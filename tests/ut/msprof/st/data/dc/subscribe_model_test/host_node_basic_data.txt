@@ -1,0 +1,2 @@
+0 22345 10000 3 1000700000 actual_input_1_0_huawei_aippConv_0Relu_2 Conv2D
+0 22345 10000 3 1001300000 actual_input_1_0_huawei_aippConv_0Relu_2 Conv2D

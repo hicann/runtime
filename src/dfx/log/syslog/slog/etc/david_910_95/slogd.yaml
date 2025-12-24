@@ -1,0 +1,571 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+slogdmgr:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: true
+  device_id: 0
+  node_type: 0x607
+  startup_priority: 1
+
+# VF slogdmgr
+slogdmgr_32:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=32]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 32
+  node_type: 0x607
+
+slogdmgr_33:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=33]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 33
+  node_type: 0x607
+
+slogdmgr_34:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=34]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 34
+  node_type: 0x607
+
+slogdmgr_35:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=35]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 35
+  node_type: 0x607
+
+slogdmgr_36:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=36]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 36
+  node_type: 0x607
+
+slogdmgr_37:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=37]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 37
+  node_type: 0x607
+
+slogdmgr_38:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=38]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 38
+  node_type: 0x607
+
+slogdmgr_39:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=39]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 39
+  node_type: 0x607
+
+slogdmgr_40:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=40]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 40
+  node_type: 0x607
+
+slogdmgr_41:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=41]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 41
+  node_type: 0x607
+
+slogdmgr_42:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=42]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 42
+  node_type: 0x607
+
+slogdmgr_43:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=43]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 43
+  node_type: 0x607
+
+slogdmgr_44:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=44]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 44
+  node_type: 0x607
+
+slogdmgr_45:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=45]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 45
+  node_type: 0x607
+
+slogdmgr_46:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=46]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 46
+  node_type: 0x607
+
+slogdmgr_47:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=47]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 47
+  node_type: 0x607
+
+slogdmgr_48:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=48]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 48
+  node_type: 0x607
+
+slogdmgr_49:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=49]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 49
+  node_type: 0x607
+
+slogdmgr_50:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=50]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 50
+  node_type: 0x607
+
+slogdmgr_51:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=51]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 51
+  node_type: 0x607
+
+slogdmgr_52:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=52]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 52
+  node_type: 0x607
+
+slogdmgr_53:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=53]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 53
+  node_type: 0x607
+
+slogdmgr_54:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=54]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 54
+  node_type: 0x607
+
+slogdmgr_55:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=55]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 55
+  node_type: 0x607
+
+slogdmgr_56:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=56]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 56
+  node_type: 0x607
+
+slogdmgr_57:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=57]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 57
+  node_type: 0x607
+
+slogdmgr_58:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=58]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 58
+  node_type: 0x607
+
+slogdmgr_59:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=59]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 59
+  node_type: 0x607
+
+slogdmgr_60:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=60]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 60
+  node_type: 0x607
+
+slogdmgr_61:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=61]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 61
+  node_type: 0x607
+
+slogdmgr_62:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=62]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 62
+  node_type: 0x607
+
+slogdmgr_63:
+  bin_path: "/var/slogd"
+  depends: [ ]
+  env: [ ]
+  uid: 1000
+  gid: 1000
+  arguments: [-n,--vfid=63]
+  priority: 0
+  restart: "on-forever"
+  is_so: false
+  process_bind_path: ""
+  term_time_out: 10000
+  is_force_term: true
+  is_auto_boot: false
+  device_id: 63
+  node_type: 0x607

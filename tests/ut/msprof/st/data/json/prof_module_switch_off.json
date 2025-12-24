@@ -1,0 +1,26 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "FRAMEWORK",
+                "prof_switch": "off"
+            },   
+            {
+                "module": "ACL",
+                "prof_switch": "off"
+            },   
+            {
+                "module": "RUNTIME",
+                "prof_switch": "off"
+            },   
+            {
+                "module": "HCCL",
+                "prof_switch": "off"
+            },   
+            {
+                "module": "DATA_PREPROCESS",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

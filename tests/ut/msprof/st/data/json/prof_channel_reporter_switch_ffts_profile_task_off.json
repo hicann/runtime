@@ -1,0 +1,10 @@
+{
+    "device": {
+        "channels": [
+            {
+                "channel": 53,
+                "reporter_switch": "off"
+            }
+        ]
+    }
+}

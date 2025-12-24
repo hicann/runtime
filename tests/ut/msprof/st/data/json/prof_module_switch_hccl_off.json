@@ -1,0 +1,10 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "HCCL",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

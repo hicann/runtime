@@ -1,0 +1,16 @@
+observability:
+   json:
+     cpeName: json
+     groupId:
+     url: https://gitcode.com/cann-src-third-party/json.git
+     version: 3.11.3
+  makeself:
+     cpeName: makeself
+     groupId:
+     url: https://gitcode.com/cann-src-third-party/makeself.git
+     version: release-2.5.0-patch1
+  protobuf:
+     cpeName: protobuf
+     groupId:
+     url: https://gitcode.com/cann-src-third-party/protobuf.git
+     version: v3.13.0

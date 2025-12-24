@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2025 Huawei Technologies Co., Ltd.
+     This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+     CANN Open Software License Agreement Version 2.0 (the "License").
+     Please refer to the License for details. You may not use this file except in compliance with the License.
+     THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+     See LICENSE in the root of the software repository for the full text of the License.
+-->
+<block name="RuntimeSo" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="run;devel">
+    <file_info value="runtime_lib" copy_type="delivery" src_path="" dst_path="lib/" install_path="$(TARGET_ENV)/lib64" install_mod="440">
+        <file value="libacl_rt.so" file_type="shared"/>
+        <file value="libacl_rt_impl.so" file_type="shared"/>
+        <file value="libacl_tdt_channel.so" file_type="shared"/>
+        <file value="libacl_tdt_queue.so" file_type="shared"/>
+        <file value="libruntime.so" file_type="shared"/>
+        <file value="libruntime_v100.so" file_type="shared"/>
+        <file value="libruntime_common.so" file_type="shared"/>
+        <file value="libc_sec.so" file_type="shared"/>
+        <file value="libmmpa.so" file_type="shared"/>
+        <file value="libmmpa.a" file_type="static"/>
+        <file value="libprofapi.so" file_type="shared"/>
+        <file value="libc_sec.a" file_type="shared"/>
+        <file value="libmsprofiler.so" file_type="shared"/>
+        <file value="libprofimpl.so" file_type="shared"/>
+        <file value="liberror_manager.so" file_type="shared"/>
+        <file value="libascend_watchdog.so" file_type="shared"/>
+        <file value="libascendalog.so" file_type="shared"/>
+        <file value="libunified_dlog.so" file_type="shared"/>
+        <file value="libascend_trace.so" file_type="shared"/>
+        <file value="libascend_dump.so" file_type="shared"/>
+        <file value="libtsdclient.so" file_type="shared"/>
+        <file value="libdgw_client.so" file_type="shared"/>
+        <file value="libascend_dump.a" file_type="static"/>
+        <file value="libadump_server.a" file_type="static"/>
+        <file value="libadcore.a" file_type="static"/>
+        <file value="libplatform.so" file_type="shared"/>
+        <file value="libascend_protobuf.so.3.13.0.0" file_type="shared"/>
+        <file value="libascend_protobuf.so" file_type="shared"/>
+        <file value="libhost_queue_schedule.so" file_type="shared"/>
+        <file value="libascendcl.so" file_type="shared" optional="true"/>
+        <file value="libhost_aicpu_scheduler.so" file_type="shared"/>
+        <file value="libdatatransfer.so" file_type="shared" optional="true"/>
+        <file value="libindextransform.so" file_type="shared" optional="true"/>
+    </file_info>
+    <file_info value="runtime_devlib_device" copy_type="delivery" src_path="" dst_path="lib/device" install_path="$(TARGET_ENV)/devlib/device" install_mod="440">
+        <file value="libc_sec.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libc_sec.so" optional="true"/>
+        <file value="libascendalog.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascendalog.so"  optional="true"/>
+        <file value="libunified_dlog.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libunified_dlog.so" optional="true"/>
+        <file value="libascend_protobuf.a" file_type="static" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascend_protobuf.a" optional="true"/>
+        <file value="libmmpa.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libmmpa.so" optional="true"/>
+        <file value="libplatform_static.a" file_type="static" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libplatform_static.a" optional="true"/>
+        <file value="libkernel_load_platform.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libkernel_load_platform.so" optional="true"/>
+        <file value="libascend_hal.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascend_hal.so" optional="true"/>
+    </file_info>
+    <file_info value="runtime_lib_devlib_aarch" copy_type="delivery" src_path="" dst_path="devlib/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_mod="440" optional="true">
+        <file value="libacl_rt.so" file_type="shared"/>
+        <file value="libacl_tdt_channel.so" file_type="shared"/>
+        <file value="libacl_tdt_queue.so" file_type="shared"/>
+        <file value="libacl_prof.so" file_type="shared"/>
+        <file value="libplatform.so" file_type="shared"/>
+        <file value="liberror_manager.so" file_type="shared"/>
+        <file value="libascend_hal.so" file_type="shared"/>
+        <file value="libascendcl.so" file_type="shared"/>
+    </file_info>
+        <file_info value="runtime_lib_devlib_X86" copy_type="delivery" src_path="" dst_path="devlib/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_mod="440" optional="true">
+        <file value="libacl_rt.so" file_type="shared"/>
+        <file value="libacl_tdt_channel.so" file_type="shared"/>
+        <file value="libacl_tdt_queue.so" file_type="shared"/>
+        <file value="libacl_prof.so" file_type="shared"/>
+        <file value="libplatform.so" file_type="shared"/>
+        <file value="liberror_manager.so" file_type="shared"/>
+        <file value="libascend_hal.so" file_type="shared"/>
+        <file value="libascendcl.so" file_type="shared"/>
+    </file_info>
+    <file_info value="runtime_bin" copy_type="delivery" src_path="" dst_path="bin/" install_path="$(TARGET_ENV)/bin" install_mod="550">
+        <file value="host_queue_schedule" file_type="shared"/>
+        <file value="asc_dumper" file_type="shared"/>
+    </file_info>
+</block>

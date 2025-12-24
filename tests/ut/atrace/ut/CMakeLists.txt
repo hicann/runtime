@@ -1,0 +1,4 @@
+add_subdirectory(utrace)
+add_subdirectory(trace_server)
+add_subdirectory(awatchdog)
+add_subdirectory(cpu_detect)

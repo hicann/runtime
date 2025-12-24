@@ -1,0 +1,27 @@
+{
+  "BF16": {
+    "runtimeVersion": "7.1",
+    "socVersionList": [
+      "Ascend910B1",
+      "Ascend910B2",
+      "Ascend910B2C",
+      "Ascend910B3",
+      "Ascend910B4",
+      "Ascend910_9"
+    ]
+  },
+  "INF_NAN": {
+    "runtimeVersion": "7.1",
+    "socVersionList": [
+      "Ascend910B1",
+      "Ascend910B2",
+      "Ascend910B2C",
+      "Ascend910B3",
+      "Ascend910B4",
+      "Ascend910_9"
+    ]
+  },
+  "JIT_COMPILE": {
+    "runtimeVersion": "6.4"
+  }
+}

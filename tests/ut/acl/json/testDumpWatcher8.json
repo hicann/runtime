@@ -1,0 +1,14 @@
+{
+    "dump":{
+        "dump_list":[
+            {
+                "model_name":"ResNet-50",
+                "layer":["A"],
+                "watcher_nodes":["B", "C"]
+            }
+        ],
+        "dump_path":"/home/",
+        "dump_mode":"output",
+        "dump_scene":"watcher"
+    }
+}

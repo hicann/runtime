@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dll-mmpa", "dll-mmpa\dll-mmpa.vcxproj", "{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Debug|x64.ActiveCfg = Debug|x64
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Debug|x64.Build.0 = Debug|x64
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Debug|x86.ActiveCfg = Debug|Win32
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Debug|x86.Build.0 = Debug|Win32
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Release|x64.ActiveCfg = Release|x64
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Release|x64.Build.0 = Release|x64
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Release|x86.ActiveCfg = Release|Win32
+		{267EB8C0-37F1-42A0-B1A6-FE85C99D4931}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {648A3423-1AEC-4855-9ACA-B038EBA33086}
+	EndGlobalSection
+EndGlobal

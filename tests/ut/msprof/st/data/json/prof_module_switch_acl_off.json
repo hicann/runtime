@@ -1,0 +1,10 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "ACL",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

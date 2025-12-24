@@ -1,0 +1,10 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "DATA_PREPROCESS",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

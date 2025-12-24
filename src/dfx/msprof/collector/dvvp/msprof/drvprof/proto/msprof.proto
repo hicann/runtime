@@ -1,0 +1,40 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+syntax = "proto3";
+
+package analysis.dvvp.msprof.proto;
+
+
+message Header {
+    string Magic = 1;
+    string job_ctx = 2;
+}
+
+// for transfer data and flush to file
+message FileChunkReq {
+    Header Hdr = 1;
+    string FileName = 2;
+    int64 Offset = 3;
+    bytes Chunk = 4;
+    int32 ChunkSizeInBytes = 5;
+    bool IsLastChunk = 6;
+    bool NeedAck = 7;
+    string Tag = 8;
+    string TagSuffix = 9;
+    uint64 ChunkStartTime = 10;
+    uint64 ChunkEndTime = 11;
+    int32 DataModule = 12;
+}
+
+message FileChunkFlushReq {
+    Header Hdr = 1;
+    string FileName = 2;
+    int32 DataModule = 3;
+}

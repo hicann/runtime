@@ -1,0 +1,17 @@
+{
+    "dump": {
+        "dump_list": [
+            {
+                "layer": [
+                    "diag"
+                ],
+                "watcher_nodes": [
+                    "MatrixSolve"
+                ]
+            }
+        ],
+        "dump_op_switch": "off",
+        "dump_path": "/tmp",
+        "dump_scene": "watcher"
+    }
+}

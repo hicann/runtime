@@ -1,0 +1,4 @@
+<bios_check_cfg >
+    <item input="cann-tsch-compat.tar.gz" output="cann-tsch-compat.tar.gz" type="cms" sign_alg="PSS" tag="ascend_aicpu" nvcnt="0"></item>
+    <item input="libtsch_fw_plugin_910b.o" output="libtsch_fw_plugin_910b.o" type="cms" sign_alg="PSS" tag="tschplugin910b" nvcnt="0"></item>
+</bios_check_cfg>

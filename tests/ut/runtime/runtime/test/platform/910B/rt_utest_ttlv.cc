@@ -1,0 +1,399 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+#include <cstdio>
+#include <stdlib.h>
+
+#include "runtime/rt.h"
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
+#define private public
+#define protected public
+#include "runtime.hpp"
+#include "device/device_error_proc.hpp"
+#include "ttlv_decoder_utils.hpp"
+#include "ttlv_err_msg_decoder.hpp"
+#include "ttlv.hpp"
+#undef private
+#undef protected
+#include "securec.h"
+
+using namespace testing;
+using namespace cce::runtime;
+
+class TTLVTest : public testing::Test
+{
+protected:
+    static void SetUpTestCase()
+    {
+        std::cout<<"TTLV test start"<<std::endl;
+
+    }
+
+    static void TearDownTestCase()
+    {
+        std::cout<<"TTLV test end"<<std::endl;
+    }
+
+    virtual void SetUp()
+    {
+    }
+
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+    }
+};
+
+TEST_F(TTLVTest, unknown_type)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {1, 240, 129, 0, 167, 0, 3, 0, 129,
+        0, 106, 0, 0, 0, 130, 0, 15, 0, 84, 65, 83, 75, 95, 116, 101, 115, 116, 99, 97, 115, 101, 49, 0, 1, 0, 2, 0,
+        245, 3, 2, 0, 2, 0, 4, 0, 4, 0, 6, 0, 31, 160, 36, 97, 0, 0, 0, 0, 5, 0, 6, 0, 120, 88, 9, 0, 0, 0, 0, 0, 6,
+        0, 130, 0, 30, 0, 83, 114, 99, 32, 100, 101, 118, 73, 100, 61, 55, 53, 51, 53, 53, 53, 50, 32, 105, 115, 32,
+        105, 110, 118, 97, 108, 105, 100, 46, 0, 7, 0, 130, 0, 7, 0, 69, 69, 50, 48, 48, 49, 0, 109, 1, 4, 0, 86, 52,
+        18, 0, 8, 1, 2, 0, 1, 0, 6, 1, 2, 0, 12, 0, 7, 1, 2, 0, 0, 0, 1, 1, 2, 0, 128, 0, 2, 1, 2, 0, 13, 0, 4, 1, 2,
+        0, 0, 0, 5, 1, 2, 0, 0, 0, 3, 1, 0, 0, 0};
+
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("EXCEPTION TASK"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("unknown data"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("model id=1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream id=12"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream phase=INIT"), ttlvData.GetDecodeStr().npos);
+
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task id=128"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task type=model execute"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("recently received task id=0"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("recently send task id=0"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task phase=INIT"), ttlvData.GetDecodeStr().npos);
+
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=TASK_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, task_error)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {
+        0x1, 0xf0, 0x81, 0x0, 0xc7, 0x0, 0x3, 0x0,
+        0x81, 0x0, 0x8a, 0x0, 0x0, 0x0, 0x82, 0x0,
+        0xf, 0x0, 0x54, 0x41, 0x53, 0x4b, 0x5f, 0x74,
+        0x65, 0x73, 0x74, 0x63, 0x61, 0x73, 0x65, 0x31,
+        0x0, 0x1, 0x0, 0x2, 0x0, 0x7b, 0x4, 0x2,
+        0x0, 0x2, 0x0, 0x4, 0x0, 0x4, 0x0, 0x6,
+        0x0, 0xed, 0x3a, 0x27, 0x61, 0x0, 0x0, 0x0,
+        0x0, 0x5, 0x0, 0x6, 0x0, 0x44, 0x36, 0xd,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x6, 0x0, 0x82,
+        0x0, 0x1a, 0x0, 0x32, 0x30, 0x32, 0x31, 0x2d,
+        0x31, 0x2d, 0x31, 0x20, 0x30, 0x30, 0x3a, 0x30,
+        0x30, 0x3a, 0x30, 0x30, 0x2e, 0x38, 0x36, 0x35,
+        0x2e, 0x38, 0x36, 0x30, 0x0, 0x7, 0x0, 0x82,
+        0x0, 0x1e, 0x0, 0x53, 0x72, 0x63, 0x20, 0x64,
+        0x65, 0x76, 0x49, 0x64, 0x3d, 0x37, 0x36, 0x36,
+        0x32, 0x37, 0x30, 0x34, 0x20, 0x69, 0x73, 0x20,
+        0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x2e,
+        0x0, 0x8, 0x0, 0x82, 0x0, 0x7, 0x0, 0x45,
+        0x45, 0x32, 0x30, 0x30, 0x31, 0x0, 0x9, 0x1,
+        0x4, 0x0, 0x56, 0x34, 0x12, 0x0, 0x8, 0x1,
+        0x2, 0x0, 0x1, 0x0, 0x6, 0x1, 0x2, 0x0,
+        0xc, 0x0, 0x7, 0x1, 0x2, 0x0, 0x0, 0x0,
+        0x1, 0x1, 0x2, 0x0, 0x80, 0x0, 0x2, 0x1,
+        0x2, 0x0, 0xd, 0x0, 0x4, 0x1, 0x2, 0x0,
+        0x0, 0x0, 0x5, 0x1, 0x2, 0x0, 0x0, 0x0,
+        0x3, 0x1, 0x0, 0x0, 0x0};
+
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    printf("%s task_error", ttlvData.GetDecodeStr().c_str());
+    EXPECT_NE(ttlvData.GetDecodeStr().find("EXCEPTION TASK"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("TGID=1193046"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("model id=1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream id=12"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream phase=INIT"), ttlvData.GetDecodeStr().npos);
+
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task id=128"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task type=model execute"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("recently received task id=0"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("recently send task id=0"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("task phase=INIT"), ttlvData.GetDecodeStr().npos);
+
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=TASK_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, stream_error)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {
+        0x2, 0xf0, 0x81, 0x0, 0xac, 0x0, 0x3, 0x0,
+        0x81, 0x0, 0x8c, 0x0, 0x0, 0x0, 0x82, 0x0,
+        0x11, 0x0, 0x53, 0x54, 0x52, 0x45, 0x41, 0x4d,
+        0x5f, 0x74, 0x65, 0x73, 0x74, 0x63, 0x61, 0x73,
+        0x65, 0x31, 0x0, 0x1, 0x0, 0x2, 0x0, 0xd8,
+        0x4, 0x2, 0x0, 0x2, 0x0, 0x4, 0x0, 0x4,
+        0x0, 0x6, 0x0, 0xf6, 0x3e, 0x27, 0x61, 0x0,
+        0x0, 0x0, 0x0, 0x5, 0x0, 0x6, 0x0, 0x5d,
+        0x55, 0xe, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6,
+        0x0, 0x82, 0x0, 0x1a, 0x0, 0x32, 0x30, 0x32,
+        0x31, 0x2d, 0x31, 0x2d, 0x31, 0x20, 0x30, 0x30,
+        0x3a, 0x30, 0x30, 0x3a, 0x30, 0x30, 0x2e, 0x39,
+        0x33, 0x39, 0x2e, 0x33, 0x35, 0x37, 0x0, 0x7,
+        0x0, 0x82, 0x0, 0x1e, 0x0, 0x53, 0x72, 0x63,
+        0x20, 0x64, 0x65, 0x76, 0x49, 0x64, 0x3d, 0x37,
+        0x36, 0x36, 0x36, 0x32, 0x34, 0x38, 0x20, 0x69,
+        0x73, 0x20, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69,
+        0x64, 0x2e, 0x0, 0x8, 0x0, 0x82, 0x0, 0x7,
+        0x0, 0x45, 0x45, 0x39, 0x30, 0x30, 0x31, 0x0,
+        0x9, 0x1, 0x4, 0x0, 0x56, 0x34, 0x12, 0x0,
+        0x8, 0x1, 0x2, 0x0, 0x1, 0x0, 0x6, 0x1,
+        0x2, 0x0, 0xc, 0x0, 0x7, 0x1, 0x2, 0x0,
+        0x0, 0x0
+    };
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    printf("%s stream_error", ttlvData.GetDecodeStr().c_str());
+    EXPECT_NE(ttlvData.GetDecodeStr().find("EXCEPTION STREAM"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("TGID=1193046"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("model id=1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream id=12"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("stream phase=INIT"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=STREAM_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, TTLVWordDecoder_DecodeUnknownData)
+{
+    TTLVWordDecoder word;
+    uint32_t val = 32;
+    uint32_t msgLen = sizeof(uint32_t);
+    word.msgLen_ = msgLen;
+    word.buffer_ = &val;
+    word.tag_ = 0;
+    word.type_ = 0;
+    auto err = word.DecodeUnknownData();
+    EXPECT_EQ(err, RT_ERROR_NONE);
+
+    // cnt > 0, ret is nok
+    msgLen = sizeof(uint64_t) + sizeof(uint32_t);
+    word.msgLen_ = msgLen;
+    err = word.DecodeUnknownData();
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TTLVTest, pid_error)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {
+        0x4, 0xf0, 0x81, 0x0, 0x97, 0x0, 0x3, 0x0,
+        0x81, 0x0, 0x89, 0x0, 0x0, 0x0, 0x82, 0x0,
+        0xe, 0x0, 0x50, 0x49, 0x44, 0x5f, 0x74, 0x65,
+        0x73, 0x74, 0x63, 0x61, 0x73, 0x65, 0x31, 0x0,
+        0x1, 0x0, 0x2, 0x0, 0x27, 0x5, 0x2, 0x0,
+        0x2, 0x0, 0x4, 0x0, 0x4, 0x0, 0x6, 0x0,
+        0xe6, 0x3f, 0x27, 0x61, 0x0, 0x0, 0x0, 0x0,
+        0x5, 0x0, 0x6, 0x0, 0x10, 0x20, 0x2, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x6, 0x0, 0x82, 0x0,
+        0x1a, 0x0, 0x32, 0x30, 0x32, 0x31, 0x2d, 0x31,
+        0x2d, 0x31, 0x20, 0x30, 0x30, 0x3a, 0x30, 0x30,
+        0x3a, 0x30, 0x30, 0x2e, 0x31, 0x33, 0x39, 0x2e,
+        0x32, 0x38, 0x30, 0x0, 0x7, 0x0, 0x82, 0x0,
+        0x1e, 0x0, 0x53, 0x72, 0x63, 0x20, 0x64, 0x65,
+        0x76, 0x49, 0x64, 0x3d, 0x37, 0x36, 0x36, 0x36,
+        0x34, 0x36, 0x34, 0x20, 0x69, 0x73, 0x20, 0x69,
+        0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x2e, 0x0,
+        0x8, 0x0, 0x82, 0x0, 0x7, 0x0, 0x45, 0x45,
+        0x39, 0x30, 0x30, 0x31, 0x0, 0x9, 0x1, 0x4,
+        0x0, 0x56, 0x34, 0x12, 0x0};
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("EXCEPTION TGID"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("TGID=1193046"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=PID_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, model_error)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {
+        0x3, 0xf0, 0x81, 0x0, 0x9f, 0x0, 0x3, 0x0,
+        0x81, 0x0, 0x8b, 0x0, 0x0, 0x0, 0x82, 0x0,
+        0x10, 0x0, 0x4d, 0x4f, 0x44, 0x45, 0x4c, 0x5f,
+        0x74, 0x65, 0x73, 0x74, 0x63, 0x61, 0x73, 0x65,
+        0x31, 0x0, 0x1, 0x0, 0x2, 0x0, 0x2, 0x5,
+        0x2, 0x0, 0x2, 0x0, 0x4, 0x0, 0x4, 0x0,
+        0x6, 0x0, 0x54, 0x40, 0x27, 0x61, 0x0, 0x0,
+        0x0, 0x0, 0x5, 0x0, 0x6, 0x0, 0x70, 0xeb,
+        0xb, 0x0, 0x0, 0x0, 0x0, 0x0, 0x6, 0x0,
+        0x82, 0x0, 0x1a, 0x0, 0x32, 0x30, 0x32, 0x31,
+        0x2d, 0x31, 0x2d, 0x31, 0x20, 0x30, 0x30, 0x3a,
+        0x30, 0x30, 0x3a, 0x30, 0x30, 0x2e, 0x37, 0x38,
+        0x31, 0x2e, 0x31, 0x36, 0x38, 0x0, 0x7, 0x0,
+        0x82, 0x0, 0x1e, 0x0, 0x53, 0x72, 0x63, 0x20,
+        0x64, 0x65, 0x76, 0x49, 0x64, 0x3d, 0x37, 0x36,
+        0x36, 0x36, 0x35, 0x30, 0x34, 0x20, 0x69, 0x73,
+        0x20, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64,
+        0x2e, 0x0, 0x8, 0x0, 0x82, 0x0, 0x7, 0x0,
+        0x45, 0x45, 0x39, 0x30, 0x30, 0x31, 0x0, 0x9,
+        0x1, 0x4, 0x0, 0x56, 0x34, 0x12, 0x0, 0x8,
+        0x1, 0x2, 0x0, 0x2, 0x0};
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("EXCEPTION MODEL"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("TGID=1193046"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("model id=2"), ttlvData.GetDecodeStr().npos);
+
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=MODEL_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, system_error)
+{
+    rtError_t error;
+    //以下是从ts侧拷贝的，勿动
+    uint8_t buffer[] = {
+        0x5, 0xf0, 0x81, 0x0, 0x86, 0x0, 0x0, 0x0,
+        0x82, 0x0, 0x11, 0x0, 0x53, 0x59, 0x53, 0x54,
+        0x45, 0x4d, 0x5f, 0x74, 0x65, 0x73, 0x74, 0x63,
+        0x61, 0x73, 0x65, 0x31, 0x0, 0x1, 0x0, 0x2,
+        0x0, 0x45, 0x5, 0x2, 0x0, 0x2, 0x0, 0x4,
+        0x0, 0x4, 0x0, 0x6, 0x0, 0x9b, 0x40, 0x27,
+        0x61, 0x0, 0x0, 0x0, 0x0, 0x5, 0x0, 0x6,
+        0x0, 0x29, 0xf4, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x6, 0x0, 0x82, 0x0, 0x1a, 0x0, 0x32,
+        0x30, 0x32, 0x31, 0x2d, 0x31, 0x2d, 0x31, 0x20,
+        0x30, 0x30, 0x3a, 0x30, 0x30, 0x3a, 0x30, 0x30,
+        0x2e, 0x30, 0x36, 0x32, 0x2e, 0x35, 0x30, 0x35,
+        0x0, 0x7, 0x0, 0x82, 0x0, 0x18, 0x0, 0x53,
+        0x72, 0x63, 0x20, 0x64, 0x65, 0x76, 0x49, 0x64,
+        0x3d, 0x30, 0x20, 0x69, 0x73, 0x20, 0x69, 0x6e,
+        0x76, 0x61, 0x6c, 0x69, 0x64, 0x2e, 0x0, 0x8,
+        0x0, 0x82, 0x0, 0x7, 0x0, 0x45, 0x45, 0x39,
+        0x30, 0x30, 0x31, 0x0};
+    TTLV ttlvData(buffer, sizeof(buffer));
+    error = ttlvData.Decode();
+
+    /* 字符串相等 */
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("SYSTEM ERROR"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("is invalid"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("function=SYSTEM_testcase1"), ttlvData.GetDecodeStr().npos);
+    EXPECT_NE(ttlvData.GetDecodeStr().find("error code=0x4"), ttlvData.GetDecodeStr().npos);
+}
+
+TEST_F(TTLVTest, DefaultPhaseValue)
+{
+    uint64_t outData = 0;
+    auto err = TTLVDecoderUtils::DefaultPhaseValue(0, nullptr, outData);
+    EXPECT_EQ(err, RT_ERROR_NONE);
+    err = TTLVDecoderUtils::DefaultPhaseValue(sizeof(uint64_t) + 1, nullptr, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TTLVTest, PhaseValueHex)
+{
+    std::string outData;
+    auto err = TTLVDecoderUtils::PhaseValueHex(sizeof(uint64_t) + 1, nullptr, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TTLVTest, PhaseValueDecimal)
+{
+    std::string outData;
+    auto err = TTLVDecoderUtils::PhaseValueDecimal(sizeof(uint64_t) + 1, nullptr, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(TTLVTest, PhaseTaskType)
+{
+    uint16_t task_type = 0xffff;
+    std::string outData;
+    auto err = TTLVDecoderUtils::PhaseTaskType(sizeof(uint16_t) + 1, &task_type, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+    err = TTLVDecoderUtils::PhaseTaskType(sizeof(uint16_t), &task_type, outData);
+    printf("PhaseTaskType=%d", err);
+}
+
+TEST_F(TTLVTest, PhaseTaskPhase)
+{
+    uint8_t task_phase = 0xff;
+    std::string outData;
+    auto err = TTLVDecoderUtils::PhaseTaskPhase(sizeof(uint8_t) + 1, &task_phase, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+    err = TTLVDecoderUtils::PhaseTaskPhase(sizeof(uint8_t), &task_phase, outData);
+    printf("PhaseTaskPhase=%d", err);
+}
+
+TEST_F(TTLVTest, PhaseStreamPhase)
+{
+    uint16_t stream_phase = 0xff;
+    std::string outData;
+    auto err = TTLVDecoderUtils::PhaseStreamPhase(sizeof(uint16_t) + 1, &stream_phase, outData);
+    EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+    err = TTLVDecoderUtils::PhaseStreamPhase(sizeof(uint16_t), &stream_phase, outData);
+    printf("PhaseStreamPhase=%d", err);
+}
+
+TEST_F(TTLVTest, ParseErrCode)
+{
+    TTLVErrMsgDecoder errMsg;
+    errMsg.SetErrCode("EE3001");
+    TTLVWordDecoder ttlvTag;
+    char *str = "test";
+    ttlvTag.buffer_ = str;
+    ttlvTag.msgLen_ = strlen(str) + 1;
+    auto err = TTLVDecoderUtils::ParseErrCode(errMsg, ttlvTag);
+    printf("ParseErrCode=%d", err);
+    EXPECT_EQ(err, RT_ERROR_NONE);
+}
+
+TEST_F(TTLVTest, TTLVParagraphDecoder)
+{
+    std::string output;
+    TTLVParagraphDecoder decoder;
+    TTLVSentenceDecoder sen = decoder.GetRecentSentence();
+    EXPECT_EQ(sen.decoderErrMsg_.size(), 0);
+    EXPECT_EQ(sen.decoderWord_.size(), 0);
+    TTLVErrMsgDecoder errMsg[3];
+    for (auto &err : errMsg) {
+        err.SetErrCode("EE3001");
+        sen.AddErrMsg(err);
+    }
+    decoder.decoderSentence_.push_back(sen);
+    decoder.PrintOut(output);
+    EXPECT_EQ(decoder.decoderSentence_.size(), 2);
+}

@@ -1,0 +1,85 @@
+# aclrtMemSetPidToShareableHandleV2<a name="ZH-CN_TOPIC_0000002483631149"></a>
+
+## AI处理器支持情况<a name="section15254644421"></a>
+
+<a name="zh-cn_topic_0000002219420921_table14931115524110"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0000002219420921_row1993118556414"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="zh-cn_topic_0000002219420921_p29315553419"><a name="zh-cn_topic_0000002219420921_p29315553419"></a><a name="zh-cn_topic_0000002219420921_p29315553419"></a><span id="zh-cn_topic_0000002219420921_ph59311455164119"><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a>AI处理器类型</span></p>
+</th>
+<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="zh-cn_topic_0000002219420921_p59313557417"><a name="zh-cn_topic_0000002219420921_p59313557417"></a><a name="zh-cn_topic_0000002219420921_p59313557417"></a>是否支持</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0000002219420921_row1693117553411"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p1493195513412"><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><span id="zh-cn_topic_0000002219420921_ph1093110555418"><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a>Ascend 910C</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p20931175524111"><a name="zh-cn_topic_0000002219420921_p20931175524111"></a><a name="zh-cn_topic_0000002219420921_p20931175524111"></a>√</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000002219420921_row199312559416"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p0931555144119"><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><span id="zh-cn_topic_0000002219420921_ph1693115559411"><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a>Ascend 910B</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p129321955154117"><a name="zh-cn_topic_0000002219420921_p129321955154117"></a><a name="zh-cn_topic_0000002219420921_p129321955154117"></a>√</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 功能说明<a name="section36583473819"></a>
+
+设置共享内存的进程白名单**。**
+
+本接口是在接口[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)基础上进行了增强，用户可通过shareType参数指定导出AI Server内的共享句柄，或导出跨AI Server的共享句柄。
+
+本接口的使用流程可参见[aclrtMemExportToShareableHandle](aclrtMemExportToShareableHandle.md)，但本接口需配合调用[aclrtMemExportToShareableHandleV2](aclrtMemExportToShareableHandleV2.md)接口导出共享句柄、调用[aclrtMemImportFromShareableHandleV2](aclrtMemImportFromShareableHandleV2.md)接口导入共享句柄。
+
+## 函数原型<a name="section13230182415108"></a>
+
+```
+aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemSharedHandleType shareType, int32_t *pid, size_t pidNum)
+```
+
+## 参数说明<a name="section75395119104"></a>
+
+<a name="zh-cn_topic_0122830089_table438764393513"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0122830089_row53871743113510"><th class="cellrowborder" valign="top" width="18.39%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0122830089_p1438834363520"><a name="zh-cn_topic_0122830089_p1438834363520"></a><a name="zh-cn_topic_0122830089_p1438834363520"></a>参数名</p>
+</th>
+<th class="cellrowborder" valign="top" width="13.56%" id="mcps1.1.4.1.2"><p id="p1769255516412"><a name="p1769255516412"></a><a name="p1769255516412"></a>输入/输出</p>
+</th>
+<th class="cellrowborder" valign="top" width="68.05%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0122830089_p173881843143514"><a name="zh-cn_topic_0122830089_p173881843143514"></a><a name="zh-cn_topic_0122830089_p173881843143514"></a>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0122830089_row2038874343514"><td class="cellrowborder" valign="top" width="18.39%" headers="mcps1.1.4.1.1 "><p id="p142411213163111"><a name="p142411213163111"></a><a name="p142411213163111"></a>shareableHandle</p>
+</td>
+<td class="cellrowborder" valign="top" width="13.56%" headers="mcps1.1.4.1.2 "><p id="p42407139317"><a name="p42407139317"></a><a name="p42407139317"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68.05%" headers="mcps1.1.4.1.3 "><p id="p174801641153315"><a name="p174801641153315"></a><a name="p174801641153315"></a>通过aclrtMemExportToShareableHandleV2接口导出的shareableHandle，表示指向共享句柄的指针。</p>
+</td>
+</tr>
+<tr id="row13574102519228"><td class="cellrowborder" valign="top" width="18.39%" headers="mcps1.1.4.1.1 "><p id="p1152119775012"><a name="p1152119775012"></a><a name="p1152119775012"></a>shareType</p>
+</td>
+<td class="cellrowborder" valign="top" width="13.56%" headers="mcps1.1.4.1.2 "><p id="p7521573506"><a name="p7521573506"></a><a name="p7521573506"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68.05%" headers="mcps1.1.4.1.3 "><p id="p195211971504"><a name="p195211971504"></a><a name="p195211971504"></a>导出的共享句柄类型。</p>
+</td>
+</tr>
+<tr id="row1660814462512"><td class="cellrowborder" valign="top" width="18.39%" headers="mcps1.1.4.1.1 "><p id="p202371213153111"><a name="p202371213153111"></a><a name="p202371213153111"></a>pid</p>
+</td>
+<td class="cellrowborder" valign="top" width="13.56%" headers="mcps1.1.4.1.2 "><p id="p12375137315"><a name="p12375137315"></a><a name="p12375137315"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68.05%" headers="mcps1.1.4.1.3 "><p id="p13236131313318"><a name="p13236131313318"></a><a name="p13236131313318"></a>用于存放白名单进程ID的数组。</p>
+<p id="p1108946705"><a name="p1108946705"></a><a name="p1108946705"></a>进程ID可调用<a href="aclrtDeviceGetBareTgid.md">aclrtDeviceGetBareTgid</a>接口获取，Docker场景下获取到的是物理机上的进程ID，非Docker场景下获取到的是进程ID。</p>
+</td>
+</tr>
+<tr id="row187221499516"><td class="cellrowborder" valign="top" width="18.39%" headers="mcps1.1.4.1.1 "><p id="p6234121363114"><a name="p6234121363114"></a><a name="p6234121363114"></a>pidNum</p>
+</td>
+<td class="cellrowborder" valign="top" width="13.56%" headers="mcps1.1.4.1.2 "><p id="p132342013133119"><a name="p132342013133119"></a><a name="p132342013133119"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68.05%" headers="mcps1.1.4.1.3 "><p id="p1923319132315"><a name="p1923319132315"></a><a name="p1923319132315"></a>白名单进程数量，与pid参数数组的大小保持一致。</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 返回值说明<a name="section25791320141317"></a>
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
+

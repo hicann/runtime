@@ -1,0 +1,100 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+#include "cloud_v2_platform.h"
+#include "cloud_v2_analyzer.h"
+
+namespace Dvvp {
+namespace Collect {
+namespace Platform {
+PLATFORM_REGISTER(CHIP_CLOUD_V2, CloudV2Platform);
+CloudV2Platform::CloudV2Platform()
+{
+    supportedFeature_ = {
+        // TASK
+        PLATFORM_TASK_ASCENDCL,
+        PLATFORM_TASK_RUNTIME_API,
+        PLATFORM_TASK_METRICS,
+        PLATFORM_TASK_AIC_METRICS,
+        PLATFORM_TASK_AIV_METRICS,
+        PLATFORM_TASK_AICORE_LPM,
+        PLATFORM_TASK_AICORE_LPM_INFO,
+        PLATFORM_TASK_GE_API,
+        PLATFORM_TASK_HCCL,
+        PLATFORM_TASK_TSFW,
+        PLATFORM_TASK_L2_CACHE_REG,
+        PLATFORM_TASK_MEMORY,
+        PLATFORM_TASK_MSPROFTX,
+        PLATFORM_TASK_SWITCH,
+        PLATFORM_TASK_TRACE,
+        PLATFORM_TASK_TRACE_L3,
+        PLATFORM_TASK_STARS_ACSQ,
+        PLATFORM_TASK_TS_KEYPOINT,
+        PLATFORM_TASK_TS_MEMCPY,
+        PLATFORM_TASK_BLOCK,
+        PLATFORM_TASK_TRAINING_TRACE,
+        PLATFORM_TASK_AICPU,
+        PLATFORM_TASK_DYNAMIC,
+        PLATFORM_TASK_DELAY_DURATION,
+        // PMU
+        PLATFORM_TASK_AU_PMU,
+        PLATFORM_TASK_PU_PMU,
+        PLATFORM_TASK_PUEXCT_PMU,
+        PLATFORM_TASK_MEMORY_PMU,
+        PLATFORM_TASK_MEMORYL0_PMU,
+        PLATFORM_TASK_MEMORYUB_PMU,
+        PLATFORM_TASK_L2_CACHE_PMU,
+        PLATFORM_TASK_RCR_PMU,
+        PLATFORM_TASK_SOC_PMU,
+        PLATFORM_TASK_MEMORY_ACCESS_PMU,
+        // System-device
+        PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
+        PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
+        PLATFORM_SYS_DEVICE_TS_CPU_HOT_FUNC_PMU,
+        PLATFORM_SYS_DEVICE_AI_CTRL_CPU_HOT_FUNC_PMU,
+        PLATFORM_SYS_DEVICE_NPU_MODULE_MEM,
+        PLATFORM_SYS_DEVICE_LLC,
+        PLATFORM_SYS_DEVICE_HBM,
+        PLATFORM_SYS_DEVICE_NIC,
+        PLATFORM_SYS_DEVICE_ROCE,
+        PLATFORM_SYS_DEVICE_HCCS,
+        PLATFORM_SYS_DEVICE_PCIE,
+        PLATFORM_SYS_DEVICE_DVPP,
+        PLATFORM_SYS_DEVICE_DVPP_EX,
+        PLATFORM_SYS_DEVICE_INSTR_PROFILING,
+        PLATFORM_SYS_DEVICE_QOS,
+        // System-host
+        PLATFORM_SYS_HOST_ONE_PID_CPU,
+        PLATFORM_SYS_HOST_ALL_PID_CPU,
+        PLATFORM_SYS_HOST_ONE_PID_MEM,
+        PLATFORM_SYS_HOST_ALL_PID_MEM,
+        PLATFORM_SYS_HOST_ONE_PID_DISK,
+        PLATFORM_SYS_HOST_ONE_PID_OSRT,
+        PLATFORM_SYS_HOST_NETWORK,
+        PLATFORM_SYS_HOST_SYS_CPU,
+        PLATFORM_SYS_HOST_SYS_MEM,
+        // Feature collection
+        PLATFORM_COLLECTOR_ACP,
+        PLATFORM_DIAGNOSTIC_COLLECTION,
+        PLATFORM_MC2,
+        PLATFORM_AICPU_HCCL,
+        PLATFORM_SYS_MEM_SERVICEFLOW,
+        PLATFORM_AICSCALE_ACP,
+        PLATFORM_ACLAPI_SETDEVICE_ENABLE
+    };
+}
+
+int32_t CloudV2Platform::InitOnlineAnalyzer()
+{
+    MSVP_MAKE_SHARED0(analyzer_, CloudV2Analyzer, return -1);
+    return 0;
+}
+}
+}
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2025 Huawei Technologies Co., Ltd.
+     This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+     CANN Open Software License Agreement Version 2.0 (the "License").
+     Please refer to the License for details. You may not use this file except in compliance with the License.
+     THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+     See LICENSE in the root of the software repository for the full text of the License.
+-->
+<block name="EngineeringCommon" install_own="$username:$usergroup" install_mod="440" install_type="all">
+    <dir_info value="common" install_mod="550">
+        <path value="$(TARGET_ENV)"/>
+        <path value="$(TARGET_ENV)/bin" install_softlink="bin"/>
+        <path value="$(TARGET_ENV)/include" install_softlink="include"/>
+        <path value="$(TARGET_ENV)/include/version" install_type="devel"/>
+        <path value="$(TARGET_ENV)/lib64" install_softlink="lib64"/>
+        <path value="$(TARGET_ENV)/devlib" install_softlink="devlib"/>
+        <path value="$(TARGET_ENV)/devlib/linux"/>
+        <path value="$(TARGET_ENV)/devlib/linux/x86_64" install_softlink="$(TARGET_ENV)/devlib/x86_64"/>
+        <path value="$(TARGET_ENV)/devlib/linux/aarch64" install_softlink="$(TARGET_ENV)/devlib/aarch64"/>
+        <path value="$(TARGET_ENV)/conf" install_softlink="conf"/>
+        <path value="$(TARGET_ENV)/pkg_inc" install_softlink="pkg_inc"/>
+        <path value="var" install_mod="750"/>
+    </dir_info>
+</block>

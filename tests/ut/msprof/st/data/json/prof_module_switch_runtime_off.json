@@ -1,0 +1,10 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "RUNTIME",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

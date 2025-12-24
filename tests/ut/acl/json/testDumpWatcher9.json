@@ -1,0 +1,13 @@
+{
+    "dump":{
+        "dump_list":[
+            {
+                "layer":["A"],
+                "watcher_nodes":[]
+            }
+        ],
+        "dump_path":"/home/",
+        "dump_mode":"output",
+        "dump_scene":"watcher"
+    }
+}

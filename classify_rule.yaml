@@ -1,0 +1,43 @@
+acl:
+  commiter:
+    "xxx"
+  team: "acl"
+  src:
+    release:
+      - src/acl
+      - include/external/acl
+    unrelease:
+      - src/acl/acl_tdt_queue
+  llt:
+    ut_check: true
+    st_check: false
+rts:
+  commiter:
+    "xxx"
+  team: "rts"
+  src:
+    release:
+      - src/runtime
+    unrelease:
+      - tests/depends/runtime
+      - src/runtime/feature/platform
+      - src/runtime/feature/src/common/performance_record.cc
+      - src/runtime/feature/src/drv/npu_driver_win.cc
+      - src/runtime/feature/src/drv/npu_driver_standard_soc_win.cc
+  llt:
+    ut_check: true
+    st_check: false
+platform:
+  commiter:
+    "xxx"
+  team: "platform"
+  src:
+    release:
+      - src/platform
+    unrelease:
+      - tests/depends/runtime
+      - src/platform/platform_config
+      - src/platform/stub
+  llt:
+    ut_check: true
+    st_check: false

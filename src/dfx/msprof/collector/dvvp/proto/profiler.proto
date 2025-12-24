@@ -1,0 +1,113 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+syntax = "proto3";
+
+package analysis.dvvp.proto;
+
+
+enum EumStatus {
+    SUCCESS = 0;
+    FAILED = 1;
+}
+
+message Header {
+    string Magic = 1;
+    string job_ctx = 2;
+}
+
+// for transfer data and flush to file
+message FileChunkReq {
+    Header Hdr = 1;
+    string FileName = 2;
+    int64 Offset = 3;
+    bytes Chunk = 4;
+    int32 ChunkSizeInBytes = 5;
+    bool IsLastChunk = 6;
+    bool NeedAck = 7;
+    string Tag = 8;
+    string TagSuffix = 9;
+    uint64 ChunkStartTime = 10;
+    uint64 ChunkEndTime = 11;
+    int32 DataModule = 12;
+}
+
+message FileChunkFlushReq {
+    Header Hdr = 1;
+    string FileName = 2;
+    int32 DataModule = 3;
+}
+
+//common response
+message Response {
+    Header Hdr = 1;
+    string JobId = 2;
+    EumStatus Status = 3;
+    string Message = 4;
+}
+
+// for job start/stop
+message JobStartReq {
+    Header Hdr = 1;
+    string SampleConfig = 2;
+}
+
+message JobStopReq {
+    Header Hdr = 1;
+    string JobId = 2;
+}
+
+message ReplayStartReq {
+    Header Hdr = 1;
+    int32 ReplayId = 2;
+    repeated string ctrl_cpu_events = 3;
+    repeated string ts_cpu_events = 4;
+    repeated string ai_cpu_events = 5;
+    repeated string ai_core_events = 6;
+    repeated int32 ai_core_events_cores = 7;    //ai_core_events_cores used only when sample based
+    repeated string llc_events = 8;
+    repeated string ddr_events = 9;
+    repeated string aiv_events = 10;
+    repeated int32 aiv_events_cores = 11;   //ai_vecotor_core_events_cores used only when sample based
+}
+
+message ReplayStopReq {
+    Header Hdr = 1;
+    int32 ReplayId = 2;
+}
+
+// AI Host will send FinishJob to UI host when sampling finished
+message FinishJobRsp {
+    Header Hdr = 1;
+    string JobId = 2;
+    EumStatus Status = 3;
+    string Message = 4;
+}
+
+// handshake between host and device
+message CtrlChannelHandshake {
+    string jobId = 1;
+    int32 devId = 2;
+    string mode = 3; // system-wide or def_mode or ""
+}
+
+message DataChannelHandshake {
+    string jobId = 1;
+    int32 devId = 2;
+    string mode = 3;
+}
+
+// sync device list
+message DeviceInfo {
+    string dev_id = 1;
+}
+
+message DataChannelFinish {
+    Header Hdr = 1;
+}

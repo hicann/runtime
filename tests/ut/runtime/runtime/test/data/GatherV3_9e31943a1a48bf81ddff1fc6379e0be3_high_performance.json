@@ -1,0 +1,18 @@
+{
+    "binFileName":"GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance",
+    "binFileSuffix":".o",
+    "blockDim":40,
+    "coreType":"VectorCore",
+    "deterministic":"ignore",
+    "intercoreSync":1,
+    "kernelName":"GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null
+    ],
+    "debugOptions": "test",
+    "sha256":"23673556afa3860402a84eda043f19ffbd350a39a08ac94635dbbfeb35a2024d"
+}

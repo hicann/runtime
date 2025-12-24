@@ -1,0 +1,555 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef CCE_RUNTIME_RT_EXTERNAL_BASE_H
+#define CCE_RUNTIME_RT_EXTERNAL_BASE_H
+
+#include <stdbool.h>
+#include <stdint.h>
+#include "profiling/aprof_pub.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+// If you need export the function of this library in Win32 dll, use __declspec(dllexport)
+#ifndef RTS_API
+#ifdef RTS_DLL_EXPORT
+#define RTS_API __declspec(dllexport)
+#else
+#define RTS_API
+#endif
+#endif
+
+typedef int32_t rtError_t;
+static const int32_t RT_ERROR_NONE = 0; // success
+
+#ifndef char_t
+typedef char char_t;
+#endif
+
+#ifndef float32_t
+typedef float float32_t;
+#endif
+
+#ifndef float64_t
+typedef double float64_t;
+#endif
+
+/**
+ * @ingroup dvrt_base
+ * @brief device mode.
+ */
+typedef enum tagRtDeviceMode {
+    RT_DEVICE_MODE_SINGLE_DIE = 0,
+    RT_DEVICE_MODE_MULTI_DIE,
+    RT_DEVICE_MODE_RESERVED
+} rtDeviceMode;
+
+/**
+ * @ingroup dvrt_base
+ * @brief device status.
+ */
+typedef enum tagRtDeviceStatus {
+    RT_DEVICE_STATUS_NORMAL = 0,
+    RT_DEVICE_STATUS_ABNORMAL,
+    RT_DEVICE_STATUS_END = 0xFFFF
+} rtDeviceStatus;
+
+/**
+ * @ingroup dvrt_base
+ * @brief runtime exception numbers.
+ */
+typedef enum tagRtExceptionType {
+    RT_EXCEPTION_NONE = 0,
+    RT_EXCEPTION_TS_DOWN = 1,
+    RT_EXCEPTION_TASK_TIMEOUT = 2,
+    RT_EXCEPTION_TASK_FAILURE = 3,
+    RT_EXCEPTION_DEV_RUNNING_DOWN = 4,
+    RT_EXCEPTION_STREAM_ID_FREE_FAILED = 5
+} rtExceptionType;
+
+/**
+ * @ingroup dvrt_base
+ * @brief Switch type.
+ */
+typedef enum tagRtCondition {
+    RT_EQUAL = 0,
+    RT_NOT_EQUAL,
+    RT_GREATER,
+    RT_GREATER_OR_EQUAL,
+    RT_LESS,
+    RT_LESS_OR_EQUAL
+} rtCondition_t;
+
+typedef enum schemModeType {
+    RT_SCHEM_MODE_NORMAL = 0,
+    RT_SCHEM_MODE_BATCH,
+    RT_SCHEM_MODE_SYNC,
+    RT_SCHEM_MODE_END
+} rtschemModeType_t;
+
+typedef enum tagSysParamOpt {
+    SYS_OPT_DETERMINISTIC = 0,   // value: 0:non-DETERMINISTIC, 1:DETERMINISTIC
+    SYS_OPT_ENABLE_DEBUG_KERNEL = 1,   // value: 0:disable, 1:enable
+    SYS_OPT_STRONG_CONSISTENCY = 2,   // value: 0:non-STRONG_CONSISTENCY, 1:STRONG_CONSISTENCY
+    SYS_OPT_RESERVED = 3,
+} rtSysParamOpt;
+
+typedef enum tagSysParamValue {
+    SYS_OPT_DISABLE = 0,   // sys param opt disable
+    SYS_OPT_ENABLE = 1,   // sys param opt enable
+    SYS_OPT_MAX = 2,
+} rtSysParamValue;
+
+typedef struct tagRtTaskCfgInfo {
+    uint8_t qos;
+    uint8_t partId;
+    uint8_t schemMode; // rtschemModeType_t 0:normal;1:batch;2:sync
+    bool d2dCrossFlag; // d2dCrossFlag true:D2D_CROSS flase:D2D_INNER
+    uint32_t blockDimOffset;
+    uint8_t dumpflag; // dumpflag 0:fault 2:RT_KERNEL_DUMPFLAG 4:RT_FUSION_KERNEL_DUMPFLAG
+    uint8_t neverTimeout; // 1: never timeout, 0: will timeout
+    uint8_t rev[2];
+    uint32_t localMemorySize;  // for simt ub_size
+} rtTaskCfgInfo_t;
+
+typedef struct tagRtLaunchTaskCfgInfo {
+    uint32_t blockDim;
+    uint32_t dynamicShareMemSize;
+    struct {
+        uint32_t groupDim;
+        uint32_t groupBlockDim;
+    } Group;
+    uint8_t qos;
+    uint8_t partId;
+    uint8_t schemMode; // rtschemModeType_t 0:normal;1:batch;2:sync
+    uint8_t dumpflag; // dumpflag 0:fault 2:RT_KERNEL_DUMPFLAG
+    uint32_t blockDimOffset;
+} LaunchTaskCfgInfo_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief Data Type of Extensible Switch Task.
+ */
+typedef enum tagRtSwitchDataType {
+    RT_SWITCH_INT32 = 0,
+    RT_SWITCH_INT64 = 1,
+} rtSwitchDataType_t;
+
+typedef enum tagRtStreamFlagType {
+    RT_HEAD_STREAM = 0,  // first stream
+    RT_INVALID_FLAG = 0x7FFFFFFF,
+} rtStreamFlagType_t;
+
+typedef enum tagRtLimitType {
+    RT_LIMIT_TYPE_LOW_POWER_TIMEOUT = 0,  // timeout for power down , ms
+    RT_LIMIT_TYPE_SIMT_WARP_STACK_SIZE = 1,
+    RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE = 2,
+    RT_LIMIT_TYPE_STACK_SIZE = 3,  // max stack size for each core, bytes
+    RT_LIMIT_TYPE_RESERVED,
+} rtLimitType_t;
+
+typedef enum tagRtStreamlistType {
+    RT_NOTSINKED_STREAM = 0,  // not sinked stream
+    RT_STREAM_TYPE_MAX
+} rtStreamlistType_t;
+
+typedef enum tagRtFloatOverflowMode {
+    RT_OVERFLOW_MODE_SATURATION = 0,
+    RT_OVERFLOW_MODE_INFNAN,
+    RT_OVERFLOW_MODE_UNDEF,
+} rtFloatOverflowMode_t;
+
+typedef enum tagRtExceptionExpandType {
+    RT_EXCEPTION_INVALID = 0,
+    RT_EXCEPTION_FFTS_PLUS,
+    RT_EXCEPTION_AICORE,
+    RT_EXCEPTION_UB,
+    RT_EXCEPTION_CCU,
+    RT_EXCEPTION_FUSION
+} rtExceptionExpandType_t;
+
+typedef enum tagRtCoreType {
+    RT_CORE_TYPE_AIC = 0,
+    RT_CORE_TYPE_AIV,
+} rtCoreType_t;
+
+typedef enum {
+    RT_DEV_RES_CUBE_CORE = 0,
+    RT_DEV_RES_VECTOR_CORE,
+    RT_DEV_RES_TYPE_MAX
+} rtDevResLimitType_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief Program handle.
+ */
+typedef void *rtBinHandle;
+
+typedef struct rtExceptionKernelInfo {
+    uint32_t binSize;
+    rtBinHandle bin; // binHandle
+    uint32_t kernelNameSize;
+    const char *kernelName;
+    const void *dfxAddr;
+    uint16_t dfxSize;
+    uint8_t reserved[2]; // 填补空间以保持四字节对齐
+    int32_t elfDataFlag;
+} rtExceptionKernelInfo_t;
+
+typedef struct rtArgsSizeInfo {
+    void *infoAddr; /* info : atomicIndex|input num input offset|size|size */
+    uint32_t atomicIndex;
+} rtArgsSizeInfo_t;
+
+typedef struct rtExceptionArgsInfo {
+    uint32_t argsize;
+    void *argAddr;
+    rtArgsSizeInfo_t sizeInfo;
+    rtExceptionKernelInfo_t exceptionKernelInfo; // 新增结构体，注意兼容性问题
+} rtExceptionArgsInfo_t;
+
+typedef struct rtFftsPlusExDetailInfo {
+    uint16_t contextId;
+    uint16_t threadId;
+    rtExceptionArgsInfo_t exceptionArgs;
+} rtFftsPlusExDetailInfo_t;
+
+#define UB_DB_SEND_MAX_NUM (4)
+#define FUSION_SUB_TASK_MAX_CCU_NUM (8U)
+#define RT_CCU_SQE_ARGS_LEN     (13U)
+#define MAX_CCU_EXCEPTION_INFO_SIZE (64U)
+
+typedef enum rtFusionType {
+    RT_FUSION_AICORE_CCU,
+    RT_FUSION_AICORE_AICPU
+} rtFusionExType_t;
+
+typedef struct rtUbInfo {
+    uint8_t functionId;
+    uint8_t dieId;
+    uint16_t jettyId;
+    uint16_t piValue;  // directWqe类型下该字段无效
+} rtUbInfo_t;
+
+typedef enum rtUbExType {
+    RT_UB_TYPE_DOORBELL,
+    RT_UB_TYPE_DIRECT_WQE
+} rtUbExType_t;
+
+typedef struct rtUbExDetailInfo {
+    rtUbExType_t ubType;
+    uint8_t ubNum;
+    uint8_t resv[3];
+    rtUbInfo_t info[UB_DB_SEND_MAX_NUM];
+} rtUbExDetailInfo_t;
+
+typedef struct rtCCUExDetailInfo {
+	uint8_t dieId;
+    uint8_t missionId;
+    uint16_t instrId;
+    uint64_t args[RT_CCU_SQE_ARGS_LEN];
+} rtCcuSqeDetailInfo_t;
+
+typedef struct rtMultiCCUExDetailInfo {
+    uint16_t ccuTaskNum;        /* used for sqeInfo */
+    uint16_t panicLogNum;       /* used for panicLog */
+    rtCcuSqeDetailInfo_t sqeInfo[FUSION_SUB_TASK_MAX_CCU_NUM];
+    uint8_t panicLog[FUSION_SUB_TASK_MAX_CCU_NUM][MAX_CCU_EXCEPTION_INFO_SIZE];
+} rtMultiCCUExDetailInfo_t;
+
+typedef struct rtAicoreExDetailInfo {
+    rtExceptionArgsInfo_t exceptionArgs;
+} rtAicoreExDetailInfo_t;
+
+typedef struct rtFusionAICoreCCUExDetailInfo {
+    rtExceptionArgsInfo_t exceptionArgs;
+    rtMultiCCUExDetailInfo_t ccuDetailMsg;
+} rtFusionAICoreCCUExDetailInfo_t;
+
+typedef struct rtFusionExDetailInfo {
+    rtFusionExType_t type;
+    union {
+        rtFusionAICoreCCUExDetailInfo_t aicoreCcuInfo;
+    } u;
+} rtFusionExDetailInfo_t;
+
+typedef struct rtExceptionExpandInfo {
+    rtExceptionExpandType_t type;
+    union {
+        rtFftsPlusExDetailInfo_t fftsPlusInfo;
+        rtAicoreExDetailInfo_t aicoreInfo; // 关注下影响
+        rtUbExDetailInfo_t ubInfo;
+        rtMultiCCUExDetailInfo_t ccuInfo;       /* use for ccu task */
+        rtFusionExDetailInfo_t fusionInfo;      /* use for fusion task */
+    } u;
+} rtExceptionExpandInfo_t;
+
+typedef struct rtExceptionInfo {
+    uint32_t taskid;
+    uint32_t streamid;
+    uint32_t tid;
+    uint32_t deviceid;
+    uint32_t retcode;
+    rtExceptionExpandInfo_t expandInfo;
+} rtExceptionInfo_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief stream handle.
+ */
+typedef void *rtStream_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief stream list
+ */
+#define RT_MAX_STREAM_NUM (2048U)
+typedef struct rtStreamList {
+    uint32_t stmNum;
+    rtStream_t stms[RT_MAX_STREAM_NUM];
+} rtStreamlist_t;
+
+typedef void *rtMemcpyDesc_t;
+
+typedef void (*rtErrorCallback)(rtExceptionType);
+
+typedef void (*rtTaskFailCallback)(rtExceptionInfo_t *exceptionInfo);
+
+typedef void (*rtDeviceStateCallback)(uint32_t devId, bool isOpen);
+
+typedef void (*rtStreamStateCallback)(rtStream_t stm, const bool isCreate);
+/**
+ * @ingroup profiling_base
+ * @brief dataType: rtProfCtrlType_t
+ * @brief data: data swtich or reporter function
+ * @brief dataLen: length of data
+ */
+typedef rtError_t (*rtProfCtrlHandle)(uint32_t dataType, void *data, uint32_t dataLen);
+
+/**
+ * @ingroup dvrt_base
+ * @brief Kernel handle.
+ */
+typedef void *rtFuncHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief launch args handle.
+ */
+typedef void *rtLaunchArgsHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief args handle.
+ */
+typedef void *rtArgsHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief para handle.
+ */
+typedef void *rtParaHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief runtime event handle.
+ */
+typedef void *rtEvent_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief label handle.
+ */
+typedef void *rtLabel_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief model handle.
+ */
+typedef void *rtModel_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief mem handle.
+ */
+typedef void *rtMemHandle;
+
+/**
+ * @ingroup dvrt_base
+ * @brief task group handle.
+ */
+typedef void *rtTaskGrp_t;
+
+/**
+ * @brief model list
+ */
+#define RT_MAX_MODEL_NUM (2048U)
+typedef struct rtModelList {
+    uint32_t mdlNum;
+    rtModel_t mdls[RT_MAX_MODEL_NUM];
+} rtModelList_t;
+
+#define RT_PROF_MAX_DEV_NUM 64
+
+#define PATH_LEN_MAX 1023
+#define PARAM_LEN_MAX 4095
+typedef struct rtCommandHandleParams {
+    uint32_t pathLen;
+    uint32_t storageLimit;  // MB
+    uint32_t profDataLen;
+    char_t path[PATH_LEN_MAX + 1];
+    char_t profData[PARAM_LEN_MAX + 1];
+} rtCommandHandleParams_t;
+
+/**
+ * @brief whitelisted ssid and pid 
+ */
+typedef struct {
+    uint32_t sdid; // whitelisted server device id
+    int32_t *pid;  // whitelisted pid array
+    size_t num;    // length of pid array
+} rtServerPid;
+
+/**
+ * @ingroup profiling_base
+ * @brief profiling command info
+ */
+typedef struct rtProfCommandHandle {
+    uint64_t profSwitch;
+    uint64_t profSwitchHi;
+    uint32_t devNums;
+    uint32_t devIdList[RT_PROF_MAX_DEV_NUM];
+    uint32_t modelId;
+    uint32_t type;
+    uint32_t cacheFlag;
+    rtCommandHandleParams_t commandHandleParams;
+} rtProfCommandHandle_t;
+
+/**
+ * @ingroup profiling_base
+ * @brief type of app register profiling switch or reporter callback
+ */
+typedef enum {
+    RT_PROF_CTRL_INVALID = 0,
+    RT_PROF_CTRL_SWITCH,
+    RT_PROF_CTRL_REPORTER,
+    RT_PROF_CTRL_BUTT
+} rtProfCtrlType_t;
+
+/**
+ * @ingroup profiling_base
+ * @brief set profling switch, called by profiling
+ * @param [in]  data  rtProfCommandHandle
+ * @param [out] len   length of data
+ * @return RT_ERROR_NONE for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ */
+RTS_API rtError_t rtProfSetProSwitch(void *data, uint32_t len);
+
+/**
+ * @ingroup profiling_base
+ * @brief register callback of upper app, called by ge or acl
+ * @param [in]  moduleId of APP
+ * @param [in]  callback function when switch or reporter change
+ * @return RT_ERROR_NONE for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ */
+RTS_API rtError_t rtProfRegisterCtrlCallback(uint32_t moduleId, rtProfCtrlHandle callback);
+
+/**
+ * @ingroup dvrt_base
+ * @brief notify handle.
+ */
+typedef void *rtNotify_t;
+typedef void *rtCntNotify_t;
+
+/**
+ * @ingroup dvrt_base
+ * @brief get current thread last stream id and task id
+ * @param [out] stm id and task id
+ * @param [in] null
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for input null ptr
+ */
+RTS_API rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId);
+
+#define RT_PROCESS_SIGN_LENGTH (49)
+
+typedef enum tagRtDevDrvProcessType {
+    RT_DEVDRV_PROCESS_CP1 = 0,   /* aicpu_scheduler */
+    RT_DEVDRV_PROCESS_CP2,       /* custom_process */
+    RT_DEVDRV_PROCESS_DEV_ONLY,  /* TDT */
+    RT_DEVDRV_PROCESS_QS,        /* queue_scheduler */
+    RT_DEVDRV_PROCESS_HCCP,      /* hccp server */
+    RT_DEVDRV_PROCESS_USER,      /* user proc, can bind many on host or device */
+    RT_DEVDRV_PROCESS_CPTYPE_MAX
+} rtDevDrvProcessType_t;
+
+typedef struct tagRtBindHostpidInfo {
+    int32_t hostPid;
+    uint32_t vfId;
+    uint32_t chipId;
+    int32_t mode;
+    rtDevDrvProcessType_t cpType;
+    uint32_t len;
+    char sign[RT_PROCESS_SIGN_LENGTH];
+} rtBindHostpidInfo;
+
+/**
+ * @ingroup dvrt_base
+ * @brief Bind Device custom-process to aicpu-process.
+ * @param [in] info The Information about the bound hostid.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtBindHostPid(rtBindHostpidInfo info);
+
+/**
+ * @ingroup dvrt_base
+ * @brief Unbind Device custom-process to aicpu-process.
+ * @param [in] info The Information about the bound hostid.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtUnbindHostPid(rtBindHostpidInfo info);
+
+/**
+ * @ingroup dvrt_base
+ * @brief Query the binding information of the devpid.
+ * @param [in] pid: dev pid
+ * @param [in] chipId chip id
+ * @param [in] vfId vf id
+ * @param [in] hostPid host pid
+ * @param [in] cpType type of custom-process
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtQueryProcessHostPid(int32_t pid, uint32_t *chipId, uint32_t *vfId, uint32_t *hostPid,
+    uint32_t *cpType);
+
+/**
+ * @ingroup dvrt_base
+ * @brief register callback for fail task
+ * @param [in] uniName unique register name, can't be null
+ * @param [in] callback fail task callback function
+ * @param [out] NA
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtRegTaskFailCallbackByModule(const char_t *moduleName, rtTaskFailCallback callback);
+#if defined(__cplusplus)
+}
+#endif
+
+#endif  // CCE_RUNTIME_RT_EXTERNAL_BASE_H

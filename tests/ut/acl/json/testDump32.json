@@ -1,0 +1,18 @@
+{
+	"dump":{
+		"dump_list":[
+			{
+				"model_name":"",
+				"opname_range":[{"begin":"conv1", "end":"conv2" }, {"begin":"res5c", "end":"res4d_branch2c"}]
+			},
+			{
+				"model_name":"ResNet-50",
+				"opname_range":[{"begin":"conv3", "end":"conv4" }]
+			}
+		],
+		"dump_mode":"output",
+        "dump_level": "op",
+        "dump_op_switch":"off",
+        "dump_path":"192.168.1.254:opt/data/"
+	}
+}

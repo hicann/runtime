@@ -1,0 +1,167 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef LOG_ERROR_CODE_H
+#define LOG_ERROR_CODE_H
+
+#include <stdint.h>
+
+typedef int32_t LogStatus;
+
+#define LOG_SUCCESS         0
+#define LOG_FAILURE         (-1)
+#define LOG_INVALID_PARAM   (-2)
+#define LOG_INVALID_PTR     (-3)
+#define LOG_INVALID_DATA    (-4)
+
+// process
+#define LOG_PROCESS_REPEAT              (-500)
+
+// msg queue
+#define LOG_INVALID_QUEUE_ID            (-1000)
+#define LOG_NOEXIST_QUEUE_ID            (-1001)
+#define LOG_FAILURE_CREATE_MSG_QUEUE    (-1002)
+#define LOG_FAILURE_DELETE_MSG_QUEUE    (-1003)
+#define LOG_FAILURE_SEND_MSG            (-1004)
+#define LOG_FAILURE_RECV_MSG            (-1005)
+
+#define LOG_USER_NOFOUND                (-1010)
+
+// drv session
+#define LOG_SESSION_RECV_TIMEOUT        (-1020)
+#define LOG_SESSION_CLOSE               (-1021)
+#define LOG_SESSION_RECV_NULL           (-1022)
+#define LOG_SESSION_RECV_END            (-1023)
+
+#define LOG_SERVICE_NOT_READY           (-1030)
+
+typedef enum {
+    SUCCESS = 0,
+    ARGV_NULL,
+    CFG_FILE_INVALID,
+    OPEN_FILE_FAILED,
+    MALLOC_FAILED,
+    CALLOC_FAILED,
+    LINE_NO_SYMBLE,
+    STR_COPY_FAILED,
+    LINE_NOT_FIND,
+    KEYVALUE_NOT_FIND,
+    OPEN_DIR_FAILED,
+    INITIAL_CHAR_POINTER_FAILED,
+    SCANDIR_DIR_FAILED = 12,
+    LOG_FILE_NUM_ERR,
+    GET_FILE_LEN_ERR,
+    MV_FILE_PNTR_ERR,
+    READ_FILE_ERR,
+    GET_CFG_VALUE_ERR,
+    GET_NO_VALUE_ERR,
+    UNSAFE_REQUEST,
+    NO_ENOUTH_SPACE,
+    CONF_VALUE_NULL,
+    INPUT_INVALID,
+    GET_DEVICE_ID_ERR,
+    DATA_OVER_FLOW,
+    FLAG_TRUE,
+    FLAG_FALSE,
+    MKDIR_FAILED,
+    NOTIFY_INIT_FAILED,
+    NOTIFY_WATCH_FAILED,
+    SET_LEVEL_ERR,
+    LEVEL_INFO_ILLEGAL,
+    GET_REALPATH_ERR,
+    FILEPATH_INVALID,
+    SIGACTION_FAILED,
+    PROCESS_NOT_EXIST,
+    INIT_FILE_LIST_ERR,
+    LEVEL_NOTIFY_FAILED,
+    GET_USERID_FAILED,
+    CHOWN_FAILED,
+    SEND_FAILED,
+    MOVE_FAILED,
+    MISSING_KEY_INFO,
+    NO_MATCH_TARGET_SYMBOL,
+    NO_MATCH_MODULE_NAME,
+    REPEAT_GROUP_NAME,
+    REPEAT_MODULE_GROUPING,
+    ILLEGAL_GROUP_PARA,
+    ILLEGAL_FILE_SIZE,
+    GROUP_RATIO_OVER_MAX,
+    // thread
+    CREAT_THREAD_ERR = 50,
+    MUTEX_INIT_ERR,
+    MUTEX_LOCK_ERR,
+    MUTEX_UNLOCK_ERR,
+    // slog.conf
+    OPEN_CONF_FAILED = 60,
+    CONF_FILEPATH_INVALID,
+    GET_CONF_FILEPATH_FAILED,
+    // socket
+    SOCKET_PORT_ERR = 100,
+    CREATE_SOCK_FAILED,
+    SET_SOCK_FAILED,
+    SOCK_SEND_FAILED,
+    SOCK_RECV_FAILED,
+    GETIFADDRS_ERR,
+    GET_NO_AFINET_CARD,
+    GET_CARD_IP_ERR,
+    GET_FILE_ERROR,
+    PEER_CLOSE_SOCKET,
+    SOCK_BIND_PORT_ERR,
+    SOCK_ACCEPT_FAILED,
+    SOCK_SEND_FILENAME_FAILED,
+    INVALID_LOG_TYPE,
+    // zip
+    GET_ZIP_LEN_ERR = 200,
+    ZIP_BUFFER_ERR,
+    UNZIP_BUFF_ERR,
+    UNCOMPRESS_ERR,
+    GET_FHEAD_ERR,
+    WRITE_FILE_ERR,
+    GET_BLOCK_ERR,
+    NOT_ZIPPED_FILE,
+    NOT_COMPLETE_BLOCK,
+    BUFFER_LEN_ZERO,
+    OVER_UNZIPPED_LENGTH,
+    HARDWARE_ZIP_INIT_ERR,
+    HARDWARE_ZIP_ERR,
+    // ssl
+    SSL_INIT_FAILED,
+    CREATE_THREAD_FAILED,
+    // hdc
+    HDC_INIT_ERR,
+    INIT_PARENTSOURCE_ERR,
+    RELEASE_PARENTSOURCE_ERR,
+    LOG_RECV_FAILED,
+    LOG_RECV_NULL,
+    HDC_CHANNEL_CLOSE,
+    HDC_FREE_ERR,
+    INIT_CHILDSOURCE_ERR,
+    RELEASE_CHILDSOURCE_ERR,
+    // QUEUE
+    QUEUE_IS_FULL,
+    QUEUE_IS_NULL,
+    QUEUE_LOCK_INIT_ERR,
+    QUEUE_INIT_ERR,
+    ADD_INOTIFY_ERR,
+    LOG_DIR_DEPTH_EXCEED,
+    LOG_FILE_NUM_EXCEED,
+    FAILED,
+    // log buffer err
+    BUFFER_CHECK,
+    BUFFER_WRITE_MEMCPY,
+    BUFFER_WRITE_LONG,
+    BUFFER_NULL,
+    BUFFER_READ_FINISH,
+    BUFFER_READ_MEMCPY,
+    BUFFER_READ_LONG,
+    LOG_RESERVED
+} LogRt;
+
+#endif

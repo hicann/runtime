@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2025 Huawei Technologies Co., Ltd.
+     This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+     CANN Open Software License Agreement Version 2.0 (the "License").
+     Please refer to the License for details. You may not use this file except in compliance with the License.
+     THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+     See LICENSE in the root of the software repository for the full text of the License.
+-->
+<block name="RuntimeInc" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550"
+       install_type="all" pkg_feature="runtime_binary">
+    <dir_info install_mod="550">
+        <path value="$(TARGET_ENV)/include/base"/>
+        <path value="$(TARGET_ENV)/include"/>
+        <path value="$(TARGET_ENV)/include/acl"/>
+        <path value="$(TARGET_ENV)/include/acl/error_codes"/>
+        <path value="$(TARGET_ENV)/include/ge"/>
+        <path value="$(TARGET_ENV)/include/dump"/>
+        <path value="$(TARGET_ENV)/include/driver"/>
+        <path value="$(TARGET_ENV)/include/ge"/>
+        <path value="$(TARGET_ENV)/pkg_inc"/>
+        <path value="$(TARGET_ENV)/include/toolchain"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu/common"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule"/>
+        <path value="$(TARGET_ENV)/pkg_inc/aicpu/tsd"/>
+        <path value="$(TARGET_ENV)/pkg_inc/base"/>
+        <path value="$(TARGET_ENV)/pkg_inc/dump"/>
+        <path value="$(TARGET_ENV)/pkg_inc/runtime"/>
+        <path value="$(TARGET_ENV)/pkg_inc/runtime/runtime"/>
+        <path value="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts"/>
+        <path value="$(TARGET_ENV)/pkg_inc/profiling"/>
+        <path value="$(TARGET_ENV)/pkg_inc/toolchain"/>
+        <path value="$(TARGET_ENV)/pkg_inc/trace"/>
+        <path value="$(TARGET_ENV)/pkg_inc/watchdog"/>
+        <path value="$(TARGET_ENV)/include/platform"/>
+        <path value="$(TARGET_ENV)/include/mmpa"/>
+        <path value="$(TARGET_ENV)/include/mmpa/sub_inc"/>
+        <path value="$(TARGET_ENV)/data"/>
+        <path value="$(TARGET_ENV)/data/platform_config"/>
+        <path value="$(TARGET_ENV)/data/ascendcl_config"/>
+        <path value="$(TARGET_ENV)/conf/error_manager"/>
+        <path value="$(TARGET_ENV)/conf"/>
+        <path value="$(TARGET_ENV)/include/experiment"/>
+        <path value="$(TARGET_ENV)/include/experiment/metadef"/>
+        <path value="$(TARGET_ENV)/include/experiment/metadef/common"/>
+        <path value="$(TARGET_ENV)/include/experiment/metadef/common/util"/>
+        <path value="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager"/>
+        <path value="compat"/>
+    </dir_info>
+    <file_info copy_type="source" src_path="" dst_path="include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
+        <file value="appmon_lib.h" install_mod="440" entity="true"/>
+        <file value="dsmi_common_interface_base.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_dc.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_define.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_error.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_external.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_adc.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal.h" install_mod="440" entity="true"/>
+        <file value="ascend_inpackage_hal.h" install_mod="440" entity="true"/>
+        <file value="debug_drv_user.h" install_mod="440" entity="true"/>
+        <file value="dms_device_node_type.h" install_mod="440" entity="true"/>
+        <file value="dsmi_common_interface.h" install_mod="440" entity="true"/>
+        <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
+        <file value="hwts_task_info.h" install_mod="440" entity="true"/>
+        <file value="nic_uio_interface.h" install_mod="440" entity="true"/>
+        <file value="peripheral_api.h" install_mod="440" entity="true"/>
+        <file value="ts_api.h" install_mod="440" entity="true"/>
+        <file value="safety_cfg_inpackage.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/external/acl" install_path="$(TARGET_ENV)/include/acl" install_type="all">
+        <file value="acl.h" install_mod="440" entity="true"/>
+        <file value="acl_rt.h" install_mod="440" entity="true"/>
+        <file value="acl_rt_allocator.h" install_mod="440" entity="true"/>
+        <file value="acl_base_rt.h" install_mod="440" entity="true"/>
+        <file value="acl_base.h" install_mod="440" entity="true"/>
+        <file value="acl_base_mdl.h" install_mod="440" entity="true"/>
+        <file value="acl_tdt.h" install_mod="440" entity="true"/>
+        <file value="acl_tdt_queue.h" install_mod="440" entity="true"/>
+        <file value="acl_op.h" install_mod="440" entity="true"/>
+        <file value="acl_mdl.h" install_mod="440" entity="true"/>
+        <file value="acl_dump.h" install_mod="440" entity="true"/>
+        <file value="acl_prof.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/external/ge" install_path="$(TARGET_ENV)/include/ge" install_type="all">
+        <file value="ge_prof.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include" install_path="$(TARGET_ENV)/include" install_type="all">
+        <file value="securec.h" install_mod="440" entity="true"/>
+        <file value="securectype.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/external/acl/error_codes" install_path="$(TARGET_ENV)/include/acl/error_codes" install_type="all">
+        <file value="ge_error_codes.h" install_mod="440" entity="true"/>
+        <file value="rt_error_codes.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/dump" install_path="$(TARGET_ENV)/pkg_inc/dump" install_type="all">
+        <file value="adump_device_pub.h" install_mod="440" entity="true"/>
+        <file value="adump_pub.h" install_mod="440" entity="true"/>
+        <file value="adump_api.h" install_mod="440" entity="true"/>
+        <file value="adx_datadump_server.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime" install_type="all">
+        <file value="rt_external.h" install_mod="440" entity="true"/>
+        <file value="rt_external_stars.h" install_mod="440" entity="true"/>
+        <file value="rt_external_base.h" install_mod="440" entity="true"/>
+        <file value="rt_external_device.h" install_mod="440" entity="true"/>
+        <file value="rt_external_event.h" install_mod="440" entity="true"/>
+        <file value="rt_external_ffts_define.h" install_mod="440" entity="true"/>
+        <file value="rt_external_ffts.h" install_mod="440" entity="true"/>
+        <file value="rt_external_kernel.h" install_mod="440" entity="true"/>
+        <file value="rt_external_mem.h" install_mod="440" entity="true"/>
+        <file value="rt_external_model.h" install_mod="440" entity="true"/>
+        <file value="rt_external_preload.h" install_mod="440" entity="true"/>
+        <file value="rt_external_stars_define.h" install_mod="440" entity="true"/>
+        <file value="rt_external_stream.h" install_mod="440" entity="true"/>
+    </file_info>
+     <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime" install_type="all">
+        <file value="context.h" install_mod="440" entity="true"/>
+        <file value="dev.h" install_mod="440" entity="true"/>
+        <file value="event.h" install_mod="440" entity="true"/>
+        <file value="elf_base.h" install_mod="440" entity="true"/>
+        <file value="kernel.h" install_mod="440" entity="true"/>
+        <file value="mem_base.h" install_mod="440" entity="true"/>
+        <file value="mem.h" install_mod="440" entity="true"/>
+        <file value="rt_dfx.h" install_mod="440" entity="true"/>
+        <file value="rt_ffts_plus_define.h" install_mod="440" entity="true"/>
+        <file value="rt_ffts_plus.h" install_mod="440" entity="true"/>
+        <file value="rt_ffts.h" install_mod="440" entity="true"/>
+        <file value="rt_mem_queue.h" install_mod="440" entity="true"/>
+        <file value="rt_model.h" install_mod="440" entity="true"/>
+        <file value="rt_preload_task.h" install_mod="440" entity="true"/>
+        <file value="rt_ras.h" install_mod="440" entity="true"/>
+        <file value="rt_stars_define.h" install_mod="440" entity="true"/>
+        <file value="rt_stars.h" install_mod="440" entity="true"/>
+        <file value="rt.h" install_mod="440" entity="true"/>
+        <file value="stars_interface.h" install_mod="440" entity="true"/>
+        <file value="stream.h" install_mod="440" entity="true"/>
+        <file value="base.h" install_mod="440" entity="true"/>
+        <file value="config.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime/rts" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts" install_type="all">
+        <file value="rts_context.h" install_mod="440" entity="true"/>
+        <file value="rts_device.h" install_mod="440" entity="true"/>
+        <file value="rts_dfx.h" install_mod="440" entity="true"/>
+        <file value="rts_dqs.h" install_mod="440" entity="true"/>
+        <file value="rts_event.h" install_mod="440" entity="true"/>
+        <file value="rts_ffts.h" install_mod="440" entity="true"/>
+        <file value="rts_kernel.h" install_mod="440" entity="true"/>
+        <file value="rts_mem.h" install_mod="440" entity="true"/>
+        <file value="rts_model.h" install_mod="440" entity="true"/>
+        <file value="rts_stars.h" install_mod="440" entity="true"/>
+        <file value="rts_stream.h" install_mod="440" entity="true"/>
+        <file value="rts.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
+        <file value="aprof_pub.h" install_mod="440" entity="true"/>
+        <file value="devprof_pub.h" install_mod="440" entity="true"/>
+        <file value="prof_api.h" install_mod="440" entity="true"/>
+        <file value="prof_common.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/toolchain" install_path="$(TARGET_ENV)/pkg_inc/toolchain" install_type="all">
+        <file value="prof_api.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/trace" install_path="$(TARGET_ENV)/pkg_inc/trace" install_type="all">
+        <file value="atrace_pub.h" install_mod="440" entity="true"/>
+        <file value="atrace_types.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/watchdog" install_path="$(TARGET_ENV)/pkg_inc/watchdog" install_type="all">
+        <file value="awatchdog_types.h" install_mod="440" entity="true"/>
+        <file value="awatchdog.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/platform" install_path="$(TARGET_ENV)/include/platform" install_type="all">
+        <file value="platform_info.h" install_mod="440" entity="true"/>
+        <file value="platform_info_def.h" install_mod="440" entity="true"/>
+        <file value="platform_infos_def.h" install_mod="440" entity="true"/>
+        <file value="platform_infos_lite_def.h" install_mod="440" entity="true"/>
+        <file value="soc_spec.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/mmpa" install_path="$(TARGET_ENV)/include/mmpa" install_type="all">
+        <file value="mmpa_api.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/mmpa/sub_inc" install_path="$(TARGET_ENV)/include/mmpa/sub_inc" install_type="all">
+        <file value="mmpa_env_define.h" install_mod="440" entity="true"/>
+        <file value="mmpa_typedef_linux.h" install_mod="440" entity="true"/>
+        <file value="mmpa_linux.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/dfx/base" install_path="$(TARGET_ENV)/include/base" install_type="all">
+        <file value="err_msg.h" install_mod="440" entity="true"/>
+        <file value="alog_pub.h" install_mod="440" entity="true"/>
+        <file value="log_types.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/toolchain" install_path="$(TARGET_ENV)/include/toolchain" install_type="all">
+        <file value="slog.h" install_mod="440" entity="true"/>
+        <file value="dlog_pub.h" install_mod="440" entity="true"/>
+        <file value="log_types.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/external/acl/error_codes" install_path="$(TARGET_ENV)/include/ge" install_type="all">
+        <file value="ge_error_codes.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/base" install_path="$(TARGET_ENV)/pkg_inc/base" install_type="all">
+        <file value="err_mgr.h" install_mod="440" entity="true"/>
+        <file value="dlog_pub.h" install_mod="440" entity="true"/>
+        <file value="log_types.h" install_mod="440" entity="true"/>
+        <file value="plog.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
+        <file value="error_manager.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
+        <file value="aicpu_engine_struct.h" install_mod="440" entity="true"/>
+        <file value="aicpu_task_struct.h" install_mod="440" entity="true"/>
+        <file value="fwk_adpt_struct.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu/common" install_type="all">
+        <file value="type_def.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/aicpu_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_type="all">
+        <file value="aicpu_async_event.h" install_mod="440" entity="true"/>
+        <file value="aicpu_context.h" install_mod="440" entity="true"/>
+        <file value="aicpu_mc2_maintenance_thread.h" install_mod="440" entity="true"/>
+        <file value="aicpusd_info.h" install_mod="440" entity="true"/>
+        <file value="aicpusd_interface.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/cpu_kernels" install_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_type="all">
+        <file value="cpu_attr_value.h" install_mod="440" entity="true"/>
+        <file value="cpu_context.h" install_mod="440" entity="true"/>
+        <file value="cpu_kernel.h" install_mod="440" entity="true"/>
+        <file value="cpu_kernel_register.h" install_mod="440" entity="true"/>
+        <file value="cpu_kernel_utils.h" install_mod="440" entity="true"/>
+        <file value="cpu_node_def.h" install_mod="440" entity="true"/>
+        <file value="cpu_tensor.h" install_mod="440" entity="true"/>
+        <file value="cpu_tensor_shape.h" install_mod="440" entity="true"/>
+        <file value="cpu_types.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/queue_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_type="all">
+        <file value="dgw_client.h" install_mod="440" entity="true"/>
+        <file value="qs_client.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/tsd" install_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_type="all">
+        <file value="status.h" install_mod="440" entity="true"/>
+        <file value="tsd_client.h" install_mod="440" entity="true"/>
+        <file value="tsd.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="data/ascendcl_config" install_path="$(TARGET_ENV)/data/ascendcl_config" install_type="all">
+        <file value="swFeatureList.json" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="conf/error_manager" install_path="$(TARGET_ENV)/conf/error_manager" install_type="all">
+        <file value="error_code.json" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="" install_path="compat" install_type="all">
+        <file value="cann-tsch-compat.tar.gz" install_mod="440" entity="true" optional="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+        <file value="Ascend031.ini" install_mod="440" entity="true"/>
+        <file value="Ascend035.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310B1.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310B2.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310B3.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310B4.ini" install_mod="440" entity="true"/>
+        <file value="Ascend610.ini" install_mod="440" entity="true"/>
+        <file value="BS9SX2AB.ini" install_mod="440" entity="true"/>
+        <file value="BS9SX1AA.ini" install_mod="440" entity="true"/>
+        <file value="BS9SX1AB.ini" install_mod="440" entity="true"/>
+        <file value="BS9SX1AC.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310P3.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310P1.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310P5.ini" install_mod="440" entity="true"/>
+        <file value="Ascend310P7.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910A.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910PremiumA.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910ProA.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910ProB.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B1.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B2.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B3.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B4.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B4-1.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_5591.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9362.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9372.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9381.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9382.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9391.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9392.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910B2C.ini" install_mod="440" entity="true"/>
+        <file value="MC62CM12AA.ini" install_mod="440" entity="true"/>
+        <file value="KirinX90.ini" install_mod="440" entity="true"/>
+        <file value="Kirin9030.ini" install_mod="440" entity="true"/>
+    </file_info>
+     <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
+        <file value="ascend_package_load.ini" install_mod="444" entity="true"/>
+    </file_info>
+</block>

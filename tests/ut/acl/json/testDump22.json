@@ -1,0 +1,9 @@
+{
+    "dump":{
+        "dump_list":[],
+        "dump_path":"/home/",
+        "dump_mode":"all",
+        "dump_op_switch":"on",
+        "dump_step":"0|5-\n10|20"
+    }
+}

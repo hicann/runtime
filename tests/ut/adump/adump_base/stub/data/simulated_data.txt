@@ -1,0 +1,149 @@
+
+hello:	file format elf64-x86-64
+
+Disassembly of section .init:
+
+0000000000001000 <_init>:
+; _init():
+    1000: f3 0f 1e fa                  	endbr64
+    1004: 48 83 ec 08                  	subq	$8, %rsp
+    1008: 48 8b 05 d9 2f 00 00         	movq	12249(%rip), %rax       # 0x3fe8 <_GLOBAL_OFFSET_TABLE_+0x30>
+    100f: 48 85 c0                     	testq	%rax, %rax
+    1012: 74 02                        	je	0x1016 <_init+0x16>
+    1014: ff d0                        	callq	*%rax
+    1016: 48 83 c4 08                  	addq	$8, %rsp
+    101a: c3                           	retq
+
+Disassembly of section .plt:
+
+0000000000001020 <.plt>:
+    1020: ff 35 9a 2f 00 00            	pushq	12186(%rip)             # 0x3fc0 <_GLOBAL_OFFSET_TABLE_+0x8>
+    1026: f2 ff 25 9b 2f 00 00         	repne		jmpq	*12187(%rip)    # 0x3fc8 <_GLOBAL_OFFSET_TABLE_+0x10>
+    102d: 0f 1f 00                     	nopl	(%rax)
+    1030: f3 0f 1e fa                  	endbr64
+    1034: 68 00 00 00 00               	pushq	$0
+    1039: f2 e9 e1 ff ff ff            	repne		jmp	0x1020 <.plt>
+    103f: 90                           	nop
+
+Disassembly of section .plt.got:
+
+0000000000001040 <.plt.got>:
+    1040: f3 0f 1e fa                  	endbr64
+    1044: f2 ff 25 ad 2f 00 00         	repne		jmpq	*12205(%rip)    # 0x3ff8 <_GLOBAL_OFFSET_TABLE_+0x40>
+    104b: 0f 1f 44 00 00               	nopl	(%rax,%rax)
+
+Disassembly of section .plt.sec:
+
+0000000000001050 <.plt.sec>:
+    1050: f3 0f 1e fa                  	endbr64
+    1054: f2 ff 25 75 2f 00 00         	repne		jmpq	*12149(%rip)    # 0x3fd0 <_GLOBAL_OFFSET_TABLE_+0x18>
+    105b: 0f 1f 44 00 00               	nopl	(%rax,%rax)
+
+Disassembly of section .text:
+
+0000000000001060 <_start>:
+; _start():
+    1060: f3 0f 1e fa                  	endbr64
+    1064: 31 ed                        	xorl	%ebp, %ebp
+    1066: 49 89 d1                     	movq	%rdx, %r9
+    1069: 5e                           	popq	%rsi
+    106a: 48 89 e2                     	movq	%rsp, %rdx
+    106d: 48 83 e4 f0                  	andq	$-16, %rsp
+    1071: 50                           	pushq	%rax
+    1072: 54                           	pushq	%rsp
+    1073: 45 31 c0                     	xorl	%r8d, %r8d
+    1076: 31 c9                        	xorl	%ecx, %ecx
+    1078: 48 8d 3d ca 00 00 00         	leaq	202(%rip), %rdi         # 0x1149 <main>
+    107f: ff 15 53 2f 00 00            	callq	*12115(%rip)            # 0x3fd8 <_GLOBAL_OFFSET_TABLE_+0x20>
+    1085: f4                           	hlt
+    1086: 66 2e 0f 1f 84 00 00 00 00 00	nopw	%cs:(%rax,%rax)
+
+0000000000001090 <deregister_tm_clones>:
+; deregister_tm_clones():
+    1090: 48 8d 3d 79 2f 00 00         	leaq	12153(%rip), %rdi       # 0x4010 <completed.0>
+    1097: 48 8d 05 72 2f 00 00         	leaq	12146(%rip), %rax       # 0x4010 <completed.0>
+    109e: 48 39 f8                     	cmpq	%rdi, %rax
+    10a1: 74 15                        	je	0x10b8 <deregister_tm_clones+0x28>
+    10a3: 48 8b 05 36 2f 00 00         	movq	12086(%rip), %rax       # 0x3fe0 <_GLOBAL_OFFSET_TABLE_+0x28>
+    10aa: 48 85 c0                     	testq	%rax, %rax
+    10ad: 74 09                        	je	0x10b8 <deregister_tm_clones+0x28>
+    10af: ff e0                        	jmpq	*%rax
+    10b1: 0f 1f 80 00 00 00 00         	nopl	(%rax)
+    10b8: c3                           	retq
+    10b9: 0f 1f 80 00 00 00 00         	nopl	(%rax)
+
+00000000000010c0 <register_tm_clones>:
+; register_tm_clones():
+    10c0: 48 8d 3d 49 2f 00 00         	leaq	12105(%rip), %rdi       # 0x4010 <completed.0>
+    10c7: 48 8d 35 42 2f 00 00         	leaq	12098(%rip), %rsi       # 0x4010 <completed.0>
+    10ce: 48 29 fe                     	subq	%rdi, %rsi
+    10d1: 48 89 f0                     	movq	%rsi, %rax
+    10d4: 48 c1 ee 3f                  	shrq	$63, %rsi
+    10d8: 48 c1 f8 03                  	sarq	$3, %rax
+    10dc: 48 01 c6                     	addq	%rax, %rsi
+    10df: 48 d1 fe                     	sarq	%rsi
+    10e2: 74 14                        	je	0x10f8 <register_tm_clones+0x38>
+    10e4: 48 8b 05 05 2f 00 00         	movq	12037(%rip), %rax       # 0x3ff0 <_GLOBAL_OFFSET_TABLE_+0x38>
+    10eb: 48 85 c0                     	testq	%rax, %rax
+    10ee: 74 08                        	je	0x10f8 <register_tm_clones+0x38>
+    10f0: ff e0                        	jmpq	*%rax
+    10f2: 66 0f 1f 44 00 00            	nopw	(%rax,%rax)
+    10f8: c3                           	retq
+    10f9: 0f 1f 80 00 00 00 00         	nopl	(%rax)
+
+0000000000001100 <__do_global_dtors_aux>:
+; __do_global_dtors_aux():
+    1100: f3 0f 1e fa                  	endbr64
+    1104: 80 3d 05 2f 00 00 00         	cmpb	$0, 12037(%rip)         # 0x4010 <completed.0>
+    110b: 75 2b                        	jne	0x1138 <__do_global_dtors_aux+0x38>
+    110d: 55                           	pushq	%rbp
+    110e: 48 83 3d e2 2e 00 00 00      	cmpq	$0, 12002(%rip)         # 0x3ff8 <_GLOBAL_OFFSET_TABLE_+0x40>
+    1116: 48 89 e5                     	movq	%rsp, %rbp
+    1119: 74 0c                        	je	0x1127 <__do_global_dtors_aux+0x27>
+    111b: 48 8b 3d e6 2e 00 00         	movq	12006(%rip), %rdi       # 0x4008 <__dso_handle>
+    1122: e8 19 ff ff ff               	callq	0x1040 <.plt.got>
+    1127: e8 64 ff ff ff               	callq	0x1090 <deregister_tm_clones>
+    112c: c6 05 dd 2e 00 00 01         	movb	$1, 11997(%rip)         # 0x4010 <completed.0>
+    1133: 5d                           	popq	%rbp
+    1134: c3                           	retq
+    1135: 0f 1f 00                     	nopl	(%rax)
+    1138: c3                           	retq
+    1139: 0f 1f 80 00 00 00 00         	nopl	(%rax)
+
+0000000000001140 <frame_dummy>:
+; frame_dummy():
+    1140: f3 0f 1e fa                  	endbr64
+    1144: e9 77 ff ff ff               	jmp	0x10c0 <register_tm_clones>
+
+0000000000001149 <main>:
+; main():
+; /mnt/wk/demo/hello.c:4
+; {
+    1149: f3 0f 1e fa                  	endbr64
+    114d: 55                           	pushq	%rbp
+    114e: 48 89 e5                     	movq	%rsp, %rbp
+    1151: 48 83 ec 10                  	subq	$16, %rsp
+    1155: 89 7d fc                     	movl	%edi, -4(%rbp)
+    1158: 48 89 75 f0                  	movq	%rsi, -16(%rbp)
+; /mnt/wk/demo/hello.c:5
+;     printf("hello world!");
+    115c: 48 8d 05 a1 0e 00 00         	leaq	3745(%rip), %rax        # 0x2004 <_IO_stdin_used+0x4>
+    1163: 48 89 c7                     	movq	%rax, %rdi
+    1166: b8 00 00 00 00               	movl	$0, %eax
+    116b: e8 e0 fe ff ff               	callq	0x1050 <.plt.sec>
+; /mnt/wk/demo/hello.c:6
+;     return 0;
+    1170: b8 00 00 00 00               	movl	$0, %eax
+; /mnt/wk/demo/hello.c:7
+; }
+    1175: c9                           	leave
+    1176: c3                           	retq
+
+Disassembly of section .fini:
+
+0000000000001178 <_fini>:
+; _fini():
+    1178: f3 0f 1e fa                  	endbr64
+    117c: 48 83 ec 08                  	subq	$8, %rsp
+    1180: 48 83 c4 08                  	addq	$8, %rsp
+    1184: c3                           	retq

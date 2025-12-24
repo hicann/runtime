@@ -1,0 +1,69 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+syntax = "proto2";
+
+option java_package = "org.eclipse.che.ide.ext.nvconfig.server";
+option java_outer_classname = "NvconfigProtocol";
+
+message C2HNvDeviceInfo {
+}
+
+message H2CNvDeviceInfo {
+    optional int32 ret = 1;
+    optional uint32 board_id = 2;
+}
+
+message C2HNvLoad {
+    optional int32 nv_id = 1;
+}
+
+message H2CNvLoad {
+    optional int32 ret = 1;
+    optional int32 nv_id = 2;
+    optional string name = 3;
+    optional int32 valid_size = 4;
+    optional bytes data = 5;
+}
+
+message C2HNvSave {
+    optional int32 nv_id = 1;
+    optional string name = 2;
+    optional int32 valid_size = 3;
+    optional bytes data = 4;
+}
+
+message H2CNvSave {
+    optional int32 ret = 1;
+    optional int32 nv_id = 2;
+}
+
+message C2HNvMessage{
+    enum ProtocolType {
+        C2H_NV_DEVICE_INFO = 0;
+        C2H_NV_LOAD = 1;
+        C2H_NV_SAVE = 2;
+    }
+    optional ProtocolType type = 1;
+    optional C2HNvDeviceInfo c2h_nv_device_info = 2;
+    optional C2HNvLoad c2h_nv_load = 3;
+    optional C2HNvSave c2h_nv_save = 4;
+}
+
+message H2CNvMessage {
+    enum ProtocolType {
+        H2C_NV_DEVICE_INFO = 0;
+        H2C_NV_LOAD = 1;
+        H2C_NV_SAVE = 2;
+    }
+    optional ProtocolType type = 1;
+    optional H2CNvDeviceInfo h2c_nv_device_info = 2;
+    optional H2CNvLoad h2c_nv_load = 3;
+    optional H2CNvSave h2c_nv_save = 4;
+}

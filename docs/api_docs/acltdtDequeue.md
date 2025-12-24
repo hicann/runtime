@@ -1,0 +1,77 @@
+# acltdtDequeue<a name="ZH-CN_TOPIC_0000001312721945"></a>
+
+## AI处理器支持情况<a name="section8178181118225"></a>
+
+<a name="table38301303189"></a>
+<table><thead align="left"><tr id="row20831180131817"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="p1883113061818"><a name="p1883113061818"></a><a name="p1883113061818"></a><span id="ph20833205312295"><a name="ph20833205312295"></a><a name="ph20833205312295"></a>AI处理器类型</span></p>
+</th>
+<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="p783113012187"><a name="p783113012187"></a><a name="p783113012187"></a>是否支持</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="row220181016240"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="p48327011813"><a name="p48327011813"></a><a name="p48327011813"></a><span id="ph583230201815"><a name="ph583230201815"></a><a name="ph583230201815"></a><term id="zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000001312391781_term1253731311225"></a>Ascend 910C</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="p5621529174820"><a name="p5621529174820"></a><a name="p5621529174820"></a>☓</p>
+</td>
+</tr>
+<tr id="row173226882415"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="p14832120181815"><a name="p14832120181815"></a><a name="p14832120181815"></a><span id="ph1483216010188"><a name="ph1483216010188"></a><a name="ph1483216010188"></a><term id="zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000001312391781_term11962195213215"></a>Ascend 910B</term></span></p>
+</td>
+<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="p1762213297481"><a name="p1762213297481"></a><a name="p1762213297481"></a>☓</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 功能说明<a name="section93499471063"></a>
+
+从队列中获取数据。
+
+## 函数原型<a name="section14885205814615"></a>
+
+```
+aclError acltdtDequeue(uint32_t qid, acltdtBuf *buf, int32_t timeout)
+```
+
+## 参数说明<a name="section31916522610"></a>
+
+<a name="t7578495d685c4a90bce9c97d867977d6"></a>
+<table><thead align="left"><tr id="r2d1a1bf4a62d4919b78beceb6f54a2b5"><th class="cellrowborder" valign="top" width="18%" id="mcps1.1.4.1.1"><p id="a0ef8a1f61ce94163847db2d50aadf417"><a name="a0ef8a1f61ce94163847db2d50aadf417"></a><a name="a0ef8a1f61ce94163847db2d50aadf417"></a>参数名</p>
+</th>
+<th class="cellrowborder" valign="top" width="14.000000000000002%" id="mcps1.1.4.1.2"><p id="p1769255516412"><a name="p1769255516412"></a><a name="p1769255516412"></a>输入/输出</p>
+</th>
+<th class="cellrowborder" valign="top" width="68%" id="mcps1.1.4.1.3"><p id="aa32c26db853f48c09906042f64b95091"><a name="aa32c26db853f48c09906042f64b95091"></a><a name="aa32c26db853f48c09906042f64b95091"></a>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="rac0b28977c28486084cd6002e34558ca"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p472843475119"><a name="p472843475119"></a><a name="p472843475119"></a>qid</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p13727193415110"><a name="p13727193415110"></a><a name="p13727193415110"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p1172563414511"><a name="p1172563414511"></a><a name="p1172563414511"></a>需要从哪个队列中获取数据。</p>
+<p id="p28561326124416"><a name="p28561326124416"></a><a name="p28561326124416"></a>队列需提前调用<a href="acltdtCreateQueue.md">acltdtCreateQueue</a>接口创建。</p>
+</td>
+</tr>
+<tr id="row15871162271310"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p198715227135"><a name="p198715227135"></a><a name="p198715227135"></a>buf</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p15871172231316"><a name="p15871172231316"></a><a name="p15871172231316"></a>输出</p>
+</td>
+<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p1587182218131"><a name="p1587182218131"></a><a name="p1587182218131"></a>共享Buffer指针。</p>
+</td>
+</tr>
+<tr id="row133601128151319"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p19360028171318"><a name="p19360028171318"></a><a name="p19360028171318"></a>timeout</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p336072811319"><a name="p336072811319"></a><a name="p336072811319"></a>输入</p>
+</td>
+<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p1063785917577"><a name="p1063785917577"></a><a name="p1063785917577"></a>等待超时时间。当队列空时，如果从队列中获取数据，系统内部会根据设置的等待超时时间来决定如何处理。</p>
+<div class="p" id="p1910617462580"><a name="p1910617462580"></a><a name="p1910617462580"></a>该参数取值范围如下：<a name="ul8106146155813"></a><a name="ul8106146155813"></a><ul id="ul8106146155813"><li>-1：阻塞方式，一直等待直到队列有数据后返回。</li><li>0：非阻塞方式，当队列空时，直接返回队列空这个错误，这时由用户自行设定重试间隔。</li><li>&gt;0：配置具体的超时时间，单位为毫秒。队列空时，等待达到超时时间后返回报错。<p id="p7926144225017"><a name="p7926144225017"></a><a name="p7926144225017"></a>超时时间受操作系统影响，一般偏差在操作系统的一个时间片内，例如，操作系统的一个时间片为4ms，用户设置的超时时间为1ms，则实际的超时时间在1ms到5ms范围内。在CPU负载高场景下，超时时间仍可能存在波动。</p>
+</li></ul>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 返回值说明<a name="section17970231879"></a>
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
+

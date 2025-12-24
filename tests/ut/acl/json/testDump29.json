@@ -1,0 +1,28 @@
+{
+	"dump":{
+		"dump_list":[
+			{
+				"model_name":"ResNet-50",
+                "optype_blacklist":[
+                    {
+                        "name":"Conv2D",
+                        "pos": ["input0"]
+                    },
+                    {
+                        "name":"Conv2D",
+                        "pos": ["output0"]
+                    }
+                ],
+                "opname_blacklist":[],
+				"layer":[
+					"res5c",
+					"res4d_branch2c"
+				]
+			}
+		],
+		"dump_mode":"input",
+        "dump_level": "op",
+        "dump_op_switch":"off",
+        "dump_path":"192.168.1.254:opt/data/"
+	}
+}

@@ -1,0 +1,168 @@
+{
+    "AddBlockCust": {
+        "opInfo": {
+            "blockDimByIndex": "-1",
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "flagSupportBlockDim": "True",
+            "functionName": "RunCpuKernelWithBlock",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "CUSTAICPUKernel",
+            "subTypeOfInferShape": "1",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "ReshapeCust": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "AICPUKernel",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "TFKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "CUSTAICPUKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_01": {
+        "opInfo1": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "CUSTAICPUKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_02": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "KFCKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_03": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "CUSTKFCKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "False",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_04": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "NO_EXIST_KERNEL",
+            "subTypeOfInferShape": "3",
+            "userDefined": "False",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_05": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "TFKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_06": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "opKernelLib": "TFKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_07": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "opKernelLib": "TFKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    },
+    "UniqueCust_08": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "kernelSo": "libcust_aicpu_kernels.so",
+            "functionName": "RunCpuKernel",
+            "subTypeOfInferShape": "3",
+            "userDefined": "True",
+            "workspaceSize": "100"
+        }
+    }
+}

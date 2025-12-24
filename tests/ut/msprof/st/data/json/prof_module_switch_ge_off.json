@@ -1,0 +1,10 @@
+{
+    "cann": {
+        "modules": [
+            {
+                "module": "FRAMEWORK",
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

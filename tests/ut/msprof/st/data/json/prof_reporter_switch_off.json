@@ -1,0 +1,33 @@
+{
+    "profiler": "on",
+    "cann": {
+        "modules": [
+            {
+                "module": "ACL",
+                "prof_switch": "on"
+            },
+            {
+                "module": "FRAMEWORK",
+                "prof_switch": "on"
+            },
+            {
+                "module": "RUNTIME",
+                "prof_switch": "on"
+            }
+        ],
+        "reporters": [
+            {
+                "reporter": "API_EVENT",
+                "reporter_switch": "off"
+            },
+            {
+                "reporter": "COMPACT",
+                "reporter_switch": "off"
+            },
+            {
+                "reporter": "ADDITIONAL",
+                "reporter_switch": "off"
+            }
+        ]
+    }
+}

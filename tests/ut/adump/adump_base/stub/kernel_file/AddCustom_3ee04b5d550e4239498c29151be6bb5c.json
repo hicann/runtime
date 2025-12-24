@@ -1,0 +1,129 @@
+{
+    "binFileName": "AddCustom_3ee04b5d550e4239498c29151be6bb5c",
+    "binFileSuffix": ".o",
+    "blockDim": -1,
+    "coreType": "VectorCore",
+    "core_type": "AIV",
+    "intercoreSync": 0,
+    "kernelName": "AddCustom_3ee04b5d550e4239498c29151be6bb5c",
+    "magic": "RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping": [],
+    "opParaSize": 80,
+    "parameters": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "sha256": "b18b52a1cb8a962e7ddcc3b533031779ac9a4947e416090450f3752bab18bab7",
+    "workspace": {
+        "num": 1,
+        "size": [
+            -1
+        ],
+        "type": [
+            0
+        ]
+    },
+    "kernelList": [
+        {
+            "kernelName": "AddCustom_3ee04b5d550e4239498c29151be6bb5c_0"
+        }
+    ],
+    "optionalInputMode": "gen_placeholder",
+    "compileInfo": {},
+    "dynamicParamMode": "folded_with_desc",
+    "supportInfo": {
+        "implMode": "high_performance",
+        "int64Mode": false,
+        "simplifiedKeyMode": 0,
+        "simplifiedKey": [
+            "AddCustom/d=0,p=1/0,2/0,2/0,2/0,2",
+            "AddCustom/d=0,p=0/0,2/0,2/0,2/0,2",
+            "AddCustom/d=1,p=1/0,2/0,2/0,2/0,2",
+            "AddCustom/d=1,p=0/0,2/0,2/0,2/0,2"
+        ],
+        "dynamicParamMode": "folded_with_desc",
+        "staticKey": "e27c86cb2f7af966d96d74597854e29eb57ffa64c112f2bdeff4c8622a8da507,36ab3ee39d063b051f22215847055db0b3ed02b0be40c2fd1dd142868d01cc25",
+        "inputs": [
+            {
+                "name": "x",
+                "index": 0,
+                "dtype": "float32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                    -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            [
+                {
+                    "name": "x1",
+                    "index": 1,
+                    "dtype": "float32",
+                    "format": "ND",
+                    "paramType": "dynamic",
+                    "shape": [
+                        -2
+                    ],
+                    "format_match_mode": "FormatAgnostic"
+                }
+            ],
+            {
+                "name": "x2",
+                "index": 2,
+                "dtype": "float32",
+                "format": "ND",
+                "paramType": "optional",
+                "shape": [
+                    -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "x3",
+                "index": 3,
+                "dtype": "float32",
+                "format": "ND",
+                "paramType": "optional",
+                "shape": [
+                    -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "y",
+                "index": 4,
+                "dtype": "float32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                    -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "out",
+                "index": 0,
+                "dtype": "float32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                    -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+        ],
+        "opMode": "dynamic",
+        "optionalInputMode": "gen_placeholder",
+        "deterministic": "ignore",
+        "op_debug_config": "oom"
+    },
+    "filePath": "ascend910b/bin/add_custom/AddCustom_3ee04b5d550e4239498c29151be6bb5c.json"
+}

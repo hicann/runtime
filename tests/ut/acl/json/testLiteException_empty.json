@@ -1,0 +1,6 @@
+{
+	"dump":{
+        	"dump_path":"192.168.1.254:opt/data/",
+		"dump_scene":""
+	}
+}

@@ -1,0 +1,10 @@
+{
+    "device": {
+        "channels": [
+            {
+                "channel": 53,
+                "prof_switch": "off"
+            }
+        ]
+    }
+}

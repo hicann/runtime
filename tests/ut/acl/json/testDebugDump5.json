@@ -1,0 +1,10 @@
+{
+	"dump":{
+		"dump_list":[
+		],
+		"dump_mode":"output",
+        "dump_op_switch":"off",
+        "dump_path":"192.168.1.254:opt/data/",
+	"dump_debug":"on"
+	}
+}
