@@ -40,6 +40,7 @@
 #undef protected
 #undef private
 #include "ffts_task.h"
+#include "../../data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -693,23 +694,10 @@ TEST_F(CloudV2ContextTest, CPU_KERNEL_LAUNCH_TEST)
 
 TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
 {
-    size_t MAX_LENGTH = 75776;
-    FILE *master = nullptr;
-    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (nullptr == master)
-    {
-        printf ("master open error\n");
-        return;
-    }
     Context *ctx;
     RefObject<Context*> *refObject = NULL;
     refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(0);
     ctx = refObject->GetVal();
-
-    char m_data[MAX_LENGTH];
-    size_t m_len = 0;
-    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
-    fclose(master);
 
     rtError_t error;
     void *m_handle;
@@ -717,8 +705,8 @@ TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = m_data;
-    master_bin.length = m_len;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
 
