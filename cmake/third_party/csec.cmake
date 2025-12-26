@@ -9,17 +9,38 @@
 # -----------------------------------------------------------------------------------------------------------
 
 include(ExternalProject)
-
 if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
+    set(LOCAL_SRC_DIR "${OPEN_SOURCE_DIR}/libboundscheck-v1.1.16")
     set(REQ_URL "https://gitcode.com/cann-src-third-party/libboundscheck/releases/download/v1.1.16/libboundscheck-v1.1.16.tar.gz")
-    set(CSEC_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/libc_sec)
-    set(CSEC_SOURCE_DIR ${CMAKE_BINARY_DIR}/libc_sec/source)
     set(SO_NEW_NAME libc_sec.so)
     set(STATIC_NEW_NAME libc_sec.a)
-    set(SO_ORIGINAL_NAME libboundscheck.so)
-    if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG_COMMUNITY)
-        message("secc not use cache")
-        # 下载/解压 libc_sec 源码
+    set(CSEC_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/libc_sec)
+    set(CSEC_SOURCE_DIR ${CMAKE_BINARY_DIR}/libc_sec/source)
+    if(EXISTS "${LOCAL_SRC_DIR}" AND IS_DIRECTORY "${LOCAL_SRC_DIR}")
+        message(STATUS "Using local csec source: ${LOCAL_SRC_DIR}")
+        if(NOT EXISTS "${CSEC_SOURCE_DIR}/Makefile")
+            message(STATUS "Copying source to build directory: ${CSEC_SOURCE_DIR}")
+            file(REMOVE_RECURSE "${CSEC_SOURCE_DIR}")
+            file(MAKE_DIRECTORY "${CSEC_SOURCE_DIR}")
+            file(COPY "${LOCAL_SRC_DIR}/" DESTINATION "${CSEC_SOURCE_DIR}")
+        endif()
+        ExternalProject_Add(csec_src
+            SOURCE_DIR        ${CSEC_SOURCE_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_IN_SOURCE   1
+            BUILD_COMMAND
+                ${CMAKE_MAKE_PROGRAM} -C <SOURCE_DIR> lib
+                CC=${CMAKE_C_COMPILER}
+                AR=${CMAKE_AR}
+                LINK=${CMAKE_C_COMPILER}
+            INSTALL_COMMAND ""
+            # 禁用更新和下载
+            UPDATE_DISCONNECTED 1
+            PATCH_COMMAND ${CMAKE_COMMAND}
+                -D CSEC_SOURCE_DIR=<SOURCE_DIR>
+                -P ${CMAKE_CURRENT_LIST_DIR}/csec_patch.cmake
+        )
+    else()
         ExternalProject_Add(csec_src
             URL               ${REQ_URL}
             DOWNLOAD_DIR      ${CSEC_DOWNLOAD_DIR}
@@ -34,29 +55,31 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
                 CC=${CMAKE_C_COMPILER}
                 AR=${CMAKE_AR}
                 LINK=${CMAKE_C_COMPILER}
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/lib/${SO_ORIGINAL_NAME} <SOURCE_DIR>/lib/${SO_NEW_NAME}
+            INSTALL_COMMAND ""
         )
-        add_library(shared_c_sec_lib SHARED IMPORTED)
-        set_property(TARGET shared_c_sec_lib PROPERTY
-            IMPORTED_LOCATION ${CSEC_SOURCE_DIR}/lib/${SO_NEW_NAME}
-        )
+    endif()
+    add_library(shared_c_sec_lib SHARED IMPORTED)
+    set_property(TARGET shared_c_sec_lib PROPERTY
+        IMPORTED_LOCATION ${CSEC_SOURCE_DIR}/lib/${SO_NEW_NAME}
+    )
 
-        add_library(shared_c_sec INTERFACE)
-        target_link_libraries(shared_c_sec INTERFACE shared_c_sec_lib)
-        add_dependencies(shared_c_sec csec_src)
-        add_custom_target(csec_build DEPENDS csec_src)
-        add_library(c_sec ALIAS shared_c_sec)
-    
+    add_library(shared_c_sec INTERFACE)
+    target_link_libraries(shared_c_sec INTERFACE shared_c_sec_lib)
+    add_dependencies(shared_c_sec csec_src)
+    add_custom_target(csec_build DEPENDS csec_src)
+    add_library(c_sec ALIAS shared_c_sec)
+    if(PRODUCT_SIDE STREQUAL "device")
+        install(FILES
+            ${CSEC_SOURCE_DIR}/lib/${SO_NEW_NAME} ${CSEC_SOURCE_DIR}/lib/${STATIC_NEW_NAME}
+            DESTINATION lib
+        )
+    else()
         install(FILES
             ${CSEC_SOURCE_DIR}/lib/${SO_NEW_NAME} ${CSEC_SOURCE_DIR}/lib/${STATIC_NEW_NAME}
             DESTINATION runtime/lib
         )
-        set(LIBC_SEC_HEADER ${CSEC_SOURCE_DIR}/include)
-    else()
-        message("secc use cache。")
-        add_subdirectory(${RUNTIME_DIR}/third_party/libc_sec ${CMAKE_BINARY_DIR}/libc_sec)
-        set(LIBC_SEC_HEADER ${RUNTIME_DIR}/third_party/libc_sec/include)
-    endif()
+    endif()    
+    set(LIBC_SEC_HEADER ${CSEC_SOURCE_DIR}/include)
 else()
     set(LIBC_SEC_HEADER ${RUNTIME_DIR}/third_party/libc_sec/include)
 endif()

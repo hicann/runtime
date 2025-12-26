@@ -22,15 +22,6 @@ set(INSTALL_INCLUDE_DIR include)
 set(INSTALL_CONFIG_DIR cmake)
 
 message(STATUS "start build npu_runtime")
-# third_party
-if(NOT EXISTS ${OPEN_SOURCE_DIR})
-    message(STATUS "Build runtime with dependency communtiy cann pkgs installed")
-    option(BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG_COMMUNITY "Build runtime with dependency communtiy cann pkgs installed" FALSE)
-else()
-    message(STATUS "Build runtime with dependency communtiy cann pkgs not installed")
-    option(BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG_COMMUNITY "Build runtime with dependency communtiy cann pkgs not installed" FALSE)
-endif()
-
 
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     message(STATUS "Build with dependency cann pkgs installed")
