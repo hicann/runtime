@@ -148,6 +148,183 @@ TEST_F(ApiAbnormalTest910B, rtNpuGetFloatStatusAbnormal)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiAbnormalTest910B, rtGetBinaryDeviceBaseAddrAbnormal)
+{
+    rtError_t error;
+    error = rtGetBinaryDeviceBaseAddr(nullptr, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtIpcSetMemoryNameAbnormal)
+{
+    rtError_t error;
+    error = rtIpcSetMemoryName(nullptr, 0, nullptr, 0);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtIpcCloseMemoryAbnormal)
+{
+    rtError_t error;
+    error = rtIpcCloseMemory(nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtsLaunchReduceAsyncTaskAbnormal)
+{
+    rtError_t error;
+    error = rtsLaunchReduceAsyncTask(nullptr, nullptr, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtReduceAsyncTaskAbnormal)
+{
+    rtError_t ret;
+    void *dst = nullptr;
+    uint64_t destMax;
+    void *src = nullptr;
+    uint64_t cnt;
+    rtRecudeKind_t kind;
+    rtDataType_t dataType;
+    rtStream_t stream;
+    ret = rtReduceAsync(dst, destMax, src, cnt, kind, dataType, stream);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    uint32_t qosCfg;
+    ret = rtReduceAsyncWithCfg(dst, destMax, src, cnt, kind, dataType, stream, qosCfg);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    rtTaskCfgInfo_t *cfgInfo = nullptr;
+    ret = rtReduceAsyncWithCfgV2(dst, destMax, src, cnt, kind, dataType, stream, cfgInfo);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, event_work_abnormal)
+{
+    rtError_t error;
+
+    error = rtEventWorkModeGet(nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, cm0_task_abnormal)
+{
+    rtError_t error;
+    rtCmoTaskCfg_t cmoTaskCfg = {};
+
+    cmoTaskCfg.cmoType = RT_CMO_RESERVED;
+    error = rtsLaunchCmoTask(&cmoTaskCfg, nullptr, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, cntNotify_abnormal)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    rtCntNotify_t inNotify;
+    rtCntNotifyWaitInfo_t waitInfo = {RT_CNT_NOTIFY_WAIT_EQUAL_MODE, 0, 10, false};
+    uint32_t notifyId = 0;
+    ret = rtCntNotifyCreate(0, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyCreateWithFlag(0, nullptr, 0);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyRecord(nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyWaitWithTimeout(nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyReset(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyDestroy(nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtGetCntNotifyAddress(nullptr, nullptr, NOTIFY_TYPE_MAX);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtGetCntNotifyId(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyCreateServer(&inNotify, 0);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtsCntNotifyWaitWithTimeout(inNotify, nullptr, &waitInfo);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtsCntNotifyReset(inNotify, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyReset(inNotify, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCntNotifyDestroy(inNotify);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtsCntNotifyGetId(inNotify, &notifyId);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ubDb_abnormal)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    ret = rtUbDbSend(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtUbDirectSend(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtFusionLaunch(nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtCCULaunch(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtUbDevQueryInfo(QUERY_TYPE_BUFF, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, devRes_abnormal)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    ret = rtGetDevResAddress(nullptr, nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret = rtReleaseDevResAddress(nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, taskbuffer_abnormal)
+{ 
+    rtError_t ret = RT_ERROR_NONE;
+    rtTaskBuffType_t type;
+    uint32_t bufferLen;
+    ret = rtGetTaskBufferLen(type, &bufferLen);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    rtTaskInput_t taskInput;
+    uint32_t taskLen;
+    ret = rtTaskBuild(&taskInput, &taskLen);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    void *elfData = nullptr;
+    uint32_t elfLen;
+    uint32_t offset;
+    ret = rtGetElfOffset(elfData, elfLen, &offset);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtGetStreamBufferLen_abnormal)
+{ 
+    const bool isHuge = true;
+    uint32_t * const bufferLen = nullptr;
+    rtError_t ret = rtGetStreamBufferLen(isHuge, bufferLen);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtIpcDestroyMemoryName_abnormal)
+{ 
+    rtError_t ret = RT_ERROR_NONE;
+    ret = rtIpcDestroyMemoryName(nullptr);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, debug_abnormal)
+{
+    rtError_t error;
+
+    error = rtDebugSetDumpMode(RT_DEBUG_DUMP_ON_EXCEPTION);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtDebugGetStalledCore(nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtDebugReadAICore(nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
 // rts prefix api
 TEST_F(ApiAbnormalTest910B, rtsNpuClearFloatOverFlowStatus)
 {

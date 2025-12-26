@@ -681,6 +681,32 @@ TEST_F(CloudV2ApiImplTest, kernel_transarg_set_test_offline_flush_failed)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiImplTest, ReduceAsync_error_01)
+{
+    rtError_t error;
+    rtStream_t streamA;
+    uint64_t buff_size = 100;
+
+    error = rtStreamCreate(&streamA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t *devMemSrc = NULL;
+    uint32_t *devMem = NULL;
+
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context *)NULL));
+    error = rtReduceAsync(devMem,
+                          0,
+                          (const void *)devMemSrc,
+                          buff_size,
+                          RT_MEMCPY_SDMA_AUTOMATIC_ADD,
+                          RT_DATA_TYPE_FP32,
+                          streamA);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(streamA);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiImplTest, context_create_test_fail)
 {
     ApiImpl apiImpl;

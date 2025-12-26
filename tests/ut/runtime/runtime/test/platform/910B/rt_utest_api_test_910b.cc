@@ -248,6 +248,38 @@ TEST_F(ApiTest910B, dqs_test)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(ApiTest910B, xpu_Normal)
+{
+    rtError_t error;
+    error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest910B, event_work_Normal)
+{
+    rtError_t error;
+    error = rtEventWorkModeSet(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiTest910B, cm0_task_normal)
+{
+    rtError_t error;
+    rtCmoTaskCfg_t cmoTaskCfg = {};
+    cmoTaskCfg.cmoType = RT_CMO_PREFETCH;
+    error = rtsLaunchCmoTask(&cmoTaskCfg, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    cmoTaskCfg.cmoType = RT_CMO_WRITEBACK;
+    error = rtsLaunchCmoTask(&cmoTaskCfg, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ApiTest910B, AI_CPU_KERNEL_LAUNCH_TEST)
 {
     rtError_t error;
