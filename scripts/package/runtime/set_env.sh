@@ -120,7 +120,7 @@ setenv_main() {
     fi
 
     prepend_env "PATH" "$version_dirpath/bin:$version_dirpath/tools/ccec_compiler/bin:$version_dirpath/tools/profiler/bin:$version_dirpath/tools/ascend_system_advisor/asys:$version_dirpath/tools/show_kernel_debug_data:$version_dirpath/tools/msobjdump"
-    prepend_env "LD_LIBRARY_PATH" "$version_dirpath/lib64:$version_dirpath/lib64/plugin/opskernel:$version_dirpath/lib64/plugin/nnengine:$version_dirpath/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/$architecture:$version_dirpath/tools/aml/lib64:$version_dirpath/tools/aml/lib64/plugin"
+    prepend_env "LD_LIBRARY_PATH" "$version_dirpath/lib64:$version_dirpath/lib64/plugin/opskernel:$version_dirpath/lib64/plugin/nnengine:$version_dirpath/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/$architecture:$version_dirpath/tools/aml/lib64:$version_dirpath/tools/aml/lib64/plugin:/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver"
     # make compatibility with older versions of behavior
     export PYTHONPATH="$version_dirpath/python/site-packages:$version_dirpath/opp/built-in/op_impl/ai_core/tbe:$PYTHONPATH"
 
