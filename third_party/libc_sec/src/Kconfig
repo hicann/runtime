@@ -1,6 +1,0 @@
-config HISI_HW_SECUREC
-        bool "Support Huawei Secure C"
-        default n
-        help
-          This driver supports Huawei Secure C.
-
