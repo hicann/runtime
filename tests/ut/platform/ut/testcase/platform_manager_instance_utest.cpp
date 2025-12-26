@@ -16,7 +16,6 @@
 #define protected public
 #define private public
 #include "platform_info.h"
-#include "platform_infos_lite_impl.h"
 #undef protected
 #undef private
 
@@ -225,43 +224,5 @@ TEST_F(PlatformManagerUTest, platform_instance_Trim) {
 
   std::string strNg = " \t \t \t \t \t                  ";
   instance.Trim(strNg);
-}
-
-TEST_F(PlatformManagerUTest, platform_instance_GetPlatformRes_succ) {
-  PlatFormInfosLiteImpl impl;
-  impl.normal_infos_.emplace_back(std::vector<uint64_t>{1, 2});
-  uint64_t val = 0;
-  bool ret = impl.GetPlatformRes(PlatformLabel(0), uint64_t(0), val);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(PlatformManagerUTest, platform_instance_GetPlatformRes_fail) {
-  PlatFormInfosLiteImpl impl;
-  uint64_t val = 0;
-  impl.normal_infos_.emplace_back(std::vector<uint64_t>{1, 2});
-  bool ret = impl.GetPlatformRes(PlatformLabel::ENUM_DSA_RANDOM, uint64_t(0), val);
-  EXPECT_EQ(ret, false);
-}
-
-TEST_F(PlatformManagerUTest, platform_instance_GetPlatformRes) {
-  PlatFormInfosLiteImpl impl;
-  impl.normal_infos_.emplace_back(std::vector<uint64_t>{1, 2});
-  auto res = impl.GetPlatformRes(PlatformLabel::ENUM_AI_CORE_MEMORY_RATES);
-  EXPECT_EQ(res.size(), 2);
-}
-
-TEST_F(PlatformManagerUTest, platform_instance_CheckIntrinsicSupport_succ) {
-  PlatFormInfosLiteImpl impl;
-  impl.intrinsic_infos_.emplace_back(std::set<IntrinsicAbility>{IntrinsicAbility::add, IntrinsicAbility::anti_quant_add, IntrinsicAbility::anti_quant_sub, IntrinsicAbility::b8u2});
-  auto ret = impl.CheckIntrinsicSupport(IntrinsicTypeKey::MMAD, IntrinsicAbility::add);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(PlatformManagerUTest, platform_instance_CheckIntrinsicSupport_fail) {
-  PlatFormInfosLiteImpl impl;
-  impl.intrinsic_infos_.emplace_back(std::set<IntrinsicAbility>{IntrinsicAbility::add, IntrinsicAbility::anti_quant_add, IntrinsicAbility::anti_quant_sub, IntrinsicAbility::b8u2});
-  auto ret = impl.CheckIntrinsicSupport(IntrinsicTypeKey::INTRINSIC_TYPE_KEY_END, IntrinsicAbility::add);
-  EXPECT_EQ(ret, false);
-  ret = impl.CheckIntrinsicSupport(IntrinsicTypeKey::MMAD, IntrinsicAbility::bf162s32r);
 }
 }

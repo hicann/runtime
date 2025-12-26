@@ -17,7 +17,6 @@
 #define private public
 #include "platform_manager_v2.h"
 #include "platform_infos_utils.h"
-#include "platform_infos_lite_impl.h"
 #undef protected
 #undef private
 
