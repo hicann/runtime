@@ -7,8 +7,6 @@ set(STATICPLATFORMFILE
     ${CMAKE_CURRENT_LIST_DIR}/platform_info.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_def.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_impl.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/platform_infos_lite_def.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/platform_infos_lite_impl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_utils.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_manager_v2.cpp
 )
@@ -29,8 +27,6 @@ else()
         "platform_info.cpp"
         "platform_infos_def.cpp"
         "platform_infos_impl.cpp"
-        "platform_infos_lite_def.cpp"
-        "platform_infos_lite_impl.cpp"
         "platform_infos_utils.cpp"
         "platform_manager_v2.cpp")
 endif()
@@ -117,7 +113,6 @@ target_compile_options(platform_static PRIVATE
 target_compile_definitions(platform_static PRIVATE
         google=ascend_private
         $<$<STREQUAL:${PRODUCT_SIDE},device>:ASCENDC_DEVICE_REG_STATIC>
-        $<$<STREQUAL:${PRODUCT_SIDE},device>:_FORTIFY_SOURCE=2>
         -DCOMPILE_PLATFORM_STATIC="True"
 )
 
@@ -152,7 +147,6 @@ install_package(
     FILES   ${RUNTIME_DIR}/pkg_inc/platform/platform_info.h
             ${RUNTIME_DIR}/pkg_inc/platform/platform_info_def.h
             ${RUNTIME_DIR}/pkg_inc/platform/platform_infos_def.h
-            ${RUNTIME_DIR}/pkg_inc/platform/platform_infos_lite_def.h
             ${RUNTIME_DIR}/pkg_inc/platform/soc_spec.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/platform/platform
 )

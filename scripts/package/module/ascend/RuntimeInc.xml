@@ -176,7 +176,6 @@
         <file value="platform_info.h" install_mod="440" entity="true"/>
         <file value="platform_info_def.h" install_mod="440" entity="true"/>
         <file value="platform_infos_def.h" install_mod="440" entity="true"/>
-        <file value="platform_infos_lite_def.h" install_mod="440" entity="true"/>
         <file value="soc_spec.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="include/mmpa" install_path="$(TARGET_ENV)/include/mmpa" install_type="all">
@@ -287,7 +286,6 @@
         <file value="Ascend910_9391.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9392.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B2C.ini" install_mod="440" entity="true"/>
-        <file value="MC62CM12AA.ini" install_mod="440" entity="true"/>
         <file value="KirinX90.ini" install_mod="440" entity="true"/>
         <file value="Kirin9030.ini" install_mod="440" entity="true"/>
     </file_info>

@@ -835,27 +835,13 @@ uint32_t PlatformInfoManager::AssemblePlatformInfoVector(std::map<std::string, s
     return PLATFORM_FAILED;
   }
   FillupFixPipeInfo(platform_infos);
-  bool init_result = true;
   if (!soc_version.empty()) {
     auto iter = platform_infos_map_.find(soc_version);
     if (iter == platform_infos_map_.end()) {
       platform_infos_map_.emplace(soc_version, platform_infos);
-      auto iter_soc = SOC_VERSION_STR.find(soc_version);
-      if (iter_soc != SOC_VERSION_STR.end()) {
-        auto &lite = platform_infos_lite_vec_.at(static_cast<size_t>(iter_soc->second));
-        init_result = lite.InitPlatFormInfosLite(iter_soc->second, platform_infos);
-      } else {
-        PF_LOGW("Cannot find Soc info enum by %s.", soc_version.c_str());
-      }
       PF_LOGD("The platform info's os soc version[%s] has been initialized.", soc_version.c_str());
     }
   }
-
-  if (!init_result) {
-    PF_LOGE("Failed to initialize platform by %s.", soc_version.c_str());
-    return PLATFORM_FAILED;
-  }
-
   return PLATFORM_SUCCESS;
 }
 
@@ -1052,16 +1038,6 @@ void PlatformInfoManager::SetOptionalCompilationInfo(OptionalInfo &opti_compilat
   opti_compilation_info_ = opti_compilation_info;
   if (opti_compilation_info_.soc_version == SOC_VERSION_ASCEND910) {
     opti_compilation_info_.soc_version = SOC_VERSION_ASCEND910A;
-  }
-}
-
-__attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatFormInfosLite(
-    SocVersion soc_version, PlatFormInfosLite &platform_infos_lite) {
-  if (static_cast<size_t>(soc_version) >= platform_infos_lite_vec_.size()) {
-    return PLATFORM_FAILED;
-  } else {
-    platform_infos_lite = platform_infos_lite_vec_.at(static_cast<size_t>(soc_version));
-    return PLATFORM_SUCCESS;
   }
 }
 

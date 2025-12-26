@@ -13,8 +13,6 @@ protobuf_generate(platform_infos_proto PROTO_SRCS PROTO_HDRS ${PROTO_LIST} TARGE
 
 set (PLATFORM_SRC_FILES
         ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_info.cpp
-        ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_infos_lite_def.cpp
-        ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_infos_lite_impl.cpp
         ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_infos_def.cpp
         ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_infos_impl.cpp
         ${TOP_DIR}/ace/npuruntime/runtime/platform/platform_infos_utils.cpp)

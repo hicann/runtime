@@ -1,8 +1,6 @@
 set(CMAKE_CXX_STANDARD 14)
 
 file(GLOB FE_SRC_CPP_1 RELATIVE ${CMAKE_CURRENT_LIST_DIR}
-        "${TOP_DIR}/src/platform/platform_infos_lite_def.cpp"
-        "${TOP_DIR}/src/platform/platform_infos_lite_impl.cpp"
         "${TOP_DIR}/src/platform/platform_info.cpp"
         "${TOP_DIR}/src/platform/platform_infos_def.cpp"
         "${TOP_DIR}/src/platform/platform_infos_impl.cpp"
