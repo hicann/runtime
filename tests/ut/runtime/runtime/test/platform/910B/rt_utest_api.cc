@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "../../data/elf.h"
 
 class CloudV2ApiTest : public testing::Test
 {
@@ -231,28 +232,14 @@ TEST_F(CloudV2ApiTest, ipc_memory_success){
 
 TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2)
 {
-    // bin register
-    size_t MAX_LENGTH = 75776;
-    FILE *objFile = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == objFile)
-    {
-        printf("master open error\n");
-        return;
-    }
-
-    char data[MAX_LENGTH];
-    size_t len = 0;
-    len = fread(data, sizeof(char), MAX_LENGTH, objFile);
-    fclose(objFile);
-
     rtError_t error;
     void *handle;
     Program *prog;
     rtDevBinary_t bin;
     bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     bin.version = 2;
-    bin.data = data;
-    bin.length = len;
+    bin.data = (void*)elf_o;
+    bin.length = elf_o_len;
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     error = rtDevBinaryRegister(&bin, &handle);
@@ -297,28 +284,14 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2)
 }
 TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2)
 {
-    // bin register
-    size_t MAX_LENGTH = 75776;
-    FILE *objFile = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == objFile)
-    {
-        printf("master open error\n");
-        return;
-    }
-
-    char data[MAX_LENGTH];
-    size_t len = 0;
-    len = fread(data, sizeof(char), MAX_LENGTH, objFile);
-    fclose(objFile);
-
     rtError_t error;
     void *handle;
     Program *prog;
     rtDevBinary_t bin;
     bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     bin.version = 2;
-    bin.data = data;
-    bin.length = len;
+    bin.data = (void*)elf_o;
+    bin.length = elf_o_len;
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
@@ -370,28 +343,14 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2)
 }
 TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error1)
 {
-    // bin register
-    size_t MAX_LENGTH = 75776;
-    FILE *objFile = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == objFile)
-    {
-        printf("master open error\n");
-        return;
-    }
-
-    char data[MAX_LENGTH];
-    size_t len = 0;
-    len = fread(data, sizeof(char), MAX_LENGTH, objFile);
-    fclose(objFile);
-
     rtError_t error;
     void *handle;
     Program *prog;
     rtDevBinary_t bin;
     bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     bin.version = 2;
-    bin.data = data;
-    bin.length = len;
+    bin.data = (void*)elf_o;
+    bin.length = elf_o_len;
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
@@ -443,28 +402,14 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error1)
 }
 TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error2)
 {
-    // bin register
-    size_t MAX_LENGTH = 75776;
-    FILE *objFile = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == objFile)
-    {
-        printf("master open error\n");
-        return;
-    }
-
-    char data[MAX_LENGTH];
-    size_t len = 0;
-    len = fread(data, sizeof(char), MAX_LENGTH, objFile);
-    fclose(objFile);
-
     rtError_t error;
     void *handle;
     Program *prog;
     rtDevBinary_t bin;
     bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     bin.version = 2;
-    bin.data = data;
-    bin.length = len;
+    bin.data = (void*)elf_o;
+    bin.length = elf_o_len;
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 

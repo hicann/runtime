@@ -22,6 +22,7 @@
 #include "profiler.hpp"
 #include "binary_loader.hpp"
 #include "thread_local_container.hpp"
+#include "../../data/elf.h"
 #undef private
 
 
@@ -363,28 +364,14 @@ TEST_F(KernelApiTest, TestFuncGetAttribute)
 
 TEST_F(KernelApiTest, LAUNCH_ALL_KERNEL_TEST_1)
 {
-    size_t MAX_LENGTH = 75776;
-    FILE *master = NULL;
-    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == master)
-    {
-        printf ("master open error\n");
-        return;
-    }
-
-    char m_data[MAX_LENGTH];
-    size_t m_len = 0;
-    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
-    fclose(master);
-
     rtError_t error;
     void *m_handle;
     Program *m_prog;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = m_data;
-    master_bin.length = m_len;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     error = rtSetExceptionExtInfo(nullptr);
@@ -411,28 +398,14 @@ TEST_F(KernelApiTest, LAUNCH_ALL_KERNEL_TEST_1)
 
 TEST_F(KernelApiTest, LAUNCH_KERNEL_WITH_HANDLE_NO_TILINGKEY_01)
 {
-    size_t MAX_LENGTH = 75776;
-    FILE *master = NULL;
-    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == master)
-    {
-        printf ("master open error\n");
-        return;
-    }
-
-    char m_data[MAX_LENGTH];
-    size_t m_len = 0;
-    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
-    fclose(master);
-
     rtError_t error;
     void *m_handle;
     Program *m_prog;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = m_data;
-    master_bin.length = m_len;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     error = rtSetExceptionExtInfo(nullptr);
@@ -458,28 +431,14 @@ TEST_F(KernelApiTest, LAUNCH_KERNEL_WITH_HANDLE_NO_TILINGKEY_01)
 
 TEST_F(KernelApiTest, LAUNCH_ALL_KERNEL_TEST_3)
 {
-    size_t MAX_LENGTH = 75776;
-    FILE *master = NULL;
-    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (NULL == master)
-    {
-        printf ("master open error\n");
-        return;
-    }
-
-    char m_data[MAX_LENGTH];
-    size_t m_len = 0;
-    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
-    fclose(master);
-
     rtError_t error;
     void *m_handle;
     Program *m_prog;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = m_data;
-    master_bin.length = m_len;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
 
@@ -503,28 +462,14 @@ TEST_F(KernelApiTest, LAUNCH_ALL_KERNEL_TEST_3)
 
 TEST_F(KernelApiTest, LAUNCH_ALL_KERNEL_TEST_4)
 {
-    size_t MAX_LENGTH = 75776;
-    FILE *master = nullptr;
-    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-    if (master == nullptr)
-    {
-        printf ("master open error\n");
-        return;
-    }
-
-    char m_data[MAX_LENGTH];
-    size_t m_len = 0;
-    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
-    fclose(master);
-
     rtError_t error;
     void *m_handle;
     Program *m_prog;
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = m_data;
-    master_bin.length = m_len;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
 

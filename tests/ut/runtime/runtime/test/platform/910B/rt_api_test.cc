@@ -1255,6 +1255,7 @@ TEST_F(ApiAbnormalTest910B, HostUnregisterTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostUnregister)
@@ -1262,6 +1263,13 @@ TEST_F(ApiAbnormalTest910B, HostUnregisterTest)
         .will(returnValue(RT_ERROR_NONE));
 
     error = apiDecorator.HostUnregister(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = api.HostUnregister(nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    void* ptr = (void*)0x1000;
+    error = api.HostUnregister(ptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1508,6 +1516,7 @@ TEST_F(ApiAbnormalTest910B, DeviceSetTsIdTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceSetTsId)
@@ -1515,6 +1524,9 @@ TEST_F(ApiAbnormalTest910B, DeviceSetTsIdTest)
         .will(returnValue(RT_ERROR_NONE));
 
     error = apiDecorator.DeviceSetTsId(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = api.DeviceSetTsId(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1592,6 +1604,7 @@ TEST_F(ApiAbnormalTest910B, ModelExecuteSyncTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExecuteSync)
@@ -1599,6 +1612,17 @@ TEST_F(ApiAbnormalTest910B, ModelExecuteSyncTest)
         .will(returnValue(RT_ERROR_NONE));
 
     error = apiDecorator.ModelExecuteSync(nullptr, 10);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtModel_t rtModel;
+    error = rtModelCreate(&rtModel, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Model* model = static_cast<Model *>(rtModel);
+    error = api.ModelExecuteSync(model, 10);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(rtModel);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1704,6 +1728,7 @@ TEST_F(ApiAbnormalTest910B, IpcCloseMemoryByNameTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemoryByName)
@@ -1711,6 +1736,10 @@ TEST_F(ApiAbnormalTest910B, IpcCloseMemoryByNameTest)
         .will(returnValue(RT_ERROR_NONE));
 
     error = apiDecorator.IpcCloseMemoryByName(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    char_t* name = "name";
+    error = api.IpcCloseMemoryByName(name);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1746,28 +1775,66 @@ TEST_F(ApiAbnormalTest910B, StreamSwitchExTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
+
+    error = api.StreamSwitchEx(nullptr, RT_EQUAL, nullptr, nullptr, nullptr, RT_SWITCH_INT32);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamSwitchEx)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    error = apiDecorator.StreamSwitchEx(nullptr, RT_EQUAL, nullptr, nullptr, nullptr, RT_SWITCH_INT32);
+    void* ptr = (void*)0x1000;
+    void* valuePtr = (void*)0x0100;
+    rtStream_t trueStm;
+    error = rtStreamCreate(&trueStm, 0);
+    Stream *trueStream = static_cast<Stream *>(trueStm);
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stream = static_cast<Stream *>(stm);
+
+    error = apiDecorator.StreamSwitchEx(ptr, RT_EQUAL, valuePtr, trueStream, stream, RT_SWITCH_INT32);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = api.StreamSwitchEx(ptr, RT_EQUAL, valuePtr, trueStream, stream, RT_SWITCH_INT32);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+    rtStreamDestroy(trueStm);
 }
 
 TEST_F(ApiAbnormalTest910B, StreamActiveTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
+
+    error = api.StreamActive(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamActive)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    error = apiDecorator.StreamActive(nullptr, nullptr);
+    rtStream_t activeStm;
+    error = rtStreamCreate(&activeStm, 0);
+    Stream *activeStream = static_cast<Stream *>(activeStm);
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stream = static_cast<Stream *>(stm);
+
+    error = api.StreamActive(activeStream, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = apiDecorator.StreamActive(activeStream, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+    rtStreamDestroy(activeStm);
 }
 
 TEST_F(ApiAbnormalTest910B, ProfilerTraceTest)
@@ -1802,6 +1869,7 @@ TEST_F(ApiAbnormalTest910B, SetIpcNotifyPidExTest)
 {
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
+    ApiErrorDecorator api(&impl);
     rtError_t error;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcNotifyPid)
@@ -1809,6 +1877,11 @@ TEST_F(ApiAbnormalTest910B, SetIpcNotifyPidExTest)
         .will(returnValue(RT_ERROR_NONE));
 
     error = apiDecorator.SetIpcNotifyPid(nullptr, nullptr, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    char_t *name = "name";
+    int32_t pid[] = {0, 1};
+    error = api.SetIpcNotifyPid(name, pid, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -2734,4 +2807,385 @@ TEST_F(ApiAbnormalTest910B, ResetXpuDeviceTest)
 
     error = apiDecorator.ResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ReduceAsyncTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReduceAsync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    void* dst = (void*)0x1000;
+    void* src = (void*)0x0010;
+    error = api.ReduceAsync(dst, src, MAX_MEMCPY_SIZE_OF_D2D, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP16, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ReduceAsyncV2Test)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReduceAsyncV2)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    void* dst = (void*)0x1000;
+    void* src = (void*)0x0010;
+    void* overflowAddr = (void*)0x0001;
+    error = api.ReduceAsyncV2(dst, src, MAX_MEMCPY_SIZE_OF_D2D, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP16, nullptr, overflowAddr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, MemGetL2InfoTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.MemGetL2Info(nullptr, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stmPtr = static_cast<Stream *>(stm);
+    void* dst = (void*)0x1000;
+    uint32_t size = 0;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetL2Info)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = api.MemGetL2Info(stmPtr, &dst, &size);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+}
+
+TEST_F(ApiAbnormalTest910B, GetDeviceIDsTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.GetDeviceIDs(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceIDs)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    uint32_t devId = 0;
+    error = api.GetDeviceIDs(&devId, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, StartOnlineProfTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StartOnlineProf)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = api.StartOnlineProf(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, StopOnlineProfTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StopOnlineProf)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = api.StopOnlineProf(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, AdcProfilerTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::AdcProfiler)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = api.AdcProfiler(0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, GetOnlineProfDataTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetOnlineProfData)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtProfDataInfo_t pProfData = {};
+    error = api.GetOnlineProfData(nullptr, &pProfData, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, NopTaskTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NopTask)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stmPtr = static_cast<Stream *>(stm);
+    
+    error = api.NopTask(stmPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+}
+
+TEST_F(ApiAbnormalTest910B, IpcDestroyMemoryNameTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.IpcDestroyMemoryName(nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcDestroyMemoryName)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    char_t *name = "name";
+    error = api.IpcDestroyMemoryName(name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, SetIpcMemPidTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.SetIpcMemPid(nullptr, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcMemPid)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    char_t *name = "name";
+    int32_t pid[] = {0, 1};
+    error = api.SetIpcMemPid(name, pid, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, IpcCloseMemoryTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.IpcCloseMemory(nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemory)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    void* ptr = (void*)0x1000;
+    error = api.IpcCloseMemory(ptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ModelGetIdTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.ModelGetId(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelGetId)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtModel_t rtModel;
+    error = rtModelCreate(&rtModel, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Model* model = static_cast<Model *>(rtModel);
+    uint32_t modelId = 0;
+    error = api.ModelGetId(model, &modelId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(rtModel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ModelSetSchGroupIdTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.ModelSetSchGroupId(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rtModel_t rtModel;
+    error = rtModelCreate(&rtModel, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Model* model = static_cast<Model *>(rtModel);
+    error = api.ModelSetSchGroupId(model, 5);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelSetSchGroupId)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = api.ModelSetSchGroupId(model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(rtModel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, DebugRegisterForStreamTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.DebugRegisterForStream(nullptr, 0, nullptr, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugRegisterForStream)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stmPtr = static_cast<Stream *>(stm);
+    void* addr = (void*)0x1000;
+    uint32_t streamId = 0;
+    uint32_t taskId = 0;
+    error = api.DebugRegisterForStream(stmPtr, 0, addr, &streamId, &taskId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+}
+
+TEST_F(ApiAbnormalTest910B, DebugUnRegisterForStreamTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.DebugUnRegisterForStream(nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugUnRegisterForStream)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stmPtr = static_cast<Stream *>(stm);
+    error = api.DebugUnRegisterForStream(stmPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStreamDestroy(stm);
+}
+
+TEST_F(ApiAbnormalTest910B, ModelExecutorSetTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.ModelExecutorSet(nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExecutorSet)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtModel_t rtModel;
+    error = rtModelCreate(&rtModel, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Model* model = static_cast<Model *>(rtModel);
+
+    error = api.ModelExecutorSet(model, EXECUTOR_TS);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(rtModel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ModelExitTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.ModelExit(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ModelExit)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtModel_t rtModel;
+    error = rtModelCreate(&rtModel, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Model* model = static_cast<Model *>(rtModel);
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    Stream *stmPtr = static_cast<Stream *>(stm);
+
+    error = api.ModelExit(model, stmPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(rtModel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, GetNotifyIDTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtError_t error;
+
+    error = api.GetNotifyID(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetNotifyID)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    Notify* notify = new Notify(0, 0);
+    uint32_t notifyId = 0;
+    error = api.GetNotifyID(notify, &notifyId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete notify;
 }
