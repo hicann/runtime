@@ -1,5 +1,6 @@
 set(CMAKE_CXX_STANDARD 14)
-include_directories(${OPEN_SOURCE_DIR}/boost)
+include_directories(${OPEN_SOURCE_DIR}/boost-1.87.0)
+include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 # compile for ut
 set(SLOG_STUB_FILES
         ${CMAKE_CURRENT_LIST_DIR}/../depends/slog/slog_stub.cc)
@@ -121,15 +122,11 @@ add_custom_target(
 )
 
 add_dependencies(platform_utest platform_config_files)
-#add_dependencies(platform_utest platform_infos_proto_ut)
 
 add_dependencies(platform_stub_ut platform_config_files)
-#add_dependencies(platform_stub_ut platform_infos_proto_ut)
+
 set(RUNTIME_TARGET
     platform_utest
     platform_stub_ut
 )
 add_custom_target(platform_ut DEPENDS ${RUNTIME_TARGET})
-include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
-# message(STATUS "OPEN_SOURCE_DIR is ${OPEN_SOURCE_DIR}")
-# include_directories(/home/jenkins/opensource/mockcpp_src/include)
