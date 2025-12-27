@@ -44,3 +44,7 @@
 
 -   **[aclrtPersistentTaskClean](aclrtPersistentTaskClean.md)**  
 
+-   **[aclrtStreamGetPriority](aclrtStreamGetPriority.md)**
+
+-   **[aclrtStreamGetFlags](aclrtStreamGetFlags.md)**
+

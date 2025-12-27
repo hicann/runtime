@@ -1667,6 +1667,39 @@ rtError_t ApiImpl::GetCqId(Stream * const stm, uint32_t * const cqId, uint32_t *
     return RT_ERROR_NONE;
 }
 
+
+rtError_t ApiImpl::StreamGetPriority(Stream * const stm, uint32_t * const priority)
+{
+    TIMESTAMP_NAME(__func__);
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+
+    *priority = curStm->GetPriority();
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::StreamGetFlags(Stream * const stm, uint32_t * const flags)
+{
+    TIMESTAMP_NAME(__func__);
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+
+    *flags = curStm->Flags();
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
     uint32_t * const maxTaskCount)
 {

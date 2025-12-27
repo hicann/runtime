@@ -251,6 +251,26 @@ RTS_API rtError_t rtGetStreamId(rtStream_t stm, int32_t *streamId);
 
 /**
  * @ingroup dvrt_stream
+ * @brief get stream priority from a stream handle
+ * @param [in] stm   stream hadle
+ * @param [in] priority   stream priority
+ * @return RT_ERROR_NONE for complete
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtStreamGetPriority(const rtStream_t stm, uint32_t *priority);
+
+/**
+ * @ingroup dvrt_stream
+ * @brief get stream flags from a stream handle
+ * @param [in] stm   stream hadle
+ * @param [in] flags   stream flags
+ * @return RT_ERROR_NONE for complete
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t *flags);
+
+/**
+ * @ingroup dvrt_stream
  * @brief inquire max stream count and max task count per stream
  * @param [in] streamType   Stream Type
  * @param [in] MaxStrCount   Max stream count

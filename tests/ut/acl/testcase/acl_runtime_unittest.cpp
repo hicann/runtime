@@ -666,6 +666,54 @@ TEST_F(UTEST_ACL_Runtime, aclrtStreamQueryTest)
     EXPECT_EQ(status, ACL_STREAM_STATUS_NOT_READY);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtStreamGetPriorityTest)
+{
+    // test aclrtStreamGetPriority
+    aclrtStream stream = (aclrtStream)0x01;
+    uint32_t priority;
+
+    aclError ret = aclrtStreamGetPriority(nullptr, &priority);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtStreamGetPriority(stream, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamGetPriority(_, _))
+        .WillOnce(Return((ACL_ERROR_RT_PARAM_INVALID)));
+    ret = aclrtStreamGetPriority(stream, &priority);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamGetPriority(_, _))
+        .WillOnce(DoAll(SetArgPointee<1>(5), Return(RT_ERROR_NONE)));
+    ret = aclrtStreamGetPriority(stream, &priority);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(priority, 5);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtStreamGetFlagsTest)
+{
+    // test aclrtStreamGetFlags
+    aclrtStream stream = (aclrtStream)0x01;
+    uint32_t flags;
+
+    aclError ret = aclrtStreamGetFlags(nullptr, &flags);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtStreamGetFlags(stream, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamGetFlags(_, _))
+        .WillOnce(Return((ACL_ERROR_RT_PARAM_INVALID)));
+    ret = aclrtStreamGetFlags(stream, &flags);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamGetFlags(_, _))
+        .WillOnce(DoAll(SetArgPointee<1>(RT_STREAM_FAST_LAUNCH), Return(RT_ERROR_NONE)));
+    ret = aclrtStreamGetFlags(stream, &flags);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(flags, ACL_STREAM_FAST_LAUNCH);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtStreamWaitEventTest)
 {
     // test aclrtStreamWaitEvent

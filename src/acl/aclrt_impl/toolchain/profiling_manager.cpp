@@ -85,6 +85,8 @@ namespace acl {
         {AclProfType::AclrtSynchronizeStream,                   "aclrtSynchronizeStream"},
         {AclProfType::AclrtSynchronizeStreamWithTimeout,        "aclrtSynchronizeStreamWithTimeout"},
         {AclProfType::AclrtStreamQuery,                         "aclrtStreamQuery"},
+        {AclProfType::AclrtStreamGetPriority,                   "aclrtStreamGetPriority"},
+        {AclProfType::AclrtStreamGetFlags,                      "aclrtStreamGetFlags"},
         {AclProfType::AclrtStreamWaitEvent,                     "aclrtStreamWaitEvent"},
         {AclProfType::AclrtStreamWaitEventWithTimeout,          "aclrtStreamWaitEventWithTimeout"},
         {AclProfType::AclrtAllocatorCreateDesc,                 "aclrtAllocatorCreateDesc"},

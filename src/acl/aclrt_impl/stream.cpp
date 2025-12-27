@@ -199,6 +199,59 @@ aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status)
     return ACL_SUCCESS;
 }
 
+aclError aclrtStreamGetPriorityImpl(aclrtStream stream, uint32_t *priority)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetPriority);
+    ACL_LOG_INFO("start to execute aclrtStreamGetPriority");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(priority);
+    rtStream_t rtStream = static_cast<rtStream_t>(stream);
+    uint32_t prio = 0U;
+    const rtError_t rtErr = rtStreamGetPriority(rtStream, &prio);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("get stream priority failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    *priority = prio;
+    ACL_LOG_INFO("successfully execute aclrtStreamGetPriority, priority is %u", *priority);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtStreamGetFlagsImpl(aclrtStream stream, uint32_t *flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetFlags);
+    ACL_LOG_INFO("start to execute aclrtStreamGetFlags");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(flags);
+    rtStream_t rtStream = static_cast<rtStream_t>(stream);
+    uint32_t rtFlags = 0U;
+    const rtError_t rtErr = rtStreamGetFlags(rtStream, &rtFlags);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("get stream flags failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    uint32_t aclFlags = 0U;
+    if ((rtFlags & RT_STREAM_FAST_LAUNCH) != 0U) {
+        aclFlags |= ACL_STREAM_FAST_LAUNCH;
+    }
+    if ((rtFlags & RT_STREAM_FAST_SYNC) != 0U) {
+        aclFlags |= ACL_STREAM_FAST_SYNC;
+    }
+    if ((rtFlags & RT_STREAM_PERSISTENT) != 0U) {
+        aclFlags |= ACL_STREAM_PERSISTENT;
+    }
+    if ((rtFlags & RT_STREAM_HUGE) != 0U) {
+        aclFlags |= ACL_STREAM_HUGE;
+    }
+    if ((rtFlags & RT_STREAM_CPU_SCHEDULE) != 0U) {
+        aclFlags |= ACL_STREAM_CPU_SCHEDULE;
+    }
+    if ((rtFlags & RT_STREAM_CP_PROCESS_USE) != 0U) {
+        aclFlags |= ACL_STREAM_DEVICE_USE_ONLY;
+    }
+    *flags = aclFlags;
+    ACL_LOG_INFO("successfully execute aclrtStreamGetFlags, rtFlags is %#x, aclFlags is %#x", rtFlags, *flags);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtStreamWaitEventImpl(aclrtStream stream, aclrtEvent event)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEvent);

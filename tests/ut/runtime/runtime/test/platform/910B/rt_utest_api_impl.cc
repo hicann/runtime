@@ -1812,6 +1812,32 @@ TEST_F(CloudV2ApiImplTest, LaunchDqsTask_Test)
     delete apiErrDecorator_;
 }
 
+TEST_F(CloudV2ApiImplTest, StreamGetPriority_Test)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
+
+    Stream *stream = nullptr;
+    rtError_t error = apiDecorator_->StreamGetPriority(stream, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete apiDecorator_;
+}
+
+TEST_F(CloudV2ApiImplTest, StreamGetFlags_Test)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
+
+    Stream *stream = nullptr;
+    rtError_t error = apiDecorator_->StreamGetFlags(stream, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete apiDecorator_;
+}
+
 uint32_t stub_open_service(const uint32_t device_id, const NetServiceOpenArgs * args)
 {
     return RT_ERROR_NONE;

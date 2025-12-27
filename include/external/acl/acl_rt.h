@@ -2194,6 +2194,30 @@ ACL_FUNC_VISIBILITY aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamSta
 
 /**
  * @ingroup AscendCL
+ * @brief Query priority of the stream .
+ *
+ * @param  stream [IN]   the stream to query
+ * @param  priority [OUT]  stream priority
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority);
+
+/**
+ * @ingroup AscendCL
+ * @brief Query flags of the stream .
+ *
+ * @param  stream [IN]   the stream to query
+ * @param  flags [OUT]  stream flags
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags);
+
+/**
+ * @ingroup AscendCL
  * @brief Blocks the operation of the specified Stream until
  * the specified Event is completed.
  * Support for multiple streams waiting for the same event.

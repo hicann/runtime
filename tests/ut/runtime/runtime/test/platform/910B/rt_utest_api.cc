@@ -791,6 +791,53 @@ TEST_F(CloudV2ApiTest2, notify_record1)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiTest2, stream_get_priority)
+{
+    rtError_t error;
+    rtStream_t stream;
+    uint32_t priority = 0;
+
+    error = rtStreamCreateWithFlags(&stream, 5, RT_STREAM_FORBIDDEN_DEFAULT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamGetPriority(stream, &priority);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(priority, 5);
+
+    error = rtStreamGetPriority(nullptr, &priority);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamGetPriority(stream, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest2, stream_get_flags)
+{
+    rtStream_t stream;
+    rtError_t error = RT_ERROR_NONE;
+    uint32_t flags = 0;
+
+    error = rtStreamCreateWithFlags(&stream, 1, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamGetFlags(stream, &flags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(flags, RT_STREAM_PERSISTENT);
+
+    error = rtStreamGetFlags(nullptr, &flags);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamGetFlags(stream, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+
 TEST_F(CloudV2ApiTest2, rtStreamSetModeTest_normal)
 {
     rtError_t error;

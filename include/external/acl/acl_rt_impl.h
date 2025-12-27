@@ -199,6 +199,10 @@ ACL_FUNC_VISIBILITY aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream s
 
 ACL_FUNC_VISIBILITY aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status);
 
+ACL_FUNC_VISIBILITY aclError aclrtStreamGetPriorityImpl(aclrtStream stream, uint32_t *priority);
+
+ACL_FUNC_VISIBILITY aclError aclrtStreamGetFlagsImpl(aclrtStream stream, uint32_t *flags);
+
 ACL_FUNC_VISIBILITY aclError aclrtStreamWaitEventImpl(aclrtStream stream, aclrtEvent event);
 
 ACL_FUNC_VISIBILITY aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent event, int32_t timeout);
