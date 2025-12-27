@@ -29,9 +29,9 @@ ut_path_map["adump"]="/tests/ut/adump"
 # print usage message
 usage() {
   echo "Usage:"
-  echo "  sh build.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
-  echo "              [-t | --target <target1> <target2> ...]"
-  echo "               [-u | --ut] [-c | --cov]"
+  echo "  sh build_ut.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
+  echo "                 [-t | --target <target1> <target2> ...]"
+  echo "                 [-u | --ut] [-c | --cov]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"

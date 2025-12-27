@@ -150,7 +150,7 @@ bash build.sh
 bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c
 ```
 - `--ut`可以指定需要执行的`tests/ut`目录下的用例文件，例如`acl、runtime`等;
-- `--target`可以指定需要执行的用例文件编译出来的目标二进制文件（可能有多个），例如acl用例可以使用`tests/ut/acl/CMakeLists.txt`文件中定义的`ascendcl_utest`；runtime用例可以使用`tests/ut/runtime/runtime/CMakeLists.txt`文件中定义的`runtime_utest_task_cloudv2`，执行runtime全量用例则需要指定target为`runtime_ut`;
+- `--target`可以指定需要执行的用例文件编译出来的目标二进制文件（可能有多个），例如acl用例可以使用`tests/ut/acl/CMakeLists.txt`文件中定义的`ascendcl_utest`；runtime用例可以使用`tests/ut/runtime/runtime/CMakeLists.txt`文件中定义的`runtime_utest_task_910B`，执行runtime全量用例则需要指定target为`runtime_ut`;
 - `-c`可以获取覆盖率（如无需获取覆盖率，可省略此参数）。
 
 UT测试用例编译输出目录为`build`，如果想清除历史编译记录，可以执行如下操作：
