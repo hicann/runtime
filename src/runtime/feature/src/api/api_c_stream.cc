@@ -215,6 +215,30 @@ rtError_t rtGetStreamId(rtStream_t stm, int32_t *streamId)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtStreamGetPriority(const rtStream_t stm, uint32_t *priority)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_NAME(__func__);
+    Stream * const exeStream = static_cast<Stream *>(stm);
+    const rtError_t ret = apiInstance->StreamGetPriority(exeStream, priority);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t *flags)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_NAME(__func__);
+    Stream * const exeStream = static_cast<Stream *>(stm);
+    const rtError_t ret = apiInstance->StreamGetFlags(exeStream, flags);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
 {
     Api * const apiInstance = Api::Instance();

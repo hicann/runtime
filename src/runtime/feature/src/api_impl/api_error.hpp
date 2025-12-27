@@ -136,6 +136,8 @@ public:
     rtError_t UseStreamResInCurrentThread(const Stream *const stm) override;
     rtError_t NotUseStreamResInCurrentThread(const Stream *const stm) override;
     rtError_t GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t *const value) override;
+    rtError_t StreamGetPriority(Stream * const stm, uint32_t * const priority) override;
+    rtError_t StreamGetFlags(Stream * const stm, uint32_t * const flags) override;
 
     // event API
     rtError_t EventCreate(Event ** const evt, const uint64_t flag) override;

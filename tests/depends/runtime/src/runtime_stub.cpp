@@ -127,6 +127,18 @@ rtError_t aclStub::rtStreamQuery(rtStream_t stream)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtStreamGetPriority(rtStream_t stream, uint32_t *priority)
+{
+    *priority = 0;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtStreamGetFlags(rtStream_t stream, uint32_t *flags)
+{
+    *flags = 0;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtStreamWaitEvent(rtStream_t stream, rtEvent_t event)
 {
     return RT_ERROR_NONE;
@@ -2299,6 +2311,16 @@ rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stream, const int32_t timeou
 rtError_t rtStreamQuery(rtStream_t stream)
 {
     return MockFunctionTest::aclStubInstance().rtStreamQuery(stream);
+}
+
+rtError_t rtStreamGetPriority(rtStream_t stream, uint32_t *priority)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamGetPriority(stream, priority);
+}
+
+rtError_t rtStreamGetFlags(rtStream_t stream, uint32_t *flags)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamGetFlags(stream, flags);
 }
 
 rtError_t rtStreamWaitEvent(rtStream_t stream, rtEvent_t event)

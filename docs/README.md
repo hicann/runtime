@@ -97,6 +97,8 @@ Runtime API参考的目录如下：
     -   [aclrtRegStreamStateCallback](api_docs/aclrtRegStreamStateCallback.md)
     -   [acIrtStreamStop](api_docs/acIrtStreamStop.md)
     -   [aclrtPersistentTaskClean](api_docs/aclrtPersistentTaskClean.md)
+    -   [aclrtStreamGetPriority](api_docs/aclrtStreamGetPriority.md)
+    -   [aclrtStreamGetFlags](api_docs/aclrtStreamGetFlags.md)
 
 -   [Event管理](api_docs\Event管理.md)
     -   [aclrtCreateEvent](api_docs\aclrtCreateEvent.md)

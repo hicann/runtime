@@ -425,6 +425,16 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
     return aclrtStreamQueryImpl(stream, status);
 }
 
+aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)
+{
+    return aclrtStreamGetPriorityImpl(stream, priority);
+}
+
+aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)
+{
+    return aclrtStreamGetFlagsImpl(stream, flags);
+}
+
 aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 {
     return aclrtStreamWaitEventImpl(stream, event);

@@ -69,7 +69,7 @@ aclError aclrtRecordNotifyImpl(aclrtNotify notify, aclrtStream stream)
 aclError aclrtWaitAndResetNotifyImpl(aclrtNotify notify, aclrtStream stream, uint32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtWaitAndResetNotify);
-    ACL_LOG_INFO("start to execute aclrtWaitAndResetNotify, timeout is [%u] ms", timeout);
+    ACL_LOG_INFO("start to execute aclrtWaitAndResetNotify, timeout is [%u]s", timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
 
     const rtError_t rtErr = rtsNotifyWaitAndReset(static_cast<rtNotify_t>(notify),

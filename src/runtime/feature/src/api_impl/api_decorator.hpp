@@ -133,6 +133,8 @@ public:
     rtError_t StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handle) override;
     rtError_t StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle) override;
     rtError_t StreamEndTaskUpdate(Stream * const stm) override;
+    rtError_t StreamGetPriority(Stream * const stm, uint32_t * const priority) override;
+    rtError_t StreamGetFlags(Stream * const stm, uint32_t * const flags) override;
 
     // event API
     rtError_t EventCreate(Event ** const evt, const uint64_t flag) override;

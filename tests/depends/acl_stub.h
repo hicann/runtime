@@ -88,6 +88,8 @@ public:
     virtual rtError_t rtStreamSynchronize(rtStream_t stream);
     virtual rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stream, const int32_t timeout);
     virtual rtError_t rtStreamQuery(rtStream_t stream);
+    virtual rtError_t rtStreamGetPriority(rtStream_t stream, uint32_t *priority);
+    virtual rtError_t rtStreamGetFlags(rtStream_t stream, uint32_t *flags);
     virtual rtError_t rtStreamWaitEvent(rtStream_t stream, rtEvent_t event);
     virtual rtError_t rtStreamWaitEventWithTimeout(rtStream_t stream, rtEvent_t event, uint32_t timeout);
     virtual rtError_t rtIpcGetEventHandle(rtEvent_t event, rtIpcEventHandle_t *handle);
@@ -551,6 +553,8 @@ public:
     MOCK_METHOD1(rtStreamSynchronize, rtError_t(rtStream_t stream));
     MOCK_METHOD2(rtStreamSynchronizeWithTimeout, rtError_t(rtStream_t stream, const int32_t timeout));
     MOCK_METHOD1(rtStreamQuery, rtError_t(rtStream_t stream));
+    MOCK_METHOD2(rtStreamGetPriority, rtError_t(rtStream_t stream, uint32_t *priority));
+    MOCK_METHOD2(rtStreamGetFlags, rtError_t(rtStream_t stream, uint32_t *flags));
     MOCK_METHOD2(rtStreamWaitEvent, rtError_t(rtStream_t stream, rtEvent_t event));
     MOCK_METHOD3(rtStreamWaitEventWithTimeout, rtError_t(rtStream_t stream, rtEvent_t event, uint32_t timeout));
     MOCK_METHOD2(rtIpcGetEventHandle, rtError_t(rtEvent_t event, rtIpcEventHandle_t *handle));

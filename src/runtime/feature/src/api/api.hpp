@@ -222,6 +222,8 @@ public:
     virtual rtError_t UseStreamResInCurrentThread(const Stream *const stm) = 0;
     virtual rtError_t NotUseStreamResInCurrentThread(const Stream *const stm) = 0;
     virtual rtError_t GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t *const value) = 0;
+    virtual rtError_t StreamGetPriority(Stream * const stm, uint32_t * const priority) = 0;
+    virtual rtError_t StreamGetFlags(Stream * const stm, uint32_t * const flags) = 0;
 
     // event API
     virtual rtError_t EventCreate(Event ** const evt, const uint64_t flag) = 0;

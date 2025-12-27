@@ -1041,6 +1041,18 @@ rtError_t ApiErrorDecorator::GetCqId(Stream * const stm, uint32_t * const cqId, 
     return impl_->GetCqId(stm, cqId, logicCqId);
 }
 
+rtError_t ApiErrorDecorator::StreamGetPriority(Stream * const stm,  uint32_t * const priority)
+{
+    NULL_PTR_RETURN_MSG_OUTER(priority, RT_ERROR_INVALID_VALUE);
+    return impl_->StreamGetPriority(stm, priority);
+}
+
+rtError_t ApiErrorDecorator::StreamGetFlags(Stream * const stm,  uint32_t * const flags)
+{
+    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
+    return impl_->StreamGetFlags(stm, flags);
+}
+
 rtError_t ApiErrorDecorator::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
     uint32_t * const maxTaskCount)
 {

@@ -142,6 +142,27 @@ RTS_API rtError_t rtStreamCreateWithConfig(rtStream_t *stm, rtStreamConfigHandle
 
 /**
  * @ingroup dvrt_stream
+ * @brief query stream priority
+ * @param [in] stm  to query
+ * @param [out] priority   stream priority
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtStreamGetPriority(const rtStream_t stm, uint32_t *priority);
+
+/**
+ * @ingroup dvrt_stream
+ * @brief query stream flags
+ * @param [in] stm  to query
+ * @param [out] flags  stream op flags
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t *flags);
+
+
+/**
+ * @ingroup dvrt_stream
  * @brief create stream instance
  * @param [in] stm   stream hadle
  * @param [out] sqId   stream op sqId

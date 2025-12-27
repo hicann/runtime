@@ -398,6 +398,16 @@ rtError_t ApiDecorator::GetCqId(Stream * const stm, uint32_t * const cqId, uint3
     return impl_->GetCqId(stm, cqId, logicCqId);
 }
 
+rtError_t ApiDecorator::StreamGetPriority(Stream * const stm, uint32_t * const priority)
+{
+    return impl_->StreamGetPriority(stm, priority);
+}
+
+rtError_t ApiDecorator::StreamGetFlags(Stream * const stm, uint32_t * const flags)
+{
+    return impl_->StreamGetFlags(stm, flags);
+}
+
 rtError_t ApiDecorator::EventCreate(Event ** const evt, const uint64_t flag)
 {
     return impl_->EventCreate(evt, flag);
