@@ -2680,7 +2680,102 @@ TEST_F(ProfilerTest, LableTest)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, ProfileDecoratorApiTest)
+TEST_F(ProfilerTest, OnlineProfMallocTest)
+{
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    RawDevice *dev = dynamic_cast<RawDevice *>(device);
+    EXPECT_NE(dev, nullptr);
+    NpuDriver *drv = dynamic_cast<NpuDriver *>(dev->driver_);
+    EXPECT_NE(drv, nullptr);
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemSetSync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::DevMemFlushCache).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::HostMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(memset_s).stubs().will(returnValue(EOK)).then(returnValue(EOK - 1));
+    auto error = OnlineProf::OnlineProfMalloc(stream);
+    EXPECT_NE(error, RT_ERROR_NONE);
+    delete stream;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ProfilerTest, OnlineProfFreeTest)
+{
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    RawDevice *dev = dynamic_cast<RawDevice *>(device);
+    EXPECT_NE(dev, nullptr);
+    NpuDriver *drv = dynamic_cast<NpuDriver *>(dev->driver_);
+    EXPECT_NE(drv, nullptr);
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    auto error = OnlineProf::OnlineProfFree(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete stream;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ProfilerTest, GetOnlineProfilingDataTest)
+{
+    uint8_t deviceMem[512];
+    uint8_t hostRtMem[512];
+    uint8_t hostTsMem[512];
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    EXPECT_NE(device, nullptr);
+    RawDevice *dev = dynamic_cast<RawDevice *>(device);
+    EXPECT_NE(dev, nullptr);
+    NpuDriver *drv = dynamic_cast<NpuDriver *>(dev->driver_);
+    EXPECT_NE(drv, nullptr);
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+    stream->SetOnProfDeviceAddr((void *)&deviceMem);
+    stream->SetOnProfHostRtAddr((void *)&hostRtMem);
+    stream->SetOnProfHostTsAddr((void *)&hostTsMem);
+    rtProfDataInfo_t pProfData = {0};
+    auto error = OnlineProf::GetOnlineProfilingData(stream, &pProfData, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete stream;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ProfilerTest, ProfileDecoratorKernelApiTest)
+{
+    ApiImpl* apiImpl_ = new ApiImpl();
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MetadataRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::DependencyRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionStart).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelFusionEnd).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CpuKernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CpuKernelLaunchExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MultipleTaskInfoLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
+    profiler->SetProfLogEnable(true);
+    auto error = profiler->apiProfileDecorator_->MetadataRegister(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->DependencyRegister(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->KernelFusionStart(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->KernelFusionEnd(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rtAicpuArgsEx_t aicpuArgs = {0};
+    error = profiler->apiProfileDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, &aicpuArgs, nullptr, nullptr, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->MultipleTaskInfoLaunch(nullptr, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    profiler->SetProfLogEnable(false);
+    delete apiImpl_;
+}
+
+TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)
 {
     ApiImpl* apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CntNotifyCreate).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2689,7 +2784,9 @@ TEST_F(ProfilerTest, ProfileDecoratorApiTest)
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CntNotifyReset).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CntNotifyWaitWithTimeout).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetCntNotifyAddress).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::WriteValue).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventCreateForNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventRecordForNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetEventID).stubs().will(returnValue(RT_ERROR_NONE));
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->SetProfLogEnable(true);
     auto error = profiler->apiProfileDecorator_->CntNotifyCreate(0, nullptr, 0);
@@ -2704,7 +2801,71 @@ TEST_F(ProfilerTest, ProfileDecoratorApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->GetCntNotifyAddress(nullptr, nullptr, NOTIFY_TABLE_SLICE);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->EventCreateForNotify(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->EventRecordForNotify(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->GetEventID(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    profiler->SetProfLogEnable(false);
+    delete apiImpl_;
+}
+
+TEST_F(ProfilerTest, ProfileDecoratorMemApiTest)
+{
+    ApiImpl* apiImpl_ = new ApiImpl();
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostMalloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ReduceAsync).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetRunMode).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CmoAddrTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetOverflowAddr).stubs().will(returnValue(RT_ERROR_NONE));
+    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
+    profiler->SetProfLogEnable(true);
+    auto error = profiler->apiProfileDecorator_->HostMalloc(nullptr, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->HostFree(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->ReduceAsync(nullptr, nullptr, 0, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->GetRunMode(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->CmoAddrTaskLaunch(nullptr, 0, RT_CMO_PREFETCH, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->CtxGetOverflowAddr(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    profiler->SetProfLogEnable(false);
+    delete apiImpl_;
+}
+
+TEST_F(ProfilerTest, ProfileDecoratorDeviceApiTest)
+{
+    ApiImpl* apiImpl_ = new ApiImpl();
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetDeviceSatStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CleanDeviceSatStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetLogicDevIdByUserDevId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MemWriteValue).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::MemWaitValue).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::LaunchHostFunc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::WriteValue).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelExecuteSync).stubs().will(returnValue(RT_ERROR_NONE));
+    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
+    profiler->SetProfLogEnable(true);
+    auto error = profiler->apiProfileDecorator_->GetDeviceSatStatus(nullptr, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->CleanDeviceSatStatus(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->GetLogicDevIdByUserDevId(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->MemWriteValue(nullptr, 0, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->MemWaitValue(nullptr, 0, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->LaunchHostFunc(nullptr, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->WriteValue(nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = profiler->apiProfileDecorator_->ModelExecuteSync(nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     profiler->SetProfLogEnable(false);
     delete apiImpl_;
