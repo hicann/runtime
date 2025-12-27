@@ -15,6 +15,7 @@
 #include "runtime/rt.h"
 #include "npu_driver.hpp"
 #include "profiler.hpp"
+#include "ctrl_stream.hpp"
 #include "api_profile_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
 #include "profiler_struct.hpp"
@@ -239,6 +240,133 @@ TEST_F(StarsEngineTest, SendCommand)
     EXPECT_EQ(err, 0U);
     stream_->SetAbortStatus(RT_ERROR_NONE);
 }
+
+
+TEST_F(StarsEngineTest, CheckReportSimuFlag)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task= {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+
+    rtTsReport_t taskReport = {};
+    rtStarsCqe_t cqe01 = {};
+    tsReportBuf_t  tsBuf = {starsCqe:&cqe01};
+    taskReport.msgBuf = tsBuf;
+
+    engine_ -> SetReportSimuFlag(taskReport);
+    bool res =  engine_ -> CheckReportSimuFlag(taskReport);
+    EXPECT_EQ(res, false);
+}
+
+TEST_F(StarsEngineTest, ReportSocketCloseProcV2)
+{
+    rtError_t err = RT_ERROR_SOCKET_CLOSE;
+    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    engine_-> ReportSocketCloseProcV2();
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, ReportStatusOomProc)
+{
+    rtError_t err = RT_ERROR_SOCKET_CLOSE;
+    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    engine_-> ReportStatusOomProc(err, 0);
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, ReportTimeoutProc)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+
+    uint16_t taskId;
+    engine_ -> IsExeTaskSame(task.stream, taskId);
+    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    int32_t timeoutCnt = 0;
+    uint32_t streamId;
+    uint32_t execId;
+    uint64_t msec;
+    engine_ -> ReportTimeoutProc(err,timeoutCnt, streamId, taskId, execId, msec);
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, RecycleTask)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+
+    uint16_t taskId;
+    engine_ -> IsExeTaskSame(task.stream, taskId);
+    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
+
+    uint32_t stmId;
+    engine_ -> RecycleTask(stmId, 0);
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, RecycleTask01)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+
+    uint16_t taskId;
+    engine_ -> IsExeTaskSame(task.stream, taskId);
+    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    TaskInfo *task01 = nullptr;
+    MOCKER(&TaskFactory::GetTask).stubs().will(returnValue(&task)).then(returnValue(task01));
+    uint32_t stmId;
+    engine_ -> RecycleTask(stmId, 0);
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, SendFlipTask)
+{
+    rtError_t err = RT_ERROR_NONE;
+    uint16_t taskId = 0;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::IsNeedSendFlipTask).stubs().will(returnValue(true)).then(returnValue(false));
+    err = engine_ -> SendFlipTask(taskId, stream_);
+    EXPECT_EQ(err, RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, SendTaskWithoutError)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+    uint16_t taskId;;
+    uint32_t flipTaskId;
+    MOCKER(&Stream::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
+    err = engine_ -> Engine::SendTask(&task,taskId, &flipTaskId);
+    EXPECT_EQ(err, RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, RecycleCtrlTask)
+{
+    rtError_t err = RT_ERROR_NONE;
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+    CtrlStream ctrStm(device_);
+    engine_ -> Engine::RecycleCtrlTask(&ctrStm, 0);
+    stream_ -> SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(StarsEngineTest, ProcessTaskDavincList)
+{
+    bool res = false;
+    uint32_t endTaskId = 0;
+    res = engine_ -> Engine::ProcessTaskDavinciList(stream_, endTaskId, 0);
+    EXPECT_EQ(res, false);
+}
+
 
 TEST_F(StarsEngineTest, StateDown)
 {
