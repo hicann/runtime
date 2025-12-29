@@ -1781,14 +1781,18 @@ TEST_F(CloudV2ApiImplTest, modelGetName_decorator_test)
     Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
     ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
 
-
     rtModel_t  model;
+    uint32_t maxLen = 128;
+    char_t mdlName[maxLen] = {0};
     rtError_t error = rtsModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtsModelSetName(model, "modelA");
     char name[128];
     error = apiDecorator_->ModelGetName(static_cast<Model *>(model), 128, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsModelGetName(model, maxLen, mdlName);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiDecorator_;

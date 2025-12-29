@@ -483,3 +483,11 @@ TEST_F(CloudV2IpcApiTest, MemGetAllocationPropertiesFromHandle_Prop_decorator)
    
     delete apiDecorator_;
 }
+
+TEST_F(CloudV2IpcApiTest, ipc_memory_close_normal)
+{
+    rtError_t error;
+
+    error = rtsIpcMemClose("aaa");
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
