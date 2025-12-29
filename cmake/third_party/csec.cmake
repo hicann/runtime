@@ -81,7 +81,7 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
     endif()    
     set(LIBC_SEC_HEADER ${CSEC_SOURCE_DIR}/include)
 else()
-    set(LIBC_SEC_HEADER ${RUNTIME_DIR}/third_party/libc_sec/include)
+    message("not download csec source code")
 endif()
 
 

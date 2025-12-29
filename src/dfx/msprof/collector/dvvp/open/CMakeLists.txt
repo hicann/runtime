@@ -324,7 +324,7 @@ target_include_directories(profimpl_share_device PRIVATE
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/dfx/msprof/inc
-    ${RUNTIME_DIR}/third_party/libc_sec/include
+    ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/include/driver
     ${RUNTIME_DIR}/include/external
     ${RUNTIME_DIR}/src/dfx/error_manager
