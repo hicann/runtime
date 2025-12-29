@@ -186,6 +186,25 @@ TEST_F(KernelApiTest, TestRtsLaunchKernelWithDevArgs)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(KernelApiTest, TestRtsFuncGetByName)
+{
+    rtFuncHandle funcHandle;
+    rtBinHandle binHandle;
+    char_t name[128]="testName";
+
+    rtError_t error = rtsFuncGetByName(binHandle, name, &funcHandle);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(KernelApiTest, TestRegisterCpuFunc)
+{
+    PlainProgram prog;
+    rtFuncHandle funcHandle = nullptr;
+    rtError_t error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(nullptr, funcHandle);
+}
+
 TEST_F(KernelApiTest, TestBinaryLoadFromFileFailed)
 {
     ApiImpl apiImpl;

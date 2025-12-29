@@ -482,3 +482,51 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsNewDeviceId)
     error = rtsGetUserDevIdByLogicDevId(-1, &count3);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
+
+rtError_t ApiGetDeviceUuidStub(Api *api, int32_t devId, rtUuid_t *uuid)
+{
+    UNUSED(api);
+    UNUSED(devId);
+    memset_s(uuid->bytes, RT_NPU_UUID_LENGTH, 0xaa, RT_NPU_UUID_LENGTH);
+
+    return RT_ERROR_NONE;
+}
+
+TEST_F(CloudV2ApiDeviceTest, get_device_uuid_success)
+{ 
+    int32_t devId = 0;
+    rtUuid_t uuid;
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceUuid)
+        .stubs()
+        .will(invoke(ApiGetDeviceUuidStub));
+
+    auto error = rtGetDeviceUuid(devId, &uuid);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    char exepectUuid[RT_NPU_UUID_LENGTH];
+    memset_s(exepectUuid, RT_NPU_UUID_LENGTH, 0xaa, RT_NPU_UUID_LENGTH);
+    EXPECT_EQ(memcmp(uuid.bytes, exepectUuid, RT_NPU_UUID_LENGTH), 0);
+}
+
+TEST_F(CloudV2ApiDeviceTest, get_device_uuid_fail)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    rtUuid_t uuid;
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceUuid)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NULL))
+        .then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT))
+        .then(returnValue(RT_ERROR_DEVICE_ID));
+
+    error = rtGetDeviceUuid(devId, &uuid);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+
+    error = rtGetDeviceUuid(devId, &uuid);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    error = rtGetDeviceUuid(devId, &uuid);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
+}

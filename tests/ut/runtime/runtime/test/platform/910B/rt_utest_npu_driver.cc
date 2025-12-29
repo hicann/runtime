@@ -2942,6 +2942,9 @@ TEST_F(CloudV2NpuDriverTest, host_register_03)
 
     error = rtsHostRegister(&ptr, 100, RT_HOST_REGISTER_MAPPED, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtsHostUnregister(nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
 TEST_F(CloudV2NpuDriverTest, GetDqsQueInfo_GetDqsMbufPoolInfo_Test)

@@ -221,6 +221,7 @@ TEST_F(ApiAbnormalTest910B, cntNotify_abnormal)
     rtError_t ret = RT_ERROR_NONE;
     rtCntNotify_t inNotify;
     rtCntNotifyWaitInfo_t waitInfo = {RT_CNT_NOTIFY_WAIT_EQUAL_MODE, 0, 10, false};
+    rtCntNotifyRecordInfo_t recordInfo = {RT_CNT_NOTIFY_RECORD_ADD_MODE, 0U};
     uint32_t notifyId = 0;
     ret = rtCntNotifyCreate(0, nullptr);
     EXPECT_NE(ret, RT_ERROR_NONE);
@@ -239,6 +240,8 @@ TEST_F(ApiAbnormalTest910B, cntNotify_abnormal)
     ret = rtGetCntNotifyId(nullptr, nullptr);
     EXPECT_NE(ret, RT_ERROR_NONE);
     ret = rtCntNotifyCreateServer(&inNotify, 0);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+    ret =  rtsCntNotifyRecord(inNotify, nullptr, &recordInfo);
     EXPECT_NE(ret, RT_ERROR_NONE);
     ret = rtsCntNotifyWaitWithTimeout(inNotify, nullptr, &waitInfo);
     EXPECT_NE(ret, RT_ERROR_NONE);
@@ -314,6 +317,15 @@ TEST_F(ApiAbnormalTest910B, rtIpcDestroyMemoryName_abnormal)
 TEST_F(ApiAbnormalTest910B, debug_abnormal)
 {
     rtError_t error;
+    std::vector<uint8_t> data(8192U);
+    rtDebugMemoryParam param = {};
+    param.debugMemType = RT_DEBUG_MEM_TYPE_L0A;
+    param.coreType = RT_CORE_TYPE_AIC;
+    param.coreId = 0U;
+    param.elementSize = 0U;
+    param.srcAddr = 0U;
+    param.dstAddr = reinterpret_cast<uint64_t>(data.data());
+    param.memLen = 8192U;
 
     error = rtDebugSetDumpMode(RT_DEBUG_DUMP_ON_EXCEPTION);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -322,6 +334,30 @@ TEST_F(ApiAbnormalTest910B, debug_abnormal)
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = rtDebugReadAICore(nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtsDebugReadAICore(&param);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtsGetErrorVerbosefault_abnormal)
+{
+    rtError_t error;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+
+    MOCKER(halGetFaultEvent)
+        .stubs()
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+    rtErrorInfo errorInfo = {};
+    error = rtsGetErrorVerbose(0, &errorInfo);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtsRepairError_abnormal)
+{
+    rtError_t error;
+
+    error = rtsRepairError(0, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -374,6 +410,49 @@ TEST_F(ApiAbnormalTest910B, rtNpuClearFloatStatusAbnormal)
     rtError_t error;
     error = rtNpuClearFloatStatus(0, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtLaunchKernelExByFuncHandleAbnormal)
+{
+    rtError_t error;
+    error = rtLaunchKernelExByFuncHandle(nullptr, nullptr, nullptr, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, ModelDebugJsonPrint_Error)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtModel_t  model;
+    rtModel_t captureMdl;
+    rtCallback_t stub_func = (rtCallback_t)0x12345;
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+
+    MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = rtModelDebugJsonPrint(nullptr, "graph_dump.json", 0);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtMemcpyAsyncWithOffset_Error)
+{
+    rtError_t error;
+
+    error = rtMemcpyAsyncWithOffset(nullptr, 0, 0, nullptr, 0, 0, RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest910B, rtSnapShotProcessGetStateTest)
+{
+    rtError_t error;
+    rtProcessState state;
+
+    error = rtSnapShotProcessGetState(&state);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtSnapShotProcessGetState(nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
 TEST_F(ApiAbnormalTest910B, rtsMemcpyAsyncTest)
