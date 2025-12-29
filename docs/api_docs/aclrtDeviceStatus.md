@@ -1,4 +1,4 @@
-# aclrtDeviceStatus<a name="ZH-CN_TOPIC_0000001721337009"></a>
+# aclrtDeviceStatus
 
 ```
 typedef enum aclrtDeviceStatus {

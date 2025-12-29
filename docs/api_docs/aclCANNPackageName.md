@@ -1,4 +1,4 @@
-# aclCANNPackageName<a name="ZH-CN_TOPIC_0000002195073950"></a>
+# aclCANNPackageName
 
 设置为ACL\_PKG\_NAME\_CANN，表示查询CANN的版本号；设置为其它值，表示查询CANN中具体某个模块的版本号。
 

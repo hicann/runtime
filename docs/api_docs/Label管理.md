@@ -1,4 +1,4 @@
-# Label管理<a name="ZH-CN_TOPIC_0000002271302562"></a>
+# Label管理
 
 -   **[aclrtCreateLabel](aclrtCreateLabel.md)**  
 

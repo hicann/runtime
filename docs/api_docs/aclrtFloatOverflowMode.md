@@ -1,4 +1,4 @@
-# aclrtFloatOverflowMode<a name="ZH-CN_TOPIC_0000001382754406"></a>
+# aclrtFloatOverflowMode
 
 ```
 typedef enum aclrtFloatOverflowMode {

@@ -1,74 +1,33 @@
-# aclrtNotifySetImportPidInterServer<a name="ZH-CN_TOPIC_0000002485826605"></a>
+# aclrtNotifySetImportPidInterServer
 
-## AI处理器支持情况<a name="section8178181118225"></a>
+## 产品支持情况
 
-<a name="table38301303189"></a>
-<table><thead align="left"><tr id="row20831180131817"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="p1883113061818"><a name="p1883113061818"></a><a name="p1883113061818"></a><span id="ph20833205312295"><a name="ph20833205312295"></a><a name="ph20833205312295"></a>AI处理器类型</span></p>
-</th>
-<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="p783113012187"><a name="p783113012187"></a><a name="p783113012187"></a>是否支持</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row220181016240"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="p48327011813"><a name="p48327011813"></a><a name="p48327011813"></a><span id="ph583230201815"><a name="ph583230201815"></a><a name="ph583230201815"></a><term id="zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000001312391781_term1253731311225"></a>Ascend 910C</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="p13190111042216"><a name="p13190111042216"></a><a name="p13190111042216"></a>√</p>
-</td>
-</tr>
-<tr id="row173226882415"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="p14832120181815"><a name="p14832120181815"></a><a name="p14832120181815"></a><span id="ph1483216010188"><a name="ph1483216010188"></a><a name="ph1483216010188"></a><term id="zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000001312391781_term11962195213215"></a>Ascend 910B</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="p2869174264211"><a name="p2869174264211"></a><a name="p2869174264211"></a>☓</p>
-</td>
-</tr>
-</tbody>
-</table>
 
-## 功能说明<a name="section36583473819"></a>
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
-针对Ascend 910C中的超节点产品，设置共享Notify的进程白名单。
+## 功能说明
 
-## 函数原型<a name="section13230182415108"></a>
+针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，设置共享Notify的进程白名单。
+
+## 函数原型
 
 ```
 aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *serverPids, size_t num)
 ```
 
-## 参数说明<a name="section75395119104"></a>
+## 参数说明
 
-<a name="zh-cn_topic_0122830089_table438764393513"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0122830089_row53871743113510"><th class="cellrowborder" valign="top" width="18%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0122830089_p1438834363520"><a name="zh-cn_topic_0122830089_p1438834363520"></a><a name="zh-cn_topic_0122830089_p1438834363520"></a>参数名</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.000000000000002%" id="mcps1.1.4.1.2"><p id="p1769255516412"><a name="p1769255516412"></a><a name="p1769255516412"></a>输入/输出</p>
-</th>
-<th class="cellrowborder" valign="top" width="68%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0122830089_p173881843143514"><a name="zh-cn_topic_0122830089_p173881843143514"></a><a name="zh-cn_topic_0122830089_p173881843143514"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0122830089_row2038874343514"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p1655619401428"><a name="p1655619401428"></a><a name="p1655619401428"></a>notify</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p16555144064210"><a name="p16555144064210"></a><a name="p16555144064210"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p7884145522717"><a name="p7884145522717"></a><a name="p7884145522717"></a>指定Notify。</p>
-<p id="p557375518329"><a name="p557375518329"></a><a name="p557375518329"></a>必须先调用<a href="aclrtNotifyGetExportKey.md">aclrtNotifyGetExportKey</a>接口获取指定Notify的共享名称，再作为入参传入。</p>
-</td>
-</tr>
-<tr id="row198943121925"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p1355324015422"><a name="p1355324015422"></a><a name="p1355324015422"></a>serverPids</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p4553164019429"><a name="p4553164019429"></a><a name="p4553164019429"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p1766324113419"><a name="p1766324113419"></a><a name="p1766324113419"></a>白名单信息数组。</p>
-</td>
-</tr>
-<tr id="row526518379305"><td class="cellrowborder" valign="top" width="18%" headers="mcps1.1.4.1.1 "><p id="p7265837123011"><a name="p7265837123011"></a><a name="p7265837123011"></a>num</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p18265133712303"><a name="p18265133712303"></a><a name="p18265133712303"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="68%" headers="mcps1.1.4.1.3 "><p id="p1084702318436"><a name="p1084702318436"></a><a name="p1084702318436"></a>serverPids数组的大小。</p>
-</td>
-</tr>
-</tbody>
-</table>
 
-## 返回值说明<a name="section25791320141317"></a>
+| 参数名 | 输入/输出 | 说明 |
+| --- | --- | --- |
+| notify | 输入 | 指定Notify。<br>必须先调用[aclrtNotifyGetExportKey](aclrtNotifyGetExportKey.md)接口获取指定Notify的共享名称，再作为入参传入。 |
+| serverPids | 输入 | 白名单信息数组。 |
+| num | 输入 | serverPids数组的大小。 |
+
+## 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
 

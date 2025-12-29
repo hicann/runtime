@@ -1,4 +1,4 @@
-# aclrtCompareDataType<a name="ZH-CN_TOPIC_0000002343368501"></a>
+# aclrtCompareDataType
 
 ```
 typedef enum { 

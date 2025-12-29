@@ -1,4 +1,4 @@
-# acltdtDataItem<a name="ZH-CN_TOPIC_0000001264921954"></a>
+# acltdtDataItem
 
 -   **[acltdtCreateDataItem](acltdtCreateDataItem.md)**  
 

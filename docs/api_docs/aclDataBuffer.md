@@ -1,4 +1,4 @@
-# aclDataBuffer<a name="ZH-CN_TOPIC_0000001312481349"></a>
+# aclDataBuffer
 
 -   **[aclCreateDataBuffer](aclCreateDataBuffer.md)**  
 

@@ -1,4 +1,4 @@
-# Context管理<a name="ZH-CN_TOPIC_0000001264921810"></a>
+# Context管理
 
 -   **[aclrtCreateContext](aclrtCreateContext.md)**  
 

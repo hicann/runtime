@@ -1,4 +1,4 @@
-# aclrtEngineType<a name="ZH-CN_TOPIC_0000002344333637"></a>
+# aclrtEngineType
 
 ```
 typedef enum { 

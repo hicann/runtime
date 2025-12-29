@@ -1,4 +1,4 @@
-# Kernel加载与执行<a name="ZH-CN_TOPIC_0000001726129505"></a>
+# Kernel加载与执行
 
 -   **[概念及使用说明](概念及使用说明.md)**  
 
@@ -15,6 +15,8 @@
 -   **[aclrtGetFunctionAddr](aclrtGetFunctionAddr.md)**  
 
 -   **[aclrtGetFunctionName](aclrtGetFunctionName.md)**  
+
+-   **[aclrtGetFunctionAttribute](aclrtGetFunctionAttribute.md)**  
 
 -   **[aclrtGetHardwareSyncAddr](aclrtGetHardwareSyncAddr.md)**  
 

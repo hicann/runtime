@@ -1,4 +1,4 @@
-# aclrtBinHandle<a name="ZH-CN_TOPIC_0000002218090372"></a>
+# aclrtBinHandle
 
 ```
 typedef void* aclrtBinHandle;

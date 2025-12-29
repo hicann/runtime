@@ -1,4 +1,4 @@
-# Profiling数据采集<a name="ZH-CN_TOPIC_0000001265400210"></a>
+# Profiling数据采集
 
 -   **[Profiling数据采集接口](Profiling数据采集接口.md)**  
 

@@ -1,4 +1,4 @@
-# aclrtLaunchKernelAttrId<a name="ZH-CN_TOPIC_0000002253071369"></a>
+# aclrtLaunchKernelAttrId
 
 ```
 typedef enum aclrtLaunchKernelAttrId {

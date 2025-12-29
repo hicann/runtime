@@ -1,4 +1,4 @@
-# 共享Buffer管理<a name="ZH-CN_TOPIC_0000001312481565"></a>
+# 共享Buffer管理
 
 -   **[acltdtAllocBuf](acltdtAllocBuf.md)**  
 

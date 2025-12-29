@@ -1,4 +1,4 @@
-# aclrtMemLocationType<a name="ZH-CN_TOPIC_0000001651188052"></a>
+# aclrtMemLocationType
 
 ```
 typedef enum aclrtMemLocationType {

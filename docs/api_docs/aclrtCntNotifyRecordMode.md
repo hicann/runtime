@@ -1,4 +1,4 @@
-# aclrtCntNotifyRecordMode<a name="ZH-CN_TOPIC_0000002462072616"></a>
+# aclrtCntNotifyRecordMode
 
 ```
 typedef enum {

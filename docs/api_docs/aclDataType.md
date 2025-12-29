@@ -1,4 +1,4 @@
-# aclDataType<a name="ZH-CN_TOPIC_0000001265241422"></a>
+# aclDataType
 
 ```
 typedef enum {

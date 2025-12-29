@@ -1,4 +1,4 @@
-# aclrtCmoType<a name="ZH-CN_TOPIC_0000002010000656"></a>
+# aclrtCmoType
 
 ```
 typedef enum aclrtCmoType {

@@ -1,4 +1,4 @@
-# aclrtMemcpyKind<a name="ZH-CN_TOPIC_0000002217977868"></a>
+# aclrtMemcpyKind
 
 ```
 typedef enum aclrtMemcpyKind {

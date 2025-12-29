@@ -1,4 +1,4 @@
-# aclprofStepInfo<a name="ZH-CN_TOPIC_0000001312400869"></a>
+# aclprofStepInfo
 
 -   **[aclprofCreateStepInfo](aclprofCreateStepInfo.md)**  
 

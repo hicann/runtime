@@ -1,4 +1,4 @@
-# aclrtMemLocation<a name="ZH-CN_TOPIC_0000001651171050"></a>
+# aclrtMemLocation
 
 ```
 typedef struct aclrtMemLocation {

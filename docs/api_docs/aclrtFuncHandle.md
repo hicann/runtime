@@ -1,4 +1,4 @@
-# aclrtFuncHandle<a name="ZH-CN_TOPIC_0000002218253602"></a>
+# aclrtFuncHandle
 
 ```
 typedef void* aclrtFuncHandle;

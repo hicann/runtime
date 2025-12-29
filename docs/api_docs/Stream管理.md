@@ -1,4 +1,4 @@
-# Stream管理<a name="ZH-CN_TOPIC_0000001312641657"></a>
+# Stream管理
 
 -   **[aclrtCreateStream](aclrtCreateStream.md)**  
 
@@ -44,7 +44,7 @@
 
 -   **[aclrtPersistentTaskClean](aclrtPersistentTaskClean.md)**  
 
--   **[aclrtStreamGetPriority](aclrtStreamGetPriority.md)**
+-   **[aclrtStreamGetPriority](aclrtStreamGetPriority.md)**  
 
--   **[aclrtStreamGetFlags](aclrtStreamGetFlags.md)**
+-   **[aclrtStreamGetFlags](aclrtStreamGetFlags.md)**  
 

@@ -1,4 +1,4 @@
-# aclprofStepTag<a name="ZH-CN_TOPIC_0000001265241378"></a>
+# aclprofStepTag
 
 ```
 typedef enum{

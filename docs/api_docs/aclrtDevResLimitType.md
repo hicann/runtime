@@ -1,4 +1,4 @@
-# aclrtDevResLimitType<a name="ZH-CN_TOPIC_0000002303801390"></a>
+# aclrtDevResLimitType
 
 ```
 typedef enum { 
@@ -11,7 +11,7 @@ typedef enum {
 
 -   对于以下产品，ACL\_RT\_DEV\_RES\_CUBE\_CORE表示Cube Core。
 
-    Ascend 910C
+    Atlas A3 训练系列产品/Atlas A3 推理系列产品
 
-    Ascend 910B
+    Atlas A2 训练系列产品/Atlas A2 推理系列产品
 

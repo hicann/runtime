@@ -1,4 +1,4 @@
-# aclrtMemAccessFlags<a name="ZH-CN_TOPIC_0000002505554601"></a>
+# aclrtMemAccessFlags
 
 ```
 typedef enum {

@@ -1,4 +1,4 @@
-# aclprofConfig<a name="ZH-CN_TOPIC_0000001265400618"></a>
+# aclprofConfig
 
 -   **[aclprofCreateConfig](aclprofCreateConfig.md)**  
 

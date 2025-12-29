@@ -1,4 +1,4 @@
-# aclrtCntNotifyRecordInfo<a name="ZH-CN_TOPIC_0000002461913020"></a>
+# aclrtCntNotifyRecordInfo
 
 ```
 typedef struct {

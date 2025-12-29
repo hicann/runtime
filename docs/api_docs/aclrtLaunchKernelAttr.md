@@ -1,4 +1,4 @@
-# aclrtLaunchKernelAttr<a name="ZH-CN_TOPIC_0000002218031718"></a>
+# aclrtLaunchKernelAttr
 
 ```
 typedef struct aclrtLaunchKernelAttr {

@@ -1,4 +1,4 @@
-# CntNotify管理<a name="ZH-CN_TOPIC_0000002456617128"></a>
+# CntNotify管理
 
 -   **[aclrtCntNotifyCreate](aclrtCntNotifyCreate.md)**  
 

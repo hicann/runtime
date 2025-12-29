@@ -1,4 +1,4 @@
-# Device管理<a name="ZH-CN_TOPIC_0000001312641881"></a>
+# Device管理
 
 -   **[aclrtSetDevice](aclrtSetDevice.md)**  
 
