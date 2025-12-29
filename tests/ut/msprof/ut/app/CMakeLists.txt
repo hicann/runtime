@@ -54,7 +54,6 @@ add_executable(
 
 set(libmsprofHeaderDir
     ${TOP_DIR}/output/third_party/gtest_shared/include
-    ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
