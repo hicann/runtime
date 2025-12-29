@@ -1,4 +1,4 @@
-# aclrtEventStatus<a name="ZH-CN_TOPIC_0000001312641733"></a>
+# aclrtEventStatus
 
 ```
 typedef enum aclrtEventStatus {

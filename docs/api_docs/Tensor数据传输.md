@@ -1,4 +1,4 @@
-# Tensor数据传输<a name="ZH-CN_TOPIC_0000001265081782"></a>
+# Tensor数据传输
 
 -   **[acltdtCreateChannel](acltdtCreateChannel.md)**  
 

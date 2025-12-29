@@ -1,4 +1,4 @@
-# aclrtLastErrLevel<a name="ZH-CN_TOPIC_0000002054963381"></a>
+# aclrtLastErrLevel
 
 ```
 typedef enum aclrtLastErrLevel {

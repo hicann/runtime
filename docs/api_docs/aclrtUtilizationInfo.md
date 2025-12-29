@@ -1,4 +1,4 @@
-# aclrtUtilizationInfo<a name="ZH-CN_TOPIC_0000001580776340"></a>
+# aclrtUtilizationInfo
 
 ```
 typedef struct aclrtUtilizationInfo {

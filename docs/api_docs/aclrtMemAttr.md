@@ -1,4 +1,4 @@
-# aclrtMemAttr<a name="ZH-CN_TOPIC_0000001699489897"></a>
+# aclrtMemAttr
 
 ```
 typedef enum aclrtMemAttr {
@@ -21,6 +21,6 @@ typedef enum aclrtMemAttr {
 
 ACL\_HBM\_MEM\_HUGE1G和ACL\_HBM\_MEM\_P2P\_HUGE1G选项各产品型号的支持情况不同，如下：
 
--   Ascend 910C，支持该选项。
--   Ascend 910B，支持该选项。
+-   Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持该选项。
+-   Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持该选项。
 

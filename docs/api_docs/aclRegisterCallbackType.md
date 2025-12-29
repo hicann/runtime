@@ -1,4 +1,4 @@
-# aclRegisterCallbackType<a name="ZH-CN_TOPIC_0000002452458288"></a>
+# aclRegisterCallbackType
 
 ```
 typedef enum aclRegisterCallbackType {

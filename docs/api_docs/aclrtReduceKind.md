@@ -1,4 +1,4 @@
-# aclrtReduceKind<a name="ZH-CN_TOPIC_0000002274820838"></a>
+# aclrtReduceKind
 
 ```
 typedef enum { 

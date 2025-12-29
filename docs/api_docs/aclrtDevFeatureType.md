@@ -1,4 +1,4 @@
-# aclrtDevFeatureType<a name="ZH-CN_TOPIC_0000002308857653"></a>
+# aclrtDevFeatureType
 
 ```
 typedef enum { 

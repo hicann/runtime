@@ -1,4 +1,4 @@
-# Event管理<a name="ZH-CN_TOPIC_0000001312481877"></a>
+# Event管理
 
 -   **[aclrtCreateEvent](aclrtCreateEvent.md)**  
 
@@ -35,4 +35,8 @@
 -   **[aclrtGetEventId](aclrtGetEventId.md)**  
 
 -   **[aclrtGetEventAvailNum](aclrtGetEventAvailNum.md)**  
+
+-   **[aclrtIpcGetEventHandle](aclrtIpcGetEventHandle.md)**  
+
+-   **[aclrtIpcOpenEventHandle](aclrtIpcOpenEventHandle.md)**  
 

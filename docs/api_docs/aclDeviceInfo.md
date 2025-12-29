@@ -1,4 +1,4 @@
-# aclDeviceInfo<a name="ZH-CN_TOPIC_0000001819827396"></a>
+# aclDeviceInfo
 
 ```
 typedef enum {

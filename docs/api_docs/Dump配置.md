@@ -1,4 +1,4 @@
-# Dump配置<a name="ZH-CN_TOPIC_0000002430943332"></a>
+# Dump配置
 
 -   **[aclmdlInitDump](aclmdlInitDump.md)**  
 

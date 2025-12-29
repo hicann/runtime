@@ -1,4 +1,4 @@
-# aclrtBinaryLoadOption<a name="ZH-CN_TOPIC_0000002218031714"></a>
+# aclrtBinaryLoadOption
 
 ```
 typedef struct {

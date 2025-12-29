@@ -1,4 +1,4 @@
-# aclFormat<a name="ZH-CN_TOPIC_0000001265241354"></a>
+# aclFormat
 
 ```
 typedef enum {

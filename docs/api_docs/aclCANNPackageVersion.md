@@ -1,4 +1,4 @@
-# aclCANNPackageVersion<a name="ZH-CN_TOPIC_0000002195233514"></a>
+# aclCANNPackageVersion
 
 ```
 #define ACL_PKG_VERSION_MAX_SIZE       128

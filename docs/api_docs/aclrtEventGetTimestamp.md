@@ -1,68 +1,34 @@
-# aclrtEventGetTimestamp<a name="ZH-CN_TOPIC_0000002171625801"></a>
+# aclrtEventGetTimestamp
 
-## AI处理器支持情况<a name="section15254644421"></a>
+## 产品支持情况
 
-<a name="zh-cn_topic_0000002219420921_table14931115524110"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002219420921_row1993118556414"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="zh-cn_topic_0000002219420921_p29315553419"><a name="zh-cn_topic_0000002219420921_p29315553419"></a><a name="zh-cn_topic_0000002219420921_p29315553419"></a><span id="zh-cn_topic_0000002219420921_ph59311455164119"><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a>AI处理器类型</span></p>
-</th>
-<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="zh-cn_topic_0000002219420921_p59313557417"><a name="zh-cn_topic_0000002219420921_p59313557417"></a><a name="zh-cn_topic_0000002219420921_p59313557417"></a>是否支持</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002219420921_row1693117553411"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p1493195513412"><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><span id="zh-cn_topic_0000002219420921_ph1093110555418"><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a>Ascend 910C</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p20931175524111"><a name="zh-cn_topic_0000002219420921_p20931175524111"></a><a name="zh-cn_topic_0000002219420921_p20931175524111"></a>√</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002219420921_row199312559416"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p0931555144119"><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><span id="zh-cn_topic_0000002219420921_ph1693115559411"><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a>Ascend 910B</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p129321955154117"><a name="zh-cn_topic_0000002219420921_p129321955154117"></a><a name="zh-cn_topic_0000002219420921_p129321955154117"></a>√</p>
-</td>
-</tr>
-</tbody>
-</table>
 
-## 功能说明<a name="section36583473819"></a>
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
+## 功能说明
 
 获取Event的执行结束时间点（表示从昇腾AI处理器系统启动以来的时间）。
 
 本接口需与其它关键接口配合使用，接口调用顺序：调用[aclrtCreateEvent](aclrtCreateEvent.md)/[aclrtCreateEventWithFlag](aclrtCreateEventWithFlag.md)接口创建Event**--\>**调用[aclrtRecordEvent](aclrtRecordEvent.md)接口在Stream中记录Event**\>**调用[aclrtSynchronizeStream](aclrtSynchronizeStream.md)接口阻塞应用程序运行，直到指定Stream中的所有任务都完成**--\>**调用aclrtEventGetTimestamp接口获取Event的执行时间。
 
-## 函数原型<a name="section13230182415108"></a>
+## 函数原型
 
 ```
 aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t *timestamp)
 ```
 
-## 参数说明<a name="section75395119104"></a>
+## 参数说明
 
-<a name="zh-cn_topic_0122830089_table438764393513"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0122830089_row53871743113510"><th class="cellrowborder" valign="top" width="14.000000000000002%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0122830089_p1438834363520"><a name="zh-cn_topic_0122830089_p1438834363520"></a><a name="zh-cn_topic_0122830089_p1438834363520"></a>参数名</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.000000000000002%" id="mcps1.1.4.1.2"><p id="p1769255516412"><a name="p1769255516412"></a><a name="p1769255516412"></a>输入/输出</p>
-</th>
-<th class="cellrowborder" valign="top" width="72%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0122830089_p173881843143514"><a name="zh-cn_topic_0122830089_p173881843143514"></a><a name="zh-cn_topic_0122830089_p173881843143514"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0122830089_row2038874343514"><td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.1 "><p id="p039116593511"><a name="p039116593511"></a><a name="p039116593511"></a>event</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p16390135183518"><a name="p16390135183518"></a><a name="p16390135183518"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="72%" headers="mcps1.1.4.1.3 "><p id="p134414918118"><a name="p134414918118"></a><a name="p134414918118"></a>查询的Event。</p>
-</td>
-</tr>
-<tr id="row133911674512"><td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.1 "><p id="p1440116204510"><a name="p1440116204510"></a><a name="p1440116204510"></a>timestamp</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.000000000000002%" headers="mcps1.1.4.1.2 "><p id="p640121610453"><a name="p640121610453"></a><a name="p640121610453"></a>输出</p>
-</td>
-<td class="cellrowborder" valign="top" width="72%" headers="mcps1.1.4.1.3 "><p id="p193436495115"><a name="p193436495115"></a><a name="p193436495115"></a>Event执行结束的时间点，单位为微秒。</p>
-</td>
-</tr>
-</tbody>
-</table>
 
-## 返回值说明<a name="section25791320141317"></a>
+| 参数名 | 输入/输出 | 说明 |
+| --- | --- | --- |
+| event | 输入 | 查询的Event。 |
+| timestamp | 输出 | Event执行结束的时间点，单位为微秒。 |
+
+## 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
 

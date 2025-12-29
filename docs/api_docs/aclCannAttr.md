@@ -1,4 +1,4 @@
-# aclCannAttr<a name="ZH-CN_TOPIC_0000001819987176"></a>
+# aclCannAttr
 
 ```
 typedef enum {

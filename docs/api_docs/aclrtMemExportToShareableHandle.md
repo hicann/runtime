@@ -1,25 +1,12 @@
 # aclrtMemExportToShareableHandle
 
-## AI处理器支持情况
+## 产品支持情况
 
-<table><thead align="left"><tr id="zh-cn_topic_0000002219420921_row1993118556414"><th class="cellrowborder" valign="top" width="57.99999999999999%" id="mcps1.1.3.1.1"><p id="zh-cn_topic_0000002219420921_p29315553419"><a name="zh-cn_topic_0000002219420921_p29315553419"></a><a name="zh-cn_topic_0000002219420921_p29315553419"></a><span id="zh-cn_topic_0000002219420921_ph59311455164119"><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a><a name="zh-cn_topic_0000002219420921_ph59311455164119"></a>AI处理器类型</span></p>
-</th>
-<th class="cellrowborder" align="center" valign="top" width="42%" id="mcps1.1.3.1.2"><p id="zh-cn_topic_0000002219420921_p59313557417"><a name="zh-cn_topic_0000002219420921_p59313557417"></a><a name="zh-cn_topic_0000002219420921_p59313557417"></a>是否支持</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002219420921_row1693117553411"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p1493195513412"><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><a name="zh-cn_topic_0000002219420921_p1493195513412"></a><span id="zh-cn_topic_0000002219420921_ph1093110555418"><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><a name="zh-cn_topic_0000002219420921_ph1093110555418"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term1253731311225"></a>Ascend 910C</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p20931175524111"><a name="zh-cn_topic_0000002219420921_p20931175524111"></a><a name="zh-cn_topic_0000002219420921_p20931175524111"></a>√</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002219420921_row199312559416"><td class="cellrowborder" valign="top" width="57.99999999999999%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000002219420921_p0931555144119"><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><a name="zh-cn_topic_0000002219420921_p0931555144119"></a><span id="zh-cn_topic_0000002219420921_ph1693115559411"><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><a name="zh-cn_topic_0000002219420921_ph1693115559411"></a><term id="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a><a name="zh-cn_topic_0000002219420921_zh-cn_topic_0000001312391781_term11962195213215"></a>Ascend 910B</term></span></p>
-</td>
-<td class="cellrowborder" align="center" valign="top" width="42%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000002219420921_p129321955154117"><a name="zh-cn_topic_0000002219420921_p129321955154117"></a><a name="zh-cn_topic_0000002219420921_p129321955154117"></a>√</p>
-</td>
-</tr>
-</tbody>
-</table>
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
@@ -32,7 +19,7 @@
 
         先调用[aclrtMemGetAllocationGranularity](aclrtMemGetAllocationGranularity.md)接口获取内存申请粒度，然后再调用[aclrtMallocPhysical](aclrtMallocPhysical.md)接口申请物理内存时size按获取到的内存申请粒度对齐，以便节约内存。
 
-        若需申请地址连续的虚拟内存、最大化利用物理内存，此处可配合[aclrtReserveMemAddress](aclrtReserveMemAddress.md)、[aclrtMapMem](aclrtMapMem.md)、、[aclrtMemSetAccess](aclrtMemSetAccess.md)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射、设置虚拟内存的访问权限。
+        若需申请地址连续的虚拟内存、最大化利用物理内存，此处可配合[aclrtReserveMemAddress](aclrtReserveMemAddress.md)、[aclrtMapMem](aclrtMapMem.md)、[aclrtMemSetAccess](aclrtMemSetAccess.md)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射、设置虚拟内存的访问权限。
 
     2.  调用[aclrtMemExportToShareableHandle](aclrtMemExportToShareableHandle.md)接口，导出物理内存handle，输出shareableHandle。
 
@@ -53,7 +40,7 @@
 
         在调用[aclrtMemImportFromShareableHandle](aclrtMemImportFromShareableHandle.md)接口前，需确保待共享的物理内存存在，不能提前释放。
 
-        若需申请地址连续的虚拟内存、最大化利用物理内存地址，此处可配合[aclrtReserveMemAddress](aclrtReserveMemAddress.md)、[aclrtMapMem](aclrtMapMem.md)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射，请参见对应接口的说明。
+        若需申请地址连续的虚拟内存、最大化利用物理内存地址，此处可配合[aclrtReserveMemAddress](aclrtReserveMemAddress.md)、[aclrtMapMem](aclrtMapMem.md)、[aclrtMemSetAccess](aclrtMemSetAccess.md)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射、设置虚拟内存的访问权限，请参见对应接口的说明。
 
     3.  调用[aclrtFreePhysical](aclrtFreePhysical.md)接口，释放物理内存。
 
@@ -65,53 +52,13 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
 ## 参数说明
 
-<table><thead align="left"><tr id="zh-cn_topic_0122830089_row53871743113510"><th class="cellrowborder" valign="top" width="19.17%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0122830089_p1438834363520"><a name="zh-cn_topic_0122830089_p1438834363520"></a><a name="zh-cn_topic_0122830089_p1438834363520"></a>参数名</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.03%" id="mcps1.1.4.1.2"><p id="p1769255516412"><a name="p1769255516412"></a><a name="p1769255516412"></a>输入/输出</p>
-</th>
-<th class="cellrowborder" valign="top" width="67.80000000000001%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0122830089_p173881843143514"><a name="zh-cn_topic_0122830089_p173881843143514"></a><a name="zh-cn_topic_0122830089_p173881843143514"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0122830089_row2038874343514"><td class="cellrowborder" valign="top" width="19.17%" headers="mcps1.1.4.1.1 "><p id="p4579181641514"><a name="p4579181641514"></a><a name="p4579181641514"></a>handle</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.03%" headers="mcps1.1.4.1.2 "><p id="p783015417719"><a name="p783015417719"></a><a name="p783015417719"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.80000000000001%" headers="mcps1.1.4.1.3 "><p id="p1039820018572"><a name="p1039820018572"></a><a name="p1039820018572"></a>存放物理内存信息的handle。</p>
-<p id="p513515485719"><a name="p513515485719"></a><a name="p513515485719"></a>需先在本进程调用aclrtMallocPhysical接口申请物理内存，该接口调用成功，会返回一个handle。</p>
-<p id="p121212121270"><a name="p121212121270"></a><a name="p121212121270"></a>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一，否则报错，例如重复调用本接口导出时则会返回报错。</p>
-</td>
-</tr>
-<tr id="row1660814462512"><td class="cellrowborder" valign="top" width="19.17%" headers="mcps1.1.4.1.1 "><p id="p19609124617516"><a name="p19609124617516"></a><a name="p19609124617516"></a>handleType</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.03%" headers="mcps1.1.4.1.2 "><p id="p160915469510"><a name="p160915469510"></a><a name="p160915469510"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.80000000000001%" headers="mcps1.1.4.1.3 "><p id="p123961002578"><a name="p123961002578"></a><a name="p123961002578"></a>预留参数，当前固定填ACL_MEM_HANDLE_TYPE_NONE。</p>
-</td>
-</tr>
-<tr id="row187221499516"><td class="cellrowborder" valign="top" width="19.17%" headers="mcps1.1.4.1.1 "><p id="p67237494519"><a name="p67237494519"></a><a name="p67237494519"></a>flags</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.03%" headers="mcps1.1.4.1.2 "><p id="p97231849555"><a name="p97231849555"></a><a name="p97231849555"></a>输入</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.80000000000001%" headers="mcps1.1.4.1.3 "><p id="p1349185435919"><a name="p1349185435919"></a><a name="p1349185435919"></a>是否启用进程白名单校验。</p>
-<p id="p6169115715920"><a name="p6169115715920"></a><a name="p6169115715920"></a>取值为如下宏：</p>
-<a name="ul33464527015"></a><a name="ul33464527015"></a><ul id="ul33464527015"><li>ACL_RT_VMM_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。<p id="p1410617497187"><a name="p1410617497187"></a><a name="p1410617497187"></a>配置为该值时，需单独调用<a href="aclrtMemSetPidToShareableHandle.md">aclrtMemSetPidToShareableHandle</a>接口将使用shareableHandle的进程ID设置为白名单。</p>
-</li><li>ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。<p id="p5951651141816"><a name="p5951651141816"></a><a name="p5951651141816"></a>配置为该值时，则无需调用<a href="aclrtMemSetPidToShareableHandle.md">aclrtMemSetPidToShareableHandle</a>接口。</p>
-</li></ul>
-<p id="p18200675010"><a name="p18200675010"></a><a name="p18200675010"></a>宏的定义如下：</p>
-<pre class="screen" id="screen158584141105"><a name="screen158584141105"></a><a name="screen158584141105"></a>#define ACL_RT_VMM_EXPORT_FLAG_DEFAULT                0x0UL
-#define ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL</pre>
-</td>
-</tr>
-<tr id="row7307528520"><td class="cellrowborder" valign="top" width="19.17%" headers="mcps1.1.4.1.1 "><p id="p5312052954"><a name="p5312052954"></a><a name="p5312052954"></a>shareableHandle</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.03%" headers="mcps1.1.4.1.2 "><p id="p143135211517"><a name="p143135211517"></a><a name="p143135211517"></a>输出</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.80000000000001%" headers="mcps1.1.4.1.3 "><p id="p239517085718"><a name="p239517085718"></a><a name="p239517085718"></a>标识共享给其它进程的shareableHandle。</p>
-</td>
-</tr>
-</tbody>
-</table>
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | --- | --- |
+| handle | 输入 | 存放物理内存信息的handle。<br>需先在本进程调用aclrtMallocPhysical接口申请物理内存，该接口调用成功，会返回一个handle。<br>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一，否则报错，例如重复调用本接口导出时则会返回报错。 |
+| handleType | 输入 | 预留参数，当前固定填ACL_MEM_HANDLE_TYPE_NONE。 |
+| flags | 输入 | 是否启用进程白名单校验。<br>取值为如下宏：<br><br>  - ACL_RT_VMM_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。配置为该值时，需单独调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口将使用shareableHandle的进程ID设置为白名单。<br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。配置为该值时，则无需调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_VMM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
+| shareableHandle | 输出 | 标识共享给其它进程的shareableHandle。 |
 
 ## 返回值说明
 
@@ -121,9 +68,9 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
 -   支持AI Server内跨进程共享物理内存的产品型号如下，若跨Device还需配合[aclrtDeviceEnablePeerAccess](aclrtDeviceEnablePeerAccess.md)接口使用。AI Server通常多个NPU设备组成的服务器形态的统称。
 
-    Ascend 910C
+    Atlas A3 训练系列产品/Atlas A3 推理系列产品
 
-    Ascend 910B
+    Atlas A2 训练系列产品/Atlas A2 推理系列产品
 
 -   不支持昇腾虚拟化实例场景。
 

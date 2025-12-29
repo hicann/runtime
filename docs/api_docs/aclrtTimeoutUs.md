@@ -1,4 +1,4 @@
-# aclrtTimeoutUs<a name="ZH-CN_TOPIC_0000002521375029"></a>
+# aclrtTimeoutUs
 
 ```
 typedef struct {

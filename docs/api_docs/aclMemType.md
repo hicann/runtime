@@ -1,4 +1,4 @@
-# aclMemType<a name="ZH-CN_TOPIC_0000001312721793"></a>
+# aclMemType
 
 ```
 typedef enum {

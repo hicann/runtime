@@ -1,4 +1,4 @@
-# aclmdlRICaptureMode<a name="ZH-CN_TOPIC_0000002186675558"></a>
+# aclmdlRICaptureMode
 
 ```
 typedef enum {

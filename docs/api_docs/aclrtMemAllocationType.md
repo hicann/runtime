@@ -1,4 +1,4 @@
-# aclrtMemAllocationType<a name="ZH-CN_TOPIC_0000001699410625"></a>
+# aclrtMemAllocationType
 
 ```
 typedef enum aclrtMemAllocationType {

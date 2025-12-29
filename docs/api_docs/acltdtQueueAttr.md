@@ -1,4 +1,4 @@
-# acltdtQueueAttr<a name="ZH-CN_TOPIC_0000001312400725"></a>
+# acltdtQueueAttr
 
 -   **[acltdtCreateQueueAttr](acltdtCreateQueueAttr.md)**  
 

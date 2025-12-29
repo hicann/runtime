@@ -1,4 +1,4 @@
-# aclrtGroupAttr<a name="ZH-CN_TOPIC_0000001265400386"></a>
+# aclrtGroupAttr
 
 ```
 typedef enum aclrtGroupAttr

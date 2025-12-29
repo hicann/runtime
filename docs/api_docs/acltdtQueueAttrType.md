@@ -1,4 +1,4 @@
-# acltdtQueueAttrType<a name="ZH-CN_TOPIC_0000001265241494"></a>
+# acltdtQueueAttrType
 
 ```
 typedef enum {

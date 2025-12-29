@@ -1,4 +1,4 @@
-# aclrtIpcMemAttrType<a name="ZH-CN_TOPIC_0000002453628286"></a>
+# aclrtIpcMemAttrType
 
 ```
 typedef enum {

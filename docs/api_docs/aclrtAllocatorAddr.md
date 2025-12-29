@@ -1,4 +1,4 @@
-# aclrtAllocatorAddr<a name="ZH-CN_TOPIC_0000002452208322"></a>
+# aclrtAllocatorAddr
 
 ```
 typedef void *aclrtAllocatorAddr;

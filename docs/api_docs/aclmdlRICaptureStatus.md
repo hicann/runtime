@@ -1,4 +1,4 @@
-# aclmdlRICaptureStatus<a name="ZH-CN_TOPIC_0000002222021281"></a>
+# aclmdlRICaptureStatus
 
 ```
 typedef enum {

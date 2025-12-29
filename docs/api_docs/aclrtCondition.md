@@ -1,4 +1,4 @@
-# aclrtCondition<a name="ZH-CN_TOPIC_0000002309329442"></a>
+# aclrtCondition
 
 ```
 typedef enum { 

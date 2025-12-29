@@ -1,4 +1,4 @@
-# aclrtMemGranularityOptions<a name="ZH-CN_TOPIC_0000001794744681"></a>
+# aclrtMemGranularityOptions
 
 ```
 typedef enum aclrtMemGranularityOptions {

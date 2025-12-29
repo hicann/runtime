@@ -1,4 +1,4 @@
-# acltdtQueueRouteQueryInfo<a name="ZH-CN_TOPIC_0000001312721585"></a>
+# acltdtQueueRouteQueryInfo
 
 -   **[acltdtCreateQueueRouteQueryInfo](acltdtCreateQueueRouteQueryInfo.md)**  
 

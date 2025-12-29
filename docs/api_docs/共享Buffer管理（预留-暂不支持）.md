@@ -1,4 +1,4 @@
-# 共享Buffer管理（预留，暂不支持）<a name="ZH-CN_TOPIC_0000002308011392"></a>
+# 共享Buffer管理（预留，暂不支持）
 
 -   **[aclrtAllocBuf](aclrtAllocBuf.md)**  
 

@@ -1,4 +1,4 @@
-# aclrtCntNotifyWaitMode<a name="ZH-CN_TOPIC_0000002495155221"></a>
+# aclrtCntNotifyWaitMode
 
 ```
 typedef enum {

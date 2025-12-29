@@ -1,4 +1,4 @@
-# aclrtAllocatorDesc<a name="ZH-CN_TOPIC_0000001625621401"></a>
+# aclrtAllocatorDesc
 
 -   **[aclrtAllocatorCreateDesc](aclrtAllocatorCreateDesc.md)**  
 

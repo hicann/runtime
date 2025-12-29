@@ -1,4 +1,4 @@
-# aclrtUuid<a name="ZH-CN_TOPIC_0000002505548011"></a>
+# aclrtUuid
 
 ```
  typedef struct aclrtUuid {

@@ -1,4 +1,4 @@
-# acltdtTensorType<a name="ZH-CN_TOPIC_0000001264921862"></a>
+# acltdtTensorType
 
 ```
 enum acltdtTensorType {

@@ -1,4 +1,4 @@
-# acltdtQueueRouteQueryMode<a name="ZH-CN_TOPIC_0000001265400718"></a>
+# acltdtQueueRouteQueryMode
 
 ```
 typedef enum {

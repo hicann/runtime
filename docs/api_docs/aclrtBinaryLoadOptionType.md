@@ -1,4 +1,4 @@
-# aclrtBinaryLoadOptionType<a name="ZH-CN_TOPIC_0000002253071373"></a>
+# aclrtBinaryLoadOptionType
 
 ```
 typedef enum aclrtBinaryLoadOptionType {

@@ -1,4 +1,4 @@
-# aclrtRandomNumFuncType<a name="ZH-CN_TOPIC_0000002353414241"></a>
+# aclrtRandomNumFuncType
 
 ```
 typedef enum { 
