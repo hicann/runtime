@@ -174,3 +174,553 @@ TEST_F(DriverTest, get_sq_tail)
     drv.HostAddrRegister(nullptr, 0, 0);
     drv.HostAddrUnRegister(nullptr, 0);
 }
+
+TEST_F(DriverTest, GetStarsInfo_Success)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halTsdrvCtl)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+    
+    uint64_t addr;
+    rtError_t error = npuDrv->GetStarsInfo(0U, 0U, addr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, GetTsfwVersion_Success)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halTsdrvCtl)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+    
+    uint32_t version;
+    uint32_t isSupportHcomcpu;
+    rtError_t error = npuDrv->GetTsfwVersion(0U, 0U, version, isSupportHcomcpu);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, QueryUbInfo_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halMemGetInfo)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtMemUbTokenInfo *info = (rtMemUbTokenInfo *)malloc(sizeof(rtMemUbTokenInfo));
+    ASSERT_NE(info, nullptr);
+    info->va = 0;
+    info->size = 1;
+    rtError_t error = npuDrv->QueryUbInfo(0, QUERY_PROCESS_TOKEN, info);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->QueryUbInfo(0, QUERY_PROCESS_TOKEN, info);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+    free(info);
+}
+
+TEST_F(DriverTest, GetDevResAddress_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(memset_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halResAddrMap)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtDevResInfo *info = (rtDevResInfo *)malloc(sizeof(rtDevResInfo));
+    ASSERT_NE(info, nullptr);
+    info->dieId = 0;
+    info->procType = RT_PROCESS_CP1;
+    info->resType = RT_RES_TYPE_STARS_NOTIFY_RECORD;
+    info->resId = 123;
+    info->flag = 0;
+    rtError_t error = npuDrv->GetDevResAddress(0, info, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->GetDevResAddress(0, info, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+    free(info);
+}
+
+TEST_F(DriverTest, ReleaseDevResAddress_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(memset_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halResAddrUnmap)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtDevResInfo *info = (rtDevResInfo *)malloc(sizeof(rtDevResInfo));
+    ASSERT_NE(info, nullptr);
+    info->dieId = 0;
+    info->procType = RT_PROCESS_CP1;
+    info->resType = RT_RES_TYPE_STARS_NOTIFY_RECORD;
+    info->resId = 123;
+    info->flag = 0;
+    rtError_t error = npuDrv->ReleaseDevResAddress(0, info);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->ReleaseDevResAddress(0, info);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+    free(info);
+}
+
+TEST_F(DriverTest, SqArgsCopyWithUb_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halSqTaskArgsAsyncCopy)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->SqArgsCopyWithUb(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->SqArgsCopyWithUb(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, GetSqRegVirtualAddrBySqidForStarsV2_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(memset_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halResAddrMap)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    uint64_t addr = 0;
+    rtError_t error = npuDrv->GetSqRegVirtualAddrBySqidForStarsV2(0, 0, 0, &addr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->GetSqRegVirtualAddrBySqidForStarsV2(0, 0, 0, &addr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+int stat_stub(const char* path, struct stat* buf)
+{
+    buf->st_size = 1024;
+    return 0;
+}
+
+TEST_F(DriverTest, FreeHostSharedMemory_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(strcpy_s).stubs().will(returnValue(0));
+    MOCKER(strcat_s).stubs().will(returnValue(0));
+    MOCKER(munmap).stubs().will(returnValue(0));
+    MOCKER(close).stubs().will(returnValue(0));
+    MOCKER(shm_unlink).stubs().will(returnValue(0));
+    MOCKER(stat).stubs().will(invoke(stat_stub));
+
+    MOCKER(halHostUnregister)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtFreeHostSharedMemoryIn in = {"test", 1024, 0};
+
+    rtError_t error = npuDrv->FreeHostSharedMemory(&in, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->FreeHostSharedMemory(&in, 0);;
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, GetMemUceInfo_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halGetDeviceInfoByBuff)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->GetMemUceInfo(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->GetMemUceInfo(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, GetDeviceInfoByBuff_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halGetDeviceInfoByBuff)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->GetDeviceInfoByBuff(0, 0, 0, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->GetDeviceInfoByBuff(0, 0, 0, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, SetDeviceInfoByBuff_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halSetDeviceInfoByBuff)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->SetDeviceInfoByBuff(0, 0, 0, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->SetDeviceInfoByBuff(0, 0, 0, nullptr, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemUceRepair_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halMemCtl)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->MemUceRepair(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemUceRepair(0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, StreamEnableStmSyncEsched_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(memset_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halResourceConfig)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->StreamEnableStmSyncEsched(0, 0, 0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->StreamEnableStmSyncEsched(0, 0, 0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, DebugSqTaskSend_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halSqTaskSend)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->DebugSqTaskSend(0, nullptr, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->DebugSqTaskSend(0, nullptr, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, DebugSqCqAllocate_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halSqCqAllocate)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    uint32_t sqId;
+    uint32_t cqId;
+    rtError_t error = npuDrv->DebugSqCqAllocate(0, 0, sqId, cqId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->DebugSqCqAllocate(0, 0, sqId, cqId);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, VirtualCqFree_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halSqCqFree)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+
+    rtError_t error = npuDrv->VirtualCqFree(0, 0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, DebugCqReport_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halCqReportRecv)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    uint32_t realCnt;
+    rtError_t error = npuDrv->DebugCqReport(0, 0, 0, nullptr, realCnt);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->DebugCqReport(0, 0, 0, nullptr, realCnt);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, ProcessResRestore_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halProcessResRestore)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->ProcessResRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->ProcessResRestore();
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, HostDeviceClose_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halDeviceClose)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->HostDeviceClose(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->HostDeviceClose(0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, CqReportRelease_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halReportRelease)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtHostFuncCqReport_t report = {};
+    rtError_t error = npuDrv->CqReportRelease(&report, 0, 0, 0, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->CqReportRelease(&report, 0, 0, 0, false);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueExport_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(strcpy_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halQueueExport)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    char name[] = "test";
+    rtError_t error = npuDrv->MemQueueExport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueExport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueUnExport_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(strcpy_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halQueueUnexport)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    char name[] = "test";
+    rtError_t error = npuDrv->MemQueueUnExport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueUnExport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueImport_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(strcpy_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halQueueImport)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    char name[] = "test";
+    uint32_t qid = 1;
+    rtError_t error = npuDrv->MemQueueImport(0, 0, name, &qid);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueImport(0, 0, name, &qid);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueUnImport_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(strcpy_s)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER(halQueueUnimport)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    char name[] = "test";
+    rtError_t error = npuDrv->MemQueueUnImport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueUnImport(0, 0, 0, name);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueReset_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halQueueReset)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->MemQueueReset(0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueReset(0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemQueueGrant_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halQueueGrant)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtMemQueueShareAttr_t attr = {};
+    rtError_t error = npuDrv->MemQueueGrant(0, 0, 0, &attr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemQueueGrant(0, 0, 0, &attr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, QueueSubscribe_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halQueueSubscribe)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->QueueSubscribe(0, 0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->QueueSubscribe(0, 0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, QueueSubF2NFEvent_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halQueueSubF2NFEvent)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    rtError_t error = npuDrv->QueueSubF2NFEvent(0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->QueueSubF2NFEvent(0, 0, 0);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, GetChipFromDevice_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halGetChipFromDevice)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    uint32_t chipId = 0;
+    rtError_t error = npuDrv->GetChipFromDevice(0, &chipId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->GetChipFromDevice(0, &chipId);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
+
+TEST_F(DriverTest, MemcpyBatch_test)
+{
+    NpuDriver *npuDrv = new NpuDriver();
+
+    MOCKER(halMemcpyBatch)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    size_t count = 1;
+    uint64_t dsts[count] = {0};
+    uint64_t srcs[count] = {0};
+    size_t sizes[count] = {0};
+    rtError_t error = npuDrv->MemcpyBatch(dsts, srcs, sizes, count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = npuDrv->MemcpyBatch(dsts, srcs, sizes, count);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete npuDrv;
+}
