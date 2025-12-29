@@ -55,6 +55,13 @@ detect_os() {
             else
                 PKG_MANAGER="yum"
             fi
+        elif [[ -f /etc/euleros-release ]]; then
+            OS="rhel"
+            if command -v dnf &> /dev/null; then
+                PKG_MANAGER="dnf"
+            else
+                PKG_MANAGER="yum"
+            fi
         else
             echo "自动安装脚本不支持该Linux发行版本，请手动安装依赖"
             exit 1
