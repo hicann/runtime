@@ -219,6 +219,16 @@ public:
         return (refCount_ != 0U);
     }
 
+    bool ModelSqOperTryLock(void)
+    {
+        return sqBindMutex_.try_lock();
+    }
+
+    void ModelSqOperUnLock(void)
+    {
+        return sqBindMutex_.unlock();
+    }
+
     rtError_t ReleaseNotifyId(void);
     rtError_t UpdateNotifyId(Stream * const exeStream);
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
