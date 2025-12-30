@@ -177,6 +177,7 @@ DVresult __attribute__((weak)) halStreamRestore(uint32_t dev_id, struct stream_b
 drvError_t __attribute__((weak)) halSetMemSharing(struct drvMemSharingPara *para);
 drvError_t __attribute__((weak)) halGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
 drvError_t __attribute__((weak)) halDrvEventThreadInit(unsigned int devId);
+drvError_t __attribute__((weak)) halGetMemUsageInfo(uint32_t dev_id, struct mem_module_usage *mem_usage, size_t in_num, size_t *out_num);
 };
 
 namespace cce {

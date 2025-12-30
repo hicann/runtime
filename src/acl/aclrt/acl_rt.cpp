@@ -496,6 +496,11 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
     return aclrtGetMemInfoImpl(attr, free, total);
 }
 
+aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum)
+{
+    return aclrtGetMemUsageInfoImpl(deviceId, memUsageInfo, inputNum, outputNum);
+}
+
 aclError aclrtSetOpWaitTimeout(uint32_t timeout)
 {
     return aclrtSetOpWaitTimeoutImpl(timeout);

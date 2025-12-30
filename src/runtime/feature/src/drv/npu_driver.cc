@@ -2379,6 +2379,31 @@ static bool Is1GHugePageMem(const rtMemInfoType_t memInfoType)
     return flag;
 }
 
+rtError_t NpuDriver::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
+                                     const size_t inputNum, size_t * const outputNum)
+{
+    COND_RETURN_WARN(&halGetMemUsageInfo == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+                     "[drv api] halGetMemUsageInfo does not support.");
+
+    auto memUsage = std::make_unique<struct mem_module_usage[]>(inputNum);
+    NULL_PTR_RETURN(memUsage, RT_ERROR_MEMORY_ALLOCATION);
+
+    const drvError_t drvRet = halGetMemUsageInfo(deviceId, memUsage.get(), inputNum, outputNum);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halGetMemUsageInfo failed: device_id=%u, drvRetCode=%d!",
+            deviceId, static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    for (size_t i = 0ULL; i < *outputNum; i++) {
+        memUsageInfo[i].curMemSize = memUsage[i].cur_mem_size;
+        memUsageInfo[i].memPeakSize = memUsage[i].mem_peak_size;
+        (void)strcpy_s(memUsageInfo[i].name, sizeof(memUsageInfo[i].name), memUsage[i].name);
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t memInfoType,
                                   size_t * const freeSize, size_t * const totalSize)
 {

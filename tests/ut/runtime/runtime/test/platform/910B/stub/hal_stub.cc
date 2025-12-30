@@ -1909,6 +1909,12 @@ drvError_t halMemGetAllocationPropertiesFromHandle(struct drv_mem_prop *prop, dr
     return DRV_ERROR_NONE;
 }
 
+drvError_t halGetMemUsageInfo(uint32_t dev_id, struct mem_module_usage *mem_usage, size_t in_num, size_t *out_num)
+{
+    *out_num = in_num;
+    return DRV_ERROR_NONE;
+}
+
 TraStatus AtraceEventReportSync(TraEventHandle eventHandle)
 {
     return TRACE_SUCCESS;

@@ -354,6 +354,15 @@ typedef struct {
     uint64_t memLen;
 } rtDebugMemoryParam;
 
+#define RT_MEM_MODULE_NAME_LEN (32U)
+#define RT_MEM_USAGE_INFO_RSV (8U)
+typedef struct {
+    char name[RT_MEM_MODULE_NAME_LEN]; /* module name */
+    uint64_t curMemSize; /* the total amount of memory currently occupied by the module */
+    uint64_t memPeakSize; /* the peak size of the total memory occupied by the module */
+    size_t reserved[RT_MEM_USAGE_INFO_RSV];
+} rtMemUsageInfo_t;
+
 /**
  * @ingroup dvrt_mem
  * @brief alloc device memory

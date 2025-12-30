@@ -140,6 +140,7 @@ public:
                                                 const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                                 uint32_t flags);
     virtual rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *free, size_t *total);
+    virtual rtError_t rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum);
     virtual rtError_t rtGetRunMode(rtRunMode *mode);
     virtual rtError_t rtGetDeviceCount(int32_t *count);
     virtual rtError_t rtEventElapsedTime(float *time, rtEvent_t start, rtEvent_t end);
@@ -603,6 +604,7 @@ public:
     MOCK_METHOD7(rtCpuKernelLaunchWithFlag, rtError_t(const void *soName, const void *kernelName, uint32_t blockDim,
             const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags));
     MOCK_METHOD3(rtMemGetInfoEx, rtError_t(rtMemInfoType_t memInfoType, size_t *free, size_t *total));
+    MOCK_METHOD4(rtGetMemUsageInfo, rtError_t(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum));
     MOCK_METHOD1(rtGetRunMode, rtError_t(rtRunMode *mode));
     MOCK_METHOD1(rtGetDeviceCount, rtError_t(int32_t *count));
     MOCK_METHOD3(rtEventElapsedTime, rtError_t(float *time, rtEvent_t start, rtEvent_t end));

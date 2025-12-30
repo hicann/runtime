@@ -706,6 +706,12 @@ rtError_t ApiDecorator::CheckMemType(void **addrs, uint32_t size, uint32_t memTy
     return impl_->CheckMemType(addrs, size, memType, checkResult, reserve);
 }
 
+rtError_t ApiDecorator::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
+                                        const size_t inputNum, size_t * const outputNum)
+{
+    return impl_->GetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
+}
+
 rtError_t ApiDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize,
     size_t * const totalSize)
 {

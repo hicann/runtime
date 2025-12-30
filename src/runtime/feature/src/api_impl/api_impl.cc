@@ -3037,6 +3037,16 @@ rtError_t ApiImpl::CheckMemType(void **addrs, uint32_t size, uint32_t memType, u
     return curCtx->Device_()->Driver_()->CheckMemType(addrs, size, memType, checkResult, deviceId);
 }
 
+rtError_t ApiImpl::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
+                                   const size_t inputNum, size_t * const outputNum)
+{
+    RT_LOG(RT_LOG_INFO, "get mem usage info: deviceId=%u, inputNum=%zu.", deviceId, inputNum);
+    Context * const curCtx = CurrentContext(true, deviceId);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    return curCtx->Device_()->Driver_()->GetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
+}
+
 rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize, size_t * const totalSize)
 {
     RT_LOG(RT_LOG_DEBUG, "mem get info memInfoType=%u, free=%zu, total=%zu.", memInfoType, *freeSize, *totalSize);

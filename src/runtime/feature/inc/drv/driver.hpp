@@ -182,6 +182,9 @@ public:
 
     virtual rtError_t CheckMemType(void **addrs, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t deviceId) = 0;
 
+    virtual rtError_t GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
+                                      const size_t inputNum, size_t * const outputNum) = 0;
+
     virtual rtError_t MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t memInfoType,
                                    size_t * const freeSize, size_t * const totalSize) = 0;
 
