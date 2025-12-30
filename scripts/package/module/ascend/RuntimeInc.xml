@@ -253,32 +253,11 @@
         <file value="cann-tsch-compat.tar.gz" install_mod="440" entity="true" optional="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
-        <file value="Ascend031.ini" install_mod="440" entity="true"/>
-        <file value="Ascend035.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B2.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B3.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B4.ini" install_mod="440" entity="true"/>
-        <file value="Ascend610.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX2AB.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AA.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AB.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AC.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P3.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P5.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P7.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910A.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910PremiumA.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910ProA.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910ProB.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B1.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B2.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B3.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B4.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B4-1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_5591.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9362.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9372.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9381.ini" install_mod="440" entity="true"/>
