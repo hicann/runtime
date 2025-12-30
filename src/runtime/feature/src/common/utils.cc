@@ -163,5 +163,19 @@ const std::string RealPathForFileNotExists(const std::string &inputPath)
     }
     return fullPath;
 }
+
+uint64_t GetQuickHash(const void *data, const size_t size)
+{
+    // Using the FNV-1a algorithm for hash computation offers faster speed.
+    const uint8_t *bytes = static_cast<const uint8_t *>(data);
+    const uint64_t prime = 1099511628211UL;
+    uint64_t hash = 14695981039346656037UL;
+    for (size_t i = 0UL; i < size; i++) {
+        hash ^= bytes[i];
+        hash *= prime;
+    }
+
+    return hash;
+}
 }
 }

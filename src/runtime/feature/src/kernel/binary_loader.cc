@@ -242,7 +242,7 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
     // 2 only user for load from data
     COND_RETURN_OUT_ERROR_MSG_CALL(!isLoadFromFile_ && (mode != 2), RT_ERROR_INVALID_VALUE,
         "load from data scenario cpu kernel mode is invalid, mode=%d, should be 2", mode);
-
+    size_t binSize;
     switch (mode) {
         case 0: // 0: only need .json
         case 1: // 1: need .so and .json
@@ -251,7 +251,8 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
             break;
         case 2: // 2: load form data
             binPath_ = "";
-            soName_ = std::to_string(ClockGetTimeUs()) + ".so";
+            binSize = binarySize_ > 1024UL ? 1024UL : binarySize_;
+            soName_ = std::to_string(GetQuickHash(binaryBuffer_, binSize)) + ".so";
             break;
         default:
             // mode range only support [0, 1, 2]
