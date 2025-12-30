@@ -210,6 +210,13 @@ struct HdcSessionNotify {
     drvHdcSessionDataInNotify data_in_notify;
 };
 
+struct mem_module_usage {
+    char name[32]; /* module name Length 32 */
+    uint64_t cur_mem_size;   /* Current memory size occupied by the module */
+    uint64_t mem_peak_size;   /* Peak memory size occupied by the module */
+    size_t reserved[8];  /* reserved field 8 */
+};
+
 #ifdef __cplusplus
 }
 #endif

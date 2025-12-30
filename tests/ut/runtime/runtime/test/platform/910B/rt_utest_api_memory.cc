@@ -223,3 +223,25 @@ TEST_F(RtMemoryApiTest, rtGetServerIDBySDID)
     error = rtGetServerIDBySDID(sdid1, &srvid);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
+
+TEST_F(RtMemoryApiTest, rtGetMemUsageInfo)
+{
+    uint32_t deviceId = 0;
+    rtMemUsageInfo_t memUsageInfo[10];
+    size_t inputNum = 10;
+    size_t outputNum = 10;
+
+    rtError_t error = rtGetMemUsageInfo(deviceId, memUsageInfo, inputNum, &outputNum);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    ApiImpl apiImpl;
+    ApiDecorator apiDecorator(&apiImpl);
+    error = apiDecorator.GetMemUsageInfo(deviceId, memUsageInfo, inputNum, &outputNum);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    MOCKER(halGetMemUsageInfo)
+    .stubs()
+    .will(returnValue(DRV_ERROR_INVALID_VALUE));
+    error = rtGetMemUsageInfo(deviceId, memUsageInfo, inputNum, &outputNum);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}

@@ -229,6 +229,8 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceDisablePeerAccessImpl(int32_t peerDevice
 
 ACL_FUNC_VISIBILITY aclError aclrtGetMemInfoImpl(aclrtMemAttr attr, size_t *free, size_t *total);
 
+ACL_FUNC_VISIBILITY aclError aclrtGetMemUsageInfoImpl(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum);
+
 ACL_FUNC_VISIBILITY aclError aclrtSetOpWaitTimeoutImpl(uint32_t timeout);
 
 ACL_FUNC_VISIBILITY aclError aclrtSetOpExecuteTimeOutImpl(uint32_t timeout);

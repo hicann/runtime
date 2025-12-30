@@ -1676,6 +1676,22 @@ TEST_F(UTEST_ACL_Runtime, memory_getMemInfo)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetMemUsageInfo)
+{
+    int32_t deviceId = 0;
+    aclrtMemUsageInfo memUsageInfo[10];
+    size_t numInput = 10;
+    size_t numOutput = 0;
+    aclError ret = aclrtGetMemUsageInfo(deviceId, memUsageInfo, numInput, &numOutput);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // aclrtGetMemUsageInfo failed
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetMemUsageInfo(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtGetMemUsageInfo(deviceId, memUsageInfo, numInput, &numOutput);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtMemsetAsyncFailedTest)
 {
     void *devPtr = (void *)0x01;

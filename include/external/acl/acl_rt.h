@@ -254,6 +254,13 @@ typedef struct aclrtPtrAttributes {
     uint32_t rsv[4];
 } aclrtPtrAttributes;
 
+typedef struct aclrtMemUsageInfo {
+    char name[32];
+    uint64_t curMemSize;
+    uint64_t memPeakSize;
+    size_t reserved[8];
+} aclrtMemUsageInfo;
+
 typedef enum aclrtMemAllocationType {
     ACL_MEM_ALLOCATION_TYPE_PINNED = 0,
 } aclrtMemAllocationType;
@@ -2393,6 +2400,20 @@ ACL_FUNC_VISIBILITY aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId);
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total);
+
+/**
+ * @ingroup AscendCL
+ * @brief Query the device memory information occupied by each component.
+ *
+ * @param deviceId [IN]             the deviceId to be queried.
+ * @param memUsageInfo [IN/OUT]     the memUsageInfo used to store memory usage information.
+ * @param inputNum [IN]             the number of components that are expected to be queried.
+ * @param outputNum [IN/OUT]        the actual number of components queried.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum);
 
 /**
  * @ingroup AscendCL

@@ -605,7 +605,20 @@ RTS_API rtError_t rtIpcMemImportPidInterServer(const char *key, const rtServerPi
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtMemAlloc(void **devPtr, uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, rtMallocConfig_t *cfg);
- 
+
+/**
+ * @ingroup rts_mem
+ * @brief Query the device memory information occupied by each component
+ * @param [in] deviceId             the deviceId to be queried
+ * @param [in|out] memUsageInfo     the memUsageInfo used to store memory usage information
+ * @param [in] inputNum             the number of components that are expected to be queried
+ * @param [in|out] outputNum        the actual number of components queried
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum);
+
 #if defined(__cplusplus)
 }
 #endif

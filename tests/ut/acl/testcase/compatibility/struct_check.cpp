@@ -533,3 +533,27 @@ TEST_F(UTEST_ACL_compatibility_struct_check, aclrtMemAccessDesc)
         sizeof(aclrtMemAccessFlags) + 
         sizeof(uint8_t) * 12);
 }
+
+TEST_F(UTEST_ACL_compatibility_struct_check, aclrtMemUsageInfo)
+{
+    size_t offset;
+    // 测试结构体 aclrtMemUsageInfo 中的 name 字段偏移量
+    offset = OFFSET_OF_MEMBER(aclrtMemUsageInfo, name);
+    EXPECT_EQ(offset, 0);
+
+    // 测试结构体 aclrtMemUsageInfo 中的 curMemSize 字段偏移量
+    offset = OFFSET_OF_MEMBER(aclrtMemUsageInfo, curMemSize);
+    EXPECT_EQ(offset, sizeof(char) * 32);
+
+    // 测试结构体 aclrtMemUsageInfo 中的 memPeakSize 字段偏移量
+    offset = OFFSET_OF_MEMBER(aclrtMemUsageInfo, memPeakSize);
+    EXPECT_EQ(offset, sizeof(char) * 32 + sizeof(uint64_t));
+
+    // 测试结构体 aclrtMemUsageInfo 中的 reserved 字段偏移量
+    offset = OFFSET_OF_MEMBER(aclrtMemUsageInfo, reserved);
+    EXPECT_EQ(offset, sizeof(char) * 32 + sizeof(uint64_t) * 2);
+
+    // 检查整个结构体的大小是否正确
+    EXPECT_EQ(sizeof(aclrtMemUsageInfo),
+        sizeof(char) * 32 + sizeof(uint64_t) * 2 + sizeof(size_t) * 8);
+}

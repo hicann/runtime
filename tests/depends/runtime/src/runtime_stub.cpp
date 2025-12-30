@@ -387,6 +387,15 @@ rtError_t aclStub::rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *free, siz
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum)
+{
+    (void)deviceId;
+    (void)memUsageInfo;
+    (void)inputNum;
+    (void)outputNum;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtSubscribeReport(uint64_t threadId, rtStream_t stream)
 {
     return RT_ERROR_NONE;
@@ -2555,6 +2564,11 @@ rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, 
 rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *free, size_t *total)
 {
     return MockFunctionTest::aclStubInstance().rtMemGetInfoEx(memInfoType, free, total);
+}
+
+rtError_t rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum)
+{
+    return MockFunctionTest::aclStubInstance().rtGetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
 }
 
 rtError_t rtSubscribeReport(uint64_t threadId, rtStream_t stream)

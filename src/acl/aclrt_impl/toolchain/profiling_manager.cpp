@@ -266,6 +266,7 @@ namespace acl {
         {AclProfType::AclrtIpcOpenEventHandle,                  "aclrtIpcOpenEventHandle"},
         {AclProfType::AclrtMemRetainAllocationHandle,           "aclrtMemRetainAllocationHandle"},
         {AclProfType::AclrtMemGetAllocationPropertiesFromHandle,"aclrtMemGetAllocationPropertiesFromHandle"},
+        {AclProfType::AclrtGetMemUsageInfo,                     "aclrtGetMemUsageInfo"},
 };
 
 aclError RegisterType(const uint32_t index) {

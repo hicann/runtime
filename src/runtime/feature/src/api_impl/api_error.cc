@@ -6270,6 +6270,24 @@ rtError_t ApiErrorDecorator::CheckMemType(void **addrs, uint32_t size, uint32_t 
     return impl_->CheckMemType(addrs, size, memType, checkResult, reserve);
 }
 
+rtError_t ApiErrorDecorator::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * const memUsageInfo,
+                                             const size_t inputNum, size_t * const outputNum)
+{
+    NULL_PTR_RETURN_MSG_OUTER(outputNum, RT_ERROR_INVALID_VALUE);
+    *outputNum = 0U;
+    NULL_PTR_RETURN_MSG_OUTER(memUsageInfo, RT_ERROR_INVALID_VALUE);
+    ZERO_RETURN_MSG_OUTER(inputNum);
+    rtError_t error;
+    uint32_t realDeviceId = 0U;
+    error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
+    COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "input error deviceId:%u, errCode:%#x",
+        deviceId, static_cast<uint32_t>(error));
+    error = CheckDeviceIdIsValid(realDeviceId);
+    COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%u, retCode=%#x",
+        realDeviceId, static_cast<uint32_t>(error));
+    return impl_->GetMemUsageInfo(realDeviceId, memUsageInfo, inputNum, outputNum);
+}
+
 rtError_t ApiErrorDecorator::LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData)
 {
     NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);

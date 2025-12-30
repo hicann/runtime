@@ -712,6 +712,23 @@ aclError aclrtGetMemInfoImpl(aclrtMemAttr attr, size_t *free, size_t *total)
     return ACL_SUCCESS;
 }
 
+aclError aclrtGetMemUsageInfoImpl(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtGetMemUsageInfo);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memUsageInfo);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(outputNum);
+    ACL_LOG_DEBUG("start to execute aclrtGetMemUsageInfo, deviceId = %d, inputNum = %zu", static_cast<int32_t>(deviceId), inputNum);
+
+    const rtError_t rtErr = rtGetMemUsageInfo(static_cast<uint32_t>(deviceId), reinterpret_cast<rtMemUsageInfo_t*>(memUsageInfo), inputNum, outputNum);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("get memory usage information failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_DEBUG("successfully execute aclrtGetMemUsageInfo, deviceId = %d, inputNum = %zu", deviceId, inputNum);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtMemcpy2dImpl(void *dst,
                            size_t dpitch,
                            const void *src,
