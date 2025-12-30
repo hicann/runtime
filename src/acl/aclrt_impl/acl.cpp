@@ -112,6 +112,19 @@ namespace {
 #endif
         return ACL_SUCCESS;
     }
+
+    std::string ConvertVersion(const std::string &version) {
+        size_t dashPos = version.find('-');
+        if (dashPos == std::string::npos) {
+            return version;
+        }
+
+        std::string prefix = version.substr(0, dashPos);
+        std::string suffix = version.substr(dashPos + 1U);
+        suffix.erase(std::remove(suffix.begin(), suffix.end(), '.'), suffix.end());
+
+        return prefix + "." + suffix;
+    }
 }
 
 namespace acl {
@@ -592,9 +605,10 @@ bool ParseVersionInfo(const std::string &path, std::string &versionInfo)
 
 bool FillinPackageVersion(const std::string &versionInfo, aclCANNPackageVersion &version)
 {
+    std::string versionAlternative = ConvertVersion(versionInfo);
     (void)memset_s(&version, sizeof(aclCANNPackageVersion), 0, sizeof(aclCANNPackageVersion));
     std::vector<std::string> parts;
-    acl::StringUtils::Split(versionInfo, '.', parts);
+    acl::StringUtils::Split(versionAlternative, '.', parts);
     constexpr uint32_t pkgVersionPartsMinCount = 2;
     constexpr uint32_t pkgVersionPartsMaxCount = 4;
 
@@ -606,7 +620,7 @@ bool FillinPackageVersion(const std::string &versionInfo, aclCANNPackageVersion 
         parts.push_back("0");
     }
 
-    if ((versionInfo.copy(version.version, ACL_PKG_VERSION_MAX_SIZE - 1) > 0) &&
+    if ((versionAlternative.copy(version.version, ACL_PKG_VERSION_MAX_SIZE - 1) > 0) &&
         (parts[0].copy(version.majorVersion, ACL_PKG_VERSION_PARTS_MAX_SIZE - 1) > 0) &&
         (parts[1].copy(version.minorVersion, ACL_PKG_VERSION_PARTS_MAX_SIZE - 1) > 0) &&
         (parts[2].copy(version.releaseVersion, ACL_PKG_VERSION_PARTS_MAX_SIZE - 1) > 0) &&
