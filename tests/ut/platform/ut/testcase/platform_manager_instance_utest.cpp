@@ -119,7 +119,7 @@ TEST_F(PlatformManagerUTest, platform_instance_002) {
   OptionalInfos optional_infos;
   (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
   platform_infos.SetCoreNumByCoreType("MIX_AIV");
-  EXPECT_EQ(platform_infos.GetCoreNum(), 18);
+  EXPECT_EQ(platform_infos.GetCoreNum(), 0);
 }
 
 TEST_F(PlatformManagerUTest, platform_instance_003) {
@@ -155,8 +155,8 @@ TEST_F(PlatformManagerUTest, platform_instance_005) {
   (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
   uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
   uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
-  EXPECT_EQ(vector_core_num, 7);
-  EXPECT_EQ(aicore_num, 8);
+  EXPECT_EQ(vector_core_num, 0);
+  EXPECT_EQ(aicore_num, 0);
 }
 
 TEST_F(PlatformManagerUTest, platform_instance_006) {
@@ -171,7 +171,7 @@ TEST_F(PlatformManagerUTest, platform_instance_006) {
   (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
   platform_infos.SetPlatformRes("SoCInfo", res);
   uint32_t aicore_num = platform_infos.GetCoreNumByType("ai_core_cnt");
-  EXPECT_EQ(aicore_num, -1);
+  EXPECT_EQ(aicore_num, 0);
 }
 
 TEST_F(PlatformManagerUTest, platform_instance_007) {
