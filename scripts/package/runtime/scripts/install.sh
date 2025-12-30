@@ -684,7 +684,7 @@ install_run() {
         new_echo "INFO" "install ${runtime_install_path_param} ${runtime_install_type}"
         log "INFO" "install ${runtime_install_path_param} ${runtime_install_type}"
         sh "${curpath}/run_runtime_install.sh" "install" "${runtime_input_install_path}" "${runtime_install_type}" \
-            "${is_quiet}" "${input_setenv}" "${docker_root}" "${in_install_for_all}"
+            "${is_quiet}" "${input_setenv}" "${docker_root}" "${in_install_for_all}" "$pkg_version_dir"
         if [ $? -eq 0 ]; then
             update_version_info_version
             log "INFO" "Runtime package installed successfully! The new version takes effect immediately."
@@ -726,7 +726,7 @@ upgrade_run() {
         new_echo "INFO" "upgrade ${runtime_install_path_param} ${runtime_install_type}"
         log "INFO" "upgrade ${runtime_install_path_param} ${runtime_install_type}"
         sh "${curpath}/run_runtime_upgrade.sh" "upgrade" "${runtime_input_install_path}" "${runtime_install_type}" \
-            "${is_quiet}" "${input_setenv}" "${docker_root}" "${in_install_for_all}"
+            "${is_quiet}" "${input_setenv}" "${docker_root}" "${in_install_for_all}" "$pkg_version_dir"
         if [ $? -eq 0 ]; then
             update_version_info_version
             log "INFO" "Runtime package upgraded successfully! The new version takes effect immediately."
@@ -776,7 +776,7 @@ uninstall_run() {
         new_echo "INFO" "uninstall ${runtime_install_path_param} ${runtime_install_type}"
         log "INFO" "uninstall ${runtime_install_path_param} ${runtime_install_type}"
         sh "$upgrade_default_dir/script/run_runtime_uninstall.sh" "uninstall" "${runtime_input_install_path}" "${runtime_install_type}" "${is_quiet}" \
-            "${is_docker_install}" "${docker_root}" "${is_recreate_softlink}"
+            "${is_docker_install}" "${docker_root}" "${is_recreate_softlink}" "$pkg_version_dir"
         if [ $? -eq 0 ]; then
             if [ "$is_remove_info_files" = "y" ]; then
                 test -f "$upgrade_install_info" && rm -f "$upgrade_install_info"
@@ -1141,11 +1141,16 @@ fi
 
 #######################################################
 is_multi_version_pkg "pkg_is_multi_version" "$pkg_version_path"
-get_version_dir "pkg_version_dir" "$pkg_version_path"
 
 if [ "$full_install" = "y" ] || [ "$run_install" = "y" ] || [ "$devel_install" = "y" ] || [ "$upgrade" = "y" ] || [ "$uninstall" = "y" ]; then
     input_install_path=$(relative_path_to_absolute_path "${input_install_path}")
     get_install_path
+    if is_version_dirpath "$input_install_path"; then
+        pkg_version_dir="$(basename "$input_install_path")"
+        input_install_path="$(dirname "$input_install_path")"
+    else
+        pkg_version_dir="cann"
+    fi
     install_top_path="$(dirname $input_install_path)"
     install_path_param="${input_install_path}"
     if [ "$hetero_arch" = "y" ]; then
