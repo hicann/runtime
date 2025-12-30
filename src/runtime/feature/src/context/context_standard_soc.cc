@@ -94,16 +94,22 @@ rtError_t Context::TryRecycleCaptureModelResource(const uint32_t allocSqNum, con
             }
 
             if (allocSqNum > totalReleaseSqNum) {
-                releaseSqNum = 0U;
-                error = captureMdl->ReleaseSqCq(releaseSqNum);
-                COND_PROC(error != RT_ERROR_NONE, break);
-                totalReleaseSqNum += releaseSqNum;
+                if (captureMdl->ModelSqOperTryLock()) {
+                    releaseSqNum = 0U;
+                    error = captureMdl->ReleaseSqCq(releaseSqNum);
+                    captureMdl->ModelSqOperUnLock();
+                    COND_PROC(error != RT_ERROR_NONE, break);
+                    totalReleaseSqNum += releaseSqNum;
+                }
             }
 
             if (ntfCnt > totalReleaseNtfNum) {
-                error = captureMdl->ReleaseNotifyId();
-                COND_PROC(error != RT_ERROR_NONE, continue);
-                totalReleaseNtfNum++;
+                if (captureMdl->ModelSqOperTryLock()) {
+                    error = captureMdl->ReleaseNotifyId();
+                    captureMdl->ModelSqOperUnLock();
+                    COND_PROC(error != RT_ERROR_NONE, continue);
+                    totalReleaseNtfNum++;
+                }
             }
         }
     }

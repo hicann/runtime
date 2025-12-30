@@ -419,6 +419,8 @@ rtError_t CaptureModel::AllocSqCqProc(const uint32_t streamNum) const
     rtError_t errorTmp = RT_ERROR_NONE;
 
     do {
+        error = Context_()->CheckStatus();
+        ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
         error = Context_()->Device_()->GetDeviceSqCqManage()->AllocSqCq(streamNum, sqCqArray_);
         totalResNum = Context_()->Device_()->GetDeviceSqCqManage()->GetSqCqPoolTotalResNum();
         COND_PROC(error != RT_ERROR_NONE, errorTmp = Context_()->TryRecycleCaptureModelResource(streamNum, 0U, this));
@@ -476,6 +478,8 @@ rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
         Api * const apiObj = Runtime::Instance()->ApiImpl_();
         rtError_t error = RT_ERROR_NONE;
         do {
+            error = Context_()->CheckStatus();
+            ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
             loopCnt++;
             error = apiObj->ModelEndGraph(this, origCaptureStream, 0U);
             COND_PROC(error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES && loopCnt == 1U, RT_LOG(RT_LOG_EVENT,
