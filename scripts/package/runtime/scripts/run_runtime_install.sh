@@ -33,6 +33,7 @@ if [ "$1" ]; then
     setenv_flag="${5}"
     docker_root="${6}"
     in_install_for_all="${7}"
+    pkg_version_dir="${8}"
 fi
 
 if [ "x${docker_root}" != "x" ]; then
@@ -44,7 +45,6 @@ fi
 get_version "pkg_version" "$pkg_version_path"
 is_multi_version_pkg "pkg_is_multi_version" "$pkg_version_path"
 if [ "$pkg_is_multi_version" = "true" ] && [ "$hetero_arch" != "y" ]; then
-    get_version_dir "pkg_version_dir" "$pkg_version_path"
     common_parse_dir="$common_parse_dir/$pkg_version_dir"
 fi
 

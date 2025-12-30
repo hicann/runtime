@@ -68,6 +68,12 @@ set(VERSION_OUT_PUT
 set(SCENE_OUT_PUT
     ${CPACK_CMAKE_BINARY_DIR}/scene.info
 )
+set(CANN_VERSION_OUT_PUT
+    ${CPACK_CMAKE_BINARY_DIR}/cann_version.h
+)
+set(RUNTIME_VERSION_OUT_PUT
+    ${CPACK_CMAKE_BINARY_DIR}/runtime_version.h
+)
 configure_file(
     ${SCENE_OUT_PUT}
     ${STAGING_DIR}/share/info/runtime/
@@ -76,6 +82,16 @@ configure_file(
 configure_file(
     ${CSV_OUTPUT}
     ${STAGING_DIR}/share/info/runtime/script/
+    COPYONLY
+)
+configure_file(
+    ${CANN_VERSION_OUT_PUT}
+    ${STAGING_DIR}/runtime/
+    COPYONLY
+)
+configure_file(
+    ${RUNTIME_VERSION_OUT_PUT}
+    ${STAGING_DIR}/runtime/
     COPYONLY
 )
 # makeself打包

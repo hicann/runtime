@@ -19,6 +19,12 @@
         <parallel>true</parallel>
         <check_features>true</check_features>
     </package_info>
+    <generate_info value="cann_version.h" dst_path="runtime" install_path="$(TARGET_ENV)/include/version" install_mod="440" install_type="devel" generator="version_header">
+        <CANN_VERSION>$(ASCEND_VER)</CANN_VERSION>
+    </generate_info>
+    <generate_info value="runtime_version.h" dst_path="runtime" install_path="$(TARGET_ENV)/include/version" install_mod="440" install_type="devel" generator="version_header">
+        <RUNTIME_VERSION>$(ASCEND_VER)</RUNTIME_VERSION>
+    </generate_info>
     <version_info install="true" install_path="runtime" install_own="$username:$usergroup" install_mod="440"/>
     <generate_info value="scene.info" dst_path="share/info/runtime" install_path="share/info/runtime" install_mod="440">
         <os>$(OS_NAME)</os>
