@@ -3111,13 +3111,15 @@ rtError_t Runtime::InitOpExecTimeout(Device *dev)
         return RT_ERROR_NONE;
     }
 
+    const bool isSupportScaleMdy = dev->IsSupportFeature(
+        RtOptionalFeatureType::RT_FEATURE_TASK_EXEC_TIMEOUT_SCALE_MODIFY);
+    const bool isSupportOpTimeoutMs = dev->CheckFeatureSupport(TS_FEATURE_OP_EXEC_TIMEOUT_MS);
     std::lock_guard<std::mutex> lock(timeoutConfig_.mtx);
     if (timeoutConfig_.isInit) {
         return RT_ERROR_NONE;
     }
 
-    if ((!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_EXEC_TIMEOUT_SCALE_MODIFY)) ||
-        (!dev->CheckFeatureSupport(TS_FEATURE_OP_EXEC_TIMEOUT_MS))) {
+    if ((!isSupportScaleMdy) || (!isSupportOpTimeoutMs)) {
         timeoutConfig_.interval = GetKernelCreditScaleUS();
         timeoutConfig_.isInit = true;
         RT_LOG(RT_LOG_INFO, "Do not support op execute timeout with ms.");
@@ -3135,7 +3137,7 @@ rtError_t Runtime::InitOpExecTimeout(Device *dev)
     timeoutConfig_.interval = static_cast<float64_t>(timeoutInterval) / RT_TIMEOUT_US_TO_NS;
     timeoutConfig_.isOpTimeoutMs =
         (timeoutConfig_.interval < RT_STARS_OP_TIMEOUT_THRESHOLD &&
-        timeoutConfig_.interval >= RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN) ?
+        timeoutConfig_.interval > RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN) ?
         true : false;
     timeoutConfig_.isInit = true;
     RT_LOG(RT_LOG_INFO, "devId=%u, tsId=%u, op execute timeout interval=%" PRIu64 "ns, isOpTimeoutMs=%d.",

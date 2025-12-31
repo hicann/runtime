@@ -558,7 +558,7 @@ rtError_t NpuDriver::QueryOpExecTimeoutInterval(const uint32_t deviceId, const u
     
     timeoutInterval = static_cast<uint64_t>(timeoutAck.u.query_op_exec_timeout_ack_info.timeout_interval_l) |
         (static_cast<uint64_t>(timeoutAck.u.query_op_exec_timeout_ack_info.timeout_interval_h) << 32U);
-    RT_LOG(RT_LOG_INFO, "device_id=%u, ts_id=%u, op execute timeoutInterval=%" PRIu64 "us.",
+    RT_LOG(RT_LOG_INFO, "device_id=%u, ts_id=%u, op execute timeoutInterval=%" PRIu64 "ns.",
         deviceId, tsId, timeoutInterval);
 
     return RT_ERROR_NONE;
