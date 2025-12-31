@@ -22,6 +22,7 @@
 #include "para_convertor.hpp"
 #include "global_state_manager.hpp"
 #include "starsv2_base.hpp"
+#include "register_memory.hpp"
 namespace cce {
 namespace runtime {
 constexpr int16_t MODEL_SCH_GROUP_ID_MIN = 0;
@@ -1465,6 +1466,35 @@ rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegist
 
     const rtError_t error = impl_->HostRegister(ptr, size, type, devPtr);
     ERROR_RETURN(error, "Malloc host memory failed, MemSize=%" PRIu64 "(bytes)", size);
+    return error;
+}
+
+rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, size_t size, uint32_t flag)
+{
+    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
+    ZERO_RETURN_MSG_OUTER(size);
+    constexpr uint32_t validFlags = RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED;
+ 	const bool isValidFlag = ((flag & validFlags) != 0U) && ((flag & (~validFlags)) == 0U);
+ 	COND_RETURN_OUT_ERROR_MSG_CALL(!isValidFlag,
+ 	    RT_ERROR_INVALID_VALUE,
+ 	    "Invalid flag:%#x, valid flag range is %#x, %#x or %#x.", flag,
+ 	    RT_MEM_HOST_REGISTER_MAPPED,
+        RT_MEM_HOST_REGISTER_PINNED,
+ 	    (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED));
+
+    const rtError_t error = impl_->HostRegisterV2(ptr, size, flag);
+    ERROR_RETURN(error, "Register host memory failed, MemSize=%" PRIu64 "(bytes), flag=%#x.", size, flag);
+    return error;
+}
+
+rtError_t ApiErrorDecorator::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    NULL_PTR_RETURN_MSG_OUTER(pHost, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(pDevice, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_OUT_ERROR_MSG_CALL((flag != 0U), RT_ERROR_INVALID_VALUE, "flag must be 0.");
+
+    const rtError_t error = impl_->HostGetDevicePointer(pHost, pDevice, flag);
+    ERROR_RETURN(error, "Host get device memory failed.");
     return error;
 }
 

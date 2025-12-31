@@ -156,6 +156,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/feature/src/common/rt_log.cc
     ${TOP_DIR}/src/runtime/feature/src/common/dev_info_manage.cc
     ${TOP_DIR}/src/runtime/feature/src/common/global_state_manager.cc
+    ${TOP_DIR}/src/runtime/feature/src/common/register_memory.cc
 )
 
 set(runtimeut_platform_list

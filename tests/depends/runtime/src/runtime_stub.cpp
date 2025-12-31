@@ -1368,6 +1368,22 @@ rtError_t aclStub::rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType 
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
+{
+    (void)ptr;
+    (void)size;
+    (void)flag;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    (void)pHost;
+    (void)pDevice;
+    (void)flag;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsHostUnregister(void *ptr)
 {
     (void)ptr;
@@ -3460,6 +3476,16 @@ rtError_t rtsPointerGetAttributes(const void *ptr, rtPtrAttributes_t *attributes
 rtError_t rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr)
 {
     return MockFunctionTest::aclStubInstance().rtsHostRegister(ptr, size, type, devPtr);
+}
+
+rtError_t rtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtHostRegisterV2(ptr, size, flag);
+}
+
+rtError_t rtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtHostGetDevicePointer(pHost, pDevice, flag);
 }
 
 rtError_t rtsHostUnregister(void *ptr)

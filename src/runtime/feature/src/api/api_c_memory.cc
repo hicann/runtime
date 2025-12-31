@@ -26,7 +26,9 @@ TIMESTAMP_EXTERN(rtInvalidCache);
 TIMESTAMP_EXTERN(rtsMemFlushCache);
 TIMESTAMP_EXTERN(rtsMemInvalidCache);
 TIMESTAMP_EXTERN(rtsHostRegister);
+TIMESTAMP_EXTERN(rtHostRegisterV2);
 TIMESTAMP_EXTERN(rtsHostUnregister);
+TIMESTAMP_EXTERN(rtHostGetDevicePointer);
 TIMESTAMP_EXTERN(rtsPointerGetAttributes);
 TIMESTAMP_EXTERN(rtsMemcpy);
 TIMESTAMP_EXTERN(rtsMemcpyBatch);
@@ -230,6 +232,32 @@ rtError_t rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType type, voi
     TIMESTAMP_BEGIN(rtsHostRegister);
     const rtError_t error = apiInstance->HostRegister(ptr, size, type, devPtr);
     TIMESTAMP_END(rtsHostRegister);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtHostRegisterV2(void *ptr, size_t size, uint32_t flag)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtHostRegisterV2);
+    const rtError_t error = apiInstance->HostRegisterV2(ptr, size, flag);
+    TIMESTAMP_END(rtHostRegisterV2);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtHostGetDevicePointer);
+    const rtError_t error = apiInstance->HostGetDevicePointer(pHost, pDevice, flag);
+    TIMESTAMP_END(rtHostGetDevicePointer);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

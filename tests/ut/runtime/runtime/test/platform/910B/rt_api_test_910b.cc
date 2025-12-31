@@ -1307,6 +1307,118 @@ TEST_F(ApiTest910b, host_register_test)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiTest910b, host_register_pinned)
+{
+    rtError_t error;
+    auto ptr = std::make_unique<uint32_t>();
+    uintptr_t value = 0x123U;
+    void **devPtr = (void **)&value;
+
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*devPtr, nullptr);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 1U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 2U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 3U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*devPtr, nullptr);
+
+    error = rtsHostUnregister(ptr.get()); 
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtsHostUnregister(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U)); 
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+drvError_t halHostRegister_stub(void *hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void **devPtr)
+{
+    *devPtr = hostPtr;
+    return DRV_ERROR_NONE;
+}
+
+TEST_F(ApiTest910b, host_register_pinned_mapped)
+{
+    rtError_t error;
+    auto ptr = std::make_unique<uint32_t>();
+    uintptr_t value = 0x123U;
+    void **devPtr = (void **)&value;
+
+    MOCKER(&halHostRegister)
+        .stubs()
+        .will(invoke(halHostRegister_stub));
+
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*devPtr, ptr.get());
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 1U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 2U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 3U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    error = rtHostRegisterV2(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtHostGetDevicePointer(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U), devPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*devPtr, nullptr);
+
+    error = rtHostGetDevicePointer(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 5U), devPtr, 1U);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(*devPtr, nullptr);
+
+    error = rtsHostUnregister(ptr.get()); 
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtsHostUnregister(RtValueToPtr<void *>(RtPtrToValue(ptr.get()) + 4U)); 
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    auto ptr2 = std::make_unique<uint32_t>();
+    uintptr_t value2 = 0x123U;
+    void **devPtr2 = (void **)&value2;
+
+    error = rtsHostRegister(ptr2.get(), sizeof(uint32_t), RT_HOST_REGISTER_MAPPED, devPtr2);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtsHostUnregister(ptr2.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(ApiTest910b, pin_memory_attribute)
+{
+    rtError_t error;
+    auto ptr = std::make_unique<uint32_t>();
+    rtPointerAttributes_t attributes;
+
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_7));
+    error = rtPointerGetAttributes(&attributes, ptr.get());
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(attributes.locationType, RT_MEMORY_LOC_HOST);
+
+    error = rtsHostUnregister(ptr.get()); 
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
 
 TEST_F(ApiTest910b, memcpy_batch)
 {

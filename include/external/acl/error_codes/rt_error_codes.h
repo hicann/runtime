@@ -148,6 +148,8 @@ extern "C" {
 #define  ACL_ERROR_SNAPSHOT_UNLOCK_FAILED        507907 // snapshot unlock failed
 #define  ACL_ERROR_SNAPSHOT_BACKUP_FAILED        507908 // snapshot backup failed
 #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED       507909 // snapshot restore failed
+#define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 // host memory range already registered
+#define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED      507911 // host memory has not been registered
 
 
 #ifdef __cplusplus

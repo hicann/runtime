@@ -341,6 +341,48 @@ aclError aclrtHostRegisterImpl(void *ptr, uint64_t size, aclrtHostRegisterType t
     return ACL_SUCCESS;
 }
 
+aclError aclrtHostRegisterV2Impl(void *ptr, uint64_t size, uint32_t flag)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtHostRegisterV2);
+    ACL_LOG_DEBUG("start to execute aclrtHostRegisterV2");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+    // size must be greater than zero
+    if (size == 0UL) {
+        ACL_LOG_ERROR("register size must be greater than zero");
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
+            std::vector<const char *>({"param", "value", "reason"}),
+            std::vector<const char *>({"size", std::to_string(size).c_str(), "size must be greater than zero"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    const rtError_t rtErr = rtHostRegisterV2(ptr, size, flag);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call rtHostRegisterV2 failed, runtime result = %d", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
+aclError aclrtHostGetDevicePointerImpl(void *pHost, void **pDevice, uint32_t flag)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtHostGetDevicePointer);
+    ACL_LOG_DEBUG("start to execute aclrtHostGetDevicePointer");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pHost);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pDevice);
+    if (flag != 0UL) {
+        ACL_LOG_ERROR("register flag must be zero");
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
+            std::vector<const char *>({"param", "value", "reason"}),
+            std::vector<const char *>({"flag", std::to_string(flag).c_str(), "flag must be zero"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    const rtError_t rtErr = rtHostGetDevicePointer(pHost, pDevice, flag);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call aclrtHostGetDevicePointer failed, runtime result = %d", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclrtHostUnregisterImpl(void *ptr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtHostUnregister);

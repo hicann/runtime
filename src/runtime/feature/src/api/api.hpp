@@ -259,6 +259,8 @@ public:
         rtMallocHostSharedMemoryOut * const out) = 0;
     virtual rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in) = 0;
     virtual rtError_t HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr) = 0;
+    virtual rtError_t HostRegisterV2(void *ptr, uint64_t size, uint32_t flag) = 0;
+    virtual rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) = 0;
     virtual rtError_t HostUnregister(void *ptr) = 0;
     virtual rtError_t ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) = 0;

@@ -547,6 +547,16 @@ rtError_t ApiDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegisterTyp
     return impl_->HostRegister(ptr, size, type, devPtr);
 }
 
+rtError_t ApiDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
+{
+    return impl_->HostRegisterV2(ptr, size, flag);
+}
+
+rtError_t ApiDecorator::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    return impl_->HostGetDevicePointer(pHost, pDevice, flag);
+}
+
 rtError_t ApiDecorator::HostUnregister(void *ptr)
 {
     return impl_->HostUnregister(ptr);

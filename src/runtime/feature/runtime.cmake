@@ -78,6 +78,7 @@ set(common_src_files
     src/common/rt_log.cc
     src/common/dev_info_manage.cc
     src/common/global_state_manager.cc
+    src/common/register_memory.cc
 )
 
 set(libruntime_context_src_files
