@@ -138,6 +138,8 @@ namespace acl {
         {AclProfType::AclrtStreamGetId,                         "aclrtStreamGetId"},
         {AclProfType::AclrtPointerGetAttributes,                "aclrtPointerGetAttributes"},
         {AclProfType::AclrtHostRegister,                        "aclrtHostRegister"},
+        {AclProfType::AclrtHostRegisterV2,                      "aclrtHostRegisterV2"},
+        {AclProfType::AclrtHostGetDevicePointer,                "aclrtHostGetDevicePointer"},
         {AclProfType::AclrtHostUnregister,                      "aclrtHostUnregister"},
         {AclProfType::AclrtValueWrite,                          "aclrtValueWrite"},
         {AclProfType::AclrtValueWait,                           "aclrtValueWait"},

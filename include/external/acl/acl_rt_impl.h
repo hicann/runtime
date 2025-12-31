@@ -130,6 +130,10 @@ ACL_FUNC_VISIBILITY aclError aclrtPointerGetAttributesImpl(const void *ptr, aclr
 
 ACL_FUNC_VISIBILITY aclError aclrtHostRegisterImpl(void *ptr, uint64_t size, aclrtHostRegisterType type, void **devPtr);
 
+ACL_FUNC_VISIBILITY aclError aclrtHostRegisterV2Impl(void *ptr, uint64_t size, uint32_t flag);
+ 	 
+ACL_FUNC_VISIBILITY aclError aclrtHostGetDevicePointerImpl(void *pHost, void **pDevice, uint32_t flag);
+
 ACL_FUNC_VISIBILITY aclError aclrtHostUnregisterImpl(void *ptr);
 
 ACL_FUNC_VISIBILITY aclError aclrtGetThreadLastTaskIdImpl(uint32_t *taskId);

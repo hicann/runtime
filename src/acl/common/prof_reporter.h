@@ -271,6 +271,8 @@ namespace acl {
         AclrtStreamGetPriority,
         AclrtStreamGetFlags,
         AclrtGetMemUsageInfo,
+        AclrtHostRegisterV2,
+        AclrtHostGetDevicePointer,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

@@ -4012,6 +4012,86 @@ TEST_F(UTEST_ACL_Runtime, aclrtHostUnregister_failed02)
     EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtHostRegisterV2_succ)
+{
+    void *ptr = (void*)0xff;
+    uint64_t size = 1024UL;
+    uint32_t flag = ACL_HOST_REG_MAPPED;
+    auto ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    flag = ACL_HOST_REG_PINNED;
+    ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostRegisterV2_failed01)
+{
+    void *ptr = nullptr;
+    uint64_t size = 1024UL;
+    uint32_t flag = ACL_HOST_REG_MAPPED;
+    auto ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostRegisterV2_failed02)
+{
+    void *ptr = (void*)0xff;
+    uint64_t size = 0UL;
+    uint32_t flag = ACL_HOST_REG_MAPPED;
+    auto ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostRegisterV2_failed03)
+{
+    void *ptr = (void*)0xff;
+    uint64_t size = 1024UL;
+    uint32_t flag = ACL_HOST_REG_MAPPED;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostRegisterV2(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_FAILURE));
+    auto ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_succ)
+{
+    void *pHost = (void*)0xff;
+    void *pDevice = nullptr;
+    uint32_t flag = 0U;
+    auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed01)
+{
+    void *pHost = nullptr;
+    void *pDevice = nullptr;
+    uint32_t flag = 0U;
+    auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed02)
+{
+    void *pHost = (void*)0xff;
+    void *pDevice = nullptr;
+    uint32_t flag = 1U;
+    auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed03)
+{
+    void *pHost = (void*)0xff;
+    void *pDevice = nullptr;
+    uint32_t flag = 0U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostGetDevicePointer(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_FAILURE));
+    auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskId_succ)
 {
     uint32_t taskId = 0;

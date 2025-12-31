@@ -49,6 +49,7 @@
 #include "soc_info.h"
 #include "task_execute_time.h"
 #include "starsv2_base.hpp"
+#include "register_memory.hpp"
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
 
@@ -2498,14 +2499,58 @@ rtError_t ApiImpl::HostRegister(void *ptr, uint64_t size, rtHostRegisterType typ
         curCtx->Device_()->Id_());
 }
 
+rtError_t ApiImpl::HostRegisterV2(void *ptr, size_t size, uint32_t flag)
+{
+    RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
+    TIMESTAMP_NAME(__func__);
+    Context * const curCtx = CurrentContext();
+    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    rtError_t error;
+    void *devPtr = nullptr;
+    void **pDevice = &devPtr;
+
+    if ((flag & RT_MEM_HOST_REGISTER_MAPPED) != 0U) {
+        const uint32_t deviceId = curCtx->Device_()->Id_();
+        error = curCtx->Device_()->Driver_()->HostRegister(ptr, size,
+            RT_HOST_REGISTER_MAPPED, pDevice, deviceId);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    }
+
+    if ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U) {
+        error = InsertPinnedMemory(ptr, size);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    (void)flag;
+    *pDevice = GetMappedDevicePointer(pHost);
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::HostUnregister(void *ptr)
 {
     TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    return curCtx->Device_()->Driver_()->HostUnregister(ptr,
-        curCtx->Device_()->Id_());
+    bool isRegister = false;
+    if(IsMappedMemoryBase(ptr)) {
+        isRegister = true;
+        const uint32_t deviceId = curCtx->Device_()->Id_();
+        const rtError_t error = curCtx->Device_()->Driver_()->HostUnregister(ptr, deviceId);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    }
+
+    if(IsPinnedMemoryBase(ptr)) {
+        isRegister = true;
+        ErasePinnedMemory(ptr);
+    }
+    return (isRegister) ? RT_ERROR_NONE : RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
 }
 
 rtError_t ApiImpl::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
@@ -3504,6 +3549,8 @@ void ApiImpl::DumpTimeStampPart2() const
     TIMESTAMP_DUMP(rtEventRecord);
     TIMESTAMP_DUMP(rtEventReset);
     TIMESTAMP_DUMP(rtEventSynchronize);
+    TIMESTAMP_DUMP(rtHostRegisterV2);
+ 	TIMESTAMP_DUMP(rtHostGetDevicePointer);
 }
 
 rtError_t ApiImpl::DeviceReset(const int32_t devId, const bool isForceReset)

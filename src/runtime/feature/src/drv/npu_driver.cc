@@ -24,6 +24,7 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
+#include "register_memory.hpp"
 
 namespace {
     constexpr int32_t MEMQ_EVENT_CROSS_DEV_VERSION = 0x72316; // MAJOR:0x07, MINOR:0x23, PATCH:0x16
@@ -2496,7 +2497,7 @@ rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t * const attribut
         attributes->locationType = RT_MEMORY_LOC_MANAGED;
     } else if ((dvAttributes.memType & DV_MEM_USER_MALLOC) != 0U) {
         attributes->memoryType = RT_MEMORY_TYPE_USER;
-        attributes->locationType = RT_MEMORY_LOC_UNREGISTERED;
+        attributes->locationType = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
     } else {
         RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
@@ -2539,7 +2540,7 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
         attributes->location.type = RT_MEMORY_LOC_MANAGED;
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_UNREGISTERED;
+        attributes->location.type = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
     } else {
         RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
@@ -2584,7 +2585,7 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         location = RT_MEMORY_LOC_MANAGED;
         realLocation = RT_MEMORY_LOC_HOST; // to be check
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
-        location = RT_MEMORY_LOC_UNREGISTERED;
+        location = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
         realLocation = RT_MEMORY_LOC_HOST;
     } else {
         RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);

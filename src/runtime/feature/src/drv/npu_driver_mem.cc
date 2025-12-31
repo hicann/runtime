@@ -20,6 +20,7 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
+#include "register_memory.hpp"
 
 namespace cce {
 namespace runtime {
@@ -190,7 +191,9 @@ rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType t
             "[drv api] Malloc host memory failed, halHostRegister failed, drvRetCode=%d, device_id=%u!",
             static_cast<int32_t>(drvRet), deviceId);
         error = RT_GET_DRV_ERRCODE(drvRet);
-    }
+    } else {
+ 	    InsertMappedMemory(ptr, size, *devPtr);
+ 	}
 
     return error;
 }
@@ -218,6 +221,7 @@ rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
             "drvRetCode=%d!", deviceId, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
+    EraseMappedMemory(ptr);
     RT_LOG(RT_LOG_DEBUG, "halHostUnregister: device_id=%u, drvRetCode=%d!",
            deviceId, static_cast<int32_t>(drvRet));
     return RT_ERROR_NONE;

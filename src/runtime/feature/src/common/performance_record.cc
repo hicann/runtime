@@ -31,6 +31,8 @@ TIMESTAMP_DEFINE(rtInvalidCache);
 TIMESTAMP_DEFINE(rtsMemFlushCache);
 TIMESTAMP_DEFINE(rtsMemInvalidCache);
 TIMESTAMP_DEFINE(rtsHostRegister);
+TIMESTAMP_DEFINE(rtHostRegisterV2);
+TIMESTAMP_DEFINE(rtHostGetDevicePointer);
 TIMESTAMP_DEFINE(rtsHostUnregister);
 TIMESTAMP_DEFINE(rtsPointerGetAttributes);
 TIMESTAMP_DEFINE(rtsMemcpy);

@@ -271,6 +271,16 @@ aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type,
     return aclrtHostRegisterImpl(ptr, size, type, devPtr);
 }
 
+aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
+{
+    return aclrtHostRegisterV2Impl(ptr, size, flag);
+}
+
+aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    return aclrtHostGetDevicePointerImpl(pHost, pDevice, flag);
+}
+
 aclError aclrtHostUnregister(void *ptr)
 {
     return aclrtHostUnregisterImpl(ptr);

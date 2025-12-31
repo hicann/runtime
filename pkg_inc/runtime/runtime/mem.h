@@ -126,6 +126,13 @@ typedef uint32_t rtMemType_t;
 
 /**
  * @ingroup dvrt_mem
+ * @brief register host memory
+ */
+#define RT_MEM_HOST_REGISTER_MAPPED (0X2U)
+#define RT_MEM_HOST_REGISTER_PINNED (0X10000000U)
+
+/**
+ * @ingroup dvrt_mem
  * @brief memory copy type
  */
 typedef enum tagRtMemcpyKind {

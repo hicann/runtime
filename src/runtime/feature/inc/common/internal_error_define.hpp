@@ -470,6 +470,9 @@ constexpr int32_t RT_ERROR_SNAPSHOT_UNLOCK_FAILED                      = 0x071D0
 constexpr int32_t RT_ERROR_SNAPSHOT_BACKUP_FAILED                      = 0x071D0003;
 constexpr int32_t RT_ERROR_SNAPSHOT_RESTORE_FAILED                     = 0x071D0004;
 
+constexpr int32_t RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED              = 0x071E0001;
+constexpr int32_t RT_ERROR_HOST_MEMORY_NOT_REGISTERED                  = 0x071E0002;
+
 enum class DeviceFaultType : uint8_t {
     MTE_ERROR,
     AICORE_SW_ERROR,
