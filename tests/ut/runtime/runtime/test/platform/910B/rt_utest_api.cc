@@ -560,25 +560,39 @@ TEST_F(CloudV2ApiTest, label_api)
 //changed
 TEST_F(CloudV2ApiTest, memcpy_async_host_to_device_81)
 {
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
+    rtError_t error;
     void *hostPtr;
     void *devPtr;
+    size_t size = 128;
 
-    rtError_t error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);//RT_MEMORY_TYPE_HOST
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    hostPtr = malloc(size);   /* malloc host pageable memory */
+    EXPECT_EQ(true, hostPtr != nullptr);
 
-    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);//RT_MEMORY_TYPE_DEVICE
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtMalloc(&devPtr, size, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(RT_ERROR_NONE, error);
 
-    Stream *stream = static_cast<Stream *>(stream_);
-    error = rtMemcpyAsync(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, stream_);
+    struct DVattribute dvAttributesSrc, dvAttributesDst;
+    dvAttributesSrc.memType = DV_MEM_USER_MALLOC;
+    dvAttributesDst.memType = DV_MEM_LOCK_DEV;
+
+    MOCKER(drvMemGetAttribute).stubs()
+        .with(eq(RtPtrToPtr<DVdeviceptr>(hostPtr)), outBoundP(&dvAttributesSrc))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    MOCKER(drvMemGetAttribute).stubs()
+        .with(eq(RtPtrToPtr<DVdeviceptr>(devPtr)), outBoundP(&dvAttributesDst))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    error = rtMemcpyAsync(devPtr, size, hostPtr, size, RT_MEMCPY_HOST_TO_DEVICE, NULL);
+    EXPECT_EQ(RT_ERROR_NONE, error);
+
+    error = rtStreamSynchronize(NULL);
+    EXPECT_EQ(RT_ERROR_NONE, error);
 
     error = rtFree(devPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(RT_ERROR_NONE, error);
 
-    error = rtFree(hostPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    free(hostPtr);
 }
 
 TEST_F(CloudV2ApiTest, LAUNCH_KERNEL_WITH_TYPE)

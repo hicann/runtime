@@ -1619,7 +1619,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
 
     if (isD2HorH2DInvolvePageableMemory) {
         /* 把异步拷贝转化为隐式流同步 + 同步拷贝，以避免异步访问pageable内存引起的PA异常 */
-        error = impl_->StreamSynchronize(stm, -1);
+        error = StreamSynchronize(stm, -1);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", streamId);
 
         error = impl_->MemCopySync(dst, destMax, src, cnt, copyKind);
