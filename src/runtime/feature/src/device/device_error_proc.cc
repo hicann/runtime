@@ -1214,11 +1214,11 @@ void DeviceErrorProc::ProcessReportFastRingBuffer()
     }
 
     DevRingBufferCtlInfo *ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *>(fastRingBufferAddr_);
-    COND_RETURN_WITH_NOLOG((ctrlInfo->magic != RINGBUFFER_MAGIC), );  // no error return
+    COND_PROC((ctrlInfo->magic != RINGBUFFER_MAGIC), return); // no error return
     StarsOpExceptionInfo report;
     {
         const std::lock_guard<std::mutex> lk(fastRingbufferMutex_);
-        COND_RETURN_WITH_NOLOG((ctrlInfo->magic != RINGBUFFER_MAGIC), );  // no error return
+        COND_PROC((ctrlInfo->magic != RINGBUFFER_MAGIC), return); // no error return
         StarsOpExceptionInfo *starsReport = RtValueToPtr<StarsOpExceptionInfo *>(RtPtrToValue(fastRingBufferAddr_) +
         sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo));
         report = *starsReport;
