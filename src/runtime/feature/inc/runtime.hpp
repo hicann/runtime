@@ -640,7 +640,7 @@ public:
     rtError_t SaveModule(void);
 
     rtError_t RestoreModule(void) const;
-    rtError_t DeleteModuleBackupPoint(void);
+    void DeleteModuleBackupPoint(void);
     const std::vector<char> &GetDcacheLockMixOpData() const
     {
         return dcacheLockMixOpData_;

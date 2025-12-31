@@ -5636,7 +5636,7 @@ rtError_t Runtime::SaveModule(void)
     ObjAllocator<RefObject<Program *>> *programAllocator = rt->GetProgramAllocator();
     NULL_PTR_RETURN_MSG_OUTER(programAllocator, RT_ERROR_PROGRAM_BASE);
  
-    COND_PROC(moduleBackupList_.empty() == false, (void)DeleteModuleBackupPoint());
+    COND_PROC(moduleBackupList_.empty() == false, DeleteModuleBackupPoint());
 
     RefObject<Program *> **progPool = programAllocator->GetObjAllocatorPool();
     NULL_PTR_RETURN(progPool, RT_ERROR_PROGRAM_BASE);
@@ -5698,13 +5698,11 @@ rtError_t Runtime::RestoreModule(void) const
     return ret;
 }
  
-rtError_t Runtime::DeleteModuleBackupPoint(void)
+void Runtime::DeleteModuleBackupPoint(void)
 {
-    rtError_t ret = RT_ERROR_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Delete begain");
+    RT_LOG(RT_LOG_DEBUG, "Delete begin");
     moduleBackupList_.clear();
     RT_LOG(RT_LOG_DEBUG, "Delete finish");
-    return ret;
 }
 
 bool Runtime::JudgeNeedSubscribe(const uint64_t threadId, Stream *stm, const uint32_t deviceId)
