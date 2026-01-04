@@ -117,6 +117,9 @@ public:
                 case FUSION_KERNEL_ERROR:
                     errorInfo->u.fusionKernelErrorInfo.comm.streamId = g_streamId;
                     break;
+                case CCU_ERROR:
+                    errorInfo->u.ccuErrorInfo.comm.streamId = g_streamId;
+                    break;
                 default:
                     break;
             }

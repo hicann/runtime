@@ -1237,6 +1237,7 @@ bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::
         static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC) : static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV);
     }
     kernelTmp->SetMixType(type);
+    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelTmp);
     RT_LOG(RT_LOG_DEBUG, "proc mix kernel register, kernel name=[%s], offset1=%llu, offset2=%llu, mixType1=%hu, "
         "mixType2=%hu, final mixType=%hu version=%u", kernel->name, kernelTmp->Offset_(), kernelTmp->Offset2_(),
         kernelTmpMixType, mixType, kernelTmp->GetMixType(), mixProcVersion);
@@ -1462,6 +1463,7 @@ rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
 
     // set other attrs
     SetKernelAttribute(kernel, kernelObj, kernelType);
+    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelObj);
     ret = KernelAdd(kernelObj, tilingKeyParseRet);
     if (ret != RT_ERROR_NONE) {
         delete kernelObj;
