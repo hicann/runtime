@@ -3103,18 +3103,6 @@ rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * cons
         totalSize);
 }
 
-rtError_t ApiImpl::MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size)
-{
-    rtAiCoreMemorySize_t aiCoreMemorySize;
-    const rtError_t error = GetAiCoreMemorySizes(&aiCoreMemorySize);
-    ERROR_RETURN_MSG_INNER(error, "Get aicore memory sizes failed, retCode=%#x", static_cast<uint32_t>(error));
-
-    *ptr = stm->L2BaseVaddr();
-    *size = aiCoreMemorySize.l2Size;
-
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImpl::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
     RT_LOG(RT_LOG_DEBUG, "get memory attribute.");
@@ -4559,72 +4547,6 @@ rtError_t ApiImpl::GetAiCpuCount(uint32_t * const aiCpuCnt)
         *aiCpuCnt = static_cast<uint32_t>(val);
     }
     return error;
-}
-
-rtError_t ApiImpl::GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const rtPlatformType_t platformType = curCtx->Device_()->GetPlatformType();
-
-    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(platformType) >= PLATFORM_END, RT_ERROR_DEVICE_PLATFORM,
-                                "Get platform type failed, current platform type=%d,"
-                                " valid value range is [%d, %d)",
-                                platformType, PLATFORM_BEGIN, PLATFORM_END);
-
-    return Runtime::Instance()->Config_()->GetAiCoreSpec(platformType, aiCoreSpec);
-}
-
-rtError_t ApiImpl::GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const rtPlatformType_t platformType = curCtx->Device_()->GetPlatformType();
-
-    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(platformType) >= PLATFORM_END, RT_ERROR_DEVICE_PLATFORM,
-                                "Get platform type failed, current platform type=%d,"
-                                " valid value range is [%d, %d)",
-                                platformType, PLATFORM_BEGIN, PLATFORM_END);
-    return Runtime::Instance()->Config_()->GetAiCoreMemorySizes(platformType, aiCoreMemorySize);
-}
-
-rtError_t ApiImpl::GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const rtPlatformType_t platformType = curCtx->Device_()->GetPlatformType();
-
-    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(platformType) >= PLATFORM_END, RT_ERROR_DEVICE_PLATFORM,
-                                "Get platform type failed, current platform type=%d,"
-                                " valid value range is [%d, %d)",
-                                platformType, PLATFORM_BEGIN, PLATFORM_END);
-    return Runtime::Instance()->Config_()->GetAiCoreMemoryRates(platformType, aiCoreMemoryRates);
-}
-
-rtError_t ApiImpl::GetMemoryConfig(rtMemoryConfig_t * const memoryConfig)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const rtPlatformType_t platformType = curCtx->Device_()->GetPlatformType();
-
-    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(platformType) >= PLATFORM_END, RT_ERROR_DEVICE_PLATFORM,
-                                "Get platform type failed, current platform type=%d,"
-                                " valid value range is [%d, %d)",
-                                platformType, PLATFORM_BEGIN, PLATFORM_END);
-    return Runtime::Instance()->Config_()->GetMemoryConfig(platformType, memoryConfig);
-}
-
-rtError_t ApiImpl::SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const rtPlatformType_t platformType = curCtx->Device_()->GetPlatformType();
-
-    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(platformType) >= PLATFORM_END, RT_ERROR_DEVICE_PLATFORM,
-                                "Get platform type failed, current platform type=%d,"
-                                " valid value range is [%d, %d)",
-                                platformType, PLATFORM_BEGIN, PLATFORM_END);
-    return Runtime::Instance()->Config_()->SetAiCoreMemSizes(platformType, aiCoreMemorySize);
 }
 
 rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify ** const retNotify, uint64_t flag)

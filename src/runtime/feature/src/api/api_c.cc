@@ -2007,16 +2007,6 @@ rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallbac
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtMemGetL2Info(rtStream_t stm, void **ptr, uint32_t *size)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->MemGetL2Info(static_cast<Stream *>(stm), ptr, size);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt)
 {
     const auto rtInstance = Runtime::Instance();
@@ -2038,56 +2028,6 @@ rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetAiCpuCount(aiCpuCnt);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetAiCoreSpec(rtAiCoreSpec_t *aiCoreSpec)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetAiCoreSpec(aiCoreSpec);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtAiCoreMemorySizes(rtAiCoreMemorySize_t *aiCoreMemorySize)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetAiCoreMemorySizes(aiCoreMemorySize);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetAiCoreMemoryRates(rtAiCoreMemoryRates_t *aiCoreMemoryRates)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetAiCoreMemoryRates(aiCoreMemoryRates);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetMemoryConfig(rtMemoryConfig_t *memoryConfig)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetMemoryConfig(memoryConfig);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtSetAiCoreMemorySizes(rtAiCoreMemorySize_t *aiCoreMemorySize)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetAiCoreMemorySizes(aiCoreMemorySize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

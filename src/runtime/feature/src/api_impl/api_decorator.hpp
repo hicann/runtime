@@ -210,7 +210,6 @@ public:
     rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) override;
     rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes) override;
     rtError_t MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId) override;
-    rtError_t MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size) override;
     rtError_t MemCopy2DSync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
         const uint64_t width, const uint64_t height,
         const rtMemcpyKind_t kind = RT_MEMCPY_RESERVED, const rtMemcpyKind newKind = RT_MEMCPY_KIND_MAX) override;
@@ -367,12 +366,6 @@ public:
     rtError_t AdcProfiler(const uint64_t addr, const uint32_t length) override;
     rtError_t SetMsprofReporterCallback(const MsprofReporterCallback callback) override;
 
-    // ai core buffer size
-    rtError_t GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) override;
-
-    // set ai core buffer size
-    rtError_t SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) override;
-
     // inquire information
     rtError_t GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
         uint32_t * const maxTaskCount) override;
@@ -419,9 +412,6 @@ public:
     /* hardware Info */
     rtError_t GetAiCoreCount(uint32_t * const aiCoreCnt) override;
     rtError_t GetAiCpuCount(uint32_t * const aiCpuCnt) override;
-    rtError_t GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec) override;
-    rtError_t GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates) override;
-    rtError_t GetMemoryConfig(rtMemoryConfig_t * const memoryConfig) override;
     rtError_t SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMode) override;
     rtError_t GetDeviceSatMode(rtFloatOverflowMode_t * const floatOverflowMode) override;
     rtError_t GetDeviceSatModeForStream(Stream * const stm, rtFloatOverflowMode_t * const floatOverflowMode) override;

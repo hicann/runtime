@@ -2431,15 +2431,6 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, siz
     return error;
 }
 
-rtError_t ApiErrorDecorator::MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size)
-{
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(size, RT_ERROR_INVALID_VALUE);
-
-    return impl_->MemGetL2Info(stm, ptr, size);
-}
-
 rtError_t ApiErrorDecorator::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
     NULL_PTR_RETURN_MSG_OUTER(attributes, RT_ERROR_INVALID_VALUE);
@@ -2935,19 +2926,6 @@ rtError_t ApiErrorDecorator::GetOnlineProfData(Stream * const stm, rtProfDataInf
     return error;
 }
 
-rtError_t ApiErrorDecorator::GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    NULL_PTR_RETURN_MSG_OUTER(aiCoreMemorySize, RT_ERROR_INVALID_VALUE);
-    return impl_->GetAiCoreMemorySizes(aiCoreMemorySize);
-}
-
-rtError_t ApiErrorDecorator::SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    NULL_PTR_RETURN_MSG_OUTER(aiCoreMemorySize, RT_ERROR_INVALID_VALUE);
-
-    return impl_->SetAiCoreMemorySizes(aiCoreMemorySize);
-}
-
 rtError_t ApiErrorDecorator::IpcSetMemoryName(const void * const ptr, const uint64_t byteCount, char_t * const name,
     const uint32_t len, const uint64_t flags)
 {
@@ -3062,27 +3040,6 @@ rtError_t ApiErrorDecorator::GetAiCpuCount(uint32_t * const aiCpuCnt)
     NULL_PTR_RETURN_MSG_OUTER(aiCpuCnt, RT_ERROR_INVALID_VALUE);
 
     return impl_->GetAiCpuCount(aiCpuCnt);
-}
-
-rtError_t ApiErrorDecorator::GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec)
-{
-    NULL_PTR_RETURN_MSG_OUTER(aiCoreSpec, RT_ERROR_INVALID_VALUE);
-
-    return impl_->GetAiCoreSpec(aiCoreSpec);
-}
-
-rtError_t ApiErrorDecorator::GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates)
-{
-    NULL_PTR_RETURN_MSG_OUTER(aiCoreMemoryRates, RT_ERROR_INVALID_VALUE);
-
-    return impl_->GetAiCoreMemoryRates(aiCoreMemoryRates);
-}
-
-rtError_t ApiErrorDecorator::GetMemoryConfig(rtMemoryConfig_t * const memoryConfig)
-{
-    NULL_PTR_RETURN_MSG_OUTER(memoryConfig, RT_ERROR_INVALID_VALUE);
-
-    return impl_->GetMemoryConfig(memoryConfig);
 }
 
 rtError_t ApiErrorDecorator::ModelCreate(Model ** const mdl, const uint32_t flag)

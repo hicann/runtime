@@ -175,48 +175,6 @@ rtError_t GetThreadIdByStreamIdStub(CbSubscribe *cbSubscribe, const uint32_t dev
     return RT_ERROR_NONE;
 }
 
-TEST_F(RtOthersApiTest, get_MemoryConfig_test)
-{
-    rtError_t error;
-    rtMemoryConfig_t *memoryConfig;
-    memoryConfig = (rtMemoryConfig_t *)malloc(sizeof(rtMemoryConfig_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetMemoryConfig(memoryConfig);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(memoryConfig);
-    delete rawDevice;
-}
-
-TEST_F(RtOthersApiTest, get_AiCoreMemoryRates_test)
-{
-    rtError_t error;
-    rtAiCoreMemoryRates_t *aiCoreMemoryRates;
-    aiCoreMemoryRates = (rtAiCoreMemoryRates_t *)malloc(sizeof(rtAiCoreMemoryRates_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetAiCoreMemoryRates(aiCoreMemoryRates);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(aiCoreMemoryRates);
-    delete rawDevice;
-}
-
-TEST_F(RtOthersApiTest, get_AiCoreSpec_test)
-{
-    rtError_t error;
-    rtAiCoreSpec_t *aiCoreSpec;
-    aiCoreSpec = (rtAiCoreSpec_t *)malloc(sizeof(rtAiCoreSpec_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetAiCoreSpec(aiCoreSpec);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(aiCoreSpec);
-    delete rawDevice;
-}
-
 TEST_F(RtOthersApiTest, capture_api_37)
 {
     rtError_t error;

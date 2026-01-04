@@ -799,31 +799,12 @@ RTS_API rtError_t rtMemcpy2dAsync(void *dst, uint64_t dstPitch, const void *src,
 
 /**
  * @ingroup dvrt_mem
- * @brief query memory size
- * @param [in] aiCoreMemorySize
- * @return RT_ERROR_NONE for ok, errno for failed
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtAiCoreMemorySizes(rtAiCoreMemorySize_t *aiCoreMemorySize);
-
-/**
- * @ingroup dvrt_mem
  * @brief read mem info while holding the core
  * @param [in] param
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtDebugReadAICore(rtDebugMemoryParam_t *const param);
-
-/**
- * @ingroup dvrt_mem
- * @brief set memory size, Setting before model reasoning, Bright screen to prevent model can not be fully
-       integrated network due to memory limitations.Requirement come from JiaMinHu.Only use for Tiny.
- * @param [in] aiCoreMemorySize
- * @return RT_ERROR_NONE for ok, errno for failed
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtSetAiCoreMemorySizes(rtAiCoreMemorySize_t *aiCoreMemorySize);
 
 /**
  * @ingroup dvrt_mem

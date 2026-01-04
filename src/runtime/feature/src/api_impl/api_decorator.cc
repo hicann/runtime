@@ -728,11 +728,6 @@ rtError_t ApiDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t *
     return impl_->MemGetInfoEx(memInfoType, freeSize, totalSize);
 }
 
-rtError_t ApiDecorator::MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size)
-{
-    return impl_->MemGetL2Info(stm, ptr, size);
-}
-
 rtError_t ApiDecorator::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
     return impl_->PointerGetAttributes(attributes, ptr);
@@ -1029,31 +1024,6 @@ rtError_t ApiDecorator::GetAiCoreCount(uint32_t * const aiCoreCnt)
 rtError_t ApiDecorator::GetAiCpuCount(uint32_t * const aiCpuCnt)
 {
     return impl_->GetAiCpuCount(aiCpuCnt);
-}
-
-rtError_t ApiDecorator::GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec)
-{
-    return impl_->GetAiCoreSpec(aiCoreSpec);
-}
-
-rtError_t ApiDecorator::GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    return impl_->GetAiCoreMemorySizes(aiCoreMemorySize);
-}
-
-rtError_t ApiDecorator::GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates)
-{
-    return impl_->GetAiCoreMemoryRates(aiCoreMemoryRates);
-}
-
-rtError_t ApiDecorator::GetMemoryConfig(rtMemoryConfig_t * const memoryConfig)
-{
-    return impl_->GetMemoryConfig(memoryConfig);
-}
-
-rtError_t ApiDecorator::SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize)
-{
-    return impl_->SetAiCoreMemorySizes(aiCoreMemorySize);
 }
 
 rtError_t ApiDecorator::SetExceptCallback(const rtErrorCallback callback)
