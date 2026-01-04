@@ -131,6 +131,9 @@ public:
                 case FUSION_KERNEL_ERROR:
                     errorInfo->u.fusionKernelErrorInfo.comm.streamId = g_streamId;
                     break;
+                case CCU_ERROR:
+                    errorInfo->u.ccuErrorInfo.comm.streamId = g_streamId;
+                    break;
                 default:
                     break;
             }
@@ -466,6 +469,11 @@ TEST_F(CloudV2DeviceTest, device_reportRingbuffer_03)
     EXPECT_EQ(streamId, g_streamId);
 
     g_case_num = FUSION_KERNEL_ERROR;
+    error = errorProc->ReportRingBuffer(&streamId);
+    EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
+    EXPECT_EQ(streamId, g_streamId);
+
+    g_case_num = CCU_ERROR;
     error = errorProc->ReportRingBuffer(&streamId);
     EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
     EXPECT_EQ(streamId, g_streamId);
@@ -2373,6 +2381,9 @@ rtError_t MemCopySyncForRingBuffer(Driver *drv, void *dst, uint64_t destMax, con
                 break;
             case FUSION_KERNEL_ERROR:
                 errorInfo->u.fusionKernelErrorInfo.comm.streamId = g_streamId;
+                break;
+            case CCU_ERROR:
+                errorInfo->u.ccuErrorInfo.comm.streamId = g_streamId;
                 break;
             default:
                 break;

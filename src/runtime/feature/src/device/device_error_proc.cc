@@ -1053,7 +1053,11 @@ void GetStreamAndTaskIdFromErrorInfo(const uint32_t errorType,
         case FUSION_KERNEL_ERROR:
             streamTaskId.streamId = errorInfo->u.fusionKernelErrorInfo.comm.streamId;
             streamTaskId.taskId = errorInfo->u.fusionKernelErrorInfo.comm.taskId;
-            break; 
+            break;
+        case CCU_ERROR:
+            streamTaskId.streamId = errorInfo->u.ccuErrorInfo.comm.streamId;
+            streamTaskId.taskId = errorInfo->u.ccuErrorInfo.comm.taskId;
+            break;
         default:
             streamTaskId.streamId = 0xFFFFU;
             streamTaskId.taskId = 0xFFFFU;
