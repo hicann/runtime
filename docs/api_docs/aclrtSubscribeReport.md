@@ -41,15 +41,11 @@ aclError aclrtSubscribeReport(uint64_t threadId, aclrtStream stream)
 
 ## 约束说明
 
--   支持多次调用aclrtSubscribeReport接口给多个Stream（仅支持同一Device内的多个Stream）注册同一个处理回调函数的线程；
--   为确保Stream内的任务按调用顺序执行，不支持调用aclrtSubscribeReport接口给同一个Stream注册多个处理回调函数的线程；
--   同一个进程内，在不同的Device上注册回调函数的线程时，不能指定同一个线程ID。
--   单进程内调用本接口注册的线程数量超过一定限制，则接口返回失败。考虑操作系统的线程切换性能开销，建议调用aclrtSubscribeReport接口注册的线程数量控制在32个以下（包括32）。
+支持多次调用aclrtSubscribeReport接口给多个Stream（仅支持同一Device内的多个Stream）注册同一个处理回调函数的线程；为确保Stream内的任务按调用顺序执行，不支持调用aclrtSubscribeReport接口给同一个Stream注册多个处理回调函数的线程；同一个进程内，在不同的Device上注册回调函数的线程时，不能指定同一个线程ID。
 
-    各产品型号支持的线程数量最大值不同，如下表所示。
-
+单进程内调用本接口注册的线程数量超过一定限制，则接口返回失败。考虑操作系统的线程切换性能开销，建议调用aclrtSubscribeReport接口注册的线程数量控制在32个以下（包括32）。各产品型号支持的线程数量最大值不同，如下表所示。
     
-    | 型号 | 线程数量最大值 |
+| 型号 | 线程数量最大值 |
 | --- | --- |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | 1024 |
 

@@ -12,9 +12,8 @@
 
 在当前进程或线程中创建Stream。
 
-Atlas A3 训练系列产品/Atlas A3 推理系列产品，相比[aclrtCreateStream](aclrtCreateStream.md)接口，使用本接口可以创建一个快速下发任务的Stream，但会增加内存消耗或CPU的性能消耗。
+相比[aclrtCreateStream](aclrtCreateStream.md)接口，使用本接口可以创建一个快速下发任务的Stream，但会增加内存消耗或CPU的性能消耗。
 
-Atlas A2 训练系列产品/Atlas A2 推理系列产品，相比[aclrtCreateStream](aclrtCreateStream.md)接口，使用本接口可以创建一个快速下发任务的Stream，但会增加内存消耗或CPU的性能消耗。
 
 ## 函数原型
 
@@ -29,7 +28,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 | --- | --- | --- |
 | stream | 输出 | Stream的指针。 |
 | priority | 输入 | 优先级。<br>对以下产品，该参数为预留参数，暂不使用，当前固定设置为0：<br><br>  - Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>  - Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
-| flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏位或（例如ACL_STREAM_FAST_LAUNCH | ACL_STREAM_FAST_SYNC）。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过[aclrtCreateStream](aclrtCreateStream.md)接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
+| flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏位或。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过[aclrtCreateStream](aclrtCreateStream.md)接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
 
 ## flag取值说明
 
