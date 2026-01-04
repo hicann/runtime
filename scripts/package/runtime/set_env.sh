@@ -59,10 +59,6 @@ setenv_main() {
     local dep_info_file="/etc/ascend_install.info"
     local is_install_driver="n"
     local architecture remove_regex
-    if [ "$BASH_SOURCE" = "" ]; then
-        echo "error: BASH_SOURCE is empty, Please confirm that the current shell is bash."
-        return 1
-    fi
 
     version_dirpath="$(dirname "$(readlink -f "$BASH_SOURCE")")"
     install_dirpath="$(dirname "$version_dirpath")"

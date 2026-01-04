@@ -566,11 +566,16 @@ unpack_feature_param() {
 
 # 展开version.info文件中参数
 expand_version_file() {
-    if [ "${VERSION_FILE}" = "" ]; then
-        return 0
+    local install_path="$1"
+
+    if [ "${VERSION_FILE}" != "" ]; then
+        get_version "VERSION" "${VERSION_FILE}"
+        get_version_dir "VERSION_DIR" "${VERSION_FILE}"
     fi
-    get_version "VERSION" "${VERSION_FILE}"
-    get_version_dir "VERSION_DIR" "${VERSION_FILE}"
+
+    if [ -n "$VERSION_DIR" ] && [ -L "$install_path/$VERSION_DIR" ]; then
+        VERSION_DIR="$(readlink "$install_path/$VERSION_DIR")"
+    fi
 }
 
 # 提取第一项

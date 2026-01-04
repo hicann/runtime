@@ -1515,8 +1515,6 @@ do_install() {
     check_ret_error "$?" "Set log package name failed in install!"
     ret="$?" && [ ${ret} -ne 0 ] && return ${ret}
 
-    expand_version_file
-
     # 获取filelist.csv文件真实路径
     get_realpath "filelist_path" "${filelist_path}"
     # 获取install_path真实路径
@@ -1531,6 +1529,8 @@ do_install() {
     else
         install_path_real="${install_path}"
     fi
+
+    expand_version_file "$install_path_real"
 
     if [ "${VERSION}" != "" ] && [ "${VERSION_DIR}" != "" ]; then
         multi_version_install "${install_type}" "${install_path_real}" "${filelist_path}" "${package}" "${feature_param}" \
@@ -1563,8 +1563,6 @@ do_uninstall() {
     check_ret_error "$?" "Set log package name failed in uninstall!"
     ret="$?" && [ ${ret} -ne 0 ] && return ${ret}
 
-    expand_version_file
-
     # 获取filelist.csv文件真实路径
     get_realpath "filelist_path" "${filelist_path}"
     # 获取install_path真实路径
@@ -1579,6 +1577,8 @@ do_uninstall() {
     else
         install_path_real="${install_path}"
     fi
+
+    expand_version_file "$install_path_real"
 
     if [ "${VERSION}" != "" ] && [ "${VERSION_DIR}" != "" ]; then
         multi_version_uninstall "${install_type}" "${install_path_real}" "${filelist_path}" "${package}" "${feature_param}" \
