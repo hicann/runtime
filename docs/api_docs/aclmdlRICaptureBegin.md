@@ -34,7 +34,7 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | stream | 输入 | 指定Stream。 |
-| mode | 输入 | 捕获模式，用于限制非安全函数（包括aclrtMemset、aclrtMemcpy、aclrtMemcpy2d）的调用范围。 |
+| mode | 输入 | 捕获模式，用于限制非安全函数（包括aclrtMemset、aclrtMemcpy、aclrtMemcpy2d以及使用非Host锁页内存进行异步内存复制操作的接口，如aclrtMemcpyAsync接口）的调用范围。 |
 
 ## 返回值说明
 

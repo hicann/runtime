@@ -12,8 +12,6 @@
 
 将Host内存映射注册为Device可访问的地址，供Device侧网卡访问。映射后的Device地址不能用于内存操作，例如内存复制。
 
-如果注册的ptr是通过aclrtMallocHostWithCfg申请的，并且申请时配置的attr类型是ACL\_RT\_MEM\_ATTR\_VA\_FLAG，vaFlag的值为1，则映射后的Device地址与Host地址一致，可以进行内存操作。
-
 本接口与[aclrtHostUnregister](aclrtHostUnregister.md)接口成对使用。
 
 ## 函数原型

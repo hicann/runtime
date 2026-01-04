@@ -31,13 +31,13 @@ aclError aclrtCreateEvent(aclrtEvent *event)
 
 ## 约束说明
 
--   采用本API创建的Event不支持在[aclrtResetEvent](aclrtResetEvent.md)接口中使用，否则会导致未定义的行为。
--   调用本接口创建Event后，后续调用[aclrtRecordEvent](aclrtRecordEvent.md)接口时，系统内部才会申请Event资源，因此会受Event数量的限制，Event达到上限后，系统内部会等待资源释放。
+采用本API创建的Event不支持在[aclrtResetEvent](aclrtResetEvent.md)接口中使用，否则会导致未定义的行为。
 
-    不同型号的硬件支持的Event数量不同，如下表所示：
+调用本接口创建Event后，后续调用[aclrtRecordEvent](aclrtRecordEvent.md)接口时，系统内部才会申请Event资源，因此会受Event数量的限制，Event达到上限后，系统内部会等待资源释放。
 
-    
-    | 型号 | 单个Device支持的Event最大数 |
+不同型号的硬件支持的Event数量不同，如下表所示：
+
+| 型号 | 单个Device支持的Event最大数 |
 | --- | --- |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | 65536 |
 
