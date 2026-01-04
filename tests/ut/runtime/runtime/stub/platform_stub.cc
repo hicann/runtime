@@ -9,6 +9,7 @@
  */
 
 #include "platform/platform_info.h"
+#include "platform_manager_v2.h"
 bool g_init_platform_info_flag = true;
 bool g_get_platform_info_flag = true;
 
@@ -117,4 +118,16 @@ bool fe::PlatFormInfos::GetPlatformResWithLock(const std::string &label, std::ma
 void fe::PlatFormInfos::SetPlatformResWithLock(const std::string &label, std::map<std::string, std::string> &res)
 {
   return;
+}
+
+PlatformManagerV2 &PlatformManagerV2::Instance() {
+  static PlatformManagerV2 platform_info;
+  return platform_info;
+}
+
+uint32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version, const std::string &label,
+    const std::string &key, std::string &value)
+{
+  value = "test";
+  return 0U;
 }
