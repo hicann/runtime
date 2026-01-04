@@ -28,12 +28,12 @@ target_compile_options(error_manager PRIVATE
 
 target_include_directories(error_manager PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${LIBC_SEC_HEADER}
     ${BASE_DIR}/include/dfx
 )
 
 target_link_libraries(error_manager PRIVATE
         $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:c_sec_headers>
         static_mmpa
         -Wl,--no-as-needed
         c_sec
@@ -103,6 +103,7 @@ target_compile_options(stub_error_manager PRIVATE
 
 target_link_libraries(stub_error_manager PRIVATE
         $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:c_sec_headers>
         c_sec
         unified_dlog
         json
