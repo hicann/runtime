@@ -34,6 +34,9 @@ include_directories(${BASE_DIR}/src/acl/aclrt_impl)
 include_directories(${BASE_DIR}/tests/depends/)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/runtime/feature/inc/kernel)
+include_directories(${BASE_DIR}/src/mmpa/inc)
+include_directories(${BASE_DIR}/include/dfx)
+include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 
 set(UT_FILES
     "test.cpp"
@@ -129,6 +132,7 @@ target_compile_options(ut_ascendcl_src PRIVATE
 
 target_link_libraries(ut_ascendcl_src PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     c_sec
     json
@@ -161,6 +165,7 @@ target_compile_definitions(ascendcl_cpp_utest PRIVATE
 
 target_link_libraries(ascendcl_cpp_utest PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     ut_ascendcl_src
     json

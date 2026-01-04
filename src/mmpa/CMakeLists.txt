@@ -47,12 +47,10 @@ add_library(mmpa SHARED
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:src/mmpa_win_message.cpp>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:src/mmpa_win_option.cpp>
 )
-target_include_directories(mmpa PRIVATE
-    ${LIBC_SEC_HEADER}
-)
 target_link_libraries(mmpa
     PRIVATE
         intf_pub
+        $<BUILD_INTERFACE:c_sec_headers>
         c_sec
         "$<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:dl;rt>"
     PUBLIC
@@ -96,9 +94,6 @@ add_library(static_mmpa  STATIC
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:src/mmpa_win_message.cpp>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:src/mmpa_win_option.cpp>
 )
-target_include_directories(static_mmpa PRIVATE
-${LIBC_SEC_HEADER}
-)
 target_compile_definitions(static_mmpa PRIVATE
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${PRODUCT},ascend035>:STRERROR_R_RETURN_INT>
@@ -112,6 +107,7 @@ target_compile_options(static_mmpa PRIVATE
 target_link_libraries(static_mmpa
     PRIVATE
         $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:c_sec_headers>
     PUBLIC
         mmpa_headers
 )

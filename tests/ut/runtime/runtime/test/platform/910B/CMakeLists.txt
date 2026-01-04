@@ -388,6 +388,7 @@ target_link_libraries(runtime_ut_910b_intf_pub INTERFACE
     -lgcov
     $<BUILD_INTERFACE:intf_910b_llt_pub>
     $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:c_sec_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>

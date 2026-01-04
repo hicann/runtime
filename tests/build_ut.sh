@@ -25,6 +25,7 @@ ut_path_map["slog"]="/tests/ut/slog"
 ut_path_map["atrace"]="/tests/ut/atrace"
 ut_path_map["msprof"]="/tests/ut/msprof"
 ut_path_map["adump"]="/tests/ut/adump"
+ut_path_map["error_manager"]="/tests/ut/error_manager"
 
 # print usage message
 usage() {

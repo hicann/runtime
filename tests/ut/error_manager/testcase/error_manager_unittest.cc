@@ -16,18 +16,26 @@
 #include <condition_variable>
 #include <nlohmann/json.hpp>
 #include "mmpa/mmpa_api.h"
-#include "tests/depends/mmpa/src/mmpa_stub.h"
 #include "base/err_msg.h"
 #include "base/err_mgr.h"
-#include "graph/def_types.h"
-#include "common/util/error_manager/error_manager.h"
+#include "error_manager.h"
 
-namespace ge
+template<typename TI, typename TO>
+inline TO *PtrToPtr(TI *const ptr) {
+  return reinterpret_cast<TO *>(ptr);
+}
+
+template<typename TI, typename TO>
+inline const TO *PtrToPtr(const TI *const ptr) {
+  return reinterpret_cast<const TO *>(ptr);
+}
+
+namespace error_message
 {
 namespace {
   int32_t system_time_ret = 0;
   int32_t time_of_day_ret = 0;
-  class MockMmpa : public ge::MmpaStubApi {
+  /*class MockMmpa : public ge::MmpaStubApi {
     public:
       INT32 mmGetSystemTime(mmSystemTime_t *sysTime) override {
         if (system_time_ret == -1) {
@@ -49,7 +57,7 @@ namespace {
         timeVal->tv_sec = 1001;
         return EN_OK;
       }
-  };
+  };*/
   std::string g_msg1 = R"(
 {
   "error_info_list": [
@@ -113,13 +121,12 @@ REG_FORMAT_ERROR_MSG(g_msg2.c_str(), g_msg2.size());
   class UtestErrorManager : public testing::Test {
     protected:
     void SetUp() {
-      MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
       auto &instance = ErrorManager::GetInstance();
       EXPECT_FALSE(instance.is_init_);
-      std::string error_code_json_path = METADEF_DIR + std::string("/error_manager/error_code.json");
+      std::string error_code_json_path = BASE_DIR + std::string("/src/dfx/error_manager/error_code.json");
       nlohmann::json json_file;
       EXPECT_EQ(instance.ReadJsonFile(error_code_json_path, &json_file), 0);
-      EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), 0);
+      EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), 0);
       instance.is_init_ = true;
     }
     void TearDown() {
@@ -128,7 +135,6 @@ REG_FORMAT_ERROR_MSG(g_msg2.c_str(), g_msg2.size());
         ErrorManager::GetInstance().compile_failed_msg_map_.clear();
         ErrorManager::GetInstance().error_message_per_work_id_.clear();
         ErrorManager::GetInstance().warning_messages_per_work_id_.clear();
-        MmpaStub::GetInstance().Reset();
     }
   };
 
@@ -381,7 +387,7 @@ TEST_F(UtestErrorManager, ParseJsonFile) {
   }
   nlohmann::json json_file;
   EXPECT_EQ(instance.ReadJsonFile("out.json", &json_file), 0);
-  EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), -1);
+  EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), -1);
 
   std::ofstream out1("out1.json");
   if (out1.is_open()){
@@ -389,29 +395,29 @@ TEST_F(UtestErrorManager, ParseJsonFile) {
     out1.close();
   }
   EXPECT_EQ(instance.ReadJsonFile("out1.json", &json_file), 0);
-  EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), -1);
+  EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), -1);
   std::ofstream out2("out2.json");
   if (out2.is_open()){
     out2 << "{\"error_info_list\":\"err1\"}";
     out2.close();
   }
   EXPECT_EQ(instance.ReadJsonFile("out2.json", &json_file), 0);
-  EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), -1);
+  EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), -1);
   std::ofstream out3("out3.json");
   if (out3.is_open()){
     out3 << "{\"error_info_list\":[{\"ErrCode\":\"1\", \"ErrMessage\":\"message\", \"Arglist\":\"1,2,3\"}]}";
     out3.close();
   }
   EXPECT_EQ(instance.ReadJsonFile("out3.json", &json_file), 0);
-  EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), 0);
+  EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), 0);
   instance.error_map_["1"] = ErrorManager::ErrorInfoConfig();
 
   EXPECT_EQ(instance.ReadJsonFile("out3.json", &json_file), 0);
-  EXPECT_EQ(instance.ParseJsonFormatString(ge::PtrToPtr<nlohmann::json, void>(&json_file)), 0);
+  EXPECT_EQ(instance.ParseJsonFormatString(PtrToPtr<nlohmann::json, void>(&json_file)), 0);
 }
 
 TEST_F(UtestErrorManager, ParseJsonFileSuccess) {
-  std::string error_code_json_path = METADEF_DIR + std::string("/error_manager/error_code.json");
+  std::string error_code_json_path = BASE_DIR + std::string("/src/dfx/error_manager/error_code.json");
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.ParseJsonFile(error_code_json_path), 0);
 }

@@ -80,6 +80,11 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
         )
     endif()    
     set(LIBC_SEC_HEADER ${CSEC_SOURCE_DIR}/include)
+    add_library(c_sec_headers INTERFACE)
+    target_include_directories(c_sec_headers INTERFACE
+        $<BUILD_INTERFACE:${LIBC_SEC_HEADER}>
+        $<INSTALL_INTERFACE:include>
+    )
 else()
     message("not download csec source code")
 endif()

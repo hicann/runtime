@@ -15,6 +15,7 @@ file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 include_directories(${TOP_DIR}/include)
+include_directories(${TOP_DIR}/include/external)
 include_directories(${TOP_DIR}/pkg_inc/runtime)
 include_directories(${TOP_DIR}/pkg_inc/runtime/runtime)
 include_directories(${CMAKE_BINARY_DIR}/include_acl)
@@ -26,6 +27,9 @@ include_directories(${BASE_DIR}/pkg_inc/profiling)
 include_directories(${BASE_DIR}/pkg_inc/dump)
 include_directories(${BASE_DIR}/pkg_inc/watchdog)
 include_directories(${BASE_DIR}/tests/depends)
+include_directories(${BASE_DIR}/src/mmpa/inc)
+include_directories(${BASE_DIR}/include/dfx)
+include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 
 add_library(slog_stub SHARED ${SRC_FILES})
 
@@ -33,6 +37,7 @@ add_dependencies(slog_stub copy_acl_headers_and_libs)
 
 target_link_libraries(slog_stub PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     c_sec
     GTest::gtest
     GTest::gtest_main

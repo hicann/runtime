@@ -24,7 +24,6 @@ target_include_directories(acl_tdt_queue PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/../common
     ${RUNTIME_DIR}/include/external
-    ${LIBC_SEC_HEADER}
 )
 
 target_compile_options(acl_tdt_queue PRIVATE
@@ -46,6 +45,7 @@ target_link_options(acl_tdt_queue PRIVATE
 
 target_link_libraries(acl_tdt_queue PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     $<BUILD_INTERFACE:msprof_headers>
     acl_rt
     acl_rt_impl
