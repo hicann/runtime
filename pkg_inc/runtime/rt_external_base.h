@@ -548,6 +548,18 @@ RTS_API rtError_t rtQueryProcessHostPid(int32_t pid, uint32_t *chipId, uint32_t 
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtRegTaskFailCallbackByModule(const char_t *moduleName, rtTaskFailCallback callback);
+
+/**
+ * @ingroup dvrt_base
+ * @brief get soc spec
+ * @param [out] val return query result
+ * @param [in] label
+ * @param [in] key
+ * @param [in] maxLen val max len
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen);
+
 #if defined(__cplusplus)
 }
 #endif

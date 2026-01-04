@@ -863,6 +863,17 @@ RTS_API rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int
  */
 RTS_API rtError_t rtSetIpcMemorySuperPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num);
 
+/**
+ * @ingroup dvrt_base
+ * @brief get soc spec
+ * @param [out] val return query result
+ * @param [in] label
+ * @param [in] key
+ * @param [in] maxLen val max len
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen);
+
 #if defined(__cplusplus)
 }
 #endif

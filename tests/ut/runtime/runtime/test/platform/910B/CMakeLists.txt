@@ -354,6 +354,8 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/include/external/acl/error_codes
     ${TOP_DIR}/src/inc/runtime/rts
     ${TOP_DIR}/src/inc/runtime
+    ${TOP_DIR}/pkg_inc/platform
+    ${TOP_DIR}/src/platform
     ${C_SEC_INCLUDE}
 )
 

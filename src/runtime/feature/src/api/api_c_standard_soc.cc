@@ -27,6 +27,7 @@
 #include "soc_info.h"
 #include "task_abort.hpp"
 #include "global_state_manager.hpp"
+#include "platform_manager_v2.h"
 
 using namespace cce::runtime;
 namespace cce {
@@ -1031,6 +1032,40 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen)
+{
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(label, RT_ERROR_INVALID_VALUE);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(key, RT_ERROR_INVALID_VALUE);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(val, RT_ERROR_INVALID_VALUE);
+
+    char_t socVersion[SOC_VERSION_LEN] = {};
+    const auto error = rtGetSocVersion(socVersion, static_cast<uint32_t>(sizeof(socVersion)));
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+
+    std::string result = "";
+    const uint32_t ret = PlatformManagerV2::Instance().GetSocSpec(std::string(socVersion), std::string(label),
+        std::string(key), result);
+    if (ret != RT_ERROR_NONE) {
+        if (ret == 0xFFFFFFFFU) {
+            RT_LOG(RT_LOG_WARNING, "No platform info found from GetSocSpec.");
+            return ret;
+        }
+        RT_LOG(RT_LOG_ERROR, "Get soc spec failed, ret = %u, please check.", ret);
+        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_PLATFORM);
+    }
+    if (maxLen < result.size() + 1U) {
+        RT_LOG(RT_LOG_INFO, "maxLen less than result.size() + 1U.");
+        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
+    } else {
+        const errno_t rtn = memcpy_s(val, maxLen, result.c_str(), result.size() + 1U);
+        COND_RETURN_ERROR_WITH_EXT_ERRCODE((ret != EOK), RT_ERROR_INVALID_VALUE,
+            "Get soc spec, memcpy failed, retCode=%#x", static_cast<uint32_t>(rtn));
+        return ACL_RT_SUCCESS;
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "../../data/elf.h"
+#include "platform_manager_v2.h"
 
 class CloudV2ApiTest : public testing::Test
 {
@@ -2678,4 +2679,64 @@ TEST_F(CloudV2ApiTest, get_stream_cache_opinfo_switch_coverage_apidecorator)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest, check_get_soc_spec)
+{
+    rtError_t error;
+
+    uint32_t rtn = 0U;
+
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec)
+        .stubs()
+        .will(returnValue(rtn));
+
+    char npuArch[32];
+    error = rtGetSocSpec("Version", "NpuArch", npuArch, 32);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(CloudV2ApiTest, check_get_soc_spec_no_platform_info)
+{
+    rtError_t error;
+
+    uint32_t rtn = 0xFFFFFFFFU;
+
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec)
+        .stubs()
+        .will(returnValue(rtn));
+
+    char npuArch[32];
+    error = rtGetSocSpec("Version", "NpuArch", npuArch, 32);
+    EXPECT_EQ(error, rtn);
+}
+
+TEST_F(CloudV2ApiTest, check_get_soc_spec_error_return)
+{
+    rtError_t error;
+
+    uint32_t rtn = 0x1U;
+
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec)
+        .stubs()
+        .will(returnValue(rtn));
+
+    char npuArch[32];
+    error = rtGetSocSpec("Version", "NpuArch", npuArch, 32);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+}
+
+TEST_F(CloudV2ApiTest, check_get_soc_spec_exceed_limit)
+{
+    rtError_t error;
+
+    uint32_t rtn = 0U;
+
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec)
+        .stubs()
+        .will(returnValue(rtn));
+
+    char npuArch[32];
+    error = rtGetSocSpec("Version", "NpuArch", npuArch, 0);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }

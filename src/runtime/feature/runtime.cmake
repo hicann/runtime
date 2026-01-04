@@ -296,6 +296,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/include/trace/awatchdog
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
+    ${RUNTIME_DIR}/src/platform
 )
 
 #------------------------- runtime common -------------------------
