@@ -51,7 +51,6 @@ target_include_directories(acl_rt_impl PRIVATE
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
-    ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/dump
     ${RUNTIME_DIR}/src
@@ -79,6 +78,7 @@ target_link_options(acl_rt_impl PRIVATE
 
 target_link_libraries(acl_rt_impl PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:platform_headers>

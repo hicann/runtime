@@ -10,8 +10,10 @@
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${BASE_DIR}/src/dfx/error_manager)
-include_directories(${BASE_DIR}/include/external)
-include_directories(${BASE_DIR}/pkg_inc/base)
+include_directories(${BASE_DIR}/include/dfx)
+include_directories(${BASE_DIR}/pkg_inc)
+include_directories(${BASE_DIR}/src/mmpa/inc)
+include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 
 set(UT_FILES
     "testcase/error_manager_unittest.cc"
@@ -39,12 +41,18 @@ target_link_options(ut_error_manager PRIVATE
         -Wl,-rpath,${CMAKE_CURRENT_LIST_DIR}
         )
 
-target_link_libraries(ut_error_manager
-    intf_pub
+target_link_libraries(ut_error_manager PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     error_manager
     mmpa
     json
-    GTest::gtest GTest::gtest_main ascend_protobuf c_sec -lrt -ldl -lgcov
-    pthread
-    metadef_headers
+    GTest::gtest
+    GTest::gtest_main    
+    ascend_protobuf
+    c_sec
+    -lrt
+    -ldl
+    -lgcov
+    -lpthread
 )

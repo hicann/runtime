@@ -22,7 +22,6 @@ target_include_directories(acl_tdt_channel PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../common
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_BINARY_DIR}/include_acl/tdt
-    ${LIBC_SEC_HEADER}
 )
 
 target_compile_options(acl_tdt_channel PRIVATE
@@ -45,6 +44,7 @@ target_link_options(acl_tdt_channel PRIVATE
 
 target_link_libraries(acl_tdt_channel PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:c_sec_headers>
     $<BUILD_INTERFACE:msprof_headers>
     acl_rt_impl
     mmpa
