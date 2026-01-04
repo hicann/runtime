@@ -213,7 +213,6 @@ public:
                               const size_t inputNum, size_t * const outputNum) override;
     rtError_t MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize,
         size_t * const totalSize) override;
-    rtError_t MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size) override;
     rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) override;
     rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes) override;
     rtError_t MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId) override;
@@ -363,12 +362,6 @@ public:
     rtError_t AdcProfiler(const uint64_t addr, const uint32_t length) override;
     rtError_t SetMsprofReporterCallback(const MsprofReporterCallback callback) override;
 
-    // ai core buffer size
-    rtError_t GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) override;
-
-    // set ai core buffer size
-    rtError_t SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) override;
-
     // inquire information
     rtError_t GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
         uint32_t * const maxTaskCount) override;
@@ -391,9 +384,6 @@ public:
     rtError_t SetIpcMemPid(const char_t * const name, int32_t pid[], const int32_t num) override;
     rtError_t GetAiCoreCount(uint32_t * const aiCoreCnt) override;
     rtError_t GetAiCpuCount(uint32_t * const aiCpuCnt) override;
-    rtError_t GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec) override;
-    rtError_t GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates) override;
-    rtError_t GetMemoryConfig(rtMemoryConfig_t * const memoryConfig) override;
     rtError_t SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMode) override;
     rtError_t GetDeviceSatMode(rtFloatOverflowMode_t * const floatOverflowMode) override;
     rtError_t GetDeviceSatModeForStream(Stream * const stm, rtFloatOverflowMode_t * const floatOverflowMode) override;

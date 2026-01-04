@@ -156,39 +156,5 @@ rtError_t Config::InitHardwareInfo() const
     return RT_ERROR_NONE;
 }
 
-rtError_t Config::GetAiCoreSpec(const  rtPlatformType_t platformType,
-                                rtAiCoreSpec_t * const aiCoreSpec) const
-{
-    *aiCoreSpec = hardWareConfig_[platformType].aiCoreSpec;
-    return RT_ERROR_NONE;
-}
-
-rtError_t Config::GetAiCoreMemorySizes(const rtPlatformType_t platformType,
-                                       rtAiCoreMemorySize_t * const aiCoreMemorySize) const
-{
-    *aiCoreMemorySize = hardWareConfig_[platformType].aiCoreMemorySize;
-    return RT_ERROR_NONE;
-}
-
-rtError_t Config::GetAiCoreMemoryRates(const rtPlatformType_t platformType,
-                                       rtAiCoreMemoryRates_t * const aiCoreMemoryRates) const
-{
-    *aiCoreMemoryRates = hardWareConfig_[platformType].aiCoreMemoryRates;
-    return RT_ERROR_NONE;
-}
-
-rtError_t Config::GetMemoryConfig(const rtPlatformType_t platformType, rtMemoryConfig_t * const memoryConfig) const
-{
-    *memoryConfig = hardWareConfig_[platformType].memoryConfig;
-    return RT_ERROR_NONE;
-}
-
-rtError_t Config::SetAiCoreMemSizes(const rtPlatformType_t platformType,
-                                    const rtAiCoreMemorySize_t * const aiCoreMemorySize) const
-{
-    UNUSED(platformType);
-    UNUSED(aiCoreMemorySize);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 }
 }

@@ -41,16 +41,6 @@ public:
     virtual ~Config();
     rtPlatformType_t GetPlatformTypeByConfig(uint32_t platformConfig) const;
     rtError_t InitHardwareInfo() const;
-    rtError_t GetAiCoreSpec(const rtPlatformType_t platformType,
-                            rtAiCoreSpec_t * const aiCoreSpec) const;
-    rtError_t GetAiCoreMemorySizes(const rtPlatformType_t platformType,
-                                   rtAiCoreMemorySize_t * const aiCoreMemorySize) const;
-    rtError_t GetAiCoreMemoryRates(const rtPlatformType_t platformType,
-                                   rtAiCoreMemoryRates_t * const aiCoreMemoryRates) const;
-    rtError_t GetMemoryConfig(const rtPlatformType_t platformType,
-                              rtMemoryConfig_t * const memoryConfig) const;
-    rtError_t SetAiCoreMemSizes(const rtPlatformType_t platformType,
-                                const rtAiCoreMemorySize_t * const aiCoreMemorySize) const;
 private:
     static void InitHardwareInfoCloudV2();
     static void InitHardwareInfo910B();

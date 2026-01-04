@@ -301,7 +301,6 @@ public:
     virtual rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) = 0;
     virtual rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t  * const attributes) = 0;
     virtual rtError_t MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId) = 0;
-    virtual rtError_t MemGetL2Info(Stream * const stm, void ** const ptr, uint32_t * const size) = 0;
     virtual rtError_t MemCopy2DSync(void * const dst, const uint64_t dstPitch, const void * const src,
         const uint64_t srcPitch, const uint64_t width, const uint64_t height,
         const rtMemcpyKind_t kind = RT_MEMCPY_RESERVED, const rtMemcpyKind newKind = RT_MEMCPY_KIND_MAX) = 0;
@@ -453,12 +452,6 @@ public:
     virtual rtError_t AdcProfiler(const uint64_t addr, const uint32_t length) = 0;
     virtual rtError_t SetMsprofReporterCallback(const MsprofReporterCallback callback) = 0;
 
-    // query ai core buffer size
-    virtual rtError_t GetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) = 0;
-
-    // set ai core buffer size
-    virtual rtError_t SetAiCoreMemorySizes(rtAiCoreMemorySize_t * const aiCoreMemorySize) = 0;
-
     // inquire information
     virtual rtError_t GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
         uint32_t * const maxTaskCount) = 0;
@@ -505,9 +498,6 @@ public:
     /* hardware Info */
     virtual rtError_t GetAiCoreCount(uint32_t * const aiCoreCnt) = 0;
     virtual rtError_t GetAiCpuCount(uint32_t * const aiCpuCnt) = 0;
-    virtual rtError_t GetAiCoreSpec(rtAiCoreSpec_t * const aiCoreSpec) = 0;
-    virtual rtError_t GetAiCoreMemoryRates(rtAiCoreMemoryRates_t * const aiCoreMemoryRates) = 0;
-    virtual rtError_t GetMemoryConfig(rtMemoryConfig_t * const memoryConfig) = 0;
     virtual rtError_t SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMode) = 0;
     virtual rtError_t GetDeviceSatMode(rtFloatOverflowMode_t * const floatOverflowMode) = 0;
     virtual rtError_t GetDeviceSatModeForStream(Stream * const stm,

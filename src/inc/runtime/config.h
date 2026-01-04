@@ -137,38 +137,6 @@ RTS_API rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt);
 
 /**
  * @ingroup
- * @brief get AI core frequency
- * @param [in] aiCoreSpec
- * @return aiCoreSpec
- */
-RTS_API rtError_t rtGetAiCoreSpec(rtAiCoreSpec_t *aiCoreSpec);
-
-/**
- * @ingroup
- * @brief AI get core band Info
- * @param [in] aiCoreMemoryRates
- * @return aiCoreMemoryRates
- */
-RTS_API rtError_t rtGetAiCoreMemoryRates(rtAiCoreMemoryRates_t *aiCoreMemoryRates);
-
-/**
- * @ingroup
- * @brief AI get core buffer Info,FlowTable Size,Compiler Size
- * @param [in] memoryConfig
- * @return memoryConfig
- */
-RTS_API rtError_t rtGetMemoryConfig(rtMemoryConfig_t *memoryConfig);
-
-/**
- * @ingroup
- * @brief get l2 buffer Info,virtual baseaddr,Size
- * @param [in] stm
- * @return RT_ERROR_NONE for ok, errno for failed
- */
-RTS_API rtError_t rtMemGetL2Info(rtStream_t stm, void **ptr, uint32_t *size);
-
-/**
- * @ingroup
  * @brief get runtime version. The version is returned as (1000 major + 10 minor). For example, RUNTIME 9.2 would be
  *        represented by 9020.
  * @param [out] runtimeVersion

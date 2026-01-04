@@ -1747,48 +1747,6 @@ TEST_F(ApiAbnormalTest910B, GetAiCpuCountTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiAbnormalTest910B, GetAiCoreSpecTest)
-{
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-    rtError_t error;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAiCoreSpec)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = apiDecorator.GetAiCoreSpec(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(ApiAbnormalTest910B, GetAiCoreMemoryRatesTest)
-{
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-    rtError_t error;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAiCoreMemoryRates)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = apiDecorator.GetAiCoreMemoryRates(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(ApiAbnormalTest910B, GetMemoryConfigTest)
-{
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-    rtError_t error;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetMemoryConfig)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = apiDecorator.GetMemoryConfig(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(ApiAbnormalTest910B, RegProfCtrlCallbackTest)
 {
     ApiImpl impl;
@@ -3044,30 +3002,6 @@ TEST_F(ApiAbnormalTest910B, ReduceAsyncV2Test)
     void* overflowAddr = (void*)0x0001;
     error = api.ReduceAsyncV2(dst, src, MAX_MEMCPY_SIZE_OF_D2D, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP16, nullptr, overflowAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(ApiAbnormalTest910B, MemGetL2InfoTest)
-{
-    ApiImpl impl;
-    ApiErrorDecorator api(&impl);
-    rtError_t error;
-
-    error = api.MemGetL2Info(nullptr, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    rtStream_t stm;
-    error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
-    void* dst = (void*)0x1000;
-    uint32_t size = 0;
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetL2Info)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = api.MemGetL2Info(stmPtr, &dst, &size);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtStreamDestroy(stm);
 }
 
 TEST_F(ApiAbnormalTest910B, GetDeviceIDsTest)

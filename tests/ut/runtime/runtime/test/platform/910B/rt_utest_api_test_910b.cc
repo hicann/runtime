@@ -1582,12 +1582,6 @@ TEST_F(ApiTest910B, api_error_test)
     error = rtNameEvent(&event1, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtAiCoreMemorySizes(NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtSetAiCoreMemorySizes(&memSize);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
     error = rtMemGetInfo(NULL, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -1627,18 +1621,6 @@ TEST_F(ApiTest910B, api_error_test_coverage)
         .stubs()
         .will(returnValue(RT_ERROR_INVALID_VALUE));
     error = api.NameEvent(event, name);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAiCoreMemorySizes)
-        .stubs()
-        .will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = api.GetAiCoreMemorySizes(&memSize);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetAiCoreMemorySizes)
-        .stubs()
-        .will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = api.SetAiCoreMemorySizes(&memSize);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     size_t *free;
@@ -1709,119 +1691,6 @@ TEST_F(ApiTest910B, get_aiCpuCount_ctx_null)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     error = rtGetAiCpuCount(&aiCpuCnt);
     EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-
-TEST_F(ApiTest910B, get_AiCoreSpec_test)
-{
-    rtError_t error;
-    rtAiCoreSpec_t *aiCoreSpec;
-    aiCoreSpec = (rtAiCoreSpec_t *)malloc(sizeof(rtAiCoreSpec_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetAiCoreSpec(aiCoreSpec);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(aiCoreSpec);
-    delete rawDevice;
-}
-
-TEST_F(ApiTest910B, get_AiCoreSpec_test_null)
-{
-    rtError_t error;
-    rtAiCoreSpec_t *aiCoreSpec;
-    aiCoreSpec = (rtAiCoreSpec_t *)malloc(sizeof(rtAiCoreSpec_t));
-
-    error = rtGetAiCoreSpec((rtAiCoreSpec_t *)NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    free(aiCoreSpec);
-}
-
-TEST_F(ApiTest910B, get_AiCoreMemoryRates_test)
-{
-    rtError_t error;
-    rtAiCoreMemoryRates_t *aiCoreMemoryRates;
-    aiCoreMemoryRates = (rtAiCoreMemoryRates_t *)malloc(sizeof(rtAiCoreMemoryRates_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetAiCoreMemoryRates(aiCoreMemoryRates);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(aiCoreMemoryRates);
-    delete rawDevice;
-}
-
-TEST_F(ApiTest910B, get_AiCoreMemoryRates_test_null)
-{
-    rtError_t error;
-    rtAiCoreMemoryRates_t *aiCoreMemoryRates;
-    aiCoreMemoryRates = (rtAiCoreMemoryRates_t *)malloc(sizeof(rtAiCoreMemoryRates_t));
-
-    error = rtGetAiCoreMemoryRates((rtAiCoreMemoryRates_t *)NULL);
-
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    free(aiCoreMemoryRates);
-}
-
-TEST_F(ApiTest910B, get_MemoryConfig_test)
-{
-    rtError_t error;
-    rtMemoryConfig_t *memoryConfig;
-    memoryConfig = (rtMemoryConfig_t *)malloc(sizeof(rtMemoryConfig_t));
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    error = rtGetMemoryConfig(memoryConfig);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    free(memoryConfig);
-    delete rawDevice;
-}
-
-TEST_F(ApiTest910B, get_MemoryConfig_test_null)
-{
-    rtError_t error;
-    rtMemoryConfig_t *memoryConfig;
-    memoryConfig = (rtMemoryConfig_t *)malloc(sizeof(rtMemoryConfig_t));
-
-    error = rtGetMemoryConfig((rtMemoryConfig_t *)NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    free(memoryConfig);
-}
-
-TEST_F(ApiTest910B, aicore_get_mem_srize)
-{
-    rtError_t error;
-    void *ptr = NULL;
-
-    Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
-
-    rtAiCoreMemorySize_t memSize = {0,0,0,0,0,0,0};
-    error = rtAiCoreMemorySizes(&memSize);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete rawDevice;
-}
-
-TEST_F(ApiTest910B, aicore_get_mem_srize_null)
-{
-    rtError_t error;
-    void *ptr = NULL;
-
-    rtAiCoreMemorySize_t memSize = {0,0,0,0,0,0,0};
-
-    error = rtAiCoreMemorySizes((rtAiCoreMemorySize_t *)NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}
-
-TEST_F(ApiTest910B, aicore_set_mem_srize_null)
-{
-    rtError_t error;
-    rtAiCoreMemorySize_t *aiCoreMemorySize;
-    aiCoreMemorySize = (rtAiCoreMemorySize_t *)malloc(sizeof(rtAiCoreMemorySize_t));
-
-    error = rtSetAiCoreMemorySizes((rtAiCoreMemorySize_t *)NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    free(aiCoreMemorySize);
 }
 
 TEST_F(ApiTest910B, RT_MEMCPY_ASYNC_TEST_1)
@@ -4183,14 +4052,6 @@ TEST_F(ApiTest910B, api_mem_and_buf_test)
 
     MOCKER_CPP_VIRTUAL(api, &Api::IpcDestroyMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.IpcDestroyMemoryName(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    uint32_t size = 0;
-    void *ptr = NULL;
-    ApiImpl impl;
-    ApiDecorator iapiDec(&impl);
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetL2Info).stubs().will(returnValue(RT_ERROR_NONE));
-    error = iapiDec.MemGetL2Info(NULL, &ptr, &size);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(api, &Api::MemGetInfoEx).stubs().will(returnValue(RT_ERROR_NONE));
