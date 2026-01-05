@@ -108,10 +108,10 @@ void IpcVaLockInitStub()
 {
 }
 
-uint16_t* GetCurrentHostMemStub()
+uint8_t value = 0U;
+uint8_t* GetCurrentHostMemStub()
 {
-    uint16_t value = 0U;
-    uint16_t* ptr = &value;
+    uint8_t* ptr = &value;
     return ptr;
 }
 

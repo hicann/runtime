@@ -282,9 +282,6 @@ rtError_t IpcEvent::IpcOpenEventHandle(rtIpcEventHandle_t *ipcEventHandle)
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event IpcHandleAllocAndImport failed, error=%#x.", static_cast<uint32_t>(error));
 
-    // init lock
-    IpcVaLockInit();
-
     uint64_t deviceMemHandle = 0U;
     deviceMemHandle = RtPtrToValue(ipcHandleVa_->deviceMemHandle);
 
@@ -311,21 +308,22 @@ rtError_t IpcEvent::IpcOpenEventHandle(rtIpcEventHandle_t *ipcEventHandle)
 rtError_t IpcEvent::GetIpcRecordIndex(uint16_t *curIndex)
 {
     rtError_t error = RT_ERROR_NONE;
-    IpcVaLock();
-    for (int i = 0; static_cast<uint32_t>(i) < IPC_EVENT_P2P_SIZE; ++i) {
+    uint16_t i = 0U;
+    do {
         error = context_->CheckStatus();
-        COND_PROC((error != RT_ERROR_NONE), IpcVaUnLock(); return error);
+        COND_PROC((error != RT_ERROR_NONE), return error);
+        IpcVaLock();
         if (ipcHandleVa_->deviceMemRef[i] == 0U) {
-            ipcHandleVa_->currentIndex = static_cast<uint16_t>(i);
-            *curIndex = static_cast<uint16_t>(i);
+            ipcHandleVa_->currentIndex = i;
+            *curIndex = i;
             ipcHandleVa_->deviceMemRef[ipcHandleVa_->currentIndex]++; 
+            IpcEventCountAdd();
+            IpcVaUnLock();
             break;
         }
-        COND_PROC(((static_cast<uint32_t>(i) == (IPC_EVENT_P2P_SIZE - 1)) &&
-            (ipcHandleVa_->deviceMemRef[i] != 0)), i = -1);
-    }
-    IpcEventCountAdd();
-    IpcVaUnLock();
+        IpcVaUnLock();
+        i = (i + 1) % IPC_EVENT_P2P_SIZE;
+    } while (true);
     return error;
 }
 
@@ -350,7 +348,7 @@ rtError_t IpcEvent::IpcEventRecord(Stream * const stm)
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);
-    uint16_t* addr = ((uint16_t*)currentDeviceMem_) + curIndex;
+    uint8_t* addr = RtPtrToPtr<uint8_t*>(currentDeviceMem_) + curIndex;
     error = MemWriteValueTaskInit(tsk, RtPtrToPtr<void*>(addr), static_cast<uint64_t>(1U));
     ERROR_RETURN_MSG_INNER(error, "mem write value init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
         stm->Id_(), tsk->id, static_cast<uint32_t>(error));
@@ -400,7 +398,7 @@ rtError_t IpcEvent::IpcEventWait(Stream * const stm)
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);
-    uint16_t* addr = ((uint16_t*)currentDeviceMem_) + curIndex;
+    uint8_t* addr = RtPtrToPtr<uint8_t*>(currentDeviceMem_) + curIndex;
     tsk->typeName = "IPC_WAIT";
     tsk->type = TS_TASK_TYPE_IPC_WAIT;
     error = MemWaitValueTaskInit(tsk, RtPtrToPtr<void*>(addr), 1, 0x0);
@@ -432,8 +430,8 @@ rtError_t IpcEvent::IpcEventQuery(rtEventStatus_t * const status)
         return RT_ERROR_NONE;
     }
     IpcVaUnLock();
-    uint16_t* hostaddr = GetCurrentHostMem() + curIndex;
-    if (((*hostaddr & IPC_RECORD_STATUS) != 0U) || IsIpcFinished()) {
+    uint8_t* hostaddr = GetCurrentHostMem() + curIndex;
+    if ((*hostaddr != 0U) || IsIpcFinished()) {
         *status = RT_EVENT_RECORDED;
     } else {
         *status = RT_EVENT_INIT;
@@ -455,10 +453,10 @@ rtError_t IpcEvent::IpcEventSync(int32_t timeout)
         return RT_ERROR_NONE;
     }
     IpcVaUnLock();
-    uint16_t* hostaddr = GetCurrentHostMem()+ curIndex;
+    uint8_t* hostaddr = GetCurrentHostMem() + curIndex;
     uint16_t queryTimes = 0U;
     const mmTimespec beginTimeSpec = mmGetTickCount();
-    while (((*hostaddr & IPC_RECORD_STATUS) == 0U) || IsIpcFinished()) { 
+    while ((*hostaddr == 0U) || IsIpcFinished()) {
         error = context_->CheckStatus();
         ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
         queryTimes++;

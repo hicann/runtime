@@ -71,9 +71,9 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void ** const eventAddr, int32
     int32_t currentEventId;
     void *devAddr = eventAllocator_[poolIndex_]->AllocItemForEventPool(&currentEventId, false);
     if (devAddr == nullptr) {
-        ++poolIndex_;
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, poolIndex_ > (MAX_POOL_CNT - 1), RT_ERROR_DRV_NO_EVENT_RESOURCES,
+        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, (poolIndex_ + 1U) >= MAX_POOL_CNT, RT_ERROR_DRV_NO_EVENT_RESOURCES,
             "event count is reaching the maximum.");
+        ++poolIndex_;
         eventAllocator_[poolIndex_] = new (std::nothrow) BufferAllocator(sizeof(uint64_t), EVENT_INIT_CNT, PER_POOL_CNT, BufferAllocator::LINEAR, 
                                                             &MallocBufferForEvent, &FreeBufferForEvent, device_);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, eventAllocator_[poolIndex_] == nullptr, RT_ERROR_MEMORY_ALLOCATION,

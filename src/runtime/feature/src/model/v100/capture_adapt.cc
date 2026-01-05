@@ -47,7 +47,7 @@ rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, u
             RT_ERROR_TASK_NULL,
             "Get task failed, stream_id=%u, task_id=%u.", streamId, pos);
         COND_RETURN_ERROR(!((task->type == TS_TASK_TYPE_EVENT_RECORD) || ((task->type == TS_TASK_TYPE_CAPTURE_RECORD)
-            && (strcmp(task->typeName, "EVENT_RECORD") == 0))),
+            && (strncmp(task->typeName, "EVENT_RECORD", strlen("EVENT_RECORD") + 1) == 0))),
             RT_ERROR_STREAM_UNJOINED,
             "The last task type is not event record, stream_id=%u, task_id=%u, task_type=%d (%s)",
             streamId, pos, static_cast<int32_t>(task->type), task->typeName);
