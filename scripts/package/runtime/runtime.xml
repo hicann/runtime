@@ -37,6 +37,7 @@
         <file value="run_runtime_install.sh"/>
         <file value="run_runtime_uninstall.sh"/>
         <file value="run_runtime_upgrade.sh"/>
+        <file value="runtime_custom_install.sh"/>
         <file value="runtime_func.sh"/>
         <file value="uninstall.sh"/>
         <file value="help.info"/>
