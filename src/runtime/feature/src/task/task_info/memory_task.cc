@@ -1382,11 +1382,10 @@ void DoCompleteSuccessForIpcRecordTask(TaskInfo* taskInfo, const uint32_t devId)
         RT_LOG(RT_LOG_ERROR, "device_id=%u, event_id=%u, current_id=%u, count already is zero",
             devId, curIndex, vaHandle->currentIndex);
     }
-    if ((vaHandle->deviceMemRef[curIndex] == 0U) &&
-        (curIndex != vaHandle->currentIndex)) {
-        uint16_t* addr = event->GetCurrentHostMem() + curIndex;
+    if (vaHandle->deviceMemRef[curIndex] == 0U) {
+        uint8_t* addr = event->GetCurrentHostMem() + curIndex;
         event->SetIpcFinished();
-        (void)memset_s(RtPtrToPtr<void*>(addr), INDEX_LENGTH, 0, INDEX_LENGTH);
+        (void)memset_s(RtPtrToPtr<void*>(addr), sizeof(uint8_t), 0, sizeof(uint8_t));
     }
     event->IpcEventCountSub();
     event->IpcVaUnLock();
@@ -1625,10 +1624,9 @@ void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId)
         RT_LOG(RT_LOG_ERROR, "device_id=%u, event_id=%u, current_id=%u, count already is zero",
             devId, curIndex, vaHandle->currentIndex);
     }
-    if ((vaHandle->deviceMemRef[curIndex] == 0U) &&
-        (curIndex != vaHandle->currentIndex)) {
-        uint16_t* addr = event->GetCurrentHostMem() + curIndex;
-        (void)memset_s(RtPtrToPtr<void*>(addr), INDEX_LENGTH, 0, INDEX_LENGTH);
+    if (vaHandle->deviceMemRef[curIndex] == 0U) {
+        uint8_t* addr = event->GetCurrentHostMem() + curIndex;
+        (void)memset_s(RtPtrToPtr<void*>(addr), sizeof(uint8_t), 0, sizeof(uint8_t));
     }
     event->IpcEventCountSub();
     event->IpcVaUnLock();

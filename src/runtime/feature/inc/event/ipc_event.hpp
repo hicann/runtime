@@ -23,15 +23,12 @@ class Event;
 class Context;
 class Device;
 
-constexpr uint32_t IPC_EVENT_P2P_SIZE = 8U * 1024U;
 constexpr uint64_t IPC_EVENT_P2P_NO_CHECK_FLAG = 1U;
-constexpr uint64_t DEV_MEM_MAP_FLAG = 0x1U;
-constexpr uint64_t HOST_MEM_MAP_FLAG = 0x2U;
-constexpr uint64_t IPC_HANDLE_MAP_FLAG = 0x4U;
+constexpr uint32_t DEV_MEM_MAP_FLAG = 0x1U;
+constexpr uint32_t HOST_MEM_MAP_FLAG = 0x2U;
+constexpr uint32_t IPC_HANDLE_MAP_FLAG = 0x4U;
 constexpr uint32_t MEM_SET_ACCESS_NUM = 1U;
-constexpr uint16_t IPC_RECORD_STATUS = 1U;
-constexpr uint16_t INDEX_LENGTH = 1U;
-constexpr uint8_t  IPC_EVENT_TYPE = 1U;
+constexpr uint16_t IPC_EVENT_P2P_SIZE = 8192U;
 constexpr int32_t  IMPORT_DEVICE_ID = 65U;
 
 enum class LockStatus : uint8_t {
@@ -43,7 +40,7 @@ struct IpcHandleVa {
     uint64_t  volatile lockStatus;   // atomic lock
     void*     deviceMemHandle;
     uint64_t  deviceMemRef[IPC_EVENT_P2P_SIZE];
-    uint32_t  currentIndex;
+    uint16_t  currentIndex;
 };
 
 class IpcEvent : public Event {
@@ -93,9 +90,9 @@ public :
     {
         return ipcHandleVa_;
     }
-    uint16_t* GetCurrentHostMem()
+    uint8_t* GetCurrentHostMem()
     {
-        return RtPtrToPtr<uint16_t*>(currentHostMem_);
+        return RtPtrToPtr<uint8_t*>(currentHostMem_);
     }
     void IpcVaLockInit()
     {
