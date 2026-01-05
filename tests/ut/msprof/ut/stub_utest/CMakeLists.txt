@@ -28,6 +28,7 @@ add_executable(stub_file_utest
 )
 
 set(libmsprofHeaderDir
+    ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
@@ -71,13 +72,13 @@ target_compile_options(stub_file_utest PRIVATE
 )
 
 target_compile_definitions(stub_file_utest PRIVATE
-    C_SEC
     __PROF_LLT
     google=ascend_private
 )
 
 target_link_libraries(stub_file_utest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
 )
 
 set_target_properties(stub_file_utest
