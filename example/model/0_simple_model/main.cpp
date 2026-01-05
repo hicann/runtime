@@ -81,7 +81,7 @@ int main()
     // 标志着model的开始直到end。此处设置的mode为ACL_MODEL_RI_CAPTURE_MODE_GLOBAL，禁止执行非安全的函数
     // 该model执行了将内存从host复制到device侧，然后调用了一个add算子和一个mul算子
     CHECK_ERROR(aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL));
-    // 异步复制为安全函数，可以再GLOBAL的mode下调用，该函数会入图。
+    // 异步复制为安全函数，可以在GLOBAL的mode下调用，该函数会入图。
     CHECK_ERROR(aclrtMemcpyAsync(selfDevice, size, selfHost, size, ACL_MEMCPY_HOST_TO_DEVICE, stream));
     aclmdlRICaptureMode mode = ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
     // 可以通过该函数设置mode，此处修改为ACL_MODEL_RI_CAPTURE_MODE_RELAXED，可以执行非安全的函数
