@@ -73,12 +73,10 @@ target_link_libraries(intf_ut_pub INTERFACE
 target_link_libraries(platform_llt PRIVATE
         $<BUILD_INTERFACE:intf_ut_pub>
         -Wl,--no-as-needed
-        c_sec
         -Wl,--no-as-needed
         -ldl
         ascend_protobuf
 )
-
 
 add_library(platform_llt_tiling SHARED
         ${FE_SRC_CPP_1}
@@ -113,9 +111,7 @@ target_compile_options(platform_llt_tiling PRIVATE
         -D_GLIBCXX_USE_CXX11_ABI=0)
 
 target_link_libraries(platform_llt_tiling PRIVATE
-#       $<BUILD_INTERFACE:intf_llt_pub_no_asan>
         -Wl,--no-as-needed
-        c_sec
         -Wl,--no-as-needed
         -ldl
         ascend_protobuf
