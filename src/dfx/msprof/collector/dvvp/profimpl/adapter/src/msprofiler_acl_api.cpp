@@ -642,7 +642,10 @@ aclError ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresDat
 aclError ProfAclRegisterDeviceCallback()
 {
     static const std::string ON = "on";
-    return ProfParamsAdapter::instance()->CheckSetDeviceEnableIsValid(ON);
+    if (ProfParamsAdapter::instance()->CheckSetDeviceEnableIsValid(ON)) {
+        return ACL_SUCCESS;
+    }
+    return ACL_ERROR_PROFILING_FAILURE;
 }
 } // namespace AclApi
 } // namespace Msprofiler
