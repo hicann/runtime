@@ -574,7 +574,7 @@ expand_version_file() {
     fi
 
     if [ -n "$VERSION_DIR" ] && [ -L "$install_path/$VERSION_DIR" ]; then
-        VERSION_DIR="$(readlink "$install_path/$VERSION_DIR")"
+        VERSION_DIR="$(basename "$(readlink "$install_path/$VERSION_DIR")")"
     fi
 }
 
