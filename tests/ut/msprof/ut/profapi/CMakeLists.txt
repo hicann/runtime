@@ -49,6 +49,7 @@ add_executable(prof_api_utest
 )
 
 set(libmsprofHeaderDir
+    ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
@@ -88,7 +89,6 @@ target_compile_options(prof_api_utest PRIVATE
 )
 
 target_compile_definitions(prof_api_utest PRIVATE
-    C_SEC
     __PROF_LLT
     google=ascend_private
     PROF_API_STUB
@@ -96,6 +96,7 @@ target_compile_definitions(prof_api_utest PRIVATE
 
 target_link_libraries(prof_api_utest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
 )
 
 set_target_properties(prof_api_utest
