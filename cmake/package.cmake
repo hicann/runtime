@@ -341,7 +341,7 @@ install(FILES
     DESTINATION runtime/lib
 )
 
-if(DEFINED ENV{TOOLCHAIN_DIR})
+if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
     install(FILES 
         ${CHILD_INSTALL_DIR}/lib/libc_sec.so
         ${CHILD_INSTALL_DIR}/lib/libascendalog.so
