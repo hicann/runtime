@@ -12,6 +12,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${BASE_DIR}/src/dfx/error_manager)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/pkg_inc)
+include_directories(${BASE_DIR}/pkg_inc/base)
 include_directories(${BASE_DIR}/src/mmpa/inc)
 include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 
@@ -19,7 +20,11 @@ set(UT_FILES
     "testcase/error_manager_unittest.cc"
 )
 
-add_executable(ut_error_manager ${UT_FILES})
+set(SRC_FILES
+    "${BASE_DIR}/src/dfx/error_manager/error_manager.cc"
+)
+
+add_executable(ut_error_manager ${UT_FILES} ${SRC_FILES})
 
 target_compile_definitions(ut_error_manager PRIVATE
     BASE_DIR="${BASE_DIR}"
@@ -44,8 +49,8 @@ target_link_options(ut_error_manager PRIVATE
 target_link_libraries(ut_error_manager PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
-    error_manager
     mmpa
+    unified_dlog
     json
     GTest::gtest
     GTest::gtest_main    
