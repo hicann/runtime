@@ -72,10 +72,15 @@ CaptureModel::~CaptureModel() noexcept
     }
     
     const std::list<Stream *> streamsCpy(StreamList_());
+    // all stream need unbind first
     for (Stream * const streamObj : streamsCpy) {
         (void)UnBindSqPerStream(streamObj);
         (void)DelStream(streamObj);
         Context_()->InsertStreamList(streamObj);
+    }
+
+    // model bind with no stream, then destroy stream.
+    for (Stream * const streamObj : streamsCpy) {
         (void)Context_()->StreamDestroy(streamObj, true);
     }
     (void)Context_()->Device_()->ClearEndGraphNotifyInfoByModel(this);
