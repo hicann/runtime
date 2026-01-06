@@ -88,8 +88,8 @@ int main()
     CHECK_ERROR(aclrtCreateEventWithFlag(&event, ACL_EVENT_EXTERNAL));
 
     CHECK_ERROR(aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_RELAXED));
-    CHECK_ERROR(aclrtMemcpyAsync(selfDevice, size, selfHostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE, stream));
-    CHECK_ERROR(aclrtMemcpyAsync(otherDevice, size, otherHostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE, stream));
+    CHECK_ERROR(aclrtMemcpy(selfDevice, size, selfHostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
+    CHECK_ERROR(aclrtMemcpy(otherDevice, size, otherHostData.data(), size, ACL_MEMCPY_HOST_TO_DEVICE));
     aclnnAdd(firstAddWorkspaceAddr, firstAddWorkspaceSize, firstAddExecutor, stream);
     // 因为后续的任务为可更新的，所以在该处阻塞stream等待event，在后续更新任务中结束时记录event，可以确保后续执行的任务是更新后的
     CHECK_ERROR(aclrtStreamWaitEvent(stream, event));
