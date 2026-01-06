@@ -267,35 +267,6 @@ static rtError_t ConstructFuncCallPara(TaskInfo * const taskInfo, rtStarsModelEx
     return RT_ERROR_NONE;
 }
 
-rtError_t StarsV2ConstructFuncCallPara(TaskInfo * const taskInfo, rtStarsModelExeFuncCallPara_t &funcCallPara)
-{
-    Stream * const stream = taskInfo->stream;
-    ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
-
-    const rtError_t ret = AllocFuncCallMemForModelExecuteTask(taskInfo, funcCallPara);
-    ERROR_RETURN(ret, "alloc func call svm failed, retCode=%#x.", ret);
-
-    funcCallPara.sqHeadOffset = STARS_SIMPLE_SQ_HEAD_OFFSET;
-    funcCallPara.sqTailOffset = STARS_SIMPLE_SQ_TAIL_OFFSET;
-    const uint64_t baseAddr = taskInfo->stream->Device_()->GetStarsRegBaseAddr();
-    RT_LOG(RT_LOG_INFO, "baseAddr=0x%llx", baseAddr);    
-    if (baseAddr == 0ULL) {
-        RT_LOG(RT_LOG_ERROR, "invalid device_id, physic chip_id=%u, die_id=%u, stream_id=%d.",
-               taskInfo->stream->Device_()->Id_(), taskInfo->stream->Device_()->GetPhyChipId(),
-               taskInfo->stream->Device_()->GetPhyDieId(), taskInfo->stream->Id_());
-        return RT_ERROR_DEVICE_INVALID;
-    }
-    funcCallPara.sqFsmSelBasAddr = baseAddr + STARSV2_SIMPLE_RTSQ_FSM_SEL_REG;
-    funcCallPara.sqTailOffset = static_cast<uint16_t>(STARSV2_SIMPLE_SQ_TAIL_OFFSET) ;
-    RT_LOG(RT_LOG_INFO, "chip_id=%lld,die_id=%lld,rtSqFsmState=0x%llx", stream->Device_()->GetPhyChipId(),
-        stream->Device_()->GetPhyDieId(), funcCallPara.sqFsmSelBasAddr);
-
-    funcCallPara.sqVirtualAddr =
-            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(stream->Device_()->GetSqVirtualArrBaseAddr_()));
-    funcCallPara.dfxAddr = reinterpret_cast<uint64_t>(modelExecuteTaskInfo->model->GetDfxPtr());
-    return RT_ERROR_NONE;
-}
-
 static void PrintDebugInfoForModelExecute(const Model *model)
 {
     if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
