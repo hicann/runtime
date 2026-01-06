@@ -553,7 +553,7 @@ TEST_F(DumpArgsUtest, Test_Dump_Args)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);  // copy kernel bin file failed
-    sleep(2);  // wait async process done
+    sleep(1);  // wait async process done
 
     // check host kernel file dump success
     Path hostKernelPath(ws.Root());
@@ -589,16 +589,19 @@ TEST_F(DumpArgsUtest, Test_Dump_Args)
     MOCKER_CPP(&File::Copy).stubs().will(returnValue(ADUMP_SUCCESS));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+    sleep(1);  // wait async process done
 
     // mock real path failed
     MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(false));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);
+    sleep(1);  // wait async process done
 
     MOCKER_CPP(&File::Write).stubs().will(returnValue((int64_t)EN_ERROR));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);
+    sleep(1);  // wait async process done
 
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::ARGS_EXCEPTION), true);
     uint64_t dumpSwitch = 0;
@@ -808,7 +811,7 @@ TEST_F(DumpArgsUtest, Test_Dump_Args_OPP_Path)
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);  // copy kernel bin file failed
-    sleep(2);  // wait async process done
+    sleep(1);  // wait async process done
 
     // check host kernel file dump success
     Path hostKernelPath(ws.Root());
@@ -844,16 +847,19 @@ TEST_F(DumpArgsUtest, Test_Dump_Args_OPP_Path)
     MOCKER_CPP(&File::Copy).stubs().will(returnValue(ADUMP_SUCCESS));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+    sleep(1);  // wait async process done
 
     // mock real path failed
     MOCKER(&DumpFile::Dump).stubs().will(returnValue(ADUMP_SUCCESS));
     MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(false));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);
+    sleep(1);  // wait async process done
 
     MOCKER_CPP(&File::Write).stubs().will(returnValue((int64_t)EN_ERROR));
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);
+    sleep(1);  // wait async process done
 
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::ARGS_EXCEPTION), true);
     uint64_t dumpSwitch = 0;
