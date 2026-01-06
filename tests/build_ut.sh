@@ -56,14 +56,6 @@ checkopts() {
   CMAKE_BUILD_TYPE="Debug"
   UT_TARGET="full"
   TARGETS=()
-  if [ -z "${ASCEND_HOME_PATH}" ]; then
-    ASCEND_HOME_PATH="/usr/local/Ascend/cann"
-  fi
-
-  if [[ -n "${ASCEND_HOME_PATH}" ]]; then
-    echo "env exists ASCEND_HOME_PATH : ${ASCEND_HOME_PATH}"
-    export TOOLCHAIN_DIR=${ASCEND_HOME_PATH}/toolkit/toolchain/hcc
-  fi
 
   # Process the options
   parsed_args=$(getopt -o j:hvu::ct: -l help,ut::,verbose,target:, -- "$@") || {
@@ -140,7 +132,6 @@ build_rts() {
   CMAKE_ARGS="-DENABLE_OPEN_SRC=True \
               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
               -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
-              -DASCEND_INSTALL_PATH=${ASCEND_HOME_PATH} \
               -DOPEN_SOURCE_DIR=${ASCEND_3RD_LIB_PATH} \
               -DENABLE_COV=${ENABLE_COV} \
               -DENABLE_UT=${ENABLE_UT}"
@@ -221,7 +212,7 @@ run_ut() {
       echo "WARNING: If an error occurs due to the version of the lcov tool, please select the appropriate parameters according to the prompts for adaptation."
       lcov -c -d ${ut_dir} -o cov/tmp.info
       lcov -r cov/tmp.info '/usr/*' "${OUTPUT_PATH}/*" "${BASEPATH}/tests/*" \
-        "${ASCEND_HOME_PATH}/*" "${ASCEND_3RD_LIB_PATH}/*" "${BASEPATH}/build/*" -o cov/coverage.info
+       "${ASCEND_3RD_LIB_PATH}/*" "${BASEPATH}/build/*" -o cov/coverage.info
       cd ${BASEPATH}/cov
       genhtml coverage.info
     fi
