@@ -121,6 +121,7 @@ add_executable(adx_hdc_dump_utest
 add_dependencies(adx_hdc_dump_utest adump_base_proto)
 
 target_include_directories(adx_hdc_dump_utest PRIVATE
+    ${LIBC_SEC_HEADER}
     ${adxHeaders}
 )
 
@@ -139,9 +140,6 @@ target_compile_definitions(adx_hdc_dump_utest PRIVATE
 
 target_link_libraries(adx_hdc_dump_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
-    c_sec_static
-    ascend_protobuf_static
-    GTest::gtest
 )
 
 target_compile_options(adx_hdc_dump_utest PRIVATE

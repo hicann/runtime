@@ -85,6 +85,7 @@ add_executable(adx_soc_dump_utest
 )
 
 target_include_directories(adx_soc_dump_utest PRIVATE
+    ${LIBC_SEC_HEADER}
     ${adxSocDumpApiUtHeaderList}
 )
 
@@ -103,10 +104,6 @@ target_compile_definitions(adx_soc_dump_utest PRIVATE
 
 target_link_libraries(adx_soc_dump_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
-    -Wl,-rpath,${TOP_DIR}/output/llt/c_sec/lib
-    c_sec_static
-    ascend_protobuf_static
-    GTest::gtest
 )
 
 target_compile_options(adx_soc_dump_utest PRIVATE
