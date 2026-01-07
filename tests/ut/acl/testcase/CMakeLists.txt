@@ -34,7 +34,6 @@ include_directories(${BASE_DIR}/src/acl/aclrt_impl)
 include_directories(${BASE_DIR}/tests/depends/)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/runtime/feature/inc/kernel)
-include_directories(${BASE_DIR}/src/mmpa/inc)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 

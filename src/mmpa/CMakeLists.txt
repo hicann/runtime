@@ -18,9 +18,9 @@ endif()
 
 add_library(mmpa_headers INTERFACE)
 target_include_directories(mmpa_headers INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/inc>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/inc/mmpa>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/inc/mmpa/sub_inc>
+    $<BUILD_INTERFACE:${MMPA_DIR}/../../pkg_inc>
+    $<BUILD_INTERFACE:${MMPA_DIR}/../../pkg_inc/mmpa>
+    $<BUILD_INTERFACE:${MMPA_DIR}/../../pkg_inc/mmpa/sub_inc>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/mmpa>
     $<INSTALL_INTERFACE:include/mmpa/sub_inc>
@@ -118,11 +118,11 @@ set_target_properties(static_mmpa PROPERTIES
 install_package(
     PACKAGE mmpa
     TARGETS mmpa static_mmpa mmpa_headers
-    FILES   ${MMPA_DIR}/inc/mmpa/mmpa_api.h
+    FILES   ${MMPA_DIR}/../../pkg_inc/mmpa/mmpa_api.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/mmpa
-    FILES   ${MMPA_DIR}/inc/mmpa/sub_inc/mmpa_linux.h
-            ${MMPA_DIR}/inc/mmpa/sub_inc/mmpa_typedef_linux.h
-            ${MMPA_DIR}/inc/mmpa/sub_inc/mmpa_env_define.h
+    FILES   ${MMPA_DIR}/../../pkg_inc/mmpa/sub_inc/mmpa_linux.h
+            ${MMPA_DIR}/../../pkg_inc/mmpa/sub_inc/mmpa_typedef_linux.h
+            ${MMPA_DIR}/../../pkg_inc/mmpa/sub_inc/mmpa_env_define.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/mmpa/sub_inc
 )
 
