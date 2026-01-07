@@ -4979,11 +4979,6 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
         ClearCaptureModel(this, stm, captureModel),
         "Failed to verify the validity of the capture model, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = captureModelTmp->ResetCaptureEvents(stm);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
-        ClearCaptureModel(this, stm, captureModel),
-        "Failed to reset capture events, retCode=%#x.", static_cast<uint32_t>(error));
-
     captureStream = stm->GetCaptureStream();
     NULL_PTR_PROC_RETURN_ERROR(captureStream, RT_ERROR_STREAM_NULL,
         ClearCaptureModel(this, stm, captureModel));
@@ -5004,6 +4999,10 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
         ClearCaptureModel(this, stm, captureModel);
         return error;
     }
+
+    error = captureModelTmp->ResetCaptureEvents(stm);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, ClearCaptureModel(this, stm, captureModel),
+        "Failed to reset capture events, retCode=%#x.", static_cast<uint32_t>(error));
 
     if (!captureModelTmp->IsSoftwareSqEnable()) {
         Api * const apiObj = Runtime::Instance()->ApiImpl_();
