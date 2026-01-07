@@ -19,7 +19,7 @@ set(libawatchdogHeaderDir
     ${LIBC_SEC_HEADER}
     ${ATRACE_DIR}/../../../include/driver
     ${ATRACE_DIR}/inc/toolchain
-    ${ATRACE_DIR}/../../mmpa/inc/mmpa
+    ${ATRACE_DIR}/../../../pkg_inc/mmpa
 )
 
 add_library(awatchdog_share

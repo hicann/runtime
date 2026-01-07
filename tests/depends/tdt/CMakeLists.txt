@@ -28,7 +28,6 @@ include_directories(${BASE_DIR}/pkg_inc/base)
 include_directories(${BASE_DIR}/pkg_inc/profiling)
 include_directories(${BASE_DIR}/pkg_inc/dump)
 include_directories(${BASE_DIR}/pkg_inc/watchdog)
-include_directories(${BASE_DIR}/src/mmpa/inc)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 

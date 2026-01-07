@@ -38,6 +38,8 @@
         <path value="$(TARGET_ENV)/include/platform"/>
         <path value="$(TARGET_ENV)/include/mmpa"/>
         <path value="$(TARGET_ENV)/include/mmpa/sub_inc"/>
+        <path value="$(TARGET_ENV)/pkg_inc/mmpa"/>
+        <path value="$(TARGET_ENV)/pkg_inc/mmpa/sub_inc"/>
         <path value="$(TARGET_ENV)/data"/>
         <path value="$(TARGET_ENV)/data/platform_config"/>
         <path value="$(TARGET_ENV)/data/ascendcl_config"/>
@@ -178,13 +180,13 @@
         <file value="platform_infos_def.h" install_mod="440" entity="true"/>
         <file value="soc_spec.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/mmpa" install_path="$(TARGET_ENV)/include/mmpa" install_type="all">
-        <file value="mmpa_api.h" install_mod="440" entity="true"/>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/mmpa" install_path="$(TARGET_ENV)/pkg_inc/mmpa" install_type="all">
+        <file value="mmpa_api.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/mmpa_api.h"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/mmpa/sub_inc" install_path="$(TARGET_ENV)/include/mmpa/sub_inc" install_type="all">
-        <file value="mmpa_env_define.h" install_mod="440" entity="true"/>
-        <file value="mmpa_typedef_linux.h" install_mod="440" entity="true"/>
-        <file value="mmpa_linux.h" install_mod="440" entity="true"/>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/mmpa/sub_inc" install_path="$(TARGET_ENV)/pkg_inc/mmpa/sub_inc" install_type="all">
+        <file value="mmpa_env_define.h" install_mod="440" entity="true"  install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_env_define.h"/>
+        <file value="mmpa_typedef_linux.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_typedef_linux.h"/>
+        <file value="mmpa_linux.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_linux.h"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="include/dfx/base" install_path="$(TARGET_ENV)/include/base" install_type="all">
         <file value="err_msg.h" install_mod="440" entity="true"/>

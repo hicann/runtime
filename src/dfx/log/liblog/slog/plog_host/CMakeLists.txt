@@ -34,7 +34,7 @@ set(libalogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}/../plog
     ${CMAKE_CURRENT_SOURCE_DIR}/../
     ${TOOLAHCIN_LOG_DIR}/../../../include/driver
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../mmpa/inc/mmpa
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../pkg_inc/mmpa
     ${TOOLAHCIN_LOG_DIR}/inc/toolchain
 )
 

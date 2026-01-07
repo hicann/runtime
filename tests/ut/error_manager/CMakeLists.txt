@@ -12,7 +12,6 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${BASE_DIR}/src/dfx/error_manager)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/pkg_inc)
-include_directories(${BASE_DIR}/src/mmpa/inc)
 include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 
 set(UT_FILES
