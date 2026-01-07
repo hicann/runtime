@@ -218,15 +218,15 @@ install(FILES
 )
 
 install(FILES
-    src/mmpa/inc/mmpa/mmpa_api.h
-    DESTINATION runtime/include/mmpa
+    pkg_inc/mmpa/mmpa_api.h
+    DESTINATION runtime/pkg_inc/mmpa
 )
 
 install(FILES
-    src/mmpa/inc/mmpa/sub_inc/mmpa_linux.h
-    src/mmpa/inc/mmpa/sub_inc/mmpa_typedef_linux.h
-    src/mmpa/inc/mmpa/sub_inc/mmpa_env_define.h
-    DESTINATION runtime/include/mmpa/sub_inc
+    pkg_inc/mmpa/sub_inc/mmpa_linux.h
+    pkg_inc/mmpa/sub_inc/mmpa_typedef_linux.h
+    pkg_inc/mmpa/sub_inc/mmpa_env_define.h
+    DESTINATION runtime/pkg_inc/mmpa/sub_inc
 )
 
 install(DIRECTORY pkg_inc/aicpu
