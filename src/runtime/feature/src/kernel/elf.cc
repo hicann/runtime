@@ -24,6 +24,8 @@ const std::string ELF_SECTION_CCE_KERNEL_META_DATA = "__CCE_KernelMetaData";
 const std::string ELF_SECTION_PREFIX_ASCEND_META = ".ascend.meta.";
 const std::string ELF_SECTION_ASCEND_META = ".ascend.meta";
 const std::string ELF_SECTION_ASCEND_STACK_SIZE_RECORD  = ".ascend.stack.size.record";
+const std::string ELF_SECTION_MIX_KERNEL_AIV = "_mix_aiv";
+const std::string ELF_SECTION_MIX_KERNEL_AIC = "_mix_aic";
 }
 
 namespace cce {
@@ -921,7 +923,10 @@ rtError_t ConvertTaskRation(ElfKernelInfo * elfKernelInfo, uint32_t& taskRation)
         RT_LOG(RT_LOG_ERROR, "elfKernelInfo is null");
         return RT_ERROR_INVALID_VALUE;
     }
-    if (elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIC || elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIV) {
+    if (elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIC ||
+        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIV ||
+        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIC_ROLLBACK ||
+        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIV_ROLLBACK) {
         taskRation = 0U;
         return RT_ERROR_NONE;
     }
@@ -1533,7 +1538,7 @@ static rtError_t GetMetaSection(const rtElfData * const elfData, Elf_Internal_Sh
     }
 
     if (section == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Get meta section %s failed!", targetSection.c_str());
+        RT_LOG(RT_LOG_WARNING, "Get meta section %s failed!", targetSection.c_str());
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;
@@ -1584,6 +1589,7 @@ rtError_t GetBinaryMetaInfo(const rtElfData * const elfData, const uint16_t type
     Elf_Internal_Shdr *section = nullptr;
     const rtError_t error = GetMetaSection(elfData, section, ELF_SECTION_ASCEND_META);
     if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Get meta section failed!");
         return error;
     }
 
@@ -1606,7 +1612,10 @@ rtError_t GetFunctionMetaInfo(const rtElfData * const elfData, const std::string
     const std::string targetSection = ELF_SECTION_PREFIX_ASCEND_META + kernelName;
     Elf_Internal_Shdr *section = nullptr;
     const rtError_t error = GetMetaSection(elfData, section, targetSection);
-    if (error != RT_ERROR_NONE) {
+    const rtError_t errorAic = GetMetaSection(elfData, section, targetSection + ELF_SECTION_MIX_KERNEL_AIC);
+    const rtError_t errorAiv = GetMetaSection(elfData, section, targetSection + ELF_SECTION_MIX_KERNEL_AIV);
+    if ((error != RT_ERROR_NONE) && (errorAic != RT_ERROR_NONE) && (errorAiv != RT_ERROR_NONE)) {
+        RT_LOG(RT_LOG_ERROR, "Get meta section failed!");
         return error;
     }
 
