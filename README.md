@@ -138,7 +138,19 @@ bash build.sh
 
 安装完成之后，用户编译生成的Runtime软件包会替换已安装CANN开发套件包中的Runtime相关软件。
                                        
+#### 关于签名的补充说明
 
+* 本仓编译产生`cann-npu-runtime_<version>_linux-<arch>.run`软件包中含有`cann-tsch-compat.tar.gz`（Runtime兼容升级包)。
+* `cann-tsch-compat.tar.gz`会在业务启动时加载至Device，加载过程中默认会由驱动进行安全验签，确保包可信。
+* 开发者下载本仓源码自行编译产生`cann-tsch-compat.tar.gz` 采用社区证书签名头，为此采用关闭驱动安全验签的机制。
+* 关闭验签方式：</br>
+配套使用HDK 25.5.T2.B001或以上版本，并通过该HDK配套的npu-smi工具关闭验签。参考如下命令，以root用户在物理机上执行。 </br>
+以device 0为例 (其中 -i 后面的参数是device id）：
+    ```bash
+  npu-smi set -t custom-op-secverify-enable -i 0 -d 1     # 使能验签配置
+  npu-smi set -t custom-op-secverify-mode -i 0 -d 0      # 关闭客户自定义验签
+ 	```
+  
 ## 本地验证 
 
 编译完成后，用户可以进行开发测试（DT：Development Testing），验证项目功能是否正常。
