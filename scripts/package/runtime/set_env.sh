@@ -75,7 +75,7 @@ setenv_main() {
         for path in ${ld_library_path}; do
             if echo "$path" | grep -q "driver"; then
                 if [ -d "$path" ]; then
-                    dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null)"
+                    dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null || true)"
                     if [ ! -z "${dep_hal_path}" ]; then
                         is_install_driver="y"
                     fi
@@ -87,9 +87,9 @@ setenv_main() {
     if [ -f "$dep_info_file" ]; then
         driver_install_path_param="$(grep -iw driver_install_path_param $dep_info_file | cut --only-delimited -d"=" -f2-)"
         if [ ! -z "${driver_install_path_param}" ]; then
-            path="${driver_install_path_param}/driver"
+            path="${driver_install_path_param}/driver/lib64"
             if [ -d "$path" ]; then
-                dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null)"
+                dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null || true)"
                 if [ ! -z "${dep_hal_path}" ]; then
                     is_install_driver="y"
                 fi
