@@ -20,7 +20,7 @@
 #include "notify.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "device/device_error_proc.hpp"
-#include "aicpu/common/aicpu_task_struct.h"
+#include "common/aicpu_task_struct.h"
 #include "context.hpp"
 #include "tsch_defines.h"
 #include "profiler.hpp"

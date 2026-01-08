@@ -13,7 +13,7 @@
 #include <algorithm>
 #endif
 #include <functional>
-#include "aicpu/common/aicpu_task_struct.h"
+#include "common/aicpu_task_struct.h"
 #include "context.hpp"
 #include "stream.hpp"
 #include "api.hpp"

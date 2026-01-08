@@ -284,8 +284,8 @@ target_compile_definitions(runtime_ut_910b_intf_pub INTERFACE
 
 set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/include/driver
-    ${TOP_DIR}/pkg_inc/aicpu
-    ${TOP_DIR}/pkg_inc/aicpu/common
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/pkg_inc/aicpu_sched/common
     ${TOP_DIR}/src/tsd/tsdclient/inc/tsd
     ${TOP_DIR}/src/tsd/tsdclient/inc
     ${TOP_DIR}/inc/external
@@ -336,10 +336,10 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/metadef/inc
     ${TOP_DIR}/src/dfx/adump/inc/metadef
     ${TOP_DIR}/metadef/inc/external
-    ${TOP_DIR}/pkg_inc/aicpu/common
+    ${TOP_DIR}/pkg_inc/aicpu_sched/common
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/
     ${TOP_DIR}/include
-    ${TOP_DIR}/pkg_inc/aicpu/tsd
+    ${TOP_DIR}/pkg_inc/tsd
     ${TOP_DIR}/pkg_inc/trace
     ${TOP_DIR}/pkg_inc/watchdog
     ${TOP_DIR}/pkg_inc/profiling

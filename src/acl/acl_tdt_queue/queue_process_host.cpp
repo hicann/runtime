@@ -12,7 +12,7 @@
 #include "runtime/mem.h"
 #include "runtime/rt_mem_queue.h"
 #include "runtime/dev.h"
-#include "aicpu/queue_schedule/qs_client.h"
+#include "queue_schedule/qs_client.h"
 #include "utils/math_utils.h"
 
 namespace acl {

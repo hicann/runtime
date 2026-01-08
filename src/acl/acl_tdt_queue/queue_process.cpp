@@ -11,7 +11,7 @@
 #include "log_inner.h"
 #include "runtime/rt_mem_queue.h"
 #include "runtime/dev.h"
-#include "aicpu/queue_schedule/qs_client.h"
+#include "queue_schedule/qs_client.h"
 
 namespace acl {
     constexpr uint32_t RT_MQ_DEPTH_DEFAULT = 8U;
