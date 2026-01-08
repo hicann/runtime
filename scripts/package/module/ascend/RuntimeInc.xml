@@ -210,22 +210,22 @@
     <file_info copy_type="source" src_path="" dst_path="include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
         <file value="error_manager.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
         <file value="aicpu_engine_struct.h" install_mod="440" entity="true"/>
         <file value="aicpu_task_struct.h" install_mod="440" entity="true"/>
         <file value="fwk_adpt_struct.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu/common" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu/common" install_type="all">
         <file value="type_def.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/aicpu_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/aicpu_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_type="all">
         <file value="aicpu_async_event.h" install_mod="440" entity="true"/>
         <file value="aicpu_context.h" install_mod="440" entity="true"/>
         <file value="aicpu_mc2_maintenance_thread.h" install_mod="440" entity="true"/>
         <file value="aicpusd_info.h" install_mod="440" entity="true"/>
         <file value="aicpusd_interface.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/cpu_kernels" install_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/cpu_kernels" install_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_type="all">
         <file value="cpu_attr_value.h" install_mod="440" entity="true"/>
         <file value="cpu_context.h" install_mod="440" entity="true"/>
         <file value="cpu_kernel.h" install_mod="440" entity="true"/>
@@ -236,11 +236,11 @@
         <file value="cpu_tensor_shape.h" install_mod="440" entity="true"/>
         <file value="cpu_types.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/queue_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/queue_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_type="all">
         <file value="dgw_client.h" install_mod="440" entity="true"/>
         <file value="qs_client.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu/tsd" install_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/tsd" install_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_type="all">
         <file value="status.h" install_mod="440" entity="true"/>
         <file value="tsd_client.h" install_mod="440" entity="true"/>
         <file value="tsd.h" install_mod="440" entity="true"/>

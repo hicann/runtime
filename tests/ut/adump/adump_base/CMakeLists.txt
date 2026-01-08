@@ -139,7 +139,7 @@ set(adumpBaseHeaders
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/
     ${TOP_DIR}/pkg_inc/dump/
-    ${TOP_DIR}/pkg_inc/aicpu/
+    ${TOP_DIR}/pkg_inc/aicpu_sched/
 
     ${ADUMP_BASE_UT_ROOT_PATH}/
     ${ADUMP_BASE_UT_ROOT_PATH}/tools/

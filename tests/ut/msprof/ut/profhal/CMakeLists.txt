@@ -174,7 +174,7 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/src/dfx/error_manager
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/pkg_inc/dump
-    ${TOP_DIR}/pkg_inc/aicpu
+    ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/open

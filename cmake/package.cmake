@@ -229,7 +229,10 @@ install(FILES
     DESTINATION runtime/pkg_inc/mmpa/sub_inc
 )
 
-install(DIRECTORY pkg_inc/aicpu
+install(DIRECTORY
+    pkg_inc/aicpu_sched
+    pkg_inc/queue_schedule
+    pkg_inc/tsd
     DESTINATION runtime/pkg_inc
 )
 

@@ -18,7 +18,7 @@
 #include "acl_tdt_queue/queue_process_sp.h"
 #include "acl_tdt_queue/queue_process_host.h"
 #include "acl_tdt_queue/queue_process_ccpu.h"
-#include "aicpu/queue_schedule/qs_client.h"
+#include "queue_schedule/qs_client.h"
 #include "base.h"
 #include "acl_tdt_queue/toolchain/prof_api_reg.h"
 

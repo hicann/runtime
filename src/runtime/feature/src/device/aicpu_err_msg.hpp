@@ -14,7 +14,7 @@
 #include "kernel.h"
 #include "device.hpp"
 #include "task.hpp"
-#include "aicpu/common/aicpu_task_struct.h"
+#include "common/aicpu_task_struct.h"
 
 namespace cce {
 namespace runtime {

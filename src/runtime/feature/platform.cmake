@@ -58,9 +58,9 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/sqe/v200
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/sqe/v200_base
     ${RUNTIME_DIR}/src/inc
-    ${RUNTIME_DIR}/pkg_inc/aicpu/tsd/
-    ${RUNTIME_DIR}/pkg_inc/aicpu/
-    ${RUNTIME_DIR}/pkg_inc/aicpu/common
+    ${RUNTIME_DIR}/pkg_inc/tsd/
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
     ${RUNTIME_DIR}/src/queue_schedule/dgwclient/inc/
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${LIBC_SEC_HEADER}

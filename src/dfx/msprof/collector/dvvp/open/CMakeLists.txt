@@ -132,7 +132,7 @@ set(profimplInc
     ${RUNTIME_DIR}/graphengine/inc/external
     ${RUNTIME_DIR}/graphengine/inc/framework/common
     ${RUNTIME_DIR}/inc
-    ${RUNTIME_DIR}/pkg_inc/aicpu
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched
     ${RUNTIME_DIR}/src/queue_schedule/dgwclient/inc
     ${RUNTIME_DIR}/include/driver
     ${RUNTIME_DIR}/include/external

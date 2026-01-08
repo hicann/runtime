@@ -12,7 +12,7 @@
 #include "base.hpp"
 #include "aicpu_err_msg.hpp"
 #include "runtime.hpp"
-#include "aicpu/common/aicpu_task_struct.h"
+#include "common/aicpu_task_struct.h"
 #include "arg_loader.hpp"
 #include "task_info.hpp"
 #include "device_error_info.hpp"
