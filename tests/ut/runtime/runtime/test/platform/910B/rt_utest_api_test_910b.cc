@@ -4114,26 +4114,6 @@ TEST_F(ApiTest910B, api_mem_and_buf_test)
     error = apiDec.QueryDevPid(NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(api, &Api::MbufAlloc).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufAlloc(NULL, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::MbufFree).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufFree(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::MbufGetBuffAddr).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufGetBuffAddr(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::MbufGetBuffSize).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufGetBuffSize(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::MbufGetPrivInfo).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufGetPrivInfo(NULL, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(api, &Api::MemGrpCreate).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.MemGrpCreate(NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);

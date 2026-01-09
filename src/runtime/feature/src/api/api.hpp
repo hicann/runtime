@@ -669,25 +669,7 @@ public:
     virtual rtError_t QueryDevPid(rtBindHostpidInfo_t * const info, int32_t * const devPid) = 0;
     virtual rtError_t BuffAlloc(const uint64_t size, void **buff) = 0;
     virtual rtError_t BuffConfirm(void * const buff, const uint64_t size) = 0;
-    virtual rtError_t MbufBuild(void * const buff, const uint64_t size, rtMbufPtr_t *mbufPtr) = 0;
-    virtual rtError_t MbufAlloc(rtMbufPtr_t * const mbufPtr, const uint64_t size) = 0;
-    virtual rtError_t MbufAllocEx(rtMbufPtr_t * const mbufPtr, const uint64_t size, const uint64_t flag,
-        const int32_t grpId) = 0;
     virtual rtError_t BuffFree(void * const buff) = 0;
-    virtual rtError_t MbufUnBuild(const rtMbufPtr_t mbufPtr, void ** const buff, uint64_t * const size) = 0;
-    virtual rtError_t MbufGet(const rtMbufPtr_t mbufPtr, void * const buff, const uint64_t size) = 0;
-    virtual rtError_t MbufPut(const rtMbufPtr_t mbufPtr, void * const buff) = 0;
-    virtual rtError_t MbufFree(const rtMbufPtr_t mbufPtr) = 0;
-    virtual rtError_t MbufSetDataLen(const rtMbufPtr_t mbufPtr, const uint64_t len) = 0;
-    virtual rtError_t MbufGetDataLen(const rtMbufPtr_t mbufPtr, uint64_t *len) = 0;
-    virtual rtError_t MbufGetBuffAddr(const rtMbufPtr_t mbufPtr, void ** const buf) = 0;
-    virtual rtError_t MbufGetBuffSize(const rtMbufPtr_t mbufPtr, uint64_t * const totalSize) = 0;
-    virtual rtError_t MbufGetPrivInfo(const rtMbufPtr_t mbufPtr, void ** const priv, uint64_t * const size) = 0;
-    virtual rtError_t MbufCopyBufRef(const rtMbufPtr_t mbufPtr, rtMbufPtr_t * const newMbufPtr) = 0;
-    virtual rtError_t MbufChainAppend(const rtMbufPtr_t memBufChainHead, rtMbufPtr_t memBuf) = 0;
-    virtual rtError_t MbufChainGetMbufNum(const rtMbufPtr_t memBufChainHead, uint32_t *num) = 0;
-    virtual rtError_t MbufChainGetMbuf(const rtMbufPtr_t memBufChainHead, const uint32_t index,
-        rtMbufPtr_t * const memBuf) = 0;
     virtual rtError_t MemGrpCreate(const char_t * const name, const rtMemGrpConfig_t * const cfg) = 0;
     virtual rtError_t MemGrpCacheAlloc(const char_t *const name, const int32_t devId,
         const rtMemGrpCacheAllocPara *const para) = 0;
