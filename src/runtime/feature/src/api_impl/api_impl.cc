@@ -2503,26 +2503,26 @@ rtError_t ApiImpl::HostRegisterV2(void *ptr, size_t size, uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
     TIMESTAMP_NAME(__func__);
-    Context * const curCtx = CurrentContext();
+    Context *const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device *const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    const uint32_t deviceId = dev->Id_();
 
-    rtError_t error;
+    rtError_t error = RT_ERROR_NONE;
     void *devPtr = nullptr;
     void **pDevice = &devPtr;
 
     if ((flag & RT_MEM_HOST_REGISTER_MAPPED) != 0U) {
-        const uint32_t deviceId = curCtx->Device_()->Id_();
-        error = curCtx->Device_()->Driver_()->HostRegister(ptr, size,
-            RT_HOST_REGISTER_MAPPED, pDevice, deviceId);
+        error = dev->Driver_()->HostRegister(ptr, size, RT_HOST_REGISTER_MAPPED, pDevice, deviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     }
 
     if ((flag & RT_MEM_HOST_REGISTER_PINNED) != 0U) {
-        error = InsertPinnedMemory(ptr, size);
-        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+        (void)InsertPinnedMemory(ptr, size);
     }
 
-    return RT_ERROR_NONE;
+    return error;
 }
 
 rtError_t ApiImpl::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
