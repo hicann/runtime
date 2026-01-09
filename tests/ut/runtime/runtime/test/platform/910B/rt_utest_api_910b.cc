@@ -478,52 +478,8 @@ TEST_F(CloudV2ApiTest910b, testBuffAllocTest)
     error = apiDec.BuffConfirm(NULL, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufBuild).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufBuild(NULL, 1, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufAllocEx).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufAllocEx(NULL, 1, 1, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BuffFree).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.BuffFree(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufUnBuild).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufUnBuild(NULL, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufGet).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufGet(NULL, NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufPut).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufPut(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufSetDataLen).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufSetDataLen(NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufGetDataLen).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufGetDataLen(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufCopyBufRef).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufCopyBufRef(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufChainAppend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufChainAppend(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufChainGetMbufNum).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufChainGetMbufNum(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MbufChainGetMbuf).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MbufChainGetMbuf(NULL, 1, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EschedSubscribeEvent).stubs().will(returnValue(RT_ERROR_NONE));

@@ -1549,11 +1549,6 @@ rtError_t ApiDecorator::QueryDevPid(rtBindHostpidInfo_t * const info, int32_t * 
     return impl_->QueryDevPid(info, devPid);
 }
 
-rtError_t ApiDecorator::MbufAlloc(rtMbufPtr_t * const mbufPtr, const uint64_t size)
-{
-    return impl_->MbufAlloc(mbufPtr, size);
-}
-
 rtError_t ApiDecorator::BuffAlloc(const uint64_t size, void **buff)
 {
     return impl_->BuffAlloc(size, buff);
@@ -1564,86 +1559,9 @@ rtError_t ApiDecorator::BuffConfirm(void * const buff, const uint64_t size)
     return impl_->BuffConfirm(buff, size);
 }
 
-rtError_t ApiDecorator::MbufBuild(void * const buff, const uint64_t size, rtMbufPtr_t * const mbufPtr)
-{
-    return impl_->MbufBuild(buff, size, mbufPtr);
-}
-
-rtError_t ApiDecorator::MbufAllocEx(rtMbufPtr_t * const mbufPtr, const uint64_t size,
-    const uint64_t flag, const int32_t grpId)
-{
-    return impl_->MbufAllocEx(mbufPtr, size, flag, grpId);
-}
-
 rtError_t ApiDecorator::BuffFree(void * const buff)
 {
     return impl_->BuffFree(buff);
-}
-
-rtError_t ApiDecorator::MbufUnBuild(const rtMbufPtr_t mbufPtr, void ** const buff, uint64_t * const size)
-{
-    return impl_->MbufUnBuild(mbufPtr, buff, size);
-}
-
-rtError_t ApiDecorator::MbufGet(const rtMbufPtr_t mbufPtr, void * const buff, const uint64_t size)
-{
-    return impl_->MbufGet(mbufPtr, buff, size);
-}
-
-rtError_t ApiDecorator::MbufPut(const rtMbufPtr_t mbufPtr, void * const buff)
-{
-    return impl_->MbufPut(mbufPtr, buff);
-}
-
-rtError_t ApiDecorator::MbufFree(const rtMbufPtr_t mbufPtr)
-{
-    return impl_->MbufFree(mbufPtr);
-}
-
-rtError_t ApiDecorator::MbufSetDataLen(const rtMbufPtr_t mbufPtr, const uint64_t len)
-{
-    return impl_->MbufSetDataLen(mbufPtr, len);
-}
-
-rtError_t ApiDecorator::MbufGetDataLen(const rtMbufPtr_t mbufPtr, uint64_t *len)
-{
-    return impl_->MbufGetDataLen(mbufPtr, len);
-}
-
-rtError_t ApiDecorator::MbufGetBuffAddr(const rtMbufPtr_t mbufPtr, void ** const buf)
-{
-    return impl_->MbufGetBuffAddr(mbufPtr, buf);
-}
-
-rtError_t ApiDecorator::MbufGetBuffSize(const rtMbufPtr_t mbufPtr, uint64_t * const totalSize)
-{
-    return impl_->MbufGetBuffSize(mbufPtr, totalSize);
-}
-
-rtError_t ApiDecorator::MbufGetPrivInfo(const rtMbufPtr_t mbufPtr, void ** const priv, uint64_t * const size)
-{
-    return impl_->MbufGetPrivInfo(mbufPtr, priv, size);
-}
-
-rtError_t ApiDecorator::MbufCopyBufRef(const rtMbufPtr_t mbufPtr, rtMbufPtr_t * const newMbufPtr)
-{
-    return impl_->MbufCopyBufRef(mbufPtr, newMbufPtr);
-}
-
-rtError_t ApiDecorator::MbufChainAppend(const rtMbufPtr_t memBufChainHead, rtMbufPtr_t memBuf)
-{
-    return impl_->MbufChainAppend(memBufChainHead, memBuf);
-}
-
-rtError_t ApiDecorator::MbufChainGetMbufNum(const rtMbufPtr_t memBufChainHead, uint32_t *num)
-{
-    return impl_->MbufChainGetMbufNum(memBufChainHead, num);
-}
-
-rtError_t ApiDecorator::MbufChainGetMbuf(const rtMbufPtr_t memBufChainHead, const uint32_t index,
-    rtMbufPtr_t * const memBuf)
-{
-    return impl_->MbufChainGetMbuf(memBufChainHead, index, memBuf);
 }
 
 rtError_t ApiDecorator::MemGrpCreate(const char_t * const name, const rtMemGrpConfig_t * const cfg)
