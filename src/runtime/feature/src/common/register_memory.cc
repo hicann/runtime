@@ -40,21 +40,51 @@ static std::map<uint64_t, uint64_t>::const_iterator FindRegisteredMemory(
     return data.end();
 }
 
-rtError_t InsertPinnedMemory(const void *ptr, const uint64_t size)
+static std::map<uint64_t, uint64_t>::const_iterator FindOverlappingMemory(
+ 	    const std::map<uint64_t, uint64_t>& data, uint64_t start, uint64_t end)
+{
+ 	if (data.empty()) {
+ 	    return data.end();
+ 	}
+ 	const auto it = data.lower_bound(start);
+ 	if (it != data.end() && it->first <= end) {
+ 	    return it;
+ 	}
+ 	if (it != data.begin()) {
+ 	    const auto prev = std::prev(it);
+ 	    if (prev->second >= start) {
+ 	        return prev;
+ 	    }
+ 	}
+ 	return data.end();
+}
+
+rtError_t CheckMemoryRangeRegistered(const void *ptr, const uint64_t size)
+{
+ 	std::lock_guard<std::mutex> lock(g_registeredMutex);
+ 	const uint64_t memoryStart = RtPtrToValue(ptr);
+ 	const uint64_t memoryEnd =  memoryStart + size - 1U;
+ 	if ((FindOverlappingMemory(g_pinnedHost, memoryStart, memoryEnd) != g_pinnedHost.cend()) ||
+ 	    (FindOverlappingMemory(g_mappedHost, memoryStart, memoryEnd) != g_mappedHost.cend())) {
+ 	    RT_LOG(RT_LOG_ERROR,
+            "the memory range has already been registered, "
+ 	        "base=%#" PRIx64 ", end=%#" PRIx64 ", size=%#" PRIx64 ".", 
+            memoryStart, 
+            memoryEnd, 
+            size);
+ 	    return RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED;
+ 	}
+ 	return RT_ERROR_NONE;
+}
+
+void InsertPinnedMemory(const void *ptr, const uint64_t size)
 {
     std::lock_guard<std::mutex> lock(g_registeredMutex);
     const uint64_t start = RtPtrToValue(ptr);
     const uint64_t end = start + size - 1U;
-    if ((FindRegisteredMemory(g_pinnedHost, start) != g_pinnedHost.cend()) ||
-        (FindRegisteredMemory(g_pinnedHost, end) != g_pinnedHost.cend())) {
-        RT_LOG(RT_LOG_ERROR, "the memory range has already been registered, "
-            "base=%#" PRIx64 ", end=%#" PRIx64 ", size=%#" PRIx64 ".", start, end, size);
-        return RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED;
-    }
     (void)g_pinnedHost.insert({start, end});
     RT_LOG(RT_LOG_INFO, "base=%#" PRIx64 ", end=%#" PRIx64 ", size=%#" PRIx64 ", cnt=%zu.",
         start, end, size, g_pinnedHost.size());
-    return RT_ERROR_NONE;
 }
 
 void InsertMappedMemory(const void *ptr, const uint64_t size, const void *devPtr)

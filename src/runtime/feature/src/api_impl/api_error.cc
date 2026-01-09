@@ -1482,7 +1482,10 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, size_t size, uint32_t fla
         RT_MEM_HOST_REGISTER_PINNED,
  	    (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED));
 
-    const rtError_t error = impl_->HostRegisterV2(ptr, size, flag);
+    rtError_t error = CheckMemoryRangeRegistered(ptr, size);
+ 	COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+
+    error = impl_->HostRegisterV2(ptr, size, flag);
     ERROR_RETURN(error, "Register host memory failed, MemSize=%" PRIu64 "(bytes), flag=%#x.", size, flag);
     return error;
 }
