@@ -277,6 +277,10 @@ public:
     virtual rtError_t DevSetOnlineProfStart(const bool profEnable) = 0;
     virtual bool DevGetOnlineProfStart() = 0;
     virtual rtError_t DatadumpInfoLoad(const void * const dumpInfo, const uint32_t length) = 0;
+    virtual bool IsSupportStopOnStreamError(void) = 0;
+    virtual uint64_t GetC2cCtrlAddr(void) = 0;
+    virtual uint32_t GetC2cCtrlAddrLen(void) = 0;
+    virtual void SetC2cCtrlAddr(const uint64_t addr, const uint32_t addrLen) = 0; 	 
 
     virtual rtError_t AicpuModelLoad(void * const modelInfo) = 0;
     virtual rtError_t AicpuModelDestroy(const uint32_t modelId) = 0;

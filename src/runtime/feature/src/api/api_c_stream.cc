@@ -467,8 +467,6 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
 {
     NULL_PTR_RETURN_MSG_OUTER(attrValue, ACL_ERROR_RT_PARAM_INVALID);
     rtError_t error;
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 	Stream * const exeStream = static_cast<Stream *>(stm);
@@ -483,6 +481,8 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
+            const Runtime * const rtInstance = Runtime::Instance();
+            NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
             if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
                 RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return success.", static_cast<int32_t>(rtInstance->GetChipType()));
                 return ACL_RT_SUCCESS;

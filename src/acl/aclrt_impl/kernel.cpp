@@ -476,7 +476,6 @@ aclError aclrtLaunchKernelWithHostArgsImpl(aclrtFuncHandle funcHandle, uint32_t 
                                            aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithHostArgs);
-    ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithHostArgs");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
 
@@ -555,13 +554,11 @@ aclError aclrtNpuClearFloatOverFlowStatusImpl(uint32_t checkMode, aclrtStream st
 aclError aclrtGetHardwareSyncAddrImpl(void **addr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetHardwareSyncAddr);
-    ACL_LOG_INFO("start to execute aclrtGetHardwareSyncAddrImpl");
     const rtError_t rtErr = rtsGetHardwareSyncAddr(addr);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("call rtsGetHardwareSyncAddr failed, runtime result = %d.", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("successfully execute aclrtGetHardwareSyncAddrImpl");
     return ACL_SUCCESS;
 }
 
