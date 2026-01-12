@@ -2238,6 +2238,17 @@ TEST_F(CloudV2ApiTest, rtsGetHardwareSyncAddr)
 {
     rtError_t error;
     void *addr = nullptr;
+    Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    uint64_t c2cAddr = 0x10;
+    uint32_t addrLen = 2;
+    MOCKER_CPP_VIRTUAL((NpuDriver *)driver, &NpuDriver::GetC2cCtrlAddr)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&c2cAddr, sizeof(c2cAddr)), outBoundP(&addrLen, sizeof(addrLen)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtsGetHardwareSyncAddr(&addr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtsGetHardwareSyncAddr(&addr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

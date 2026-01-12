@@ -699,6 +699,7 @@ rtError_t RawDevice::Init()
 
     CreateMessageQueue();
     CreateFreeEventQueue();
+    isSupportStopOnStreamError_ = IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR);
     return RT_ERROR_NONE;
 
 SQ_ADDR_MEMORY_FREE:
