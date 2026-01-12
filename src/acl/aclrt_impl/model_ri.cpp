@@ -70,7 +70,6 @@ aclError aclmdlRICaptureBeginImpl(aclrtStream stream, aclmdlRICaptureMode mode)
 aclError aclmdlRICaptureGetInfoImpl(aclrtStream stream, aclmdlRICaptureStatus *status, aclmdlRI *modelRI)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRICaptureGetInfo);
-    ACL_LOG_INFO("start to execute aclmdlRICaptureGetInfo");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     if (status == nullptr && modelRI == nullptr) {
         ACL_LOG_INNER_ERROR("status and modelRI cannot be nullptr at the same time");
@@ -92,7 +91,6 @@ aclError aclmdlRICaptureGetInfoImpl(aclrtStream stream, aclmdlRICaptureStatus *s
         *modelRI = static_cast<aclmdlRI>(rtModel);
     }
 
-    ACL_LOG_INFO("successfully execute aclmdlRICaptureGetInfo");
     return ACL_SUCCESS;
 }
 

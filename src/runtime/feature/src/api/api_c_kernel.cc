@@ -53,9 +53,9 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     RtArgsWithType argsWithType = {};
-    rtArgsEx_t argsInfo = {};
-    rtCpuKernelArgs_t cpuArgsInfo = {};
+    rtError_t ret;
     if (regType == RT_KERNEL_REG_TYPE_NON_CPU) {
+        rtArgsEx_t argsInfo = {};
         argsInfo.args = hostArgs;
         argsInfo.argsSize = argsSize;
         argsInfo.hostInputInfoPtr = RtPtrToPtr<rtHostInputInfo_t *>(placeHolderArray);
@@ -64,7 +64,9 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
 
         argsWithType.type = RT_ARGS_NON_CPU_EX;
         argsWithType.args.nonCpuArgsInfo = &argsInfo;
+        ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType, RtPtrToPtr<Stream *>(stm), cfg);
     } else {
+        rtCpuKernelArgs_t cpuArgsInfo = {};
         cpuArgsInfo.baseArgs.args = hostArgs;
         cpuArgsInfo.baseArgs.argsSize = argsSize;
         cpuArgsInfo.baseArgs.hostInputInfoPtr = RtPtrToPtr<rtHostInputInfo_t *>(placeHolderArray);
@@ -73,10 +75,9 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
 
         argsWithType.type = RT_ARGS_CPU_EX;
         argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
+        ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType, RtPtrToPtr<Stream *>(stm), cfg);
     }
 
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType,
-        RtPtrToPtr<Stream *>(stm), cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -469,7 +470,9 @@ rtError_t rtsGetHardwareSyncAddr(void **addr)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_INTER_CORE_SYNC_ADDR)) {
+    const static bool isSupportSyncAddr = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+        RtOptionalFeatureType::RT_FEATURE_KERNEL_INTER_CORE_SYNC_ADDR);
+    if (!isSupportSyncAddr) {
         REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

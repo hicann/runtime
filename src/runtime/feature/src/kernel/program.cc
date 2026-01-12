@@ -598,6 +598,10 @@ rtError_t Program::CheckLoaded2Device()
 
 rtError_t Program::Load2Device()
 {
+    if (GetBinBaseAddr() != nullptr) {
+        return RT_ERROR_NONE;
+    }
+
     load2DeviceLock_.Lock();
     std::function<void()> const lockGuard = [this]() {
         this->load2DeviceLock_.Unlock();

@@ -732,7 +732,9 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
+    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(chipType,
+        RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
+    if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
             static_cast<int32_t>(chipType));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);

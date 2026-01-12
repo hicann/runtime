@@ -945,8 +945,6 @@ rtError_t ApiImpl::BinaryGetFunctionByEntry(const Program * const binHandle, con
                                             Kernel ** const funcHandle)
 {
     *funcHandle = nullptr;
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Program * const prog = binHandle;
     Program * const progTmp = const_cast<Program *>(prog);
     const Kernel * const kernelTmp = progTmp->GetKernelByTillingKey(funcEntry);
@@ -1634,11 +1632,11 @@ rtError_t ApiImpl::StreamQuery(Stream * const stm)
 rtError_t ApiImpl::GetStreamId(Stream * const stm, int32_t * const streamId)
 {
     TIMESTAMP_NAME(__func__);
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     Stream *curStm = stm;
     if (curStm == nullptr) {
+        Context * const curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         curStm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
@@ -5646,9 +5644,22 @@ rtError_t ApiImpl::GetC2cCtrlAddr(uint64_t * const addr, uint32_t * const len)
     RT_LOG(RT_LOG_DEBUG, "get c2c ctrl addr.");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const uint64_t addrTmp = curCtx->Device_()->GetC2cCtrlAddr();
+    const uint32_t lenTmp = curCtx->Device_()->GetC2cCtrlAddrLen();
+    if ((addrTmp != 0UL) && (lenTmp != 0U)) {
+        *addr = addrTmp;
+        *len = lenTmp;
+        return RT_ERROR_NONE;
+    }
+
     const int32_t drvDeviceId = static_cast<int32_t>(curCtx->Device_()->Id_());
     Driver * const curDrv = curCtx->Device_()->Driver_();
-    return curDrv->GetC2cCtrlAddr(drvDeviceId, addr, len);
+    const rtError_t error = curDrv->GetC2cCtrlAddr(drvDeviceId, addr, len);
+    if (error == RT_ERROR_NONE) {
+        curCtx->Device_()->SetC2cCtrlAddr(*addr, *len);
+    }
+
+    return error;
 }
 
 rtError_t ApiImpl::NpuClearFloatStatus(const uint32_t checkMode, Stream * const stm)

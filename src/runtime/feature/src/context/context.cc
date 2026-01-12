@@ -4038,7 +4038,7 @@ rtError_t Context::CheckStatus(const Stream * const stm, const bool isBlockDefau
     status = device_->GetDeviceStatus();
     COND_RETURN_ERROR(status != RT_ERROR_NONE, status, "device_id=%d status=%d is abnormal.",
                       device_->Id_(), status);
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR)) {
+    if (device_->IsSupportStopOnStreamError()) {
         COND_RETURN_ERROR((GetFailureError() != RT_ERROR_NONE) && (stm != nullptr) &&
                           (stm != DefaultStream_()) && (stm->GetFailureMode() == STOP_ON_FAILURE),
                           GetFailureError(),
@@ -5039,7 +5039,6 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
 rtError_t Context::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptureStatus * const status,
                                         Model ** const captureMdl)
 {
-    std::unique_lock<std::mutex> taskLock(captureLock_);
     Stream *captureStream = stm->GetCaptureStream();
     const rtStreamCaptureStatus statusTmp = stm->GetCaptureStatus();
     Model *mdlTmp = nullptr;
