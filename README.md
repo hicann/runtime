@@ -144,7 +144,7 @@ bash build.sh
 * `cann-tsch-compat.tar.gz`会在业务启动时加载至Device，加载过程中默认会由驱动进行安全验签，确保包可信。
 * 开发者下载本仓源码自行编译产生`cann-tsch-compat.tar.gz` 采用社区证书签名头，为此采用关闭驱动安全验签的机制。
 * 关闭验签方式：</br>
-配套使用HDK 25.5.T2.B001或以上版本，并通过该HDK配套的npu-smi工具关闭验签。参考如下命令，以root用户在物理机上执行。 </br>
+配套使用HDK 25.5.T2.B001或以上版本，并通过该HDK配套的npu-smi工具关闭验签。详见[设置AI CPU算子用户自定义验签能力使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540362/3152813c?idPath=23710424|251366513|254884019|261408772|252764743), [设置AI CPU算子验签模式](https://support.huawei.com/enterprise/zh/doc/EDOC1100540362/a484ba7b?idPath=23710424|251366513|254884019|261408772|252764743)命令文档，以root用户在物理机上执行。 </br>
 以device 0为例 (其中 -i 后面的参数是device id）：
     ```bash
   npu-smi set -t custom-op-secverify-enable -i 0 -d 1     # 使能验签配置
