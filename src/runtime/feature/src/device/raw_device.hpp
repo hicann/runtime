@@ -763,6 +763,27 @@ public:
     rtError_t ClearEndGraphNotifyInfoByModel(Model* captureModel) override;
     void PollEndGraphNotifyInfo();
 
+    bool IsSupportStopOnStreamError(void) override
+    {
+        return isSupportStopOnStreamError_;
+    }
+
+    uint64_t GetC2cCtrlAddr(void) override
+    {
+        return c2cCtrlAddr_.Value();
+    }
+
+    uint32_t GetC2cCtrlAddrLen(void) override
+    {
+        return c2cCtrlAddrLen_.Value();
+    }
+
+    void SetC2cCtrlAddr(const uint64_t addr, const uint32_t addrLen) override
+    {
+        c2cCtrlAddr_.Set(addr);
+        c2cCtrlAddrLen_.Set(addrLen);
+    }
+
     DeviceSqCqPool *GetDeviceSqCqManage() const override
     {
         return deviceSqCqPool_;
@@ -935,6 +956,9 @@ private:
     SqAddrMemoryOrder *sqAddrMemoryOrder_;
     std::map<std::pair<uint32_t, uint32_t>, std::vector<rtExceptionErrRegInfo_t>> exceptionRegMap_;
     std::mutex exceptionRegMutex_;
+    bool isSupportStopOnStreamError_{false};
+    Atomic<uint64_t> c2cCtrlAddr_{0UL};
+    Atomic<uint32_t> c2cCtrlAddrLen_{0U};
 
     std::mutex printfMtx_;
     void *printfAddr_ = nullptr;

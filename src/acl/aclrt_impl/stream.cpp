@@ -328,7 +328,6 @@ aclError aclrtStreamAbortImpl(aclrtStream stream)
 aclError aclrtStreamGetIdImpl(aclrtStream stream, int32_t *streamId)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetId);
-    ACL_LOG_DEBUG("start to execute aclrtStreamGetId");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(streamId);
     const rtError_t rtErr = rtsStreamGetId(static_cast<rtStream_t>(stream), streamId);
     if (rtErr != RT_ERROR_NONE) {
