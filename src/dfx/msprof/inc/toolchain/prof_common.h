@@ -716,7 +716,7 @@ struct MsprofMemoryInfo {
  * @brief struct of data reported by msproftx
  */
 #define PAYLOAD_VALUE_LEN 2
-#define MAX_MESSAGE_LEN 128
+#define MAX_MESSAGE_LEN 156
 struct MsprofStampInfo {
     uint16_t magicNumber;
     uint16_t dataTag;

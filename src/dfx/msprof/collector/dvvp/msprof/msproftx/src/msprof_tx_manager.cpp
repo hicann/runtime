@@ -380,7 +380,7 @@ int32_t MsprofTxManager::LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm)
 
 uint64_t MsprofTxManager::GetTxEventId()
 {
-    return txEventId_++;
+    return ++txEventId_;
 }
 }
 }

@@ -27,6 +27,20 @@ public:
     ~ProfRoceJob() override;
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
 };
+
+class ProfNetDevStatJob : public ProfPeripheralJob {
+public:
+    ProfNetDevStatJob() = default;
+    ~ProfNetDevStatJob() override = default;
+    int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
+    int32_t Process() override;
+    int32_t Uninit() override;
+
+protected:
+    static std::mutex jobMtx_;
+    bool isStarted_{false};
+    uint64_t sampleIntervalNs_{0};
+};
 }
 }
 }

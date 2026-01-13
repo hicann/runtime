@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <string>
 #include <ctime>
+#include <unordered_map>
 #include "config/config.h"
 #include "securec.h"
 #include "cmd_log/cmd_log.h"
@@ -1632,6 +1633,23 @@ bool Utils::CheckDuplicateStrings(const std::string &oriStr, const std::string &
     }
     if (count > 1) {
         return false;
+    }
+    return true;
+}
+
+bool Utils::CheckPathWithInvalidChar(const std::string &path)
+{
+    static const std::unordered_map<std::string, std::string> INVALID_CHAR = {
+        {"\n", "\\n"}, {"\f", "\\f"}, {"\r", "\\r"}, {"\b", "\\b"}, {"\t", "\\t"},
+        {"\v", "\\v"}, {"\u007f", "\\u007f"}, {"\"", "\\\""}, {"'", "\'"},
+        {"\\", "\\\\"}, {"%", "\\%"}, {">", "\\>"}, {"<", "\\<"}, {"|", "\\|"},
+        {"&", "\\&"}, {"$", "\\$"}, {";", "\\;"}, {"`", "\\`"}
+    };
+    for (auto &ch : INVALID_CHAR) {
+        if (path.find(ch.first) != std::string::npos) {
+            MSPROF_LOGE("The path %s contains invalid character %s.", path.c_str(), ch.second.c_str());
+            return false;
+        }
     }
     return true;
 }
