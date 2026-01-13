@@ -452,6 +452,8 @@ int32_t JobDeviceSoc::CreateCollectionJobArray()
     MSVP_MAKE_SHARED0(collectionJobV_[UB_DRV_COLLECTION_JOB].collectionJob, ProfUbJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[LLC_DRV_COLLECTION_JOB].collectionJob, ProfLlcJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[ROCE_DRV_COLLECTION_JOB].collectionJob, ProfRoceJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[NETDEV_STATS_COLLECTION_JOB].collectionJob, ProfNetDevStatJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[APP_MEM_COLLECTION_JOB].collectionJob, ProfAppMemJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[DEV_MEM_COLLECTION_JOB].collectionJob, ProfDevMemJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(

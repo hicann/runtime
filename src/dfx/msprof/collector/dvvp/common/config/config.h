@@ -139,6 +139,7 @@ const char * const PROF_SYS_MEM_FILE = "Memory.data";
 const char * const PROF_HOST_PROC_CPU_USAGE_FILE = "host_cpu.data";
 const char * const PROF_HOST_PROC_MEM_USAGE_FILE = "host_mem.data";
 const char * const PROF_HOST_SYS_NETWORK_USAGE_FILE = "host_network.data";
+const char * const PROF_NETDEV_STATS_FILE = "netdev_stats.data";
 const char * const MSVP_PROF_DATA_DIR = "/data";
 const char * const MSVP_PROF_PERF_DATA_FILE = "ai_ctrl_cpu.data.";
 const char * const MSVP_PROF_PERF_RET_FILE_SUFFIX = ".txt";

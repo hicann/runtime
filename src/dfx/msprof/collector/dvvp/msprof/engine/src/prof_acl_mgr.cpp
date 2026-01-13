@@ -324,6 +324,9 @@ int32_t ProfAclMgr::ProfAclInit(const std::string &profResultPath)
         MSPROF_INNER_ERROR("EK9999", "Input profResultPath is empty");
         return ACL_ERROR_INVALID_FILE;
     }
+    if (!Utils::CheckPathWithInvalidChar(path)) {
+        return ACL_ERROR_INVALID_FILE;
+    }
     if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to create dir: %s", Utils::BaseName(path).c_str());
         MSPROF_INNER_ERROR("EK9999", "Failed to create dir: %s", Utils::BaseName(path).c_str());
@@ -1468,6 +1471,9 @@ int32_t ProfAclMgr::MsprofAclJsonParamConstruct(NanoJson::Json &acljsonCfg)
     params_->result_dir = acljsonCfg.Contains("output") ?
         MsprofResultDirAdapter(acljsonCfg["output"].GetValue<std::string>()) :
         MsprofResultDirAdapter(MSVP_PROF_EMPTY_STRING);
+    if (!Utils::CheckPathWithInvalidChar(params_->result_dir)) {
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
     resultPath_ = params_->result_dir;
     baseDir_ = Utils::CreateProfDir(0);
     int32_t ret = MsprofAclJsonParamConstructTwo(acljsonCfg);
@@ -1638,6 +1644,9 @@ int32_t ProfAclMgr::MsprofResultPathAdapter(const std::string &dir, std::string 
         if (!ascendWorkPath.empty()) {
             MSPROF_LOGI("No result path set, use %s path", ASCEND_WORK_PATH_ENV.c_str());
             std::string path = Utils::RelativePathToAbsolutePath(ascendWorkPath) + MSVP_SLASH + PROFILING_RESULT_PATH;
+            if (!Utils::CheckPathWithInvalidChar(path)) {
+                return PROFILING_FAILED;
+            }
             if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
                 MSPROF_LOGW("Unable to create dir: %s", path.c_str());
             }
@@ -1648,6 +1657,9 @@ int32_t ProfAclMgr::MsprofResultPathAdapter(const std::string &dir, std::string 
         }
     } else {
         std::string path = Utils::RelativePathToAbsolutePath(dir);
+        if (!Utils::CheckPathWithInvalidChar(path)) {
+            return PROFILING_FAILED;
+        }
         if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
             MSPROF_LOGW("Unable to create dir: %s", path.c_str());
         }
@@ -1835,6 +1847,9 @@ int32_t ProfAclMgr::MsprofInitAclEnv(const std::string &envValue)
     params_->host_sys_pid = Utils::GetPid();
     params_->result_dir = params_->result_dir.empty() ?
         MsprofResultDirAdapter(params_->result_dir) : params_->result_dir;
+    if (!Utils::CheckPathWithInvalidChar(params_->result_dir)) {
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
     if (params_->prof_level == MSVP_PROF_OFF && params_->taskTime == MSVP_PROF_ON &&
         params_->taskTrace == MSVP_PROF_ON) {
         params_->prof_level = MSVP_PROF_ON; // taskTime, taskTrace默认值的赋值

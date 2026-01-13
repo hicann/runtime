@@ -46,6 +46,7 @@ enum TimerHandlerTag {
     PROF_HOST_ALL_PID_CPU,
     PROF_HOST_ALL_PID_MEM,
     PROF_HOST_SYS_NETWORK,
+    PROF_NETDEV_STATS,
     PROF_NONE
 };
 
@@ -263,6 +264,117 @@ private:
     std::vector<uint32_t> prevPids_;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+#define DCMI_OK 0
+
+struct dcmi_network_pkt_stats_info {
+    unsigned long long mac_tx_mac_pause_num;
+    unsigned long long mac_rx_mac_pause_num;
+    unsigned long long mac_tx_pfc_pkt_num;
+    unsigned long long mac_tx_pfc_pri0_pkt_num;
+    unsigned long long mac_tx_pfc_pri1_pkt_num;
+    unsigned long long mac_tx_pfc_pri2_pkt_num;
+    unsigned long long mac_tx_pfc_pri3_pkt_num;
+    unsigned long long mac_tx_pfc_pri4_pkt_num;
+    unsigned long long mac_tx_pfc_pri5_pkt_num;
+    unsigned long long mac_tx_pfc_pri6_pkt_num;
+    unsigned long long mac_tx_pfc_pri7_pkt_num;
+    unsigned long long mac_rx_pfc_pkt_num;
+    unsigned long long mac_rx_pfc_pri0_pkt_num;
+    unsigned long long mac_rx_pfc_pri1_pkt_num;
+    unsigned long long mac_rx_pfc_pri2_pkt_num;
+    unsigned long long mac_rx_pfc_pri3_pkt_num;
+    unsigned long long mac_rx_pfc_pri4_pkt_num;
+    unsigned long long mac_rx_pfc_pri5_pkt_num;
+    unsigned long long mac_rx_pfc_pri6_pkt_num;
+    unsigned long long mac_rx_pfc_pri7_pkt_num;
+    unsigned long long mac_tx_total_pkt_num;
+    unsigned long long mac_tx_total_oct_num;
+    unsigned long long mac_tx_bad_pkt_num;
+    unsigned long long mac_tx_bad_oct_num;
+    unsigned long long mac_rx_total_pkt_num;
+    unsigned long long mac_rx_total_oct_num;
+    unsigned long long mac_rx_bad_pkt_num;
+    unsigned long long mac_rx_bad_oct_num;
+    unsigned long long mac_rx_fcs_err_pkt_num;
+    unsigned long long roce_rx_rc_pkt_num;
+    unsigned long long roce_rx_all_pkt_num;
+    unsigned long long roce_rx_err_pkt_num;
+    unsigned long long roce_tx_rc_pkt_num;
+    unsigned long long roce_tx_all_pkt_num;
+    unsigned long long roce_tx_err_pkt_num;
+    unsigned long long roce_cqe_num;
+    unsigned long long roce_rx_cnp_pkt_num;
+    unsigned long long roce_tx_cnp_pkt_num;
+    unsigned long long roce_err_ack_num;
+    unsigned long long roce_err_psn_num;
+    unsigned long long roce_verification_err_num;
+    unsigned long long roce_err_qp_status_num;
+    unsigned long long roce_new_pkt_rty_num;
+    unsigned long long roce_ecn_db_num;
+    unsigned long long nic_tx_all_pkg_num;
+    unsigned long long nic_tx_all_oct_num;
+    unsigned long long nic_rx_all_pkg_num;
+    unsigned long long nic_rx_all_oct_num;
+    long tv_sec;
+    long tv_usec;
+    unsigned char reserved[64];
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+using DcmiInitFunc = int (*)();
+using DcmiGetCardListFunc = int (*)(int *cardNum, int *cardList, int listLen);
+using DcmiGetDeviceNumInCardFunc_ = int (*)(int cardId, int *deviceNum);
+using DcmiGetNetdevPktStatsInfoFunc = int (*)(int cardId, int deviceId, int portId,
+    struct dcmi_network_pkt_stats_info *statsInfo);
+
+class NetDevStatsHandler : public TimerHandler {
+public:
+    NetDevStatsHandler(size_t bufSize, uint64_t sampleIntervalNs, std::string jobId,
+        SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx);
+    ~NetDevStatsHandler() override = default;
+
+    int32_t Execute() override;
+    int32_t Init() override;
+    int32_t Uinit() override;
+    int32_t RegisterDevTask(uint32_t devId);
+    int32_t RemoveDevTask(uint32_t devId);
+    size_t GetCurDevTaskCount();
+
+private:
+    void StoreData(uint32_t devId, std::string data);
+    void SendData(uint32_t devId, CONST_UNSIGNED_CHAR_PTR buf, size_t size);
+    bool GetDcmiCardDevId(uint32_t devId, int &dcmiCardId, int &dcmiDevId) const;
+    std::unordered_map<uint32_t, std::pair<int, int>> GetCurDcmiCardDevIdMap();
+
+    int32_t LoadDcmiApi();
+
+private:
+    volatile bool isInited_;
+    unsigned long long prevTimeStamp_;
+    unsigned long long  sampleIntervalNs_;
+    size_t bufSize_;
+    std::string retFileName_;
+    std::string jobId_;
+    SHARED_PTR_ALIA<analysis::dvvp::message::JobContext> jobCtx_;
+
+    std::mutex devTaskMtx_;
+    std::unordered_map<uint32_t, std::pair<int, int>> dcmiCardDevIdMap_;
+    std::unordered_map<uint32_t, SHARED_PTR_ALIA<analysis::dvvp::common::memory::Chunk>> devTaskBufs_;
+
+    VOID_PTR dcmiLibHandle_ = nullptr;
+    DcmiInitFunc dcmiInit_ = nullptr;
+    DcmiGetCardListFunc dcmiGetCardList_ = nullptr;
+    DcmiGetDeviceNumInCardFunc_ dcmiGetDeviceNumInCard_ = nullptr;
+    DcmiGetNetdevPktStatsInfoFunc dcmiGetNetdevPktStatsInfo_ = nullptr;
+};
+
 struct TimerParam {
     explicit TimerParam(unsigned long interval)
         : intervalUsec(interval)
@@ -278,6 +390,7 @@ public:
 public:
     int32_t RegisterTimerHandler(TimerHandlerTag tag, SHARED_PTR_ALIA<TimerHandler> handler);
     int32_t RemoveTimerHandler(TimerHandlerTag tag);
+    SHARED_PTR_ALIA<TimerHandler> GetTimerHandler(TimerHandlerTag tag);
 
 public:
     int32_t Init();
@@ -305,6 +418,7 @@ public:
     void StopProfTimer();
     void RegisterProfTimerHandler(TimerHandlerTag tag, SHARED_PTR_ALIA<TimerHandler> handler);
     void RemoveProfTimerHandler(TimerHandlerTag tag);
+    SHARED_PTR_ALIA<TimerHandler> GetProfTimerHandler(TimerHandlerTag tag);
 
 protected:
     TimerManager();

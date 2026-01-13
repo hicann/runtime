@@ -29,6 +29,7 @@ static const std::string COLLECTION_JOB_FILENAME[NR_MAX_COLLECTION_JOB] = {
     "data/hccs.data",
     "data/ub.data",
     "data/roce.data",
+    "data/netdev_stats.data",
     "data/npu_mem.app",
     "data/npu_mem.data",
     "data/npu_module_mem.data",
