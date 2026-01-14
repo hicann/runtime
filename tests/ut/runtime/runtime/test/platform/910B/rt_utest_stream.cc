@@ -390,6 +390,28 @@ TEST_F(CloudV2StreamTest, stream_sync_fail)
     error = rtCtxDestroy(ctx);
 }
 
+TEST_F(CloudV2StreamTest, stream_sync_dealy)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtModel_t  model;
+    rtContext_t ctx;
+    rtEvent_t event;
+    error = rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Stream *stream_var = static_cast<Stream *>(stream);
+
+    stream_var->SynchronizeDelayTime(1, 20, 0);
+    stream_var->SynchronizeDelayTime(1, 5, 0);
+    stream_var->SynchronizeDelayTime(1, 5, 10);
+    error = rtStreamDestroy(stream);
+    error = rtCtxDestroy(ctx);
+}
+
 TEST_F(CloudV2StreamTest, stream_tearDown_fail)
 {
     rtError_t error;
