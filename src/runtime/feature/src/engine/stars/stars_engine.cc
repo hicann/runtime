@@ -1915,8 +1915,8 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo * const recycleTask
     stm->taskResMang_->RecycleResHead();
     (void)stm->latestConcernedTaskId.CompareExchange(excepted, MAX_UINT16_NUM);
     stm->SetRecycleEndTaskId(recycleTaskId);
-    RT_LOG(RT_LOG_INFO, "stream_id=%d, recycle task_id=%hu, sqHead=%u, sqTail=%u, sqeNum=%u, resHead=%hu, resTail=%hu.",
-           stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
+    RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, recycle task_id=%hu, sqHead=%u, sqTail=%u, sqeNum=%u, resHead=%hu, resTail=%hu.",
+           stm->Device_()->Id_(), stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
            stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_);
     return;
 }
@@ -1975,8 +1975,8 @@ rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
 
     error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
     COND_PROC(((error != RT_ERROR_NONE) || (endTaskId == MAX_UINT16_NUM)), return RT_ERROR_NONE);
-    RT_LOG(RT_LOG_INFO, "stream_id=%d, sqHead=%d, posHead=%u, posTail=%u, finishedTaskId=%d",
-           stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
+    RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, sqHead=%d, posHead=%u, posTail=%u, finishedTaskId=%d",
+           stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
     (void)RecycleSeparatedStmByFinishedId(stm, endTaskId);
     return RT_ERROR_NONE;
 }

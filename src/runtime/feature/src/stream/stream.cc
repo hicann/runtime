@@ -1400,19 +1400,45 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint16_t &fin
     return RT_ERROR_NONE;
 }
 
+bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead)
+{
+    constexpr uint16_t LARGER_THRESHOLD = 10U;
+    constexpr uint16_t SLEEP_UNIT = 5U;
+    constexpr uint16_t PER_SCHED_YIELD = 100U;
+
+    uint16_t exeTaskId = (finishedId == MAX_UINT16_NUM) ? executeEndTaskid_.Value() : finishedId;
+    if (TASK_ID_LEQ(TASK_ID_ADD(exeTaskId, LARGER_THRESHOLD), taskId)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(LARGER_THRESHOLD * SLEEP_UNIT));
+    } else if (TASK_ID_LEQ(TASK_ID_ADD(exeTaskId, 1U), taskId)) {
+        uint32_t tryCount = 0U;
+        const uint64_t beginTime = GetWallUs();
+        while (GetWallUs() - beginTime < SLEEP_UNIT) {
+            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId) || (sqHead == GetTaskPosTail())) {
+                return true;
+            }
+            tryCount++;
+            if ((tryCount % PER_SCHED_YIELD) == 0U) {
+                std::this_thread::yield();
+            }
+        }
+    } else {
+        // No-op
+    }
+    return false;
+}
+
 rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespec &beginTime, int32_t timeout)
 {
     uint16_t sqHead = static_cast<uint16_t>(MAX_UINT16_NUM);
-    uint32_t tryCount = 0U;
     rtError_t error = RT_ERROR_NONE;
-    constexpr uint16_t perSchedYield = 1000U;
-    int32_t reportTime = 180*1000; // report timeout 3 min.
+    const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
+    int32_t reportTime = REPORT_TIME_UINT;
     while (true) {
         COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                          "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms, tryCount=%u.",
-                          device_->Id_(), streamId_, timeout, tryCount);
+                          "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms.",
+                          device_->Id_(), streamId_, timeout);
         if (IsProcessTimeout(beginTime, reportTime)) {
-            reportTime += reportTime;
+            reportTime += REPORT_TIME_UINT;
             RT_LOG(RT_LOG_EVENT, "report three minutes timeout! stream_id=%u, task_id=%u, pendingNum=%u.", Id_(), taskId, pendingNum_.Value());
             if (Runtime::Instance()->excptCallBack_ != nullptr) {
                 Runtime::Instance()->excptCallBack_(RT_EXCEPTION_TASK_TIMEOUT);
@@ -1432,13 +1458,12 @@ rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespe
                                     static_cast<uint32_t>(error));
         uint16_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
+        if (SynchronizeDelayTime(finishedId, taskId, sqHead)) {
+            return RT_ERROR_NONE;
+        }
         COND_PROC((error != RT_ERROR_NONE || finishedId == static_cast<uint16_t>(MAX_UINT16_NUM)), continue);
         if (TASK_ID_GEQ(finishedId, taskId)) {
             return RT_ERROR_NONE;
-        }
-        tryCount++;
-        if (tryCount % perSchedYield == 0) {
-            std::this_thread::yield();
         }
     }
 }
