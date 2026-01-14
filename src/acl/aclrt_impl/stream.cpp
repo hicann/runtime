@@ -9,7 +9,7 @@
  */
 
 #include <unordered_map>
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 
 #include "runtime/stream.h"
 #include "runtime/rts/rts_stream.h"

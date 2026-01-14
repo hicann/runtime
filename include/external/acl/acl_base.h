@@ -11,8 +11,6 @@
 #ifndef INC_EXTERNAL_ACL_ACL_BASE_H_
 #define INC_EXTERNAL_ACL_ACL_BASE_H_
 
-#include <stdint.h>
-#include <stddef.h>
 #include "acl/acl_base_rt.h"
 #include "acl/acl_base_mdl.h"
 #include "error_codes/rt_error_codes.h"

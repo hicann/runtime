@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "runtime/rts/rts_snapshot.h"
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"

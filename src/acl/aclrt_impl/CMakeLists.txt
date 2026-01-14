@@ -51,6 +51,7 @@ target_include_directories(acl_rt_impl PRIVATE
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
+    ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/pkg_inc/dump
     ${RUNTIME_DIR}/src

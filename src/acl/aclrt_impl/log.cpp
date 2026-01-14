@@ -10,7 +10,7 @@
 
 #include <cstdarg>
 #include <securec.h>
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "common/log_inner.h"
 
 void aclAppLogImpl(aclLogLevel logLevel, const char *func, const char *file, uint32_t line, const char *fmt, va_list args)

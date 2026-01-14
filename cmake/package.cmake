@@ -113,9 +113,6 @@ install(FILES ${CMAKE_SOURCE_DIR}/scripts/package/runtime/set_env.sh
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
     DESTINATION runtime
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "include/external/acl/acl_rt_impl.h" EXCLUDE
 )
 
 install(FILES

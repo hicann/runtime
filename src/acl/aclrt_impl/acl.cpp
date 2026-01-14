@@ -14,7 +14,7 @@
 #include <fstream>
 #include <cctype>
 #include <algorithm>
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "runtime/rt_preload_task.h"
 #include "runtime/rt.h"
 #include "runtime/rts/rts_device.h"

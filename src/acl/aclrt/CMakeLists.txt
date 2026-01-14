@@ -18,6 +18,7 @@ set(ACL_INC_EXTERNAL_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../include/external)
 target_include_directories(acl_rt PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
+    ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${ACL_INC_EXTERNAL_DIR}
 )
 

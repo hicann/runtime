@@ -20,6 +20,7 @@ target_include_directories(acl_tdt_channel PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/../common
+    ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_BINARY_DIR}/include_acl/tdt
 )
