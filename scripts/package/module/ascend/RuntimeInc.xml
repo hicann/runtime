@@ -11,8 +11,7 @@
        install_type="all" pkg_feature="runtime_binary">
     <dir_info install_mod="550">
         <path value="$(TARGET_ENV)/include/base"/>
-        <path value="$(TARGET_ENV)/include"/>
-        <path value="$(TARGET_ENV)/include/acl"/>
+        <path value="$(TARGET_ENV)/include/acl" install_softlink="runtime/include/acl"/>
         <path value="$(TARGET_ENV)/include/acl/error_codes"/>
         <path value="$(TARGET_ENV)/include/ge"/>
         <path value="$(TARGET_ENV)/include/dump"/>
