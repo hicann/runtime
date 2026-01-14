@@ -582,6 +582,32 @@ TEST_F(UTEST_ACL_Common, getCANNVersion_cann_invalid_name)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Common, GetCANNVersionInternalOps_success)
+{
+    std::string opsPath = utTestBasePath + "/getCANNVersion_cann/usr/local/Ascend";
+    writeToFile(opsPath + "/ops_legacy/version.info",
+        "Version=7.6.T9.0.B057\n"
+        "timestamp=00000000_000000000\n"
+    );
+
+    std::string ascendInstallPath = utTestBasePath + "/getCANNVersion_cann/etc/ascend_install.info";
+    writeToFile(ascendInstallPath,
+        "Driver_Install_Path_Param=" + opsPath + "\n"
+    );
+
+    aclCANNPackageName name = ACL_PKG_NAME_OPP;
+    aclCANNPackageVersion version;
+    aclError ret = GetCANNVersionInternal(name, version, opsPath);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(std::string(version.version), "7.6.T9.0.B057");
+    EXPECT_EQ(std::string(version.majorVersion), "7");
+    EXPECT_EQ(std::string(version.minorVersion), "6");
+    EXPECT_EQ(std::string(version.releaseVersion), "T9");
+    EXPECT_EQ(std::string(version.patchVersion), "0");
+
+    system(("rm -rf " + utTestBasePath + "/getCANNVersion_cann").c_str());
+}
+
 TEST_F(UTEST_ACL_Common, GetCANNVersionInternalDriver_success01)
 {
     std::string driverPath = utTestBasePath + "/getCANNVersion_cann/usr/local/Ascend";
