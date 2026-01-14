@@ -16,7 +16,7 @@
 #include <unordered_set>
 #include <string>
 #include "runtime/dev.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "acl/acl_base.h"
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"

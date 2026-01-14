@@ -11,7 +11,7 @@
 #include "utils/cann_info_utils.h"
 
 #include <fstream>
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "utils/file_utils.h"
 #include "common/json_parser.h"
 

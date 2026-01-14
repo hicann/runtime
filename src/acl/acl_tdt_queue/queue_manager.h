@@ -14,8 +14,7 @@
 #include <mutex>
 #include <memory>
 #include <map>
-#include "acl/acl_rt_impl.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "queue_process.h"
 #include "queue.h"
 

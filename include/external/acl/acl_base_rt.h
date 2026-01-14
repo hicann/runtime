@@ -11,6 +11,9 @@
 #ifndef INC_EXTERNAL_ACL_ACL_BASE_RT_H_
 #define INC_EXTERNAL_ACL_ACL_BASE_RT_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

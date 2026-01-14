@@ -13,7 +13,7 @@
 #include "common/resource_statistics.h"
 #include "common/log_inner.h"
 #include "common/prof_reporter.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 
 size_t aclDataTypeSizeImpl(aclDataType dataType)
 {

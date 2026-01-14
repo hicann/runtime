@@ -24,7 +24,7 @@
 #include "common/log_inner.h"
 #include "utils/string_utils.h"
 #include "aclrt_impl/acl_rt_impl_base.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 
 namespace {
     bool aclmdlInitDumpFlag = false;

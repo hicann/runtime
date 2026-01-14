@@ -9,7 +9,7 @@
  */
 #include <cstdarg>
 #include "set_device_vxx.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 
 aclError aclrtPeekAtLastError(aclrtLastErrLevel level)
 {

@@ -23,6 +23,7 @@ target_include_directories(acl_tdt_queue PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/../common
+    ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${RUNTIME_DIR}/include/external
 )
 

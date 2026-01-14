@@ -9,7 +9,7 @@
  */
 
 #include "acl/acl_base.h"
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "fp16_impl.h"
 
 float aclFloat16ToFloatImpl(aclFloat16 value)

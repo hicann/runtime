@@ -9,7 +9,7 @@
  */
 
 #include <map>
-#include "acl/acl_rt_impl.h"
+#include "acl_rt_impl.h"
 #include "runtime/mem.h"
 #include "runtime/rts/rts_mem.h"
 #include "runtime/dev.h"
