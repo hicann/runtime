@@ -179,7 +179,7 @@ rtError_t NpuDriver::MbufAllocEx(rtMbufPtr_t * const mbufPtr, const uint64_t siz
             return RT_GET_DRV_ERRCODE(drvRet);
         }
     } else {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "flag=%" PRIu64 " invalid, flag range [0, 1].", flag);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(flag, "[0, 1]");
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;

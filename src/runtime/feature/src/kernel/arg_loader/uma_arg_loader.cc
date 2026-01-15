@@ -622,10 +622,9 @@ rtError_t UmaArgLoader::GetKernelInfoDevAddr(const char_t * const name, const Ke
             break;
         }
         default: {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                             "Invalid kernel info type, current type = %d, valid type is %d or %d.",
-                             static_cast<int32_t>(type), static_cast<int32_t>(SO_NAME),
-                             static_cast<int32_t>(KERNEL_NAME));
+            RT_LOG_OUTER_MSG_INVALID_PARAM(type,
+                "[" + std::to_string(static_cast<int32_t>(SO_NAME)) + ", " +
+                std::to_string(static_cast<int32_t>(MAX_NAME)) + ")");
             error = RT_ERROR_KERNEL_TYPE;
             break;
         }

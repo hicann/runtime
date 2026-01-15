@@ -1184,7 +1184,7 @@ TEST_F(StarsTaskTest, FftsPlusTaskInitTest)
 
     InitByStream(&task, stream_);
     error = FftsPlusTaskInit(&task, &fftsPlusTaskInfo, 0);
-    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     fftsPlusTaskInfo.descBufLen = PCIE_BAR_COPY_SIZE + 1;
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));

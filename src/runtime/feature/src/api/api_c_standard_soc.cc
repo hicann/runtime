@@ -464,8 +464,7 @@ rtError_t rtsLaunchUpdateTask(rtStream_t destStm, uint32_t destTaskId, rtStream_
         }
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "launch update task failed, current cfg->id=%d, valid range is [1, %d).", updateType, RT_UPDATE_MAX);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(cfg->id, "[1, " + std::to_string(RT_UPDATE_MAX) + ")");
             break;
     }
 

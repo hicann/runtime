@@ -65,7 +65,7 @@ rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const i
                 "Malloc host shared memory failed, ftruncate failed!");
             RT_LOG(RT_LOG_DEBUG, "ftruncate success");
         } else if (in->size != static_cast<uint64_t>(buf.st_size)) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Malloc host shared memory failed, "
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Failed to apply for the shared memory of the host. The"
                 "current size=%" PRIu64 "(bytes), valid size=%" PRIu64 "(bytes)", in->size,
                 static_cast<uint64_t>(buf.st_size));
             (void)close(out->fd);
@@ -152,8 +152,7 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
             COND_RETURN_WARN(ret != 0, RT_ERROR_NONE,
                              "shm_unlink failed, %s may not exsit!", in->name);
         } else if ((ret == 0) && (in->size != static_cast<uint64_t>(buf.st_size))) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "FreeHostSharedMemory fail: invalid size mismatch, "
-                "input size is %" PRIu64 ", need size is %" PRIu64, in->size, static_cast<uint64_t>(buf.st_size));
+            RT_LOG_OUTER_MSG_INVALID_PARAM(in->size, buf.st_size);
             return RT_ERROR_INVALID_VALUE;
         } else {
             RT_LOG(RT_LOG_WARNING, "%s is not exsit.", in->name);

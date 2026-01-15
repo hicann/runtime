@@ -256,8 +256,7 @@ rtError_t BinaryLoader::SetCpuBinInfo(const rtLoadBinaryOptionValue_t &option)
             break;
         default:
             // mode range only support [0, 1, 2]
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "set cpu bin info failed, cpuKernelMode value=%d is illegal, should be [0, 2]", mode);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(mode, "[0, 2]");
             return RT_ERROR_INVALID_VALUE;
     }
 
