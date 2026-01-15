@@ -1684,9 +1684,10 @@ VISIBILITY_DEFAULT
 rtError_t rtProfSetProSwitch(void *data, uint32_t len)
 {
     RT_LOG(RT_LOG_DEBUG, "len:%u.", len);
-    if ((data == nullptr) || (len != sizeof(rtProfCommandHandle_t))) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "check data is null or Invalid len=%u(bytes), valid len=%zu(bytes)",
-            len, sizeof(rtProfCommandHandle_t));
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(data, RT_ERROR_INVALID_VALUE);
+ 
+    if (len != sizeof(rtProfCommandHandle_t)) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(len, sizeof(rtProfCommandHandle_t));
         REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
@@ -4117,10 +4118,7 @@ RTS_API rtError_t rtModelCheckCompatibility(const char_t *omSocVersion, const ch
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    if (omSocVersion == nullptr) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Check param failed, omSocVersion can not be null.");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(omSocVersion, RT_ERROR_INVALID_VALUE);
     if (omSocVersion[0U] == '\0') {
         RT_LOG(RT_LOG_WARNING, "Input omSocVersion is null, please check.");
     }
@@ -4134,9 +4132,7 @@ RTS_API rtError_t rtModelCheckCompatibility(const char_t *omSocVersion, const ch
             RT_LOG(RT_LOG_ERROR, "rtGetSocVersion failed, retCode=%#x", rtRet);
             return ACL_ERROR_RT_INTERNAL_ERROR;
         } else {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "ModelCheckCompatibility failed, supported socVersion=%s, but the model socVersion=%s",
-                socType, omSocVersion);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(omSocVersion, socType);
         }
     }
 
@@ -4175,10 +4171,7 @@ RTS_API rtError_t rtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetExceptionExtInfo(const rtArgsSizeInfo_t * const sizeInfo)
 {
-    if (sizeInfo == nullptr) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "sizeInfo can not be null.");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizeInfo, RT_ERROR_INVALID_VALUE);
 
     rtArgsSizeInfo_t &launchArg = ThreadLocalContainer::GetArgsSizeInfo();
     launchArg.infoAddr = sizeInfo->infoAddr;

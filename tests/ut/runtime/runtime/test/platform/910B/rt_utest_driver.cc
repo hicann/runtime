@@ -7,9 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#define private public
 #include "npu_driver.hpp"
-#undef private
 #include "driver/ascend_hal.h"
 #include "event.hpp"
 #include "gtest/gtest.h"
@@ -169,8 +167,6 @@ TEST_F(DriverTest, get_sq_tail)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(tail, 0xffff);
 
-    drv.addrMode_ = 1;
-    drv.sysMode_ = 1;
     drv.HostAddrRegister(nullptr, 0, 0);
     drv.HostAddrUnRegister(nullptr, 0);
 }

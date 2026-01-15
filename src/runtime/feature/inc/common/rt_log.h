@@ -19,6 +19,28 @@ constexpr int32_t RT_MAX_LOG_BUF_SIZE = 896;  // Total length for slog is 1024 b
 void RecordErrorLog(const char *file, const int32_t line, const char *fun, const char *fmt, ...);
 void RecordLog(int32_t level, const char *file, const int32_t line, const char *fun, const char *fmt, ...);
 void ReportErrMsg(std::string errorCode, const std::vector<char> &valueString);
+// 具体含义见error_manager/error_code.json
+enum class ErrorCode
+{
+    EE_NO_ERROR = 0,
+    EE1001,
+    EE1002,
+    EE1003,
+    EE1004,
+    EE1005,
+    EE1006,
+    EE1007,
+    EE1008,
+    EE1009,
+    EE1010,
+    EE1011,
+    EE2002
+};
+std::vector<std::string> GetParamNames(ErrorCode code);
+void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, const char *func,
+    const std::vector<std::string> &values);
+void ProcessErrorCodeImpl(ErrorCode errCode, const char *file, const int32_t line, const char *func,
+    const std::vector<std::string> &values);
 }
 }
 #endif

@@ -350,7 +350,7 @@ rtError_t ApiImpl::MetadataRegister(Program * const prog, const char_t * const m
     const std::string strMetadata(metadata);
     const auto pos = strMetadata.find(',');
     if (pos == std::string::npos) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Cannot find ',' in metadata=%s.", metadata);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "No ',' is found in metadata=%s.", metadata);
         RT_LOG(RT_LOG_ERROR, "Register binary metadata failed.");
         return RT_ERROR_METADATA;
     } else {
@@ -1196,7 +1196,8 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
         }
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "invalid type=%d.", argsWithType->type);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(argsWithType->type,
+                "[" + std::to_string(RT_ARGS_NON_CPU_EX) + ", " + std::to_string(RT_ARGS_MAX) + ")");
             break;
     }
 
@@ -1271,10 +1272,11 @@ rtError_t ApiImpl::SetupArgument(const void * const setupArg, const uint32_t siz
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
     if ((offset >= sizeof(launchArg.args)) || ((sizeof(launchArg.args) - offset) < size) ||
         (launchArg.argCount >= argCountLimit)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid valid, current offset=%u, size=%u(bytes), argCount=%u,"
-                         " valid offset range is (0, %zu), valid argCount range is (0, %u)",
-                         offset, size, launchArg.argCount,
-                         sizeof(launchArg.args), (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
+            "Invalid current offset=%u, size=%u(bytes), and argCount=%u."
+            "The valid offset range is (0, %zu), and the valid argCount range is (0, %u).",
+            offset, size, launchArg.argCount,
+            sizeof(launchArg.args), (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -2394,7 +2396,7 @@ rtError_t ApiImpl::GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t *
     if (attr->attr == RT_MEM_MALLOC_ATTR_MODULE_ID) {
         *moduleId = attr->value.moduleId;
     } else {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid MallocHostConfigAttrId=%d.", attr->attr);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(attr->attr, RT_MEM_MALLOC_ATTR_MODULE_ID);
         error = RT_ERROR_INVALID_VALUE;
     }
     return error;
@@ -3222,21 +3224,18 @@ rtError_t ApiImpl::GetDeviceCount(int32_t * const cnt)
             error = RT_GET_DRV_ERRCODE(DRV_ERROR_NO_DEVICE);
             break;
         case RT_ALL_DUPLICATED_ERROR:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "set ASCEND_RT_VISIBLE_DEVICES:%s cannot be duplicated, input data range[0-%u)",
-                Runtime::Instance()->inputDeviceStr, Runtime::Instance()->deviceCnt);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
+                "cannot be duplicated");
             error = RT_ERROR_DRV_NO_DEVICE;
             break;
         case RT_ALL_ORDER_ERROR:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "set ASCEND_RT_VISIBLE_DEVICES:%s error, it must be configured in ascending order",
-                Runtime::Instance()->inputDeviceStr);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
+                "configured in ascending order");
             error = RT_ERROR_DRV_NO_DEVICE;
             break;
         case RT_ALL_DATA_ERROR:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "set ASCEND_RT_VISIBLE_DEVICES:%s error, input data range[0-%u)",
-                Runtime::Instance()->inputDeviceStr, Runtime::Instance()->deviceCnt);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
+                "[0, " + std::to_string(Runtime::Instance()->deviceCnt) + ")");
             error = RT_ERROR_DRV_NO_DEVICE;
             break;
         default:
@@ -4198,9 +4197,7 @@ rtError_t ApiImpl::ModelSetSchGroupId(Model * const mdl, const int16_t schGrpId)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_SCHED_GROUP)) {
-        const Runtime * const rtInstance = Runtime::Instance();
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "ModelSetSchGroupId failed, feature not support ChipType=%d",
-            rtInstance->GetChipType());
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -4383,12 +4380,9 @@ rtError_t ApiImpl::IpcCloseMemory(const void * const ptr)
     RT_LOG(RT_LOG_DEBUG, "Start close ipc memory.");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Ipc close memory failed, feature not support ChipType=%d.",
-            chipType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -4417,12 +4411,9 @@ rtError_t ApiImpl::IpcDestroyMemoryName(const char_t * const name)
     RT_LOG(RT_LOG_DEBUG, "Destroy ipc memory. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Ipc destroy memory name failed, feature not support ChipType=%d.",
-            chipType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -4434,12 +4425,9 @@ rtError_t ApiImpl::SetIpcNotifyPid(const char_t * const name, int32_t pid[], con
     RT_LOG(RT_LOG_DEBUG, "Set ipc notify pid. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Set ipc notify pid failed, feature not support ChipType=%d.",
-            chipType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -4451,12 +4439,9 @@ rtError_t ApiImpl::SetIpcMemPid(const char_t * const name, int32_t pid[], const 
     RT_LOG(RT_LOG_DEBUG, "Set ipc mem pid. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Set ipc memory pid failed, feature not support ChipType=%d.",
-            chipType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -4539,8 +4524,7 @@ rtError_t ApiImpl::GetAiCpuCount(uint32_t * const aiCpuCnt)
 
     if ((val < 0) || (val > static_cast<int64_t>(UINT32_MAX))) {
         error = RT_ERROR_DRV_ERR;
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Get aicpu count failed, count=%" PRId64 " is out of range[0, %#x]",
-                         val, UINT32_MAX);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(val, "[0, " + std::to_string(static_cast<int64_t>(UINT32_MAX)) + "]");
     } else {
         *aiCpuCnt = static_cast<uint32_t>(val);
     }
@@ -5493,7 +5477,7 @@ rtError_t ApiImpl::GetHostAicpuDeviceInfo(const uint32_t deviceId, const int32_t
     if ((featureType != static_cast<int32_t>(INFO_TYPE_CORE_NUM)) &&
         (featureType != static_cast<int32_t>(INFO_TYPE_FREQUE)) &&
         (featureType != static_cast<int32_t>(INFO_TYPE_WORK_MODE)))  {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "HostAicpu Unsupported type, featureType=%d.", featureType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "featureType=" + std::to_string(featureType));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -5537,8 +5521,8 @@ rtError_t ApiImpl::GetDeviceCapability(const int32_t deviceId, const int32_t mod
         *val = GetTaskIdBitWidth();
         return RT_ERROR_NONE;
     } else {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Unsupported type, featureType=%d, moduleType=%d.", featureType, moduleType);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006,
+ 	            "featureType=" + std::to_string(featureType) + " and " + "moduleType=" + std::to_string(moduleType));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 }
@@ -5889,7 +5873,7 @@ rtError_t ApiImpl::CheckArchCompatibility(const char_t *omSocVersion, int32_t *c
     rtSocInfo_t socInfo = {SOC_END, CHIP_END, ARCH_END, nullptr};
     const rtError_t ret = GetSocInfoByName(omSocVersion, socInfo);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version [%s] is invalid", omSocVersion);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "SoC version [%s] is invalid", omSocVersion);
         return RT_ERROR_INVALID_VALUE;
     }
     const rtArchType_t inputArchType = socInfo.archType;
@@ -6941,8 +6925,7 @@ rtError_t ApiImpl::GetTaskBufferLen(const rtTaskBuffType_t type, uint32_t *const
             *bufferLen = PARMA_PARAM_BUFFER_MAX_N * 20U;
             break;
         default:
-            RT_LOG_OUTER_MSG(
-                RT_INVALID_ARGUMENT_ERROR, "TaskType=%d does not support, valid range is [0, %d)", type, MAX_TASK);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(type, "[0, " + std::to_string(MAX_TASK) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
     RT_LOG(RT_LOG_INFO, "Get Task Buffer Len success. bufferLen=%zu, task type=%d.", *bufferLen, type);

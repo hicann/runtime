@@ -68,8 +68,9 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpy2D(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    if ((params == nullptr) || (config != nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "params can not be null, config must be null.");
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(params, RT_ERROR_INVALID_VALUE);
+    if (config != nullptr) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
         REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
@@ -117,8 +118,9 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpy2DAsync(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config, rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    if ((params == nullptr) || (config != nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "params can not be null, config must be null.");
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(params, RT_ERROR_INVALID_VALUE);
+    if (config != nullptr) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(config, "nullptr");
         REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
@@ -338,11 +340,7 @@ rtError_t rtsGetMemcpyDescSize(rtMemcpyKind kind, size_t *descSize)
         RT_LOG(RT_LOG_WARNING, "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    if (descSize == nullptr) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "descSize should not be null.");
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(descSize, RT_ERROR_INVALID_VALUE);
     DevProperties properties;
     (void)GET_DEV_PROPERTIES(rtInstance->GetChipType(), properties);
     *descSize = properties.memcpyDescriptorSize;
