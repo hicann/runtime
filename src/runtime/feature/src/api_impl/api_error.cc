@@ -281,7 +281,7 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigAttr(rtMemcpyAttribute_t* attr, RtMe
             configInfo->checkBitmap = attr->value.checkBitmap;
             break;
         default:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid MemoryConfigAttrId=%d, current only supports id is 1.", attr->id);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(attr->id, 1);
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -339,8 +339,9 @@ rtError_t ApiErrorDecorator::QueryFunctionRegistered(const char_t * const stubNa
 rtError_t ApiErrorDecorator::CheckCfg(const rtTaskCfgInfo_t * const cfgInfo) const
 {
     if ((cfgInfo != nullptr) && (cfgInfo->schemMode >= RT_SCHEM_MODE_END)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "unsupported schemMode: %u, valid range is [0, %d)",
-            cfgInfo->schemMode, RT_SCHEM_MODE_END);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+           cfgInfo->schemMode,
+           "[" + std::to_string(RT_SCHEM_MODE_NORMAL) + ", " + std::to_string(RT_SCHEM_MODE_END) + ")");
         return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;
@@ -795,8 +796,9 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t *
             const rtError_t error = CheckArgs(&(taskInfo->taskDesc[idx].u.aicpuTaskDescByHandle.argsInfo));
             ERROR_RETURN_MSG_CALL(ERR_MODULE_GE, error, "check argsInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
         } else {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "unsupported task_type : %d, valid range is [0, %d)",
-                taskInfo->taskDesc[idx].type, RT_MULTIPLE_TASK_TYPE_MAX);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003,
+                taskInfo->taskDesc[idx].type, "taskInfo->taskDesc[" + std::to_string(idx) +"].type",
+                "[0, " + std::to_string(RT_MULTIPLE_TASK_TYPE_MAX) + ")");
             return RT_ERROR_INVALID_VALUE;
         }
     }
@@ -2524,15 +2526,16 @@ rtError_t ApiErrorDecorator::SetDevice(const int32_t devId)
         RtPtrToPtr<uint32_t *>(&realDeviceId), true);
     if (error != RT_ERROR_NONE) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Set visible device failed, invalid device=%d, input visible devices:%s", devId, rt->inputDeviceStr);
+            "Failed to set visible device. The invalid device is %d and the input visible device is %s.",
+            devId,
+            rt->inputDeviceStr);
         return RT_ERROR_DEVICE_ID;
     }
 
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
     if ((realDeviceId < 0) || (realDeviceId >= deviceCnt)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Set device failed, invalid device, set drv devId=%d, valid device range is [0, %d)", realDeviceId, deviceCnt);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, realDeviceId, "drv devId", "[0, " +std::to_string(deviceCnt) + ")");
         return RT_ERROR_DEVICE_ID;
     }
 
@@ -3269,8 +3272,8 @@ rtError_t ApiErrorDecorator::ModelSetSchGroupId(Model * const mdl, const int16_t
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     if ((schGrpId < MODEL_SCH_GROUP_ID_MIN) || (schGrpId > MODEL_SCH_GROUP_ID_MAX)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "ModelSetSchGroupId failed, MinSchGrpId=%hd, "
-            "MaxSchGrpId=%hd, curSchGrpId=%hd.", MODEL_SCH_GROUP_ID_MIN, MODEL_SCH_GROUP_ID_MAX, schGrpId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(schGrpId,
+            "[" + std::to_string(MODEL_SCH_GROUP_ID_MIN) + ", " + std::to_string(MODEL_SCH_GROUP_ID_MAX) + "]");
         return RT_ERROR_INVALID_VALUE;
     }
     const rtError_t error = impl_->ModelSetSchGroupId(mdl, schGrpId);
@@ -4924,9 +4927,7 @@ rtError_t ApiErrorDecorator::GetVisibleDeviceIdByLogicDeviceId(const int32_t log
     const rtError_t error = npuDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
     if ((logicDeviceId >= deviceCnt) || (logicDeviceId < 0)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Get device failed, invalid device, set device=%d, valid device range is [0, %d)",
-            logicDeviceId, deviceCnt);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDeviceId, "[0, " + std::to_string(deviceCnt) + ')');
         return RT_ERROR_DEVICE_ID;
     }
 

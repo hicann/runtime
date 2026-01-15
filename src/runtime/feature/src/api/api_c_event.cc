@@ -41,7 +41,7 @@ rtError_t rtsEventCreate(rtEvent_t *evt, uint64_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if ((flag & ~RT_EVENT_FLAG_VALID_MASK) != 0U) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid flag value: %" PRIu64 ", it should be a OR combination of RT_EVENT_FLAG.", flag);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(flag, "exclusive OR value with RT_EVENT_FLAG");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     if (flag == RT_EVENT_FLAG_DEFAULT) {
@@ -61,7 +61,7 @@ rtError_t rtsEventCreateEx(rtEvent_t *evt, uint64_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (flag == RT_EVENT_FLAG_DEFAULT || (flag & ~RT_EVENT_FLAG_VALID_MASK) != 0U) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid flag value: %" PRIu64 ", it should be a OR combination of RT_EVENT_FLAG and cannot be 0.", flag);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(flag, "exclusive OR value with RT_EVENT_FLAG and cannot be 0");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     Api * const apiInstance = Api::Instance();
@@ -136,7 +136,8 @@ rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (flag != RT_NOTIFY_FLAG_DEFAULT && flag != RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid flag value: %" PRIu64 ", currently the flag parameter supports RT_NOTIFY_FLAG_DEFAULT and RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV.", flag);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(flag,
+            std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     int32_t deviceId = 0;

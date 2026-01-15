@@ -76,8 +76,8 @@ rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
         RT_ERROR_INVALID_VALUE,
         "Non-persistent stream does not support bind model.");
     if ((bindStream != nullptr) && (bindStream->GetModelNum() != 0)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream bind more than one mdlRI, size:%u",
-            bindStream->GetModelNum());
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, bindStream->Id_(),
+            "The stream is bound to more than one mdlRI. Size: " + std::to_string(bindStream->GetModelNum()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_STREAM_MODEL);
     }
 

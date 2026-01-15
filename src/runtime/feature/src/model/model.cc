@@ -346,22 +346,19 @@ rtError_t Model::CheckBindStream(const Stream * const streamIn) const
     RT_LOG(RT_LOG_DEBUG, "Bind-Stream stream start, stream_id=%d.", streamIn->Id_());
     const int32_t streamId = streamIn->Id_();
     if (streamIn->GetModelNum() >= RT_MAX_MODELS_IN_ONE_STREAM) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream bind failed, models number exceeds the upper limit 256,"
-        " stream_id=%d, specified modelId=%d!", streamId, id_);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The number of models exceeds the upper limit 256");
         return RT_ERROR_STREAM_REUSE_LIMIT_MODEL_NUM;
     }
 
     const bool isBindDup = (streamIn->Model_() != nullptr);
     if (isBindDup) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream bind failed, stream is already bound,"
-        " stream_id=%d, specified modelId=%d!", streamId, id_);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The stream is already bound");
         return RT_ERROR_STREAM_MODEL;
     }
 
     const bool isAicpuStreamBind = ((streamIn->Flags() & RT_STREAM_AICPU) != 0U) && (streamIn->GetModelNum() != 0U);
     if (isAicpuStreamBind) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream bind failed, aicpu stream  not support reuse,"
-        " stream_id=%d, specified modelId=%d!", streamId, id_);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The AI CPU stream is reused");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -374,8 +371,7 @@ rtError_t Model::CheckBindStream(const Stream * const streamIn) const
     }
 
     if (!isSupportStreamReuse && (streamIn->GetModelNum() != 0)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream bind failed, The model has been bound to other stream,"
-        " stream_id=%d, specified modelId=%d!", streamId, id_);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The model has been bound to another stream");
         return RT_ERROR_STREAM_MODEL;
     }
     return RT_ERROR_NONE;

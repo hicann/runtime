@@ -2425,28 +2425,26 @@ rtError_t Context::ReduceAsync(void * const dst, const void * const src, const u
             RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_kind=0x%x.", sdmaReduceKind);
             const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
             if (((sdmaReduceKind >> shift) & 0x1U) == 0U) { // 1:bit 0
-                RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                    "ReduceAsync failed, due to kind does not support, kind=%d", kind);
+                RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
                 return RT_ERROR_FEATURE_NOT_SUPPORT;
             }
         }
 
         if (((kind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL) && (!starsFlag))) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "ReduceAsync failed, due to equal kind not support");
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
 
         const uint32_t kindShift = static_cast<uint32_t>(kind);
         if (((device_->GetDevProperties().sdmaReduceKind >> kindShift) & 0x1U) == 0U) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "ReduceAsync failed, due to kind does not support, kind=%d", kind);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
 
         const uint32_t offset = static_cast<uint32_t>(type);
         RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_support=0x%x.", sdmaReduceSupport);
         if (((sdmaReduceSupport >> offset) & 0x1U) == 0U) { // 1:bit 0
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "ReduceAsync failed, due to data type does not support, Type=%d", type);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + std::to_string(type));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
@@ -2506,8 +2504,7 @@ rtError_t Context::ReduceAsyncV2(void * const dst, const void * const src, const
         const uint32_t offset = static_cast<uint32_t>(type);
         RT_LOG(RT_LOG_INFO, "ReduceAsyncV2 sdma_reduce_support=0x%x.", sdmaReduceSupport);
         if (((sdmaReduceSupport >> offset) & 0x1U) == 0U) { // 1:bit 0
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "ReduceAsyncV2 failed, due to data type does not support, Type=%d.", type);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + std::to_string(type));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
@@ -3365,8 +3362,8 @@ rtError_t Context::StartOnlineProf(Stream * const stm, const uint32_t sampleNum)
         " valid sampleNum range is range is (0, %u].",
         sampleNum, MAX_ONLINEPROF_NUM);
     if ((stm->Device_())->DevGetOnlineProfStart()) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "StreamId=%d online profiling already set on device",
-            streamId);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "StreamId=%d online profiling has already been set on the device.",
+ 	        streamId);
         return RT_ERROR_PROF_START;
     }
 

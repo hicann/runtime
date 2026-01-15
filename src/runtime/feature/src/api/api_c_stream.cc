@@ -59,9 +59,9 @@ rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config)
                     priority = config->attrs[i].value.priority;
                     break;
                 default:
-                    RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid attribute id: %d, "
-                        "Supported stream attribute IDs: [%d, %d).", config->attrs[i].id,
-                        RT_STREAM_CREATE_ATTR_FLAGS, RT_STREAM_CREATE_ATTR_MAX);
+                    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, config->attrs[i].id,
+                        "config->attrs[" + std::to_string(i) + "].id",
+                        "[" + std::to_string(RT_STREAM_CREATE_ATTR_FLAGS) + ", " + std::to_string(RT_STREAM_CREATE_ATTR_MAX) + ")");
                     return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
             }
         }
@@ -452,9 +452,8 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         default:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "Invalid stream attribute ID: %d, "
-                "Supported stream attribute IDs: [%d, %d).", stmAttrId,
-                RT_STREAM_ATTR_FAILURE_MODE, RT_STREAM_ATTR_MAX);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(stmAttrId,
+               "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -495,9 +494,8 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         default:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "Invalid stream attribute ID: %d, "
-                "Supported stream attribute IDs: [%d, %d).", stmAttrId,
-                RT_STREAM_ATTR_FAILURE_MODE, RT_STREAM_ATTR_MAX);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(stmAttrId,
+               "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");  
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
