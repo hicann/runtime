@@ -21,9 +21,9 @@
 extern "C" {
 #endif
 
-// Current version is 1.15.0
+// Current version is 1.16.0
 #define ACL_MAJOR_VERSION              1
-#define ACL_MINOR_VERSION              15
+#define ACL_MINOR_VERSION              16
 #define ACL_PATCH_VERSION              0
 #define ACL_EVENT_SYNC                    0x00000001U
 #define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U
