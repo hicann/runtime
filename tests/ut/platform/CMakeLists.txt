@@ -17,17 +17,9 @@ set_target_properties(platform_llt
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(platform_llt PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../graphengine/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../src/platform/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/common
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/external/platform
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../graphengine/inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc/toolchain
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/graph
+        ${TOP_DIR}/pkg_inc
+        ${TOP_DIR}/pkg_inc/base
+        ${TOP_DIR}/build/proto/platform_infos_proto/
 )
 
 target_compile_definitions(platform_llt PRIVATE
@@ -88,17 +80,9 @@ set_target_properties(platform_llt_tiling
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(platform_llt_tiling PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../graphengine/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../src/platform/inc
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/common
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/inc/external/platform
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../graphengine/inc/external
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../inc/toolchain
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../metadef/graph
+        ${TOP_DIR}/pkg_inc
+        ${TOP_DIR}/pkg_inc/base
+        ${TOP_DIR}/build/proto/platform_infos_proto/
 )
 
 target_compile_definitions(platform_llt_tiling PRIVATE
