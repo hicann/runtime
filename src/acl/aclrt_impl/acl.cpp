@@ -666,10 +666,21 @@ bool GetDriverPath(const std::string &ascendInstallPath, std::string &driverPath
 aclError GetCANNVersionInternal(const aclCANNPackageName name, aclCANNPackageVersion &version,
     const std::string &installPath)
 {
-    std::string versionInfoPath = installPath + "/" + kMapToPkgName.at(name) + "/version.info";
+    std::string pkgName = kMapToPkgName.at(name);
+
+    std::string versionInfoPath = installPath + "/" + pkgName + "/version.info";
     if (!IsFileExist(versionInfoPath)) {
-        ACL_LOG_WARN("[Check]versionInfoPath [%s] does not exist.", versionInfoPath.c_str());
-        return ACL_ERROR_INVALID_FILE;
+        ACL_LOG_INFO("[Check]versionInfoPath [%s] does not exist, try use Alternative versionInfoPath.", versionInfoPath.c_str());
+        std::string pkgNameAlternative = pkgName;
+        if (pkgName.find('-') != std::string::npos) {
+            std::replace(pkgNameAlternative.begin(), pkgNameAlternative.end(), '-', '_');
+        }
+        versionInfoPath = installPath + "/" + pkgNameAlternative + "/version.info";
+        ACL_LOG_INFO("[Check]use Alternative versionInfoPath [%s].", versionInfoPath.c_str());
+        if (!IsFileExist(versionInfoPath)) {
+            ACL_LOG_WARN("[Check]versionInfoPath [%s] does not exist.", versionInfoPath.c_str());
+            return ACL_ERROR_INVALID_FILE;
+        }
     }
 
     std::string versionInfo;
