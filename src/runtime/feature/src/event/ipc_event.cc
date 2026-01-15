@@ -195,20 +195,14 @@ rtError_t IpcEvent::IpcHandleAllocAndImport(size_t granularity, rtIpcEventHandle
 }
 rtError_t IpcEvent::EnableP2PForIpc(uint64_t deviceMemHandle) const
 {
-    const uint32_t deviceId = device_->Id_();
     uint32_t peerPhyDeviceId = 0U;
     rtError_t error = NpuDriver::GetPhyDevIdByMemShareHandle(deviceMemHandle, &peerPhyDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc GetPhyDevIdByMemShareHandle failed, error=%#x.", static_cast<uint32_t>(error));
     // enable p2p
-    if (deviceId != peerPhyDeviceId) {
-        error = NpuDriver::EnableP2P(deviceId, peerPhyDeviceId, 0);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "enable p2p failed, error=%#x.", static_cast<uint32_t>(error));
-        error = NpuDriver::EnableP2P(peerPhyDeviceId, deviceId, 0);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "enable p2p failed, error=%#x.", static_cast<uint32_t>(error));
-    }
+    Device* const dev = context_->Device_();
+    error = dev->EnableP2PWithOtherDevice(peerPhyDeviceId);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     return error;
 }
 
