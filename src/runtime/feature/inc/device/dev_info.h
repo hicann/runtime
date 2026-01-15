@@ -7,8 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCE_RUNTIME_DEVICE_INFO_H
-#define CCE_RUNTIME_DEVICE_INFO_H
+#ifndef CCE_RUNTIME_DEV_INFO_H
+#define CCE_RUNTIME_DEV_INFO_H
 #include <cstdint>
 #include "base.hpp"
 
