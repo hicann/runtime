@@ -1448,8 +1448,7 @@ rtError_t NpuDriver::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t 
             infoType = MODULE_TYPE_AICPU;
             break;
         default:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "invalid util type=%d, valid range is (0, %d).",
-                kind, RT_UTIL_TYPE_MAX);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(kind, "(0, " + std::to_string(RT_UTIL_TYPE_MAX) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
     int64_t value = 0;

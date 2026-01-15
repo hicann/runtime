@@ -1718,17 +1718,6 @@
     },
     {
       "errClass": "RTS Errors",
-      "errTitle": "Invalid_Argument",
-      "ErrCode": "EE1001",
-      "ErrMessage": "The argument is invalid.Reason: %s",
-      "Arglist": "extend_info",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function. 2.Check the function invocation relationship."
-      }
-    },
-    {
-      "errClass": "RTS Errors",
       "errTitle": "Execution_Error_Stream_Synchronize_Timeout",
       "ErrCode": "EE1002",
       "ErrMessage": "Stream synchronize timeout. %s",
@@ -1832,9 +1821,42 @@
     {
       "errClass": "RTS Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
-      "ErrCode": "EE2001",
+      "ErrCode": "EE2002",
       "ErrMessage": "Value %s for environment variable %s is invalid. Expected value: %s.",
       "Arglist": "value, env, expect"
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Model_Binding_Errors",
+      "ErrCode": "EE4001",
+      "ErrMessage": "Failed to bind the stream to the model. %s",
+      "Arglist": "extend_info",
+      "suggestion": {
+        "Possible Cause": "The stream has been bound to another model.",
+        "Solution": "Remove the repeated binding operation on the stream from the code."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Model_Unbinding_Errors",
+      "ErrCode": "EE4002",
+      "ErrMessage": "Failed to unbind the stream to the model. %s",
+      "Arglist": "extend_info",
+      "suggestion": {
+        "Possible Cause": "1.The stream to be unbound is not bound to the model.   2.The model is running.",
+        "Solution": "1.Check the code to ensure that the stream to be unbound is bound to the model.    2.Ensure that the model is not running."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Profiling_Enable_Errors",
+      "ErrCode": "EE4004",
+      "ErrMessage": "Failed to enable profiling.  %s",
+      "Arglist": "extend_info",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Do not enable profiling repeatedly."
+      }
     },
     {
       "errClass": "MdatDeploy Errors",

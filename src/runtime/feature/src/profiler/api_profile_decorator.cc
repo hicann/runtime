@@ -815,10 +815,8 @@ rtError_t ApiProfileDecorator::ContextSetCurrent(Context * const inCtx)
 
 rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * const name)
 {
-    if ((stm == nullptr) || (name == nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Stream and name, neither can be null.");
-        return RT_ERROR_INVALID_VALUE;
-    }
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+ 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
 
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
     if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {
@@ -831,10 +829,8 @@ rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * con
 
 rtError_t ApiProfileDecorator::NameEvent(Event * const evt, const char_t * const name)
 {
-    if ((evt == nullptr) || (name == nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Event or name null.");
-        return RT_ERROR_INVALID_VALUE;
-    }
+    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
+ 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
     const size_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_EVENT_NAME_LEN));
     if (nameLen >= static_cast<uint64_t>(M_PROF_EVENT_NAME_LEN)) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "Event name too long, range[0, %u.", M_PROF_EVENT_NAME_LEN);

@@ -13,6 +13,7 @@
 #include <atomic>
 #include <memory>
 #include <cinttypes>
+#include <sstream>
 #include "soc_define.hpp"
 #include "mmpa/mmpa_api.h"
 #include "osal.hpp"
@@ -105,6 +106,9 @@ namespace runtime {
         RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);
 #define RT_LOG_OUTER_MSG(error_code, format, ...) \
         RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);
+#define RT_LOG_OUTER_MSG_IMPL(error_code, ...)
+#define RT_LOG_OUTER_MSG_WITH_FUNC(error_code, ...)
+#define RT_LOG_OUTER_MSG_INVALID_PARAM(parm, ...)
 #define RT_LOG_FLUSH()
 #define REPORT_INPUT_ERROR(error_code, key, value)
 
@@ -114,6 +118,9 @@ namespace runtime {
 #define RT_LOG_INNER_MSG(level, format, ...)
 #define RT_LOG_CALL_MSG(model_type, format, ...)
 #define RT_LOG_OUTER_MSG(error_code, format, ...)
+#define RT_LOG_OUTER_MSG_IMPL(error_code, ...)
+#define RT_LOG_OUTER_MSG_WITH_FUNC(error_code, ...)
+#define RT_LOG_OUTER_MSG_INVALID_PARAM(parm, ...)
 #define RT_LOG_FLUSH()
 #else
 #define RT_LOG(level, format, ...) RT_LOG_##level(format, ##__VA_ARGS__)
@@ -196,6 +203,88 @@ static constexpr const char_t *RT_MODULE_TYPE_TO_ERR_MSG[ERR_MODULE_MAX] = {
         if (error_message::FormatErrorMessage(value_string.data(), value_string.size(), format, ##__VA_ARGS__) > 0) {\
             ReportErrMsg((error_code), value_string);                                                                  \
         }                                                                                                            \
+    } while (false)
+
+constexpr const char* ErrorCodeToString(ErrorCode code) {
+    switch (code) {
+        case ErrorCode::EE1001:
+            return "EE1001";
+        case ErrorCode::EE1002:
+            return "EE1002";
+        case ErrorCode::EE1003:
+            return "EE1003";
+        case ErrorCode::EE1004:
+            return "EE1004";
+        case ErrorCode::EE1005:
+            return "EE1005";
+        case ErrorCode::EE1006:
+            return "EE1006";
+        case ErrorCode::EE1007:
+            return "EE1007";
+        case ErrorCode::EE1008:
+            return "EE1008";
+        case ErrorCode::EE1009:
+            return "EE1009";
+        case ErrorCode::EE1010:
+            return "EE1010";
+        case ErrorCode::EE1011:
+            return "EE1011";
+        case ErrorCode::EE2002:
+            return "EE2002";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+template<class... Args>
+void ErrorCodeProcess(ErrorCode errorCode, const char *file,
+    const int32_t line, const char *func, Args&&... args)
+{
+#if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
+    std::vector<std::string> values;
+    if constexpr (sizeof...(Args) > 0) {
+        values.reserve(sizeof...(Args));
+        auto processArg = [&values](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_arithmetic_v<T>) {
+                values.emplace_back(std::to_string(arg));
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                values.emplace_back(std::forward<decltype(arg)>(arg));
+            } else if constexpr (std::is_convertible_v<T, const char*>) {
+                const char* ptr = arg;
+                values.emplace_back(ptr ? ptr : "");
+            } else {
+                std::ostringstream oss;
+                oss << arg;
+                values.emplace_back(oss.str());
+            }
+        };
+
+        (processArg(std::forward<Args>(args)), ...);
+    }
+    ProcessErrorCodeImpl(errorCode, file, line, func, std::move(values));
+    ErrorManager::GetInstance().ATCReportErrMessage(
+        ErrorCodeToString(errorCode), 
+        GetParamNames(errorCode), 
+        std::move(values)
+    );
+#else
+    (void)errorCode;
+    (void)(sizeof...(args));
+#endif
+}
+
+// EE1003错误码上报
+#define RT_LOG_OUTER_MSG_INVALID_PARAM(parm, ...) \
+    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, (parm), #parm, ##__VA_ARGS__)
+ 
+#define RT_LOG_OUTER_MSG_WITH_FUNC(error_code, ...) \
+    RT_LOG_OUTER_MSG_IMPL((error_code), __func__, ##__VA_ARGS__)
+
+// 由调用者保证传参个数和errmsg匹配
+#define RT_LOG_OUTER_MSG_IMPL(error_code, ...)                                                               \
+    do {                                                                                                     \
+        ErrorCodeProcess((error_code), __FILE__, __LINE__, &__func__[0], ##__VA_ARGS__);                     \
     } while (false)
 #endif
 

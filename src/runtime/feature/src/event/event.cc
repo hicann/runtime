@@ -597,7 +597,7 @@ rtError_t Event::Wait(Stream * const stm, const uint32_t timeout)
     const uint32_t recDevId = device_->Id_();
     if ((!isNotify_) && ((eventFlag_ & (RT_EVENT_DDSYNC_NS | RT_EVENT_EXTERNAL)) == 0U) &&
         (!HasRecord() || (eventId == INVALID_EVENT_ID))) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Cannot submit event wait before event record, device_id=%u, "
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The wait event cannot be submitted before the record event. device_id=%u, "
             "stream_id=%d, flag=%" PRIu64 ", model=%s.",
             recDevId, stm->Id_(), eventFlag_, stm->GetModelNum() != 0 ? "yes" : "no");
         EventIdCountSub(eventId);

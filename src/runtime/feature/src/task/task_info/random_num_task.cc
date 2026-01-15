@@ -344,8 +344,8 @@ static rtError_t SetRandomSqeDiffInfo(const rtRandomNumTaskInfo_t *taskInfo, rtS
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "funcType[%d] is invalid, should be [0, %d)",
-                taskInfo->randomNumFuncParaInfo.funcType, RT_RANDOM_NUM_FUNC_TYPE_MAX);
+            RT_LOG_OUTER_MSG_INVALID_PARAM(taskInfo->randomNumFuncParaInfo.funcType,
+                "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) +")");
             break;
     }
 
@@ -419,11 +419,8 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t *taskInfo)
     ERROR_RETURN_MSG_INNER(error,
         "get random num data size failed, dataType=%d, retCode=%d", taskInfo->dataType, error);
 
-    if ((taskInfo->randomCounterAddr == nullptr) || (taskInfo->randomResultAddr == nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                         "randomCounterAddr or randomResultAddr is nullptr");
-        return RT_ERROR_INVALID_VALUE;
-    }
+     NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE);
+ 	NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomResultAddr, RT_ERROR_INVALID_VALUE);
 
     // 随机种子和随机数个数均为64bit
     const rtRandomParaInfo_t seed = taskInfo->randomSeed;
@@ -447,8 +444,8 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t *taskInfo)
             error = CheckNorDisTaskInfo(taskInfo, dataSize);
             break;
         default:
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-                "funcType[%u] is invalid, ", static_cast<uint32_t>(taskInfo->randomNumFuncParaInfo.funcType));
+            RT_LOG_OUTER_MSG_INVALID_PARAM(taskInfo->randomNumFuncParaInfo.funcType,
+                "[" + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK) + ", " + std::to_string(RT_RANDOM_NUM_FUNC_TYPE_MAX) +")");
             error = RT_ERROR_INVALID_VALUE;
             break;
     }

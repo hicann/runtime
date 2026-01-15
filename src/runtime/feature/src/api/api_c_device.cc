@@ -188,7 +188,7 @@ rtError_t rtsSetDeviceResLimit(const int32_t devId, const rtDevResLimitType_t ty
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     if (devId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid device id, devId=%d.", devId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
         ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
     }
     const rtError_t error = apiInstance->SetDeviceResLimit(static_cast<uint32_t>(devId), type, value);
@@ -202,7 +202,7 @@ rtError_t rtsResetDeviceResLimit(const int32_t devId)
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     if (devId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid device id, devId=%d.", devId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
         ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
     }
     const rtError_t error = apiInstance->ResetDeviceResLimit(static_cast<uint32_t>(devId));
@@ -216,7 +216,7 @@ rtError_t rtsGetDeviceResLimit(const int32_t devId, const rtDevResLimitType_t ty
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     if (devId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid device id, devId=%d.", devId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
         ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
     }
     const rtError_t error = apiInstance->GetDeviceResLimit(static_cast<uint32_t>(devId), type, value);
@@ -308,7 +308,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsGetLogicDevIdByPhyDevId(int32_t phyDevId, int32_t * const logicDevId)
 {
     if (phyDevId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid phyDevId value: %d", phyDevId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(phyDevId, "greater than or equal to 0");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     return rtGetDeviceIndexByPhyId(static_cast<uint32_t>(phyDevId), RtPtrToPtr<uint32_t *>(logicDevId));
@@ -318,7 +318,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t * const phyDevId)
 {
     if (logicDevId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid logicDevId value: %d", logicDevId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDevId, "greater than or equal to 0");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     return rtGetDevicePhyIdByIndex(static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t *>(phyDevId));
@@ -328,7 +328,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsGetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId)
 {
     if (userDevId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid userDevId value: %d", userDevId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(userDevId, "greater than or equal to 0");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     return rtGetLogicDevIdByUserDevId(userDevId, logicDevId);
@@ -338,7 +338,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t * const userDevId)
 {
     if (logicDevId < 0) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid logicDevId value: %d", logicDevId);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDevId, "greater than or equal to 0");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     return rtGetUserDevIdByLogicDevId(logicDevId, userDevId);
@@ -419,16 +419,12 @@ VISIBILITY_DEFAULT
 rtError_t rtGetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t *deviceId)
 {
     RT_LOG(RT_LOG_DEBUG, "geModelIdx:%u", geModelIdx);
-    if (deviceId == nullptr) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid deviceId, value is null.");
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(deviceId, RT_ERROR_INVALID_VALUE);
 
     uint32_t drvDeviceId;
     rtError_t error = ProfMapGeModelDevice::Instance().GetDeviceIdByGeModelIdx(geModelIdx, &drvDeviceId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Device of geModelIdx:%u does not exist!", geModelIdx);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The device of geModelIdx:%u does not exist.", geModelIdx);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
     }
     
@@ -574,7 +570,10 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
             devFeatureType, val);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
     } else {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid devFeatureType=%d.", devFeatureType);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+            devFeatureType,
+            "[" + std::to_string(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV) +
+                ", " + std::to_string(RT_DEV_FEATURE_MAX) + ")");
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     return ACL_RT_SUCCESS;
@@ -974,7 +973,8 @@ rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
         NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstanceNoTSD);
         error = apiInstanceNoTSD->SetDevice(deviceId);
     } else {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid flag value: %" PRIu64 "", flags);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+           flags, std::to_string(RT_DEVICE_FLAG_DEFAULT) + " or " + std::to_string(RT_DEVICE_FLAG_NOT_START_CPU_SCHED));
         error = RT_ERROR_INVALID_VALUE;
     }
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

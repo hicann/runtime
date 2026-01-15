@@ -69,7 +69,7 @@ rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const i
                 "Malloc host shared memory failed, ftruncate failed!");
             RT_LOG(RT_LOG_DEBUG, "ftruncate success");
         } else if (in->size != static_cast<uint64_t>(buf.st_size)) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Malloc host shared memory failed, "
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Failed to apply for the shared memory of the host. The"
                 "current size=%" PRIu64 "(bytes), valid size=%" PRIu64 "(bytes)", in->size,
                 static_cast<uint64_t>(buf.st_size));
             (void)close(out->fd);
@@ -156,8 +156,7 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
             COND_RETURN_WARN(ret != 0, RT_ERROR_NONE,
                              "shm_unlink failed, %s may not exsit!", in->name);
         } else if ((ret == 0) && (in->size != static_cast<uint64_t>(buf.st_size))) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "FreeHostSharedMemory fail: invalid size mismatch, "
-                "input size is %" PRIu64 ", need size is %" PRIu64, in->size, static_cast<uint64_t>(buf.st_size));
+            RT_LOG_OUTER_MSG_INVALID_PARAM(in->size, buf.st_size);
             return RT_ERROR_INVALID_VALUE;
         } else {
             RT_LOG(RT_LOG_WARNING, "%s is not exsit.", in->name);
@@ -1271,8 +1270,7 @@ rtError_t NpuDriver::DevMemAlloc(void ** const dptr, const uint64_t size, const 
         temptRet = DevMemAllocOnline(dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag,
             isNewApi, cpOnlyFlag);
     } else if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) && ((type & p2PTypeSet) != 0U)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Not support P2P memory type at OFFLINE mode: "
-            "device_id=%u, type=%u.", deviceId, static_cast<uint32_t>(type));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "P2P memory type at OFFLINE mode");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     } else if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) ||
         (devRunMode == static_cast<uint32_t>(RT_RUN_MODE_AICPU_SCHED))) {
@@ -1435,7 +1433,7 @@ rtError_t NpuDriver::DevMemAllocForPctrace(void ** const dptr, const uint64_t si
 {
     TIMESTAMP_NAME(__func__);
     if (GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Pctrace does not support online mode");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "online mode");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -2086,11 +2084,11 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
 {
     TIMESTAMP_NAME(__func__);
 
-    if ((static_cast<uint32_t>(kind) >= RT_MEMCPY_RESERVED) || (src == nullptr) || (dst == nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "memcpy kind or address is invalid, current kind=%d, cnt size=%" PRIu64
-            "(bytes), valid kind range is [%d, %d)", static_cast<int32_t>(kind),
-            size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_HOST), static_cast<int32_t>(RT_MEMCPY_RESERVED));
+    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    if (kind >= RT_MEMCPY_RESERVED) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+            kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
         return RT_ERROR_DRV_INPUT;
     }
 
@@ -2134,11 +2132,11 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
 rtError_t NpuDriver::MemCopyAsync(void * const dst, const uint64_t destMax, const void * const src,
                                   const uint64_t size, const rtMemcpyKind_t kind, volatile uint64_t &copyFd)
 {
-    if ((static_cast<uint32_t>(kind) >= RT_MEMCPY_RESERVED) || (src == nullptr) || (dst == nullptr)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "mem async copy, kind or addr is invalid, current kind=%d, size=%" PRIu64
-            "(bytes), valid kind range is [%d, %d)!", static_cast<int32_t>(kind),
-            size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_HOST), static_cast<int32_t>(RT_MEMCPY_RESERVED));
+    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    if (kind >= RT_MEMCPY_RESERVED) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+            kind, "[" + std::to_string(RT_MEMCPY_HOST_TO_HOST) + ", " + std::to_string(RT_MEMCPY_RESERVED) + ")");
         return RT_ERROR_DRV_INPUT;
     }
 

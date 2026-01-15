@@ -83,13 +83,14 @@ rtError_t rtSetSocVersion(const char_t *ver)
     rtSocInfo_t socInfo = {SOC_END, CHIP_END, ARCH_END, nullptr};
     const rtError_t ret = GetSocInfoByName(ver, socInfo);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version [%s] is invalid", ver);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "SoC version [%s] is invalid.", ver);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     if (GlobalContainer::GetHardwareChipType() != CHIP_END &&
         GlobalContainer::GetHardwareChipType() != socInfo.chipType) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Device has been set to real chip type=%d, different chip type=%d "
-            "cannot be set, the current input soc version(%s) does not match the NPU type.",
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The device has been set to real chip type %d, "
+            "and a different chip type %d cannot be set."
+            "The currently input SoC version (%s) does not match the NPU type.",
             GlobalContainer::GetHardwareChipType(), socInfo.chipType, ver);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
