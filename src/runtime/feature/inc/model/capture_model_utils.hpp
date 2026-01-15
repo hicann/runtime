@@ -19,7 +19,6 @@ namespace cce {
 namespace runtime {
 bool IsEventCapturing(const Event * const evt, const Stream * const stm);
 void TerminateCapture(const Event * const evt, const Stream * const stm);
-bool IsCaptureEventWaitAllowed(const Event * const evt);
 bool IsCrossCaptureModel(const Event * const evt, const Stream * const stm);
 bool IsCapturedTask(const Stream * const launchStm, const TaskInfo *submitTask);
 rtError_t GetCaptureStream(Context * const ctx, Stream * const stm, const Event * const evt, Stream ** const captureStm);
