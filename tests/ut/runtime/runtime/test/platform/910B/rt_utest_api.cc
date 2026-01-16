@@ -268,7 +268,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // api test
@@ -321,7 +322,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // api test
@@ -380,7 +382,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error1)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // api test
@@ -439,7 +442,8 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error2)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // api test

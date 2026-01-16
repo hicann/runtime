@@ -185,6 +185,7 @@ TEST_F(KernelTest, kernel_all_kernel_add)
     Kernel *k1 = new Kernel(nullptr, "", key1, program, 10);
     Kernel *k2 = new Kernel(nullptr, "", key2, program, 10);
     Kernel *k3 = new Kernel(nullptr, "", key1, program2, 10);
+    bool addKernelFlag = true;
 
     program->kernelCount_ = 2;
     program2->kernelCount_ = 1;
@@ -196,13 +197,13 @@ TEST_F(KernelTest, kernel_all_kernel_add)
         program2->KernelTable_ = new rtKernelArray_t[program2->kernelCount_];
     }
 
-    error = program->AllKernelAdd(k1);
+    error = program->AllKernelAdd(k1, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = program->AllKernelAdd(k1);
-    EXPECT_EQ(error, RT_ERROR_KERNEL_DUPLICATE);
+    error = program->AllKernelAdd(k1, addKernelFlag);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = program2->AllKernelAdd(k3);
+    error = program2->AllKernelAdd(k3, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Runtime::GetProgram)
@@ -213,7 +214,7 @@ TEST_F(KernelTest, kernel_all_kernel_add)
     kernel = program->AllKernelLookup(1);
     EXPECT_NE(kernel, (const Kernel *)NULL);
 
-    error = program->AllKernelAdd(k2);
+    error = program->AllKernelAdd(k2, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = table.RemoveAll(program);

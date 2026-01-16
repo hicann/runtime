@@ -255,7 +255,7 @@ rtError_t Program::ArrayInsert(const int32_t insertIndex, const uint64_t tilingK
     return RT_ERROR_NONE;
 }
 
-rtError_t Program::AllKernelAdd(Kernel *&addKernel)
+rtError_t Program::AllKernelAdd(Kernel *&addKernel, bool &isRepeated)
 {
     rtError_t error = RT_ERROR_NONE;
     rtHalfSearchResult_t halfSearchResult;
@@ -270,10 +270,11 @@ rtError_t Program::AllKernelAdd(Kernel *&addKernel)
             "Program AllKernelAdd failed, retCode=%#x.", static_cast<uint32_t>(error));
         kernelPos_ += 1;
     } else {
-        RT_LOG_CALL_MSG(ERR_MODULE_TBE, "Add all kernel failed, using registered programid=%u, kernelInfoExt=%" PRIu64,
+        RT_LOG(RT_LOG_WARNING, "Add all kernel repeatedly, using registered programid=%u, kernelInfoExt=%" PRIu64,
             addKernel->Program_()->Id_(), kernelInfoExt);
         kernelMapLock_.Unlock();
-        return RT_ERROR_KERNEL_DUPLICATE;
+        isRepeated = true;
+        return RT_ERROR_NONE;
     }
     kernelMapLock_.Unlock();
 
@@ -1390,7 +1391,8 @@ rtError_t ElfProgram::KernelAdd(Kernel *kernelPtr, const rtError_t tilingKeyPars
     }
 
     // If tiling key is valid, then register kernel to program kernel map. Insert key is tilingKey.
-    error = AllKernelAdd(kernelPtr);
+    bool isRepeated = false;
+    error = AllKernelAdd(kernelPtr, isRepeated);
     if (error != RT_ERROR_NONE) {
         (void)MixKernelRemove(kernelPtr);
         return error;
@@ -1445,10 +1447,25 @@ rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
         }
     }
 
-    const rtError_t tilingKeyParseRet = ParseTilingKey(kernelName, tilingKey);
+     // 1. not support function entry info but support old tilingKey process
+    rtError_t tilingKeyParseRet = ParseTilingKey(kernelName, tilingKey);
+    // 2. support function entry info
+    if (kernel->funcEntryType == KERNEL_TYPE_FUNCTION_ENTRY) {
+        RT_LOG(RT_LOG_INFO, "support function entry mode.");
+        tilingKey = kernel->functionEntry;
+        tilingKeyParseRet = RT_ERROR_NONE;
+    }
     rtError_t ret = CreateNewKernel(kernel, kernelName, mixType, tilingKey, kernelObj);
     if (ret != RT_ERROR_NONE) {
         return ret;
+    }
+
+    // 3. not support tilingKey and not support function entry
+    if (kernel->funcEntryType == KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY) {
+        // add to program kernel map, key is kernel name
+        const rtError_t error = MixKernelAdd(kernelObj);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+        return RT_ERROR_NONE;
     }
 
     // set other attrs
