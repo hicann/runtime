@@ -71,6 +71,7 @@
     </block_info>
     <dir_info value="runtime" install_path="runtime" install_type="all">
         <path value="runtime" install_mod="550"/>
+        <path value="runtime/include" install_mod="550"/>
         <path value="share" install_mod="550"/>
         <path value="share/info" install_mod="750"/>
         <path value="share/info/runtime" install_mod="750"/>
