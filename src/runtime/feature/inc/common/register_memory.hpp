@@ -16,13 +16,14 @@
 namespace cce {
 namespace runtime {
 void InsertMappedMemory(const void *ptr, const uint64_t size, const void *devPtr);
-rtError_t InsertPinnedMemory(const void *ptr, const uint64_t size);
+void InsertPinnedMemory(const void *ptr, const uint64_t size);
 void EraseMappedMemory(const void *ptr);
 void ErasePinnedMemory(const void *ptr);
 bool IsRegisteredMemory(const void *ptr);
 bool IsPinnedMemoryBase(const void *ptr);
 bool IsMappedMemoryBase(const void *ptr);
 void* GetMappedDevicePointer(const void *ptr);
+rtError_t CheckMemoryRangeRegistered(const void *ptr, const uint64_t size);
 }  // namespace runtime
 }  // namespace cce
 
