@@ -4798,15 +4798,16 @@ rtError_t ApiImpl::StreamSwitchEx(void * const ptr, const rtCondition_t conditio
     Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType)
 {
     RT_LOG(RT_LOG_DEBUG, "Switch, condition=%d, dataType=%d.", condition, dataType);
+    COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	         0, "trueStream->modelNum", "The stream is not bound to a model");
+ 	COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	         0, "stm->modelNum", "The stream is not bound to a model");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx,
         RT_ERROR_STREAM_CONTEXT,
         "Stream switch(extend) failed, stream is not in current ctx, stream_id=%d.",
         stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, "Stream is not in model");
-    COND_RETURN_ERROR_MSG_INNER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-                                "True stream is not in model");
     return curCtx->StreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType);
 }
 
@@ -4819,14 +4820,14 @@ rtError_t ApiImpl::StreamSwitchN(void * const ptr, const uint32_t size, void * c
 
     for (uint32_t i = 0U; i < elementSize; i++) {
         NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr[i], RT_ERROR_STREAM_NULL);
-        COND_RETURN_ERROR_MSG_INNER(trueStreamPtr[i]->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-                                    "true_stream[%u] is not in model.", i);
+        COND_RETURN_AND_MSG_OUTER(trueStreamPtr[i]->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011,
+ 	        __func__, 0, "trueStreamPtr[" + std::to_string(i) + "]->modelNum", "The stream is not bound to a model");
     }
 
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
                                 "Stream switchN failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-                                "Stream is not in model");
+    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	        0, "stm->modelNum", "The stream is not bound to a model");
     return curCtx->StreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, stm, dataType);
 }
 
@@ -4835,10 +4836,10 @@ rtError_t ApiImpl::StreamActive(Stream * const activeStream, Stream * const stm)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-                                "Stream is not in model");
-    COND_RETURN_ERROR_MSG_INNER(activeStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-                                "Active stream is not in model");
+    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	        0, "stm->modelNum", "The stream is not bound to a model");      
+ 	COND_RETURN_AND_MSG_OUTER(activeStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	        0, "activeStream->modelNum", "The stream is not bound to a model");
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
                                 "Stream active failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
 
@@ -5228,8 +5229,8 @@ rtError_t ApiImpl::LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, v
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Label switch by index failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL,
-        "stream is not in model");
+    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
+ 	        0, "stm->modelNum", "The stream is not bound to a model");
 
     return curCtx->LabelSwitchByIndex(ptr, maxVal, labelInfoPtr, stm);
 }
