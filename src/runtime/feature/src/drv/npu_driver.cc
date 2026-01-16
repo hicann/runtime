@@ -1960,10 +1960,17 @@ rtError_t NpuDriver::DevMemFree(void * const dptr, const uint32_t deviceId)
 }
 
 rtError_t NpuDriver::HostMemAlloc(void ** const dptr, const uint64_t size, const uint32_t deviceId,
-    const uint16_t moduleId)
+    const uint16_t moduleId, const uint32_t vaFlag)
 {
     TIMESTAMP_NAME(__func__);
     uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST);
+    if (vaFlag == 1U) {
+        // 接口cfg里面配置了使用UVA特性，但是驱动不支持，直接返回
+        COND_RETURN_WARN(!CheckIsSupportFeature(deviceId, FEATURE_SVM_MEM_HOST_UVA),
+            RT_ERROR_DRV_NOT_SUPPORT, "[drv api] driver not support uva feature.");
+        drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST_UVA);
+    }
+
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
     const drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
@@ -4121,6 +4128,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         {FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA, "FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA"},
         {FEATURE_SVM_VMM_NORMAL_GRANULARITY, "FEATURE_SVM_VMM_NORMAL_GRANULARITY"},
         {FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION, "FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION"},
+        {FEATURE_SVM_MEM_HOST_UVA, "FEATURE_SVM_MEM_HOST_UVA"},
     };
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));

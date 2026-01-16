@@ -752,8 +752,8 @@ private:
     rtError_t CaptureEventWait(Context * const ctx, Stream * const stm, Event * const evt, const uint32_t timeout);
     rtError_t CaptureEventReset(const Event * const evt, Stream * const stm);
     rtError_t ProcError(rtError_t error);
-    rtError_t GetMallocHostConfigInfo(const rtMallocConfig_t *cfg, uint16_t *moduleId) const;
-    rtError_t GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t *moduleId) const;
+    rtError_t GetMallocHostConfigInfo(const rtMallocConfig_t *cfg, uint16_t *moduleId, uint32_t *vaFlag) const;
+    rtError_t GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t *moduleId, uint32_t *vaFlag) const;
     void CheckMallocHostCfg(uint16_t *moduleId) const;
 
     rtError_t ParseMallocCfg(const rtMallocConfig_t * const cfg, rtConfigValue_t *cfgVal) const;
