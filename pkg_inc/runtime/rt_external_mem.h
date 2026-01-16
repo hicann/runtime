@@ -852,12 +852,14 @@ typedef enum {
     RT_MEM_MALLOC_ATTR_RSV = 0,
     RT_MEM_MALLOC_ATTR_MODULE_ID,   // 申请内存的模块id
     RT_MEM_MALLOC_ATTR_DEVICE_ID,   // 指定deviceId申请内存
+    RT_MEM_MALLOC_ATTR_VA_FLAG,   // 设置VA相关特性
     RT_MEM_MALLOC_ATTR_MAX
 } rtMallocAttr;
 
 typedef union {
     uint16_t moduleId;  // 默认不配置时，为RUNTIME_ID
     uint32_t deviceId;  // 默认不配置时，为ctx的deviceId
+    uint32_t vaFlag;   // 默认不配置时，不使能此VA相关特性
     uint8_t rsv[8];     // 预留8字节
 } rtMallocAttrValue;
 

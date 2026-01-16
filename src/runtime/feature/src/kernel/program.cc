@@ -148,7 +148,7 @@ void Program::SaveBinaryData(const void *data, uint64_t length, const bool isLoa
         return;
     }
 
-    auto buffer = std::make_unique<char_t[]>(length);
+    auto buffer = std::unique_ptr<char_t[]>(new (std::nothrow) char_t[length]());
     if (buffer != nullptr) {
         if (memcpy_s(buffer.get(), length, data, length) == EOK) {
             RT_LOG(RT_LOG_INFO, "Malloc the buffer for elfData, len=%llu", length);

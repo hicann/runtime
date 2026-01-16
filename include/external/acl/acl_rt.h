@@ -150,11 +150,13 @@ typedef enum {
     ACL_RT_MEM_ATTR_RSV = 0,
     ACL_RT_MEM_ATTR_MODULE_ID,
     ACL_RT_MEM_ATTR_DEVICE_ID,
+    ACL_RT_MEM_ATTR_VA_FLAG,
 } aclrtMallocAttrType;
 
 typedef union {
     uint16_t moduleId;
     uint32_t deviceId;
+    uint32_t vaFlag;
     uint8_t rsv[8];
 } aclrtMallocAttrValue;
 
