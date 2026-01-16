@@ -2456,8 +2456,8 @@
       "errClass": "Driver Errors",
       "errTitle": "Memory_Allocation_Failure",
       "ErrCode": "EL0004",
-      "ErrMessage": "Failed to allocate memory.",
-      "Arglist": "",
+      "ErrMessage": "Failed to allocate memory requested by %s module.",
+      "Arglist": "module_name",
       "suggestion": {
         "Possible Cause": "Available memory is insufficient.",
         "Solution": "Close applications not in use."

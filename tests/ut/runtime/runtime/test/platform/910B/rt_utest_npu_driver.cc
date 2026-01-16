@@ -570,6 +570,37 @@ TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_02)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_03)
+{
+    void *mem;
+    rtError_t error;
+
+    MOCKER(halMemAlloc)
+        .stubs()
+        .will(returnValue(DRV_ERROR_OUT_OF_MEMORY));
+
+    error = rtMemAllocManaged(&mem, 1024*1024*1025, 0, DEFAULT_MODULEID);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_04)
+{
+    void *mem;
+    rtError_t error;
+
+    MOCKER(halMemAlloc)
+        .stubs()
+        .will(returnValue(DRV_ERROR_OUT_OF_MEMORY));
+
+    error = rtMemAllocManaged(NULL, 10, 0, DEFAULT_MODULEID);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2NpuDriverTest, utils_get_module_name)
+{
+    std::string moduleName = RT_GET_MODULE_NAME(RUNTIME_MODULE_ID);
+    EXPECT_EQ(moduleName, "RUNTIME");
+}
 
 TEST_F(CloudV2NpuDriverTest, memory_failed)
 {
