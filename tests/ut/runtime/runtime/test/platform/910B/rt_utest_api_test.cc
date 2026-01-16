@@ -184,7 +184,8 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_KernelExpandCopy_error)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtContext_t context = NULL;
@@ -264,7 +265,8 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_KernelExpandCopy_error)
     if (prog->KernelTable_ == nullptr) {
         prog->KernelTable_ = new rtKernelArray_t[1];
     }
-    error = prog->AllKernelAdd(kernelPtr);
+    bool addKernelFlag = true;
+    error = prog->AllKernelAdd(kernelPtr, addKernelFlag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     // api test

@@ -103,6 +103,7 @@ enum {
     FUNC_META_TYPE_COMPILER_ALLOC_UB_SIZE  = 7U, // for simt, elf report share memory size
     FUNC_META_TYPE_SU_STACK_SIZE    = 8U,        // for min stack size
     FUNC_META_TYPE_AIV_TYPE_FLAG    = 12U,       // for simt, corresponding enum AivTypeFlag
+    FUNCTION_META_TYPE_FUNCTION_ENTRY_INFO = 14U,
     FUNC_META_TYPE_BLOCK_DIM_INFO   = 15U,
 };
 
@@ -120,6 +121,12 @@ enum Ratio {
     RATION_TYPE_ONE_RATIO_ZERO        = 3,
     RATION_TYPE_ZERO_RATIO_ONE        = 4,
     RATION_TYPE_MAX                   = 5,
+};
+
+enum KernelFunctionEntryType {
+    KERNEL_TYPE_TILING_KEY = 0,                 // legacy tiling key flow
+    KERNEL_TYPE_FUNCTION_ENTRY = 1,             // replace tiling key with function entry
+    KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY = 2, // neither function-entry nor tiling-key supported
 };
 
 constexpr uint16_t USER_ARGS_MAX_NUM = 128U;
@@ -163,6 +170,16 @@ struct ElfKernelMinStackSizeInfo {
     uint32_t minStackSize;
 };
 
+constexpr uint8_t KERNEL_FUNCTION_ENTRY_DISABLE = 0x80;
+
+struct ElfKernelFunctionEntryInfo {
+    ElfTlvHead head;
+    uint8_t flag;               // 0x80, disable function entry(the same as tiling key); 0x00 enable.
+    uint8_t resv0;              // 0x00
+    uint16_t resv1;             // 0x00
+    uint64_t functionEntry;     // tiling key, if functionEntry is not supported, the default value is 0.
+};
+
 struct ElfBinaryAddrInfo {
     ElfTlvHead head;
     uint32_t type;
@@ -180,6 +197,9 @@ struct ElfKernelInfo {
     int32_t elfDataFlag;
     uint16_t userArgsNum;
     uint32_t minStackSize;
+    uint64_t functionEntry;
+    bool isSupportFuncEntry;
+    uint8_t functionEntryFlag;
 };
 
 struct Elf_Internal_Ehdr {
@@ -297,6 +317,8 @@ struct RtKernel final {
     int32_t elfDataFlag;
     uint16_t userArgsNum;
     uint32_t minStackSize;
+    uint64_t functionEntry;         // the same as tiling key
+    KernelFunctionEntryType funcEntryType;
 };
 
 struct rtKernelContent {
@@ -363,6 +385,7 @@ std::unique_ptr<char_t[]> GetStringTableCopy(const char_t * const src, const uin
 void GetKernelTlvInfo(const uint8_t *buf, uint32_t bufLen, ElfKernelInfo *tlvInfo);
 bool CheckShareMemSizeValid(const ElfKernelInfo * const kernelInfo);
 void UpdateFuncTypeByProgType(ElfKernelInfo * const kernelInfo, const uint32_t progType, bool *isUpdate);
+rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap);
 
 rtError_t ConvertTaskRation(ElfKernelInfo *elfKernelInfo, uint32_t& taskRation);
 bool GetMixStatus(uint32_t funcType, uint32_t crossCoreSync);

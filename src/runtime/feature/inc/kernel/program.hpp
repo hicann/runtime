@@ -266,7 +266,7 @@ public:
     Kernel* SearchKernelByPcAddr(const uint64_t pcAddr) const;
     rtError_t ArrayInsert(const int32_t insertIndex, const uint64_t tilingKey,
                           Kernel *&addKernel, const uint32_t curLen);
-    rtError_t AllKernelAdd(Kernel *&addKernel);
+    rtError_t AllKernelAdd(Kernel *&addKernel, bool &isRepeated);
     Kernel *AllKernelLookup(const uint64_t tilingKey, const bool getProgFlag = true);
     const Kernel *GetKernelByTillingKey(const uint64_t tilingKey);
     rtError_t MixKernelAdd(Kernel *&addKernel);

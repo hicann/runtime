@@ -1734,8 +1734,9 @@ rtError_t Runtime::AllKernelRegister(Program * const prog, const bool isHostApiR
 
         SetKernelAttributes(prog, kernelPtr, &kernels[idx], kernelPtr->KernelType_(), nullptr);
         (void)GetPrefetchCnt(prog, kernelPtr);
-        error = prog->AllKernelAdd(kernelPtr);
-        if (error != RT_ERROR_NONE) {
+        bool isRepeated = false;
+        error = prog->AllKernelAdd(kernelPtr, isRepeated);
+        if ((error != RT_ERROR_NONE) || (isRepeated)) {
             delete kernelPtr;
             kernelPtr = nullptr;
             return error;
@@ -1773,8 +1774,9 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     (*kernelPtr)->SetSimtFlag_(kernel->simtFlag);
     (*kernelPtr)->SetShareMemSize_(kernel->shareMemSize);
     (void)GetPrefetchCnt(prog, *kernelPtr);
-    const rtError_t error = prog->AllKernelAdd(*kernelPtr);
-    if (error != RT_ERROR_NONE) {
+    bool isRepeated = false;
+    const rtError_t error = prog->AllKernelAdd(*kernelPtr, isRepeated);
+    if ((error != RT_ERROR_NONE) || (isRepeated)) {
         delete *kernelPtr;
         *kernelPtr = nullptr;
         return error;

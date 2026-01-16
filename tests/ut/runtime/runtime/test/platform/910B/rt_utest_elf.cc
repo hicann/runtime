@@ -1481,3 +1481,109 @@ TEST_F(ELFTest910B, rtGetMetaInfo)
     delete prog2;
     delete funcHandle;
 }
+
+TEST_F(ELFTest910B, ElfParseTlvInfo_Function_Entry)
+{
+    ElfKernelFunctionEntryInfo kernelFunctionEntryInfo;
+    kernelFunctionEntryInfo.head.type = FUNCTION_META_TYPE_FUNCTION_ENTRY_INFO;
+    kernelFunctionEntryInfo.head.length = sizeof(ElfKernelFunctionEntryInfo) - sizeof(ElfTlvHead);
+    kernelFunctionEntryInfo.functionEntry = 0;
+    ElfKernelInfo tlvInfo;
+
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t *>(&kernelFunctionEntryInfo), sizeof(ElfKernelFunctionEntryInfo), &tlvInfo);
+    EXPECT_EQ(tlvInfo.functionEntry, 0);
+}
+
+TEST_F(ELFTest910B, SetKernelFunctionEntry)
+{
+    rtError_t error;
+    const uint32_t kernelsNum = 2;
+    RtKernel kernel[kernelsNum];
+    kernel[0].name = "symbol00";
+    kernel[1].name = "symbol01";
+    std::map<std::string, ElfKernelInfo *> kernelInfoMap;
+    ElfKernelInfo info1;
+    info1.functionEntryFlag = 0U;
+    info1.isSupportFuncEntry = true;
+    kernelInfoMap["symbol00"] = &info1;
+    ElfKernelInfo info2;
+    info2.functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
+    info2.isSupportFuncEntry = true;
+    kernelInfoMap["symbol01"] = &info2;
+
+    error = SetKernelFunctionEntry(kernel, kernelsNum, kernelInfoMap);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    RtKernel kernelArr[1];
+    kernelArr[0].name = "symbol00";
+    info1.functionEntryFlag = 1U;
+
+    error = SetKernelFunctionEntry(kernelArr, 1, kernelInfoMap);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ELFTest910B, ELF_Process_SetKernelFunctionEntry_Failed)
+{
+    size_t MAX_LENGTH = 75776;
+    FILE *bin = nullptr;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
+    if (bin == nullptr) {
+        printf("error\n");
+        return;
+    } else {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
+
+    rtElfData *elfData;
+    RtKernel *kernels;
+
+    elfData = new rtElfData;
+
+    bool isSupportMix = false;
+    MOCKER(SetKernelFunctionEntry).stubs().will(returnValue(1));
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    if (nullptr == kernels) {
+        printf("SUCC no kernel!\n");
+    } else {
+        printf("FAIL\n");
+    }
+
+    if (nullptr != elfData->section_headers) {
+        delete[] elfData->section_headers;
+        elfData->section_headers = nullptr;
+    }
+
+    if (elfData != nullptr) {
+        delete elfData;
+        elfData = nullptr;
+    }
+    if (kernels != nullptr) {
+        delete[] kernels;
+        kernels = nullptr;
+    }
+}
+
+TEST_F(ELFTest910B, UnifiedOneKernelRegister_Function_Entry)
+{
+    rtError_t error;
+    ElfProgram prog;
+    RtKernel kernel;
+    kernel.name = "symbol";
+    kernel.simtFlag = false;
+    kernel.funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY;
+    MOCKER_CPP(&ElfProgram::CreateNewKernel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    error = prog.UnifiedOneKernelRegister(&kernel);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+
+    kernel.funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY;
+    error = prog.UnifiedOneKernelRegister(&kernel);
+    MOCKER_CPP(&ElfProgram::MixKernelAdd).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}

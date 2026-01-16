@@ -512,6 +512,7 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
     const ElfKernelAivTypeInfo *aivTypeInfo = nullptr;
     const ElfKernelReportSzInfo *reportSzInfo = nullptr;
     const ElfKernelMinStackSizeInfo *minStackSizeInfo = nullptr;
+    const ElfKernelFunctionEntryInfo *functionEntryInfo = nullptr;
     uint32_t aivType = 0U;
     uint16_t tlvLength = 0U;
 
@@ -563,6 +564,17 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
             tlvInfo->minStackSize = static_cast<uint32_t>(
                 GetByte(RtPtrToPtr<const uint8_t *, const uint32_t *>(&(minStackSizeInfo->minStackSize)), tlvLength));
             RT_LOG(RT_LOG_INFO, "tlvLength=%u, minStackSize=%u.", tlvLength, tlvInfo->minStackSize);
+            break;
+        case FUNCTION_META_TYPE_FUNCTION_ENTRY_INFO:
+            functionEntryInfo = RtPtrToPtr<const ElfKernelFunctionEntryInfo *>(buf);
+            tlvLength = static_cast<uint16_t>(
+                GetByte(RtPtrToPtr<const uint8_t *, const uint16_t *>(&(functionEntryInfo->head.length)),
+                    static_cast<int32_t>(sizeof(uint16_t))));
+            tlvInfo->functionEntryFlag = functionEntryInfo->flag;
+            tlvInfo->isSupportFuncEntry = true;
+            tlvInfo->functionEntry = functionEntryInfo->functionEntry;
+            RT_LOG(RT_LOG_INFO, "tlvLength=%u, isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".", 
+                tlvLength, tlvInfo->isSupportFuncEntry, tlvInfo->functionEntryFlag, tlvInfo->functionEntry);
             break;
         default:
             break;
@@ -767,6 +779,9 @@ static void kernelInfoInit(rtElfData * const elfData, Elf_Internal_Shdr *section
     kernelInfo->dfxAddr = (RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) + section->sh_offset);
     kernelInfo->dfxSize = static_cast<uint16_t>(section->sh_size);
     kernelInfo->elfDataFlag = static_cast<int32_t>(elfData->elf_header.e_ident[EI_DATA]);
+    kernelInfo->functionEntry = 0U;
+    kernelInfo->functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
+    kernelInfo->isSupportFuncEntry = false;
 }
 
 static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *section,
@@ -853,11 +868,13 @@ static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *se
         kernelInfoMap[kernelName] = kernelInfo;
         RT_LOG(RT_LOG_INFO, "kernel_name=%s, ration[0]=%u, ration[1]=%u, isSupportMix=%d, isUpdate=%d, "
             "dfxAddr=0x%llx, dfxSize=%u, "
-            "funcType=%u, crossCoreSync=%u, simtFlag=%d, shareMemSizeFlag=%d, shareMemSize=%u, minStackSize=%u.",
+            "funcType=%u, crossCoreSync=%u, simtFlag=%d, shareMemSizeFlag=%d, shareMemSize=%u, minStackSize=%u, "
+            "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
             kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1], *isSupportMix, *isUpdate, 
             RtPtrToValue(kernelInfo->dfxAddr), kernelInfo->dfxSize,
             kernelInfo->funcType, kernelInfo->crossCoreSync,
-            kernelInfo->simtFlag, kernelInfo->shareMemSizeFlag, kernelInfo->shareMemSize, kernelInfo->minStackSize);
+            kernelInfo->simtFlag, kernelInfo->shareMemSizeFlag, kernelInfo->shareMemSize, kernelInfo->minStackSize,
+            kernelInfo->isSupportFuncEntry, kernelInfo->functionEntryFlag, kernelInfo->functionEntry);
     } else if (stringTab.find(ELF_SECTION_ASCEND_STACK_SIZE_RECORD) != std::string::npos) {
         ParseElfStackInfoFromSection(elfData, (RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) + section->sh_offset),
             static_cast<uint32_t>(section->sh_size));
@@ -1259,6 +1276,29 @@ static int32_t GetStringTable(const rtElfData * const elfData, std::unique_ptr<c
     return ELF_SUCCESS;
 }
 
+ rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
+{
+    for (uint32_t i = 0; i < kernelsNum; ++i) {
+        const auto it = kernelInfoMap.find(std::string(kernels[i].name));
+        if ((it == kernelInfoMap.end()) || (!it->second->isSupportFuncEntry)) {
+            kernels[i].funcEntryType = KERNEL_TYPE_TILING_KEY;
+            continue;
+        } 
+        const uint8_t functionEntryFlag = it->second->functionEntryFlag;
+        if (functionEntryFlag == 0U) {
+            kernels[i].functionEntry = it->second->functionEntry;
+            kernels[i].funcEntryType = KERNEL_TYPE_FUNCTION_ENTRY;
+        } else if (functionEntryFlag == KERNEL_FUNCTION_ENTRY_DISABLE) {
+            kernels[i].funcEntryType = KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY;
+        } else {
+            RT_LOG(RT_LOG_ERROR, "kernel function meta info error! kernel name=%s, functionEntryFlag=%u",
+                kernels[i].name, functionEntryFlag);
+            return RT_ERROR_INVALID_VALUE;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 /* Dump the symbol table.  */
 static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t progType, bool *isSupportMix)
 {
@@ -1332,11 +1372,14 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
     RtKernel * const kernels = GetKernels(elfData);
     if (kernels != nullptr) {
         const bool isMixKernel = (progType == Program::MACH_AI_MIX_KERNEL) ? true : false;
+        std::function<void()> const errReleaseKernels = [&kernels, &elfData, &kernelInfoMap]() {
+            KernelNameFree(kernels, elfData->kernel_num);
+            delete[] kernels;
+            KernelInfoMapRelease(kernelInfoMap);
+        };
+        ScopeGuard kernelsGuard(errReleaseKernels);
         if (isMixKernel || isUpdate) {
             if (UpdateKernelsInfo(kernelInfoMap, kernels, elfData, isSupportMix) != RT_ERROR_NONE) {
-                KernelNameFree(kernels, elfData->kernel_num);
-                delete[] kernels;
-                KernelInfoMapRelease(kernelInfoMap);
                 return nullptr;
             }
         }
@@ -1344,12 +1387,16 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE)) {
             const auto error = UpdateKernelsMinStackSizeInfo(kernelInfoMap, kernels, elfData->kernel_num);
             if (error != RT_ERROR_NONE) {
-                KernelNameFree(kernels, elfData->kernel_num);
-                delete[] kernels;
-                KernelInfoMapRelease(kernelInfoMap);
                 return nullptr;
             }
         }
+
+        rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "set kernel function entry failed! errCode = %d.", error);
+            return nullptr;
+        }
+        kernelsGuard.ReleaseGuard();
     }
     KernelInfoMapRelease(kernelInfoMap);
     return kernels;
