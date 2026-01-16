@@ -8,12 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "program.hpp"
+#include <thread>
 #include "securec.h"
 #include "context.hpp"
 #include "runtime.hpp"
 #include "elf.hpp"
 #include "error_message_manage.hpp"
 #include "utils.h"
+#include "stream_factory.hpp"
 
 namespace cce {
 namespace runtime {
@@ -46,13 +48,13 @@ Program::Program(const uint32_t progMachine)
       kernelNames_(),
       progId_(UINT32_MAX),
       progType_(PLAIN_PROGRAM),
-      progMemType_(PROGRAM_MEM_DDR),
-      baseAddr_(nullptr),
-      baseAddrAlign_(nullptr)
+      progMemType_(PROGRAM_MEM_DDR)
 {
     kernelNameMap_.clear();
-    soNameDevAddrMap_.clear();
-    funcNameDevAddrMap_.clear();
+    for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
+        soNameDevAddrMap_[i].clear();
+        funcNameDevAddrMap_[i].clear();
+    }
 }
 
 Program::~Program()
@@ -598,19 +600,6 @@ rtError_t Program::CheckLoaded2Device()
 
 rtError_t Program::Load2Device()
 {
-    if (GetBinBaseAddr() != nullptr) {
-        return RT_ERROR_NONE;
-    }
-
-    load2DeviceLock_.Lock();
-    std::function<void()> const lockGuard = [this]() {
-        this->load2DeviceLock_.Unlock();
-    };
-
-    ScopeGuard programGuard(lockGuard);
-    if (GetBinBaseAddr() != nullptr) {
-        return RT_ERROR_NONE;
-    }
     Runtime* runtime = Runtime::Instance();
     NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
     Context * const curCtx = runtime->CurrentContext();
@@ -618,11 +607,20 @@ rtError_t Program::Load2Device()
     Device * const device = curCtx->Device_();
     NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL)
 
+    if (GetBinBaseAddr(device->Id_()) != nullptr) {
+        return RT_ERROR_NONE;
+    }
+    load2DeviceLock_.Lock();
+    if (GetBinBaseAddr(device->Id_()) != nullptr) {
+        load2DeviceLock_.Unlock();
+        return RT_ERROR_NONE;
+    }
     // load program binary to device
     const rtError_t error = runtime->BinaryLoad(device, this);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Load program to device failed");
     }
+    load2DeviceLock_.Unlock();
     RT_LOG(RT_LOG_DEBUG, "Program was loaded to device successfully.");
     return error;
 }
@@ -641,15 +639,13 @@ uint32_t Program::GetMaxMinStackSize() const
     return maxMinStackSize;
 }
 
-rtError_t Program::CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle) const
+rtError_t Program::CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle, const Device * const dev) const
 {
     // get current device
     Runtime* runtime = Runtime::Instance();
 	NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
-    Context * const curCtx = runtime->CurrentContext();
-	CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-	const uint32_t devId = static_cast<uint32_t>(curCtx->Device_()->Id_());
-	Driver *curDrv = curCtx->Device_()->Driver_();
+    const uint32_t devId = static_cast<uint32_t>(dev->Id_());
+    Driver *curDrv = dev->Driver_();
 
     // alloc dev memory for soName and funcName
     size_t nameSize = literalName.size() + 1;
@@ -670,34 +666,39 @@ rtError_t Program::CopyKernelLiteralNameToDevice(const std::string &literalName,
     return RT_ERROR_NONE;
 }
 
-rtError_t Program::StoreKernelLiteralNameToDevice(const Kernel *const kernel, void **soNameDevAddrHandle, void **funcNameDevAddrHandle)
+rtError_t Program::StoreKernelLiteralNameToDevice(Kernel *const kernel)
 {
     void *soNameDevAddr = nullptr;
     void *funcNameDevAddr = nullptr;
 
+    // get current device
+    Runtime* runtime = Runtime::Instance();
+    NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
+    Context * const curCtx = runtime->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const uint32_t devId = static_cast<uint32_t>(curCtx->Device_()->Id_());
+
     // copy soName to device
-    const auto iterSoName = soNameDevAddrMap_.find(kernel->GetCpuKernelSo());
-    if (iterSoName != soNameDevAddrMap_.end()) {
+    const auto iterSoName = soNameDevAddrMap_[devId].find(kernel->GetCpuKernelSo());
+    if (iterSoName != soNameDevAddrMap_[devId].end()) {
         soNameDevAddr = iterSoName->second;
     } else {
-        rtError_t ret = CopyKernelLiteralNameToDevice(kernel->GetCpuKernelSo(), &soNameDevAddr);
+        rtError_t ret = CopyKernelLiteralNameToDevice(kernel->GetCpuKernelSo(), &soNameDevAddr, curCtx->Device_());
         ERROR_RETURN(ret, "fail to copy soName to device, ret=%d.", ret);
-        soNameDevAddrMap_[kernel->GetCpuKernelSo()] = soNameDevAddr;
+        soNameDevAddrMap_[devId][kernel->GetCpuKernelSo()] = soNameDevAddr;
     }
 
     // copy funcName to device
-    const auto iterFuncName = funcNameDevAddrMap_.find(kernel->GetCpuFuncName());
-    if (iterFuncName != funcNameDevAddrMap_.end()) {
+    const auto iterFuncName = funcNameDevAddrMap_[devId].find(kernel->GetCpuFuncName());
+    if (iterFuncName != funcNameDevAddrMap_[devId].end()) {
         funcNameDevAddr = iterFuncName->second;
     } else {
-        rtError_t ret = CopyKernelLiteralNameToDevice(kernel->GetCpuFuncName(), &funcNameDevAddr);
+        rtError_t ret = CopyKernelLiteralNameToDevice(kernel->GetCpuFuncName(), &funcNameDevAddr, curCtx->Device_());
         ERROR_RETURN(ret, "fail to copy funcName to device, ret=%d.", ret);
-        funcNameDevAddrMap_[kernel->GetCpuFuncName()] = funcNameDevAddr;
+        funcNameDevAddrMap_[devId][kernel->GetCpuFuncName()] = funcNameDevAddr;
     }
 
-    *soNameDevAddrHandle = soNameDevAddr;
-    *funcNameDevAddrHandle = funcNameDevAddr;
- 
+    kernel->SetKernelLiteralNameDevAddr(soNameDevAddr, funcNameDevAddr, devId);
     return RT_ERROR_NONE;
 }
 
@@ -706,20 +707,20 @@ rtError_t Program::FreeKernelLiteralNameDevMem(const Device *const device)
     const uint32_t deviceId = device->Id_();
 	Driver *curDrv = device->Driver_();
 
-    for (auto iter = soNameDevAddrMap_.begin(); iter != soNameDevAddrMap_.end(); ) {
+    for (auto iter = soNameDevAddrMap_[deviceId].begin(); iter != soNameDevAddrMap_[deviceId].end(); ) {
         if (iter->second != nullptr) {
             rtError_t ret = curDrv->DevMemFree(iter->second, deviceId);
             ERROR_RETURN(ret, "fail to free soNameDevMem %s, ret=%d, devId=%u.", iter->first.c_str(), ret, deviceId);
         }
-        iter = soNameDevAddrMap_.erase(iter);
+        iter = soNameDevAddrMap_[deviceId].erase(iter);
     }
 
-    for (auto iter = funcNameDevAddrMap_.begin(); iter != funcNameDevAddrMap_.end(); ) {
+    for (auto iter = funcNameDevAddrMap_[deviceId].begin(); iter != funcNameDevAddrMap_[deviceId].end(); ) {
         if (iter->second != nullptr) {
             rtError_t ret = curDrv->DevMemFree(iter->second, deviceId);
             ERROR_RETURN(ret, "fail to free funcNameDevMem %s, ret=%d, devId=%u.", iter->first.c_str(), ret, deviceId);
         }    
-        iter = funcNameDevAddrMap_.erase(iter);
+        iter = funcNameDevAddrMap_[deviceId].erase(iter);
     }
 
     return RT_ERROR_NONE;
@@ -884,17 +885,6 @@ rtError_t Program::RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInf
 
         SetCpuKernelAttr(kernel, kernelInfo, key);
 
-        // Aicpu算子注册时，把KernelName, soname存储至device侧，并把devAddr记录至kernel，从而args区无须填入kernelName, soname
-        void *soNameDevAddr = nullptr;
-        void *funcNameDevAddr = nullptr;
-        rtError_t ret = StoreKernelLiteralNameToDevice(kernel, &soNameDevAddr, &funcNameDevAddr);
-        kernel->SetKernelLiteralNameDevAddr(soNameDevAddr, funcNameDevAddr);
-        if (unlikely(ret != RT_ERROR_NONE)) {
-            RT_LOG(RT_LOG_ERROR, "fail to store kernel %s literal name to device, ret=%d", key.c_str(), ret);
-            delete kernel;
-            continue;
-        }
-
         kernelNameMap_[key] = kernel;
         RT_LOG(RT_LOG_DEBUG, "cpu kernel info:functionName[%s],kernelSo[%s],opType[%s]",
             kernel->GetCpuFuncName().c_str(), kernel->GetCpuKernelSo().c_str(), key.c_str());
@@ -936,17 +926,13 @@ rtError_t Program::RegisterSingleCpuKernel(const char *const funcName, const cha
     kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
  
     // Aicpu算子注册时，把KernelName, soname存储至device侧，并把devAddr记录至kernel，从而args区无须填入kernelName, soname
-    void *soNameDevAddr = nullptr;
-    void *funcNameDevAddr = nullptr;
-    rtError_t ret = StoreKernelLiteralNameToDevice(kernel, &soNameDevAddr, &funcNameDevAddr);
+    rtError_t ret = StoreKernelLiteralNameToDevice(kernel);
     if (ret != RT_ERROR_NONE) {
         delete kernel;
         kernelMapLock_.Unlock();
         RT_LOG(RT_LOG_ERROR, "fail to store kernel %s literal name to device, ret=%d", kernelName, ret);
         return ret;
     }
-    
-    kernel->SetKernelLiteralNameDevAddr(soNameDevAddr, funcNameDevAddr);
     kernelNameMap_[kernelName] = kernel;
     kernelMapLock_.Unlock();
 
@@ -1522,14 +1508,12 @@ void Program::RegCpuProgInfo(const void *data, const uint64_t length, const std:
     return;
 }
 
-rtError_t Program::FreeCpuSoH2dMem(Stream *stream, std::vector<void *> &allocatedMem) const
+rtError_t Program::FreeCpuSoH2dMem(Device * const device, std::vector<void *> &allocatedMem) const
 {
     RT_LOG(RT_LOG_DEBUG, "free cpu so start");
-    Context * const curCtx = Runtime::Instance()->CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     rtError_t error = RT_ERROR_NONE;
-    Driver *drv = curCtx->Device_()->Driver_();
-    const uint32_t devId = static_cast<uint32_t>(curCtx->Device_()->Id_());
+    Driver *drv = device->Driver_();
+    const uint32_t devId = static_cast<uint32_t>(device->Id_());
     for (auto &mem : allocatedMem) {
         RT_LOG(RT_LOG_DEBUG, "cpu kernel proc recycle memory");
         error = drv->DevMemFree(mem, devId);
@@ -1537,14 +1521,7 @@ rtError_t Program::FreeCpuSoH2dMem(Stream *stream, std::vector<void *> &allocate
             RT_LOG(RT_LOG_ERROR, "free dev mem failed! error=%#x", error));
     }
 
-    NULL_STREAM_PTR_RETURN_MSG(stream);
-
-    RT_LOG(RT_LOG_DEBUG, "cpu kernel proc destroy stream");
-    error = curCtx->StreamDestroy(stream, false);
-    ERROR_RETURN(error, "stream destroy failed! error=%#x", error);
-
     RT_LOG(RT_LOG_DEBUG, "free cpu so end");
-
     return RT_ERROR_NONE;
 }
 
@@ -1555,38 +1532,47 @@ static bool IsNoNeedProcCpuH2DMem(const KernelRegisterType kernelRegType, const 
 }
 
 // isLoadCpuSo  true 代表注册， false 代表卸载
-rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo)
+rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device * const device)
 {
     COND_RETURN_WITH_NOLOG(IsNoNeedProcCpuH2DMem(kernelRegType_, cpuRegMode_), RT_ERROR_NONE);
+    rtError_t ret = RT_ERROR_NONE;
     std::vector<void *> allocMem;
-    Stream *stm = nullptr;
-    Context * const curCtx = Runtime::Instance()->CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const std::function<void()> recycle = [&stm, &allocMem, this]() {this->FreeCpuSoH2dMem(stm, allocMem);};
+    std::unique_ptr<Stream, void(*)(Stream*)> stm(StreamFactory::CreateStream(device, 0U, RT_STREAM_DEFAULT),
+                                                  [](Stream* ptr) {ptr->Destructor();});
+    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, stm == nullptr, RT_ERROR_STREAM_NEW, "new Stream failed.");
+    ret = stm->Setup();
+    ERROR_RETURN_MSG_INNER(ret, "stream setup failed, retCode=%#x.", static_cast<uint32_t>(ret));
+
+    const std::function<void()> recycle = [&device, &allocMem, &stm, this]() {
+        this->FreeCpuSoH2dMem(device, allocMem);
+        const auto error = (stm->TearDown());
+        // Disable thread stream destroy task will delete stream, other condition, we should delete stream here
+        // Disable thread free in stream destroy task recycle, stream destroy task send in TearDown process.
+        if ((error == RT_ERROR_NONE) && (!Runtime::Instance()->GetDisableThread())) {
+            (void)stm.release();
+        }
+    };
     ScopeGuard procCpuKernelGuard(recycle);
 
-    const uint32_t devId = static_cast<uint32_t>(curCtx->Device_()->Id_());
-    Driver *curDrv = curCtx->Device_()->Driver_();
+    const uint32_t devId = static_cast<uint32_t>(device->Id_());
 
     void *devSoBuff = nullptr;
-    rtError_t ret = RT_ERROR_NONE;
     if (isLoadCpuSo) {
-        ret = curDrv->DevMemAlloc(&devSoBuff, static_cast<uint64_t>(binarySize_),
-            RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
+        ret = device->Driver_()->DevMemAlloc(&devSoBuff, static_cast<uint64_t>(binarySize_), RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
         ERROR_RETURN(ret, "devSoBuff alloc failed! error=%#x", ret);
         allocMem.push_back(devSoBuff);
 
-        ret = curDrv->MemCopySync(devSoBuff, static_cast<uint64_t>(binarySize_), binary_,
+        ret = device->Driver_()->MemCopySync(devSoBuff, static_cast<uint64_t>(binarySize_), binary_,
             static_cast<uint64_t>(binarySize_), RT_MEMCPY_HOST_TO_DEVICE);
         ERROR_RETURN(ret, "devSoBuff copy failed! error=%#x", ret);
     }
 
     void *devSoName = nullptr;
-    ret = curDrv->DevMemAlloc(&devSoName, soName_.size(), RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
+    ret = device->Driver_()->DevMemAlloc(&devSoName, soName_.size(), RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
     ERROR_RETURN(ret, "devSoName alloc failed! error=%#x", ret);
     allocMem.push_back(devSoName);
 
-    ret = curDrv->MemCopySync(devSoName, soName_.size(), soName_.c_str(), soName_.size(), RT_MEMCPY_HOST_TO_DEVICE);
+    ret = device->Driver_()->MemCopySync(devSoName, soName_.size(), soName_.c_str(), soName_.size(), RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(ret, "devSoName copy failed! error=%#x", ret);
 
     CpuSoBuf cpuSoBuf = {.kernelSoBuf = PtrToValue(devSoBuff), .kernelSoBufLen = static_cast<uint32_t>(binarySize_),
@@ -1596,19 +1582,16 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo)
     // 2. copy cpuSoBuf to device memory
     void *args = nullptr;
     constexpr size_t argsSize = sizeof(CpuSoBuf);
-    ret = curDrv->DevMemAlloc(&args, argsSize, RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
+    ret = device->Driver_()->DevMemAlloc(&args, argsSize, RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
     ERROR_RETURN(ret, "args alloc failed! error=%#x", ret);
     allocMem.push_back(args);
 
-    ret = curDrv->MemCopySync(args, argsSize, &cpuSoBuf, argsSize, RT_MEMCPY_HOST_TO_DEVICE);
+    ret = device->Driver_()->MemCopySync(args, argsSize, &cpuSoBuf, argsSize, RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(ret, "args copy failed! error=%#x", ret);
-
-    ret = curCtx->StreamCreate(0U, RT_STREAM_DEFAULT, &stm, nullptr);
-    ERROR_RETURN(ret, "stream create failed! error=%#x", ret);
 
     const std::string opName = isLoadCpuSo ? LOAD_CPU_SO : DELETE_CPU_SO;
     const rtKernelLaunchNames_t launchName = {nullptr, opName.c_str(), ""};
-    ERROR_RETURN_MSG_INNER(Runtime::Instance()->StartAicpuSd(curCtx->Device_()),
+    ERROR_RETURN_MSG_INNER(Runtime::Instance()->StartAicpuSd(device),
         "Cpu kernel launch failed, check and start tsd open aicpu sd error.");
 
     // only 1 so
@@ -1617,13 +1600,109 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo)
     argsInfo.args = &batchCpuSo;
     argsInfo.argsSize = static_cast<uint32_t>(sizeof(BatchProcCpuOpFromBufArgs));
     argsInfo.isNoNeedH2DCopy = 0U; // 0 is need h2d copy
-    ret = curCtx->LaunchAicpuKernelForCpuSo(&launchName, &argsInfo, stm);
+    ret = LaunchAicpuKernelForCpuSo(&launchName, &argsInfo, stm.get());
     ERROR_RETURN(ret, "launch cpu kernel failed! error=%#x", ret);
 
     ret = stm->Synchronize(false, -1);  // -1代表永不超时
     ERROR_RETURN(ret, "stream sync failed! error=%#x", ret);
 
     return RT_ERROR_NONE;
+}
+rtError_t Program::CopySoAndNameToCurrentDevice()
+{
+    rtError_t ret = RT_ERROR_NONE;
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device *device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+    if (!IsNewBinaryLoadFlow() || devicePtr_[device->Id_()] != nullptr) {
+        RT_LOG(RT_LOG_INFO, "device_id=%d, handle=%p, isNewFlow=%d already copy or not need.", device->Id_(), this, IsNewBinaryLoadFlow());
+        return ret;
+    }
+    {
+        const std::lock_guard<std::mutex> lock(devValidMutex_[device->Id_()]);
+        if (devicePtr_[device->Id_()] != nullptr) {
+            RT_LOG(RT_LOG_INFO, "device_id=%d, handle=%p already copy.", device->Id_(), this);
+            return ret;
+        }
+        if (!isLazyLoad_ && (kernelRegType_ == RT_KERNEL_REG_TYPE_NON_CPU)) {
+            ret = Load2Device();
+            ERROR_RETURN(ret, "load program to device_id=%d failed, retCode=%#x", device->Id_(), ret);
+        }
+        kernelMapLock_.Lock();
+        for (auto item : kernelNameMap_) {
+            // Aicpu算子注册时，把KernelName, soname存储至device侧，并把devAddr记录至kernel，从而args区无须填入kernelName, soname
+            Kernel *kernel = item.second;
+            ret = StoreKernelLiteralNameToDevice(kernel);
+            if (unlikely(ret != RT_ERROR_NONE)) {
+                RT_LOG(RT_LOG_ERROR, "fail to store kernel %s literal name to device_id=%d, retCode=%#x", item.first.c_str(), device->Id_(), ret);
+                delete kernel;
+                kernelNameMap_.erase(item.first);
+            }
+        }
+        kernelMapLock_.Unlock();
+
+        ret = ProcCpuKernelH2DMem(true, device);
+        ERROR_RETURN(ret, "cpu kernel send to aicpu failed device_id=%d, retCode=%#x", device->Id_(), ret);
+        devicePtr_[device->Id_()] = device;
+    }
+    device->RegisterProgram(this);
+    return RT_ERROR_NONE;
+}
+
+void Program::SetDeviceSoAndNameInvalid(const uint32_t deviceId)
+{
+    const std::lock_guard<std::mutex> lock(devValidMutex_[deviceId]);
+    devicePtr_[deviceId] = nullptr;
+    soNameDevAddrMap_[deviceId].clear();
+    funcNameDevAddrMap_[deviceId].clear();
+    baseAddr_[deviceId] = nullptr;
+    baseAddrAlign_[deviceId] = nullptr;
+}
+
+bool Program::IsDeviceSoAndNameValid(const uint32_t deviceId)
+{
+    if (!IsNewBinaryLoadFlow()) {
+        return true;
+    }
+    return devicePtr_[deviceId] != nullptr;
+}
+void Program::SetProgramInvalidToDevice(const uint32_t deviceId)
+{
+    RT_LOG(RT_LOG_DEBUG, "begin to delete program=%p from device_id=%u.", this, deviceId);
+    while (true) {
+        devValidMutex_[deviceId].lock();
+        if (devicePtr_[deviceId] == nullptr) {
+            devValidMutex_[deviceId].unlock();
+            break;
+        }
+        Device * dev =  devicePtr_[deviceId];
+        if (dev->ProgramSetMutexTryLock()) {
+            dev->UnRegisterProgram(this);
+            devicePtr_[deviceId] = nullptr;
+            dev->ProgramSetMutexUnLock();
+            devValidMutex_[deviceId].unlock();
+            break;
+        } else {
+            devValidMutex_[deviceId].unlock();
+            std::this_thread::sleep_for(std::chrono::microseconds(10U));
+        }
+    }
+    RT_LOG(RT_LOG_DEBUG, "delete program=%p from device_id=%u end.", this, deviceId);
+    return;
+}
+rtError_t Program::FreeSoAndNameByDeviceId(const uint32_t deviceId)
+{
+    rtError_t error = RT_ERROR_NONE;
+    {
+        const std::lock_guard<std::mutex> lock(devValidMutex_[deviceId]);
+        if (devicePtr_[deviceId] == nullptr) {
+            return RT_ERROR_NONE;
+        }
+        error = Runtime::Instance()->BinaryUnLoad(devicePtr_[deviceId], this);
+    }
+    SetProgramInvalidToDevice(deviceId);
+    return error;
 }
 
 }

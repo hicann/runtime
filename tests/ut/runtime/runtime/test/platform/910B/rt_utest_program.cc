@@ -391,7 +391,7 @@ TEST_F(ProgramTest, CPU_KERNEL_REG)
     void *devMem= nullptr;
     allocatedMem.push_back(devMem);
     MOCKER_CPP(&Context::StreamDestroy).stubs().will(returnValue(RT_ERROR_NONE));
-    error = program->FreeCpuSoH2dMem((Stream *)stream, allocatedMem);
+    error = program->FreeCpuSoH2dMem(curCtx->Device_(), allocatedMem);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);

@@ -78,6 +78,7 @@ constexpr uint64_t MEM_BLOCK_SIZE = 64ULL * 1024ULL * 1024ULL; // 64MB:64 * 1024
 constexpr uint32_t TS_NUM_ADC = 2U;
 constexpr uint32_t OVERFLOW_ADDR_MAX_SIZE = 512U;
 extern bool g_isAddrFlatDevice;
+rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm);
 
 class ContextCallBack : public ThreadRunnable {
     void Run(const void * const param) override;
@@ -115,14 +116,10 @@ public:
     rtError_t LaunchKernelGetPrefetchCnt(const Kernel * const kernelPtr, const Program * const prog,
         uint32_t &icachePrefetchCnt1, uint32_t &icachePrefetchCnt2, uint8_t &mixType) const;
 
-    rtError_t LaunchKernelEx(const void * const args, const uint32_t argsSize, const uint32_t flags,
-        Stream * const stm);
+    rtError_t LaunchKernelEx(const void * const args, const uint32_t argsSize, const uint32_t flags, Stream * const stm);
 
     rtError_t LaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
         const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag);
-
-    rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo,
-        Stream * const stm);
 
     rtError_t LaunchCpuKernelExWithArgs(const uint32_t coreDim, const rtAicpuArgsEx_t * const argsInfo,
         Stream * const stm, const uint32_t flag, const uint32_t kernelType);

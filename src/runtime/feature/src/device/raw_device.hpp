@@ -18,6 +18,7 @@
 #include "device.hpp"
 #include "base_starsv2.hpp"
 #include "event_expanding.hpp"
+#include "program.hpp"
 namespace cce {
 namespace runtime {
 
@@ -811,6 +812,15 @@ public:
 
     uint64_t AllocSqIdMemAddr() override;
     void FreeSqIdMemAddr(const uint64_t sqIdAddr) override;
+    void RegisterProgram(Program *prog) override;
+    void UnRegisterProgram(Program *prog) override;
+    void UnregisterAllProgram();
+    bool ProgramSetMutexTryLock() override {
+        return programMtx_.try_lock();
+    }
+    void ProgramSetMutexUnLock() override {
+        programMtx_.unlock();
+    }
 private:
     bool JudgeIsEndGraphNotifyWaitExecuted(const Stream* const exeStream, Model* captureModel,
         std::list<uint32_t>& sqePosList) const;
@@ -965,6 +975,8 @@ private:
     size_t printblockLen_ = 0U;
     std::atomic<uint64_t> parseCounter_{0};
     BufferAllocator* sqIdMemAddrPool_{nullptr};
+    std::mutex programMtx_;
+    std::unordered_set<Program *> programSet_;
 };
 }
 }
