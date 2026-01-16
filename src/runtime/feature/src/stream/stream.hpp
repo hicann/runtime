@@ -1152,6 +1152,7 @@ public:
         (void)hostFlag;
     }
     virtual rtError_t PrintStmDfxAndCheckDevice(uint64_t& beginCnt, uint64_t& endCnt, uint16_t& checkCount, uint32_t tryCount);
+    virtual rtError_t StreamTaskClean(void);
     void PushbackTilingTblAddr(void *addr)
     {
         devTilingTblAddr.push_back(addr);
@@ -1165,7 +1166,6 @@ public:
     // use for starsv2
     virtual rtError_t StreamAbort(void) { return RT_ERROR_NONE; }
     virtual rtError_t StreamRecoverAbort(void) { return RT_ERROR_NONE; }
-    virtual rtError_t StreamTaskClean(void) { return RT_ERROR_NONE; }
     virtual rtError_t ModelAbortById(uint32_t modelId);
     rtError_t UpdateTask(TaskInfo** updateTask);
     TaskInfo* AllocTask(TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason,
@@ -1313,6 +1313,8 @@ private:
     // submit create stream task
     rtError_t SubmitCreateStreamTask();
     rtError_t GetSynchronizeError(rtError_t error);
+    void ResetHostResourceForPersistentStream();
+    void RecycleModelDelayRecycleTask();
 public:
     bool isDeviceSyncFlag = false;
     uint32_t streamResId;

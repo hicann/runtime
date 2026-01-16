@@ -676,6 +676,23 @@ typedef enum {
 
 typedef void (*aclrtDeviceStateCallback)(int32_t deviceId, aclrtDeviceState state, void *args);
 
+/*
+ * BackUp Flow:
+ * LOCK_PRE → [aclrtSnapShotProcessLock] → BACKUP_PRE → [aclrtSnapShotProcessBackup] → BACKUP_POST → [aclrtSnapShotProcessUnlock] -> UNLOCK_POST
+ * Restore Flow:
+ * RESTORE_PRE → [aclrtSnapShotProcessRestore] → RESTORE_POST → [aclrtSnapShotProcessUnlock] → UNLOCK_POST
+ */
+typedef enum {
+    ACL_RT_SNAPSHOT_LOCK_PRE = 0,
+    ACL_RT_SNAPSHOT_BACKUP_PRE,
+    ACL_RT_SNAPSHOT_BACKUP_POST,
+    ACL_RT_SNAPSHOT_RESTORE_PRE,
+    ACL_RT_SNAPSHOT_RESTORE_POST,
+    ACL_RT_SNAPSHOT_UNLOCK_POST,
+} aclrtSnapShotStage;
+
+typedef uint32_t (*aclrtSnapShotCallBack)(int32_t deviceId, void* args);
+
 typedef struct aclrtUuid {
     char bytes[16];
 } aclrtUuid;
@@ -4629,7 +4646,7 @@ typedef enum aclrtProcessState {
  * @brief lock the NPU process which will block further aclrt api calls
  *
  * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues success.
+ * @retval OtherValues Failure.
  */
 ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessLock();
 
@@ -4638,7 +4655,7 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessLock();
  * @brief unlock the NPU process and allow it to continue making aclrt api calls
  *
  * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues success.
+ * @retval OtherValues Failure.
  */
 ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessUnlock();
 
@@ -4647,7 +4664,7 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessUnlock();
  * @brief backup the NPU process
  *
  * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues success.
+ * @retval OtherValues Failure.
  */
 ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessBackup();
 
@@ -4656,9 +4673,45 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessBackup();
  * @brief restore the NPU process from the last backup point
  *
  * @retval ACL_SUCCESS The function is successfully executed.
- * @retval
+ * @retval OtherValues Failure
 */
 ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessRestore();
+
+/**
+ * @ingroup AscendCL
+ * @brief registers a callback function for snapshot operation stages
+ * @param [in] stage the snapshot stage at which the callback should be triggered
+ *   The available stages are:
+ *   @li ACL_RT_SNAPSHOT_LOCK_PRE         - Called before process lock for snapshot
+ *   @li ACL_RT_SNAPSHOT_BACKUP_PRE       - Called before backup operation starts
+ *   @li ACL_RT_SNAPSHOT_BACKUP_POST      - Called after backup operation completes
+ *   @li ACL_RT_SNAPSHOT_RESTORE_PRE      - Called before restore operation starts
+ *   @li ACL_RT_SNAPSHOT_RESTORE_POST     - Called after restore operation completes
+ *   @li ACL_RT_SNAPSHOT_UNLOCK_POST      - Called after process unlock
+ * @param [in] callback Pointer to the callback function
+ * @param [in] args User-defined argument pointer passed unchanged to the callback.
+ *        This can be NULL if no additional data is needed.
+ * @retval ACL_SUCCESS The function is successfully executed
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args);
+
+/**
+ * @ingroup AscendCL
+ * @brief unregisters a previously registered callback function for a snapshot stage
+ * @param [in] stage the snapshot stage at which the callback should be triggered
+ *   The available stages are:
+ *   @li ACL_RT_SNAPSHOT_LOCK_PRE         - Called before process lock for snapshot
+ *   @li ACL_RT_SNAPSHOT_BACKUP_PRE       - Called before backup operation starts
+ *   @li ACL_RT_SNAPSHOT_BACKUP_POST      - Called after backup operation completes
+ *   @li ACL_RT_SNAPSHOT_RESTORE_PRE      - Called before restore operation starts
+ *   @li ACL_RT_SNAPSHOT_RESTORE_POST     - Called after restore operation completes
+ *   @li ACL_RT_SNAPSHOT_UNLOCK_POST      - Called after process unlock
+ * @param [in] callback Pointer to the callback function
+ * @retval ACL_SUCCESS The function is successfully executed
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback);
 
 /**
  * @ingroup AscendCL

@@ -50,6 +50,7 @@
 #include "task_execute_time.h"
 #include "starsv2_base.hpp"
 #include "register_memory.hpp"
+#include "global_state_manager.hpp"
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
 
@@ -1526,8 +1527,8 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
     const bool supFlag = ((evt->IsNewMode()) || ((!evt->IsNotify()) && (evt->GetEventFlag() == RT_EVENT_DEFAULT))) &&
             (curStm->GetModelNum() != 0);
     COND_RETURN_WARN(supFlag, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Not support current mode bind stream, mode=%d, flag=%" PRIu64 ", isNotify=%d, isModel=%d.",
-        evt->IsNewMode(), evt->GetEventFlag(), evt->IsNotify(), (curStm->GetModelNum() != 0U));
+        "Not support current mode bind stream, mode=%d, flag=%" PRIu64 ", isNotify=%d, isModel=%d, stream_id=%d.",
+        evt->IsNewMode(), evt->GetEventFlag(), evt->IsNotify(), (curStm->GetModelNum() != 0U), curStm->Id_());
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Stream wait event failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
 
@@ -3728,14 +3729,54 @@ rtError_t ApiImpl::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
     return error;
 }
 
+rtError_t ApiImpl::SnapShotProcessLock()
+{
+    rtError_t error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_LOCK_PRE);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = GlobalStateManager::GetInstance().Locked();
+    return error;
+}
+
+rtError_t ApiImpl::SnapShotProcessUnlock()
+{
+    rtError_t error = GlobalStateManager::GetInstance().Unlocked();
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_UNLOCK_POST);
+    return error;
+}
+
 rtError_t ApiImpl::SnapShotProcessBackup()
 {
-    return ContextManage::SnapShotProcessBackup();
+    rtError_t error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_BACKUP_PRE);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = ContextManage::SnapShotProcessBackup();
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_BACKUP_POST);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_BACKED_UP);
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::SnapShotProcessRestore()
 {
-    return ContextManage::SnapShotProcessRestore();
+    rtError_t error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_RESTORE_PRE);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = ContextManage::SnapShotProcessRestore();
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    error = Runtime::Instance()->SnapShotCallback(RT_SNAPSHOT_RESTORE_POST);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_LOCKED);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
+    return Runtime::Instance()->SnapShotCallbackRegister(stage, callback, args);
+}
+
+rtError_t ApiImpl::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    return Runtime::Instance()->SnapShotCallbackUnregister(stage, callback);
 }
 
 rtError_t ApiImpl::DeviceSetTsId(const uint32_t tsId)

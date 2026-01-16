@@ -1207,22 +1207,6 @@ TEST_F(CloudV2ApiTest910b, rtStreamWaitEventWithTimeout)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-TEST_F(CloudV2ApiTest910b, rtStreamTaskClean_02)
-{
-    rtError_t error = RT_ERROR_NONE;
-    uint32_t devId = 0U;
-    RawDevice *device = new RawDevice(0);
-    device->Init();
-    Stream *stm = new Stream(device, 0);
-
-    stm->SetBindFlag(true);
-    error = rtStreamTaskClean(stm);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-
-    delete stm;
-    delete device;
-}
-
 TEST_F(CloudV2ApiTest910b, rtStreamSynchronizeWithTimeout)
 {
     rtError_t error;
@@ -1642,23 +1626,6 @@ TEST_F(CloudV2ApiTest910b, rtsProfTrace_007)
 
     delete stubDevice;
 }
-
-TEST_F(CloudV2ApiTest910b, rtsPersistentTaskClean_001)
-{
-    rtError_t error = RT_ERROR_NONE;
-    uint32_t devId = 0U;
-    RawDevice *device = new RawDevice(0);
-    device->Init();
-    Stream *stm = new Stream(device, 0);
-
-    stm->SetBindFlag(true);
-    error = rtsPersistentTaskClean(stm);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-
-    delete stm;
-    delete device;
-}
-
 
 TEST_F(CloudV2ApiTest910b, rtsMemReserveAddress)
 {

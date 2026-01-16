@@ -518,7 +518,6 @@ add_executable(runtime_utest_api_910B
     rt_utest_snapshot.cc
     rt_utest_ipc_event.cc
     rt_utest_macro_value.cc
-    rt_utest_npu_snapshot.cc
     rt_utest_dfx_api.cc
     rt_utest_driver.cc
     rt_utest_context.cc

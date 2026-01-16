@@ -3090,6 +3090,18 @@ TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_failed)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, SnapShotCallbackRegister_failed)
+{
+    aclError ret = aclrtSnapShotCallbackRegister(ACL_RT_SNAPSHOT_LOCK_PRE, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapShotCallbackUnregister_failed)
+{
+    aclError ret = aclrtSnapShotCallbackUnregister(ACL_RT_SNAPSHOT_LOCK_PRE, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
 TEST_F(UTEST_ACL_Runtime, get_mem_uce_info__failedwith_invalid_array)
 {
   int32_t deviceId = 0;

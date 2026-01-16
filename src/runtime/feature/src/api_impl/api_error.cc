@@ -2707,6 +2707,26 @@ rtError_t ApiErrorDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t
     return impl_->DeviceTaskAbort(realDeviceId, timeout);
 }
 
+rtError_t ApiErrorDecorator::SnapShotProcessLock()
+{
+    return impl_->SnapShotProcessLock();
+}
+
+rtError_t ApiErrorDecorator::SnapShotProcessUnlock()
+{
+    return impl_->SnapShotProcessUnlock();
+}
+
+rtError_t ApiErrorDecorator::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
+    return impl_->SnapShotCallbackRegister(stage, callback, args);
+}
+
+rtError_t ApiErrorDecorator::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    return impl_->SnapShotCallbackUnregister(stage, callback);
+}
+
 rtError_t ApiErrorDecorator::SnapShotProcessBackup()
 {
     GlobalStateManager &globalStateManagerInstance = GlobalStateManager::GetInstance();

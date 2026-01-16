@@ -475,6 +475,8 @@ public:
     virtual rtError_t rtSnapShotProcessUnlock();
     virtual rtError_t rtSnapShotProcessBackup();
     virtual rtError_t rtSnapShotProcessRestore();
+    virtual rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args);
+ 	virtual rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
     // tdt function
     virtual int32_t TdtHostInit(uint32_t deviceId);
     virtual int32_t TdtHostPreparePopData();

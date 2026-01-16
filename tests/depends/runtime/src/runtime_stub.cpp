@@ -2210,6 +2210,22 @@ rtError_t aclStub::rtSnapShotProcessRestore()
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
+{
+    if (callback == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    if (callback == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return RT_ERROR_NONE;
+}
+
 MockFunctionTest& MockFunctionTest::aclStubInstance()
 {
     static MockFunctionTest stub;
@@ -2244,6 +2260,16 @@ rtError_t rtSnapShotProcessBackup()
 rtError_t rtSnapShotProcessRestore()
 {
   return MockFunctionTest::aclStubInstance().rtSnapShotProcessRestore();
+}
+
+rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
+{
+    return MockFunctionTest::aclStubInstance().rtSnapShotCallbackRegister(stage, callback, args);
+}
+
+rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    return MockFunctionTest::aclStubInstance().rtSnapShotCallbackUnregister(stage, callback);
 }
 
 rtError_t rtSetDevice(int32_t device)

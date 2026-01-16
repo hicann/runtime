@@ -187,8 +187,11 @@ rtError_t ApiImpl::StreamRecover(Stream * const stm)
 
 rtError_t ApiImpl::StreamTaskClean(Stream * const stm)
 {
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        "task clean failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
+    return stm->StreamTaskClean();
 }
 
 rtError_t ApiImpl::DeviceResourceClean(int32_t devId)

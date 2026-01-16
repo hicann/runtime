@@ -1649,6 +1649,16 @@ aclError aclrtSnapShotProcessRestore()
     return aclrtSnapShotProcessRestoreImpl();
 }
 
+aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void* args)
+{
+    return aclrtSnapShotCallbackRegisterImpl(stage, callback, args);
+}
+
+aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)
+{
+    return aclrtSnapShotCallbackUnregisterImpl(stage, callback);
+}
+
 aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
 {
     return aclrtCacheLastTaskOpInfoImpl(infoPtr, infoSize);

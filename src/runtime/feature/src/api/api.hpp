@@ -376,8 +376,12 @@ public:
     virtual rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) = 0;
     virtual rtError_t DeviceSynchronize(const int32_t timeout = -1) = 0;
     virtual rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) = 0;
+    virtual rtError_t SnapShotProcessLock() = 0;
+ 	virtual rtError_t SnapShotProcessUnlock() = 0;
     virtual rtError_t SnapShotProcessBackup() = 0;
     virtual rtError_t SnapShotProcessRestore() = 0;
+    virtual rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args) = 0;
+ 	virtual rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) = 0;
     virtual rtError_t DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList) = 0;
     virtual rtError_t DeviceGetModelList(int32_t devId, rtModelList_t *mdlList) = 0;
     virtual rtError_t DeviceGetStreamPriorityRange(int32_t * const leastPriority, int32_t * const greatestPriority) = 0;

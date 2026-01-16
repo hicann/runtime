@@ -335,9 +335,11 @@ rtError_t ApiErrorDecorator::StreamRecover(Stream * const stm)
 
 rtError_t ApiErrorDecorator::StreamTaskClean(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG(stm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_WITH_NOLOG(!stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM), 
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    const bool isSupport =
+        stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM) ||
+        stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT);
+    COND_RETURN_WITH_NOLOG(!isSupport, RT_ERROR_FEATURE_NOT_SUPPORT);
     COND_RETURN_ERROR_MSG_INNER((((stm->Flags() & RT_STREAM_PERSISTENT) == 0U) || (!stm->GetBindFlag())),
         RT_ERROR_STREAM_INVALID, "Stream must binded");
     COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_AICPU) != 0U),

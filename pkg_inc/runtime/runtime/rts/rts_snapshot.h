@@ -23,6 +23,17 @@ typedef enum {
     RT_PROCESS_STATE_MAX 
 } rtProcessState;
 
+typedef enum {
+    RT_SNAPSHOT_LOCK_PRE = 0,
+    RT_SNAPSHOT_BACKUP_PRE,
+    RT_SNAPSHOT_BACKUP_POST,
+    RT_SNAPSHOT_RESTORE_PRE,
+    RT_SNAPSHOT_RESTORE_POST,
+    RT_SNAPSHOT_UNLOCK_POST,
+} rtSnapShotStage;
+
+typedef uint32_t (*rtSnapShotCallBack)(int32_t devId, void* args);
+
 /**
  * @ingroup rts_snapshot
  * @brief lock the NPU process which will block further rts API calls
@@ -60,6 +71,52 @@ RTS_API rtError_t rtSnapShotProcessBackup();
  * @return ACL_RT_SUCCESS for ok, others failed
  */
 RTS_API rtError_t rtSnapShotProcessRestore();
+
+/**
+ * @ingroup rts_snapshot
+ * @brief registers a callback function for snapshot operation stages
+ * @param [in] stage the snapshot stage at which the callback should be triggered
+ *   The available stages are:
+ *   @li RT_SNAPSHOT_LOCK_PRE         - Called before process lock for snapshot
+ *   @li RT_SNAPSHOT_BACKUP_PRE       - Called before backup operation starts
+ *   @li RT_SNAPSHOT_BACKUP_POST      - Called after backup operation completes
+ *   @li RT_SNAPSHOT_RESTORE_PRE      - Called before restore operation starts
+ *   @li RT_SNAPSHOT_RESTORE_POST     - Called after restore operation completes
+ *   @li RT_SNAPSHOT_UNLOCK_POST      - Called after process unlock
+ * @param [in] callback Pointer to the callback function with signature:
+ *        @code
+ *        uint32_t rtSnapShotCallBack(int32_t devId, void* args);
+ *        @endcode
+ *        The system will invoke this function when the specified stage is reached.
+ *        The callback should return 0 on success, non-zero error code on failure.
+ *        Must not be NULL.
+ * @param [in] args User-defined argument pointer passed unchanged to the callback.
+ *        This can be NULL if no additional data is needed.
+ * @return ACL_RT_SUCCESS for ok, others failed
+ */
+RTS_API rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args);
+
+/**
+ * @ingroup rts_snapshot
+ * @brief unregisters a previously registered callback function for a snapshot stage
+ * @param [in] stage the snapshot stage at which the callback should be triggered
+ *   The available stages are:
+ *   @li RT_SNAPSHOT_LOCK_PRE         - Called before process lock for snapshot
+ *   @li RT_SNAPSHOT_BACKUP_PRE       - Called before backup operation starts
+ *   @li RT_SNAPSHOT_BACKUP_POST      - Called after backup operation completes
+ *   @li RT_SNAPSHOT_RESTORE_PRE      - Called before restore operation starts
+ *   @li RT_SNAPSHOT_RESTORE_POST     - Called after restore operation completes
+ *   @li RT_SNAPSHOT_UNLOCK_POST      - Called after process unlock
+ * @param [in] callback Pointer to the callback function with signature:
+ *        @code
+ *        uint32_t rtSnapShotCallBack(int32_t devId, void* args);
+ *        @endcode
+ *        The system will invoke this function when the specified stage is reached.
+ *        The callback should return 0 on success, non-zero error code on failure.
+ *        Must not be NULL.
+ * @return ACL_RT_SUCCESS for ok, others failed
+ */
+RTS_API rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
 
 #if defined(__cplusplus)
 }
