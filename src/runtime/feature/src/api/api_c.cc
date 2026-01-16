@@ -286,9 +286,8 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, ui
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)),
-        RT_ERROR_INVALID_VALUE, "argCount=%u is invalid, valid range is [0, %u)", launchArg.argCount,
-        (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)), RT_ERROR_INVALID_VALUE, 
+        launchArg.argCount, "[0, " + std::to_string(ARG_ENTRY_SIZE / MIN_ARG_SIZE) + ")");
     launchArg.stubFunc = stubFunc;
     if (launchArg.argCount == 0U) {
         launchArg.argCount = 1U;
@@ -304,11 +303,11 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, ui
     argsInfo.args = args;
     argsInfo.argsSize = argsSize;
     Context * const curCtx = rtInstance->CurrentContext();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(curCtx == nullptr, RT_ERROR_CONTEXT_NULL, "current context is nullptr");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(curCtx == nullptr, RT_ERROR_CONTEXT_NULL, "current context is nullptr");
 
     Stream * const curStm = (exeStream == nullptr) ? curCtx->DefaultStream_() : exeStream;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "stream is not in current ctx, stream_id=%d.", curStm->Id_());
 
     // 0 : need h2d copy  1: no need h2d copy
@@ -333,9 +332,8 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)),
-        RT_ERROR_INVALID_VALUE, "argCount=%u is invalid, valid range is [0, %u)", launchArg.argCount,
-        (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)), RT_ERROR_INVALID_VALUE, 
+        launchArg.argCount, "[0, " + std::to_string(ARG_ENTRY_SIZE / MIN_ARG_SIZE) + ")");
     launchArg.stubFunc = nullptr;
     if (launchArg.argCount == 0U) {
         launchArg.argCount = 1U;
@@ -361,9 +359,8 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)),
-        RT_ERROR_INVALID_VALUE, "argCount=%u is invalid, valid range is [0, %u)", launchArg.argCount,
-        (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)), RT_ERROR_INVALID_VALUE, 
+        launchArg.argCount, "[0, " + std::to_string(ARG_ENTRY_SIZE / MIN_ARG_SIZE) + ")");
     launchArg.stubFunc = nullptr;
     if (launchArg.argCount == 0U) {
         launchArg.argCount = 1U;
@@ -560,12 +557,12 @@ rtError_t rtConfigureCall(uint32_t numBlocks, rtSmDesc_t *smDesc, rtStream_t stm
         launchArg.smUsed = true;
         ret = memcpy_s(&launchArg.smDesc, sizeof(launchArg.smDesc), smDesc,
                        sizeof(launchArg.smDesc));
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE(ret != EOK, RT_ERROR_SEC_HANDLE,
-            "Call memcpy_s failed, copy size is %zu", sizeof(launchArg.smDesc));
+        COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(ret != EOK, RT_ERROR_SEC_HANDLE,
+            "Call memcpy_s failed, copy size is %zu.", sizeof(launchArg.smDesc));
     } else {
         launchArg.smUsed = false;
         ret = memset_s(&launchArg.smDesc, sizeof(launchArg.smDesc), 0, sizeof(launchArg.smDesc));
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE(ret != EOK, RT_ERROR_SEC_HANDLE, "Call memset_s failed, set size is %zu.",
+        COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(ret != EOK, RT_ERROR_SEC_HANDLE, "Call memset_s failed, set size is %zu.",
                                            sizeof(launchArg.smDesc));
     }
     launchArg.isConfig = true;
@@ -4188,7 +4185,7 @@ rtError_t rtNeedDevVA2PA(bool *need)
     rtChipType_t chipType = rtInstance->GetChipType();
     DevProperties devProperty {};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
         "Failed to get dev properties, chipType = %u", chipType);
     if (devProperty.isSupportDevVA2PA) {
         *need = true;
@@ -4205,7 +4202,7 @@ rtError_t rtDevVA2PA(uint64_t devAddr, uint64_t len, rtStream_t stm, bool isAsyn
     rtChipType_t chipType = rtInstance->GetChipType();
     DevProperties devProperty {};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DRV_INVALID_DEVICE,
         "Failed to get dev properties, chipType = %u", chipType);
     if (!(devProperty.isSupportDevVA2PA)) {
         RT_LOG(RT_LOG_ERROR, "Chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
@@ -4228,9 +4225,8 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)),
-        RT_ERROR_INVALID_VALUE, "argCount=%u is invalid, valid range is [0, %u)", launchArg.argCount,
-        (ARG_ENTRY_SIZE / MIN_ARG_SIZE));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((launchArg.argCount >= (ARG_ENTRY_SIZE / MIN_ARG_SIZE)), RT_ERROR_INVALID_VALUE, 
+        launchArg.argCount, "[0, " + std::to_string(ARG_ENTRY_SIZE / MIN_ARG_SIZE) + ")");
     launchArg.stubFunc = nullptr;
     if (launchArg.argCount == 0U) {
         launchArg.argCount = 1U;
@@ -4431,15 +4427,14 @@ rtError_t rtsProfTrace(void *userdata, int32_t length, rtStream_t stream)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((userdata == nullptr), RT_ERROR_INVALID_VALUE,
-        "Invalid userdata, the parameter cannot be a null pointer.");
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(userdata, RT_ERROR_INVALID_VALUE);
     const int32_t dataSize = static_cast<int32_t>(sizeof(rtProfTraceUserData));
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(((length > dataSize) || (length <= 0)), RT_ERROR_INVALID_VALUE,
-        "Invalid length=%d, valid range is (0, %d].", length, dataSize);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(((length > dataSize) || (length <= 0)), RT_ERROR_INVALID_VALUE, 
+        length, "(0, " + std::to_string(dataSize) + "]");
 
     rtProfTraceUserData data = {0, 0, 0};
     errno_t ret = memcpy_s(&data, dataSize, userdata, length);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(ret != EOK, RT_ERROR_SEC_HANDLE,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(ret != EOK, RT_ERROR_SEC_HANDLE,
         "Call memcpy_s failed in rtsProfTrace, copy size is %d", dataSize);
 
     Stream * const exeStream = static_cast<Stream *>(stream);

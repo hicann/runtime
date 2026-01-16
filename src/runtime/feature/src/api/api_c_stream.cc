@@ -46,10 +46,8 @@ rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config)
 {
     int32_t priority = RT_STREAM_PRIORITY_DEFAULT;
     uint32_t flags = RT_STREAM_DEFAULT;
-
     if (config != nullptr) {
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE((config->attrs == nullptr),
-            RT_ERROR_INVALID_VALUE, "Invalid config, attrs is nullptr .");
+        PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(config->attrs, RT_ERROR_INVALID_VALUE);
         for (uint32_t i = 0; i < config->numAttrs; ++i) {
             switch (config->attrs[i].id) {
                 case RT_STREAM_CREATE_ATTR_FLAGS:
@@ -370,8 +368,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsSwitchStream(void *leftValue, rtCondition_t cond, void *rightValue, rtSwitchDataType_t dataType,
                           rtStream_t trueStream, rtStream_t falseStream, rtStream_t stream)
 {
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((falseStream != nullptr), RT_ERROR_INVALID_VALUE,
-        "falseStream is a reserved parameter, only support nullptr.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((falseStream != nullptr), RT_ERROR_INVALID_VALUE, falseStream, "nullptr");
     return rtStreamSwitchEx(leftValue, cond, rightValue, trueStream, stream, dataType);
 }
 
@@ -646,8 +643,9 @@ VISIBILITY_DEFAULT
 rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags)
 {
     constexpr uint64_t STREAM_DESTROY_VALID_FLAGS = (RT_STREAM_DESTORY_FLAG_DEFAULT | RT_STREAM_DESTORY_FLAG_FORCE);
-    COND_RETURN_OUT_ERROR_MSG_CALL((flags & (~STREAM_DESTROY_VALID_FLAGS)) != 0U, ACL_ERROR_RT_PARAM_INVALID,
-        "flags=%" PRIu64 " does not support.", flags);
+
+    COND_RETURN_AND_MSG_OUTER((flags & (~STREAM_DESTROY_VALID_FLAGS)) != 0U, ACL_ERROR_RT_PARAM_INVALID,
+            ErrorCode::EE1006, __func__, "flags=" + std::to_string(flags));
     if ((flags & RT_STREAM_DESTORY_FLAG_FORCE) != 0U) {
         return rtStreamDestroyForce(stm);
     }
@@ -663,8 +661,8 @@ rtError_t rtsStreamAbort(rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtsStreamSynchronize(rtStream_t stm, int32_t timeout)
 {
-    COND_RETURN_OUT_ERROR_MSG_CALL((timeout < -1) || (timeout == 0), ACL_ERROR_RT_PARAM_INVALID,
-        "timeout=%dms does not support.", timeout);
+    COND_RETURN_AND_MSG_OUTER((timeout < -1) || (timeout == 0), ACL_ERROR_RT_PARAM_INVALID, 
+        ErrorCode::EE1006, __func__, "timeout=" + std::to_string(timeout));
     if (timeout == -1) {
         return rtStreamSynchronize(stm);
     }
