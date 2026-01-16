@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_NPU_DRIVER_BASE_HPP
 #define CCE_RUNTIME_NPU_DRIVER_BASE_HPP
 
+#include "errcode_manage.hpp"
+
 extern "C" {
 int __attribute__((weak)) halMbufSetDataLen(Mbuf *mbufPtr, uint64_t len);
 int __attribute__((weak)) halMbufGetDataLen(Mbuf *mbuf, uint64_t *len);
@@ -205,6 +207,8 @@ constexpr uint64_t RT_MEM_DEV_READONLY = 1U; // set device memory readonly, but 
 constexpr int32_t RT_INFO_TYPE_VA = 34U;
 constexpr int32_t RT_INFO_TYPE_SYS_COUNT = 13U;
 
+const std::string RT_MEMORY_ALLOC_ERROR = "EL0004";
+
 enum class RtCtrlType {
     RT_CTRL_TYPE_ADDR_MAP = 0,
     RT_CTRL_TYPE_ADDR_UNMAP = 1,
@@ -216,7 +220,7 @@ enum class RtCtrlType {
 
 #define RUNTIME_WHEN_NO_VIRTUAL_MODEL_RETURN if (sysMode_ != RUN_MACHINE_VIRTUAL || addrMode_ == 0) { \
         return RT_ERROR_NONE; \
-    }
+}
 
 #define DRV_ERROR_PROCESS(drvErrorCode, format, ...)                                                                 \
     do {                                                                                                             \
@@ -229,7 +233,13 @@ enum class RtCtrlType {
                 const int32_t errRet = sprintf_s(&(errBuf[0]), ERROR_MSG_CODE_LEN, "EL%04d", errCodeAfterTrans);     \
                 errBuf.resize(ERROR_MSG_CODE_LEN - 1U);                                                              \
                 if (likely(errRet != -1)) {                                                                          \
-                    REPORT_INPUT_ERROR(errBuf, std::vector<std::string>(), std::vector<std::string>());              \
+                    if (errBuf.compare(RT_MEMORY_ALLOC_ERROR) == 0) {                                                \
+                        REPORT_INPUT_ERROR(errBuf,                                                                   \
+                            std::vector<std::string>({"module_name"}),                                               \
+                            std::vector<std::string>({"UNKNOWN"}));                                                  \
+                    } else {                                                                                         \
+                        REPORT_INPUT_ERROR(errBuf, std::vector<std::string>(), std::vector<std::string>());          \
+                    }                                                                                                \
                 } else {                                                                                             \
                     RT_LOG(RT_LOG_WARNING, "sprintf_s failed ret:%d, errCodeAfterTrans:%d",                          \
                            errRet, errCodeAfterTrans);                                                               \
@@ -240,6 +250,40 @@ enum class RtCtrlType {
         }                                                                                                            \
         RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__);                                                      \
     } while (false)
+
+#if (!defined(WIN32))
+#define DRV_MALLOC_ERROR_PROCESS(drvErrorCode, moduleId, format, ...)                                                \
+    do {                                                                                                             \
+        if (&halMapErrorCode != nullptr) {                                                                           \
+            const int32_t errCodeAfterTrans = halMapErrorCode(drvErrorCode);                                         \
+            RT_LOG(RT_LOG_INFO, "halMapErrorCode ret:%d, drvErrorCode:%d, moduleId: %d", errCodeAfterTrans,          \
+                static_cast<int32_t>(drvErrorCode), moduleId);                                                       \
+            if ((errCodeAfterTrans >= 0) && (errCodeAfterTrans < MAX_DRV_ERR_CODE_AFTER_TRANS)) {                    \
+                std::string errBuf(ERROR_MSG_CODE_LEN, '\0');                                                        \
+                const int32_t errRet = sprintf_s(&(errBuf[0]), ERROR_MSG_CODE_LEN, "EL%04d", errCodeAfterTrans);     \
+                errBuf.resize(ERROR_MSG_CODE_LEN - 1U);                                                              \
+                if (likely(errRet != -1)) {                                                                          \
+                    if (errBuf.compare(RT_MEMORY_ALLOC_ERROR) == 0) {                                                \
+                        REPORT_INPUT_ERROR(errBuf,                                                                   \
+                            std::vector<std::string>({"module_name"}),                                               \
+                            std::vector<std::string>({RT_GET_MODULE_NAME(moduleId)}));                               \
+                    } else {                                                                                         \
+                        REPORT_INPUT_ERROR(errBuf, std::vector<std::string>(), std::vector<std::string>());          \
+                    }                                                                                                \
+                } else {                                                                                             \
+                    RT_LOG(RT_LOG_WARNING, "sprintf_s failed ret:%d, errCodeAfterTrans:%d",                          \
+                            errRet, errCodeAfterTrans);                                                              \
+                }                                                                                                    \
+                RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);                                                         \
+                break;                                                                                               \
+            }                                                                                                        \
+        }                                                                                                            \
+        RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__);                                                      \
+    } while (false)
+#else
+#define DRV_MALLOC_ERROR_PROCESS(drvErrorCode, moduleId, format, ...)      \
+    RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__)
+#endif
 
 }  // namespace runtime
 }  // namespace ccez
