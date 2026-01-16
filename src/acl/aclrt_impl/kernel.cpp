@@ -125,8 +125,13 @@ aclError aclrtLaunchKernelImpl(aclrtFuncHandle funcHandle, uint32_t blockDim, co
 
     const rtError_t rtErr = rtLaunchKernelByFuncHandleV3(funcHandle, blockDim, &argsInfo, stream, nullptr);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtLaunchKernelByFuncHandleV3 failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("rtLaunchKernelByFuncHandleV3 funHandle is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else {
+            ACL_LOG_CALL_ERROR("rtLaunchKernelByFuncHandleV3 failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
     }
 
   return ACL_SUCCESS;
@@ -215,8 +220,13 @@ aclError aclrtLaunchKernelWithConfigImpl(aclrtFuncHandle funcHandle, uint32_t bl
     }
     const auto rtErr = rtsLaunchKernelWithConfig(funcHandle, blockDim, stream, rt_cfg, argsHandle, reserve);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("Launch kernel with config Failed, runtime result = %d", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("Launch kernel with config funHandle is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else {
+            ACL_LOG_CALL_ERROR("Launch kernel with config failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
     }
     return ACL_SUCCESS;
 }
@@ -464,8 +474,13 @@ aclError aclrtLaunchKernelV2Impl(aclrtFuncHandle funcHandle, uint32_t blockDim, 
     const rtError_t rtErr = rtsLaunchKernelWithDevArgs(funcHandle, blockDim, stream, rt_cfg,
         argsData, static_cast<uint32_t>(argsSize), nullptr);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtsLaunchKernelWithDevArgs failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("rtsLaunchKernelWithDevArgs funHandle is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else {
+            ACL_LOG_CALL_ERROR("rtsLaunchKernelWithDevArgs failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
     }
 
     return ACL_SUCCESS;
@@ -492,8 +507,13 @@ aclError aclrtLaunchKernelWithHostArgsImpl(aclrtFuncHandle funcHandle, uint32_t 
     const rtError_t rtErr = rtsLaunchKernelWithHostArgs(funcHandle, blockDim, stream, rt_cfg,
         hostArgs, static_cast<uint32_t>(argsSize), rt_placeHolderArray, placeHolderNum);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("rtsLaunchKernelWithHostArgs failed, runtime result = %d.", rtErr);
-        return ACL_GET_ERRCODE_RTS(rtErr);
+        if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
+            ACL_LOG_WARN("rtsLaunchKernelWithHostArgs funHandle is invalid, runtime result = %d.", rtErr);
+            return ACL_ERROR_RT_INVALID_HANDLE;
+        } else {
+            ACL_LOG_CALL_ERROR("rtsLaunchKernelWithHostArgs failed, runtime result = %d.", rtErr);
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
     }
 
     return ACL_SUCCESS;
