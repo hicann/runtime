@@ -2284,6 +2284,113 @@ TEST_F(UTEST_ACL_Runtime, physical_memory_malloc_free)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, physical_memory_malloc_host)
+{
+    aclrtDrvMemHandle handle = nullptr;
+    size_t size = 1;
+    aclrtPhysicalMemProp prop = {};
+    prop.handleType = ACL_MEM_HANDLE_TYPE_NONE;
+    prop.allocationType = ACL_MEM_ALLOCATION_TYPE_PINNED;
+    prop.location.type = ACL_MEM_LOCATION_TYPE_HOST_NUMA;
+    prop.location.id = 0;
+    
+    prop.memAttr = ACL_DDR_MEM_HUGE;
+    aclError ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_DDR_MEM_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_DDR_MEM_P2P_HUGE;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_DDR_MEM_P2P_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_HUGE;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_HUGE1G;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_HUGE;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_HUGE1G;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+}
+
+TEST_F(UTEST_ACL_Runtime, physical_memory_malloc_device)
+{
+    aclrtDrvMemHandle handle = nullptr;
+    size_t size = 1;
+    aclrtPhysicalMemProp prop = {};
+    prop.handleType = ACL_MEM_HANDLE_TYPE_NONE;
+    prop.allocationType = ACL_MEM_ALLOCATION_TYPE_PINNED;
+    prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+    prop.location.id = 0;
+
+    prop.memAttr = ACL_MEM_NORMAL;
+    aclError ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_HUGE;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_HUGE1G;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_HUGE;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_MEM_P2P_HUGE1G;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(handle, nullptr);
+
+    prop.memAttr = ACL_DDR_MEM_NORMAL;
+    ret = aclrtMallocPhysical(&handle, size, &prop, 0);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_NE(handle, nullptr);
+}
+
 TEST_F(UTEST_ACL_Runtime, virtual_physical_memory_map_unmap)
 {
     void *virPtr = nullptr;

@@ -187,7 +187,26 @@ typedef enum aclrtMemAttr {
     ACL_HBM_MEM_P2P_NORMAL,
     ACL_HBM_MEM_HUGE1G,
     ACL_HBM_MEM_P2P_HUGE1G,
+    ACL_MEM_NORMAL,
+ 	ACL_MEM_HUGE,
+ 	ACL_MEM_HUGE1G,
+ 	ACL_MEM_P2P_NORMAL,
+ 	ACL_MEM_P2P_HUGE,
+ 	ACL_MEM_P2P_HUGE1G,
 } aclrtMemAttr;
+
+enum aclrtMemPgType {
+    NORMAL_PAGE_TYPE = 0U,
+    HUGE_PAGE_TYPE,
+    HUGE1G_PAGE_TYPE,
+};
+
+enum aclrtMemType {
+    HBM_TYPE = 0U,
+    DDR_TYPE,
+    P2P_HBM_TYPE,
+    P2P_DDR_TYPE,
+};
 
 // for ACL_RT_IPC_MEM_ATTR_ACCESS_LINK value
 #define ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO 0
@@ -244,6 +263,7 @@ typedef enum aclrtMemLocationType {
     ACL_MEM_LOCATION_TYPE_HOST = 0, /**< reserved enum, current version not support */
     ACL_MEM_LOCATION_TYPE_DEVICE,
     ACL_MEM_LOCATION_TYPE_UNREGISTERED,
+    ACL_MEM_LOCATION_TYPE_HOST_NUMA = 4, /*alloc host memeory via NUMA ID */
 } aclrtMemLocationType;
 
 typedef struct aclrtMemLocation {

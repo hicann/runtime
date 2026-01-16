@@ -30,6 +30,10 @@ constexpr int16_t MODEL_SCH_GROUP_ID_MAX = 4;
 constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
 constexpr uint32_t HUGE1G_PAGE = 2U;
 constexpr size_t MAX_SHAPE_INFO_SIZE = 1024U * 64U;
+constexpr uint32_t DEVICE_TYPE = 1;
+constexpr uint32_t NUMA_TYPE = 4;
+constexpr uint32_t DRV_MEM_HOST_NUMA_SIDE = 2;
+constexpr int32_t FEATURE_SVM_VMM_NORMAL_GRANULARITY = 6; // check drv is support alloc mem via numa id
 
 ApiErrorDecorator::ApiErrorDecorator(Api * const impl) : ApiDecorator(impl)
 {
@@ -5083,13 +5087,27 @@ rtError_t ApiErrorDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t size,
     uint64_t flags)
 {
     NULL_PTR_RETURN_MSG(prop, RT_ERROR_INVALID_VALUE);
-    const uint32_t userDeviceId = prop->devid;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
-    error = CheckDeviceIdIsValid(static_cast<int32_t>(prop->devid));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "drv devId is invalid, drv devId=%u, retCode=%#x", prop->devid, static_cast<uint32_t>(error));
+    rtError_t error = RT_ERROR_NONE;
+    // only device id need covert
+    if (prop->side == DEVICE_TYPE) {
+        const uint32_t userDeviceId = prop->devid;
+        error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        error = CheckDeviceIdIsValid(static_cast<int32_t>(prop->devid));
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+            "drv devId is invalid, drv devId=%u, retCode=%#x", prop->devid, static_cast<uint32_t>(error));
+    }
+    // check feature is support
+    if (prop->side == NUMA_TYPE) {
+        Context *curCtx = Runtime::Instance()->CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
+        COND_RETURN_WARN((!(NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), FEATURE_SVM_VMM_NORMAL_GRANULARITY))), 
+            RT_ERROR_DRV_NOT_SUPPORT, "[drv api] driver not support alloc mem via numa id feature.");
+        // rt location type covert drv location type
+        prop->side = DRV_MEM_HOST_NUMA_SIDE;
+    }
     if (prop->pg_type == HUGE1G_PAGE) {
         error = NpuDriver::CheckIfSupport1GHugePage();
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
