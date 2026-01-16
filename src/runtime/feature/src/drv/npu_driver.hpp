@@ -45,7 +45,7 @@ public:
 
     // Alloc page-locked host memory.
     rtError_t HostMemAlloc(void ** const dptr, const uint64_t size, const uint32_t deviceId,
-        const uint16_t moduleId = MODULEID_RUNTIME) override;
+        const uint16_t moduleId = MODULEID_RUNTIME, const uint32_t vaFlag = 0) override;
     rtError_t AllocFastRingBufferAndDispatch(void ** const dptr, const uint64_t size, const uint32_t deviceId,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     void FreeFastRingBuffer(void * const ptr, const uint64_t size, const uint32_t deviceId) override;

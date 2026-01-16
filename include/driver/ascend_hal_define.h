@@ -737,10 +737,12 @@ typedef struct {
 #define MEM_DVPP_VAL           0X3
 #define MEM_HOST_AGENT_VAL     0X4
 #define MEM_RESERVE_VAL        0X5
-#define MEM_MAX_VAL            0X6
+#define MEM_HOST_UVA_VAL       0X6
+#define MEM_MAX_VAL            0X7
 #define MEM_SVM                (MEM_SVM_VAL << MEM_VIRT_BIT)
 #define MEM_DEV                (MEM_DEV_VAL << MEM_VIRT_BIT)
 #define MEM_HOST               (MEM_HOST_VAL << MEM_VIRT_BIT)
+#define MEM_HOST_UVA           (MEM_HOST_UVA_VAL << MEM_VIRT_BIT)
 #define MEM_DVPP               (MEM_DVPP_VAL << MEM_VIRT_BIT)
 #define MEM_HOST_AGENT         (MEM_HOST_AGENT_VAL << MEM_VIRT_BIT)
 #define MEM_RESERVE            (MEM_RESERVE_VAL << MEM_VIRT_BIT)
@@ -1570,6 +1572,7 @@ typedef enum tagDrvFeature {
     FEATURE_HOST_PIN_REGISTER_SUPPORT_UVA = 5,
     FEATURE_SVM_VMM_NORMAL_GRANULARITY = 6, /* host PAGE_SIZE alloc granularity */
     FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION = 7,
+    FEATURE_SVM_MEM_HOST_UVA = 8,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

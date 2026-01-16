@@ -2404,31 +2404,37 @@ void ApiImpl::CheckMallocHostCfg(uint16_t *moduleId) const
     return;
 }
 
-rtError_t ApiImpl::GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t *moduleId) const
+rtError_t ApiImpl::GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t *moduleId, uint32_t *vaFlag) const
 {
-    rtError_t error = RT_ERROR_NONE;
     NULL_PTR_RETURN_MSG_OUTER(attr, RT_ERROR_INVALID_VALUE);
     if (attr->attr == RT_MEM_MALLOC_ATTR_MODULE_ID) {
         *moduleId = attr->value.moduleId;
-    } else {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(attr->attr, RT_MEM_MALLOC_ATTR_MODULE_ID);
-        error = RT_ERROR_INVALID_VALUE;
+        return RT_ERROR_NONE;
     }
-    return error;
+
+    // 设置UVA特性
+    if (attr->attr == RT_MEM_MALLOC_ATTR_VA_FLAG) {
+        *vaFlag = attr->value.vaFlag;
+        return RT_ERROR_NONE;
+    }
+
+    // 申请内存的接口不支持传入其他类型cfg
+    RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid MallocHostConfigAttrId=%d.", attr->attr);
+    return RT_ERROR_INVALID_VALUE;
 }
 
-rtError_t ApiImpl::GetMallocHostConfigInfo(const rtMallocConfig_t *cfg, uint16_t *moduleId) const
+rtError_t ApiImpl::GetMallocHostConfigInfo(const rtMallocConfig_t *cfg, uint16_t *moduleId, uint32_t *vaFlag) const
 {
     rtError_t error = RT_ERROR_NONE;
     for (uint32_t i = 0U; i < cfg->numAttrs; i++) {
         rtMallocAttribute_t* attr = &(cfg->attrs[i]);
-        error = GetMallocHostConfigAttr(attr, moduleId);
+        error = GetMallocHostConfigAttr(attr, moduleId, vaFlag);
         if (error != RT_ERROR_NONE) {
             return error;
         }
     }
     CheckMallocHostCfg(moduleId);
-    return error;
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::HostMallocWithCfg(void ** const hostPtr, const uint64_t size,
@@ -2437,18 +2443,25 @@ rtError_t ApiImpl::HostMallocWithCfg(void ** const hostPtr, const uint64_t size,
     NULL_PTR_RETURN_MSG_OUTER(hostPtr, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_MSG_OUTER(size);
     uint16_t moduleId = static_cast<uint16_t>(MODULEID_RUNTIME);
+    uint32_t vaFlag = 0U;
+    rtError_t error = RT_ERROR_NONE;
     if (cfg != nullptr) {
         NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
-    }
-
-    if ((cfg != nullptr) && (cfg->attrs != nullptr)) {
-        const rtError_t error = GetMallocHostConfigInfo(cfg, &moduleId);
+        error = GetMallocHostConfigInfo(cfg, &moduleId, &vaFlag);
         ERROR_RETURN(error, "Host memory malloc failed, size=%" PRIu64 "(bytes)", size);
     }
-    const rtError_t error = HostMalloc(hostPtr, size, moduleId);
-    ERROR_RETURN(error, "Host memory malloc failed, size=%" PRIu64 "(bytes), moduleId=%hu.", size, moduleId);
-    RT_LOG(RT_LOG_INFO, "Host memory malloc succeed,size=%" PRIu64 " , moduleId=%hu, host addr=%#" PRIx64 ".",
-        size, moduleId, static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*hostPtr)));
+
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    // 32 byte align
+    const uint64_t curSize = (((size + 0x1FU) >> 5U) << 5U);
+
+    error = curCtx->Device_()->Driver_()->HostMemAlloc(hostPtr, curSize, curCtx->Device_()->Id_(), moduleId, vaFlag);
+    ERROR_RETURN(error, "Host memory malloc failed, size=%" PRIu64 "(bytes), moduleId=%hu, vaFlag=%u.",
+        size, moduleId, vaFlag);
+    RT_LOG(RT_LOG_INFO,
+        "Host memory malloc succeed, size=%" PRIu64 "(bytes), moduleId=%hu, vaFlag=%u, host addr=%#" PRIx64 ".",
+        size, moduleId, vaFlag, RtPtrToValue(*hostPtr));
     return error;
 }
 
