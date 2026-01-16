@@ -34,7 +34,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // device error
     rtErrMap_[RT_ERROR_DEVICE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "device base error"};
     rtErrMap_[RT_ERROR_DEVICE_NULL] = {ACL_ERROR_RT_DEV_SETUP_ERROR, "device pointer null"};
-    rtErrMap_[RT_ERROR_DEVICE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "device new memory error"};
+    rtErrMap_[RT_ERROR_DEVICE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the device object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_DEVICE_ID] = {ACL_ERROR_RT_INVALID_DEVICEID, "device id error"};
     rtErrMap_[RT_ERROR_DEVICE_CHIPTYPE] = {ACL_ERROR_RT_INTERNAL_ERROR, "device chiptype error"};
     rtErrMap_[RT_ERROR_DEVICE_DEPLOY] = {ACL_ERROR_RT_INTERNAL_ERROR, "device deploy error"};
@@ -56,7 +56,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
 
     rtErrMap_[RT_ERROR_DRV_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "driver base error"};
     rtErrMap_[RT_ERROR_DRV_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "driver pointer null"};
-    rtErrMap_[RT_ERROR_DRV_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "driver new memory error"};
+    rtErrMap_[RT_ERROR_DRV_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the driver object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_DRV_MEMORY] = {ACL_ERROR_RT_INTERNAL_ERROR, "driver handle memory error"};
     rtErrMap_[RT_ERROR_DRV_PTRNULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "parameter pointer null"};
     rtErrMap_[RT_ERROR_DRV_OPEN_AICPU] = {ACL_ERROR_RT_INTERNAL_ERROR, "open aicpu error"};
@@ -106,7 +106,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // stream error
     rtErrMap_[RT_ERROR_STREAM_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "stream base error"};
     rtErrMap_[RT_ERROR_STREAM_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "stream pointer null"};
-    rtErrMap_[RT_ERROR_STREAM_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "stream new memory error"};
+    rtErrMap_[RT_ERROR_STREAM_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the stream object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_STREAM_CONTEXT] = {ACL_ERROR_RT_STREAM_CONTEXT, "stream not in current context"};
     rtErrMap_[RT_ERROR_STREAM_INVALID] = {ACL_ERROR_RT_INTERNAL_ERROR, "stream invalid"};
     rtErrMap_[RT_ERROR_STREAM_MODEL] = {ACL_ERROR_RT_STREAM_MODEL,
@@ -153,7 +153,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // model error
     rtErrMap_[RT_ERROR_MODEL_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "model base error"};
     rtErrMap_[RT_ERROR_MODEL_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "model pointer null"};
-    rtErrMap_[RT_ERROR_MODEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "model new memory error"};
+    rtErrMap_[RT_ERROR_MODEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the model object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_MODEL_CONTEXT] = {ACL_ERROR_RT_MODEL_CONTEXT, "model not in current ctx"};
     rtErrMap_[RT_ERROR_MODEL_ENDGRAPH] = {ACL_ERROR_RT_INTERNAL_ERROR, "model endgraph num error"};
     rtErrMap_[RT_ERROR_MODEL_STREAM] = {ACL_ERROR_RT_STREAM_MODEL, "model empty"};
@@ -171,7 +171,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // event error
     rtErrMap_[RT_ERROR_EVENT_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "event base error"};
     rtErrMap_[RT_ERROR_EVENT_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "event pointer null"};
-    rtErrMap_[RT_ERROR_EVENT_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "event new memory error"};
+    rtErrMap_[RT_ERROR_EVENT_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the event object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_EVENT_RECORDER_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "event recorder null"};
     rtErrMap_[RT_ERROR_EVENT_TIMESTAMP_INVALID] = {ACL_ERROR_RT_EVENT_TIMESTAMP_INVALID, "event timestamp invalid"};
     rtErrMap_[RT_ERROR_EVENT_TIMESTAMP_REVERSAL] = {ACL_ERROR_RT_EVENT_TIMESTAMP_REVERSAL,
@@ -186,14 +186,14 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // notify error
     rtErrMap_[RT_ERROR_NOTIFY_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "notify base error"};
     rtErrMap_[RT_ERROR_NOTIFY_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "notify pointer null"};
-    rtErrMap_[RT_ERROR_NOTIFY_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "notify new memory error"};
+    rtErrMap_[RT_ERROR_NOTIFY_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the notify object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_NOTIFY_TYPE] = {ACL_ERROR_RT_INTERNAL_ERROR, "notify type error"};
     rtErrMap_[RT_ERROR_NOTIFY_NOT_COMPLETE] = {ACL_ERROR_RT_INTERNAL_ERROR, "notify not complete"};
 
     // context error
     rtErrMap_[RT_ERROR_CONTEXT_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "context base error"};
-    rtErrMap_[RT_ERROR_CONTEXT_NULL] = {ACL_ERROR_RT_CONTEXT_NULL, "context pointer null"};
-    rtErrMap_[RT_ERROR_CONTEXT_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "context new memory error"};
+    rtErrMap_[RT_ERROR_CONTEXT_NULL] = {ACL_ERROR_RT_CONTEXT_NULL, "the context is a null pointer"};
+    rtErrMap_[RT_ERROR_CONTEXT_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the context object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_CONTEXT_DEL] = {ACL_ERROR_RT_CONTEXT_RELEASE_ERROR, "context release error"};
     rtErrMap_[RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR,
                                                        "default stream in current context is null"};
@@ -203,7 +203,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // kernel error
     rtErrMap_[RT_ERROR_KERNEL_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "kernel base error"};
     rtErrMap_[RT_ERROR_KERNEL_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "kernel pointer null"};
-    rtErrMap_[RT_ERROR_KERNEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "kernel new memory error"};
+    rtErrMap_[RT_ERROR_KERNEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the kernel object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_KERNEL_LOOKUP] = {ACL_ERROR_RT_KERNEL_LOOKUP, "kernel lookup error"};
     rtErrMap_[RT_ERROR_KERNEL_NAME] = {ACL_ERROR_RT_INTERNAL_ERROR, "kernel name error"};
     rtErrMap_[RT_ERROR_KERNEL_TYPE] = {ACL_ERROR_RT_INTERNAL_ERROR, "kernel type error"};
@@ -215,7 +215,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // program error
     rtErrMap_[RT_ERROR_PROGRAM_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "program base error"};
     rtErrMap_[RT_ERROR_PROGRAM_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "program pointer null"};
-    rtErrMap_[RT_ERROR_PROGRAM_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "program new memory error"};
+    rtErrMap_[RT_ERROR_PROGRAM_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the program object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_PROGRAM_DATA] = {ACL_ERROR_RT_INTERNAL_ERROR, "program data error"};
     rtErrMap_[RT_ERROR_PROGRAM_SIZE] = {ACL_ERROR_RT_INTERNAL_ERROR, "program size error"};
     rtErrMap_[RT_ERROR_PROGRAM_MEM_TYPE] = {ACL_ERROR_RT_INTERNAL_ERROR, "program mem type error"};
@@ -225,7 +225,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // module error
     rtErrMap_[RT_ERROR_MODULE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "module error base"};
     rtErrMap_[RT_ERROR_MODULE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "module pointer null"};
-    rtErrMap_[RT_ERROR_MODULE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "module new memory error"};
+    rtErrMap_[RT_ERROR_MODULE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the module object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_STREAM_UNJOINED] = {ACL_ERROR_RT_STREAM_UNJOINED,
         "capture model contains a stream that was not joined to the original stream"};
     rtErrMap_[RT_ERROR_MODEL_CAPTURED] = {ACL_ERROR_RT_MODEL_CAPTURED, "model is captured"};
@@ -236,18 +236,18 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // instance error
     rtErrMap_[RT_ERROR_INSTANCE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "instance base error"};
     rtErrMap_[RT_ERROR_INSTANCE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "instance pointer null"};
-    rtErrMap_[RT_ERROR_INSTANCE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "instance new error"};
+    rtErrMap_[RT_ERROR_INSTANCE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the instance object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_INSTANCE_VERSION] = {ACL_ERROR_RT_SOC_VERSION, "soc version error"};
 
     // api error
     rtErrMap_[RT_ERROR_API_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "api error base"};
     rtErrMap_[RT_ERROR_API_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "api pointer null"};
-    rtErrMap_[RT_ERROR_API_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "api new memory error"};
+    rtErrMap_[RT_ERROR_API_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the api object. The host memory has been exhausted."};
 
     // datadump error
     rtErrMap_[RT_ERROR_DATADUMP_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "datadump base error"};
     rtErrMap_[RT_ERROR_DATADUMP_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "datadump pointer null"};
-    rtErrMap_[RT_ERROR_DATADUMP_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "datadump new memory error"};
+    rtErrMap_[RT_ERROR_DATADUMP_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the datadump object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_DATADUMP_TIME] = {ACL_ERROR_RT_INTERNAL_ERROR, "datadump time error"};
     rtErrMap_[RT_ERROR_DATADUMP_FILE] = {ACL_ERROR_RT_FILE_WRITE, "datadump file error"};
     rtErrMap_[RT_ERROR_DATADUMP_ADDRESS] = {ACL_ERROR_RT_INTERNAL_ERROR, "datadump address error"};
@@ -257,7 +257,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // prof error
     rtErrMap_[RT_ERROR_PROF_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler base error"};
     rtErrMap_[RT_ERROR_PROF_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler pointer null"};
-    rtErrMap_[RT_ERROR_PROF_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "profiler new memory error"};
+    rtErrMap_[RT_ERROR_PROF_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the profiler object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_PROF_START] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler start error"};
     rtErrMap_[RT_ERROR_PROF_DEVICE_MEM] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler device memory error"};
     rtErrMap_[RT_ERROR_PROF_HOST_MEM] = {ACL_ERROR_RT_INTERNAL_ERROR, "profiler host memory error"};
@@ -269,14 +269,14 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // pctrace error
     rtErrMap_[RT_ERROR_PCTRACE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace base error"};
     rtErrMap_[RT_ERROR_PCTRACE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace pointer null"};
-    rtErrMap_[RT_ERROR_PCTRACE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "pctrace new memory error"};
+    rtErrMap_[RT_ERROR_PCTRACE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the pctrace object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_PCTRACE_TIME] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace time error"};
     rtErrMap_[RT_ERROR_PCTRACE_FILE] = {ACL_ERROR_RT_INTERNAL_ERROR, "pctrace file error"};
 
     // task error
     rtErrMap_[RT_ERROR_TASK_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "task base error"};
     rtErrMap_[RT_ERROR_TASK_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "task pointer null"};
-    rtErrMap_[RT_ERROR_TASK_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "task new memory error"};
+    rtErrMap_[RT_ERROR_TASK_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the task object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_TASK_NOT_SUPPORT] = {ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT, "task not supported"};
     rtErrMap_[RT_ERROR_TASK_ALLOCATOR] = {ACL_ERROR_RT_INTERNAL_ERROR, "task allocator error"};
 
@@ -295,7 +295,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_SOCKET_CLOSE] = {ACL_ERROR_RT_SOCKET_CLOSE, "hdc disconnect"};
     rtErrMap_[RT_ERROR_LOST_HEARTBEAT] = {ACL_ERROR_RT_LOST_HEARTBEAT, "lost heartbeat"};
     rtErrMap_[RT_ERROR_REPORT_TIMEOUT] = {ACL_ERROR_RT_REPORT_TIMEOUT, "report timeout"};
-    rtErrMap_[RT_ERROR_FEATURE_NOT_SUPPORT] = {ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "feature not support"};
+    rtErrMap_[RT_ERROR_FEATURE_NOT_SUPPORT] = {ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "the feature is not supported"};
     rtErrMap_[RT_ERROR_MEMORY_ALLOCATION] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "alloc memory error"};
     rtErrMap_[RT_ERROR_MEMORY_FREE] = {ACL_ERROR_RT_MEMORY_FREE, "free memory error"};
     rtErrMap_[RT_ERROR_INVALID_MEMORY_TYPE] = {ACL_ERROR_RT_INVALID_MEMORY_TYPE, "invalid memory type"};
@@ -304,7 +304,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // debug error
     rtErrMap_[RT_ERROR_DEBUG_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "debug base error"};
     rtErrMap_[RT_ERROR_DEBUG_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "debug pointer null"};
-    rtErrMap_[RT_ERROR_DEBUG_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "debug new memory error"};
+    rtErrMap_[RT_ERROR_DEBUG_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the debug object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_DEBUG_SIGNAL] = {ACL_ERROR_RT_INTERNAL_ERROR, "debug signal error"};
     rtErrMap_[RT_ERROR_DEBUG_OPEN] = {ACL_ERROR_RT_FILE_OPEN, "open file failed"};
     rtErrMap_[RT_ERROR_DEBUG_WRITE] = {ACL_ERROR_RT_FILE_WRITE, "write file failed"};
@@ -314,13 +314,13 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // engine error
     rtErrMap_[RT_ERROR_ENGINE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "engine base error"};
     rtErrMap_[RT_ERROR_ENGINE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "engine pointer null"};
-    rtErrMap_[RT_ERROR_ENGINE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "engine new memory error"};
+    rtErrMap_[RT_ERROR_ENGINE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the engine object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_ENGINE_THREAD] = {ACL_ERROR_RT_INTERNAL_ERROR, "error engine thread"};
 
     // label error
     rtErrMap_[RT_ERROR_LABEL_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "label base error"};
     rtErrMap_[RT_ERROR_LABEL_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "label pointer null"};
-    rtErrMap_[RT_ERROR_LABEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "label new memory error"};
+    rtErrMap_[RT_ERROR_LABEL_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the label object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_LABEL_CONTEXT] = {ACL_ERROR_RT_LABEL_CONTEXT, "label not in current ctx"};
     rtErrMap_[RT_ERROR_LABEL_STREAM] = {ACL_ERROR_RT_INTERNAL_ERROR, "label stream error"};
     rtErrMap_[RT_ERROR_LABEL_MODEL] = {ACL_ERROR_RT_INTERNAL_ERROR, "label not in current model"};
@@ -469,7 +469,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     // subscribe error
     rtErrMap_[RT_ERROR_SUBSCRIBE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "subscribe base error"};
     rtErrMap_[RT_ERROR_SUBSCRIBE_NULL] = {ACL_ERROR_RT_INTERNAL_ERROR, "subscribe pointer null"};
-    rtErrMap_[RT_ERROR_SUBSCRIBE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "subscribe new memory error"};
+    rtErrMap_[RT_ERROR_SUBSCRIBE_NEW] = {ACL_ERROR_RT_MEMORY_ALLOCATION, "Failed to create the subscribe object. The host memory has been exhausted."};
     rtErrMap_[RT_ERROR_SUBSCRIBE_STREAM] = {ACL_ERROR_RT_STREAM_SUBSCRIBE, "subscribe stream error"};
     rtErrMap_[RT_ERROR_SUBSCRIBE_THREAD] = {ACL_ERROR_RT_THREAD_SUBSCRIBE, "subscribe thread error"};
     rtErrMap_[RT_ERROR_SUBSCRIBE_GROUP] = {ACL_ERROR_RT_INTERNAL_ERROR, "subscribe group error"};
@@ -638,7 +638,7 @@ std::string ErrorcodeManage::GetErrorReason(const RtInnerErrcodeType errcode)
             return ss.str();  // protect for externel errorcode,in callback situation
         }
     }
-    ss << "[" << it->second.second << "]";
+    ss << it->second.second;
     return ss.str();
 }
 }

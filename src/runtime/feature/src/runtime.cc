@@ -2918,8 +2918,8 @@ rtError_t Runtime::GetPrimaryCtxState(const int32_t devId, uint32_t *flags, int3
 {
     *flags = 0U; // 0 means SCHED_AUTO;
     *active = 0;
-    COND_RETURN_ERROR_MSG_INNER((static_cast<uint32_t>(devId) >= RT_MAX_DEV_NUM || devId < 0), RT_ERROR_DEVICE_ID,
-        "Invalid para, devId=%u, valid range is [0,%u)", devId, RT_MAX_DEV_NUM);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((static_cast<uint32_t>(devId) >= RT_MAX_DEV_NUM || devId < 0),
+        RT_ERROR_DEVICE_ID, devId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 
     COND_RETURN_ERROR_MSG_INNER((tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_DEVICE_ID,
         "Invalid para, tsNum=%u, valid range is [1,%u]", tsNum_, RT_MAX_TS_NUM);
@@ -2954,8 +2954,8 @@ void Runtime::PrimaryContextCallBackAfterTeardown(const uint32_t devId) const
 rtError_t Runtime::PrimaryContextRelease(const uint32_t devId, const bool isForceReset)
 {
     bool ret = false;
-    COND_RETURN_ERROR_MSG_INNER(devId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID,
-        "Primary context release failed, devId=%u, valid range is [0,%u)", devId, RT_MAX_DEV_NUM);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, devId,
+        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     COND_RETURN_ERROR_MSG_INNER((tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_CONTEXT_DEL,
         "release failed, tsNum=%u, valid range is [1,%u]", devId, RT_MAX_TS_NUM);
     const Device * const dev = GetDevice(devId, 0U);
