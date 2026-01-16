@@ -92,6 +92,18 @@ DumpManager &DumpManager::Instance()
     return instance;
 }
 
+DumpManager::DumpManager()
+{
+    // enable dump functions with environment variables
+    DumpConfig config;
+    // 1. check and enable L1 exception dump with NPU_COLLECT_PATH
+    if (DumpConfigConverter::EnabledExceptionWithEnv(config)) {
+        if (SetDumpConfig(DumpType::EXCEPTION, config) != ADUMP_SUCCESS) {
+            IDE_LOGW("Enable L1 exception dump with env[NPU_COLLECT_PATH] failed!");
+        }
+    }
+}
+
 void DumpManager::KFCResourceInit()
 {
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
@@ -177,12 +189,6 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConf
 int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize)
 {
     std::lock_guard<std::mutex> lk(resourceMtx2_);
-    DumpConfig config;
-    if (DumpConfigConverter::EnabledExceptionWithEnv(config)) {
-        IDE_CTRL_VALUE_FAILED(SetDumpConfig(DumpType::EXCEPTION, config) == ADUMP_SUCCESS,
-            return ADUMP_FAILED, "Set exception dump config failed.");
-    }
-
     if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U)) {
         IDE_LOGE("Set dump config failed. Config data is null or empty.");
         return ADUMP_FAILED;
@@ -217,6 +223,7 @@ int32_t DumpManager::UnSetDumpConfig()
     std::lock_guard<std::mutex> lk(resourceMtx2_);
     DumpConfig config;
     config.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_OFF;
+    config.dumpSwitch = 0;
     for (const auto dumpType : openedDump_) {
         if (IsEnableDump(dumpType)) {
            const auto ret = SetDumpConfig(dumpType, config);

@@ -139,4 +139,9 @@ void AdumpPrintSetConfig(const AdumpPrintConfig &config)
 {
     AdxPrintSetConfig(config);
 }
+
+static void __attribute__((constructor)) AdumpInit(void)
+{
+    (void)DumpManager::Instance();
+}
 }  // namespace Adx
