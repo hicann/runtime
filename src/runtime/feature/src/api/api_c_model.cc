@@ -57,7 +57,7 @@ rtError_t rtModelExecuteSync(rtModel_t mdl, rtStream_t stm, uint32_t flag, int32
 VISIBILITY_DEFAULT
 rtError_t rtsModelCreate(rtModel_t *mdl, uint32_t flag)
 {
-    COND_RETURN_OUT_ERROR_MSG_CALL((flag != 0), ACL_ERROR_RT_PARAM_INVALID, "flag only support 0.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag != 0), ACL_ERROR_RT_PARAM_INVALID, flag, "0");
     return rtModelCreate(mdl, flag);
 }
 
@@ -65,16 +65,14 @@ VISIBILITY_DEFAULT
 rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    COND_RETURN_OUT_ERROR_MSG_CALL(((flag != RT_MODEL_STREAM_FLAG_HEAD) && (flag != RT_MODEL_STREAM_FLAG_DEFAULT)),
-        ACL_ERROR_RT_PARAM_INVALID,
-        "flag %u does not support, it should be RT_MODEL_STREAM_FLAG_HEAD or RT_MODEL_STREAM_FLAG_DEFAULT.", flag);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag != RT_MODEL_STREAM_FLAG_HEAD) && (flag != RT_MODEL_STREAM_FLAG_DEFAULT)),
+        ACL_ERROR_RT_PARAM_INVALID, flag, std::to_string(RT_MODEL_STREAM_FLAG_HEAD) + " or " + std::to_string(RT_MODEL_STREAM_FLAG_DEFAULT));
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream *bindStream = RtPtrToPtr<Stream *>(stm);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((bindStream != nullptr) &&
-        ((bindStream->Flags() & RT_STREAM_PERSISTENT) == 0),
-        RT_ERROR_INVALID_VALUE,
-        "Non-persistent stream does not support bind model.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((bindStream != nullptr) &&
+        ((bindStream->Flags() & RT_STREAM_PERSISTENT) == 0), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1001, "Non-persistent stream cannot be bound to a model.");
     if ((bindStream != nullptr) && (bindStream->GetModelNum() != 0)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, bindStream->Id_(),
             "The stream is bound to more than one mdlRI. Size: " + std::to_string(bindStream->GetModelNum()));
@@ -104,7 +102,7 @@ rtError_t rtsEndGraph(rtModel_t mdl, rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtsModelLoadComplete(rtModel_t mdl, void* reserve)
 {
-    COND_RETURN_OUT_ERROR_MSG_CALL((reserve != nullptr), ACL_ERROR_RT_PARAM_INVALID, "reserve only support nullptr.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), ACL_ERROR_RT_PARAM_INVALID, reserve, "nullptr");
     return rtModelLoadComplete(mdl);
 }
 

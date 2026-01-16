@@ -661,19 +661,21 @@ rtError_t rtsCmoAsyncWithBarrier(void *srcAddrPtr, size_t srcLen, rtCmoOpCode cm
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(srcAddrPtr == nullptr, RT_ERROR_INVALID_VALUE, "srcAddPtr is nullptr.");
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(srcLen == 0, RT_ERROR_INVALID_VALUE, "srcLen must be bigger than 0, but srcLen is zero.");
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(srcAddrPtr, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(srcLen == 0, RT_ERROR_INVALID_VALUE, srcLen, "greater than 0");
     
     // support prefetch, write back, invalid, flush
     // when invalid op, logicId must set >0, other ops logicId must set 0.
     switch (cmoType){
         case RT_CMO_INVALID:
-            COND_RETURN_ERROR_WITH_EXT_ERRCODE(logicId == 0 , RT_ERROR_INVALID_VALUE, "logicId is invalid, cmoType(%d) must input valid logicId(>0).", static_cast<int32_t>(cmoType));
+            COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(logicId == 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
+                "Parameter logicId is invalid. If parameter cmoType is equal to " + std::to_string(cmoType) + ", parameter logicId cannot be 0.");
             break;
         case RT_CMO_PREFETCH:
         case RT_CMO_WRITEBACK:
         case RT_CMO_FLUSH:
-            COND_RETURN_ERROR_WITH_EXT_ERRCODE(logicId != 0 , RT_ERROR_INVALID_VALUE, "cmoType(%d) not support logicId, logicId must be 0.", static_cast<int32_t>(cmoType));
+            COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(logicId != 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
+                "Parameter logicId is invalid. If parameter cmoType is equal to " + std::to_string(cmoType) + ", the value of parameter logicId should be 0.");
             break;
         default:
             RT_LOG(RT_LOG_WARNING, "cmoType(%d) does not support, support[PREFETCH, WRITEBACK, INVALID, FLUSH]",
@@ -694,17 +696,15 @@ VISIBILITY_DEFAULT
 rtError_t rtsLaunchBarrierTask(rtBarrierTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(taskInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(taskInfo->logicIdNum == 0, RT_ERROR_INVALID_VALUE, "logicIdNum should not be 0.");
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM, RT_ERROR_INVALID_VALUE,
-        "logicIdNum=%hhu is invalid, valid range is [1, %u]", taskInfo->logicIdNum, RT_CMO_MAX_BARRIER_NUM);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM || taskInfo->logicIdNum == 0), 
+        RT_ERROR_INVALID_VALUE, taskInfo->logicIdNum, "[1, " + std::to_string(RT_CMO_MAX_BARRIER_NUM) + "]");
     // loop cmoInfo array to validate whether cmoType is 1(invalid) or not
     for (uint8_t i = 0; i < taskInfo->logicIdNum; i++) {
         auto cmoInfo = taskInfo->cmoInfo[i];
         // if cmoType!=invalid return error
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE(cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE,
-            "cmoType=(%d) is not supported, only support cmoType(%d) just now.", static_cast<int32_t>(cmoInfo.cmoType), static_cast<int32_t>(RT_CMO_INVALID));
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE(cmoInfo.logicId == 0, RT_ERROR_INVALID_VALUE,
-            "logicId 0 is invalid.");
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1006, __func__, "taskInfo->cmoInfo[" + std::to_string(i) + "].cmoType=" + std::to_string(RT_CMO_INVALID));
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(cmoInfo.logicId == 0, RT_ERROR_INVALID_VALUE, cmoInfo.logicId, "not equal to 0");
     }
     
     return rtBarrierTaskLaunch(taskInfo, stm, flag);
@@ -767,8 +767,8 @@ rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t
 VISIBILITY_DEFAULT
 rtError_t rtsLaunchCmoTask(rtCmoTaskCfg_t *taskCfg, rtStream_t stm, const void *reserve)
 {
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((taskCfg == nullptr), RT_ERROR_INVALID_VALUE, "taskCfg is nullptr.");
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((reserve != nullptr), RT_ERROR_INVALID_VALUE, "reserve only support nullptr.");
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(taskCfg, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), RT_ERROR_INVALID_VALUE, reserve, "nullptr");
 
     rtCmoTaskInfo_t taskInfo = {};
     taskInfo.qos = 6U; // to avoid the cross-chip D2D problem, set QoS to 6.

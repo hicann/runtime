@@ -185,8 +185,8 @@ VISIBILITY_DEFAULT
 rtError_t rtsNotifyBatchReset(rtNotify_t *notifies, uint32_t num)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(notifies, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(num <= 0, RT_ERROR_INVALID_VALUE,
-        "Invalid num, current num=%u, valid num range is (0, %u].", num, MAX_UINT32_NUM);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(num <= 0, RT_ERROR_INVALID_VALUE, 
+        num, "(0, " + std::to_string(MAX_UINT32_NUM) + "]");
 
     RT_LOG(RT_LOG_INFO, "start batch reset notify, num=%u.", num);
     // if notify reset err, break it and return

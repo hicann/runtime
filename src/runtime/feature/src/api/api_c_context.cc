@@ -29,8 +29,8 @@ rtError_t rtsCtxCreate(rtContext_t *createCtx, uint64_t flags, int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((flags > static_cast<uint64_t>(RT_CONTEXT_NORMAL_MODE)),
-        RT_ERROR_INVALID_VALUE, "rtsCtxCreate failed, invalid flags=%" PRIu64, flags);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((flags > static_cast<uint64_t>(RT_CONTEXT_NORMAL_MODE)), 
+        RT_ERROR_INVALID_VALUE, flags, "less than or equal to 0");
 
     const rtError_t error = apiInstance->ContextCreate(RtPtrToPtr<Context **>(createCtx), devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -60,9 +60,8 @@ rtError_t rtsCtxSetSysParamOpt(rtSysParamOpt configOpt, int64_t configVal)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0),
-        RT_ERROR_INVALID_VALUE, "rtsCtxSetSysParamOpt failed, current configOpt=%d, valid range is [0, %d).",
-        configOpt, SYS_OPT_RESERVED);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), 
+        RT_ERROR_INVALID_VALUE, configOpt, "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
 
     const rtError_t ret = apiInstance->CtxSetSysParamOpt(configOpt, configVal);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -74,9 +73,8 @@ rtError_t rtsCtxGetSysParamOpt(rtSysParamOpt configOpt, int64_t *configVal)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0),
-        RT_ERROR_INVALID_VALUE, "rtsCtxGetSysParamOpt failed, current configOpt=%d, valid range is [0, %d).",
-        configOpt, SYS_OPT_RESERVED);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), 
+        RT_ERROR_INVALID_VALUE, configOpt, "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
 
     const rtError_t ret = apiInstance->CtxGetSysParamOpt(configOpt, configVal);
     if (ret == RT_ERROR_NOT_SET_SYSPARAMOPT) {

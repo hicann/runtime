@@ -123,8 +123,7 @@ rtError_t GetIsCmdListNotFreeValByDvppCfg(rtDvppCfg_t *cfg, bool &isCmdListNotFr
 {
     // cfg support nullptr, no need process
     NULL_PTR_RETURN_NOLOG(cfg, RT_ERROR_NONE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(cfg->attrs == nullptr,
-        RT_ERROR_INVALID_VALUE, "cfg is not nullptr, but cfg->attrs is nullptr, invalid param.");
+    NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
 
     for (size_t idx = 0U; idx < cfg->numAttrs; idx++) {
         switch (cfg->attrs[idx].id) {
