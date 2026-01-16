@@ -817,6 +817,7 @@ ACL_FUNC_VISIBILITY const char *aclGetRecentErrMsg();
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval ACL_ERROR_INVALID_FILE Failure
  */
+ACL_DEPRECATED_MESSAGE("aclsysGetCANNVersion is deprecated, use aclsysGetVersionStr and aclsysGetVersionNum instead")
 ACL_FUNC_VISIBILITY aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion *version);
 
 /**
