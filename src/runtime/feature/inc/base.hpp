@@ -179,8 +179,6 @@ static constexpr const char_t *RT_MODULE_TYPE_TO_ERR_MSG[ERR_MODULE_MAX] = {
 // Other level may cause an exception log
 #define RT_LOG_INNER_MSG(level, format, ...) \
     do { \
-        RT_LOG(RT_LOG_ERROR, "report error module_type=%d, module_name=%s", static_cast<int32_t>(level),    \
-        RT_LOG_LEVEL_TO_ERR_MSG[(level)]); \
         RT_LOG(level, format, ##__VA_ARGS__);                           \
         REPORT_INNER_ERROR(RT_LOG_LEVEL_TO_ERR_MSG[(level)], format, ##__VA_ARGS__);                 \
     } while (false)
@@ -188,8 +186,6 @@ static constexpr const char_t *RT_MODULE_TYPE_TO_ERR_MSG[ERR_MODULE_MAX] = {
 // report other module error message by module type
 #define RT_LOG_CALL_MSG(module_type, format, ...) \
     do { \
-        RT_LOG(RT_LOG_ERROR, "report error module_type=%d, module_name=%s", \
-            static_cast<int32_t>(module_type), RT_MODULE_TYPE_TO_ERR_MSG[(module_type)]); \
         RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);               \
         REPORT_CALL_ERROR(RT_MODULE_TYPE_TO_ERR_MSG[(module_type)], format, ##__VA_ARGS__);      \
     } while (false)
@@ -197,7 +193,6 @@ static constexpr const char_t *RT_MODULE_TYPE_TO_ERR_MSG[ERR_MODULE_MAX] = {
 // report outer error message, such as invalid parameter
 #define RT_LOG_OUTER_MSG(error_code, format, ...)                                                                    \
     do { \
-        RT_LOG(RT_LOG_ERROR, "report error module_name=%s", (error_code));                                             \
         RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);                                                                 \
         std::vector<char> value_string(LIMIT_PER_MESSAGE, '\0');                                                     \
         if (error_message::FormatErrorMessage(value_string.data(), value_string.size(), format, ##__VA_ARGS__) > 0) {\
