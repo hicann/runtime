@@ -3661,6 +3661,7 @@ rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t blockDim,
     const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
                                                     static_cast<Stream *>(stm), nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3680,6 +3681,7 @@ rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t blockDi
     const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
                                                     static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3696,6 +3698,7 @@ rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDi
     const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
                                                     static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
