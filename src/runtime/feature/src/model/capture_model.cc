@@ -36,14 +36,6 @@ CaptureModel::CaptureModel(ModelType type) : Model(type)
 CaptureModel::~CaptureModel() noexcept
 {
     // 清空capturestream和单算子流关系
-    Device * const dev = Context_()->Device_();
-    for (const auto& iter: singleOperStmIdAndCaptureStmIdMap_) {
-        Stream *oriStm = nullptr;
-        (void)dev->GetStreamSqCqManage()->GetStreamById(static_cast<uint32_t>(iter.first), &oriStm);
-        if (oriStm != nullptr) {
-            oriStm->ResetCaptureInfo();
-        }
-    }
     singleOperStmIdAndCaptureStmIdMap_.clear();
 
     for (Event *evt : captureEvents_) {
