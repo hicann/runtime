@@ -1016,16 +1016,13 @@ Runtime::~Runtime()
             Context *context = priCtxs_[i][j].GetVal(false);
             priCtxs_[i][j].ResetVal();
             if (context != nullptr) {
-                const rtError_t ret = ContextManage::EraseContextFromSet(context);
-                if (ret != RT_ERROR_CONTEXT_NULL) {
-                    if (context->ContextOutUse() == 0ULL) {
-                        try {
-                            (void)context->TearDown();
-                        } catch (...) {
-                        }
-                        delete context;
-                        context = nullptr;
+                if (context->GetCount() == 0ULL) {
+                    try {
+                        (void)context->TearDown();
+                    } catch (...) {
                     }
+                    delete context;
+                    context = nullptr;
                 }
             }
         }
