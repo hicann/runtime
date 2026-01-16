@@ -4295,6 +4295,91 @@ rtError_t Runtime::SetTaskAbortCallBack(const char_t *regName, void *callback, v
     return RT_ERROR_NONE;
 }
 
+rtError_t Runtime::SnapShotCallbackRegister(const rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((stage < RT_SNAPSHOT_LOCK_PRE || stage > RT_SNAPSHOT_UNLOCK_POST),
+        RT_ERROR_INVALID_VALUE,
+        stage,
+        "[0, " + std::to_string(RT_SNAPSHOT_UNLOCK_POST) + "]");
+    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    const std::unique_lock<std::mutex> snapShotMapLock(snapShotCallBackMapMutex_);
+    std::list<SnapShotCallBackInfo> &callBackList = snapShotCallBackMap_[stage];
+    const auto &callBackIter = std::find_if(callBackList.begin(),
+        callBackList.end(),
+        [callback](const SnapShotCallBackInfo &info) { return info.callback == callback; });
+    if (callBackIter != callBackList.end()) {
+        RT_LOG(RT_LOG_ERROR,
+            "this callback function already registered for this stage, stage:%d, callback=%p.",
+            stage,
+            callback);
+        return RT_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED;
+    }
+    callBackList.push_back({callback, args});
+    RT_LOG(RT_LOG_EVENT, "register snapshot callback finish, stage:%d, callback=%p.", stage, callback);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::SnapShotCallbackUnregister(const rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((stage < RT_SNAPSHOT_LOCK_PRE || stage > RT_SNAPSHOT_UNLOCK_POST),
+        RT_ERROR_INVALID_VALUE,
+        stage,
+        "[0, " + std::to_string(RT_SNAPSHOT_UNLOCK_POST) + "]");
+    NULL_PTR_RETURN_MSG_OUTER(callback, RT_ERROR_INVALID_VALUE);
+    const std::unique_lock<std::mutex> snapShotMapLock(snapShotCallBackMapMutex_);
+    if (snapShotCallBackMap_.find(stage) == snapShotCallBackMap_.end()) {
+        RT_LOG(RT_LOG_ERROR, "no callback function was registered for this stage, stage:%d.", stage);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    std::list<SnapShotCallBackInfo>& callBackList = snapShotCallBackMap_[stage];
+    const auto &callBackIter = std::find_if(callBackList.begin(),
+        callBackList.end(),
+        [callback](const SnapShotCallBackInfo &info) { return info.callback == callback; });
+    if (callBackIter == callBackList.end()) {
+        RT_LOG(RT_LOG_ERROR, "this callback function was not registered for this stage, stage:%d, callback=%p.", stage, callback);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    (void)callBackList.erase(callBackIter);
+    RT_LOG(RT_LOG_EVENT, "unregister snapshot callback successfully, stage:%d, callback=%p.", stage, callback);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::SnapShotCallback(const rtSnapShotStage stage)
+{
+    const std::unique_lock<std::mutex> SnapShotMapLock(snapShotCallBackMapMutex_);
+    const auto& iter = snapShotCallBackMap_.find(stage);
+    if (iter == snapShotCallBackMap_.end()) {
+        RT_LOG(RT_LOG_INFO, "no callback function was registered for this stage, stage:%d.", stage);
+        return RT_ERROR_NONE;
+    }
+
+    for (const auto& snapShotCallBackInfo : iter->second) {
+        if (snapShotCallBackInfo.callback == nullptr) {
+            continue;
+        }
+
+        for (int32_t devId = 0; devId < static_cast<int32_t>(RT_MAX_DEV_NUM); ++devId) {
+            RefObject<Device*>& refObj = devices_[devId][0U];
+            const Device* dev = refObj.GetVal();
+            if (dev == nullptr) {
+                continue;
+            }
+            uint32_t userDeviceId = 0U;
+            rtError_t error = GetUserDevIdByDeviceId(static_cast<uint32_t>(devId), &userDeviceId);
+            COND_RETURN_ERROR_MSG_INNER(
+                error != RT_ERROR_NONE, error, "Get userDeviceId failed, error=%#x, drv devId=%u",
+                static_cast<uint32_t>(error), devId);
+            error = snapShotCallBackInfo.callback(userDeviceId, snapShotCallBackInfo.args);
+            COND_RETURN_ERROR_MSG_INNER(
+                error != RT_ERROR_NONE, RT_ERROR_SNAPSHOT_CALLBACK_FAILED,
+                "snapshot call back func execution failed, drv devId=%d, user devId=%u, stage:%d, error=%#x", devId,
+                userDeviceId, stage, static_cast<uint32_t>(error))
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t Runtime::AllocAiCpuStreamId(int32_t &id)
 {
     const int32_t tmpId = aicpuStreamIdBitmap_->AllocId();

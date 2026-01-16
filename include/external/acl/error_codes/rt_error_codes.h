@@ -150,7 +150,8 @@ extern "C" {
 #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED       507909 // snapshot restore failed
 #define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 // host memory range already registered
 #define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED      507911 // host memory has not been registered
-
+#define  ACL_ERROR_SNAPSHOT_CALLBACK_FAILED          507912 // snapshot callback function execution failed
+#define  ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED 507913 // register snapshot callback function failed
 
 #ifdef __cplusplus
 }

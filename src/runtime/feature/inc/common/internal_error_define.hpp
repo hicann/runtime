@@ -470,6 +470,9 @@ constexpr int32_t RT_ERROR_SNAPSHOT_LOCK_FAILED                        = 0x071D0
 constexpr int32_t RT_ERROR_SNAPSHOT_UNLOCK_FAILED                      = 0x071D0002;
 constexpr int32_t RT_ERROR_SNAPSHOT_BACKUP_FAILED                      = 0x071D0003;
 constexpr int32_t RT_ERROR_SNAPSHOT_RESTORE_FAILED                     = 0x071D0004;
+// It could be either an internal error or an external error
+constexpr int32_t RT_ERROR_SNAPSHOT_CALLBACK_FAILED                    = 0x071D0005;
+constexpr int32_t RT_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED           = 0x071D0006;
 
 constexpr int32_t RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED              = 0x071E0001;
 constexpr int32_t RT_ERROR_HOST_MEMORY_NOT_REGISTERED                  = 0x071E0002;

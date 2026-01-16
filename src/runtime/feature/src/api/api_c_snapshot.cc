@@ -18,10 +18,9 @@ using namespace cce::runtime;
 extern "C" {
 #endif  // __cplusplus
 
-VISIBILITY_DEFAULT
-rtError_t rtSnapShotProcessLock()
+static rtError_t CheckSnapShotFeatureSupport()
 {
-    const Runtime *const rtInstance = Runtime::Instance();
+    const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
@@ -29,7 +28,20 @@ rtError_t rtSnapShotProcessLock()
             RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    const rtError_t error = GlobalStateManager::GetInstance().Locked();
+    return RT_ERROR_NONE;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotProcessLock()
+{
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    error = apiInstance->SnapShotProcessLock();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -37,15 +49,14 @@ rtError_t rtSnapShotProcessLock()
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessUnlock()
 {
-    const Runtime *const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        RT_LOG(
-            RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
     }
-    const rtError_t error = GlobalStateManager::GetInstance().Unlocked();
+
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    error = apiInstance->SnapShotProcessUnlock();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -53,13 +64,9 @@ rtError_t rtSnapShotProcessUnlock()
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessGetState(rtProcessState *state)
 {
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
-            static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
     }
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(state, RT_ERROR_INVALID_VALUE);
     *state = GlobalStateManager::GetInstance().GetCurrentState();
@@ -69,41 +76,62 @@ rtError_t rtSnapShotProcessGetState(rtProcessState *state)
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessBackup()
 {
-    const Runtime *const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        RT_LOG(
-            RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
     }
+
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SnapShotProcessBackup();
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT,
-                           ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    error = apiInstance->SnapShotProcessBackup();
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_BACKED_UP);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessRestore()
 {
-    const Runtime *const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {
-        RT_LOG(
-            RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
     }
+
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SnapShotProcessRestore();
+    error = apiInstance->SnapShotProcessRestore();
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_LOCKED);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    Api *const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    error = apiInstance->SnapShotCallbackRegister(stage, callback, args);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+RTS_API rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    rtError_t error = CheckSnapShotFeatureSupport();
+    if(error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    Api *const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    error = apiInstance->SnapShotCallbackUnregister(stage, callback);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
 

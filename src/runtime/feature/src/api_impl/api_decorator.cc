@@ -803,6 +803,26 @@ rtError_t ApiDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t time
     return impl_->DeviceTaskAbort(devId, timeout);
 }
 
+rtError_t ApiDecorator::SnapShotProcessLock()
+{
+    return impl_->SnapShotProcessLock();
+}
+
+rtError_t ApiDecorator::SnapShotProcessUnlock()
+{
+    return impl_->SnapShotProcessUnlock();
+}
+
+rtError_t ApiDecorator::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
+    return impl_->SnapShotCallbackRegister(stage, callback, args);
+}
+
+rtError_t ApiDecorator::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
+{
+    return impl_->SnapShotCallbackUnregister(stage, callback);
+}
+
 rtError_t ApiDecorator::SnapShotProcessBackup()
 {
     return impl_->SnapShotProcessBackup();

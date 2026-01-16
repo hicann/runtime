@@ -723,6 +723,10 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessBackupImpl();
 
 ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessRestoreImpl();
 
+ACL_FUNC_VISIBILITY aclError aclrtSnapShotCallbackRegisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args);
+
+ACL_FUNC_VISIBILITY aclError aclrtSnapShotCallbackUnregisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback);
+
 ACL_FUNC_VISIBILITY aclError aclrtCacheLastTaskOpInfoImpl(const void * const infoPtr, const size_t infoSize);
 
 ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t *attrValue);

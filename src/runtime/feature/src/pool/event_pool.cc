@@ -122,11 +122,18 @@ bool EventPool::AllocEventIdFromPool(int32_t *eventId)
 
 rtError_t EventPool::EventIdReAlloc()
 {
+    // 如果队列为空，直接返回
+    if (eventQueueHead_ == eventQueueTail_) {
+        RT_LOG(RT_LOG_INFO, "Event pool is empty, drv devId=%u", device_->Id_());
+        return RT_ERROR_NONE;
+    }
+
     const std::lock_guard<std::mutex> lock(lk_);
     Driver *devDrv = device_->Driver_();
     NULL_PTR_RETURN_MSG(devDrv, RT_ERROR_DRV_NULL);
-    for (uint32_t i = eventQueueHead_; i < eventQueueTail_; i++) {
-        const int32_t eventId = eventQueue_[i];
+    uint32_t index = eventQueueHead_;
+    while (index != eventQueueTail_) {
+        const int32_t eventId = eventQueue_[index];
         const rtError_t error = devDrv->ReAllocResourceId(
             device_->Id_(), device_->DevGetTsId(), 0U, static_cast<uint32_t>(eventId), DRV_EVENT_ID);
         ERROR_RETURN(error,
@@ -135,6 +142,7 @@ rtError_t EventPool::EventIdReAlloc()
             device_->Id_(),
             error);
         RT_LOG(RT_LOG_INFO, "Reallocate event id successfully, drv devId=%u, eventId=%d", device_->Id_(), eventId);
+        index = (index + 1) % poolSize_;
     }
     return RT_ERROR_NONE;
 }

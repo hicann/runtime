@@ -792,7 +792,7 @@ void PushBackErrInfo(TaskInfo* taskInfo, const void *errInfo, uint32_t len)
 
 void SetSqPos(TaskInfo* taskInfo, const uint32_t pos)
 {
-    taskInfo->pos= pos;
+    taskInfo->pos = pos;
     if (taskInfo->type == TS_TASK_TYPE_LABEL_SET) {
         SetLabelInfoForLabelSetTask(taskInfo, pos);
     }

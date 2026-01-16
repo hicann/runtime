@@ -932,9 +932,13 @@ rtError_t Stream::Restore()
             streamId_, device_->Id_(), error);
     }
 
-    error = device_->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "MemSetSync stream executed times SVM failed, retCode=%#x.", static_cast<uint32_t>(error));
+    if (executedTimesSvm_ != nullptr) {
+        error = device_->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
+            error,
+            "MemSetSync stream executed times SVM failed, retCode=%#x.",
+            static_cast<uint32_t>(error));
+    }
     return error;
 }
 
@@ -3765,6 +3769,17 @@ void Stream::ResetStreamConstruct()
     }
 }
 
+void Stream::ResetHostResourceForPersistentStream()
+{
+    ResetStreamConstruct();
+    isModelComplete = false;
+    delayRecycleTaskid_.clear();
+    taskPersistentHead_.Set(0U);
+    taskPersistentTail_.Set(0U);
+    (void)memset_s(taskPersistentBuff_, sizeof(taskPersistentBuff_), 0U, sizeof(taskPersistentBuff_));
+    cacheTrackTaskid_.clear();
+}
+
 rtError_t Stream::ResClear(uint64_t timeout)
 {
     // old sq stop and head == tail
@@ -4415,6 +4430,51 @@ uint32_t Stream::GetResValue(const rtDevResLimitType_t type) const
         return resLimitArray_[type];
     }
     return 0U;
+}
+
+void Stream::RecycleModelDelayRecycleTask()
+{
+    if (bindFlag_.Value() == false) {
+        RT_LOG(RT_LOG_WARNING, "This stream is not model stream.");
+        return;
+    }
+    TaskFactory* factory = device_->GetTaskFactory();
+    NULL_PTR_RETURN_DIRECTLY(factory);
+    std::unique_lock<std::mutex> lock(streamMutex_);
+    for (const uint16_t taskId : delayRecycleTaskid_) {
+        TaskInfo* recycleTask = factory->GetTask(streamId_, taskId);
+        if (recycleTask == nullptr) {
+            RT_LOG(RT_LOG_WARNING, "can't find task from factory, stream_id=%d task_id=%u", streamId_, taskId);
+            continue;
+        }
+        (void)device_->GetTaskFactory()->Recycle(recycleTask);
+    }
+    ResetHostResourceForPersistentStream();
+    RT_LOG(RT_LOG_INFO, "Recycle all task finish, stream_id=%d", streamId_);
+}
+
+rtError_t Stream::StreamTaskClean(void)
+{
+    const uint32_t devId = device_->Id_();
+    Driver* const devDrv = device_->Driver_();
+    const uint32_t tsId = device_->DevGetTsId();
+    bool enable = true;
+    rtError_t error = devDrv->GetSqEnable(devId, tsId, sqId_, enable);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE), error, "Get sq enable status fail, drv devId=%u, tsId=%u, stream_id=%d, sq_id=%u",
+        devId, tsId, streamId_, sqId_);
+    COND_RETURN_ERROR(
+        (enable != false), RT_ERROR_STREAM_INVALID,
+        "Sq must be disable when clean task, drv devId=%u, tsId=%u, stream_id=%d, sq_id=%u", devId, tsId, streamId_,
+        sqId_);
+    RecycleModelDelayRecycleTask();
+    // set head and tail to 0
+    error = device_->Driver_()->SetSqTail(devId, tsId, sqId_, 0U);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "SetSqTail fail, retCode=%#x.", static_cast<uint32_t>(error));
+    error = device_->Driver_()->SetSqHead(devId, tsId, sqId_, 0U);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "SetSqHead fail, retCode=%#x.", static_cast<uint32_t>(error));
+    RT_LOG(RT_LOG_INFO, "stream task clean finish, stream_id=%d", streamId_);
+    return error;
 }
 
 rtError_t Stream::UpdateSnapShotSqe()

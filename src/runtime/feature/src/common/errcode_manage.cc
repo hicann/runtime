@@ -507,7 +507,9 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_SNAPSHOT_UNLOCK_FAILED] = {ACL_ERROR_SNAPSHOT_UNLOCK_FAILED, "snapshot unlock failed"};
     rtErrMap_[RT_ERROR_SNAPSHOT_BACKUP_FAILED] = {ACL_ERROR_SNAPSHOT_BACKUP_FAILED, "snapshot backup failed"};
     rtErrMap_[RT_ERROR_SNAPSHOT_RESTORE_FAILED] = {ACL_ERROR_SNAPSHOT_RESTORE_FAILED, "snapshot restore failed"};
-
+    rtErrMap_[RT_ERROR_SNAPSHOT_CALLBACK_FAILED] = {ACL_ERROR_SNAPSHOT_CALLBACK_FAILED, "snapshot callback function execution failed"};
+    rtErrMap_[RT_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED] = {
+        ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED, "register snapshot callback function failed"};
     // register memory
     rtErrMap_[RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED] = {ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED,
         "host memory range already registered"};

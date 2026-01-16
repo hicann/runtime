@@ -1014,6 +1014,30 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtProcessState)
   EXPECT_EQ(sizeof(aclrtProcessState), 4);
 }
 
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtSnapShotStage)
+{
+  aclrtSnapShotStage value;
+  value = (aclrtSnapShotStage)0U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_LOCK_PRE);
+
+  value = (aclrtSnapShotStage)1U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_BACKUP_PRE);
+
+  value = (aclrtSnapShotStage)2U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_BACKUP_POST);
+
+  value = (aclrtSnapShotStage)3U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_RESTORE_PRE);
+
+  value = (aclrtSnapShotStage)4U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_RESTORE_POST);
+
+  value = (aclrtSnapShotStage)5U;
+  EXPECT_EQ(value, ACL_RT_SNAPSHOT_UNLOCK_POST);
+
+  EXPECT_EQ(sizeof(aclrtSnapShotStage), 4);
+}
+
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtKernelType)
 {
   aclrtKernelType value;

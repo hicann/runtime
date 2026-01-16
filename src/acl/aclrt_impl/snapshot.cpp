@@ -69,3 +69,30 @@ aclError aclrtSnapShotProcessRestoreImpl()
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessRestore");
     return ACL_SUCCESS;
 }
+
+aclError aclrtSnapShotCallbackRegisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void* args)
+{
+    ACL_LOG_INFO("start to execute aclrtSnapShotCallbackRegister");
+    const rtError_t rtErr = rtSnapShotCallbackRegister(
+        static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback), args);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("execute SnapShotCallbackRegister failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    ACL_LOG_INFO("successfully execute aclrtSnapShotCallbackRegister");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtSnapShotCallbackUnregisterImpl(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)
+{
+    ACL_LOG_INFO("start to execute aclrtSnapShotCallbackUnregister");
+    const rtError_t rtErr =
+        rtSnapShotCallbackUnregister(static_cast<rtSnapShotStage>(stage), static_cast<rtSnapShotCallBack>(callback));
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR(
+            "execute SnapShotCallbackUnregister failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    ACL_LOG_INFO("successfully execute aclrtSnapShotCallbackUnregister");
+    return ACL_SUCCESS;
+}
