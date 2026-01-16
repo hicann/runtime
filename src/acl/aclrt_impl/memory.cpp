@@ -905,18 +905,106 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     rtProp.devid = prop->location.id;
     rtProp.module_id = acl::APP_MODE_ID_U16;
     rtProp.reserve = prop->reserve;
+    // host alloc
+    bool IsHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
+    // device alloc
+    bool IsDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
+    if (IsDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE)
+        || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
+            ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST/ACL_MEM_LOCATION_TYPE_HOST_NUMA.", 
+                static_cast<int32_t>(prop->memAttr));
+            return ACL_ERROR_INVALID_PARAM;
+        }
     switch (prop->memAttr) {
         case ACL_HBM_MEM_HUGE:
-            rtProp.pg_type = 1U;
-            rtProp.mem_type = 0U;
+            rtProp.pg_type = HUGE_PAGE_TYPE;
+            rtProp.mem_type = HBM_TYPE;
             break;
         case ACL_HBM_MEM_NORMAL:
-            rtProp.pg_type = 0U;
-            rtProp.mem_type = 0U;
+            rtProp.pg_type = NORMAL_PAGE_TYPE;
+            rtProp.mem_type = HBM_TYPE;
             break;
         case ACL_HBM_MEM_HUGE1G:
-            rtProp.pg_type = 2U; // 1G huge page
-            rtProp.mem_type = 0U;
+            rtProp.pg_type = HUGE1G_PAGE_TYPE; // 1G huge page
+            rtProp.mem_type = HBM_TYPE;
+            break;
+        case ACL_DDR_MEM_HUGE:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = DDR_TYPE; 
+            }
+            break;
+        case ACL_DDR_MEM_NORMAL:
+            if (IsHostAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;
+                rtProp.mem_type = DDR_TYPE;  
+            }
+            break;
+        case ACL_DDR_MEM_P2P_HUGE:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = P2P_DDR_TYPE;  // p2p_ddr 
+            }
+            break;
+        case ACL_DDR_MEM_P2P_NORMAL:
+            if (IsHostAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;  
+                rtProp.mem_type = P2P_DDR_TYPE;  // p2p_ddr
+            }
+            break;
+        case ACL_MEM_NORMAL:
+            if (IsHostAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;
+                rtProp.mem_type = DDR_TYPE;
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;
+                rtProp.mem_type = HBM_TYPE;
+            }
+            break;
+        case ACL_MEM_HUGE:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = DDR_TYPE;
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = HBM_TYPE;
+            }
+            break;
+        case ACL_MEM_HUGE1G:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE1G_PAGE_TYPE;
+                rtProp.mem_type = DDR_TYPE;
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = HUGE1G_PAGE_TYPE;
+                rtProp.mem_type = HBM_TYPE;
+            }
+            break;
+        case ACL_MEM_P2P_NORMAL:
+            if (IsHostAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;
+                rtProp.mem_type = P2P_DDR_TYPE; // p2p_ddr
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = NORMAL_PAGE_TYPE;
+                rtProp.mem_type = P2P_HBM_TYPE; // p2p_hbm
+            }
+            break;
+        case ACL_MEM_P2P_HUGE:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = P2P_DDR_TYPE; // p2p_ddr
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = HUGE_PAGE_TYPE;
+                rtProp.mem_type = P2P_HBM_TYPE; // p2p_hbm
+            }
+            break;
+        case ACL_MEM_P2P_HUGE1G:
+            if (IsHostAlloc) {
+                rtProp.pg_type = HUGE1G_PAGE_TYPE;
+                rtProp.mem_type = P2P_DDR_TYPE; // p2p_ddr
+            } else if (IsDeviceAlloc) {
+                rtProp.pg_type = HUGE1G_PAGE_TYPE;
+                rtProp.mem_type = P2P_HBM_TYPE; // p2p_hbm
+            }
             break;
         default:
             ACL_LOG_ERROR("memAttr [%d] support ACL_HBM_MEM_HUGE/ACL_HBM_MEM_NORMAL/ACL_HBM_MEM_HUGE1G. "
