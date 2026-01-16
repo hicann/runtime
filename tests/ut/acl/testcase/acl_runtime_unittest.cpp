@@ -2634,6 +2634,19 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed
   aclError ret = aclrtLaunchKernel(funcHandle, blockDim, argsData, argsSize, stream);
   EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
+TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed_2)
+{
+    aclrtFuncHandle funcHandle = (aclrtFuncHandle)0x01U;
+    void *argsData = reinterpret_cast<void *>(0x01U);
+    aclrtStream stream = (aclrtStream)0x01U;
+    uint32_t blockDim = 24;
+    size_t argsSize = 100;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtLaunchKernelByFuncHandleV3(_, _, _, _, _))
+          .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+    aclError ret = aclrtLaunchKernel(funcHandle, blockDim, argsData, argsSize, stream);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
+}
 
 TEST_F(UTEST_ACL_Runtime, export_to_shareablehandle_failed_with_rt_func_failed)
 {
@@ -3606,6 +3619,18 @@ TEST_F(UTEST_ACL_Runtime, aclrtLaunchKernelWithConfig_failed_with_invalid_args)
     auto argsHandle = reinterpret_cast<aclrtArgsHandle>(0x3000U);
     ret = aclrtLaunchKernelWithConfig(funcHandle, 0x10U, nullptr, nullptr, argsHandle, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    funcHandle = argsHandle = nullptr;
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtLaunchKernelWithConfig_failed_with_invalid_func)
+{
+    auto funcHandle = reinterpret_cast<aclrtFuncHandle>(0x1000U);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchKernelWithConfig(_,_,_,_,_,_))
+                    .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+
+    auto argsHandle = reinterpret_cast<aclrtArgsHandle>(0x3000U);
+    auto ret = aclrtLaunchKernelWithConfig(funcHandle, 0x10U, nullptr, nullptr, argsHandle, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
     funcHandle = argsHandle = nullptr;
 }
 
@@ -6231,6 +6256,20 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_V2_failed_with_rt_launch_kernel_func_fai
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, launch_kernel_V2_failed_with_rt_launch_kernel_func_failed_2)
+{
+    aclrtFuncHandle funcHandle = (aclrtFuncHandle)0x01U;
+    void *argsData = reinterpret_cast<void *>(0x01U);
+    aclrtStream stream = (aclrtStream)0x01U;
+    uint32_t blockDim = 24;
+    size_t argsSize = 100;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchKernelWithDevArgs(_, _, _, _, _, _, _))
+          .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+    aclError ret = aclrtLaunchKernelV2(funcHandle, blockDim, argsData, argsSize, nullptr, stream);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
+}
+
 TEST_F(UTEST_ACL_Runtime, launch_kernel_with_host_args_failed_with_nullptr_input)
 {
     aclrtFuncHandle funcHandle = nullptr;
@@ -6286,6 +6325,20 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_with_host_args_failed_with_rt_launch_ker
           .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
     aclError ret = aclrtLaunchKernelWithHostArgs(funcHandle, blockDim, stream, nullptr, hostArgs, argsSize, nullptr, 0);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, launch_kernel_with_host_args_failed_with_rt_launch_kernel_func_failed_2)
+{
+    aclrtFuncHandle funcHandle = (aclrtFuncHandle)0x01U;
+    void *hostArgs = reinterpret_cast<void *>(0x01U);
+    aclrtStream stream = (aclrtStream)0x01U;
+    uint32_t blockDim = 24;
+    size_t argsSize = 100;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchKernelWithHostArgs(_, _, _, _, _, _, _, _))
+          .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+    aclError ret = aclrtLaunchKernelWithHostArgs(funcHandle, blockDim, stream, nullptr, hostArgs, argsSize, nullptr, 0);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtCtxGetFloatOverflowAddr_success)

@@ -1233,7 +1233,10 @@ rtError_t ApiImpl::LaunchKernel(Kernel * const kernel, uint32_t blockDim, const 
     }
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Kernel launch with handle failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
-
+    if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
+        RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
+        return RT_ERROR_KERNEL_INVALID;
+    }
     TaskCfg taskCfg = {};
     if (cfgInfo != nullptr) {
         taskCfg.isBaseValid = 1U;
