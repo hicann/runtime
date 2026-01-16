@@ -1267,6 +1267,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     bool mixOpt = false;
     Kernel *registeredKernel = nullptr;
     bool isNeedAllocSqeDevBuf = false;
+    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1281,7 +1282,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "launch kernel prepare failed.");
 
     mixType = registeredKernel->GetMixType();
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (noMixFlag) {
         mixType = static_cast<uint8_t>(NO_MIX); // both 51dc aic aiv not support mixtype
     }
 
@@ -1317,7 +1318,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     } else {
         // do nothing
     }
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (noMixFlag) {
         TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelType, isLaunchVec);
     }
     error = CheckMixKernelValid(mixType, addr2);
@@ -1338,7 +1339,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     aicTask->funcAddr1 = addr2;
     aicTask->kernel = registeredKernel;
     aicTask->progHandle = prog;
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX) &&
+    if (noMixFlag &&
         (kernTask->type == TS_TASK_TYPE_KERNEL_AICORE) && (!infMode_)) {
         aicTask->infMode = TASK_UN_SATURATION_MODE;
     }
@@ -1398,6 +1399,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     uint32_t funcType = 0U;
     TaskCfg taskCfg = {};
     bool isNeedAllocSqeDevBuf = false;
+    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1414,7 +1416,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "kernel launch prepare failed.");
 
     mixType = (tilingKey == DEFAULT_TILING_KEY) ? static_cast<uint8_t>(NO_MIX) : registeredKernel->GetMixType();
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (noMixFlag) {
         mixType = static_cast<uint8_t>(NO_MIX); // both 51dc aic aiv not support mixtype
     }
 
@@ -1452,7 +1454,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     } else {
         // do nothing
     }
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (noMixFlag) {
         TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelType, isLaunchVec);
     }
 
@@ -1480,7 +1482,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     aicTask->tilingKey = tilingKey;
     aicTask->kernel = registeredKernel;
     aicTask->progHandle = (prog != nullptr) ? prog : RtPtrToPtr<Program *>(progHandle);
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX) &&
+    if (noMixFlag &&
         (kernTask->type == TS_TASK_TYPE_KERNEL_AICORE) && (!infMode_)) {
         aicTask->infMode = TASK_UN_SATURATION_MODE;
     }

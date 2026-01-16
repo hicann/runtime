@@ -19,12 +19,18 @@ namespace runtime {
 uint16_t TransKernelCreditCreditByChip(const uint16_t kernelCredit)
 {
     rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    DevProperties devProperty {};
-    rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, kernelCredit,
-        "Failed to get dev properties, chipType = %u error = %u", chipType, error);
+    static bool isGet = false;
+    static uint16_t creditStartValue = UINT16_MAX;
 
-    uint16_t creditStartValue = devProperty.creditStartValue;
+    if (!isGet) {
+        DevProperties devProperty {};
+        rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, kernelCredit,
+            "Failed to get dev properties, chipType = %u error = %u", chipType, error);
+
+        creditStartValue = devProperty.creditStartValue;
+        isGet = true;
+    }
     if (creditStartValue != UINT16_MAX) {
         // To prevent errors caused by kernelCredit = 0 in sqe, hardware calculates timeout by kernelCredit + 1.
         return (kernelCredit == 0U) ? creditStartValue : (kernelCredit - 1U);
@@ -66,8 +72,9 @@ uint16_t GetSdmaKernelCredit()
     uint16_t kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     const RtTimeoutConfig &timeoutCfg = Runtime::Instance()->GetTimeoutConfig();
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_CREDIT_CALC_FROM_EXE_TIMEOUT) && 
-        timeoutCfg.isCfgOpExcTaskTimeout) {
+    const static bool timeoutFlag = IS_SUPPORT_CHIP_FEATURE(chipType,
+ 	         RtOptionalFeatureType::RT_FEATURE_KERNEL_CREDIT_CALC_FROM_EXE_TIMEOUT);
+    if (timeoutFlag && timeoutCfg.isCfgOpExcTaskTimeout) {
         TransExeTimeoutCfgToKernelCredit(timeoutCfg.opExcTaskTimeout, kernelCredit);
     } else if (timeoutCfg.isCfgOpExcTaskTimeout && timeoutCfg.isOpTimeoutMs) {
         TransExeTimeoutCfgToKernelCredit(timeoutCfg.opExcTaskTimeout, kernelCredit);
