@@ -2335,7 +2335,7 @@
       "errClass": "Profiling Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EK0001",
-      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value %s for parameter %s is invalid. Reason: %s.",
       "Arglist": "value,param,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -2344,9 +2344,9 @@
     },
     {
       "errClass": "Profiling Errors",
-      "errTitle": "Interface_Call_Sequence_Error",
+      "errTitle": "Invalid_Argument_API_Call_Sequence",
       "ErrCode": "EK0002",
-      "ErrMessage": "Failed to call %s before calling %s.",
+      "ErrMessage": "Call the following APIs in order: %s and %s.",
       "Arglist": "intf1,intf2",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -2355,10 +2355,10 @@
     },
     {
       "errClass": "Profiling Errors",
-      "errTitle": "Profiling_Config_Setting_Error",
+      "errTitle": "Config_Error",
       "ErrCode": "EK0003",
-      "ErrMessage": "Failed to set the %s to [%s]. Reason: %s.",
-      "Arglist": "config,value,reason",
+      "ErrMessage": "Value %s for %s is invalid. Reason: %s.",
+      "Arglist": "value,config,reason",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
@@ -2366,10 +2366,10 @@
     },
     {
       "errClass": "Profiling Errors",
-      "errTitle": "API_Support_Error",
+      "errTitle": "Not_Supported_API",
       "ErrCode": "EK0004",
-      "ErrMessage": "[%s] is not supported in %s.",
-      "Arglist": "intf,platform",
+      "ErrMessage": "The current system or device does not support %s.",
+      "Arglist": "intf",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
@@ -2377,13 +2377,35 @@
     },
     {
       "errClass": "Profiling Errors",
-      "errTitle": "Memory_Allocation_Error",
+      "errTitle": "Not_Supported",
+      "ErrCode": "EK0005",
+      "ErrMessage": "Parameter %s is not supported.",
+      "Arglist": "param",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Profiling Errors",
+      "errTitle": "Invalid_Argument_Null_Pointer",
+      "ErrCode": "EK0006",
+      "ErrMessage": "%s failed because parameter %s cannot be a null pointer.",
+      "Arglist": "api, param",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Profiling Errors",
+      "errTitle": "Resource_Error_Insufficient_Host_Memory",
       "ErrCode": "EK0201",
       "ErrMessage": "Failed to allocate host memory for Profiling: %s.",
       "Arglist": "buf_size",
       "suggestion": {
-        "Possible Cause": "Available memory is insufficient.",
-        "Solution": "Close unused applications."
+        "Possible Cause": "Allocation failed due to insufficient host memory.",
+        "Solution": "Stop unnecessary processes and ensure that the required memory is available."
       }
     },
     {

@@ -45,6 +45,8 @@
         <path value="$(TARGET_ENV)/conf/error_manager"/>
         <path value="$(TARGET_ENV)/conf"/>
         <path value="$(TARGET_ENV)/include/experiment"/>
+        <path value="$(TARGET_ENV)/include/experiment/msprof"/>
+        <path value="$(TARGET_ENV)/include/experiment/msprof/toolchain"/>
         <path value="$(TARGET_ENV)/include/experiment/metadef"/>
         <path value="$(TARGET_ENV)/include/experiment/metadef/common"/>
         <path value="$(TARGET_ENV)/include/experiment/metadef/common/util"/>
@@ -157,10 +159,10 @@
         <file value="rts.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
-        <file value="aprof_pub.h" install_mod="440" entity="true"/>
-        <file value="devprof_pub.h" install_mod="440" entity="true"/>
-        <file value="prof_api.h" install_mod="440" entity="true"/>
-        <file value="prof_common.h" install_mod="440" entity="true"/>
+        <file value="aprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/aprof_pub.h" entity="true"/>
+        <file value="devprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/devprof_pub.h" entity="true"/>
+        <file value="prof_api.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_api.h" entity="true"/>
+        <file value="prof_common.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_common.h" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/toolchain" install_path="$(TARGET_ENV)/pkg_inc/toolchain" install_type="all">
         <file value="prof_api.h" install_mod="440" entity="true"/>

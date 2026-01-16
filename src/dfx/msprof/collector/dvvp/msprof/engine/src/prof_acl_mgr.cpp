@@ -338,8 +338,12 @@ int32_t ProfAclMgr::ProfAclInit(const std::string &profResultPath)
     // Check path is valid
     if (!Utils::IsDirAccessible(path)) {
         MSPROF_LOGE("Dir is not accessible: %s", Utils::BaseName(path).c_str());
+        std::string errorReason = "The operation on directory " +  path + " is abnormal. [Error 13] Permission denied";
+        if (!Utils::IsDir(path)) {
+            errorReason = "The operation on directory " +  path + " is abnormal. [Error 20] Not a directory";
+        }
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
-            std::vector<std::string>({"output", path, "No permission to access the configuration path."}));
+            std::vector<std::string>({"output", path, errorReason}));
         return ACL_ERROR_INVALID_FILE;
     }
 
@@ -1655,7 +1659,7 @@ int32_t ProfAclMgr::MsprofResultPathAdapter(const std::string &dir, std::string 
     }
     if (result.empty() || !analysis::dvvp::common::utils::Utils::IsDirAccessible(result)) {
         MSPROF_LOGE("Result path is empty or not accessible, result path: %s", result.c_str());
-        std::string errReason = "result path is empty or not accessible";
+        std::string errReason = "Result path is empty or not accessible";
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
             std::vector<std::string>({"output", result, errReason}));
         return PROFILING_FAILED;
@@ -2487,8 +2491,8 @@ int32_t ProfAclMgr::PrepareStartAclApi(const MsprofConfig *config)
     // check if 51 helper scene
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofStart", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofStart"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     // check if acl api mode
@@ -2555,8 +2559,8 @@ int32_t ProfAclMgr::PrepareStopAclApi(const MsprofConfig *config)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofStop", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofStop"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -2592,8 +2596,8 @@ int32_t ProfAclMgr::PrepareStartAclSubscribe(const MsprofConfig *config)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofModelSubscribe", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofModelSubscribe"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -2668,8 +2672,8 @@ int32_t ProfAclMgr::PrepareStopAclSubscribe(const MsprofConfig *config) const
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofModelUnSubscribe", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofModelUnSubscribe"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 

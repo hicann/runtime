@@ -59,13 +59,13 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
 {
     if (deviceidList == nullptr) {
         MSPROF_LOGE("[IsProfConfigValid]deviceIdList is nullptr");
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({"nullptr", "deviceidList", "deviceidList can not be nullptr"}));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclgrphProfCreateConfig", "deviceidList"}));
         return false;
     }
     if (deviceNums == 0 || deviceNums > MSVP_MAX_DEV_NUM) {
         MSPROF_LOGE("[IsProfConfigValid]The device nums is invalid.");
-        std::string errorReason = "The device nums should be in range(0, " + std::to_string(MSVP_MAX_DEV_NUM) + "]";
+        std::string errorReason = "The device number should be in range [1, " + std::to_string(MSVP_MAX_DEV_NUM) + "]";
         MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
         return false;
@@ -78,7 +78,7 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
     }
     if (deviceNums > static_cast<uint32_t>(devCount)) {
         MSPROF_LOGE("[IsProfConfigValid]Device num(%u) is not in range 1 ~ %d.", deviceNums, devCount);
-        std::string errorReason = "The device nums should be in range[1, " + std::to_string(devCount) + "]";
+        std::string errorReason = "The device number should be in range [1, " + std::to_string(devCount) + "]";
         MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
         return false;
@@ -88,7 +88,7 @@ bool IsProfConfigValid(CONST_UINT32_T_PTR deviceidList, uint32_t deviceNums)
         uint32_t devId = deviceidList[i];
         if (devId >= static_cast<uint32_t>(devCount)) {
             MSPROF_LOGE("Device id %u is not in range 0 ~ %d(exclude %d)", devId, devCount, devCount);
-            std::string errorReason = "The device id should be in range[0, " + std::to_string(devCount) + ")";
+            std::string errorReason = "The device ID should be in range[0, " + std::to_string(devCount) + ")";
             MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({std::to_string(devId), "device id", errorReason}));
             return false;
