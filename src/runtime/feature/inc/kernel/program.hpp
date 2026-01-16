@@ -171,24 +171,24 @@ public:
         return unRegisteringFlag_;
     }
 
-    void SetBinAlignBaseAddr(void *addr)
+    void SetBinAlignBaseAddr(void *addr, const uint32_t deviceId)
     {
-        baseAddrAlign_ = addr;
+        baseAddrAlign_[deviceId] = addr;
     }
 
-    const void *GetBinAlignBaseAddr() const
+    const void *GetBinAlignBaseAddr(const uint32_t deviceId) const
     {
-        return baseAddrAlign_;
+        return baseAddrAlign_[deviceId];
     }
 
-    void SetBinBaseAddr(void *addr)
+    void SetBinBaseAddr(void *addr, const uint32_t deviceId)
     {
-        baseAddr_ = addr;
+        baseAddr_[deviceId] = addr;
     }
 
-    void *GetBinBaseAddr() const
+    void *GetBinBaseAddr(const uint32_t deviceId) const
     {
-        return baseAddr_;
+        return baseAddr_[deviceId];
     }
 
     bool GetSupportMix() const
@@ -307,11 +307,16 @@ public:
         return RT_ERROR_NONE;
     }
     uint32_t GetMaxMinStackSize() const;
-    rtError_t StoreKernelLiteralNameToDevice(const Kernel *const kernel, void **soNameDevAddrHandle, void **funcNameDevAddrHandle);
+    rtError_t StoreKernelLiteralNameToDevice(Kernel *const kernel);
     rtError_t FreeKernelLiteralNameDevMem(const Device *const device);
     void RegCpuProgInfo(const void *data, const uint64_t length, const std::string &soName, const int32_t cpuRegMode,
         const bool isLoadFromFile = false);
-    rtError_t ProcCpuKernelH2DMem(bool isLoadCpuSo);
+    rtError_t ProcCpuKernelH2DMem(bool isLoadCpuSo, Device * const device);
+    rtError_t CopySoAndNameToCurrentDevice();
+    rtError_t FreeSoAndNameByDeviceId(const uint32_t deviceId);
+    void SetProgramInvalidToDevice(const uint32_t deviceId);
+    void SetDeviceSoAndNameInvalid(const uint32_t deviceId);
+    bool IsDeviceSoAndNameValid(const uint32_t deviceId);
 
     rtKernelArray_t *KernelTable_;
     uint32_t kernelCount_;
@@ -323,6 +328,8 @@ public:
     std::string soName_;
     std::string metadata_;
     std::string kernelNames_;
+    std::mutex devValidMutex_[RT_MAX_DEV_NUM];
+    Device *devicePtr_[RT_MAX_DEV_NUM] = {nullptr};
 private:
     uint32_t progId_;
     uint32_t progType_;
@@ -333,8 +340,8 @@ private:
     std::map<Module **, Context *> mapUsedCtx_;
     SpinLock mapLock_;
     SpinLock kernelMapLock_;
-    void *baseAddr_;
-    void *baseAddrAlign_;
+    void *baseAddr_[RT_MAX_DEV_NUM] = {nullptr};
+    void *baseAddrAlign_[RT_MAX_DEV_NUM] = {nullptr};
     std::map<std::string, Kernel *> kernelNameMap_;
     uint64_t stackSize_{0ULL};        // 算子的栈大小，32k/16k
     SpinLock load2DeviceLock_;
@@ -345,11 +352,11 @@ private:
     bool isNewBinaryLoadFlow_{false};
     KernelRegisterType kernelRegType_{RT_KERNEL_REG_TYPE_NON_CPU};
     int32_t cpuRegMode_ = -1;
-    std::map<std::string, void *> soNameDevAddrMap_;
-    std::map<std::string, void *> funcNameDevAddrMap_;
-    rtError_t CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle) const;
+    std::map<std::string, void *> soNameDevAddrMap_[RT_MAX_DEV_NUM];
+    std::map<std::string, void *> funcNameDevAddrMap_[RT_MAX_DEV_NUM];
+    rtError_t CopyKernelLiteralNameToDevice(const std::string &literalName, void **devAddrHandle, const Device * const dev) const;
     void SaveBinaryData(const void *data, uint64_t length, const bool isLoadFromFile);
-    rtError_t FreeCpuSoH2dMem(Stream *stream, std::vector<void *> &allocatedMem) const;
+    rtError_t FreeCpuSoH2dMem(Device * const device, std::vector<void *> &allocatedMem) const;
 };
 
 class PlainProgram : public Program {

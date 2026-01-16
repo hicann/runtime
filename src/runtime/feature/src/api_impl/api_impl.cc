@@ -947,6 +947,8 @@ rtError_t ApiImpl::BinaryGetFunctionByEntry(const Program * const binHandle, con
     *funcHandle = nullptr;
     const Program * const prog = binHandle;
     Program * const progTmp = const_cast<Program *>(prog);
+    rtError_t ret = progTmp->CopySoAndNameToCurrentDevice();
+    ERROR_RETURN(ret, "copy program failed retCode=%#x.", ret);
     const Kernel * const kernelTmp = progTmp->GetKernelByTillingKey(funcEntry);
     if (kernelTmp == nullptr) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "BinaryGetFunctionByEntry failed, funcEntry=%" PRIu64, funcEntry);
@@ -993,8 +995,10 @@ rtError_t ApiImpl::RegisterCpuFunc(rtBinHandle binHandle, const char_t *const fu
         "only support cpu program, binHandle is invalid, kernelRegType=%d.", kernelRegType);
     Kernel *kernel = nullptr;
     // 注册cpu kernel
-    const rtError_t error = prog->RegisterSingleCpuKernel(funcName, kernelName, &kernel);
+    rtError_t error = prog->RegisterSingleCpuKernel(funcName, kernelName, &kernel);
     ERROR_RETURN_MSG_INNER(error, "register single cpu kernel failed, retCode=%#x", static_cast<uint32_t>(error));
+    error = prog->CopySoAndNameToCurrentDevice();
+    ERROR_RETURN_MSG_INNER(error, "copy cpu so name failed, retCode=%#x", static_cast<uint32_t>(error));
 
     *funcHandle = kernel;
 
@@ -1003,19 +1007,30 @@ rtError_t ApiImpl::RegisterCpuFunc(rtBinHandle binHandle, const char_t *const fu
 
 rtError_t ApiImpl::BinaryUnLoad(Program * const binHandle)
 {
-    RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad prog=0x%x", binHandle);
+    RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad prog=0x%x, isnew=%d", binHandle, binHandle->IsNewBinaryLoadFlow());
     TIMESTAMP_NAME(__func__);
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device * const dev = curCtx->Device_();
-    RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad  deviceId=%u, prog=0x%x.", dev->Id_(), binHandle);
-    const rtError_t error = Runtime::Instance()->BinaryUnLoad(dev, binHandle);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
-        return error;
+    rtError_t error = RT_ERROR_NONE;
+    if (!binHandle->IsNewBinaryLoadFlow()) {
+        Context * const curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        Device * const dev = curCtx->Device_();
+        RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad device_id=%u, prog=0x%x.", dev->Id_(), binHandle);
+        error = Runtime::Instance()->BinaryUnLoad(dev, binHandle);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
+            return error;
+        }
+    } else {
+        for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
+            rtError_t tmpError = binHandle->FreeSoAndNameByDeviceId(i);
+            if (tmpError != RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_WARNING, "free program device_id=%u memory failed, reCode=%#x", i, error);
+                error = (error != RT_ERROR_NONE) ? tmpError : error;
+            }
+        }
     }
-
-    return RT_ERROR_NONE;
+    delete binHandle;
+    return error;
 }
 
 rtError_t ApiImpl::BinaryLoadFromFile(const char_t * const binPath, const rtLoadBinaryConfig_t * const optionalCfg,
@@ -1159,6 +1174,10 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Kernel launch with handle failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
+        RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
+        return RT_ERROR_KERNEL_INVALID;
+    }
     // For the new launch logic, the nop task delivery is hidden in the launchKernel. only for aic/aiv kernel
     if ((kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_NON_CPU) && (taskCfg.isExtendValid == 1U) && (taskCfg.extend.blockTaskPrefetch)) {
         DevProperties props;
@@ -1182,11 +1201,7 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
         case RT_ARGS_CPU_EX: {
             // 由于tv是可选配置，可以通过有没有timeout可选配置来弱化RT_KERNEL_USE_SPECIAL_TIMEOUT的kernel flag
             // 对外不提供kernel flag, 如果taskCfg.extend.timeout为全F时，代表永不超时
-            uint32_t flag = RT_KERNEL_DEFAULT;
-            if (taskCfg.isBaseValid == 1U) {
-                flag |= taskCfg.base.dumpflag;
-            }
-            
+            uint32_t flag = (taskCfg.isBaseValid == 1U) ? (RT_KERNEL_DEFAULT | taskCfg.base.dumpflag) : RT_KERNEL_DEFAULT;
             error = CpuKernelLaunchEx(kernel, blockDim, argsWithType->args.cpuArgsInfo, taskCfg, curStm, flag);
             break;
         }

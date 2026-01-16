@@ -386,13 +386,6 @@ PlainProgram* BinaryLoader::LoadCpuKernelFromData()
     }
 
     prog->RegCpuProgInfo(binaryBuffer_, binarySize_, soName_, cpuKernelMode_, isLoadFromFile_);
-    const rtError_t ret = prog->ProcCpuKernelH2DMem(true);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "register cpu kernel failed, ret=%#x", ret);
-        DELETE_O(prog);
-        return nullptr;
-    }
-
     return prog;
 }
 
@@ -504,13 +497,6 @@ PlainProgram *BinaryLoader::LoadCpuMode1Program()
     }
 
     prog->RegCpuProgInfo(binaryBuffer_, binarySize_, soName_, cpuKernelMode_, isLoadFromFile_);
-    ret = prog->ProcCpuKernelH2DMem(true);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "register cpu kernel failed, ret=%#x", ret);
-        DELETE_O(prog);
-        return nullptr;
-    }
-
     return prog;
 }
 
@@ -534,15 +520,6 @@ rtError_t BinaryLoader::LoadNonCpu(Program **prog)
 
     // 3. If not lazy load, copy the kernels to the device
     program->SetIsLazyLoad(isLazyLoad_);
-    if (!isLazyLoad_) {
-        error = program->Load2Device();
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Load program to device failed.");
-            delete program;
-            return error;
-        }
-    }
-
     program->SetIsNewBinaryLoadFlow(true);
     *prog = program;
 

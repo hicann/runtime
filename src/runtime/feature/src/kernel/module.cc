@@ -141,8 +141,8 @@ rtError_t Module::Load(Program * const prog)
         NULL_PTR_GOTO_MSG_INNER(devMem, FAIL_FREE, error, RT_ERROR_MEMORY_ALLOCATION);
 
         baseAddr_ = devMem;
-        if (prog->GetBinBaseAddr() == nullptr) {
-            prog->SetBinBaseAddr(devMem);
+        if (prog->GetBinBaseAddr(device_->Id_()) == nullptr) {
+            prog->SetBinBaseAddr(devMem, device_->Id_());
         }
         // cce instr addr should align to 4K for ARM instr ADRP
         if ((RtPtrToPtr<uintptr_t>(devMem) & 0xFFFULL) != 0ULL) {
@@ -152,8 +152,8 @@ rtError_t Module::Load(Program * const prog)
         }
         baseAddrAlign_ = devMem;
         baseAddrSize_ = devSize;
-        if (prog->GetBinAlignBaseAddr() == nullptr) {
-            prog->SetBinAlignBaseAddr(devMem);
+        if (prog->GetBinAlignBaseAddr(device_->Id_()) == nullptr) {
+            prog->SetBinAlignBaseAddr(devMem, device_->Id_());
         }
 
         TIMESTAMP_BEGIN(ModuleMemCpy);
