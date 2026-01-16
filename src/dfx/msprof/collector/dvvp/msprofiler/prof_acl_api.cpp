@@ -57,9 +57,8 @@ bool IsValidProfConfigPreCheck(
 {
     if (deviceNums != 0 && deviceIdList == nullptr) {
         MSPROF_LOGE("deviceIdList is nullptr");
-        MSPROF_INPUT_ERROR("EK0001",
-            std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({"nullptr", "deviceIdList", "The value of deviceIdList should not be nullptr"}));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofCreateConfig", "deviceIdList"}));
         return false;
     }
 
@@ -73,7 +72,7 @@ bool IsValidProfConfigPreCheck(
 
     if (deviceNums > PROF_MAX_DEV_NUM) {
         MSPROF_LOGE("The device nums is invalid.");
-        std::string errorReason = "The number of device should be smaller than " + std::to_string(PROF_MAX_DEV_NUM);
+        std::string errorReason = "The device number should be less than " + std::to_string(PROF_MAX_DEV_NUM);
         MSPROF_INPUT_ERROR("EK0001",
             std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
@@ -93,7 +92,7 @@ bool IsValidDevId(const uint32_t *deviceIdList, uint32_t deviceNums)
 
     if (deviceNums > static_cast<uint32_t>(devCount)) {
         MSPROF_LOGE("Device num(%u) is not in range 1 ~ %d.", deviceNums, devCount);
-        std::string errorReason = "device number should be in range [1, " + std::to_string(devCount) + "]";
+        std::string errorReason = "The device number should be in range [1, " + std::to_string(devCount) + "]";
         MSPROF_INPUT_ERROR("EK0001",
             std::vector<std::string>({"value", "param", "reason"}),
             std::vector<std::string>({std::to_string(deviceNums), "deviceNums", errorReason}));
@@ -106,7 +105,7 @@ bool IsValidDevId(const uint32_t *deviceIdList, uint32_t deviceNums)
         if (devId >= static_cast<uint32_t>(devCount)) {
             MSPROF_LOGE(
                 "[IsValidProfConfig]Device id %u is not in range 0 ~ %d(exclude %d)", devId, devCount, devCount);
-            std::string errorReason = "device id should be in range (0," + std::to_string(devCount) + "]";
+            std::string errorReason = "The device id should be in range [0," + std::to_string(devCount) + "]";
             MSPROF_INPUT_ERROR("EK0001",
                 std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({std::to_string(devId), "device id", errorReason}));
@@ -217,9 +216,8 @@ aclError aclprofDestroyConfig(ACL_PROF_CONFIG_CONST_PTR profilerConfig)
         if (profilerConfig == nullptr) {
             MSPROF_LOGE("destroy profilerConfig failed, profilerConfig must not be nullptr");
             std::string errorReason = "profilerConfig can not be nullptr";
-            MSPROF_INPUT_ERROR("EK0001",
-                std::vector<std::string>({"value", "param", "reason"}),
-                std::vector<std::string>({"nullptr", "profilerConfig", errorReason}));
+            MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+                std::vector<std::string>({"aclprofDestroyConfig", "profilerConfig"}));
             return ACL_ERROR_INVALID_PARAM;
         }
         try {
@@ -236,9 +234,8 @@ aclError aclprofWarmup(ACL_PROF_CONFIG_CONST_PTR profilerConfig)
 {
     if (profilerConfig == nullptr) {
         MSPROF_LOGE("Param profilerConfig is nullptr");
-        MSPROF_INPUT_ERROR("EK0001",
-            std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({"nullptr", "profilerConfig", "Prof config can not be nullptr"}));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofStart", "profilerConfig"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     return ProfAclWarmup(ACL_API_TYPE, &profilerConfig->config);
@@ -248,9 +245,8 @@ aclError aclprofStart(ACL_PROF_CONFIG_CONST_PTR profilerConfig)
 {
     if (profilerConfig == nullptr) {
         MSPROF_LOGE("Param profilerConfig is nullptr");
-        MSPROF_INPUT_ERROR("EK0001",
-            std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({"nullptr", "profilerConfig", "Prof config can not be nullptr"}));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofStop", "profilerConfig"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     return ProfAclStart(ACL_API_TYPE, &profilerConfig->config);

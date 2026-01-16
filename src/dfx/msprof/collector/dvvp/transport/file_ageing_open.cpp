@@ -51,7 +51,7 @@ int32_t FileAgeing::Init()
                 availableVolume, (availableVolume >> MOVE_BIT));
             std::string errReason = "The available volume is less than 20MB. " +
                 std::string("Data will not be collected. ") +
-                "Please check the available disk space in current path and the related profiling configs";
+                "Check the available space in the current path " + storageDir_ + " and related profiling configurations";
             std::string errValue = std::to_string(availableVolume >> MOVE_BIT) + "MB";
             MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
                 std::vector<std::string>({"storage limit", errValue, errReason}));
