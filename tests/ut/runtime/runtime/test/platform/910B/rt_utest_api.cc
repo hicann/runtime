@@ -2751,3 +2751,129 @@ TEST_F(CloudV2ApiTest, check_get_soc_spec_exceed_limit)
     error = rtGetSocSpec("Version", "NpuArch", npuArch, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
+
+TEST_F(CloudV2ApiTest, stream_switchN_error_unbind_model)
+{
+    rtStream_t streamA;
+    rtStream_t streamB;
+    rtError_t error;
+    int64_t dev_val, dev_val_target;
+    int64_t* devMem = &dev_val;
+    int64_t* devMem_target = &dev_val_target;
+    error = rtStreamCreate(&streamA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&streamB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStream_t trueStream[1];
+    trueStream[0] = streamB;
+    error =
+        rtStreamSwitchN((void*)devMem, 1, (void*)devMem_target, (rtStream_t*)&trueStream, 1, streamA, RT_SWITCH_INT64);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    rtModel_t model;
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtModelBindStream(model, streamB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error =
+        rtStreamSwitchN((void*)devMem, 1, (void*)devMem_target, (rtStream_t*)&trueStream, 1, streamA, RT_SWITCH_INT64);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(streamA);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(streamB);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest, stream_active_error_unbind_model)
+{
+    rtStream_t streamA;
+    rtStream_t streamB;
+    rtError_t error;
+    error = rtStreamCreate(&streamA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&streamB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamActive(streamA, streamB);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    rtModel_t model;
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtModelBindStream(model, streamB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamActive(streamA, streamB);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(streamA);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(streamB);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest, model_switch_stream_ex)
+{
+    rtError_t error;
+    rtModel_t model;
+    rtStream_t streamA;
+    rtStream_t streamB;
+    rtStream_t streamC;
+    rtStream_t exeStream;
+    int64_t dev_val, dev_val_target;
+
+    int64_t* devMem = &dev_val;
+    int64_t* devMem_target = &dev_val_target;
+
+    error = rtStreamCreate(&streamA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreate(&streamB, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamSwitchEx((void*)devMem, RT_EQUAL, (void*)devMem_target, streamB, streamA, RT_SWITCH_INT64);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    error = rtModelBindStream(model, streamB, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamSwitchEx((void*)devMem, RT_EQUAL, (void*)devMem_target, streamB, streamA, RT_SWITCH_INT64);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
+
+    // Main Stream
+    error = rtModelBindStream(model, streamA, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamSwitchEx((void*)devMem, RT_EQUAL, (void*)devMem_target, streamB, streamA, RT_SWITCH_INT64);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelUnbindStream(model, streamA);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelUnbindStream(model, streamB);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(streamA);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(streamB);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(exeStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}
