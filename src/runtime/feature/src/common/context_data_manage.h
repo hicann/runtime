@@ -23,7 +23,10 @@ class Context;
 class ContextDataManage {
 public:
     ContextDataManage() = default;
-    ~ContextDataManage() = default;
+    ~ContextDataManage()
+    {
+        set_.clear();
+    }
 
     static ContextDataManage &Instance();
 
