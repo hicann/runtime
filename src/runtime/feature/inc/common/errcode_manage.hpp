@@ -31,6 +31,9 @@
 #define RT_GET_ERRREASON(rtErrCode) \
     ErrorcodeManage::Instance().GetErrorReason(rtErrCode)
 
+#define RT_GET_MODULE_NAME(moduleId) \
+    ErrorcodeManage::Instance().GetModuleName(moduleId)
+
 namespace cce {
 namespace runtime {
 using DrvErrcodeType = drvError_t;
@@ -44,6 +47,8 @@ public:
     std::string GetErrorDesc(const RtInnerErrcodeType errcode);
 
     std::string GetErrorReason(const RtInnerErrcodeType errcode);
+
+    const std::string& GetModuleName(const uint16_t moduleId);
 
     RtInnerErrcodeType GetDrvErrCode(const DrvErrcodeType drvErrcode);
 
