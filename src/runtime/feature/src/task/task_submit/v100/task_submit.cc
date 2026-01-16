@@ -530,6 +530,14 @@ rtError_t AllocTaskAndSendStars(TaskInfo *submitTask, Stream *stm, uint32_t * co
         return error;
     }
 
+    struct halTaskSendInfo sendInfo = {};
+    sendInfo.type = DRV_NORMAL_TYPE;
+    sendInfo.sqe_addr = RtPtrToPtr<uint8_t *, rtStarsSqe_t *>(starsSqe);
+    sendInfo.sqe_num = sendSqeNum;
+    sendInfo.tsId = tsId;
+    sendInfo.sqId = sqId;
+    drvError_t drvRet = DRV_ERROR_NONE;
+
     error = engine->ProcessTaskWait(taskInfo);
     if (error != RT_ERROR_NONE) {
         stm->pendingNum_.Sub(1U);
@@ -544,14 +552,6 @@ rtError_t AllocTaskAndSendStars(TaskInfo *submitTask, Stream *stm, uint32_t * co
 
     // 调用driver接口发送sqe
     TIMESTAMP_BEGIN(SqTaskSendNormalV1);
-    struct halTaskSendInfo sendInfo = {};
-    sendInfo.type = DRV_NORMAL_TYPE;
-    sendInfo.sqe_addr = RtPtrToPtr<uint8_t *, rtStarsSqe_t *>(starsSqe);
-    sendInfo.sqe_num = sendSqeNum;
-    sendInfo.tsId = tsId;
-    sendInfo.sqId = sqId;
-    drvError_t drvRet = DRV_ERROR_NONE;
-
     if (!stm->IsSoftwareSqEnable()) {
         drvRet = halSqTaskSend(devId, &sendInfo);
     } else {

@@ -227,10 +227,8 @@ rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
 Context *ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 {
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    bool setGroupFlag = false;
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO)) {
-        setGroupFlag = true;
-    }
+    static bool setGroupFlag = IS_SUPPORT_CHIP_FEATURE(chipType,
+ 	         RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO);
     Context * const curCtx = InnerThreadLocalContainer::GetCurCtx();
     if (curCtx != nullptr) {
         if (setGroupFlag) {
