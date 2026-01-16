@@ -30,12 +30,6 @@ namespace {
     bool aclmdlInitDumpFlag = false;
     std::mutex aclDumpMutex;
     constexpr int32_t ADX_ERROR_NONE = 0;
-
-    typedef aclError (*aclDumpSetCallbackFunc)(const char *configStr);
-    typedef aclError (*aclDumpUnsetCallbackFunc)();
-    std::mutex dumpCbMtx;
-    aclDumpSetCallbackFunc dumpSetCbFunc;
-    aclDumpUnsetCallbackFunc dumpUnsetCbFunc;
 }
 
 namespace acl {
@@ -189,38 +183,3 @@ aclError aclmdlFinalizeDumpImpl()
     ACL_LOG_INFO("successfully execute aclmdlFinalizeDump, the dump task completed!");
     return ACL_SUCCESS;
 }
-
-// add interface for acl_model dump
-#ifdef __cplusplus
-extern "C" {
-#endif
-ACL_FUNC_VISIBILITY aclError aclDumpSetCallbackRegister(aclDumpSetCallbackFunc cbFunc)
-{
-    const std::unique_lock<std::mutex> lk(dumpCbMtx);
-    dumpSetCbFunc = cbFunc;
-    return ACL_SUCCESS;
-}
-
-ACL_FUNC_VISIBILITY aclError aclDumpSetCallbackUnRegister()
-{
-    const std::unique_lock<std::mutex> lk(dumpCbMtx);
-    dumpSetCbFunc = nullptr;
-    return ACL_SUCCESS;
-}
-
-ACL_FUNC_VISIBILITY aclError aclDumpUnsetCallbackRegister(aclDumpUnsetCallbackFunc cbFunc)
-{
-    const std::unique_lock<std::mutex> lk(dumpCbMtx);
-    dumpUnsetCbFunc = cbFunc;
-    return ACL_SUCCESS;
-}
-
-ACL_FUNC_VISIBILITY aclError aclDumpUnsetCallbackUnRegister()
-{
-    const std::unique_lock<std::mutex> lk(dumpCbMtx);
-    dumpUnsetCbFunc = nullptr;
-    return ACL_SUCCESS;
-}
-#ifdef __cplusplus
-}
-#endif
