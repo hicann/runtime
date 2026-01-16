@@ -2207,8 +2207,8 @@ rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *ts
 
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING)) {
-        NULL_PTR_RETURN_MSG_OUTER(phyDevId, ACL_ERROR_RT_PARAM_INVALID);
-        NULL_PTR_RETURN_MSG_OUTER(tsId, ACL_ERROR_RT_PARAM_INVALID);
+        PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(phyDevId, RT_ERROR_INVALID_VALUE);
+        PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(tsId, RT_ERROR_INVALID_VALUE);
         Notify * const notifyPtr = static_cast<Notify *>(notify);
         rtNotifyPhyInfo notifyInfo;
         const rtError_t error = apiInstance->GetNotifyPhyInfo(notifyPtr, &notifyInfo);

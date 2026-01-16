@@ -69,14 +69,12 @@
         } \
     } while (false)
 
-#define PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(PTR, ERRCODE) \
+#define PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(PTR, RET_CODE) \
     do { \
         if (unlikely((PTR) == nullptr)) { \
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Check param failed, " #PTR " can not be NULL!"); \
-            const std::string errorStr = RT_GET_ERRDESC(ERRCODE); \
-            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1004, #PTR); \
             RT_LOG_FLUSH(); \
-            return GetRtExtErrCodeAndSetGlobalErr((ERRCODE)); \
+            return GetRtExtErrCodeAndSetGlobalErr((RET_CODE)); \
         } \
     } while (false)
 

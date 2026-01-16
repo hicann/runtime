@@ -113,8 +113,11 @@
 #define NULL_PTR_RETURN_MSG(PARAM, ERROR_CODE)                        \
     NULL_PTR_PROC_RETURN_ERROR_MSG_(INNER, PARAM, ERROR_CODE, RT_LOG_ERROR,) \
 
-#define NULL_PTR_RETURN_MSG_OUTER(PARAM, ERROR_CODE)                        \
-    NULL_PTR_PROC_RETURN_ERROR_MSG_(OUTER, PARAM, ERROR_CODE, RT_INVALID_ARGUMENT_ERROR,) \
+#define NULL_PTR_RETURN_MSG_OUTER(PTR, RET_CODE)                        \
+    if (unlikely((PTR) == nullptr)) { \
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1004, #PTR); \
+        return RET_CODE; \
+    }
 
 #define ZERO_RETURN_MSG(PARAM)            \
     COND_RETURN_CALL_MSG_(CALL, (PARAM) == 0U, \
