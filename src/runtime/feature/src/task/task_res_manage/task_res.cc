@@ -157,10 +157,16 @@ bool TaskResManage::CreateTaskRes(Stream* stm)
         RT_LOG(RT_LOG_WARNING, "does not support, chipType=%u, isOffline=%u.", chipType, isOffline);
         return false;
     }
-    const uint32_t taskPoolSize = taskPoolNum_ * sizeof(TaskRes);
+
+    uint32_t taskResCellSize = static_cast<uint32_t>(sizeof(TaskRes));
+    if ((taskResCellSize & (RTS_BUFF_ASSING_NUM - 1U)) > 0) {
+        taskResCellSize += RTS_BUFF_ASSING_NUM;
+        taskResCellSize &= (~(RTS_BUFF_ASSING_NUM - 1U));
+    }
+    const uint32_t taskPoolSize = taskPoolNum_ * taskResCellSize;
     taskResBaseAddr_ = new (std::nothrow) uint8_t[taskPoolSize];
     COND_RETURN_WARN((taskResBaseAddr_ == nullptr), false, "no memory for taskRes,"
-        "taskResSize=%u, taskPoolNum_=%u.", sizeof(TaskRes), taskPoolNum_);
+        "taskResSize=%u, taskPoolNum_=%u.", taskResCellSize, taskPoolNum_);
 
     streamId_ = stm->Id_();
     deviceId_ = stm->Device_()->Id_();
@@ -419,10 +425,10 @@ TaskInfo* TaskResManage::AllocTaskInfoByTaskResId(Stream *stm, uint32_t taskResI
     __sync_synchronize();
     taskResTail_ = (taskResId + 1U) % taskPoolNum_;
     __sync_synchronize();
+    taskTailMutex_.unlock();
     RT_LOG(RT_LOG_DEBUG, "alloc taskinfo success, device_id=%u, stream_id=%u, taskResId=%u, taskResHead_=%u, "
         "taskResTail_=%u, taskPoolNum_=%u.",
         deviceId_, streamId_, taskResId, taskResHead_, taskResTail_, taskPoolNum_);
-    taskTailMutex_.unlock();
 
     return task;
 }

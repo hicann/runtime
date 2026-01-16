@@ -588,7 +588,9 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     const uint8_t mixType = kernel->GetMixType();
     const KernelRegisterType kernelRegType = kernel->GetKernelRegisterType();
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_EXTRA_VECTOR_CORE) &&
+    const static bool isVectorCoreEnable = IS_SUPPORT_CHIP_FEATURE(chipType,
+ 	         RtOptionalFeatureType::RT_FEATURE_DEVICE_EXTRA_VECTOR_CORE);
+    if (isVectorCoreEnable &&
         (kernelRegType != RT_KERNEL_REG_TYPE_CPU) && (mixType != NO_MIX)) {
         NULL_PTR_RETURN_MSG_OUTER(cfg, RT_ERROR_INVALID_VALUE);
         NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
@@ -605,7 +607,8 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
     uint8_t isBlockPrefetch= BLOCK_PREFETCH_DISABLE;
     bool blockDimOffsetExist = false;
     bool engineTypeExist = false;
-    bool hasAttrId[RT_LAUNCH_KERNEL_ATTR_MAX] = {};
+    bool timeoutFlag = false;
+ 	bool timeoutUsFlag = false;
     for (size_t idx = 0U; idx < cfg->numAttrs; idx++) {
         switch (cfg->attrs[idx].id) {
             case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:
@@ -624,18 +627,17 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
                 isDataDump = cfg->attrs[idx].value.isDataDump; // 0: disable, 1: enable
                 break;
             case RT_LAUNCH_KERNEL_ATTR_TIMEOUT:
-                hasAttrId[RT_LAUNCH_KERNEL_ATTR_TIMEOUT] = true;
+                timeoutFlag = true;
                 break;
             case RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US:
-                hasAttrId[RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US] = true;
+                timeoutUsFlag = true;
                 break;
             default:
                 break;
         }
     }
 
-    COND_RETURN_OUT_ERROR_MSG_CALL((hasAttrId[RT_LAUNCH_KERNEL_ATTR_TIMEOUT] && 
-        hasAttrId[RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US]),
+    COND_RETURN_OUT_ERROR_MSG_CALL((timeoutFlag && timeoutUsFlag),
         RT_ERROR_INVALID_VALUE, "Attribute RT_LAUNCH_KERNEL_ATTR_TIMEOUT and "
         "RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US cannot be carried at the same time.");
 
@@ -650,8 +652,7 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t * const cfg, con
         (isDataDump != DATA_DUMP_ENABLE) && (isDataDump != DATA_DUMP_DISABLE),
         RT_ERROR_INVALID_VALUE, "not support dataDump: %u, valid range is [0, 1]", isDataDump);
 
-    COND_RETURN_WITH_NOLOG(
-        !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_EXTRA_VECTOR_CORE) ||
+    COND_RETURN_WITH_NOLOG(!isVectorCoreEnable ||
         (kernelRegType == RT_KERNEL_REG_TYPE_CPU) || (mixType == NO_MIX), RT_ERROR_NONE);
 
     COND_RETURN_OUT_ERROR_MSG_CALL((!blockDimOffsetExist || !engineTypeExist), RT_ERROR_INVALID_VALUE,

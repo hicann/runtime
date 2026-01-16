@@ -301,9 +301,14 @@ TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void
     if (notify->GetEndGraphModel() != nullptr) {
         rtStarsCqeSwStatus_t sw_status;
         sw_status.value = *(static_cast<const uint32_t *>(info));
-        const uint16_t streamId = sw_status.model_exec.stream_id;
-        const uint16_t taskId = sw_status.model_exec.task_id;
+        uint16_t streamId = sw_status.model_exec.stream_id;
+ 	    uint16_t taskId = sw_status.model_exec.task_id;
         Device *const dev = taskInfo->stream->Device_();
+        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) && 
+            (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
+            streamId = notify->GetEndGraphModel()->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
+            taskId = sw_status.model_exec_ex.task_id;
+        }
 
         TaskInfo *taskPtr = GetTaskInfo(dev, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId));
         
