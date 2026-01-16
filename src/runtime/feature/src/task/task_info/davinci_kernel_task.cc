@@ -866,8 +866,6 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     Stream * const stm = taskInfo->stream;
     Device *dev = stm->Device_();
     uint64_t stackSize = KERNEL_STACK_SIZE_32K;
-    constexpr uint32_t MAX_LEN_PER_LINE = 1024U;
-    char programBuffStr[MAX_LEN_PER_LINE] = {0};
     const uint64_t funcAddr = aicTaskInfo->funcAddr;
     uint8_t funcType = 0U;
     uint32_t prefetchCnt1 = 0U;
@@ -875,13 +873,6 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     if (aicTaskInfo->kernel != nullptr) {
         funcType = aicTaskInfo->kernel->GetFuncType();
         prefetchCnt1 = aicTaskInfo->kernel->PrefetchCnt1_();
-        Program *programPtr = aicTaskInfo->kernel->Program_();
-        if (programPtr != nullptr) {
-            stackSize = programPtr->GetStackSize();
-            (void)snprintf_s(programBuffStr, MAX_LEN_PER_LINE, MAX_LEN_PER_LINE - 1,
-            "stackSize is [%lu], SoName is [%s], kernelName is [%s]",
-            stackSize, programPtr->GetSoName().c_str(), programPtr->GetKernelNamesBuffer().c_str());
-        }
         minStackSize = aicTaskInfo->kernel->GetMinStackSize1();
     }
 
@@ -938,10 +929,10 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     sqe->sqe_index = 0U;
     sqe->kernel_credit = GetAicoreKernelCredit(aicTaskInfo->timeout);
     RT_LOG(RT_LOG_INFO, "bindFlag=%d, biuperfProfFla=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
-        "schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, buff=%s, machine=%u.",
+        "schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, machine=%u.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
         Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode, taskInfo->type, aicTaskInfo->comm.kernelFlag,
-        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, programBuffStr, aicTaskInfo->machine);
+        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, aicTaskInfo->machine);
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
             sqe->schem = static_cast<uint16_t>(aicTaskInfo->schemMode);
