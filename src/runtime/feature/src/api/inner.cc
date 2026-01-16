@@ -208,17 +208,14 @@ rtError_t rtGeneralCtrlInner(uintptr_t *ctl, uint32_t num, uint32_t type)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(ctl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((type >= static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)),
-        RT_ERROR_INVALID_VALUE, "current type=%u greater than max type=%u.",
-        type, static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((type >= static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)), RT_ERROR_INVALID_VALUE, 
+        type, "less than " + std::to_string(RT_GNL_CTRL_TYPE_MAX));
 
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((g_genCtrPro[type].funcCall == nullptr),
-        RT_ERROR_INVALID_VALUE, "current type[%u] func call is nullptr.", type);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((g_genCtrPro[type].funcCall == nullptr), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1001, "current type[" + std::to_string(type) + "] func call is nullptr.");
 
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((num != static_cast<uint32_t>(g_genCtrPro[type].num)),
-        RT_ERROR_INVALID_VALUE, "current type[%u] num must be [%u], but got [%u].",
-        type, g_genCtrPro[type].num, num);
-
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((num != static_cast<uint32_t>(g_genCtrPro[type].num)), RT_ERROR_INVALID_VALUE, 
+        num, std::to_string(g_genCtrPro[type].num));
     return g_genCtrPro[type].funcCall(ctl, num);
 }
 

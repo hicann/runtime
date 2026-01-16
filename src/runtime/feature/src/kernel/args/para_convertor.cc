@@ -33,7 +33,7 @@ rtError_t ConvertArgsByArgsHandle(rtArgsEx_t &oldArgs, const RtArgsHandle *const
             continue;
         }
         COND_RETURN_OUT_ERROR_MSG_CALL(phIndex >= arrayArgsNum, RT_ERROR_INVALID_VALUE,
-            "phIndex[%u] is greater than phNum[%u].", phIndex, arrayArgsNum);
+            "phIndex[%u] should less than phNum[%u].", phIndex, arrayArgsNum);
         specialArgsInfos[phIndex].dataOffset = static_cast<uint32_t>(argsHandle->para[idx].dataOffset);
         specialArgsInfos[phIndex].addrOffset = argsHandle->para[idx].paraOffset;
         phIndex++;
@@ -73,7 +73,7 @@ rtError_t ConvertCpuArgsByArgsHandle(rtCpuKernelArgs_t &oldArgs, const RtArgsHan
             continue;
         }
         COND_RETURN_OUT_ERROR_MSG_CALL(phIndex >= arrayArgsNum, RT_ERROR_INVALID_VALUE,
-            "phIndex[%u] is greater than phNum[%u].", phIndex, arrayArgsNum);
+            "phIndex[%u] should less than phNum[%u].", phIndex, arrayArgsNum);
         specialArgsInfos[phIndex].dataOffset = argsHandle->para[idx].dataOffset;
         specialArgsInfos[phIndex].addrOffset = argsHandle->para[idx].paraOffset;
         phIndex++;
@@ -131,8 +131,7 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg &taskCfg, const rtKernelLaunchCfg_t*
     taskCfg.extend.timeout = 0UL; // 默认值0U，代表默认超时时间
     // cfg support nullptr, no need process
     NULL_PTR_RETURN_NOLOG(cfg, RT_ERROR_NONE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(cfg->attrs == nullptr,
-        RT_ERROR_INVALID_VALUE, "cfg is not nullptr, but cfg->attrs is nullptr, invalid param.");
+    NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
     for (size_t idx = 0U; idx < cfg->numAttrs; idx++) {
         switch (cfg->attrs[idx].id) {
             case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:

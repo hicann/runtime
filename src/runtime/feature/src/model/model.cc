@@ -1950,7 +1950,7 @@ rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags)
     std::string realFilePath = RealPathForFileNotExists(path);
     std::ofstream outputFile(realFilePath);
     COND_RETURN_OUT_ERROR_MSG_CALL((!outputFile.is_open()), RT_ERROR_INVALID_VALUE,
-        "invalid json file path or fail to open: %s", path);
+        "Invalid JSON file path or failed to open %s", path);
     outputFile << "[\n";
     uint32_t streamCnt = 0;
     bool isLastStream = false;

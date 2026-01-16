@@ -2050,8 +2050,8 @@ rtError_t RawDevice::SetPrintFifoSize(const uint32_t value)
 {
     std::unique_lock<std::mutex> l(printfMtx_);
     constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
-    COND_RETURN_OUT_ERROR_MSG_CALL(value < MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE,
-            "Set print fifo space size failed, value=%u, value cannot be less than %u.", value, MIN_FIFO_PRINTF_SIZE);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(value < MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
+        value, "greater than and equal to " + std::to_string(MIN_FIFO_PRINTF_SIZE));
     printblockLen_ = value;
     return RT_ERROR_NONE;
 }

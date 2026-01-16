@@ -392,7 +392,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsLaunchReduceAsyncTask(const rtReduceInfo_t *reduceInfo, const rtStream_t stm, const void *reserve)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((reserve != nullptr), RT_ERROR_INVALID_VALUE, "reserve only support nullptr.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), RT_ERROR_INVALID_VALUE, reserve, "nullptr");
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(reduceInfo, RT_ERROR_INVALID_VALUE);
     const auto rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -513,7 +513,7 @@ rtError_t rtsSetCmoDesc(rtCmoDesc_t cmoDesc, void *srcAddr, size_t srcLen)
 VISIBILITY_DEFAULT
 rtError_t rtsLaunchCmoAddrTask(rtCmoDesc_t cmoDesc, rtStream_t stm, rtCmoOpCode cmoOpCode, const void *reserve)
 {
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((reserve != nullptr), RT_ERROR_INVALID_VALUE, "reserve only support nullptr.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), RT_ERROR_INVALID_VALUE, reserve, "nullptr");
 
     DevProperties properties;
     auto error = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), properties);
@@ -860,8 +860,8 @@ VISIBILITY_DEFAULT
 rtError_t rtMemcpyAsyncWithOffset(void **dst, uint64_t dstMax, uint64_t dstDataOffset, const void **src,
     uint64_t cnt, uint64_t srcDataOffset, rtMemcpyKind kind, rtStream_t stm)
 {
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_INVALID_VALUE,
-        "Invalid kind, current kind must be %d.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), 
+        RT_ERROR_INVALID_VALUE, kind, std::to_string(RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE));
     return rtMemcpyD2DAddrAsync(RtPtrToPtr<void *>(dst), dstMax, dstDataOffset,
         RtPtrToPtr<void *>(src), cnt, srcDataOffset, stm);
 }
@@ -871,12 +871,11 @@ rtError_t rtIpcMemImportPidInterServer(const char *key, const rtServerPid *serve
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(key, RT_ERROR_INVALID_VALUE);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(serverPids, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((num == 0UL), RT_ERROR_INVALID_VALUE,
-        "Invalid userdata, the parameter num cannot be zero.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(num == 0UL, RT_ERROR_INVALID_VALUE, num, "not equal to 0");
 
     for (size_t i = 0; i < num; i++) {
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE,
-            "Invalid userdata, the parameter serverPids[%zu].pid cannot be a null pointer.", i);
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004,
+            __func__, "serverPids[" + std::to_string(i) + "].pid" );
         const rtError_t ret = rtSetIpcMemorySuperPodPid(key, serverPids[i].sdid, serverPids[i].pid,
             static_cast<int32_t>(serverPids[i].num & INT32_MAX));
         if (ret != ACL_RT_SUCCESS) {
@@ -893,15 +892,14 @@ rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(notify, RT_ERROR_INVALID_VALUE);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(serverPids, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((num == 0UL), RT_ERROR_INVALID_VALUE,
-        "Invalid userdata, the parameter num cannot be zero.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(num == 0UL, RT_ERROR_INVALID_VALUE, num, "not equal to 0");
         
     Notify * const notifyPtr = static_cast<Notify *>(notify);
     for (size_t i = 0; i < num; i++) {
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE,
-            "Invalid userdata, the parameter serverPids[%zu].pid cannot be a null pointer.", i);
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE((serverPids[i].num != 1UL), RT_ERROR_INVALID_VALUE,
-            "Invalid userdata, the parameter serverPids[%zu].num must be 1.", i);
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004,
+            __func__, "serverPids[" + std::to_string(i) + "].pid" );
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].num != 1UL), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003,
+            __func__, serverPids[i].num, "serverPids[" + std::to_string(i) + "].num", "1");
         const rtError_t ret = rtSetIpcNotifySuperPodPid(notifyPtr->GetIpcName().c_str(), serverPids[i].sdid, serverPids[i].pid[0U]);
         if (ret != ACL_RT_SUCCESS) {
             return ret;

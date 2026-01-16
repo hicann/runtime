@@ -95,9 +95,8 @@ rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t blockDim, r
 
     Kernel * const kernel = RtPtrToPtr<Kernel *>(funcHandle);
     const KernelRegisterType regType = kernel->GetKernelRegisterType();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(regType != RT_KERNEL_REG_TYPE_CPU, RT_ERROR_INVALID_VALUE,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(regType != RT_KERNEL_REG_TYPE_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1001,
         "current api only support cpu kernel");
-
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     RtArgsWithType argsWithType = {};
@@ -117,7 +116,8 @@ rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, 
     rtArgsHandle argsHandle, void* reserve)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((reserve != nullptr), RT_ERROR_INVALID_VALUE, "reserve only support nullptr.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), 
+        RT_ERROR_INVALID_VALUE, reserve, "nullptr");
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
@@ -138,7 +138,8 @@ rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim,
                                      const void *args, uint32_t argsSize, void *reserve)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((reserve != nullptr), RT_ERROR_INVALID_VALUE, "reserve only support nullptr.");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), 
+        RT_ERROR_INVALID_VALUE, reserve, "nullptr");
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(funcHandle, RT_ERROR_INVALID_VALUE);
@@ -335,14 +336,14 @@ rtError_t rtsKernelArgsParaUpdate(rtArgsHandle argsHandle, rtParaHandle paraHand
     RtArgsHandle *handle = RtPtrToPtr<RtArgsHandle *>(argsHandle);
     ParaDetail *pHandle = RtPtrToPtr<ParaDetail *>(paraHandle);
     // 0 is Common param, 1 is place holder param
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((pHandle->type != 0U) || (pHandle->paraSize != paraSize),
-        RT_ERROR_INVALID_VALUE, "invalid param, paraHandle type is %u, dest paraSize is %zu, input paraSize is %zu",
-        pHandle->type, pHandle->paraSize, paraSize);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((pHandle->type != 0U) || (pHandle->paraSize != paraSize), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1001, "invalid param, paraHandle type is " + std::to_string(pHandle->type) + ", dest paraSize is " 
+        + std::to_string(pHandle->paraSize) + ", input paraSize is " + std::to_string(paraSize) + ".");
 
     const uint64_t offset = RtPtrToValue(handle->buffer) + pHandle->paraOffset;
     const errno_t ret = memcpy_s(RtValueToPtr<void *>(offset), paraSize, para, paraSize);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((ret != EOK),
-        RT_ERROR_INVALID_VALUE, "args para update, memcpy failed, retCode=%#x", static_cast<uint32_t>(ret));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((ret != EOK), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1001, "args para update, memcpy failed, retCode=" + std::to_string(ret));
     handle->isParamUpdating = 1U;
 
     return ACL_RT_SUCCESS;
