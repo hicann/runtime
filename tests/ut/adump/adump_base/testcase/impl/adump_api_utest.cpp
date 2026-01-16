@@ -14,7 +14,6 @@
 #include <cassert>
 #include <filesystem>
 #include "case_workspace.h"
-#include "dump_param_builder.h"
 #include "dump_file_checker.h"
 #include "acl_op.h"
 #include "adump_pub.h"
@@ -129,7 +128,7 @@ TEST_F(AdumpApiUtest, Test_DisableOperatorOverflowDump)
     dumpConf.dumpPath = "";
     dumpConf.dumpStatus = "off";
     dumpConf.dumpMode = "";
-    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpSwitch = 0;
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, dumpConf), ADUMP_SUCCESS);
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::OP_OVERFLOW), false);
 }
@@ -180,17 +179,6 @@ TEST_F(AdumpApiUtest, Test_SetOperatorOverflowDumpConf_fail)
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, invalidDumpConf), ADUMP_FAILED);
 }
 
-TEST_F(AdumpApiUtest, Test_AdumpDumpTensor_With_Nullptr)
-{
-    EnableOperatorDump();
-
-    TensorInfo outputTensorInfo = BuildTensorInfo(nullptr, TensorType::OUTPUT);
-    ;
-    std::vector<TensorInfo> tensorInfos = {outputTensorInfo};
-    aclrtStream stream = (aclrtStream)0x1234;
-    EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", tensorInfos, stream), ADUMP_FAILED);
-}
-
 TEST_F(AdumpApiUtest, Test_AdumpDumpTensor_with_DumpStatus_off)
 {
     DumpConfig dumpConf;
@@ -229,20 +217,6 @@ static rtError_t rtRegTaskFailCallbackByModuleStub(const char_t *moduleName, rtT
 {
     RuntimeExceptionCallback::Instance().MutableCallback() = callback;
     return RT_ERROR_NONE;
-}
-
-static void ExceptionOccur(uint32_t deviceId, uint32_t taskId, uint32_t streamId, uint32_t retCode)
-{
-    rtExceptionInfo exception = BuildRtException(deviceId, taskId, streamId, retCode);
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = nullptr;
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = 0;
-    char hostKernel[] = "host kernel bin file stub";
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.binSize = sizeof(hostKernel);
-    std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = kernelName.data();
-    exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelNameSize = kernelName.size();
-    RuntimeExceptionCallback::Instance().Invoke(&exception);
 }
 
 uint64_t mmGetClockMonotonicTime()

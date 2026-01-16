@@ -61,7 +61,7 @@ public:
 #endif
 
 private:
-    DumpManager() = default;
+    DumpManager();
     DumpManager(const DumpManager &) = delete;
     DumpManager &operator = (const DumpManager &) = delete;
     int32_t ExceptionConfig(DumpType dumpType, const DumpConfig &dumpConfig);

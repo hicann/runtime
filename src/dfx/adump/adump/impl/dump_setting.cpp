@@ -85,6 +85,11 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig &dumpConfig)
         return ADUMP_FAILED;
     }
 
+    // Non-Zero when enable, Zero when disable(dumpDebug is converted to be dumpStatus when convert dump config)
+    if (dumpConfig.dumpSwitch != 0) {
+        dumpDebugStatus_ = true;
+    }
+
     // if disable dump, just return.
     if (!dumpDebugStatus_) {
         return ADUMP_SUCCESS;
@@ -100,6 +105,8 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig &dumpConfig)
         return ADUMP_FAILED;
     }
 
+    InitDumpSwitch(dumpConfig.dumpSwitch & DUMP_SWITCH_MASK);
+ 	IDE_LOGD("DumpOverflowInit finished.");
     return ADUMP_SUCCESS;
 }
 
