@@ -1056,15 +1056,14 @@ rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint
         RT_LOG(RT_LOG_ERROR, "Get soc spec failed, ret = %u, please check.", ret);
         ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_PLATFORM);
     }
-    if (maxLen < result.size() + 1U) {
-        RT_LOG(RT_LOG_INFO, "maxLen less than result.size() + 1U.");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_INVALID_VALUE);
-    } else {
-        const errno_t rtn = memcpy_s(val, maxLen, result.c_str(), result.size() + 1U);
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE((ret != EOK), RT_ERROR_INVALID_VALUE,
-            "Get soc spec, memcpy failed, retCode=%#x", static_cast<uint32_t>(rtn));
-        return ACL_RT_SUCCESS;
-    }
+
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((maxLen < (result.size() + 1U)), RT_ERROR_INVALID_VALUE, maxLen,
+        "maxLen should be larger than size of query result");
+
+    const errno_t rtn = memcpy_s(val, maxLen, result.c_str(), result.size() + 1U);
+    COND_RETURN_ERROR_WITH_EXT_ERRCODE((ret != EOK), RT_ERROR_INVALID_VALUE,
+        "Get soc spec, memcpy failed, retCode=%#x", static_cast<uint32_t>(rtn));
+    return ACL_RT_SUCCESS;
 }
 
 #ifdef __cplusplus
