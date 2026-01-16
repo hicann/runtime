@@ -137,8 +137,8 @@ public:
     virtual rtError_t GetDeviceIDs(uint32_t * const deviceIds, const uint32_t len) = 0;
 
     // Alloc page-locked host memory.
-    virtual rtError_t HostMemAlloc(void ** const dptr, const uint64_t size,
-        const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME) = 0;
+    virtual rtError_t HostMemAlloc(void ** const dptr, const uint64_t size, const uint32_t deviceId,
+        const uint16_t moduleId = MODULEID_RUNTIME, const uint32_t vaFlag = 0) = 0;
     virtual rtError_t AllocFastRingBufferAndDispatch(void ** const dptr, const uint64_t size, const uint32_t deviceId,
         const uint16_t moduleId = MODULEID_RUNTIME)  = 0;
     virtual void FreeFastRingBuffer(void * const ptr, const uint64_t size, const uint32_t deviceId) = 0;

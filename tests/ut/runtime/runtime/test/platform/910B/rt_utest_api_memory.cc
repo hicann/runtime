@@ -265,3 +265,98 @@ TEST_F(RtMemoryApiTest, rtGetMemUsageInfo)
     error = rtGetMemUsageInfo(deviceId, memUsageInfo, inputNum, &outputNum);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
+
+TEST_F(RtMemoryApiTest, rtsMallocHost_001)
+{
+    rtError_t error;
+    Api *Api_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator *apiDecorator_ = new ApiDecorator(Api_);
+    void * hostPtr;
+    rtMallocConfig_t *malloCfg = (rtMallocConfig_t *)malloc(sizeof(rtMallocConfig_t));
+    rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
+    malloCfg->numAttrs = 1;
+
+    // 无效cfg校验
+    malloCfg->attrs = nullptr;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 1, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    // 无效hostPtr校验
+    malloCfg->attrs = mallocAttrs;
+    mallocAttrs[0].attr = RT_MEM_MALLOC_ATTR_MODULE_ID;
+    mallocAttrs[0].value.moduleId = 1;
+    error = apiDecorator_->HostMallocWithCfg(nullptr, 1, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    // 无效size校验
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 0, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete[] mallocAttrs;
+    free(malloCfg);
+    delete apiDecorator_;
+}
+
+TEST_F(RtMemoryApiTest, rtsMallocHost_002)
+{
+    rtError_t error;
+    Api *Api_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator *apiDecorator_ = new ApiDecorator(Api_);
+    void * hostPtr;
+    rtMallocConfig_t *malloCfg = (rtMallocConfig_t *)malloc(sizeof(rtMallocConfig_t));
+    rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
+    malloCfg->numAttrs = 1;
+    malloCfg->attrs = mallocAttrs;
+
+    // 申请内存的cfg不支持module/uva之外的类型
+    mallocAttrs[0].attr = RT_MEM_MALLOC_ATTR_RSV;
+    mallocAttrs[0].value.moduleId = 0;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 60, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    mallocAttrs[0].attr = RT_MEM_MALLOC_ATTR_DEVICE_ID;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 60, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    // 配置moduleId
+    mallocAttrs[0].attr = RT_MEM_MALLOC_ATTR_MODULE_ID;
+    mallocAttrs[0].value.moduleId = 1;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 60, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = apiDecorator_->HostFree(hostPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete[] mallocAttrs;
+    free(malloCfg);
+    delete apiDecorator_;
+}
+
+TEST_F(RtMemoryApiTest, rtsMallocHost_003)
+{
+    rtError_t error;
+    Api *Api_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator *apiDecorator_ = new ApiDecorator(Api_);
+    void * hostPtr;
+    rtMallocConfig_t *malloCfg = (rtMallocConfig_t *)malloc(sizeof(rtMallocConfig_t));
+    rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
+    malloCfg->numAttrs = 1;
+    malloCfg->attrs = mallocAttrs;
+
+    // UVA类型，但是value为0，默认不启用特性
+    mallocAttrs[0].attr = RT_MEM_MALLOC_ATTR_VA_FLAG;
+    mallocAttrs[0].value.vaFlag = 0;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 60, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = apiDecorator_->HostFree(hostPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    // UVA类型，value设置为1，启用特性
+    mallocAttrs[0].value.vaFlag = 1;
+    error = apiDecorator_->HostMallocWithCfg(&hostPtr, 60, malloCfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = apiDecorator_->HostFree(hostPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete[] mallocAttrs;
+    free(malloCfg);
+    delete apiDecorator_;
+}
