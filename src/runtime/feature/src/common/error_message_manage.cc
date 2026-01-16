@@ -46,15 +46,24 @@ void ErrorMessageUtils::RuntimeErrorMessage(const std::string &errCode,
 
 void ErrorMessageUtils::FuncErrorReason(const RtInnerErrcodeType rtErrCode, const char_t * const funcName)
 {
-    if ((rtErrCode == RT_ERROR_INVALID_VALUE) || (rtErrCode == RT_ERROR_CONTEXT_NULL) ||
-        (rtErrCode == RT_ERROR_FEATURE_NOT_SUPPORT)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "%s execute failed, reason=%s", funcName,
-                         RT_GET_ERRREASON(rtErrCode).c_str());
-    }  else if (rtErrCode == RT_ERROR_STREAM_SYNC_TIMEOUT) {
-        RT_LOG_OUTER_MSG(RT_STREAM_SYNC_TIMEOUT_INNER_ERROR, "%s execute failed, reason=%s", funcName,
-                         RT_GET_ERRREASON(rtErrCode).c_str());
-    } else {
-        RT_LOG_CALL_MSG(ERR_MODULE_GE, "%s execute failed, reason=%s", funcName, RT_GET_ERRREASON(rtErrCode).c_str());
+    switch(rtErrCode) {
+        case RT_ERROR_INVALID_VALUE:
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "%s execution failed.", funcName);
+            break;
+        case RT_ERROR_CONTEXT_NULL:
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "%s execution failed, %s.", funcName,
+                            RT_GET_ERRREASON(rtErrCode).c_str());
+            break;
+        case RT_ERROR_FEATURE_NOT_SUPPORT:
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "%s execution failed, %s.", funcName,
+                            RT_GET_ERRREASON(rtErrCode).c_str());
+            break;
+        case RT_ERROR_STREAM_SYNC_TIMEOUT:
+            RT_LOG_OUTER_MSG(RT_STREAM_SYNC_TIMEOUT_INNER_ERROR, "%s execution failed.", funcName);
+            break;
+        default:
+            RT_LOG_CALL_MSG(ERR_MODULE_GE, "%s execution failed, reason=%s", funcName, RT_GET_ERRREASON(rtErrCode).c_str());
+            break;
     }
 }
 }

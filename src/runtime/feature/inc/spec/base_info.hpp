@@ -230,7 +230,7 @@ enum RtErrModuleType : uint8_t {
     ERR_MODULE_AICPU = 0U,
     ERR_MODULE_DRV = 1U,
     ERR_MODULE_HCCL = 2U,
-    ERR_MODULE_GE = 3U,
+    ERR_MODULE_GE = 3U, // This enumeration is not recommended and will be discarded gradually.
     ERR_MODULE_PROFILE = 4U,
     ERR_MODULE_TBE = 5U,
     ERR_MODULE_SYSTEM = 6U,
