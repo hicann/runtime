@@ -1067,6 +1067,7 @@ rtError_t RawDevice::Stop()
             RT_LOG(RT_LOG_DEBUG, "The return of esched dettach device is %d.", ret);
         }
     }
+    UnregisterAllProgram();
 
     if (IsStarsPlatform()) {
         isThreadAlive = true;
@@ -2223,6 +2224,24 @@ void RawDevice::PollEndGraphNotifyInfo()
     }
 
     captureModelExeInfoLock_.unlock();
+}
+void RawDevice::RegisterProgram(Program * prog)
+{
+    programMtx_.lock();
+    programSet_.insert(prog);
+    programMtx_.unlock();
+}
+void RawDevice::UnRegisterProgram(Program * prog)
+{
+    programSet_.erase(prog);
+}
+void RawDevice::UnregisterAllProgram() {
+    programMtx_.lock();
+    for (auto &prog : programSet_) {
+        prog->SetDeviceSoAndNameInvalid(Id_());
+    }
+    programSet_.clear();
+    programMtx_.unlock();
 }
 }  // namespace runtime
 }

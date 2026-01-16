@@ -667,6 +667,7 @@ rtError_t ApiErrorDecorator::LaunchKernelV2(Kernel * const kernel, uint32_t bloc
     error = CheckKernelLaunchCfg(cfg, kernel);
     ERROR_RETURN(error, "check cfgInfo failed, retCode=%#x.", error);
     error = impl_->LaunchKernelV2(kernel, blockDim, argsWithType, stm, cfg);
+    COND_PROC((error == RT_ERROR_KERNEL_INVALID), return error;);
     ERROR_RETURN(error, "LaunchKernel failed.");
     return error;
 }

@@ -1585,7 +1585,7 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t &logicCq, const bool
         InnerThreadLocalContainer::SetCurCtx(stm->Context_());
         (void)RecycleSeparatedStmByFinishedId(stm, taskId, true);
         if (isExceptionFlag) {
-            reportTask->stream->EnterFailureAbort();
+            stm->EnterFailureAbort();
             stm->SetExecuteEndTaskId(taskId);
         }
     } else {
@@ -1916,8 +1916,8 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo * const recycleTask
     (void)stm->latestConcernedTaskId.CompareExchange(excepted, MAX_UINT16_NUM);
     stm->SetRecycleEndTaskId(recycleTaskId);
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, recycle task_id=%hu, sqHead=%u, sqTail=%u, sqeNum=%u, resHead=%hu, resTail=%hu.",
-           stm->Device_()->Id_(), stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
-           stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_);
+                 stm->Device_()->Id_(), stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
+                 stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_);
     return;
 }
 
@@ -1976,7 +1976,7 @@ rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
     error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
     COND_PROC(((error != RT_ERROR_NONE) || (endTaskId == MAX_UINT16_NUM)), return RT_ERROR_NONE);
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, sqHead=%d, posHead=%u, posTail=%u, finishedTaskId=%d",
-           stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
+                 stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
     (void)RecycleSeparatedStmByFinishedId(stm, endTaskId);
     return RT_ERROR_NONE;
 }

@@ -4804,7 +4804,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
                static_cast<uint32_t>(error), static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE));
         return error;
     }
-    prog->SetBinBaseAddr(devMem);
+    prog->SetBinBaseAddr(devMem, device->Id_());
 
     // cce instr addr should align to 4K for ARM instr ADRP
     if ((RtPtrToPtr<uintptr_t>(devMem) & 0xFFFULL) != 0ULL) {
@@ -4812,7 +4812,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
         const uintptr_t devMemAlign = (((RtPtrToPtr<uintptr_t>(devMem)) >> 12U) + 1UL) << 12U;
         devMem = RtPtrToPtr<void *>(devMemAlign);
     }
-    prog->SetBinAlignBaseAddr(devMem);
+    prog->SetBinAlignBaseAddr(devMem, device->Id_());
 
     TIMESTAMP_BEGIN(rtBinaryLoad_MemCopySync);
     error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(size), data,
@@ -4822,14 +4822,13 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
         RT_LOG(RT_LOG_ERROR,  "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
             size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
 
-        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr())) {
-            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(), alignSize);
+        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
+            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
         } else {
-            (void)curDrv->DevMemFree(prog->GetBinBaseAddr(), device->Id_());
+            (void)curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
         }
-        prog->SetBinBaseAddr(nullptr);
-        prog->SetBinAlignBaseAddr(nullptr);
-        return error;
+        prog->SetBinBaseAddr(nullptr, device->Id_());
+        prog->SetBinAlignBaseAddr(nullptr, device->Id_());
     }
 
     RT_LOG(RT_LOG_DEBUG,
@@ -4973,6 +4972,8 @@ rtError_t Runtime::BinaryGetFunctionByName(const Program * const binHandle, cons
 {
     const Program * const prog = binHandle;
     Program * const progTmp = const_cast<Program *>(prog);
+    rtError_t ret = progTmp->CopySoAndNameToCurrentDevice();
+    ERROR_RETURN(ret, "copy program to, failed retCode=%#x.", ret);
     const Kernel *kernel = progTmp->GetKernelByName(kernelName);
     COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_KERNEL_NULL,
         "Can not find kernel by name = %s.", kernelName);
@@ -4985,30 +4986,29 @@ rtError_t Runtime::BinaryUnLoad(const Device *const device, Program * const prog
 {
     TIMESTAMP_BEGIN(rtBinaryUnLoad_DevMemRelease);
     rtError_t ret = RT_ERROR_NONE;
-    if (prog->GetBinBaseAddr() != nullptr) {
-        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr())) {
+    if (prog->GetBinBaseAddr(device->Id_()) != nullptr) {
+        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
             const uint32_t devSize = device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
                 (prog->LoadSize() + SIMT_PREFETCH_INCREASE_SIZE) : prog->LoadSize();
             const uint32_t alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
-            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(), alignSize);
+            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
         } else {
             Driver * const curDrv = device->Driver_();
-            ret = curDrv->DevMemFree(prog->GetBinBaseAddr(), device->Id_());
+            ret = curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
         }
         ERROR_RETURN(ret, "Free svm mem free failed, retCode=%#x, dev_id=%u.", ret, device->Id_());
-        prog->SetBinBaseAddr(nullptr);
-        prog->SetBinAlignBaseAddr(nullptr);
+        prog->SetBinBaseAddr(nullptr, device->Id_());
+        prog->SetBinAlignBaseAddr(nullptr, device->Id_());
     }
 
     ret = prog->FreeKernelLiteralNameDevMem(device);
     ERROR_RETURN(ret, "Fail to FreeKernelLiteralNameDevMem, retCode=%#x, dev_id=%u.", ret, device->Id_());
 
     // 此处考虑prog的释放，做log记录，不return
-    ret = prog->ProcCpuKernelH2DMem(false);
+    ret = prog->ProcCpuKernelH2DMem(false, const_cast<Device *const>(device));
     COND_PROC((ret != RT_ERROR_NONE),
         RT_LOG(RT_LOG_ERROR, "fail to free cpu so dev mem, retCode=%#x", ret));
 
-    delete prog;
     TIMESTAMP_END(rtBinaryUnLoad_DevMemRelease);
     return ret;
 }
@@ -5156,7 +5156,12 @@ rtError_t Runtime::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferTy
     if (type == RT_BIN_HOST_ADDR) {
         *bin = programHdl->GetBinary();
     } else if (type == RT_BIN_DEVICE_ADDR) {
-        *bin = programHdl->GetBinBaseAddr();
+        Context *curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        const rtError_t ret = programHdl->CopySoAndNameToCurrentDevice();
+        COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "copy bin to device failed device_id=%u, retCode=%#x.",
+            curCtx->Device_()->Id_(), ret);
+        *bin = programHdl->GetBinBaseAddr(curCtx->Device_()->Id_());
     } else {
         // do nothing
     }
@@ -5592,13 +5597,15 @@ rtError_t Runtime::SaveModelAicpuInfo(const Module* const module, const uint32_t
 rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
 {
     rtError_t ret = RT_ERROR_NONE;
-    if (prog->GetBinAlignBaseAddr() != nullptr) {
-        // save program load addr
-        std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(UINT32_MAX, prog->LoadSize(),
-            prog->GetBinAlignBaseAddr(), nullptr));
-        COND_PROC(progMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
-        NULL_PTR_RETURN(progMemInfo, RT_ERROR_MEMORY_ALLOCATION);
-        moduleBackupList_.push_back(std::move(progMemInfo));
+    for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
+        if (prog->GetBinAlignBaseAddr(i) != nullptr) {
+            // save program load addr
+            std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(UINT32_MAX, prog->LoadSize(),
+                prog->GetBinAlignBaseAddr(i), nullptr));
+            COND_PROC(progMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
+            NULL_PTR_RETURN(progMemInfo, RT_ERROR_MEMORY_ALLOCATION);
+            moduleBackupList_.push_back(std::move(progMemInfo));
+        }
     }
 
     for (const auto iter : prog->GetCtxMap()) {
@@ -5619,7 +5626,7 @@ rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
                 devId, memSize, devAddr, curDrv));
         COND_PROC(kernelMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
         NULL_PTR_RETURN(kernelMemInfo, RT_ERROR_MEMORY_ALLOCATION);
-        COND_PROC((prog->GetBinAlignBaseAddr() != devAddr && prog->LoadSize() != memSize),
+        COND_PROC((prog->GetBinAlignBaseAddr(devId) != devAddr && prog->LoadSize() != memSize),
             moduleBackupList_.push_back(std::move(kernelMemInfo)));
 
         ret = SaveModelAicpuInfo(module, devId, curDrv);

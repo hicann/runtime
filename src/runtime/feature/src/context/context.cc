@@ -114,6 +114,59 @@ rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
 }
 } // namespace
 
+static rtError_t LaunchAicpuKernelForCpuSoImpl(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm)
+{
+     rtError_t error = RT_ERROR_NONE;
+     Device *device = stm->Device_();
+     TaskInfo submitTask = {};
+     rtError_t errorReason;
+     AicpuTaskInfo *aicpuTaskInfo = nullptr;
+     TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason);
+     NULL_PTR_RETURN_MSG(tsk, errorReason);
+     AicpuTaskInit(tsk, 1, RT_KERNEL_DEFAULT);
+     ArgLoaderResult result = {};
+     error = device->ArgLoader_()->LoadCpuKernelArgs(argsInfo, stm, &result);
+     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+ 	     "Failed to load kernel args, retCode=%#x.", error);
+     SetAicpuArgs(tsk, result.kerArgs, argsInfo->argsSize, result.handle);
+     result.handle = nullptr;
+
+     // soName is nullptr, only copy kerneName.
+     void *kernelNameAddr = nullptr;
+     error = device->ArgLoader_()->GetKernelInfoDevAddr(launchNames->kernelName, KernelInfoType::KERNEL_NAME, &kernelNameAddr);
+     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+ 	     "Failed to get kernel address by name, retCode=%#x.", error);
+     SetNameArgs(tsk, nullptr, kernelNameAddr);
+
+     aicpuTaskInfo = &(tsk->u.aicpuTaskInfo);
+     RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, flag=%u, kernelFlag=0x%x, blkdim=%u, soName=null, kernel_name=%s.",
+ 	     device->Id_(), stm->Id_(), tsk->id, RT_KERNEL_DEFAULT, aicpuTaskInfo->comm.kernelFlag, aicpuTaskInfo->comm.dim,
+ 	     launchNames->kernelName != nullptr ? launchNames->kernelName : "null");
+
+     // Set kernel type and flags
+     aicpuTaskInfo->aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_AICPU);
+
+     // for batchLoadsoFrombuf and deleteCustOp set timeout 60s
+     if (Runtime::Instance()->IsSupportOpTimeoutMs()) {
+ 	     aicpuTaskInfo->timeout = LOAD_CPU_SO_KERNEL_TIMEOUT;
+     }
+
+     error = stm->Device_()->SubmitTask(tsk);
+     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+ 	     "Failed to submit aicpu task, retCode=%#x.", error);
+     return error;
+    }
+
+    rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm) {
+     rtError_t error = RT_ERROR_NONE;
+     if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL_DOT_CPUKERNEL)) {
+ 	     error = StreamLaunchCpuKernel(launchNames, 1, argsInfo, stm, RT_KERNEL_DEFAULT);
+     } else {
+ 	     error = LaunchAicpuKernelForCpuSoImpl(launchNames, argsInfo, stm);
+     }
+     return error;
+}
+
 TIMESTAMP_EXTERN(rtReduceAsync_part1);
 TIMESTAMP_EXTERN(rtReduceAsync_part2);
 TIMESTAMP_EXTERN(rtReduceAsyncV2_part1);
@@ -1745,13 +1798,6 @@ rtError_t Context::LaunchCpuKernel(const rtKernelLaunchNames_t * const launchNam
     aicpuKernelType = ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ? TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;
     aicpuTaskInfo->aicpuKernelType = static_cast<uint8_t>(aicpuKernelType);
 
-    // for batchLoadsoFrombuf and deleteCustOp set timeout 60s
-    if (Runtime::Instance()->IsSupportOpTimeoutMs() &&
-        ((strncmp(kernelName, LOAD_CPU_SO.c_str(), (sizeof(LOAD_CPU_SO.c_str()) - 1UL)) == 0) ||
-         (strncmp(kernelName, DELETE_CPU_SO.c_str(), (sizeof(DELETE_CPU_SO.c_str()) - 1UL)) == 0))) {
-        aicpuTaskInfo->timeout = LOAD_CPU_SO_KERNEL_TIMEOUT;
-    }
-
     // Submit task
     error = device_->SubmitTask(kernTask, taskGenCallback_);
 
@@ -1763,17 +1809,6 @@ rtError_t Context::LaunchCpuKernel(const rtKernelLaunchNames_t * const launchNam
 
 ERROR_FREE:
     (void)device_->GetTaskFactory()->Recycle(kernTask);
-    return error;
-}
-
-rtError_t Context::LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm)
-{
-    rtError_t error = RT_ERROR_NONE;
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL_DOT_CPUKERNEL)) {
-        error = StreamLaunchCpuKernel(launchNames, 1, argsInfo, stm, RT_KERNEL_DEFAULT);
-    } else {
-        error = LaunchCpuKernel(launchNames, 1, argsInfo, stm, RT_KERNEL_DEFAULT);
-    }
     return error;
 }
 
@@ -1800,7 +1835,7 @@ rtError_t Context::LaunchCpuKernelExWithArgs(const Kernel * const kernel, const 
     NULL_PTR_GOTO_MSG_INNER(newKernel, ERROR_FREE, error, RT_ERROR_KERNEL_NEW);
 
     /* 默认使用kernel注册时的devAddr */
-    SetNameArgs(kernelTask, kernel->GetSoNameDevAddr(), kernel->GetFuncNameDevAddr());
+    SetNameArgs(kernelTask, kernel->GetSoNameDevAddr(device_->Id_()), kernel->GetFuncNameDevAddr(device_->Id_()));
 
     if ((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
         (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernelTask)) {
@@ -4468,17 +4503,18 @@ rtError_t Context::SetStreamTag(Stream * const stm, const uint32_t geOpTag) cons
     rtError_t error = RT_ERROR_NONE;
     NULL_PTR_RETURN_MSG(DefaultStream_(), RT_ERROR_STREAM_NULL);
 
-    TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, errorReason);
+    TaskInfo *tsk = DefaultStream_()->AllocTask(&submitTask, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, errorReason);
     NULL_PTR_RETURN(tsk, errorReason);
 
     (void)StreamTagSetTaskInit(tsk, stm, geOpTag);
+    tsk->isNeedStreamSync = true;
     error = device_->SubmitTask(tsk, taskGenCallback_);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "StreamTagSetTask task submit failed, retCode=%#x",
                          static_cast<uint32_t>(error));
 
     stm->SetStreamTag(geOpTag);
 
-    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->Id_());
+    GET_THREAD_TASKID_AND_STREAMID(tsk, DefaultStream_()->Id_());
     return RT_ERROR_NONE;
 
 ERROR_RECYCLE:

@@ -438,6 +438,10 @@ public:
     virtual rtError_t ClearEndGraphNotifyInfoByModel(Model* captureModel) = 0;
     virtual uint64_t AllocSqIdMemAddr() = 0;
     virtual void FreeSqIdMemAddr(const uint64_t sqIdAddr) = 0;
+    virtual void RegisterProgram(Program *prog) = 0;
+    virtual void UnRegisterProgram(Program *prog) = 0;
+    virtual bool ProgramSetMutexTryLock() = 0;
+    virtual void ProgramSetMutexUnLock() = 0;
 
     inline std::mutex& GetHcclStreamIndexMutex(void)
     {
