@@ -17,9 +17,10 @@ set_target_properties(platform_llt
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(platform_llt PRIVATE
+        ${TOP_DIR}/include/dfx/base
         ${TOP_DIR}/pkg_inc
         ${TOP_DIR}/pkg_inc/base
-        ${TOP_DIR}/build/proto/platform_infos_proto/
+        ${CMAKE_BINARY_DIR}/proto/platform_infos_proto
 )
 
 target_compile_definitions(platform_llt PRIVATE
@@ -80,9 +81,10 @@ set_target_properties(platform_llt_tiling
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(platform_llt_tiling PRIVATE
+        ${TOP_DIR}/include/dfx/base
         ${TOP_DIR}/pkg_inc
         ${TOP_DIR}/pkg_inc/base
-        ${TOP_DIR}/build/proto/platform_infos_proto/
+        ${CMAKE_BINARY_DIR}/proto/platform_infos_proto
 )
 
 target_compile_definitions(platform_llt_tiling PRIVATE
