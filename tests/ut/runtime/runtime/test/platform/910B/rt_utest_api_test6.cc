@@ -5027,6 +5027,9 @@ TEST_F(CloudV2ApiTest6, BIN_LAUNCH_KERNEL_TEST_1)
     error = rtLaunchKernelByFuncHandle(func_handle, blockDim, argsHandle, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     usleep(2000);
+    MOCKER_CPP(&Program::IsDeviceSoAndNameValid).stubs().will(returnValue(false));
+    error = rtLaunchKernelByFuncHandleV2(func_handle, blockDim, argsHandle, stream, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
     error = rtBinaryUnLoad(bin_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtDestroyLaunchArgs(argsHandle);
