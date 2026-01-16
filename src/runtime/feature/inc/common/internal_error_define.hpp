@@ -204,6 +204,7 @@ constexpr int32_t RT_ERROR_KERNEL_TYPE              = 0x07080005;
 constexpr int32_t RT_ERROR_KERNEL_OFFSET            = 0x07080006;
 constexpr int32_t RT_ERROR_KERNEL_DUPLICATE         = 0x07080007;
 constexpr int32_t RT_ERROR_KERNEL_UNREGISTERING     = 0x07080008;
+constexpr int32_t RT_ERROR_KERNEL_INVALID           = 0x07080009;
 
 constexpr int32_t RT_ERROR_PROGRAM_BASE             = 0x07090000;
 constexpr int32_t RT_ERROR_PROGRAM_NULL             = 0x07090001;

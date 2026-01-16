@@ -211,11 +211,13 @@ rtError_t ApiImpl::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
 
 rtError_t ApiImpl::GetBinaryDeviceBaseAddr(const Program * const prog, void **deviceBase)
 {
-    if (prog->GetBinAlignBaseAddr() == nullptr) {
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    if (prog->GetBinAlignBaseAddr(curCtx->Device_()->Id_()) == nullptr) {
         RT_LOG(RT_LOG_ERROR, "device addr is NULL, make sure that the kernel launch process has been invoked.");
         return RT_ERROR_PROGRAM_DATA;
     } else {
-        *deviceBase = const_cast<void *>(prog->GetBinAlignBaseAddr());
+        *deviceBase = const_cast<void *>(prog->GetBinAlignBaseAddr(curCtx->Device_()->Id_()));
         return RT_ERROR_NONE;
     }
 }

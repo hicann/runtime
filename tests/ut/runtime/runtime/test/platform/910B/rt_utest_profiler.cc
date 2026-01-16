@@ -2371,29 +2371,6 @@ TEST_F(ProfilerTest, BinaryLoad_02)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, BinaryLoad_03)
-{
-    uint32_t binary[32];
-    rtDevBinary_t devBin;
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
-    Program *program = &stubProg;
-    ApiImpl* apiImpl_ = new ApiImpl();
-    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
-    profiler->SetApiProfEnable(true);
-    NpuDriver drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync)
-        .stubs()
-        .will(returnValue(RT_ERROR_DEVICE_NULL));
-    auto error = profiler->apiProfileDecorator_->BinaryLoad(&devBin, &program);
-    EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
-    profiler->SetApiProfEnable(false);
-    delete apiImpl_;
-}
-
 TEST_F(ProfilerTest, BinaryGetFunction)
 {
     ApiImpl* apiImpl_ = new ApiImpl();

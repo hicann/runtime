@@ -257,8 +257,8 @@ void ConstructAICpuSqeByHandleForDavinciMultipleTask(TaskInfo * const taskInfo, 
     rtAicpuTaskDescByHandle_t aicpuTaskByHandle = multipleTaskInfo->taskDesc[idx].u.aicpuTaskDescByHandle;
     Kernel *hdl = RtPtrToPtr<Kernel *>(aicpuTaskByHandle.funcHdl);
     rtUncommonAicpuParams_t params;
-    void *soNameAddr = hdl->GetSoNameDevAddr();
-    void *kernelNameAddr = hdl->GetFuncNameDevAddr();    
+    void *soNameAddr = hdl->GetSoNameDevAddr(taskInfo->stream->Device_()->Id_());
+    void *kernelNameAddr = hdl->GetFuncNameDevAddr(taskInfo->stream->Device_()->Id_());
 
     params.idx = idx;
     params.soNameAddr = soNameAddr;

@@ -24,8 +24,7 @@ Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, con
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType), taskRation_(taskRation),
       funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
-      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U), 
-      cpuSoNameDevAddr_(nullptr), cpuFuncNameDevAddr_(nullptr)
+      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
 {
     if (kernelInfoExtern != nullptr) {
         kernelInfoExt_ = std::string(kernelInfoExtern);
@@ -48,8 +47,7 @@ Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, con
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType),
       taskRation_(taskRation), funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
-      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U),
-      cpuSoNameDevAddr_(nullptr), cpuFuncNameDevAddr_(nullptr)
+      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
 {
     if (taskRation_ == NONE_TASK_RATION) {
         DevProperties prop;
@@ -66,8 +64,7 @@ Kernel::Kernel(const std::string &cpuKernelSo, const std::string &cpuFunctionNam
 	  length1_(0U), length2_(0U), pctraceFlag_(0U), nameOffset_(0U), mixType_(0U), taskRation_(0U), funcType_(0U), userParaNum_(0U),
       systemParaNum_(0U), dfxAddr_(nullptr), dfxSize_(0U), elfDataFlag_(0),
       nameId_(0U), simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U),
-	  cpuOpType_(cpuOpType), cpuKernelSo_(cpuKernelSo), cpuFunctionName_(cpuFunctionName),
-      cpuSoNameDevAddr_(nullptr), cpuFuncNameDevAddr_(nullptr)
+	  cpuOpType_(cpuOpType), cpuKernelSo_(cpuKernelSo), cpuFunctionName_(cpuFunctionName)
 {
 }
 
@@ -93,7 +90,10 @@ rtError_t Kernel::GetFunctionDevAddr(uint64_t &func1, uint64_t &func2) const
     const Runtime * const runtime = Runtime::Instance();
     NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
 
-    const uint64_t programBinAlignBaseAddr = RtPtrToValue(program_->GetBinAlignBaseAddr());
+    Context * const curCtx = runtime->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    const uint64_t programBinAlignBaseAddr = RtPtrToValue(program_->GetBinAlignBaseAddr(curCtx->Device_()->Id_()));
     func1 = programBinAlignBaseAddr + static_cast<uint64_t>(offset1_);
 
     if (offset2_ != 0ULL) {

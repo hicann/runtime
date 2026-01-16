@@ -373,20 +373,20 @@ public:
 
     void SetMixMinStackSize();
 
-    void SetKernelLiteralNameDevAddr(void *cpuSoNameDevAddr, void *cpuFuncNameDevAddr)
+    void SetKernelLiteralNameDevAddr(void *cpuSoNameDevAddr, void *cpuFuncNameDevAddr, const uint32_t devId)
     {
-        cpuSoNameDevAddr_ = cpuSoNameDevAddr;
-        cpuFuncNameDevAddr_ = cpuFuncNameDevAddr;
+        cpuSoNameDevAddr_[devId] = cpuSoNameDevAddr;
+        cpuFuncNameDevAddr_[devId] = cpuFuncNameDevAddr;
     }
 
-    void *GetSoNameDevAddr() const
+    void *GetSoNameDevAddr(const uint32_t devId) const
     {
-        return cpuSoNameDevAddr_;
+        return cpuSoNameDevAddr_[devId];
     }
 
-    void *GetFuncNameDevAddr() const
+    void *GetFuncNameDevAddr(const uint32_t devId) const
     {
-        return cpuFuncNameDevAddr_;
+        return cpuFuncNameDevAddr_[devId];
     }
 private:
     Program *program_;
@@ -427,8 +427,8 @@ private:
     std::string cpuOpType_;
     std::string cpuKernelSo_;
     std::string cpuFunctionName_;
-    void *cpuSoNameDevAddr_;
-    void *cpuFuncNameDevAddr_;
+    void *cpuSoNameDevAddr_[RT_MAX_DEV_NUM] = {nullptr};
+    void *cpuFuncNameDevAddr_[RT_MAX_DEV_NUM] = {nullptr};
 };
 
 typedef struct rtAllKernelMapKey {
