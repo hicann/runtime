@@ -128,7 +128,7 @@ TEST_F(AdumpApiUtest, Test_DisableOperatorOverflowDump)
     dumpConf.dumpPath = "";
     dumpConf.dumpStatus = "off";
     dumpConf.dumpMode = "";
-    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpSwitch = 0;
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, dumpConf), ADUMP_SUCCESS);
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::OP_OVERFLOW), false);
 }
