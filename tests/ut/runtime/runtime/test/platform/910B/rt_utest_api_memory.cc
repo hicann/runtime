@@ -113,6 +113,26 @@ TEST_F(RtMemoryApiTest, rtMallocPhysical)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(RtMemoryApiTest, testHostNumaAlloc)
+{
+    rtDrvMemHandle handle = nullptr;
+    rtDrvMemProp_t prop = {};
+    prop.side = 4;
+    prop.devid = 0;
+    prop.pg_type = RT_MEMORY_DEFAULT;
+    prop.mem_type = 0;
+    int32_t deviceId = 0;
+    rtError_t error = rtSetDevice(deviceId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    MOCKER(halMemCreate)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+    error = rtMallocPhysical(&handle, 1, &prop, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtDeviceReset(deviceId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(RtMemoryApiTest, rtFreePhysical)
 {
     rtDrvMemHandle handle = nullptr;
