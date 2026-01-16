@@ -1402,6 +1402,28 @@ TEST_F(ApiTest910b, host_register_pinned_mapped)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
+TEST_F(ApiTest910b, host_register_atomic)
+{
+    rtError_t error;
+    auto ptr = std::make_unique<uint32_t>();
+    uintptr_t value = 0x123U;
+    void **devPtr = (void **)&value;
+
+    MOCKER(&halHostRegister)
+        .stubs()
+        .will(invoke(halHostRegister_stub));
+
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
+    EXPECT_EQ(error, ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+    error = rtHostGetDevicePointer(ptr.get(), devPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*devPtr, nullptr);
+    error = rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
 TEST_F(ApiTest910b, pin_memory_attribute)
 {
     rtError_t error;
