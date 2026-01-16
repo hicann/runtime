@@ -409,6 +409,11 @@ public:
         return --count_;
     }
 
+    uint64_t GetCount()
+    {
+        return count_;
+    }
+
     void SetContextDeleteStatus()
     {
         isNeedDelete_.Set(true);
