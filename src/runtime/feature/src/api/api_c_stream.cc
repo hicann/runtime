@@ -414,7 +414,7 @@ rtError_t rtStreamWaitEventWithTimeout(rtStream_t stm, rtEvent_t evt, uint32_t t
 VISIBILITY_DEFAULT
 rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue)
 {
-    NULL_PTR_RETURN_MSG_OUTER(attrValue, ACL_ERROR_RT_PARAM_INVALID);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(attrValue, RT_ERROR_INVALID_VALUE);
     rtError_t error;
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -464,7 +464,7 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
 VISIBILITY_DEFAULT
 rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue)
 {
-    NULL_PTR_RETURN_MSG_OUTER(attrValue, ACL_ERROR_RT_PARAM_INVALID);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(attrValue, RT_ERROR_INVALID_VALUE);
     rtError_t error;
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
