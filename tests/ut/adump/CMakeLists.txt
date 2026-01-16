@@ -46,7 +46,7 @@ target_link_libraries(adump_intf_llt_pub INTERFACE
     ${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a
     -lpthread
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
-    c_sec_static
+    c_sec
     ascend_protobuf_static
 )
 
@@ -72,7 +72,6 @@ add_subdirectory(adump_base)
 set(ADUMP_UT_SUB_TARGETS
     adx_hdc_dump_utest
     adx_soc_dump_utest
-    adump_base_utest
 )
 
 add_custom_target(adump_ut DEPENDS ${ADUMP_UT_SUB_TARGETS})

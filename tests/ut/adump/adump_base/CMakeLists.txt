@@ -139,7 +139,7 @@ set(adumpBaseHeaders
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/pkg_inc/
     ${TOP_DIR}/pkg_inc/dump/
-    ${TOP_DIR}/pkg_inc/aicpu/
+    ${TOP_DIR}/pkg_inc/aicpu_sched/
 
     ${ADUMP_BASE_UT_ROOT_PATH}/
     ${ADUMP_BASE_UT_ROOT_PATH}/tools/
@@ -158,6 +158,7 @@ add_executable(adump_base_utest
 add_dependencies(adump_base_utest adump_base_proto)
 
 target_include_directories(adump_base_utest PRIVATE
+    ${LIBC_SEC_HEADER}
     ${adumpBaseHeaders}
 )
 
@@ -171,9 +172,6 @@ target_compile_definitions(adump_base_utest PRIVATE
 
 target_link_libraries(adump_base_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
-    c_sec_static
-    ascend_protobuf_static
-    GTest::gtest
     -Wl,--no-as-needed
     json
     -Wl,--as-needed
