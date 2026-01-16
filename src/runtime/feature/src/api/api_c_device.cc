@@ -539,8 +539,8 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     rtError_t error = RT_ERROR_NONE;
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE((devFeatureType >= static_cast<int32_t>(RT_DEV_FEATURE_MAX)) || (devFeatureType < 0),
-        RT_ERROR_INVALID_VALUE, "rtsDeviceGetCapability failed, invalid devFeatureType=%d.", devFeatureType);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((devFeatureType >= static_cast<int32_t>(RT_DEV_FEATURE_MAX)) || (devFeatureType < 0), 
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "rtsDeviceGetCapability failed, invalid devFeatureType=" + std::to_string(devFeatureType) + ".");
 
     if (devFeatureType == static_cast<int32_t>(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV)) {
         error = apiInstance->GetDeviceCapability(deviceId, static_cast<int32_t>(RT_MODULE_TYPE_TSCPU),

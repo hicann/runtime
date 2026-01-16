@@ -979,7 +979,7 @@ rtError_t ElfProgram::ParserBinary()
 
     elfData_->obj_size = binarySize_;
     kernels_ = ProcessObject(RtPtrToPtr<char_t *>(binary_), elfData_, Machine(), &isSupportMix_);
-    COND_RETURN_OUT_ERROR_MSG_CALL((kernels_ == nullptr), RT_ERROR_INVALID_VALUE, "kernel is null.");
+    NULL_PTR_RETURN_MSG_OUTER(kernels_, RT_ERROR_INVALID_VALUE);
 
     const Runtime * const rtInstance = Runtime::Instance();
     const rtChipType_t chipType = rtInstance->GetChipType();

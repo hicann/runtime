@@ -56,21 +56,21 @@ rtError_t rtGetSocVersion(char_t *ver, const uint32_t maxLen)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(ver, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(maxLen == 0U, RT_ERROR_INVALID_VALUE, "max length can not be 0!");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(maxLen == 0U, RT_ERROR_INVALID_VALUE, maxLen, "not equal to 0");
 
     const int32_t isHetero = RtGetHeterogenous();
     // if helper condition, recheck ge option
     const std::string socName = GetSocVersionStr(isHetero);
     if (socName.empty()) {
         rc = memcpy_s(ver, static_cast<size_t>(maxLen), "UnknowSocType", sizeof("UnknowSocType"));
-        COND_RETURN_ERROR_WITH_EXT_ERRCODE(rc != EOK, RT_ERROR_SEC_HANDLE,
+        COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(rc != EOK, RT_ERROR_SEC_HANDLE,
             "Call memcpy_s for soc type failed, max size is %u, copy size is %zu.", maxLen, sizeof("UnknowSocType"));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INSTANCE_VERSION);
     }
 
     RT_LOG(RT_LOG_DEBUG, "soc version: %s", socName.c_str());
     rc = memcpy_s(ver, static_cast<size_t>(maxLen), socName.c_str(), socName.length() + 1U);
-    COND_RETURN_ERROR_WITH_EXT_ERRCODE(rc != EOK, RT_ERROR_SEC_HANDLE,
+    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(rc != EOK, RT_ERROR_SEC_HANDLE,
         "Call memcpy_s for soc name failed, max size is %u, copy size is %zu.", maxLen, socName.length() + 1U);
     RT_LOG(RT_LOG_INFO, "soc version is %s", ver);
     return ACL_RT_SUCCESS;

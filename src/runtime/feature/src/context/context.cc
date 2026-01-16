@@ -3394,10 +3394,8 @@ rtError_t Context::StartOnlineProf(Stream * const stm, const uint32_t sampleNum)
     const void *deviceMem = nullptr;
     const int32_t streamId = stm->Id_();
 
-    COND_RETURN_OUT_ERROR_MSG_CALL((sampleNum == 0U) || (sampleNum > MAX_ONLINEPROF_NUM), RT_ERROR_INVALID_VALUE,
-        "Start online prof failed, invalid sample num, current sampleNum=%u,"
-        " valid sampleNum range is range is (0, %u].",
-        sampleNum, MAX_ONLINEPROF_NUM);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((sampleNum == 0U) || (sampleNum > MAX_ONLINEPROF_NUM), RT_ERROR_INVALID_VALUE, 
+        sampleNum, "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");
     if ((stm->Device_())->DevGetOnlineProfStart()) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "StreamId=%d online profiling has already been set on the device.",
  	        streamId);
@@ -3475,11 +3473,8 @@ FREE_MEM:
 rtError_t Context::GetOnlineProfData(const Stream * const stm, rtProfDataInfo_t * const pProfData,
                                      const uint32_t profDataNum) const
 {
-    COND_RETURN_OUT_ERROR_MSG_CALL((profDataNum == 0U) || (profDataNum > MAX_ONLINEPROF_NUM),
-        RT_ERROR_INVALID_VALUE,
-        "Get online prof data failed, invalid profDataNum, current profDataNum=%u,"
-        " valid profDataNum range is (0, %u].",
-        profDataNum, MAX_ONLINEPROF_NUM);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((profDataNum == 0U) || (profDataNum > MAX_ONLINEPROF_NUM), 
+        RT_ERROR_INVALID_VALUE, profDataNum, "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");
     const rtError_t error = OnlineProf::GetOnlineProfilingData(stm, pProfData, profDataNum);
     ERROR_RETURN_MSG_INNER(error, "Get online profiling data failed, retCode=%#x.", error);
 
@@ -3670,8 +3665,8 @@ rtError_t Context::StarsLaunch(const void * const sqe, const uint32_t sqeLen, St
     const int32_t streamId = stm->Id_();
     uint32_t taskId;
 
-    COND_RETURN_OUT_ERROR_MSG_CALL(sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE,
-        "Stars launch failed, param sqeLen=%u(bytes) must be %zu(bytes).", sqeLen, sizeof(rtStarsCommonSqe_t));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(sqeLen != sizeof(rtStarsCommonSqe_t), RT_ERROR_INVALID_VALUE, 
+        sqeLen, sizeof(rtStarsCommonSqe_t));
 
     TaskInfo taskSubmit = {};
     rtError_t errorReason;

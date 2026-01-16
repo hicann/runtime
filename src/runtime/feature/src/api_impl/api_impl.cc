@@ -991,7 +991,7 @@ rtError_t ApiImpl::RegisterCpuFunc(rtBinHandle binHandle, const char_t *const fu
     *funcHandle = nullptr;
     Program * const prog = RtPtrToPtr<Program *>(binHandle);
     const KernelRegisterType kernelRegType = prog->GetKernelRegType();
-    COND_RETURN_OUT_ERROR_MSG_CALL(kernelRegType != RT_KERNEL_REG_TYPE_CPU, RT_ERROR_INVALID_VALUE,
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(kernelRegType != RT_KERNEL_REG_TYPE_CPU, RT_ERROR_INVALID_VALUE,
         "only support cpu program, binHandle is invalid, kernelRegType=%d.", kernelRegType);
     Kernel *kernel = nullptr;
     // 注册cpu kernel
@@ -2444,7 +2444,7 @@ rtError_t ApiImpl::HostMallocWithCfg(void ** const hostPtr, const uint64_t size,
     const rtMallocConfig_t *cfg)
 {
     NULL_PTR_RETURN_MSG_OUTER(hostPtr, RT_ERROR_INVALID_VALUE);
-    ZERO_RETURN_MSG_OUTER(size);
+    ZERO_RETURN_AND_MSG_OUTER(size);
     uint16_t moduleId = static_cast<uint16_t>(MODULEID_RUNTIME);
     uint32_t vaFlag = 0U;
     rtError_t error = RT_ERROR_NONE;
@@ -2640,9 +2640,8 @@ rtError_t ApiImpl::DevMallocCached(void ** const devPtr, const uint64_t size, co
     RT_LOG(RT_LOG_INFO, "dev cached memory alloc, size=%" PRIu64 ", type=%u.", size, type);
     TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(size > MAX_ALLOC_SIZE, RT_ERROR_INVALID_VALUE,
-        "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "].",
-        size, MAX_ALLOC_SIZE);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(size > MAX_ALLOC_SIZE, RT_ERROR_INVALID_VALUE, 
+        size, "(0, " + std::to_string(MAX_ALLOC_SIZE) + "]");
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2655,7 +2654,7 @@ rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
     TIMESTAMP_NAME(__func__);
-    COND_RETURN_OUT_ERROR_MSG_CALL(base == 0U, RT_ERROR_INVALID_VALUE, "invalid param, base is 0!");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2668,7 +2667,8 @@ rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
     TIMESTAMP_NAME(__func__);
-    COND_RETURN_OUT_ERROR_MSG_CALL(base == 0U, RT_ERROR_INVALID_VALUE, "invalid param base is 0!");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, 
+        base, "not equal to 0");
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2802,10 +2802,10 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void 
     }
 
     COND_RETURN_OUT_ERROR_MSG_CALL(curStm->GetBindFlag() == true, RT_ERROR_INVALID_VALUE,
-        "curStm param should be a single-operator flow stream.");
+        "The curStm parameter should be a single-operator flow stream.");
 
     COND_RETURN_OUT_ERROR_MSG_CALL(curStm->IsCapturing() == true, RT_ERROR_STREAM_CAPTURED,
-        "the stream is capturing.");
+        "The stream is capturing.");
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "launch sqe update task failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
@@ -7550,7 +7550,7 @@ rtError_t ApiImpl::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitTy
     const uint32_t initValue = dev->GetResInitValue(type);
     COND_RETURN_OUT_ERROR_MSG_CALL(value > initValue,
         RT_ERROR_INVALID_VALUE,
-        "value exceeds the total number of cores, drv devId=%u, type=%d, value=%u, total number of cores=%u.",
+        "The value exceeds the total number of cores. drv devId=%u, type=%d, value=%u, total number of cores=%u.",
         devId,
         type,
         value,
@@ -7604,7 +7604,7 @@ static rtError_t SetStreamResLimitByType(Stream *const stm, const rtDevResLimitT
     const uint32_t initValue = dev->GetResInitValue(type);
     COND_RETURN_OUT_ERROR_MSG_CALL(value > initValue,
         RT_ERROR_INVALID_VALUE,
-        "value exceeds the total number of cores, drv devId=%u, type=%d, value=%u, total number of cores=%u.",
+        "The value exceeds the total number of cores. drv devId=%u, type=%d, value=%u, total number of cores=%u.",
         dev->Id_(),
         type,
         value,
@@ -8485,9 +8485,9 @@ rtError_t ApiImpl::MemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t c
         realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
         realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
         COND_PROC_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, *failIdx = i,
-            "verification of the %zuth memory pair attributes failed, retCode=%#x", i, static_cast<uint32_t>(error));
+            "Failed to verify the %zuth memory pair attributes. retCode=%#x", i, static_cast<uint32_t>(error));
         COND_PROC_RETURN_OUT_ERROR_MSG_CALL((realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, *failIdx = i,
-            "only H2D and D2H copy directions are supported, dstLoc type=%d, srcLoc type=%d.", realDstLoc, realSrcLoc);
+            "Only H2D and D2H copy directions are supported. dstLoc type=%d, srcLoc type=%d.", realDstLoc, realSrcLoc);
     }
     return NpuDriver::MemcpyBatch(reinterpret_cast<uint64_t *>(dsts), reinterpret_cast<uint64_t *>(srcs), sizes, count);
 }
@@ -8501,7 +8501,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     memType = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != memAttr.dstLoc.type) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
-        "dst's real memory type is %d, but %d is inputted, or real device id is %d, but %d is inputted.",
+        "The real memory type of dst is %d, but the input type is %d. Or the real device ID is %d, but the input ID is %d.",
         memType, memAttr.dstLoc.type, dstAttr.location.id, memAttr.dstLoc.id);
 
     error = PtrGetAttributes(src, &srcAttr);
@@ -8509,7 +8509,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     memType = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != memAttr.srcLoc.type) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
-        "src's real memory type is %d, but %d is inputted, or real device id is %d, but %d is inputted.",
+        "The real memory type of src is %d, but the input type is %d. Or the real device ID is %d, but the input ID is %d.",
         memType, memAttr.srcLoc.type, srcAttr.location.id, memAttr.srcLoc.id);
 
     return RT_ERROR_NONE;

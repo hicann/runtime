@@ -83,10 +83,8 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify
         reinterpret_cast<uint32_t *>(&realDeviceId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "input error device_id:%d is err:%#x", deviceId, static_cast<uint32_t>(error));
-
-    COND_RETURN_OUT_ERROR_MSG_CALL(!((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)),
-        RT_ERROR_INVALID_VALUE, "Invalid flag, current flag=%u, valid flag is %u or %u",
-        static_cast<uint32_t>(flag), RT_NOTIFY_FLAG_DEFAULT, RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(!((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)),
+        RT_ERROR_INVALID_VALUE, flag, std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV));
     return impl_->CntNotifyCreate(realDeviceId, retCntNotify, flag);
 }
 
@@ -101,9 +99,8 @@ rtError_t ApiErrorDecorator::CntNotifyRecord(CountNotify * const inCntNotify, St
 {
     NULL_PTR_RETURN_MSG_OUTER(inCntNotify, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)),
-        RT_ERROR_INVALID_VALUE, "Invalid record mode, mode=%d, valid condition range is [0, 3) & (3, %d).",
-        info->mode, RECORD_MODE_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)), 
+        RT_ERROR_INVALID_VALUE, info->mode, "[0, 3) & (3, " + std::to_string(static_cast<uint32_t>(RECORD_MODE_MAX)) + ")");
     const rtError_t error = impl_->CntNotifyRecord(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
     return error;
@@ -114,8 +111,8 @@ rtError_t ApiErrorDecorator::CntNotifyWaitWithTimeout(CountNotify * const inCntN
 {
     NULL_PTR_RETURN_MSG_OUTER(inCntNotify, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL((info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE,
-        "Invalid wait mode, mode=%d, valid condition range is [0, %d)", info->mode, WAIT_MODE_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, 
+        info->mode, "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
     const rtError_t error = impl_->CntNotifyWaitWithTimeout(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
     return error;
@@ -135,8 +132,8 @@ rtError_t ApiErrorDecorator::GetCntNotifyAddress(CountNotify *const inCntNotify,
     NULL_PTR_RETURN_MSG_OUTER(inCntNotify, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(cntNotifyAddress, RT_ERROR_INVALID_VALUE);
     // Driver now only support NOTIFY_CNT_ST_SLICE for count notify
-    COND_RETURN_OUT_ERROR_MSG_CALL((regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE,
-        "Query invalid notify reg address, regType = %d, valid regType is %d", regType, NOTIFY_CNT_ST_SLICE);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((regType != NOTIFY_CNT_ST_SLICE), RT_ERROR_INVALID_VALUE, 
+        regType, std::to_string(NOTIFY_CNT_ST_SLICE));
     return impl_->GetCntNotifyAddress(inCntNotify, cntNotifyAddress, regType);
 }
 
@@ -165,25 +162,23 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t *taskInfo,  Stream * cons
 {
     NULL_PTR_RETURN_MSG(taskInfo, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG(taskInfo->args, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL((taskInfo->instCnt == RT_CCU_INST_CNT_INVALID), RT_ERROR_INVALID_VALUE,
-        "Invalid para, CCU instCnt can not be 0.");
-    COND_RETURN_OUT_ERROR_MSG_CALL((taskInfo->instStartId >= RT_CCU_INST_START_MAX), RT_ERROR_INVALID_VALUE,
-        "Invalid para, CCU instStartId %u invalid, valid size is [0, %u).",
-        taskInfo->instStartId, RT_CCU_INST_START_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->instCnt == RT_CCU_INST_CNT_INVALID), RT_ERROR_INVALID_VALUE, 
+        taskInfo->instCnt, "not equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->instStartId >= RT_CCU_INST_START_MAX), RT_ERROR_INVALID_VALUE, 
+        taskInfo->instStartId, "[0, " + std::to_string(RT_CCU_INST_START_MAX) + ")");
+        
     // 1 or 13 to sqe ccu size
-    COND_RETURN_OUT_ERROR_MSG_CALL(
-        (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN) && (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN_32B),
-        RT_ERROR_INVALID_VALUE, "Invalid para, CCU argSize %u invalid, valid size is %u or %u.",
-        taskInfo->argSize, RT_CCU_SQE_ARGS_LEN, RT_CCU_SQE_ARGS_LEN_32B);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+        (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN) && (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN_32B), RT_ERROR_INVALID_VALUE, 
+        taskInfo->argSize, std::to_string(RT_CCU_SQE_ARGS_LEN) + " or " + std::to_string(RT_CCU_SQE_ARGS_LEN_32B));
     return impl_->CCULaunch(taskInfo, stm);
 }
 
 rtError_t ApiErrorDecorator::UbDevQueryInfo(rtUbDevQueryCmd cmd, void * devInfo)
 {
     NULL_PTR_RETURN_MSG(devInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE,
-        "Invalid query cmd, cmd: %u, valid cmd range is [0, %d)",
-        static_cast<uint32_t>(cmd), QUERY_TYPE_BUFF);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, 
+        cmd, "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
     return impl_->UbDevQueryInfo(cmd, devInfo);
 }
 
@@ -193,39 +188,33 @@ rtError_t ApiErrorDecorator::GetDevResAddress(const rtDevResInfo * const resInfo
     NULL_PTR_RETURN_MSG(addrInfo, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG(addrInfo->len, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG(addrInfo->resAddress, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL((resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0),
-        RT_ERROR_INVALID_VALUE, "Invalid resource type, type: %u, valid type range is [0, %d)",
-        static_cast<uint32_t>(resInfo->resType), RT_RES_TYPE_MAX);
-    COND_RETURN_OUT_ERROR_MSG_CALL((resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0),
-        RT_ERROR_INVALID_VALUE, "Invalid process type, type: %u, valid type range is [0, %d)",
-        static_cast<uint32_t>(resInfo->procType), RT_PROCESS_CPTYPE_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0), RT_ERROR_INVALID_VALUE, 
+        resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0), RT_ERROR_INVALID_VALUE, 
+        resInfo->procType, "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->GetDevResAddress(resInfo, addrInfo);
 }
 
 rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo * const resInfo)
 {
     NULL_PTR_RETURN_MSG(resInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL(static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX,
-        RT_ERROR_INVALID_VALUE,
-        "Invalid resource type, type: %u, valid type range is [0, %d)",
-        static_cast<uint32_t>(resInfo->resType), RT_RES_TYPE_MAX);
-    COND_RETURN_OUT_ERROR_MSG_CALL(static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX,
-        RT_ERROR_INVALID_VALUE,
-        "Invalid process type, type: %u, valid type range is [0, %d)",
-        static_cast<uint32_t>(resInfo->procType), RT_PROCESS_CPTYPE_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
+        resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX, RT_ERROR_INVALID_VALUE, 
+        resInfo->procType, "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->ReleaseDevResAddress(resInfo);
 }
 
 rtError_t ApiErrorDecorator::UbDbSend(rtUbDbInfo_t *const dbInfo, Stream *const stm)
 {
     NULL_PTR_RETURN_MSG(dbInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_OUT_ERROR_MSG_CALL((dbInfo->dbNum != UB_DOORBELL_NUM_MIN) && (dbInfo->dbNum != UB_DOORBELL_NUM_MAX),
-        RT_ERROR_INVALID_VALUE, "Invalid dbNum, current  dbNum must be 1 or 2.");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dbInfo->dbNum != UB_DOORBELL_NUM_MIN) && (dbInfo->dbNum != UB_DOORBELL_NUM_MAX), 
+        RT_ERROR_INVALID_VALUE, dbInfo->dbNum, "1 or 2");    
     if (dbInfo->dbNum == UB_DOORBELL_NUM_MAX) {
         COND_RETURN_OUT_ERROR_MSG_CALL((dbInfo->info[0].dieId == dbInfo->info[1].dieId) &&
                                        (dbInfo->info[0].jettyId == dbInfo->info[1].jettyId) &&
                                        (dbInfo->info[0].functionId == dbInfo->info[1].functionId),
-            RT_ERROR_INVALID_VALUE, "the same funcid:%u dieid:%u and jettyid:%u in the SQE.",
+            RT_ERROR_INVALID_VALUE, "An entry with the same functionId (%u), dieId (%u), and jettyId (%u) already exists in the SQE.",
             dbInfo->info[0].functionId, dbInfo->info[0].dieId, dbInfo->info[0].jettyId);
     }
     return impl_->UbDbSend(dbInfo, stm);
@@ -237,30 +226,32 @@ rtError_t ApiErrorDecorator::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream 
     NULL_PTR_RETURN_MSG(wqeInfo->wqe, RT_ERROR_INVALID_VALUE);
     COND_RETURN_OUT_ERROR_MSG_CALL((wqeInfo->wqeSize == 0 && wqeInfo->wqePtrLen != UB_DIRECT_WQE_MIN_LEN) ||
         (wqeInfo->wqeSize == 1 && wqeInfo->wqePtrLen != UB_DIRECT_WQE_MAX_LEN), RT_ERROR_INVALID_VALUE,
-        "Invalid para, wqeSize:%u and wqe len:%u is misMatch.", wqeInfo->wqeSize, wqeInfo->wqePtrLen);
+        "Invalid parameter. wqeSize:%u and wqePtrLen:%u do not match.", wqeInfo->wqeSize, wqeInfo->wqePtrLen);
     return impl_->UbDirectSend(wqeInfo, stm);
 }
 
 static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t * const argsInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
-    ZERO_RETURN_MSG_OUTER(argsInfo->argsSize);
+    ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
     NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
     const uint8_t aicpuTaskNum = argsInfo->aicpuNum;
-    COND_RETURN_OUT_ERROR_MSG_CALL(aicpuTaskNum > FUSION_SUB_TASK_MAX_CPU_NUM, RT_ERROR_INVALID_VALUE,
-        "aicpu subtask num %hhu is invalid, its range should be in [0,%u].", aicpuTaskNum, FUSION_SUB_TASK_MAX_CPU_NUM);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(aicpuTaskNum > FUSION_SUB_TASK_MAX_CPU_NUM, RT_ERROR_INVALID_VALUE, 
+        aicpuTaskNum, "[0, " + std::to_string(FUSION_SUB_TASK_MAX_CPU_NUM) + "]");
     if (argsInfo->isNoNeedH2DCopy == 0U) {
         if (argsInfo->aicpuNum > 0) {
             NULL_PTR_RETURN_MSG(argsInfo->aicpuArgs, RT_ERROR_INVALID_VALUE);
             for (uint8_t i = 0U; i < argsInfo->aicpuNum; i++) {
                 COND_RETURN_OUT_ERROR_MSG_CALL(
                     argsInfo->aicpuArgs[i].soNameAddrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    "%huth aicpu soName addr offset[%hu] greater than or equal to args size[%u], invalid param.", i,
-                    argsInfo->aicpuArgs[i].soNameAddrOffset, argsInfo->argsSize);
+                    "Parameter argsInfo->aicpuArgs[%hu].soNameAddrOffset should be less than parameter argsInfo->argsSize. "
+                    "Parameter argsInfo->aicpuArgs[%hu].soNameAddrOffset = %u, parameter argsInfo->argsSize = %u.", 
+                    i, i, argsInfo->aicpuArgs[i].soNameAddrOffset, argsInfo->argsSize);
                 COND_RETURN_OUT_ERROR_MSG_CALL(
                     argsInfo->aicpuArgs[i].kernelNameAddrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    "%huth aicpu kernelName offset[%hu] greater than or equal to args size[%u], invalid param.", i,
-                    argsInfo->aicpuArgs[i].kernelNameAddrOffset, argsInfo->argsSize);
+                    "Parameter argsInfo->aicpuArgs[%hu].kernelNameAddrOffset should be less than parameter argsInfo->argsSize. "
+                    "Parameter argsInfo->aicpuArgs[%hu].kernelNameAddrOffset = %u, parameter argsInfo->argsSize = %u.",                    
+                    i, i, argsInfo->aicpuArgs[i].kernelNameAddrOffset, argsInfo->argsSize);
             }
         }
         if (argsInfo->hostInputInfoNum != 0U) {
@@ -269,12 +260,14 @@ static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t * const argsInf
             for (int16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
                 COND_RETURN_OUT_ERROR_MSG_CALL(
                     argsInfo->hostInputInfoPtr[i].addrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    "%huth host mem addr offset[%u] greater than or equal to args size[%u], invalid param.", i,
-                    argsInfo->hostInputInfoPtr[i].addrOffset, argsInfo->argsSize);
+                    "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset should be less than parameter argsInfo->argsSize. "
+                    "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset = %u, parameter argsInfo->argsSize = %u.", 
+                    i, i, argsInfo->hostInputInfoPtr[i].addrOffset, argsInfo->argsSize);
                 COND_RETURN_OUT_ERROR_MSG_CALL(
                     argsInfo->hostInputInfoPtr[i].dataOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    "%huth host mem data offset[%u] greater than or equal to args size[%u], invalid param.", i,
-                    argsInfo->hostInputInfoPtr[i].dataOffset, argsInfo->argsSize);
+                    "Parameter argsInfo->hostInputInfoPtr[%hu].dataOffset should be less than parameter argsInfo->argsSize. "
+                    "Parameter argsInfo->hostInputInfoPtr[%hu].dataOffset = %u, parameter argsInfo->argsSize = %u.", 
+                    i, i, argsInfo->hostInputInfoPtr[i].dataOffset, argsInfo->argsSize);                  
             }
         }
     }
@@ -296,22 +289,22 @@ rtError_t ApiErrorDecorator::FusionLaunch(void * const fusionInfo, Stream * cons
     rtFunsionTaskInfo_t *fusionTask = static_cast<rtFunsionTaskInfo_t *>(fusionInfo);
     const uint32_t subTaskNum = fusionTask->subTaskNum;
     COND_RETURN_OUT_ERROR_MSG_CALL((subTaskNum == 0U || subTaskNum > FUSION_SUB_TASK_MAX_NUM), RT_ERROR_INVALID_VALUE,
-        "Fusion subtask num %u is invalid, its range should be in [1,%u].", subTaskNum, FUSION_SUB_TASK_MAX_NUM);
+        "Fusion subtask num %u is invalid, its range should be in [1, %u].", subTaskNum, FUSION_SUB_TASK_MAX_NUM);
 
     string fusionList = "";
     for (uint32_t idx = 0U; idx < subTaskNum; idx++) {
         const rtFusionType_t subKernelType = fusionTask->subTask[idx].type;
         COND_RETURN_OUT_ERROR_MSG_CALL((subKernelType >= RT_FUSION_END), RT_ERROR_INVALID_VALUE,
-            "The %uth subtask's type %u is invalid, its range should be in (0,%d).", idx,
-            static_cast<uint32_t>(subKernelType), RT_FUSION_END);
+            "The value range of attribute type %u of parameter subtask whose index is %u should be (0, %d).",
+            static_cast<uint32_t>(subKernelType), idx, RT_FUSION_END);
         fusionList += g_fusionSubTypeStr[subKernelType];
     }
 
     // check fusion task list is valid or not
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_TASK_FUSION_DOT_ONLY_AICPUAIC)) {
-        COND_RETURN_OUT_ERROR_MSG_CALL(g_fusionAllowedList.find(fusionList) == g_fusionAllowedList.end(),
-            RT_ERROR_INVALID_VALUE, "Fusion task list %s is invalid, does not support.", fusionList.c_str());
+        COND_RETURN_AND_MSG_OUTER(g_fusionAllowedList.find(fusionList) == g_fusionAllowedList.end(), RT_ERROR_INVALID_VALUE, 
+            ErrorCode::EE1006, __func__, "fusionList=" + fusionList);
     } else {
         COND_RETURN_OUT_ERROR_MSG_CALL(fusionList != "AICPUAIC",
             RT_ERROR_INVALID_VALUE, "Fusion task list %s is invalid, not support.", fusionList.c_str());
@@ -381,14 +374,14 @@ rtError_t ApiErrorDecorator::FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * con
 {
     NULL_PTR_RETURN_MSG_OUTER(fftsPlusTaskInfo, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(fftsPlusTaskInfo->fftsPlusSqe, RT_ERROR_INVALID_VALUE);
-    ZERO_RETURN_MSG_OUTER(fftsPlusTaskInfo->fftsPlusSqe->readyContextNum);
+    ZERO_RETURN_AND_MSG_OUTER(fftsPlusTaskInfo->fftsPlusSqe->readyContextNum);
     NULL_PTR_RETURN_MSG_OUTER(fftsPlusTaskInfo->descBuf, RT_ERROR_INVALID_VALUE);
     const rtFftsPlusSqe_t * const sqe = fftsPlusTaskInfo->fftsPlusSqe;
 
     COND_RETURN_OUT_ERROR_MSG_CALL(
         ((CONTEXT_LEN) * (static_cast<uint32_t>(sqe->totalContextNum)) !=
         (static_cast<uint32_t>(fftsPlusTaskInfo->descBufLen))),
-        RT_ERROR_INVALID_VALUE, "Invalid task info, descBufLen=%u(bytes), totalContextNum=%u.",
+        RT_ERROR_INVALID_VALUE, "Invalid task information. descBufLen=%u(bytes), totalContextNum=%u.",
         static_cast<uint32_t>(fftsPlusTaskInfo->descBufLen), static_cast<uint32_t>(sqe->totalContextNum));
 
     const rtError_t error = impl_->FftsPlusTaskLaunch(fftsPlusTaskInfo, stm, flag);
@@ -457,9 +450,8 @@ rtError_t ApiErrorDecorator::ResetXpuDevice(rtXpuDevType devType, const uint32_t
 
 rtError_t ApiErrorDecorator::EventWorkModeSet(uint8_t mode)
 {
-    COND_RETURN_OUT_ERROR_MSG_CALL(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE),
-         RT_ERROR_INVALID_VALUE,
-        "can not assign this mode: %u", mode);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), 
+        RT_ERROR_INVALID_VALUE, mode, "[0, " + std::to_string(static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE)) + "]");
     return impl_->EventWorkModeSet(mode);
 }
 
