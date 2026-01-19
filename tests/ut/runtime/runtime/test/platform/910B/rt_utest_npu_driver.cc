@@ -25,6 +25,9 @@
 using namespace testing;
 using namespace cce::runtime;
 
+DVresult drvMemGetAttribute_1(DVdeviceptr vptr, struct DVattribute *attr);
+DVresult drvMemGetAttribute_2(DVdeviceptr vptr, struct DVattribute *attr);
+
 class CloudV2NpuDriverTest : public testing::Test
 {
 protected:
@@ -2976,6 +2979,36 @@ TEST_F(CloudV2NpuDriverTest, host_register_03)
 
     error = rtsHostUnregister(nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(CloudV2NpuDriverTest, host_register_06)
+{ 
+    rtError_t error;
+    uintptr_t address_val = 0x00200000;
+    void* ptr = nullptr;
+    errno_t ret = memcpy_s(&ptr, sizeof(void*), &address_val, sizeof(uintptr_t));
+    if (ret != 0) {
+        ptr = nullptr;
+    }
+    void **devPtr;
+    NpuDriver *rawDrv = new NpuDriver();
+    g_isAddrFlatDevice = true;
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(false));
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
+
+    error = rawDrv->HostRegister(ptr, 100, RT_HOST_REGISTER_IOMEMORY, devPtr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);     
+
+    error = rawDrv->HostRegister(ptr, 100, RT_HOST_REGISTER_READONLY, devPtr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);   
+    error = rawDrv->HostUnregister(ptr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE); 
+    
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_1));
+    error = rawDrv->HostRegister(ptr, 0, static_cast<rtHostRegisterType>(RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY), devPtr, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);   
+
+    delete rawDrv;
 }
 
 TEST_F(CloudV2NpuDriverTest, GetDqsQueInfo_GetDqsMbufPoolInfo_Test)

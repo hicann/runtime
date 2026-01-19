@@ -2186,6 +2186,18 @@ DLLEXPORT drvError_t halHostUnregisterEx(void *src_ptr, UINT32 devid, UINT32 fla
 
 /**
  * @ingroup driver
+ * @brief This command is used to get memory map capabilities.
+ * @attention null
+ * @param [in] deviceId: requested input device id.
+ * @param [in] accType: requested input accelerator type.
+ * @param [out] capabilities: requested output memory map capabilities.
+ * @return DRV_ERROR_NONE : success
+ * @return DV_ERROR_XXX : get fail
+ */
+DLLEXPORT drvError_t halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32 *mem_map_cap);
+
+/**
+ * @ingroup driver
  * @brief This command is used to alloc memory.
  * @attention
  * 1. When the application phy_mem_type is HBM and no HBM is available on the device side, this command allocates

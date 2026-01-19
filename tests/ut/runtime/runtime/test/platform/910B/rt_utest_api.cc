@@ -2625,6 +2625,83 @@ TEST_F(CloudV2ApiTest, set_stream_cache_opinfo_switch_coverage_apierrordecorator
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiTest, rtHostMemMapCapabilities_01)
+{
+    rtError_t error;
+    rtHacType hacType = RT_HAC_TYPE_STARS;
+    rtHostMemMapCapability capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    
+    hacType = RT_HAC_TYPE_AICPU;
+    capabilities = RT_HOST_MEM_MAP_SUPPORTED;
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    
+    hacType = RT_HAC_TYPE_AIC;
+    capabilities = RT_HOST_MEM_MAP_SUPPORTED;
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    hacType = RT_HAC_TYPE_AIV;
+    capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    hacType = RT_HAC_TYPE_PCIEDMA;
+    capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    
+    hacType = RT_HAC_TYPE_RDMA;
+    capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    hacType = RT_HAC_TYPE_SDMA;
+    capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+    error = rtHostMemMapCapabilities(1, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    hacType = RT_HAC_TYPE_DVPP;
+    capabilities = RT_HOST_MEM_MAP_NOT_SUPPORTED;
+    MOCKER(halHostRegisterCapabilities)
+        .stubs()
+        .will(returnValue(DRV_ERROR_INVALID_DEVICE));
+    error = rtHostMemMapCapabilities(3, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
+}
+
+TEST_F(CloudV2ApiTest, rtHostMemMapCapabilities_02)
+{
+    rtError_t error;
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    uint32_t deviceId = 0;
+    rtHacType hacType = RT_HAC_TYPE_STARS;
+    rtHostMemMapCapability capabilities;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostMemMapCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    error = api.HostMemMapCapabilities(deviceId, hacType, &capabilities);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest, rtHostMemMapCapabilities_03)
+{
+    rtError_t error;
+    rtHacType hacType = RT_HAC_TYPE_STARS;
+    rtHostMemMapCapability capabilities;
+
+    MOCKER(halHostRegisterCapabilities)
+        .stubs()
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = rtHostMemMapCapabilities(0, hacType, &capabilities);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(CloudV2ApiTest, get_stream_cache_opinfo_switch_coverage_apierrordecorator)
 {
     rtError_t error;

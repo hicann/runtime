@@ -339,6 +339,7 @@ public:
     virtual rtError_t rtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag);
     virtual rtError_t rtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag);
     virtual rtError_t rtsHostUnregister(void *ptr);
+    virtual rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities);
     virtual rtError_t rtsGetThreadLastTaskId(uint32_t *taskId);
     virtual rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId);
 
@@ -792,6 +793,7 @@ public:
     MOCK_METHOD3(rtHostRegisterV2, rtError_t(void *ptr, uint64_t size, uint32_t flag));
     MOCK_METHOD3(rtHostGetDevicePointer, rtError_t(void *pHost, void **pDevice, uint32_t flag));
     MOCK_METHOD1(rtsHostUnregister, rtError_t(void *ptr));
+    MOCK_METHOD3(rtHostMemMapCapabilities, rtError_t(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities));
     MOCK_METHOD1(rtsGetThreadLastTaskId, rtError_t(uint32_t *taskId));
     MOCK_METHOD2(rtsStreamGetId, rtError_t(rtStream_t stm, int32_t *streamId));
 

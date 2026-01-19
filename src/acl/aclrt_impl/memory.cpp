@@ -396,6 +396,25 @@ aclError aclrtHostUnregisterImpl(void *ptr)
     return ACL_SUCCESS;
 }
 
+aclError aclrtHostMemMapCapabilitiesImpl(uint32_t deviceId, aclrtHacType hacType,
+    aclrtHostMemMapCapability *capabilities)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtHostMemMapCapabilities);
+    ACL_LOG_DEBUG("start to execute aclrtHostMemMapCapabilities, deviceId = %u", deviceId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(capabilities);
+    const rtError_t rtErr = rtHostMemMapCapabilities(deviceId, static_cast<rtHacType>(hacType),
+        reinterpret_cast<rtHostMemMapCapability*>(capabilities));
+    if (rtErr != RT_ERROR_NONE) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtHostMemMapCapabilities not support this feature, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtHostMemMapCapabilities failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclrtMemFlushImpl(void *devPtr, size_t size)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemFlush);

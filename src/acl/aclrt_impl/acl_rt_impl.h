@@ -136,6 +136,8 @@ ACL_FUNC_VISIBILITY aclError aclrtHostGetDevicePointerImpl(void *pHost, void **p
 
 ACL_FUNC_VISIBILITY aclError aclrtHostUnregisterImpl(void *ptr);
 
+ACL_FUNC_VISIBILITY aclError aclrtHostMemMapCapabilitiesImpl(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities);
+
 ACL_FUNC_VISIBILITY aclError aclrtGetThreadLastTaskIdImpl(uint32_t *taskId);
 
 ACL_FUNC_VISIBILITY aclError aclrtStreamGetIdImpl(aclrtStream stream, int32_t *streamId);

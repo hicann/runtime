@@ -183,7 +183,13 @@ rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType t
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
         flag = static_cast<uint32_t>(HOST_MEM_MAP_DEV);
     }
-
+    uint32_t typeMask = static_cast<uint32_t>(type);
+    if ((typeMask & RT_HOST_REGISTER_IOMEMORY) != 0U) {
+        flag = HOST_IO_MAP_DEV;
+    }
+    if ((typeMask & RT_HOST_REGISTER_READONLY) != 0U) {
+        flag |= MEM_REGISTER_READ_ONLY;
+    }
     RT_LOG(RT_LOG_INFO, "memory type %u.", flag);
     const drvError_t drvRet = halHostRegister(ptr, static_cast<UINT64>(size), flag,
         deviceId, devPtr);
@@ -227,6 +233,25 @@ rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
     EraseMappedMemory(ptr);
     RT_LOG(RT_LOG_DEBUG, "halHostUnregister: device_id=%u, drvRetCode=%d!",
            deviceId, static_cast<int32_t>(drvRet));
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    COND_RETURN_WARN(&halHostRegisterCapabilities == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostRegisterCapabilities does not exist");
+    drvError_t drvRet = DRV_ERROR_NONE;
+    UINT32 drv_capabilities;
+    drvRet = halHostRegisterCapabilities(deviceId, static_cast<UINT32>(hacType), &drv_capabilities);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halHostRegisterCapabilities failed: device_id=%u, hacType=%d,"
+                          "drvRetCode=%d!", deviceId, static_cast<UINT32>(hacType), static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    //将drv_capabilities的值传递给capabilities
+    *capabilities = static_cast<rtHostMemMapCapability>(drv_capabilities);
+    RT_LOG(RT_LOG_DEBUG, "halHostRegisterCapabilities: device_id=%u, hacType=%d, capabilities=%d!",
+           deviceId, hacType, *capabilities);
     return RT_ERROR_NONE;
 }
 

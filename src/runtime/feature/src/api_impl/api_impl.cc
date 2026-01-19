@@ -2585,6 +2585,15 @@ rtError_t ApiImpl::HostUnregister(void *ptr)
     return (isRegister) ? RT_ERROR_NONE : RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
 }
 
+rtError_t ApiImpl::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    TIMESTAMP_NAME(__func__);
+    Context * const curCtx = CurrentContext();
+    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    return curCtx->Device_()->Driver_()->HostMemMapCapabilities(deviceId, hacType, capabilities);
+}
+
 rtError_t ApiImpl::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)
 {

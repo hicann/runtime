@@ -1467,8 +1467,10 @@ rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegist
 {
     NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(size);
-    if (type != RT_HOST_REGISTER_MAPPED) {
-        RT_LOG(RT_LOG_WARNING, "not support this type, current type=%u, current range is [0, 1)", type);
+    constexpr uint32_t validFlags = RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY;
+    if ((static_cast<uint32_t>(type) & (~validFlags)) != 0U){
+        RT_LOG(RT_LOG_WARNING, "not support this type, current type=%u, valid flags are combinations of [%u, %u] or 0",
+            type, RT_HOST_REGISTER_IOMEMORY, RT_HOST_REGISTER_READONLY);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
@@ -1518,6 +1520,31 @@ rtError_t ApiErrorDecorator::HostUnregister(void *ptr)
     ERROR_RETURN(error, "Malloc host memory failed.");
     return error;
 }
+
+rtError_t ApiErrorDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
+    uint32_t realDeviceId;
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+        "input error:drv devId %u is err:%#x", deviceId, static_cast<uint32_t>(error));
+
+    error = CheckDeviceIdIsValid(static_cast<int32_t>(realDeviceId));
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%u, retCode=%#x",
+        realDeviceId, static_cast<uint32_t>(error));
+
+    COND_RETURN_OUT_ERROR_MSG_CALL(hacType >= RT_HAC_TYPE_MAX, RT_ERROR_INVALID_VALUE,
+        "Invalid hacType, current hacType=%u, valid hacType range is [0, %u).",
+        hacType, RT_HAC_TYPE_MAX);
+    error = impl_->HostMemMapCapabilities(realDeviceId, hacType, capabilities);
+    if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
+        RT_LOG(RT_LOG_WARNING, "HostMemMapCapabilities not support on drv deviceId %u", realDeviceId);
+    } else {
+        ERROR_RETURN(error, "query host memory capabilities failed.");
+    }   
+    return error;
+}
+
 
 rtError_t ApiErrorDecorator::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)

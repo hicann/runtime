@@ -947,6 +947,11 @@ drvError_t halHostUnregisterEx(void *srcPtr, UINT32 devid, UINT32 flag)
     return DRV_ERROR_NONE;
 }
 
+drvError_t halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32 *mem_map_cap)
+{
+    return DRV_ERROR_NONE;
+}
+
 drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
 {
     return DRV_ERROR_NONE;

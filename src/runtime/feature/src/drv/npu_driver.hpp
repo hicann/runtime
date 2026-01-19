@@ -66,6 +66,9 @@ public:
     // Unegister host memory.
     rtError_t HostUnregister(void *ptr,  const uint32_t deviceId) override;
 
+    // Query host memory mapping capabilities.
+    rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) override;
+
     // Alloc specified memory.
     rtError_t MemAllocEx(void ** const dptr, const uint64_t size, const rtMemType_t memType) override;
 

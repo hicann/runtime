@@ -4235,6 +4235,32 @@ TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed03)
     auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
     EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
 }
+TEST_F(UTEST_ACL_Runtime, aclrtHostMemMapCapabilities_succ)
+{
+    uint32_t deviceId = 0U;
+    aclrtHacType hacType = ACL_RT_HAC_TYPE_AIC;
+    aclrtHostMemMapCapability capabilities;
+    
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostMemMapCapabilities(_,_,_))
+        .WillOnce(Return(RT_ERROR_NONE));
+
+    auto ret = aclrtHostMemMapCapabilities(deviceId, hacType, &capabilities);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtHostMemMapCapabilities_failed)
+{
+    uint32_t deviceId = 0U;
+    aclrtHacType hacType = ACL_RT_HAC_TYPE_AIC;
+    aclrtHostMemMapCapability capabilities;
+    
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostMemMapCapabilities(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    auto ret = aclrtHostMemMapCapabilities(deviceId, hacType, &capabilities);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 
 TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskId_succ)
 {

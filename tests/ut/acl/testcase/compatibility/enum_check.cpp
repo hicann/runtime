@@ -1002,6 +1002,49 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtMemAccessFlags)
     EXPECT_EQ(sizeof(aclrtMemAccessFlags), 4);
 }
 
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtHacType)
+{
+    aclrtHacType value;
+    value = (aclrtHacType)0;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_STARS);
+    
+    value = (aclrtHacType)1;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_AICPU);
+
+    value = (aclrtHacType)2;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIC);
+
+    value = (aclrtHacType)3;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIV);
+    
+    value = (aclrtHacType)4;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_PCIEDMA);
+
+    value = (aclrtHacType)5;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_RDMA);
+
+    value = (aclrtHacType)6;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_SDMA);
+    
+    value = (aclrtHacType)7;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_DVPP);
+
+    value = (aclrtHacType)8;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_UDMA);
+
+    value = (aclrtHacType)9;
+    EXPECT_EQ(value, ACL_RT_HAC_TYPE_CCU);
+}
+
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtHostMemMapCapability)
+{
+    aclrtHostMemMapCapability value;
+    value = (aclrtHostMemMapCapability)0;
+    EXPECT_EQ(value, ACL_RT_HOST_MEM_MAP_NOT_SUPPORTED);
+    value = (aclrtHostMemMapCapability)1;
+    EXPECT_EQ(value, ACL_RT_HOST_MEM_MAP_SUPPORTED);
+}
+
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtProcessState)
 {
   aclrtProcessState value;

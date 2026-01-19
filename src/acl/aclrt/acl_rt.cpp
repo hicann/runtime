@@ -286,6 +286,11 @@ aclError aclrtHostUnregister(void *ptr)
     return aclrtHostUnregisterImpl(ptr);
 }
 
+aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)
+{
+    return aclrtHostMemMapCapabilitiesImpl(deviceId, hacType, capabilities);
+}
+
 aclError aclrtGetThreadLastTaskId(uint32_t *taskId)
 {
     return aclrtGetThreadLastTaskIdImpl(taskId);

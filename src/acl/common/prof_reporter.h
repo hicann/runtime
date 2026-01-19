@@ -273,6 +273,7 @@ namespace acl {
         AclrtGetMemUsageInfo,
         AclrtHostRegisterV2,
         AclrtHostGetDevicePointer,
+        AclrtHostMemMapCapabilities,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

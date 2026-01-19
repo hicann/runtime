@@ -144,7 +144,27 @@ typedef enum aclrtMemMallocPolicy {
 
 typedef enum {
     ACL_HOST_REGISTER_MAPPED = 0,
+    ACL_HOST_REGISTER_IOMEMORY = 0x04,
+    ACL_HOST_REGISTER_READONLY = 0x08
 } aclrtHostRegisterType;
+
+typedef enum {
+    ACL_RT_HAC_TYPE_STARS = 0,
+    ACL_RT_HAC_TYPE_AICPU,
+    ACL_RT_HAC_TYPE_AIC,
+    ACL_RT_HAC_TYPE_AIV,
+    ACL_RT_HAC_TYPE_PCIEDMA,
+    ACL_RT_HAC_TYPE_RDMA,
+    ACL_RT_HAC_TYPE_SDMA,
+    ACL_RT_HAC_TYPE_DVPP,
+    ACL_RT_HAC_TYPE_UDMA,
+    ACL_RT_HAC_TYPE_CCU  
+} aclrtHacType;
+
+typedef enum {
+    ACL_RT_HOST_MEM_MAP_NOT_SUPPORTED = 0,
+    ACL_RT_HOST_MEM_MAP_SUPPORTED
+} aclrtHostMemMapCapability;
 
 typedef enum {
     ACL_RT_MEM_ATTR_RSV = 0,
@@ -1707,6 +1727,19 @@ ACL_FUNC_VISIBILITY aclError aclrtHostGetDevicePointer(void *pHost, void **pDevi
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtHostUnregister(void *ptr);
+
+/** @ingroup AscendCL
+ * @brief get host mem map capabilities
+ *
+ * @param deviceId [IN]        device id
+ * @param hacType [IN]         chip type
+ * @param capabilities [OUT]   mem map capabilities
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+
+ACL_FUNC_VISIBILITY aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities);
 
 /**
  * @ingroup AscendCL
