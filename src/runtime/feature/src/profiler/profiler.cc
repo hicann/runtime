@@ -530,7 +530,7 @@ void Profiler::TsProfilerStart(const uint64_t profConfig, const uint32_t devId, 
         uint32_t pid;
         (void)dev->Driver_()->DeviceGetBareTgid(&pid);
 
-        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFLING_TS_DYNAMIC)) &&
+        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFILING_TS_DYNAMIC)) &&
             (dev->CheckFeatureSupport(TS_FEATURE_DYNAMIC_PROFILING))) {
             (void)DynamicProfilingEnableTaskInit(tsk, static_cast<uint64_t>(pid), &profCfg_);
         } else {
@@ -601,7 +601,7 @@ void Profiler::TsProfilerStop(const uint64_t profConfig, const uint32_t devId, D
         uint32_t pid;
         (void)dev->Driver_()->DeviceGetBareTgid(&pid);
 
-        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFLING_TS_DYNAMIC)) &&
+        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFILING_TS_DYNAMIC)) &&
             (dev->CheckFeatureSupport(TS_FEATURE_DYNAMIC_PROFILING))) {
             (void)DynamicProfilingDisableTaskInit(tsk, static_cast<uint64_t>(pid), &profCfg_);
         } else {

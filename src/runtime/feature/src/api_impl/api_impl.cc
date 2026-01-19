@@ -5887,7 +5887,7 @@ rtError_t ApiImpl::GetOpExecuteTimeOut(uint32_t * const timeout)
     } else {
         float32_t kernelCreditScale = Runtime::Instance()->GetKernelCreditScaleUS();
         const uint32_t kernelCredit = static_cast<uint32_t>(Runtime::Instance()->GetStarsFftsDefaultKernelCredit());
-        if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_OP_EXE_TIMEOUT_CONFIG)) {
+        if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_OP_EXE_TIMEOUT_CONFIG)) {
             kernelCreditScale = kernelCreditScale / RT_TIMEOUT_MS_TO_US;
         }
         *timeout = static_cast<uint32_t>(ceil(kernelCreditScale * kernelCredit / RT_TIMEOUT_S_TO_MS));
