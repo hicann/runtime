@@ -269,6 +269,7 @@ namespace acl {
         {AclProfType::AclrtMemRetainAllocationHandle,           "aclrtMemRetainAllocationHandle"},
         {AclProfType::AclrtMemGetAllocationPropertiesFromHandle,"aclrtMemGetAllocationPropertiesFromHandle"},
         {AclProfType::AclrtGetMemUsageInfo,                     "aclrtGetMemUsageInfo"},
+        {AclProfType::AclrtHostMemMapCapabilities,              "aclrtHostMemMapCapabilities"},
 };
 
 aclError RegisterType(const uint32_t index) {

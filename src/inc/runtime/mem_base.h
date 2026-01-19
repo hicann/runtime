@@ -31,8 +31,29 @@ typedef enum {
 
 typedef enum {
     RT_HOST_REGISTER_MAPPED = 0, // HOST_MEM map to device
+    RT_HOST_REGISTER_IOMEMORY = 0x04, 
+    RT_HOST_REGISTER_READONLY = 0x08,
     RT_HOST_REGISTER_MAX
 } rtHostRegisterType;
+
+typedef enum {
+    RT_HAC_TYPE_STARS  = 0,
+    RT_HAC_TYPE_AICPU,
+    RT_HAC_TYPE_AIC,
+    RT_HAC_TYPE_AIV,
+    RT_HAC_TYPE_PCIEDMA,
+    RT_HAC_TYPE_RDMA,
+    RT_HAC_TYPE_SDMA,
+    RT_HAC_TYPE_DVPP,
+    RT_HAC_TYPE_UDMA,
+    RT_HAC_TYPE_CCU,
+    RT_HAC_TYPE_MAX        
+} rtHacType;
+
+typedef enum {
+    RT_HOST_MEM_MAP_NOT_SUPPORTED = 0,
+    RT_HOST_MEM_MAP_SUPPORTED
+} rtHostMemMapCapability;
 
 typedef enum {
     RT_MEMORY_LOC_HOST = 0,

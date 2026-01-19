@@ -1390,6 +1390,14 @@ rtError_t aclStub::rtsHostUnregister(void *ptr)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    (void)deviceId;
+    (void)hacType;
+    (void)capabilities;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsGetThreadLastTaskId(uint32_t *taskId)
 {
     (void)taskId;
@@ -3517,6 +3525,11 @@ rtError_t rtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
 rtError_t rtsHostUnregister(void *ptr)
 {
     return MockFunctionTest::aclStubInstance().rtsHostUnregister(ptr);
+}
+
+rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    return MockFunctionTest::aclStubInstance().rtHostMemMapCapabilities(deviceId, hacType, capabilities);
 }
 
 rtError_t rtsGetThreadLastTaskId(uint32_t *taskId)

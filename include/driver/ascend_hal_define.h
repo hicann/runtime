@@ -906,6 +906,7 @@ struct MEMCPY2D {
     };
 };
 
+#define  MEM_REGISTER_READ_ONLY 0x10000000
 /* enables different options to be specified that affect the host register */
 enum drvRegisterTpye {
     HOST_MEM_MAP_DEV = 0,       /* HOST_MEM map to device */
@@ -914,7 +915,27 @@ enum drvRegisterTpye {
     HOST_MEM_MAP_DEV_PCIE_TH,   /* HOST_MEM map to device, accessed by pcie_through */
     DEV_MEM_MAP_HOST,           /* DEV_MEM map to host */
     HOST_MEM_MAP_DMA,           /* Host va preprocess into dma addr to improve memcpy performance */
+    HOST_IO_MAP_DEV,            /* HOST_IO map to device */
     HOST_REGISTER_MAX_TPYE
+};
+
+enum drvAccModuleType {
+    DRV_ACC_MODULE_TYPE_STARS = 0,
+    DRV_ACC_MODULE_TYPE_AICPU,
+    DRV_ACC_MODULE_TYPE_AIC,
+    DRV_ACC_MODULE_TYPE_AIV,
+    DRV_ACC_MODULE_TYPE_PCIEDMA,
+    DRV_ACC_MODULE_TYPE_RDMA,
+    DRV_ACC_MODULE_TYPE_SDMA,
+    DRV_ACC_MODULE_TYPE_DVPP,
+    DRV_ACC_MODULE_TYPE_UDMA,
+    DRV_ACC_MODULE_TYPE_CCU,
+    DRV_ACC_MODULE_TYPE_MAX
+};
+
+enum drvMemMapCapability{
+    HOST_MEM_MAP_NOT_SUPPORTED = 0,
+    HOST_MEM_MAP_SUPPORTED
 };
 
 enum ctrlType {

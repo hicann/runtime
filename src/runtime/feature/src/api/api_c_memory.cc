@@ -29,6 +29,7 @@ TIMESTAMP_EXTERN(rtsHostRegister);
 TIMESTAMP_EXTERN(rtHostRegisterV2);
 TIMESTAMP_EXTERN(rtsHostUnregister);
 TIMESTAMP_EXTERN(rtHostGetDevicePointer);
+TIMESTAMP_EXTERN(rtHostMemMapCapabilities);
 TIMESTAMP_EXTERN(rtsPointerGetAttributes);
 TIMESTAMP_EXTERN(rtsMemcpy);
 TIMESTAMP_EXTERN(rtsMemcpyBatch);
@@ -273,6 +274,20 @@ rtError_t rtsHostUnregister(void *ptr)
     TIMESTAMP_BEGIN(rtsHostUnregister);
     const rtError_t error = apiInstance->HostUnregister(ptr);
     TIMESTAMP_END(rtsHostUnregister);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtHostMemMapCapabilities);
+    const rtError_t error = apiInstance->HostMemMapCapabilities(deviceId, hacType, capabilities);
+    TIMESTAMP_END(rtHostMemMapCapabilities);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

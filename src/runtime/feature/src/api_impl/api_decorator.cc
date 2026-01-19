@@ -562,6 +562,11 @@ rtError_t ApiDecorator::HostUnregister(void *ptr)
     return impl_->HostUnregister(ptr);
 }
 
+rtError_t ApiDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    return impl_->HostMemMapCapabilities(deviceId, hacType, capabilities);
+}
+
 rtError_t ApiDecorator::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)
 {

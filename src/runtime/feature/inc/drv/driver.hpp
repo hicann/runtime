@@ -159,6 +159,9 @@ public:
     // Unegister host memory.
     virtual rtError_t HostUnregister(void *ptr,  const uint32_t deviceId) = 0;
 
+    // Query host memory mapping capabilities.
+    virtual rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) = 0;
+
     // Alloc specified memory.
     virtual rtError_t MemAllocEx(void ** const dptr, const uint64_t size, const rtMemType_t memType) = 0;
 

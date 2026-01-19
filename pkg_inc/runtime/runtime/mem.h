@@ -464,6 +464,17 @@ RTS_API rtError_t rtFreeHostWithDevSync(void *hostPtr);
 
 /**
  * @ingroup dvrt_mem
+ * @brief get host memory map capabilities
+ * @param [in] deviceId
+ * @param [in] hacType
+ * @param [out] capabilities
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities);
+
+/**
+ * @ingroup dvrt_mem
  * @brief alloc host shared memory
  * @param [in] in   alloc host shared memory inputPara pointer
  * @param [in] out   alloc host shared memory outputInfo pointer

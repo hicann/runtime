@@ -182,6 +182,8 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtMemMallocPolicy)
 TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostRegisterType)
 {
     EXPECT_EQ((uint64_t)ACL_HOST_REGISTER_MAPPED, (uint64_t)RT_HOST_REGISTER_MAPPED);
+    EXPECT_EQ((uint64_t)ACL_HOST_REGISTER_IOMEMORY, (uint64_t)RT_HOST_REGISTER_IOMEMORY);
+    EXPECT_EQ((uint64_t)ACL_HOST_REGISTER_READONLY, (uint64_t)RT_HOST_REGISTER_READONLY);
 
     // check total size
     EXPECT_EQ(sizeof(aclrtHostRegisterType), sizeof(rtHostRegisterType));
@@ -814,4 +816,28 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtFuncAttribute)
     EXPECT_EQ((uint64_t)ACL_FUNC_ATTR_KERNEL_TYPE, (uint64_t)RT_FUNCTION_ATTR_KERNEL_TYPE);
 
     EXPECT_EQ(sizeof(aclrtFuncAttribute), sizeof(rtFuncAttribute));
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHacType)
+{
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_STARS, (uint32_t)RT_HAC_TYPE_STARS);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_AICPU, (uint32_t)RT_HAC_TYPE_AICPU);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_AIC, (uint32_t)RT_HAC_TYPE_AIC);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_AIV, (uint32_t)RT_HAC_TYPE_AIV);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_PCIEDMA, (uint32_t)RT_HAC_TYPE_PCIEDMA);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_RDMA, (uint32_t)RT_HAC_TYPE_RDMA);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_SDMA, (uint32_t)RT_HAC_TYPE_SDMA);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_DVPP, (uint32_t)RT_HAC_TYPE_DVPP);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_UDMA, (uint32_t)RT_HAC_TYPE_UDMA);
+   EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_CCU, (uint32_t)RT_HAC_TYPE_CCU);
+
+   EXPECT_EQ(sizeof(aclrtHacType), sizeof(rtHacType));
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostMemMapCapability)
+{
+   EXPECT_EQ((uint32_t)ACL_RT_HOST_MEM_MAP_NOT_SUPPORTED, (uint32_t)RT_HOST_MEM_MAP_NOT_SUPPORTED);
+   EXPECT_EQ((uint32_t)ACL_RT_HOST_MEM_MAP_SUPPORTED, (uint32_t)RT_HOST_MEM_MAP_SUPPORTED);
+
+   EXPECT_EQ(sizeof(aclrtHostMemMapCapability), sizeof(rtHostMemMapCapability));
 }

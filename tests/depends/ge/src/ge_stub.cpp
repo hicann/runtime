@@ -194,6 +194,9 @@ void  MockFunctionTest::ResetToDefaultMock() {
         .WillByDefault([this]() {
           return aclStub::GetErrMgrErrorMessage();
         });
+    ON_CALL(*this, rtHostMemMapCapabilities)
+        .WillByDefault([this](uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) {
+          return aclStub::rtHostMemMapCapabilities(deviceId, hacType, capabilities);
+        });
 }
-
 
