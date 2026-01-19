@@ -1267,7 +1267,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     bool mixOpt = false;
     Kernel *registeredKernel = nullptr;
     bool isNeedAllocSqeDevBuf = false;
-    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX);
+    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1399,7 +1399,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     uint32_t funcType = 0U;
     TaskCfg taskCfg = {};
     bool isNeedAllocSqeDevBuf = false;
-    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX);
+    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1614,7 +1614,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
         " retCode=%#x.", stm->Id_(), errorReason);
 
     error = LaunchKernelGetPrefetchCnt(kernel, prog, prefetchCnt1, prefetchCnt2, mixType);
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX)) {
                 mixType = static_cast<uint8_t>(NO_MIX);
     }
 
@@ -1649,7 +1649,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
     } else {
         // do nothing
     }
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_NO_MIX)) {
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX)) {
         TransDavinciTaskToVectorCore(stm->Flags(), kernelPc2, kernelPc1, mixType, kernelType, isLaunchVec);
     }
     error = CheckMixKernelValid(mixType, kernelPc2);

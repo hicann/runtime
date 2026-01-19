@@ -38,7 +38,7 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream * const stm)
         "size=%" PRIu64 ", type=%d, id=%d, retCode=%#x!", memSize, RT_MEMORY_DEFAULT, dev->Id_(),
         static_cast<uint32_t>(ret));
 
-    if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFLING_ONLINE_DEVICE_MEM_CLEAR)) {
+    if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE_DEVICE_MEM_CLEAR)) {
         ret = deviceDrv->MemSetSync(deviceMem, memSize, 0U, memSize);
         ERROR_GOTO_MSG_INNER(ret, ERROR_FREE, "Memset sync device memory failed, "
                                                "size=%" PRIu64 ", retCode=%#x!", memSize, static_cast<uint32_t>(ret));

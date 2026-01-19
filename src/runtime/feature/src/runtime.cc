@@ -3683,7 +3683,7 @@ rtError_t Runtime::AiCpuProfilerStart(
 
     RT_LOG(RT_LOG_DEBUG,
         "profConfig=%#" PRIx64 ", profSwitchHi=%#" PRIx64 ", chipType_ = %d", profConfig, profSwitchHi, chipType_);
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_PROFILNG_AICPU)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU)) {
         RT_LOG(RT_LOG_WARNING, "Not support aicpu profiling chipType_ = %d.", chipType_);
         return RT_ERROR_NONE;
     }
@@ -4008,7 +4008,7 @@ rtError_t Runtime::AiCpuProfilerStop(
     bool flag = false;
     rtError_t error;
 
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_PROFILNG_AICPU)) {
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_PROFILING_AICPU)) {
         RT_LOG(RT_LOG_WARNING, "Not support aicpu profiling chipType_ = %d.", chipType_);
         return RT_ERROR_NONE;
     }
