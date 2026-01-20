@@ -17,7 +17,6 @@ Runtime API参考的目录如下：
     -   [aclInitCallbackUnRegister](api_docs/aclInitCallbackUnRegister.md)
     -   [aclFinalizeCallbackRegister](api_docs/aclFinalizeCallbackRegister.md)
     -   [aclFinalizeCallbackUnRegister](api_docs/aclFinalizeCallbackUnRegister.md)
-
 -   [运行时配置](api_docs/运行时配置.md)
     -   [aclrtSetSysParamOpt](api_docs/aclrtSetSysParamOpt.md)
     -   [aclrtGetSysParamOpt](api_docs/aclrtGetSysParamOpt.md)
@@ -30,7 +29,6 @@ Runtime API参考的目录如下：
     -   [aclrtUseStreamResInCurrentThread](api_docs/aclrtUseStreamResInCurrentThread.md)
     -   [aclrtUnuseStreamResInCurrentThread](api_docs/aclrtUnuseStreamResInCurrentThread.md)
     -   [aclrtGetResInCurrentThread](api_docs/aclrtGetResInCurrentThread.md)
-
 -   [Device管理](api_docs/Device管理.md)
     -   [aclrtSetDevice](api_docs/aclrtSetDevice.md)
     -   [aclrtResetDevice](api_docs/aclrtResetDevice.md)
@@ -62,7 +60,6 @@ Runtime API参考的目录如下：
     -   [aclrtGetLogicDevIdByPhyDevId](api_docs/aclrtGetLogicDevIdByPhyDevId.md)
     -   [aclrtGetPhyDevIdByLogicDevId](api_docs/aclrtGetPhyDevIdByLogicDevId.md)
     -   [aclrtDeviceGetUuid](api_docs/aclrtDeviceGetUuid.md)
-
 -   [Context管理](api_docs/Context管理.md)
     -   [aclrtCreateContext](api_docs/aclrtCreateContext.md)
     -   [aclrtDestroyContext](api_docs/aclrtDestroyContext.md)
@@ -73,7 +70,6 @@ Runtime API参考的目录如下：
     -   [aclrtCtxGetCurrentDefaultStream](api_docs/aclrtCtxGetCurrentDefaultStream.md)
     -   [aclrtGetPrimaryCtxState](api_docs/aclrtGetPrimaryCtxState.md)
     -   [aclrtCtxGetFloatOverflowAddr](api_docs/aclrtCtxGetFloatOverflowAddr.md)
-
 -   [Stream管理](api_docs/Stream管理.md)
     -   [aclrtCreateStream](api_docs/aclrtCreateStream.md)
     -   [aclrtCreateStreamV2](api_docs/aclrtCreateStreamV2.md)
@@ -99,7 +95,6 @@ Runtime API参考的目录如下：
     -   [aclrtPersistentTaskClean](api_docs/aclrtPersistentTaskClean.md)
     -   [aclrtStreamGetPriority](api_docs/aclrtStreamGetPriority.md)
     -   [aclrtStreamGetFlags](api_docs/aclrtStreamGetFlags.md)
-
 -   [Event管理](api_docs/Event管理.md)
     -   [aclrtCreateEvent](api_docs/aclrtCreateEvent.md)
     -   [aclrtCreateEventWithFlag](api_docs/aclrtCreateEventWithFlag.md)
@@ -121,7 +116,6 @@ Runtime API参考的目录如下：
     -   [aclrtGetEventAvailNum](api_docs/aclrtGetEventAvailNum.md)
     -   [aclrtIpcGetEventHandle](api_docs/aclrtIpcGetEventHandle.md)
     -   [aclrtIpcOpenEventHandle](api_docs/aclrtIpcOpenEventHandle.md)
-
 -   [Notify管理](api_docs/Notify管理.md)
     -   [aclrtCreateNotify](api_docs/aclrtCreateNotify.md)
     -   [aclrtDestroyNotify](api_docs/aclrtDestroyNotify.md)
@@ -133,7 +127,6 @@ Runtime API参考的目录如下：
     -   [aclrtNotifySetImportPid](api_docs/aclrtNotifySetImportPid.md)
     -   [aclrtNotifySetImportPidInterServer](api_docs/aclrtNotifySetImportPidInterServer.md)
     -   [aclrtNotifyImportByKey](api_docs/aclrtNotifyImportByKey.md)
-
 -   [CntNotify管理](api_docs/CntNotify管理.md)
     -   [aclrtCntNotifyCreate](api_docs/aclrtCntNotifyCreate.md)
     -   [aclrtCntNotifyRecord](api_docs/aclrtCntNotifyRecord.md)
@@ -141,7 +134,6 @@ Runtime API参考的目录如下：
     -   [aclrtCntNotifyReset](api_docs/aclrtCntNotifyReset.md)
     -   [aclrtCntNotifyGetId](api_docs/aclrtCntNotifyGetId.md)
     -   [aclrtCntNotifyDestroy](api_docs/aclrtCntNotifyDestroy.md)
-
 -   [Label管理](api_docs/Label管理.md)
     -   [aclrtCreateLabel](api_docs/aclrtCreateLabel.md)
     -   [aclrtSetLabel](api_docs/aclrtSetLabel.md)
@@ -149,7 +141,6 @@ Runtime API参考的目录如下：
     -   [aclrtCreateLabelList](api_docs/aclrtCreateLabelList.md)
     -   [aclrtDestroyLabelList](api_docs/aclrtDestroyLabelList.md)
     -   [aclrtSwitchLabelByIndex](api_docs/aclrtSwitchLabelByIndex.md)
-
 -   [内存管理](api_docs/内存管理.md)
     -   [内存使用说明](api_docs/内存使用说明.md)
     -   [aclrtMalloc](api_docs/aclrtMalloc.md)
@@ -204,6 +195,8 @@ Runtime API参考的目录如下：
     -   [aclrtCmoAsyncWithDesc](api_docs/aclrtCmoAsyncWithDesc.md)
     -   [aclrtPointerGetAttributes](api_docs/aclrtPointerGetAttributes.md)
     -   [aclrtHostRegister](api_docs/aclrtHostRegister.md)
+    -   [aclrtHostRegisterV2](api_docs/aclrtHostRegisterV2.md)
+    -   [aclrtHostGetDevicePointer](api_docs/aclrtHostGetDevicePointer.md)
     -   [aclrtHostUnregister](api_docs/aclrtHostUnregister.md)
     -   [aclrtValueWrite](api_docs/aclrtValueWrite.md)
     -   [aclrtValueWait](api_docs/aclrtValueWait.md)
@@ -216,9 +209,8 @@ Runtime API参考的目录如下：
     -   [aclrtGetMemInfo](api_docs/aclrtGetMemInfo.md)
     -   [aclrtAllocatorRegister](api_docs/aclrtAllocatorRegister.md)
     -   [aclrtAllocatorGetByStream](api_docs/aclrtAllocatorGetByStream.md)
-    -   [aclrtAllocatorUnregister](api_docs/aclrtAllocatorUnregister.md)
+-   [aclrtAllocatorUnregister](api_docs/aclrtAllocatorUnregister.md)
     -   [aclrtCheckMemType](api_docs/aclrtCheckMemType.md)
-
 -   [执行控制](api_docs/执行控制.md)
     -   [aclrtLaunchCallback](api_docs/aclrtLaunchCallback.md)
     -   [aclrtSubscribeReport](api_docs/aclrtSubscribeReport.md)
@@ -237,7 +229,6 @@ Runtime API参考的目录如下：
     -   [aclrtLaunchHostFunc](api_docs/aclrtLaunchHostFunc.md)
     -   [aclrtRandomNumAsync](api_docs/aclrtRandomNumAsync.md)
     -   [aclrtUpdateTaskAsync](api_docs/aclrtUpdateTaskAsync.md)
-
 -   [异常处理](api_docs/异常处理.md)
     -   [aclGetRecentErrMsg](api_docs/aclGetRecentErrMsg.md)
     -   [aclrtSetExceptionInfoCallback](api_docs/aclrtSetExceptionInfoCallback.md)
@@ -255,7 +246,6 @@ Runtime API参考的目录如下：
     -   [aclrtGetErrorVerbose](api_docs/aclrtGetErrorVerbose.md)
     -   [aclrtRepairError](api_docs/aclrtRepairError.md)
     -   [aclrtSetDeviceTaskAbortCallback](api_docs/aclrtSetDeviceTaskAbortCallback.md)
-
 -   [Kernel加载与执行](api_docs/Kernel加载与执行.md)
     -   [概念及使用说明](api_docs/概念及使用说明.md)
     -   [aclrtBinaryLoadFromFile](api_docs/aclrtBinaryLoadFromFile.md)
@@ -285,7 +275,6 @@ Runtime API参考的目录如下：
     -   [aclrtDestroyBinary](api_docs/aclrtDestroyBinary.md)
     -   [aclrtBinaryLoad](api_docs/aclrtBinaryLoad.md)
     -   [aclrtBinaryUnLoad](api_docs/aclrtBinaryUnLoad.md)
-
 -   [模型运行实例管理](api_docs/模型运行实例管理.md)
     -   [aclmdlRICaptureBegin](api_docs/aclmdlRICaptureBegin.md)
     -   [aclmdlRICaptureGetInfo](api_docs/aclmdlRICaptureGetInfo.md)
@@ -309,7 +298,6 @@ Runtime API参考的目录如下：
     -   [aclmdlRIGetName](api_docs/aclmdlRIGetName.md)
     -   [aclrtCheckArchCompatibility](api_docs/aclrtCheckArchCompatibility.md)
     -   [aclmdlRIAbort](api_docs/aclmdlRIAbort.md)
-
 -   [算力Group查询与设置](api_docs/算力Group查询与设置.md)
     -   [aclrtSetGroup](api_docs/aclrtSetGroup.md)
     -   [aclrtGetGroupCount](api_docs/aclrtGetGroupCount.md)
@@ -317,7 +305,6 @@ Runtime API参考的目录如下：
     -   [aclrtGetGroupInfoDetail](api_docs/aclrtGetGroupInfoDetail.md)
     -   [aclrtCreateGroupInfo](api_docs/aclrtCreateGroupInfo.md)
     -   [aclrtDestroyGroupInfo](api_docs/aclrtDestroyGroupInfo.md)
-
 -   [数据传输](api_docs/数据传输.md)
     -   [Tensor数据传输](api_docs/Tensor数据传输.md)
         -   [acltdtCreateChannel](api_docs/acltdtCreateChannel.md)
@@ -356,7 +343,6 @@ Runtime API参考的目录如下：
         -   [acltdtAppendBufChain](api_docs/acltdtAppendBufChain.md)
         -   [acltdtGetBufChainNum](api_docs/acltdtGetBufChainNum.md)
         -   [acltdtGetBufFromChain](api_docs/acltdtGetBufFromChain.md)
-
 -   [Dump配置](api_docs/Dump配置.md)
     -   [aclmdlInitDump](api_docs/aclmdlInitDump.md)
     -   [aclmdlSetDump](api_docs/aclmdlSetDump.md)
@@ -365,7 +351,6 @@ Runtime API参考的目录如下：
     -   [aclmdlFinalizeDump](api_docs/aclmdlFinalizeDump.md)
     -   [aclopStartDumpArgs](api_docs/aclopStartDumpArgs.md)
     -   [aclopStopDumpArgs](api_docs/aclopStopDumpArgs.md)
-
 -   [Profiling数据采集](api_docs/Profiling数据采集.md)
     -   [Profiling数据采集接口](api_docs/Profiling数据采集接口.md)
         -   [数据采集说明](api_docs/数据采集说明.md)
@@ -404,7 +389,6 @@ Runtime API参考的目录如下：
 
     -   [PyTorch场景标记迭代时间](api_docs/PyTorch场景标记迭代时间.md)
         -   [aclprofGetStepTimestamp](api_docs/aclprofGetStepTimestamp.md)
-
 -   [共享Buffer管理（预留，暂不支持）](api_docs/共享Buffer管理（预留-暂不支持）.md)
     -   [aclrtAllocBuf](api_docs/aclrtAllocBuf.md)
     -   [aclrtFreeBuf](api_docs/aclrtFreeBuf.md)
@@ -417,7 +401,13 @@ Runtime API参考的目录如下：
     -   [aclrtAppendBufChain](api_docs/aclrtAppendBufChain.md)
     -   [aclrtGetBufFromChain](api_docs/aclrtGetBufFromChain.md)
     -   [aclrtGetBufChainNum](api_docs/aclrtGetBufChainNum.md)
-
+-   [快照管理](api_docs/快照管理.md)
+    -   [aclrtSnapShotProcessLock](api_docs/aclrtSnapShotProcessLock.md)
+    -   [aclrtSnapShotProcessBackup](api_docs/aclrtSnapShotProcessBackup.md)
+    -   [aclrtSnapShotProcessRestore](api_docs/aclrtSnapShotProcessRestore.md)
+    -   [aclrtSnapShotProcessUnlock](api_docs/aclrtSnapShotProcessUnlock.md)
+    -   [aclrtSnapShotCallbackRegister](api_docs/aclrtSnapShotCallbackRegister.md)
+    -   [aclrtSnapShotCallbackUnregister](api_docs/aclrtSnapShotCallbackUnregister.md)
 -   [其他接口](api_docs/其他接口.md)
     -   [aclAppLog](api_docs/aclAppLog.md)
     -   [aclDataTypeSize](api_docs/aclDataTypeSize.md)
@@ -430,7 +420,6 @@ Runtime API参考的目录如下：
     -   [aclGetDeviceCapability](api_docs/aclGetDeviceCapability.md)
     -   [aclrtCacheLastTaskOpInfo](api_docs/aclrtCacheLastTaskOpInfo.md)
     -   [aclrtProfTrace](api_docs/aclrtProfTrace.md)
-
 -   [数据类型及其操作接口](api_docs/数据类型及其操作接口.md)
     -   [aclError](api_docs/aclError.md)
     -   [aclDataType](api_docs/aclDataType.md)
