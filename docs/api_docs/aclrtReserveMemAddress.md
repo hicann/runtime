@@ -36,7 +36,7 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 | virPtr | 输出 | “已分配的虚拟内存地址的指针”的指针。 |
 | size | 输入 | 虚拟内存大小，单位Byte。<br>size不能为0。 |
 | alignment | 输入 | 虚拟地址对齐值，预留，当前只能设置为0。 |
-| expectPtr | 输入 | 指定期望返回的虚拟内存起始地址。<br>取值说明如下：<br><br>  - nullptr：系统自动分配符合对齐规则的虚拟地址。<br>  - 非nullptr：指定地址，由用户指定起始地址，但expectPtr必须1GB对齐，否则返回错误码ACL_ERROR_RT_PARAM_INVALID。如果指定的起始地址无效或被已被占用，会申请失败，返回错误码ACL_ERROR_RT_MEMORY_ALLOCATION。 |
+| expectPtr | 输入 | 指定期望返回的虚拟内存起始地址。<br>取值说明如下：<br><br>  - nullptr：系统自动分配符合对齐规则的虚拟地址。<br>  - 非nullptr：由用户指定起始地址，地址必须在8T范围内（16T-24T）。用户需确保指定的地址未被占用，且符合对齐规则，否则预留虚拟内存失败，接口返回错误。对齐规则为：若size小于1G，expectPtr需按2的n次方对齐；如果size大于1G，expectPtr需按1GB对齐。须知：由用户指定起始地址是试验特性，后续版本可能存在变更，不支持应用于商用产品中。 |
 | flags | 输入 | 大页/普通页标志，此处的标志需与[aclrtMallocPhysical](aclrtMallocPhysical.md)接口的内存类型保持一致。<br>参数取值如下：<br><br>  - 0：普通页<br>  - 1：大页 |
 
 ## 返回值说明
