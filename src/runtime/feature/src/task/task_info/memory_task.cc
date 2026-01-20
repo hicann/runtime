@@ -422,20 +422,42 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
     } else if (kind == RT_MEMCPY_DEVICE_TO_HOST) {
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_D2H;
+    } else if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+        error = ConvertCpyType(taskInfo, kind, srcAddr, dst);
+        ERROR_RETURN_MSG_INNER(error, "Convert copy type failed, retCode=%#x, kind=%u", error, kind);
     } else {
         // reserve
     }
 
     memcpyAsyncTaskInfo->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(stream->Device_()->Id_());
-    error = driver->MemCopy2D(dst, dstPitch, srcAddr, srcPitch, width, height, kind,
-        DEVMM_MEMCPY2D_ASYNC_CONVERT, fixedSize, &(memcpyAsyncTaskInfo->dmaAddr));
-    ERROR_RETURN_MSG_INNER(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
-    memcpyAsyncTaskInfo->isConcernedRecycle = true;
-    memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
-    RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
-        ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
-        dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
-    return RT_ERROR_NONE;
+    const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
+    // d2d copy data convert
+    if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) || 
+        (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
+        if (stream->Device_()->IsStarsV2Platform()) {
+            return RT_ERROR_FEATURE_NOT_SUPPORT;
+        } else {
+            memcpyAsyncTaskInfo->src = const_cast<void *>(srcAddr);
+            memcpyAsyncTaskInfo->destPtr = dst;
+            RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
+            ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
+            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
+            // copy one line data once time
+            memcpyAsyncTaskInfo->size = width;
+            return RT_ERROR_NONE;
+        }
+    } else {
+        // d2h or h2d data convert
+        error = driver->MemCopy2D(dst, dstPitch, srcAddr, srcPitch, width, height, kind,
+            DEVMM_MEMCPY2D_ASYNC_CONVERT, fixedSize, &(memcpyAsyncTaskInfo->dmaAddr));
+        ERROR_RETURN_MSG_INNER(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
+        memcpyAsyncTaskInfo->isConcernedRecycle = true;
+        memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
+        RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
+            ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
+            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
+        return RT_ERROR_NONE;
+    }
 }
 
 rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isUbMode)
