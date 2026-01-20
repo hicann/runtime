@@ -260,11 +260,6 @@
         <file value="Ascend310B2.ini" install_mod="440" entity="true"/>
         <file value="Ascend310B3.ini" install_mod="440" entity="true"/>
         <file value="Ascend310B4.ini" install_mod="440" entity="true"/>
-        <file value="Ascend610.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX2AB.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AA.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AB.ini" install_mod="440" entity="true"/>
-        <file value="BS9SX1AC.ini" install_mod="440" entity="true"/>
         <file value="Ascend310P3.ini" install_mod="440" entity="true"/>
         <file value="Ascend310P1.ini" install_mod="440" entity="true"/>
         <file value="Ascend310P5.ini" install_mod="440" entity="true"/>
@@ -279,7 +274,6 @@
         <file value="Ascend910B3.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B4.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B4-1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_5591.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9362.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9372.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9381.ini" install_mod="440" entity="true"/>
