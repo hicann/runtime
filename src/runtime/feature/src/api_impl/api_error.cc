@@ -2284,8 +2284,8 @@ rtError_t ApiErrorDecorator::MemCopy2DCheckParam(const void * const dst, const u
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(width > RT_MAX_MEMCPY2D_WIDTH, RT_ERROR_INVALID_VALUE, 
         width, "less than or equal to " + std::to_string(RT_MAX_MEMCPY2D_WIDTH)); 
     COND_RETURN_WARN(((kind != RT_MEMCPY_DEFAULT) && (kind != RT_MEMCPY_HOST_TO_DEVICE) &&
-        (kind != RT_MEMCPY_DEVICE_TO_HOST)), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "this memcpy2d feature only support kind is host2device or device2host.");
+        (kind != RT_MEMCPY_DEVICE_TO_HOST) && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "this memcpy2d feature only support kind is host2device, device2host or device2device.");
 
     return RT_ERROR_NONE;
 }
@@ -2322,6 +2322,9 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(void * const dst, const uint64_t dstP
     const auto curKind = GetMemCpyKind(kind, newKind);
     rtError_t error = MemCopy2DCheckParam(dst, dstPitch, src, srcPitch, width, height, curKind);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_GE, error, "check memcpy2d param failure, retCode=%#x.", static_cast<uint32_t>(error));
+    COND_RETURN_WARN(((curKind != RT_MEMCPY_DEFAULT) && (curKind != RT_MEMCPY_HOST_TO_DEVICE) &&
+        (curKind != RT_MEMCPY_DEVICE_TO_HOST)), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "this memcpy2d feature only support kind is host2device or device2host.");
     rtMemcpyKind_t copyKind = curKind;
     rtMemLocationType srcLocationType = RT_MEMORY_LOC_MAX;
     rtMemLocationType dstLocationType = RT_MEMORY_LOC_MAX;
@@ -2359,12 +2362,13 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
         "MemcpyAsync check src or dst location failed, stream_id=%d.", stm->Id_());
     COND_RETURN_OUT_ERROR_MSG_CALL((error != RT_ERROR_NONE) ||
         ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) &&
-        (copyKind != RT_MEMCPY_DEVICE_TO_HOST)),
+        (copyKind != RT_MEMCPY_DEVICE_TO_HOST) &&
+        (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
         RT_ERROR_INVALID_VALUE,
-        "Memcpy2d Async only support h2d or d2h, kind=%d, reviseKind=%d", kind, copyKind);
+        "Memcpy2d Async only support h2d, d2h or d2d, kind=%d, reviseKind=%d", kind, copyKind);
 
-    COND_RETURN_WARN(((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST)),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "only support h2d or d2h");
+    COND_RETURN_WARN(((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) && (copyKind != RT_MEMCPY_DEVICE_TO_DEVICE)),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "only support h2d, d2h or d2d");
 
     if (isD2HorH2DInvolvePageableMemory ) {
         /* 把异步拷贝转化为隐式流同步 + 同步拷贝，以避免异步访问pageable内存引起的PA异常 */

@@ -1069,6 +1069,44 @@ TEST_F(ApiTest910b, memcpy2d_async_success_coverage)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
+TEST_F(ApiTest910b, memcpy2d_async_success_d2d)
+{
+    void *destPtr;
+    void *srcPtr;
+    rtError_t error = RT_ERROR_NONE; 
+    ApiImpl impl;
+
+    rtStream_t stm;
+    error = rtStreamCreate(&stm, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream * const exeStream = static_cast<Stream *>(stm);
+
+    uint64_t size = 10;
+    uint64_t* realSize = &size;
+    MOCKER_CPP(&Context::MemCopy2DAsync)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(),
+         mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), 
+         outBoundP(realSize), mockcpp::any(), mockcpp::any())
+         .will(returnValue(RT_ERROR_NONE));
+    uint64_t dstPitch = 150;
+    uint64_t srcPitch = 150;
+    uint64_t width = 10;
+    uint64_t height = 2;
+
+    error = impl.MemCopy2DAsync(destPtr, dstPitch, srcPtr, srcPitch, width, height, exeStream, RT_MEMCPY_DEVICE_TO_DEVICE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP(&Context::MemCopy2DAsync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));      
+    error = impl.MemCopy2DAsync(destPtr, dstPitch, srcPtr, srcPitch, width, height, exeStream, RT_MEMCPY_DEVICE_TO_HOST);
+    EXPECT_EQ(error, RT_ERROR_NONE);    
+
+    error = rtStreamDestroy(stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ApiTest910b, memcpy2d_host_to_device_fail)
 {
     rtError_t error;

@@ -418,6 +418,30 @@ TEST_F(CloudV2TaskTest, stars_memcpy_async_dsa_sqe_d2h)
     TaskUnInitProc(&task);
 }
 
+TEST_F(CloudV2TaskTest, memcpy2d_async_sqe_d2d)
+{
+    void *dst = nullptr;
+    void *src = nullptr;
+    uint64_t count = 1;
+    rtMemcpyKind_t kind = RT_MEMCPY_DEVICE_TO_DEVICE;
+    uint64_t size = 1000;
+
+    TaskInfo task = {};
+    rtError_t error;
+    rtStream_t stream = NULL;
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtStarsSqe_t sqe;
+    InitByStream(&task, (Stream *)stream);
+    MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
+    ToConstructSqe(&task, &sqe);
+
+    Complete(&task, 0);
+    TaskUnInitProc(&task);
+    rtStreamDestroy(stream);
+}
+
 TEST_F(CloudV2TaskTest, stars_memcpy2d_async_sqe_addr_h2d)
 {
     void *dst = nullptr;

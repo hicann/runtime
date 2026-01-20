@@ -106,6 +106,10 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
             rtKind = RT_MEMCPY_DEVICE_TO_HOST;
             break;
         }
+        case ACL_MEMCPY_DEVICE_TO_DEVICE: {
+            rtKind = RT_MEMCPY_DEVICE_TO_DEVICE;
+            break;
+        }
         case ACL_MEMCPY_DEFAULT: {
             rtKind = RT_MEMCPY_DEFAULT;
             break;

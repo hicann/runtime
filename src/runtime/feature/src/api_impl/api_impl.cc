@@ -6563,6 +6563,8 @@ rtError_t ApiImpl::MemCopy2DAsync(void * const dst, const uint64_t dstPitch, con
     uint64_t remainSize = width * height;
     uint64_t realSize = 0UL;
     uint64_t fixedSize = 0UL;
+    uint64_t srcoffset = 0UL;
+    uint64_t dstoffset = 0UL;
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6575,7 +6577,16 @@ rtError_t ApiImpl::MemCopy2DAsync(void * const dst, const uint64_t dstPitch, con
         "Memcpy2D async failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
 
     while (remainSize > 0UL) {
-        error = curCtx->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
+        if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+            error = curCtx->MemCopy2DAsync((static_cast<char_t *>(dst)) + dstoffset, dstPitch,
+                (static_cast<const char_t *>(src)) + srcoffset, srcPitch, width, height, kind, 
+                &realSize, curStm, fixedSize);
+            dstoffset += dstPitch;
+            srcoffset += srcPitch;
+        } else {
+            error = curCtx->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, 
+                fixedSize);
+        }
         if (error != RT_ERROR_NONE) {
             return error;
         }
