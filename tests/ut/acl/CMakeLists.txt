@@ -8,7 +8,9 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 add_subdirectory(testcase)
+add_subdirectory(testcase_c)
 set(ASCENDCL_TARGET
+    ascendcl_c_utest
     ascendcl_cpp_utest
 )
 add_custom_target(ascendcl_utest DEPENDS ${ASCENDCL_TARGET})

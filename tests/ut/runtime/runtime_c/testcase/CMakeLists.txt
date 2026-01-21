@@ -7,5 +7,14 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-add_subdirectory(runtime)
-add_subdirectory(runtime_c/testcase)
+add_subdirectory(c_base)
+#add_subdirectory(feature)
+
+include(CMakePackageConfigHelpers)
+
+set(RUNTIME_C_TARGET
+    #c_feature_liteos_utest
+    #c_feature_linux_utest
+    c_base_utest
+)
+add_custom_target(runtime_c_ut DEPENDS ${RUNTIME_C_TARGET})
