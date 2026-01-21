@@ -45,7 +45,9 @@ typedef enum {
     // 6: runtime support send device id
     RUNTIME_FEATURE_SEND_DEVICE_ID             = 6,
     // 7: runtime support MC2 error proc
-    RUNTIME_FEATURE_MC2_ENHANCE                = 7
+    RUNTIME_FEATURE_MC2_ENHANCE                = 7,
+    // 8: runtime support acl graph expand stream
+    RUNTIME_FEATURE_STREAM_EXPAND              = 8
 } RtRunTimeFeature;
 
 // 枚举值与TSCH保持一致
