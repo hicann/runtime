@@ -1835,7 +1835,7 @@ void Stream::SetMaxTaskId(const bool isDisableThread)
 rtError_t Stream::ProcFlipTask(TaskInfo *&tsk, uint16_t flipNum)
 {
     rtError_t errorReason;
-    TaskInfo *rtFlipTask = AllocTask(tsk, TS_TASK_TYPE_FLIP, errorReason);
+    TaskInfo *rtFlipTask = AllocTask(tsk, TS_TASK_TYPE_FLIP, errorReason, 1U, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
     NULL_PTR_RETURN_MSG(rtFlipTask, errorReason);
     tsk = rtFlipTask;
 
