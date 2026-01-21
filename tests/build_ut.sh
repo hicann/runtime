@@ -20,6 +20,7 @@ declare -A ut_name_map
 ut_path_map["full"]="/tests/ut"
 ut_path_map["acl"]="/tests/ut/acl"
 ut_path_map["runtime"]="/tests/ut/runtime/runtime"
+ut_path_map["runtime_c"]="/tests/ut/runtime/runtime_c/testcase"
 ut_path_map["platform"]="/tests/ut/platform/ut"
 ut_path_map["slog"]="/tests/ut/slog"
 ut_path_map["atrace"]="/tests/ut/atrace"

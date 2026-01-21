@@ -7,5 +7,12 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-add_subdirectory(runtime)
-add_subdirectory(runtime_c/testcase)
+include(${CMAKE_CURRENT_SOURCE_DIR}/c_mmpa_headers.cmake)
+ 
+#------------------------- install -------------------------
+install_package(
+    PACKAGE c_mmpa
+    TARGETS c_mmpa_headers
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc/
+    DESTINATION ${INSTALL_INCLUDE_DIR}/c_mmpa
+)
