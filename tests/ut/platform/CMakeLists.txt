@@ -103,6 +103,9 @@ target_link_libraries(platform_llt_tiling PRIVATE
         ascend_protobuf
 )
 
+add_dependencies(platform_llt platform_infos_proto)
+
+add_dependencies(platform_llt_tiling platform_infos_proto)
 
 set(INSTALL_BASE_DIR "")
 set(INSTALL_INCLUDE_DIR include)
