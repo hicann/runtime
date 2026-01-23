@@ -371,6 +371,40 @@ install_libtool() {
     fi
 }
 
+install_pip3() {
+    echo -e "\n==== 检查pip3 ===="
+
+    if command -v pip3 &> /dev/null; then
+        echo "pip3已安装"
+        return
+    fi
+
+    echo "安装pip3..."
+    case "$OS" in
+        debian)
+            run_command sudo $PKG_MANAGER update
+            run_command sudo $PKG_MANAGER install -y python3-pip
+            ;;
+        rhel)
+            run_command sudo $PKG_MANAGER install -y python3-pip
+            ;;
+        macos)
+            # macOS 下 pip3 通常随 Python3 一起安装
+            if ! command -v pip3 &> /dev/null; then
+                run_command python3 -m ensurepip --upgrade
+                run_command python3 -m pip install --upgrade pip
+            fi
+            ;;
+    esac
+
+    if command -v pip3 &> /dev/null; then
+        echo "pip3安装成功"
+    else
+        echo "pip3安装失败"
+        exit 1
+    fi
+}
+
 main() {
     echo "===================================================="
     echo "开始安装项目依赖"
@@ -378,6 +412,7 @@ main() {
 
     detect_os
     install_python
+    install_pip3
     install_gcc
     install_cmake
     install_ccache
