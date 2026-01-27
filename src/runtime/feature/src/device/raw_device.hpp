@@ -854,9 +854,9 @@ public:
 
     rtError_t SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index);
 
-    const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM>& GetQosCfg()
+    const qos_master_config_t& GetQosCfg()
     {
-        return aicoreQosCfg_;
+        return aicoreQosCfgs_;
     }
 
 private:
@@ -882,6 +882,7 @@ private:
     rtError_t InitPrintInfo();
     rtError_t InitSimtPrintInfo();
     rtError_t InitCtrlSQ();
+    rtError_t InitQosCfg();
 
     Stream *primaryStream_;
     Stream *tsFftsDsaStream_;
@@ -1023,7 +1024,7 @@ private:
     std::unique_ptr<CtrlSQ> ctrlSQ_ = nullptr;
     std::mutex programMtx_;
     std::unordered_set<Program *> programSet_;
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg_;
+    qos_master_config_t aicoreQosCfgs_;
 };
 }
 }

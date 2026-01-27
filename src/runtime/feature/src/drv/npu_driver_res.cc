@@ -20,7 +20,6 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
-#include "raw_device.hpp"
 namespace cce {
 namespace runtime {
 
@@ -146,48 +145,6 @@ rtError_t NpuDriver::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUce
     }
 
     return RT_GET_DRV_ERRCODE(drvRet);
-}
-
-rtError_t NpuDriver::GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg)
-{
-    int32_t bufSize = static_cast<int32_t>(sizeof(qos_master_config_type));
-    RT_LOG(RT_LOG_INFO, "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=%u, moduleType=%d, infoType=%d.",
-        deviceId, aicoreQosCfg.type, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
-    const rtError_t error = GetDeviceInfoByBuff(deviceId, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG,
-        static_cast<void *>(&aicoreQosCfg), &bufSize);
-    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Not support get acc event info.");
-    if ((error != RT_ERROR_NONE) || (bufSize != static_cast<int32_t>(sizeof(qos_master_config_type)))) {
-        RT_LOG(RT_LOG_ERROR, "Calling drv api halGetDeviceInfoByBuff failed, bufSize is %d, expect bufSize is %d, error=%#x.",
-            bufSize, sizeof(qos_master_config_type), static_cast<uint32_t>(error));
-        return RT_ERROR_DRV_ERR;
-    }
-    RT_LOG(RT_LOG_INFO, "The QOS info from halGetDeviceInfoByBuff is: type=%u, mpamId=%u, qos=%u, pmg=%u, mode=%u.",
-        aicoreQosCfg.type, aicoreQosCfg.mpamId, aicoreQosCfg.qos, aicoreQosCfg.pmg, aicoreQosCfg.mode);
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::GetAicoreQosCfg(Device *dev)
-{
-    RawDevice *const rdev = RtPtrToPtr<RawDevice*>(dev);
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
-    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_DAT;
-    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
-    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
-    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_INS;
-    for(int i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
-        rtError_t error = GetOneAicoreQosCfg(rdev->Id_(), aicoreQosCfg[i]);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "GetAicoreQosCfg failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
-            return error;
-        }
-        error = rdev->SetQosCfg(aicoreQosCfg[i], i);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Set qos to device failed, drv devId=%u, index=%d.", rdev->Id_(), i);
-            return error;
-        }
-    }
-    return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::GetDeviceInfoByBuff(const uint32_t deviceId, const int32_t moduleType, const int32_t infoType,
