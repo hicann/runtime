@@ -114,6 +114,11 @@ typedef struct qos_master_config_type {
     uint32_t reserved[QOS_CFG_RESERVED_LEN - 1];
 } qos_master_config_type_t;
 
+typedef struct qos_master_config {
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg;
+    bool isAicoreQosConfiged{false};
+} qos_master_config_t;
+
 typedef struct {
     uint64_t addr;
     std::string kernelName;

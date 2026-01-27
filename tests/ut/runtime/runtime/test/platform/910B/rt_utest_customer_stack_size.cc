@@ -282,11 +282,6 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask4)
     dev->SetQosCfg(aicoreQosCfg[3], 3);
     ConstructFftsMixSqeForDavinciTask(&taskInfo, &command);
 
-    MOCKER(cce::runtime::NpuDriver::GetDeviceInfoByBuff).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    cce::runtime::NpuDriver::GetAicoreQosCfg(dev);
-    MOCKER(cce::runtime::NpuDriver::GetOneAicoreQosCfg).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    cce::runtime::NpuDriver::GetAicoreQosCfg(dev);
-
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 

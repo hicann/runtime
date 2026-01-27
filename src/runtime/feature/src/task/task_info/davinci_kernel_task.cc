@@ -545,11 +545,14 @@ static QosMasterType GetQosMasterTypeForCtx(const rtFftsPlusMixAicAivCtx_t *ffts
 
 static void UpdateQosCfgInFftsCtx(rtFftsPlusMixAicAivCtx_t *fftsCtx, TaskInfo* const taskInfo)
 {
+    RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
+    if (!dev->GetQosCfg().isAicoreQosConfiged) {
+        return;
+    }
     QosMasterType masterType = GetQosMasterTypeForCtx(fftsCtx);
     RT_LOG(RT_LOG_INFO, "Begin to update fftsCtx qos info, masterType is %u.", static_cast<uint32_t>(masterType));
     if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
-        RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
-        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg();
+        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg().aicoreQosCfg;
         const auto index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
         if (aicoreQosCfg[index].mode == 0) {     // mode=0 对应 tsch 中 replace_en=1，表示要替换sqe中的qos配置
             fftsCtx->pmg = aicoreQosCfg[index].pmg;
@@ -920,11 +923,14 @@ static QosMasterType GetQosMasterTypeForSqe(const RtFftsPlusKernelSqe *sqe)
 
 static void UpdateQosCfgInAicoreSqe(RtFftsPlusKernelSqe *sqe, TaskInfo* const taskInfo)
 {
+    RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
+    if (!dev->GetQosCfg().isAicoreQosConfiged) {
+        return;
+    }
     QosMasterType masterType = GetQosMasterTypeForSqe(sqe);
     RT_LOG(RT_LOG_INFO, "Begin to update sqe qos info, masterType is %u.", static_cast<uint32_t>(masterType));
     if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
-        RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
-        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg();
+        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg().aicoreQosCfg;
         const auto index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
         if (aicoreQosCfg[index].mode == 0) {    // mode=0 对应 tsch 中 replace_en=1，表示要替换sqe中的qos配置
             sqe->pmg = aicoreQosCfg[index].pmg;

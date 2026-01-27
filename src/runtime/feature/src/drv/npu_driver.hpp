@@ -17,7 +17,6 @@
 #include <unordered_set>
 #include "driver/ascend_hal.h"
 #include "npu_driver_base.hpp"
-#include "device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -666,7 +665,6 @@ public:
     virtual rtError_t GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
         struct halTsegInfo *tsegInfo) override;
     virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) override;
-    static rtError_t GetAicoreQosCfg(Device *dev);
     rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
                              int64_t &chipId, int64_t &dieId) override;
 private:
@@ -693,7 +691,6 @@ private:
 
     rtError_t GetSqRegVirtualAddrBySqidForDavid(const int32_t deviceId, const uint32_t tsId,
         const uint32_t sqId, uint64_t * const addr) const;
-    static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg);
 
     std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
     DevProperties properties_;
