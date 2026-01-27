@@ -2293,6 +2293,10 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
         }
 
         if (static_cast<uint32_t>(rspCode_) != 0U) {
+            if (!loadPackageErrorMsg_.empty()) {
+                TSD_ERROR("[Device error message] %s", loadPackageErrorMsg_.c_str());
+                loadPackageErrorMsg_ = "";
+            }
             TSD_ERROR("host and device checkcode compare failed package:%s", pkgPureName.c_str());
             return TSD_INTERNAL_ERROR;
         }

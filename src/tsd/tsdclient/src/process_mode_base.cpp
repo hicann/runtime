@@ -49,7 +49,8 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
       deviceIdle_(false),
       hostSoPath_(""),
       hasGetHostSoPath_(false),
-      hasSendConfigFile_(false)
+      hasSendConfigFile_(false),
+      loadPackageErrorMsg_("")
 {
 #ifndef WIN_TSD
     initHostFlag_ = false;
