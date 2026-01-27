@@ -3079,3 +3079,36 @@ TEST_F(ProcessManagerTest, LoadDriverExtendPkg_success)
     ret = processModeManager.LoadDriverExtendPkg();
     EXPECT_NE(ret, tsd::TSD_OK);
 }
+
+TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_failed)
+{
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER(drvHdcGetTrustedBasePathV2).stubs().will(returnValue(0));
+    MOCKER(drvHdcSendFileV2).stubs().will(returnValue(0));
+    MOCKER_CPP(&ClientManager::IsAdcEnv)
+        .stubs()
+        .will(returnValue(false));
+    ProcessModeManager processModeManager(deviceId, 0);
+    PackageProcessConfig *pkgConInst = PackageProcessConfig::GetInstance();
+    std::string pkgName = "LoadPackageToDeviceByConfig_failed_test";
+    PackConfDetail packConfDetail;
+    packConfDetail.hostTruePath = "tmp123";
+    pkgConInst->configMap_[pkgName] = packConfDetail;
+    MOCKER_CPP(&ProcessModeManager::SupportLoadPkg)
+        .stubs()
+        .will(returnValue(true));
+    std::string hashcode = "12345666";
+    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+        .stubs()
+        .will(returnValue(hashcode));
+    MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+    processModeManager.rspCode_ = ResponseCode::FAIL;
+    processModeManager.loadPackageErrorMsg_ = "test error";
+    auto ret = processModeManager.LoadPackageToDeviceByConfig();
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+}

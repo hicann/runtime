@@ -190,6 +190,7 @@ void ProcessModeManager::SaveDeviceCheckCode(const HDCMessage &msg)
             TSD_RUN_WARN("device has process is running, skip load driver extend package");
         }
         rspCode_ = ((msg.tsd_rsp_code() == 0U) ? ResponseCode::SUCCESS : ResponseCode::FAIL);
+        loadPackageErrorMsg_ = msg.error_info().error_log();
     } else if (msgType == HDCMessage::TSD_GET_DEVICE_CANN_HS_CHECKCODE_RSP) {
         if (msg.package_hash_code_list_size() == 0) {
             TSD_ERROR("Get package hash size from msg failed, is empty");

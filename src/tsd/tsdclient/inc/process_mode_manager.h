@@ -540,6 +540,7 @@ private:
     std::map<std::string, std::string> pkgHostHashValue_;
     std::map<std::string, std::string> pkgDeviceHashValue_;
     bool hasSendConfigFile_;
+    std::string loadPackageErrorMsg_;
 };
 }  // namespace tsd
 #endif  // INNER_INC_PROCESS_MODE_MANAGER_H
