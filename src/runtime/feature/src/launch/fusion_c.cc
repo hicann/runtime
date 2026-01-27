@@ -367,7 +367,7 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);, "stream_id=%d check failed, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
     DavidStream *davidStm = static_cast<DavidStream *>(stm);
-    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGrouping());
+    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     TaskInfo *taskInfo = nullptr;
