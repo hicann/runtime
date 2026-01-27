@@ -1768,7 +1768,6 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
     rtError_t error = RT_ERROR_NONE;
     Runtime *rt = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
-    std::unique_lock<std::mutex> lock(rt->GetSimtStackMutex());
     Context * const curCtx = CurrentContext();
     if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1776,8 +1775,15 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
             static_cast<uint32_t>(type), val);
         return error;
     } else if (type == RT_LIMIT_TYPE_STACK_SIZE) {
+        std::unique_lock<std::mutex> lock(rt->GetSimtStackMutex());
         rt->SetDeviceCustomerStackSize(val);
         return RT_ERROR_NONE;
+    } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
+        std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
+        return rt->SetSimdPrintFifoSize(val);
+    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE) {
+        std::unique_lock<std::mutex> lock(rt->GetSimtFifoMutex());
+        return rt->SetSimtPrintFifoSize(val);
     } else {
         // no op
     }

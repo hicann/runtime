@@ -1,0 +1,4 @@
+{
+    "simd_printf_fifo_size_per_core": 32768,
+    "simt_printf_fifo_size": 1048576
+}

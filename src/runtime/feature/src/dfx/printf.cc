@@ -27,7 +27,9 @@ namespace {
 constexpr uint16_t MAGIC_NUM = 0xAE86U;
 constexpr uint32_t PRINT_ARG_LEN = 8U;
 constexpr uint32_t RESV_LEN = 8U;
+constexpr uint32_t RESV_LEN_SIMT = 40U;
 constexpr uint32_t PRINT_MSG_LEN_OFFSET = 12U;
+constexpr uint32_t SIMT_PRINT_MSG_LEN_OFFSET = 44U;
 constexpr size_t MAX_LOG_LENGTH = 256U;
 constexpr uint16_t INT16_SIZE = 2U;
 constexpr uint16_t INT32_SIZE = 4U;
@@ -191,6 +193,44 @@ static void PrintFormatS(const uint8_t *paramBegin, std::string &printInfo, cons
     printInfo += stream.str();
 }
 
+static void SimtPrintFormatS(const uint8_t *paramBegin, std::string &printInfo, const uint32_t paramIndex)
+{
+    const uint64_t *offsetAddr = RtPtrToPtr<const uint64_t *>(paramBegin + paramIndex * PRINT_ARG_LEN);
+    const char *data = (RtPtrToPtr<const char *>(offsetAddr)) + (*offsetAddr);
+    // DumpInfoHead 中infoMsg前面就是当前dump块的Len，占4字节,infoMsg前面是40字节的预留字段
+    const size_t maxLen = static_cast<size_t>(*(RtPtrToPtr<const uint32_t *>(paramBegin - SIMT_PRINT_MSG_LEN_OFFSET)));
+    const size_t dataLen = strnlen(data, maxLen);
+    RT_LOG(RT_LOG_DEBUG, "Get string param length[%zu bytes], max length[%zu bytes].", dataLen, maxLen);
+    COND_RETURN_VOID(dataLen == maxLen, "String param length is greater than max length[%zu bytes]", maxLen);
+
+    std::stringstream stream;
+    stream << data;
+    printInfo += stream.str();
+}
+
+const std::unordered_map<std::string,
+    std::function<void(const uint8_t *,std::string &, const uint32_t)>> SIMT_PRINT_FORMAT_CALLS {
+    {"d", &PrintFormatD},
+    {"ld", &PrintFormatD},
+    {"lld", &PrintFormatD},
+    {"i", &PrintFormatI},
+    {"li", &PrintFormatI},
+    {"lli", &PrintFormatI},
+    {"f", &PrintFormatF},
+    {"F", &PrintFormatFUpper},
+    {"u", &PrintFormatU},
+    {"lu", &PrintFormatU},
+    {"llu", &PrintFormatU},
+    {"p", &PrintFormatP},
+    {"x", &PrintFormatX},
+    {"lx", &PrintFormatX},
+    {"llx", &PrintFormatX},
+    {"X", &PrintFormatXUpper},
+    {"lX", &PrintFormatXUpper},
+    {"llX", &PrintFormatXUpper},
+    {"s", &SimtPrintFormatS}
+};
+
 const std::unordered_map<std::string,
     std::function<void(const uint8_t *,std::string &, const uint32_t)>> PRINT_FORMAT_CALLS {
     {"d", &PrintFormatD},
@@ -238,8 +278,9 @@ std::string ParseFormat(const char *format)
     return temp;
 }
 
-void ParsePrintToLog(const char *format, const uint8_t *paramBegin, const uint32_t paramNum, const bool isAssert)
+void ParsePrintToLog(const char *format, const uint8_t *paramBegin, const uint32_t paramNum, const bool isAssert, uint32_t flag)
 {
+    const auto& formatMap = (flag == PRINT_SIMT) ? SIMT_PRINT_FORMAT_CALLS : PRINT_FORMAT_CALLS;
     uint32_t paramIndex = 0U;
     std::string printInfo = "";
     while ((*format) != '\0') {
@@ -251,8 +292,8 @@ void ParsePrintToLog(const char *format, const uint8_t *paramBegin, const uint32
 
         format++;
         const std::string &tempFormat = ParseFormat(format);
-        const auto &iter = PRINT_FORMAT_CALLS.find(tempFormat);
-        if (iter == PRINT_FORMAT_CALLS.end()) {
+        const auto &iter = formatMap.find(tempFormat);
+        if (iter == formatMap.end()) {
             printInfo += "%";
             if (tempFormat[0] == '%') {  // 支持 %% 打印
                 format++;
@@ -287,35 +328,45 @@ void ParsePrintToLog(const char *format, const uint8_t *paramBegin, const uint32
     }
 }
 
-void PrintDump(const DumpInfoHead *dumpHead)
+void PrintDumpBase(const DumpInfoHead *dumpHead, uint32_t flag)
 {
+    uint32_t resvOffset = (flag == PRINT_SIMT) ? RESV_LEN_SIMT : RESV_LEN;
     RT_LOG(RT_LOG_DEBUG, "Get dump print dataLen[%u bytes].", dumpHead->infoLen);
     // 预留8字节, strOffset占位8字节
-    COND_RETURN_VOID(dumpHead->infoLen < (PRINT_ARG_LEN + RESV_LEN),
+    COND_RETURN_VOID(dumpHead->infoLen < (PRINT_ARG_LEN + resvOffset),
                      "dumpHead infoLen(%u) is too small", dumpHead->infoLen);
 
-    const uint64_t strOffset = *(RtPtrToPtr<const uint64_t *>(dumpHead->infoMsg + RESV_LEN));
+    const uint64_t strOffset = *(RtPtrToPtr<const uint64_t *>(dumpHead->infoMsg + resvOffset));
     // 第一个位置填的是offset，所以通过-1得到的实际参数个数
     const uint32_t argsNum = static_cast<uint32_t>(strOffset) / PRINT_ARG_LEN - 1U;
-    const char *str = RtPtrToPtr<const char *>(dumpHead->infoMsg + strOffset + RESV_LEN);
+    const char *str = RtPtrToPtr<const char *>(dumpHead->infoMsg + strOffset + resvOffset);
     const size_t strLen = strnlen(str, static_cast<size_t>(dumpHead->infoLen));
     RT_LOG(RT_LOG_DEBUG, "Get print str len[%zu bytes]", strLen);
     COND_RETURN_VOID(strLen == static_cast<size_t>(dumpHead->infoLen), "Print str len is greater than infoLen");
 
-    const bool isAssert = (dumpHead->type == DumpType::DUMP_ASSERT);
-    ParsePrintToLog(str, RtPtrToPtr<const uint8_t *>(dumpHead->infoMsg + RESV_LEN), argsNum, isAssert);
+    const bool isAssert = (dumpHead->type == DumpType::DUMP_ASSERT || dumpHead->type == DumpType::DUMP_SIMT_ASSERT);
+    ParsePrintToLog(str, RtPtrToPtr<const uint8_t *>(dumpHead->infoMsg + resvOffset), argsNum, isAssert, flag);
 }
 
-void PrintDumpTimestamp(const DumpInfoHead *dumpHead, const uint32_t coreId,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void PrintDump(const DumpInfoHead *dumpHead)
+{
+    PrintDumpBase(dumpHead, PRINT_SIMD);
+}
+
+void PrintSimtDump(const DumpInfoHead *dumpHead)
+{
+    PrintDumpBase(dumpHead, PRINT_SIMT);
+}
+
+void PrintDumpTimestamp(const DumpInfoHead *dumpHead, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
 {
     COND_RETURN_VOID((dumpHead->infoLen < sizeof(DumpTimeStampInfoMsg)),
         "dumpHead infoLen(%u) is less than %u", dumpHead->infoLen, sizeof(MsprofAicTimeStampInfo));
     
     MsprofAicTimeStampInfo timeInfo;
-    timeInfo.blockId = coreId;
 
     const DumpTimeStampInfoMsg *dumpInfoMsg = RtPtrToPtr<const DumpTimeStampInfoMsg *>(dumpHead->infoMsg);
+    timeInfo.blockId = dumpInfoMsg->blockIdx;
     timeInfo.descId = dumpInfoMsg->descId;
     const uint32_t rsv = dumpInfoMsg->rsv;
     timeInfo.syscyc = dumpInfoMsg->syscyc;
@@ -760,8 +811,7 @@ void PrintDumpTensor(const DumpInfoHead *dumpHead, std::vector<size_t> &shape)
     }
 }
 
-void PrintDumpInfo(const DumpInfoHead *dumpHead, std::vector<size_t> &shapeInfo, const uint32_t coreId,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void PrintDumpInfo(const DumpInfoHead *dumpHead, std::vector<size_t> &shapeInfo, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
 {
     switch (dumpHead->type) {
         case DumpType::DUMP_SCALAR:
@@ -775,10 +825,26 @@ void PrintDumpInfo(const DumpInfoHead *dumpHead, std::vector<size_t> &shapeInfo,
             PrintDumpTensor(dumpHead, shapeInfo);
             break;
         case DumpType::DUMP_TIMESTAMP:
-            PrintDumpTimestamp(dumpHead, coreId, timeStampInfo);
+            PrintDumpTimestamp(dumpHead, timeStampInfo);
             break;
         case DumpType::DUMP_SKIP:
             RT_LOG(RT_LOG_INFO, "Skip this dump info for the type.");
+            break;
+        default:
+            RT_LOG(RT_LOG_WARNING, "Invalid dump type %u.", static_cast<uint32_t>(dumpHead->type));
+            break;
+    }
+}
+
+void PrintSimtDumpInfo(const DumpInfoHead *dumpHead)
+{
+    switch (dumpHead->type) {
+        case DumpType::DUMP_SIMT_ASSERT:
+        case DumpType::DUMP_SIMT_PRINTF:
+            PrintSimtDump(dumpHead);
+            break;
+        case DumpType::DUMP_WAIT:
+            RT_LOG(RT_LOG_INFO, "Wait this dump info for the type.");
             break;
         default:
             RT_LOG(RT_LOG_WARNING, "Invalid dump type %u.", static_cast<uint32_t>(dumpHead->type));
@@ -810,7 +876,7 @@ void PrintBlockInfo(const uint8_t *blockData, uint64_t readIdx, const uint64_t w
     uint64_t dataLen = 0U;
     while (dataLen < totalLen) {
         const DumpInfoHead *dumpHead = RtPtrToPtr<const DumpInfoHead *>(addrAddr + readIdx);
-        PrintDumpInfo(dumpHead, shape, blockInfo->coreId, timeStampInfo);
+        PrintDumpInfo(dumpHead, shape, timeStampInfo);
 
         readIdx += sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen); // 不可能出现溢出的情况
         dataLen += sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
@@ -824,15 +890,18 @@ void PrintBlockInfo(const uint8_t *blockData, uint64_t readIdx, const uint64_t w
 
 rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
 {
-    const uint64_t totalLen = blockSize * BLOCK_NUM;
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    auto props = curDrv->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const uint64_t totalLen = blockSize * totalCoreNum;
     std::vector<uint8_t> hostData(totalLen, 0);
 
-    for (size_t i = 0U; i < BLOCK_NUM; i++) {
+    for (size_t i = 0U; i < totalCoreNum; i++) {
         uint8_t *blockAddr = hostData.data() + blockSize * i;
         BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
         blockInfo->length = static_cast<uint32_t>(blockSize);
         blockInfo->coreId = i;
-        blockInfo->blockNum = BLOCK_NUM;
+        blockInfo->blockNum = totalCoreNum;
         blockInfo->remainLen = static_cast<uint32_t>(blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo));
         blockInfo->magic = MAGIC_NUM;
         blockInfo->dumpAddr = RtPtrToValue(addr) + blockSize * i + sizeof(BlockInfo) + sizeof(BlockReadInfo);
@@ -848,6 +917,34 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
         writeInfo->writeIdx = readInfo->readIdx; // 初始化和readIdx一致
     }
 
+    const rtError_t ret = curDrv->MemCopySync(addr, totalLen, hostData.data(), totalLen, RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
+    return RT_ERROR_NONE;
+}
+
+rtError_t InitSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv)
+{
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+
+    uint8_t *blockAddr = hostData.data();
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    blockInfo->length = static_cast<uint32_t>(blockSize);
+    blockInfo->remainLen =static_cast<uint32_t>(blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo));
+    blockInfo->magic = MAGIC_NUM;
+    blockInfo->flag = PRINT_SIMT;
+    blockInfo->dumpAddr = RtPtrToValue(addr) + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    readInfo->dumpType = DumpType::DUMP_BUFO;
+    readInfo->length = 16; // readIdx 和 resv 的大小相加
+    readInfo->readIdx = 0U;
+
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->dumpType = DumpType::DUMP_BUFI;
+    writeInfo->length = 16;                  // writeIdx 和 packIdx 的大小相加
+    writeInfo->writeIdx = readInfo->readIdx; // 初始化和readIdx一致
+    
     NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
     const rtError_t ret = curDrv->MemCopySync(addr, totalLen, hostData.data(), totalLen, RT_MEMCPY_HOST_TO_DEVICE, false);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
@@ -857,14 +954,16 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
 rtError_t ParsePrintf(void *addr, const size_t blockSize, Driver *curDrv)
 {
     NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
-    const uint64_t totalLen = blockSize * BLOCK_NUM;
+    auto props = curDrv->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const uint64_t totalLen = blockSize * totalCoreNum;
     std::vector<uint8_t> hostData(totalLen, 0);
     rtError_t ret = curDrv->MemCopySync(hostData.data(), totalLen, addr, totalLen, RT_MEMCPY_DEVICE_TO_HOST, false);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u", ret);
 
     std::vector<MsprofAicTimeStampInfo> timeStampInfo;
 
-    for (size_t i = 0U; i < BLOCK_NUM; i++) {
+    for (size_t i = 0U; i < totalCoreNum; i++) {
         uint8_t *blockAddr = hostData.data() + blockSize * i;
         BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
         const BlockWriteInfo *writeInfo =
@@ -892,6 +991,110 @@ rtError_t ParsePrintf(void *addr, const size_t blockSize, Driver *curDrv)
         PrintBlockInfo(blockAddr, readIdx, writeInfo->writeIdx, timeStampInfo);
     }
     ReportTimeStampInfo(timeStampInfo);
+    return RT_ERROR_NONE;
+}
+
+static rtError_t CollectDumpInfoFromBuffer(const uint8_t* dumpReadStartAddr, 
+                                       uint64_t totalReadBufLen,
+                                       std::vector<const DumpInfoHead*>& dumpInfoHolds,
+                                       uint64_t& processedLen, const uint64_t packIdx, const Device * const device) {
+    processedLen = 0U;
+    uint64_t dumpInfoLen = 0U;
+
+    while (processedLen < totalReadBufLen) {
+        const DumpInfoHead *dumpHead = RtPtrToPtr<const DumpInfoHead *>(dumpReadStartAddr + processedLen);
+        // 只处理 asset 和 print 类型，其他均视为无效类型
+        if ((packIdx == device->GetSimtPrintTlvCnt()) || 
+            (dumpHead->type != DumpType::DUMP_SIMT_ASSERT && dumpHead->type != DumpType::DUMP_SIMT_PRINTF)) {
+            break;
+        }
+
+        dumpInfoLen = sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
+        dumpInfoHolds.emplace_back(dumpHead);
+        processedLen += dumpInfoLen;
+        device->AddSimtPrintTlvCnt(1U);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetReadLenAndAddr(uint8_t *blockAddr, const size_t blockSize, uint64_t &totalReadBufLen,
+                            const uint8_t *&dumpReadStartAddr, std::vector<uint8_t> &dumpInfoVec) {
+    const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    const BlockWriteInfo *writeInfo =
+    RtPtrToPtr<const BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    const uint8_t *dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+    const uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
+    const uint64_t writeIdx = writeInfo->writeIdx % blockInfo->remainLen;
+
+    if (writeInfo->writeIdx - readInfo->readIdx > blockInfo->remainLen) {
+        totalReadBufLen = blockInfo->remainLen;
+        dumpInfoVec.resize(totalReadBufLen, 0);
+        (void)memcpy_s(dumpInfoVec.data(), blockInfo->remainLen - readIdx, dumpStartAddr + readIdx, blockInfo->remainLen - readIdx);
+        (void)memcpy_s(dumpInfoVec.data() + blockInfo->remainLen - readIdx, readIdx, dumpStartAddr, readIdx);
+        dumpReadStartAddr = dumpInfoVec.data();
+    } else {
+        if (readIdx > writeIdx) {
+            totalReadBufLen = blockInfo->remainLen - readIdx + writeIdx;
+            dumpInfoVec.resize(totalReadBufLen, 0);
+            (void)memcpy_s(dumpInfoVec.data(), blockInfo->remainLen - readIdx, dumpStartAddr + readIdx, blockInfo->remainLen - readIdx);
+            (void)memcpy_s(dumpInfoVec.data() + blockInfo->remainLen - readIdx, writeIdx, dumpStartAddr, writeIdx);
+            dumpReadStartAddr = dumpInfoVec.data();
+        } else {
+            totalReadBufLen = writeIdx - readIdx;
+            dumpReadStartAddr = dumpStartAddr + readIdx;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, const Device * const dev)
+{
+    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    // D2H拷贝
+    std::vector<uint8_t> hostData(blockSize, 0);
+    rtError_t ret = curDrv->MemCopySync(hostData.data(), blockSize, addr, blockSize, RT_MEMCPY_DEVICE_TO_HOST, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync d2h failed, ret=%u", ret);
+
+    // 解析头部信息
+    uint8_t *blockAddr = hostData.data();
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    const BlockWriteInfo *writeInfo =
+    RtPtrToPtr<const BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    // 校验readIdx和writeIdx在合法的范围内
+    const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
+    COND_RETURN_ERROR((readInfo->readIdx > writeInfo->writeIdx), RT_ERROR_INVALID_VALUE,
+        "Read idx %llu cannot be greater than write idx %llu.", readInfo->readIdx, writeInfo->writeIdx);
+    // 表示没有信息更新
+    if (readInfo->readIdx == writeInfo->writeIdx) {
+        RT_LOG(RT_LOG_DEBUG, "Block info writeIdx %llu has no info updates.", writeInfo->writeIdx);
+        return RT_ERROR_NONE;
+    }
+
+    uint64_t totalReadBufLen = 0U;
+    const uint8_t *dumpReadStartAddr;
+    std::vector<uint8_t> dumpInfoVec;
+    // 如果涉及回绕，直接申请成连续的内存;
+    ret = GetReadLenAndAddr(blockAddr, blockSize, totalReadBufLen, dumpReadStartAddr, dumpInfoVec);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Get read buffer len and addr failed, ret=%u", ret);
+    
+    uint64_t processedLen = 0U;
+    std::vector<const DumpInfoHead *> dumpInfoHolds;
+    ret = CollectDumpInfoFromBuffer(dumpReadStartAddr, totalReadBufLen, dumpInfoHolds, processedLen, writeInfo->packIdx, dev);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "collect dump info failed, ret=%u", ret);
+
+    // 更新读指针
+    readInfo->readIdx = readInfo->readIdx + processedLen;
+    void *deviceAddr = RtValueToPtr<void *>(RtPtrToValue(addr) + sizeof(BlockInfo));
+    ret = curDrv->MemCopySync(
+        deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
+
+    for (const DumpInfoHead *dumpHead : dumpInfoHolds) {
+        PrintSimtDumpInfo(dumpHead);
+    }
+
     return RT_ERROR_NONE;
 }
 } // runtime

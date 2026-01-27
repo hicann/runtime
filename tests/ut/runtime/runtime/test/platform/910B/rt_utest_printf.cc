@@ -62,14 +62,15 @@ static unsigned char* AddTimeStampInfo(unsigned char* data, int32_t dumpSize, ui
         uint32_t type = 6U;
         uint32_t infoLen = timeStampInfoLen; // 数据长度，如果小于sizeof(MsprofAicTimeStampInfo)则不合法
         uint32_t descId = 10U;
-        uint32_t rsv = 0U;
+        uint16_t blockIdx = 1U;
+        uint16_t rsv = 0U;
         uint64_t timeStamp = 8662162037790U;
         uint64_t pcPtr = 20619064410912U;
         uint64_t entry = 0U;
         data = DumpInfoAppendByte(data, type);
         data = DumpInfoAppendByte(data, infoLen);
         data = DumpInfoAppendByte(data, descId);
-        data = DumpInfoAppendByte(data, rsv);
+        data = DumpInfoAppendByte(data, (blockIdx << 16 | rsv));
         data = DumpInfoAppendByte(data, timeStamp);
         data = DumpInfoAppendByte(data, pcPtr);
         data = DumpInfoAppendByte(data, entry);
@@ -83,7 +84,7 @@ static unsigned char* ConstructBlock(unsigned char* data, uint32_t timeStampInfo
     size_t dataLen = sizeof(BlockInfo) + sizeof(BlockReadInfo)
         + (sizeof(DumpInfoHead) + timeStampInfoLen) * dumpSize + sizeof(BlockWriteInfo);
     BlockInfo blockInfo{};
-    blockInfo.length = 1024U;
+    blockInfo.length = 2048U;
     blockInfo.coreId = 0U;
     blockInfo.blockNum = 2U;
     blockInfo.remainLen = blockInfo.length - dataLen;
@@ -124,13 +125,16 @@ TEST_F(PrintfTest, TestParsePrintInfo)
     cmodelDrvMemcpy_flag = 1;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
-    error = dev->ParsePrintInfo();
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
     const size_t blockSize = 1024 * 1024;
-    const uint64_t totalLen = blockSize * 75;
+    const uint64_t totalLen = blockSize * totalCoreNum;
     std::vector<uint8_t> hostData(totalLen, 0);
-    for (size_t i = 0U; i < 75; i++) {
+    for (size_t i = 0U; i < totalCoreNum; i++) {
         uint8_t *blockAddr = hostData.data() + blockSize * i;
         BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
         blockInfo->length = blockSize;
@@ -376,10 +380,10 @@ TEST_F(PrintfTest, TestParseBlockInfo_TimeStamp)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
 
-    int* addr = new int[1024 * 75]();
+    int* addr = new int[2048 * 75]();
     void *workSpaceAddr = (void *)addr;
     EXPECT_NE(workSpaceAddr, nullptr);
-    const size_t blockSize = 1024U;
+    const size_t blockSize = 2048U;
     const uint32_t timeStampInfoLen = 40U;
     ConstructBlock((unsigned char*)addr, timeStampInfoLen);
     rtError_t ret = RT_ERROR_NONE;
@@ -547,7 +551,8 @@ TEST_F(PrintfTest, PrintDumpLargeTensorWithShape)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
-    error = dev->ParsePrintInfo();
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL(dev->driver_, &Driver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
 

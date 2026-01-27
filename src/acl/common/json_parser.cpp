@@ -374,4 +374,31 @@ namespace acl {
         ACL_LOG_DEBUG("successfully parse StackSize by type");
         return ACL_SUCCESS;
     }
+
+    aclError JsonParser::GetPrintFifoSizeByType(
+        const char_t* const fileName, const std::string& typeName, size_t& fifoSize, bool& found)
+    {
+        ACL_LOG_DEBUG("start to execute GetPrintFifoSizeByType, typeName = %s.", typeName.c_str());
+        std::string fifoSizeStr;
+        found = false;
+
+        auto ret = acl::JsonParser::GetJsonCtxByKey(fileName, fifoSizeStr, typeName,  found);
+        if (ret != ACL_SUCCESS) {
+            ACL_LOG_INNER_ERROR("can not parse config from file[%s], config[%s], errorCode = %d", fileName, typeName.c_str(), ret);
+            return ret;
+        }
+        if (!found) {
+            return ACL_SUCCESS;
+        }
+
+        std::regex reg("[1-9]\\d*");
+        if (!std::regex_match(fifoSizeStr, reg)) {
+            ACL_LOG_ERROR("fifoSize %s in acl.json is not a positive integer.", fifoSizeStr.c_str());
+            return ACL_ERROR_INVALID_PARAM;
+        }
+
+        fifoSize = static_cast<size_t>(std::strtol(fifoSizeStr.c_str(), nullptr, DECIMAL));
+        ACL_LOG_DEBUG("successfully parse print fifo size by type");
+        return ACL_SUCCESS;
+    }
 } // namespace acl

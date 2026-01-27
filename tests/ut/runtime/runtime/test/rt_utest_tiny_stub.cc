@@ -658,6 +658,15 @@ TEST_F(TinyStubTest, printf_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(TinyStubTest, simt_printf_stub)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    ret = ParseSimtPrintf(nullptr, 0, nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = InitSimtPrintf(nullptr, 0, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, engine_stub)
 {
     RawDevice *device = new RawDevice(0);
