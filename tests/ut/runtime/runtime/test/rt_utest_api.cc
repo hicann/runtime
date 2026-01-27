@@ -1439,7 +1439,6 @@ TEST_F(ApiTest, api_error_test)
     Context *ctx = NULL;
     Stream *stream = NULL;
     const char *name=NULL;
-    rtAiCoreMemorySize_t memSize = {0,0,0,0,0,0,0};
 
     error = rtCtxSetCurrent(ctx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1474,7 +1473,6 @@ TEST_F(ApiTest, api_error_test_coverage)
     Context *ctx = NULL;
     Stream *stream = NULL;
     const char *name = NULL;
-    rtAiCoreMemorySize_t memSize = {0,0,0,0,0,0,0};
 
     ApiImpl impl;
     ApiDecorator api(&impl);
@@ -1516,7 +1514,6 @@ TEST_F(ApiTest, api_error_test_coverage_2)
     const char *name = NULL;
     void *hostPtr;
     void *devPtr;
-    rtAiCoreMemorySize_t memSize = {0,0,0,0,0,0,0};
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t chipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_ADC);
@@ -3985,7 +3982,7 @@ TEST_F(ApiTest, rtGetSocVersion)
 
     drvStubInit(SOC_ASCEND320T);
     rtInstance->InitSocType();
-    rtInstance->MacroInit(CHIP_5612);
+    rtInstance->MacroInit(CHIP_ASCEND_031);
 
     // restore soc type
     drvStubInit(socBak);
@@ -4125,8 +4122,8 @@ TEST_F(ApiTest, notify_address_otherChipMini)
     NpuDriver drv;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t type = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     Notify *notify = new Notify(device_id, 0);
     error = notify->Setup();
     EXPECT_EQ(error, RT_ERROR_NONE);

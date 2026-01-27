@@ -688,7 +688,7 @@ rtError_t Runtime::SetSocTypeByChipType(int64_t hardwareVersion, int64_t aicoreN
         case CHIP_MINI_V3:
             InitSocTypeFrom310BVersion(hardwareVersion);
             break;
-        case CHIP_5612:
+        case CHIP_ASCEND_031:
             socType_ = SOC_ASCEND320T;
             break;
         case CHIP_CLOUD:

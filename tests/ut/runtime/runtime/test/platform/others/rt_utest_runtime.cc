@@ -655,8 +655,8 @@ TEST_F(ChipRuntimeTest, ut_AiCpuProfilerStart_00)
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     ret = rtInstance->AiCpuProfilerStart(1, 5, deviceList);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rtInstance->SetChipType(chipType);

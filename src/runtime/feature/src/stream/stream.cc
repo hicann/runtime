@@ -696,7 +696,7 @@ rtError_t Stream::Setup()
                                                               sqId_, &sqRegVirtualAddr_, &addrLen);
         ERROR_RETURN_MSG_INNER(error, "Fail to get sq reg virtual addr, deviceId=%u, sqId=%u.", device_->Id_(), sqId_);
         RT_LOG(RT_LOG_INFO, "Success to get sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
-        if (device_->GetPlatformType() == PLATFORM_MINI_5612) {
+        if (device_->GetPlatformType() == PLATFORM_ASCEND_031) {
             sqRegVirtualAddr_ = RT_STARS_BASE_ADDR_78000000 + RT_SIMPLE_SQ0_STARS_P0_SQ_CFG4_0_REG +
                     sqId_ * RT_SIMPLE_SQ_OFFSET_1000 - STARS_SIMPLE_SQ_HEAD_OFFSET;
         }

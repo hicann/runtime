@@ -85,8 +85,8 @@ TEST_F(DcacheDeviceTest, AllocStackPhyBase_01)
 TEST_F(DcacheDeviceTest, AllocStackPhyBase_02)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     RawDevice *dev = new RawDevice(1);
     dev->Init();
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
