@@ -49,6 +49,9 @@ constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX_CLOUD_V2 = 196608U; // 192KB
 constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX_MINI_V3 = 7864320U; // 7680KB
 constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX_DAVID = 131072U; // 128KB
 
+constexpr uint32_t PRINT_SIMD = 0U;
+constexpr uint32_t PRINT_SIMT = 1U;
+
 #define MAX_BUF_NUM 2048
 #define DEFAULT_TASK_RATION 2U
 #define SOLOMON_TASK_RATION 1U
@@ -64,6 +67,9 @@ constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX_DAVID = 131072U; // 128KB
 #define KERNEL_STACK_TYPE_16K     1U
 #define KERNEL_STACK_TYPE_32K     2U
 #define ELF_VERSION_MAGIC         0x5A5AU
+
+#define SIMD_FIFO_PER_CORE_SIZE_32K 32768U
+#define SIMT_FIFO_SIZE_1024K      1048576U
 
 #define GET_VERSION_MAGIC(val) (((val) >> 16U) & 0xFFFFU)
 #define GET_STACK_TYPE(val)    (((val) >> 8U) & 0xFFU)
@@ -341,15 +347,18 @@ struct RtKernelCombine
 constexpr uint32_t KERNEL_PRINT_FIFO_ADDR_BIT = 1U;
 constexpr uint32_t KERNEL_FFTS_ADDR_BIT = 2U;
 constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR_BIT = 4U;
+constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR_BIT = 8U;
 
 constexpr uint32_t KERNEL_PRINT_FIFO_ADDR = 1U;
 constexpr uint32_t KERNEL_FFTS_ADDR = 2U;
 constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR = 3U;
+constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR = 4U;
 
 struct rtElfSymbolAddr {
     uint64_t *g_sysFftsAddr = nullptr;
     uint64_t *g_opL2CacheHintCfg = nullptr;
     uint64_t *g_sysPrintFifoSpace = nullptr;
+    uint64_t *g_sysSimtPrintFifoSpace = nullptr;
 };
 
 struct rtElfData {

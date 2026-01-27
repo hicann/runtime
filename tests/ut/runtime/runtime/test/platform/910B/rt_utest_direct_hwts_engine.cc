@@ -462,6 +462,7 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_002)
 TEST_F(DirectHwtsEngineTest, TestPrintThread)
 {
     RawDevice *device = new RawDevice(0);
+    device->Init();
     device->driver_ = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     DirectHwtsEngine *dhwtsEngine = new DirectHwtsEngine(device);
     Engine *engine = dhwtsEngine;

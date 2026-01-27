@@ -28,6 +28,8 @@ using namespace cce::runtime;
 
 namespace {
     const uint32_t PARAM_VALUE_LEN = 8;
+    const uint32_t SIMD_PRINT_RSV_LEN = 8;
+    const uint32_t SIMT_PRINT_RSV_LEN = 40;
 }
 
 class PrintfTest : public testing::Test {
@@ -83,7 +85,7 @@ static unsigned char* ConstructBlock(unsigned char* data, uint32_t timeStampInfo
     size_t dataLen = sizeof(BlockInfo) + sizeof(BlockReadInfo)
         + (sizeof(DumpInfoHead) + timeStampInfoLen) * dumpSize + sizeof(BlockWriteInfo);
     BlockInfo blockInfo{};
-    blockInfo.length = 1024U;
+    blockInfo.length = 2048U;
     blockInfo.coreId = 0U;
     blockInfo.blockNum = 2U;
     blockInfo.remainLen = blockInfo.length - dataLen;
@@ -124,13 +126,16 @@ TEST_F(PrintfTest, TestParsePrintInfo)
     cmodelDrvMemcpy_flag = 1;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
-    error = dev->ParsePrintInfo();
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
     const size_t blockSize = 1024 * 1024;
-    const uint64_t totalLen = blockSize * 75;
+    const uint64_t totalLen = blockSize * totalCoreNum;
     std::vector<uint8_t> hostData(totalLen, 0);
-    for (size_t i = 0U; i < 75; i++) {
+    for (size_t i = 0U; i < totalCoreNum; i++) {
         uint8_t *blockAddr = hostData.data() + blockSize * i;
         BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
         blockInfo->length = blockSize;
@@ -152,11 +157,49 @@ TEST_F(PrintfTest, TestParsePrintInfo)
     rtDeviceReset(0);
 }
 
-void FillNoParamDumpInfo(DumpInfoHead *noParamDumpInfo, DumpType type)
+TEST_F(PrintfTest, TestInitSimtPrintf) {
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    cmodelDrvMemcpy_flag = 1;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+    dev->simtEnable_ = true;
+    error = dev->ParseSimtPrintInfo(dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> deviceMemory(blockSize, 0);
+    error = InitSimtPrintf(deviceMemory.data(), blockSize, dev->driver_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
+    // Verify the initialized data
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(deviceMemory.data());
+    EXPECT_EQ(blockInfo->length, static_cast<uint32_t>(blockSize));
+    EXPECT_EQ(blockInfo->magic, 0xAE86U);
+    EXPECT_EQ(blockInfo->flag, PRINT_SIMT);
+    
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(
+        deviceMemory.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->dumpType, DumpType::DUMP_BUFO);
+    EXPECT_EQ(readInfo->readIdx, 0U);
+    
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(
+        deviceMemory.data() + blockSize - sizeof(BlockWriteInfo));
+    EXPECT_EQ(writeInfo->dumpType, DumpType::DUMP_BUFI);
+    EXPECT_EQ(writeInfo->writeIdx, readInfo->readIdx);
+
+    error = ParseSimtPrintf(deviceMemory.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    cmodelDrvMemcpy_flag = 0;
+    rtDeviceReset(0);
+}
+
+void FillNoParamDumpInfo(DumpInfoHead *noParamDumpInfo, DumpType type, const uint32_t rsvLen)
 {
     noParamDumpInfo->type = type;
     uint64_t offset = 8;
-    uint32_t curIdx = 8;
+    uint32_t curIdx = rsvLen;
     (void)memcpy_s(noParamDumpInfo->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
     curIdx += sizeof(offset);
     const char *printInfo = "No param print.";
@@ -165,11 +208,11 @@ void FillNoParamDumpInfo(DumpInfoHead *noParamDumpInfo, DumpType type)
     noParamDumpInfo->infoLen = curIdx;
 }
 
-void FillInvalidParamDumpInfo(DumpInfoHead *invalidParamDumpInfo, DumpType type)
+void FillInvalidParamDumpInfo(DumpInfoHead *invalidParamDumpInfo, DumpType type, const uint32_t rsvLen)
 {
     invalidParamDumpInfo->type = type;
     uint64_t offset = 8;
-    uint32_t curIdx = 8;
+    uint32_t curIdx = rsvLen;
     (void)memcpy_s(invalidParamDumpInfo->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
     curIdx += sizeof(offset);
     const char *printInfo = "Invalid param %a.";
@@ -178,11 +221,11 @@ void FillInvalidParamDumpInfo(DumpInfoHead *invalidParamDumpInfo, DumpType type)
     invalidParamDumpInfo->infoLen = curIdx;
 }
 
-void FillRedundantParamDumpInfo(DumpInfoHead *redundantParamDumpInfo, DumpType type)
+void FillRedundantParamDumpInfo(DumpInfoHead *redundantParamDumpInfo, DumpType type, const uint32_t rsvLen)
 {
     redundantParamDumpInfo->type = type;
     uint64_t offset = 8;
-    uint32_t curIdx = 8;
+    uint32_t curIdx = rsvLen;
     (void)memcpy_s(redundantParamDumpInfo->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
     curIdx += sizeof(offset);
     const char *printInfo = "Redundant param %d.";
@@ -191,11 +234,11 @@ void FillRedundantParamDumpInfo(DumpInfoHead *redundantParamDumpInfo, DumpType t
     redundantParamDumpInfo->infoLen = curIdx;
 }
 
-void FillPrintDumpInfo(DumpInfoHead *paramPrint)
+void FillPrintDumpInfo(DumpInfoHead *paramPrint, DumpType type, const uint32_t rsvLen)
 {
-    paramPrint->type = DumpType::DUMP_SCALAR;
+    paramPrint->type = type;
     uint64_t offset = 64;
-    uint32_t curIdx = 8;
+    uint32_t curIdx = rsvLen;
     (void)memcpy_s(paramPrint->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
     curIdx += sizeof(offset);
 
@@ -230,12 +273,55 @@ void FillPrintDumpInfo(DumpInfoHead *paramPrint)
     paramPrint->infoLen = curIdx;
 }
 
-void FillAssertDumpInfo(DumpInfoHead *assertInfo)
+// 绕接 circular buffer
+void FillPrintDumpInfoForSimtCircular(DumpInfoHead *paramPrint, uint8_t *dumpStartAddr)
 {
-    assertInfo->type = DumpType::DUMP_ASSERT;
+    paramPrint->type = DumpType::DUMP_SIMT_PRINTF;
+    uint64_t offset = 64;
+    uint32_t curIdx = 40;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
+    curIdx += sizeof(offset);
+
+    int64_t dNum = -1;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &dNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+    int64_t ldNum = -2;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &ldNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN; 
+    int64_t lldNum = -3;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &lldNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+
+    int64_t iNum = 0;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &iNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+
+    uint64_t uNum = 1;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &uNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+
+    int64_t xNum = 253;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &xNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+    int64_t xUpperNum = 254;
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, PARAM_VALUE_LEN, &xUpperNum, PARAM_VALUE_LEN);
+    curIdx += PARAM_VALUE_LEN;
+
+    const char *printInfo0 = "Test circular buffer the format: the length of the string is 66B: "; // 至此填充到尾部
+    (void)memcpy_s(paramPrint->infoMsg + curIdx, strlen(printInfo0), printInfo0, strlen(printInfo0));  // 不要尾部\0
+    // 绕接的部分
+    const char *printInfo1 = "d[%d], ld[%ld], lld[%lld], i[%i], u[%u], x[%x], X[%X]";
+    (void)memcpy_s(dumpStartAddr, strlen(printInfo1) + 1, printInfo1, strlen(printInfo1) + 1);
+    curIdx += (strlen(printInfo0) + strlen(printInfo1) + 1);
+    paramPrint->infoLen = curIdx;
+}
+
+void FillAssertDumpInfo(DumpInfoHead *assertInfo, DumpType type, const uint32_t rsvLen)
+{
+    assertInfo->type = type;
     const char *printInfo = "Test the format: %%[%%], f[%f], F[%F], p[%p], s[%s]";
     uint64_t offset = 40;
-    uint32_t curIdx = 8;
+    uint32_t curIdx = rsvLen;
     (void)memcpy_s(assertInfo->infoMsg + curIdx, sizeof(offset), &offset, sizeof(offset));
     curIdx += sizeof(offset);
 
@@ -293,23 +379,255 @@ TEST_F(PrintfTest, TestParseBlockInfo_Print)
     // 不带占位符的场景
     DumpInfoHead *noParamInfo =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_SCALAR);
+    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_SCALAR, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + noParamInfo->infoLen);
     // 非法占位符场景
     DumpInfoHead *invalidParamInfo =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SCALAR);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SCALAR, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen);
     // 合法占位符场景
     DumpInfoHead *paramPrint =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillPrintDumpInfo(paramPrint);
+    FillPrintDumpInfo(paramPrint, DumpType::DUMP_SCALAR, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + paramPrint->infoLen);
 
     BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
     writeInfo->writeIdx = endIdx;
 
     error = ParsePrintf(hostData.data(), blockSize, dev->driver_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseBlockInfo_SIMT)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    cmodelDrvMemcpy_flag = 1;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+
+    const size_t blockSize = 1024;
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    // 只处理第一个block，其余跳过
+    uint8_t *blockAddr = hostData.data();
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
+    blockInfo->length = blockSize;
+    blockInfo->remainLen = blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo);
+
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = 0U;
+    uint32_t endIdx = 0U;
+
+    // 不带占位符的场景,直接打印字符串
+    DumpInfoHead *noParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + noParamInfo->infoLen);
+    // 非法占位符场景
+    DumpInfoHead *invalidParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen);
+    // 合法占位符场景
+    DumpInfoHead *paramPrint =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillPrintDumpInfo(paramPrint, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + paramPrint->infoLen);
+
+    // dump wait 1 for 18B
+    DumpInfoHead *dumpWaitInfo1 = 
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    dumpWaitInfo1->type = DumpType::DUMP_WAIT;
+    dumpWaitInfo1->infoLen = 10U;
+    endIdx += sizeof(DumpInfoHead) + dumpWaitInfo1->infoLen;
+
+    // dump wait 2 for 18B
+    DumpInfoHead *dumpWaitInfo2 = 
+    RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    dumpWaitInfo2->type = DumpType::DUMP_WAIT;
+    dumpWaitInfo2->infoLen = 10U;
+    endIdx += sizeof(DumpInfoHead) + dumpWaitInfo2->infoLen;
+
+    BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = endIdx;
+    writeInfo->packIdx = 5;
+
+    error = ParseSimtPrintf(hostData.data(), blockSize, dev->driver_, dev);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx + 36, writeInfo->writeIdx);
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Exceed_Len)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    cmodelDrvMemcpy_flag = 1;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+
+    const size_t blockSize = 1024;
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    // 只处理第一个block，其余跳过
+    uint8_t *blockAddr = hostData.data();
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
+    blockInfo->length = blockSize;
+    blockInfo->remainLen = blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo);
+
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = 0U;
+    uint32_t endIdx = 0U;
+
+    // 不带占位符的场景,直接打印字符串
+    DumpInfoHead *noParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + noParamInfo->infoLen);
+    // 非法占位符场景
+    DumpInfoHead *invalidParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen);
+    // 合法占位符场景
+    DumpInfoHead *paramPrint =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillPrintDumpInfo(paramPrint, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + paramPrint->infoLen);
+
+    // dump wait 1 for 18B
+    DumpInfoHead *dumpWaitInfo1 = 
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    dumpWaitInfo1->type = DumpType::DUMP_WAIT;
+    dumpWaitInfo1->infoLen = 10U;
+    endIdx += sizeof(DumpInfoHead) + dumpWaitInfo1->infoLen;
+
+    // dump wait 2 for 18B
+    DumpInfoHead *dumpWaitInfo2 = 
+    RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    dumpWaitInfo2->type = DumpType::DUMP_WAIT;
+    dumpWaitInfo2->infoLen = 10U;
+    endIdx += sizeof(DumpInfoHead) + dumpWaitInfo2->infoLen;
+
+    BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = blockInfo->remainLen + 1;  // 写指针超过remain len
+    writeInfo->packIdx = 5;
+
+    error = ParseSimtPrintf(hostData.data(), blockSize, dev->driver_, dev);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+}
+
+// 绕接场景
+TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Circular)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    cmodelDrvMemcpy_flag = 1;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+
+    const size_t blockSize = 616;
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    // 只处理第一个block，其余跳过
+    uint8_t *blockAddr = hostData.data();
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
+    blockInfo->length = blockSize;
+    blockInfo->remainLen = blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo); // 512
+
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = 77U;
+    uint32_t endIdx = 77U;
+
+    // 非法占位符场景
+    DumpInfoHead *invalidParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen); // 151
+    // 合法占位符场景
+    DumpInfoHead *paramPrint =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillPrintDumpInfo(paramPrint, DumpType::DUMP_SIMT_PRINTF, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + paramPrint->infoLen); // 334
+  
+    DumpInfoHead *circlePrint =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillPrintDumpInfoForSimtCircular(circlePrint, blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo));
+    endIdx += (sizeof(DumpInfoHead) + circlePrint->infoLen); // 566
+
+    BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = endIdx; //512 + 54
+    writeInfo->packIdx = 3;
+
+    error = ParseSimtPrintf(hostData.data(), blockSize, dev->driver_, dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+    cmodelDrvMemcpy_flag = 0;
+
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestParseBlockInfo_SIMT_Assert)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    cmodelDrvMemcpy_flag = 1;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+
+    const size_t blockSize = 1024;
+    const uint64_t totalLen = blockSize;
+    std::vector<uint8_t> hostData(totalLen, 0);
+    // 只处理最后一个block，其余跳过
+    uint8_t *blockAddr = hostData.data() + (totalLen - blockSize);
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(blockAddr);
+    blockInfo->length = blockSize;
+    blockInfo->remainLen = blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo);
+
+    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = 0U;
+    uint32_t endIdx = 0;
+    // 不带占位符的场景
+    DumpInfoHead *noParamInfo = RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo));
+    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_SIMT_ASSERT, SIMT_PRINT_RSV_LEN);
+    endIdx = sizeof(DumpInfoHead) + noParamInfo->infoLen;
+    // 非法占位符场景
+    DumpInfoHead *invalidParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_SIMT_ASSERT, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen);
+    // 冗余占位符场景
+    DumpInfoHead *redundantParamInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillRedundantParamDumpInfo(redundantParamInfo, DumpType::DUMP_SIMT_ASSERT, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + redundantParamInfo->infoLen);
+    // 合法占位符场景
+    DumpInfoHead *assertInfo =
+        RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
+    FillAssertDumpInfo(assertInfo, DumpType::DUMP_SIMT_ASSERT, SIMT_PRINT_RSV_LEN);
+    endIdx += (sizeof(DumpInfoHead) + assertInfo->infoLen);
+
+    BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = endIdx;
+    writeInfo->packIdx = 4;
+
+    error = ParseSimtPrintf(hostData.data(), blockSize, dev->driver_, dev);
     EXPECT_EQ(error, RT_ERROR_NONE);
     cmodelDrvMemcpy_flag = 0;
 
@@ -339,22 +657,22 @@ TEST_F(PrintfTest, TestParseBlockInfo_Assert)
     uint32_t endIdx = 0;
     // 不带占位符的场景
     DumpInfoHead *noParamInfo = RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo));
-    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_ASSERT);
+    FillNoParamDumpInfo(noParamInfo, DumpType::DUMP_ASSERT, SIMD_PRINT_RSV_LEN);
     endIdx = sizeof(DumpInfoHead) + noParamInfo->infoLen;
     // 非法占位符场景
     DumpInfoHead *invalidParamInfo =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_ASSERT);
+    FillInvalidParamDumpInfo(invalidParamInfo, DumpType::DUMP_ASSERT, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + invalidParamInfo->infoLen);
     // 冗余占位符场景
     DumpInfoHead *redundantParamInfo =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillRedundantParamDumpInfo(redundantParamInfo, DumpType::DUMP_ASSERT);
+    FillRedundantParamDumpInfo(redundantParamInfo, DumpType::DUMP_ASSERT, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + redundantParamInfo->infoLen);
     // 合法占位符场景
     DumpInfoHead *assertInfo =
         RtPtrToPtr<DumpInfoHead *>(blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo) + endIdx);
-    FillAssertDumpInfo(assertInfo);
+    FillAssertDumpInfo(assertInfo, DumpType::DUMP_ASSERT, SIMD_PRINT_RSV_LEN);
     endIdx += (sizeof(DumpInfoHead) + assertInfo->infoLen);
 
     BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
@@ -376,10 +694,10 @@ TEST_F(PrintfTest, TestParseBlockInfo_TimeStamp)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
 
-    int* addr = new int[1024 * 75]();
+    int* addr = new int[2048 * 75]();
     void *workSpaceAddr = (void *)addr;
     EXPECT_NE(workSpaceAddr, nullptr);
-    const size_t blockSize = 1024U;
+    const size_t blockSize = 2048U;
     const uint32_t timeStampInfoLen = 40U;
     ConstructBlock((unsigned char*)addr, timeStampInfoLen);
     rtError_t ret = RT_ERROR_NONE;
@@ -547,7 +865,8 @@ TEST_F(PrintfTest, PrintDumpLargeTensorWithShape)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
-    error = dev->ParsePrintInfo();
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL(dev->driver_, &Driver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
 

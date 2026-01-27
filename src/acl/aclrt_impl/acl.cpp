@@ -169,6 +169,48 @@ namespace {
         }
         return ACL_SUCCESS;
     }
+
+    const std::map<rtLimitType_t, std::string> fifoSizeToKeyMap = {
+        {RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, "simd_printf_fifo_size_per_core"},
+        {RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, "simt_printf_fifo_size"}};
+
+    aclError SetPrintFifoSizeByType(const char_t* const configPath, rtLimitType_t limitType, const std::string& typeName)
+    {
+        size_t fifoSize = 0;
+        bool found = false;
+
+        auto ret = acl::JsonParser::GetPrintFifoSizeByType(configPath, typeName, fifoSize, found);
+        if (ret != ACL_SUCCESS) {
+            return ACL_ERROR_FAILURE;
+        }
+
+        if (!found) {
+            return ACL_SUCCESS;
+        }
+
+        rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(fifoSize));
+        if (rtErr != RT_ERROR_NONE) {
+            ACL_LOG_CALL_ERROR("set limit (%s %zu) failed, runtime result = %d.", typeName.c_str(), fifoSize,
+                static_cast<int32_t>(rtErr));
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
+        ACL_LOG_INFO("set %s fifo size %zu success", typeName.c_str(), fifoSize);
+        return ACL_SUCCESS;
+    }
+
+    aclError SetPrintFifoSizes(const char_t* const configPath)
+    {
+        for (const auto& entry : fifoSizeToKeyMap) {
+            rtLimitType_t limitType = entry.first;
+            const std::string& typeName = entry.second;
+
+            aclError ret = SetPrintFifoSizeByType(configPath, limitType, typeName);
+            if (ret == ACL_ERROR_FAILURE) {
+                return ret; // 如果返回 ACL_ERROR_FAILURE，直接返回错误
+            }
+        }
+        return ACL_SUCCESS;
+    }
 }
 
 namespace acl {
@@ -268,6 +310,11 @@ aclError HandleEventModeConfig(const char_t *const configPath) {
     ACL_LOG_INFO("event mode is set [%d].", event_mode);
     ACL_REQUIRES_CALL_RTS_OK(rtEventWorkModeSet(event_mode), rtEventWorkModeSet);
     ACL_LOG_INFO("Successfully handled event mode config.");
+    return ACL_SUCCESS;
+}
+
+aclError HandlePrintFifoSizeConfig(const char_t *const configPath) {
+    ACL_REQUIRES_OK(SetPrintFifoSizes(configPath));
     return ACL_SUCCESS;
 }
 
@@ -400,6 +447,14 @@ aclError aclInitImpl(const char *configPath)
             return ret;
         }
         ACL_LOG_INFO("set HandleDefaultDeviceAndStackSize success in aclInit");
+
+        // print fifo size config
+        ret = acl::HandlePrintFifoSizeConfig(configPath);
+        if (ret != ACL_SUCCESS) {
+            ACL_LOG_INNER_ERROR("[Process][PrintFifoSize]process HandlePrintFifoSizeConfig failed, ret=%d", ret);
+            return ret;
+        }
+        ACL_LOG_INFO("set HandlePrintFifoSizeConfig success in aclInit");
 
         ret = acl::HandleEventModeConfig(configPath);
         if (ret != ACL_SUCCESS) {

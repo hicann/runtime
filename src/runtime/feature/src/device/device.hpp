@@ -475,6 +475,10 @@ public:
     virtual uint64_t GetPageFaultBaseTime() const = 0;
     virtual void SetDeviceFaultType(const DeviceFaultType type) = 0;
     virtual DeviceFaultType GetDeviceFaultType()  const = 0;
+    virtual void AddSimtPrintTlvCnt(uint64_t val) const = 0;
+    virtual uint64_t GetSimtPrintTlvCnt() const = 0;
+    virtual bool GetPrintSimtEnable() const = 0;
+    virtual void* GetSimtPrintfAddr() const = 0;
     virtual void SetAixErrRecoverCnt() = 0;
     virtual uint32_t GetAixErrRecoverCnt() const = 0;
     virtual bool IsSupportUserMem() const = 0;
@@ -483,9 +487,11 @@ public:
     virtual DeviceSnapshot *GetDeviceSnapShot(void) = 0;
     virtual std::map<std::pair<uint32_t, uint32_t>, std::vector<rtExceptionErrRegInfo_t>>& GetExceptionRegMap() = 0;
     virtual std::mutex& GetExceptionRegMutex() = 0;
-    virtual rtError_t ParsePrintInfo() = 0;
+    virtual rtError_t ParsePrintInfo(const Device * const dev) = 0;
+    virtual rtError_t ParseSimtPrintInfo(const Device * const dev) = 0;
+    virtual rtError_t ParseSimdPrintInfo() = 0;
     virtual void WaitForParsePrintf() const = 0;
-    virtual rtError_t GetPrintFifoAddress(uint64_t * const addr) = 0;
+    virtual rtError_t GetPrintFifoAddress(uint64_t * const addr, const uint32_t model) = 0;
     virtual rtError_t StoreEndGraphNotifyInfo(Stream* exeStream, Model* captureModel, uint32_t endGraphNotifyPos) = 0;
     virtual rtError_t DeleteEndGraphNotifyInfo(Stream* exeStream, Model* captureModel, uint32_t endGraphNotifyPos) = 0;
     virtual rtError_t ClearEndGraphNotifyInfoByModel(Model* captureModel) = 0;

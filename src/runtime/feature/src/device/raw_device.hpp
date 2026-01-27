@@ -721,6 +721,26 @@ public:
         return aixErrRecoverCnt_.Value();
     }
 
+    void AddSimtPrintTlvCnt(uint64_t val) const override
+    {
+        simtPrintTlvCnt_.Add(val);
+    }
+ 
+    uint64_t GetSimtPrintTlvCnt() const override
+    {
+        return simtPrintTlvCnt_.Value();
+    }
+
+    bool GetPrintSimtEnable() const override
+    {
+        return simtEnable_;
+    }
+
+    void* GetSimtPrintfAddr() const override
+    {
+        return simtPrintfAddr_;
+    }
+
     void GetErrorPcArr(const uint16_t devId, uint64_t **errorPc, uint32_t *cnt) const override;
 
     bool IsSupportUserMem() const override
@@ -757,9 +777,11 @@ public:
     {
         return deviceSnapshot_;
     }
-    rtError_t ParsePrintInfo() override;
+    rtError_t ParsePrintInfo(const Device * const dev) override;
+    rtError_t ParseSimtPrintInfo(const Device * const dev) override;
+    rtError_t ParseSimdPrintInfo() override;
     void WaitForParsePrintf() const override;
-    rtError_t GetPrintFifoAddress(uint64_t * const addr) override;
+    rtError_t GetPrintFifoAddress(uint64_t * const addr, const uint32_t model) override;
 
     rtError_t StoreEndGraphNotifyInfo(Stream* exeStream, Model* captureModel, uint32_t endGraphNotifyPos) override;
     rtError_t DeleteEndGraphNotifyInfo(Stream* exeStream, Model* captureModel, uint32_t endGraphNotifyPos) override;
@@ -848,7 +870,6 @@ private:
     rtError_t GetStarsVersion();
     rtError_t TschStreamSetup();
     rtError_t TschStreamAllocDsaAddr() const;
-    rtError_t SetPrintFifoSize(const uint32_t value);
     rtError_t SetSupportHcomcpuFlag();
     static void *MallocBufferForSqIdMem(const size_t size, void * const para);
     static void FreeBufferForSqIdMem(void * const addr, void * const para);
@@ -859,6 +880,7 @@ private:
     rtError_t InitStreamSyncEsched() const;
     rtError_t InitTsdQos();
     rtError_t InitPrintInfo();
+    rtError_t InitSimtPrintInfo();
     rtError_t InitCtrlSQ();
 
     Stream *primaryStream_;
@@ -990,8 +1012,13 @@ private:
 
     std::mutex printfMtx_;
     void *printfAddr_ = nullptr;
-    size_t printblockLen_ = 0U;
+    void *simtPrintfAddr_ = nullptr;
+    uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // device 备份
+ 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_1024K}; // device 备份
+    bool simdEnable_{false};
+    bool simtEnable_{false};
     std::atomic<uint64_t> parseCounter_{0};
+    mutable Atomic<uint64_t> simtPrintTlvCnt_{0U};
     BufferAllocator* sqIdMemAddrPool_{nullptr};
     std::unique_ptr<CtrlSQ> ctrlSQ_ = nullptr;
     std::mutex programMtx_;

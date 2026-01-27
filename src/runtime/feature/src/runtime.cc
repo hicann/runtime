@@ -51,6 +51,7 @@
 #include "dev_info_manage.h"
 #include "global_state_manager.hpp"
 #include "kernel.hpp"
+#include "printf.hpp"
 
 namespace cce {
 namespace runtime {
@@ -6094,6 +6095,24 @@ rtError_t Runtime::SubscribeCallback(const uint64_t threadId, Stream *stm, void 
         stm->Id_(), threadId, static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_RUNTIME);
     return error;
+}
+
+rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
+{
+    constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val <= MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
+    val, "greater than " + std::to_string(MIN_FIFO_PRINTF_SIZE));
+    printblockLen_ = val;
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::SetSimtPrintFifoSize(uint32_t val)
+{
+    constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val <= MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
+    val, "greater than " + std::to_string(MIN_FIFO_PRINTF_SIZE));
+    simtPrintLen_ = val;
+    return RT_ERROR_NONE;
 }
 
 uint32_t GetRuntimeStreamNum(void)

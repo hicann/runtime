@@ -15,7 +15,6 @@
 
 namespace cce {
 namespace runtime {
-constexpr size_t BLOCK_NUM = 75U;
 
 // 单核数据排布 blockData: | blockInfo | readInfo | tlv1 | tlv2 | tlv3 ... | writeInfo |
 // 整体排布：| blockData1 | blockData2 | ... | bloackData75 |
@@ -43,7 +42,15 @@ enum class DumpType : uint32_t  {
     DUMP_SIMT,
     DUMP_BUFI,
     DUMP_BUFO,
-    DUMP_SKIP
+    DUMP_SKIP,
+    DUMP_SIMT_ASSERT = 0xF0E00F0E,
+    DUMP_SIMT_PRINTF = 0xF0F00F0F,
+    DUMP_WAIT = 0xF0A55A0F
+};
+
+enum class ParallelismModel : uint32_t {
+    PRINT_SIMD         = 0U,
+    PRINT_SIMT         = 1U,
 };
 
 #pragma pack(push, 1)
@@ -70,7 +77,8 @@ struct BlockReadInfo {
 
 struct DumpTimeStampInfoMsg {
     uint32_t descId;   // dot Id for description
-    uint32_t rsv;
+    uint16_t blockIdx;
+    uint16_t rsv;
     uint64_t syscyc;   // dotting timestamp with system cycle
     uint64_t curPc;   // currrent pc for source line
     uint64_t entry; // Entry system cycle
@@ -83,7 +91,7 @@ struct DumpTensorInfo {
     uint32_t desc;          // 用户标识
     uint32_t bufferId;
     uint16_t position;        // position GM, UB, L1, L0C
-    uint16_t resv1 = 0U;      // 保留字段
+    uint16_t blockIdx = 0U;      // block idx
     uint32_t dim = 0U;        // dim值
     uint32_t shape[8] = {0U}; // shape 各维度值 < 8
     uint32_t resv = 0U;       // 保留字
@@ -97,7 +105,9 @@ struct DumpShapeInfo {
 };
 
 rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv);
+rtError_t InitSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv);
 rtError_t ParsePrintf(void *addr, const size_t blockSize, Driver *curDrv);
+rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, const Device * const dev);
 } // runtime
 } // cce
  

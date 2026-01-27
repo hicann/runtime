@@ -45,7 +45,6 @@
 namespace cce {
 namespace runtime {
 constexpr uint32_t FREE_EVENT_QUEUE_SIZE = 64U * 1024U;
-constexpr size_t PRINT_FIFO_DEFAULT_BLOCK_SIZE = 1024U * 1024U;
 constexpr uint32_t SQ_ID_MEM_POOL_INIT_COUNT = 1024U;
 constexpr uint32_t SQ_ID_MEM_POOL_MAX_COUNT = 32U * 1024U; /* stream is 32k */
 constexpr uint32_t WAIT_PRINTF_THREAD_TIME_MAX = 10U;
@@ -137,6 +136,11 @@ RawDevice::~RawDevice() noexcept
         if (printfAddr_ != nullptr) {
             (void)driver_->DevMemFree(printfAddr_, deviceId_);
             printfAddr_ = nullptr;
+        }
+        if (simtPrintfAddr_ != nullptr) {
+            (void)driver_->DevMemFree(simtPrintfAddr_, deviceId_);
+            simtPrintfAddr_ = nullptr;
+            simtPrintTlvCnt_.Set(0U);
         }
         (void)driver_->DeviceClose(deviceId_, tsId_);
         driver_ = nullptr;
@@ -1373,9 +1377,6 @@ rtError_t RawDevice::DevSetLimit(const rtLimitType_t type, const uint32_t val)
     if (type == RT_LIMIT_TYPE_LOW_POWER_TIMEOUT) {
         return RT_ERROR_NONE;
     }
-    if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
-        return SetPrintFifoSize(val);
-    }
     RT_LOG(RT_LOG_WARNING, "limit type wrong!,type=%u", static_cast<uint32_t>(type));
     return RT_ERROR_NONE;
 }
@@ -2021,36 +2022,87 @@ rtError_t RawDevice::WriteDevValue(void * const dest, const size_t size, const v
 
 rtError_t RawDevice::InitPrintInfo()
 {
-    if (printblockLen_ == 0U) {
-        printblockLen_ = PRINT_FIFO_DEFAULT_BLOCK_SIZE;
-    }
-    rtError_t ret = driver_->DevMemAlloc(&printfAddr_, printblockLen_ * BLOCK_NUM, RT_MEMORY_HBM, deviceId_,
+    Runtime *rt = Runtime::Instance();
+    COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
+    printblockLen_ = rt->GetSimdPrintFifoSize();
+    auto props = GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    rtError_t ret = driver_->DevMemAlloc(&printfAddr_, printblockLen_ * totalCoreNum, RT_MEMORY_HBM, deviceId_,
         DEFAULT_MODULEID);
-    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device id=%d, ret=%u.", deviceId_, ret);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device id=%u, ret=%u.", deviceId_, ret);
 
     // 如果初始化失败，需要free后返回
     ret = InitPrintf(printfAddr_, printblockLen_, driver_);
     if (ret != RT_ERROR_NONE) {
         (void)driver_->DevMemFree(printfAddr_, deviceId_);
         printfAddr_ = nullptr;
-        RT_LOG(RT_LOG_ERROR, "InitPrintf failed, device id=%d, ret=%u.", deviceId_, ret);
+        RT_LOG(RT_LOG_ERROR, "InitPrintf failed, device id=%u, ret=%u.", deviceId_, ret);
         return ret;
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t RawDevice::ParsePrintInfo()
+rtError_t RawDevice::InitSimtPrintInfo()
+{
+    Runtime *rt = Runtime::Instance();
+    COND_RETURN_ERROR_MSG_INNER(rt == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
+    simtPrintLen_ = rt->GetSimtPrintFifoSize();
+
+    rtError_t ret = driver_->DevMemAlloc(&simtPrintfAddr_, simtPrintLen_, RT_MEMORY_HBM, deviceId_,
+        DEFAULT_MODULEID);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device id=%u, ret=%u.", deviceId_, ret);
+
+    // 如果初始化失败，需要free后返回
+    ret = InitSimtPrintf(simtPrintfAddr_, simtPrintLen_, driver_);
+    if (ret != RT_ERROR_NONE) {
+        (void)driver_->DevMemFree(simtPrintfAddr_, deviceId_);
+        simtPrintfAddr_ = nullptr;
+        RT_LOG(RT_LOG_ERROR, "InitSimtPrintf failed, device id=%u, ret=%u.", deviceId_, ret);
+        return ret;
+    }
+    RT_LOG(RT_LOG_DEBUG, "InitSimtPrintf succ, device id=%u, simtPrintfAddr_=%p, simtPrintLen_=%u.", deviceId_, simtPrintfAddr_, simtPrintLen_);
+    return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::ParseSimtPrintInfo(const Device * const dev)
 {
     std::unique_lock<std::mutex> l(printfMtx_);
+    if (!simtEnable_) {
+        return RT_ERROR_NONE;
+    }
+    rtError_t ret = RT_ERROR_NONE;
+    if (simtPrintfAddr_ == nullptr) {
+        ret = InitSimtPrintInfo();
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitSimtPrintInfo failed, device id=%u, ret=%u.", deviceId_, ret);
+    }
+
+    ret = ParseSimtPrintf(simtPrintfAddr_, simtPrintLen_, driver_, dev);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ParseSimtPrintInfo failed, device id=%u, ret=%u.", deviceId_, ret);
+    return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::ParseSimdPrintInfo()
+{
+    std::unique_lock<std::mutex> l(printfMtx_);
+    if (!simdEnable_) {
+        return RT_ERROR_NONE;
+    }
     rtError_t ret = RT_ERROR_NONE;
     if (printfAddr_ == nullptr) {
         ret = InitPrintInfo();
-        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device id=%d, ret=%u.", deviceId_, ret);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device id=%u, ret=%u.", deviceId_, ret);
     }
+
     ret = ParsePrintf(printfAddr_, printblockLen_, driver_);
-    ++parseCounter_;
-    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ParsePrintf failed, device id=%d, ret=%u.", deviceId_, ret);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ParsePrintf failed, device id=%u, ret=%u.", deviceId_, ret);
     return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::ParsePrintInfo(const Device * const dev)
+{
+    ParseSimdPrintInfo();
+    ParseSimtPrintInfo(dev);
+    ++parseCounter_;
 }
 
 void RawDevice::WaitForParsePrintf() const
@@ -2073,28 +2125,36 @@ void RawDevice::WaitForParsePrintf() const
     RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread, suss!");
 }
 
-rtError_t RawDevice::SetPrintFifoSize(const uint32_t value)
-{
-    std::unique_lock<std::mutex> l(printfMtx_);
-    constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(value < MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
-        value, "greater than and equal to " + std::to_string(MIN_FIFO_PRINTF_SIZE));
-    printblockLen_ = value;
-    return RT_ERROR_NONE;
-}
 
-rtError_t RawDevice::GetPrintFifoAddress(uint64_t * const addr)
+rtError_t RawDevice::GetPrintFifoAddress(uint64_t * const addr, const uint32_t model)
 {
     std::unique_lock<std::mutex> l(printfMtx_);
     rtError_t ret = RT_ERROR_NONE;
+    if (model == PRINT_SIMD) {
+        simdEnable_ = true;
     if (printfAddr_ == nullptr) {
         ret = InitPrintInfo();
-        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device id=%d, ret=%u.", deviceId_, ret);
+            COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device id=%u, ret=%u.", deviceId_, ret);
         ret = engine_->CreatePrintfThread();
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret,
-            "CreatePrintfThread failed, device id=%d, ret=%u.", deviceId_, ret);
+                "CreatePrintfThread failed, device id=%y, ret=%u.", deviceId_, ret);
     }
     *addr = RtPtrToPtr<uint64_t>(printfAddr_);
+    } else if (model == PRINT_SIMT) {
+        simtEnable_ = true;
+        if (simtPrintfAddr_ == nullptr) {
+            ret = InitSimtPrintInfo();
+            COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitSimtPrintInfo failed, device id=%u, ret=%u.", deviceId_, ret);
+            ret = engine_->CreatePrintfThread();
+            COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret,
+                "CreatePrintfThread failed, device id=%u, ret=%u.", deviceId_, ret);
+        }
+        *addr = RtPtrToPtr<uint64_t>(simtPrintfAddr_);
+    } else {
+        ret = RT_ERROR_INVALID_VALUE;
+        RT_LOG(RT_LOG_ERROR, "Invalid parallelism model, model=%u, device id=%u, ret=%u.", model, deviceId_, ret);
+    }
+
     return ret;
 }
 

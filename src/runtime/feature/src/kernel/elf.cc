@@ -349,7 +349,7 @@ rtError_t RefreshSymbolAddress(rtElfData *elfData)
     uint64_t sourceAddr = 0;
     if (((elfData->ascendMetaFlag & KERNEL_PRINT_FIFO_ADDR_BIT) != 0) && (elfData->symbolAddr.g_sysPrintFifoSpace != nullptr)) {
         uint64_t *addr = elfData->symbolAddr.g_sysPrintFifoSpace;
-        const rtError_t error = curCtx->Device_()->GetPrintFifoAddress(&sourceAddr);
+        const rtError_t error = curCtx->Device_()->GetPrintFifoAddress(&sourceAddr, PRINT_SIMD);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get printf fifo space address failed!");
         *addr = sourceAddr;
         RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace = %p, addr = %p", *addr, addr);
@@ -365,9 +365,20 @@ rtError_t RefreshSymbolAddress(rtElfData *elfData)
     if (((elfData->ascendMetaFlag & KERNEL_SYSTEM_RUN_CFG_ADDR_BIT) != 0) && (elfData->symbolAddr.g_opL2CacheHintCfg != nullptr)) {
         uint64_t *addr = elfData->symbolAddr.g_opL2CacheHintCfg;
         const rtError_t error = curDrv->GetL2CacheOffset(drvDeviceId, &sourceAddr);
+        // stars v2不支持该特性，直接返回
+        if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
+            return RT_ERROR_NONE;
+        }
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get L2Cache address failed!");
         *addr = sourceAddr;
         RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_opL2CacheHintCfg = %p, addr = %p", *addr, addr);
+    }
+    if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) && (elfData->symbolAddr.g_sysSimtPrintFifoSpace != nullptr)) {
+        uint64_t *addr = elfData->symbolAddr.g_sysSimtPrintFifoSpace;
+        const rtError_t error = curCtx->Device_()->GetPrintFifoAddress(&sourceAddr, PRINT_SIMT);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get simt printf fifo space address failed!");
+        *addr = sourceAddr;
+        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysSimtPrintFifoSpace = %p, addr = %p", *addr, addr);
     }
 
     return RT_ERROR_NONE;
@@ -405,6 +416,11 @@ void SetSymbolAddress(const char_t *stringTab, const Elf_Internal_Sym * const ps
                 // 双页表地址
                 elfData->symbolAddr.g_opL2CacheHintCfg = addr;
                 RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_opL2CacheHintCfg = %p", addr);
+            }
+            if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) && (symbol ==  "g_sysSimtPrintFifoSpace")) {
+                // SIMT维侧空间地址
+                elfData->symbolAddr.g_sysSimtPrintFifoSpace = addr;
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysSimtPrintFifoSpace = %p", addr);
             }
         }
         internalSym++;
@@ -470,7 +486,7 @@ static void setMetaFlag(rtElfData * const elfData, uint32_t type)
     switch (type) {
         case KERNEL_PRINT_FIFO_ADDR:
             bit = KERNEL_PRINT_FIFO_ADDR_BIT;
-            RT_LOG(RT_LOG_INFO, "Enable print fifo addr flag");
+            RT_LOG(RT_LOG_INFO, "Enable simd print fifo addr flag");
             break;
         case KERNEL_FFTS_ADDR:
             bit = KERNEL_FFTS_ADDR_BIT;
@@ -479,6 +495,10 @@ static void setMetaFlag(rtElfData * const elfData, uint32_t type)
         case KERNEL_SYSTEM_RUN_CFG_ADDR:
             bit = KERNEL_SYSTEM_RUN_CFG_ADDR_BIT;
             RT_LOG(RT_LOG_INFO, "Enable system run cfg addr flag");
+            break;
+        case KERNEL_SIMT_PRINT_FIFO_ADDR:
+            bit = KERNEL_SIMT_PRINT_FIFO_ADDR_BIT;
+            RT_LOG(RT_LOG_INFO, "Enable simt print fifo addr flag");
             break;
         default:
             break;

@@ -776,6 +776,33 @@ public:
     {
         return simtStackMutex_;
     }
+
+    std::mutex& GetSimdFifoMutex()
+    {
+        return simdFifoMutex_;
+    }
+
+    std::mutex& GetSimtFifoMutex()
+    {
+        return simtFifoMutex_;
+    }
+
+    // 目前只会在aclInit里面调用一次
+    rtError_t SetSimdPrintFifoSize(uint32_t val); 
+
+    uint32_t GetSimdPrintFifoSize() const
+    {
+        return printblockLen_;
+    }
+
+    // 目前只会在aclInit里面调用一次
+    rtError_t SetSimtPrintFifoSize(uint32_t val);
+
+    uint32_t GetSimtPrintFifoSize() const
+    {
+        return simtPrintLen_;
+    }
+
     void SetIsUserSetSocVersion(bool flag)
     {
         isUserSetSocVersion_ = flag;
@@ -958,6 +985,8 @@ private:
     RefObject<Context *> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device *> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM];  // Last one is stub device
     uint32_t deviceCustomerStackSize_{KERNEL_STACK_SIZE_32K};  // 全局共享，所有device生效，向上取整到16KB对齐
+    uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // 全局共享
+ 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_1024K}; // 全局共享
     ObjAllocator<RefObject<Program *>> *programAllocator_;
     Device *xpuDevice_{nullptr};
     Context *xpuCtxt_{nullptr};
@@ -1039,6 +1068,8 @@ private:
     std::vector<char> dcacheLockMixOpData_;
     bool connectUbFlag_ = false;
     std::mutex simtStackMutex_;
+    std::mutex simdFifoMutex_;
+    std::mutex simtFifoMutex_;
     uint32_t simtWarpStkSize_{RT_KIS_SIMT_WARP_STK_SIZE};
     uint32_t simtDvgWarpStkSize_{RT_KIS_SIMT_DVG_WARP_STK_SIZE};
 

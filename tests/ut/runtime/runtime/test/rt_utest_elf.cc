@@ -1108,10 +1108,10 @@ TEST_F(ELFTest, UpdateKernelsInfo)
  
 TEST_F(ELFTest, SymbolAddress)
 {
-    const uint64_t numSyms = 3;
+    const uint64_t numSyms = 4;
     rtElfData    *elfData;
     elfData = new rtElfData;
-    elfData->ascendMetaFlag = 0x7;
+    elfData->ascendMetaFlag = 0xF;
     elfData->elf_header.e_shnum = 1;
     elfData->obj_ptr_origin = nullptr;
 
@@ -1122,11 +1122,13 @@ TEST_F(ELFTest, SymbolAddress)
     string var1 = "g_sysFftsAddr";
     string var2 = "g_opL2CacheHintCfg";
     string var3 = "g_sysPrintFifoSpace";
-    const uint64_t strSize = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U;
+    string var4 = "g_sysSimtPrintFifoSpace";
+    const uint64_t strSize = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U;
     std::unique_ptr<char_t[]> strTbl(new (std::nothrow) char_t[strSize]);
-    memcpy_s(strTbl.get(), var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var1.c_str(), var1.size() + 1U);
-    memcpy_s(strTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U, var2.c_str(), var2.size() + 1U);
-    memcpy_s(strTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U, var3.c_str(), var3.size() + 1U);
+    memcpy_s(strTbl.get(), var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U, var1.c_str(), var1.size() + 1U);
+    memcpy_s(strTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U + var4.size() + 1U, var2.c_str(), var2.size() + 1U);
+    memcpy_s(strTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U + var4.size() + 1U, var3.c_str(), var3.size() + 1U);
+    memcpy_s(strTbl.get() + var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var4.size() + 1U, var4.c_str(), var4.size() + 1U);
 
     std::unique_ptr<Elf_Internal_Sym[]> symTab(new (std::nothrow) Elf_Internal_Sym[numSyms]);
     Elf_Internal_Sym *psym = symTab.get();
@@ -1134,6 +1136,7 @@ TEST_F(ELFTest, SymbolAddress)
     uint64_t g_sysFftsAddr = 0;
     uint64_t g_opL2CacheHintCfg = 0;
     uint64_t g_sysPrintFifoSpace = 0;
+    uint64_t g_sysSimtPrintFifoSpace = 0;
 
     // 设置 g_sysFftsAddr 符号信息
     psym->st_name = 0;
@@ -1155,6 +1158,13 @@ TEST_F(ELFTest, SymbolAddress)
     psym->st_shndx = 0;
     psym->st_info = STT_OBJECT;
 
+    // 设置 g_sysSimtPrintFifoSpace 符号信息
+    ++psym;
+    psym->st_name = var1.size() + 1U +  var2.size() + 1U +  var3.size() + 1U;
+    psym->st_value = reinterpret_cast<uint64_t>(&g_sysSimtPrintFifoSpace);
+    psym->st_shndx = 0;
+    psym->st_info = STT_OBJECT;
+
     elfData->elf_header.e_shnum = 0;
     SetSymbolAddress(strTbl.get(), symTab.get(), numSyms, elfData);
 
@@ -1167,6 +1177,12 @@ TEST_F(ELFTest, SymbolAddress)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 4 * 1024 * 1024);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 87);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 4 * 1024 * 1024);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = RefreshSymbolAddress(elfData);

@@ -104,6 +104,13 @@ static aclError InitCallback_Fail(const char *configStr, size_t len, void *userD
     return ACL_ERROR_RT_PARAM_INVALID;
 }
 
+static aclError InitCallback_Success(const char *configStr, size_t len, void *userData) {
+    (void)configStr;
+    (void)len;
+    (void)userData;
+    return ACL_SUCCESS;
+}
+
 static aclError FinalizeCallback_Fail(void *userData) {
     (void)userData;
     return ACL_ERROR_RT_PARAM_INVALID;
@@ -219,6 +226,29 @@ TEST_F(UTEST_ACL_Common, SetDefaultDeviceTest)
 
     ret = aclInit(nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    cbMgrInstance.initCallbackMap_ = bakInitCbMap;
+}
+
+TEST_F(UTEST_ACL_Common, SetFifoSizeTest)
+{
+    auto &cbMgrInstance = InitCallbackManager::GetInstance();
+    auto bakInitCbMap = cbMgrInstance.initCallbackMap_;
+    cbMgrInstance.initCallbackMap_.clear();
+    auto ret = aclInitCallbackRegister(ACL_REG_TYPE_OTHER, InitCallback_Success, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_01.json");
+    EXPECT_EQ(ret, ACL_ERROR_FAILURE);
+
+    ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_02.json");
+    EXPECT_EQ(ret, ACL_ERROR_FAILURE);
+
+    ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_03.json");
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    
+    resetAclJsonHash();
+    ret = aclFinalize();
+    EXPECT_EQ(ret, ACL_SUCCESS);
     cbMgrInstance.initCallbackMap_ = bakInitCbMap;
 }
 

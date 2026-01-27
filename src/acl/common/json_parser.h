@@ -28,6 +28,8 @@ namespace acl {
         static aclError GetEventModeFromFile(const char_t *const fileName, uint8_t &event_mode, bool &found);
         static aclError GetStackSizeByType(const char_t *const fileName, const std::string &typeName, size_t &outSize,
                                             bool &outExist);  
+        static aclError GetPrintFifoSizeByType(const char_t* const fileName, const std::string& typeName, 
+            size_t& fifoSize, bool& found);
         static aclError ParseJson(const char_t *const configStr, nlohmann::json &js);
         static aclError GetConfigStrFromFile(const char_t *const fileName, std::string &configStr);
 
