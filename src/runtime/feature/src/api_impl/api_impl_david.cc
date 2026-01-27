@@ -38,6 +38,7 @@
 #include "args_handle_allocator.hpp"
 #include "para_convertor.hpp"
 #include "runtime/kernel.h"
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
 

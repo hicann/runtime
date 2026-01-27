@@ -40,7 +40,7 @@
 #include "task_manager.h"
 #include "task_manager_david.h"
 #include "device_error_proc.hpp"
-
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
 constexpr uint32_t CCU_TASK_LOCAL_MEM_ERROR = 0x02U;

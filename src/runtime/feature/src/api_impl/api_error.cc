@@ -22,7 +22,7 @@
 #include "para_convertor.hpp"
 #include "global_state_manager.hpp"
 #include "register_memory.hpp"
-
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
 constexpr int16_t MODEL_SCH_GROUP_ID_MIN = 0;

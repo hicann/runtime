@@ -17,7 +17,7 @@
 #include "stars_cond_isa_define.hpp"
 #include "module.hpp"
 #include "stars_base.hpp"
-
+#include "starsv2_base.hpp"
 #define RTS_LITE_PCIE_BAR_COPY_SIZE (1024U)
 #define UB_DIRECT_WQE_MIN_LEN (64)
 #define UB_DIRECT_WQE_MAX_LEN (128)
@@ -53,26 +53,6 @@ struct rtStarsSqeHeader_t {
     uint16_t task_id;
 };
 
-struct rtDavidStarsSqeHeader_t {
-    /* word0 */
-    uint8_t type : 6;
-    uint8_t lock : 1;
-    uint8_t unlock : 1;
-    uint8_t ie : 1;
-    uint8_t preP : 1;
-    uint8_t postP : 1;
-    uint8_t wrCqe : 1;
-    uint8_t ptrMode : 1;
-    uint8_t rttMode : 1;
-    uint8_t headUpdate : 1;
-    uint8_t reserved : 1;
-    uint16_t blockDim;
-
-    /* word1 */
-    uint16_t rtStreamId;
-    uint16_t taskId;
-};
-
 struct RtFftsSqe {
     // 0-7 bytes
     rtStarsSqeHeader_t sqeHeader;
@@ -103,14 +83,6 @@ struct RtFftsSqe {
 
 struct rtStarsCommonSqe_t {
     rtStarsSqeHeader_t sqeHeader;  // word 0-1
-    uint32_t commandCustom[14];       // word 2-15 is custom define by command.
-};
-
-struct rtDavidStarsCommonSqe_t {
-    /* word0-1 */
-    rtDavidStarsSqeHeader_t sqeHeader;
-
-    /* word2-15 */
     uint32_t commandCustom[14];       // word 2-15 is custom define by command.
 };
 #pragma pack(pop)

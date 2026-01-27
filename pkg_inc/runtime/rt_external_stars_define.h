@@ -37,35 +37,10 @@ typedef struct tagStarsSqeHeader {
     uint16_t taskId;
 } rtStarsSqeHeader_t;
 
-typedef struct tagDavidStarsSqeHeader {
-    /* word0 */
-    uint8_t type : 6;
-    uint8_t lock : 1;
-    uint8_t unlock : 1;
-    uint8_t ie : 1;
-    uint8_t preP : 1;
-    uint8_t postP : 1;
-    uint8_t wrCqe : 1;
-    uint8_t ptrMode : 1;
-    uint8_t rttMode : 1;
-    uint8_t headUpdate : 1;
-    uint8_t res0 : 1;
-    uint16_t blockDim;
-
-    /* word1 */
-    uint16_t rtStreamId;
-    uint16_t taskId;
-} rtDavidStarsSqeHeader_t;
-
 typedef struct tagRtStarsCommonSqe {
     rtStarsSqeHeader_t sqeHeader;  // word 0-1
     uint32_t commandCustom[14];       // word 2-15 is custom define by command.
 } rtStarsCommonSqe_t;
-
-typedef struct tagRtDavidStarsCommonSqe {
-    rtDavidStarsSqeHeader_t sqeHeader;  // word 0-1
-    uint32_t commandCustom[14];       // word 2-15 is custom define by command.
-} rtDavidStarsCommonSqe_t;
 
 typedef struct tagStarsDsaSqe {
     // 0-7 bytes
@@ -248,17 +223,6 @@ typedef struct {
     uint32_t stride_outer;
     uint32_t stride_inner;
 } rtCmoAddrInfo;
-
-typedef struct {
-    uint32_t resv0[7];
-    uint16_t num_outer;
-    uint16_t num_inner;
-    uint64_t src;
-    uint32_t stride_outer;
-    uint32_t stride_inner;
-    uint32_t len_inner;
-    uint32_t resv1[3];
-} rtDavidCmoAddrInfo;
 #pragma pack(pop)
 
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
