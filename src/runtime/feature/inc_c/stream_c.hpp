@@ -13,7 +13,7 @@
 
 #include "stream_david.hpp"
 #include "program.hpp"
-
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
     rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registeredKernel, Program *&prog,

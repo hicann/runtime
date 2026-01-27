@@ -687,15 +687,6 @@ typedef struct {
     uint64_t dst;
 } rtMemcpyAddrInfo;
 
-// user should give the right src and dst address, and the right len
-typedef struct {
-    uint64_t res0[4];
-    uint64_t src;
-    uint64_t dst;
-    uint32_t len;
-    uint32_t res1[3];
-} rtDavidMemcpyAddrInfo;
-
 RTS_API rtError_t rtMemcpyAsyncPtr(void *memcpyAddrInfo, uint64_t destMax, uint64_t count,
                                     rtMemcpyKind_t kind, rtStream_t stream, uint32_t qosCfg);
 

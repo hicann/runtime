@@ -13,7 +13,7 @@
 #include "runtime/mem.h"
 #include "base.hpp"
 #include "stream.hpp"
-
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
     rtError_t MemcpyAsyncPtrForDavid(rtDavidMemcpyAddrInfo * const memcpyAddrInfo, const uint64_t count, Stream *stm,

@@ -13,7 +13,7 @@
 #include "stars_base_cond_isa_define.hpp"
 #include "task_base.hpp"
 #include "base_david.hpp"
-
+#include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
 
