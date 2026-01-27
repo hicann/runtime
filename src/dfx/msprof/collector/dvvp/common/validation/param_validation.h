@@ -89,6 +89,7 @@ public:
     bool CheckSocPmuEventsSizeValid(ProfSocPmuType type, uint32_t eventSize, int32_t &maxEvent) const;
     bool CheckScaleIsValid(const std::string &scaleInput, std::string &scaleType, std::string &scaleName,
         std::string &errInfo) const;
+    bool CheckTaskBlockValid(const std::string &switchName, const std::string &config) const;
 
 private:
     bool CheckControlSwitchProfiling(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);

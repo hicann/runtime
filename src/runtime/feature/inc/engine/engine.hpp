@@ -175,16 +175,6 @@ public:
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    virtual rtError_t CreatePrintfThread(void)
-    {
-        return RT_ERROR_NONE;
-    }
-
-    virtual bool isEnablePrintfThread(void)
-    {
-        return false;
-    }
-
     uint32_t GetDevRunningState()
     {
         if (monitorIsRunning_ == false && runningState_ == DEV_RUNNING_NORMAL) {
@@ -236,6 +226,9 @@ public:
     void RecycleCtrlTask(CtrlStream* const stm, const uint32_t sqPos);
     rtError_t ReportHeartBreakProcV2(void);
     virtual void RecycleThreadDo(void);
+
+    rtError_t CreatePrintfThread(void);
+    bool isEnablePrintfThread(void);
 protected:
     Device *GetDevice() const
     {
@@ -313,6 +306,8 @@ protected:
         return RT_ERROR_NONE;
     }
     void ReportStatusOomProc(const rtError_t error, const uint32_t deviceId) const;
+    void PrintfRun();
+    void DestroyPrintfThread(void);
 
     EngineObserver *observers_[EngineConstExpr::MAX_OBSERVER_NUM];
     uint32_t observerNum_;
@@ -328,6 +323,10 @@ protected:
 
     bool stmEmptyFlag_;
     bool isSubmitTaskFail_;
+
+    std::unique_ptr<Thread> printfThread_;
+    std::atomic<bool> printThreadRunFlag_{false};
+    std::mutex printMtx_;
 #ifndef CFG_DEV_PLATFORM_PC
     error_message::Context errorContext_ = {0UL, "", "", ""};
 #endif

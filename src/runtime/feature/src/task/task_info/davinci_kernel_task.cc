@@ -20,7 +20,7 @@
 #include "notify.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "device/device_error_proc.hpp"
-#include "common/aicpu_task_struct.h"
+#include "aicpu_sched/common/aicpu_task_struct.h"
 #include "context.hpp"
 #include "tsch_defines.h"
 #include "profiler.hpp"
@@ -28,6 +28,7 @@
 #include "stub_task.hpp"
 #include "hwts.hpp"
 #include "device.hpp"
+#include "raw_device.hpp"
 #include "atrace_log.hpp"
 #include "task_info.h"
 #include "task_manager.h"
@@ -525,6 +526,45 @@ void FillFftsMixSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const comman
     return;
 }
 
+static QosMasterType GetQosMasterTypeForCtx(const rtFftsPlusMixAicAivCtx_t *fftsCtx)
+{
+    QosMasterType masterType = QosMasterType::MASTER_INVALID;
+    switch (fftsCtx->contextType) {
+        case RT_CTX_TYPE_MIX_AIC:
+            masterType = QosMasterType::MASTER_AIC_INS;
+            break;
+        case RT_CTX_TYPE_MIX_AIV:
+            masterType = QosMasterType::MASTER_AIV_INS;
+            break;
+        default:
+            RT_LOG(RT_LOG_INFO, "fftsCtx->contextType is %u, there is no matching masterType.", fftsCtx->contextType);
+            break;
+    }
+    return masterType;
+}
+
+static void UpdateQosCfgInFftsCtx(rtFftsPlusMixAicAivCtx_t *fftsCtx, TaskInfo* const taskInfo)
+{
+    QosMasterType masterType = GetQosMasterTypeForCtx(fftsCtx);
+    RT_LOG(RT_LOG_INFO, "Begin to update fftsCtx qos info, masterType is %u.", static_cast<uint32_t>(masterType));
+    if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
+        RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
+        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg();
+        const auto index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
+        if (aicoreQosCfg[index].mode == 0) {     // mode=0 对应 tsch 中 replace_en=1，表示要替换sqe中的qos配置
+            fftsCtx->pmg = aicoreQosCfg[index].pmg;
+            fftsCtx->partId = aicoreQosCfg[index].mpamId;
+            fftsCtx->qos = aicoreQosCfg[index].qos;
+        } else {
+            RT_LOG(RT_LOG_INFO, "mode is not 0, no need to update ctx, mode=%u, index=%u.",
+                aicoreQosCfg[index].mode, index);
+        }
+    } else {
+        RT_LOG(RT_LOG_ERROR, "masterType (%u) is invalid, the QoS will not be updated.", static_cast<uint32_t>(masterType));
+    }
+    return;
+}
+
 void FillFftsAicAivCtxForDavinciTask(TaskInfo* const taskInfo, rtFftsPlusMixAicAivCtx_t *fftsCtx, uint32_t& minStackSize)
 {
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
@@ -648,6 +688,8 @@ void FillFftsAicAivCtxForDavinciTask(TaskInfo* const taskInfo, rtFftsPlusMixAicA
     fftsCtx->qos = 0U;
     fftsCtx->srcSlot[0] = 0U;
     fftsCtx->srcSlot[1] = 0U;
+
+    UpdateQosCfgInFftsCtx(fftsCtx, taskInfo);
     return;
 }
 
@@ -859,6 +901,45 @@ void ConstructFftsMixSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const c
     return;
 }
 
+static QosMasterType GetQosMasterTypeForSqe(const RtFftsPlusKernelSqe *sqe)
+{
+    QosMasterType masterType = QosMasterType::MASTER_INVALID;
+    switch (sqe->fftsType) {
+        case TS_FFTS_TYPE_AIC_ONLY:
+            masterType = QosMasterType::MASTER_AIC_INS;
+            break;
+        case TS_FFTS_TYPE_AIV_ONLY:
+            masterType = QosMasterType::MASTER_AIV_INS;
+            break;
+        default:
+            RT_LOG(RT_LOG_INFO, "sqe->fftsType is %u, there is no matching masterType.", sqe->fftsType);
+            break;
+    }
+    return masterType;
+}
+
+static void UpdateQosCfgInAicoreSqe(RtFftsPlusKernelSqe *sqe, TaskInfo* const taskInfo)
+{
+    QosMasterType masterType = GetQosMasterTypeForSqe(sqe);
+    RT_LOG(RT_LOG_INFO, "Begin to update sqe qos info, masterType is %u.", static_cast<uint32_t>(masterType));
+    if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
+        RawDevice * const dev = RtPtrToPtr<RawDevice*>(taskInfo->stream->Device_());
+        const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> &aicoreQosCfg = dev->GetQosCfg();
+        const auto index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
+        if (aicoreQosCfg[index].mode == 0) {    // mode=0 对应 tsch 中 replace_en=1，表示要替换sqe中的qos配置
+            sqe->pmg = aicoreQosCfg[index].pmg;
+            sqe->part_id = aicoreQosCfg[index].mpamId;
+            sqe->qos = aicoreQosCfg[index].qos;
+        } else {
+            RT_LOG(RT_LOG_INFO, "mode is not 0, no need to update sqe, mode=%u, index=%u.",
+                aicoreQosCfg[index].mode, index);
+        }
+    } else {
+        RT_LOG(RT_LOG_ERROR, "masterType (%u) is invalid, the QoS will not be updated.", static_cast<uint32_t>(masterType));
+    }
+    return;
+}
+
 void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *const command)
 {
     RtFftsPlusKernelSqe *sqe = &(command->fftsPlusKernelSqe);
@@ -953,6 +1034,8 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     sqe->pcAddrHigh = static_cast<uint16_t>(funcAddr >> UINT32_BIT_NUM);
     sqe->res7 = 0U;
 
+    UpdateQosCfgInAicoreSqe(sqe, taskInfo);
+
     const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args);
     sqe->paramAddrLow = static_cast<uint32_t>(addr);
     sqe->param_addr_high = static_cast<uint32_t>(addr >> UINT32_BIT_NUM);
@@ -964,6 +1047,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
         sqe->param_addr_high |= stackLevel << 20U;
     }
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_DAVINCI_WITH_SCHEM_MODE)) {
+        /* reserved 0 used only in 1910b tiny send to drv */
         sqe->res8[0U] = aicTaskInfo->comm.argsSize;
     }
 
@@ -1465,7 +1549,8 @@ bool CheckErrPrint(const uint32_t errorCode)
 
 static bool IsAiCoreMemErrorCode(const uint16_t errCode)
 {
-    return ((errCode == TS_ERROR_AICORE_MTE_ERROR) || (errCode == TS_ERROR_SDMA_LINK_ERROR));
+    return ((errCode == TS_ERROR_AICORE_MTE_ERROR) || (errCode == TS_ERROR_SDMA_LINK_ERROR) ||
+        (errCode == TS_ERROR_LINK_ERROR));
 }
 
 void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId)

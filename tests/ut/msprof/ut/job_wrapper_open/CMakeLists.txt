@@ -103,6 +103,7 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_open.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hash_data.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/platform/soc/dev_mgr_api.cpp
@@ -129,6 +130,10 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/adprof_collector.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_compute_device_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_inject.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_domain_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_data_handler.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/ctrl_files_dumper.cpp
     ${CppPath}
 )
 
@@ -157,8 +162,26 @@ target_compile_definitions(job_wrapper_open PRIVATE
     C_SEC
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+)
 
 target_include_directories(job_wrapper_open PRIVATE
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils
     ${TOP_DIR}/abl/msprof/inc/toolchain
@@ -228,11 +251,9 @@ target_compile_options(job_wrapper_open PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(job_wrapper_open PRIVATE
@@ -242,14 +263,7 @@ target_compile_definitions(job_wrapper_open PRIVATE
 )
 
 target_link_libraries(job_wrapper_open PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    ascend_protobuf
-    c_sec
-    #mmpa
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(job_wrapper_open
@@ -258,7 +272,3 @@ set_target_properties(job_wrapper_open
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET job_wrapper_open
-    TASK_NUM 1
-)

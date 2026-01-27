@@ -1276,7 +1276,7 @@ static int32_t GetStringTable(const rtElfData * const elfData, std::unique_ptr<c
     return ELF_SUCCESS;
 }
 
- rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
+rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
 {
     for (uint32_t i = 0; i < kernelsNum; ++i) {
         const auto it = kernelInfoMap.find(std::string(kernels[i].name));

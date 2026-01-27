@@ -235,16 +235,12 @@ namespace acl {
         try {
             for (auto &item : cannInfoMap) {
                 auto &cannInfo = item.second;
-                const auto config = js.find(cannInfo.configKeyName);
+                const auto config = js.find(cannInfo.readableAttrName);
                 if (config != js.end()) {
                     const auto runtimeIter = config->find(SW_CONFIG_RUNTIME);
                     if (runtimeIter != config->end()) {
                         ACL_REQUIRES_OK(CannInfoUtils::ParseVersionValue(
-                            runtimeIter->get<std::string>(), &cannInfo.runtimeVersion));
-                    }
-                    const auto socIter = config->find(SW_CONFIG_SOC_VERSION);
-                    if (socIter != config->end()) {
-                        cannInfo.socVersions = socIter->get<std::vector<std::string>>();
+                            runtimeIter->get<std::string>(), &cannInfo.minimumRuntimeVersion));
                     }
                 }
             }
@@ -335,34 +331,47 @@ namespace acl {
         return ACL_SUCCESS;
     }
 
-    aclError JsonParser::GetStackSize(const char_t *const fileName, size_t &aicoreStackSize, bool &exist)
+    aclError JsonParser::GetStackSizeByType(
+        const char_t* const fileName, const std::string& typeName, size_t& outSize, bool& outExist)
     {
-        ACL_LOG_DEBUG("start to execute GetStackSize.");
-        exist = false;
+        ACL_LOG_DEBUG("start to execute GetStackSizeByType, typeName = %s.", typeName.c_str());
+        outExist = false;
+        outSize = 0U;
         nlohmann::json js;
         aclError ret = acl::JsonParser::ParseJsonFromFile(fileName, js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("[Parse][JsonFromFile]parse default config from file[%s] failed, errorCode = %d", fileName, ret);
+            ACL_LOG_ERROR(
+                "[Parse][JsonFromFile]parse default config from file[%s] failed, errorCode = %d", fileName, ret);
+            acl::AclErrorLogManager::ReportInputError(
+                acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
+                std::vector<const char*>({fileName, "Parse config file failed"}));
             return ret;
         }
-        size_t statckSize = 0;
+
         try {
-            if (JsonParser::ContainKey(js, "StackSize")) {
-                const nlohmann::json &stackSizeJs = js.at("StackSize");
-                if (JsonParser::ContainKey(stackSizeJs, "aicore_stack_size")) {
-                   statckSize = stackSizeJs.at("aicore_stack_size").get<size_t>();
-                   exist = true;
-                   ACL_LOG_INFO("successfully parse aicore_stack_size, size is %zu", statckSize);
-                }
+            // 检查 "StackSize" 键是否存在
+            if (js.find("StackSize") == js.end()) {
+                ACL_LOG_DEBUG("StackSize key not found in config file [%s]", fileName);
+                outExist = false; // 明确设置 outExist 为 false
+                return ACL_SUCCESS;
             }
-        } catch (const nlohmann::json::exception &e) {
-            ACL_LOG_INNER_ERROR("parse config file [%s], exception: %s", fileName, e.what());
+
+            const nlohmann::json& stackSizeJs = js["StackSize"];
+            if (stackSizeJs.find(typeName.c_str()) != stackSizeJs.end()) {
+                size_t rawSize = stackSizeJs.at(typeName.c_str()).get<size_t>();
+                outSize = rawSize;
+                outExist = true;
+                ACL_LOG_INFO("successfully parse %s, size is %zu", typeName.c_str(), outSize);
+            }
+        } catch (const nlohmann::json::exception& e) {
+            ACL_LOG_ERROR("parse config file [%s], exception: %s", fileName, e.what());
+            acl::AclErrorLogManager::ReportInputError(
+                acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
+                std::vector<const char*>({fileName, ("Parse exception: " + std::string(e.what())).c_str()}));
             return ACL_ERROR_INTERNAL_ERROR;
         }
 
-        aicoreStackSize = statckSize;
-        ACL_LOG_DEBUG("successfully parse StackSize");
+        ACL_LOG_DEBUG("successfully parse StackSize by type");
         return ACL_SUCCESS;
     }
-
 } // namespace acl

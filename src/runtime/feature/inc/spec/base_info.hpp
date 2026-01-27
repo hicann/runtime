@@ -33,6 +33,8 @@ constexpr int32_t RT_ABORT_MODEL_TIMEOUT = 10000;  // ms
 constexpr int32_t RT_REPORT_TIMEOUT_TIME = 5000;
 constexpr int32_t RT_REPORT_STARS_TIMEOUT_TIME = 500;
 constexpr int32_t RT_REPORT_STARS_TIMEOUT_TIME_OP_TIMEOUT_MS = 1;
+constexpr int32_t RT_REPORT_MDC_TIMEOUT_TIME = 1000;
+constexpr int32_t RT_REPORT_AS31XM1_TIMEOUT_TIME = 150;
 constexpr int32_t RT_GET_SQ_STATUS_TIMEOUT_TIME = 300000;
 constexpr int32_t RT_REPORT_WITHOUT_TIMEOUT = 0;
 constexpr int32_t RT_QUERY_SIMT_STACK_TIMEOUT = 1000;   //ms
@@ -83,6 +85,15 @@ constexpr uint32_t STARS_NOTIFY_NUM_OF_SINGLE_TABLE_128 = 128U;
 
 constexpr uint64_t RT_STARS_BASE_ADDR_78000000 = 0x078000000ULL;
 
+constexpr uint32_t RT_BS9SX1AA_AICORE_NUM_AG = 10U;
+constexpr uint32_t RT_BS9SX1AA_AICORE_NUM = 9U;
+constexpr uint32_t RT_BS9SX1AA_AIVECTOR_NUM_AG = 8U;
+constexpr uint32_t RT_BS9SX1AA_AIVECTOR_NUM = 7U;
+constexpr uint32_t RT_BS9SX1AB_AICORE_NUM = 8U;
+constexpr uint32_t RT_BS9SX1AB_AIVECTOR_NUM = 6U;
+constexpr uint32_t RT_BS9SX1AC_AICORE_NUM = 6U;
+constexpr uint32_t RT_BS9SX1AC_AIVECTOR_NUM = 4U;
+
 constexpr uint64_t STARS_EVENT_BASE_ADDR = 0x200000ULL;
 constexpr uint64_t STARS_EVENT_OFFSET = 0x4ULL;
 constexpr uint32_t STARS_EVENT_NUM_OF_SINGLE_TABLE = 4096U;
@@ -94,12 +105,12 @@ constexpr uint32_t STARS_NOTIFY_NUM_OF_SINGLE_TABLE = 512U;
 constexpr uint64_t STARS_NOTIFY_TABLE_OFFSET = 0x10000ULL;
 
 constexpr uint64_t STARS_SIMPLE_SQ_OFFSET = 0x10000ULL;
-constexpr uint64_t STARS_SIMPLE_SQ_OFFSET_4K = 0x1000ULL; 
+constexpr uint64_t STARS_SIMPLE_SQ_OFFSET_4K = 0x1000ULL; //1910b is 4k model
 constexpr uint64_t STARS_SIMPLE_SQ0_STARS_P0_SQ_DB_0_REG = 0x08000008ULL;
 constexpr uint64_t STARS_SIMPLE_SQ0_STARS_P0_SQ_CFG4_0_REG = 0x08000010ULL;
 constexpr uint64_t STARS_SIMPLE_SQ0_STARS_P0_SQ_CFG5_0_REG = 0x08000014ULL;
 constexpr uint64_t STARS_SIMPLE_RTSQ_FSM_SEL_REG = 0x4880ULL;
-constexpr uint64_t STARSV2_SIMPLE_RTSQ_FSM_SEL_REG = 0x21000000ULL;
+constexpr uint64_t DAVID_SIMPLE_RTSQ_FSM_SEL_REG = 0x21000000ULL;
 
 /* follow 4K config */
 constexpr uint64_t RT_SIMPLE_SQ_OFFSET_1000 = 0x1000ULL;
@@ -137,7 +148,7 @@ constexpr uint32_t RT_HALF_TASK_NUM = 512U;
 constexpr uint32_t RT_HALF_SEND_TASK_NUM = 256U; // this is half of RT_HALF_TASK_NUM
 constexpr uint16_t RT_VIRTUAL_SQE_SIZE = 64U;
 constexpr uint16_t RT_VIRTUAL_CQE_SIZE = 16U;
-constexpr uint16_t RT_STARSV2_VIRTUAL_CQE_SIZE = 32U;
+constexpr uint16_t RT_DAVID_VIRTUAL_CQE_SIZE = 32U;
 
 constexpr uint16_t RT_STREAM_ID_OFFSET = 10U;
 constexpr uint16_t RT_TASK_ID_OFFSET = 10U;
@@ -167,41 +178,52 @@ enum TschId : uint8_t {
 };
 
 enum rtPGVersion_t : uint8_t {
-    RT_VER_NA    = 0U,   
-    RT_VER_BIN1  = 1U,   
-    RT_VER_BIN2  = 2U,   
-    RT_VER_BIN3  = 3U,   
-    RT_VER_BIN4  = 4U,   /* reserved is same as driver */
-    RT_VER_BIN8  = 8U,   
-    RT_VER_BIN10 = 10U,  
+    RT_VER_NA    = 0U,   /* Ascend910B4 */	
+    RT_VER_BIN1  = 1U,   /* Ascend910B1 */	
+    RT_VER_BIN2  = 2U,   /* Ascend910B2 */	
+    RT_VER_BIN3  = 3U,   /* Ascend910B3 */	
+    RT_VER_BIN4  = 4U,   /* reserved is same as driver */	
+    RT_VER_BIN8  = 8U,   /* Ascend910B2C */	
+    RT_VER_BIN10 = 10U,  /* Ascend910B4_1 */  
     RT_VER_END = 11U
 };
 
 enum RtPGVersion : uint8_t {
-    PG_VER_BIN0 = 0U,
-    PG_VER_BIN1 = 1U,   
-    PG_VER_BIN2 = 2U,   
-    PG_VER_BIN3 = 3U,  
-    PG_VER_BIN4 = 4U,
-    PG_VER_BIN5 = 5U,
-    PG_VER_BIN6 = 6U,
-    PG_VER_BIN7 = 7U,
-    PG_VER_BIN10 = 10U,
-    PG_VER_BIN11 = 11U,
-    PG_VER_BIN12 = 12U,
-    PG_VER_BIN13 = 13U,
-    PG_VER_BIN14 = 14U,
-    PG_VER_BIN15 = 15U,
-    PG_VER_BIN16 = 16U,
-    PG_VER_BIN17 = 17U,
-    PG_VER_BIN18 = 18U,
-    PG_VER_BIN19 = 19U,
-    PG_VER_BIN20 = 20U,
-    PG_VER_BIN21 = 21U,
-    PG_VER_BIN22 = 22U,
-    PG_VER_BIN23 = 23U,
-    PG_VER_BIN24 = 24U,
-    PG_VER_END = 25U
+    PG_VER_BIN0 = 0U,   /* Ascend910_9599 */	
+    PG_VER_BIN1 = 1U,   /* Ascend910_9589/Ascend910_9391/Ascend910_9392 */	
+    PG_VER_BIN2 = 2U,   /* Ascend910_958a/Ascend910_9381/Ascend910_9382 */	
+    PG_VER_BIN3 = 3U,   /* Ascend910_958b/Ascend910_9372 */	
+    PG_VER_BIN4 = 4U,   /* Ascend910_957b */	
+    PG_VER_BIN5 = 5U,   /* Ascend910_957d */	
+    PG_VER_BIN6 = 6U,   /* Ascend910_950z */	
+    PG_VER_BIN7 = 7U,   /* Ascend910_9579 */	
+    PG_VER_BIN10 = 10U, /* Ascend910_9362 */	
+    PG_VER_BIN11 = 11U, /* Ascend910_9591 */	
+    PG_VER_BIN12 = 12U, /* Ascend910_9592 */	
+    PG_VER_BIN13 = 13U, /* Ascend910_9581 */	
+    PG_VER_BIN14 = 14U, /* Ascend910_9582 */	
+    PG_VER_BIN15 = 15U, /* Ascend910_9584 */	
+    PG_VER_BIN16 = 16U, /* Ascend910_9587 */	
+    PG_VER_BIN17 = 17U, /* Ascend910_9588 */	
+    PG_VER_BIN18 = 18U, /* Ascend910_9572 */	
+    PG_VER_BIN19 = 19U, /* Ascend910_9575 */	
+    PG_VER_BIN20 = 20U, /* Ascend910_9576 */	
+    PG_VER_BIN21 = 21U, /* Ascend910_9574 */	
+    PG_VER_BIN22 = 22U, /* Ascend910_9577 */	
+    PG_VER_BIN23 = 23U, /* Ascend910_9578 */	
+    PG_VER_BIN24 = 24U, /* Ascend910_957C */	
+    PG_VER_BIN25 = 25U, /* Ascend910_95A1 */	
+    PG_VER_BIN26 = 26U, /* Ascend910_95A2 */	
+    PG_VER_BIN27 = 27U, /* Ascend910_9595 */	
+    PG_VER_BIN28 = 28U, /* Ascend910_9596 */	
+    PG_VER_BIN29 = 29U, /* Ascend910_9585 */	
+    PG_VER_BIN30 = 30U, /* Ascend910_9586 */	
+    PG_VER_BIN31 = 31U, /* Ascend910_9583 */	
+    PG_VER_BIN32 = 32U, /* Ascend910_9571 */	
+    PG_VER_BIN33 = 33U, /* Ascend910_9573 */
+    PG_VER_BIN34 = 34U, /* Ascend910_950x */
+ 	PG_VER_BIN35 = 35U, /* Ascend910_950y */
+ 	PG_VER_END = 36U
 };
 
 enum RtSetVisDevicesErrorType : uint8_t {

@@ -9,10 +9,10 @@
 # -----------------------------------------------------------------------------------------------------------
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}//dvvp/driver/devmgmt/ai_drv_dev_api.cpp
-    ${MSPROF_SOURCE_DIR}//dvvp/driver/devmgmt/ai_drv_dev_api_open.cpp
+    ${MSPROF_SOURCE_DIR}//dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/driver/channel/ai_drv_prof_api.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}//dvvp/common/validation/param_validation_open.cpp
+    ${MSPROF_SOURCE_DIR}//dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/json/json.cpp
@@ -20,8 +20,9 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/json_parser.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
 )
 
@@ -32,7 +33,7 @@ set(localSrcFiles
     ../stub/mmpa_stub.cpp
     ../stub/devdrv_runtime_api_stub.cpp
     ../stub/profile_drv_user_stub.cpp
-    #test/ai_drv_api_utest.cpp
+    test/ai_drv_api_utest.cpp
 )
 
 add_executable(driver_utest
@@ -41,8 +42,8 @@ add_executable(driver_utest
 )
 
 set(libmsprofHeaderDir
-    ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
@@ -52,8 +53,8 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/open
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
 )
 
@@ -95,13 +96,13 @@ target_compile_options(driver_utest PRIVATE
 )
 
 target_compile_definitions(driver_utest PRIVATE
+    C_SEC
     MSPROF_DEBUG
     google=ascend_private
 )
 
 target_link_libraries(driver_utest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
-    c_sec
 )
 
 set_target_properties(driver_utest

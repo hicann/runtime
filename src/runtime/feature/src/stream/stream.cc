@@ -30,13 +30,14 @@
 #include "inner_thread_local.hpp"
 #include "error_code.h"
 #include "capture_model.hpp"
-#include "task_starsv2.hpp"
+#include "task_david.hpp"
 #include "stub_task.hpp"
 #include "device_error_info.hpp"
 #include "capture_adapt.hpp"
 #include "memory_task.h"
 #include "sq_addr_memory_pool.hpp"
 #include <thread>
+#include "ctrl_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -695,6 +696,10 @@ rtError_t Stream::Setup()
                                                               sqId_, &sqRegVirtualAddr_, &addrLen);
         ERROR_RETURN_MSG_INNER(error, "Fail to get sq reg virtual addr, deviceId=%u, sqId=%u.", device_->Id_(), sqId_);
         RT_LOG(RT_LOG_INFO, "Success to get sq=%u sq reg virtual addr length=%u.", sqId_, addrLen);
+        if (device_->GetPlatformType() == PLATFORM_MINI_5612) {
+            sqRegVirtualAddr_ = RT_STARS_BASE_ADDR_78000000 + RT_SIMPLE_SQ0_STARS_P0_SQ_CFG4_0_REG +
+                    sqId_ * RT_SIMPLE_SQ_OFFSET_1000 - STARS_SIMPLE_SQ_HEAD_OFFSET;
+        }
         error = SetSqRegVirtualAddrToDevice(sqRegVirtualAddr_);
         ERROR_RETURN_MSG_INNER(error, "Fail to copy sqid=%u virtual addr to device, error=%#x.", sqId_,
             static_cast<uint32_t>(error));
@@ -710,7 +715,7 @@ rtError_t Stream::Setup()
 
     isFlowCtrl = false;
 
-    /* no need to seed task.
+    /* 1980C no need to seed task.
      * A message will be sent in NormalSqCqAllocate via mailbox to ts.
      * Then, ts will config sq swap buffer info on STARS.
      */
@@ -831,6 +836,130 @@ void Stream::SetBeingAbortedFlag(bool abortFlag)
 bool Stream::GetBeingAbortedFlag()
 {
     return isBeingAborted_;
+}
+
+rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    uint32_t result = static_cast<uint32_t>(RT_ERROR_NONE);
+    const uint64_t startTime = ClockGetTimeUs();
+    uint64_t count = 0ULL;
+    do {
+        // 3.send message to TS to abort sq
+        ret = TaskAbortByType(result, opType, sqId_);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, 
+            "Failed to abort stream, stream_id=%d, sq_id=%u, retCode=%#x.", 
+            streamId_, sqId_, static_cast<uint32_t>(ret));
+
+        if (result == TS_SUCCESS) {
+            break;
+        }
+
+        COND_RETURN_ERROR((result == TS_ERROR_ILLEGAL_PARAM) || (result == TS_APP_EXIT_UNFINISHED) ||
+            (result == TS_ERROR_ABORT_UNFINISHED), RT_ERROR_TSFW_ILLEGAL_PARAM,
+            "TS param invalid or abort, exit unfinished, device_id=%u, stream_id=%d, sq_id=%u, result=%u.",
+            device_->Id_(), streamId_, sqId_, result);
+
+        count = ClockGetTimeIntervalUs(startTime);
+        COND_RETURN_ERROR((count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
+            "Abort process timeout, device_id=%u, stream_id=%d, time=%llu us, timeout_threshold=%llu us", 
+            device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
+        (void)mmSleep(1U);
+    } while (result == TS_ERROR_APP_QUEUE_FULL);
+
+    uint32_t status = 0U;
+    do {
+        // 4.polling if TS has aborted sq successfully until timeout
+        ret = QueryAbortStatusByType(status, APP_ABORT_STS_QUERY_BY_SQ, sqId_);
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, 
+            "Abort query fail, stream_id=%d, sq_id=%u, retCode=%#x.",
+            streamId_, sqId_, static_cast<uint32_t>(ret));
+
+        if (status == DAVID_ABORT_TERMINATE_SUCC) {
+            break;
+        }
+
+        COND_RETURN_ERROR((status == DAVID_ABORT_TERMINATE_FAIL), RT_ERROR_TSFW_ILLEGAL_PARAM,
+            "Device desc status invalid or abort stream flag illegal or hccl abort process fail, "
+            "device_id=%u, stream_id=%d, sq_id=%u, status=%u.",
+            device_->Id_(), streamId_, sqId_, status);
+
+        count = ClockGetTimeIntervalUs(startTime);
+        COND_RETURN_ERROR((count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
+            "Abort query timeout, device_id=%u, stream_id=%d, time=%llu us, timeout_threshold=%llu us", 
+            device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
+        (void)mmSleep(5U);
+    } while (true);
+
+    return ret;
+}
+
+rtError_t Stream::StreamStop()
+{
+    if (device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT || GetAbortStatus() == RT_ERROR_STREAM_ABORT) {
+        RT_LOG(RT_LOG_INFO, "device or stream is in abort status, stream_id=%d, sq_id=%u, cq_id=%u",
+            streamId_, sqId_, cqId_);
+        return RT_ERROR_STREAM_ABORT;
+    }
+
+    rtError_t ret = RT_ERROR_NONE;
+    std::unique_lock<std::mutex> taskLock(Context_()->streamLock_);
+
+    // send message to TS to abort sq
+    ret = TaskAbortAndQueryStatus(OP_STOP_STREAM);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "TaskStop retCode=%#x.", static_cast<uint32_t>(ret));
+    RT_LOG(RT_LOG_INFO,
+        "Finish StreamStop, stream_id=%d, sq_id=%u, cq_id=%u",
+        streamId_, sqId_, cqId_);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t Stream::StreamAbort()
+{
+    RT_LOG(RT_LOG_INFO, "Enter StreamAbort, stream_id=%d, sq_id=%u, cq_id=%u",
+        streamId_, sqId_, cqId_);
+    if (device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) {
+        RT_LOG(RT_LOG_INFO, "device is in device abort status, stream_id=%d, sq_id=%u, cq_id=%u",
+            streamId_, sqId_, cqId_);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ret = RT_ERROR_NONE;
+    // 1.set stream abort status
+    SetAbortStatus(RT_ERROR_STREAM_ABORT);
+    // wait others thread finish sendTask
+    (void)mmSleep(10U);
+    // WARNING: streamLock_ must be locked after abort status is set,
+    //          otherwise there could be mutual lock with Context::Synchronize
+    std::unique_lock<std::mutex> taskLock(Context_()->streamLock_);
+
+    // 2.clean up buffer for the 2nd stage of the sq pipeline
+    ret = CleanSq();
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "CleanSq retCode=%#x.", static_cast<uint32_t>(ret));
+
+    // 3.send message to TS to abort sq
+    ret = TaskAbortAndQueryStatus(OP_ABORT_STREAM);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "TaskAbort retCode=%#x.", static_cast<uint32_t>(ret));
+
+    // 4.recycle runtime task related resources
+    ret = ResClear(ABORT_STREAM_TIMEOUT);
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ResClear retCode=%#x.", static_cast<uint32_t>(ret));
+    
+    // 5.clean up sq and cq in driver
+    ret = SqCqUpdate();
+    COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "SqCqUpdate retCode=%#x.", static_cast<uint32_t>(ret));
+    RT_LOG(RT_LOG_INFO,
+        "After sq cp update, stream_id=%d, sq_id=%u, cq_id=%u",
+        streamId_, sqId_, cqId_);
+    
+    // 6.restore stream normal state
+    SetAbortStatus(RT_ERROR_NONE);
+    RT_LOG(RT_LOG_INFO,
+        "Finish StreamAbort, stream_id=%d, sq_id=%u, cq_id=%u",
+        streamId_, sqId_, cqId_);
+
+    return RT_ERROR_NONE;
 }
 
 rtError_t Stream::CleanSq()
@@ -1006,10 +1135,35 @@ ERROR_TASK:
     return error;
 }
 
+rtError_t Stream::SubmitStreamRecycle(Stream* exeStream, bool isForceRecycle, uint16_t logicCqId, TaskInfo *&task) const
+{
+    TaskInfo submitRecycleTask = {};
+    TaskInfo *maintenanceTsk = nullptr;
+    rtError_t errorReason;
+    if (this != exeStream && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtMaintainceParam param = {streamId_, isForceRecycle, logicCqId};
+        return device_->GetCtrlSQ().SendStreamRecycleMsg(param, task);
+    }
+
+    NULL_PTR_RETURN_MSG(exeStream, RT_ERROR_STREAM_NULL);
+    maintenanceTsk = exeStream->AllocTask(&submitRecycleTask, TS_TASK_TYPE_MAINTENANCE, errorReason);
+    NULL_PTR_RETURN_MSG(maintenanceTsk, errorReason);
+
+    (void)MaintenanceTaskInit(maintenanceTsk, MT_STREAM_RECYCLE_TASK, static_cast<uint32_t>(streamId_), isForceRecycle);
+    maintenanceTsk->u.maintenanceTaskInfo.waitCqId = logicCqId;
+    task = maintenanceTsk;
+    rtError_t error = device_->SubmitTask(maintenanceTsk);
+    if (error != RT_ERROR_NONE) {
+        (void)device_->GetTaskFactory()->Recycle(maintenanceTsk);
+        RT_LOG(RT_LOG_ERROR, "Failed to submit task, retCode=%#x, stream_id=%d, task_id=%u.",
+            error, streamId_, static_cast<uint32_t>(maintenanceTsk->id));
+    }
+    return error;
+}
+
 rtError_t Stream::TearDown(const bool terminal, bool flag)
 {
     Runtime * const rt = Runtime::Instance();
-    TaskInfo submitRecycleTask = {};
     TaskInfo submitDestroyTask = {};
     TaskInfo *tsk = nullptr;
     TaskInfo *recycleTask = nullptr;
@@ -1031,7 +1185,10 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
     if (fusioning_) {
         RT_LOG(RT_LOG_WARNING, "fusion is not match, stream_id=%d", stmId);
     }
-
+    if (argsHandle_ != nullptr) {
+        (void)dev->ArgLoader_()->Release(argsHandle_);
+        argsHandle_ = nullptr;
+    }
     const bool starsFlag = dev->IsStarsPlatform();
     if (rt->GetDisableThread() && (!starsFlag)) {
         bool isFastCq = false;
@@ -1056,21 +1213,7 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
         }
     }
     if (unlikely(pendingNum_.Value() > 0U)) {
-        NULL_PTR_RETURN_MSG(exeStream, RT_ERROR_STREAM_NULL);
-        tsk = exeStream->AllocTask(&submitRecycleTask, TS_TASK_TYPE_MAINTENANCE, errorReason);
-        NULL_PTR_RETURN_MSG(tsk, errorReason);
-
-        error = MaintenanceTaskInit(tsk, MT_STREAM_RECYCLE_TASK, static_cast<uint32_t>(stmId), isForceRecycle);
-        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to init maintenance task, retCode=%#x, stream_id=%d.",
-                             static_cast<uint32_t>(error), stmId);
-        tsk->u.maintenanceTaskInfo.waitCqId = static_cast<uint16_t>(logicCqId);
-
-        error = dev->SubmitTask(tsk);
-        if (error != RT_ERROR_NONE) {
-            (void)dev->GetTaskFactory()->Recycle(tsk);
-            RT_LOG(RT_LOG_ERROR, "Failed to submit task, retCode=%#x, stream_id=%d, task_id=%u.",
-                error, stmId, static_cast<uint32_t>(tsk->id));
-        }
+        (void)SubmitStreamRecycle(exeStream, isForceRecycle, static_cast<uint16_t>(logicCqId), tsk);
     }
     // Stream may be destroyed without sync, so MT task can get abort_failure status
     isForceRecycle = GetForceRecycleFlag(flag);
@@ -1208,7 +1351,9 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
     return RT_ERROR_NONE;
 
 ERROR_FREE:
-    (void)dev->GetTaskFactory()->Recycle(tsk);
+    if (tsk != nullptr && tsk->stream != nullptr) {
+        (void)dev->GetTaskFactory()->Recycle(tsk);
+    }
     return error;
 }
 
@@ -1288,11 +1433,7 @@ rtError_t Stream::GetSynchronizeError(rtError_t error)
         return RT_ERROR_DEVICE_TASK_ABORT;
     }
     // if the context enter failure mode,return the failure error
-    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR)) {
-        return (GetFailureMode() == CONTINUE_ON_FAILURE) ? RT_ERROR_NONE : context_->GetFailureError();
-    } else {
-        return (context_->GetCtxMode() == CONTINUE_ON_FAILURE) ? RT_ERROR_NONE : context_->GetFailureError();
-    }
+    return (context_->GetCtxMode() == CONTINUE_ON_FAILURE) ? RT_ERROR_NONE : context_->GetFailureError();
 }
 
 rtError_t Stream::GetError(void)
@@ -1381,7 +1522,8 @@ rtError_t Stream::CheckContextTaskSend(const TaskInfo * const workTask) const
         return context_->CheckTaskSend(workTask);
     }
 }
-rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint16_t &finishedId)
+
+rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &finishedId)
 {
     // sqHead indicates the current position of execution; it has not yet been completed.
     const uint32_t rtsqDepth = (((flags_ & RT_STREAM_HUGE) != 0U) && (Runtime::macroValue_.maxTaskNumPerHugeStream != 0)) ?
@@ -1389,26 +1531,37 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint16_t &fin
     const uint32_t posTail = GetTaskPosTail();
     const uint32_t posHead = GetTaskPosHead();
     if (((posTail + rtsqDepth - sqHead) % rtsqDepth) >= (posTail + rtsqDepth - posHead) % rtsqDepth) {
+        RT_LOG(RT_LOG_INFO, "stream_id=%d, sqHead=%u, posTail=%u, posHead=%u", this->Id_(), sqHead, posTail, posHead);
         return RT_ERROR_INVALID_VALUE;
     }
     uint32_t endTaskId = MAX_UINT16_NUM;
     uint32_t nextTaskId = MAX_UINT16_NUM;
-    (void)GetTaskIdByPos(sqHead, nextTaskId); // sqhead is next pos.
+    (void)GetTaskIdByPos(sqHead, nextTaskId); // sqhead is next executed task pos.
+    RT_LOG(RT_LOG_INFO, "sqHead=%u, nextTaskId=%u", sqHead, nextTaskId);
 
-    const uint16_t finishedPos = (sqHead + rtsqDepth - 1) % rtsqDepth;
+    const uint16_t finishedPos = static_cast<uint16_t>((sqHead + rtsqDepth - 1) % rtsqDepth);
     (void)GetTaskIdByPos(finishedPos, endTaskId); // sqhead-1 is finished pos.
+    RT_LOG(RT_LOG_INFO, "finishedPos=%u, endTaskId=%u", finishedPos, endTaskId);
 
-    if (sqHead == posTail || nextTaskId != endTaskId) {
-        finishedId = static_cast<uint16_t>(endTaskId);
+    // In scenarios with multiple SQEs, ffts+, mem wait, determine whether a task has been completed.
+    // If the task IDs before and after are the same, it is considered that the task has not been completed.
+    if (sqHead == posTail || nextTaskId != endTaskId) { // In the multi-task scenario, the task is reclaimed after all the tasks are executed.
+        finishedId = endTaskId;
     }
+
     return RT_ERROR_NONE;
+}
+
+bool Stream::IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId)
+{
+    return TASK_ID_GEQ(executeEndTaskid, taskId);
 }
 
 bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead)
 {
     constexpr uint16_t LARGER_THRESHOLD = 10U;
     constexpr uint16_t SLEEP_UNIT = 5U;
-    constexpr uint16_t PER_SCHED_YIELD = 100U;
+    constexpr uint16_t perSchedYield = 100U;
 
     uint16_t exeTaskId = (finishedId == MAX_UINT16_NUM) ? executeEndTaskid_.Value() : finishedId;
     if (TASK_ID_LEQ(TASK_ID_ADD(exeTaskId, LARGER_THRESHOLD), taskId)) {
@@ -1417,28 +1570,26 @@ bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t task
         uint32_t tryCount = 0U;
         const uint64_t beginTime = GetWallUs();
         while (GetWallUs() - beginTime < SLEEP_UNIT) {
-            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId) || (sqHead == GetTaskPosTail())) {
+            if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId) || sqHead == GetTaskPosTail()) {
                 return true;
             }
             tryCount++;
-            if ((tryCount % PER_SCHED_YIELD) == 0U) {
+            if (tryCount % perSchedYield == 0) {
                 std::this_thread::yield();
             }
         }
-    } else {
-        // No-op
     }
     return false;
 }
 
-rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespec &beginTime, int32_t timeout)
+rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec &beginTime, int32_t timeout)
 {
     uint16_t sqHead = static_cast<uint16_t>(MAX_UINT16_NUM);
     rtError_t error = RT_ERROR_NONE;
     const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
     int32_t reportTime = REPORT_TIME_UINT;
     while (true) {
-        COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
+        COND_PROC_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT, this->SetNeedSyncFlag(true);,
                           "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms.",
                           device_->Id_(), streamId_, timeout);
         if (IsProcessTimeout(beginTime, reportTime)) {
@@ -1451,7 +1602,7 @@ rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespe
         COND_RETURN_ERROR((abortStatus_ == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT, "stream_id=%d is abort.", streamId_);
         error = CheckContextStatus(false);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-        if (TASK_ID_GEQ(executeEndTaskid_.Value(), taskId) || sqHead == GetTaskPosTail()) {
+        if ((IsTaskExcuted(GetExecuteEndTaskId(), taskId)) || (sqHead == GetTaskPosTail())) {
             return RT_ERROR_NONE;
         }
         if (!device_->GetIsDoingRecycling()) {
@@ -1460,13 +1611,14 @@ rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespe
         error = device_->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
                                     static_cast<uint32_t>(error));
-        uint16_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
+        uint32_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
+        RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%u, sqHead=%u.", Id_(), taskId, sqHead);
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
         if (SynchronizeDelayTime(finishedId, taskId, sqHead)) {
             return RT_ERROR_NONE;
         }
         COND_PROC((error != RT_ERROR_NONE || finishedId == static_cast<uint16_t>(MAX_UINT16_NUM)), continue);
-        if (TASK_ID_GEQ(finishedId, taskId)) {
+        if (IsTaskExcuted(finishedId, taskId)) {
             return RT_ERROR_NONE;
         }
     }
@@ -1477,6 +1629,7 @@ rtError_t Stream::WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimes
     uint32_t tryCount = 0U;
     rtError_t error = RT_ERROR_NONE;
     constexpr uint16_t perSchedYield = 1000U;
+    RT_LOG(RT_LOG_DEBUG, "stream_id=%u, task_id=%u, recycleEndTaskId_=%u.", Id_(), taskId, recycleEndTaskId_.Value());
      while (true) {
          COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                            "Stream recycle timeout, device_id=%u, stream_id=%d, timeout=%dms, tryCount=%u",
@@ -1484,7 +1637,7 @@ rtError_t Stream::WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimes
          COND_RETURN_ERROR((abortStatus_ == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT, "stream_id=%d is abort.", streamId_);
          error = CheckContextStatus(false);
          COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
-         if (TASK_ID_GEQ(recycleEndTaskId_.Value(), taskId)) {
+         if (IsTaskExcuted(recycleEndTaskId_.Value(), taskId)) {
              return RT_ERROR_NONE;
          }
          if (!device_->GetIsDoingRecycling()) {
@@ -1497,7 +1650,7 @@ rtError_t Stream::WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimes
      }
 }
 
-rtError_t Stream::SynchronizeImpl(const uint16_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout)
+rtError_t Stream::SynchronizeImpl(const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout)
 {
     rtError_t error = RT_ERROR_NONE;
     const mmTimespec beginTime = mmGetTickCount();
@@ -1505,6 +1658,7 @@ rtError_t Stream::SynchronizeImpl(const uint16_t syncTaskId, const uint16_t conc
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "failed, stream_id=%d, error=0x%x", Id_(), error);
     StreamSyncFinishReport();
     if (concernedTaskId == MAX_UINT16_NUM) {
+        device_->WakeUpRecycleThread();
         RT_LOG(RT_LOG_INFO, "device_id=%d, stream_id=%d, task_id=%u has been completed, no concerned cqe.",
                device_->Id_(), streamId_, syncTaskId);
         return error;
@@ -1523,7 +1677,8 @@ rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
         if (!IsSeparateSendAndRecycle() || GetBindFlag()) {
             error = StarsWaitForTask(lastTaskId_, isNeedWaitSyncCq, timeout);
         } else {
-            error = SynchronizeImpl(static_cast<uint16_t>(lastTaskId_), latestConcernedTaskId.Value(), timeout);
+            RT_LOG(RT_LOG_DEBUG, "lastTaskId_=%u, latestConcernedTaskId=%u", static_cast<uint16_t>(lastTaskId_), latestConcernedTaskId.Value());
+            error = SynchronizeImpl(lastTaskId_, latestConcernedTaskId.Value(), timeout);
         }
         if (context_ != nullptr) {
             context_->PopContextErrMsg();
@@ -1682,6 +1837,7 @@ rtError_t Stream::FreePersistentTaskID(TaskAllocator * const tskAllocator)
 void Stream::FreePersistentTaskID(const Stream * const exeStream)
 {
     if (device_ == nullptr) {
+        // 1910 may desconstruct stream in another thread, so device_ here may be nullptr.
         return;
     }
     TaskFactory * const taskGenerator = device_->GetTaskFactory();
@@ -2213,6 +2369,7 @@ bool Stream::IsTaskLimited(const TaskInfo * const tsk)
 {
     UNUSED(tsk);
     if (IsTaskSink()) {
+        // for 1910 check all stream tasks, others check current stream tasks.
         return (pendingNum_.Value() > RT_MAX_TASK_NUM);
     }
 
@@ -2271,7 +2428,7 @@ bool Stream::IsWaitFinish(const uint32_t finishedTaskId, const uint32_t submitte
 rtError_t Stream::WaitTask(bool const isReclaim, const uint32_t taskId, const int32_t timeout)
 {
     if (IsSeparateSendAndRecycle()) {
-        return SynchronizeImpl(static_cast<uint16_t>(taskId), static_cast<uint16_t>(taskId), timeout);
+        return SynchronizeImpl(taskId, static_cast<uint16_t>(taskId), timeout);
     }
     rtError_t error = RT_ERROR_NONE;
     uint32_t currId = UINT16_MAX;
@@ -2462,6 +2619,7 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
         }
 
         tryCount++;
+
         if ((tryCount % perSchedYield) == 0) {
             if (timeout > 0) {
                 uint64_t count = GetTimeInterval(beginTimeSpec);
@@ -3264,6 +3422,7 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
         }
 
         tryCount++;
+
         if ((tryCount % perSchedYield) == 0U) {
             if (timeout > 0) {
                 const uint64_t count = GetTimeInterval(beginTime);
@@ -3798,18 +3957,20 @@ rtError_t Stream::ResClear(uint64_t timeout)
     while (pendingNum_.Value() > 0U) {
         COND_RETURN_ERROR((device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)), RT_ERROR_DRV_ERR,
             "device_id=%u is down, clear stream_id=%u", device_->Id_(), streamId_);
-        StreamSyncLock();
-        isForceRecycle_ = true;
-        SetNeedRecvCqeFlag(false);
         if (IsSeparateSendAndRecycle()) {
+            isForceRecycle_ = true;
+            SetNeedRecvCqeFlag(false);
             StreamRecycleLock();
             (void)dev->RecycleSeparatedStmByFinishedId(this, static_cast<uint16_t>(lastTaskId_));
             StreamRecycleUnlock();
         } else {
+            StreamSyncLock();
+            isForceRecycle_ = true;
+            SetNeedRecvCqeFlag(false);
             uint32_t reclaimTaskId = UINT32_MAX;
             (void)dev->TaskReclaim(static_cast<uint32_t>(streamId_), false, reclaimTaskId);
+            StreamSyncUnLock();
         }
-        StreamSyncUnLock();
         tryCount++;
         if(timeout >0 && tryCount % perDetectTimes == 0) {
             endCnt = mmGetTickCount();
@@ -4112,8 +4273,8 @@ bool Stream::IsStreamFull(const uint32_t head, const uint32_t tail, const uint32
 
 void Stream::GetTaskEventIdOrNotifyId(TaskInfo *taskInfo, int32_t &eventId, uint32_t &notifyId, uint64_t &devAddr) const
 {
-    EventRecordTaskInfo *eventRecordTaskInfo = nullptr;
-    EventWaitTaskInfo *eventWaitTaskInfo = nullptr;
+    EventRecordTaskInfo *eventRecordTask = nullptr;
+    EventWaitTaskInfo *eventWaitTask = nullptr;
     EventResetTaskInfo *eventResetTaskInfo = nullptr;
     NotifyWaitTaskInfo* notifyWaitTask = nullptr;
     NotifyRecordTaskInfo *notifyRecord = nullptr;
@@ -4122,12 +4283,12 @@ void Stream::GetTaskEventIdOrNotifyId(TaskInfo *taskInfo, int32_t &eventId, uint
 
     switch (taskInfo->type) {
         case TS_TASK_TYPE_EVENT_RECORD:
-            eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
-            eventId = eventRecordTaskInfo->eventid;
+            eventRecordTask = &(taskInfo->u.eventRecordTaskInfo);
+            eventId = eventRecordTask->eventid;
             break;
         case TS_TASK_TYPE_STREAM_WAIT_EVENT:
-            eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
-            eventId = eventWaitTaskInfo->eventId;
+            eventWaitTask = &(taskInfo->u.eventWaitTaskInfo);
+            eventId = eventWaitTask->eventId;
             break;
         case TS_TASK_TYPE_EVENT_RESET:
             eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);

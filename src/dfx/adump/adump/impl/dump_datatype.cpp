@@ -11,6 +11,7 @@
 #include "dump_datatype.h"
 #include <map>
 #include "log/adx_log.h"
+#include "proto/dump_task.pb.h"
 namespace Adx {
 namespace {
 static constexpr uint32_t K_BIT_NUM_OF_ONE_BYTE = 8U;
@@ -34,7 +35,7 @@ const std::map<GeDataType, ProtoDataType> GE_DT_TO_PROTO_DT = {
     { GeDataType::DT_COMPLEX128, ProtoDataType::DT_COMPLEX128 },
     { GeDataType::DT_QINT8, ProtoDataType::DT_QINT8 },
     { GeDataType::DT_QINT16, ProtoDataType::DT_QINT16 },
-    { GeDataType::C_DT_QINT32, ProtoDataType::DT_QINT32 },
+    { GeDataType::DT_QINT32, ProtoDataType::DT_QINT32 },
     { GeDataType::DT_QUINT8, ProtoDataType::DT_QUINT8 },
     { GeDataType::DT_QUINT16, ProtoDataType::DT_QUINT16 },
     { GeDataType::DT_RESOURCE, ProtoDataType::DT_RESOURCE },

@@ -537,7 +537,7 @@ int32_t ProfHostService::KillToolAndWaitHostProcess() const
     std::vector<std::string> argsV;
     argsV.push_back(PROF_SCRIPT_FILE_PATH);
     argsV.push_back("kill");
-    argsV.push_back(std::to_string(hostProcess_));
+ 	argsV.push_back(std::to_string(hostProcess_));
     int32_t exitCode = analysis::dvvp::common::utils::VALID_EXIT_CODE;
     static const std::string CMD = "sudo";
     OsalProcess appProcess = MSVP_PROCESS;

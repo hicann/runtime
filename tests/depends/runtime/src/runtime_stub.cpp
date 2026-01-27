@@ -375,7 +375,7 @@ rtError_t aclStub::rtMemsetAsync(void *ptr, uint64_t destMax, uint32_t value, ui
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+rtError_t aclStub::rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                              const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                              uint32_t flags)
 {
@@ -459,7 +459,7 @@ rtError_t aclStub::rtFunctionRegister(void *binHandle,
 }
 
 rtError_t aclStub::rtKernelLaunch(const void *stubFunc,
-                        uint32_t blockDim,
+                        uint32_t numBlocks,
                         void *args,
                         uint32_t argsSize,
                         rtSmDesc_t *smDesc,
@@ -478,6 +478,13 @@ rtError_t aclStub::rtGetSocVersion(char *version, const uint32_t maxLen)
 {
     const char *socVersion = "Ascend910B1";
     memcpy_s(version, maxLen, socVersion, strlen(socVersion) + 1);
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtGetSocSpec(const char *label, const char *key, char *value, uint32_t maxLen)
+{
+    const char *attrValue = "1";
+    memcpy_s(value, maxLen, attrValue, strlen(attrValue) + 1);
     return RT_ERROR_NONE;
 }
 
@@ -865,6 +872,10 @@ rtError_t aclStub::rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle,
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize) {
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtMapMem(void *devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) {
     return RT_ERROR_NONE;
 }
@@ -912,24 +923,24 @@ rtError_t aclStub::rtDestroyLaunchArgs(rtLaunchArgsHandle argsHandle)
   return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDim,
+rtError_t aclStub::rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBlocks,
                                                 const rtArgsEx_t * const argsInfo,
                                                 rtStream_t stm, const rtTaskCfgInfo_t * const cfgInfo)
 {
   (void)funcHandle;
-  (void)blockDim;
+  (void)numBlocks;
   (void)argsInfo;
   (void)stm;
   (void)cfgInfo;
   return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim,
+rtError_t aclStub::rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks,
                                               rtStream_t stm, rtKernelLaunchCfg_t *cfg,
                                               const void *args, uint32_t argsSize, void *reserve)
 {
   (void)funcHandle;
-  (void)blockDim;
+  (void)numBlocks;
   (void)stm;
   (void)cfg;
   (void)args;
@@ -938,12 +949,12 @@ rtError_t aclStub::rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t 
   return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t aclStub::rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                                rtKernelLaunchCfg_t *cfg, void *hostArgs, uint32_t argsSize,
                                                rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum)
 {
   (void)funcHandle;
-  (void)blockDim;
+  (void)numBlocks;
   (void)stm;
   (void)cfg;
   (void)hostArgs;
@@ -1280,7 +1291,7 @@ rtError_t aclStub::rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr,
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t aclStub::rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                              rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void *reserve)
 {
     return RT_ERROR_NONE;
@@ -2234,6 +2245,21 @@ rtError_t aclStub::rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapSho
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData)
+{
+    (void)binHandle;
+    (void)callback;
+    (void)userData;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func)
+{
+    (void)info;
+    (void)func;
+    return RT_ERROR_NONE;
+}
+
 MockFunctionTest& MockFunctionTest::aclStubInstance()
 {
     static MockFunctionTest stub;
@@ -2603,11 +2629,11 @@ rtError_t rtMemsetAsync(void *ptr, uint64_t destMax, uint32_t value, uint64_t co
     return MockFunctionTest::aclStubInstance().rtMemsetAsync(ptr, destMax, value, count, stream);
 }
 
-rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                     const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                     uint32_t flags)
 {
-    return MockFunctionTest::aclStubInstance().rtCpuKernelLaunchWithFlag(soName, kernelName, blockDim, argsInfo,
+    return MockFunctionTest::aclStubInstance().rtCpuKernelLaunchWithFlag(soName, kernelName, numBlocks, argsInfo,
         smDesc, stm, flags);
 }
 
@@ -2688,13 +2714,13 @@ rtError_t rtFunctionRegister(void *binHandle,
 }
 
 rtError_t rtKernelLaunch(const void *stubFunc,
-                        uint32_t blockDim,
+                        uint32_t numBlocks,
                         void *args,
                         uint32_t argsSize,
                         rtSmDesc_t *smDesc,
                         rtStream_t stream)
 {
-    return MockFunctionTest::aclStubInstance().rtKernelLaunch(stubFunc, blockDim, args, argsSize, smDesc, stream);
+    return MockFunctionTest::aclStubInstance().rtKernelLaunch(stubFunc, numBlocks, args, argsSize, smDesc, stream);
 }
 
 
@@ -2708,6 +2734,13 @@ rtError_t rtGetSocVersion(char *version, const uint32_t maxLen)
     const char *socVersion = "Ascend910_9391";
     memcpy_s(version, maxLen, socVersion, strlen(socVersion) + 1);
     return MockFunctionTest::aclStubInstance().rtGetSocVersion(version, maxLen);
+}
+
+rtError_t rtGetSocSpec(const char *label, const char *key, char *value, uint32_t maxLen)
+{
+    const char *attrValue = "1";
+    memcpy_s(value, maxLen, attrValue, strlen(attrValue) + 1);
+    return MockFunctionTest::aclStubInstance().rtGetSocSpec(label, key, value, maxLen);
 }
 
 rtError_t rtGetGroupCount(uint32_t *count)
@@ -3127,6 +3160,10 @@ rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMem
     return MockFunctionTest::aclStubInstance().rtMemGetAllocationPropertiesFromHandle(handle, prop);
 }
 
+rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize) {
+    return MockFunctionTest::aclStubInstance().rtMemGetAddressRange(ptr, pbase, psize);
+}
+
 rtError_t rtMallocPhysical(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags) {
     *handle = (rtDrvMemHandle)0x01U;
     return MockFunctionTest::aclStubInstance().rtMallocPhysical(handle, size, prop, flags);
@@ -3179,25 +3216,25 @@ rtError_t rtDestroyLaunchArgs(rtLaunchArgsHandle argsHandle)
   return MockFunctionTest::aclStubInstance().rtDestroyLaunchArgs(argsHandle);
 }
 
-rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
+rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBlocks, const rtArgsEx_t * const argsInfo,
                                        rtStream_t stm, const rtTaskCfgInfo_t * const cfgInfo)
 {
-  return MockFunctionTest::aclStubInstance().rtLaunchKernelByFuncHandleV3(funcHandle, blockDim,
+  return MockFunctionTest::aclStubInstance().rtLaunchKernelByFuncHandleV3(funcHandle, numBlocks,
                                                                           argsInfo, stm, nullptr);
 }
 
-rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                      rtKernelLaunchCfg_t *cfg, const void *args, uint32_t argsSize, void *reserve)
 {
-  return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithDevArgs(funcHandle, blockDim,
+  return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithDevArgs(funcHandle, numBlocks,
                                                                         stm, cfg, args, argsSize, reserve);
 }
 
-rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                       rtKernelLaunchCfg_t *cfg, void *hostArgs, uint32_t argsSize,
                                       rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum)
 {
-  return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithHostArgs(funcHandle, blockDim, stm, cfg, hostArgs, argsSize,
+  return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithHostArgs(funcHandle, numBlocks, stm, cfg, hostArgs, argsSize,
                                                                          placeHolderArray, placeHolderNum);
 }
 
@@ -3441,10 +3478,10 @@ rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **a
     return MockFunctionTest::aclStubInstance().rtsFuncGetAddr(funcHandle, aicAddr, aivAddr);
 }
 
-rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                     rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void* reserve)
 {
-    return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithConfig(funcHandle, blockDim, stm, cfg, argsHandle, reserve);
+    return MockFunctionTest::aclStubInstance().rtsLaunchKernelWithConfig(funcHandle, numBlocks, stm, cfg, argsHandle, reserve);
 }
 
 rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle *handle)
@@ -4050,4 +4087,15 @@ rtError_t rtMemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_
 rtError_t rtMemGetAccess(void *virPtr, rtMemLocation *location, uint64_t *flag)
 {
     return MockFunctionTest::aclStubInstance().rtMemGetAccess(virPtr, location, flag);
+}
+
+rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData)
+{
+
+    return MockFunctionTest::aclStubInstance().rtBinarySetExceptionCallback(binHandle, callback, userData);
+}
+
+rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func)
+{
+    return MockFunctionTest::aclStubInstance().rtGetFuncHandleFromExceptionInfo(info, func);
 }

@@ -14,7 +14,7 @@
 #include "runtime.hpp"
 #include "tsch_defines.h"
 #include "ttlv.hpp"
-#if (!defined CFG_DEV_PLATFORM_PC)
+#if (!defined WIN32) && (!defined CFG_DEV_PLATFORM_PC)
 #include "error_manager.h"
 #endif
 
@@ -27,7 +27,7 @@ void ErrorMessageUtils::RuntimeErrorMessage(const int32_t errCode,
     UNUSED(errCode);
     UNUSED(errMsgKey);
     UNUSED(errMsgValue);
-#if (!defined CFG_DEV_PLATFORM_PC)
+#if (!defined WIN32) && (!defined CFG_DEV_PLATFORM_PC)
     REPORT_ENV_ERROR(GetViewErrorCodeStr(errCode), errMsgKey, errMsgValue);
 #endif
 }
@@ -39,7 +39,7 @@ void ErrorMessageUtils::RuntimeErrorMessage(const std::string &errCode,
     UNUSED(errCode);
     UNUSED(errMsgKey);
     UNUSED(errMsgValue);
-#if (!defined CFG_DEV_PLATFORM_PC)
+#if (!defined WIN32) && (!defined CFG_DEV_PLATFORM_PC)
     REPORT_ENV_ERROR(errCode, errMsgKey, errMsgValue);
 #endif
 }

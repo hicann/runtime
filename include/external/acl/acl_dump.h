@@ -63,6 +63,15 @@ ACL_FUNC_VISIBILITY aclError aclopStartDumpArgs(uint32_t dumpType, const char *p
  */
 ACL_FUNC_VISIBILITY aclError aclopStopDumpArgs(uint32_t dumpType);
 
+/**
+ * @ingroup AscendCL
+ * @brief Get exception dump path for tensor custom dump data.
+ *
+ * @retval path for success
+ * @retval NULL for failed
+ */
+ACL_FUNC_VISIBILITY const char* acldumpGetPath();
+
 #ifdef __cplusplus
 }
 #endif

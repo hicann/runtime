@@ -125,7 +125,7 @@ PlatformManagerV2 &PlatformManagerV2::Instance() {
   return platform_info;
 }
 
-uint32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version, const std::string &label,
+int32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version, const std::string &label,
     const std::string &key, std::string &value)
 {
   value = "test";

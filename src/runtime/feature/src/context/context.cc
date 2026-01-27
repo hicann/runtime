@@ -51,6 +51,7 @@
 #include "para_convertor.hpp"
 #include "binary_loader.hpp"
 #include "buffer_allocator.hpp"
+#include "ctrl_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -116,55 +117,55 @@ rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
 
 static rtError_t LaunchAicpuKernelForCpuSoImpl(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm)
 {
-     rtError_t error = RT_ERROR_NONE;
-     Device *device = stm->Device_();
-     TaskInfo submitTask = {};
-     rtError_t errorReason;
-     AicpuTaskInfo *aicpuTaskInfo = nullptr;
-     TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason);
-     NULL_PTR_RETURN_MSG(tsk, errorReason);
-     AicpuTaskInit(tsk, 1, RT_KERNEL_DEFAULT);
-     ArgLoaderResult result = {};
-     error = device->ArgLoader_()->LoadCpuKernelArgs(argsInfo, stm, &result);
-     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
- 	     "Failed to load kernel args, retCode=%#x.", error);
-     SetAicpuArgs(tsk, result.kerArgs, argsInfo->argsSize, result.handle);
-     result.handle = nullptr;
+    rtError_t error = RT_ERROR_NONE;
+    Device *device = stm->Device_();
+    TaskInfo submitTask = {};
+    rtError_t errorReason;
+    AicpuTaskInfo *aicpuTaskInfo = nullptr;
+    TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason);
+    NULL_PTR_RETURN_MSG(tsk, errorReason);
+    AicpuTaskInit(tsk, 1, RT_KERNEL_DEFAULT);
+    ArgLoaderResult result = {};
+    error = device->ArgLoader_()->LoadCpuKernelArgs(argsInfo, stm, &result);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+        "Failed to load kernel args, retCode=%#x.", error);
+    SetAicpuArgs(tsk, result.kerArgs, argsInfo->argsSize, result.handle);
+    result.handle = nullptr;
 
-     // soName is nullptr, only copy kerneName.
-     void *kernelNameAddr = nullptr;
-     error = device->ArgLoader_()->GetKernelInfoDevAddr(launchNames->kernelName, KernelInfoType::KERNEL_NAME, &kernelNameAddr);
-     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
- 	     "Failed to get kernel address by name, retCode=%#x.", error);
-     SetNameArgs(tsk, nullptr, kernelNameAddr);
+    // soName is nullptr, only copy kerneName.
+    void *kernelNameAddr = nullptr;
+    error = device->ArgLoader_()->GetKernelInfoDevAddr(launchNames->kernelName, KernelInfoType::KERNEL_NAME, &kernelNameAddr);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+        "Failed to get kernel address by name, retCode=%#x.", error);
+    SetNameArgs(tsk, nullptr, kernelNameAddr);
 
-     aicpuTaskInfo = &(tsk->u.aicpuTaskInfo);
-     RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, flag=%u, kernelFlag=0x%x, blkdim=%u, soName=null, kernel_name=%s.",
- 	     device->Id_(), stm->Id_(), tsk->id, RT_KERNEL_DEFAULT, aicpuTaskInfo->comm.kernelFlag, aicpuTaskInfo->comm.dim,
- 	     launchNames->kernelName != nullptr ? launchNames->kernelName : "null");
+    aicpuTaskInfo = &(tsk->u.aicpuTaskInfo);
+    RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, flag=%u, kernelFlag=0x%x, blkdim=%u, soName=null, kernel_name=%s.",
+        device->Id_(), stm->Id_(), tsk->id, RT_KERNEL_DEFAULT, aicpuTaskInfo->comm.kernelFlag, aicpuTaskInfo->comm.dim,
+        launchNames->kernelName != nullptr ? launchNames->kernelName : "null");
 
-     // Set kernel type and flags
-     aicpuTaskInfo->aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_AICPU);
+    // Set kernel type and flags
+    aicpuTaskInfo->aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_AICPU);
 
-     // for batchLoadsoFrombuf and deleteCustOp set timeout 60s
-     if (Runtime::Instance()->IsSupportOpTimeoutMs()) {
- 	     aicpuTaskInfo->timeout = LOAD_CPU_SO_KERNEL_TIMEOUT;
-     }
-
-     error = stm->Device_()->SubmitTask(tsk);
-     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
- 	     "Failed to submit aicpu task, retCode=%#x.", error);
-     return error;
+    // for batchLoadsoFrombuf and deleteCustOp set timeout 60s
+    if (Runtime::Instance()->IsSupportOpTimeoutMs()) {
+        aicpuTaskInfo->timeout = LOAD_CPU_SO_KERNEL_TIMEOUT;
     }
 
-    rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm) {
-     rtError_t error = RT_ERROR_NONE;
-     if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL_DOT_CPUKERNEL)) {
- 	     error = StreamLaunchCpuKernel(launchNames, 1, argsInfo, stm, RT_KERNEL_DEFAULT);
-     } else {
- 	     error = LaunchAicpuKernelForCpuSoImpl(launchNames, argsInfo, stm);
-     }
-     return error;
+    error = stm->Device_()->SubmitTask(tsk);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+        "Failed to submit aicpu task, retCode=%#x.", error);
+    return error;
+}
+
+rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm) {
+    rtError_t error = RT_ERROR_NONE;
+    if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL_DOT_CPUKERNEL)) {
+        error = StreamLaunchCpuKernel(launchNames, 1, argsInfo, stm, RT_KERNEL_DEFAULT);
+    } else {
+        error = LaunchAicpuKernelForCpuSoImpl(launchNames, argsInfo, stm);
+    }
+    return error;
 }
 
 TIMESTAMP_EXTERN(rtReduceAsync_part1);
@@ -193,7 +194,7 @@ Context::Context(Device * const ctxDevice, const bool primaryCtx)
 Context::~Context()
 {
     uint32_t i = 0U;
-    while (i < Runtime::maxProgramNum_) {
+    while ((i < Runtime::maxProgramNum_) && (moduleAllocator_ != nullptr)) {
         if (!moduleAllocator_->CheckIdValid(i)) {
             i = moduleAllocator_->NextPoolFirstId(i);
             continue;
@@ -431,35 +432,37 @@ rtError_t Context::Setup()
 
     // set overflow addr
     if (overflowAddr_ == nullptr) {
-        const rtMemType_t memType = (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TS_MEM_4G_SPACE_FOR_OVERFLOW)) ? 
-            RT_MEMORY_TS_4G : RT_MEMORY_DEFAULT;
-        error = device_->Driver_()->DevMemAlloc(&overflowAddr_, OVERFLOW_ADDR_MAX_SIZE,
-            memType, device_->Id_());
+        const rtMemType_t memType =
+            (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TS_MEM_4G_SPACE_FOR_OVERFLOW)) ?
+                RT_MEMORY_TS_4G :
+                RT_MEMORY_DEFAULT;
+        error = device_->Driver_()->DevMemAlloc(&overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, memType, device_->Id_());
         if (unlikely(error == RT_ERROR_DRV_OUT_MEMORY)) {
             RT_LOG(RT_LOG_ERROR, "overflowAddr DevMemAlloc failed, retCode=%#x.", error);
         } else {
             ERROR_RETURN(error, "overflowAddr DevMemAlloc failed, retCode=%#x.", error);
             if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TS_MEM_4G_SPACE_FOR_OVERFLOW)) {
                 error = device_->Driver_()->MemSetSync(overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, 0U, OVERFLOW_ADDR_MAX_SIZE);
-                ERROR_RETURN_MSG_INNER(error, "Memset value failed, size=%#" PRIx64 "(bytes), retCode=%#x!",
-                static_cast<uint64_t>(OVERFLOW_ADDR_MAX_SIZE), static_cast<uint32_t>(error));
-                error =device_->Driver_()->MemAddressTranslate(static_cast<int32_t>(device_->Id_()),
-                RtPtrToValue<void *>(overflowAddr_), &overflowAddrOffset_);
+                ERROR_RETURN_MSG_INNER(
+                    error, "Memset value failed, size=%#" PRIx64 "(bytes), retCode=%#x!",
+                    static_cast<uint64_t>(OVERFLOW_ADDR_MAX_SIZE), static_cast<uint32_t>(error));
+                error = device_->Driver_()->MemAddressTranslate(
+                    static_cast<int32_t>(device_->Id_()), RtPtrToValue<void*>(overflowAddr_), &overflowAddrOffset_);
                 ERROR_RETURN_MSG_INNER(error, "Trans overflowAddr failed retCode=%#x!", static_cast<uint32_t>(error));
             }
         }
     }
-
     if (isPrimary_) {
         defaultStream_ = device_->PrimaryStream_();
-        COND_RETURN_ERROR_MSG_INNER(defaultStream_ == nullptr, RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL,
-                                    "Set up failed, default stream is null.");
+        COND_RETURN_ERROR_MSG_INNER(defaultStream_ == nullptr, RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL, "Set up failed, default stream is null.");
     } else {
-        defaultStream_ = StreamFactory::CreateStream(device_, 0U, RT_STREAM_PRIMARY_DEFAULT);
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, defaultStream_ == nullptr, RT_ERROR_STREAM_NEW,
-            "Setup context failed, new Stream failed.");
-        RT_LOG(RT_LOG_INFO, "New defaultStream_ ok, Runtime_alloc_size %zu, stream_id=%d.",
-            sizeof(Stream), defaultStream_->Id_());
+        uint32_t stmFlag = RT_STREAM_PRIMARY_DEFAULT;
+        if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+            stmFlag = RT_STREAM_PRIMARY_DEFAULT | RT_STREAM_FAST_LAUNCH | RT_STREAM_FAST_SYNC;
+        }
+        defaultStream_ = StreamFactory::CreateStream(device_, 0U, stmFlag);
+        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, defaultStream_ == nullptr, RT_ERROR_STREAM_NEW, "Setup context failed, new Stream failed.");
+        RT_LOG(RT_LOG_INFO, "New defaultStream_ ok, Runtime_alloc_size %zu, stream_id=%d.", sizeof(Stream), defaultStream_->Id_());
 
         error = defaultStream_->Setup();
         ERROR_PROC_RETURN_MSG_INNER(error, DeleteStream(defaultStream_);,
@@ -469,8 +472,7 @@ rtError_t Context::Setup()
     defaultStream_->SetContext(this);
 
     // need sync for get tsch version value succ
-    const bool syncFlag = ((defaultStream_->Flags() & RT_STREAM_PRIMARY_FIRST_DEFAULT) != 0U) &&
-                           (!(device_->IsStarsPlatform()));
+    const bool syncFlag = ((defaultStream_->Flags() & RT_STREAM_PRIMARY_FIRST_DEFAULT) != 0U) && (!(device_->IsStarsPlatform()));
     if (syncFlag) {
         error = defaultStream_->Synchronize(true);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
@@ -550,41 +552,36 @@ ERROR_FREE_STREAM:
     return error;
 }
 
-bool Context::IsSyncTimeout(int32_t timeout, uint64_t start) const
-{
-    mmTimeval tv;
-    mmGetTimeOfDay(&tv, nullptr);
-    const uint64_t timeCost = static_cast<uint64_t>(((static_cast<uint64_t>(tv.tv_sec) * RT_MS_PER_S) +
-        (static_cast<uint64_t>(tv.tv_usec) / RT_US_TO_MS)) - start);
-    if ((timeout >= 0) && (timeCost > static_cast<uint64_t>(timeout))) {
-        return true;
-    }
-    return false;
-}
-
-rtError_t Context::SyncNonFailModeStreams(const std::list<Stream *> &streams, int32_t timeout, uint64_t start) const
+rtError_t Context::SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const
 {
     rtError_t error;
     rtError_t firstError = RT_ERROR_NONE;
+    int32_t remainTime = timeout;
+    COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(start, timeout, &remainTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
+        "Sync stream timeout, before sync stream.");
+
     for (const auto &syncStream : streams) {
-        const int32_t streamId = syncStream->Id_();
-        error = syncStream->Synchronize(false, timeout);
         if (device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) {
             RT_LOG(RT_LOG_ERROR, "device is abort, device_id=%d.", device_->Id_());
             return RT_ERROR_DEVICE_TASK_ABORT;
         }
-        COND_RETURN_ERROR_MSG_INNER(IsSyncTimeout(timeout, start), RT_ERROR_STREAM_SYNC_TIMEOUT,
-            "Sync stream timeout, stream_id=%d.", streamId);
 
-        if (unlikely((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE))) {
-            firstError = error;
-            RT_LOG(RT_LOG_ERROR, "Synchronize stream fail, stream_id=%d, errorCode=%#x.", streamId, error);
+        error = syncStream->Synchronize(false, remainTime);
+        COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(start, timeout, &remainTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
+            "Sync stream timeout, stream_id=%d.", syncStream->Id_());
+
+        if (unlikely(error != RT_ERROR_NONE)) {
+            RT_LOG(RT_LOG_ERROR, "Synchronize stream fail, stream_id=%d, errorCode=%#x.", syncStream->Id_(), error);
+            if (GetCtxMode() != CONTINUE_ON_FAILURE) {
+                return error;
+            } else if (firstError == RT_ERROR_NONE) {
+                firstError = error;
+            }
         }
     }
 
-    error = defaultStream_->Synchronize(false, timeout);
-
-    COND_RETURN_ERROR_MSG_INNER(IsSyncTimeout(timeout, start), RT_ERROR_STREAM_SYNC_TIMEOUT,
+    error = defaultStream_->Synchronize(false, remainTime);
+    COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(start, timeout, &remainTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
         "Sync stream timeout, default stream.");
 
     if (unlikely((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE))) {
@@ -595,7 +592,7 @@ rtError_t Context::SyncNonFailModeStreams(const std::list<Stream *> &streams, in
     return firstError;
 }
 
-rtError_t Context::TaskReclaimforSyncDevice(uint64_t startTime, int32_t timeout)
+rtError_t Context::TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t timeout)
 {
     rtError_t firstError = RT_ERROR_NONE;
     rtError_t error = RT_ERROR_NONE;
@@ -632,7 +629,7 @@ rtError_t Context::TaskReclaimforSyncDevice(uint64_t startTime, int32_t timeout)
             const rtError_t ctxStatus = CheckStatus(syncStream);
             COND_RETURN_ERROR(ctxStatus != RT_ERROR_NONE, ctxStatus, "context is abort, status=%#x.", static_cast<uint32_t>(ctxStatus));
            
-            COND_RETURN_ERROR_MSG_INNER(IsSyncTimeout(timeout, startTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
+            COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT,
                 "Sync stream timeout=%dms, stream_id=%d.", timeout, syncStream->Id_());
 
             if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
@@ -656,13 +653,15 @@ rtError_t Context::TaskReclaimforSyncDevice(uint64_t startTime, int32_t timeout)
         if ((reclaimStream + 1U) >= totalStream) {
             break;
         }
+
         if ((tryCount % perSchedYield) == 0) {
             COND_RETURN_ERROR((device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)),
                 RT_ERROR_DRV_ERR, "device_id=%u is down", device_->Id_());
-            COND_RETURN_ERROR_MSG_INNER(IsSyncTimeout(timeout, startTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
+            COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT,
                 "Sync stream timeout=%dms, device_id=%d.", timeout, device_->Id_());
             (void)sched_yield();
         }
+
     }
     return firstError;
 }
@@ -692,15 +691,12 @@ rtError_t Context::SyncAllStreamToGetError()
 
 rtError_t Context::Synchronize(int32_t timeout)
 {
-    rtError_t error;
-    rtError_t firstError = RT_ERROR_NONE;
     const Stream *defaultStream = defaultStream_;
     NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL);
 
     TIMESTAMP_NAME(__func__);
     const std::unique_lock<std::mutex> taskLock(streamLock_);
-    std::queue<Stream *> failModeStreams;
-    std::list<Stream *> nonFailModeStreams;
+    std::list<Stream *> syncStreams;
 
     for (const auto &syncStream : streams_) {
         if (IsStreamNotSync(syncStream->Flags())) {
@@ -709,51 +705,15 @@ rtError_t Context::Synchronize(int32_t timeout)
         COND_RETURN_ERROR(syncStream->IsCapturing(),
             RT_ERROR_STREAM_CAPTURED, "Not allow to synchronize captured-stream, device_id=%u, stream_id=%d.",
             device_->Id_(), syncStream->Id_());
-        // not set fail mode
-        if (syncStream->GetFailureMode() == CONTINUE_ON_FAILURE) {
-            nonFailModeStreams.push_back(syncStream);
-        } else {
-            failModeStreams.push(syncStream); // set fail mode
-        }
+        syncStreams.push_back(syncStream);
     }
 
-    mmTimeval tv;
-    mmGetTimeOfDay(&tv, nullptr);
-    const uint64_t startTime = ((static_cast<uint64_t>(tv.tv_sec) * RT_MS_PER_S) +
-                                (static_cast<uint64_t>(tv.tv_usec) / RT_US_TO_MS));
-    const int32_t failModeTimeout = (timeout == -1) ? CONTEXT_STREAM_SYNC_TIMEOUT : timeout;
+    const mmTimespec startTime = mmGetTickCount();
 
     // TaskReclaim
     (void)TaskReclaimforSyncDevice(startTime, timeout);
 
-    while (!failModeStreams.empty()) {
-        Stream * const streamMode = failModeStreams.front();
-        // in order to poll every stream, set stream sync timeout 6000ms
-        streamMode->isDeviceSyncFlag = true;
-        error = streamMode->Synchronize(false, failModeTimeout);
-        streamMode->isDeviceSyncFlag = false;
-        failModeStreams.pop(); // pop
-        if (device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) {
-            RT_LOG(RT_LOG_ERROR, "device is abort, device_id=%d.", device_->Id_());
-            return RT_ERROR_DEVICE_TASK_ABORT;
-        }
-        COND_RETURN_ERROR_MSG_INNER(IsSyncTimeout(timeout, startTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
-            "Sync stream timeout, stream_id=%d.", streamMode->Id_());
-
-        if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
-            RT_LOG(RT_LOG_ERROR, "sync stream timeout, stream_id=%d, retCode=%#x.", streamMode->Id_(), error);
-            return RT_ERROR_STREAM_SYNC_TIMEOUT;
-        } else if ((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE)) {
-            firstError = error;
-            RT_LOG(RT_LOG_ERROR, "sync stream fail, stream_id=%d, retCode=%#x.", streamMode->Id_(), error);
-        } else {
-            // do nothing
-        }
-    }
-
-    ERROR_RETURN(firstError, "Synchronize streams, retCode=%#x.", firstError);
-
-    return SyncNonFailModeStreams(nonFailModeStreams, timeout, startTime);  // return last stream error
+    return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
 rtError_t Context::KernelTaskConfig(TaskInfo * const configTask, const void * const kernSoName,
@@ -840,7 +800,7 @@ TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 TIMESTAMP_EXTERN(rtKernelLaunch_CpuArgLoad);
 
-rtError_t Context::LaunchKernelPrepare(uint32_t &smArgsSize,
+rtError_t Context::LaunchKernelPrepare(const rtChipType_t chipType, uint32_t &smArgsSize,
     Kernel *&registeredKernel, Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
     rtL2Ctrl_t *&l2ctrl, uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
     uint32_t &prefetchCnt1, uint32_t &prefetchCnt2)
@@ -1264,10 +1224,11 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     AicTaskInfo *aicTask = nullptr;
     Program *prog = nullptr;
     Module *launchMdl = nullptr;
+    const rtChipType_t chipType = device_->GetChipType();
     bool mixOpt = false;
     Kernel *registeredKernel = nullptr;
     bool isNeedAllocSqeDevBuf = false;
-    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
+    const bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1275,7 +1236,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, stubFunc,
+    error = LaunchKernelPrepare(chipType, smArgsSize, registeredKernel, prog, kernelType, launchMdl, stubFunc,
         l2ctrl, addr1, addr2, nullptr, 0, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
@@ -1393,13 +1354,14 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
     Kernel *registeredKernel = nullptr;
+    const rtChipType_t chipType = device_->GetChipType();
     bool mixOpt = false;
     rtError_t errorReason;
     uint32_t taskRation = 0U;
     uint32_t funcType = 0U;
     TaskCfg taskCfg = {};
     bool isNeedAllocSqeDevBuf = false;
-    bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
+    const bool noMixFlag = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX);
 
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
@@ -1407,7 +1369,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d."
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, nullptr,
+    error = LaunchKernelPrepare(chipType, smArgsSize, registeredKernel, prog, kernelType, launchMdl, nullptr,
         l2ctrl, addr1, addr2, progHandle, tilingKey, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
@@ -1985,14 +1947,19 @@ rtError_t Context::DatadumpInfoLoad(const void * const dumpInfo, const uint32_t 
     Stream * const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
     const int32_t streamId = dftStm->Id_();
+    const tsAicpuKernelType kernelType =
+        ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ? TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;
+
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtDataDumpLoadInfoParam param = {dumpInfo, length, static_cast<uint16_t>(kernelType)};
+        return device_->GetCtrlSQ().SendDataDumpLoadInfoMsg(RtCtrlMsgType::RT_CTRL_MSG_DATADUMP_INFOLOAD, param, taskGenCallback_);
+    }
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo *rtDumpLoadInfoTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DATADUMP_LOADINFO, errorReason);
     NULL_PTR_RETURN_MSG(rtDumpLoadInfoTask, errorReason);
 
-    const tsAicpuKernelType kernelType =
-        ((flag & RT_KERNEL_CUSTOM_AICPU) != 0U) ? TS_AICPU_KERNEL_CUSTOM_AICPU : TS_AICPU_KERNEL_AICPU;
     error = DataDumpLoadInfoTaskInit(rtDumpLoadInfoTask, dumpInfo, length, static_cast<uint16_t>(kernelType));
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
         "Failed to init DataDumpLoadInfoTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
@@ -2016,6 +1983,11 @@ rtError_t Context::AicpuInfoLoad(const void * const aicpuInfo, const uint32_t le
 {
     Stream * const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
+
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtAicpuInfoLoadParam param = {aicpuInfo, length};
+        return device_->GetCtrlSQ().SendAicpuInfoLoadMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_INFOLOAD, param, taskGenCallback_);
+    }
 
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -2050,27 +2022,34 @@ rtError_t Context::DebugRegister(Model * const mdl, const uint32_t flag, const v
     Stream * const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
     *streamId = static_cast<uint32_t>(dftStm->Id_());
+    TaskInfo *rtDbgRegTask = nullptr;
 
     COND_RETURN_WARN(mdl->IsDebugRegister(),
         RT_ERROR_DEBUG_REGISTER_FAILED, "model repeat debug register!");
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtDebugRegisterParam param = {addr, mdl->Id_(), flag};
+        error = device_->GetCtrlSQ().SendDebugRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_REGISTER, param, taskGenCallback_, &flipTaskId);
+        *taskId = flipTaskId;
+        *streamId = device_->GetCtrlSQ().GetStream()->Id_();
+        ERROR_RETURN_MSG_INNER(error, "Failed to SendDebugRegisterMsg, retCode=%#x.", error);
+    } else {
+        TaskInfo submitTask = {};
+        rtError_t errorReason;
+        rtDbgRegTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_REGISTER, errorReason);
+        NULL_PTR_RETURN_MSG(rtDbgRegTask, errorReason);
 
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo *rtDbgRegTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_REGISTER, errorReason);
-    NULL_PTR_RETURN_MSG(rtDbgRegTask, errorReason);
+        error = DebugRegisterTaskInit(rtDbgRegTask, mdl->Id_(), addr, flag);
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
+            "Failed to init DebugRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
+            *streamId, rtDbgRegTask->id, error);
 
-    error = DebugRegisterTaskInit(rtDbgRegTask, mdl->Id_(), addr, flag);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Failed to init DebugRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
-        *streamId, rtDbgRegTask->id, error);
+        error = device_->SubmitTask(rtDbgRegTask, taskGenCallback_, &flipTaskId);
+        *taskId = flipTaskId;
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugRegisterTask, retCode=%#x", error);
 
-    error = device_->SubmitTask(rtDbgRegTask, taskGenCallback_, &flipTaskId);
-    *taskId = flipTaskId;
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugRegisterTask, retCode=%#x", error);
-
-    error = dftStm->Synchronize();
-    ERROR_RETURN_MSG_INNER(error, "Failed to synchronize DebugRegisterTask, retCode=%#x.", error);
-
+        error = dftStm->Synchronize();
+        ERROR_RETURN_MSG_INNER(error, "Failed to synchronize DebugRegisterTask, retCode=%#x.", error);
+    }
     mdl->SetDebugRegister(true);
     return error;
 
@@ -2085,24 +2064,32 @@ rtError_t Context::DebugUnRegister(Model * const mdl)
     Stream * const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
     const int32_t streamId = dftStm->Id_();
+    TaskInfo *rtDbgUnregTask = nullptr;
 
     COND_RETURN_WARN(!mdl->IsDebugRegister(),
         RT_ERROR_DEBUG_UNREGISTER_FAILED, "model is not debug register!");
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo *rtDbgUnregTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_UNREGISTER, errorReason);
-    NULL_PTR_RETURN_MSG(rtDbgUnregTask, errorReason);
 
-    error = DebugUnRegisterTaskInit(rtDbgUnregTask, mdl->Id_());
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Failed to init DebugUnRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
-        streamId, rtDbgUnregTask->id, error);
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtDebugUnRegisterParam param = {mdl->Id_()};
+        error = device_->GetCtrlSQ().SendDebugUnRegisterMsg(RtCtrlMsgType::RT_CTRL_MSG_DEBUG_UNREGISTER, param, taskGenCallback_);
+        ERROR_RETURN_MSG_INNER(error, "Failed to SendDebugUnRegisterMsg, retCode=%#x.", error);
+    } else {
+        TaskInfo submitTask = {};
+        rtError_t errorReason;
+        rtDbgUnregTask = dftStm->AllocTask(&submitTask, TS_TASK_TYPE_DEBUG_UNREGISTER, errorReason);
+        NULL_PTR_RETURN_MSG(rtDbgUnregTask, errorReason);
 
-    error = device_->SubmitTask(rtDbgUnregTask, taskGenCallback_);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugUnRegisterTask, retCode=%#x.", error);
+        error = DebugUnRegisterTaskInit(rtDbgUnregTask, mdl->Id_());
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
+            "Failed to init DebugUnRegisterTask, stream_id=%d, task_id=%" PRIu16 ", retCode=%#x.",
+            streamId, rtDbgUnregTask->id, error);
 
-    error = dftStm->Synchronize();
-    ERROR_RETURN_MSG_INNER(error, "Failed to synchronize DebugUnRegisterTask, retCode=%#x.", error);
+        error = device_->SubmitTask(rtDbgUnregTask, taskGenCallback_);
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit DebugUnRegisterTask, retCode=%#x.", error);
+
+        error = dftStm->Synchronize();
+        ERROR_RETURN_MSG_INNER(error, "Failed to synchronize DebugUnRegisterTask, retCode=%#x.", error);
+    }
 
     mdl->SetDebugRegister(false);
     return error;
@@ -2456,6 +2443,8 @@ rtError_t Context::ReduceAsync(void * const dst, const void * const src, const u
 
         const uint32_t sdmaReduceSupport = capabilityInfo.sdma_reduce_support;
 
+        // sdma_reduce_kind is a new field and is not set in the earlier version of the driver.
+        // Therefore, this field is checked only in Cloud_v2.
         const bool starsFlag = device_->IsStarsPlatform();
         if (starsFlag) {
             const uint32_t sdmaReduceKind = capabilityInfo.sdma_reduce_kind;
@@ -2467,6 +2456,7 @@ rtError_t Context::ReduceAsync(void * const dst, const void * const src, const u
             }
         }
 
+        // EQUAL kind only support Cloud_v2
         if (((kind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL) && (!starsFlag))) {
             RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -2735,6 +2725,9 @@ void Context::SetStreamsStatus(rtError_t status)
         }
         stream->SetAbortStatus(status);
     }
+    if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        GetCtrlSQStream()->SetAbortStatus(status);
+    }
 }
 
 rtError_t Context::StreamsCleanSq(void)
@@ -2750,6 +2743,10 @@ rtError_t Context::StreamsCleanSq(void)
         }
         error = stream->CleanSq();
         ERROR_RETURN(error, "Failed to clean stream id %d, retCode=%#x.", stream->Id_(), error);
+    }
+    if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        error = GetCtrlSQStream()->CleanSq();
+        ERROR_RETURN(error, "Failed to clean stream, retCode=%#x.", error);
     }
     return error;
 }
@@ -2786,6 +2783,11 @@ rtError_t Context::StreamsTaskClean(void)
         }
         error = stream->ResClear();
     }
+    if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        error = GetCtrlSQStream()->ResClear();
+        ERROR_RETURN(error, "retCode=%#x.", error);
+    }
+
     Device_()->Driver_()->ResourceReset(Device_()->Id_(), Device_()->DevGetTsId(), DRV_EVENT_ID);
     return error;
 }
@@ -2803,6 +2805,10 @@ rtError_t Context::StreamsUpdate(void)
         error = stream->SqCqUpdate();
         ERROR_RETURN(error, "retCode=%#x.", error);
     }
+    if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        error = GetCtrlSQStream()->SqCqUpdate();
+        ERROR_RETURN(error, "retCode=%#x.", error);
+    }
     return error;
 }
 
@@ -2815,6 +2821,10 @@ rtError_t Context::StreamsRestore(void)
     for (Stream *s : streams_) {
         error = s->Restore();
         ERROR_RETURN(error, "Restore stream id %d failed, retCode=%#x.", s->Id_(), error);
+    }
+    if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        error = GetCtrlSQStream()->Restore();
+        ERROR_RETURN(error, "retCode=%#x.", error);
     }
     return RT_ERROR_NONE;
 }
@@ -3398,7 +3408,7 @@ rtError_t Context::StartOnlineProf(Stream * const stm, const uint32_t sampleNum)
         sampleNum, "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");
     if ((stm->Device_())->DevGetOnlineProfStart()) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "StreamId=%d online profiling has already been set on the device.",
- 	        streamId);
+            streamId);
         return RT_ERROR_PROF_START;
     }
 
@@ -3485,15 +3495,15 @@ rtError_t Context::AdcProfiler(Stream * const stm, const uint64_t addr, const ui
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    TaskInfo *rtProfTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_ADCPROF, errorReason);
-    NULL_PTR_RETURN_MSG(rtProfTask, errorReason);
+    TaskInfo *rtMdcProfTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_ADCPROF, errorReason);
+    NULL_PTR_RETURN_MSG(rtMdcProfTask, errorReason);
 
-    rtError_t error = ProfTaskInit(rtProfTask, addr, length);
+    rtError_t error = AdcProfTaskInit(rtMdcProfTask, addr, length);
     if (error != RT_ERROR_NONE) {
         goto ERROR_RECYCLE;
     }
 
-    error = device_->SubmitTask(rtProfTask);
+    error = device_->SubmitTask(rtMdcProfTask);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "AdcProfiler failed, submit task failed, errCode=%#x.", error);
         goto ERROR_RECYCLE;
@@ -3503,7 +3513,7 @@ rtError_t Context::AdcProfiler(Stream * const stm, const uint64_t addr, const ui
     return error;
 
 ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtProfTask);
+    (void)device_->GetTaskFactory()->Recycle(rtMdcProfTask);
     return error;
 }
 
@@ -3546,7 +3556,7 @@ rtError_t Context::LabelListCpy(Label ** const labelList, const uint32_t labelNu
     Model *labelModel = nullptr;
 
     if (device_->IsStarsPlatform()) {
-        labelStep = RT_CHIP_910_B_93_LABEL_INFO_SIZE;
+        labelStep = RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE;
     } else if (Device_()->GetTschVersion() >= TS_VERSION_MORE_LABEL) {
         labelStep = sizeof(rtLabelDevInfo);
     } else {
@@ -3564,7 +3574,7 @@ rtError_t Context::LabelListCpy(Label ** const labelList, const uint32_t labelNu
         RT_LOG(RT_LOG_DEBUG, "copy label to device, label_id=%hu, model_id=%hu, stream_id=%hu, label_step=%u.",
                tempLabelInfo.labelId, tempLabelInfo.modelId, tempLabelInfo.streamId,
                labelStep);
-        if ((Device_()->GetTschVersion() >= TS_VERSION_MORE_LABEL) || (device_->IsStarsV2Platform())) {
+        if ((Device_()->GetTschVersion() >= TS_VERSION_MORE_LABEL) || (device_->IsDavidPlatform())) {
             error = labelList[idx]->SetLabelDevAddr(devAddr);
             ERROR_RETURN_MSG_INNER(error,
                 "Label list copy failed, have same labels in label list, label_id=%hu,"
@@ -3611,7 +3621,7 @@ rtError_t Context::LabelSwitchListCreate(Label ** const labels, const size_t num
 
     uint32_t labelStep;
     if (device_->IsStarsPlatform()) {
-        labelStep = RT_CHIP_910_B_93_LABEL_INFO_SIZE;
+        labelStep = RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE;
     } else {
         labelStep = sizeof(rtLabelDevInfo);
     }
@@ -3814,13 +3824,13 @@ rtError_t Context::CopyTilingTabToDev(Program * const programHdl, const Device *
     Driver * const curDrv = device->Driver_();
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TAB_COPY_V2)) {
         /* 构建拷贝的内容 */
-        TilingTablForStarsV2 *tilingTab = nullptr;
-        ret = programHdl->BuildTilingTblForStarsV2(mdl, &tilingTab, &kernelLen);
+        TilingTablForDavid *tilingTab = nullptr;
+        ret = programHdl->BuildTilingTblForDavid(mdl, &tilingTab, &kernelLen);
         if (ret != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
             return ret;
         }
-        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTablForStarsV2));
+        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTablForDavid));
         /* 拷贝内容到device */
         error = curDrv->DevMemAlloc(&devMem, static_cast<uint64_t>(copyLen),
             RT_MEMORY_TS, device->Id_(), MODULEID_RUNTIME, true, false, false);
@@ -3829,7 +3839,7 @@ rtError_t Context::CopyTilingTabToDev(Program * const programHdl, const Device *
             if (devMem != nullptr) {
                 (void)curDrv->DevMemFree(devMem, device->Id_());
             }
-            programHdl->DestroyTilingTblForStarsV2(tilingTab);
+            programHdl->DestroyTilingTblForDavid(tilingTab);
             return error;
         }
         error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(copyLen), tilingTab,
@@ -3839,12 +3849,12 @@ rtError_t Context::CopyTilingTabToDev(Program * const programHdl, const Device *
             if (devMem != nullptr) {
                 (void)curDrv->DevMemFree(devMem, device->Id_());
             }
-            programHdl->DestroyTilingTblForStarsV2(tilingTab);
+            programHdl->DestroyTilingTblForDavid(tilingTab);
             return error;
         }
         RT_LOG(RT_LOG_INFO, "Load on device devMem=%p,copyLen=%u,deviceId=%u,kernelLen=%u",
             devMem, copyLen, device->Id_(), kernelLen);
-        programHdl->DestroyTilingTblForStarsV2(tilingTab);
+        programHdl->DestroyTilingTblForDavid(tilingTab);
     } else {
         /* 构建拷贝的内容 */
         TilingTabl *tilingTab = nullptr;
@@ -3920,7 +3930,9 @@ rtError_t Context::StreamClear(const Stream * const stm, rtClearStep_t step) con
         "Not support clear model stream");
     COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support clear non-mc2 stream");
-
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return device_->GetCtrlSQ().SendStreamClearMsg(stm, step, taskGenCallback_);
+    }
     Stream * const dftStm = DefaultStream_();
     NULL_PTR_RETURN_MSG(dftStm, RT_ERROR_STREAM_NULL);
 
@@ -4054,6 +4066,16 @@ rtError_t Context::SendAndRecvDebugTask(RtDebugSendInfo *const sendInfo, rtDebug
     return RT_ERROR_NONE;
 }
 
+Stream *Context::GetCtrlSQStream() const
+{
+    if (!device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return DefaultStream_();
+    }
+
+    CtrlSQ& ctrlSQ = device_->GetCtrlSQ();
+    return ctrlSQ.GetStream();
+}
+
 rtError_t Context::CheckStatus(const Stream * const stm, const bool isBlockDefault)
 {
     ProcessReportFastRingBuffer();
@@ -4067,16 +4089,9 @@ rtError_t Context::CheckStatus(const Stream * const stm, const bool isBlockDefau
     status = device_->GetDeviceStatus();
     COND_RETURN_ERROR(status != RT_ERROR_NONE, status, "device_id=%d status=%d is abnormal.",
                       device_->Id_(), status);
-    if (device_->IsSupportStopOnStreamError()) {
-        COND_RETURN_ERROR((GetFailureError() != RT_ERROR_NONE) && (stm != nullptr) &&
-                          (stm != DefaultStream_()) && (stm->GetFailureMode() == STOP_ON_FAILURE),
-                          GetFailureError(),
-                          "device_id=%u, context is ABORT, stream_id=%d", stm->Device_()->Id_(), stm->Id_());
-        return status;
-    }
     Stream *ctrlStream = device_->GetCtrlStream(nullptr);
     if (!isBlockDefault && (stm != nullptr) &&
-        ((stm == DefaultStream_()) || (stm == device_->PrimaryStream_()) || stm == ctrlStream) &&
+        ((stm == GetCtrlSQStream()) || (stm == device_->PrimaryStream_()) || stm == ctrlStream) &&
         (stm->GetFailureMode() != ABORT_ON_FAILURE)) {
         return RT_ERROR_NONE;
     }
@@ -4104,7 +4119,7 @@ rtError_t Context::CheckTaskSend(const TaskInfo * const workTask)
     status = device_->GetDeviceStatus();
     ERROR_RETURN(status, "device_id=%d status=%#x is abnormal, stream_id=%d", device_->Id_(), status, stm->Id_());
     // 任务下发场景
-    const bool isDefaultStreamSend = (stm->GetFailureMode() != ABORT_ON_FAILURE) && (stm == DefaultStream_()) &&
+    const bool isDefaultStreamSend = (stm->GetFailureMode() != ABORT_ON_FAILURE) && (stm == GetCtrlSQStream()) &&
                                (workTask->type == TS_TASK_TYPE_MODEL_MAINTAINCE ||
                                 workTask->type == TS_TASK_TYPE_EVENT_RECORD ||
                                 workTask->type == TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL);
@@ -4173,7 +4188,7 @@ rtError_t Context::GetStackBuffer(const rtBinHandle binHandle, const uint32_t co
             stackPhyBase = device_->GetStackPhyBase32k();
         }
     }
-    uint32_t aicNum = device_->GetDevProperties().aicNumForCoreStack;
+    const uint32_t aicNum = device_->GetDevProperties().aicNumForCoreStack;
     if (coreType == 0U) {
         *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * coreId);
     } else {
@@ -4473,20 +4488,30 @@ ERROR_RECYCLE:
 
 rtError_t Context::SetStreamOverflowSwitch(Stream * const stm, const uint32_t flags)
 {
-    NULL_PTR_RETURN_MSG(DefaultStream_(), RT_ERROR_STREAM_NULL);
-    TaskInfo submitTask = {};
-    rtError_t errorReason = RT_ERROR_TASK_NEW;
     rtError_t error = RT_ERROR_NONE;
-    TaskInfo *tsk = DefaultStream_()->AllocTask(&submitTask, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, errorReason);
-    NULL_PTR_RETURN(tsk, errorReason);
+    TaskInfo *tsk = nullptr;
+    
+    NULL_PTR_RETURN_MSG(DefaultStream_(), RT_ERROR_STREAM_NULL);
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        uint32_t flipTaskId = 0;
+        RtOverflowSwitchSetParam param = {stm, flags};
+        error = device_->GetCtrlSQ().SendOverflowSwitchSetMsg(RtCtrlMsgType::RT_CTRL_MSG_SET_OVERFLOW_SWITCH, param, taskGenCallback_, &flipTaskId);
+        ERROR_RETURN_MSG_INNER(error, "Failed to SendOverflowSwitchSetMsg, retCode=%#x.", error);
+        SET_THREAD_TASKID_AND_STREAMID(DefaultStream_()->Id_(), flipTaskId);
+    } else {
+        TaskInfo submitTask = {};
+        rtError_t errorReason = RT_ERROR_TASK_NEW;
+        tsk = DefaultStream_()->AllocTask(&submitTask, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, errorReason);
+        NULL_PTR_RETURN(tsk, errorReason);
 
-    (void)OverflowSwitchSetTaskInit(tsk, stm, flags);
-    error = device_->SubmitTask(tsk, taskGenCallback_);
-    ERROR_GOTO(error, ERROR_RECYCLE, "OverflowSwitchSetTask task submit failed, retCode=%#x", error);
+        (void)OverflowSwitchSetTaskInit(tsk, stm, flags);
+        error = device_->SubmitTask(tsk, taskGenCallback_);
+        ERROR_GOTO(error, ERROR_RECYCLE, "OverflowSwitchSetTask task submit failed, retCode=%#x", error);
+        GET_THREAD_TASKID_AND_STREAMID(tsk, DefaultStream_()->Id_());
+    }
+
     stm->SetOverflowSwitch(flags != 0U);
     RT_LOG(RT_LOG_INFO, "success to submit OverflowSwitchSetTask task.");
-
-    GET_THREAD_TASKID_AND_STREAMID(tsk, DefaultStream_()->Id_());
     return error;
 ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(tsk);
@@ -4504,7 +4529,6 @@ rtError_t Context::SetStreamTag(Stream * const stm, const uint32_t geOpTag) cons
     NULL_PTR_RETURN(tsk, errorReason);
 
     (void)StreamTagSetTaskInit(tsk, stm, geOpTag);
-    tsk->isNeedStreamSync = true;
     error = device_->SubmitTask(tsk, taskGenCallback_);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "StreamTagSetTask task submit failed, retCode=%#x",
                          static_cast<uint32_t>(error));
@@ -5468,6 +5492,5 @@ void ContextCallBack::Run(const void * const param)
         apiInstance->ProcessReport(1000, true); // 1000 means 1s, if 1s not get callback cq break up, and try again
     }
 }
-
 }  // namespace runtime
 }  // namespace cce

@@ -19,6 +19,7 @@
 #include "prof_acl_mgr.h"
 
 using PROF_CONFIG_CONST_PTR = const ProfConfig *;
+using PROF_CONFIG_PTR = ProfConfig *;
 
 namespace Msprofiler {
 namespace AclApi {
@@ -57,6 +58,8 @@ void ProfRegisterTransport(ProfCreateTransportFunc callback);
 aclError ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData);
 aclError ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData);
 aclError ProfAclRegisterDeviceCallback();
+PROF_CONFIG_CONST_PTR ProfSetDefaultConfig();
+PROF_CONFIG_CONST_PTR ProfGetCurrentConfig();
 }
 }
 #endif

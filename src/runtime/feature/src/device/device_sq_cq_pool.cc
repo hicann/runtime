@@ -174,11 +174,13 @@ rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t
 
 rtError_t DeviceSqCqPool::FreeSqCqToDrv(const uint32_t sqId, const uint32_t cqId) const
 {
-    constexpr uint32_t drvFlag = 0U;
-    RT_LOG(RT_LOG_DEBUG, "free SqCq: sq_id=%u, cq_id=%u", sqId, cqId);
+    if (device_->GetDevRunningState() != static_cast<uint32_t>(DEV_RUNNING_DOWN)) {
+        constexpr uint32_t drvFlag = 0U;
+        RT_LOG(RT_LOG_DEBUG, "free SqCq: sq_id=%u, cq_id=%u", sqId, cqId);
 
-    const rtError_t error = device_->Driver_()->NormalSqCqFree(device_->Id_(), device_->DevGetTsId(), drvFlag, sqId, cqId);
-    ERROR_RETURN(error, "Failed to free sq cq, retCode=0x%#x.", static_cast<uint32_t>(error));
+        const rtError_t error = device_->Driver_()->NormalSqCqFree(device_->Id_(), device_->DevGetTsId(), drvFlag, sqId, cqId);
+        ERROR_RETURN(error, "Failed to free sq cq, retCode=0x%#x.", static_cast<uint32_t>(error));
+    }
 
     return RT_ERROR_NONE;
 }

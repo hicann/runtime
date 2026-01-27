@@ -11,6 +11,8 @@
 #include <functional>
 #include <fstream>
 #include <mutex>
+#include <memory>
+#include <string>
 #include <stack>
 #include <thread>
 #include <dirent.h>

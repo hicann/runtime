@@ -32,7 +32,7 @@
 #include "platform/platform.h"
 #include "transport/hdc/hdc_transport.h"
 #include "prof_task.h"
-#include "config/config_manager.h"
+#include "config_manager.h"
 #include "prof_perf_job.h"
 #include "prof_ts_job.h"
 #include "prof_sys_info_job.h"
@@ -2133,7 +2133,7 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Init) {
         .will(returnValue(false))
         .then(returnValue(true));
 
-    params->interconnection_profiling = "on";
+    params->ccuInstr = "on";
     collectionJobCfg_->comParams->params = params;
     // Ccu statistic not enabled in host profiling
     collectionJobCfg_->comParams->params->hostProfiling = true;
@@ -2143,8 +2143,8 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Init(collectionJobCfg_));
 
     EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Init(collectionJobCfg_));
-    // Ccu statistic not enabled with interconnection_profiling switch off
-    params->interconnection_profiling = "off";
+    // Ccu statistic not enabled with ccuInstr switch off
+    params->ccuInstr = "off";
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Init(collectionJobCfg_));
 }
 

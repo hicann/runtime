@@ -33,9 +33,6 @@
 #include "dump_exception_stub.h"
 
 using namespace Adx;
-constexpr int32_t SYMBOLS_SIZE_3 = 3;
-constexpr int32_t CORE_ID_2 = 2;
-constexpr int64_t STRTAB_SECTION_SIZE_100 = 100;
 
 // 测试用例
 class KernelInfoCollectorUTest : public ::testing::Test {
@@ -88,7 +85,7 @@ protected:
 
         MockELF() {
             // 初始化ELF头部
-            (void)memset_s(&ehdr, sizeof(ehdr), 0, sizeof(ehdr));
+            memset(&ehdr, 0, sizeof(ehdr));
             ehdr.e_ident[EI_MAG0] = ELFMAG0;
             ehdr.e_ident[EI_MAG1] = ELFMAG1;
             ehdr.e_ident[EI_MAG2] = ELFMAG2;
@@ -103,6 +100,7 @@ protected:
             ehdr.e_shoff = sizeof(Elf64_Ehdr);
         }
     };
+
 };
 
 // 用例1: 非SuperKernel (functionCount <= globalCount)
@@ -149,7 +147,7 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithoutEntry)
     // 验证结果
     EXPECT_FALSE(kernelSymbols.existAicBase);
     EXPECT_FALSE(kernelSymbols.existAivBase);
-    EXPECT_EQ(kernelSymbols.symbols.size(), SYMBOLS_SIZE_3);  // 3个函数符号
+    EXPECT_EQ(kernelSymbols.symbols.size(), 3);  // 3个函数符号
 }
 
 // 用例3: SuperKernel含_mix_aic_entry符号
@@ -174,7 +172,7 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithAicEntry)
     EXPECT_TRUE(kernelSymbols.existAicBase);
     EXPECT_FALSE(kernelSymbols.existAivBase);
     EXPECT_EQ(kernelSymbols.aicBase, 0x1000);  // 第一个符号的地址
-    EXPECT_EQ(kernelSymbols.symbols.size(), SYMBOLS_SIZE_3);
+    EXPECT_EQ(kernelSymbols.symbols.size(), 3);
 }
 
 // 用例4: SuperKernel含_mix_aiv_entry符号
@@ -199,7 +197,7 @@ TEST_F(KernelInfoCollectorUTest, SuperKernelWithAivEntry)
     EXPECT_FALSE(kernelSymbols.existAicBase);
     EXPECT_TRUE(kernelSymbols.existAivBase);
     EXPECT_EQ(kernelSymbols.aivBase, 0x1000);
-    EXPECT_EQ(kernelSymbols.symbols.size(), SYMBOLS_SIZE_3);
+    EXPECT_EQ(kernelSymbols.symbols.size(), 3);
 }
 
 // 用例5: 空符号表
@@ -292,7 +290,7 @@ TEST_F(KernelInfoCollectorUTest, NoSymbolMatch)
     rtExceptionInfo exception = {0};
     KernelInfoCollector::GetExceptionRegInfo(exception, exceptionRegInfo);
     exceptionRegInfo.coreNum = 1;
-    exceptionRegInfo.errRegInfo[0].coreId = CORE_ID_2;
+    exceptionRegInfo.errRegInfo[0].coreId = 2;
     exceptionRegInfo.errRegInfo[0].coreType = RT_CORE_TYPE_AIC;
     exceptionRegInfo.errRegInfo[0].startPC = 0x3000;
     exceptionRegInfo.errRegInfo[0].currentPC = 0x4000; // offset超出所有符号范围
@@ -330,8 +328,7 @@ TEST_F(KernelInfoCollectorUTest, NormalParseSymtabAndStrtab)
     mockELF.sectionNames += ".strtab";
     mockELF.sectionNames += '\0';
     strtabSection.sh_offset = 0x2000; // 模拟字符串表偏移
-    strtabSection.sh_size = STRTAB_SECTION_SIZE_100;
-;
+    strtabSection.sh_size = 100;
     mockELF.sections.push_back(strtabSection);
 
     // 设置ELF头部信息
@@ -339,15 +336,16 @@ TEST_F(KernelInfoCollectorUTest, NormalParseSymtabAndStrtab)
     mockELF.ehdr.e_shstrndx = 0; // 字符串表节索引
 
     // 构建完整的ELF数据
-    size_t sections_size = sizeof(Elf64_Shdr) * mockELF.sections.size();
-    size_t totalSize = sizeof(Elf64_Ehdr) + sections_size + mockELF.sectionNames.size() + 0x3000;
+    size_t totalSize = sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() +
+        mockELF.sectionNames.size() + 0x3000;
     mockELF.data.resize(totalSize, 0);
 
     // 复制ELF头部
-    (void)memcpy_s(mockELF.data.data(), sizeof(Elf64_Ehdr), &mockELF.ehdr, sizeof(Elf64_Ehdr));
+    memcpy(mockELF.data.data(), &mockELF.ehdr, sizeof(Elf64_Ehdr));
 
     // 复制节区段头表
-    (void)memcpy_s(mockELF.data.data() + sizeof(Elf64_Ehdr), sections_size, mockELF.sections.data(), sections_size);
+    memcpy(mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
+        sizeof(Elf64_Shdr) * mockELF.sections.size());
 
     // 调用函数（验证不崩溃且正确调用ParseSuperKernelSymbols）
     KernelInfoCollector::ParseKernelSymbols(mockELF.data.data(), kernelSymbols);
@@ -371,7 +369,7 @@ TEST_F(KernelInfoCollectorUTest, MissingSymtabSection)
     mockELF.sectionNames += ".strtab";
     mockELF.sectionNames += '\0';
     strtabSection.sh_offset = 0x1000;
-    strtabSection.sh_size = STRTAB_SECTION_SIZE_100;
+    strtabSection.sh_size = 100;
     mockELF.sections.push_back(strtabSection);
 
     // 设置ELF头部信息
@@ -379,13 +377,14 @@ TEST_F(KernelInfoCollectorUTest, MissingSymtabSection)
     mockELF.ehdr.e_shstrndx = 0;
 
     // 构建ELF数据
-    size_t sections_size = sizeof(Elf64_Shdr) * mockELF.sections.size();
-    size_t totalSize = sizeof(Elf64_Ehdr) + sections_size + mockELF.sectionNames.size() + 0x2000;
+    size_t totalSize = sizeof(Elf64_Ehdr) + sizeof(Elf64_Shdr) * mockELF.sections.size() +
+        mockELF.sectionNames.size() + 0x2000;
     mockELF.data.resize(totalSize, 0);
 
     // 复制数据
-    (void)memcpy_s(mockELF.data.data(), &mockELF.ehdr, sizeof(Elf64_Ehdr));
-    (void)memcpy_s(mockELF.data.data() + sizeof(Elf64_Ehdr), sections_size, mockELF.sections.data(), sections_size);
+    memcpy(mockELF.data.data(), &mockELF.ehdr, sizeof(Elf64_Ehdr));
+    memcpy(mockELF.data.data() + sizeof(Elf64_Ehdr), mockELF.sections.data(),
+        sizeof(Elf64_Shdr) * mockELF.sections.size());
 
     // 调用函数（验证输出错误日志并返回）
     KernelInfoCollector::ParseKernelSymbols(mockELF.data.data(), kernelSymbols);

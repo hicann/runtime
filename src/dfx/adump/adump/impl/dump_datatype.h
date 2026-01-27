@@ -11,8 +11,7 @@
 #ifndef DUMP_DATATYPE_H
 #define DUMP_DATATYPE_H
 #include <cstdint>
-#include "external/graph/types.h"
-#include "proto/dump_task.pb.h"
+#include <string>
 
 namespace Adx {
 enum class GeDataType: int32_t {
@@ -36,7 +35,7 @@ enum class GeDataType: int32_t {
     DT_COMPLEX128 = 17,      // complex128 type
     DT_QINT8 = 18,           // qint8 type
     DT_QINT16 = 19,          // qint16 type
-    C_DT_QINT32 = 20,          // qint32 type
+    DT_QINT32 = 20,          // qint32 type
     DT_QUINT8 = 21,          // quint8 type
     DT_QUINT16 = 22,         // quint16 type
     DT_RESOURCE = 23,        // resource type
@@ -102,6 +101,17 @@ enum class ProtoDataType: int32_t {
     DT_FLOAT6_E2M3 = 38,       // float6_e2m3 type
     DT_FLOAT4_E2M1 = 39,       // float4_e2m1 type
     DT_FLOAT4_E1M2 = 40       // float4_e1m2 type
+};
+
+enum class ImplyType : unsigned int {
+  BUILDIN = 0,  // Built in operator, normally executed by OME
+  TVM,          // Compile to TVM bin file for execution
+  CUSTOM,       // User defined calculation logic, executed by CPU
+  AI_CPU,       // AICPU
+  CCE,          // Cce
+  GELOCAL,      // GE local, do node need execute by device
+  HCCL,         // Hccl
+  INVALID = 0xFFFFFFFF,
 };
 
 class DumpDataType {

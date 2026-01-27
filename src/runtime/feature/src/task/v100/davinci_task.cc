@@ -78,7 +78,11 @@ static void ArgReleaseForAicpuTaskUnInit(TaskInfo *taskInfo)
     const auto dev = taskInfo->stream->Device_();
 
     if (aicpuTaskInfo->comm.argHandle != nullptr) {
-        (void)dev->ArgLoader_()->Release(aicpuTaskInfo->comm.argHandle);
+        if ((taskInfo->stream->IsSeparateSendAndRecycle()) && (!taskInfo->stream->GetBindFlag())) {
+            taskInfo->stream->SetArgHandle(aicpuTaskInfo->comm.argHandle);
+        } else {
+            (void)dev->ArgLoader_()->Release(aicpuTaskInfo->comm.argHandle);
+        }
         aicpuTaskInfo->comm.argHandle = nullptr;
     }
     aicpuTaskInfo->comm.args = nullptr;
@@ -110,6 +114,8 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
      if (stream->Model_() != nullptr) {
         RT_LOG(RT_LOG_INFO, "Model Task no relase args, stream_id=%d ,task_id=%hu", stream->Id_(), taskInfo->id);
         (stream->Model_())->PushbackArgHandle(static_cast<uint16_t>(stream->Id_()), taskInfo->id, argHdl);
+    } else if (stream->IsSeparateSendAndRecycle() && taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        stream->SetArgHandle(aicTaskInfo->comm.argHandle);
     } else {
         (void)stream->Device_()->ArgLoader_()->Release(argHdl);
     }

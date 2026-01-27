@@ -25,6 +25,7 @@
 #include "davinci_kernel_task.h"
 #include "rdma_task.h"
 #include "stub_task.hpp"
+#include "task_scheduler_error.h"
 
 namespace cce {
 namespace runtime {
@@ -240,6 +241,28 @@ void PrintErrorInfoForNotifyWaitTask(TaskInfo *const taskInfo, const uint32_t de
         taskInfo->u.notifywaitTask.notifyId, taskInfo->u.notifywaitTask.isCountNotify);
 }
 
+void MapNotifyErrorCodeForFastRecovery(TaskInfo *taskInfo, const uint32_t devId)
+{
+    Stream * const stream = taskInfo->stream;
+    if (taskInfo->errorCode == AICPU_HCCL_OP_RETRY_FAILED) {
+        taskInfo->errorCode = TS_ERROR_AICPU_HCCL_OP_RETRY_FAILED;
+    } else if (taskInfo->errorCode == AICPU_HCCL_OP_UB_DDRC_FAILED) {
+        if(HasMteErr(stream->Device_()) && IsEventIdAndRasCodeMatch(stream->Device_()->Id_(), g_ubNonMemPoisonRasList) && !HasMemUceErr(stream->Device_()->Id_(), g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
+            taskInfo->errorCode = TS_ERROR_LOCAL_MEM_ERROR;
+            RT_LOG(RT_LOG_ERROR,
+                "hccl aicpu task error is local mem error, device_id=%u, stream_id=%d, task_id=%hu, taskInfo->errorCode=%u",
+                devId, stream->Id_(), taskInfo->id, taskInfo->errorCode);
+        }  
+    } else if (taskInfo->errorCode == AICPU_HCCL_OP_UB_POISON_FAILED) {
+        if (!HasMteErr(stream->Device_()) && !HasMemUceErr(stream->Device_()->Id_(), g_hcclRemoteMulBitEccEventIdBlkList)) {
+            taskInfo->errorCode = TS_ERROR_REMOTE_MEM_ERROR;
+            RT_LOG(RT_LOG_ERROR,
+                "hccl aicpu task error is remote mem error, device_id=%u, stream_id=%d, task_id=%hu, taskInfo->errorCode=%u",
+                devId, stream->Id_(), taskInfo->id, taskInfo->errorCode);
+        }
+    }
+}
+
 static void ReportNotifyErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId)
 {
     Stream * const stream = taskInfo->stream;
@@ -252,9 +275,7 @@ static void ReportNotifyErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_
             taskInfo->errorCode = TS_ERROR_SDMA_ERROR;
         }
     } else {
-        if (taskInfo->errorCode == AICPU_HCCL_OP_RETRY_FAILED) {
-            taskInfo->errorCode = TS_ERROR_AICPU_HCCL_OP_RETRY_FAILED;
-        }
+        MapNotifyErrorCodeForFastRecovery(taskInfo, devId);
     }
     const uint32_t errorCode = taskInfo->errorCode;
     RT_LOG(RT_LOG_ERROR, "Kernel task happen error, retCode=%#x, [%s].",
@@ -302,7 +323,7 @@ TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void
         rtStarsCqeSwStatus_t sw_status;
         sw_status.value = *(static_cast<const uint32_t *>(info));
         uint16_t streamId = sw_status.model_exec.stream_id;
- 	    uint16_t taskId = sw_status.model_exec.task_id;
+        uint16_t taskId = sw_status.model_exec.task_id;
         Device *const dev = taskInfo->stream->Device_();
         if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) && 
             (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
@@ -315,6 +336,24 @@ TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void
         return taskPtr;
     }
     return nullptr;
+}
+
+#endif
+
+#if F_DESC("NotifyResetTask")
+rtError_t NotifyResetTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex,
+    const SingleBitNotifyRecordInfo * const singleInfo, void * const notify)
+{
+    COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "notify is nullptr.");
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_NOTIFY_RECORD;
+    taskInfo->typeName = "NOTIFY_RESET";
+    NotifyRecordTaskInfo *notifyReset = &(taskInfo->u.notifyrecordTask);
+    notifyReset->notifyId = notifyIndex;
+    notifyReset->isCountNotify = false;
+    notifyReset->uPtr.notify = static_cast<Notify *>(notify);
+    notifyReset->uInfo.singleBitNtfyInfo = *singleInfo;
+    return RT_ERROR_NONE;
 }
 
 #endif
@@ -412,7 +451,7 @@ rtError_t GetDevMsgTaskInit(TaskInfo* taskInfo, const void * const devMemAddr,
     getDevMsgTask->offset = MAX_UINT64_NUM;
     Stream * const stm = taskInfo->stream;
 
-    if (!stm->Device_()->IsStarsV2Platform()) {
+    if (!stm->Device_()->IsDavidPlatform()) {
         const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
             static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
             RtPtrToValue<void *>(getDevMsgTask->devMem),

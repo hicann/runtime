@@ -33,7 +33,7 @@ int32_t ProfBiuPerfJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     collectionJobCfg_ = cfg;
     if (cfg->comParams->params->hostProfiling || (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING) &&
         !Platform::instance()->CheckIfSupport(PLATFORM_TASK_PC_SAMPLING))) {
-        MSPROF_LOGI("Biu perf job is not support.");
+        MSPROF_LOGI("Biu perf job does not support.");
         return PROFILING_FAILED;
     }
 

@@ -46,6 +46,8 @@ H2DCopyMgr::H2DCopyMgr(Device * const dev, const uint32_t size, const uint32_t i
         cpyInfoUbMap_.cpyItemSize = size;
         cpyInfoUbMap_.device = device_;
         cpyInfoUbMap_.mapLock = &mapLock_;
+        cpyInfoUbMap_.poolIndex = 0U;
+        cpyInfoUbMap_.memTsegInfoMap.clear();
         devAllocator_ = new (std::nothrow) BufferAllocator(size, initCnt, maxCnt,
             stg,  &MallocUbBuffer, &FreeUbBuffer, &cpyInfoUbMap_);
     } else if (policy_ == COPY_POLICY_SYNC) {
@@ -81,6 +83,7 @@ H2DCopyMgr::~H2DCopyMgr()
     }
     cpyInfoDmaMap_.cpyDmaMap.clear();
     cpyInfoUbMap_.cpyUbMap.clear();
+    cpyInfoUbMap_.memTsegInfoMap.clear();
 }
 
 void H2DCopyMgr::Init(Device * const dev, const uint32_t size)
@@ -417,21 +420,47 @@ void H2DCopyMgr::FreePcieBarBuffer(void *addr, void *para)
     }
 }
 
-uint64_t H2DCopyMgr::GetUbHostAddr(const uint64_t devAddr)
+uint64_t H2DCopyMgr::GetUbHostAddr(const uint64_t devAddr, void **devTsegInfo, void **hostTsegInfo)
 {
     const ReadProtect rp(cpyInfoUbMap_.mapLock);
     const auto iter = cpyInfoUbMap_.cpyUbMap.find(devAddr);
     if (iter == cpyInfoUbMap_.cpyUbMap.end()) {
         RT_LOG(RT_LOG_ERROR, "Can't find ub info by args device addr.");
-        return 0U;
+        return 0ULL;
     }
+    uint32_t poolIndex = iter->second.poolIndex;
+    const auto tsegInfo = cpyInfoUbMap_.memTsegInfoMap.find(poolIndex);
+    if (tsegInfo == cpyInfoUbMap_.memTsegInfoMap.end()) {
+        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index.");
+        return 0ULL;
+    }
+    *devTsegInfo = static_cast<void *>(&(cpyInfoUbMap_.memTsegInfoMap[poolIndex]->devTsegInfo));
+    *hostTsegInfo = static_cast<void *>(&(cpyInfoUbMap_.memTsegInfoMap[poolIndex]->hostTsegInfo));
     return iter->second.hostAddr;
+}
+
+rtError_t GetMemTsegInfo(const Device *const dev, void *devAddr, void *hostAddr, uint64_t size,
+    struct halTsegInfo *devTsegInfo, struct halTsegInfo *hostTsegInfo)
+{
+    rtError_t ret = dev->Driver_()->GetTsegInfoByVa(dev->Id_(), RtPtrToValue(hostAddr), size,
+        1U, hostTsegInfo);
+    ERROR_PROC_RETURN_MSG_INNER(ret, (void)dev->Driver_()->HostMemFree(hostAddr);
+                                     (void)dev->Driver_()->DevMemFree(devAddr, dev->Id_());,
+                                       "host mem get segment failed, retCode=%#x, size=%lu, device_id=%u.",
+                                       ret, size, dev->Id_());
+    ret = dev->Driver_()->GetTsegInfoByVa(dev->Id_(), RtPtrToValue(devAddr), size, 0U, devTsegInfo);
+    ERROR_PROC_RETURN_MSG_INNER(ret, (void)dev->Driver_()->HostMemFree(hostAddr);
+                                     (void)dev->Driver_()->DevMemFree(devAddr, dev->Id_());,
+                                       "dev mem get segment failed, retCode=%#x, size=%lu, device_id=%u.",
+                                       ret, size, dev->Id_());
+    return RT_ERROR_NONE;
 }
 
 void *H2DCopyMgr::MallocUbBuffer(const size_t size, void * const para)
 {
     void *devAddr = nullptr;
     void *hostAddr = nullptr;
+    void *tsegInfoAddr = nullptr;
     uint64_t devBlockAddr = 0;
     CpyUbInfo *cpyInfoUbInfo = static_cast<CpyUbInfo *>(para);
     Device * const dev = cpyInfoUbInfo->device;
@@ -449,6 +478,23 @@ void *H2DCopyMgr::MallocUbBuffer(const size_t size, void * const para)
             ret, size, dev->Id_());
         return nullptr;
     }
+    ret = dev->Driver_()->HostMemAlloc(&tsegInfoAddr, sizeof(struct memTsegInfo), dev->Id_());
+    if (ret != RT_ERROR_NONE) {
+        (void)dev->Driver_()->HostMemFree(hostAddr);
+        (void)dev->Driver_()->DevMemFree(devAddr, dev->Id_());
+        RT_LOG(RT_LOG_ERROR, "alloc mem for tseg info failed, retCode=%#x, size=%u(bytes), device_id=%u.",
+            ret, sizeof(struct memTsegInfo), dev->Id_());
+        return nullptr;
+    }
+    struct memTsegInfo *memInfo = (struct memTsegInfo *)tsegInfoAddr;
+    ret = GetMemTsegInfo(dev, devAddr, hostAddr, static_cast<uint64_t>(size), &(memInfo->devTsegInfo),
+        &(memInfo->hostTsegInfo));
+    if (ret != RT_ERROR_NONE) {
+        (void)dev->Driver_()->HostMemFree(tsegInfoAddr);
+        RT_LOG(RT_LOG_ERROR, "get tseg info failed, retCode=%#x, size=%llu(bytes), device_id=%u.",
+            ret, size, dev->Id_());
+        return nullptr;
+    }
     RT_LOG(RT_LOG_INFO, "Ub buffer alloc success, Runtime_alloc_size %u", size);
 #ifdef __RT_ENABLE_ASAN__
     dev->Driver_()->MemSetSync(hostAddr, size, 0U, size);
@@ -460,9 +506,12 @@ void *H2DCopyMgr::MallocUbBuffer(const size_t size, void * const para)
         cpyAddr.hostBaseAddr = RtPtrToValue(hostAddr);
         cpyAddr.hostAddr = cpyAddr.hostBaseAddr + item * static_cast<uint64_t>(cpyInfoUbInfo->cpyItemSize);
         devBlockAddr = cpyAddr.devBaseAddr + item * static_cast<uint64_t>(cpyInfoUbInfo->cpyItemSize);
+        cpyAddr.poolIndex = cpyInfoUbInfo->poolIndex;
         cpyInfoUbInfo->cpyUbMap[devBlockAddr] = cpyAddr;
     }
 
+    cpyInfoUbInfo->memTsegInfoMap[cpyInfoUbInfo->poolIndex] = memInfo;
+    cpyInfoUbInfo->poolIndex++;
     return devAddr;
 }
 
@@ -482,6 +531,19 @@ void H2DCopyMgr::FreeUbBuffer(void * const addr, void * const para)
     (void)dev->Driver_()->HostMemFree(
         RtValueToPtr<void *>(iter->second.hostBaseAddr));
     (void)dev->Driver_()->DevMemFree(addr, dev->Id_());
+    uint32_t poolIndex = iter->second.poolIndex;
+    const auto tsegInfo = cpyInfoUbInfo->memTsegInfoMap.find(poolIndex);
+    if (tsegInfo == cpyInfoUbInfo->memTsegInfoMap.end()) {
+        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index.");
+        return;
+    }
+    (void)dev->Driver_()->PutTsegInfo(dev->Id_(),
+        &(cpyInfoUbInfo->memTsegInfoMap[poolIndex]->hostTsegInfo));
+    (void)dev->Driver_()->PutTsegInfo(dev->Id_(),
+        &(cpyInfoUbInfo->memTsegInfoMap[poolIndex]->devTsegInfo));
+    (void)dev->Driver_()->HostMemFree(cpyInfoUbInfo->memTsegInfoMap[poolIndex]);
+    cpyInfoUbInfo->memTsegInfoMap[poolIndex] = nullptr;
+    cpyInfoUbInfo->memTsegInfoMap.erase(poolIndex);
 }
 }  // namespace runtime
 }  // namespace cce

@@ -522,7 +522,7 @@ RTS_API rtError_t rtsSetDeviceTaskAbortCallback(const char_t *regName, rtsDevice
  * @param [out] count Currently count=1
  * @return RT_ERROR_NONE for ok
  */
-RTS_API uint32_t rtGetXpuDevCount(rtXpuDevType devType);
+RTS_API rtError_t rtGetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount);
 
 /**
  * @ingroup xpu dev

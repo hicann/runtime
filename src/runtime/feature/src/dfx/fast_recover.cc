@@ -9,11 +9,12 @@
  */
 #include "fast_recover.hpp"
 #include "stream_c.hpp"
-#include "task_starsv2.hpp"
+#include "task_david.hpp"
 #include "stream_factory.hpp"
 #include "error_message_manage.hpp"
 #include "thread_local_container.hpp"
 #include "context_data_manage.h"
+#include "device/device_error_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -67,7 +68,7 @@ rtError_t DeviceTaskSendStop(const int32_t devId, const uint64_t timeRemain)
     return error;
 }
 
-rtError_t StarsV2DeviceKill(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
+rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
 {
     RT_LOG(RT_LOG_INFO, "DeviceKill[%u] op=%u start", devId, op);
     rtError_t error = RT_ERROR_CONTEXT_NULL;
@@ -109,7 +110,7 @@ rtError_t StarsV2DeviceKill(const int32_t devId, const uint32_t op, const uint64
     return error;
 }
 
-rtError_t StarsV2DeviceQuery(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
+rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
 {
     RT_LOG(RT_LOG_INFO, "DeviceQuery[%u] op=%u start.", devId, op);
     rtError_t error = RT_ERROR_CONTEXT_NULL;
@@ -125,7 +126,7 @@ rtError_t StarsV2DeviceQuery(const int32_t devId, const uint32_t op, const uint6
                     RECOVER_STS_QUERY_BY_PID, UINT32_MAX, status);
                 ERROR_RETURN(error, "Failed to query abort, device_id=%d, op=%u, retCode=%#x.",
                     devId, op, error);
-                if ((status == STARSV2_ABORT_TERMINATE_SUCC) || (status == STARSV2_ABORT_STOP_FINISH)) {
+                if ((status == DAVID_ABORT_TERMINATE_SUCC) || (status == DAVID_ABORT_STOP_FINISH)) {
                     break;
                 }
             } else if (op == OP_QUERY_RECOVER_STATUS) {
@@ -133,13 +134,13 @@ rtError_t StarsV2DeviceQuery(const int32_t devId, const uint32_t op, const uint6
                     RECOVER_STS_QUERY_BY_PID, UINT32_MAX, status);
                 ERROR_RETURN(error,
                     "Failed to query recover, device_id=%d, op=%u, retCode=%#x.", devId, op, error);
-                if (status == STARSV2_ABORT_TERMINATE_SUCC) {
+                if (status == DAVID_ABORT_TERMINATE_SUCC) {
                     break;
                 }
             } else {
                 // no operation
             }
-            COND_RETURN_ERROR((status == STARSV2_ABORT_TERMINATE_FAIL), RT_ERROR_TSFW_ILLEGAL_PARAM,
+            COND_RETURN_ERROR((status == DAVID_ABORT_TERMINATE_FAIL), RT_ERROR_TSFW_ILLEGAL_PARAM,
                 "TS param invalid, device_id=%u, op=%u, result=%u.", devId, op, status);
 
             count = ClockGetTimeIntervalUs(startTime);
@@ -193,7 +194,7 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
     return error;
 }
 
-rtError_t StarsV2DeviceTaskAbort(const int32_t devId, const uint32_t time)
+rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
 {
     Runtime * const rtInstance = Runtime::Instance();
     const uint64_t timeout = static_cast<uint64_t>(time) * 1000ULL;
@@ -222,14 +223,14 @@ rtError_t StarsV2DeviceTaskAbort(const int32_t devId, const uint32_t time)
         "ABORT_PRE timeout, device_id=%d.", devId);
 
     /* 3. Notice TS terminate all sq */
-    error = StarsV2DeviceKill(devId, OP_ABORT_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
+    error = DavidDeviceKill(devId, OP_ABORT_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
     ERROR_RETURN_MSG_INNER(error, "Abort app, retCode=%#x", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
         "Abort app timeout, device_id=%d.", devId);
 
     /* 4. Query all single and model stream terminate/stop succ */
-    error = StarsV2DeviceQuery(devId, OP_QUERY_ABORT_STATUS, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
+    error = DavidDeviceQuery(devId, OP_QUERY_ABORT_STATUS, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
     ERROR_RETURN_MSG_INNER(error, "Query abort, retCode=%#x", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
@@ -244,14 +245,14 @@ rtError_t StarsV2DeviceTaskAbort(const int32_t devId, const uint32_t time)
         "ABORT_POST timeout, device_id=%d.", devId);
 
     /* 6. Notice TS recover all stop sq */
-    error = StarsV2DeviceKill(devId, OP_RECOVER_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
+    error = DavidDeviceKill(devId, OP_RECOVER_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
     ERROR_RETURN_MSG_INNER(error, "Recover app, retCode=%#x", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
         "Recover app timeout, device_id=%d.", devId);
 
     /* 7. Query all sq terminate succ */
-    error = StarsV2DeviceQuery(devId, OP_QUERY_RECOVER_STATUS, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
+    error = DavidDeviceQuery(devId, OP_QUERY_RECOVER_STATUS, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
     ERROR_RETURN_MSG_INNER(error, "Query recover, retCode=%#x", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
@@ -264,6 +265,68 @@ rtError_t StarsV2DeviceTaskAbort(const int32_t devId, const uint32_t time)
     COND_RETURN_ERROR(((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
         "DeviceResume timeout, device_id=%d.", devId);
     return error;
+}
+
+rtError_t GetMemUceInfoProc(const uint32_t deviceId, rtErrorInfo * const errorInfo)
+{
+    rtError_t error = RT_ERROR_NONE;
+    rtMemUceInfo memUceInfo = {};
+    GlobalContainer::UceMutexLock();
+    if (GlobalContainer::FindMemUceInfo(deviceId)) {
+        errno_t ret = memcpy_s(&memUceInfo, sizeof(rtMemUceInfo), GlobalContainer::GetMemUceInfo(deviceId),
+            sizeof(rtMemUceInfo));
+        COND_PROC(ret != 0, error = RT_ERROR_SEC_HANDLE; RT_LOG(RT_LOG_ERROR, "memcpy_s failed, err=%d.", ret));
+    } else {
+        error = NpuDriver::GetMemUceInfo(deviceId, &memUceInfo);
+        if (error == RT_ERROR_NONE && memUceInfo.count != 0) {
+            GlobalContainer::InsertMemUceInfo(deviceId, &memUceInfo);
+        }
+    }
+    GlobalContainer::UceMutexUnlock();
+    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Not support get mem uce info.");
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "GetMemUceInfo failed, drv devId=%u, error=%d.", deviceId, error);
+        return error;
+    }
+    RT_LOG(RT_LOG_INFO, "drv devId=%u, count=%u.", memUceInfo.devid, memUceInfo.count);
+
+    rtMemUceArray *memUceArray = &(errorInfo->detail.uceInfo);
+    memUceArray->arraySize = memUceInfo.count;
+    const errno_t ret = memcpy_s(memUceArray->repairAddrArray, sizeof(memUceArray->repairAddrArray),
+                            memUceInfo.repairAddr, sizeof(memUceInfo.repairAddr));
+    COND_RETURN_ERROR(ret != 0, RT_ERROR_INVALID_VALUE, "memcpy_s failed, err=%d.", ret);
+
+    errorInfo->tryRepair = 1U;
+    errorInfo->hasDetail = 1U;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t MemUceErrorResume(Device * const dev, const uint32_t deviceId, const rtErrorInfo * const errorInfo)
+{
+    rtMemUceInfo memUceInfo = {};
+    memUceInfo.devid = deviceId;
+    memUceInfo.count = errorInfo->detail.uceInfo.arraySize;
+    const errno_t ret = memcpy_s(memUceInfo.repairAddr, sizeof(memUceInfo.repairAddr),
+                            errorInfo->detail.uceInfo.repairAddrArray,
+                            sizeof(errorInfo->detail.uceInfo.repairAddrArray));
+    COND_RETURN_ERROR(ret != 0, RT_ERROR_INVALID_VALUE, "memcpy_s failed, err=%d.", ret);
+
+    const rtError_t error = NpuDriver::MemUceRepair(deviceId, &memUceInfo);
+    if (error == RT_ERROR_NONE) {
+        GlobalContainer::UceMutexLock();
+        GlobalContainer::DeleteMemUceInfo(deviceId);
+        GlobalContainer::UceMutexUnlock();
+    }
+    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Not support Mem uce error repair.");
+    COND_PROC((error != RT_ERROR_NONE),
+        RT_LOG(RT_LOG_ERROR, "Mem uce error repair failed, drv devId=%u, retCode=%#x.",
+        deviceId, static_cast<uint32_t>(error)));
+
+    dev->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
+    return RT_ERROR_NONE;
 }
 
 }  // namespace runtime

@@ -571,9 +571,9 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
     } else {
         RT_LOG_OUTER_MSG_INVALID_PARAM(
-            devFeatureType,
-            "[" + std::to_string(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV) +
-                ", " + std::to_string(RT_DEV_FEATURE_MAX) + ")");
+           devFeatureType,
+           "[" + std::to_string(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV) +
+            ", " + std::to_string(RT_DEV_FEATURE_MAX) + ")");
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     return ACL_RT_SUCCESS;
@@ -876,7 +876,7 @@ rtError_t rtsGetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorI
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_ERR_GET_AND_REPAIR)) {
-        RT_LOG(RT_LOG_WARNING, "Chip type(%d) do not support rtsGetErrorVerbose api.",
+        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtsGetErrorVerbose api.",
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -894,7 +894,7 @@ rtError_t rtsRepairError(const uint32_t deviceId, const rtErrorInfo * const erro
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_ERR_GET_AND_REPAIR)) {
-        RT_LOG(RT_LOG_WARNING, "Chip type(%d) do not support rtsRepairError api.",
+        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtsRepairError api.",
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

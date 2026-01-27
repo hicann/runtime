@@ -24,7 +24,7 @@ struct CpuTypeTable {
 OSAL_FUNC_VISIBILITY int32_t LinuxSleep(uint32_t milliSecond);
 OSAL_FUNC_VISIBILITY int32_t LinuxGetPid(void);
 OSAL_FUNC_VISIBILITY int32_t LinuxGetTid(void);
-
+#ifndef LITE_OS
 OSAL_FUNC_VISIBILITY OsalSockHandle LinuxSocket(int32_t sockFamily, int32_t type, int32_t protocol);
 OSAL_FUNC_VISIBILITY int32_t LinuxBind(OsalSockHandle sockFd, OsalSockAddr *addr, OsalSocklen addrLen);
 OSAL_FUNC_VISIBILITY int32_t LinuxListen(OsalSockHandle sockFd, int32_t backLog);
@@ -62,7 +62,7 @@ OSAL_FUNC_VISIBILITY VOID *LinuxDlopen(const CHAR *fileName, int32_t mode);
 OSAL_FUNC_VISIBILITY VOID *LinuxDlsym(VOID *handle, const CHAR *funcName);
 OSAL_FUNC_VISIBILITY int32_t LinuxDlclose(VOID *handle);
 OSAL_FUNC_VISIBILITY CHAR *LinuxDlerror(void);
-
+#endif
 OSAL_FUNC_VISIBILITY int32_t LinuxGetErrorCode(void);
 OSAL_FUNC_VISIBILITY int32_t LinuxCreateProcess(const CHAR *fileName, const OsalArgvEnv *env,
     const CHAR *stdoutRedirectFile, OsalProcess *id);

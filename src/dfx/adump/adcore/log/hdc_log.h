@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <sys/syslog.h>
 #include "mmpa_api.h"
-#include "slog.h"
+#include "dlog_pub.h"
 namespace Adx {
 const int32_t ADX_MODULE_NAME = IDEDD;
 const int32_t MAX_ERRSTR_LEN  = 128;

@@ -84,7 +84,7 @@ struct RtStarsPcieDmaSqe {
 struct RtStarsRdmaSinkSqe1 {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t condsSubType;  
+    uint8_t condsSubType;  // CONDS_SUB_TYPE_RDMA_1, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernelCredit;
@@ -104,7 +104,7 @@ struct RtStarsRdmaSinkSqe1 {
 struct RtStarsRdmaSinkSqe2 {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t condsSubType;  
+    uint8_t condsSubType;  // CONDS_SUB_TYPE_RDMA_2, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernelCredit;

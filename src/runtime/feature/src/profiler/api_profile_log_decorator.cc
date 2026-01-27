@@ -587,7 +587,8 @@ rtError_t ApiProfileLogDecorator::ContextSetCurrent(Context * const inCtx)
 rtError_t ApiProfileLogDecorator::NameStream(Stream * const stm, const char_t * const name)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
- 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
     if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {
         RT_LOG(RT_LOG_ERROR, "stream name too long, range[0, %u).", M_PROF_STREAM_NAME_LEN);
@@ -600,7 +601,7 @@ rtError_t ApiProfileLogDecorator::NameStream(Stream * const stm, const char_t * 
 rtError_t ApiProfileLogDecorator::NameEvent(Event * const evt, const char_t * const name)
 {
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
- 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
     const size_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_EVENT_NAME_LEN));
     if (nameLen >= static_cast<uint64_t>(M_PROF_EVENT_NAME_LEN)) {
         RT_LOG(RT_LOG_ERROR, "event name too long, range[0, %u).", M_PROF_EVENT_NAME_LEN);

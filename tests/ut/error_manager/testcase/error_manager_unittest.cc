@@ -35,29 +35,7 @@ namespace error_message
 namespace {
   int32_t system_time_ret = 0;
   int32_t time_of_day_ret = 0;
-  /*class MockMmpa : public ge::MmpaStubApi {
-    public:
-      INT32 mmGetSystemTime(mmSystemTime_t *sysTime) override {
-        if (system_time_ret == -1) {
-          return EN_ERR;
-        }
-        sysTime->wYear = 2023;
-        sysTime->wMonth = 8;
-        sysTime->wDay = 8;
-        sysTime->wHour = 20;
-        sysTime->wMinute = 8;
-        sysTime->wSecond = 0;
-        return EN_OK;
-      }
-      INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone) override {
-        if (time_of_day_ret == -1) {
-          return EN_ERR;
-        }
-        timeVal->tv_usec = 1001;
-        timeVal->tv_sec = 1001;
-        return EN_OK;
-      }
-  };*/
+
   std::string g_msg1 = R"(
 {
   "error_info_list": [
@@ -114,8 +92,37 @@ namespace {
   ]
 }
 )";
+  std::string g_msg3 = R"(
+{
+  "error_info_list": [
+    {
+      "errClass": "GE Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "E10001",
+      "ErrMessage": "Value [%s] for parameter [%s] is invalid. Reason: %s",
+      "Arglist": "value,parameter,reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Try again with a valid argument."
+      }
+    },
+    {
+      "errClass": "GE Errors",
+      "errTitle": "Config_Error_Weight_Configuration",
+      "ErrCode": "W11002",
+      "ErrMessage": "In the compression weight configuration file [%s], some nodes do not exist in graph: %s.",
+      "Arglist": "filename, opnames",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check whether the weight file matches the model file."
+      }
+    }
+  ]
+}
+)";
 REG_FORMAT_ERROR_MSG(g_msg1.c_str(), g_msg1.size());
 REG_FORMAT_ERROR_MSG(g_msg2.c_str(), g_msg2.size());
+REG_FORMAT_ERROR_MSG(g_msg3.c_str(), g_msg3.size());
 }
 
   class UtestErrorManager : public testing::Test {

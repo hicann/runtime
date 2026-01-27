@@ -8,12 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_STARSV2_PLACE_HOLDER_SQE_H
-#define CCE_RUNTIME_STARSV2_PLACE_HOLDER_SQE_H
+#ifndef CCE_RUNTIME_DAVID_PLACE_HOLDER_SQE_H
+#define CCE_RUNTIME_DAVID_PLACE_HOLDER_SQE_H
 
 #include "base.h"
 #include "task_info_base.hpp"
-#include "starsv2_base.hpp"
 #include "driver/ascend_hal_define.h"
 
 namespace cce {
@@ -21,14 +20,14 @@ namespace runtime {
 #pragma pack(push)
 #pragma pack (1)
 
-struct StarsV2Maintaince {
+struct DavidStarsMaintaince {
     uint8_t  subType; // force recyle
     uint8_t  rsv;
     uint16_t targetId;
     uint8_t  reserved[44];
 };
 
-struct StarsV2DataDumpLoadInfo {
+struct DavidDataDumpLoadInfo {
     uint64_t dumpinfoPtr;
     uint32_t length;
     uint16_t streamId;
@@ -37,7 +36,7 @@ struct StarsV2DataDumpLoadInfo {
     uint16_t reserved;
 };
 
-struct StarsV2DynamicProf {
+struct DavidDynamicProf {
     uint64_t pid;
     uint8_t eventMuxConfig[8];
     uint64_t startCycle;
@@ -50,28 +49,28 @@ struct StarsV2DynamicProf {
     uint8_t reserved[11]; // reserved 11 bytes
 };
 
-struct StarsV2ProfilerTraceEx {
+struct DavidProfilerTraceEx {
     uint64_t profilerTraceId;
     uint64_t modelId;
     uint16_t tagId;
     uint8_t reserved[30];
 };
 
-struct StarsV2ModelDebugRegister {
+struct DavidModelDebugRegister {
     uint64_t addr;
     uint32_t modelId;
     uint32_t flag;
     uint32_t reserved[8];
 };
 
-struct StarsV2StreamDebugRegister {
+struct DavidStreamDebugRegister {
     uint64_t addr;
     uint32_t streamId;
     uint32_t flag;
     uint32_t reserved[8];
 };
 
-struct StarsV2ModelMaintaince {
+struct DavidStarsModelMaintaince {
     uint16_t modelId;
     uint16_t streamId;
     uint16_t operation;
@@ -83,7 +82,7 @@ struct StarsV2ModelMaintaince {
     uint32_t reserved[6];
 };
 
-struct StarsV2RingBufferControl {
+struct DavidRingBufferControl {
     uint64_t ringbufferOffset;
     uint64_t ringbufferPhyAddr;
     uint64_t pid;
@@ -92,7 +91,7 @@ struct StarsV2RingBufferControl {
     uint8_t  reserved[19];
 };
 
-struct StarsV2MemCpyAsyncWithoutSdma {
+struct DavidMemCpyAsyncWithoutSdma {
     uint64_t src;
     uint64_t dest;
     uint32_t size;
@@ -100,14 +99,14 @@ struct StarsV2MemCpyAsyncWithoutSdma {
     uint8_t reserved[24];
 };
 
-struct StarsV2StreamOverflowSwitch {
+struct DavidStreamOverflowSwitch {
     uint16_t streamId;
     uint16_t isSwitchOn : 1;
     uint16_t rsv : 15;
     uint32_t reserved[11];
 };
 
-struct StarsV2GetDevMsg {
+struct DavidGetDevMsg {
     uint64_t devAddr;
     uint64_t offset;
     uint32_t len;
@@ -115,24 +114,24 @@ struct StarsV2GetDevMsg {
     uint8_t reserved[26];
 };
 
-struct StarsV2StreamSetTag {
+struct DavidStreamSetTag {
     uint16_t streamId;
     uint16_t rsv;
     uint32_t geOpTag;
     uint32_t reserved[10];
 };
 
-struct StarsV2DebugStatus {
+struct DavidDebugStatus {
     uint8_t debugFlag;
     uint8_t reserved[3];
 };
 
-struct StarsV2FlipTaskTag {
+struct DavidFlipTaskTag {
     uint16_t flipNumReport;
     uint8_t reserved[46];
 };
 
-struct StarsV2AicpuInfoLoad {
+struct DavidAicpuInfoLoad {
     uint64_t aicpufoPtr;
     uint32_t length;
     uint16_t streamId;
@@ -140,7 +139,7 @@ struct StarsV2AicpuInfoLoad {
     uint16_t reserved[2];
 };
 
-struct StarsV2MdlTaskUpdate {
+struct DavidMdlTaskUpdate {
     uint64_t tilingKeyOffset;
     uint64_t blockDimOffset;
     uint64_t tilingTabOffset;
@@ -151,7 +150,7 @@ struct StarsV2MdlTaskUpdate {
     uint16_t resv;
 };
 
-struct StarsV2CallBackTask {
+struct DavidCallBackTask {
     /* word4-5 */
     uint16_t cbCqId;
     uint16_t cbGroupId;
@@ -186,34 +185,34 @@ struct StarsV2CallBackTask {
     uint32_t destPid;
 };
 
-struct RtStarsV2PlaceHolderSqe {
-    rtStarsV2SqeHeader_t header;
+struct RtDavidPlaceHolderSqe {
+    rtDavidStarsSqeHeader_t header;
     /* word2-3 */
     uint32_t res1;
     uint16_t taskType;
     uint8_t kernelCredit;
-    uint8_t timeoutType;  // use for timeout cqe in starsv2
+    uint8_t timeoutType;  // use for timeout cqe in david
 
     /* use reserved field */
     /* The struct in the union must be 48 bytes */
     union {
-        StarsV2Maintaince maintainceInfo;
-        StarsV2DataDumpLoadInfo dataDumpLoadInfo;
-        StarsV2DynamicProf dynamicProfilingInfo;
-        StarsV2ProfilerTraceEx profileTraceInfo;
-        StarsV2ModelDebugRegister modelDebugRegisterInfo;
-        StarsV2StreamDebugRegister streamDebugRegisterInfo;
-        StarsV2ModelMaintaince modelMaintainceInfo;
-        StarsV2RingBufferControl ringBufferControlInfo;
-        StarsV2MemCpyAsyncWithoutSdma memcpyAsyncWithoutSdmaInfo;
-        StarsV2StreamOverflowSwitch streamOverflowSwitchInfo;
-        StarsV2GetDevMsg getDevMsgInfo;
-        StarsV2StreamSetTag streamSetTagInfo;
-        StarsV2DebugStatus  debugStatusInfo;
-        StarsV2FlipTaskTag flipTaskInfo;
-        StarsV2MdlTaskUpdate mdlTaskUpdateInfo;
-        StarsV2AicpuInfoLoad aiCpuLoadInfo;
-        StarsV2CallBackTask callBackInfo;
+        DavidStarsMaintaince maintainceInfo;
+        DavidDataDumpLoadInfo dataDumpLoadInfo;
+        DavidDynamicProf dynamicProfilingInfo;
+        DavidProfilerTraceEx profileTraceInfo;
+        DavidModelDebugRegister modelDebugRegisterInfo;
+        DavidStreamDebugRegister streamDebugRegisterInfo;
+        DavidStarsModelMaintaince modelMaintainceInfo;
+        DavidRingBufferControl ringBufferControlInfo;
+        DavidMemCpyAsyncWithoutSdma memcpyAsyncWithoutSdmaInfo;
+        DavidStreamOverflowSwitch streamOverflowSwitchInfo;
+        DavidGetDevMsg getDevMsgInfo;
+        DavidStreamSetTag streamSetTagInfo;
+        DavidDebugStatus  debugStatusInfo;
+        DavidFlipTaskTag flipTaskInfo;
+        DavidMdlTaskUpdate mdlTaskUpdateInfo;
+        DavidAicpuInfoLoad aiCpuLoadInfo;
+        DavidCallBackTask callBackInfo;
         uint32_t resv[12];
     } u;
 };

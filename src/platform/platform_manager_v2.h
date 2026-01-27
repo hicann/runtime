@@ -27,7 +27,7 @@ class PlatformManagerV2 {
 
   static PlatformManagerV2 &Instance();
 
-  uint32_t GetSocSpec(const std::string &soc_version, const std::string &label, const std::string &key, std::string &value);
+  int32_t GetSocSpec(const std::string &soc_version, const std::string &label, const std::string &key, std::string &value);
 
  private:
   PlatformManagerV2() = default;
@@ -47,7 +47,7 @@ class PlatformManagerV2 {
   std::string RealPath(const std::string &path);
   std::string GetSoFilePath();
   uint32_t InitPlatformInfos(const std::string &soc_version);
-  uint32_t GetPlatformInfos(const std::string &soc_version, fe::PlatFormInfos &platform_info);
+  int32_t GetPlatformInfos(const std::string &soc_version, fe::PlatFormInfos &platform_info);
 
  private:
   std::mutex soc_lock_;

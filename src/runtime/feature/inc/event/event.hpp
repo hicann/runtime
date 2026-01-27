@@ -30,6 +30,7 @@ class EventRecordTask;
 
 constexpr int32_t INVALID_EVENT_ID = -1;
 constexpr int32_t TIMELINE_EVENT_ID = 1023;
+constexpr int32_t TIMELINE_EVENT_ID_MDC_LITE = 511;
 constexpr uint32_t RT_EVENT_FLAG_MAX = (RT_EVENT_DDSYNC_NS | RT_EVENT_STREAM_MARK | RT_EVENT_DDSYNC |
                                         RT_EVENT_TIME_LINE | RT_EVENT_MC2 | RT_EVENT_EXTERNAL);
 constexpr uint32_t MEM_WAIT_SPLIT_SIZE = 512U;

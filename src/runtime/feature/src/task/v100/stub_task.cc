@@ -21,7 +21,7 @@ TaskInfo* GetTaskInfo(const Device * const dev, uint32_t streamId, uint32_t id)
     return dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), static_cast<uint16_t>(id));
 }
 
-rtError_t TaskReclaimByStream(const Stream *const stm, const bool limited, const bool needLog)
+rtError_t TaskReclaimByStream(Stream *const stm, const bool limited, const bool needLog)
 {
     UNUSED(stm);
     UNUSED(limited);
@@ -52,7 +52,7 @@ void ProfStop(Profiler * const profiler, const uint64_t profConfig, const uint32
     return;
 }
 
-rtError_t SetTimeoutConfigTaskSubmitStarsV2(Stream * const stm, const rtTaskTimeoutType_t type, const uint32_t timeout)
+rtError_t SetTimeoutConfigTaskSubmitDavid(Stream * const stm, const rtTaskTimeoutType_t type, const uint32_t timeout)
 {
     UNUSED(stm);
     UNUSED(type);
@@ -151,7 +151,7 @@ rtError_t SyncGetDeviceMsg(Device * const dev, const void * const devMemAddr, co
     return SyncGetDevMsg(dev, devMemAddr, devMemSize, getDevMsgType);
 }
 
-rtError_t ProcRingBufferTaskStarsV2(const Device *const dev, const void * const devMem, const bool delFlag,
+rtError_t ProcRingBufferTaskDavid(const Device *const dev, const void * const devMem, const bool delFlag,
     const uint32_t len)
 {
     UNUSED(dev);
@@ -167,14 +167,14 @@ rtError_t TaskReclaimAllStream(const Device * const dev)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t UpdateTimeoutConfigTaskSubmitStarsV2(Stream * const stm, const RtTimeoutConfig &timeoutConfig)
+rtError_t UpdateTimeoutConfigTaskSubmitDavid(Stream * const stm, const RtTimeoutConfig &timeoutConfig)
 {
     UNUSED(stm);
     UNUSED(timeoutConfig);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-void RegStarsV2TaskFunc(void)
+void RegDavidTaskFunc(void)
 {
     return;
 }
@@ -207,5 +207,10 @@ uint32_t GetProfTaskId(const TaskInfo * const taskInfo)
     return GetFlipTaskId(static_cast<uint32_t>(taskInfo->id), taskInfo->flipNum);
 }
 
+void RecycleThreadDoForStarsV2(Device *deviceInfo)
+{
+    UNUSED(deviceInfo);
+    return;
+}
 }  // namespace runtime
 }  // namespace cce

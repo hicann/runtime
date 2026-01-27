@@ -15,6 +15,7 @@
 #include "data_check.h"
 #include "data_report_manager.h"
 #include "msprof_main.h"
+#include "../../st/cli/stub/cli_stub.h"
 
 using namespace std;
 

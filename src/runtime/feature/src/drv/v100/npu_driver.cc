@@ -22,5 +22,15 @@ rtError_t InitDrvEventThread(const uint32_t deviceId)
     UNUSED(deviceId);
     return RT_ERROR_NONE;
 }
+
+rtError_t GetDrvSentinelMode(void)
+{
+    return RT_ERROR_NONE;
+}
+
+bool IsOfflineSupportMemType(const rtMemType_t &type)
+{
+    return (type != RT_MEMORY_P2P_HBM) && (type != RT_MEMORY_P2P_DDR);
+}
 }  // namespace runtime
 }  // namespace cce

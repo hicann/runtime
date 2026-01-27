@@ -39,7 +39,7 @@ BATCH_REGISTER_DEV_INFO(DEV_INFO_910_93, sizeof(DEV_INFO_910_93) / sizeof(RtDevI
 
 REGISTER_PLATFORM_LIB_INFO(CHIP_910_B_93, "libruntime_v100.so");
 
-static const std::unordered_set<RtOptionalFeatureType> CHIP_910_B_93_FEATURE{
+static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH,
     RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT,
@@ -107,6 +107,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_910_B_93_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_RESOURCE_CLEAN,
     RtOptionalFeatureType::RT_FEATURE_TASK_EXEC_TIMEOUT_SCALE_MODIFY,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL,
     RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
     RtOptionalFeatureType::RT_FEATURE_STREAM_EXTENSION,
@@ -145,9 +146,10 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_910_B_93_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_FLOAT_STATUS,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_EVENT_POOL,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ
 };
 
-REGISTER_CHIP_FEATURE_SET(CHIP_910_B_93, CHIP_910_B_93_FEATURE);
+REGISTER_CHIP_FEATURE_SET(CHIP_910_B_93, CHIP_CLOUD_V2_FEATURE);
 
 static constexpr uint32_t ASYNC_TASK_D2D_QOS = 6U;
 constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP = 23;
@@ -155,7 +157,7 @@ static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX
 static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 = 254U; // The STARS reference time is 1090921693.184 us.
 static constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F;  // 0.001(us) = 1ns
 
-static const DevProperties CHIP_910_B_93_PROPERTIES = {
+static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .engineType = "STARS",
     .isStars = true,
     .pthreadStackSize = 0U,
@@ -193,7 +195,7 @@ static const DevProperties CHIP_910_B_93_PROPERTIES = {
     .resAllocRange = DEFAULT,
     .supportSnapshot = SupportSnapshot::SUPPORT,
     .MaxKernelCredit = RT_STARS_MAX_KERNEL_CREDIT_UINT32,
-    .eventTimestampFreq = RT_CHIP_910_B_93_TIMESTAMP_FREQ,
+    .eventTimestampFreq = RT_CHIP_CLOUD_V2_TIMESTAMP_FREQ,
     .taskEngineType = EngineCreateType::STARS_ENGINE,
     .CmoSqeVersion = SqeVersion::CMO_SQE_VERSION_V2,
     .DefaultKernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32,
@@ -252,9 +254,9 @@ static const DevProperties CHIP_910_B_93_PROPERTIES = {
     .supportCreateTaskRes = SupportCreateTaskRes::CREATE_TASK_RES_SUPPORT,
     .aicNumForCoreStack = RT_AICORE_NUM_25,
     .engineWaitCompletionTImeout = 0UL,
-    .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME
+    .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
 };
 
-REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_910_B_93_PROPERTIES);
+REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_CLOUD_V2_PROPERTIES);
 }
 }

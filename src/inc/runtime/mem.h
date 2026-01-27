@@ -173,7 +173,7 @@ typedef enum rtMemcpyAttributeId {
  
 typedef union rtMemcpyAttributeValue_union {
     uint32_t rsv[4];
-    uint32_t checkBitmap; // bit0：Do not check for matching between addr and kind；bit1：check addr is page-lock
+    uint32_t checkBitmap; // bit0：Do not check for matching between address and kind；bit1：check addr is page-lock
 } rtMemcpyAttributeValue_t;
  
 typedef struct rtMemcpyAttribute {
@@ -194,6 +194,7 @@ typedef enum tagRtMemcpyChannelType {
     RT_MEMCPY_CHANNEL_TYPE_INNER = 0,  // 1P
     RT_MEMCPY_CHANNEL_TYPE_PCIe,
     RT_MEMCPY_CHANNEL_TYPE_HCCs,  // not support now
+    RT_MEMCPY_CHANNEL_TYPE_UB,
     RT_MEMCPY_CHANNEL_TYPE_RESERVED,
 } rtMemcpyChannelType_t;
 
@@ -297,8 +298,8 @@ typedef struct {
 } rtMemSvmGrpInfo_t;
 
 typedef struct {
-    uint64_t va;                /* Input para: Virtual addr requested by the SVM module*/
-    uint64_t size;              /* Input para: Virtual addr size*/
+    uint64_t va;                /* Input para: Virtual address requested by the SVM module*/
+    uint64_t size;              /* Input para: Virtual address size*/
     uint32_t tokenId;          /* Output para */
     uint32_t tokenValue;       /* Output para */
 } rtMemUbTokenInfo_t;
@@ -548,9 +549,9 @@ RTS_API rtError_t rtInvalidCache(void *base, size_t len);
 /**
  * @ingroup dvrt_mem
  * @brief synchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @return RT_ERROR_NONE for ok
@@ -561,9 +562,9 @@ RTS_API rtError_t rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_
 /**
  * @ingroup dvrt_mem for mbuff
  * @brief synchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind   memcpy type
  * @return RT_ERROR_NONE for ok
@@ -574,9 +575,9 @@ RTS_API rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint6
 /**
  * @ingroup dvrt_mem
  * @brief host task memcpy
- * @param [in] dst   destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst   destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @param [in] stm   task stream
@@ -588,9 +589,9 @@ RTS_API rtError_t rtMemcpyHostTask(void * const dst, const uint64_t destMax, con
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst   destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst   destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind   memcpy type
  * @param [in] stm   asynchronized task stream
@@ -603,9 +604,9 @@ RTS_API rtError_t rtMemcpyAsync(void *dst, uint64_t destMax, const void *src, ui
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type, not check
  * @param [in] stm   asynchronized task stream
@@ -620,7 +621,7 @@ RTS_API rtError_t rtMemcpyAsyncWithoutCheckKind(void *dst, uint64_t destMax, con
  * @brief dsa update memcpy
  * @param [in] streamId dsa streamId
  * @param [in] taskId dsa
- * @param [in] src   source device addr pointer
+ * @param [in] src   source device address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] stm   asynchronized task stream
  * @return RT_ERROR_NONE for ok
@@ -632,9 +633,9 @@ RTS_API rtError_t rtLaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @param [in] stm   asynchronized task stream
@@ -648,9 +649,9 @@ RTS_API rtError_t rtMemcpyAsyncEx(void *dst, uint64_t destMax, const void *src, 
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @param [in] stm   asynchronized task stream
@@ -664,9 +665,9 @@ RTS_API rtError_t rtMemcpyAsyncWithCfg(void *dst, uint64_t destMax, const void *
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @param [in] stm   asynchronized task stream
@@ -686,6 +687,15 @@ typedef struct {
     uint64_t dst;
 } rtMemcpyAddrInfo;
 
+// user should give the right src and dst address, and the right len
+typedef struct {
+    uint64_t res0[4];
+    uint64_t src;
+    uint64_t dst;
+    uint32_t len;
+    uint32_t res1[3];
+} rtDavidMemcpyAddrInfo;
+
 RTS_API rtError_t rtMemcpyAsyncPtr(void *memcpyAddrInfo, uint64_t destMax, uint64_t count,
                                     rtMemcpyKind_t kind, rtStream_t stream, uint32_t qosCfg);
 
@@ -695,10 +705,10 @@ RTS_API rtError_t rtMemcpyAsyncPtrV2(void *memcpyAddrInfo, uint64_t destMax, uin
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy
- * @param [in] dst   destination addr pointer
- * @param [in] dstMax length of destination addr memory
+ * @param [in] dst   destination address pointer
+ * @param [in] dstMax length of destination address memory
  * @param [in] dstOffset
- * @param [in] src   source addr pointer
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] srcOffset
  * @param [in] stm   asynchronized task stream
@@ -711,9 +721,9 @@ RTS_API rtError_t rtMemcpyD2DAddrAsync(void *dst, uint64_t dstMax, uint64_t dstO
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized reduce memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src   source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] kind  memcpy type
  * @param [in] type  data type
@@ -727,9 +737,9 @@ RTS_API rtError_t rtReduceAsync(void *dst, uint64_t destMax, const void *src, ui
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized reduce memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src     source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src     source address pointer
  * @param [in] count   the number of byte to copy
  * @param [in] kind    memcpy type
  * @param [in] type    data type
@@ -744,9 +754,9 @@ RTS_API rtError_t rtReduceAsyncWithCfg(void *dst, uint64_t destMax, const void *
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized reduce memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src    source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src    source address pointer
  * @param [in] count  the number of byte to copy
  * @param [in] kind   memcpy type
  * @param [in] type   data type
@@ -761,9 +771,9 @@ RTS_API rtError_t rtReduceAsyncWithCfgV2(void *dst, uint64_t destMax, const void
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized reduce memcpy
- * @param [in] dst     destination addr pointer
- * @param [in] destMax length of destination addr memory
- * @param [in] src    source addr pointer
+ * @param [in] dst     destination address pointer
+ * @param [in] destMax length of destination address memory
+ * @param [in] src    source address pointer
  * @param [in] cnt  the number of byte to copy
  * @param [in] kind   memcpy type
  * @param [in] type   data type
@@ -778,9 +788,9 @@ RTS_API rtError_t rtReduceAsyncV2(void *dst, uint64_t destMax, const void *src, 
 /**
  * @ingroup dvrt_mem
  * @brief synchronized memcpy2D
- * @param [in] dst      destination addr pointer
+ * @param [in] dst      destination address pointer
  * @param [in] dstPitch pitch of destination memory
- * @param [in] src      source addr pointer
+ * @param [in] src      source address pointer
  * @param [in] srcPitch pitch of source memory
  * @param [in] width    width of matrix transfer
  * @param [in] height   height of matrix transfer
@@ -794,10 +804,10 @@ RTS_API rtError_t rtMemcpy2d(void *dst, uint64_t dstPitch, const void *src, uint
 /**
  * @ingroup dvrt_mem
  * @brief asynchronized memcpy2D
- * @param [in] dst      destination addr pointer
- * @param [in] dstPitch length of destination addr memory
- * @param [in] src      source addr pointer
- * @param [in] srcPitch length of destination addr memory
+ * @param [in] dst      destination address pointer
+ * @param [in] dstPitch length of destination address memory
+ * @param [in] src      source address pointer
+ * @param [in] srcPitch length of destination address memory
  * @param [in] width    width of matrix transfer
  * @param [in] height   height of matrix transfer
  * @param [in] kind     memcpy type
@@ -831,7 +841,7 @@ RTS_API rtError_t rtMemAdvise(void *devPtr, uint64_t count, uint32_t advise);
  * @ingroup dvrt_mem
  * @brief set memory with uint32_t value
  * @param [in] devPtr
- * @param [in] destMax length of destination addr memory
+ * @param [in] destMax length of destination address memory
  * @param [in] val
  * @param [in] cnt byte num
  * @return RT_ERROR_NONE for ok, errno for failed
@@ -843,7 +853,7 @@ RTS_API rtError_t rtMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64_
  * @ingroup dvrt_mem
  * @brief set memory with uint32_t value async
  * @param [in] devPtr
- * @param [in] destMax length of destination addr memory
+ * @param [in] destMax length of destination address memory
  * @param [in] val
  * @param [in] cnt byte num
  * @param [in] stm
@@ -907,7 +917,7 @@ RTS_API rtError_t rtPointerGetAttributes(rtPointerAttributes_t *attributes, cons
 /**
  * @ingroup dvrt_mem
  * @brief make memory shared interprocess and assigned a name
- * @param [in] ptr    device memory addr pointer
+ * @param [in] ptr    device memory address pointer
  * @param [in] name   identification name
  * @param [in] byteCount   identification byteCount
  * @return RT_ERROR_NONE for ok
@@ -941,7 +951,7 @@ RTS_API rtError_t rtIpcDestroyMemoryName(const char_t *name);
 /**
  * @ingroup dvrt_mem
  * @brief open a interprocess shared memory
- * @param [in|out] ptr    device memory addr pointer
+ * @param [in|out] ptr    device memory address pointer
  * @param [in] name   identification name
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -952,7 +962,7 @@ RTS_API rtError_t rtIpcOpenMemory(void **ptr, const char_t *name);
 /**
  * @ingroup dvrt_mem
  * @brief close a interprocess shared memory
- * @param [in] ptr    device memory addr pointer
+ * @param [in] ptr    device memory address pointer
  * @param [in] name   identification name
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -1089,12 +1099,12 @@ RTS_API rtError_t rtUbDbSend(rtUbDbInfo_t *dbInfo,  rtStream_t stm);
 RTS_API rtError_t rtUbDirectSend(rtUbWqeInfo_t *wqeInfo, rtStream_t stm);
 /**
  * @ingroup dvrt_mem
- * @brief This command is used to reserve a virtual addr range
+ * @brief This command is used to reserve a virtual address range
  * @attention Only support ONLINE scene
- * @param [in] devPtr Resulting pointer to start of virtual addr range allocated.
- * @param [in] size Size of the reserved virtual addr range requested.
- * @param [in] alignment Alignment of the reserved virtual addr range requested,  Currently unused, must be zero.
- * @param [in] devAddr Expected virtual addr space start addr Currently, Currently unused, must be zero.
+ * @param [in] devPtr Resulting pointer to start of virtual address range allocated.
+ * @param [in] size Size of the reserved virtual address range requested.
+ * @param [in] alignment Alignment of the reserved virtual address range requested,  Currently unused, must be zero.
+ * @param [in] devAddr Expected virtual address space start address Currently, Currently unused, must be zero.
  * @param [in] flags currently unused, must be zero.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -1104,9 +1114,9 @@ RTS_API rtError_t rtReserveMemAddress(void** devPtr, size_t size, size_t alignme
 
 /**
  * @ingroup dvrt_mem
- * @brief This command is used to free a virtual addr range reserved by halMemAddressReserve.
+ * @brief This command is used to free a virtual address range reserved by halMemAddressReserve.
  * @attention Only support ONLINE scene.
- * @param [in] devPtr Starting addr of the virtual addr range to free.
+ * @param [in] devPtr Starting address of the virtual address range to free.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
@@ -1140,7 +1150,7 @@ RTS_API rtError_t rtFreePhysical(rtDrvMemHandle handle);
 
 /**
  * @ingroup dvrt_mem
- * @brief This command is used to map an allocation handle to a reserved virtual addr range.
+ * @brief This command is used to map an allocation handle to a reserved virtual address range.
  * @attention Only support ONLINE scene.
  * @param [in] devPtr Address where memory will be mapped.
  * @param [in] size Size of the memory mapping.
@@ -1155,9 +1165,9 @@ RTS_API rtError_t rtMapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHan
 
 /**
  * @ingroup dvrt_mem
- * @brief This command is used to unmap the backing memory of a given addr range.
+ * @brief This command is used to unmap the backing memory of a given address range.
  * @attention Only support ONLINE scene.
- * @param [in] devPtr Starting addr for the virtual addr range to unmap.
+ * @param [in] devPtr Starting address for the virtual address range to unmap.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
@@ -1166,7 +1176,7 @@ RTS_API rtError_t rtUnmapMem(void* devPtr);
 
 /**
 * @ingroup dvrt_mem
-* @brief This command is used to set access to a reserved virtual addr range for the other device.
+* @brief This command is used to set access to a reserved virtual address range for the other device.
 * @attention
 * 1. Only support ONLINE scene.
 * 2. Support va->pa:
@@ -1174,12 +1184,12 @@ RTS_API rtError_t rtUnmapMem(void* devPtr);
 *    D2D(sigle device, diffrent device with same host, diffrent device with diffrent host),
 *    H2H(same host, diffrent host(support latter))
 * 3. rtMemSetAccess: ptr and size must be same with rtMemMap, rtMemGetAccess: ptr and size is in range of set
-* 4. after rtMemMap, if handle has owner(witch position pa handle is created or use witch device pa handle is imported)
-*    the owner position has readwrite prop automatic, not need to set again
-* 5. not support repeat set ptr to same position
-* @param [in] virPtr mapped addr.
+* 4. after rtMemMap, if handle has owner(witch location pa handle is created or use witch device pa handle is imported)
+*    the owner location has readwrite prop automatic, not need to set again
+* 5. not support repeat set ptr to same location
+* @param [in] virPtr mapped address.
 * @param [in] size mapped size.
-* @param [in] desc va position and access type, when position is device, id is devid.
+* @param [in] desc va location and access type, when location is device, id is devid.
 * @param [in] count desc num.
 * @return RT_ERROR_NONE for ok
 * @return RT_ERROR_INVALID_VALUE for error input
@@ -1189,9 +1199,9 @@ RTS_API rtError_t rtMemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *des
 
 /**
 * @ingroup dvrt_mem
-* @brief This command is used to get access to a reserved virtual addr range for the other device.
-* @param [in] virPtr mapped addr.
-* @param [in] location va position, when position is device, id is devid.
+* @brief This command is used to get access to a reserved virtual address range for the other device.
+* @param [in] virPtr mapped address.
+* @param [in] location va location, when location is device, id is devid.
 * @param [out] flags access type from desc.
 * @return RT_ERROR_NONE : success
 * @return RT_ERROR_XXX : fail
@@ -1306,7 +1316,7 @@ RTS_API rtError_t rtMemGetAllocationGranularity(rtDrvMemProp_t *prop, rtDrvMemGr
  *                          through attrsIdxs[k+1] - 1. Also attrs[numAttrs-1] will apply to copies starting from
  *                          attrsIdxs[numAttrs-1] through count - 1.
  * @param [in] numAttrs     Size of attrs and attrsIdxs arrays.
- * @param [out] failIdx     Pointer to a position to return the index of the copy where a failure was encountered.
+ * @param [out] failIdx     Pointer to a location to return the index of the copy where a failure was encountered.
  *                          The value will be SIZE_MAX if the error doesn't pertain to any specific copy.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -1319,7 +1329,7 @@ RTS_API rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t
  * @ingroup rts_mem
  * @brief Performs a batch of memory copies synchronous.
  * @param [in] dsts         Array of destination pointers.
- * @param [in] destMaxs     Array of destination addr memory lengths.
+ * @param [in] destMaxs     Array of destination address memory lengths.
  * @param [in] srcs         Array of memcpy source pointers.
  * @param [in] sizes        Array of sizes for memcpy operations.
  * @param [in] count        Size of dsts, srcs and sizes arrays.
@@ -1329,7 +1339,7 @@ RTS_API rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t
  *                          through attrsIdxs[k+1] - 1. Also attrs[numAttrs-1] will apply to copies starting from
  *                          attrsIdxs[numAttrs-1] through count - 1.
  * @param [in] numAttrs     Size of attrs and attrsIdxs arrays.
- * @param [out] failIdx     Pointer to a position to return the index of the copy where a failure was encountered.
+ * @param [out] failIdx     Pointer to a location to return the index of the copy where a failure was encountered.
  *                          The value will be SIZE_MAX if the error doesn't pertain to any specific copy.
  * @param [in] stm   asynchronized task stream
  * @return RT_ERROR_NONE for ok
@@ -1365,7 +1375,7 @@ RTS_API rtError_t rtsValueWait(const void * const devAddr, const uint64_t value,
 
 /**
 * @ingroup dvrt_mem
-* @brief This command is used to return the result to the user via virtual addr contrast with physical handle.
+* @brief This command is used to return the result to the user via virtual address contrast with physical handle.
 * @attention
 * @param [in] virPtr the va that has been mapped to device memory.
 * @param [out] handle physical addr handle.
@@ -1377,7 +1387,7 @@ RTS_API rtError_t rtMemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *hand
 
 /**
 * @ingroup dvrt_mem
-* @brief This command is used to return memory properties via physical addr handle.
+* @brief This command is used to return memory properties via physical address handle.
 * @attention
 * @param [in] handle physical addr handle.
 * @param [out] prop prop Properties of the allocation.
@@ -1386,6 +1396,18 @@ RTS_API rtError_t rtMemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *hand
 * @return RT_ERROR_DRV_ERR for driver error
 */
 RTS_API rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
+
+/**
+ * @ingroup dvrt_mem
+ * @brief get start address and size of memory block
+ * @param  [in] ptr Address whithin a certain memory block range
+ * @param  [out] pbase Start address of the memory block
+ * @param  [out] psize Size of th memory block
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
 #if defined(__cplusplus)
 }
 #endif

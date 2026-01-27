@@ -100,6 +100,21 @@ TEST_F(CloudV2DcacheDeviceTest, AllocStackPhyBaseForCloudV2_02)
     delete dev;
 }
 
+TEST_F(CloudV2DcacheDeviceTest, Alloc32kStackAddrForDcache)
+{
+    MOCKER(AllocAddrForDcache).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    RawDevice *dev = new RawDevice(1);
+    int32_t temp = 0;
+    dev->stackPhyBase32k_ = &temp;
+    Driver *driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    dev->driver_ = driver_;
+    rtError_t ret = dev->Alloc32kStackAddrForDcache();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    dev->FreeStackPhyBase();
+    dev->driver_ = nullptr;
+    delete dev;
+}
+
 TEST_F(CloudV2DcacheDeviceTest, AllocStackPhyAddrForDcache_01)
 {
     MOCKER(AllocAddrForDcache).stubs().will(returnValue(RT_ERROR_NONE));
@@ -328,7 +343,9 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_06)
             const bool))
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    dev->primaryStream_ = new Stream(dev, 0);
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     delete dev;
@@ -344,7 +361,7 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_07)
     MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
     MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
     dev->stackAddrIsDcache_ = true;
-
+    Stream *stm;
     ElfProgram program(0);
     MOCKER_CPP(&RawDevice::RegisterDcacheLockOp)
         .stubs()
@@ -363,7 +380,8 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_07)
             const bool))
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    dev->primaryStream_ = new Stream(dev, 0);
+    MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     delete dev;

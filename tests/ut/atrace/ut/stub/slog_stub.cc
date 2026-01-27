@@ -76,6 +76,9 @@ void RecordErrorLog(void)
 
 void RecordLog(int level, char *buffer)
 {
+    if(buffer == nullptr){
+        return;
+    }
     if (level == DLOG_ERROR) {
         RecordErrorLog();
     }
@@ -155,7 +158,7 @@ void DlogRecordForC(int moduleId, int level, const char *fmt, ...)
     vsnprintf(buffer, sizeof(buffer), fmt, args);
     std::unique_lock<std::mutex> lk(mtx_); 
     std::string levelStr = GetLevelString(level);
-    RecordLog(level, "buffer");
+    RecordLog(level, buffer);
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
 }

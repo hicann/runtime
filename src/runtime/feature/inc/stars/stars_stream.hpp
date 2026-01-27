@@ -37,7 +37,7 @@ struct RtStreamSetTag {
 struct RtStarsStreamSwitchSqe {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t conds_sub_type;  
+    uint8_t conds_sub_type;  // CONDS_SUB_TYPE_STREAM_SWITCH, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernelCredit;
@@ -57,7 +57,7 @@ struct RtStarsStreamSwitchSqe {
 struct RtStarsStreamSwitchExSqe {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t conds_sub_type;  
+    uint8_t conds_sub_type;  // CONDS_SUB_TYPE_STREAM_SWITCH_EX, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernel_credit;

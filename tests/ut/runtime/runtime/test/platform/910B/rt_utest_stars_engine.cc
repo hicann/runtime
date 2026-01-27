@@ -14,11 +14,6 @@
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
 #include "npu_driver.hpp"
-#include "profiler.hpp"
-#include "ctrl_stream.hpp"
-#include "api_profile_decorator.hpp"
-#include "api_profile_log_decorator.hpp"
-#include "profiler_struct.hpp"
 #define private public
 #define protected public
 #include "engine.hpp"
@@ -29,6 +24,7 @@
 #include "raw_device.hpp"
 #undef private
 #undef protected
+#include "scheduler.hpp"
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "npu_driver.hpp"
@@ -63,7 +59,7 @@ uint16_t GetAicpuKernelCredit(uint16_t timeout);
 using std::pair;
 using std::make_pair;
 
-class StarsEngineTest : public testing::Test {
+class CloudV2StarsEngineTest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
@@ -142,233 +138,7 @@ protected:
     rtStream_t streamHandleDvpp_ = 0;
 };
 
-TEST_F(StarsEngineTest, StreamSyncTaskFinishReport)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    engine_->StreamSyncTaskFinishReport();
-}
-
-TEST_F(StarsEngineTest, GetRecycleDavinciTaskNum)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    uint32_t lastRecycleEndTaskId = 666U;
-    uint32_t recycleEndTaskId = 666U;
-    uint32_t recyclePublicTaskCount = 888U;
-    engine_->GetRecycleDavinciTaskNum(lastRecycleEndTaskId, recycleEndTaskId, recyclePublicTaskCount);
-}
-
-TEST_F(StarsEngineTest, ProcessTask)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICPU;
-    task.stream = stream_;
-    engine_->ProcessTask(&task,0);
-    MOCKER(&Stream::GetIsSupportASyncRecycle).stubs().will(returnValue(true));
-    engine_ ->ProcessTask(&task, 0);
-}
-
-TEST_F(StarsEngineTest, GetProfileEnableFlag)
-{
-    uint8_t flag;
-    engine_ -> GetProfileEnableFlag(&flag);
-     EXPECT_EQ(flag, 0U);
-}
-
-TEST_F(StarsEngineTest, AddTaskToStreamSuccess)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICPU;
-    task.stream = stream_;
-    MOCKER(&Stream::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
-    err = engine_ ->TryAddTaskToStream(&task);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, RecycleThreadDo)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    MOCKER(&Stream::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
-    engine_ ->RecycleThreadDo();
-}
-
-TEST_F(StarsEngineTest, SendTaskBase)
-{
-    MOCKER(&Profiler::ReportStreamSynctaskFinish).stubs();
-    MOCKER(&Stream::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t err;
-    TaskInfo taskinfo = {};
-    taskinfo.type = TS_TASK_TYPE_KERNEL_AICORE;
-    taskinfo.stream = stream_;
-    uint16_t taskId;
-    uint32_t flipTaskId;
-    err = engine_ ->SendTask(&taskinfo,taskId, &flipTaskId);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, SendTaskFlipTaskId)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    uint32_t flipTaskId;
-    task.stream = stream_;
-    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
-    MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(false)).then(returnValue(false));
-    err = engine_->SendTask(&task, taskId,&flipTaskId);
-    EXPECT_EQ(err, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
-    stream_->SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, SendCommand)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    uint32_t flipTaskId;
-    task.stream = stream_;
-    rtTsCommand_t cmdLocal;
-    rtTsCmdSqBuf_t cmd;
-    uint32_t sendSqeNum;
-    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
-    MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(false)).then(returnValue(false));
-    err = engine_->SendCommand(&task, cmdLocal, &cmd, sendSqeNum);
-    EXPECT_EQ(err, 0U);
-    stream_->SetAbortStatus(RT_ERROR_NONE);
-}
-
-
-TEST_F(StarsEngineTest, CheckReportSimuFlag)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task= {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-
-    rtTsReport_t taskReport = {};
-    rtStarsCqe_t cqe01 = {};
-    tsReportBuf_t  tsBuf = {starsCqe:&cqe01};
-    taskReport.msgBuf = tsBuf;
-
-    engine_ -> SetReportSimuFlag(taskReport);
-    bool res =  engine_ -> CheckReportSimuFlag(taskReport);
-    EXPECT_EQ(res, false);
-}
-
-TEST_F(StarsEngineTest, ReportSocketCloseProcV2)
-{
-    rtError_t err = RT_ERROR_SOCKET_CLOSE;
-    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    engine_-> ReportSocketCloseProcV2();
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, ReportStatusOomProc)
-{
-    rtError_t err = RT_ERROR_SOCKET_CLOSE;
-    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    engine_-> ReportStatusOomProc(err, 0);
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, ReportTimeoutProc)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-
-    uint16_t taskId;
-    engine_ -> IsExeTaskSame(task.stream, taskId);
-    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t timeoutCnt = 0;
-    uint32_t streamId;
-    uint32_t execId;
-    uint64_t msec;
-    engine_ -> ReportTimeoutProc(err,timeoutCnt, streamId, taskId, execId, msec);
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, RecycleTask)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-
-    uint16_t taskId;
-    engine_ -> IsExeTaskSame(task.stream, taskId);
-    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-
-    uint32_t stmId;
-    engine_ -> RecycleTask(stmId, 0);
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, RecycleTask01)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-
-    uint16_t taskId;
-    engine_ -> IsExeTaskSame(task.stream, taskId);
-    MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    TaskInfo *task01 = nullptr;
-    MOCKER(&TaskFactory::GetTask).stubs().will(returnValue(&task)).then(returnValue(task01));
-    uint32_t stmId;
-    engine_ -> RecycleTask(stmId, 0);
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, SendFlipTask)
-{
-    rtError_t err = RT_ERROR_NONE;
-    uint16_t taskId = 0;
-    MOCKER_CPP_VIRTUAL(stream_, &Stream::IsNeedSendFlipTask).stubs().will(returnValue(true)).then(returnValue(false));
-    err = engine_ -> SendFlipTask(taskId, stream_);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, SendTaskWithoutError)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-    uint16_t taskId;;
-    uint32_t flipTaskId;
-    MOCKER(&Stream::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
-    err = engine_ -> Engine::SendTask(&task,taskId, &flipTaskId);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, RecycleCtrlTask)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    task.stream = stream_;
-    CtrlStream ctrStm(device_);
-    engine_ -> Engine::RecycleCtrlTask(&ctrStm, 0);
-    stream_ -> SetAbortStatus(RT_ERROR_NONE);
-}
-
-TEST_F(StarsEngineTest, ProcessTaskDavincList)
-{
-    bool res = false;
-    uint32_t endTaskId = 0;
-    res = engine_ -> Engine::ProcessTaskDavinciList(stream_, endTaskId, 0);
-    EXPECT_EQ(res, false);
-}
-
-
-TEST_F(StarsEngineTest, StateDown)
+TEST_F(CloudV2StarsEngineTest, StateDown)
 {
     rtError_t error = RT_ERROR_NONE;
     TaskInfo task0 = {};
@@ -386,7 +156,7 @@ TEST_F(StarsEngineTest, StateDown)
     rtInstance->SetDisableThread(flag);
 }
 
-TEST_F(StarsEngineTest, SubmitNormalTask_01)
+TEST_F(CloudV2StarsEngineTest, SubmitNormalTask_01)
 {
     rtError_t error = RT_ERROR_NONE;
     TaskInfo task0 = {};
@@ -400,7 +170,7 @@ TEST_F(StarsEngineTest, SubmitNormalTask_01)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(StarsEngineTest, timeout1)
+TEST_F(CloudV2StarsEngineTest, timeout1)
 {
     Runtime::Instance()->timeoutConfig_.isInit = false;
     Runtime::Instance()->timeoutConfig_.interval = cce::runtime::RT_STARS_TASK_KERNEL_CREDIT_SCALE_US;
@@ -408,14 +178,14 @@ TEST_F(StarsEngineTest, timeout1)
     EXPECT_EQ(ret, 7);
 }
 
-TEST_F(StarsEngineTest, SendingWaitProc)
+TEST_F(CloudV2StarsEngineTest, SendingWaitProc)
 {
     ((StarsEngine *)engine_)->SendingWaitProc(stream_);
     auto flag = stream_->GetRecycleFlag();
     EXPECT_EQ(flag, false);
 }
 
-TEST_F(StarsEngineTest, SendingWaitStreamAbort)
+TEST_F(CloudV2StarsEngineTest, SendingWaitStreamAbort)
 {
     stream_->abortStatus_ = RT_ERROR_STREAM_ABORT;
     ((StarsEngine *)engine_)->SendingWaitProc(stream_);
@@ -424,14 +194,14 @@ TEST_F(StarsEngineTest, SendingWaitStreamAbort)
     stream_->abortStatus_ = RT_ERROR_NONE;
 }
 
-TEST_F(StarsEngineTest, SendingWait_dvpp)
+TEST_F(CloudV2StarsEngineTest, SendingWait_dvpp)
 {
     ((StarsEngine *)engine_)->SendingWaitProc(streamDvpp_);
     auto flag = streamDvpp_->GetLimitFlag();
     EXPECT_EQ(flag, false);
 }
 
-TEST_F(StarsEngineTest, ProfilingEnableTask)
+TEST_F(CloudV2StarsEngineTest, ProfilingEnableTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -447,7 +217,7 @@ TEST_F(StarsEngineTest, ProfilingEnableTask)
     EXPECT_EQ(placeHolderSqe.task_type, 27);
 }
 
-TEST_F(StarsEngineTest, ProfilingDisableTask)
+TEST_F(CloudV2StarsEngineTest, ProfilingDisableTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -464,7 +234,7 @@ TEST_F(StarsEngineTest, ProfilingDisableTask)
     EXPECT_EQ(placeHolderSqe.task_type, 28);
 }
 
-TEST_F(StarsEngineTest, AddTaskToStream)
+TEST_F(CloudV2StarsEngineTest, AddTaskToStream)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -481,7 +251,7 @@ TEST_F(StarsEngineTest, AddTaskToStream)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, AddTaskToStream2)
+TEST_F(CloudV2StarsEngineTest, AddTaskToStream2)
 {
     rtError_t error;
     uint32_t sendSqeNum = 4096;
@@ -498,7 +268,7 @@ TEST_F(StarsEngineTest, AddTaskToStream2)
     stream_->SetBindFlag(false);
 }
 
-TEST_F(StarsEngineTest, SendTask)
+TEST_F(CloudV2StarsEngineTest, SendTask)
 {
     rtError_t err = RT_ERROR_NONE;
     TaskInfo task = {};
@@ -512,7 +282,7 @@ TEST_F(StarsEngineTest, SendTask)
     stream_->SetAbortStatus(RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, SendTaskFail)
+TEST_F(CloudV2StarsEngineTest, SendTaskFail)
 {
     rtError_t err = RT_ERROR_NONE;
     TaskInfo task = {};
@@ -528,7 +298,7 @@ TEST_F(StarsEngineTest, SendTaskFail)
     stream_->Device_()->SetDevStatus(RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, SendTaskDeviceAbort)
+TEST_F(CloudV2StarsEngineTest, SendTaskDeviceAbort)
 {
     rtError_t err = RT_ERROR_NONE;
     TaskInfo task = {};
@@ -542,7 +312,7 @@ TEST_F(StarsEngineTest, SendTaskDeviceAbort)
     stream_->SetAbortStatus(RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, SendTaskStreamAbort)
+TEST_F(CloudV2StarsEngineTest, SendTaskStreamAbort)
 {
     rtError_t err = RT_ERROR_NONE;
     TaskInfo task = {};
@@ -556,7 +326,7 @@ TEST_F(StarsEngineTest, SendTaskStreamAbort)
     stream_->SetAbortStatus(RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, AddTaskToStream3)
+TEST_F(CloudV2StarsEngineTest, AddTaskToStream3)
 {
     rtError_t error;
     uint32_t sendSqeNum = 4096;
@@ -574,7 +344,7 @@ TEST_F(StarsEngineTest, AddTaskToStream3)
     stream_->SetBeingAbortedFlag(false);
 }
 
-TEST_F(StarsEngineTest, FinishedTaskReclaim)
+TEST_F(CloudV2StarsEngineTest, FinishedTaskReclaim)
 {
     uint16_t taskHead = 100U;
     uint16_t sqHead = 200U;
@@ -594,7 +364,7 @@ TEST_F(StarsEngineTest, FinishedTaskReclaim)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(StarsEngineTest, FinishedTaskReclaim1)
+TEST_F(CloudV2StarsEngineTest, FinishedTaskReclaim1)
 {
     uint16_t taskHead = 100U;
     uint16_t sqHead = 200U;
@@ -618,7 +388,7 @@ TEST_F(StarsEngineTest, FinishedTaskReclaim1)
     }
 }
 
-TEST_F(StarsEngineTest, StartAndStopEngine)
+TEST_F(CloudV2StarsEngineTest, StartAndStopEngine)
 {
     rtError_t error;
 
@@ -632,7 +402,7 @@ TEST_F(StarsEngineTest, StartAndStopEngine)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, TaskReclaimByStreamId)
+TEST_F(CloudV2StarsEngineTest, TaskReclaimByStreamId)
 {
     rtError_t error;
     const uint32_t streamId = UINT32_MAX;
@@ -645,7 +415,7 @@ TEST_F(StarsEngineTest, TaskReclaimByStreamId)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, TaskReclaim)
+TEST_F(CloudV2StarsEngineTest, TaskReclaim)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -665,7 +435,7 @@ TEST_F(StarsEngineTest, TaskReclaim)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, MonitorTaskReclaim_01)
+TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_01)
 {
     rtError_t error;
     StarsEngine engine(device_);
@@ -674,7 +444,7 @@ TEST_F(StarsEngineTest, MonitorTaskReclaim_01)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, MonitorTaskReclaim_02)
+TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_02)
 {
     rtError_t error;
     StarsEngine engine(device_);
@@ -683,7 +453,7 @@ TEST_F(StarsEngineTest, MonitorTaskReclaim_02)
     EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
 }
 
-TEST_F(StarsEngineTest, MonitorForWatchDog_01)
+TEST_F(CloudV2StarsEngineTest, MonitorForWatchDog_01)
 {
     rtError_t error;
     StarsEngine engine(device_);
@@ -696,7 +466,7 @@ TEST_F(StarsEngineTest, MonitorForWatchDog_01)
     delete errorProc;
 }
 
-TEST_F(StarsEngineTest, MonitorForWatchDog_03)
+TEST_F(CloudV2StarsEngineTest, MonitorForWatchDog_03)
 {
     rtError_t error;
     uint16_t streamId;
@@ -710,7 +480,7 @@ TEST_F(StarsEngineTest, MonitorForWatchDog_03)
     delete errorProc;
 }
 
-TEST_F(StarsEngineTest, SyncTask)
+TEST_F(CloudV2StarsEngineTest, SyncTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -733,7 +503,7 @@ TEST_F(StarsEngineTest, SyncTask)
     stream_->SetAbortStatus(0);
 }
 
-TEST_F(StarsEngineTest, SyncTask_with_async_recycle_thread)
+TEST_F(CloudV2StarsEngineTest, SyncTask_with_async_recycle_thread)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -758,7 +528,7 @@ TEST_F(StarsEngineTest, SyncTask_with_async_recycle_thread)
     stream_->SetAbortStatus(0);
     stream_->Device_()->SetIsChipSupportRecycleThread(false);
 }
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_01)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_01)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -778,7 +548,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_01)
 
 }
 
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_02)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_02)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -793,7 +563,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_02)
     EXPECT_EQ(error, RT_ERROR_TASK_NULL);
 }
 
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_03)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_03)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -816,7 +586,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_03)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_04)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_04)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -839,7 +609,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_04)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_05)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_05)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -862,7 +632,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_05)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_06)
+TEST_F(CloudV2StarsEngineTest, ProcessHeadTaskByStreamId_06)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -885,7 +655,7 @@ TEST_F(StarsEngineTest, ProcessHeadTaskByStreamId_06)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, buffAllocer_t)
+TEST_F(CloudV2StarsEngineTest, buffAllocer_t)
 {
     BufferAllocator alloc(4, 1024, 5*1024*1024, BufferAllocator::EXPONENTIAL);
     BufferAllocator::OpenHugeBuff();
@@ -903,7 +673,7 @@ TEST_F(StarsEngineTest, buffAllocer_t)
     }
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqReport)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -955,7 +725,7 @@ TEST_F(StarsEngineTest, ProcLogicCqReport)
     EXPECT_EQ(ret, false);
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqReport_with_async_recycle_thread)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport_with_async_recycle_thread)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1010,7 +780,7 @@ TEST_F(StarsEngineTest, ProcLogicCqReport_with_async_recycle_thread)
     device_->SetIsChipSupportRecycleThread(false);
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqReport_with_limit_flag)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqReport_with_limit_flag)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1067,7 +837,7 @@ TEST_F(StarsEngineTest, ProcLogicCqReport_with_limit_flag)
     stream_->SetLimitFlag(false);
 }
 
-TEST_F(StarsEngineTest, GetLastTaskIdFromRtsq)
+TEST_F(CloudV2StarsEngineTest, GetLastTaskIdFromRtsq)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1082,7 +852,7 @@ TEST_F(StarsEngineTest, GetLastTaskIdFromRtsq)
     devicetmp = nullptr;
 }
 
-TEST_F(StarsEngineTest, TryRecycleTask)
+TEST_F(CloudV2StarsEngineTest, TryRecycleTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1094,7 +864,7 @@ TEST_F(StarsEngineTest, TryRecycleTask)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, TryRecycleTaskStreamAbort)
+TEST_F(CloudV2StarsEngineTest, TryRecycleTaskStreamAbort)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1111,7 +881,7 @@ TEST_F(StarsEngineTest, TryRecycleTaskStreamAbort)
     stream_->pendingNum_.Set(0U);
 }
 
-TEST_F(StarsEngineTest, MaintenanceTask)
+TEST_F(CloudV2StarsEngineTest, MaintenanceTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
@@ -1128,7 +898,7 @@ TEST_F(StarsEngineTest, MaintenanceTask)
     EXPECT_EQ(placeHolderSqe.rt_streamID, (0x8000 | stream_->Id_()));
 }
 
-TEST_F(StarsEngineTest, RecycleEventRecordTask)
+TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t sendSqeNum = 1;
@@ -1167,7 +937,7 @@ TEST_F(StarsEngineTest, RecycleEventRecordTask)
     delete evt;
 }
 
-TEST_F(StarsEngineTest, RecycleEventRecordTask_01)
+TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask_01)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t sendSqeNum = 1;
@@ -1208,7 +978,7 @@ TEST_F(StarsEngineTest, RecycleEventRecordTask_01)
     delete evt;
 }
 
-TEST_F(StarsEngineTest, SyncTaskCheckResult)
+TEST_F(CloudV2StarsEngineTest, SyncTaskCheckResult)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t sendSqeNum = 1;
@@ -1254,7 +1024,7 @@ TEST_F(StarsEngineTest, SyncTaskCheckResult)
     EXPECT_EQ(true, tsk == nullptr);
 }
 
-TEST_F(StarsEngineTest, ProcReportIsVpcErrorAndRetry)
+TEST_F(CloudV2StarsEngineTest, ProcReportIsVpcErrorAndRetry)
 {
     bool rt;
     StarsEngine *engine = (StarsEngine *)engine_;
@@ -1297,7 +1067,7 @@ void testDvppGrpCallbackFunc(rtDvppGrpRptInfo_t *report)
               << std::endl;
 }
 
-TEST_F(StarsEngineTest, DvppWaitGroup)
+TEST_F(CloudV2StarsEngineTest, DvppWaitGroup)
 {
     DvppGrp *grp = new DvppGrp(device_, 0);
     rtError_t error = device_->DvppWaitGroup(grp, testDvppGrpCallbackFunc, 0);
@@ -1305,7 +1075,7 @@ TEST_F(StarsEngineTest, DvppWaitGroup)
     delete grp;
 }
 
-TEST_F(StarsEngineTest, GetLastFinishTaskId)
+TEST_F(CloudV2StarsEngineTest, GetLastFinishTaskId)
 {
     uint32_t recycleTaskId = 0;
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
@@ -1316,7 +1086,7 @@ TEST_F(StarsEngineTest, GetLastFinishTaskId)
 }
 
 
-TEST_F(StarsEngineTest, WaitTask)
+TEST_F(CloudV2StarsEngineTest, WaitTask)
 {
     uint32_t recycleTaskId = 0;
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
@@ -1331,7 +1101,7 @@ TEST_F(StarsEngineTest, WaitTask)
     stream_->Context_()->SetFailureError(0);
 }
 
-TEST_F(StarsEngineTest, WaitTask_DEV_RUNNING_DOWN)
+TEST_F(CloudV2StarsEngineTest, WaitTask_DEV_RUNNING_DOWN)
 {
     uint32_t recycleTaskId = 0;
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
@@ -1347,7 +1117,7 @@ TEST_F(StarsEngineTest, WaitTask_DEV_RUNNING_DOWN)
     stream_->Context_()->SetFailureError(0);
 }
 
-TEST_F(StarsEngineTest, WaitTask_StreamAbort)
+TEST_F(CloudV2StarsEngineTest, WaitTask_StreamAbort)
 {
     uint32_t recycleTaskId = 0;
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
@@ -1358,7 +1128,7 @@ TEST_F(StarsEngineTest, WaitTask_StreamAbort)
     stream_->SetAbortStatus(0);
 }
 
-TEST_F(StarsEngineTest, WaitTaskabort)
+TEST_F(CloudV2StarsEngineTest, WaitTaskabort)
 {
     uint32_t recycleTaskId = 0;
     MOCKER_CPP(&StarsEngine::SendingProcReport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(recycleTaskId))
@@ -1369,14 +1139,14 @@ TEST_F(StarsEngineTest, WaitTaskabort)
     stream_->Device_()->SetDeviceStatus(0);
 }
 
-TEST_F(StarsEngineTest, QueryWaitTask)
+TEST_F(CloudV2StarsEngineTest, QueryWaitTask)
 {
     bool isWaitFlag = false;
     rtError_t error = stream_->QueryWaitTask(isWaitFlag, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, MultipleTaskReportLogicCq_01)
+TEST_F(CloudV2StarsEngineTest, MultipleTaskReportLogicCq_01)
 {
     uint32_t sendSqeNum = 1;
     rtError_t error;
@@ -1406,7 +1176,7 @@ TEST_F(StarsEngineTest, MultipleTaskReportLogicCq_01)
     delete[] multipleTaskInfo.taskDesc;
 }
 
-TEST_F(StarsEngineTest, ProcMultipleTaskLogicCqReport_02)
+TEST_F(CloudV2StarsEngineTest, ProcMultipleTaskLogicCqReport_02)
 {
     bool isStreamSync = false;
     rtError_t error;
@@ -1414,7 +1184,7 @@ TEST_F(StarsEngineTest, ProcMultipleTaskLogicCqReport_02)
     multipleTaskInfo.taskNum = 2;
     multipleTaskInfo.taskDesc = new rtTaskDesc_t[multipleTaskInfo.taskNum];
 
-    // DavinciMultipleTask
+    // DaviDavinciMultipleTask
     TaskInfo mulTipleTask = {};
     mulTipleTask.stream = stream_;
     error = DavinciMultipleTaskInit(&mulTipleTask, &multipleTaskInfo, 0x40U);
@@ -1435,14 +1205,14 @@ TEST_F(StarsEngineTest, ProcMultipleTaskLogicCqReport_02)
     delete[] multipleTaskInfo.taskDesc;
 }
 
-TEST_F(StarsEngineTest, ProcMultipleTaskLogicCqReport_03)
+TEST_F(CloudV2StarsEngineTest, ProcMultipleTaskLogicCqReport_03)
 {
     bool isStreamSync = false;
     rtMultipleTaskInfo_t multipleTaskInfo;
     multipleTaskInfo.taskNum = 2;
     multipleTaskInfo.taskDesc = new rtTaskDesc_t[multipleTaskInfo.taskNum];
 
-    // DavinciMultipleTask
+    // DaviDavinciMultipleTask
     TaskInfo mulTipleTask = {};
     mulTipleTask.stream = stream_;
     rtError_t error = DavinciMultipleTaskInit(&mulTipleTask, &multipleTaskInfo, 0U);
@@ -1466,13 +1236,13 @@ TEST_F(StarsEngineTest, ProcMultipleTaskLogicCqReport_03)
     delete[] multipleTaskInfo.taskDesc;
 }
 
-TEST_F(StarsEngineTest, ClearcMulTaskCqeNum_01)
+TEST_F(CloudV2StarsEngineTest, ClearcMulTaskCqeNum_01)
 {
     rtMultipleTaskInfo_t multipleTaskInfo;
     multipleTaskInfo.taskNum = 2;
     multipleTaskInfo.taskDesc = new rtTaskDesc_t[multipleTaskInfo.taskNum];
 
-    // DavinciMultipleTask
+    // DaviDavinciMultipleTask
     TaskInfo mulTipleTask = {};
     mulTipleTask.stream = stream_;
     rtError_t error = DavinciMultipleTaskInit(&mulTipleTask, &multipleTaskInfo, 0U);
@@ -1490,13 +1260,13 @@ TEST_F(StarsEngineTest, ClearcMulTaskCqeNum_01)
     delete[] multipleTaskInfo.taskDesc;
 }
 
-TEST_F(StarsEngineTest, CompleteProcMultipleTaskReport_01)
+TEST_F(CloudV2StarsEngineTest, CompleteProcMultipleTaskReport_01)
 {
     rtMultipleTaskInfo_t multipleTaskInfo;
     multipleTaskInfo.taskNum = 2U;
     multipleTaskInfo.taskDesc = new rtTaskDesc_t[multipleTaskInfo.taskNum];
 
-    // DavinciMultipleTask
+    // DaviDavinciMultipleTask
     TaskInfo mulTipleTask = {};
     mulTipleTask.stream = stream_;
     rtError_t error = DavinciMultipleTaskInit(&mulTipleTask, &multipleTaskInfo, 0U);
@@ -1517,7 +1287,7 @@ TEST_F(StarsEngineTest, CompleteProcMultipleTaskReport_01)
     delete[] multipleTaskInfo.taskDesc;
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_test)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_test)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1535,7 +1305,7 @@ TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_test)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_OneLogicReport)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_OneLogicReport)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1566,7 +1336,7 @@ TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_OneLogicReport)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_MutiTaskReport)
+TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_MutiTaskReport)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1601,7 +1371,7 @@ TEST_F(StarsEngineTest, ProcLogicCqUntilEmpty_MutiTaskReport)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, SendingProcReport_test)
+TEST_F(CloudV2StarsEngineTest, SendingProcReport_test)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1629,7 +1399,7 @@ TEST_F(StarsEngineTest, SendingProcReport_test)
     stm->SetNeedRecvCqeFlag(orgIsNeedRecvCqe);
 }
 
-TEST_F(StarsEngineTest, ProcReport_test)
+TEST_F(CloudV2StarsEngineTest, ProcReport_test)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1663,7 +1433,7 @@ void UserDefineDvppGrpCb(rtDvppGrpRptInfo_t *rptInfo)
     std::cout << "User define callback." << std::endl;
 }
 
-TEST_F(StarsEngineTest, CommonTaskReportLogicCq_test)
+TEST_F(CloudV2StarsEngineTest, CommonTaskReportLogicCq_test)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1684,7 +1454,7 @@ TEST_F(StarsEngineTest, CommonTaskReportLogicCq_test)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, ReportLogicCq_test)
+TEST_F(CloudV2StarsEngineTest, ReportLogicCq_test)
 {
     Stream * const stm = stream_;
     StarsEngine engine(device_);
@@ -1705,7 +1475,7 @@ TEST_F(StarsEngineTest, ReportLogicCq_test)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, Run_WithWrongThreadType)
+TEST_F(CloudV2StarsEngineTest, Run_WithWrongThreadType)
 {
     std::unique_ptr<Engine> engine = std::make_unique<StarsEngine>(device_);
     uint32_t threadType = 5U;
@@ -1718,7 +1488,7 @@ TEST_F(StarsEngineTest, Run_WithWrongThreadType)
     testThread->Join();
 }
 
-TEST_F(StarsEngineTest, DvppWaitGroup_test)
+TEST_F(CloudV2StarsEngineTest, DvppWaitGroup_test)
 {
     RawDevice *device = new RawDevice(0);
     device->Init();
@@ -1743,7 +1513,7 @@ TEST_F(StarsEngineTest, DvppWaitGroup_test)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, CreateRecycleThread_failed)
+TEST_F(CloudV2StarsEngineTest, CreateRecycleThread_failed)
 {
     RawDevice *device = new RawDevice(0);
     StarsEngine engine(device);
@@ -1758,7 +1528,7 @@ TEST_F(StarsEngineTest, CreateRecycleThread_failed)
     GlobalMockObject::reset();
 }
 
-TEST_F(StarsEngineTest, MonitorTaskReclaim_taskRecycle)
+TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_taskRecycle)
 {
     rtError_t error;
     StarsEngine engine(device_);
@@ -1781,7 +1551,7 @@ TEST_F(StarsEngineTest, MonitorTaskReclaim_taskRecycle)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(StarsEngineTest, StarsResumeRtsq_RT_STARS_EXIST_ERROR)
+TEST_F(CloudV2StarsEngineTest, StarsResumeRtsq_RT_STARS_EXIST_ERROR)
 {
     uint32_t taskId = 0U;
     RawDevice *device = new RawDevice(0);
@@ -1796,7 +1566,7 @@ TEST_F(StarsEngineTest, StarsResumeRtsq_RT_STARS_EXIST_ERROR)
     delete device;
 }
 
-TEST_F(StarsEngineTest, WaitTask3)
+TEST_F(CloudV2StarsEngineTest, WaitTask3)
 {
     uint32_t recycleTaskId = 0;
     rtError_t ret;
@@ -1811,7 +1581,7 @@ TEST_F(StarsEngineTest, WaitTask3)
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
 }
 
-TEST_F(StarsEngineTest, WaitTask4)
+TEST_F(CloudV2StarsEngineTest, WaitTask4)
 {
     uint32_t recycleTaskId = 0;
     rtError_t ret;
@@ -1826,7 +1596,7 @@ TEST_F(StarsEngineTest, WaitTask4)
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL);
 }
 
-TEST_F(StarsEngineTest, WaitTask5)
+TEST_F(CloudV2StarsEngineTest, WaitTask5)
 {
     uint32_t recycleTaskId = 0;
     rtError_t ret;
@@ -1841,7 +1611,7 @@ TEST_F(StarsEngineTest, WaitTask5)
     EXPECT_EQ(ret, RT_ERROR_STREAM_SYNC_TIMEOUT);
 }
 
-TEST_F(StarsEngineTest, ClearSerId)
+TEST_F(CloudV2StarsEngineTest, ClearSerId)
 {
     rtError_t error;
     uint32_t sendSqeNum = 1;
@@ -1855,7 +1625,7 @@ TEST_F(StarsEngineTest, ClearSerId)
 
 extern int32_t reportRasProcFlag;
 extern int32_t faultEventFlag;
-TEST_F(StarsEngineTest, ReportRasProc)
+TEST_F(CloudV2StarsEngineTest, ReportRasProc)
 {
     faultEventFlag = 1;
     RawDevice device(0);
@@ -1921,7 +1691,7 @@ TEST_F(StarsEngineTest, ReportRasProc)
     SetTaskMteErr(&task, &device);
 }
 
-TEST_F(StarsEngineTest, ReportRasProc_no_support)
+TEST_F(CloudV2StarsEngineTest, ReportRasProc_no_support)
 {
     reportRasProcFlag = 2;
     RawDevice device(0);
@@ -1934,7 +1704,7 @@ TEST_F(StarsEngineTest, ReportRasProc_no_support)
 }
 
 extern int32_t checkProcessStatusFlag;
-TEST_F(StarsEngineTest, TestMemUceError)
+TEST_F(CloudV2StarsEngineTest, TestMemUceError)
 {
     EXPECT_EQ(HasMemUceErr(0), true);
 
@@ -1958,7 +1728,7 @@ TEST_F(StarsEngineTest, TestMemUceError)
     TaskFailCallBack(0, 0, 0, RT_ERROR_DEVICE_TASK_ABORT, &device);
 }
 
-TEST_F(StarsEngineTest, ProcessStarsSdmaErrorInfoNotSupport)
+TEST_F(CloudV2StarsEngineTest, ProcessStarsSdmaErrorInfoNotSupport)
 {
     StarsEngine engine(device_);
     DeviceErrorProc *errorProc = new DeviceErrorProc(device_);
@@ -1978,7 +1748,7 @@ TEST_F(StarsEngineTest, ProcessStarsSdmaErrorInfoNotSupport)
     delete errorProc;
 }
 
-TEST_F(StarsEngineTest, MonitorForWatchDog_02)
+TEST_F(CloudV2StarsEngineTest, MonitorForWatchDog_02)
 {
     rtError_t error;
     uint16_t streamId;
@@ -1993,40 +1763,3 @@ TEST_F(StarsEngineTest, MonitorForWatchDog_02)
     delete errorProc;
 }
 
-TEST_F(StarsEngineTest, EngineLogObserverTest)
-{
-    EngineLogObserver log;
-    TaskInfo task = {};
-    task.stream = stream_;
-
-    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
-    log.TaskSubmited(device_, &task);
-    log.KernelTaskEventLogProc(0, &task, 0);
-    rtTsCommand_t cmd{};
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_EVENT_RECORD;
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_STREAM_WAIT_EVENT;
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_NOTIFY_RECORD;
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_NOTIFY_WAIT;
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_MEMCPY;
-    log.TaskLaunched(0, &task, &cmd);
-    task.type = TS_TASK_TYPE_REDUCE_ASYNC_V2;
-    log.TaskLaunched(0, &task, &cmd);
-    log.TaskFinished(0, &task);
-}
-
-TEST_F(StarsEngineTest, EngineObserverTest)
-{
-    EngineObserver log;
-    TaskInfo task = {};
-    task.stream = stream_;
-    rtTsCommand_t cmd{};
-    log.TaskLaunched(0, &task, &cmd);
-    log.TaskFinished(0, &task);
-    log.DeviceIdle(device_);
-    log.TaskSubmited(device_, &task);
-}

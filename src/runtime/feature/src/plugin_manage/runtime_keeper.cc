@@ -20,6 +20,9 @@
 #include "thread_local_container.hpp"
 #include "dev_info_manage.h"
 #include "global_state_manager.hpp"
+#ifdef XPU_UT
+#include "tprt.hpp"
+#endif
 
 namespace {
 constexpr int64_t RTS_INVALID_HARDWARE_VERSION = 0xFFFFFFFFFFFFFFFFLL;
@@ -87,13 +90,21 @@ rtError_t GetDeviceType(int64_t *hwVersion)
 static Runtime *CreateRuntimeImpl(void **soHandle)
 {
     UNUSED(soHandle);
-    return new (std::nothrow) Runtime();
+    cce::runtime::Runtime* rt = new (std::nothrow) cce::runtime::Runtime();
+    #ifdef XPU_UT
+        cce::tprt::TprtManage::tprt_ = new (std::nothrow) cce::tprt::TprtManage();
+    #endif
+    return rt;
 }
 
 static void DestroyRuntimeImpl(Runtime *rt, const void *soHandle)
 {
     UNUSED(soHandle);
     DELETE_O(rt);
+    #ifdef XPU_UT
+        DELETE_O(cce::tprt::TprtManage::tprt_);
+        cce::tprt::TprtManage::tprt_ = nullptr;
+    #endif
 }
 #else
 static const std::string LIBRUNTIME_SO_NAME = "libruntime_v100.so";  // default so name

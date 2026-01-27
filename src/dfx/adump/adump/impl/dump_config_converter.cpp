@@ -136,8 +136,7 @@ bool DumpConfigConverter::IsValidDumpConfig() const
         return false;
     }
 
-    if (!dumpScene.empty() && ((dumpScene != ADUMP_DUMP_WATCHER) ||
-                               (dumpScene == ADUMP_DUMP_WATCHER && dumpMode == ADUMP_DUMP_MODE_OUTPUT))) {
+    if (!dumpScene.empty() && (dumpScene != ADUMP_DUMP_WATCHER)) {
         return true;
     }
 
@@ -219,6 +218,8 @@ bool DumpConfigConverter::CheckDumpScene(std::string &dumpScene) const
 
 bool DumpConfigConverter::CheckDumpMode(std::string &dumpMode) const
 {
+    // if dump_mode is null， default value： output
+    dumpMode = ADUMP_DUMP_MODE_OUTPUT;
     if (!JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_MODE)){
         IDE_LOGI("dump_mode does not exist, no need to check.");
         return true;
@@ -278,7 +279,9 @@ bool DumpConfigConverter::CheckDumpPath() const
             return false;
         }
     } else {
-        if (!FileUtils::IsPathHasPermission(dumpPath)) {
+        std::string errorMsg;
+        if (!FileUtils::IsPathHasPermission(dumpPath, errorMsg)) {
+            IDE_LOGE("%s", errorMsg.c_str());
             ReportInvalidArgumentError(ADUMP_DUMP_PATH, dumpPath,
                 StrUtils::Format(FIELD_PATH_NO_PERMISSIONS, dumpPath.c_str(), ADUMP_DUMP_PATH.c_str(), configPath_));
             return false;
@@ -722,7 +725,8 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
             dumpType, dumpConfig.dumpPath.c_str(), dumpConfig.dumpMode.c_str(), dumpConfig.dumpStatus.c_str(), dumpConfig.dumpData.c_str(),
             dumpConfig.dumpSwitch
         );
-    } catch (const nlohmann::json::exception &e) {
+    } catch (const std::exception &e) {
+ 	    IDE_LOGE("convert exception: %s", e.what());
         ReportConfigParseError(StrUtils::Format(MEMORY_JSON_PARSE_FAILED, e.what()));
         return ADUMP_FAILED;
     }

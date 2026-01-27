@@ -110,7 +110,7 @@ HDC_SERVER HdcServerCreate(int32_t logDevId, drvHdcServiceType type)
         return nullptr;
     }
     if (error != DRV_ERROR_NONE) {
-        IDE_LOGE("logDevId %d create HDC failed, error: %d", logDevId, error);
+        IDE_LOGW("logDevId %d create HDC failed, error: %d", logDevId, error);
         return nullptr;
     }
     IDE_RUN_LOGI("logDevId %d create HDC server successfully", logDevId);
@@ -136,7 +136,7 @@ int32_t HdcServerDestroy(HDC_SERVER server)
     do {
         error = drvHdcServerDestroy(server);
         if (error != DRV_ERROR_NONE) {
-            IDE_LOGE("hdc server destroy error : %d, times %d", error, times);
+            IDE_LOGW("hdc server destroy error : %d, times %d", error, times);
             times++;
             (void)mmSleep(hdcWaitBaseSleepTime);
         }
@@ -340,9 +340,9 @@ static int32_t HdcRecvData(HDC_SESSION session, struct drvHdcMsg *pmsg, int32_t 
             return IDE_DAEMON_RECV_NODATA;
         }
         if (error == DRV_ERROR_SOCKET_CLOSE) {
-            IDE_LOGI("Session is closed.");
+            IDE_LOGW("Session(%p) is closed.", session);
             return IDE_DAEMON_SOCK_CLOSE;
-        } 
+        }
         if (error == DRV_ERROR_WAIT_TIMEOUT) {
             return DRV_ERROR_WAIT_TIMEOUT;
         }

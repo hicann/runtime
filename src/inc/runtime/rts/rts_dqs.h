@@ -63,13 +63,8 @@ typedef struct {
     uint8_t reserve;                                          // 预留
     uint8_t inputQueueNum;                                    // 输入队列数量
     uint8_t outputQueueNum;                                   // 输出队列数量
-    rtDqsFrameAlignMode frameAlignMode;                       // 帧对齐模式
-    rtDqsFrameAlignTimeoutMode frameAlignTimeoutMode;         // 帧对齐超时时的处理模式
-    uint32_t frameAlignTimeoutThreshold;                      // 帧对齐时间阈值
-    uint64_t *defaultInputAddr[RT_DQS_MAX_INPUT_QUEUE_NUM];   // 使用默认帧对齐时使用的输入数据地址
     uint16_t inputQueueIds[RT_DQS_MAX_INPUT_QUEUE_NUM];       // 输入队列id列表
     uint16_t outputQueueIds[RT_DQS_MAX_OUTPUT_QUEUE_NUM];     // 输出队列id列表
-    uint16_t outputMbufPoolIds[RT_DQS_MAX_OUTPUT_QUEUE_NUM];  // 输出队列所对应的mbuf pool id列表
 } rtDqsSchedCfg_t;
 
 typedef rtDqsSchedCfg_t rtDqsSchedConfig_t;
@@ -127,7 +122,6 @@ typedef enum {
     RT_DQS_TASK_SCHED_END,
     RT_DQS_TASK_INTER_CHIP_INIT,
     RT_DQS_TASK_ADSPC,
-    RT_DQS_TASK_BATCH_DEQUEUE,
     RT_DQS_TASK_MAX
 } rtDqsTaskType;
  
@@ -167,16 +161,6 @@ RTS_API rtError_t rtsDqsNotifyWait(const rtStream_t stm) RTS_WEAK;
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtsDqsDequeue(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch input batch dequeue task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsBatchDequeue(const rtStream_t stm) RTS_WEAK;
 
 /**
  * @ingroup rts_dqs

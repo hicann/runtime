@@ -127,6 +127,8 @@ hdcError_t halHdcGetSessionAttr(HDC_SESSION session, int attr, int *value)
         *value = 0;
     } else if (attr == HDC_SESSION_ATTR_RUN_ENV) {
         *value = RUN_ENV_PHYSICAL;
+    } else if (attr == HDC_SESSION_ATTR_STATUS) {
+        *value = HDC_SESSION_STATUS_CONNECT;
     } else {
         *value = 0;
     }

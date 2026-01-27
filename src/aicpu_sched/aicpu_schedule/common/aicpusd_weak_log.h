@@ -1,0 +1,44 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef AICPUSD_WEAK_LOG_H
+#define AICPUSD_WEAK_LOG_H
+
+#include "dlog_pub.h"
+
+#ifdef __cplusplus
+#ifndef LOG_CPP
+extern "C" {
+#endif
+#endif // __cplusplus
+LOG_FUNC_VISIBILITY void __attribute__((weak)) DlogFlush(void);
+LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent);
+LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) CheckLogLevel(int32_t moduleId, int32_t logLevel);
+LOG_FUNC_VISIBILITY int32_t __attribute__((weak)) DlogSetAttr(LogAttr logAttrInfo);
+inline void DlogFlushAicpu(void)
+{
+    if (&DlogFlush != nullptr) {
+        DlogFlush();
+    }
+}
+inline int32_t DlogSetAttrAicpu(const LogAttr logAttrInfo)
+{
+    if (&DlogSetAttr != nullptr) {
+        return DlogSetAttr(logAttrInfo);
+    } else {
+        return 0;
+    }
+}
+#ifdef __cplusplus
+#ifndef LOG_CPP
+}
+#endif // LOG_CPP
+#endif // __cplusplus
+#endif  // AICPUSD_WEAK_LOG_H

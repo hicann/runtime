@@ -38,6 +38,10 @@ target_include_directories(ascend_hal_stub PRIVATE
     ${RUNTIME_DIR}/src/runtime/dfx/msprof/include
 )
 
+target_compile_options(ascend_hal_stub PRIVATE
+    -fstack-protector-strong
+)
+
 target_link_libraries(ascend_hal_stub
     PRIVATE
         intf_pub
@@ -46,8 +50,6 @@ target_link_libraries(ascend_hal_stub
     PUBLIC
         ascend_hal_headers
 )
-
-target_compile_options(ascend_hal_stub PRIVATE -Wno-return-type -Wno-psabi)
 
 set_target_properties(ascend_hal_stub
     PROPERTIES

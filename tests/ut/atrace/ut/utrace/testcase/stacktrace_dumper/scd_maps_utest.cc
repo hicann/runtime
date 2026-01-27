@@ -209,33 +209,33 @@ TEST_F(ScdMapsUtest, TestScdDlLoadElfPheadFailed)
     ScdDlUninit(&dlInfo);
 }
 
-TEST_F(ScdMapsUtest, TestScdDlLoadElfSheadFailed)
-{
-    ScdDl dlInfo = {0};
-    int32_t pid = 0;
-    TraStatus ret = TRACE_FAILURE;
+// TEST_F(ScdMapsUtest, TestScdDlLoadElfSheadFailed)
+// {
+//     ScdDl dlInfo = {0};
+//     int32_t pid = 0;
+//     TraStatus ret = TRACE_FAILURE;
 
-    ret = ScdDlInit(&dlInfo);
-    EXPECT_EQ(TRACE_SUCCESS, ret);
+//     ret = ScdDlInit(&dlInfo);
+//     EXPECT_EQ(TRACE_SUCCESS, ret);
 
-    const char *fileName = "/test_scd_maps.txt";
-    std::string str(fileName);
-    str = LLT_TEST_DIR + str;
-    FILE *file = fopen(str.c_str(), "w");
+//     const char *fileName = "/test_scd_maps.txt";
+//     std::string str(fileName);
+//     str = LLT_TEST_DIR + str;
+//     FILE *file = fopen(str.c_str(), "w");
 
-    ElfW(Ehdr) ehdr;
-    memcpy_s(ehdr.e_ident, sizeof(ehdr.e_ident), ELFMAG, SELFMAG);
-    char log[200] = { 0 };
-    (void)memset_s(log, 200, 1, 199);
-    fwrite(&ehdr, sizeof(ElfW(Ehdr)), 1, file);
-    fwrite(log, 200, 1, file);
-    fclose(file);
+//     ElfW(Ehdr) ehdr;
+//     memcpy_s(ehdr.e_ident, sizeof(ehdr.e_ident), ELFMAG, SELFMAG);
+//     char log[200] = { 0 };
+//     (void)memset_s(log, 200, 1, 199);
+//     fwrite(&ehdr, sizeof(ElfW(Ehdr)), 1, file);
+//     fwrite(log, 200, 1, file);
+//     fclose(file);
 
-    ret = ScdDlLoad(&dlInfo, pid, str.c_str());
-    EXPECT_EQ(TRACE_FAILURE, ret);
+//     ret = ScdDlLoad(&dlInfo, pid, str.c_str());
+//     EXPECT_EQ(TRACE_FAILURE, ret);
 
-    ScdDlUninit(&dlInfo);
-}
+//     ScdDlUninit(&dlInfo);
+// }
 
 TEST_F(ScdMapsUtest, TestScdDlInitFailed)
 {

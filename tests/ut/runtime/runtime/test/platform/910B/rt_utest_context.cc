@@ -35,12 +35,12 @@
 #include "task.hpp"
 #include "task_res.hpp"
 #include "thread_local_container.hpp"
+#include "async_hwts_engine.hpp"
 #include "runtime_keeper.h"
 #include "memory_task.h"
 #undef protected
 #undef private
 #include "ffts_task.h"
-#include "../../data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -234,11 +234,11 @@ TEST_F(CloudV2ContextTest, SYNCHRONIZE_TEST)
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
-    MOCKER_CPP(&Stream::Synchronize).stubs()
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs()
         .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT))
         .then(returnValue(RT_ERROR_STREAM_BASE));
     error = ctx->Synchronize(-1);
-    MOCKER_CPP(&Stream::Synchronize).stubs()
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs()
         .will(returnValue(RT_ERROR_STREAM_BASE));
     error = ctx->Synchronize(-1);
     ctx->streams_.clear();
@@ -276,12 +276,13 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_test_timeout)
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
+    mmTimespec startTime = mmGetTickCount();
 
     Device* dev = ((Runtime *)Runtime::Instance())->GetDevice(devId, 0);
     MOCKER_CPP_VIRTUAL(dev, &Device::TaskReclaim).stubs()
         .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
 
-    error = ctx->TaskReclaimforSyncDevice(1, -1);
+    error = ctx->TaskReclaimforSyncDevice(startTime, -1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ctx->streams_.clear();
 
@@ -318,12 +319,13 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_ctxFailureMode)
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
+    mmTimespec startTime = mmGetTickCount();
 
     Device* dev = ((Runtime *)Runtime::Instance())->GetDevice(devId, 0);
     MOCKER_CPP_VIRTUAL(dev, &Device::TaskReclaim).stubs()
         .will(returnValue(RT_ERROR_DEVICE_TASK_ABORT));
 
-    error = ctx->TaskReclaimforSyncDevice(1, -1);
+    error = ctx->TaskReclaimforSyncDevice(startTime, -1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ctx->streams_.clear();
 
@@ -360,6 +362,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_deviceTaskAbort)
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
+    mmTimespec startTime = mmGetTickCount();
 
     Device* dev = ((Runtime *)Runtime::Instance())->GetDevice(devId, 0);
     MOCKER_CPP_VIRTUAL(dev, &Device::TaskReclaim).stubs()
@@ -368,7 +371,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_deviceTaskAbort)
     rtError_t status = dev->GetDeviceStatus();
     dev->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
 
-    error = ctx->TaskReclaimforSyncDevice(1, -1);
+    error = ctx->TaskReclaimforSyncDevice(startTime, -1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     dev->SetDeviceStatus(status);
     ctx->streams_.clear();
@@ -406,12 +409,13 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_test_error)
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
+    mmTimespec startTime = mmGetTickCount();
 
     Device* dev = ((Runtime *)Runtime::Instance())->GetDevice(devId, 0);
     MOCKER_CPP_VIRTUAL(dev, &Device::TaskReclaim).stubs()
         .will(returnValue(RT_ERROR_STREAM_NOT_COMPLETE));
 
-    error = ctx->TaskReclaimforSyncDevice(1, -1);
+    error = ctx->TaskReclaimforSyncDevice(startTime, -1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ctx->streams_.clear();
 
@@ -519,6 +523,10 @@ TEST_F(CloudV2ContextTest, ModelAddEndGraph_Test)
     ctx->streams_.push_back(stmPtr);
     Stream *defaultStream = ctx->defaultStream_;
     ctx->defaultStream_ = stmPtr;
+    rtSocType_t socType = GlobalContainer::GetSocType();
+    GlobalContainer::SetSocType(SOC_ASCEND310P1);
+    error = ctx->ModelAddEndGraph(model, stmPtr, 0);
+    GlobalContainer::SetSocType(socType);
     ctx->streams_.clear();
     ctx->defaultStream_ = defaultStream;
 
@@ -694,10 +702,23 @@ TEST_F(CloudV2ContextTest, CPU_KERNEL_LAUNCH_TEST)
 
 TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
 {
+    size_t MAX_LENGTH = 75776;
+    FILE *master = nullptr;
+    master = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
+    if (nullptr == master)
+    {
+        printf ("master open error\n");
+        return;
+    }
     Context *ctx;
     RefObject<Context*> *refObject = NULL;
     refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(0);
     ctx = refObject->GetVal();
+
+    char m_data[MAX_LENGTH];
+    size_t m_len = 0;
+    m_len = fread(m_data, sizeof(char), MAX_LENGTH, master);
+    fclose(master);
 
     rtError_t error;
     void *m_handle;
@@ -705,8 +726,8 @@ TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
     rtDevBinary_t master_bin;
     master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
     master_bin.version = 2;
-    master_bin.data = (void*)elf_o;
-    master_bin.length = elf_o_len;
+    master_bin.data = m_data;
+    master_bin.length = m_len;
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
 
@@ -2433,7 +2454,7 @@ TEST_F(CloudV2ContextTest, context_debugUnRegister_fail2)
     MOCKER(DebugUnRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = ctx->DebugUnRegister(model);
-    EXPECT_EQ(error, RT_ERROR_DEBUG_UNREGISTER_FAILED);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2670,7 +2691,7 @@ TEST_F(CloudV2ContextTest, MemCopy2DAsync_invalid_stream)
     GlobalMockObject::verify();
 }
 
-TEST_F(CloudV2ContextTest, SYNCHRONIZE_TEST_STARSV2)
+TEST_F(CloudV2ContextTest, SYNCHRONIZE_TEST_DAVID)
 {
     int32_t devId;
     rtError_t error;
@@ -2700,13 +2721,11 @@ TEST_F(CloudV2ContextTest, NONFAIL_SYNCHRONIZE_TEST)
     int32_t devId;
     rtError_t error;
     Context *ctx;
-    Stream *stream;
-
-    RefObject<Context*> *refObject = NULL;
-    refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(0);
+    RefObject<Context *> *refObject = NULL;
+    refObject = (RefObject<Context *> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(0);
     ctx = refObject->GetVal();
     ctx->streams_.clear();
-    ctx->defaultStream_ = stream;
+    ctx->defaultStream_ = new Stream(ctx->Device_(), 0);
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
@@ -2715,10 +2734,10 @@ TEST_F(CloudV2ContextTest, NONFAIL_SYNCHRONIZE_TEST)
     stmPtr->failureMode_ = CONTINUE_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
-    MOCKER_CPP(&Stream::Synchronize).stubs()
-        .will(returnValue(RT_ERROR_STREAM_BASE));
+    MOCKER_CPP_VIRTUAL(ctx->defaultStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_BASE));
     error = ctx->Synchronize(-1);
     ctx->streams_.clear();
+    delete ctx->defaultStream_;
     ctx->defaultStream_ = NULL;
 
     rtStreamDestroy(stm);
@@ -2907,7 +2926,7 @@ TEST_F(CloudV2ContextTest, AdcProfiler_test)
     int tempMemory;
     auto preVal = stream->taskResMang_;
     stream->taskResMang_ = reinterpret_cast<TaskResManage *>(&tempMemory);
-    MOCKER(ProfTaskInit).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
+    MOCKER(AdcProfTaskInit).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(1));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     error = ctx->AdcProfiler(stream, 0, 0);

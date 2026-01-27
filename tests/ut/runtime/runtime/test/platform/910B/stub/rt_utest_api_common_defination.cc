@@ -385,3 +385,5 @@ char  ApiTest::function_ = 'a';
 uint32_t ApiTest::binary_[32] = {};
 Driver* ApiTest::driver_ = NULL;
 bool ApiTest::disableFlag_ = true;
+
+bool ApiTest5::flag  = false;

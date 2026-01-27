@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "raw_device.hpp"
-
 namespace cce {
 namespace runtime {
 rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
@@ -21,7 +20,7 @@ rtError_t RawDevice::FreeSimtStackPhyBase()
 {
     return RT_ERROR_NONE;
 }
-rtError_t RawDevice::AllocStackPhyBaseStarsV2()
+rtError_t RawDevice::AllocStackPhyBaseDavid()
 {
     return RT_ERROR_NONE;
 }

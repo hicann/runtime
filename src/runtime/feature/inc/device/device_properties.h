@@ -145,7 +145,7 @@ enum class KernelFuncType : uint8_t {
 
 enum class CmoAddrInfoType : uint8_t {
     CMO_ADDR_INFO_TYPE_DAFAULT = 0,
-    CMO_ADDR_INFO_TYPE_STARSV2
+    CMO_ADDR_INFO_TYPE_DAVID
 };
 
 enum class CqeDepth : uint32_t {

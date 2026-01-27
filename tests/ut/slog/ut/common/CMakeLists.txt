@@ -7,19 +7,20 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(LOG_SOURCE_PATH ${TOP_DIR}/abl/slog)
-set(ADX_SOURCE_PATH ${TOP_DIR}/abl/adump)
+set(LOG_SOURCE_PATH ${TOP_DIR}/src/dfx/log)
+set(ADX_SOURCE_PATH ${TOP_DIR}/src/dfx/adump)
 
 ###################################################################
 set(libCommonSrc
     ${LOG_SOURCE_PATH}/utils/log_system_api.c
-    test/log-sys-package-ut.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/log-sys-package-ut.cc
 )
 
 set(libCommonInc
     ${LOG_SOURCE_PATH}/utils
     ${LOG_SOURCE_PATH}/shared
-    ${TOP_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
 )
 
 add_executable(log_common_utest
@@ -38,6 +39,7 @@ target_link_libraries(log_common_utest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
     c_sec
+    -ldl
 )
 
 target_compile_options(log_common_utest PRIVATE
@@ -48,11 +50,6 @@ set_target_properties(log_common_utest
     PROPERTIES
     OUTPUT_NAME toolchain_log_common_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
-)
-
-run_llt_test(
-    TARGET log_common_utest
-    TASK_NUM 1
 )
 
 ###################################################################

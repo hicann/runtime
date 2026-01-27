@@ -36,12 +36,36 @@ add_subdirectory(${RUNTIME_DIR}/src/mmpa ${CMAKE_BINARY_DIR}/src/mmpa)
 add_subdirectory(${RUNTIME_DIR}/src/dfx/log/liblog ${CMAKE_BINARY_DIR}/liblog)
 add_subdirectory(${RUNTIME_DIR}/src/platform ${CMAKE_BINARY_DIR}/platform)
 add_subdirectory(${RUNTIME_DIR}/src/aicpu_sched/aicpu_kernel ${CMAKE_BINARY_DIR}/aicpu_kernel)
+add_subdirectory(${RUNTIME_DIR}/src/queue_schedule ${CMAKE_BINARY_DIR}/queue_schedule)
+add_subdirectory(${RUNTIME_DIR}/src/aicpu_sched ${CMAKE_BINARY_DIR}/aicpu_sched)
 add_subdirectory(${RUNTIME_DIR}/cmake/stub ${CMAKE_BINARY_DIR}/stub)
 add_dependencies(mmpa c_sec)
 add_dependencies(static_mmpa c_sec)
 add_dependencies(platform c_sec)
 
+sign_file(
+  OUTPUT_TARGET sign_tsch_fw
+  INPUT "${RUNTIME_DIR}/build/lib_acl/libtsch_fw_plugin_910b.o"
+  CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml" 
+  RESULT_VAR "tsch_fw_sign_file"
+)
+
+pack_targets_and_files(
+  OUTPUT_TARGET "pack_cann_tsch_compat"
+  OUTPUT "cann-tsch-compat.tar.gz"
+  FILES "${tsch_fw_sign_file}"
+  TARGETS queue_schedule_so aicpu_sharder aicpu_prof aicpu_processer aicpu_scheduler_so aicpu_custom_scheduler_so queue_schedule aicpu_scheduler sign_tsch_fw
+  MANIFEST "aicpu_compat_bin_hash.cfg"
+)
+
+sign_file(
+  INPUT "cann-tsch-compat.tar.gz"
+  CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml"
+  RESULT_VAR "tsch_compat_sign_file"
+  DEPENDS pack_cann_tsch_compat
+)
+
 install(FILES
-  ${RUNTIME_DIR}/build/lib_aicpu/cann-tsch-compat.tar.gz
+  ${tsch_compat_sign_file}
   DESTINATION runtime
 )

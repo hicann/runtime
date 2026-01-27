@@ -336,14 +336,32 @@ int32_t ProfManager::StopTask(const std::string &jobId)
 SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::HandleProfilingParams(
     uint32_t deviceId, const std::string &sampleConfig) const
 {
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = CreateAndParseParams(sampleConfig);
+    if (params == nullptr) {
+        return nullptr;
+    }
+
+    return ValidateAndProcessParams(deviceId, params, sampleConfig);
+}
+
+SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::CreateAndParseParams(
+    const std::string &sampleConfig) const
+{
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
     MSVP_MAKE_SHARED0(params, analysis::dvvp::message::ProfileParams, return nullptr);
     if (!(params->FromString(sampleConfig))) {
-        MSPROF_LOGE("[ProfManager::HandleProfilingParams]Failed to parse sample config.");
+        MSPROF_LOGE("[ProfManager::CreateAndParseParams]Failed to parse sample config.");
         MSPROF_INNER_ERROR("EK9999", "Failed to parse sample config.");
         return nullptr;
     }
-    MSPROF_LOGI("HandleProfilingParams checking params");
+
+    return params;
+}
+
+SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAndProcessParams(uint32_t deviceId,
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string &sampleConfig) const
+{
+    MSPROF_LOGI("ValidateAndProcessParams checking params");
     if (!ParamValidation::instance()->CheckProfilingParams(params)) {
         MSPROF_LOGE("ProfileParams is not valid!");
         MSPROF_INNER_ERROR("EK9999", "ProfileParams is not valid!");
@@ -360,9 +378,6 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::HandleProfi
             MSPROF_LOGE("Failed to get qosEventId.");
             return nullptr;
         }
-    }
-    if (params->prof_level.compare(MSVP_LEVEL_L2) == 0 || params->prof_level.compare(MSVP_LEVEL_L3) == 0) {
-        params->taskBlockShink = MSVP_PROF_ON;
     }
     analysis::dvvp::common::utils::Utils::EnsureEndsInSlash(params->result_dir);
     MSPROF_LOGI("job_id:%s, result_dir:%s, app_location:%s", params->job_id.c_str(),
@@ -382,7 +397,7 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::HandleProfi
         analysis::dvvp::transport::FileDataParams fileDataParams(
             fileName, true, analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_CTRL_DATA);
 
-        MSPROF_LOGI("HandleProfilingParams: %s,fileName: %s", params->job_id.c_str(), fileName.c_str());
+        MSPROF_LOGI("ValidateAndProcessParams: %s,fileName: %s", params->job_id.c_str(), fileName.c_str());
         if (analysis::dvvp::transport::UploaderMgr::instance()->UploadCtrlFileData(params->job_id, sampleConfig,
             fileDataParams, jobCtx) != PROFILING_SUCCESS) {
             MSPROF_LOGE("Failed to upload data for %s", fileName.c_str());

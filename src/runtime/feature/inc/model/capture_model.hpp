@@ -172,7 +172,7 @@ public:
     void DebugDotPrintTaskGroups(const uint32_t deviceId) const;
     void ReportedStreamInfoForProfiling() const;
     void EraseStreamInfoForProfiling() const;
-    rtError_t FillShapeInfo(const TaskInfo* const taskInfo, const VOID * const infoPtr, const size_t infoSize, 
+    rtError_t FillShapeInfo(const Stream* const stm, const VOID * const infoPtr, const size_t infoSize, 
         MsprofShapeInfo * const shapeInfo) const;
     rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize, const Stream * const stm);
     void ReportShapeInfoForProfiling() const;
@@ -229,6 +229,11 @@ public:
         return sqBindMutex_.unlock();
     }
 
+    bool IsSendSqe(void) const
+    {
+        return isSqeSendFinish_;
+    }
+
     rtError_t ReleaseNotifyId(void);
     rtError_t UpdateNotifyId(Stream * const exeStream);
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
@@ -275,6 +280,7 @@ private:
     uint32_t refCount_{0U};
     bool isSqeSendFinish_{false};
     bool isNeedUpdateEndGraph_{false};
+    uint64_t beginCaptureTimeStamp_{0UL};
 };
 }
 }

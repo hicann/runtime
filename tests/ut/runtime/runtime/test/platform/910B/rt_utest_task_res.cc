@@ -9,6 +9,7 @@
  */
 #include "runtime/rt.h"
 #include "event.hpp"
+#include "scheduler.hpp"
 #include "gtest/gtest.h"
 #include "stars.hpp"
 #include "hwts.hpp"

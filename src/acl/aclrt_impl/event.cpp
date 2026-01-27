@@ -480,6 +480,7 @@ aclError aclrtIpcGetEventHandleImpl(aclrtEvent event, aclrtIpcEventHandle *handl
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcGetEventHandle);
     ACL_LOG_INFO("start to execute aclrtIpcGetEventHandle.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     const rtError_t rtErr = rtIpcGetEventHandle(static_cast<rtEvent_t>(event), reinterpret_cast<rtIpcEventHandle_t*>(handle));
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {

@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "program.hpp"
+#include "program_common.hpp"
 #include <thread>
 #include "securec.h"
 #include "context.hpp"
@@ -15,6 +15,13 @@
 #include "elf.hpp"
 #include "error_message_manage.hpp"
 #include "utils.h"
+#include <vector>
+#include <string>
+#include <map>
+#include "base.hpp"
+#include "elf.hpp"
+#include "runtime/elf_base.h"
+#include "osal.hpp"
 #include "stream_factory.hpp"
 
 namespace cce {
@@ -93,6 +100,11 @@ Program::~Program()
                 programItem->ResetVal();
             }
         }
+    }
+
+    if (binHandle_ != nullptr) {
+        (void)mmDlclose(binHandle_);
+        binHandle_ = nullptr;
     }
 }
 
@@ -493,12 +505,12 @@ void Program::DestroyTilingTbl(TilingTabl *tilingTab) const
     return;
 }
 
-rtError_t Program::StarsV2BuildTilingTblForNewFlow(TilingTablForStarsV2 **tilingTab, uint32_t *kernelLen)
+rtError_t Program::DavidBuildTilingTblForNewFlow(TilingTablForDavid **tilingTab, uint32_t *kernelLen)
 {
     kernelMapLock_.Lock();
     const size_t kernelCnt = kernelNameMap_.size();
-    const size_t totalSize = sizeof(TilingTablForStarsV2) * kernelCnt;
-    TilingTablForStarsV2 *tilingTabInfo = (TilingTablForStarsV2 *)malloc(totalSize);
+    const size_t totalSize = sizeof(TilingTablForDavid) * kernelCnt;
+    TilingTablForDavid *tilingTabInfo = (TilingTablForDavid *)malloc(totalSize);
     COND_PROC_RETURN_ERROR(tilingTabInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, kernelMapLock_.Unlock(),
         "Call malloc failed, copy size is %u", totalSize);
 
@@ -525,19 +537,19 @@ rtError_t Program::StarsV2BuildTilingTblForNewFlow(TilingTablForStarsV2 **tiling
     *kernelLen = idx;
     kernelMapLock_.Unlock();
     RT_LOG(RT_LOG_INFO, "kernelCnt=%zu, realCnt=%u, tilingTab size=%u, totalSize=%zu.",
-        kernelCnt, idx, sizeof(TilingTablForStarsV2), totalSize);
+        kernelCnt, idx, sizeof(TilingTablForDavid), totalSize);
     return RT_ERROR_NONE;
 }
 
-rtError_t Program::BuildTilingTblForStarsV2(const Module *mdl, TilingTablForStarsV2 **tilingTab, uint32_t *kernelLen)
+rtError_t Program::BuildTilingTblForDavid(const Module *mdl, TilingTablForDavid **tilingTab, uint32_t *kernelLen)
 {
     // 新的注册流程 binHandle中不包含module信息，需要走兼容分支
     if (IsNewBinaryLoadFlow()) {
-        return StarsV2BuildTilingTblForNewFlow(tilingTab, kernelLen);
+        return DavidBuildTilingTblForNewFlow(tilingTab, kernelLen);
     }
 
     NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODULE_NULL);
-    RT_LOG(RT_LOG_INFO, "kernelPos_ = %u tilingTab size=%u.", kernelPos_, sizeof(TilingTablForStarsV2));
+    RT_LOG(RT_LOG_INFO, "kernelPos_ = %u tilingTab size=%u.", kernelPos_, sizeof(TilingTablForDavid));
     if (kernelPos_ == 0) {
         RT_LOG(RT_LOG_ERROR, "kernelPos_ == 0.");
         return RT_ERROR_PROGRAM_SIZE;
@@ -545,9 +557,9 @@ rtError_t Program::BuildTilingTblForStarsV2(const Module *mdl, TilingTablForStar
  
     kernelMapLock_.Lock();
     const uint32_t size = kernelPos_;
-    TilingTablForStarsV2 *tilingTabInfo = (TilingTablForStarsV2 *)malloc(sizeof(TilingTablForStarsV2) * size);
+    TilingTablForDavid *tilingTabInfo = (TilingTablForDavid *)malloc(sizeof(TilingTablForDavid) * size);
     if (tilingTabInfo == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "malloc fail size = %u.", (sizeof(TilingTablForStarsV2) * size));
+        RT_LOG(RT_LOG_ERROR, "malloc fail size = %u.", (sizeof(TilingTablForDavid) * size));
         kernelMapLock_.Unlock();
         return RT_ERROR_PROGRAM_SIZE;
     }
@@ -576,7 +588,7 @@ rtError_t Program::BuildTilingTblForStarsV2(const Module *mdl, TilingTablForStar
     return RT_ERROR_NONE;
 }
  
-void Program::DestroyTilingTblForStarsV2(TilingTablForStarsV2 *tilingTab) const
+void Program::DestroyTilingTblForDavid(TilingTablForDavid *tilingTab) const
 {
     if (tilingTab != nullptr) {
         free(tilingTab);
@@ -611,11 +623,13 @@ rtError_t Program::Load2Device()
     if (GetBinBaseAddr(device->Id_()) != nullptr) {
         return RT_ERROR_NONE;
     }
+
     load2DeviceLock_.Lock();
     if (GetBinBaseAddr(device->Id_()) != nullptr) {
         load2DeviceLock_.Unlock();
         return RT_ERROR_NONE;
     }
+
     // load program binary to device
     const rtError_t error = runtime->BinaryLoad(device, this);
     if (error != RT_ERROR_NONE) {
@@ -645,8 +659,8 @@ rtError_t Program::CopyKernelLiteralNameToDevice(const std::string &literalName,
     // get current device
     Runtime* runtime = Runtime::Instance();
 	NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
-    const uint32_t devId = static_cast<uint32_t>(dev->Id_());
-    Driver *curDrv = dev->Driver_();
+	const uint32_t devId = static_cast<uint32_t>(dev->Id_());
+	Driver *curDrv = dev->Driver_();
 
     // alloc dev memory for soName and funcName
     size_t nameSize = literalName.size() + 1;
@@ -698,7 +712,6 @@ rtError_t Program::StoreKernelLiteralNameToDevice(Kernel *const kernel)
         ERROR_RETURN(ret, "fail to copy funcName to device, ret=%d.", ret);
         funcNameDevAddrMap_[devId][kernel->GetCpuFuncName()] = funcNameDevAddr;
     }
-
     kernel->SetKernelLiteralNameDevAddr(soNameDevAddr, funcNameDevAddr, devId);
     return RT_ERROR_NONE;
 }
@@ -826,44 +839,6 @@ rtError_t PlainProgram::FunctionGetMetaInfo(const std::string &kernelName, const
     return RT_ERROR_NONE;
 }
 
-static void SetCpuKernelAttr(Kernel *kernel, const CpuKernelInfo &kernelInfo, const std::string &opType)
-{
-    rtKernelType_t kernelType = KERNEL_TYPE_RESERVED;
-    kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetCpuFuncName(kernelInfo.funcName);
-    kernel->SetCpuKernelSo(kernelInfo.kernelSo);
-    kernel->SetCpuOpType(opType);
-    kernel->SetSystemParaNum(0U);
-    kernel->SetUserParaNum(USER_ARGS_MAX_NUM);
-    kernel->SetIsNeedSetFftsAddrInArg(false);
-    kernel->SetIsSupportOverFlow(false);
-    kernel->SetKernelType_(static_cast<uint32_t>(kernelType));
-    kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
-    if (!kernelInfo.hasOpKernelLib) {
-        RT_LOG(RT_LOG_ERROR, "opKernelLib does not exist, return");
-        return;
-    }
-
-    const std::string opKernelLib = kernelInfo.opKernelLib;
-    if ((opKernelLib == "CUSTAICPUKernel")) {
-        kernelType = KERNEL_TYPE_AICPU_CUSTOM;
-    } else if (opKernelLib == "AICPUKernel") {
-        kernelType = kernelInfo.isUserDefined ? KERNEL_TYPE_AICPU_CUSTOM : KERNEL_TYPE_AICPU;
-    } else if (opKernelLib == "TFKernel") {
-        kernelType = KERNEL_TYPE_FWK;
-    } else if (opKernelLib == "KFCKernel") {
-        kernelType = KERNEL_TYPE_AICPU_KFC;
-    } else if (opKernelLib == "CUSTKFCKernel"){
-        kernelType = KERNEL_TYPE_CUSTOM_KFC;
-    } else {
-        // skip, no operation
-        RT_LOG(RT_LOG_ERROR, "opKernelLib does not exist, default KERNEL_TYPE_RESERVED");
-    }
-
-    kernel->SetKernelType_(static_cast<uint32_t>(kernelType));
-    return;
-}
-
 // 注册CPU算子
 rtError_t Program::RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInfos)
 {
@@ -883,9 +858,7 @@ rtError_t Program::RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInf
             RT_LOG(RT_LOG_WARNING, "kernel new failed, continue");
             continue;
         }
-
         SetCpuKernelAttr(kernel, kernelInfo, key);
-
         kernelNameMap_[key] = kernel;
         RT_LOG(RT_LOG_DEBUG, "cpu kernel info:functionName[%s],kernelSo[%s],opType[%s]",
             kernel->GetCpuFuncName().c_str(), kernel->GetCpuKernelSo().c_str(), key.c_str());
@@ -1447,7 +1420,7 @@ rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
         }
     }
 
-     // 1. not support function entry info but support old tilingKey process
+    // 1. not support function entry info but support old tilingKey process
     rtError_t tilingKeyParseRet = ParseTilingKey(kernelName, tilingKey);
     // 2. support function entry info
     if (kernel->funcEntryType == KERNEL_TYPE_FUNCTION_ENTRY) {
@@ -1460,6 +1433,10 @@ rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
         return ret;
     }
 
+    // set other attrs
+    SetKernelAttribute(kernel, kernelObj, kernelType);
+    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelObj);
+
     // 3. not support tilingKey and not support function entry
     if (kernel->funcEntryType == KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY) {
         // add to program kernel map, key is kernel name
@@ -1468,9 +1445,6 @@ rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
         return RT_ERROR_NONE;
     }
 
-    // set other attrs
-    SetKernelAttribute(kernel, kernelObj, kernelType);
-    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelObj);
     ret = KernelAdd(kernelObj, tilingKeyParseRet);
     if (ret != RT_ERROR_NONE) {
         delete kernelObj;
@@ -1539,6 +1513,7 @@ rtError_t Program::FreeCpuSoH2dMem(Device * const device, std::vector<void *> &a
     }
 
     RT_LOG(RT_LOG_DEBUG, "free cpu so end");
+
     return RT_ERROR_NONE;
 }
 
@@ -1551,6 +1526,10 @@ static bool IsNoNeedProcCpuH2DMem(const KernelRegisterType kernelRegType, const 
 // isLoadCpuSo  true 代表注册， false 代表卸载
 rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device * const device)
 {
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+    if (IS_SUPPORT_CHIP_FEATURE(device->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
+        return RT_ERROR_NONE;
+    }
     COND_RETURN_WITH_NOLOG(IsNoNeedProcCpuH2DMem(kernelRegType_, cpuRegMode_), RT_ERROR_NONE);
     rtError_t ret = RT_ERROR_NONE;
     std::vector<void *> allocMem;
@@ -1572,15 +1551,13 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device * const device)
     ScopeGuard procCpuKernelGuard(recycle);
 
     const uint32_t devId = static_cast<uint32_t>(device->Id_());
-
     void *devSoBuff = nullptr;
     if (isLoadCpuSo) {
-        ret = device->Driver_()->DevMemAlloc(&devSoBuff, static_cast<uint64_t>(binarySize_), RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
+        ret = device->Driver_()->DevMemAlloc(&devSoBuff, binarySize_, RT_MEMORY_HBM, devId, DEFAULT_MODULEID);
         ERROR_RETURN(ret, "devSoBuff alloc failed! error=%#x", ret);
         allocMem.push_back(devSoBuff);
 
-        ret = device->Driver_()->MemCopySync(devSoBuff, static_cast<uint64_t>(binarySize_), binary_,
-            static_cast<uint64_t>(binarySize_), RT_MEMCPY_HOST_TO_DEVICE);
+        ret = device->Driver_()->MemCopySync(devSoBuff, binarySize_, binary_, binarySize_, RT_MEMCPY_HOST_TO_DEVICE);
         ERROR_RETURN(ret, "devSoBuff copy failed! error=%#x", ret);
     }
 
@@ -1617,14 +1594,15 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device * const device)
     argsInfo.args = &batchCpuSo;
     argsInfo.argsSize = static_cast<uint32_t>(sizeof(BatchProcCpuOpFromBufArgs));
     argsInfo.isNoNeedH2DCopy = 0U; // 0 is need h2d copy
+
     ret = LaunchAicpuKernelForCpuSo(&launchName, &argsInfo, stm.get());
     ERROR_RETURN(ret, "launch cpu kernel failed! error=%#x", ret);
 
     ret = stm->Synchronize(false, -1);  // -1代表永不超时
     ERROR_RETURN(ret, "stream sync failed! error=%#x", ret);
-
     return RT_ERROR_NONE;
 }
+
 rtError_t Program::CopySoAndNameToCurrentDevice()
 {
     rtError_t ret = RT_ERROR_NONE;
@@ -1684,6 +1662,7 @@ bool Program::IsDeviceSoAndNameValid(const uint32_t deviceId)
     }
     return devicePtr_[deviceId] != nullptr;
 }
+
 void Program::SetProgramInvalidToDevice(const uint32_t deviceId)
 {
     RT_LOG(RT_LOG_DEBUG, "begin to delete program=%p from device_id=%u.", this, deviceId);
@@ -1708,6 +1687,7 @@ void Program::SetProgramInvalidToDevice(const uint32_t deviceId)
     RT_LOG(RT_LOG_DEBUG, "delete program=%p from device_id=%u end.", this, deviceId);
     return;
 }
+
 rtError_t Program::FreeSoAndNameByDeviceId(const uint32_t deviceId)
 {
     rtError_t error = RT_ERROR_NONE;

@@ -50,6 +50,9 @@ public:
     int32_t DumpOperatorV2(const std::string &opType, const std::string &opName,
                            const std::vector<TensorInfoV2> &tensors, rtStream_t stream);
     void AddExceptionOpV2(const OperatorInfoV2 &opInfo);
+    void ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const;
+    std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &tensorInfos) const;
+    const char* GetExtraDumpPath();
 
 public:
     static std::vector<std::shared_ptr<OperatorPreliminary>> operatorMap_;
@@ -69,8 +72,6 @@ private:
     bool CheckBinValidation();
     bool RegsiterExceptionCallback();
     bool CheckCoredumpSupportedPlatform() const;
-    void ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const;
-    std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &tensorInfos) const;
     void ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &tensor) const;
     int32_t HandleDumpEvent(uint32_t moduleId, DumpEnableAction action);
     bool registered_ = false;

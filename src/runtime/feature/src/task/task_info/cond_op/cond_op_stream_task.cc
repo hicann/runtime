@@ -295,7 +295,7 @@ rtError_t StreamSwitchTaskInitV2(TaskInfo *taskInfo, const void *const ptrAddr,
     streamSwitchTask->funCallMemSize = sizeof(rtStarsStreamSwitchExFc_t);
     rtError_t error;
     // now esl b606 cond is only support physic address, virtual address is support on b607.
-    if (!stm->Device_()->IsStarsV2Platform()) {
+    if (!stm->Device_()->IsDavidPlatform()) {
         uint64_t physicPtr = 0UL;
         error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(devId, streamSwitchTask->ptr, &physicPtr);
         ERROR_RETURN_MSG_INNER(error, "Convert memory address to dma physic failed,retCode=%#x,ptr=%#" PRIx64 ".",

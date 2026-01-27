@@ -16,6 +16,7 @@
 #include "raw_device.hpp"
 #include "driver.hpp"
 #include "npu_driver.hpp"
+#include "async_hwts_engine.hpp"
 #undef protected
 #undef private
 #include "runtime/rt.h"
@@ -291,6 +292,7 @@ TEST_F(CloudV2ApiImplSpecTest, GetDeviceCapModelUpdate)
 TEST_F(CloudV2ApiImplSpecTest, GetDeviceCapModelUpdate_Support)
 {
     rtError_t error;
+    MOCKER_CPP(&AsyncHwtsEngine::ReceivingRun).stubs().will(returnValue(RT_ERROR_NONE));
     int32_t value = 0;
 
     MOCKER(CheckFeatureIsSupportOld)
@@ -378,7 +380,12 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_TASK_UPDATE_TEST_1)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtFree(devMemSrc);
     rtFree(devMem);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+ 
+    Stream *desStream = (Stream *)desStm;
+    Stream *sinkStream = (Stream *)sinkStm;
+    MOCKER_CPP_VIRTUAL(desStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+ 
     error = rtModelUnbindStream(model, desStm);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelUnbindStream(model, sinkStm);
@@ -436,7 +443,8 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_BACKUP)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *sinkStream = (Stream *)sinkStm;
+    MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     error = rtModelUnbindStream(model, sinkStm);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelDestroy(model);
@@ -522,7 +530,11 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE)
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     GlobalMockObject::verify();
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+ 
+    Stream *desStream = (Stream *)desStm;
+    Stream *sinkStream = (Stream *)sinkStm;
+    MOCKER_CPP_VIRTUAL(desStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtModelUnbindStream(model, desStm);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -611,12 +623,18 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE2)
         .with(mockcpp::any(), mockcpp::any())
         .will(returnValue(&task1));
     MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+ 
+    Stream *desStream = (Stream *)desStm;
+    Stream *sinkStream = (Stream *)sinkStm;
+    MOCKER_CPP_VIRTUAL(desStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+ 
     error = ContextManage::ModelRestore(dev->Id_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(desStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtModelUnbindStream(model, sinkStm);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -644,7 +662,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_002)
     TaskInfo task = {};
     InitByStream(&task, stream);
     task.type = TS_TASK_TYPE_MODEL_TASK_UPDATE;
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(UpdateD2HTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = UpdateTaskD2HSubmit(&task, nullptr, stream);
     EXPECT_EQ(error,RT_ERROR_DRV_ERR);
@@ -661,7 +679,8 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_003)
     Stream *stream = (Stream *)sinkStm;
     TaskInfo task = {};
     InitByStream(&task, stream);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(UpdateD2HTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
     Context * const curCtx = Runtime::Instance()->CurrentContext();
     EXPECT_EQ(curCtx != nullptr, true);
@@ -681,7 +700,8 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_004)
     Stream *stream = (Stream *)sinkStm;
     TaskInfo task = {};
     InitByStream(&task, stream);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    
     MOCKER(MemcpyAsyncTaskPrepare).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     error = UpdateTaskH2DSubmit(&task, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
@@ -698,7 +718,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_005)
     Stream *stream = (Stream *)sinkStm;
     TaskInfo task = {};
     InitByStream(&task, stream);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemcpyAsyncTaskPrepare).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SqeUpdateH2DTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
@@ -717,7 +737,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_006)
     Stream *stream = (Stream *)sinkStm;
     TaskInfo task = {};
     InitByStream(&task, stream);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemcpyAsyncTaskPrepare).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SqeUpdateH2DTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -737,8 +757,11 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_007)
     EXPECT_EQ(curCtx != nullptr, true);
     Device * dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    Stream *stream = new Stream(dev, 0);
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
     dev->GetDeviceSnapShot()->OpMemoryRestore();
     dev->GetDeviceSnapShot()->OpMemoryBackup();
 
@@ -755,6 +778,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_007)
     error = dev->GetDeviceSnapShot()->ArgsPoolConvertAddr(argAllocator);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete argAllocator;
+    DELETE_O(stream);
 }
 
 TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
@@ -906,7 +930,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     mdlUpdateTaskInfo->blockDimAddr = &args[15];
     mdlUpdateTaskInfo->fftsPlusTaskDescBuf = &args[16];
     dev->GetDeviceSnapShot()->RecordFuncCallAddrAndSize(&task10);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
 
     MOCKER_CPP(&DeviceSnapshot::OpMemoryInfoInit).stubs();
     error = dev->GetDeviceSnapShot()->OpMemoryBackup();

@@ -168,10 +168,9 @@ rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &
     if ((topologyType == TOPOLOGY_HCCS) || (topologyType == TOPOLOGY_HCCS_SW) ||
         (topologyType == TOPOLOGY_SIO)) {
         notifyRecord->uInfo.singleBitNtfyInfo.isPcie = false;
-        error = curDrv->GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
-        ERROR_RETURN_MSG_INNER(error, "Get chipId fail, retCode=%#x, deviceId=%u", error, remoteDevId);
-        error = curDrv->GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
-        ERROR_RETURN_MSG_INNER(error, "Get dieId fail, retCode=%#x, deviceId=%u", error, remoteDevId);
+        const uint32_t remotePhyId = notifyRecord->phyId;
+        const rtError_t error = curDrv->GetChipIdDieId(localDevId, remoteDevId, remotePhyId, chipId, dieId);
+        ERROR_RETURN_MSG_INNER(error, "Get chipId and dieId fail, retCode=%#x, deviceId=%u, phyId=%u", error, remoteDevId, remotePhyId);
 
         const uint64_t chipAddr = taskInfo->stream->Device_()->GetChipAddr();
         const uint64_t chipOffset = taskInfo->stream->Device_()->GetChipOffset();

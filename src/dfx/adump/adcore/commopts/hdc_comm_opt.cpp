@@ -178,8 +178,8 @@ OptHandle HdcCommOpt::Connect(const OptHandle handle, const std::map<std::string
 
 int32_t HdcCommOpt::Close(OptHandle &handle) const
 {
-    IDE_CTRL_VALUE_FAILED(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_ERROR,
-        "hdc close input invalid");
+    IDE_CTRL_VALUE_WARN(handle != ADX_OPT_INVALID_HANDLE, return IDE_DAEMON_OK,
+        "hdc handle is invalid. maybe has been closed or not connected");
 
     HDC_SESSION session = (HDC_SESSION)handle;
     int32_t ret = HdcSessionClose(session);

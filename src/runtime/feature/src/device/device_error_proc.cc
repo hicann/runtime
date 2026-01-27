@@ -611,7 +611,7 @@ rtError_t DeviceErrorProc::SendTaskToStopUseRingBuffer()
     }
     rtError_t error = RT_ERROR_NONE;
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-        error = ProcRingBufferTaskStarsV2(device_, devMem, true, RINGBUFFER_LEN_STARSV2);
+        error = ProcRingBufferTaskDavid(device_, devMem, true, RINGBUFFER_LEN_DAVID);
     } else {
         error = ProcRingBufferTask(devMem, true, RINGBUFFER_LEN);
     }
@@ -677,7 +677,7 @@ rtError_t DeviceErrorProc::CreateDeviceRingBufferAndSendTask()
 
     // create task to transfer the addr to device.
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-        error = ProcRingBufferTaskStarsV2(device_, devMem, false, RINGBUFFER_LEN_STARSV2);
+        error = ProcRingBufferTaskDavid(device_, devMem, false, RINGBUFFER_LEN_DAVID);
     } else {
         error = ProcRingBufferTask(devMem, false, RINGBUFFER_LEN);
     }
@@ -1069,8 +1069,8 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(const DevRingBufferCtlInfo * 
     Driver * const devDrv, uint16_t *errorStreamId)
 {
     // copy element
-    const size_t elementSize = (device_->IsStarsV2Platform()) ? \
-        static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_STARSV2) : \
+    const size_t elementSize = (device_->IsDavidPlatform()) ? \
+        static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID) : \
         static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH);
     constexpr size_t copySize  = sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo);
     std::unique_ptr<char[]> elementHostAddr(new (std::nothrow) char[copySize]);
@@ -1595,29 +1595,7 @@ rtError_t ProcessStarsAicpuErrorInfo(const StarsDeviceErrorInfo * const info,
     return RT_ERROR_NONE;
 }
 
-static void RecordSdmaErrorInfo(Device * const dev, uint32_t coreNum, TaskInfo *errTaskPtr,
-    const StarsDeviceErrorInfo * const info, const uint64_t errorNumber)
-{
-    for (uint32_t coreIdx = 0U; coreIdx < coreNum; coreIdx++) {
-        RT_LOG_CALL_MSG(ERR_MODULE_GE, "The error from device(chipId:%u, dieId:%u), "
-            "serial number is %" PRIu64 ".there is a sdma error, sdma channel is %hhu, "
-            "sdmaChFsmState=0x%x, sdmaChFree=0x%x, irqStatus=0x%x, cqeStatus=0x%x ",
-            info->u.sdmaErrorInfo.comm.chipId, info->u.sdmaErrorInfo.comm.dieId, errorNumber,
-            info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].sdmaChannelId,
-            info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].sdmaChFsmState,
-            info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].sdmaChFree,
-            info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].irqStatus,
-            info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].cqeStatus);
-        if (info->u.sdmaErrorInfo.sdma.starsInfoForStarsV2[coreIdx].cqeStatus == TS_SDMA_STATUS_POISON_ERROR) {
-            dev->SetDeviceFaultType(DeviceFaultType::MTE_ERROR);
-            if (errTaskPtr != nullptr) {
-                errTaskPtr->mte_error = TS_ERROR_SDMA_POISON_ERROR;
-            }
-        }
-    }
-}
-
-static void RecordSdmaErrorInfoForNonStarsV2(const Device * const dev, uint32_t coreNum, TaskInfo *errTaskPtr,
+static void RecordSdmaErrorInfo(const Device * const dev, uint32_t coreNum, TaskInfo *errTaskPtr,
     const StarsDeviceErrorInfo * const info, const uint64_t errorNumber)
 {
     for (uint32_t coreIdx = 0U; coreIdx < coreNum; coreIdx++) {
@@ -1635,15 +1613,52 @@ static void RecordSdmaErrorInfoForNonStarsV2(const Device * const dev, uint32_t 
         if (errTaskPtr != nullptr) {
             const uint32_t cqeStatus = info->u.sdmaErrorInfo.sdma.starsInfo[coreIdx].cqeStatus;
             GetMteErrFromCqeStatus(errTaskPtr, dev, cqeStatus);
-            RT_LOG(RT_LOG_ERROR, "Get sdma mte error, stream_id=%hu, task_id=%hu, errorCode=%u",
+            RT_LOG(RT_LOG_ERROR, "Get sdma mte error, stream_id=%hu, task_id=%hu, errorCode=%u.",
                 info->u.coreErrorInfo.comm.streamId, info->u.coreErrorInfo.comm.taskId, errTaskPtr->mte_error);
         }
     }
 }
 
+static void ProcessCoreErrors(const StarsDeviceErrorInfo * const info, const uint64_t errorNumber,
+    const Device * const dev, TaskInfo *errTaskPtr, const uint32_t coreNum)
+{
+    bool isFftsPlusTask = false;
+    rtFftsPlusTaskErrInfo_t fftsPlusErrInfo = rtFftsPlusTaskErrInfo_t();
+    if ((errTaskPtr != nullptr) && (errTaskPtr->type == TS_TASK_TYPE_FFTS_PLUS)) {
+        isFftsPlusTask = true;
+    }
+    uint32_t fftsPluscqeStatus = 0;
+    for (uint32_t coreIdx = 0U; coreIdx < coreNum; coreIdx++) {
+        RT_LOG_CALL_MSG(ERR_MODULE_GE, "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ". "
+            "there is a fftsplus sdma error, sdma channel is %hhu, "
+            "sdmaState=0x%x, sdmaTslotid=0x%x, sdmaCxtid=0x%x, sdmaThreadid=0x%x, "
+            "irqStatus=0x%x, cqeStatus=0x%x.",
+            info->u.sdmaErrorInfo.comm.chipId, info->u.sdmaErrorInfo.comm.dieId, errorNumber,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaChannelId,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaState,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaTslotid,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaCxtid,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaThreadid,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].irqStatus,
+            info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].cqeStatus);
+        fftsPluscqeStatus = ((info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].cqeStatus) >> 17U) & 0x1FU;
+        if (errTaskPtr != nullptr) {
+            GetMteErrFromCqeStatus(errTaskPtr, dev, fftsPluscqeStatus);
+            RT_LOG(RT_LOG_ERROR, "Get sdma mte error=0x%x, cqeStatus=0x%x.", errTaskPtr->mte_error,
+                    fftsPluscqeStatus);
+        }
+        if (isFftsPlusTask) {
+            fftsPlusErrInfo.contextId = info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaCxtid;
+            fftsPlusErrInfo.threadId = info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaThreadid;
+            fftsPlusErrInfo.errType = info->u.sdmaErrorInfo.comm.type;
+            PushBackErrInfo(errTaskPtr, static_cast<const void *>(&fftsPlusErrInfo),
+                            static_cast<uint32_t>(sizeof(rtFftsPlusTaskErrInfo_t)));
+        }
+    }
+}
+
 rtError_t DeviceErrorProc::ProcessStarsSdmaErrorInfo(const StarsDeviceErrorInfo * const info,
-                                                     const uint64_t errorNumber,
-                                                     const Device * const dev, const DeviceErrorProc *const insPtr)
+    const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc *const insPtr)
 {
     UNUSED(insPtr);
     RUNTIME_NULL_NO_PROC_WITH_RET(info);
@@ -1656,49 +1671,12 @@ rtError_t DeviceErrorProc::ProcessStarsSdmaErrorInfo(const StarsDeviceErrorInfo 
     }
     const uint32_t coreNum = static_cast<uint32_t>(info->u.sdmaErrorInfo.comm.coreNum);
     if (type == static_cast<uint16_t>(SDMA_ERROR)) {
-        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-            RecordSdmaErrorInfo(RtPtrToUnConstPtr<Device *>(dev), coreNum, errTaskPtr, info, errorNumber);
-        } else {
-            RecordSdmaErrorInfoForNonStarsV2(dev, coreNum, errTaskPtr, info, errorNumber);
-        }
+        RecordSdmaErrorInfo(dev, coreNum, errTaskPtr, info, errorNumber);
         if (errTaskPtr == nullptr) {
             RT_LOG_CALL_MSG(ERR_MODULE_GE, "Error task from the device stream.");
         }
     } else {
-        bool isFftsPlusTask = false;
-         rtFftsPlusTaskErrInfo_t fftsPlusErrInfo = rtFftsPlusTaskErrInfo_t();
-        if ((errTaskPtr != nullptr) && (errTaskPtr->type == TS_TASK_TYPE_FFTS_PLUS)) {
-            isFftsPlusTask = true;
-        }
-
-        uint32_t fftsPluscqeStatus = 0;
-        for (uint32_t coreIdx = 0U; coreIdx < static_cast<uint32_t>(info->u.sdmaErrorInfo.comm.coreNum); coreIdx++) {
-            RT_LOG_CALL_MSG(ERR_MODULE_GE, "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ". "
-                "there is a fftsplus sdma error, sdma channel is %hhu, "
-                "sdmaState=0x%x, sdmaTslotid=0x%x, sdmaCxtid=0x%x, sdmaThreadid=0x%x, "
-                "irqStatus=0x%x, cqeStatus=0x%x.",
-                info->u.sdmaErrorInfo.comm.chipId, info->u.sdmaErrorInfo.comm.dieId, errorNumber,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaChannelId,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaState,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaTslotid,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaCxtid,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaThreadid,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].irqStatus,
-                info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].cqeStatus);
-                fftsPluscqeStatus = ((info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].cqeStatus) >> 17U) & 0x1FU;
-                if (errTaskPtr != nullptr) {
-                    GetMteErrFromCqeStatus(errTaskPtr, dev, fftsPluscqeStatus);
-                    RT_LOG(RT_LOG_ERROR, "Get sdma mte error=0x%x, cqeStatus=0x%x.", errTaskPtr->mte_error,
-                           fftsPluscqeStatus);
-                }
-            if (isFftsPlusTask) {
-                fftsPlusErrInfo.contextId = info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaCxtid;
-                fftsPlusErrInfo.threadId = info->u.sdmaErrorInfo.sdma.fftsPlusInfo[coreIdx].sdmaThreadid;
-                fftsPlusErrInfo.errType = info->u.sdmaErrorInfo.comm.type;
-                PushBackErrInfo(errTaskPtr, static_cast<const void *>(&fftsPlusErrInfo),
-                                static_cast<uint32_t>(sizeof(rtFftsPlusTaskErrInfo_t)));
-            }
-        }
+        ProcessCoreErrors(info, errorNumber, dev, errTaskPtr, coreNum);
     }
     return RT_ERROR_NONE;
 }
@@ -2082,8 +2060,8 @@ rtError_t DeviceErrorProc::ProcessStarsOneElementInRingBuffer(const DevRingBuffe
     uint32_t head, const uint32_t tail, const bool isPrintTaskInfo, const TaskInfo * const taskPtr) const
 {
     constexpr size_t headSize = sizeof(DevRingBufferCtlInfo);
-    const size_t elementSize = (device_->IsStarsV2Platform()) ? \
-        RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_STARSV2 : RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+    const size_t elementSize = (device_->IsDavidPlatform()) ? \
+        RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID : RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
 
     RT_LOG(RT_LOG_INFO, "it need to process %u errMessages, headSize=%zu, elementSize=%zu.",
         (tail + ctlInfo->ringBufferLen - head) % ctlInfo->ringBufferLen, headSize, elementSize);

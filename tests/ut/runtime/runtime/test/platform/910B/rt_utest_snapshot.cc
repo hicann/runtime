@@ -137,8 +137,8 @@ TEST_F(SnapshotTest, Chip_Support)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t oldChipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_END);
-    GlobalContainer::SetRtChipType(CHIP_END);
+    rtInstance->SetChipType(CHIP_CLOUD);
+    GlobalContainer::SetRtChipType(CHIP_CLOUD);
 
     rtError_t error = rtSnapShotProcessLock();
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

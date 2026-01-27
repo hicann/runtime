@@ -238,6 +238,19 @@ rtError_t rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType type, voi
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+VISIBILITY_DEFAULT
+rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtHostMemMapCapabilities);
+    const rtError_t error = apiInstance->HostMemMapCapabilities(deviceId, hacType, capabilities);
+    TIMESTAMP_END(rtHostMemMapCapabilities);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
 
 VISIBILITY_DEFAULT
 rtError_t rtHostRegisterV2(void *ptr, size_t size, uint32_t flag)
@@ -274,20 +287,6 @@ rtError_t rtsHostUnregister(void *ptr)
     TIMESTAMP_BEGIN(rtsHostUnregister);
     const rtError_t error = apiInstance->HostUnregister(ptr);
     TIMESTAMP_END(rtsHostUnregister);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtHostMemMapCapabilities);
-    const rtError_t error = apiInstance->HostMemMapCapabilities(deviceId, hacType, capabilities);
-    TIMESTAMP_END(rtHostMemMapCapabilities);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -710,6 +709,7 @@ rtError_t rtsCmoAsyncWithBarrier(void *srcAddrPtr, size_t srcLen, rtCmoOpCode cm
 VISIBILITY_DEFAULT
 rtError_t rtsLaunchBarrierTask(rtBarrierTaskInfo_t *taskInfo, rtStream_t stm, uint32_t flag)
 {
+    // only CHIP_MINI_V3, CHIP_AS31XM1 and cmoType=invalid support this function
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(taskInfo, RT_ERROR_INVALID_VALUE);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM || taskInfo->logicIdNum == 0), 
         RT_ERROR_INVALID_VALUE, taskInfo->logicIdNum, "[1, " + std::to_string(RT_CMO_MAX_BARRIER_NUM) + "]");
@@ -905,6 +905,17 @@ rtError_t rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, s
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->MemGetAddressRange(ptr, pbase, psize);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

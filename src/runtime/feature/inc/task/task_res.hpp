@@ -36,7 +36,7 @@ public:
     TaskInfo *GetHeadTaskInfo() const;
     void RecycleResHead();
     uint16_t GetResHead() const;
-    bool CreateTaskRes(Stream* stm);
+    virtual bool CreateTaskRes(Stream* stm);
     void ReleaseTaskResource(Stream* stm);
     rtError_t RePcieHostRegister(const Stream *const stm) const;
     void *MallocPcieBarBuffer(const uint32_t size, Device * const dev, bool isLogError=true) const;
@@ -80,6 +80,18 @@ public:
     }
 
     void ShowDfxInfo(void) const;
+
+    void CreateTaskResBaseAddr(const uint32_t taskPoolSize)
+    {
+        if (taskResBaseAddr_ == nullptr) {
+            taskResBaseAddr_ = new (std::nothrow) uint8_t[taskPoolSize];
+        }
+    }
+
+    uint8_t *GetTaskResBaseAddr() const
+    {
+        return taskResBaseAddr_;
+    }
 
 public:
     TaskRes* taskRes_{nullptr};

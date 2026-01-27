@@ -69,6 +69,11 @@ void EXPECT_TestAcp(std::vector<std::string> args, const int expectedRet, std::v
     }
     const char* envp[1] = {nullptr};
     EXPECT_EQ(expectedRet, LltAcpMain(argc, (const char**)argv.data(), envp));
+    std::cout.rdbuf(oldCoutBuffer);
+    for (auto expectedPrint: expectedList) {
+        EXPECT_NE(output.str().find(expectedPrint), std::string::npos)
+            <<"Screen print:" << std::endl << output.str() << std::endl << "Missing expected: " + expectedPrint;
+    }
 }
 
 TEST_F(ACP_BIN_UTEST, AcpBin) 

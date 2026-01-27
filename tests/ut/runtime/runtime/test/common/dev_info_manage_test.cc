@@ -55,7 +55,8 @@ TEST_F(DevInfoManageTest, DevInfoManageDestroy)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     error = info.GetSocInfo(CHIP_910_B_93, ARCH_V100, soc);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    error = info.GetChipFeatureSet(CHIP_910_B_93, s);
+    std::array<bool, FEATURE_MAX_VALUE> tmp{false};
+    error = info.GetChipFeatureSet(CHIP_910_B_93, tmp);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     ret = info.RegPlatformSoNameInfo(CHIP_910_B_93, "lib");
     EXPECT_EQ(ret, false);
@@ -112,6 +113,118 @@ TEST_F(DevInfoManageTest, GetSocInfo)
     rtSocInfo_t s = {SOC_ASCEND910B1, CHIP_910_B_93, ARCH_C220, "Ascend910_9391"};
     rtError_t result = GetSocInfoByName("Ascend910_9372", s);
     EXPECT_EQ(result, RT_ERROR_NONE);
+}
+
+void test_soc_info_by_soc_type_and_name(const rtSocType_t socType, const char_t *const socName)
+{
+    rtSocInfo_t socInfo = {SOC_END, CHIP_END, ARCH_END, nullptr};
+    rtError_t result = RT_ERROR_NONE;
+ 
+    // 1. get soc info by type
+    result = DevInfoManage::Instance().GetSocInfo(socType, socInfo);
+ 
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(socInfo.socType, socType);
+    EXPECT_EQ(socInfo.chipType, CHIP_DAVID);
+    EXPECT_EQ(socInfo.archType, ARCH_V100);
+    EXPECT_EQ(strcmp(socInfo.socName, socName), 0);
+ 
+    // 2. get soc info by name
+    result = DevInfoManage::Instance().GetSocInfo(socName, socInfo);
+ 
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(socInfo.socType, socType);
+    EXPECT_EQ(socInfo.chipType, CHIP_DAVID);
+    EXPECT_EQ(socInfo.archType, ARCH_V100);
+    EXPECT_EQ(strcmp(socInfo.socName, socName), 0);
+}
+ 
+TEST_F(DevInfoManageTest, GetSocInfo_David_V120_test)
+{
+    const rtSocType_t socType_957c = SOC_ASCEND910_957C;
+    const char_t *const socName_957c = "Ascend910_957c";
+    test_soc_info_by_soc_type_and_name(socType_957c, socName_957c);
+ 
+    const rtSocType_t socType_95a1 = SOC_ASCEND910_95A1;
+    const char_t *const socName_95a1 = "Ascend910_95A1";
+    test_soc_info_by_soc_type_and_name(socType_95a1, socName_95a1);
+ 
+    const rtSocType_t socType_95a2 = SOC_ASCEND910_95A2;
+    const char_t *const socName_95a2 = "Ascend910_95A2";
+    test_soc_info_by_soc_type_and_name(socType_95a2, socName_95a2);
+ 
+    const rtSocType_t socType_9595 = SOC_ASCEND910_9595;
+    const char_t *const socName_9595 = "Ascend910_9595";
+    test_soc_info_by_soc_type_and_name(socType_9595, socName_9595);
+ 
+    const rtSocType_t socType_9596 = SOC_ASCEND910_9596;
+    const char_t *const socName_9596 = "Ascend910_9596";
+    test_soc_info_by_soc_type_and_name(socType_9596, socName_9596);
+ 
+    const rtSocType_t socType_9585 = SOC_ASCEND910_9585;
+    const char_t *const socName_9585 = "Ascend910_9585";
+    test_soc_info_by_soc_type_and_name(socType_9585, socName_9585);
+ 
+    const rtSocType_t socType_9586 = SOC_ASCEND910_9586;
+    const char_t *const socName_9586 = "Ascend910_9586";
+    test_soc_info_by_soc_type_and_name(socType_9586, socName_9586);
+ 
+    const rtSocType_t socType_9583 = SOC_ASCEND910_9583;
+    const char_t *const socName_9583 = "Ascend910_9583";
+    test_soc_info_by_soc_type_and_name(socType_9583, socName_9583);
+ 
+    const rtSocType_t socType_9571 = SOC_ASCEND910_9571;
+    const char_t *const socName_9571 = "Ascend910_9571";
+    test_soc_info_by_soc_type_and_name(socType_9571, socName_9571);
+ 
+    const rtSocType_t socType_9573 = SOC_ASCEND910_9573;
+    const char_t *const socName_9573 = "Ascend910_9573";
+    test_soc_info_by_soc_type_and_name(socType_9573, socName_9573);
+}
+ 
+void test_dev_info_by_soc_name(const char_t *const socName)
+{
+    RtDevInfo devInfo = {CHIP_END, ARCH_END, PG_VER_END, nullptr};
+ 
+    rtError_t result = DevInfoManage::Instance().GetDevInfo(socName, devInfo);
+ 
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(devInfo.chipType, CHIP_DAVID);
+    EXPECT_EQ(devInfo.archType, ARCH_V100);
+    EXPECT_EQ(strcmp(devInfo.socName, socName), 0);
+}
+ 
+TEST_F(DevInfoManageTest, get_david_v120_dev_info_test)
+{
+    const char_t *const socName_957c = "Ascend910_957c";
+    test_dev_info_by_soc_name(socName_957c);
+ 
+    const char_t *const socName_95a1 = "Ascend910_95A1";
+    test_dev_info_by_soc_name(socName_95a1);
+ 
+    const char_t *const socName_95a2 = "Ascend910_95A2";
+    test_dev_info_by_soc_name(socName_95a2);
+ 
+    const char_t *const socName_9595 = "Ascend910_9595";
+    test_dev_info_by_soc_name(socName_9595);
+ 
+    const char_t *const socName_9596 = "Ascend910_9596";
+    test_dev_info_by_soc_name(socName_9596);
+ 
+    const char_t *const socName_9585 = "Ascend910_9585";
+    test_dev_info_by_soc_name(socName_9585);
+ 
+    const char_t *const socName_9586 = "Ascend910_9586";
+    test_dev_info_by_soc_name(socName_9586);
+ 
+    const char_t *const socName_9583 = "Ascend910_9583";
+    test_dev_info_by_soc_name(socName_9583);
+ 
+    const char_t *const socName_9571 = "Ascend910_9571";
+    test_dev_info_by_soc_name(socName_9571);
+ 
+    const char_t *const socName_9573 = "Ascend910_9573";
+    test_dev_info_by_soc_name(socName_9573);
 }
 
 TEST_F(DevInfoManageTest, DevInfoManageSocInfoKirinX90)

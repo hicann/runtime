@@ -82,8 +82,8 @@ public:
         }
         trackProfEnable_ = trackProfEnable;
         if (trackProfEnable) {
-            ReportCacheTrack(cacheFlag);
-            ReportCacheShapeInfo();
+            (void)ReportCacheTrack(cacheFlag);
+            (void)ReportCacheShapeInfo();
         }
     }
 
@@ -137,8 +137,8 @@ public:
 
     void InsertStream(Stream * const stm);
     void EraseStream(Stream * const stm);
-    void ReportCacheTrack(uint32_t cacheFlag);
-    void ReportCacheShapeInfo() const;
+    rtError_t ReportCacheTrack(uint32_t cacheFlag);
+    rtError_t ReportCacheShapeInfo() const;
 
 private:
     Api *api_;

@@ -22,6 +22,7 @@ int __attribute__((weak)) halProfQueryAvailBufLen(unsigned int dev_id, unsigned 
 #endif
 
 using namespace analysis::dvvp::common::error;
+using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::driver;
 using namespace Devprof;
 
@@ -217,7 +218,7 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
     std::string item;
     std::string sendStr;
     uint32_t currentSize = 0;
-    while (std::getline(ss, item, ':')) {
+    while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
         uint32_t itemSize = item.length();
         if (itemSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
             MSPROF_LOGW("str size is over:%u str:%s", MSPROF_ADDTIONAL_INFO_DATA_LENGTH, item.c_str());
@@ -230,7 +231,7 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
             currentSize = 0;
         }
         if (currentSize > 0) {
-            sendStr.append(":" + item);
+            sendStr.append(STR2ID_DELIMITER + item);
         } else {
             sendStr.append(item);
         }

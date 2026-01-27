@@ -21,7 +21,7 @@
 namespace cce {
 namespace runtime {
 rtError_t NpuDriver::CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInfo &input, AsyncDmaWqeOutputInfo *output,
-                                       bool isUbMode)
+                                       bool isUbMode, bool isSqeUpdate)
 {
     struct halAsyncDmaOutputPara wqeDmaOutput;
     (void)memset_s(&wqeDmaOutput, sizeof(struct halAsyncDmaOutputPara), 0U, sizeof(struct halAsyncDmaOutputPara));
@@ -33,16 +33,26 @@ rtError_t NpuDriver::CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInf
     wqeDmaInput.tsId = input.tsId;
     wqeDmaInput.sqId = input.sqId;
     wqeDmaInput.dir = input.cpyType;
-    if (isUbMode) {
-        wqeDmaInput.dst = static_cast<uint8_t *>(input.destPtr);
+    if (isSqeUpdate) {
+        wqeDmaInput.info.sqe_pos = input.info.sqe_pos;
+        wqeDmaInput.async_dma_type = DRV_ASYNC_DMA_TYPE_SQE_UPDATE;
+        wqeDmaInput.info.sq_id = input.info.sqId;
     } else {
-        wqeDmaInput.sqe_pos = input.sqe_pos;
+        if (isUbMode) {
+            wqeDmaInput.dst = static_cast<uint8_t *>(input.destPtr);
+            wqeDmaInput.async_dma_type = DRV_ASYNC_DMA_TYPE_NORMAL;
+        } else {
+            RT_LOG(RT_LOG_ERROR, "pcie does not support");
+            return RT_ERROR_INVALID_VALUE;
+        }
     }
+
     const drvError_t drvRet = halAsyncDmaCreate(devId, &wqeDmaInput, &wqeDmaOutput);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
-            "[drv api] halAsyncDmaCreate failed, device_id=%u, ts_id=%u, sq_id=%u, mode=%d, drvRetCode=%d.",
-            devId, input.tsId, input.sqId, isUbMode, static_cast<int32_t>(drvRet));
+            "[drv api] halAsyncDmaCreate failed, device_id=%u, ts_id=%u, sq_id=%u, is_ub_mode=%d, is_sqe_update=%d,"
+            " drvRetCode=%d.",
+            devId, input.tsId, input.sqId, isUbMode, isSqeUpdate, static_cast<int32_t>(drvRet));
         return RT_ERROR_DRV_ERR;
     }
 
@@ -113,8 +123,7 @@ rtError_t NpuDriver::GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, 
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version,
-    uint32_t &isSupportHcomcpu)
+rtError_t NpuDriver::GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version)
 {
     ts_ctrl_msg_body_t queryIn = {};
     ts_ctrl_msg_body_t queryAck = {};
@@ -139,8 +148,7 @@ rtError_t NpuDriver::GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId
         "[drv api] halTsdrvCtl device_id=%u, ts_id=%u, drvRetCode=%d.",
         deviceId, tsId, static_cast<int32_t>(drvRet));
     version = queryAck.u.query_tsfw_info.tsfw_version;
-    isSupportHcomcpu = queryAck.u.query_tsfw_info.is_support_hcomcpu;
-    RT_LOG(RT_LOG_INFO, "tsfw_version=%u, isSupportHcomcpu=%u.", version, isSupportHcomcpu);
+    RT_LOG(RT_LOG_INFO, "tsfw_version=%u.", version);
 
     return RT_ERROR_NONE;
 }
@@ -456,7 +464,7 @@ rtError_t NpuDriver::ResetLogicCq(const uint32_t deviceId, const uint32_t tsId, 
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::GetSqRegVirtualAddrBySqidForStarsV2(const int32_t deviceId, const uint32_t tsId, const uint32_t sqId,
+rtError_t NpuDriver::GetSqRegVirtualAddrBySqidForDavid(const int32_t deviceId, const uint32_t tsId, const uint32_t sqId,
     uint64_t * const addr) const
 {
     struct res_addr_info resInfo;
@@ -477,6 +485,39 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqidForStarsV2(const int32_t deviceId,
             return RT_GET_DRV_ERRCODE(drvRet);
     }
     *addr = resAddr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+    struct halTsegInfo *tsegInfo)
+{
+    COND_RETURN_WARN(&halGetTsegInfoByVa == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halGetTsegInfoByVa does not exist.");
+
+    const drvError_t drvRet = halGetTsegInfoByVa(devid, va, size, flag, tsegInfo);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halGetTsegInfoByVa faild, drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_INFO, "GetTsegInfoByVa success, device_id=%u, size=%llu.", devid, size);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo)
+{
+    COND_RETURN_WARN(&halPutTsegInfo == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halPutTsegInfo does not exist.");
+
+    const drvError_t drvRet = halPutTsegInfo(devid, tsegInfo);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halPutTsegInfo faild, drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_INFO, "PutTsegInfo success, device_id=%u.", devid);
     return RT_ERROR_NONE;
 }
 }

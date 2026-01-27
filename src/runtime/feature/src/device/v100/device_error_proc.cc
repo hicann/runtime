@@ -42,15 +42,24 @@ uint16_t GetMteErrWaitCount()
     return 120U;
 }
 
-void SetMteError(const TaskInfo * const errTaskPtr, const Device * const dev, const int32_t errorCode)
+void MteErrorProc(const TaskInfo * const errTaskPtr, const Device * const dev, const int32_t errorCode, bool &hasSpecialErrorCode)
 {
     UNUSED(dev);
+    UNUSED(errorCode);
+    UNUSED(hasSpecialErrorCode);
     if ((errTaskPtr->stream != nullptr) && (errTaskPtr->stream->Context_() != nullptr) &&
         (errTaskPtr->stream->Device_() != nullptr)) {
         (RtPtrToUnConstPtr<TaskInfo *>(errTaskPtr))->stream->SetAbortStatus(errorCode);
         (RtPtrToUnConstPtr<TaskInfo *>(errTaskPtr))->stream->Context_()->SetFailureError(errorCode);
         (RtPtrToUnConstPtr<TaskInfo *>(errTaskPtr))->stream->Device_()->SetDeviceStatus(errorCode);
     }
+}
+
+void SetDeviceFaultTypeByErrorType(const Device * const dev, const rtErrorType errorType, bool &hasSpecialErrorCode)
+{
+    UNUSED(dev);
+    UNUSED(errorType);
+    hasSpecialErrorCode = true;
 }
  
 uint32_t GetRingbufferElementNum()

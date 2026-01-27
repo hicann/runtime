@@ -200,6 +200,7 @@ const char * const MSVP_PROF_EMPTY_STRING = "";
 const char * const MSVP_PROF_ACLAPI_MODE = "aclapi";
 const char * const MSVP_PROF_SUBSCRIBE_MODE = "subscribe";
 const char * const MSVP_PROF_SYSTEM_MODE = "system";
+const char * const MSVP_PROF_ALL = "all";
 const char * const HELPER_HOST_CPU_MODE = "64";
 
 // dynamic profiling
@@ -246,6 +247,7 @@ const char * const KEYPOINT_OP_TYPE = "na";
 // hash data file tag
 const std::string HASH_TAG = "hash_dic";
 const char * const HASH_DIC_DELIMITER = ":";
+const char * const STR2ID_DELIMITER = ",";
 
 // need paired ageing file
 const char * const HWTS_DATA = "hwts.data";

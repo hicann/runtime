@@ -32,7 +32,6 @@
 #endif
 #include "args/args_inner.h"
 #include "rt_log.h"
-#include "config_define.hpp"
 
 extern "C" {
 int __attribute((weak)) AtraceReportStart(int32_t devId);
@@ -61,7 +60,7 @@ namespace runtime {
 #define F_DESC(x)            1
 #endif
 
-#if (defined CFG_DEV_PLATFORM_PC)
+#if (defined WIN32) || (defined CFG_DEV_PLATFORM_PC)
 
 #define RT_LOG(level, format, ...) RT_LOG_##level(format, ##__VA_ARGS__)
 #define RT_EVENT_LOG_MASK (static_cast<uint32_t>(RUNTIME) | static_cast<uint32_t>(RUN_LOG_MASK))
@@ -199,7 +198,7 @@ static constexpr const char_t *RT_MODULE_TYPE_TO_ERR_MSG[ERR_MODULE_MAX] = {
             ReportErrMsg((error_code), value_string);                                                                  \
         }                                                                                                            \
     } while (false)
-
+ 
 constexpr const char* ErrorCodeToString(ErrorCode code) {
     switch (code) {
         case ErrorCode::EE1001:
@@ -431,9 +430,22 @@ struct RtDevInfo final {
 
 static inline uint64_t GetWallUs()
 {
+#ifndef WIN32
     mmTimeval timeVal;
     mmGetTimeOfDay(&timeVal, nullptr);
     return timeVal.tv_sec * 1000000LL + timeVal.tv_usec;
+#else
+    LARGE_INTEGER currentTime;
+    LARGE_INTEGER frequency;
+
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&currentTime);
+
+    currentTime.QuadPart *= 1000000;
+    currentTime.QuadPart /= frequency.QuadPart;
+
+    return (long long)currentTime.QuadPart;
+#endif
 }
 
 #ifdef TEMP_PERFORMANCE
@@ -475,6 +487,18 @@ static inline long long GetThreadNs()
 #endif
 
 #define TIMESTAMP_NAME(VAR)
+
+#elif defined SYSTRACE_ON
+#define ATRACE_TAG ATRACE_TAG_GRAPHICS
+#include <utils/Trace.h>
+#define TIMESTAMP_EXTERN(VAR)
+#define TIMESTAMP_DEFINE(VAR)
+#define TIMESTAMP_DEFINE(VAR)
+#define TIMESTAMP_EXTERN(VAR)
+#define TIMESTAMP_DUMP(VAR)
+#define TIMESTAMP_BEGIN(VAR)   ATRACE_BEGIN(#VAR)
+#define TIMESTAMP_END(VAR)     ATRACE_END()
+#define TIMESTAMP_NAME(VAR)    ATRACE_NAME(VAR)
 
 #else
 #define TIMESTAMP_BEGIN(VAR)

@@ -21,7 +21,6 @@
 #include <map>
 #include <vector>
 #include "acl/acl_base.h"
-#include "exe_graph/runtime/tensor.h"
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 #define ADX_API __declspec(dllexport)
@@ -118,10 +117,16 @@ enum TensorPlacement : int32_t {
 }; 
 
 struct TensorInfo {
-    gert::Tensor *tensor;
-    TensorType type;
-    AddressType addrType;
-    uint32_t argsOffSet;
+    TensorType type;       // tensor类型
+    size_t tensorSize;     // tensor内存大小  
+    int32_t format;      
+    int32_t dataType;     
+    int64_t *tensorAddr;   // tensor数据地址
+    AddressType addrType;  // 地址的类型
+    int32_t placement;
+    uint32_t argsOffSet;   // tensor数据地址在args里的偏移 
+    std::vector<int64_t> shape;  //shape
+    std::vector<int64_t> originShape; //originShape
 };
 
 struct TensorInfoV2 {
@@ -262,7 +267,7 @@ extern "C" ADX_API int32_t AdumpDelExceptionOperatorInfo(uint32_t deviceId, uint
 
 /**
  * @ingroup dump
- * @par 描述: 获取动态shape异常算子需要Dump的size信息空间。
+ * @par 描述: 获取动态shape异常算子需要Dump的size信息空间。接口即将废弃下线, 不建议使用
  *
  * @attention   无
  * @param[in]   uint32_t space 待获取space大小
@@ -276,7 +281,7 @@ extern "C" ADX_API void *AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t 
 
 /**
  * @ingroup dump
- * @par 描述: 获取静态shape异常算子需要Dump的size信息空间。
+ * @par 描述: 获取静态shape异常算子需要Dump的size信息空间。接口即将废弃下线, 不建议使用
  *
  * @attention   无
  * @param[in]   uint32_t space 待获取space大小

@@ -21,6 +21,7 @@ target_compile_options(intf_pub_base INTERFACE
     -fPIC
     -fstack-protector-strong
     $<$<CONFIG:Debug>:-g>
+    $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
     $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fsanitize=leak -fsanitize-recover=address,all -fno-stack-protector -fno-omit-frame-pointer -g>
 )
 
@@ -40,10 +41,12 @@ target_link_options(intf_pub_base INTERFACE
     -Wl,-z,noexecstack
     $<$<CONFIG:Release>:-Wl,--build-id=none>
     $<$<CONFIG:Release>:-s>
+    $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
     $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fsanitize=leak -fsanitize-recover=address>
 )
 
 target_link_libraries(intf_pub_base INTERFACE
+    $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
     -lpthread
 )
 

@@ -1,0 +1,77 @@
+﻿/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+package bqs;
+
+message BQSBindQueueMsg
+{
+    uint32 src_queue_id = 1;
+    uint32 dst_queue_id = 2;
+}
+
+message BQSBindQueueMsgs
+{
+    repeated BQSBindQueueMsg bind_queue_vec = 1;
+}
+
+message BQSBindQueueRsp
+{
+    int32 bind_result = 1;
+}
+
+message BQSBindQueueRsps
+{
+    repeated BQSBindQueueRsp bind_result_vec = 1;
+}
+
+message BQSQueryMsg
+{
+    enum QsQueryType {
+        BQS_QUERY_TYPE_SRC=0;
+        BQS_QUERY_TYPE_DST=1;
+        BQS_QUERY_TYPE_SRC_AND_DST=2;
+        BQS_QUERY_TYPE_SRC_OR_DST=3;
+}
+
+    QsQueryType key_type = 1;
+    BQSBindQueueMsg bind_queue_item = 2;
+}
+
+message BQSQueryMsgs
+{
+    repeated BQSQueryMsg query_msg_vec = 1;
+}
+
+message BQSPagedMsg
+{
+    uint32 offset = 1;
+    uint32 limit = 2;
+    uint32 total = 3;
+}
+
+message BQSMsg
+{
+    enum MsgType
+    {
+        UNUSE=0;
+        BIND=1;
+        UNBIND=2;
+        GET_BIND=3;
+        GET_ALL_BIND=4;
+    }
+
+    MsgType msg_type = 1;
+    BQSBindQueueMsgs bind_queue_msgs = 2;
+    BQSQueryMsgs query_msgs = 3;
+    BQSQueryMsg query_msg = 4;
+    BQSBindQueueRsps resp_msgs = 5;
+    BQSPagedMsg paged_msg = 6;
+}

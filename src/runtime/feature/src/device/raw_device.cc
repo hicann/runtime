@@ -113,6 +113,7 @@ RawDevice::~RawDevice() noexcept
     DELETE_O(ctrlRes_);
     DeleteStream(primaryStream_);
     DeleteStream(tsFftsDsaStream_);
+    ctrlSQ_.reset();
     DELETE_O(argLoader_);
     DELETE_O(ubArgLoader_);
     DELETE_O(spmPool_);
@@ -169,8 +170,12 @@ rtError_t RawDevice::SetCurGroupInfo(void)
         ERROR_RETURN(error, "Destroy ringbuffer failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
     // 创建当前vf下的default stream，并设为当前设备的default stream
-    primaryStream_ = StreamFactory::CreateStream(this, 0U,
-        RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT);
+    uint32_t stmFlag = RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT;
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        stmFlag = RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT | RT_STREAM_FAST_LAUNCH | RT_STREAM_FAST_SYNC;
+    }
+
+    primaryStream_ = StreamFactory::CreateStream(this, 0U, stmFlag);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, primaryStream_ == nullptr, RT_ERROR_STREAM_NEW,
         "SetCurGroupInfo, new default stream failed");
     if (ctx != nullptr) {
@@ -489,7 +494,11 @@ rtError_t RawDevice::RegisterAndLaunchDcacheLockOp(Context *ctx)
 
 bool RawDevice::IsSupportFeature(RtOptionalFeatureType f) const
 {
-    return (featureSet_.find(f) != featureSet_.end());
+    uint32_t index = static_cast<uint32_t>(f);
+    if (index >= featureSet_.size()) {
+        return false;
+    }
+    return featureSet_[index];
 }
 
 rtError_t RawDevice::Init()
@@ -541,8 +550,8 @@ rtError_t RawDevice::Init()
             RT_LOG(RT_LOG_ERROR, "Get Ddie_die_num failed!, device_id=%u, module type=%d, info type=%d.", 
                 deviceId_, MODULE_TYPE_AICORE, INFO_TYPE_DIE_NUM);
         }
-        starsv2DieNum_ = static_cast<uint8_t>(dieNum);
-        RT_LOG(RT_LOG_INFO, "Ddie_die_num=%hhu", starsv2DieNum_);
+        davidDieNum_ = static_cast<uint8_t>(dieNum);
+        RT_LOG(RT_LOG_INFO, "Ddie_die_num=%hhu", davidDieNum_);
     }
     // get runMode to runMode_
     uint32_t runMode = driver_->GetRunMode();
@@ -609,7 +618,7 @@ rtError_t RawDevice::Init()
         error = spmPool_->Init();
         ERROR_GOTO_MSG_INNER(error, SPM_FREE, "Failed to init spm pool, retCode=%#x.", static_cast<uint32_t>(error));
     } else {
-        RT_LOG(RT_LOG_INFO, "Not support spm.");
+        RT_LOG(RT_LOG_INFO, "AS31XM1X not support spm.");
     }
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_EVENT_POOL) &&
         (runMode == RT_RUN_MODE_ONLINE)) {
@@ -832,7 +841,7 @@ rtError_t RawDevice::AllocStackPhyBase()
         if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_16K_STACK)) {
             return AllocStackPhyBaseForCloudV2();
         }
-        return AllocStackPhyBaseStarsV2();
+        return AllocStackPhyBaseDavid();
     }
 
     const uint64_t stackPhySize = GetDevProperties().stackPhyBase;
@@ -926,8 +935,11 @@ rtError_t RawDevice::Start()
     rtError_t error = AllocSimtStackPhyBase(GetChipType());
     ERROR_RETURN(error, "Alloc simt stack phy base failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    primaryStream_ = StreamFactory::CreateStream(this, 0U,
-        RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT);
+    uint32_t stmFlag = RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT;
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        stmFlag = RT_STREAM_PRIMARY_FIRST_DEFAULT | RT_STREAM_PRIMARY_DEFAULT | RT_STREAM_FAST_LAUNCH | RT_STREAM_FAST_SYNC;
+    }
+    primaryStream_ = StreamFactory::CreateStream(this, 0U, stmFlag);
     COND_PROC_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, primaryStream_ == nullptr, RT_ERROR_STREAM_NEW,
         static_cast<void>(FreeSimtStackPhyBase()), "Start raw device failed, new stream failed.");
     error = primaryStream_->Setup();
@@ -952,8 +964,19 @@ rtError_t RawDevice::Start()
             error, ERROR_FREE, "alloc customer stack phy failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
 
+    if (NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_DMS_GET_QOS_MASTER_CONFIG)) {
+        error = NpuDriver::GetAicoreQosCfg(this);
+        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "get acc qos cfg failed, retCode=%#x, drv deviceId=%u.",
+            static_cast<uint32_t>(error), deviceId_);
+    } else {
+        RT_LOG(RT_LOG_WARNING, "Driver do not support the FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
+    }
+
     error = engine_->Start();
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Start runtime engine failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    error = SetSupportHcomcpuFlag();
+    ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Set support hcom cpu flag failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = GetStarsVersion();
     ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Get Stars version failed, retCode=%#x.", static_cast<uint32_t>(error));
@@ -966,6 +989,8 @@ rtError_t RawDevice::Start()
     }
 
     InitResource();
+    error = InitCtrlSQ();
+    ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Ctrl SQ init failed, retCode=%#x.", static_cast<uint32_t>(error));
 
 #ifndef CFG_DEV_PLATFORM_PC
     if (GetDevProperties().ringbufSize != 0) {
@@ -1219,7 +1244,7 @@ rtError_t RawDevice::UpdateTimeoutConfig()
             "Update timeout config failed, check and start tsd open aicpu sd error.");
     }
     if (props.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_WITHOUT_UPDATE) {
-        return UpdateTimeoutConfigTaskSubmitStarsV2(stm, timeoutConfig);
+        return UpdateTimeoutConfigTaskSubmitDavid(stm, timeoutConfig);
     }
 
     NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
@@ -1457,6 +1482,7 @@ bool RawDevice::AddStreamToMessageQueue(Stream *stm)
 
 Stream *RawDevice::GetNextRecycleStream()
 {
+#if !(defined(__arm__))
     if ((messageQueue_ == nullptr) || (messageQueueHead_ == messageQueueTail_)) {
         return nullptr;
     }
@@ -1478,6 +1504,9 @@ Stream *RawDevice::GetNextRecycleStream()
         recycleStream->SetThreadProcFlag(true);
     }
     return recycleStream;
+#else
+    return nullptr;
+#endif
 }
 
 void RawDevice::CreateMessageQueue()
@@ -1795,10 +1824,8 @@ rtError_t RawDevice::GetStarsVersion()
     rtError_t error = RT_ERROR_NONE;
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU)) {
         uint32_t tsfwVersion = 0U;
-        uint32_t isSupportHcomcpu = 0U;
-        error = driver_->GetTsfwVersion(deviceId_, tsId_, tsfwVersion, isSupportHcomcpu);
+        error = driver_->GetTsfwVersion(deviceId_, tsId_, tsfwVersion);
         if (error == RT_ERROR_NONE) {
-            isSupportHcomcpu_ = isSupportHcomcpu;
             SetTschVersion(tsfwVersion);
         }
     } else {
@@ -1894,7 +1921,7 @@ const std::map<uint32_t, uint32_t> RawDevice::tsFeatureMap_ = {
     {TS_FEATURE_FLIPTASK, RT_FEATURE_FLIPTASK},
     {TS_FEATURE_FFTSPLUS_TIMEOUT, RT_FEATURE_FFTSPLUS_TIMEOUT},
     {TS_FEATURE_MC2_RTS_SUPPORT_HCCL, RT_FEATURE_MC2_RTS_SUPPORT_HCCL},
-    {TS_FEATURE_IPC_NOTICE_910_B_93, RT_FEATURE_IPC_NOTICE_910_B_93},
+    {TS_FEATURE_IPC_NOTICE_CLOUD_V2, RT_FEATURE_IPC_NOTICE_CLOUD_V2},
     {TS_FEATURE_MC2_RTS_SUPPORT_HCCL_DC, RT_FEATURE_MC2_RTS_SUPPORT_HCCL_DC},
     {TS_FEATURE_REDUCE_V2_SUPPORT_DC, RT_FEATURE_SUPPORT_REDUCEASYNC_V2_DC},
     {TS_FEATURE_TILING_KEY_SINK, RT_FEATURE_TILING_KEY_SINK},
@@ -2225,14 +2252,25 @@ void RawDevice::PollEndGraphNotifyInfo()
 
     captureModelExeInfoLock_.unlock();
 }
-void RawDevice::RegisterProgram(Program * prog)
+
+rtError_t RawDevice::InitCtrlSQ()
 {
+    rtError_t ret = RT_ERROR_NONE;
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        ctrlSQ_ = std::make_unique<CtrlSQ>(this);
+        ret = ctrlSQ_->Setup();
+        if(ret != RT_ERROR_NONE) {
+            ctrlSQ_.reset();
+        }
+    }
+    return ret;
+}
+void RawDevice::RegisterProgram(Program * prog) {
     programMtx_.lock();
     programSet_.insert(prog);
     programMtx_.unlock();
 }
-void RawDevice::UnRegisterProgram(Program * prog)
-{
+void RawDevice::UnRegisterProgram(Program * prog) {
     programSet_.erase(prog);
 }
 void RawDevice::UnregisterAllProgram() {
@@ -2242,6 +2280,36 @@ void RawDevice::UnregisterAllProgram() {
     }
     programSet_.clear();
     programMtx_.unlock();
+}
+
+rtError_t RawDevice::SetSupportHcomcpuFlag()
+{   
+    if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU)) {
+        return RT_ERROR_NONE;
+    }
+
+    int64_t hcomCpuNum = 0;
+    rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_HCOM_CPU, INFO_TYPE_CORE_NUM, &hcomCpuNum);
+    if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+        return RT_ERROR_NONE;
+    }
+    ERROR_RETURN(error, "get hcom cpu num failed, deviceId=%d, retCode=%#x, hcomCpuNum=%lld", deviceId_, error, hcomCpuNum);
+    isSupportHcomcpu_ = (hcomCpuNum == 0) ? 0U : 1U;
+    return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index)
+{
+    COND_RETURN_ERROR(index >= MAX_ACC_QOS_CFG_NUM, RT_ERROR_INVALID_VALUE,
+                    "index is invalid, index=%u.", index);
+
+    aicoreQosCfg_[index].type = qosCfg.type;
+    aicoreQosCfg_[index].mpamId = qosCfg.mpamId;
+    aicoreQosCfg_[index].qos = qosCfg.qos;
+    aicoreQosCfg_[index].pmg = qosCfg.pmg;
+    aicoreQosCfg_[index].mode = qosCfg.mode;
+
+    return RT_ERROR_NONE;
 }
 }  // namespace runtime
 }

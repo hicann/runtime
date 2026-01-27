@@ -34,11 +34,11 @@ constexpr uint32_t SQ_SHARE_MEMORY_VALID = 0x5A5A5A5AU;
 constexpr uint32_t CONTEXT_ALIGN_BIT = 7U;
 constexpr uint32_t CONTEXT_ALIGN_LEN = 128U;
 constexpr uint32_t NOTIFY_TIMEOUT = 600U;
-constexpr uint32_t RT_CHIP_910_B_93_LABEL_INFO_SIZE = 16U; // CHIP_910_B_93 label info size is 16B
+constexpr uint32_t RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE = 16U; // CHIP_910_B_93 label info size is 16B
 constexpr uint8_t AICPU_QOS_VALID_FLAG = 8U;
 constexpr uint32_t MULTIPLE_TASK_MAX_NUM = 5U;
-constexpr float32_t RT_CHIP_910_B_93_TIMESTAMP_FREQ = 50000.0;
-constexpr float32_t RT_V1_TIMESTAMP_FREQ = 48000.0;
+constexpr float32_t RT_CHIP_CLOUD_V2_TIMESTAMP_FREQ = 50000.0;
+constexpr float32_t RT_CHIP_MINI_V3_TIMESTAMP_FREQ = 48000.0;
 constexpr float32_t RT_DEFAULT_TIMESTAMP_FREQ = 1000000.0;
 constexpr uint32_t KERNEL_HOST_AICPU_FLAG = 0x2U;
 constexpr uint8_t FORCE_RECYCLE_TASK_FLAG = 0x67U;
@@ -64,6 +64,7 @@ enum rtMemCopyAsyncDirect {
     RT_MEMCPY_DIR_D2D_HCCs = 3,             // D2D, between devices
     RT_MEMCPY_DIR_D2D_PCIe = 4,             // D2D,  between devices
     RT_MEMCPY_ADDR_D2D_SDMA = 5,            // D2D, zero-cpy used
+    RT_MEMCPY_DIR_D2D_UB = 6,               // D2D, between devices UB
     RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD = 10,  // SDMA inline reduce automatic add
     RT_MEMCPY_DIR_SDMA_AUTOMATIC_MAX = 11,
     RT_MEMCPY_DIR_SDMA_AUTOMATIC_MIN = 12,
@@ -162,7 +163,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_DEBUG_UNREGISTER = 79, /* kernel exception overflow debug unregister */
     TS_TASK_TYPE_FUSIONDUMP_ADDR_SET = 80, /* L1 fusion dump set task */
     TS_TASK_TYPE_MODEL_EXIT_GRAPH = 81,     /* add model end graph task */
-    TS_TASK_TYPE_ADCPROF = 82,    /* adc profiling task */
+    TS_TASK_TYPE_ADCPROF = 82,    /* mdc profiling task */
     TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL = 83,
     TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM = 84, /* kernel exception overflow debug register for stream */
     TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM = 85, /* kernel exception overflow debug unregister for stream */
@@ -180,7 +181,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_GET_STARS_VERSION = 97,    /* get stars version */
     TS_TASK_TYPE_FLIP = 98,
     TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK = 99,
-    TS_TASK_TYPE_UPDATE_ADDRESS = 100, /* translate va to pa by place holder sqe*/
+    TS_TASK_TYPE_UPDATE_ADDRESS = 100, /* tiny translate va to pa by place holder sqe*/
     TS_TASK_TYPE_MODEL_TASK_UPDATE = 101, /* tiling key sink for update model info */
     TS_TASK_TYPE_AICPU_INFO_LOAD = 102, /* tiling key sink : aicpu info load */
     TS_TASK_TYPE_NOP = 103,
@@ -190,9 +191,9 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_FUSION_KERNEL = 107,  /* fusion kernel task */
     TS_TASK_TYPE_KERNEL_MIX_AIC = 108,
     TS_TASK_TYPE_KERNEL_MIX_AIV = 109,
-    TS_TASK_TYPE_STARSV2_EVENT_RECORD = 110, /* starsv2 event record task */
-    TS_TASK_TYPE_STARSV2_EVENT_WAIT = 111, /* starsv2 event wait task */
-    TS_TASK_TYPE_STARSV2_EVENT_RESET = 112, /* starsv2 event reset task */
+    TS_TASK_TYPE_DAVID_EVENT_RECORD = 110, /* david event record task */
+    TS_TASK_TYPE_DAVID_EVENT_WAIT = 111, /* david event wait task */
+    TS_TASK_TYPE_DAVID_EVENT_RESET = 112, /* david event reset task */
     TS_TASK_TYPE_MEM_WRITE_VALUE = 113,  /* mem write value task */
     TS_TASK_TYPE_MEM_WAIT_VALUE  = 114,  /* mem wait value task */
     TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY = 115,
@@ -205,7 +206,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_DQS_MBUF_FREE = 121, /* dqs mbuf free*/
     TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC = 122, /* dqs inter chip pre-proc */
     TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC = 123, /* dqs inter chip post-proc */
-    TS_TASK_TYPE_DQS_ADSPC = 124, /* dqs ADSPC(Advanced Driving System Planning Control) task */
+    TS_TASK_TYPE_DQS_ADSPC = 124, /* dqs adspc task */
     TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION = 125, /* send tsfw-aicpu msg version to aicpu */
     TS_TASK_TYPE_CAPTURE_RECORD = 126,  /* mem write value task */
     TS_TASK_TYPE_CAPTURE_WAIT  = 127,  /* mem wait value task */
@@ -213,6 +214,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_IPC_RECORD = 129,  /* ipc record task */
     TS_TASK_TYPE_IPC_WAIT  = 130,  /* ipc wait task */
     TS_TASK_TYPE_DQS_CONDITION_COPY = 131, /* dqs condition copy*/
+    TS_TASK_TYPE_DQS_FRAME_ALIGN = 132, /* dqs frame align */
     TS_TASK_TYPE_RESERVED
 } tsTaskType_t;
 

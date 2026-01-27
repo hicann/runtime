@@ -28,7 +28,6 @@ include_directories(${BASE_DIR}/pkg_inc/dump)
 include_directories(${BASE_DIR}/pkg_inc/watchdog)
 include_directories(${BASE_DIR}/tests/depends)
 include_directories(${BASE_DIR}/include/dfx)
-include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 
 add_library(slog_stub SHARED ${SRC_FILES})
 

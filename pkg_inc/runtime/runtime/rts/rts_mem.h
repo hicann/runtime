@@ -398,8 +398,8 @@ RTS_API rtError_t rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType t
 /**
  * @ingroup rts_mem
  * @brief register an existing host memory range
- * @param ptr    memory pointer
- * @param size   memory size
+ * @param ptr    memory pointer to memory to page-lock
+ * @param size   size in bytes of the address range to page-lock in bytes
  * @param flag   flag for allocation input
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -420,7 +420,7 @@ RTS_API rtError_t rtsHostUnregister(void *ptr);
  * @brief return device pointer of mapped host memory registered by rtHostRegisterV2
  * @param pDevice   return device pointer for mapped memory
  * @param pHost     requested host pointer mapping
- * @param flag     flag for extensions (must be 0 for now)
+ * @param flag      flag for extensions (must be 0 for now)
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */

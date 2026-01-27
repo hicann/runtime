@@ -401,14 +401,14 @@ void Profiler::RuntimeProfilerStart(void) const
 }
 
 // report cache task track and clear streamSet_
-void Profiler::ReportCacheTrack(uint32_t cacheFlag)
+rtError_t Profiler::ReportCacheTrack(uint32_t cacheFlag)
 {
     const Runtime *const rtInstance = Runtime::Instance();
     streamSetMutex_.lock();
     if (streamSet_.empty()) {
         RT_LOG(RT_LOG_INFO, "the cache is empty");
         streamSetMutex_.unlock();
-        return;
+        return RT_ERROR_NONE;
     }
 
     RT_LOG(RT_LOG_INFO, "begin report cache track, stream set size=%zu", streamSet_.size());
@@ -468,36 +468,36 @@ void Profiler::ReportCacheTrack(uint32_t cacheFlag)
     streamSetMutex_.unlock();
 
     Context *curCtx = rtInstance->CurrentContext();
-    if (curCtx != nullptr) {
-        SpinLock &modelLock = curCtx->GetModelLock();
-        modelLock.Lock();
-        for (const auto it : curCtx->GetModelList()) {
-            if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-                const CaptureModel *captureMdl = dynamic_cast<const CaptureModel *>(it);
-                captureMdl->ReportedStreamInfoForProfiling();
-            }
+    CHECK_CONTEXT_VALID_WITH_PROC_RETURN(curCtx, RT_ERROR_CONTEXT_NULL,);
+    SpinLock &modelLock = curCtx->GetModelLock();
+    modelLock.Lock();
+    for (const auto it : curCtx->GetModelList()) {
+        if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+            const CaptureModel *captureMdl = dynamic_cast<const CaptureModel *>(it);
+            captureMdl->ReportedStreamInfoForProfiling();
         }
-        modelLock.Unlock();
     }
+    modelLock.Unlock();
     RT_LOG(RT_LOG_INFO, "end report cache track");
+    return RT_ERROR_NONE;
 }
 
-void Profiler::ReportCacheShapeInfo() const
+rtError_t Profiler::ReportCacheShapeInfo() const
 {
     RT_LOG(RT_LOG_INFO, "Begin report cache shape info");
     Context * const curCtx = Runtime::Instance()->CurrentContext();
-    if (curCtx != nullptr) {
-        SpinLock &modelLock = curCtx->GetModelLock();
-        modelLock.Lock();
-        for (const auto it : curCtx->GetModelList()) {
-            if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-                const CaptureModel *captureMdl = dynamic_cast<const CaptureModel *>(it);
-                captureMdl->ReportShapeInfoForProfiling();
-            }
+    CHECK_CONTEXT_VALID_WITH_PROC_RETURN(curCtx, RT_ERROR_CONTEXT_NULL,);
+    SpinLock &modelLock = curCtx->GetModelLock();
+    modelLock.Lock();
+    for (const auto it : curCtx->GetModelList()) {
+        if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+            const CaptureModel *captureMdl = dynamic_cast<const CaptureModel *>(it);
+            captureMdl->ReportShapeInfoForProfiling();
         }
-        modelLock.Unlock();
     }
+    modelLock.Unlock();
     RT_LOG(RT_LOG_INFO, "End report cache shape info");
+    return RT_ERROR_NONE;
 }
 
 void Profiler::RuntimeProfilerStop(void) const
@@ -511,7 +511,7 @@ void Profiler::TsProfilerStart(const uint64_t profConfig, const uint32_t devId, 
 {
     RT_LOG(RT_LOG_DEBUG, "profConfig=%#" PRIx64 ", devId=%u.", profConfig, devId);
     profCfg_.isRtsProfEn = ((profConfig & PROF_SCHEDULE_TIMELINE_MASK) == 0U) ? 0U : 1U;
-    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // adc and ts1
+    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // mdc and ts1
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AIVECTORCORE_METRICS_MASK) == 0U) ? 0U : 1U;
     } else {
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AICORE_METRICS_MASK) == 0U) ? 0U : 1U;
@@ -552,7 +552,7 @@ void Profiler::TsProfilerStart(
     RT_LOG(
         RT_LOG_DEBUG, "profConfig=%#" PRIx64 ", devId=%u, needOpenTimeline=%d.", profConfig, devId, needOpenTimeline);
     profCfg_.isRtsProfEn = (needOpenTimeline) ? 1U : 0U;
-    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // adc and ts1
+    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // mdc and ts1
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AIVECTORCORE_METRICS_MASK) == 0U) ? 0U : 1U;
     } else {
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AICORE_METRICS_MASK) == 0U) ? 0U : 1U;
@@ -583,7 +583,7 @@ void Profiler::TsProfilerStop(const uint64_t profConfig, const uint32_t devId, D
 {
     RT_LOG(RT_LOG_DEBUG, "profConfig=%#" PRIx64 ", devId=%u.", profConfig, devId);
     profCfg_.isRtsProfEn = ((profConfig & PROF_SCHEDULE_TIMELINE_MASK) == 0U) ? 0U : 1U;
-    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // adc and ts1
+    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // mdc and ts1
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AIVECTORCORE_METRICS_MASK) == 0U) ? 0U : 1U;
     } else {
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AICORE_METRICS_MASK) == 0U) ? 0U : 1U;
@@ -624,7 +624,7 @@ void Profiler::TsProfilerStop(
         RT_LOG_DEBUG, "profConfig=%#" PRIx64 ", devId=%u, needCloseTimeline=%d.", profConfig, devId, needCloseTimeline);
 
     profCfg_.isRtsProfEn = (needCloseTimeline) ? 1U : 0U;
-    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // adc and ts1
+    if ((Runtime::Instance()->GetTsNum() == TS_NUM_ADC) && (dev->DevGetTsId() == 1U)) {  // mdc and ts1
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AIVECTORCORE_METRICS_MASK) == 0U) ? 0U : 1U;
     } else {
         profCfg_.isTaskBasedProfEn = ((profConfig & PROF_AICORE_METRICS_MASK) == 0U) ? 0U : 1U;

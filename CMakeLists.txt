@@ -22,7 +22,6 @@ set(INSTALL_INCLUDE_DIR include)
 set(INSTALL_CONFIG_DIR cmake)
 
 message(STATUS "start build npu_runtime")
-
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     message(STATUS "Build with dependency cann pkgs installed")
     option(BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG "Build with dependency cann pkgs installed" TRUE)
@@ -59,8 +58,8 @@ include(cmake/func.cmake)
 include(cmake/third_party/protobuf.cmake)
 include(cmake/third_party/json.cmake)
 include(cmake/third_party/acl_compat.cmake)
-include(cmake/third_party/aicpu.cmake)
 include(cmake/third_party/csec.cmake)
+include(cmake/third_party/aicpu.cmake)
 
 if (ENABLE_COV OR ENABLE_UT)
     set(DEFAULT_BUILD_TYPE "Debug")
@@ -90,6 +89,8 @@ endif()
 
 get_filename_component(ASCEND_PROJECT_NAME "${CMAKE_CURRENT_BINARY_DIR}" NAME)
 
+add_subdirectory(src/aicpu_sched)
+add_subdirectory(src/queue_schedule)
 add_subdirectory(src/mmpa)
 add_subdirectory(cmake/stub)
 add_subdirectory(src/dfx/log/liblog)
@@ -123,14 +124,16 @@ add_custom_target(generate_runtime_version_file
 set(NPU_DEPENDENCIES platform runtime_v100 runtime runtime_common acl_rt_impl acl_rt 
         acl_tdt_queue acl_tdt_channel stub_acl_rt stub_acl_tdt_channel
         stub_acl_tdt_queue stub_acl_prof adump_server ascend_dump_static
-        mmpa static_mmpa error_manager stub_error_manager 
-        runtime_platform_910B
-        copy_acl_headers_and_libs generate_runtime_version_file
+        mmpa static_mmpa error_manager stub_error_manager runtime_platform_others 
+        xpu_tprt runtime_v200 runtime_model runtime_platform_910B
+        runtime_v201 runtime_model_v200 copy_acl_headers_and_libs generate_runtime_version_file
         copy_aicpu_libs
 )
 
 if (NOT ENABLE_COV AND NOT ENABLE_UT)
     add_dependencies(mmpa c_sec)
+    add_dependencies(runtime_platform_others c_sec)
+    add_dependencies(runtime_platform_tiny c_sec)
     add_dependencies(runtime_platform_910B c_sec)
     add_dependencies(runtime_platform_kirin c_sec)
     add_custom_target(pre_npu_runtime DEPENDS c_sec)
@@ -152,6 +155,8 @@ if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
         SOURCE_DIR ${RUNTIME_DIR}/cmake/device
         BINARY_DIR ${CMAKE_BINARY_DIR}/device_build
         CMAKE_ARGS  
+            -DENABLE_GCOV=${ENABLE_GCOV}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
             -DCMAKE_INSTALL_PREFIX=${CHILD_INSTALL_DIR}
             -DCMAKE_TOOLCHAIN_FILE=${RUNTIME_DIR}/cmake/aarch64-hcc-toolchain.cmake
@@ -166,6 +171,7 @@ if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
             -DENABLE_SIGN=${ENABLE_SIGN}
             -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}
             -DVERSION_INFO=${VERSION_INFO}
+            -DCMAKE_SKIP_RPATH=TRUE
         BUILD_ALWAYS TRUE
     )
     list(APPEND NPU_DEPENDENCIES device)

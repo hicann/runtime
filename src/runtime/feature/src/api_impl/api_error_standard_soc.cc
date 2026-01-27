@@ -306,6 +306,7 @@ rtError_t ApiErrorDecorator::FusionLaunch(void * const fusionInfo, Stream * cons
         COND_RETURN_AND_MSG_OUTER(g_fusionAllowedList.find(fusionList) == g_fusionAllowedList.end(), RT_ERROR_INVALID_VALUE, 
             ErrorCode::EE1006, __func__, "fusionList=" + fusionList);
     } else {
+        //  1952 only supports A3(aicpu + aic) task
         COND_RETURN_OUT_ERROR_MSG_CALL(fusionList != "AICPUAIC",
             RT_ERROR_INVALID_VALUE, "Fusion task list %s is invalid, not support.", fusionList.c_str());
     }
@@ -436,20 +437,6 @@ rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr at
     return impl_->GetDeviceInfoByAttr(realDeviceId, attr, val);
 }
 
-rtError_t ApiErrorDecorator::SetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    UNUSED(devType);
-    UNUSED(devId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiErrorDecorator::ResetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    UNUSED(devType);
-    UNUSED(devId);
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiErrorDecorator::EventWorkModeSet(uint8_t mode)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), 
@@ -467,7 +454,7 @@ rtError_t ApiErrorDecorator::IpcGetEventHandle(IpcEvent * const evt, rtIpcEventH
 {
     NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR(evt->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE,
+    COND_RETURN_OUT_ERROR_MSG_CALL(evt->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE,
         "only support RT_EVENT_IPC call rtIpcGetEventHandle, current flag %d.", evt->GetEventFlag());
     return impl_->IpcGetEventHandle(evt, handle);
 }

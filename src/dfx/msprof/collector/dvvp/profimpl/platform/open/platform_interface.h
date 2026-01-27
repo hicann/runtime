@@ -231,6 +231,8 @@ public:
     virtual PmuCalculationAttr* GetMetricsFunc(const std::string &name, uint32_t index) const;
     virtual float GetTotalTime(uint64_t cycle, double freq, uint16_t blockDim, int64_t coreNum) const;
     virtual void SetSubscribeFeature();
+    virtual ProfAicoreMetrics GetDefaultAicoreMetrics() const;
+    virtual uint64_t GetDefaultDataTypeConfig() const;
 
 protected:
     virtual std::string GetMetricsValue(const PlatformFeature feature);

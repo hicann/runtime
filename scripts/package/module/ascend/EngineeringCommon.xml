@@ -15,9 +15,6 @@
         <path value="$(TARGET_ENV)/include/version" install_type="devel"/>
         <path value="$(TARGET_ENV)/lib64" install_softlink="lib64"/>
         <path value="$(TARGET_ENV)/devlib" install_softlink="devlib"/>
-        <path value="$(TARGET_ENV)/devlib/linux"/>
-        <path value="$(TARGET_ENV)/devlib/linux/x86_64" install_softlink="$(TARGET_ENV)/devlib/x86_64"/>
-        <path value="$(TARGET_ENV)/devlib/linux/aarch64" install_softlink="$(TARGET_ENV)/devlib/aarch64"/>
         <path value="$(TARGET_ENV)/conf" install_softlink="conf"/>
         <path value="$(TARGET_ENV)/pkg_inc" install_softlink="pkg_inc"/>
         <path value="var" install_mod="750"/>

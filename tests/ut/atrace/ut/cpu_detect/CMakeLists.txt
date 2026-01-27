@@ -44,7 +44,6 @@ target_compile_options(cpu_detect_utest
         -g
         -Wall
         -Werror
-        -std=c++11
 )
 
 target_compile_definitions(cpu_detect_utest 

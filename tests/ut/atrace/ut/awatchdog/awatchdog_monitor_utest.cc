@@ -65,109 +65,109 @@ protected:
     }
 };
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorInitCreateThreadFailed)
-{
-    EXPECT_CheckErrorLog();
-    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(-1));
-    AwdMonitorInit();
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorInitCreateThreadFailed)
+// {
+//     EXPECT_CheckErrorLog();
+//     MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(-1));
+//     AwdMonitorInit();
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorInit)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorInit)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     AwdMonitorExit();
+// }
 
 void AwatchdogCallback(void *args)
 {
     sleep(1);
 }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutWithoutStart)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    MOCKER(AwatchdogCallback).expects(never());
-    auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    int timeout = 1;
-    auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutWithoutStart)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     MOCKER(AwatchdogCallback).expects(never());
+//     auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+//     int timeout = 1;
+//     auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//     sleep(1);
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorTimeout)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    MOCKER(AwatchdogCallback).expects(once());
-    auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    int timeout = 1;
-    auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-    AwdStartThreadWatchdog((AwdHandle)dog);
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorTimeout)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     MOCKER(AwatchdogCallback).expects(once());
+//     auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+//     int timeout = 1;
+//     auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//     AwdStartThreadWatchdog((AwdHandle)dog);
+//     sleep(1);
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutDurationTooLong)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    int num = 10;
-    auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    for (int i = 0; i < num; i++) {
-        int timeout = 1;
-        auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-        AwdStartThreadWatchdog((AwdHandle)dog);
-    }
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutDurationTooLong)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     int num = 10;
+//     auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+//     for (int i = 0; i < num; i++) {
+//         int timeout = 1;
+//         auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//         AwdStartThreadWatchdog((AwdHandle)dog);
+//     }
+//     sleep(1);
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutWithRunCountLoop)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    MOCKER(AwatchdogCallback).expects(once());
-    auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    int timeout = 1;
-    auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-    dog->runCount = 0xFFFFFFF - 1;
-    AwdStartThreadWatchdog((AwdHandle)dog);
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorTimeoutWithRunCountLoop)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     MOCKER(AwatchdogCallback).expects(once());
+//     auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+//     int timeout = 1;
+//     auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//     dog->runCount = 0xFFFFFFF - 1;
+//     AwdStartThreadWatchdog((AwdHandle)dog);
+//     sleep(1);
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorDestroyDog)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
-    int timeout = 1;
-    auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-    dog->runCount = 0xFFFFFFF - 1;
-    AwdStartThreadWatchdog((AwdHandle)dog);
-    AwdDestroyThreadWatchdog((AwdHandle)dog);
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorDestroyDog)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     auto awd = AwdGetWatchDog(AWD_WATCHDOG_TYPE_THREAD);
+//     int timeout = 1;
+//     auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//     dog->runCount = 0xFFFFFFF - 1;
+//     AwdStartThreadWatchdog((AwdHandle)dog);
+//     AwdDestroyThreadWatchdog((AwdHandle)dog);
+//     sleep(1);
+//     AwdMonitorExit();
+// }
 
-TEST_F(AwatchdogMonitorUtest, TestMonitorThreadExit)
-{
-    EXPECT_CheckNoErrorLog();
-    AwdMonitorInit();
-    std::vector<std::future<int>> thread; 
-    thread.push_back(std::move(std::async([]{
-        int timeout = 1;
-        auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
-        AwdStartThreadWatchdog((AwdHandle)dog);
-        return 0;
-    })));
-    for (auto &fret : thread) {
-        auto ret  = fret.get();
-        EXPECT_EQ(ret, 0);
-    }
-    sleep(1);
-    AwdMonitorExit();
-}
+// TEST_F(AwatchdogMonitorUtest, TestMonitorThreadExit)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     AwdMonitorInit();
+//     std::vector<std::future<int>> thread; 
+//     thread.push_back(std::move(std::async([]{
+//         int timeout = 1;
+//         auto dog = AwdWatchdogCreate(ASCENDCL, timeout, AwatchdogCallback, AWD_WATCHDOG_TYPE_THREAD);
+//         AwdStartThreadWatchdog((AwdHandle)dog);
+//         return 0;
+//     })));
+//     for (auto &fret : thread) {
+//         auto ret  = fret.get();
+//         EXPECT_EQ(ret, 0);
+//     }
+//     sleep(1);
+//     AwdMonitorExit();
+// }

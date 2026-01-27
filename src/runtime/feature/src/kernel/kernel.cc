@@ -86,11 +86,7 @@ rtError_t Kernel::GetFunctionDevAddr(uint64_t &func1, uint64_t &func2) const
     // should check if the program has been loaded to device.
     rtError_t error = program_->CheckLoaded2Device();
     ERROR_RETURN(error, "Get function addr error, failed to load program to device.");
-
-    const Runtime * const runtime = Runtime::Instance();
-    NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
-
-    Context * const curCtx = runtime->CurrentContext();
+    Context * const curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     const uint64_t programBinAlignBaseAddr = RtPtrToValue(program_->GetBinAlignBaseAddr(curCtx->Device_()->Id_()));
@@ -238,7 +234,7 @@ rtError_t KernelTable::Add(Kernel *&addKernel)
     }
     kernelMapLock_.Unlock();
 
-    RT_LOG(RT_LOG_DEBUG, "KernelTable add kernel success.");
+    RT_LOG(RT_LOG_DEBUG, "KernelTable add kernel %s success.", kernelName.c_str());
     return error;
 }
 

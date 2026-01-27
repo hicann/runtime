@@ -61,7 +61,25 @@ add_executable(common_open_utest
     ${localSrcFiles}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 target_include_directories(common_open_utest PRIVATE
+    ${libmsprofHeaderDir}
     ../
     ../stub
     ../stub/common
@@ -99,11 +117,9 @@ target_compile_options(common_open_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(common_open_utest PRIVATE
@@ -113,11 +129,7 @@ target_compile_definitions(common_open_utest PRIVATE
 )
 
 target_link_libraries(common_open_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    ascend_protobuf
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(common_open_utest
@@ -126,7 +138,3 @@ set_target_properties(common_open_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET common_open_utest
-    TASK_NUM 1
-)

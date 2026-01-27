@@ -61,7 +61,7 @@ static std::map<uint16_t, const char_t *> g_taskType2String = {
     {TS_TASK_TYPE_DEBUG_UNREGISTER, "debug unregister"},
     {TS_TASK_TYPE_FUSIONDUMP_ADDR_SET, "fusiondump address set"},
     {TS_TASK_TYPE_MODEL_EXIT_GRAPH, "model exit graph"},
-    {TS_TASK_TYPE_ADCPROF, "adcprof"},
+    {TS_TASK_TYPE_ADCPROF, "mdcprof"},
     {TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, "device ringbuffer control"},
     {TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM, "debug register for stream"},
     {TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, "debug unregister for stream"},

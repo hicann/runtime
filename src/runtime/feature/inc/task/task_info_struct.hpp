@@ -86,7 +86,7 @@ struct EventWaitTaskInfo {
     uint8_t eventWaitFlag; // 0: event wait(default), 1: notify wait
 };
 
-struct StarsV2EventRecordTaskInfo {
+struct DavidEventRecordTaskInfo {
     Event *event;
     uint64_t timestamp;
     int32_t eventId;
@@ -95,13 +95,13 @@ struct StarsV2EventRecordTaskInfo {
     uint32_t countValue;
 };
 
-struct StarsV2EventResetTaskInfo {
+struct DavidEventResetTaskInfo {
     Event *event;
     int32_t eventId;
     uint32_t isCountNotify;
 };
 
-struct StarsV2EventWaitTaskInfo {
+struct DavidEventWaitTaskInfo {
     Event *event;
     int32_t eventId;
     uint32_t timeout;
@@ -163,7 +163,7 @@ struct OnlineProfDisableTaskInfo {
     uint64_t onlineProfAddr;
 };
 
-struct ProfTaskInfo {
+struct AdcProfTaskInfo {
     uint64_t addr;
     uint32_t length;
 };
@@ -324,6 +324,7 @@ struct SingleBitNotifyRecordInfo {
     bool isPod;
     uint32_t lastLocalId;
     uint64_t lastBaseAddr;
+    bool isNotifyReset;
 };
 
 struct NotifyRecordTaskInfo {

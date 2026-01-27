@@ -40,6 +40,14 @@ enum ModelType {
     RT_MODEL_MAX
 };
 
+struct UbAsyncJettyInfo {
+    uint16_t functionId;
+    uint16_t dieId;
+    uint16_t jettyId;
+    uint16_t piValue;
+    uint32_t sqId;
+};
+
 constexpr int32_t MODEL_ID_INVALID = -1;
 constexpr size_t MALLOC_DEV_NAME_STRING_MAX = 128U;
 
@@ -401,6 +409,54 @@ public:
         devAddrList_.clear();
     }
 
+    void SetH2dJettyInfo(const UbAsyncJettyInfo& info) {
+        h2dJettyInfoList_.push_back(info);
+    }
+
+    std::vector<UbAsyncJettyInfo> GetH2dJettyInfo() const
+    {
+        return h2dJettyInfoList_;
+    }
+
+    void SetD2dJettyInfo(const UbAsyncJettyInfo& info) {
+        d2dJettyInfoList_.push_back(info);
+    }
+
+    std::vector<UbAsyncJettyInfo> GetD2dJettyInfo() const
+    {
+        return d2dJettyInfoList_;
+    }
+
+    bool GetUbModelD2dFlag() const
+    {
+        return isHasD2d_;
+    }
+
+    bool GetUbModelH2dFlag() const
+    {
+        return isHasH2d_;
+    }
+
+    bool GetProcJettyInfoFlag() const
+    {
+        return isHaveProcJettyInfo_;
+    }
+
+    void SetUbModelD2dFlag(bool flag)
+    {
+        isHasD2d_ = flag;
+    }
+
+    void SetUbModelH2dFlag(bool flag)
+    {
+        isHasH2d_ = flag;
+    }
+
+    void SetProcJettyInfoFlag(bool flag)
+    {
+        isHaveProcJettyInfo_ = flag;
+    }
+
 private:
     /*
      * Disable sq when the stream is bound to the model,
@@ -417,6 +473,8 @@ private:
     rtError_t ReAllocStreamId(void);
     rtError_t SinkSqTasksRestore(void);
     rtError_t CheckRestoredSqStatus(void);
+    void SyncExeStream(void) const;
+    rtError_t SendAicpuModelLoadMsg(Stream *stream) const;
 
 private:
     int32_t id_ = MODEL_ID_INVALID;
@@ -473,6 +531,11 @@ private:
     void *currentAddr_ = nullptr;
     uint8_t allocTimes_ = 0;
     std::vector<void *> devAddrList_;
+    std::vector<UbAsyncJettyInfo> h2dJettyInfoList_;
+    std::vector<UbAsyncJettyInfo> d2dJettyInfoList_;
+    bool isHasD2d_ = false;
+    bool isHasH2d_ = false;
+    bool isHaveProcJettyInfo_ = false;
 };
 }
 }

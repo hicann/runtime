@@ -8,11 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_STARSV2_CCU_SQE_H
-#define CCE_RUNTIME_STARSV2_CCU_SQE_H
+#ifndef CCE_RUNTIME_DAVID_CCU_SQE_H
+#define CCE_RUNTIME_DAVID_CCU_SQE_H
 
 #include "task_info_base.hpp"
-#include "starsv2_base.hpp"
 
 namespace cce {
 namespace runtime {
@@ -37,9 +36,9 @@ union CcuResv {
     } ccuResvDesc2;
 };
 
-struct RtStarsV2CcuSqe {
+struct RtDavidStarsCcuSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     CcuResv resv;
@@ -63,9 +62,9 @@ struct RtStarsV2CcuSqe {
     uint32_t usrData[CCU_1ST_SQE_ARGS_LEN];
 };
 
-struct RtStarsV2CcuSqe32B {
+struct RtDavidStarsCcuSqe32B {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     CcuResv resv;

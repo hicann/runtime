@@ -14,6 +14,10 @@
 #include "hdc_api.h"
 #include "adcore_api.h"
 namespace Adx {
+namespace {
+constexpr uint32_t RECONNECT_TIMES = 3U;
+}
+
 AdxServerManager::AdxServerManager() noexcept
     : waitOver_(true),
       pid_(0),
@@ -320,31 +324,37 @@ bool AdxServerManager::SubComponentProcess(CommHandle &handle, ComponentType &co
     msgPtr->devId = static_cast<uint16_t>(devId);
 
     IDE_LOGI("commopt type(%d), request type(%u), device id(%d)", static_cast<int32_t>(type_), msgPtr->reqType, devId);
+    return DispatchComponent(handle, msgPtr, session, comp);
+}
+
+bool AdxServerManager::DispatchComponent(CommHandle &handle, SharedPtr<MsgProto> &msgPtr, HDC_SESSION session,
+    ComponentType &comp)
+{
     comp = GetComponentTypeByReqType(static_cast<CmdClassT>(msgPtr->reqType));
     auto it = compMap_.find(comp);
-    if (it != compMap_.end()) {
-        handle.comp = comp;
-        if (handle.comp == ComponentType::COMPONENT_GETD_FILE || handle.comp == COMPONENT_LOG_LEVEL) {
-            std::lock_guard<std::mutex> lck(linkMtx_);
-            if (IsLinkOverload(session)) {
-                return false;
-            }
-            linkNum_++;
-        }
-        IDE_LOGI("begin to process [%s] component", it->second->GetInfo().c_str());
-        if (it->second->Process(handle, msgPtr) != IDE_DAEMON_OK) {
-            IDE_LOGE("end of processing [%s] component failed, req->type: %u",
-                it->second->GetInfo().c_str(), msgPtr->reqType);
-        } else {
-            IDE_LOGI("end of processing [%s] component successfully", it->second->GetInfo().c_str());
-        }
-        if (handle.comp == ComponentType::COMPONENT_GETD_FILE || handle.comp == COMPONENT_LOG_LEVEL) {
-            std::lock_guard<std::mutex> lck(linkMtx_);
-            linkNum_--;
-        }
-    } else {
+    if (it == compMap_.end()) {
         IDE_LOGE("Unable to find the corresponding component type(%d)", static_cast<int32_t>(comp));
         return false;
+    }
+
+    handle.comp = comp;
+    if (handle.comp == ComponentType::COMPONENT_GETD_FILE || handle.comp == COMPONENT_LOG_LEVEL) {
+        std::lock_guard<std::mutex> lck(linkMtx_);
+        if (IsLinkOverload(session)) {
+            return false;
+        }
+        linkNum_++;
+    }
+    std::string compInfo = it->second->GetInfo();
+    IDE_LOGI("begin to process [%s] component", compInfo.c_str());
+    if (it->second->Process(handle, msgPtr) != IDE_DAEMON_OK) {
+        IDE_LOGE("end of processing [%s] component failed, req->type: %u", compInfo.c_str(), msgPtr->reqType);
+    } else {
+        IDE_LOGI("end of processing [%s] component successfully", compInfo.c_str());
+    }
+    if (handle.comp == ComponentType::COMPONENT_GETD_FILE || handle.comp == COMPONENT_LOG_LEVEL) {
+        std::lock_guard<std::mutex> lck(linkMtx_);
+        linkNum_--;
     }
     return true;
 }
@@ -369,31 +379,48 @@ void AdxServerManager::TimerProcess()
         return;
     }
 
+    // initialize the devices on the first time(AdxCommOptManager is singleton object)
+    // create HDC server on th enable device
     device->GetAllEnableDevices(loadMode_, deviceId_, devLogIds);
-    if (!devLogIds.empty()) {
-        std::map<std::string, std::string> info;
-        info[OPT_SERVICE_KEY] = info_;
-        for (uint32_t i = 0; i < devLogIds.size(); i++) {
-            auto it = servers_.find(devLogIds[i]);
-            if (it == servers_.end() && (deviceId_ == -1 || std::to_string(deviceId_) == devLogIds[i])) {
-                info[OPT_DEVICE_KEY] = devLogIds[i];
-                IDE_LOGI("device up %s", devLogIds[i].c_str());
-                ServerInit(info);
-            }
+    std::map<std::string, std::string> info;
+    info[OPT_SERVICE_KEY] = info_;
+    for (const auto& deviceId : devLogIds) {
+        auto server = servers_.find(deviceId);
+        // filter the device that created HDC server(or not the specified device)
+        if (server != servers_.end() || !(deviceId_ == -1 || std::to_string(deviceId_) == deviceId)) {
+            continue;
+        }
+
+        IDE_LOGI("device up %s", deviceId.c_str());
+        info[OPT_DEVICE_KEY] = deviceId;
+        if (ServerInit(info)) {
+            faultyDevices_.erase(deviceId);
+            continue;
+        }
+
+        // record retry times of connection for the faulty device
+        auto faultDevice = faultyDevices_.find(deviceId);
+        if (faultDevice == faultyDevices_.end()) {
+            faultyDevices_[deviceId] = 1;
+            continue;
+        }
+        ++(faultDevice->second);
+        if (faultDevice->second >= RECONNECT_TIMES) {
+            faultyDevices_.erase(faultDevice);
+            // set the device to disable if connection is timeout
+            device->DisableNotify(deviceId);
         }
     }
 
     device->GetDisableDevices(devLogIds);
-    if (!devLogIds.empty()) {
-        for (uint32_t i = 0; i < devLogIds.size(); i++) {
-            auto it = servers_.find(devLogIds[i]);
-            if (it == servers_.end()) {
-                continue;
-            }
-            IDE_LOGI("device suspend %s", devLogIds[i].c_str());
-            if (ServerUnInit(it->second)) {
-                servers_.erase(it);
-            }
+    for (const auto& deviceId : devLogIds) {
+        auto server = servers_.find(deviceId);
+        if (server == servers_.end()) {
+            continue;
+        }
+        IDE_LOGI("device suspend %s", deviceId.c_str());
+        if (ServerUnInit(server->second)) {
+            servers_.erase(server);
         }
     }
     serverInittedFlag_ = true;
@@ -411,20 +438,24 @@ int32_t AdxServerManager::Exit()
         }
     }
 
-    auto its = servers_.begin();
-    while (its != servers_.end()) {
-        auto eit = its++;
-        if (!ServerUnInit(eit->second)) {
-            return IDE_DAEMON_ERROR;
-        }
-        servers_.erase(eit);
+    // terminate the running components before close servers(close client sessions)
+    for (auto& component : compMap_) {
+        (void)component.second->Terminate();
     }
 
-    auto it = compMap_.begin();
-    while (it != compMap_.end()) {
-        (void)it->second->UnInit();
-        it++;
+    // finalize the servers(delete epoll and close session)
+    for (auto& server : servers_) {
+        if (!ServerUnInit(server.second)) {
+            return IDE_DAEMON_ERROR;
+        }
     }
+    servers_.clear();
+
+    // finalize the components
+    for (auto& component : compMap_) {
+        (void)component.second->UnInit();
+    }
+    // make sure no longer use it in ComponentProcess/SubComponentProcess
     compMap_.clear();
 
     if (epoll_ != nullptr) {

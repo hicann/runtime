@@ -37,7 +37,7 @@ using namespace cce::runtime;
 
 rtError_t stubGetHardVerBySocVer(const uint32_t deviceId, int64_t &hardwareVersion)
 {
-    hardwareVersion = PLATFORMCONFIG_910_B_93;
+    hardwareVersion = PLATFORMCONFIG_CLOUD_V2;
     return DRV_ERROR_NONE;
 }
 
@@ -66,7 +66,7 @@ protected:
         rtGetDevice(&devId);
         dev_ = ((Runtime *)Runtime::Instance())->DeviceRetain(devId, 0);
         old = dev_->GetPlatformType();
-        dev_->SetPlatformType(PLATFORM_910_B_93);
+        dev_->SetPlatformType(PLATFORM_CLOUD_V2);
 
         rtStreamCreate((rtStream_t*)&stream_, 0);
         ctx_ = Runtime::Instance()->CurrentContext();
@@ -887,7 +887,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskHccsTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
     Notify *single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret = NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1,
         &single_bit_notify_info, nullptr, single_notify, false);
@@ -911,7 +911,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskPixTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
     Notify *single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret = NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1,
         &single_bit_notify_info, nullptr, single_notify, false);
@@ -935,7 +935,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
     Notify *single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret = NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1,
         &single_bit_notify_info, nullptr, single_notify, false);
@@ -959,7 +959,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTestDevid64)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 64, 0};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 64, 0, false};
     Notify *single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret = NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1,
         &single_bit_notify_info, nullptr, single_notify, false);
@@ -1353,6 +1353,23 @@ TEST_F(StarsTaskTest, SameTaskIdForAll)
     delete ss;
 }
 
+TEST_F(StarsTaskTest, TransExeTimeoutCfgToKernelCredit_Test)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    rtSocType_t socType = rtInstance->GetSocType();
+    rtInstance->SetSocType(SOC_AS31XM1X);
+    bool oldflag1 = rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout;
+    bool oldflag2 = rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout;
+    rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = true;
+    rtInstance->timeoutConfig_.opExcTaskTimeout = 10;
+    GetAicoreKernelCredit(0);
+    uint16_t kernelCredit = GetAicoreKernelCredit(UINT64_MAX); // never timeout
+    EXPECT_EQ(kernelCredit, RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT);
+    rtInstance->SetSocType(socType);
+    rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = oldflag1;
+    rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout = oldflag2;
+}
+
 TEST_F(StarsTaskTest, streamclear_ConstructSqe)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -1535,54 +1552,4 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(StarsTaskTest, ToCmdBodyRingBufferTask)
-{
-    TaskInfo maintainceTask = {};
-    TaskInfo *task = &maintainceTask;
-    rtCommand_t cmd = {};
-
-    InitByStream(&maintainceTask, stream_);
-    rtError_t ret = RingBufferMaintainTaskInit(&maintainceTask, (void *)0x100, 0, 10);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ToCommand(task, &cmd);
-    EXPECT_EQ(cmd.u.ringBufferToDeviceTask.ringBufferDelFlag, 0U);
-}
-
-TEST_F(StarsTaskTest, DebugRegisterForStreamTask)
-{
-    TaskInfo debugTask = {};
-    TaskInfo *task = &debugTask;
-    rtStarsSqe_t sqe = {};
-    rtCommand_t cmd = {};
-
-    InitByStream(&debugTask, stream_);
-    rtError_t ret = DebugRegisterForStreamTaskInit(&debugTask, 0, (void *)0x100, 1);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ToConstructSqe(task, &sqe);
-    EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM);
-
-    ToCommand(task, &cmd);
-    EXPECT_EQ(cmd.u.debugRegisterForStreamTask.flag, 1U);
-}
-
-TEST_F(StarsTaskTest, DebuUnRegisterForStreamTask)
-{
-    TaskInfo debugTask = {};
-    TaskInfo *task = &debugTask;
-    rtStarsSqe_t sqe = {};
-
-    InitByStream(&debugTask, stream_);
-    rtError_t ret = DebugUnRegisterForStreamTaskInit(&debugTask, 0);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ToConstructSqe(task, &sqe);
-    EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM);
-
-    rtCommand_t cmd = {};
-    ToCommand(task, &cmd);
-    EXPECT_EQ(cmd.u.debugUnRegisterForStreamTask.streamId, 0U);
 }

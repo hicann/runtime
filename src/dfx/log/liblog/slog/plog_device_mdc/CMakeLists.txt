@@ -179,6 +179,7 @@ target_link_options(alog
     PRIVATE
         -Wl,-z,relro,-z,now,-z,noexecstack
         -Wl,--gc-sections
+        $<$<CONFIG:Release>:-s>
 )
 
 target_link_directories(alog

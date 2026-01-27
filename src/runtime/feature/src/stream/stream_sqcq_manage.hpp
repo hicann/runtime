@@ -85,11 +85,11 @@ struct rtStreamInfoExMsg_t {
 class StreamSqCqManage : public NoCopy {
 public:
     explicit StreamSqCqManage(Device * const dev);
-    ~StreamSqCqManage() = default;
+    virtual ~StreamSqCqManage() = default;
 
     rtError_t AllocStreamSqCq(const Stream * const newStm, const uint32_t priority, uint32_t drvFlag, uint32_t &sqId,
                               uint32_t &cqId);
-    rtError_t AllocStarsV2StreamSqCq(const Stream * const newStm, const uint32_t priority, 
+    rtError_t AllocDavidStreamSqCq(const Stream * const newStm, const uint32_t priority, 
         uint32_t drvFlag, uint32_t &sqId, uint32_t &cqId, uint64_t &sqAddr);
     void FillStreamInfoEx(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const;
     rtError_t UpdateStreamSqCq(Stream *newStm);
@@ -114,7 +114,15 @@ public:
     void DelStreamIdToStream(const uint32_t streamId);
     rtError_t GetStreamById(const uint32_t streamId, Stream **stm);
     rtError_t GetStreamSharedPtrById(const uint32_t streamId, std::shared_ptr<Stream> &sharedStm);
-
+    Device *Device_() const
+    {
+        return device_;
+    }
+protected:
+    std::mutex streamMapLock_;
+    std::map<uint32_t, uint32_t> streamIdToSqIdMap_;
+    std::map<uint32_t, uint32_t> streamIdToCqIdMap_;
+    std::map<uint32_t, uint32_t> sqIdToStreamIdMap_;     /* only for david */
 private:
     rtError_t Add(const uint32_t streamId, uint32_t drvFlag, uint32_t &sqId, uint32_t &cqId,
                   uint32_t * const info, const uint32_t len, uint32_t * const msg, const uint32_t msgLen);
@@ -122,9 +130,7 @@ private:
                     uint32_t * const info, const uint32_t len, uint32_t * const msg, const uint32_t msgLen);
     rtError_t UnbindandFreeLogicCq(const uint32_t streamId);
 private:
-    std::mutex streamMapLock_;
-    std::map<uint32_t, uint32_t> streamIdToSqIdMap_;
-    std::map<uint32_t, uint32_t> sqIdToStreamIdMap_;     /* only for starsv2 */
+
     std::map<uint32_t, uint32_t> sqIdRefMap_;
     std::map<uint32_t, std::mutex> sqIdMutex_;
     std::mutex logicCqLock_;
@@ -132,8 +138,8 @@ private:
     std::map<uint32_t, std::map<uint64_t, rtLogicCqInfo_t>> logicCqIdMap_;
     Device *device_;
     uint32_t normalCq_{UINT32_MAX};
-    std::mutex streamIdToStreamMapLock_;
     std::unordered_map<uint32_t, Stream *> streams_;      // key is streamId, value is Stream
+    std::mutex streamIdToStreamMapLock_;
 };
 
 }  // namespace runtime

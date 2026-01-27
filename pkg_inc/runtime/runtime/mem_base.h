@@ -37,25 +37,6 @@ typedef enum {
 } rtHostRegisterType;
 
 typedef enum {
-    RT_HAC_TYPE_STARS = 0,
-    RT_HAC_TYPE_AICPU,
-    RT_HAC_TYPE_AIC,
-    RT_HAC_TYPE_AIV,
-    RT_HAC_TYPE_PCIEDMA,
-    RT_HAC_TYPE_RDMA,
-    RT_HAC_TYPE_SDMA,
-    RT_HAC_TYPE_DVPP,
-    RT_HAC_TYPE_UDMA,
-    RT_HAC_TYPE_CCU,
-    RT_HAC_TYPE_MAX        
-} rtHacType;
-
-typedef enum {
-    RT_HOST_MEM_MAP_NOT_SUPPORTED = 0,
-    RT_HOST_MEM_MAP_SUPPORTED
-} rtHostMemMapCapability;
-
-typedef enum {
     RT_MEMORY_LOC_HOST = 0,
     RT_MEMORY_LOC_DEVICE,
     RT_MEMORY_LOC_UNREGISTERED,
@@ -73,6 +54,25 @@ typedef struct {
     uint32_t pageSize;
     uint32_t rsv[4];    // 预留字段，后续待驱动整改后返回内存类型
 } rtPtrAttributes_t;
+
+typedef enum {
+    RT_HAC_TYPE_STARS = 0,
+    RT_HAC_TYPE_AICPU,
+    RT_HAC_TYPE_AIC,
+    RT_HAC_TYPE_AIV,
+    RT_HAC_TYPE_PCIEDMA,
+    RT_HAC_TYPE_RDMA,
+    RT_HAC_TYPE_SDMA,
+    RT_HAC_TYPE_DVPP,
+    RT_HAC_TYPE_UDMA,
+    RT_HAC_TYPE_CCU,
+    RT_HAC_TYPE_MAX        
+} rtHacType;
+
+typedef enum {
+    RT_HOST_MEM_MAP_NOT_SUPPORTED = 0,
+    RT_HOST_MEM_MAP_SUPPORTED
+} rtHostMemMapCapability;
 
 typedef struct{
     void *dst;

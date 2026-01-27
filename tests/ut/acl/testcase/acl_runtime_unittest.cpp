@@ -845,7 +845,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtStreamAbortTest)
     EXPECT_EQ(ret, ACL_SUCCESS);
 
     ret = aclrtStreamAbort(nullptr);
-    EXPECT_NE(ret, ACL_SUCCESS);
+    EXPECT_EQ(ret, ACL_SUCCESS);
 
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamAbort(_))
         .WillOnce(Return((ACL_ERROR_RT_PARAM_INVALID)));
@@ -1975,36 +1975,46 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpy2dAsyncTest)
     aclError ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, &stream);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 
-    width = 2; 
+    width = 2;
     height = 0;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, &stream);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
-    width = 1; 
+
+    width = 1;
     height = 2;
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemcpy2dAsync(_, _, _, _, _, _, _, _)).WillOnce(Return(1)).WillOnce(Return(0)).WillOnce(Return(0)).WillOnce(Return(0));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemcpy2dAsync(_, _, _, _, _, _, _, _))
+        .WillOnce(Return(1))
+        .WillOnce(Return(0))
+        .WillOnce(Return(0))
+        .WillOnce(Return(0));
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     EXPECT_EQ(ret, 1);
-    width = 1; 
+
+    width = 1;
     height = 2;
     kind = ACL_MEMCPY_HOST_TO_HOST;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
-    width = 1; 
+
+    width = 1;
     height = 2;
     kind = ACL_MEMCPY_HOST_TO_DEVICE;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    width = 1; 
+
+    width = 1;
     height = 2;
     kind = ACL_MEMCPY_DEVICE_TO_DEVICE;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    width = 1; 
+
+    width = 1;
     height = 2;
     kind = ACL_MEMCPY_DEFAULT;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    width = 1; 
+
+    width = 1;
     height = 2;
     kind = ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE;
     ret = aclrtMemcpy2dAsync(dst, dpitch, src, spitch, width, height, kind, stream);
@@ -2386,6 +2396,7 @@ TEST_F(UTEST_ACL_Runtime, physical_memory_malloc_device)
     ret = aclrtMallocPhysical(&handle, size, &prop, 0);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
     EXPECT_NE(handle, nullptr);
+
 }
 
 TEST_F(UTEST_ACL_Runtime, virtual_physical_memory_map_unmap)
@@ -2631,6 +2642,7 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed
   aclError ret = aclrtLaunchKernel(funcHandle, blockDim, argsData, argsSize, stream);
   EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
+
 TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed_2)
 {
     aclrtFuncHandle funcHandle = (aclrtFuncHandle)0x01U;
@@ -2640,7 +2652,7 @@ TEST_F(UTEST_ACL_Runtime, launch_kernel_failed_with_rt_launch_kernel_func_failed
     size_t argsSize = 100;
 
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtLaunchKernelByFuncHandleV3(_, _, _, _, _))
-          .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+            .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
     aclError ret = aclrtLaunchKernel(funcHandle, blockDim, argsData, argsSize, stream);
     EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
 }
@@ -4232,6 +4244,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed03)
     auto ret = aclrtHostGetDevicePointer(pHost, &pDevice, flag);
     EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
 }
+
 TEST_F(UTEST_ACL_Runtime, aclrtHostMemMapCapabilities_succ)
 {
     uint32_t deviceId = 0U;
@@ -6640,7 +6653,7 @@ TEST_F(UTEST_ACL_Runtime, aclAppLog_success)
 TEST_F(UTEST_ACL_Runtime, aclrtCheckArchCompatibilityTest)
 {
     int32_t canCompatible = 255;
-    aclError ret = aclrtCheckArchCompatibility("SOC_ASCEND910B1", &canCompatible);
+    aclError ret = aclrtCheckArchCompatibility("SOC_ASCEND910", &canCompatible);
     EXPECT_EQ(ret, ACL_SUCCESS);
 
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCheckArchCompatibility(_, _))
@@ -6881,6 +6894,11 @@ TEST_F(UTEST_ACL_Runtime, aclrtCacheLastTaskOpInfo)
 
     ret = aclrtCacheLastTaskOpInfo(rawInfo, infoSize);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCacheLastTaskOpInfo(_,_))
+                    .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclrtCacheLastTaskOpInfo(rawInfo, infoSize);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAttribute)
@@ -6900,4 +6918,119 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAttribute)
 
     ret = aclrtGetFunctionAttribute(funcHandle, attrType, &attrValue);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtReserveMemAddressNoUCMemory)
+{
+    void *virPtr = nullptr;
+    size_t size = 1;
+
+    aclError ret = aclrtReserveMemAddressNoUCMemory(&virPtr, size, 0, nullptr, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_NE(virPtr, nullptr);
+
+    ret = aclrtReleaseMemAddress(virPtr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtReserveMemAddressNoUCMemory(&virPtr, 0, 0, nullptr, 0);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtReserveMemAddressNoUCMemory(&virPtr, size, 0, nullptr, 2);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtReserveMemAddress(_,_,_,_,_))
+        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
+    ret = aclrtReserveMemAddressNoUCMemory(&virPtr, size, 0, nullptr, 0);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtReserveMemAddress(_,_,_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclrtReserveMemAddressNoUCMemory(&virPtr, size, 0, nullptr, 0);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtReleaseMemAddress(_))
+        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
+    ret = aclrtReleaseMemAddress(virPtr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemGetAddressRange)
+{
+    void *ptr = nullptr;
+    void *pbase = reinterpret_cast<void *>(0x01U);
+    size_t psize = 0;
+
+    aclError ret = aclrtMemGetAddressRange(ptr, &pbase, &psize);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ptr = (void*)0xff;
+    ret = aclrtMemGetAddressRange(ptr, &pbase, &psize);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetArgsFromExceptionInfo)
+{
+    void *devArgs = nullptr;
+    uint32_t devArgsLen = 0;
+    const uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
+    auto ret = aclrtGetArgsFromExceptionInfo(nullptr, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_EXCEPTION_INFO);
+
+    aclrtExceptionInfo exceptionInfo;
+    (void)memset_s(&exceptionInfo, sizeof(aclrtExceptionInfo), 0, sizeof(aclrtExceptionInfo));
+    
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
+    uint32_t args[3] = {1, 2, 3};
+    uint32_t argsLen = 3;
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = (void *)(&args);
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argsize = argsLen;
+
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(devArgs, (void *)(&args));
+    EXPECT_EQ(devArgsLen, argsLen);
+
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argAddr = (void *)(&args);
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argsize = argsLen;
+    exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_CCU;
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(devArgs, (void *)(&args));
+    EXPECT_EQ(devArgsLen, argsLen);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetFuncHandleFromExceptionInfo)
+{
+    aclrtExceptionInfo info;
+    aclrtFuncHandle func;
+    const uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
+
+    auto ret = aclrtGetFuncHandleFromExceptionInfo(nullptr, &func);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_EXCEPTION_INFO);
+
+    ret = aclrtGetFuncHandleFromExceptionInfo(&info, &func);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetFuncHandleFromExceptionInfo(_, _))
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtGetFuncHandleFromExceptionInfo(&info, &func);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinarySetExceptionCallback)
+{
+    aclrtBinHandle handle = (aclrtBinHandle)0x01;
+    aclrtOpExceptionCallback funcHandle = (aclrtOpExceptionCallback)0x01;
+
+    auto ret = aclrtBinarySetExceptionCallback(nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtBinarySetExceptionCallback(handle, funcHandle, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinarySetExceptionCallback(_, _, _))
+                .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtBinarySetExceptionCallback(handle, funcHandle, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);            
 }

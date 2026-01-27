@@ -92,7 +92,29 @@ struct SubProcEventCallBackInfo {
     uint32_t eventType;
     SubProcEventCallBackFuncInfo callBackFunc;
 };
- 
+
+struct CustAicpuStartInfo {
+    uint32_t    deviceId;
+    uint32_t    hostPid;
+    uint32_t     vfId;
+    const char *groupNameList;
+    uint32_t    groupNameNum;
+    int32_t    *custProcPid;
+    bool       *firstStart;
+};
+
+struct CustAicpuPara {
+    uint32_t paraVersion;
+    union {
+        struct CustAicpuStartInfo paraWithoutSoInfo;
+    } infoPara;
+};
+
+typedef enum {
+    CUST_AICPU_PARA_WITHOUT_SO_INFO,
+    CUST_AICPU_PARA_MAX
+} CustAicpuParaVersion;
+
 /**
 * @ingroup TsdWaitForShutdown
 * @brief Wait for the TSD process to issue the shutdown command
@@ -164,6 +186,23 @@ int32_t CreateOrFindCustPid(const uint32_t deviceId, const uint32_t loadLibNum, 
                             const uint32_t hostPid, const uint32_t vfId, const char * const groupNameList,
                             const uint32_t groupNameNum, int32_t * const custProcPid, bool * const firstStart);
  
+/**
+* @ingroup CreateOrFindCustPidEx
+* @brief inform tsdaemon start aicpu_cust_schedule, Its functionality depends on the paraVersion in para.
+*
+* @par Function
+* inform tsdaemon start aicpu_cust_schedule, Its functionality depends on the paraVersion in para.
+*
+* @param NA
+* @param deviceID[IN] para type #CreatCustFuncPara.
+* @retval 0 Success
+* @retval OtherValues 0 Fail
+*
+* @par Dependency
+* @li libtsdppc.so: Library to which the interface belongs.
+* @li tsd.h: Header file where the interface declaration is located.
+*/
+__attribute__((weak)) int32_t CreateOrFindCustPidEx(struct CustAicpuPara *args);
 /**
 * @ingroup TsdStartupResponse
 * @brief Wait for the TSD process to issue the shutdown command

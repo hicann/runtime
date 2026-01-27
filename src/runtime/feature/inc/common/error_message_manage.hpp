@@ -129,29 +129,29 @@
     RT_ERROR_INVALID_VALUE, RT_INVALID_ARGUMENT_ERROR, \
     "Check param failed, " #PARAM " can not be 0.")
 
-#define ZERO_RETURN_AND_MSG_OUTER(PARAM) \
+#define ZERO_RETURN_AND_MSG_OUTER(PARAM)            \
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((PARAM) == 0U, \
         RT_ERROR_INVALID_VALUE, PARAM, "not equal to 0")
 
-// EE1003错误码专用，可变参数内容为：期望值
+//EE1003错误码专用，可变参数内容为：期望值
 #define COND_RETURN_AND_MSG_OUTER_WITH_PARAM(COND, RTERRCODE, param, ...) \
-    if (unlikely(COND)) {                                                 \
-        RT_LOG_OUTER_MSG_INVALID_PARAM(param, ##__VA_ARGS__);             \
-        return RTERRCODE;                                                 \
+    if (unlikely(COND)) { \
+        RT_LOG_OUTER_MSG_INVALID_PARAM(param, ##__VA_ARGS__); \
+        return RTERRCODE; \
     }
 
-// 除EE1003、EE1001之外的其他外部错误码使用
+//除EE1003、EE1001之外的其他外部错误码使用
 #define COND_RETURN_AND_MSG_OUTER(COND, RTERRCODE, ERRCODE, ...) \
-    if (unlikely(COND)) {                                        \
-        RT_LOG_OUTER_MSG_IMPL(ERRCODE, ##__VA_ARGS__);           \
-        return RTERRCODE;                                        \
+    if (unlikely(COND)) { \
+        RT_LOG_OUTER_MSG_IMPL(ERRCODE, ##__VA_ARGS__); \
+        return RTERRCODE; \
     }
 
-// EE9999 错误码使用
+//EE9999 错误码使用
 #define COND_RETURN_AND_MSG_INNER(COND, RTERRCODE, format, ...) \
-    if (unlikely(COND)) {                                       \
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__);  \
-        return RTERRCODE;                                       \
+    if (unlikely(COND)) { \
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__); \
+        return RTERRCODE; \
     }
 
 #define NULL_PTR_PROC_RETURN_ERROR_MSG_CALL(MODULE_TYPE, PTR, ERR, PROC) \

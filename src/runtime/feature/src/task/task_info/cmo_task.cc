@@ -26,6 +26,7 @@ rtError_t CmoTaskInit(TaskInfo *taskInfo, const rtCmoTaskInfo_t *const cmoTaskIn
 
     if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_CMO)) {
         if (cmoModel == nullptr) {
+            // 1971 CmoTask for prefetch
             CmoTaskInfo *cmoTsk = &taskInfo->u.cmoTask;
             // sqe info copy
             const errno_t error =  memcpy_s(

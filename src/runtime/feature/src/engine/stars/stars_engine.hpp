@@ -74,8 +74,6 @@ public:
     void RecycleThreadDo(void) override;
     rtError_t RecycleSeparatedStmByFinishedId(Stream * const stm, const uint16_t endTaskId, bool isCqeProcess=false) override;
     void RecycleTaskProcessForSeparatedStm(TaskInfo * const recycleTask, const uint32_t devId);
-    rtError_t CreatePrintfThread(void) override;
-    bool isEnablePrintfThread(void) override;
 
 private:
     void GetRecycleHead(const uint16_t taskHead, const uint16_t sqHead,
@@ -136,19 +134,14 @@ private:
     static const std::vector<std::string> StarsCqeErrorDesc_;
 
     void MonitoringRun();
-    void PrintfRun();
     rtError_t CreateRecycleThread(void);
     void RecycleThreadRun(void);
     void DestroyRecycleThread(void);
-    void DestroyPrintfThread(void);
 
     Thread *monitorThread_;
     Thread *recycleThread_;
-    std::unique_ptr<Thread> printfThread_;
     volatile bool recycleThreadRunFlag_ = false;
     volatile bool monitorThreadRunFlag_ = false;
-    std::atomic<bool> printThreadRunFlag_{false};
-    std::mutex printMtx_;
     mmSem_t recycleThreadSem_;
 
 #ifndef CFG_DEV_PLATFORM_PC

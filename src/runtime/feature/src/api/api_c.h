@@ -51,39 +51,39 @@
     COND_RETURN_WITH_EXT_ERRCODE((COND), (ERRCODE), format, ##__VA_ARGS__)
 
 // EE1003使用，可变参数内容为参数期望值
-#define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(COND, RTERRCODE, param, ...) \
-    do {                                                                              \
-        if (unlikely(COND)) {                                                         \
-            RT_LOG_OUTER_MSG_INVALID_PARAM(param, ##__VA_ARGS__);                     \
-            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE);                  \
-            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str());                             \
-            RT_LOG_FLUSH();                                                           \
-            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE));                       \
-        }                                                                             \
+#define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(COND, RTERRCODE, param,...) \
+    do { \
+        if (unlikely(COND)) { \
+            RT_LOG_OUTER_MSG_INVALID_PARAM(param, ##__VA_ARGS__); \
+            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE); \
+            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
+            RT_LOG_FLUSH(); \
+            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE)); \
+        } \
     } while (false)
 
 // 除EE1003之外的其他外部错误码使用
 #define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(COND, RTERRCODE, ERRCODE, ...) \
-    do {                                                                     \
-        if (unlikely(COND)) {                                                \
-            RT_LOG_OUTER_MSG_IMPL(ERRCODE, ##__VA_ARGS__);                   \
-            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE);         \
-            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str());                    \
-            RT_LOG_FLUSH();                                                  \
-            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE));              \
-        }                                                                    \
+    do { \
+        if (unlikely(COND)) { \
+            RT_LOG_OUTER_MSG_IMPL(ERRCODE, ##__VA_ARGS__); \
+            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE); \
+            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
+            RT_LOG_FLUSH(); \
+            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE)); \
+        } \
     } while (false)
 
 // EE9999 使用
 #define COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(COND, RTERRCODE, format, ...) \
-    do {                                                                    \
-        if (unlikely(COND)) {                                               \
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__);          \
-            const std::string errorStr = RT_GET_ERRDESC(RTERRCODE);         \
-            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str());                   \
-            RT_LOG_FLUSH();                                                 \
-            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE));             \
-        }                                                                   \
+    do { \
+        if (unlikely(COND)) { \
+            RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__); \
+            const std::string errorStr = RT_GET_ERRDESC(RTERRCODE); \
+            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
+            RT_LOG_FLUSH(); \
+            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE)); \
+        } \
     } while (false)
 
 #define NULL_RETURN_ERROR_WITH_EXT_ERRCODE(PTR)                                                     \

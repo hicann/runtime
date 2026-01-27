@@ -15,6 +15,8 @@
 #include "config.h"
 #include "adx_dump_hdc_helper.h"
 #include "adx_comm_opt.h"
+#include "ascend_hal.h"
+
 class ADX_DUMP_HDC_HELPER_TEST: public testing::Test {
 protected:
     virtual void SetUp() {}
@@ -62,7 +64,7 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpStart)
     EXPECT_EQ(0, session);
 }
 
-TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData)
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_WriteError)
 {
     IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
     IdeDumpChunk dumpChunk;
@@ -77,6 +79,24 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData)
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     int ret = IdeDumpData(session, &constDumpChunk);
-    EXPECT_EQ(2, ret);
+    EXPECT_EQ(IDE_DAEMON_WRITE_ERROR, ret);
 }
 
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_SessionError)
+{
+    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(1));
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk;
+    unsigned char ch = 'a';
+    dumpChunk.fileName = "/home/test.log";
+    dumpChunk.dataBuf = &ch;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 0;
+    dumpChunk.offset = 0;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG ;
+    const IdeDumpChunk constDumpChunk = dumpChunk;
+    EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
+    EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
+    int ret = IdeDumpData(session, &constDumpChunk);
+    EXPECT_EQ(IDE_DAEMON_HDC_CHANNEL_ERROR, ret);
+}

@@ -21,7 +21,7 @@ void ToCommandBodyForProfilingEnableTask(TaskInfo * const taskInfo, rtCommand_t 
 void ToCommandBodyForProfilingDisableTask(TaskInfo * const taskInfo, rtCommand_t *const command);
 void ToCommandBodyForOnlineProfEnableTask(TaskInfo * const taskInfo, rtCommand_t *const command);
 void ToCommandBodyForOnlineProfDisableTask(TaskInfo * const taskInfo, rtCommand_t *const command);
-void ToCommandBodyForProfTask(TaskInfo * const taskInfo, rtCommand_t *const command);
+void ToCommandBodyForAdcProfTask(TaskInfo * const taskInfo, rtCommand_t *const command);
 void ToCommandBodyForProfilerTraceTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void ToCommandBodyForProfilerTraceExTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void ToCommandBodyForFusionDumpAddrSetTask(TaskInfo* taskInfo, rtCommand_t *const command);

@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include "osal_mem.h"
 
+#ifndef LITE_OS
 struct CpuInfoTable {
     CHAR physicalID[OSAL_CPUINFO_DEFAULT_SIZE];
     CHAR cpuMhz[OSAL_CPUINFO_DEFAULT_SIZE];
@@ -24,6 +25,7 @@ struct CpuInfoTable {
     CHAR cpuThreads[OSAL_CPUINFO_DEFAULT_SIZE];
     CHAR maxSpeed[OSAL_CPUINFO_DEFAULT_SIZE];
 };
+#endif
 
 /*
  * 描述:睡眠指定时间
@@ -32,9 +34,11 @@ struct CpuInfoTable {
  */
 int32_t LinuxSleep(uint32_t milliSecond)
 {
+#ifndef LITE_OS
     if (milliSecond == OSAL_ZERO) {
         return OSAL_EN_INVALID_PARAM;
     }
+#endif
     uint32_t microSecond;
 
     // 防止截断
@@ -58,7 +62,11 @@ int32_t LinuxSleep(uint32_t milliSecond)
  */
 int32_t LinuxGetPid(void)
 {
+#ifdef LITE_OS
+    return 0;
+#else
     return (int32_t)(getpid());
+#endif
 }
 
 /*
@@ -71,6 +79,7 @@ int32_t LinuxGetTid(void)
     return OSAL_EN_ERROR;
 }
 
+#ifndef LITE_OS
 /*
  * 描述:创建socket
  * 参数: sockFamily--协议域
@@ -180,6 +189,7 @@ OsalSsize LinuxSocketRecv(
     return OSAL_EN_ERROR;
 }
 
+#endif
 /*
  * 描述:获取错误码
  * 返回值:error code
@@ -306,11 +316,19 @@ int32_t LinuxCreateTaskWithThreadAttr(OsalThread *threadHandle,
     if (ret != OSAL_EN_OK) {
         return OSAL_EN_ERROR;
     }
+#ifndef LITE_OS
     ret = LinuxLocalSetThreadAttr(&attr, threadAttr);
     if (ret != OSAL_EN_OK) {
         (VOID)pthread_attr_destroy(&attr);
         return ret;
     }
+#else
+    ret = pthread_attr_setstacksize(&attr, OSAL_THREAD_MIN_STACK_SIZE);
+    if (ret != OSAL_EN_OK) {
+        (VOID)pthread_attr_destroy(&attr);
+        return OSAL_EN_ERROR;
+    }
+#endif
     ret = pthread_create(threadHandle, &attr, funcBlock->procFunc, funcBlock->pulArg);
     (VOID)pthread_attr_destroy(&attr);
     if (ret != OSAL_EN_OK) {
@@ -371,6 +389,7 @@ OsalTimespec LinuxGetTickCount(void)
     return rts;
 }
 
+#ifndef LITE_OS
 /*
  * 描述:获取当前工作目录路径
  * 参数:buffer--由用户分配用来存放工作目录路径的缓存
@@ -840,7 +859,9 @@ int32_t LinuxSetCurrentThreadName(const CHAR* name)
     }
     return OSAL_EN_OK;
 }
+#endif
 
+#ifndef LITE_OS
 /*
  * 描述:获取变量optind的值
  * 返回值：获取到optind的值
@@ -935,6 +956,7 @@ CHAR *LinuxDlerror(void)
 {
     return dlerror();
 }
+#endif
 
 /*
  * 描述:分析命令行参数-长参数
@@ -948,7 +970,16 @@ CHAR *LinuxDlerror(void)
 int32_t LinuxGetOptLong(int32_t argc, CHAR *const *argv, const CHAR *opts,
     const OsalStructOption *longOpts, int32_t *longIndex)
 {
+#ifdef LITE_OS
+    (void)argc;
+    (void)argv;
+    (void)opts;
+    (void)longOpts;
+    (void)longIndex;
+    return 0;
+#else
     return getopt_long(argc, argv, opts, longOpts, longIndex);
+#endif
 }
 
 /*
@@ -959,6 +990,15 @@ int32_t LinuxGetOptLong(int32_t argc, CHAR *const *argv, const CHAR *opts,
  */
 int32_t LinuxGetOsVersion(CHAR *versionInfo, int32_t versionLength)
 {
+#ifdef LITE_OS
+    const char* uname = "LiteOS";
+    errno_t ret = memcpy_s(versionInfo, versionLength - 1, uname, strlen(uname));
+    if (ret != EOK) {
+        return OSAL_EN_ERROR;
+    }
+    versionInfo[strlen(uname)] = '\0';
+    return OSAL_EN_OK;
+#else
     if ((versionInfo == NULL) || (versionLength < OSAL_MIN_OS_VERSION_SIZE)) {
         return OSAL_EN_INVALID_PARAM;
     }
@@ -978,8 +1018,10 @@ int32_t LinuxGetOsVersion(CHAR *versionInfo, int32_t versionLength)
         }
         return OSAL_EN_OK;
     }
+#endif
 }
 
+#ifndef LITE_OS
 /*
  * 描述:内部使用, 查找是否存在关键字的信息,buf为 xxx   :   xxx 形式
  * 参数:buf--需要查找的当前行数的字符串
@@ -1165,6 +1207,7 @@ static VOID LocalLookupCpuInfo(struct CpuInfoTable infoTab, OsalCpuDesc *cpuInfo
         }
     }
 }
+#endif
 
 /*
  * 描述:内部使用, 读取/proc/cpuinfo信息中的部分信息
@@ -1174,6 +1217,11 @@ static VOID LocalLookupCpuInfo(struct CpuInfoTable infoTab, OsalCpuDesc *cpuInfo
  */
 static VOID LocalGetCpuProc(OsalCpuDesc *cpuInfo, int32_t *physicalCount)
 {
+#ifdef LITE_OS
+    (void)cpuInfo;
+    (void)physicalCount;
+    return;
+#else
     struct CpuInfoTable cpuInfoTable;
     (VOID)memset_s(&cpuInfoTable, sizeof(cpuInfoTable), 0, sizeof(cpuInfoTable));
     FILE *fp = fopen("/proc/cpuinfo", "r");
@@ -1195,6 +1243,7 @@ static VOID LocalGetCpuProc(OsalCpuDesc *cpuInfo, int32_t *physicalCount)
     }
     LocalGetArmManufacturer(cpuInfoTable.cpuImplememter, cpuInfo);
     return;
+#endif
 }
 
 /*
@@ -1229,6 +1278,15 @@ int32_t LinuxGetCpuInfo(OsalCpuDesc **cpuInfo, int32_t *count)
     }
 
     (VOID)memset_s(pCpuDesc, needSize, 0, needSize); /* unsafe_function_ignore: memset */
+#ifdef LITE_OS
+    const char* uname = "LiteOS";
+    size_t sysMachineLen = strnlen(uname, sizeof(cpuDest.arch));
+    ret = memcpy_s(cpuDest.arch, sizeof(cpuDest.arch), uname, sysMachineLen + 1U);
+    if (ret != EOK) {
+        OsalFree(pCpuDesc);
+        return OSAL_EN_ERROR;
+    }
+#else
     if (uname(&sysInfo) == OSAL_EN_OK) {
         size_t sysMachineLen = strnlen(sysInfo.machine, sizeof(cpuDest.arch));
         if (sysMachineLen == sizeof(cpuDest.arch)) {
@@ -1241,6 +1299,7 @@ int32_t LinuxGetCpuInfo(OsalCpuDesc **cpuInfo, int32_t *count)
             return OSAL_EN_ERROR;
         }
     }
+#endif
     int32_t cpuCnt = physicalCount;
     for (int32_t i = 0; i < cpuCnt; i++) {
         pCpuDesc[i] = cpuDest;

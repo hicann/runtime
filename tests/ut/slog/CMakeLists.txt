@@ -7,9 +7,5 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-if(${BUILD_MOD} STREQUAL "toolchain_log")
+include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 add_subdirectory(ut)
-add_subdirectory(st)
-else()
-add_subdirectory(slog_stub)
-endif()

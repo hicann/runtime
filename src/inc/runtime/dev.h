@@ -107,7 +107,9 @@ typedef enum tagRtDeviceModuleType {
 
 typedef enum tagRtPhyDeviceInfoType {
     RT_PHY_INFO_TYPE_CHIPTYPE = 0,
-    RT_PHY_INFO_TYPE_MASTER_ID
+    RT_PHY_INFO_TYPE_MASTER_ID,
+    RT_PHY_INFO_TYPE_PHY_CHIP_ID,
+    RT_PHY_INFO_TYPE_PHY_DIE_ID
 } rtPhyDeviceInfoType_t;
 
 typedef enum tagRtMemRequestFeature {

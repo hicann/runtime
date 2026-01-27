@@ -268,12 +268,14 @@ namespace acl {
         AclrtIpcOpenEventHandle,
         AclrtMemRetainAllocationHandle,
         AclrtMemGetAllocationPropertiesFromHandle,
+        AclrtHostMemMapCapabilities,
         AclrtStreamGetPriority,
         AclrtStreamGetFlags,
         AclrtGetMemUsageInfo,
         AclrtHostRegisterV2,
         AclrtHostGetDevicePointer,
-        AclrtHostMemMapCapabilities,
+        AclrtReserveMemAddressNoUCMemory,
+        AclrtMemGetAddressRange,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

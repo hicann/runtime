@@ -145,6 +145,8 @@ bool ProfParamsAdapter::CheckJsonConfig(const std::string &switchName, const Nan
         return CheckHostSysUsageValid(val.GetValue<std::string>());
     } else if (switchName == "sys_mem_serviceflow") {
         return ParamValidation::instance()->CheckMemServiceflowValid(switchName, val.GetValue<std::string>());
+    } else if (switchName == "task_block") {
+        return ParamValidation::instance()->CheckTaskBlockValid(switchName, val.GetValue<std::string>());
     } else {
         return ParamValidation::instance()->CheckParamEmptyInvalid(switchName, val.GetValue<std::string>());
     }

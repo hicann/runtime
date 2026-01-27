@@ -59,6 +59,11 @@ struct LogicCqWaitInfo {
     uint32_t taskId;    // for v2
 };
 
+struct AsyncSqeUpdateInfo {
+    uint32_t sqId;
+    uint32_t sqe_pos;
+};
+
 struct AsyncDmaWqeInputInfo {
     void *src;
     uint64_t size;
@@ -67,7 +72,7 @@ struct AsyncDmaWqeInputInfo {
     uint32_t cpyType;
     union {
         void *destPtr;
-        uint32_t sqe_pos;
+        struct AsyncSqeUpdateInfo info;   // sqe update场景使用
     };
 };
 
@@ -324,8 +329,8 @@ public:
     virtual rtError_t LogicCqReportV2(const LogicCqWaitInfo &waitInfo, uint8_t *report, uint32_t reportCnt,
         uint32_t &realCnt) = 0;
     virtual rtError_t CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInfo &input, AsyncDmaWqeOutputInfo *output,
-                                        bool isUbMode = true) = 0;
-    virtual rtError_t DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestroyInfo *para, bool isUbMode = true) = 0;
+                                        bool isUbMode, bool isSqeUpdate) = 0;
+    virtual rtError_t DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestroyInfo *destroyPara, bool isUbMode = true) = 0;
     virtual rtError_t WriteNotifyRecord(const uint32_t deviceId, const uint32_t tsId, const uint32_t notifyId) = 0;
     virtual rtError_t DebugCqReport(const uint32_t devId, const uint32_t tsId, const uint32_t cqId,
                                     uint8_t *const report, uint32_t &realCnt) = 0;
@@ -391,8 +396,7 @@ public:
                                  const int32_t infoType, int64_t * const val) = 0;
 
     virtual rtError_t GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, uint64_t &addr) = 0;
-    virtual rtError_t GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version,
-        uint32_t &isSupportHcomcpu) = 0;
+    virtual rtError_t GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version) = 0;
 
     // get phy device info
     virtual rtError_t GetPhyDevInfo(const uint32_t phyId, const int32_t moduleType,
@@ -578,6 +582,13 @@ public:
     // dqs
     virtual rtError_t GetDqsQueInfo(const uint32_t devId, const uint32_t qid, DqsQueueInfo *queInfo) = 0;
     virtual rtError_t GetDqsMbufPoolInfo(const uint32_t poolId, DqsPoolInfo *dqsPoolInfo) = 0;
+
+    virtual rtError_t GetCentreNotify(int32_t index, int32_t *value) = 0;
+    virtual rtError_t GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+        struct halTsegInfo *tsegInfo) = 0;
+    virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) = 0;
+    virtual rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                                     int64_t &chipId, int64_t &dieId) = 0;
     uint32_t vfId_{MAX_UINT32_NUM};
 protected:
     // CallBack
@@ -599,6 +610,7 @@ enum driverType_t {
     NPU_DRIVER,
     STUB_DRIVER,
     CPU_DRIVER,
+    XPU_DRIVER,
     MAX_DRIVER_NUM,
 };
 class DriverFactory {
@@ -615,6 +627,8 @@ private:
 
 rtError_t GetConnectUbFlagFromDrv(bool &connectUbFlag);
 rtError_t InitDrvEventThread(const uint32_t deviceId);
+rtError_t GetDrvSentinelMode(void);
+bool IsOfflineSupportMemType(const rtMemType_t &type);
 }  // namespace runtime
 }  // namespace cce
 

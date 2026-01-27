@@ -66,6 +66,7 @@ void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t * const comman
     RT_LOG(RT_LOG_INFO, "LabelSetTask stream_id:%d task_id:%u", stm->Id_(), static_cast<uint32_t>(taskInfo->id));
 }
 
+// CHIP_910_B_93/CHIP_MINI_V3 need construct labelInfo in runtime
 // The format : rtsq_id=R1[10:0], head=R1[31:16].
 // stSq_id    : the ID of sq which label belong to
 // head       : The position of label in sq
@@ -77,7 +78,7 @@ void SetLabelInfoForLabelSetTask(TaskInfo* taskInfo, const uint32_t pos)
     const uint32_t sqId = stm->GetSqId();
     uint16_t * const execTimesSvm = stm->GetExecutedTimesSvm();
     const uint64_t streamExecTimesAddr = RtPtrToValue((execTimesSvm));
-    uint32_t labelInfo[RT_CHIP_910_B_93_LABEL_INFO_SIZE/sizeof(uint32_t)];
+    uint32_t labelInfo[RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE/sizeof(uint32_t)];
     // labelInfo format: rtsq_id=R1[10:0], head=R1[31:16]
     labelInfo[0U] = (sqId & 0x7FFU) + (pos << 16U);
     labelInfo[2U] = static_cast<uint32_t>(streamExecTimesAddr & 0x00000000FFFFFFFFU);
@@ -88,7 +89,7 @@ void SetLabelInfoForLabelSetTask(TaskInfo* taskInfo, const uint32_t pos)
         RtPtrToValue((devDstAddr)));
 
     const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemCopySync(devDstAddr,
-        RT_CHIP_910_B_93_LABEL_INFO_SIZE, static_cast<void *>(labelInfo), RT_CHIP_910_B_93_LABEL_INFO_SIZE,
+        RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE, static_cast<void *>(labelInfo), RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE,
         RT_MEMCPY_HOST_TO_DEVICE);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR,

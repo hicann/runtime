@@ -364,9 +364,9 @@ RTS_API rtError_t rtUbDevQueryInfo(rtUbDevQueryCmd cmd, void *devInfo);
 
 /**
  * @ingroup
- * @brief map resource va addr
+ * @brief map resource va address
  * @param [in] resInfo resource info
- * @param [out] addrInfo resource addr info
+ * @param [out] addrInfo resource address info
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -374,9 +374,9 @@ RTS_API rtError_t rtGetDevResAddress(rtDevResInfo * const resInfo, rtDevResAddrI
 
 /**
  * @ingroup
- * @brief unmap resource va addr
+ * @brief unmap resource va address
  * @param [in] resInfo resource info
- * @param [out] resAddress resource addr
+ * @param [out] resAddress resource address
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -522,7 +522,7 @@ RTS_API rtError_t rtsSetDeviceTaskAbortCallback(const char_t *regName, rtsDevice
  * @param [out] count Currently count=1
  * @return RT_ERROR_NONE for ok
  */
-RTS_API uint32_t rtGetXpuDevCount(rtXpuDevType devType);
+RTS_API rtError_t rtGetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount);
 
 /**
  * @ingroup xpu dev

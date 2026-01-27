@@ -32,6 +32,7 @@ set(ascendDumpSrcList
     ${ADUMP_ADUMP_DIR}/exception/dump_operator.cpp
     ${ADUMP_ADUMP_DIR}/exception/dump_tensor_plugin.cpp
     ${ADUMP_ADUMP_DIR}/exception/exception_dumper.cpp
+    ${ADUMP_ADUMP_DIR}/exception/exception_dumper_platform.cpp
     ${ADUMP_ADUMP_DIR}/exception/exception_info_common.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_info_collector.cpp
     ${ADUMP_ADUMP_DIR}/exception/register_config/register_config.cpp
@@ -75,8 +76,6 @@ set(ascendDumpHeaderList
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/
     ${LIBC_SEC_HEADER}
     ${PROJECT_TOP_DIR}/pkg_inc
-    ${ADUMP_DEPENDENCE_INC}/metadef/
-    ${ADUMP_DEPENDENCE_INC}/metadef/external
     ${ADUMP_DEPENDENCE_INC}/aicpu/
 )
 

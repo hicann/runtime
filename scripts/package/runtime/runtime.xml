@@ -66,6 +66,7 @@
         <block name="EngineeringCommon"/>
         <block name="EngineeringFiles"/>
         <block name="SetEnvCommon"/>
+        <block name="DevlibCommon"/>
         <block name="RuntimeSo"/>
         <block name="RuntimeInc"/>
     </block_info>

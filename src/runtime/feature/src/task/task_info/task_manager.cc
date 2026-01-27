@@ -56,7 +56,7 @@ static PfnWaitAsyncCpCompleteFunc g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_RESERVE
 PfnPrintErrorInfo g_printErrorInfoFunc[TS_TASK_TYPE_RESERVED] = {};
 static PfnTaskSetResult g_setResultFunc[TS_TASK_TYPE_RESERVED] = {};
 PfnTaskSetStarsResult g_setStarsResultFunc[TS_TASK_TYPE_RESERVED] = {};
-static const char_t *g_starsv2SqeTypeStr[] = {
+static const char_t *g_davidSqeTypeStr[] = {
     "aic",
     "aiv",
     "fusion",
@@ -160,9 +160,9 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL"},
     {TS_TASK_TYPE_KERNEL_MIX_AIC, "KERNEL_MIX_AIC"},
     {TS_TASK_TYPE_KERNEL_MIX_AIV, "KERNEL_MIX_AIV"},
-    {TS_TASK_TYPE_STARSV2_EVENT_RECORD, "EVENT_RECORD"},
-    {TS_TASK_TYPE_STARSV2_EVENT_WAIT, "EVENT_WAIT"},
-    {TS_TASK_TYPE_STARSV2_EVENT_RESET, "EVENT_RESET"},
+    {TS_TASK_TYPE_DAVID_EVENT_RECORD, "EVENT_RECORD"},
+    {TS_TASK_TYPE_DAVID_EVENT_WAIT, "EVENT_WAIT"},
+    {TS_TASK_TYPE_DAVID_EVENT_RESET, "EVENT_RESET"},
     {TS_TASK_TYPE_MEM_WRITE_VALUE, "MEM_WRITE_VALUE"},
     {TS_TASK_TYPE_MEM_WAIT_VALUE, "MEM_WAIT_VALUE"},
     {TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY, "RDMA_PI_VALUE_MODIFY"},
@@ -226,15 +226,15 @@ static const char_t *g_sqeTypeStr[] = {
 };
 
 #if F_DESC("common func")
-const char_t* GetStarsV2SqeDescByType(const uint8_t sqeType)
+const char_t* GetDavidSqeDescByType(const uint8_t sqeType)
 {
-    const uint8_t arraySize = static_cast<uint8_t>(sizeof(g_starsv2SqeTypeStr) / sizeof(g_starsv2SqeTypeStr[0]));
+    const uint8_t arraySize = static_cast<uint8_t>(sizeof(g_davidSqeTypeStr) / sizeof(g_davidSqeTypeStr[0]));
 
     if (sqeType >= arraySize) {
         return "unknown";
     }
 
-    return g_starsv2SqeTypeStr[sqeType];
+    return g_davidSqeTypeStr[sqeType];
 }
 
 const char_t* GetTaskDescByType(const uint8_t taskType)
@@ -653,7 +653,7 @@ void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
         workTask = GetTaskInfo(dev, streamId, taskId);
         if (workTask != nullptr) {
-            exceptionTaskId = workTask->dfxId;
+            exceptionTaskId = workTask->taskSn;
         }
     } else {
         workTask = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), static_cast<uint16_t>(taskId));
@@ -803,10 +803,10 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos)
             if (eventRecordInfo->event != nullptr) {
                 eventRecordInfo->event->SetRecordPos(static_cast<uint16_t>(pos));
             }
-        } else if (taskInfo->type == TS_TASK_TYPE_STARSV2_EVENT_RECORD) {
-            StarsV2EventRecordTaskInfo *starsv2EventRecordInfo = &(taskInfo->u.starsv2EventRecordTaskInfo);
-            if (starsv2EventRecordInfo->event != nullptr) {
-                starsv2EventRecordInfo->event->SetRecordPos(static_cast<uint16_t>(pos));
+        } else if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
+            DavidEventRecordTaskInfo *davidEventRecordInfo = &(taskInfo->u.davidEventRecordTaskInfo);
+            if (davidEventRecordInfo->event != nullptr) {
+                davidEventRecordInfo->event->SetRecordPos(static_cast<uint16_t>(pos));
             }
         } else if ((taskInfo->type == TS_TASK_TYPE_NOTIFY_WAIT) && (taskInfo->u.notifywaitTask.isEndGraphNotify)) {
             (void)taskInfo->stream->Device_()->StoreEndGraphNotifyInfo(taskInfo->stream, taskInfo->u.notifywaitTask.captureModel, pos);
@@ -1132,7 +1132,7 @@ void RegTaskToCommandFunc(void)
     g_toCommandFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ToCommandBodyForProfilingDisableTask;
     g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ToCommandBodyForOnlineProfEnableTask;
     g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ToCommandBodyForOnlineProfDisableTask;
-    g_toCommandFunc[TS_TASK_TYPE_ADCPROF] = &ToCommandBodyForProfTask;
+    g_toCommandFunc[TS_TASK_TYPE_ADCPROF] = &ToCommandBodyForAdcProfTask;
     g_toCommandFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ToCommandBodyForPCTraceTask;
     g_toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ToCommandBodyForModelMaintainceTask;
     g_toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ToCommandBodyForModelExecuteTask;

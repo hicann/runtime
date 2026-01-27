@@ -183,9 +183,9 @@ public:
     rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in) override;
     rtError_t HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr) override;
     rtError_t HostRegisterV2(void *ptr, uint64_t size, uint32_t flag) override;
-    rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) override;
     rtError_t HostUnregister(void *ptr) override;
     rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) override;
+    rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) override;
     rtError_t ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t ManagedMemFree(const void * const ptr) override;
@@ -265,6 +265,7 @@ public:
     rtError_t MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t *cfg) override;
     rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle) override;
     rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) override;
+    rtError_t MemGetAddressRange(void *ptr, void **pbase, size_t *psize) override;
     // new memory api
     rtError_t DevMalloc(void ** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, const rtMallocConfig_t * const cfg) override;
     rtError_t MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) override;
@@ -346,8 +347,9 @@ public:
     rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId) override;
     rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t * const userDevId) override;
     rtError_t DeviceResourceClean(int32_t devId) override;
-    rtError_t SetXpuDevice(rtXpuDevType devType, const uint32_t devId) override;
-    rtError_t ResetXpuDevice(rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) override;
     rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) override;
 
     // context
@@ -656,6 +658,7 @@ public:
     rtError_t ShmemSetPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num) override;
     rtError_t DevVA2PA(uint64_t devAddr, uint64_t len, Stream *stm, bool isAsync) override;
     rtError_t StreamClear(Stream * const stm, rtClearStep_t step) override;
+    rtError_t StreamStop(Stream * const stm) override;
     rtError_t StreamAbort(Stream * const stm) override;
     rtError_t DebugSetDumpMode(const uint64_t mode) override;
     rtError_t DebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo) override;
@@ -677,7 +680,7 @@ public:
     // OVER UB API
     rtError_t UbDbSend(rtUbDbInfo_t * const dbInfo, Stream * const stm) override;
     rtError_t UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm) override;
-    rtError_t StarsV2GetGroupAccNum(const int32_t moduleType, const int32_t infoType,
+    rtError_t DavidGetGroupAccNum(const int32_t moduleType, const int32_t infoType,
         int64_t * const val);
     rtError_t StreamTaskAbort(Stream * const stm) override;
     rtError_t StreamRecover(Stream * const stm) override;
@@ -707,9 +710,14 @@ public:
 
     // aclgraph caching shape for profiling
     rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize) override;
+
+    rtError_t BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData) override;
+    rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle) override;
+
 protected:
     virtual rtError_t GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val);
-    
+    virtual rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback);
+
 private:
     rtError_t GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val);
 
@@ -719,10 +727,11 @@ private:
     rtError_t GetBlockingOpIsSupport(const int32_t deviceId, int32_t * const val) const;
     rtError_t GetFftsWorkMode(int32_t * const val);
     rtError_t NewContext(const uint32_t deviceId, const uint32_t tsId, Context ** const ctx) const;
+    rtError_t NewXpuDevice(const int32_t devId) const;
+
     rtError_t SyncGetDevMsg(Device * const dev, const void * const devMemAddr, const uint32_t devMemSize,
                             const rtGetDevMsgType_t getDevMsgType) const;
     rtError_t GetDevErrMsg(const rtGetMsgCallback callback);
-    rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback);
     static bool IsDevSupportGetDevMsg(const Device * const dev);
     void DumpTimeStampPart1() const;
     void DumpTimeStampPart2() const;

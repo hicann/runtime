@@ -10,7 +10,7 @@
 #ifndef TS_TSCH_DEFINES_H
 #define TS_TSCH_DEFINES_H
 
-#ifndef DAVINCI_ADC_VOS
+#ifndef DAVINCI_MDC_VOS
 #if defined(__COMPILER_HUAWEILITEOS__)
 #include <los_typedef.h>
 #elif defined(__KERNEL__)
@@ -31,6 +31,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+#if defined(WIN32) && !defined(__cplusplus)
+
+#define inline __inline
+
+#endif
 
 #ifndef char_t
 typedef char char_t;
@@ -126,13 +132,13 @@ typedef char char_t;
 #define AIC_SYS_CNT_1_CYCLE     0x1U
 #define AIC_SYS_CNT_OFFSET      16U
 
-#ifdef DAVINCI_ADC_LITE
+#ifdef DAVINCI_MDC_LITE
 #define AIC_SYS_CNT_GROUP       0x20U   // 4 group * 8 cycle
 #define AIC_SYS_CNT_CYCLE       0x8U    // 8 cycle
 #else
 #define AIC_SYS_CNT_GROUP       0xA0U   // 10 group * 16 cycle
 #define AIC_SYS_CNT_CYCLE       0x10U   // 16 cycle
-#endif // DAVINCI_ADC_LITE
+#endif // DAVINCI_MDC_LITE
 
 typedef struct tag_stream_proc_info {
     uint16_t last_rcv_type;
@@ -330,7 +336,7 @@ enum tag_ts_stream_state {
     STREAM_STATE_ACTIVE = 4,
     STREAM_STATE_AICPU_ACTIVE = 5,
     STREAM_STATE_SCHEDULE = 6,
-    STREAM_STATE_DEACTIVE = 7,  
+    STREAM_STATE_DEACTIVE = 7,  // ignore 1910, reset hwts sq
     STREAM_STATE_UNBIND_MODEL = 8,
     STREAM_STATE_DESTROY = 9,   // get maintaince task, and clean data
     STREAM_STATE_RECYCLE = 10,    // send driver for recycling
@@ -451,18 +457,18 @@ enum ts_app_abort_sts_query_choice  {
     APP_ABORT_STS_QUERY_INVALID,
 };
 
-enum STARSV2_ABORT_STAUTS {
-    STARSV2_ABORT_INIT = 0x1U,
-    STARSV2_ABORT_KILL_FINISH,
-    STARSV2_ABORT_TERMINATE_FAIL,
-    STARSV2_ABORT_STOP_FINISH,
-    STARSV2_ABORT_SUBACC_TERMINATE_FINISH,
-    STARSV2_ABORT_TERMINATE_SUCC,
-    STARSV2_ABORT_RECOVER_SUCC,
-    STARSV2_ABORT_MODIFY_SWAPBUFFER_INIT,
-    STARSV2_ABORT_MODIFY_SWAPBUFFER_KILL_FINISH,
-    STARSV2_ABORT_MODIFY_SWAPBUFFER_FINISH,
-    STARSV2_ABORT_STATUS_INVALID,
+enum DAVID_ABORT_STAUTS {
+    DAVID_ABORT_INIT = 0x1U,
+    DAVID_ABORT_KILL_FINISH,
+    DAVID_ABORT_TERMINATE_FAIL,
+    DAVID_ABORT_STOP_FINISH,
+    DAVID_ABORT_SUBACC_TERMINATE_FINISH,
+    DAVID_ABORT_TERMINATE_SUCC,
+    DAVID_ABORT_RECOVER_SUCC,
+    DAVID_ABORT_MODIFY_SWAPBUFFER_INIT,
+    DAVID_ABORT_MODIFY_SWAPBUFFER_KILL_FINISH,
+    DAVID_ABORT_MODIFY_SWAPBUFFER_FINISH,
+    DAVID_ABORT_STATUS_INVALID,
 };
 
 enum RECOVER_STS_QUERY_CHOICE {
@@ -485,6 +491,7 @@ enum OPERATION_TYPE {
     OP_RECOVER_APP,
     OP_QUERY_RECOVER_STATUS,
     OP_QUERY_OP_EXEC_TIMEOUT_INTERVAL,
+    OP_STOP_STREAM,
     OP_INVALID
 };
 #pragma pack(push)
@@ -525,8 +532,7 @@ typedef struct {
 
 typedef struct {
     volatile uint32_t tsfw_version;
-    volatile uint32_t is_support_hcomcpu;
-    volatile uint32_t resv[8];
+    volatile uint32_t resv[9];
 } ts_query_tsfw_ack_info_t;
 
 typedef struct {

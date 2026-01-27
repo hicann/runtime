@@ -92,7 +92,7 @@ macro(runtime_platform_910B_obj target_name)
             -fno-strict-aliasing
             -Werror
             -Wextra
-            -Wfloat-equal
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
 
     target_link_libraries(runtime_platform_910B PRIVATE
@@ -122,7 +122,7 @@ macro(runtime_platform_kirin_obj target_name)
             -fno-strict-aliasing
             -Werror
             -Wextra
-            -Wfloat-equal
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
 
     target_link_libraries(runtime_platform_kirin PRIVATE
@@ -133,4 +133,75 @@ macro(runtime_platform_kirin_obj target_name)
         $<BUILD_INTERFACE:npu_runtime_headers>
         $<BUILD_INTERFACE:atrace_headers>
     )
+endmacro()
+
+macro(runtime_platform_others_obj target_name)
+    add_library(runtime_platform_others OBJECT
+        platform/610_lite/dev_info_reg.cc
+        platform/910_95/dev_info_reg.cc
+        platform/as31xm1/dev_info_reg.cc
+        platform/bs9sx1a/dev_info_reg.cc
+        platform/cloud/dev_info_reg.cc
+        platform/dc/dev_info_reg.cc
+        platform/mc62cm12a/dev_info_reg.cc
+        platform/adc/dev_info_reg.cc
+        platform/mini/dev_info_reg.cc
+        platform/mini_v3/dev_info_reg.cc
+        platform/nano/dev_info_reg.cc
+        platform/tiny/dev_info_reg.cc
+        platform/910_96/dev_info_reg.cc
+        platform/xpu/dev_info_reg.cc
+    )
+
+    target_include_directories(runtime_platform_others PRIVATE
+        ${RUNTIME_INC_DIR_COMMON_PLATFORM}
+    )
+
+    target_compile_options(runtime_platform_others PRIVATE
+            -O3
+            -fvisibility=hidden
+            -fno-common
+            -fno-strict-aliasing
+            -Werror
+            -Wextra
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
+    )
+
+    target_link_libraries(runtime_platform_others PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:mmpa_headers>
+        $<BUILD_INTERFACE:msprof_headers>
+        $<BUILD_INTERFACE:slog_headers>
+        $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:atrace_headers>
+    )
+endmacro()
+
+macro(runtime_platform_tiny_obj target_name)
+add_library(runtime_platform_tiny OBJECT
+    platform/tiny/dev_info_reg.cc
+)
+
+target_include_directories(runtime_platform_tiny PRIVATE
+    ${RUNTIME_INC_DIR_COMMON_PLATFORM}
+)
+
+target_compile_options(runtime_platform_tiny PRIVATE
+        -O3
+        -fvisibility=hidden
+        -fno-common
+        -fno-strict-aliasing
+        -Werror
+        -Wextra
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
+)
+
+target_link_libraries(runtime_platform_tiny PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:msprof_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:atrace_headers>
+)
 endmacro()

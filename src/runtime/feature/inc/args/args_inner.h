@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 typedef struct {
-    rtEngineType engineType;
+    rtEngineType engineType; // only use for CHIP_DC kernel launch [vector enable]
     uint64_t timeout; // unit: us
     bool blockTaskPrefetch; // only use for kernel launch [tiling key sink]
     uint8_t rsv[5];

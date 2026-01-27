@@ -19,6 +19,7 @@
 #include "adump_dsmi.h"
 #include "dump_tensor_plugin.h"
 #include "hccl_mc2_define.h"
+#include "proto/dump_task.pb.h"
 
 namespace Adx {
 namespace {

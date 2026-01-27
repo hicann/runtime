@@ -72,6 +72,7 @@ add_subdirectory(adump_base)
 set(ADUMP_UT_SUB_TARGETS
     adx_hdc_dump_utest
     adx_soc_dump_utest
+    # adump_base_utest
 )
 
 add_custom_target(adump_ut DEPENDS ${ADUMP_UT_SUB_TARGETS})

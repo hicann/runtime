@@ -12,7 +12,7 @@
 #include "rts/rts_device.h"
 #include "rts/rts_stream.h"
 #include "rts/rts_kernel.h"
-#include "common/aicpu_task_struct.h"
+#include "aicpu_sched/common/aicpu_task_struct.h"
 #include "dump_datatype.h"
 #include "dump_memory.h"
 #include "log/adx_log.h"

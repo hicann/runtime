@@ -125,7 +125,7 @@ int32_t ProfNetDevStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         static_cast<uint64_t>(collectionJobCfg_->comParams->params->io_sampling_interval) * MS_TO_NS;
 
     std::vector<std::string> profDataFilePathV{collectionJobCfg_->comParams->tmpResultDir,
-                                            "data", PROF_NETDEV_STATS_FILE};
+                                               "data", PROF_NETDEV_STATS_FILE};
     collectionJobCfg_->jobParams.dataPath = analysis::dvvp::common::utils::Utils::JoinPath(profDataFilePathV);
 
     MSPROF_LOGI("Netdev stats profiling enabled, sample interval: %llu ns", sampleIntervalNs_);

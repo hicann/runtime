@@ -120,9 +120,10 @@ rtError_t StarsEngine::Start()
 
     COND_RETURN_ERROR_MSG_INNER(CreateMonitorThread() != RT_ERROR_NONE, RT_ERROR_MEMORY_ALLOCATION,
                                 "stars create monitor thread failed.");
-
+#ifndef CFG_DEV_PLATFORM_PC
     COND_RETURN_ERROR_MSG_INNER(Runtime::Instance()->CreateReportRasThread() != RT_ERROR_NONE, RT_ERROR_MEMORY_ALLOCATION,
                                 "stars create report ras thread failed.");
+#endif
 
     Device * const dev = GetDevice();
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_RECYCLE_THREAD)) {
@@ -199,16 +200,16 @@ void StarsEngine::DestroyRecycleThread(void)
 
 void StarsEngine::RecycleThreadRun(void)
 {
-    RT_LOG(RT_LOG_INFO, "RecycleThreadRun thread enter.");
+    RT_LOG(RT_LOG_INFO, "RecycleThreadRun thread start.");
     while (recycleThreadRunFlag_) {
         (void)mmSemWait(&recycleThreadSem_);
-        if (!device_->IsStarsV2Platform()) {
-            device_->SetIsDoingRecycling(true);
-            RecycleThreadDo();
-            device_->SetIsDoingRecycling(false);
+        device_->SetIsDoingRecycling(true);
+        if (device_->IsDavidPlatform()) {
+            RecycleThreadDoForStarsV2(device_);
         } else {
-            Engine::RecycleThreadDo();
+            RecycleThreadDo();
         }
+        device_->SetIsDoingRecycling(false);
     }
     RT_LOG(RT_LOG_INFO, "RecycleThreadRun thread leave.");
     return;
@@ -608,7 +609,11 @@ rtError_t StarsEngine::MonitorTaskReclaim(uint16_t errorStreamId)
     }
     if (stm->StreamSyncTryLock(30U)) { // 30 wait for lock 300s
         if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-            (void)TaskReclaimByStream(stm.get(), false);
+            if (stm->IsSeparateSendAndRecycle()) {
+                stm->Device_()->WakeUpRecycleThread();
+            } else {
+                (void)TaskReclaimByStream(stm.get(), false);
+            }
         } else {
             (void)TaskReclaimByStreamId(static_cast<uint32_t>(errorStreamId), false, taskId);
         }
@@ -1134,7 +1139,7 @@ rtError_t StarsEngine::SyncTask(Stream * const stm, const uint32_t taskId, const
 {
     if (stm->IsSeparateSendAndRecycle()) {
         rtError_t error = RT_ERROR_NONE;
-        error = stm->SynchronizeImpl(static_cast<uint16_t>(taskId), static_cast<uint16_t>(taskId), timeout);
+        error = stm->SynchronizeImpl(taskId, static_cast<uint16_t>(taskId), timeout);
         COND_PROC((error == RT_ERROR_STREAM_ABORT), return RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL);
         COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return RT_ERROR_DEVICE_ABORT_SYNC_TASK_FAIL);
         // ctx error, task already submit, return success.
@@ -1755,6 +1760,7 @@ void StarsEngine::MonitorForWatchDog(Device * const dev)
         Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_ABNORMAL);
         return;
     }
+    // 2. 1971 Monitor taskReclaim
     uint32_t cycleTimes = 10000U;    // Number of cyclic waiting for recycle cqe
     while ((cycleTimes != 0U) && Runtime::Instance()->GetThreadGuard()->GetMonitorStatus()) {
         ret = MonitorTaskReclaim(errorStreamId);
@@ -1769,57 +1775,6 @@ void StarsEngine::MonitorEndGraphNotify(Device * const dev) const
 {
     RawDevice* const rawDev = dynamic_cast<RawDevice *>(dev);
     rawDev->PollEndGraphNotifyInfo();
-}
-
-void StarsEngine::DestroyPrintfThread(void)
-{
-    const std::lock_guard<std::mutex> lk(printMtx_);
-    if (printfThread_ != nullptr) {
-        printThreadRunFlag_ = false;
-        printfThread_->Join();
-        RT_LOG(RT_LOG_EVENT, "Join printf thread OK.");
-        printfThread_.reset(nullptr);
-    }
-    return;
-}
-
-rtError_t StarsEngine::CreatePrintfThread(void)
-{
-    const std::lock_guard<std::mutex> lk(printMtx_);
-    // 每个device仅创建一个线程用于printf
-    if (printfThread_ != nullptr) {
-        return RT_ERROR_NONE;
-    }
- 
-    void * const printf = ValueToPtr(THREAD_PRINTF);
-    constexpr const char_t* threadName = "PRINTF";
-    printfThread_.reset(OsalFactory::CreateThread(threadName, this, printf));
-    NULL_PTR_RETURN(printfThread_, RT_ERROR_MEMORY_ALLOCATION);
-    printThreadRunFlag_ = true;
-    const int32_t error = printfThread_->Start();
-    if (error != EN_OK) {
-        printThreadRunFlag_ = false;
-        printfThread_.reset(nullptr);
-        return RT_ERROR_ENGINE_THREAD;
-    }
-    return RT_ERROR_NONE;
-}
-
-bool StarsEngine::isEnablePrintfThread(void)
-{
-    return (printfThread_ != nullptr);
-}
-
-void StarsEngine::PrintfRun()
-{
-    Device * const dev = GetDevice();
-    NULL_PTR_RETURN_DIRECTLY(dev);
-    Context *ctx = Runtime::Instance()->GetPriCtxByDeviceId(dev->Id_(), 0U);
-    InnerThreadLocalContainer::SetCurCtx(ctx);
-    while (printThreadRunFlag_ && !Runtime::Instance()->IsExiting()) {
-        (void)mmSleep(200U);
-        (void)dev->ParsePrintInfo();
-    }
 }
 
 void StarsEngine::MonitoringRun()
@@ -1900,12 +1855,16 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo * const recycleTask
 {
     COND_PROC(((recycleTask == nullptr)), return;);
     Engine::ProcessProfAndObserver(recycleTask, devId);
+    Stream *stm = recycleTask->stream;
+    if (stm->GetArgHandle() != nullptr) {
+        (void)device_->ArgLoader_()->Release(stm->GetArgHandle());
+        stm->SetArgHandle(nullptr);
+    }
     Complete(recycleTask, devId);
     pendingNum_.Sub(1U);
     if (recycleTask->bindFlag != 0U) {
         return;
     }
-    Stream *stm = recycleTask->stream;
     const uint32_t recycleTaskSqeNum = GetSendSqeNum(recycleTask);
     const uint32_t recycleTaskPos = recycleTask->pos;
     uint16_t recycleTaskId = recycleTask->id;
@@ -1916,8 +1875,8 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo * const recycleTask
     (void)stm->latestConcernedTaskId.CompareExchange(excepted, MAX_UINT16_NUM);
     stm->SetRecycleEndTaskId(recycleTaskId);
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, recycle task_id=%hu, sqHead=%u, sqTail=%u, sqeNum=%u, resHead=%hu, resTail=%hu.",
-                 stm->Device_()->Id_(), stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
-                 stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_);
+           stm->Device_()->Id_(), stm->Id_(), recycleTaskId, stm->GetTaskPosHead(), stm->GetTaskPosTail(), recycleTaskSqeNum,
+           stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_);
     return;
 }
 
@@ -1961,7 +1920,7 @@ rtError_t StarsEngine::RecycleSeparatedStmByFinishedId(Stream * const stm, const
 rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
 {
     uint16_t sqHead = 0U;
-    uint16_t endTaskId = MAX_UINT16_NUM;
+    uint32_t endTaskId = MAX_UINT16_NUM;
     rtError_t error = device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), stm->GetSqId(), sqHead);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
                                 static_cast<uint32_t>(error));
@@ -1976,7 +1935,7 @@ rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream * const stm)
     error = stm->GetFinishedTaskIdBySqHead(sqHead, endTaskId);
     COND_PROC(((error != RT_ERROR_NONE) || (endTaskId == MAX_UINT16_NUM)), return RT_ERROR_NONE);
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, sqHead=%d, posHead=%u, posTail=%u, finishedTaskId=%d",
-                 stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
+           stm->Device_()->Id_(), stm->Id_(), sqHead, stm->GetTaskPosHead(), stm->GetTaskPosTail(), endTaskId);
     (void)RecycleSeparatedStmByFinishedId(stm, endTaskId);
     return RT_ERROR_NONE;
 }

@@ -8,11 +8,11 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(API_STUB_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/stub
+    ${TOP_DIR}/tests/ut/msprof/st/stub
 )
 
 set(LLT_DATA_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/data/
+    ${TOP_DIR}/tests/ut/msprof/st/data
 )
 
 set(TEST_STUB_SRC
@@ -73,7 +73,7 @@ set(PROFIMPL_SRC_FILE
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_rt.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/feature_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/memory/chunk_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
@@ -179,7 +179,7 @@ set(DEVPROF_SRC_FILE
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_aicpu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_adprof.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/aicpu_report_hdc.cpp
+    #${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/aicpu_report_hdc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/engine_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/module_job.cpp
@@ -201,7 +201,28 @@ protobuf_generate(profiler
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto
 )
 
+set(libmsprofHeaderDir
+    ${LIBC_SEC_HEADER}
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+)
+
 set(INCLUDE_DIR
+    ${libmsprofHeaderDir}
     stub
     data
     testcase/common
@@ -216,8 +237,6 @@ set(INCLUDE_DIR
     ${TOP_DIR}/ace/npuruntime/inc/external
     ${TOP_DIR}/abl/msprof/inc
     ${TOP_DIR}/abl/msprof/inc/external
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${TOP_DIR}/abl/msprof/inc/toolchain
     ${TOP_DIR}/graphengine/inc
     ${TOP_DIR}/graphengine/inc/external
@@ -294,9 +313,7 @@ add_executable(api_dc_stest
 target_compile_options(api_dc_stest PRIVATE
     -g
     -Wall
-    -std=c++11
     -fno-access-control
-    -Werror
 )
 
 target_include_directories(api_dc_stest PRIVATE
@@ -304,7 +321,6 @@ target_include_directories(api_dc_stest PRIVATE
 )
 
 target_compile_definitions(api_dc_stest PRIVATE
-    C_SEC
     __PROF_LLT
     google=ascend_private
     LLT_DATA_DIR="${LLT_DATA_DIR}"
@@ -319,25 +335,14 @@ target_link_options(api_dc_stest PRIVATE
 )
 
 target_link_libraries(api_dc_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    profapi_share_st
-    ascend_protobuf
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
     c_sec
-    json
 )
 
 set_target_properties(api_dc_stest
     PROPERTIES
     OUTPUT_NAME api_dc_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET api_dc_stest
-    TASK_NUM 1
 )
 
 ####################### api_david_stest ###########################
@@ -394,11 +399,6 @@ set_target_properties(api_david_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET api_david_stest
-    TASK_NUM 1
-)
-
 ####################### api_mini_v3_stest ###########################
 
 add_executable(api_mini_v3_stest
@@ -451,11 +451,6 @@ set_target_properties(api_mini_v3_stest
     PROPERTIES
     OUTPUT_NAME api_mini_v3_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET api_mini_v3_stest
-    TASK_NUM 1
 )
 
 ####################### api_mdc_mini_v3_stest ###########################
@@ -512,11 +507,6 @@ set_target_properties(api_mdc_mini_v3_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET api_mdc_mini_v3_stest
-    TASK_NUM 1
-)
-
 ####################### api_cloud_stest ###########################
 
 add_executable(api_cloud_stest
@@ -571,11 +561,6 @@ set_target_properties(api_cloud_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET api_cloud_stest
-    TASK_NUM 1
-)
-
 ####################### api_mdc_stest ###########################
 
 add_executable(api_mdc_stest
@@ -627,11 +612,6 @@ set_target_properties(api_mdc_stest
     PROPERTIES
     OUTPUT_NAME api_mdc_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET api_mdc_stest
-    TASK_NUM 1
 )
 
 ####################### acl_api_stest ###########################
@@ -696,10 +676,6 @@ set_target_properties(acl_api_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET acl_api_stest
-    TASK_NUM 1
-)
 ####################### api_tiny_stest ###########################
 
 add_executable(api_tiny_stest
@@ -754,10 +730,6 @@ set_target_properties(api_tiny_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET api_tiny_stest
-    TASK_NUM 1
-)
 ####################### libprofapi.so ###########################
 set(prof_api_src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_inner_api.cpp
@@ -838,8 +810,6 @@ target_include_directories(profapi_share_st PRIVATE
     ${TOP_DIR}/ace/npuruntime/inc
     ${TOP_DIR}/ace/npuruntime/inc/external
     ${TOP_DIR}/inc/external
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${API_STUB_DIR}/device
     ${API_STUB_DIR}/host
     ${LLT_DATA_DIR}

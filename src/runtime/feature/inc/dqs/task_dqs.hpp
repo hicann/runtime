@@ -24,15 +24,6 @@ union DqsTaskConfig {
     rtDqsConditionCopyCfg_t *condCopyCfg;
 };
 
-struct DqsSchedPartialCfg {
-    uint8_t type;                                             // 硬化调度类型，参考 rtDqsScheType
-    uint8_t reserve;                                          // 预留
-    rtDqsFrameAlignMode frameAlignMode;                       // 帧对齐模式
-    rtDqsFrameAlignTimeoutMode frameAlignTimeoutMode;         // 帧对齐超时时的处理模式
-    uint32_t frameAlignTimeoutThreshold;                      // 帧对齐时间阈值
-    uint64_t *defaultInputAddr[RT_DQS_MAX_INPUT_QUEUE_NUM];   // 使用默认帧对齐时使用的输入数据地址
-};
-
 constexpr uint32_t DQS_INTER_CHIP_GROUP_MAX = 255U;
 constexpr uint64_t DQS_CONDITION_COPY_SIZE_MAX = 512ULL;
 

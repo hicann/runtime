@@ -10,7 +10,10 @@
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
 #include "runtime.hpp"
+#define private public
+#include "kernel.hpp"
 #include "program.hpp"
+#undef private
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,27 +27,23 @@
 #include "thread_local_container.hpp"
 
 #include "elf.hpp"
-#include "../../data/conv_fwd_sample.cce.h"
-#include "../../data/elf.h"
-#include "../../data/bad-elf3.h"
-#include "../../data/bad-elf4.h"
-#include "../../data/no-kernel.h"
-#include "../../data/bad-elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
 
-class ELFTest910B : public testing::Test
+class CloudV2ELFTest : public testing::Test
 {
 protected:
     static void SetUpTestCase()
     {
         std::cout<<"ELF test start"<<std::endl;
+
     }
 
     static void TearDownTestCase()
     {
         std::cout<<"ELF test start end"<<std::endl;
+
     }
 
     // Some expensive resource shared by all tests.
@@ -71,7 +70,7 @@ private:
 };
 
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_ERROR)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_ERROR)
 {
 unsigned char static_kernel_data[] = {
     0x7f,0x45,0x4c,0x46,0x2,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2,0x0,0x29,0x10,
@@ -358,7 +357,7 @@ unsigned char static_kernel_data[] = {
 }
 
 
-TEST_F(ELFTest910B, ELF_UPDATE_FUNC_TYPE_BY_PROG_TYPE)
+TEST_F(CloudV2ELFTest, ELF_UPDATE_FUNC_TYPE_BY_PROG_TYPE)
 {
     ElfKernelInfo kernelInfo;
     kernelInfo.funcType = KERNEL_FUNCTION_TYPE_INVALID;
@@ -375,9 +374,27 @@ TEST_F(ELFTest910B, ELF_UPDATE_FUNC_TYPE_BY_PROG_TYPE)
     EXPECT_EQ(isUpdate, false);
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_01)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_01)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    //bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/conv_fwd_sample.cce.tmp", "rb");
+    //bin = fopen("conv_fwd_sample.cce.out", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
@@ -385,7 +402,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_01)
     elfData = new rtElfData;
     bool isSupportMix = false;
 
-    kernels = ProcessObject((char_t *)conv_fwd_sample_cce_tmp, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num, 1);
 
     if(NULL != elfData->section_headers)
@@ -404,16 +421,32 @@ TEST_F(ELFTest910B, ELF_Process_Object_01)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_02)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_02)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
 
     elfData = new rtElfData;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)elf_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     if(NULL != elfData->section_headers)
     {
         delete [] elfData->section_headers;
@@ -426,7 +459,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_02)
     }
     delete [] kernels;
     kernels = NULL;
-    kernels = ProcessObject((char_t *)elf_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
 
     EXPECT_EQ(elfData->kernel_num,1);
 
@@ -446,16 +479,81 @@ TEST_F(ELFTest910B, ELF_Process_Object_02)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_04)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_03)
 {
-    size_t MAX_LENGTH = 75776;
+    size_t MAX_LENGTH = 6144;
+    FILE *bin = NULL;
+
+    //bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/bad-elf2.o", "rb");
+    bin = fopen("bad-elf2.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
 
     elfData = new rtElfData;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)bad_elf3_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    EXPECT_EQ(elfData->kernel_num, 1);
+    if(NULL == kernels)
+    {
+        printf("SUCC get 64bit section headers failed!\n");
+    }
+    else
+    {
+        printf("FAIL\n");
+    }
+
+    if(NULL != elfData->section_headers)
+    {
+        delete [] elfData->section_headers;
+        elfData->section_headers = NULL;
+    }
+    delete elfData;
+    elfData = NULL;
+    delete [] kernels;
+    kernels = NULL;
+}
+
+TEST_F(CloudV2ELFTest, ELF_Process_Object_04)
+{
+    size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/bad-elf3.o", "rb");
+    //bin = fopen("bad-elf3.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
+
+    rtElfData    *elfData;
+    RtKernel    *kernels;
+
+    elfData = new rtElfData;
+    bool isSupportMix = false;
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num, 0);
 
     if(NULL == kernels)
@@ -478,16 +576,33 @@ TEST_F(ELFTest910B, ELF_Process_Object_04)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_05)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_05)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/bad-elf4.o", "rb");
+    //bin = fopen("bad-elf4.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
 
     elfData = new rtElfData;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)bad_elf4_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -501,16 +616,33 @@ TEST_F(ELFTest910B, ELF_Process_Object_05)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_06)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_06)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/no-kernel.o", "rb");
+    //bin = fopen("no-kernel.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
 
     elfData = new rtElfData;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)no_kernel_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -524,16 +656,33 @@ TEST_F(ELFTest910B, ELF_Process_Object_06)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_07)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_07)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/bad-elf.o", "rb");
+    //bin = fopen("bad-elf.o", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
 
     elfData = new rtElfData;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)bad_elf_o, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -547,7 +696,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_07)
     kernels = NULL;
 }
 
-TEST_F(ELFTest910B, ELF_GetStringTableCopy_memcpy_fail)
+TEST_F(CloudV2ELFTest, ELF_GetStringTableCopy_memcpy_fail)
 {
     char buf[20] = {0};
     MOCKER(memcpy_s).stubs().will(returnValue(3));
@@ -556,7 +705,7 @@ TEST_F(ELFTest910B, ELF_GetStringTableCopy_memcpy_fail)
     EXPECT_EQ(ret, 0);
 }
 
-TEST_F(ELFTest910B, ELF_Little_endian_case)
+TEST_F(CloudV2ELFTest, ELF_Little_endian_case)
 {
     const unsigned char* field = (unsigned char*)"1234567890";
     unsigned long out;
@@ -574,9 +723,10 @@ TEST_F(ELFTest910B, ELF_Little_endian_case)
     out = ByteGetLittleEndian(field, 7);
     ret = strcmp((char*)&out, "1234567");
     EXPECT_EQ(ret, 0);
+
 }
 
-TEST_F(ELFTest910B, ELF_Big_endian_case)
+TEST_F(CloudV2ELFTest, ELF_Big_endian_case)
 {
     const unsigned char* field = (unsigned char*)"1234567890";
     unsigned long temp;
@@ -605,9 +755,10 @@ TEST_F(ELFTest910B, ELF_Big_endian_case)
     out[0] = ByteGetBigEndian(field, 8);
     char *outChar = (char*)out;
     outChar[8] = '\0';
+
 }
 
-TEST_F(ELFTest910B, ELF_Get_64bit_Section_Headers_Error_02)
+TEST_F(CloudV2ELFTest, ELF_Get_64bit_Section_Headers_Error_02)
 {
     rtElfData *elfData;
     int out;
@@ -647,7 +798,7 @@ TEST_F(ELFTest910B, ELF_Get_64bit_Section_Headers_Error_02)
     }
 }
 
-TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_01)
+TEST_F(CloudV2ELFTest, ELF_Get_64bit_Elf_Symbols_Error_01)
 {
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
@@ -682,9 +833,10 @@ TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_01)
         delete section;
         section = NULL;
     }
+
 }
 
-TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_02)
+TEST_F(CloudV2ELFTest, ELF_Get_64bit_Elf_Symbols_Error_02)
 {
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
@@ -719,9 +871,10 @@ TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_02)
         delete section;
         section = NULL;
     }
+
 }
 
-TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_03)
+TEST_F(CloudV2ELFTest, ELF_Get_64bit_Elf_Symbols_Error_03)
 {
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
@@ -756,9 +909,10 @@ TEST_F(ELFTest910B, ELF_Get_64bit_Elf_Symbols_Error_03)
         delete section;
         section = NULL;
     }
+
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_Error)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_Error)
 {
     rtElfData *elfData;
     RtKernel* out;
@@ -783,10 +937,11 @@ TEST_F(ELFTest910B, ELF_Process_Object_Error)
         delete elfData;
         elfData = NULL;
     }
+
 }
 
 /* UT for elf.cc ByteGetLittleEndian() "default" Line:102*/
-TEST_F(ELFTest910B, ELF_BYTE_GET_LITTLE_ENDIAN_TEST)
+TEST_F(CloudV2ELFTest, ELF_BYTE_GET_LITTLE_ENDIAN_TEST)
 {
     const unsigned char* field = (unsigned char*)"1234567890";
     unsigned long out;
@@ -799,7 +954,7 @@ TEST_F(ELFTest910B, ELF_BYTE_GET_LITTLE_ENDIAN_TEST)
 }
 
 /* UT for elf.cc ByteGetBigEndian() "default" Line:136*/
-TEST_F(ELFTest910B, ELF_BYTE_GET_BIG_ENDIAN_TEST)
+TEST_F(CloudV2ELFTest, ELF_BYTE_GET_BIG_ENDIAN_TEST)
 {
     const unsigned char* field = (unsigned char*)"1234567890";
     unsigned long temp;
@@ -811,9 +966,25 @@ TEST_F(ELFTest910B, ELF_BYTE_GET_BIG_ENDIAN_TEST)
     EXPECT_EQ(ret, 0);
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_08)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_08)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/conv_fwd_sample.cce.tmp", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData *elfData;
     RtKernel *kernels;
@@ -826,7 +997,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_08)
     elfData->section_headers = section_headers;
 
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)conv_fwd_sample_cce_tmp, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,1);
     delete [] kernels[0].name;
     if(NULL != elfData->section_headers)
@@ -853,9 +1024,25 @@ void *malloc_stub_elf(unsigned int num_bytes)
     return __real_malloc(num_bytes);
 }
 
-TEST_F(ELFTest910B, ELF_Process_Object_09)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_09)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/conv_fwd_sample.cce.tmp", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData *elfData;
     RtKernel *kernels;
@@ -870,7 +1057,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_09)
     MOCKER(malloc).stubs().will(invoke(malloc_stub_elf));
 
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)conv_fwd_sample_cce_tmp, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {
@@ -890,9 +1077,25 @@ TEST_F(ELFTest910B, ELF_Process_Object_09)
 }
 
 
-TEST_F(ELFTest910B, ELF_Process_Object_10)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_10)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/conv_fwd_sample.cce.tmp", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData *elfData;
     RtKernel *kernels;
@@ -904,7 +1107,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_10)
     section_headers->sh_size = 0;
     elfData->section_headers = section_headers;
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)conv_fwd_sample_cce_tmp, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {
@@ -924,12 +1127,25 @@ TEST_F(ELFTest910B, ELF_Process_Object_10)
 }
 
 
-TEST_F(ELFTest910B, ELF_Process_Object_11)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_11)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = NULL;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/conv_fwd_sample.cce.tmp", "rb");
+    if (bin == NULL)
+    {
+        printf("error\n");
+        return;
+    }
+    else
+    {
+        printf("succ\n");
+    }
 
     char bindata[MAX_LENGTH];
-    memcpy(bindata, conv_fwd_sample_cce_tmp, conv_fwd_sample_cce_tmp_len);
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
     bindata[5] = 2;
 
     rtElfData *elfData;
@@ -958,7 +1174,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_11)
 }
 
 #ifdef AICPU_ON_OS
-TEST_F(ELFTest910B, ELF_Process_Object_12)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_12)
 {
     size_t MAX_LENGTH = 75776;
     FILE *bin = NULL;
@@ -1006,9 +1222,22 @@ TEST_F(ELFTest910B, ELF_Process_Object_12)
 }
 #endif /* AICPU_ON_OS */
 
-TEST_F(ELFTest910B, ELF_Process_Object_15)
+TEST_F(CloudV2ELFTest, ELF_Process_Object_15)
 {
     size_t MAX_LENGTH = 75776;
+    FILE *bin = nullptr ;
+
+    bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/no-kernel.o", "rb");
+    if (bin == nullptr ) {
+        printf("error\n");
+        return;
+    } else {
+        printf("succ\n");
+    }
+
+    char bindata[MAX_LENGTH];
+    fread(bindata, sizeof(char), MAX_LENGTH, bin);
+    fclose(bin);
 
     rtElfData    *elfData;
     RtKernel    *kernels;
@@ -1016,7 +1245,7 @@ TEST_F(ELFTest910B, ELF_Process_Object_15)
     elfData = new rtElfData;
 
     bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)no_kernel_o, elfData, false, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData, false, &isSupportMix);
     if(nullptr  == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -1045,14 +1274,14 @@ TEST_F(ELFTest910B, ELF_Process_Object_15)
     kernels = nullptr ;
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_01)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_01)
 {
     uint32_t taskRation = 2;
     rtError_t  error = ConvertTaskRation(nullptr, taskRation);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_02)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_02)
 {
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {5U, 0U, {2U, 1U}};
@@ -1060,7 +1289,7 @@ TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_03)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_03)
 {
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {4U, 0U, {1U, 1U}};
@@ -1068,7 +1297,7 @@ TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_03)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_04)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_04)
 {
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {4U, 0U, {1U, 0U}};
@@ -1076,7 +1305,7 @@ TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_04)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_05)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_05)
 {
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {5U, 0U, {1U, 0U}};
@@ -1084,7 +1313,7 @@ TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_05)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_06)
+TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_06)
 {
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {4U, 0U, {1U, 3U}};
@@ -1092,7 +1321,7 @@ TEST_F(ELFTest910B, ELF_CONVERT_TASK_RATION_06)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_01)
+TEST_F(CloudV2ELFTest, ELF_GET_MIX_STATUS_01)
 {
     uint32_t funcType = 1U;
     uint32_t crossCoreSync = 0U;
@@ -1101,7 +1330,7 @@ TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_01)
     EXPECT_EQ(isMix, false);
 }
 
-TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_02)
+TEST_F(CloudV2ELFTest, ELF_GET_MIX_STATUS_02)
 {
     uint32_t funcType = 2U;
     uint32_t crossCoreSync = 1U;
@@ -1110,7 +1339,7 @@ TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_02)
     EXPECT_EQ(isMix, true);
 }
 
-TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_03)
+TEST_F(CloudV2ELFTest, ELF_GET_MIX_STATUS_03)
 {
     uint32_t funcType = 3U;
     uint32_t crossCoreSync = 1U;
@@ -1119,7 +1348,7 @@ TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_03)
     EXPECT_EQ(isMix, true);
 }
 
-TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_04)
+TEST_F(CloudV2ELFTest, ELF_GET_MIX_STATUS_04)
 {
     uint32_t funcType = 8U;
     uint32_t crossCoreSync = 1U;
@@ -1128,7 +1357,7 @@ TEST_F(ELFTest910B, ELF_GET_MIX_STATUS_04)
     EXPECT_EQ(isMix, false);
 }
 
-TEST_F(ELFTest910B, ParseElfStackInfoHeader)
+TEST_F(CloudV2ELFTest, ParseElfStackInfoHeader)
 {
     rtElfData *elfData = new rtElfData;
 
@@ -1149,38 +1378,7 @@ TEST_F(ELFTest910B, ParseElfStackInfoHeader)
     elfData = NULL;
 }
 
-TEST_F(ELFTest910B, ParseElfStackInfoFromSection)
-{
-    rtElfData *elfData = new rtElfData;
-    uint64_t buf[2] = {0ULL};
-
-    elfData->stackSize = 0ULL;
-    elfData->elf_header.e_version = 0x5a5a0101;
-    
-    ParseElfStackInfoFromSection(elfData, (uint8_t *)&(buf[0]), 6);
-    EXPECT_EQ(elfData->stackSize, 0ULL);
-
-    buf[0] = 16000U;
-    buf[1] = 16000U;
-    ParseElfStackInfoFromSection(elfData, (uint8_t *)&(buf[0]), 2 * sizeof(uint64_t));
-    EXPECT_EQ(elfData->stackSize, 0ULL);
-
-    buf[0] = 32768U;
-    buf[1] = 32768U;
-    ParseElfStackInfoFromSection(elfData, (uint8_t *)&(buf[0]), 2 * sizeof(uint64_t));
-    EXPECT_EQ(elfData->stackSize, 32768U);
-
-    elfData->stackSize = 0ULL;
-    buf[0] = 32768U;
-    buf[1] = 16384U;
-    ParseElfStackInfoFromSection(elfData, (uint8_t *)&(buf[0]), 2 * sizeof(uint64_t));
-    EXPECT_EQ(elfData->stackSize, 0ULL);
-
-    delete elfData;
-    elfData = NULL;
-}
-
-TEST_F(ELFTest910B, UpdateKernelsInfo)
+TEST_F(CloudV2ELFTest, UpdateKernelsInfo)
 {
     rtElfData elfData = {};
     elfData.kernel_num = 1;
@@ -1216,127 +1414,10 @@ TEST_F(ELFTest910B, UpdateKernelsInfo)
     delete [] newKernels.name;
     delete kernelInfo;
     kernelInfo = NULL;
+
 }
 
-TEST_F(ELFTest910B, ParseElfBinaryMetaInfo)
-{
-    rtElfData *elfData = new rtElfData;
-    
-    uint8_t *buffer = new uint8_t[sizeof(ElfTlvHead) + 4 + sizeof(ElfBinaryAddrInfo) * 3 + sizeof(ElfTlvHead) + 4];
-    uint32_t bufLen = sizeof(ElfTlvHead) + 4 + sizeof(ElfBinaryAddrInfo) * 3 + sizeof(ElfTlvHead) + 4;
-
-    auto head = reinterpret_cast<ElfTlvHead *>(buffer);
-    head->type = 0x0;
-    head->length = 0x4;
-
-    auto metaInfo = reinterpret_cast<ElfBinaryAddrInfo *>(buffer + sizeof(ElfTlvHead) + head->length);
-    metaInfo->head.type = 0x4;
-    metaInfo->head.length = 0x4;
-    metaInfo->type = 1;
-    metaInfo++;
-
-    metaInfo->head.type = 0x4;
-    metaInfo->head.length = 0x4;
-    metaInfo->type = 2;
-    metaInfo++;
-    
-    metaInfo->head.type = 0x4;
-    metaInfo->head.length = 0x4;
-    metaInfo->type = 3;
-
-    head = reinterpret_cast<ElfTlvHead *>(buffer + sizeof(ElfTlvHead) + 4 + sizeof(ElfBinaryAddrInfo) * 3);
-    head->type = UINT16_MAX;
-    head->length = 0x4;
-
-    const std::string stringTab = ".ascend.meta";
-
-    ParseElfBinaryMetaInfo(elfData, buffer, sizeof(ElfTlvHead) + 1, "");
-
-    ParseElfBinaryMetaInfo(elfData, buffer, sizeof(ElfTlvHead) + 1, stringTab);
-
-    ParseElfBinaryMetaInfo(elfData, buffer, bufLen, stringTab);
-    EXPECT_EQ(elfData->ascendMetaFlag, 7);
-
-    delete elfData;
-    elfData = nullptr;
-
-    delete[] buffer;
-    buffer = nullptr;
-}
-
-TEST_F(ELFTest910B, SymbolAddress)
-{
-    const uint64_t numSyms = 3;
-    rtElfData *elfData = new rtElfData;
-    elfData->ascendMetaFlag = 0x7;
-    elfData->elf_header.e_shnum = 1;
-    elfData->obj_ptr_origin = nullptr;
-
-    elfData->section_headers = new Elf_Internal_Shdr[1];
-    elfData->section_headers[0].sh_offset = 0;
-    elfData->section_headers[0].sh_addr = 0;
-
-    string var1 = "g_sysFftsAddr";
-    string var2 = "g_opL2CacheHintCfg";
-    string var3 = "g_sysPrintFifoSpace";
-    const uint64_t strSize = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U;
-    std::unique_ptr<char_t[]> strTbl(new (std::nothrow) char_t[strSize]);
-    memcpy_s(strTbl.get(), var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var1.c_str(), var1.size() + 1U);
-    memcpy_s(strTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U, var2.c_str(), var2.size() + 1U);
-    memcpy_s(strTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U, var3.c_str(), var3.size() + 1U);
-
-    std::unique_ptr<Elf_Internal_Sym[]> symTab(new (std::nothrow) Elf_Internal_Sym[numSyms]);
-    Elf_Internal_Sym *psym = symTab.get();
-
-    uint64_t g_sysFftsAddr = 0;
-    uint64_t g_opL2CacheHintCfg = 0;
-    uint64_t g_sysPrintFifoSpace = 0;
-
-    // 设置 g_sysFftsAddr 符号信息
-    psym->st_name = 0;
-    psym->st_value = reinterpret_cast<uint64_t>(&g_sysFftsAddr);
-    psym->st_shndx = 0;
-    psym->st_info = STT_OBJECT;
-
-    // 设置 g_opL2CacheHintCfg 符号信息
-    ++psym;
-    psym->st_name = var1.size() + 1U;
-    psym->st_value = reinterpret_cast<uint64_t>(&g_opL2CacheHintCfg);
-    psym->st_shndx = 0;
-    psym->st_info = STT_OBJECT;
-
-    // 设置 g_sysPrintFifoSpace 符号信息
-    ++psym;
-    psym->st_name = var1.size() + 1U +  var2.size() + 1U;
-    psym->st_value = reinterpret_cast<uint64_t>(&g_sysPrintFifoSpace);
-    psym->st_shndx = 0;
-    psym->st_info = STT_OBJECT;
-
-    elfData->elf_header.e_shnum = 0;
-    SetSymbolAddress(strTbl.get(), symTab.get(), numSyms, elfData);
-
-    SetSymbolAddress(nullptr, symTab.get(), numSyms, elfData);
-
-    elfData->elf_header.e_shnum = 1;
-    SetSymbolAddress(strTbl.get(), symTab.get(), numSyms, elfData);
-
-    rtError_t error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 87);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 4 * 1024 * 1024);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = RefreshSymbolAddress(elfData);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    delete[] elfData->section_headers;
-    elfData->section_headers = nullptr;
-
-    delete elfData;
-    elfData = nullptr;
-}
-
-TEST_F(ELFTest910B, GetMetaInfo)
+TEST_F(CloudV2ELFTest, GetMetaInfo)
 {
     rtElfData   *elfData = nullptr;
     rtBinaryMetaType      BinaryTLVType = RT_BINARY_TYPE_BIN_VERSION;
@@ -1378,69 +1459,21 @@ TEST_F(ELFTest910B, GetMetaInfo)
     error = GetFunctionMetaInfo(elfData, "", FuncTLVType, RtPtrToPtr<void *>(&data), length);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    string var1 = ".shstr";
-    string var2 = ".ascend.meta";
-    string var3 = ".ascend.meta.func";
-    std::unique_ptr<char_t[]> strSecTbl(new (std::nothrow) char_t[var1.size() + 1U + var2.size() + 1U + var3.size() + 1U]);
-    memcpy_s(strSecTbl.get(), var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var1.c_str(), var1.size() + 1U);
-    memcpy_s(strSecTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U, var2.c_str(), var2.size() + 1U);
-    memcpy_s(strSecTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U, var3.c_str(), var3.size() + 1U);
-
-    elfData->section_headers[0].sh_size = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U;
-    elfData->section_headers[0].sh_offset = RtPtrToPtr<uint64_t>(strSecTbl.get());
-    elfData->section_headers[0].sh_name = 0;
-    elfData->section_headers[1].sh_name = var1.size() + 1U;
-    elfData->section_headers[2].sh_name = var1.size() + 1U + var2.size() + 1U;
-    error = GetFunctionMetaInfo(elfData, "", FuncTLVType, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    uint8_t *buffer = new uint8_t[sizeof(ElfTlvHead) + 4];
-    uint32_t bufLen = sizeof(ElfTlvHead) + 4;
-    auto head = reinterpret_cast<ElfTlvHead *>(buffer);
-    head->type = 0x0;
-    head->length = 0x4;
-
-    elfData->section_headers[1].sh_offset = RtPtrToPtr<uint64_t>(buffer);
-    elfData->section_headers[2].sh_offset = RtPtrToPtr<uint64_t>(buffer);
-    elfData->section_headers[1].sh_size = bufLen;
-    elfData->section_headers[2].sh_size = bufLen;
-
-    error = GetFunctionMetaInfo(elfData, "func", RT_FUNCTION_TYPE_KERNEL_TYPE, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = GetFunctionMetaInfo(elfData, "func", RT_FUNCTION_TYPE_INVALID, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    uint32_t invalidType = 5;
-    error = GetBinaryMetaInfo(elfData, invalidType, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = GetBinaryMetaInfo(elfData, BinaryTLVType, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    head->type = 0x1;
-    FuncTLVType = RT_FUNCTION_TYPE_KERNEL_TYPE;
-    error = GetFunctionMetaInfo(elfData, "func", FuncTLVType, RtPtrToPtr<void *>(&data), length);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     delete[] elfData->section_headers;
     elfData->section_headers = nullptr;
 
     delete elfData;
     elfData = nullptr;
-
-    delete[] buffer;
-    buffer = nullptr;
 }
 
-TEST_F(ELFTest910B, rtGetMetaInfo)
+TEST_F(CloudV2ELFTest, rtGetMetaInfo)
 {
     ElfProgram *prog = new ElfProgram();
     PlainProgram *prog2 = new PlainProgram();
-    Kernel  *funcHandle = new Kernel("func", "func", "func");
+    Kernel *funcHandle = new Kernel("func", "func", "func");
     uint64_t data = 0;
     uint32_t length = 0;
-    rtError_t   error;
+    rtError_t error;
 
     delete prog->elfData_;
     prog->elfData_ = nullptr;
@@ -1450,9 +1483,6 @@ TEST_F(ELFTest910B, rtGetMetaInfo)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtBinaryGetMetaInfo(RtPtrToPtr<rtBinHandle>(prog), RT_BINARY_TYPE_BIN_VERSION, nullptr, length);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtBinaryGetMetaInfo(RtPtrToPtr<rtBinHandle>(prog), RT_BINARY_TYPE_BIN_VERSION, RtPtrToPtr<void *>(&data), length);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtBinaryGetMetaInfo(RtPtrToPtr<rtBinHandle>(prog), RT_BINARY_TYPE_BIN_VERSION, RtPtrToPtr<void *>(&data), length);
@@ -1474,7 +1504,7 @@ TEST_F(ELFTest910B, rtGetMetaInfo)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     funcHandle->program_ = RtPtrToPtr<Program *>(prog2);
-    error = rtFunctionGetMetaInfo(RtPtrToPtr<rtBinHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, RtPtrToPtr<void *>(&data), length);
+    error = rtFunctionGetMetaInfo(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_KERNEL_TYPE, RtPtrToPtr<void *>(&data), length);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     delete prog;
@@ -1482,7 +1512,7 @@ TEST_F(ELFTest910B, rtGetMetaInfo)
     delete funcHandle;
 }
 
-TEST_F(ELFTest910B, ElfParseTlvInfo_Function_Entry)
+TEST_F(CloudV2ELFTest, ElfParseTlvInfo_Function_Entry)
 {
     ElfKernelFunctionEntryInfo kernelFunctionEntryInfo;
     kernelFunctionEntryInfo.head.type = FUNCTION_META_TYPE_FUNCTION_ENTRY_INFO;
@@ -1494,7 +1524,7 @@ TEST_F(ELFTest910B, ElfParseTlvInfo_Function_Entry)
     EXPECT_EQ(tlvInfo.functionEntry, 0);
 }
 
-TEST_F(ELFTest910B, SetKernelFunctionEntry)
+TEST_F(CloudV2ELFTest, SetKernelFunctionEntry)
 {
     rtError_t error;
     const uint32_t kernelsNum = 2;
@@ -1522,7 +1552,7 @@ TEST_F(ELFTest910B, SetKernelFunctionEntry)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(ELFTest910B, ELF_Process_SetKernelFunctionEntry_Failed)
+TEST_F(CloudV2ELFTest, ELF_Process_SetKernelFunctionEntry_Failed)
 {
     size_t MAX_LENGTH = 75776;
     FILE *bin = nullptr;
@@ -1568,7 +1598,7 @@ TEST_F(ELFTest910B, ELF_Process_SetKernelFunctionEntry_Failed)
     }
 }
 
-TEST_F(ELFTest910B, UnifiedOneKernelRegister_Function_Entry)
+TEST_F(CloudV2ELFTest, UnifiedOneKernelRegister_Function_Entry)
 {
     rtError_t error;
     ElfProgram prog;

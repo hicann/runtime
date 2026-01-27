@@ -199,10 +199,6 @@ int32_t InputParser::ParamsCheck() const
     MSPROF_GET_ENV(MM_ENV_ASCEND_WORK_PATH, ascendWorkPath);
     if (!ascendWorkPath.empty()) {
         std::string path = Utils::RelativePathToAbsolutePath(ascendWorkPath) + MSVP_SLASH + PROFILING_RESULT_PATH;
-        if (!Utils::CheckPathWithInvalidChar(path)) {
-            CmdLog::CmdErrorLog("Argument --output %s contains invalid character.", path.c_str());
-            return MSPROF_DAEMON_ERROR;
-        }
         if (Utils::CreateDir(path) != PROFILING_SUCCESS) {
             char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
             CmdLog::CmdErrorLog("Create output dir failed.ErrorCode: %d, ErrorInfo: %s.",
@@ -537,6 +533,10 @@ int32_t InputParser::CheckOutputValid(const struct MsprofCmdInfo &cmdInfo)
         if (path.size() > MAX_PATH_LENGTH) {
             CmdLog::CmdErrorLog("Argument --output is invalid because of exceeds"
                 " the maximum length of %d", MAX_PATH_LENGTH);
+            return MSPROF_DAEMON_ERROR;
+        }
+        if (!Utils::CheckPathWithInvalidChar(path)) {
+            CmdLog::CmdErrorLog("Argument --output %s contains invalid character.", path.c_str());
             return MSPROF_DAEMON_ERROR;
         }
         if (Utils::CreateDir(path) != PROFILING_SUCCESS) {

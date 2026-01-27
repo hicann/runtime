@@ -30,7 +30,7 @@ namespace queue {
 static const size_t MAX_RING_BUFF_CAPACITY      = 2097152; // 2097152: 2M
 static const size_t MIN_RING_BUFF_CAPACITY      = 2048;    // 2048: 2K
 static const size_t API_RING_BUFF_CAPACITY      = 131072;  // 131072: 128K
-static const size_t COM_RING_BUFF_CAPACITY      = 131072;  // 131072: 128K
+static const size_t COM_RING_BUFF_CAPACITY      = 262144;  // 262144: 256K
 static const size_t ADD_RING_BUFF_CAPACITY      = 262144;  // 262144: 256K
 static const size_t REPORT_BUFFER_MAX_CYCLES    = 2048;
 static const uint32_t NEG_RING_BUFF_PERCENT     = 1000;    // 1000: (1/0.1%)

@@ -337,14 +337,12 @@ int32_t DumpManager::DumpOperatorV2(const std::string &opType, const std::string
 
 void DumpManager::AddExceptionOp(const OperatorInfo &opInfo)
 {
-    OperatorInfoV2 operatorInfoV2 = {};
-    ConvertOperatorInfo(opInfo, operatorInfoV2);
-    exceptionDumper_.AddDumpOperator(operatorInfoV2);
+    exceptionDumper_.AddDumpOperator(opInfo);
 }
 
 void DumpManager::AddExceptionOpV2(const OperatorInfoV2 &opInfo)
 {
-    exceptionDumper_.AddDumpOperator(opInfo);
+    exceptionDumper_.AddDumpOperatorV2(opInfo);
 }
 
 void DumpManager::ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const
@@ -375,26 +373,21 @@ std::vector<TensorInfoV2> DumpManager::ConvertTensorInfoToDumpTensorV2(const std
  
 void DumpManager::ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &tensor) const
 {
-    if ( tensorInfo.tensor == nullptr ){
-        return;
-    } 
-    tensor.dataType = static_cast<int32_t>(tensorInfo.tensor->GetDataType());
-    tensor.format = static_cast<int32_t>(tensorInfo.tensor->GetStorageFormat());
-    tensor.placement = static_cast<int32_t>(tensorInfo.tensor->GetPlacement());
-    tensor.tensorAddr = static_cast<int64_t *>(tensorInfo.tensor->GetAddr());
-    tensor.tensorSize = tensorInfo.tensor->GetSize();
+    tensor.dataType = tensorInfo.dataType;
+    tensor.format = tensorInfo.format;
+    tensor.placement = tensorInfo.placement;
+    tensor.tensorAddr = tensorInfo.tensorAddr;
+    tensor.tensorSize = tensorInfo.tensorSize;
     tensor.type = tensorInfo.type;
     tensor.addrType = tensorInfo.addrType;
     tensor.argsOffSet = tensorInfo.argsOffSet;
-    gert::Shape shape = tensorInfo.tensor->GetStorageShape();
-    size_t dimNum = shape.GetDimNum();
-    for (size_t i = 0; i < dimNum; ++i) {
-        tensor.shape.emplace_back(static_cast<uint64_t>(shape[i]));
+    std::vector<int64_t> shape = tensorInfo.shape;
+    for (auto dim : shape) {
+        tensor.shape.emplace_back(static_cast<uint64_t>(dim));
     }
-    gert::Shape originShape = tensorInfo.tensor->GetOriginShape();
-    size_t originDimNum = originShape.GetDimNum();
-    for (size_t i = 0; i < originDimNum; ++i) {
-        tensor.originShape.emplace_back(static_cast<uint64_t>(originShape[i]));
+    std::vector<int64_t> originShape = tensorInfo.originShape;
+    for (auto dim : originShape) {
+        tensor.originShape.emplace_back(static_cast<uint64_t>(dim));
     }
 }
 
@@ -503,6 +496,13 @@ int32_t DumpManager::StopDumpArgs()
     }
     IDE_RUN_LOGI("OpInfoRecord success!");
     return 0;
+}
+
+const char* DumpManager::GetExtraDumpPath()
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    static std::string path = exceptionDumper_.CreateExtraDumpPath();
+    return path.empty() ? nullptr: path.c_str();
 }
 
 int32_t DumpManager::SaveFile(const char *data, size_t dataLen, const char *fileName, SaveType type)

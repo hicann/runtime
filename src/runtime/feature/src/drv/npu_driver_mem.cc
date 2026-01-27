@@ -134,6 +134,7 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
         COND_LOG_ERROR(secRet != EOK, "strcpy_s failed, size=%zu(bytes), retCode=%d!", sizeof(name), secRet);
         secRet = strcat_s(&name[0], sizeof(name), in->name);
         COND_LOG_ERROR(secRet != EOK, "strcat_s failed, size=%zu(bytes), retCode=%d!", sizeof(name), secRet);
+        /* 1980c wide&&deep temp code */
         drvError_t drvRet = DRV_ERROR_NONE;
         drvRet = halHostUnregister(in->ptr, deviceId);
         if (drvRet != DRV_ERROR_NONE) {
@@ -170,7 +171,6 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
 rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr,
     const uint32_t deviceId)
 {
-    UNUSED(type);
     TIMESTAMP_NAME(__func__);
 
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
@@ -201,8 +201,8 @@ rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType t
             static_cast<int32_t>(drvRet), deviceId);
         error = RT_GET_DRV_ERRCODE(drvRet);
     } else {
- 	    InsertMappedMemory(ptr, size, *devPtr);
- 	}
+        InsertMappedMemory(ptr, size, *devPtr);
+    }
 
     return error;
 }
@@ -216,6 +216,7 @@ rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
+    /* 1980c wide&&deep temp code */
     drvError_t drvRet = DRV_ERROR_NONE;
     uint32_t flag = HOST_MEM_MAP_DEV_PCIE_TH;
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
@@ -1204,15 +1205,6 @@ rtError_t NpuDriver::MemAllocPolicyOffline(void ** const dptr, const uint64_t si
     return RT_ERROR_NONE;
 }
 
-/***
-function: check p2p memory in P2P mode by memory type offline
-***/
-
-static bool IsP2pMemType(const rtMemType_t * const type)
-{
-    return ((*type == RT_MEMORY_P2P_HBM) || (*type == RT_MEMORY_P2P_DDR));
-}
-
 rtError_t NpuDriver::DevMemAllocOffline(void **dptr, const uint64_t size,
     rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId) const
 {
@@ -1231,8 +1223,9 @@ rtError_t NpuDriver::DevMemAllocOffline(void **dptr, const uint64_t size,
     }
     RT_LOG(RT_LOG_DEBUG, "device offline alloc size=%" PRIu64 ", type=%u, device_id=%u, chipType=%d!",
            size, type, deviceId, chipType_);
-    const bool isP2p = IsP2pMemType(&type);
-    COND_RETURN_ERROR_MSG_INNER(isP2p, RT_ERROR_FEATURE_NOT_SUPPORT, "Can not support P2P!");
+
+    COND_RETURN_ERROR_MSG_INNER(!IsOfflineSupportMemType(type), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Offline mode does not support memType=%d", static_cast<int>(type));
     if (memPolicy == RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) {
         const rtError_t ret = CheckIfSupport1GHugePage();
         if (ret != RT_ERROR_NONE) {
@@ -1291,7 +1284,6 @@ rtError_t NpuDriver::DevMemAlloc(void ** const dptr, const uint64_t size, const 
     const uint16_t moduleId, const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool isNewApi,
     const bool cpOnlyFlag)
 {
-    UNUSED(cpOnlyFlag);
     rtError_t temptRet = RT_ERROR_DRV_ERR;
     const uint32_t devRunMode = GetRunMode();
     constexpr uint32_t p2PTypeSet = RT_MEMORY_POLICY_HUGE_PAGE_FIRST_P2P |
@@ -1473,7 +1465,6 @@ rtError_t NpuDriver::DevMemAllocForPctrace(void ** const dptr, const uint64_t si
         static_cast<UINT64>(GetDevProperties().memAllocPctraceFlag) |
         static_cast<UINT64>(MEM_SET_ALIGN_SIZE(9ULL)) |
         static_cast<UINT64>(MEM_ADVISE_TS) | static_cast<UINT64>(NODE_TO_DEVICE(deviceId)));        
-
     if (drvRet != DRV_ERROR_NONE) {
         DRV_MALLOC_ERROR_PROCESS(drvRet, RUNTIME_MODULE_ID, "[drv api] halMemAlloc for pctrace failed: size=%" PRIu64 "(bytes), drvRetCode=%d,"
             " device_id=%u!", size, static_cast<int32_t>(drvRet), deviceId);
@@ -1523,7 +1514,7 @@ rtError_t NpuDriver::DevMemAllocCached(void ** const dptr, const uint64_t size,
         if (drvRet != DRV_ERROR_NONE) {
             const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
             const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
-             DRV_MALLOC_ERROR_PROCESS(drvRet, moduleId, "[drv api] halMemAlloc cached failed: "
+            DRV_MALLOC_ERROR_PROCESS(drvRet, moduleId, "[drv api] halMemAlloc cached failed: "
                 "device_id=%u, size=%" PRIu64 "(bytes), drvRetCode=%d, drvFlag=%" PRIu64 ", %s",
                 deviceId, size, static_cast<int32_t>(drvRet), drvFlag, errorStr.c_str());
             return rtErrorCode;
@@ -2115,7 +2106,6 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
                                  const uint64_t size, const rtMemcpyKind_t kind, bool errShow, uint32_t devId)
 {
     TIMESTAMP_NAME(__func__);
-
     NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
     if (kind >= RT_MEMCPY_RESERVED) {

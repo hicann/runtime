@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -13,7 +13,7 @@
 #include <algorithm>
 #endif
 #include <functional>
-#include "common/aicpu_task_struct.h"
+#include "aicpu_sched/common/aicpu_task_struct.h"
 #include "context.hpp"
 #include "stream.hpp"
 #include "api.hpp"
@@ -28,6 +28,7 @@
 #include "task_info.h"
 #include "utils.h"
 #include "memory_task.h"
+#include "ctrl_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -109,6 +110,8 @@ Model::~Model() noexcept
         (void) deviceDrv->ModelIdFree(id_, dev->Id_(), dev->DevGetTsId());
         id_ = MODEL_ID_INVALID;
     }
+    h2dJettyInfoList_.clear();
+    d2dJettyInfoList_.clear();
 }
 
 rtError_t Model::Setup(Context * const contextIn)
@@ -184,6 +187,12 @@ rtError_t Model::AicpuModelDestroy()
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
         return AicpuMdlDestroy(this);
     }
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RtAicpuModelParam param = 
+            { Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_DESTROY), executorFlag_, RtPtrToValue(aicpuModelInfo_) };
+        return dev->GetCtrlSQ().SendAicpuModelMsg(RtCtrlMsgType::RT_CTRL_MSG_AICPU_MODEL_DESTROY, param);
+    }
+
     TaskFactory * const devTaskFactory = dev->GetTaskFactory();
     TaskInfo taskSubmit = {};
     rtError_t errorReason;
@@ -369,7 +378,7 @@ rtError_t Model::CheckBindStream(const Stream * const streamIn) const
         (dev->Driver_()->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE))) {
         isSupportStreamReuse = true;
     }
-
+    
     if (!isSupportStreamReuse && (streamIn->GetModelNum() != 0)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, streamId, "The model has been bound to another stream");
         return RT_ERROR_STREAM_MODEL;
@@ -388,7 +397,7 @@ rtError_t Model::ModelBindTaskSubmit(Stream * const execStream, Stream * const s
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo *maintainceTask = nullptr;
-
+    
     TaskFactory * const devTaskFactory = streamIn->Device_()->GetTaskFactory();
     /* HWTS does not support sink task pool */
     const rtModelStreamType_t streamType =
@@ -416,17 +425,19 @@ rtError_t Model::ModelBindTaskSubmit(Stream * const execStream, Stream * const s
 rtError_t Model::EnterBindStream(Stream * const streamIn, const uint32_t flag)
 {
     Device * const dev = context_->Device_();
-    Stream * const execStream = dev->IsStarsPlatform()? context_->DefaultStream_() : streamIn;
-    streamIn->SetBindFlag(false); // set bind flag false for model stream reuse;
-
-    rtError_t error = ModelBindTaskSubmit(execStream, streamIn, flag);
-    ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, modelId=%u.", Id_());
-
-    streamIn->SetModel(this);
-    streamIn->SetBindFlag(true); // set bind flag for alloc task resource;
-
     if (dev->IsStarsPlatform()) {
-        error = execStream->Synchronize();
+        streamIn->SetBindFlag(false); // set bind flag false for model stream reuse;
+        streamIn->SetModel(this);
+        streamIn->SetBindFlag(true); // set bind flag for alloc task resource;
+        rtError_t error = RT_ERROR_NONE;
+        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+            error = dev->GetCtrlSQ().SendModelBindMsg(this, streamIn, flag);
+        } else {
+            Stream * const execStream = context_->DefaultStream_();
+            error = ModelBindTaskSubmit(execStream, streamIn, flag);
+            ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, modelId=%u.", Id_());
+            error = execStream->Synchronize();
+        }
         if (error != RT_ERROR_NONE) {
             streamIn->DelModel(this);
             streamIn->SetBindFlag(false);
@@ -436,8 +447,16 @@ rtError_t Model::EnterBindStream(Stream * const streamIn, const uint32_t flag)
             return error;
         }
         streamIn->SetDebugRegister(streamIn->IsModelsDebugRegister());
+        return RT_ERROR_NONE;
+    } else {
+        Stream * const execStream = streamIn;
+        rtError_t error = ModelBindTaskSubmit(execStream, streamIn, flag);
+        ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, modelId=%u.", Id_());
+
+        streamIn->SetModel(this);
+        streamIn->SetBindFlag(true); // set bind flag for alloc task resource;
+        return RT_ERROR_NONE;
     }
-    return RT_ERROR_NONE;
 }
 
 rtError_t Model::BindStream(Stream * const streamIn, const uint32_t flag)
@@ -505,6 +524,9 @@ rtError_t Model::ModelUnBindTaskSubmit(Stream * const streamIn, const bool force
     COND_RETURN_ERROR_MSG_INNER(syncRet != RT_ERROR_NONE, syncRet, "ModelWaitForTask failed.");
     streams_.remove(streamIn);
 
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return dev->GetCtrlSQ().SendModelUnbindMsg(this, streamIn, force);
+    }
     TaskFactory * const devTaskFactory = context_->Device_()->GetTaskFactory();
     Stream * const defaultStream = context_->DefaultStream_();
     TaskInfo submitTask = {};
@@ -514,13 +536,19 @@ rtError_t Model::ModelUnBindTaskSubmit(Stream * const streamIn, const bool force
 
     (void)ModelMaintainceTaskInit(maintainceTask, MMT_STREAM_DEL, this, streamIn, RT_MODEL_HEAD_STREAM, 0U);
 
-    const rtError_t error = context_->Device_()->SubmitTask(maintainceTask);
+    rtError_t error = context_->Device_()->SubmitTask(maintainceTask);
     if ((!force) && (error != RT_ERROR_NONE)) {
         (void)devTaskFactory->Recycle(maintainceTask);
         streams_.push_front(streamIn);
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream unbind failed, streamId=%d, modelId=%d!", streamIn->Id_(), id_);
+        return error;
     }
-    return error;
+    error = (context_->DefaultStream_())->Synchronize();
+    if (error != RT_ERROR_NONE) {
+        streams_.push_front(streamIn);
+        return error;
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t Model::UnbindStream(Stream * const streamIn, const bool force)
@@ -546,14 +574,7 @@ rtError_t Model::UnbindStream(Stream * const streamIn, const bool force)
 
     rtError_t error = ModelUnBindTaskSubmit(streamIn, force);
     ERROR_RETURN_MSG_INNER(
-        error, "ModelUnBindTaskSubmit failed, stream_id=%d, retCode=%#x!", streamId, static_cast<uint32_t>(error));
-
-    error = (context_->DefaultStream_())->Synchronize();
-    if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "streamId=%d, modelId=%d, retCode=%#x!", streamId, id_,
-                         static_cast<uint32_t>(error));
-        goto ROLL_BACK;
-    }
+        error, "Stream unbind failed, stream_id=%d, retCode=%#x!", streamId, static_cast<uint32_t>(error));
 
     streamIn->DelModel(this);
     streamIn->SetBindFlag(false);
@@ -561,11 +582,6 @@ rtError_t Model::UnbindStream(Stream * const streamIn, const bool force)
     headStreams_.remove(streamIn);
     RT_LOG(RT_LOG_INFO, "unbind stream end, stream_id=%d, model_id=%d.", streamId, id_);
     return RT_ERROR_NONE;
-
-ROLL_BACK:
-    streams_.push_front(streamIn);
-    RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream unbind failed, streamId=%d, modelId=%d!", streamId, id_);
-    return error;
 }
 
 rtError_t Model::AddStream(Stream * const streamIn, const uint32_t flag)
@@ -654,6 +670,10 @@ rtError_t Model::UnBindSqPerStream(Stream * const streamIn)
     const rtError_t syncRet = streamIn->Synchronize();
     COND_RETURN_ERROR_MSG_INNER(syncRet != RT_ERROR_NONE, syncRet, "Synchronize failed.");
 
+    // 这里逻辑跟unbind那边不一样, 需要确认差异原因
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return dev->GetCtrlSQ().SendModelUnbindMsg(this, streamIn, false);
+    }
     TaskFactory * const devTaskFactory = context_->Device_()->GetTaskFactory();
     Stream * const defaultStream = context_->DefaultStream_();
     TaskInfo submitTask = {};
@@ -696,17 +716,41 @@ rtError_t Model::LoadComplete()
     return LoadCompleteByStream();
 }
 
+rtError_t Model::SendAicpuModelLoadMsg(Stream *stream) const
+{
+    RT_LOG(RT_LOG_DEBUG, "packet model info for aicpu engine, model_id=%u, stream_id=%d.",  Id_(), stream->Id_());
+    TaskInfo submitTask = {};
+    rtError_t errorReason;
+    TaskInfo *aicpuTask = stream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_TO_AICPU, errorReason);
+    NULL_PTR_RETURN_MSG(aicpuTask, errorReason);
+
+    (void)ModelToAicpuTaskInit(aicpuTask, Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_LOAD), executorFlag_,
+                                RtPtrToValue(aicpuModelInfo_));
+    rtError_t error = stream->Device_()->SubmitTask(aicpuTask);
+    if (error != RT_ERROR_NONE) {
+        (void)stream->Device_()->GetTaskFactory()->Recycle(aicpuTask);
+        RT_LOG(RT_LOG_ERROR, "Failed to submit aicpu model load task, model_id=%d, retCode=%#x!", id_, static_cast<uint32_t>(error));
+    }
+    return error;
+}
+
 rtError_t Model::LoadCompleteByStreamPrep(Stream * &stream)
 {
     rtError_t error = PacketAicpuModelInfo();
     ERROR_RETURN_MSG_INNER(error, "Fail to packet aicpu model task!");
     const bool isNeedLoadAicpuModel = NeedLoadAicpuModelTask();
+    Device * const dev = context_->Device_();
     if (isNeedLoadAicpuModel) {
         COND_RETURN_ERROR_MSG_INNER(endGraphNum_ != 1U, RT_ERROR_MODEL_ENDGRAPH,
             "End graph num(%u) must be equal to 1", endGraphNum_);
         error = context_->StreamCreate(static_cast<uint32_t>(RT_STREAM_PRIORITY_DEFAULT), 0U, &stream);
         ERROR_RETURN_MSG_INNER(error, "Fail to create model load stream, retCode=%#x!", static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_DEBUG, "create a aicpu stream for model load, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
+    } else if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "There is no stream of the model");
+        CtrlSQ& ctrlSQ = dev->GetCtrlSQ();
+        stream = ctrlSQ.GetStream();
+        RT_LOG(RT_LOG_DEBUG, "use ctrl stream for model load");
     } else {
         COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "There is no stream of the model");
         stream = context_->DefaultStream_();
@@ -714,7 +758,6 @@ rtError_t Model::LoadCompleteByStreamPrep(Stream * &stream)
     }
 
     stream->SetLatestModlId(id_);
-    Device * const dev = stream->Device_();
     if (dev->IsStarsPlatform()) {
         error = dev->Driver_()->MemCopySync(labelCountPtr_, sizeof(uint64_t), &labelCount_,
             sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
@@ -763,7 +806,7 @@ rtError_t Model::LoadCompleteByStreamPostp(Stream *const stream)
         const uint32_t totalTask = sinkStream->GetCurSqPos();
         if ((flags & RT_STREAM_AICPU) != 0U) { continue; }
         mmTimespec timeBegin = mmGetTickCount();
-        uint64_t diff = 0ULL;
+        uint64_t diff = 0ULL;        
         do {
             COND_PROC(driver->GetSqTail(devId, tsId, sqId, devTail) != RT_ERROR_NONE, break);
             diff = GetTimeInterval(timeBegin);
@@ -795,7 +838,6 @@ rtError_t Model::LoadCompleteByStream(void)
     TaskInfo submitTask = {};
     TaskInfo submitTaskInfo = {};
     TaskInfo *maintainceTask = nullptr;
-    TaskInfo *aicpuTask = nullptr;
     bool isNeedStreamReuse = false;
     const bool isContextContainAicpuModel = this->Context_()->GetAicpuExecuteModel();
 
@@ -803,7 +845,7 @@ rtError_t Model::LoadCompleteByStream(void)
     Device * const dev = stream->Device_();
     TaskFactory * const devTaskFactory = dev->GetTaskFactory();
     rtError_t errorReason;
-    // per sink stream load complete
+    // per sink stream load complete for mini/cloud
     for (Stream * const sinkStream : streams_) {
         if (((sinkStream->Flags() & RT_STREAM_AICPU) != 0)) {
             continue;
@@ -832,44 +874,29 @@ rtError_t Model::LoadCompleteByStream(void)
     ERROR_RETURN_MSG_INNER(syncError, "Failed to synchronize sink stream, retCode=%#x!",
         static_cast<uint32_t>(syncError));
 
-    if (isNeedStreamReuse && isContextContainAicpuModel) {
-        ERROR_RETURN_MSG_INNER(RT_ERROR_FEATURE_NOT_SUPPORT,
-            "aicpu execute model not support stream reuse, retCode=%#x!",
-            static_cast<uint32_t>(RT_ERROR_FEATURE_NOT_SUPPORT));
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        error = dev->GetCtrlSQ().SendModelLoadCompleteMsg(this, firstTaskId_);
+        ERROR_RETURN_MSG_INNER(error, "SendModelLoadCompleteMsg failed, retCode=%#x!", static_cast<uint32_t>(error));
+    } else {
+        maintainceTask = stream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
+        NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
+
+        (void)ModelMaintainceTaskInit(maintainceTask,
+            MMT_MODEL_PRE_PROC, this, stream, RT_MODEL_HEAD_STREAM, firstTaskId_);
+
+        error = dev->SubmitTask(maintainceTask);
+        ERROR_GOTO_MSG_INNER(error, ERROR_TASK, "Failed to submit model pre proc task, retCode=%#x!",
+                            static_cast<uint32_t>(error));
     }
-
-    maintainceTask = stream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
-    NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
-
-    (void)ModelMaintainceTaskInit(maintainceTask,
-        MMT_MODEL_PRE_PROC, this, stream, RT_MODEL_HEAD_STREAM, firstTaskId_);
-
-    error = dev->SubmitTask(maintainceTask);
-    ERROR_GOTO_MSG_INNER(error, ERROR_TASK, "Failed to submit model pre proc task, retCode=%#x!",
-                         static_cast<uint32_t>(error));
-
     SetNeedSubmitTask(true);
-
     if (isNeedLoadAicpuModel) {
-        RT_LOG(RT_LOG_DEBUG, "packet model info for aicpu engine, model_id=%u, stream_id=%d.",  Id_(), stream->Id_());
-
-        aicpuTask = stream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_TO_AICPU, errorReason);
-        NULL_PTR_RETURN_MSG(aicpuTask, errorReason);
-
-        (void)ModelToAicpuTaskInit(aicpuTask, Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_LOAD), executorFlag_,
-                                   RtPtrToValue(aicpuModelInfo_));
-        error = dev->SubmitTask(aicpuTask);
-        ERROR_GOTO_MSG_INNER(error, ERROR_AICPU_TASK,
-            "Failed to submit aicpu model load task, model_id=%d, retCode=%#x!", id_, static_cast<uint32_t>(error));
+        SendAicpuModelLoadMsg(stream);
+        ERROR_RETURN_MSG_INNER(error, "SendAicpuModelLoadMsg failed, retCode=%#x!", static_cast<uint32_t>(error));
     }
-
     error = LoadCompleteByStreamPostp(stream);
     ERROR_RETURN_MSG_INNER(error, "LoadCompleteByStreamPostp failed, retCode=%#x!",
         static_cast<uint32_t>(error));
 
-    return error;
-ERROR_AICPU_TASK:
-    (void)devTaskFactory->Recycle(aicpuTask);
     return error;
 ERROR_TASK:
     (void)devTaskFactory->Recycle(maintainceTask);
@@ -1220,7 +1247,7 @@ rtError_t Model::ExecuteAsync(Stream * const stm)
     Stream *curStm = stm;
     COND_RETURN_ERROR_MSG_INNER((curStm != nullptr) && (curStm->Context_() != context_),
         RT_ERROR_STREAM_CONTEXT, "Stream is not in current ctx!");
-    COND_RETURN_WARN(GetModelExecutorType() == EXECUTOR_AICPU,
+    COND_RETURN_WARN(GetModelExecutorType() == EXECUTOR_AICPU, 
         RT_ERROR_FEATURE_NOT_SUPPORT, "feature does not support!");
 
     error = GetStreamToAsyncExecute(curStm);
@@ -1527,6 +1554,19 @@ uint32_t Model::ModelExecuteType()
     return EXECUTOR_TS;
 }
 
+// if last Synchronize timeout, need Synchronize here
+void Model::SyncExeStream(void) const
+{
+    auto * const exeStm = GetExeStream();
+    if ((exeStm != nullptr) && exeStm->GetNeedSyncFlag()) {
+        const rtError_t ret = exeStm->Synchronize(false, 100); // 100 wait 100ms
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_DEBUG, "In model abort, Synchronize return is %d.", ret);
+        }
+        exeStm->SetNeedSyncFlag(false);
+    }
+}
+
 rtError_t Model::ModelAbort()
 {
     rtError_t error;
@@ -1538,10 +1578,14 @@ rtError_t Model::ModelAbort()
     TaskInfo *executeTask = nullptr;
     if (dev->IsStarsPlatform() && (ModelExecuteType() != EXECUTOR_AICPU)) {
         RT_LOG(RT_LOG_DEBUG, "Submit abort task to ts");
-        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM)) {
+        if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM)) {
             error = context_->StreamCreate(static_cast<uint32_t>(RT_STREAM_PRIORITY_DEFAULT), 0U, &streamObj);
             ERROR_RETURN_MSG_INNER(error, "Fail to create model abort stream, retCode=%#x!",
                                    static_cast<uint32_t>(error));
+        } else if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+            dev->GetCtrlSQ().SendModelAbortMsg(this);
+            SyncExeStream();
+            return RT_ERROR_NONE;
         } else {
             streamObj = context_->DefaultStream_();
         }
@@ -1559,21 +1603,13 @@ rtError_t Model::ModelAbort()
         error = streamObj->Synchronize();
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to synchronize model abort stream, retCode=%#x!",
                             static_cast<uint32_t>(error));
-        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM)) {
+        if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM)) {
             error = context_->StreamDestroy(streamObj);
             ERROR_RETURN_MSG_INNER(error, "Failed to destroy model abort stream, retCode=%#x!",
                                    static_cast<uint32_t>(error));
         }
 
-        // if last Synchronize timeout, need Synchronize here
-        auto * const exeStm = GetExeStream();
-        if ((exeStm != nullptr) && exeStm->GetNeedSyncFlag()) {
-            const rtError_t ret = exeStm->Synchronize(false, 100); // 100 wait 100ms
-            if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_DEBUG, "In model abort, Synchronize return is %d.", ret);
-            }
-            exeStm->SetNeedSyncFlag(false);
-        }
+        SyncExeStream();
         return RT_ERROR_NONE;
     }
 
@@ -1718,7 +1754,7 @@ rtError_t Model::LoadCompleteByCallAiCpuIntf()
     rtError_t errorReason;
 
     COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "model is empty.");
-    // per sink defaultStream load complete
+    // per sink defaultStream load complete for mini/cloud
     for (Stream * const sinkStream : streams_) {
         maintainceTask = sinkStream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
         NULL_PTR_RETURN_MSG(maintainceTask, errorReason);

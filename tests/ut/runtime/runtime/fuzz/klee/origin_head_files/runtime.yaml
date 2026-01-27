@@ -1,0 +1,455 @@
+rtCtxCreate:
+    paras:
+        - ctx:
+            type: rtContext_t *
+            no_sym: True
+        - flags:
+            type: uint32_t
+        - device:
+            type: int32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtCtxDestroy:
+    paras:
+        - ctx:
+            type: rtContext_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtCtxSetCurrent:
+    paras:
+        - ctx:
+            type: rtContext_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtCtxSynchronize:
+    paras: {}
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtCtxGetCurrent:
+    paras:
+        - ctx:
+            type: rtContext_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtCtxGetDevice:
+    paras:
+        - device:
+            type: int32_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtGetDeviceCount:
+    paras:
+        - count:
+            type: int32_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtSetDevice:
+    paras:
+        - device:
+            type: int32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtGetDevice:
+    paras:
+        - device:
+            type: int32_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtDeviceReset:
+    paras: {}
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtDeviceSynchronize:
+    paras: {}
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtDeviceGetStreamPriorityRange:
+    paras:
+        - leastPriority:
+            type: int32_t *
+            no_sym: True
+        - greatestPriority:
+            type: int32_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventCreate:
+    paras:
+        - event:
+            type: rtEvent_t *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventDestroy:
+    paras:
+        - event:
+            type: rtEvent_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventRecord:
+    paras:
+        - event:
+            type: rtEvent_t
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMultiDevEventRecord:
+    paras:
+        - event_:
+            type: rtEvent_t
+        - stream_:
+            type: rtStream_t
+        - listeners:
+            type: int32_t *
+        - count:
+            type: uint32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventSynchronize:
+    paras:
+        - event:
+            type: rtEvent_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventQuery:
+    paras:
+        - event:
+            type: rtEvent_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtEventElapsedTime:
+    paras:
+        - time:
+            type: float *
+        - start:
+            type: rtEvent_t
+        - end:
+            type: rtEvent_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtDevBinaryRegister:
+    paras:
+        - bin:
+            type: rtDevBinary_t *
+        - handle:
+            type: void **
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtDevBinaryUnRegister:
+    paras:
+        - handle:
+            type: void *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtFunctionRegister:
+    paras:
+        - binHandle:
+            type: void *
+            no_sym: True
+        - stubFunc:
+            type: void *
+            no_sym: True
+        - stubName:
+            type: char *
+        - devFunc:
+            type: void *
+            no_sym: True
+        - funcMode:
+            type: uint32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtKernelConfigDump:
+    paras:
+        - kind:
+            type: uint32_t
+        - dumpSizePerBlock:
+            type: uint32_t
+        - blockDim:
+            type: uint32_t
+        - dumpBaseAddr:
+            type: void **
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtKernelLaunch:
+    paras:
+        - stubFunc:
+            type: void *
+            no_sym: True
+        - blockDim:
+            type: uint32_t
+        - args:
+            type: void *
+            no_sym: True
+        - argsSize:
+            type: uint32_t
+        - smDesc:
+            type: rtSmDesc_t *
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtConfigureCall:
+    paras:
+        - numBlocks:
+            type: uint32_t
+        - smDesc:
+            type: rtSmDesc_t *
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtSetupArgument:
+    paras:
+        - arg:
+            type: void *
+            no_sym: True
+        - size:
+            type: uint32_t
+        - offset:
+            type: uint32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtLaunch:
+    paras:
+        - stubFunc:
+            type: void *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtKernelConfigTransArg:
+    paras:
+        - ptr:
+            type: void *
+            no_sym: True
+        - size:
+            type: uint64_t
+        - flag:
+            type: uint32_t
+        - arg:
+            type: void**
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtKernelFusionStart:
+    paras:
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtKernelFusionEnd:
+    paras:
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMalloc:
+    paras:
+        - devPtr:
+            type: void **
+            no_sym: True
+        - size:
+            type: uint64_t
+        - type:
+            type: rtMemType_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtFree:
+    paras:
+        - devPtr:
+            type: void *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMallocHost:
+    paras:
+        - hostPtr:
+            type: void **
+            no_sym: True
+        - size:
+            type: uint64_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtFreeHost:
+    paras:
+        - hostPtr:
+            type: void *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMemAllocManaged:
+    paras:
+        - ptr:
+            type: void **
+            no_sym: True
+        - size:
+            type: uint64_t
+        - flag:
+            type: uint32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMemFreeManaged:
+    paras:
+        - ptr:
+            type: void *
+            no_sym: True
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMemcpy:
+    paras:
+        - dst:
+            type: void *
+            no_sym: True
+        - src:
+            type: void *
+            no_sym: True
+        - count:
+            type: uint64_t
+        - kind:
+            type: rtMemcpyKind_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtMemcpyAsync:
+    paras:
+        - dst:
+            type: void *
+            no_sym: True
+        - src:
+            type: void *
+            no_sym: True
+        - count:
+            type: uint64_t
+        - kind:
+            type: rtMemcpyKind_t
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtStreamCreate:
+    paras:
+        - stream:
+            type: rtStream_t *
+            no_sym: True
+        - priority:
+            type: int32_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtStreamDestroy:
+    paras:
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtStreamWaitEvent:
+    paras:
+        - stream:
+            type: rtStream_t
+        - event:
+            type: rtEvent_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtStreamSynchronize:
+    paras:
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std
+rtStreamQuery:
+    paras:
+        - stream:
+            type: rtStream_t
+    head_files:
+        - runtime/rt.h
+    namespace:
+        - std

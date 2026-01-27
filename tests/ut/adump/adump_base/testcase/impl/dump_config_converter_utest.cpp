@@ -121,8 +121,8 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
     configData = ReadFileToString(JSON_BASE "common/watcher_output.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
     ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-    EXPECT_TRUE(IsNeedDump);
+    EXPECT_EQ(ret, ADUMP_FAILED);
+    EXPECT_FALSE(IsNeedDump);
 
     converter = DumpConfigConverter(nullptr, static_cast<size_t>(-1));
     ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
@@ -174,6 +174,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
     converter = DumpConfigConverter(configData.c_str(), configData.size());
     ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+
 }
 
 TEST_F(DumpConfigConverterUtest, TestConvertException)

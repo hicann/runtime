@@ -208,7 +208,7 @@ rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStarsStreamA
 
     Driver * const driver = taskInfo->stream->Device_()->Driver_();
     DevProperties props;
-    auto error = GET_DEV_PROPERTIES(chipType, props);
+    const auto error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         "Failed to get properties");
     if (props.isSupportInitFuncCallPara) {
@@ -477,6 +477,7 @@ rtError_t StreamTagSetTaskInit(TaskInfo *taskInfo, Stream * const stm, const uin
     TaskCommonInfoInit(taskInfo);
     taskInfo->typeName = "STREAM_TAG_SET";
     taskInfo->type = TS_TASK_TYPE_SET_STREAM_GE_OP_TAG;
+    taskInfo->isNeedStreamSync = true;
 
     taskInfo->u.stmTagSetTask.targetStm = stm;
     taskInfo->u.stmTagSetTask.geOpTag = geOpTag;

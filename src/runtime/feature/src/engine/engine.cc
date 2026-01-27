@@ -27,6 +27,7 @@
 #include "task_info.hpp"
 #include "task_res.hpp"
 #include "thread_local_container.hpp"
+#include "inner_thread_local.hpp"
 #include "atrace_log.hpp"
 #include "task_submit.hpp"
 #include "ctrl_res_pool.hpp"
@@ -973,6 +974,7 @@ ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(fliptask);
     return error;
 }
+
 rtError_t Engine::SendCommand(TaskInfo * const workTask, rtTsCommand_t &cmdLocal, rtTsCmdSqBuf_t * const command,
                               const uint32_t sendSqeNum)
 {
@@ -997,7 +999,7 @@ rtError_t Engine::SendCommand(TaskInfo * const workTask, rtTsCommand_t &cmdLocal
     }
 
     if (cmdLocal.cmdType == RT_TASK_COMMAND_TYPE_STARS_SQE) {
-        // command is host memory, use itself directly
+        // command of hi1980C is host memory, use itself directly
         ToConstructSqe(workTask, &(command->starsSqe));
     } else {
         command->cmd = cmdLocal.cmdBuf.cmd;
@@ -1237,6 +1239,57 @@ rtError_t Engine::QueryLatestTaskId(const uint32_t streamId, uint32_t &taskId)
     UNUSED(streamId);
     UNUSED(taskId);
     return RT_ERROR_NONE;
+}
+
+void Engine::DestroyPrintfThread(void)
+{
+    const std::lock_guard<std::mutex> lk(printMtx_);
+    if (printfThread_ != nullptr) {
+        printThreadRunFlag_ = false;
+        printfThread_->Join();
+        RT_LOG(RT_LOG_EVENT, "Join printf thread OK.");
+        printfThread_.reset(nullptr);
+    }
+    return;
+}
+
+rtError_t Engine::CreatePrintfThread(void)
+{
+    const std::lock_guard<std::mutex> lk(printMtx_);
+    // 每个device仅创建一个线程用于printf
+    if (printfThread_ != nullptr) {
+        return RT_ERROR_NONE;
+    }
+
+    void * const printf = ValueToPtr(THREAD_PRINTF);
+    constexpr const char_t* threadName = "PRINTF";
+    printfThread_.reset(OsalFactory::CreateThread(threadName, this, printf));
+    NULL_PTR_RETURN(printfThread_, RT_ERROR_MEMORY_ALLOCATION);
+    printThreadRunFlag_ = true;
+    const int32_t error = printfThread_->Start();
+    if (error != EN_OK) {
+        printThreadRunFlag_ = false;
+        printfThread_.reset(nullptr);
+        return RT_ERROR_ENGINE_THREAD;
+    }
+    return RT_ERROR_NONE;
+}
+
+bool Engine::isEnablePrintfThread(void)
+{
+    return (printfThread_ != nullptr);
+}
+
+void Engine::PrintfRun()
+{
+    Device * const dev = GetDevice();
+    NULL_PTR_RETURN_DIRECTLY(dev);
+    Context *ctx = Runtime::Instance()->GetPriCtxByDeviceId(dev->Id_(), 0U);
+    InnerThreadLocalContainer::SetCurCtx(ctx);
+    while (printThreadRunFlag_ && !Runtime::Instance()->IsExiting()) {
+        (void)mmSleep(200U);
+        (void)dev->ParsePrintInfo();
+    }
 }
 }  // namespace runtime
 }  // namespace cce

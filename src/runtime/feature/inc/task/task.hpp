@@ -13,7 +13,7 @@
 #include "base.hpp"
 #include "stars.hpp"
 #include "hwts.hpp"
-#include "starsv2_sqe_info.hpp"
+#include "stars_david.hpp"
 #include "error_message_manage.hpp"
 #include "task_allocator.hpp"
 
@@ -75,7 +75,7 @@ union tagTsCommandBuf {
     rtCommand_t cmd;          // to ts module
     union {
         rtStarsSqe_t starsSqe[SQE_NUM_PER_STARS_TASK_MAX]; // STARS sqe format, to stars directly
-        rtStarsV2Sqe_t starsv2Sqe[SQE_NUM_PER_STARSV2_TASK_MAX]; // STARS sqe format, to stars directly
+        rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX]; // STARS sqe format, to stars directly
     } u;
 };
 

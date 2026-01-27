@@ -311,13 +311,16 @@ void ReceiveData::WaitAllBufferEmptyEvent(uint64_t us)
     std::unique_lock<std::mutex> lk(cvBufferEmptyMtx_);
     MSPROF_LOGI("Wait all buf empty, moduleName:%s.", moduleName_.c_str());
     bool status;
+    int cnt = 0;
+    int maxWaitTimes = 3;
     do {
         status = cvBufferEmpty_.wait_for(lk, std::chrono::microseconds(us),
             [this] {
                 return ReceiveData::reportBufEmpty_();
             });
+        cnt++;
         MSPROF_LOGI("buffer status is:%d, wait all buf empty, moduleName:%s", status, moduleName_.c_str());
-    } while (!status);
+    } while (!status && cnt < maxWaitTimes);
 }
 
 /**

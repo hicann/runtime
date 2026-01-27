@@ -7,7 +7,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
 #include <gtest/gtest.h>
 #include <mockcpp/mockcpp.hpp>
 
@@ -41,14 +40,17 @@ protected:
 TEST_F(PlatformManagerV2UTest, platform_instance_001) {
   PlatformManagerV2 &instance = PlatformManagerV2::Instance();
   std::string value_arch = "";
-  uint32_t ret = instance.GetSocSpec("Ascend910B1", "Version", "NpuArch", value_arch);
+  auto ret = instance.GetSocSpec("Ascend910B1", "Version", "NpuArch", value_arch);
   EXPECT_EQ(value_arch, "");
 
   ret = instance.GetSocSpec("Ascend910B1", "version", "NpuArch", value_arch);
   EXPECT_EQ(value_arch, "2201");
 
   ret = instance.GetSocSpec("Ascend910B1", "version", "Npu-Arch", value_arch);
-  EXPECT_EQ(ret, 0xFFFFFFFF);
+  EXPECT_EQ(ret, 0x071A0001);
+
+  ret = instance.GetSocSpec("AscendTest", "version", "Npu-Arch", value_arch);
+  EXPECT_EQ(ret, 0x071F0001);
 }
 
 TEST_F(PlatformManagerV2UTest, platform_instance_Trim) {

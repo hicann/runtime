@@ -1,0 +1,9 @@
+fuzz_target:
+    rt_kernel_fuzzer:
+        libfuzzer_options:
+            rss_limit_mb: 8000
+            max_len: 100
+    rt_event_ctx_fuzzer:
+        libfuzzer_options:
+            rss_limit_mb: 8000
+            max_len: 100

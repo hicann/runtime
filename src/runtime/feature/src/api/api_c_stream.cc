@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -42,7 +42,7 @@ rtError_t rtStreamCreate(rtStream_t *stm, int32_t priority)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config)
+rtError_t rtsStreamCreate(rtStream_t *stream, rtStreamCreateConfig_t *config) 
 {
     int32_t priority = RT_STREAM_PRIORITY_DEFAULT;
     uint32_t flags = RT_STREAM_DEFAULT;
@@ -448,7 +448,7 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             error = apiInstance->SetStreamCacheOpInfoSwitch(exeStream, attrValue->cacheOpInfoSwitch);
             break;
         }
-        default:
+        default: 
             RT_LOG_OUTER_MSG_INVALID_PARAM(stmAttrId,
                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
             error = RT_ERROR_INVALID_VALUE;
@@ -463,6 +463,8 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(attrValue, RT_ERROR_INVALID_VALUE);
     rtError_t error;
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 	Stream * const exeStream = static_cast<Stream *>(stm);
@@ -477,8 +479,6 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             break;
         }
         case RT_STREAM_ATTR_USER_CUSTOM_TAG: {
-            const Runtime * const rtInstance = Runtime::Instance();
-            NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
             if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG)) {
                 RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return success.", static_cast<int32_t>(rtInstance->GetChipType()));
                 return ACL_RT_SUCCESS;
@@ -490,9 +490,9 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             error = apiInstance->GetStreamCacheOpInfoSwitch(exeStream, &attrValue->cacheOpInfoSwitch);
             break;
         }
-        default:
+        default: 
             RT_LOG_OUTER_MSG_INVALID_PARAM(stmAttrId,
-               "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");  
+               "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");         
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -648,7 +648,7 @@ rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags)
             ErrorCode::EE1006, __func__, "flags=" + std::to_string(flags));
     if ((flags & RT_STREAM_DESTORY_FLAG_FORCE) != 0U) {
         return rtStreamDestroyForce(stm);
-    }
+    }  
     return rtStreamDestroy(stm);
 }
 

@@ -60,13 +60,15 @@ int32_t FILETransport::SendBuffer(CONST_VOID_PTR /* buffer */, int32_t /* length
     return 0;
 }
 
-int32_t FILETransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
+int32_t FILETransport::SendBuffer(
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
 {
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
         return PROFILING_SUCCESS;
     }
-
+    MSPROF_LOGD("FileChunk filename:%s, module:%d",
+        fileChunkReq->fileName.c_str(), fileChunkReq->chunkModule);
     if (fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_DEVICE ||
         fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_MSPROF ||
         fileChunkReq->chunkModule == FileChunkDataModule::PROFILING_IS_FROM_MSPROF_DEVICE ||
@@ -79,7 +81,9 @@ int32_t FILETransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
             return ParseTlvChunk(fileChunkReq);
         }
         if (stopped_ && fileChunkReq->fileName.find("aicpu.data") != std::string::npos) {
-            (void)ParseStr2IdChunk(fileChunkReq);
+            if (ParseStr2IdChunk(fileChunkReq) == PROFILING_SUCCESS) {
+                return PROFILING_SUCCESS;
+            }
         }
         std::string devId = Utils::GetInfoSuffix(fileChunkReq->extraInfo);
         std::string jobId = Utils::GetInfoPrefix(fileChunkReq->extraInfo);
@@ -91,14 +95,10 @@ int32_t FILETransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
             return PROFILING_FAILED;
         }
     }
-
     int32_t ret;
-    // 数据是否切片，关系到数据是否会被截断
     if (helperStorageMap_.empty() || fileChunkReq->id.empty()) {
         ret = fileSlice_->SaveDataToLocalFiles(fileChunkReq, storageDir_);
     } else {
-        MSPROF_LOGD("Helper fileChunkReq id: %s, fileName: %s", fileChunkReq->id.c_str(),
-            fileChunkReq->fileName.c_str());
         std::unique_lock<std::mutex> guard(helperMtx_, std::defer_lock);
         guard.lock();
         std::string helperPath = helperStorageMap_[fileChunkReq->id];
@@ -109,7 +109,6 @@ int32_t FILETransport::SendBuffer(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChu
         MSPROF_LOGE("write data to local files failed, fileName: %s", fileChunkReq->fileName.c_str());
         return PROFILING_FAILED;
     }
-
     return PROFILING_SUCCESS;
 }
 
@@ -210,7 +209,7 @@ void FILETransport::AddHashData(const std::string& input) const{
     }
     std::stringstream ss(input);
     std::string item;
-    while (std::getline(ss, item, HASH_DIC_DELIMITER[0])) {
+    while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
         uint64_t uid = hashDataGenIdFuncPtr_(item);
         MSPROF_LOGD("add str2id:%s uid:%u from adprof into hash data ", item.c_str(), uid);
     }
@@ -239,27 +238,23 @@ bool removeStr2IdHeaderMark(std::string& str) {
 int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) {
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
-        return PROFILING_SUCCESS;
+        return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
     }
-    const char *data = fileChunkReq->chunk.data();
-    if (data == nullptr) {
-        MSPROF_LOGE("str2id fileChunkReq data is null");
-        return PROFILING_FAILED;
-    }
-    std::string dataStr = data;
-    if (dataStr.length() == 0) {
+    if (fileChunkReq->chunk.length() == 0) {
         MSPROF_LOGW("str2id fileChunk length is 0");
-        return PROFILING_SUCCESS;
+        return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
     }
     if (parseStr2IdStart_) {
-        MSPROF_LOGD("parse str2id fileChunk size: %u data addr:%s data size:%u", fileChunkReq->chunkSize, data, dataStr.length());
-        AddHashData(dataStr);
-    } else if (removeStr2IdHeaderMark(dataStr)) {
+        MSPROF_LOGD("parse str2id fileChunk data size:%u", fileChunkReq->chunk.length());
+        AddHashData(fileChunkReq->chunk);
+        return PROFILING_SUCCESS;
+    } else if (removeStr2IdHeaderMark(fileChunkReq->chunk)) {
         MSPROF_LOGI("start parse drv str2id info");
         parseStr2IdStart_ = true;
-        AddHashData(dataStr);
+        AddHashData(fileChunkReq->chunk);
+        return PROFILING_SUCCESS;
     }
-    return PROFILING_SUCCESS;
+    return PROFILING_FAILED;
 }
 
 /**

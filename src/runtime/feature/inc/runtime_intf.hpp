@@ -69,6 +69,7 @@ public:
     virtual rtArchType_t GetArchType() const = 0;
     virtual int64_t GetAicpuCnt() const = 0;
     virtual bool GetDisableThread() const = 0;
+    virtual bool GetSentinelMode() const = 0;
     virtual rtMemType_t GetTsMemType(rtMemRequestFeature_t featureType, uint64_t memSize) = 0;
     virtual void SetBiuperfProfFlag(bool flag) = 0;
     virtual void SetL2CacheProfFlag(bool flag) = 0;

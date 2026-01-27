@@ -17,20 +17,21 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/streamio/common/src/select_operation.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/statistics/perf_count.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/json/json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
     ${CppPath}
 )
@@ -52,8 +53,8 @@ add_executable(streamio_common_utest
 )
 
 set(libmsprofHeaderDir
-    ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
@@ -63,8 +64,8 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/open
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
 )
@@ -112,13 +113,13 @@ target_compile_options(streamio_common_utest PRIVATE
 )
 
 target_compile_definitions(streamio_common_utest PRIVATE
+    C_SEC
     MSPROF_DEBUG
     google=ascend_private
 )
 
 target_link_libraries(streamio_common_utest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
-    c_sec
 )
 
 

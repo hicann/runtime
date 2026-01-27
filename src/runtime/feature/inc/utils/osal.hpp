@@ -19,15 +19,30 @@
 #include <mutex>
 #include "runtime/base.h"
 #include "mmpa/mmpa_api.h"
+#ifdef WIN32
+#include <malloc.h>
+#include <windows.h>
+#include <immintrin.h>
+#endif  // !WIN32
 #include <functional>
 
 // thread_local
+#ifdef WIN32
+#define LIBRARY_NAME ".dll"
+#define __func__ __FUNCTION__
+#define unlikely(x) (x)
+#define likely(x) (x)
+#define VISIBILITY_DEFAULT
+#define __THREAD_LOCAL__ __declspec(thread)
+#define CTZ(x) _tzcnt_u32(x)
+#else
 #define LIBRARY_NAME ".so"
 #define unlikely(x) (x)
 #define likely(x) (x)
 #define VISIBILITY_DEFAULT __attribute__((visibility("default")))
 #define __THREAD_LOCAL__ __thread
 #define CTZ(x) static_cast<uint32_t>(__builtin_ctz(x))
+#endif
 
 #define MEMORY_FENCE() std::atomic_thread_fence(std::memory_order_seq_cst)
 

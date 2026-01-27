@@ -201,7 +201,6 @@ target_compile_options(trace_server_utest PRIVATE
     -g
     -Wall
     -Werror
-    -std=c++11
 )
 
 target_compile_definitions(trace_server_utest PRIVATE

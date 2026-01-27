@@ -7,9 +7,8 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(ADIAG_DIR ${TOP_DIR}/abl/atrace)
+set(ADIAG_DIR ${TOP_DIR}/src/dfx/trace)
 set(ATRACE_SOURCE_DIR ${ADIAG_DIR}/atrace)
+include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 
 add_subdirectory(ut)
-add_subdirectory(st)
-add_subdirectory(rdv)

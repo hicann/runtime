@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <atomic>
 #include "adump_pub.h"
 #include "adump_api.h"
 #include "dump_manager.h"

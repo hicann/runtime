@@ -12,7 +12,6 @@
 #define __SOC_SPEC_H__
 
 #include <cstdint>
-#include <string>
 
 
 enum class NpuArch : uint32_t {

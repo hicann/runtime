@@ -43,6 +43,8 @@
 #include "para_convertor.hpp"
 #include "soc_info.h"
 #include "ipc_event.hpp"
+#include "inner_thread_local.hpp"
+
 namespace {
 using DevInfo = struct {
     DEV_MODULE_TYPE moduleType;
@@ -420,20 +422,6 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(const uint32_t deviceId, const 
         return RT_ERROR_INVALID_VALUE;
     }
 
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::SetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    UNUSED(devType);
-    UNUSED(devId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::ResetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    UNUSED(devType);
-    UNUSED(devId);
     return RT_ERROR_NONE;
 }
 

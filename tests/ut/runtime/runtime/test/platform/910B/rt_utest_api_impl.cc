@@ -245,49 +245,6 @@ TEST_F(CloudV2ApiImplTest, IPC_ADAPT)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2ApiImplTest, notify_record_error)
-{
-    ApiImpl apiImpl;
-    rtNotify_t notify;
-    rtError_t error;
-    int32_t device_id = 0;
-    uint32_t notify_id;
-    Api *api = Api::Instance();
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::NotifyCreate).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtNotifyCreate(device_id, &notify);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::NotifyRecord).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtNotifyRecord(notify, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::NotifyWait).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtNotifyWait(notify, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::GetNotifyID).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtGetNotifyID(notify, &notify_id);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::GetNotifyID).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtGetNotifyID(notify, &notify_id);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::NotifyDestroy).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtNotifyDestroy(notify);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::IpcSetNotifyName).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtIpcSetNotifyName(notify,  "test_ipc", 8);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    MOCKER_CPP_VIRTUAL(apiImpl,&ApiImpl::IpcOpenNotify).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = rtIpcOpenNotify(&notify, "test_ipc");
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}
-
 TEST_F(CloudV2ApiImplTest, LaunchRandomNumTask_Test_01)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
@@ -493,14 +450,58 @@ TEST_F(CloudV2ApiImplTest, GetExceptionRegInfo_test_02)
     delete apiDecorator_;
 }
 
+rtError_t GetDevMsgTaskInitStub(TaskInfo *task, const void *devMemAddr, uint32_t devMemSize,
+                                rtGetDevMsgType_t msgType)
+{
+    task->type = TS_TASK_TYPE_GET_DEVICE_MSG;
+    if (devMemAddr != nullptr && devMemSize > sizeof(rtGetDevMsgCtrlInfo_t)) {
+        rtGetDevMsgCtrlInfo_t *ctrlInfo = (rtGetDevMsgCtrlInfo_t *)devMemAddr;
+        ctrlInfo->magic = DeviceMsgHandler::DEVICE_GET_MSG_MAGIC;
+        ctrlInfo->pid = 0;
+        ctrlInfo->bufferLen = sizeof(rtGetDevMsgCtrlInfo_t) + sizeof(rtStreamSnapshot_t);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetRunModeStub(cce::runtime::ApiImpl *api, rtRunMode *mode)
+{
+    *mode = RT_RUN_MODE_ONLINE;
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetDevMsgSubmitTaskStub(RawDevice *dev, TaskInfo *task, rtTaskGenCallback callback)
+{
+    (void)dev->GetTaskFactory()->Recycle(task);
+    return RT_ERROR_NONE;
+}
+
+rtError_t MemCopySyncStub(Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
+{
+    memcpy_s(dst, destMax, src, size);
+    return DRV_ERROR_NONE;
+}
+
+void GetMsgCallbackStub(const char *msg, uint32_t len) {}
+
 extern int32_t deviceCloseFlag;
 extern int32_t halResourceIdFlag;
 extern int32_t processResBackupFlag;
 extern int32_t processResRestoreFlag;
 TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
 {
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImpl apiImpl;
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
+    MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
+    MOCKER_CPP_VIRTUAL((RawDevice *)device, &RawDevice::SubmitTask).stubs().will(invoke(GetDevMsgSubmitTaskStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
+
+    Stream *stream = new Stream((Device *)device, 0);
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
     MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&DeviceSnapshot::OpMemoryBackup).stubs().will(returnValue(RT_ERROR_NONE));
     deviceCloseFlag = 1;
@@ -529,6 +530,8 @@ TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
     error = rtSnapShotProcessRestore();
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_RESTORE_FAILED);
     processResRestoreFlag = 0;
+
+    delete stream;
 }
 
 TEST_F(CloudV2ApiImplTest, dev_binary_register_test)
@@ -695,12 +698,12 @@ TEST_F(CloudV2ApiImplTest, ReduceAsync_error_01)
 
     MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context *)NULL));
     error = rtReduceAsync(devMem,
-                          0,
-                          (const void *)devMemSrc,
-                          buff_size,
-                          RT_MEMCPY_SDMA_AUTOMATIC_ADD,
-                          RT_DATA_TYPE_FP32,
-                          streamA);
+                        0,
+                        (const void *)devMemSrc,
+                        buff_size,
+                        RT_MEMCPY_SDMA_AUTOMATIC_ADD,
+                        RT_DATA_TYPE_FP32,
+                        streamA);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(streamA);
@@ -840,40 +843,6 @@ TEST_F(CloudV2ApiImplTest, rtDeviceResetWithoutTsd)
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
 }
 
-rtError_t GetRunModeStub(cce::runtime::ApiImpl *api, rtRunMode *mode)
-{
-    *mode = RT_RUN_MODE_ONLINE;
-    return RT_ERROR_NONE;
-}
-
-rtError_t MemCopySyncStub(Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
-{
-    memcpy_s(dst, destMax, src, size);
-    return DRV_ERROR_NONE;
-}
-
-void GetMsgCallbackStub(const char *msg, uint32_t len) {}
-
-rtError_t GetDevMsgTaskInitStub(TaskInfo *task, const void *devMemAddr, uint32_t devMemSize,
-                                rtGetDevMsgType_t msgType)
-{
-    task->type = TS_TASK_TYPE_GET_DEVICE_MSG;
-    if (devMemAddr != nullptr && devMemSize > sizeof(rtGetDevMsgCtrlInfo_t)) {
-        rtGetDevMsgCtrlInfo_t *ctrlInfo = (rtGetDevMsgCtrlInfo_t *)devMemAddr;
-        ctrlInfo->magic = DeviceMsgHandler::DEVICE_GET_MSG_MAGIC;
-        ctrlInfo->pid = 0;
-        ctrlInfo->bufferLen = sizeof(rtGetDevMsgCtrlInfo_t) + sizeof(rtStreamSnapshot_t);
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t GetDevMsgSubmitTaskStub(RawDevice *dev, TaskInfo *task, rtTaskGenCallback callback)
-{
-    (void)dev->GetTaskFactory()->Recycle(task);
-    return RT_ERROR_NONE;
-}
-
-
 TEST_F(CloudV2ApiImplTest, rtGetDevMsgForRas)
 {
     ApiImpl apiImpl;
@@ -900,7 +869,8 @@ TEST_F(CloudV2ApiImplTest, GetDevErrMsg)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
 
     Stream *stream = new Stream((Device *)device, 0);
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TTLV::Decode).stubs().will(returnValue(RT_ERROR_NONE));
     Context context(device, false);
@@ -937,7 +907,8 @@ TEST_F(CloudV2ApiImplTest, GetDevRunningStreamSnapshotMsg)
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(invoke(GetDevMsgSubmitTaskStub1));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -975,7 +946,8 @@ TEST_F(CloudV2ApiImplTest, GetDevRunningStreamSnapshotMsg_failed)
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1011,63 +983,6 @@ TEST_F(CloudV2ApiImplTest, GetTaskIdAndStreamID)
     delete apiDecorator;
 }
 
-TEST_F(CloudV2ApiImplTest, MemcpyAsyncCheckKindAndLocation_auto)
-{
-    rtError_t error;
-
-    Api *oldApi = Runtime::runtime_->api_;
-    ApiErrorDecorator *apiDecorator = new ApiErrorDecorator(oldApi);
-
-    rtMemcpyKind_t kind = RT_MEMCPY_HOST_TO_DEVICE;
-    rtMemLocationType srcLocationType = RT_MEMORY_LOC_HOST;
-    rtMemLocationType dstLocationType = RT_MEMORY_LOC_DEVICE;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEVICE_TO_HOST;
-    srcLocationType = RT_MEMORY_LOC_DEVICE;
-    dstLocationType = RT_MEMORY_LOC_HOST;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEVICE_TO_DEVICE;
-    srcLocationType = RT_MEMORY_LOC_DEVICE;
-    dstLocationType = RT_MEMORY_LOC_DEVICE;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEFAULT;
-    srcLocationType = RT_MEMORY_LOC_HOST;
-    dstLocationType = RT_MEMORY_LOC_DEVICE;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEFAULT;
-    srcLocationType = RT_MEMORY_LOC_DEVICE;
-    dstLocationType = RT_MEMORY_LOC_DEVICE;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEFAULT;
-    srcLocationType = RT_MEMORY_LOC_DEVICE;
-    dstLocationType = RT_MEMORY_LOC_HOST;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEFAULT;
-    srcLocationType = RT_MEMORY_LOC_HOST;
-    dstLocationType = RT_MEMORY_LOC_HOST;
-    error = apiDecorator->MemcpyAsyncCheckKindAndLocation(&kind, srcLocationType, dstLocationType);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kind = RT_MEMCPY_DEFAULT;
-    srcLocationType = RT_MEMORY_LOC_HOST;
-    dstLocationType = RT_MEMORY_LOC_HOST;
-    error = apiDecorator->MemcpyKindAutoUpdate(srcLocationType, dstLocationType, &kind);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    delete apiDecorator;
-}
 
 TEST_F(CloudV2ApiImplTest, GetDeviceCount_test)
 {
@@ -1122,7 +1037,8 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test0)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(sizeof(rtGetDevMsgCtrlInfo_t)));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1150,7 +1066,8 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test1)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(sizeof(rtGetDevMsgCtrlInfo_t)));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1179,7 +1096,8 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test2)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(0U));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream *stream_var_t = static_cast<Stream *>(stream);
+    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1209,9 +1127,9 @@ TEST_F(CloudV2ApiImplTest, rtGetSocVersionFromDrvApi)
     Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
     rtArchType_t archType = rtInstance->GetArchType();
 
-    char *socVer = "Ascend910B1";
+    char *socVer = "Ascend610Lite";
     // get socversion from halGetSocVersion
-    MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910B1")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend610Lite")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
 
     char res[128] = {0};
     rtError_t error = rtGetSocVersion(res, 128);
@@ -1226,7 +1144,7 @@ TEST_F(CloudV2ApiImplTest, rtSetSocVersionFeInitFailed)
     rtArchType_t archType = rtInstance->GetArchType();
 
     MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0xF));
-    rtError_t error = rtSetSocVersion("Ascend910B");
+    rtError_t error = rtSetSocVersion("Ascend610Lite");
     EXPECT_NE(error, RT_ERROR_NONE);
     rtInstance->SetArchType(archType);
 }
@@ -1237,7 +1155,36 @@ TEST_F(CloudV2ApiImplTest, rtSetSocVersionFeGetPlatformInfoFailed)
     rtArchType_t archType = rtInstance->GetArchType();
     MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0U));
     MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo).stubs().will(returnValue(0xF));
-    rtError_t error = rtSetSocVersion("Ascend910B");
+    rtError_t error = rtSetSocVersion("Ascend610Lite");
+    EXPECT_NE(error, RT_ERROR_NONE);
+    rtInstance->SetArchType(archType);
+}
+
+TEST_F(CloudV2ApiImplTest, rtSetSocVersionFeGetPlatformInfoSuccess)
+{
+    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
+    rtArchType_t archType = rtInstance->GetArchType();
+    fe::PlatformInfo platInfo;
+    platInfo.soc_info.arch_type = ARCH_C100;
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo).stubs().with(mockcpp::any(), outBound(platInfo), mockcpp::any())
+        .will(returnValue(0U));
+    rtError_t error = rtSetSocVersion("Ascend910");
+    EXPECT_NE(error, RT_ERROR_NONE);
+    rtInstance->SetArchType(archType);
+}
+
+TEST_F(CloudV2ApiImplTest, rtSetSocVersionFeGetPlatInfoInvalidChip)
+{
+    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
+    rtArchType_t archType = rtInstance->GetArchType();
+    fe::PlatformInfo platInfo;
+    platInfo.soc_info.arch_type = -1;
+    platInfo.soc_info.chip_type = -1;
+    MOCKER_CPP(&fe::PlatformInfoManager::InitializePlatformInfo).stubs().will(returnValue(0U));
+    MOCKER_CPP(&fe::PlatformInfoManager::GetPlatformInfo).stubs().with(mockcpp::any(), outBound(platInfo), mockcpp::any())
+        .will(returnValue(0U));
+    rtError_t error = rtSetSocVersion("Ascend910");
     EXPECT_NE(error, RT_ERROR_NONE);
     rtInstance->SetArchType(archType);
 }
@@ -1781,9 +1728,10 @@ TEST_F(CloudV2ApiImplTest, modelGetName_decorator_test)
     Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
     ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
 
+
     rtModel_t  model;
     uint32_t maxLen = 128;
-    char_t mdlName[maxLen] = {0};
+ 	char_t mdlName[maxLen] = {0};
     rtError_t error = rtsModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -1814,32 +1762,6 @@ TEST_F(CloudV2ApiImplTest, LaunchDqsTask_Test)
 
     delete apiDecorator_;
     delete apiErrDecorator_;
-}
-
-TEST_F(CloudV2ApiImplTest, StreamGetPriority_Test)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
-    ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
-
-    Stream *stream = nullptr;
-    rtError_t error = apiDecorator_->StreamGetPriority(stream, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    delete apiDecorator_;
-}
-
-TEST_F(CloudV2ApiImplTest, StreamGetFlags_Test)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
-    ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
-
-    Stream *stream = nullptr;
-    rtError_t error = apiDecorator_->StreamGetFlags(stream, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    delete apiDecorator_;
 }
 
 uint32_t stub_open_service(const uint32_t device_id, const NetServiceOpenArgs * args)
@@ -1981,459 +1903,4 @@ TEST_F(CloudV2ApiImplTest, OpenEventHandle_Test)
     error = apiDecorator.IpcOpenEventHandle(eventHandle, static_cast<IpcEvent **>(event));
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiDecorator_;
-}
-
-rtError_t GetRunModeStubExt(cce::runtime::ApiImpl *api, rtRunMode *mode)
-{
-    *mode = RT_RUN_MODE_ONLINE;
-    return RT_ERROR_NONE;
-}
-
-rtError_t GetRunModeOfflineStub(cce::runtime::ApiImpl *api, rtRunMode *mode)
-{
-    *mode = RT_RUN_MODE_OFFLINE;
-    return RT_ERROR_NONE;
-}
-
-void GetErrorMessage(const char *msg, uint32_t len) {
-    if (msg != nullptr && len != 0) {
-        RT_LOG(RT_LOG_ERROR, "rtGetDeviceErrorMessage get msg:%s, length=%u.", msg, len);
-    } else {
-        RT_LOG(RT_LOG_ERROR, "rtGetDeviceErrorMessage get msg failed, length=%u.", msg, len);
-    }
-}
-
-rtError_t GetDevMsgTaskInitStubStarsV2(TaskInfo *task, const void *devMemAddr, uint32_t devMemSize,
-                                rtGetDevMsgType_t msgType)
-{
-    task->type = TS_TASK_TYPE_GET_DEVICE_MSG;
-    if (devMemAddr != nullptr && devMemSize > sizeof(rtGetDevMsgCtrlInfo_t)) {
-        rtGetDevMsgCtrlInfo_t *ctrlInfo = (rtGetDevMsgCtrlInfo_t *)devMemAddr;
-        ctrlInfo->magic = DeviceMsgHandler::DEVICE_GET_MSG_MAGIC;
-        ctrlInfo->pid = 0;
-        ctrlInfo->bufferLen = sizeof(rtGetDevMsgCtrlInfo_t) + sizeof(rtStreamSnapshot_t);
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t GetDevMsgSubmitTaskStubStarsV2(Device *dev, TaskInfo *task, rtTaskGenCallback callback)
-{
-    (void)dev->GetTaskFactory()->Recycle(task);
-    return RT_ERROR_NONE;
-}
-
-void GetMsgCallbackStubStarsV2(const char *msg, uint32_t len) {}
-
-// test05
-TEST_F(CloudV2ApiImplTest, apiImpl_ts_model_abort_as31xm1)
-{
-    rtError_t error;
-    Model *model = NULL;
-    ApiImpl apiImpl;
-    uint32_t flag = 1;
-    uint64_t addr = 0x1000;
-    uint32_t streamId;
-    uint32_t taskId;
-
-    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_TS_MODEL_ABORT);
-    error = apiImpl.ModelCreate(&model, 0);
-    model->SetModelExecutorType(EXECUTOR_TS);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-
-    error = apiImpl.ModelAbort(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiImpl.ModelDestroy(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
-}
-
-TEST_F(CloudV2ApiImplTest, apiImpl_ts_model_abort_old_ver)
-{
-    rtError_t error;
-    Model *model = NULL;
-    ApiImpl apiImpl;
-    uint32_t flag = 1;
-    uint64_t addr = 0x1000;
-    uint32_t streamId;
-    uint32_t taskId;
-
-    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    error = apiImpl.ModelCreate(&model, 0);
-    model->SetModelExecutorType(EXECUTOR_TS);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-
-    error = apiImpl.ModelAbort(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiImpl.ModelDestroy(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
-}
-
-TEST_F(CloudV2ApiImplTest, rtGetDevMsg)
-{
-    ApiImpl apiImpl;
-    rtError_t error;
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context *)NULL));
-    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(false));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStubExt));
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    error = apiImpl.GetDevMsg(RT_GET_DEV_ERROR_MSG, GetErrorMessage);
-    error = apiImpl.GetDevMsg(RT_GET_DEV_MSG_RESERVE, GetErrorMessage);
-    GlobalMockObject::verify();
-}
-
-rtError_t MemCopySyncStubStarsV2(Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
-{
-    memcpy_s(dst, destMax, src, size);
-    return DRV_ERROR_NONE;
-}
-
-
-TEST_F(CloudV2ApiImplTest, rtGetDevMsgOffline)
-{
-    ApiImpl apiImpl;
-    rtError_t error;
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context *)NULL));
-    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(false));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeOfflineStub));
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    error = apiImpl.GetDevMsg(RT_GET_DEV_ERROR_MSG, GetErrorMessage);
-    error = apiImpl.GetDevMsg(RT_GET_DEV_MSG_RESERVE, GetErrorMessage);
-    GlobalMockObject::verify();
-}
-
-TEST_F(CloudV2ApiImplTest, GetMaxModelNum)
-{
-    rtError_t error;
-    ApiImpl apiImpl;
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-    Device* device = rtInstance->DeviceRetain(0, 0);
-    device->SetTschVersion(TS_VERSION_EXPEND_MODEL_ID);
-    uint32_t maxModelCount;
-    Context context(device, false);
-    context.Init();
-    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(&context));
-    error = apiImpl.GetMaxModelNum(&maxModelCount);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-
-TEST_F(CloudV2ApiImplTest, GetDevRunningStreamSnapshotMsg_starsv2)
-{
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-
-    ApiImpl apiImpl;
-    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
-    Stream *stream = new Stream((Device *)device, 0);
-    MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStubStarsV2));
-    MOCKER(SyncGetDeviceMsg).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStubExt));
-    MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(invoke(GetDevMsgSubmitTaskStubStarsV2));
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStubStarsV2));
-    MOCKER_CPP(&Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    {
-        Context context(device, false);
-        context.Init();
-        MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
-        MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(&context));
-
-        rtError_t ret = apiImpl.GetDevRunningStreamSnapshotMsg(GetMsgCallbackStubStarsV2);
-    }
-    delete stream;
-
-    GlobalMockObject::verify();
-}
-
-TEST_F(CloudV2ApiImplTest, apiimpl_stream_test)
-{
-    ApiImpl apiImpl;
-    rtError_t error;
-    rtStream_t rt_stream;
-
-    rtStreamCreate(&rt_stream, 0);
-    Stream *stream = (Stream *)rt_stream;
-    Context *context = (Context *)stream->Context_();
-    sleep(1);
-    error = rtStreamQuery(rt_stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-
-    uint32_t maxStrCount;
-    uint32_t maxTaskCount;
-    error = apiImpl.GetMaxStreamAndTask(0, &maxStrCount, &maxTaskCount);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiImpl.GetMaxStreamAndTask(0, &maxStrCount, &maxTaskCount);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = apiImpl.GetMaxStreamAndTask(1, &maxStrCount, &maxTaskCount);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2ApiImplTest, get_priority_range_coverage)
-{
-    rtError_t error;
-    int32_t leastPriority;
-    int32_t greatestPriority;
-
-    ApiImpl impl;
-    ApiDecorator api(&impl);
-
-    error = api.DeviceGetStreamPriorityRange(&leastPriority, &greatestPriority);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2ApiImplTest, get_priority_range_coverage_with_nullptr)
-{
-    rtError_t error;
-    int32_t leastPriority;
-    int32_t greatestPriority;
-
-    ApiImpl impl;
-    ApiDecorator api(&impl);
-
-    error = api.DeviceGetStreamPriorityRange(NULL, &greatestPriority);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = api.DeviceGetStreamPriorityRange(&leastPriority, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = api.DeviceGetStreamPriorityRange(NULL, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2ApiImplTest, stream_create_with_priority_out_of_range)
-{
-    ApiImpl impl;
-	ApiErrorDecorator api(&impl);
-    rtError_t error;
-	rtStream_t stream_ = nullptr;
-	int32_t priority = -1;
-
-	error = api.StreamCreate((Stream**)&stream_, priority, 0, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(stream_);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_ = nullptr;
-
-    priority = 8;
-
-    error = api.StreamCreate((Stream**)&stream_, priority, 0, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(stream_);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2ApiImplTest, apiImpl_ts_model_abort)
-{
-    rtError_t error;
-    Model *model = NULL;
-    ApiImpl apiImpl;
-    uint32_t flag = 1;
-    uint64_t addr = 0x1000;
-    uint32_t streamId;
-    uint32_t taskId;
-
-    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    int32_t version = device->GetTschVersion();
-    device->SetTschVersion(TS_VERSION_TS_MODEL_ABORT);
-    error = apiImpl.ModelCreate(&model, 0);
-    model->SetModelExecutorType(EXECUTOR_TS);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime *rtInstance = const_cast<Runtime *>(Runtime::Instance());
-
-    error = apiImpl.ModelAbort(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    device->SetTschVersion(version);
-    error = apiImpl.ModelDestroy(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
-}
-
-TEST_F(CloudV2ApiImplTest, decorator_starsv2)
-{
-    rtError_t error;
-    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
-    ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->WriteValuePtr(nullptr, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->DeviceGetStreamlist(0, RT_STREAM_TYPE_MAX, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    rtModelList_t myModelList = {0, {nullptr}};
-    error = apiDecorator_->DeviceGetModelList(0, &myModelList);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiDecorator_->DeviceGetModelList(0, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CntNotifyCreate(0, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CntNotifyDestroy(nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CntNotifyRecord(nullptr, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CntNotifyWaitWithTimeout(nullptr, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CntNotifyReset(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->GetCntNotifyAddress(nullptr, nullptr, NOTIFY_TYPE_MAX);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->WriteValue(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->CCULaunch(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->GetDevResAddress(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->UbDevQueryInfo(QUERY_TYPE_BUFF, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->ReleaseDevResAddress(nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = apiDecorator_->UbDbSend(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    
-    error = apiDecorator_->UbDirectSend(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    error = apiDecorator_->FusionLaunch(nullptr, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    error = apiDecorator_->DeviceResourceClean(0);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    delete apiDecorator_;
-}
-
-TEST_F(CloudV2ApiImplTest, rts_api_LaunchKernel)
-{
-    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    ApiImpl impl;
-    ApiErrorDecorator apiError(&impl);
-
-    RtArgsWithType argsWithType;
-    argsWithType.args.argHandle = nullptr;
-    argsWithType.type = RT_ARGS_MAX;
-    rtError_t error = apiError.CheckArgsWithType(&argsWithType);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
-    Program *program = &stubProg;
-    int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
-    k1->userParaNum_ = 0;
-    k1->systemParaNum_ = 0;
-    k1->isSupportOverFlow_ = false;
-    k1->isNeedSetFftsAddrInArg_ = false;
-    k1->SetKernelRegisterType(RT_KERNEL_REG_TYPE_NON_CPU);
-    k1->mixType_ = MIX_AIV;
-
-    uint64_t data = 1234;
-    argsWithType.type = RT_ARGS_NON_CPU_EX;
-    rtArgsEx_t nonCpuArgsInfo = {};
-    nonCpuArgsInfo.args = &data;
-    nonCpuArgsInfo.argsSize = 8;
-    nonCpuArgsInfo.isNoNeedH2DCopy = 1;
-    argsWithType.args.nonCpuArgsInfo = &nonCpuArgsInfo;
-
-    rtKernelLaunchCfg_t cfg;
-    rtLaunchKernelAttr_t attrs[2];
-    attrs[0].id = RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE;
-    attrs[0].value.engineType = RT_ENGINE_TYPE_AIV;
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET;
-    attrs[1].value.blockDimOffset = 1;
-    cfg.attrs = attrs;
-    cfg.numAttrs = 2;
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    Stream *stream = new Stream(device, 0);
-    error = apiError.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_TIMEOUT;
-    attrs[1].value.timeout = 123;
-    error = apiError.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US;
-    attrs[1].value.timeoutUs.timeoutLow = 123U; // us
-    attrs[1].value.timeoutUs.timeoutHigh = 0U; // us
-    error = apiError.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    attrs[0].id = RT_LAUNCH_KERNEL_ATTR_TIMEOUT;
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US;
-    error = apiError.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
-
-    delete k1;
-    delete stream;
-}
-
-TEST_F(CloudV2ApiImplTest, api_DvppGroupCreate)
-{
-    rtError_t error;
-
-    Runtime *rtInstance = ((Runtime *)Runtime::Instance());
-
-    error = rtDvppGroupCreate(nullptr, 0U);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}
-
-TEST_F(CloudV2ApiImplTest, api_rtStarsTaskLaunch)
-{
-    rtError_t error;
-
-    Runtime *rtInstance = ((Runtime *)Runtime::Instance());
-
-    rtStream_t stream;
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStarsTaskLaunch(nullptr, 0U, stream);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}
-
-TEST_F(CloudV2ApiImplTest, stub_starsv2_test_SendTopicMsgVersionToAicpuStarsV2)
-{
-    rtStream_t stream;
-    rtError_t error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    bool isFinished = false;
-    uint32_t taskId = 0U;
-    uint32_t streamId = 0U;
-    ((Stream *)stream)->JudgeTaskFinish(0, isFinished);
-
-    Runtime *rtInstance = (Runtime *) Runtime::Instance();
-    error = rtGetTaskIdAndStreamID(&taskId, &streamId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }

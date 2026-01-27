@@ -59,7 +59,7 @@ static inline uint64_t CalculateMemcpyAsyncSingleMaxSize(const rtMemcpyKind_t ki
         sqSize = MAX_MEMCPY_SIZE_OF_D2D;
     }
 
-    // StarsV2片内D2D当前走的是SDMA，当前无法区分是片内，还是片间的D2D，因此这块先不拦截D2D。
+    // David片内D2D当前走的是SDMA，当前无法区分是片内，还是片间的D2D，因此这块先不拦截D2D。
     if (Runtime::Instance()->GetConnectUbFlag() && ((kind == RT_MEMCPY_HOST_TO_DEVICE) ||
         (kind == RT_MEMCPY_DEVICE_TO_HOST))) {
         sqSize = MEMCPY_ASYNC_UB_SIZE;
@@ -259,10 +259,10 @@ public:
         rtMallocHostSharedMemoryOut * const out) = 0;
     virtual rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in) = 0;
     virtual rtError_t HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr) = 0;
+    virtual rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) = 0;
     virtual rtError_t HostRegisterV2(void *ptr, uint64_t size, uint32_t flag) = 0;
     virtual rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) = 0;
     virtual rtError_t HostUnregister(void *ptr) = 0;
-    virtual rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) = 0;
     virtual rtError_t ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t ManagedMemFree(const void * const ptr) = 0;
@@ -343,6 +343,7 @@ public:
     virtual rtError_t MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t *cfg) = 0;
     virtual rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle) = 0;
     virtual rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) = 0;
+    virtual rtError_t MemGetAddressRange(void *ptr, void **pbase, size_t *psize) = 0;
     // new memory API
     virtual rtError_t DevMalloc(void ** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, const rtMallocConfig_t * const cfg) = 0;
     virtual rtError_t MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) = 0;
@@ -378,11 +379,11 @@ public:
     virtual rtError_t DeviceSynchronize(const int32_t timeout = -1) = 0;
     virtual rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) = 0;
     virtual rtError_t SnapShotProcessLock() = 0;
- 	virtual rtError_t SnapShotProcessUnlock() = 0;
+    virtual rtError_t SnapShotProcessUnlock() = 0;
     virtual rtError_t SnapShotProcessBackup() = 0;
     virtual rtError_t SnapShotProcessRestore() = 0;
     virtual rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args) = 0;
- 	virtual rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) = 0;
+    virtual rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) = 0;
     virtual rtError_t DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList) = 0;
     virtual rtError_t DeviceGetModelList(int32_t devId, rtModelList_t *mdlList) = 0;
     virtual rtError_t DeviceGetStreamPriorityRange(int32_t * const leastPriority, int32_t * const greatestPriority) = 0;
@@ -423,8 +424,9 @@ public:
     virtual rtError_t PeekLastErr(rtLastErrLevel_t level) = 0;
     virtual rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId) = 0;
     virtual rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t * const userDevId) = 0;
-    virtual rtError_t SetXpuDevice(rtXpuDevType devType, const uint32_t devId) = 0;
-    virtual rtError_t ResetXpuDevice(rtXpuDevType devType, const uint32_t devId) = 0;
+    virtual rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) = 0;
+    virtual rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) = 0;
+    virtual rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) = 0;
     virtual rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) = 0;
 
     // context
@@ -732,6 +734,7 @@ public:
     virtual rtError_t ShmemSetPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num) = 0;
     virtual rtError_t DevVA2PA(uint64_t devAddr, uint64_t len, Stream *stm, bool isAsync) = 0;
     virtual rtError_t StreamClear(Stream * const stm, rtClearStep_t step) = 0;
+    virtual rtError_t StreamStop(Stream * const stm) = 0;
     virtual rtError_t StreamAbort(Stream * const stm) = 0;
     virtual rtError_t DebugSetDumpMode(const uint64_t mode) = 0;
     virtual rtError_t DebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo) = 0;
@@ -780,7 +783,10 @@ public:
     virtual rtError_t EventWorkModeGet(uint8_t *mode) = 0;
 
     virtual rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) = 0;
+    
+    virtual rtError_t BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData) = 0;
 
+    virtual rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle) = 0;
 };
 }
 }

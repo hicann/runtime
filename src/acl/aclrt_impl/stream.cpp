@@ -314,7 +314,6 @@ aclError aclrtStreamAbortImpl(aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamAbort);
     ACL_LOG_INFO("start to execute aclrtStreamAbort");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     const rtError_t rtErr = rtStreamAbort(stream);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("abort stream failed, runtime result = %d", static_cast<int32_t>(rtErr));
@@ -357,7 +356,6 @@ aclError aclrtSetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttr
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetStreamAttribute);
     ACL_LOG_INFO("start to execute aclrtSetStreamAttribute, stmAttrType = [%u]", static_cast<uint32_t>(stmAttrType));
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
     const rtError_t rtErr = rtsStreamSetAttribute(static_cast<rtStream_t>(stream),
@@ -377,7 +375,6 @@ aclError aclrtGetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttr
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetStreamAttribute);
     ACL_LOG_INFO("start to execute aclrtGetStreamAttribute, stmAttrType = [%u]", static_cast<uint32_t>(stmAttrType));
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
     const rtError_t rtErr = rtsStreamGetAttribute(static_cast<rtStream_t>(stream),

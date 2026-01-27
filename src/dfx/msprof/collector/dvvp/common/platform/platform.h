@@ -114,6 +114,8 @@ public:
     int32_t HalEschedQueryInfo(uint32_t devId, ESCHED_QUERY_TYPE type,
         struct esched_input_info *inPut, struct esched_output_info *outPut) const;
     int32_t HalEschedCreateGrpEx(uint32_t devId, struct esched_grp_para *grpPara, uint32_t *grpId) const;
+    ProfAicoreMetrics GetDefaultAicoreMetrics() const;
+    uint64_t GetDefaultDataTypeConfig() const;
 
 private:
     uint32_t platformType_;

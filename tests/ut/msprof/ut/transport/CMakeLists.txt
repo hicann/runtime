@@ -16,7 +16,7 @@ protobuf_generate(transport_proto
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/adx_prof_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
@@ -30,35 +30,51 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/channel/ai_drv_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hash_data.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_open.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/json_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_interface.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_api_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_data_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_base.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pmu.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_biu.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pc_sampling.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_register.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_comm_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_stars_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_compute_device_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_pipe_transfer.cpp
     ${CppPath}
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux.c
     ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux_mem.c
+    #${TOP_DIR}/ace/npuruntime/inc/
+    #${TOP_DIR}/ace/npuruntime/inc/external/
 )
 
 set(localSrcFiles
@@ -81,8 +97,8 @@ add_executable(transport
 )
 
 set(libmsprofHeaderDir
-    ${LIBC_SEC_HEADER}
     ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
     ${TOP_DIR}/include/driver
     ${TOP_DIR}/include/external
     ${TOP_DIR}/include/external/acl
@@ -92,8 +108,8 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/open
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/open
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
 )
@@ -160,6 +176,7 @@ target_compile_options(transport PRIVATE
 )
 
 target_compile_definitions(transport PRIVATE
+    C_SEC
     OSAL
     MSPROF_DEBUG
     google=ascend_private
@@ -167,7 +184,6 @@ target_compile_definitions(transport PRIVATE
 
 target_link_libraries(transport PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
-    c_sec
 )
 
 set_target_properties(transport

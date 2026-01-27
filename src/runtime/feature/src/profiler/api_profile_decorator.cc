@@ -684,7 +684,7 @@ rtError_t ApiProfileDecorator::ReduceAsyncV2(void * const dst, const void * cons
     const Runtime *const rtInstance = Runtime::Instance();
     NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
     Context *const curCtx = rtInstance->CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device *const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     const uint32_t tsVersion = dev->GetTschVersion() & 0xFFFFU;  // low 16bit means tschverion
@@ -816,7 +816,7 @@ rtError_t ApiProfileDecorator::ContextSetCurrent(Context * const inCtx)
 rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * const name)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
- 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
 
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
     if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {
@@ -830,7 +830,8 @@ rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * con
 rtError_t ApiProfileDecorator::NameEvent(Event * const evt, const char_t * const name)
 {
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
- 	NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
+
     const size_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_EVENT_NAME_LEN));
     if (nameLen >= static_cast<uint64_t>(M_PROF_EVENT_NAME_LEN)) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "Event name too long, range[0, %u.", M_PROF_EVENT_NAME_LEN);

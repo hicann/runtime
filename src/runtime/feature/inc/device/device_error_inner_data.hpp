@@ -12,7 +12,7 @@
 
 #include "stars_base.hpp"
 #include "device_error_info.hpp"
-#include "starsv2_sqe_info.hpp"
+#include "stars_david.hpp"
 
 namespace {
     constexpr uint32_t MAX_BIT_LEN = 64U;
@@ -21,7 +21,7 @@ namespace {
     constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH = 12288U; // 4K + 8K
     constexpr uint32_t RINGBUFFER_LEN = 10U;
     // total 2M, used:element(42k) * 30, stream snap shot:17k, TSCH_CAPABILITY_LEN:10k
-    constexpr uint32_t RINGBUFFER_LEN_STARSV2 = 30U;
+    constexpr uint32_t RINGBUFFER_LEN_DAVID = 30U;
     constexpr uint32_t DEVICE_ERR_MSG_MAGIC = 0xA55A2021U;
     constexpr uint32_t MAX_CORE_BLOCK_NUM  = 50U;
     constexpr uint32_t MAX_CORE_NUM  = 75U;
@@ -31,8 +31,8 @@ namespace {
     constexpr uint32_t RINGBUFFER_ERRCODE4_OFFSET = 128U;
     constexpr uint32_t MAX_STREAM_NUM_CLOUD = 2048U;
     constexpr uint32_t RINGBUFFER_HCCL_FFTSPLUS_MAX_CONTEXT_NUM = 8U;
-	constexpr uint32_t MAX_CORE_BLOCK_NUM_ON_STARSV2  = 72U;
-    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_STARSV2 = 43008U; // 42K For StarsV2
+	constexpr uint32_t MAX_CORE_BLOCK_NUM_ON_DAVID  = 72U;
+    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 43008U; // 42K For David
     constexpr uint32_t MAX_AIC_ID = 64U;
     constexpr uint32_t MAX_AIV_ID = 64U;
     constexpr uint32_t MAX_DEV_ID = 16U;
@@ -42,7 +42,7 @@ namespace {
 namespace cce {
 namespace runtime {
 /*********************************** ringbuffer for STARS ***********************************/
-struct StarsV2SdmaScheErrorInfo {
+struct DavidSdmaScheErrorInfo {
     uint32_t irqStatus;                 // sdma ecc err, bus error
     uint32_t cqeStatus;                 // sdma cqe status
     uint8_t sdmaChannelId;
@@ -100,7 +100,7 @@ struct StarsSdmaErrorInfo {
     union {
         StarsSdmaScheErrorInfo starsInfo[MAX_RECORD_CORE_NUM];
         FftsPlusSdmaErrorInfo fftsPlusInfo[MAX_RECORD_CORE_NUM];
-        StarsV2SdmaScheErrorInfo starsInfoForStarsV2[MAX_RECORD_CORE_NUM];
+        DavidSdmaScheErrorInfo starsInfoForDavid[MAX_RECORD_CORE_NUM];
     } sdma;
 };
 
@@ -161,7 +161,7 @@ struct starsOstTaskOneCoreInfo {
     uint64_t pcStart;
 };
 
-struct StarsV2OneCoreErrorInfo {
+struct DavidOneCoreErrorInfo {
     uint64_t coreId;
     uint64_t aicError[3];
     uint64_t pcStart;
@@ -199,9 +199,9 @@ struct StarsV2OneCoreErrorInfo {
     starsOstTaskOneCoreInfo ostTaskOneCore[MAX_TASK_NUM_ONE_CORE];
 };
 
-struct StarsV2CoreErrorInfo {
+struct DavidCoreErrorInfo {
     StarsErrorCommonInfo comm;
-    StarsV2OneCoreErrorInfo info[MAX_CORE_BLOCK_NUM_ON_STARSV2];
+    DavidOneCoreErrorInfo info[MAX_CORE_BLOCK_NUM_ON_DAVID];
 };
 
 struct StarsOneCoreErrorInfo {
@@ -292,7 +292,7 @@ struct ccuErrorInfo {
     uint16_t timeout;
 };
 
-struct starsv2NotifyErrorInfo {
+struct davidNotifyErrorInfo {
     uint32_t notifyId : 17;
     uint32_t cntFlag : 1;
     uint32_t clrFlag : 1;
@@ -315,7 +315,7 @@ struct StarsTimeoutErrorInfo {
         notifyErrorInfo notifyInfo;
         eventErrorInfo eventInfo;
         fusionKernelErrorInfo fusionInfo;
-        starsv2NotifyErrorInfo errorInfo;
+        davidNotifyErrorInfo errorInfo;
         ccuErrorInfo ccuInfo;
     } wait;
 };
@@ -344,7 +344,7 @@ struct StarsHcclFftsplusTimeoutInfo {
 
 struct StarsCcuErrorInfo {
     StarsErrorCommonInfo comm;
-    rtStarsV2Sqe_t starsv2Sqe[SQE_NUM_PER_STARSV2_TASK_MAX - 1U];
+    rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX - 1U];
     uint8_t panicLog[FUSION_SUB_TASK_MAX_CCU_NUM][MAX_CCU_EXCEPTION_INFO_SIZE];
 };
 
@@ -358,20 +358,20 @@ struct StarsFusionKernelErrorInfo {
     uint32_t aicpuError : 1;
     uint32_t ccuError : 1;
     uint32_t resv : 28;
-    rtStarsV2Sqe_t starsv2Sqe[SQE_NUM_PER_STARSV2_TASK_MAX];
+    rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX];
     union {
         StarsAicpuErrorInfo aicpuInfo;
         StarsCcuErrorInfo ccuInfo;
     } u;
-    StarsV2CoreErrorInfo aicInfo;
-    StarsV2CoreErrorInfo aivInfo;
+    DavidCoreErrorInfo aicInfo;
+    DavidCoreErrorInfo aivInfo;
 };
 
 // it is format data in one element from ringbuffer.
 struct StarsDeviceErrorInfo {
     union {
         StarsCoreErrorInfo           coreErrorInfo;
-        StarsV2CoreErrorInfo         starsv2CoreErrorInfo;
+        DavidCoreErrorInfo           davidCoreErrorInfo;
         StarsSdmaErrorInfo           sdmaErrorInfo;
         StarsAicpuErrorInfo          aicpuErrorInfo;
         StarsDvppErrorInfo           dvppErrorInfo;

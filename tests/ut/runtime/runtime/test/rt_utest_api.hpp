@@ -34,6 +34,7 @@
 #include "raw_device.hpp"
 #include "logger.hpp"
 #include "engine.hpp"
+#include "async_hwts_engine.hpp"
 #include "task_res.hpp"
 #include "rdma_task.h"
 #include "stars.hpp"
@@ -163,7 +164,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
-        (void)rtSetSocVersion("Ascend910B1");
+        (void)rtSetSocVersion("Ascend910");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         originType_ = Runtime::Instance()->GetChipType();
@@ -171,6 +172,8 @@ protected:
         rtInstance->SetDisableThread(true);
         RawDevice *rawDevice = new RawDevice(0);
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
+        rtInstance->SetChipType(CHIP_CLOUD);
+        GlobalContainer::SetRtChipType(CHIP_CLOUD);
         (void)rtSetDevice(0);
         (void)rtSetTSDevice(1);
         rtError_t error1 = rtStreamCreate(&stream_, 0);
@@ -226,6 +229,8 @@ protected:
         // rtInstance->SetDisableThread(false);
         RawDevice *rawDevice = new RawDevice(0);
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
+        rtInstance->SetChipType(CHIP_CLOUD);
+        GlobalContainer::SetRtChipType(CHIP_CLOUD);
         delete rawDevice;
     }
 
@@ -237,6 +242,51 @@ protected:
         // rtInstance->SetDisableThread(disableFlag_);
         GlobalMockObject::verify();
     }
+};
+
+class ApiTest5 : public testing::Test
+{
+protected:
+    static void SetUpTestCase()
+    {
+        GlobalContainer::SetHardwareChipType(CHIP_END);
+        (void)rtSetSocVersion("Ascend610");
+        ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
+        bool flag = ((Runtime *)Runtime::Instance())->GetDisableThread();
+        ((Runtime *)Runtime::Instance())->SetDisableThread(true);       // Recover.
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        oldChipType = rtInstance->GetChipType();
+        rtInstance->SetChipType(CHIP_ADC);
+        GlobalContainer::SetRtChipType(CHIP_ADC);
+        std::cout << "api test5 start." << std::endl;
+        (void)rtSetTSDevice(0);
+        (void)rtSetDevice(0);
+    }
+
+    static void TearDownTestCase()
+    {
+        rtDeviceReset(0);
+        (void)rtSetSocVersion("");
+        ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
+        ((Runtime *)Runtime::Instance())->SetDisableThread(flag);      // Recover.
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetChipType(oldChipType);
+        GlobalContainer::SetRtChipType(oldChipType);
+    }
+
+    virtual void SetUp()
+    {
+        RawDevice *rawDevice = new RawDevice(0);
+        MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
+        delete rawDevice;
+    }
+
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+    }
+    static bool flag;
+    static rtChipType_t oldChipType;
 };
 
 /* allKernels_for_milancube.o */

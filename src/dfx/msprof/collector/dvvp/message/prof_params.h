@@ -272,8 +272,16 @@ struct ProfileParams : public BaseInfo {
                 } else {
                     ss << (iter->second());
                 }
-                if (iter->first.find("interval") != std::string::npos &&
-                    iter->first.find("hardware_mem_sampling_interval") == std::string::npos) {
+                if ((iter->first.find("interval") != std::string::npos &&
+                    iter->first.find("hardware_mem_sampling_interval") == std::string::npos) ||
+                    iter->first.find("memInterval") != std::string::npos ||
+                    iter->first.find("ubInterval") != std::string::npos ||
+                    iter->first.find("hccsInterval") != std::string::npos ||
+                    iter->first.find("nicInterval") != std::string::npos ||
+                    iter->first.find("pcieInterval") != std::string::npos ||
+                    iter->first.find("roceInterval") != std::string::npos ||
+                    iter->first.find("hbmInterval") != std::string::npos ||
+                    iter->first.find("hostProfilingSamplingInterval")) {
                     ss << "ms";
                 }
                 if (iter->first.find("hardware_mem_sampling_interval") != std::string::npos) {
@@ -448,6 +456,7 @@ struct ProfileParams : public BaseInfo {
     {
         SET_VALUE(object, stars_acsq_task);
         SET_VALUE(object, taskBlock);
+        SET_VALUE(object, taskBlockShink);
         SET_VALUE(object, sysLp);
         SET_VALUE(object, sysLpFreq);
         SET_VALUE(object, aicScale);
@@ -569,6 +578,7 @@ struct ProfileParams : public BaseInfo {
         FROM_STRING_VALUE(object, hwts_log1);
         FROM_STRING_VALUE(object, stars_acsq_task);
         FROM_STRING_VALUE(object, taskBlock);
+        FROM_STRING_VALUE(object, taskBlockShink);
         FROM_STRING_VALUE(object, sysLp);
         FROM_INT_VALUE(object, sysLpFreq, DEFAULT_PROFILING_INTERVAL_10000US);
         FROM_STRING_VALUE(object, aicScale);

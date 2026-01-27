@@ -82,7 +82,7 @@ namespace {
             return ACL_ERROR_INTERNAL_ERROR;
         }
         // call after aclInit
-        const string socVersion(socName); 
+        const string socVersion(socName);
 
         // init platform info
         if (fe::PlatformInfoManager::GeInstance().InitializePlatformInfo() != 0U) {
@@ -113,7 +113,8 @@ namespace {
         return ACL_SUCCESS;
     }
 
-    std::string ConvertVersion(const std::string &version) {
+    std::string ConvertVersion(const std::string& version)
+    {
         size_t dashPos = version.find('-');
         if (dashPos == std::string::npos) {
             return version;
@@ -124,6 +125,49 @@ namespace {
         suffix.erase(std::remove(suffix.begin(), suffix.end(), '.'), suffix.end());
 
         return prefix + "." + suffix;
+    }
+    const std::map<rtLimitType_t, std::string> limitToKeyMap = {
+        {RT_LIMIT_TYPE_STACK_SIZE, "aicore_stack_size"},
+        {RT_LIMIT_TYPE_SIMT_WARP_STACK_SIZE, "simt_stack_size"},
+        {RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE, "simt_divergence_stack_size"}};
+
+    aclError SetStackSizeByType(const char_t* const configPath, rtLimitType_t limitType, const std::string& typeName)
+    {
+        size_t stackSize = 0;
+        bool stackSizeExist = false;
+
+        auto ret = acl::JsonParser::GetStackSizeByType(configPath, typeName, stackSize, stackSizeExist);
+        if (ret != ACL_SUCCESS) {
+            return ACL_ERROR_FAILURE;
+        }
+
+        if (!stackSizeExist) {
+            // 如果 stackSizeExist 为 false，直接返回 ACL_SUCCESS
+            return ACL_SUCCESS;
+        }
+
+        rtError_t rtErr = rtDeviceSetLimit(0, limitType, static_cast<uint32_t>(stackSize));
+        if (rtErr != RT_ERROR_NONE) {
+            ACL_LOG_CALL_ERROR(
+                "set limit (%s %zu) failed, runtime result = %d.", typeName.c_str(), stackSize,
+                static_cast<int32_t>(rtErr));
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
+        ACL_LOG_INFO("get %s stack size %zu success\n", typeName.c_str(), stackSize);
+        return ACL_SUCCESS;
+    }
+    aclError SetAllStackSizes(const char_t* const configPath)
+    {
+        for (const auto& entry : limitToKeyMap) {
+            rtLimitType_t limitType = entry.first;
+            const std::string& typeName = entry.second;
+
+            aclError ret = SetStackSizeByType(configPath, limitType, typeName.c_str());
+            if (ret == ACL_ERROR_FAILURE) {
+                return ret; // 如果返回 ACL_ERROR_FAILURE，直接返回错误
+            }
+        }
+        return ACL_SUCCESS;
     }
 }
 
@@ -228,31 +272,18 @@ aclError HandleEventModeConfig(const char_t *const configPath) {
 }
 
 aclError HandleDefaultDeviceAndStackSize(const char_t *const configPath) {
-    size_t stackSize = 0;
-    bool stackSizeExist = false;
-    auto ret = acl::JsonParser::GetStackSize(configPath, stackSize, stackSizeExist);
-    if (ret != ACL_SUCCESS) {
-        return ACL_ERROR_FAILURE;
-    }
-    rtError_t rtErr = RT_ERROR_NONE;
-    if (stackSizeExist) {
-        rtErr = rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, static_cast<uint32_t>(stackSize));
-        if (rtErr != RT_ERROR_NONE) {
-            ACL_LOG_CALL_ERROR("set limit (aicore_stack_size %zu)failed, runtime result = %d.",
-                stackSize, static_cast<int32_t>(ret));
-            return ACL_GET_ERRCODE_RTS(rtErr);
-        }
-        ACL_LOG_INFO("get aicore stack size %zu success\n", stackSize);
-    }
+    // 调用批量设置函数
+    ACL_REQUIRES_OK(SetAllStackSizes(configPath));
+    // 设置默认设备
     int32_t defaultDeviceId = INVALID_DEFAULT_DEVICE;
-    ret = acl::JsonParser::GetDefaultDeviceIdFromFile(configPath, defaultDeviceId);
+    auto ret = acl::JsonParser::GetDefaultDeviceIdFromFile(configPath, defaultDeviceId);
     if (ret != ACL_SUCCESS) {
         return ACL_ERROR_FAILURE;
     }
     if (defaultDeviceId == INVALID_DEFAULT_DEVICE) {
         return ACL_SUCCESS;
     }
-    rtErr = rtSetDefaultDeviceId(defaultDeviceId);
+    rtError_t rtErr = rtSetDefaultDeviceId(defaultDeviceId);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("set default device id failed, ret:%d", rtErr);
         return ACL_GET_ERRCODE_RTS(rtErr);
@@ -780,7 +811,7 @@ aclError GetVersionStringInternal(const std::string &fullPath, const char_t *pkg
         if (isSilent) {
             ACL_LOG_WARN("Version file not found at [%s] (Silent check, will retry alternative).", fullPath.c_str());
         } else {
-            ACL_LOG_ERROR("Version file not found at [%s]. Please check if the package name [%s] is correct and the package is installed.", 
+            ACL_LOG_ERROR("Version file not found at [%s]. Please check if the package name [%s] is correct and the package is installed.",
                           fullPath.c_str(), pkgName);
         }
         return ACL_ERROR_INVALID_FILE;
@@ -788,7 +819,7 @@ aclError GetVersionStringInternal(const std::string &fullPath, const char_t *pkg
 
     std::string line;
     bool found = false;
-    const size_t keyLen = std::strlen(kVersionInfoKey); 
+    const size_t keyLen = std::strlen(kVersionInfoKey);
 
     while (std::getline(ifs, line)) {
         size_t pos = line.find(kVersionInfoKey);
@@ -815,7 +846,7 @@ aclError GetVersionByPkgName(const std::string &targetPkgName, std::string &vers
     if (targetPkgName == kDriverPkgName || targetPkgName == kFirmwarePkgName) {
         std::string pkgPath;
         std::string pkgPathKey = (targetPkgName == kDriverPkgName) ? kDriverPathKey : kFirmwarePathKey;
-        
+
         if (!GetPkgPath(kAscendInstallPath, pkgPath, pkgPathKey)) {
             return ACL_ERROR_INVALID_FILE;
         }
@@ -831,7 +862,7 @@ aclError GetVersionByPkgName(const std::string &targetPkgName, std::string &vers
         homePath = acl::file_utils::GetLocalRealPath(homePath);
         if(homePath.empty()){
             ACL_LOG_WARN("ASCEND_HOME_PATH [%s] does not exist.", homePath.c_str());
-            return ACL_ERROR_INVALID_FILE;    
+            return ACL_ERROR_INVALID_FILE;
         }
         fullPath = homePath + kRelPathInfo + targetPkgName + kInfoFileName;
     }
@@ -845,7 +876,7 @@ aclError GetPkgVersionContent(const char *pkgName, std::string &versionContent) 
     bool hasAlternative = false;
 
     if (originPkgName.find('-') != std::string::npos) {
-        std::replace(altPkgName.begin(), altPkgName.end(), '-', '_'); 
+        std::replace(altPkgName.begin(), altPkgName.end(), '-', '_');
         hasAlternative = true;
     } else if (originPkgName.find('_') != std::string::npos) {
         std::replace(altPkgName.begin(), altPkgName.end(), '_', '-');
@@ -860,9 +891,9 @@ aclError GetPkgVersionContent(const char *pkgName, std::string &versionContent) 
     }
 
     if (hasAlternative) {
-        ACL_LOG_INFO("Pkg [%s] not found, trying alternative name [%s]...", 
+        ACL_LOG_INFO("Pkg [%s] not found, trying alternative name [%s]...",
                      originPkgName.c_str(), altPkgName.c_str());
-        
+
         ret = GetVersionByPkgName(altPkgName, versionContent, false);
         if (ret == ACL_SUCCESS) {
             ACL_LOG_INFO("Found version info using alternative name [%s].", altPkgName.c_str());
@@ -880,14 +911,14 @@ aclError aclsysGetVersionStrImpl(char *pkgName, char *versionStr)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pkgName);
 
     std::string verInfo;
-    
+
     aclError ret = GetPkgVersionContent(pkgName, verInfo);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
 
     if (strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str()) != EOK) {
-        ACL_LOG_ERROR("Copy string failed. Dest buffer size is [%d], source len is [%lu].", 
+        ACL_LOG_ERROR("Copy string failed. Dest buffer size is [%d], source len is [%lu].",
                       ACL_PKG_VERSION_MAX_SIZE, verInfo.length());
         return ACL_ERROR_INTERNAL_ERROR;
     }
@@ -926,7 +957,7 @@ bool ParsePreNumStrict(const std::string &suffix, int32_t &outNum) {
 
     // Separators more than one.
     if (digitPos > 1) {
-        return false; 
+        return false;
     }
 
     // Analyze prerelease number.

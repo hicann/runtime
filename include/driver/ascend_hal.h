@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+
 #ifndef __ASCEND_HAL_H__
 #define __ASCEND_HAL_H__
 
@@ -150,6 +151,7 @@ typedef enum {
     MODULE_TYPE_L2BUFF,             /**< l2buff info */
     MODULE_TYPE_CC,                 /**< confidential computing info */
     MODULE_TYPE_UB,                 /**< ub info */
+    MODULE_TYPE_HCOM_CPU,           /**< hcom cpu info */
 
     /* The following types are used by the product */
     MODULE_TYPE_COMPUTING = 0x8000, /**< computing power info */
@@ -214,6 +216,7 @@ typedef enum {
     INFO_TYPE_UB_PACKET_STATISTICS,
     INFO_TYPE_UB_QOS_INFO,
     INFO_TYPE_UB_CONFIG_INFO,
+    INFO_TYPE_QOS_MASTER_CONFIG,
 } DEV_INFO_TYPE;
 
 /**
@@ -932,6 +935,8 @@ enum hal_product_type {
 * MODULE_TYPE_HOST_AICPU    |  INFO_TYPE_OCCUPY           |   host aicpu bitmap(64byte) | used in host   |
 * MODULE_TYPE_HOST_AICPU    |  INFO_TYPE_WORK_MODE        |   host aicpu work mode      | used in host   |
 * MODULE_TYPE_HOST_AICPU    |  INFO_TYPE_FREQUE           |   host aicpu frequency      | used in host   |
+* --------------------------------------------------------------------------------------------------------
+* MODULE_TYPE_HCOM_CPU      |  INFO_TYPE_CORE_NUM         |   hcom cpu num              |                |
 * --------------------------------------------------------------------------------------------------------
 * @param [in] devId  Device ID, when parameter infoType is set to INFO_TYPE_MASTERID, need to use physical device ID.
 *             Device ID, when parameter infoType is set to INFO_TYPE_VNIC_IP, need to use host physical device ID.
@@ -3699,7 +3704,7 @@ DLLEXPORT drvError_t halBuffProcCacheFree(unsigned long flag);
 * @param [out] DqsPoolInfo *poolInfo: dqs mbuf pool info
 * @return   0 for success, others for fail
 */
-DLLEXPORT drvError_t halBuffGetDQSPooInfo(struct mempool_t *mp, DqsPoolInfo *poolInfo);
+DLLEXPORT drvError_t halBuffGetDQSPoolInfo(struct mempool_t *mp, DqsPoolInfo *poolInfo);
 
 /**
 * @ingroup driver
@@ -3710,7 +3715,7 @@ DLLEXPORT drvError_t halBuffGetDQSPooInfo(struct mempool_t *mp, DqsPoolInfo *poo
 * @param [out] DqsPoolInfo *poolInfo: dqs mbuf pool info
 * @return   0 for success, others for fail
 */
-DLLEXPORT drvError_t halBuffGetDQSPooInfoById(unsigned int poolId, DqsPoolInfo *poolInfo);
+DLLEXPORT drvError_t halBuffGetDQSPoolInfoById(unsigned int poolId, DqsPoolInfo *poolInfo);
 
 /**
 * @ingroup driver
@@ -4224,6 +4229,28 @@ DLLEXPORT drvError_t halAsyncDmaDestory(uint32_t devId, struct halAsyncDmaDestor
 * @return   0 for success, others for fail
 */
 DLLEXPORT drvError_t halCtl(int cmd, void *param_value, size_t param_value_size, void *out_value, size_t *out_size_ret);
+
+/**
+* @ingroup driver
+* @brief  Get tseg info by svm va.
+* @param [in] devid -device id.
+* @param [in] va   -va alloced by svm.
+* @param [in] size   -size of the va mem.
+* @param [in] flag   -flag of the va mem, 0 for remote, 1 for local.
+* @param [out] tsegInfo -see struct halTsegInfo, which include tseg.
+* @return   0 for success, others for fail
+*/
+DLLEXPORT drvError_t halGetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+    struct halTsegInfo *tsegInfo);
+
+/**
+* @ingroup driver
+* @brief  Put tseg info.
+* @param [in] devid -device id.
+* @param [in] tsegInfo -see struct halTsegInfo, which get by halGetTsegInfoByVa.
+* @return   0 for success, others for fail
+*/
+DLLEXPORT drvError_t halPutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo);
 
 #define CDQ_NAME_LEN  64
 #define CDQ_RESV_LEN 4

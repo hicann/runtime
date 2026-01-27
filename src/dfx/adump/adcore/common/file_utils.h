@@ -52,7 +52,7 @@ public:
     static std::string ReplaceAll(std::string &base, const std::string &src, const std::string &dst);
     static bool IsAbsolutePath(const std::string &path);
     static IdeErrorT AddMappingFileItem(const std::string &fileName, const std::string &hashValue);
-    static bool IsPathHasPermission(const std::string &path);
+    static bool IsPathHasPermission(const std::string &path, std::string &errorMsg);
 };
 }
 #endif

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_STARSV2_MEMCPY_SQE_H
-#define CCE_RUNTIME_STARSV2_MEMCPY_SQE_H
+#ifndef CCE_RUNTIME_DAVID_MEMCPY_SQE_H
+#define CCE_RUNTIME_DAVID_MEMCPY_SQE_H
 
 #include "memcpy_sqe_common.h"
 
@@ -18,9 +18,9 @@ namespace runtime {
 #pragma pack(push)
 #pragma pack (1)
 
-struct RtStarsV2MemcpySqe {
+struct RtDavidStarsMemcpySqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint32_t res1;
@@ -64,9 +64,9 @@ struct RtStarsV2MemcpySqe {
     } u;
 };
 
-struct RtStarsV2CmoSqe {
+struct RtDavidStarsCmoSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint32_t res1;

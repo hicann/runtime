@@ -161,24 +161,42 @@ int32_t ProfAtlsPlugin::RegisterProfileCallback(int32_t callbackType, VOID_PTR c
 
 int32_t ProfAtlsPlugin::ProfSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)
 {
-    for (auto it = ProfPlugin::moduleCallbacks_.begin(); it != ProfPlugin::moduleCallbacks_.end(); ++it) {
-        if (it->first == GE) {
-            ProfStepInfoCmd_t stepinfo;
-            stepinfo.index_id = indexId;
-            stepinfo.tag_id = tagId;
-            stepinfo.stream = stream;
-            int32_t flag = PROFILING_SUCCESS;
-            for (auto& handle : it->second) {
-                if (handle(static_cast<uint32_t>(PROF_CTRL_STEPINFO),
-                    Utils::ReinterpretCast<VOID, ProfStepInfoCmd_t>(&stepinfo),
-                    sizeof(ProfStepInfoCmd_t)) == PROFILING_FAILED) {
-                    flag = PROFILING_FAILED;
-                }
-            }
-            return flag;
-        }
+    if (ProfAPI::ProfRuntimePlugin::instance()->RuntimeApiInit() != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to execute RuntimeApiInit.");
+        return PROFILING_FAILED;
     }
-    return PROFILING_FAILED;
+    const uint64_t modelId = 0xFFFFFFFFU;
+    const uint32_t apiType = 11;
+    const auto beginTime = MsprofSysCycleTime();
+    rtError_t ret = ProfAPI::ProfRuntimePlugin::instance()->ProfMarkEx(indexId, modelId, tagId, stream);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    const auto endTime = MsprofSysCycleTime();
+    return ReportApiInfo(beginTime, endTime, static_cast<uint64_t>(tagId), apiType);
+}
+
+int32_t ProfAtlsPlugin::ReportApiInfo(const uint64_t beginTime, const uint64_t endTime, const uint64_t itemId, const uint32_t apiType)
+{
+    MsprofApi apiInfo{};
+    BuildApiInfo({beginTime, endTime}, apiType, itemId, apiInfo);
+    const int32_t ret = MsprofReportApi(true, &apiInfo);
+    if (ret == PROFILING_FAILED) {
+        MSPROF_LOGE("MsprofReportApi interface handle Failed, beginTime is %u, endTime is %u, itemId is %u, apiType is %u", beginTime, endTime, itemId, apiType);
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
+}
+
+void ProfAtlsPlugin::BuildApiInfo(const std::pair<uint64_t, uint64_t> &profTime, const uint32_t apiType, const uint64_t itemId, MsprofApi &api)
+{
+    api.itemId = itemId;
+    api.beginTime = profTime.first;
+    api.endTime = profTime.second;
+    api.type = apiType;
+    api.level = MSPROF_REPORT_NODE_LEVEL;
+    thread_local const auto tid = mmGetTid();
+    api.threadId = static_cast<uint32_t>(tid);
 }
 
 int32_t ProfAtlsPlugin::ProfInit(uint32_t type, VOID_PTR data, uint32_t dataLen)

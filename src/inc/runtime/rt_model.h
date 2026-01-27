@@ -373,6 +373,35 @@ typedef struct tagLabelDevInfo_t {
     }u;
 }rtLabelDevInfo;
 
+typedef struct tagMdlLoad {
+    uint8_t overflow_en;
+    uint16_t totalTaskNum;
+    void *taskDescBaseAddr;
+    void *pcBaseAddr;
+    void *paramBaseAddr;
+    void *weightBaseAddr;
+    uint8_t weightPrefetch;
+} rtMdlLoad_t;
+
+typedef struct tagMdlExecute {
+    void *ioaSrcAddr;
+    void *dynamicTaskPtr;
+    void *workPtr;
+    bool sync;
+    uint16_t vld;
+    uint16_t taskProf;
+    uint8_t mid;
+    uint32_t ioaSize;
+    uint32_t sqid;
+    uint8_t meType;
+    uintptr_t cbFn;
+    void *cbData;
+    size_t mpamId;
+    size_t aicQos;
+    size_t aicOst;
+    size_t mecTimeThreshHold;
+} rtMdlExecute_t;
+
 typedef struct tagMdlTaskUpdateInfo {
     uint64_t *tilingKeyAddr;
     uint64_t *blockDimAddr;
@@ -383,8 +412,27 @@ typedef struct tagMdlTaskUpdateInfo {
 typedef rtError_t (*rtTaskGenCallback)(rtModel_t mdl, rtTaskInfo_t *taskInfo);
 
 /**
+ * @ingroup rt_model
+ * @brief nano model load
+ * @param [out] phyModelId drv create model id
+ * @param [in] modelLoad   model load param
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtNanoModelLoad(rtMdlLoad_t *modelLoad, uint32_t *phyModelId);
+
+/**
+ * @ingroup rt_model
+ * @brief nano model execute
+ * @param [in] modelExec   model execute param
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtNanoModelExecute(rtMdlExecute_t *modelExec);
+
+/**
  * @ingroup rtMsgSend
- * @brief msg send
+ * @brief nano msg send
  * @param [in] tId      rcv thread id
  * @param [in] sendTid  send thread id
  * @param [in] timeout  time out
@@ -397,7 +445,7 @@ RTS_API rtError_t rtMsgSend(uint32_t tId, uint32_t sendTid, int32_t timeout, voi
 
 /**
  * @ingroup rtSetTaskDescDumpFlag
- * @brief set taskdesc dump flag
+ * @brief nano set taskdesc dump flag
  * @param [in] taskDescBaseAddr  TaskDesc Base Addr
  * @param [in] taskDescSize      Static TaskDesc Partition size
  * @param [in] taskId   task id
@@ -408,17 +456,26 @@ RTS_API rtError_t rtSetTaskDescDumpFlag(void *taskDescBaseAddr, size_t taskDescS
 
 /**
  * @ingroup rt_dump_Init
- * @brief dump init
+ * @brief nano dump init
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtDumpInit(void);
 
 /**
  * @ingroup rt_dump_deInit
- * @brief dump deinit
+ * @brief nano dump deinit
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtDumpDeInit(void);
+
+/**
+ * @ingroup rt_model
+ * @brief nano destroy model instance
+ * @param [in] phyMdlId   model to destroy
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtNanoModelDestroy(uint32_t phyMdlId);
 
 /**
  * @ingroup rt_model

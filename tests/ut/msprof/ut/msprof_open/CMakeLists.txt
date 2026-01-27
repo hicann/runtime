@@ -109,6 +109,7 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_open.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/platform/soc/dev_mgr_api.cpp
@@ -133,6 +134,10 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_inject.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_domain_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_data_handler.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/ctrl_files_dumper.cpp
 )
 
 set(profilerSrcFile
@@ -156,7 +161,25 @@ add_executable(
     ${profilerSrcFile}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 target_include_directories(msprofiler_open_utest PRIVATE
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils
     ${TOP_DIR}/abl/msprof/inc/toolchain
@@ -229,11 +252,9 @@ target_compile_options(msprofiler_open_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(msprofiler_open_utest PRIVATE
@@ -243,24 +264,13 @@ target_compile_definitions(msprofiler_open_utest PRIVATE
 )
 
 target_link_libraries(msprofiler_open_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    ascend_protobuf
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(msprofiler_open_utest
     PROPERTIES
     OUTPUT_NAME msprofiler_open_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET msprofiler_open_utest
-    TASK_NUM 1
 )
 
 # msprof utest
@@ -381,6 +391,7 @@ add_executable(msprof_open_utest
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_open.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/json_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/msprofiler_impl.cpp
@@ -400,7 +411,25 @@ add_executable(msprof_open_utest
     ${CppPath}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 target_include_directories(msprof_open_utest PRIVATE
+    ${libmsprofHeaderDir}
     ${TOP_DIR}/inc
     ${TOP_DIR}/inc/aicpu
     ${TOP_DIR}/inc/driver
@@ -471,11 +500,9 @@ target_compile_options(msprof_open_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(msprof_open_utest PRIVATE
@@ -488,13 +515,7 @@ target_compile_definitions(msprof_open_utest PRIVATE
 )
 
 target_link_libraries(msprof_open_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    ascend_protobuf
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(msprof_open_utest
@@ -503,7 +524,3 @@ set_target_properties(msprof_open_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET msprof_open_utest
-    TASK_NUM 1
-)

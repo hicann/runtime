@@ -15,8 +15,6 @@
 
 using namespace Adx;
 
-constexpr size_t TENSOR_SIZE = 5;
-
 class DumpTensorUtest: public testing::Test {
 protected:
     virtual void SetUp() {}
@@ -38,14 +36,14 @@ TEST_F(DumpTensorUtest, Test_DumpTensor)
     tensor.format = 0; // FORMAT_NC1HWC0
     tensor.shape = {4, 2, 7, 7, 16};
     tensor.tensorAddr = nullptr;
-    tensor.tensorSize = TENSOR_SIZE;
+    tensor.tensorSize = 5;
     tensor.originShape = {4, 32, 7, 7};
     tensor.placement = TensorPlacement::kOnDeviceHbm;
 
     DumpTensor dumpTensor(tensor);
     EXPECT_EQ(dumpTensor.GetDataType(), static_cast<int32_t>(GeDataType::DT_INT32));
     EXPECT_EQ(dumpTensor.GetFormat(), 0);
-    EXPECT_EQ(dumpTensor.GetSize(), TENSOR_SIZE);
+    EXPECT_EQ(dumpTensor.GetSize(), 5);
     EXPECT_EQ(dumpTensor.GetAddress(), nullptr);
     EXPECT_EQ(dumpTensor.GetAddressType(), AddressType::TRADITIONAL);
     EXPECT_EQ(dumpTensor.GetArgsOffSet(), 0);

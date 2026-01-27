@@ -170,7 +170,12 @@ void SetConfigPathStr(std::string &configStr)
 aclError GetStrFromConfigPath(const char *configPath, std::string &configStr) {
     // 文件路径为空，按照空文件处理
     if (configPath != nullptr && strlen(configPath) != 0UL) {
-        std::ifstream file(configPath, std::ios::binary);
+        char_t realPath[MMPA_MAX_PATH] = {};
+        if (mmRealPath(configPath, realPath, MMPA_MAX_PATH) != EN_OK) {
+            ACL_LOG_ERROR("Invalid file: %s", configPath);
+            return ACL_ERROR_INVALID_FILE;
+        }
+        std::ifstream file(realPath, std::ios::binary);
         if (!file.is_open()) {
             ACL_LOG_ERROR("Failed to open file: %s", configPath);
             return ACL_ERROR_INVALID_FILE;

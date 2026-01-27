@@ -18,6 +18,7 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "task_submit.hpp"
+#include "ctrl_sq.hpp"
 
 namespace cce {
 namespace runtime {
@@ -144,7 +145,7 @@ rtError_t Notify::Record(Stream * const streamIn)
 
     RT_LOG(RT_LOG_INFO, "isIpc=%d, notify_id=%d, lastLocalId=%u, lastBaseAddr_=%#x, device_id=%u",
            isIpc, notifyid_, lastLocalId_, lastBaseAddr_, streamIn->Device_()->Id_());
-    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, lastIsPcie_, isPod_, lastLocalId_, lastBaseAddr_};
+    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, lastIsPcie_, isPod_, lastLocalId_, lastBaseAddr_, false};
     rtError_t error = NotifyRecordTaskInit(notifyTask, notifyid_, static_cast<int32_t>(deviceId_),
         phyId_, &singleInfo, nullptr, static_cast<void *>(this));
     if (error != RT_ERROR_NONE) {
@@ -173,6 +174,9 @@ rtError_t Notify::Reset(Stream * const streamIn) const
 {
     NULL_PTR_RETURN_MSG(streamIn, RT_ERROR_STREAM_NULL);
     Device * const dev = streamIn->Device_();
+    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        return dev->GetCtrlSQ().SendNotifyResetMsg(notifyid_);
+    }
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo *notifyTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_COMMON_CMD, errorReason);
@@ -218,7 +222,7 @@ rtError_t Notify::GetNotifyAddress(Stream * const streamIn, uint64_t &addr)
     }
     COND_RETURN_WITH_NOLOG((!isIpc), RT_ERROR_NOTIFY_TYPE);
 
-    SingleBitNotifyRecordInfo singleInfo = { isIpc, false, false, isPod_, MAX_UINT32_NUM, 0UL };
+    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, false, isPod_, MAX_UINT32_NUM, 0UL, false};
     error = NotifyRecordTaskInit(&notifyTask, notifyid_, static_cast<int32_t>(deviceId_),
                                  phyId_, &singleInfo, nullptr, static_cast<void *>(this));
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), RT_ERROR_NOTIFY_NOT_COMPLETE);
@@ -403,6 +407,10 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
             val = RT_NOTIFY_INVALID_SRV_ID;
         }
         srvId_ = static_cast<uint32_t>(val);
+        if (NpuDriver::CheckIsSupportFeature(localDevId_, FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID)) {
+            RT_LOG(RT_LOG_INFO, "name=%s phyId=%u", ipcNotifyName, phyId_);
+            return RT_ERROR_NONE;
+        }
         error = driver_->GetDeviceIndexByPhyId(phyId_, &deviceId_);
         ERROR_RETURN_MSG_INNER(error, "Failed to get devId, retCode=%#x, PhyId=%u",
             static_cast<uint32_t>(error), phyId_);

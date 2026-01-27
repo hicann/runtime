@@ -79,6 +79,8 @@ target_link_options(asc_dumper PRIVATE
     -Wl,--exclude-libs=ALL
     -ldl
     -lstdc++
+    $<$<CONFIG:Release>:-s>
+    -pie
 )
 
 target_link_libraries(asc_dumper PRIVATE

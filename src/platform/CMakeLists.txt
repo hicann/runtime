@@ -36,6 +36,7 @@ endif()
 target_include_directories(platform_headers INTERFACE
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/platform>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../runtime>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/proto/google>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/proto/google/protobuf/stubs>

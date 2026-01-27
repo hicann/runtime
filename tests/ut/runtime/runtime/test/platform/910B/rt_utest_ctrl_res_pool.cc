@@ -19,6 +19,7 @@
 #include "engine.hpp"
 #include "event.hpp"
 #include "ctrl_stream.hpp"
+#include "scheduler.hpp"
 #include "runtime.hpp"
 #include "task_info.hpp"
 #include "ctrl_res_pool.hpp"
@@ -41,10 +42,11 @@ protected:
     static void SetUpTestCase()
     {
         std::cout<<"CtrlTaskPoolEntry test start"<<std::endl;
-        (void)rtSetSocVersion("Ascend910B1");
+        (void)rtSetSocVersion("Ascend910");
         ((Runtime *)Runtime::Instance())->SetDisableThread(true);
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         (void)rtSetTSDevice(0);
+
     }
     static void TearDownTestCase()
     {
@@ -71,7 +73,7 @@ TEST_F(CloudV2CtrlTaskPoolEntryTest, ErrorMessageUtilsTest)
     const std::vector<std::string> errMsgKey;
     const std::vector<std::string> errMsgValue;
     RtInnerErrcodeType rtErrCode = RT_ERROR_STREAM_SYNC_TIMEOUT;
-    char_t* funcName = nullptr;
+    char_t * funcName = nullptr;
 
     EXPECT_NE(&errMsgKey, nullptr);
     EXPECT_NE(&errMsgValue, nullptr);

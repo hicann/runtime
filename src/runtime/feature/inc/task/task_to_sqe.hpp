@@ -19,7 +19,7 @@ namespace runtime {
 
 #pragma pack(push)
 #pragma pack (1)
-/* parma sqe struct info */
+/* preload sqe struct info */
 
 typedef struct {
     /* word0 */
@@ -76,7 +76,7 @@ typedef struct {
     /* word0 - 1 */
     uint32_t argOffsetAddrLow;
     uint32_t argOffsetAddrHigh;
-} rtParmaSqe_t;
+} rtPreLoadSqe_t;
 
 #pragma pack(pop)
 
@@ -97,26 +97,26 @@ public:
     virtual ~SqeInfo() = default;
 };
 
-class ParmaStaticSqe : public SqeInfo {
+class PreLoadStaticSqe : public SqeInfo {
 public:
     using SqeInfo::SqeInfo;
-    ~ParmaStaticSqe() override = default;
+    ~PreLoadStaticSqe() override = default;
     static rtError_t ConstructSqe(const rtHwtsStaticTaskDesc_t& hwtsTaskDesc, uint64_t argOffset,
                                   rtStaticSqe_t* staticSqe, uint32_t* taskLen);
 };
 
-class ParmaDynamicSqe : public SqeInfo {
+class PreLoadDynamicSqe : public SqeInfo {
 public:
     using SqeInfo::SqeInfo;
-    ~ParmaDynamicSqe() override = default;
+    ~PreLoadDynamicSqe() override = default;
     static rtError_t ConstructSqe(const rtHwtsDynamicTaskDesc_t& hwtsDynamicTaskDesc,
                                   rtDynamicSqe_t* dynamicSqe, uint32_t* taskLen);
 };
 
-class ParmaPrefetchSqe : public SqeInfo {
+class PreLoadPrefetchSqe : public SqeInfo {
 public:
     using SqeInfo::SqeInfo;
-    ~ParmaPrefetchSqe() override = default;
+    ~PreLoadPrefetchSqe() override = default;
     static rtError_t ConstructSqe(const rtParamBufDesc_t& paramBufDesc, rtPrefetchSqe_t* prefetchSqe,
                                   uint32_t bufferLen, uint32_t* taskLen);
 };

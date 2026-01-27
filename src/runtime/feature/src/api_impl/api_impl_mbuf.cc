@@ -125,5 +125,6 @@ rtError_t ApiImplMbuf::MbufChainGetMbuf(const rtMbufPtr_t memBufChainHead, const
 
     return NpuDriver::MbufChainGetMbuf(memBufChainHead, index, memBuf);
 }
+
 }  // namespace runtime
 }  // namespace cce

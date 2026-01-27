@@ -98,7 +98,12 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_DRV_NO_RESOURCES] = {ACL_ERROR_RT_RESOURCE_ALLOC_FAIL, "driver error:resource alloc fail"};
     rtErrMap_[RT_ERROR_DRV_COPY_USER_FAIL] = {ACL_ERROR_RT_COPY_DATA, "driver error:copy data fail"};
     rtErrMap_[RT_ERROR_DEVICE_MEM_ERROR] = {ACL_ERROR_RT_DEVICE_MEM_ERROR, "device mem error"};
+    rtErrMap_[RT_ERROR_DEVICE_LINK_ERROR] = {ACL_ERROR_RT_LINK_ERROR, "device network link error"};
     rtErrMap_[RT_ERROR_SDMA_POISON_ERROR] = {ACL_ERROR_RT_DEVICE_MEM_ERROR, "device mem error"};
+    rtErrMap_[RT_ERROR_LOCAL_MEM_ERROR] = {ACL_ERROR_RT_DEVICE_MEM_ERROR, "device local mem error"};
+    rtErrMap_[RT_ERROR_REMOTE_MEM_ERROR] = {ACL_ERROR_RT_SUSPECT_REMOTE_ERROR, "device remote mem error"};
+    rtErrMap_[RT_ERROR_CCU_HCCL_MEM_ERROR] = {ACL_ERROR_RT_DEVICE_MEM_ERROR, "hccl ccu task error: device local mem error"};
+    rtErrMap_[RT_ERROR_CCU_HCCL_REMOTE_ERROR] = {ACL_ERROR_RT_SUSPECT_REMOTE_ERROR, "hccl ccu task error: device remote mem error"};
     rtErrMap_[RT_ERROR_MEM_RAS_ERROR] = {ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR, "hbm Multi-bit ECC error"};
     rtErrMap_[RT_ERROR_SUSPECT_DEVICE_MEM_ERROR] = {ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR, "suspect device mem error"};
     rtErrMap_[RT_ERROR_SUSPECT_REMOTE_ERROR] = {ACL_ERROR_RT_SUSPECT_REMOTE_ERROR, "suspect remote error"};
@@ -514,7 +519,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED] = {ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED,
         "host memory range already registered"};
     rtErrMap_[RT_ERROR_HOST_MEMORY_NOT_REGISTERED] = {ACL_ERROR_HOST_MEMORY_NOT_REGISTERED,
-        "host memory has not been registered"};  
+        "host memory has not been registered"};    
 }
 
 void ErrorcodeManage::InitDrvErrCodeMap()

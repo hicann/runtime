@@ -23,7 +23,7 @@
 #include "stream.hpp"
 #include "label.hpp"
 #include "dfx_api.hpp"
-#include "base_starsv2.hpp"
+#include "base_david.hpp"
 #include "capability.hpp"
 #include "runtime_intf.hpp"
 #include "dev_info.h"
@@ -53,14 +53,17 @@ constexpr uint64_t RT_TIMEOUT_S_TO_US = 1000000UL;
 constexpr float64_t RT_TIMEOUT_US_TO_NS = 1000.0F;
 constexpr int32_t DEFAULT_HOSTCPU_USER_DEVICE_ID = 65535; // used to identify the host CPU scenario
 constexpr int32_t DEFAULT_HOSTCPU_LOGIC_DEVICE_ID = 0;
-constexpr uint8_t PREFETCH_CNT_910_B_93 = 8U;
+constexpr uint8_t PREFETCH_CNT_CLOUD_V2 = 8U;
+constexpr uint8_t PREFETCH_CNT_CHIP_DC = 10U;
 constexpr uint32_t RECYCLE_POOL_ISOLATION_WIDTH = 1;
 
 constexpr uint32_t SOFT_STREAM_MAX_NUM = 33792U;
 constexpr uint32_t LOG_SAVE_MODE_DEF_RUN = 33792U;
 
+constexpr uint32_t UB_POISON_ERROR_EVENT_ID = 0x81AF8009U;
 constexpr uint32_t HBM_ECC_NOTIFY_EVENT_ID = 0x80E18400U; // for ReadFaultEvent
 constexpr uint32_t HBM_ECC_EVENT_ID = 0x80E01801U;
+constexpr uint32_t L2_BUFFER_ECC_EVENT_ID = 0x80CD8008U;
 constexpr uint16_t RT_DSM_EVENT_FILTER_FLAG_EVENT_ID = 1U;
 constexpr uint16_t READ_FAULT_EVENT_TIMEOUT = 1000U;
 
@@ -68,6 +71,15 @@ constexpr size_t NON_CPU_KERNEL_ARGS_ALIGN_SIZE = sizeof(uint64_t);
 constexpr size_t CPU_KERNEL_ARGS_ALIGN_SIZE = 1U;
 constexpr size_t SINGLE_NON_CPU_SYS_PARAM_SIZE = sizeof(uint64_t);
 
+constexpr float64_t RT_HWTS_610LITE_TASK_KERNEL_CREDIT_SCALE_US = 9320.676F;    // 2^23 / 900M *1000*1000(us)
+constexpr uint32_t RT_HWTS_BS9SX1AB_DEFAULT_KERNEL_CREDIT_UINT32 = 143U;        // The TS BS9SX1AB reference time is 2665713.209 us.
+constexpr float64_t RT_HWTS_BS9SX1AB_TASK_KERNEL_CREDIT_SCALE_US = 18641.351F;  // 2^24 / 900M *1000*1000(us)
+constexpr uint32_t RT_HWTS_610_DEFAULT_KERNEL_CREDIT_UINT32 = 72U;              // The TS 610 reference time is 2415919.104 us.
+constexpr float64_t RT_HWTS_610_TASK_KERNEL_CREDIT_SCALE_US = 33554.432F;       // 2^25 / 1000M *1000*1000(us)
+constexpr float64_t RT_HWTS_310P_TASK_KERNEL_CREDIT_SCALE_US = 2147483.648F;    // 2^31 / 1000M *1000*1000(us)
+constexpr float64_t RT_HWTS_910A_TASK_KERNEL_CREDIT_SCALE_US = 68719476.736F;   // 2^36 / 1000M *1000*1000(us)
+
+constexpr float64_t RT_STARS_AS31XM1X_TASK_KERNEL_CREDIT_SCALE_US = 33554.432F;  // 2^24 / 500M *1000*1000(us)
 constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_US = 4294967.296F;  // 2^32 / 1000M *1000*1000(us)
 constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F;  // 0.001(us) = 1ns
 
@@ -213,6 +225,15 @@ public:
     {
         return facadeDriver_;
     }
+    Device *GetXpuDevice()
+    {
+        return xpuDevice_;
+    }
+
+    Context *GetXpuCtxt()
+    {
+        return xpuCtxt_;
+    }
 
     rtError_t MallocProgramAndReg(const rtDevBinary_t *const bin, Program **const newProg) const;
     rtError_t MallocProgramAndRegMixKernel(
@@ -357,6 +378,16 @@ public:
     void SetDisableThread(bool disable)
     {
         disableThread_ = disable;
+    }
+
+    bool GetSentinelMode() const override
+    {
+        return sentinelMode_;
+    }
+
+    void SetSentinelMode(bool mode)
+    {
+        sentinelMode_ = mode;
     }
 
     bool IsDrvBindStreamThread() const
@@ -536,11 +567,24 @@ public:
 
     uint32_t GetDefaultKernelCredit() const
     {
+        if (curChipProperties_.DefaultKernelCredit == cce::runtime::RT_HWTS_610_DEFAULT_KERNEL_CREDIT_UINT32) {
+            if ((socType_ == SOC_BS9SX1AA) || (socType_ == SOC_BS9SX1AB) || (socType_ == SOC_BS9SX1AC)) {
+                return RT_HWTS_BS9SX1AB_DEFAULT_KERNEL_CREDIT_UINT32;
+            }
+        }
+
         return curChipProperties_.DefaultKernelCredit;
     }
 
     float64_t GetKernelCreditScaleUS() const
     {
+        if (std::abs(curChipProperties_.KernelCreditScale - cce::runtime::RT_HWTS_610_TASK_KERNEL_CREDIT_SCALE_US) <
+            std::numeric_limits<float>::epsilon()) {
+            if ((socType_ == SOC_BS9SX1AA) || (socType_ == SOC_BS9SX1AB) || (socType_ == SOC_BS9SX1AC)) {
+                return RT_HWTS_BS9SX1AB_TASK_KERNEL_CREDIT_SCALE_US;
+            }
+        }
+
         if (std::abs(curChipProperties_.KernelCreditScale - RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN) <
                    std::numeric_limits<float>::epsilon()) {
             return (timeoutConfig_.isInit ? timeoutConfig_.interval :
@@ -738,23 +782,40 @@ public:
     }
     rtError_t SubscribeCallback(const uint64_t threadId, Stream *stm, void *evtNotify);
     bool JudgeNeedSubscribe(const uint64_t threadId, Stream *stm, const uint32_t deviceId);
-    void AllocDfxId(uint32_t &dfxId) {
-        dfxId = dfxId_.FetchAndAdd(1U);
-        dfxId = dfxId & 0x7FFFFFFFU;
+    void AllocTaskSn(uint32_t &taskSn) {
+        taskSn = taskSn_.FetchAndAdd(1U);
+        taskSn = taskSn & 0x7FFFFFFFU;
         return;
     }
     rtError_t startAicpuExecutor(const uint32_t devId, const uint32_t tsId);
     rtError_t StopAicpuExecutor(const uint32_t devId, const uint32_t tsId, const bool isQuickClose = false) const;
     rtError_t InitOpExecTimeout(Device *dev);
+    Stream *GetCurStream(Stream * const stm) const;
+    rtError_t PrimaryXpuContextRelease(const uint32_t devId);
+
+    Context *PrimaryXpuContextRetain(const uint32_t devId);
+    Device *XpuDeviceRetain(const uint32_t devId) const;
+    void XpuDeviceRelease(Device *dev) const;
+
+    std::mutex &XpuSetDevMutex()
+    {
+        return xpuSetDevMutex_;
+    }
 
 private:
     void MacroInitDefault(RtMacroValue &value) const;
+    void SocTypeInit(const int64_t aicoreNumLevel, const int64_t aicoreFreqLevel);
     void TsdClientInit();
     void LoadFunction(void *const handlePtr, const char_t * const libSoName);
     rtError_t GetAicoreNumByLevel(const rtChipType_t chipTypeValue, int64_t &aicoreNumLevel, uint32_t &aicoreNum);
     void CheckVirtualMachineMode(uint32_t &aicoreNum, int64_t &vmAicoreNum);
     void InitSocTypeFrom910BVersion(int64_t hardwareVersion);
+    void InitSocTypeFrom310BVersion(const int64_t hardwareVersion);
+    void InitSocTypeFromBS9SX1AXVersion();
+    void InitSocTypeFromADCVersion(const rtVersion_t ver, const int64_t hardwareVersion);
+    void InitSocTypeFrom910Version(const int64_t hardwareVersion);
 
+    void Init310PSocType(const int64_t vmAicoreNum);
     int32_t GetProfDeviceNum(const uint64_t profMask);
     rtError_t SetSocTypeByChipType(int64_t hardwareVersion, int64_t aicoreNumLevel, int64_t vmAicoreNum);
     bool IsSupportVisibleDevices() const;
@@ -898,6 +959,8 @@ private:
     RefObject<Device *> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM];  // Last one is stub device
     uint32_t deviceCustomerStackSize_{KERNEL_STACK_SIZE_32K};  // 全局共享，所有device生效，向上取整到16KB对齐
     ObjAllocator<RefObject<Program *>> *programAllocator_;
+    Device *xpuDevice_{nullptr};
+    Context *xpuCtxt_{nullptr};
 
     ApiErrorDecorator *apiError_;
     Logger *logger_;
@@ -960,18 +1023,19 @@ private:
     std::map<std::string, TaskAbortCallbackInfo> taskAbortCallbackMap_;
     std::mutex taskAbortMutex_;
     std::mutex snapShotCallBackMapMutex_;
- 	std::map<rtSnapShotStage, std::list<SnapShotCallBackInfo>> snapShotCallBackMap_;
+    std::map<rtSnapShotStage, std::list<SnapShotCallBackInfo>> snapShotCallBackMap_;
     uint32_t tschVersion_ = 0U;
     uint8_t tilingKeyFlag_ = UINT8_MAX;
     ThreadGuard *threadGuard_;
     std::mutex deviceIdMutex_;
+    std::mutex xpuSetDevMutex_;
     uint32_t defaultDeviceId_ = 0xFFFFFFFFU;
     bool hasSetDefaultDevId_ = false;
     bool isSupport1GHugePage_ = false;
     bool isRk3588Cpu_ = false;
     RtHbmRasInfo rasInfo_ = {};
     uint32_t latestPoolIdx_ = 0;
-
+    bool sentinelMode_ = false;
     std::vector<char> dcacheLockMixOpData_;
     bool connectUbFlag_ = false;
     std::mutex simtStackMutex_;
@@ -987,8 +1051,8 @@ private:
     bool isUserSetSocVersion_ = false;
     RuntimeRas ras_;
 
-    /* starsv2 dfx task id in current process */
-    Atomic<uint32_t> dfxId_{0U};
+    /* david dfx task id in current process */
+    Atomic<uint32_t> taskSn_{0U};
 
     std::unordered_map<rtChipType_t, DevProperties> propertiesMap_;
     DevProperties curChipProperties_;

@@ -37,6 +37,10 @@ public:
     int32_t WriteCtrlDataToFile(const std::string &absolutePath, const std::string &data, int32_t dataLen) const;
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> HandleProfilingParams(uint32_t deviceId,
         const std::string &sampleConfig) const;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> CreateAndParseParams(
+        const std::string &sampleConfig) const;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ValidateAndProcessParams(uint32_t deviceId,
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const std::string &sampleConfig) const;
     int32_t IdeCloudProfileProcess(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
     bool CheckIfDevicesOnline(const std::string paramsDevices, std::string &statusInfo) const;
 

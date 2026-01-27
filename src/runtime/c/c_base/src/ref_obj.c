@@ -36,11 +36,9 @@ static bool ObjRefCount(RefObj *obj, const RefObjUpdate *update,
     uint64_t perSchedYield = 0x3FFU;
     do {
         tryCount++;
-#ifndef WIN32
         if ((tryCount & perSchedYield) == 0U) {
             (void)mmSchedYield();
         }
-#endif
         oldVal = obj->refCount;
         if ((oldVal & REF_OBJ_UPDATING) != 0) {
             continue;
