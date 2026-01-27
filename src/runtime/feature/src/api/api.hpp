@@ -52,14 +52,25 @@ constexpr uint32_t MEMCPY_DESC_SIZE = 32U;
 constexpr uint32_t MEMCPY_DESC_SIZE_V2 = 64U;
 constexpr uint32_t MEMCPY_DESC_LENGTH_OFFSET = 12U;
 
-static inline uint64_t CalculateMemcpyAsyncSingleMaxSize(const rtMemcpyKind_t kind)
+static inline uint64_t CalculateMemcpyAsyncSingleMaxSize(const rtMemcpyKind_t kind,
+    const uint32_t transType = UINT32_MAX)
 {
     uint64_t sqSize = MEMCPY_ASYNC_UNIT_SIZE;
-    if ((kind == RT_MEMCPY_DEVICE_TO_DEVICE) || (kind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE)) {
+    if (kind == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) {
         sqSize = MAX_MEMCPY_SIZE_OF_D2D;
     }
 
-    // David片内D2D当前走的是SDMA，当前无法区分是片内，还是片间的D2D，因此这块先不拦截D2D。
+    // 跨片D2D单次拷贝大小在UB场景是256M，PCIE场景是64M
+    if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+        if (transType == RT_MEMCPY_DIR_D2D_UB) {
+            sqSize = MEMCPY_ASYNC_UB_SIZE;
+        } else if (transType == RT_MEMCPY_DIR_D2D_PCIe) {
+            sqSize = MEMCPY_ASYNC_UNIT_SIZE;
+        } else {
+            sqSize = MAX_MEMCPY_SIZE_OF_D2D;
+        }
+    }
+
     if (Runtime::Instance()->GetConnectUbFlag() && ((kind == RT_MEMCPY_HOST_TO_DEVICE) ||
         (kind == RT_MEMCPY_DEVICE_TO_HOST))) {
         sqSize = MEMCPY_ASYNC_UB_SIZE;

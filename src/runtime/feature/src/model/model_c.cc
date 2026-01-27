@@ -400,7 +400,7 @@ static void GetAndSaveJettyInfo(Model * const mdl)
             error = GetAndSaveH2dJettyInfo(mdl, sinkStream->GetSqId(), sinkStream->Device_()->Id_(),
                 sinkStream->Device_()->DevGetTsId());
             if (error != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "GetH2DJettyInfo failed, device_id=%d, sq_id=%u, error=%d.",
+                RT_LOG(RT_LOG_ERROR, "GetH2DJettyInfo failed, device_id=%u, sq_id=%u, error=%d.",
                     sinkStream->Device_()->Id_(), sinkStream->GetSqId(), error);
             }
         }
@@ -412,7 +412,7 @@ static void GetAndSaveJettyInfo(Model * const mdl)
             error = GetAndSaveD2dJettyInfo(mdl, sinkStream->GetSqId(), sinkStream->Device_()->Id_(),
                 sinkStream->Device_()->DevGetTsId());
             if (error != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "GetD2DJettyInfo failed, device_id=%d, sq_id=%u, error=%d.",
+                RT_LOG(RT_LOG_ERROR, "GetD2DJettyInfo failed, device_id=%u, sq_id=%u, error=%d.",
                     sinkStream->Device_()->Id_(), sinkStream->GetSqId(), error);
             }
         }

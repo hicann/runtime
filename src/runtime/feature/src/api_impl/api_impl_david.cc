@@ -834,9 +834,17 @@ rtError_t ApiImplDavid::MemcpyAsync(void * const dst, const uint64_t destMax, co
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Memcpy async failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
 
-    const uint64_t sqSize = CalculateMemcpyAsyncSingleMaxSize(kind);
-
+    uint32_t transType = UINT32_MAX;
     rtError_t error = RT_ERROR_NONE;
+    if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+        error = ConvertD2DCpyType(curStm, transType, src, dst);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "ConvertD2DCpyType failed, retCode=%#x.", static_cast<uint32_t>(error));
+            return error;
+        }
+    }
+    const uint64_t sqSize = CalculateMemcpyAsyncSingleMaxSize(kind, transType);
+
     uint64_t realSize = cnt;
     uint64_t remainSize = cnt;
     uint64_t doneSize = 0U;

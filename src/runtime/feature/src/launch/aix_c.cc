@@ -323,7 +323,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
         "Mix kernel check failed, stream_id=%d, kernelType=%u, retCode=%#x.", stm->Id_(),
         kernelType, static_cast<uint32_t>(error));
     DavidStream *davidStm = static_cast<DavidStream *>(stm);
-    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGrouping());
+    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     std::function<void()> const errRecycle = [&result, &kernelTask, &prog, &stm, &pos, &dstStm]() {
@@ -438,7 +438,7 @@ rtError_t StreamLaunchKernelV2(Kernel * const kernel, const uint32_t coreDim, St
     ERROR_RETURN_MSG_INNER(error, "Mix kernel check failed, stream_id=%d, kernelType=%u, retCode=%#x.",
         stm->Id_(), kernelType, static_cast<uint32_t>(error));
     DavidStream *davidStm = static_cast<DavidStream *>(stm);
-    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGrouping());
+    bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
 
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
