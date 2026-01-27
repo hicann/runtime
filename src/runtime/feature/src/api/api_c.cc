@@ -177,6 +177,7 @@ rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc, const char_t
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_DUPLICATE, ACL_ERROR_RT_KERNEL_DUPLICATE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
