@@ -29,7 +29,8 @@ namespace runtime {
 namespace {
 const std::set<int32_t> MEM_ERROR_CODE = {TS_ERROR_AICORE_MTE_ERROR,
                                           TS_ERROR_SDMA_LINK_ERROR,
-                                          TS_ERROR_SDMA_POISON_ERROR};
+                                          TS_ERROR_SDMA_POISON_ERROR,
+                                          TS_ERROR_LINK_ERROR};
 } // namespace 
 #if F_DESC("ModelExecuteTask")
 
@@ -259,7 +260,7 @@ static rtError_t ConstructFuncCallPara(TaskInfo * const taskInfo, rtStarsModelEx
                     taskInfo->stream->Device_()->GetPhyDieId(), taskInfo->stream->Id_());
             return RT_ERROR_DEVICE_INVALID;
         }
-        funcCallPara.sqFsmSelBasAddr = baseAddr + STARSV2_SIMPLE_RTSQ_FSM_SEL_REG;
+        funcCallPara.sqFsmSelBasAddr = baseAddr + DAVID_SIMPLE_RTSQ_FSM_SEL_REG;
     }
     funcCallPara.sqVirtualAddr =
             static_cast<uint64_t>(reinterpret_cast<uintptr_t>(stream->Device_()->GetSqVirtualArrBaseAddr_()));

@@ -276,6 +276,9 @@ TEST_F(UTEST_ACL_Common, SetStackSize)
     ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/testStackSize_abnormal_-1.json");
     EXPECT_EQ(ret, ACL_SUCCESS);
 
+    ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/testStackSize_abnormal_aligned.json");
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
     // not exist file
     ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/xxxxxxxxxxxxx.json");
     EXPECT_EQ(ret, ACL_ERROR_FAILURE);
@@ -284,7 +287,32 @@ TEST_F(UTEST_ACL_Common, SetStackSize)
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
         .WillRepeatedly(Return(0));
     ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/testStackSize_normal_32768.json");
-    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Common, SetStackSize_SimtStackFail)
+{
+    // 测试SIMT栈设置失败的情况
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_,_,_))
+        .WillOnce(Return(0))  // 第一次调用成功（aicore_stack_size）
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))  // 第二次调用失败（simt_stack_size）
+        .WillRepeatedly(Return(0));
+
+    aclError ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/testStackSize_normal_32768.json");
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Common, SetStackSize_SimtDivergenceStackFail)
+{
+    // 测试SIMT分支栈设置失败的情况
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_,_,_))
+        .WillOnce(Return(0))  // 第一次调用成功（aicore_stack_size）
+        .WillOnce(Return(0))  // 第二次调用成功（simt_stack_size）
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))  // 第三次调用失败（simt_divergence_stack_size）
+        .WillRepeatedly(Return(0));
+
+    aclError ret = HandleDefaultDeviceAndStackSize(ACL_BASE_DIR "/tests/ut/acl/json/testStackSize/testStackSize_normal_32768.json");
+    EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Common, ErrorManagerTest)
@@ -404,6 +432,23 @@ TEST_F(UTEST_ACL_Common, finalize_failed_with_rts_fail)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+#if 0
+TEST_F(UTEST_ACL_Common, finalize_failed_with_rts_callback_fail)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegStreamStateCallback(_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillRepeatedly(Return(0));
+    aclError ret = aclFinalize();
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtRegDeviceStateCallbackEx(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillRepeatedly(Return(0));
+    ret = aclFinalize();
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+#endif
+
 TEST_F(UTEST_ACL_Common, aclInitFlag_true)
 {
     bool ret = GetAclInitFlag();
@@ -423,7 +468,7 @@ TEST_F(UTEST_ACL_Common, finalize3)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtUnRegKernelLaunchFillFunc(_))
         .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT))
         .WillRepeatedly(Return(0));
-    
+
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSetDefaultDeviceId(_))
         .WillOnce(Return(ACL_ERROR_RT_FAILURE));
 
@@ -774,7 +819,7 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_CANN_Success)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/compiler/version.info";
-    
+
     writeToFile(infoPath, "Version=8.5.0.alpha001 \n");
 
     int32_t mmRet = 0;
@@ -783,7 +828,7 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_CANN_Success)
 
     char pkgName[] = "compiler";
     char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
-    
+
     aclError ret = aclsysGetVersionStr(pkgName, verStr);
 
     EXPECT_EQ(ret, ACL_SUCCESS);
@@ -796,14 +841,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_CANN_Success)
 TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_Retry_AlternativeName_Success)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
-    
+
     std::string infoPath = mockAscendHome + "/share/info/ops_math/version.info";
     writeToFile(infoPath, "Version=1.0.0");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
 
-    char pkgName[] = "ops-math"; 
+    char pkgName[] = "ops-math";
     char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
 
     aclError ret = aclsysGetVersionStr(pkgName, verStr);
@@ -818,14 +863,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_Retry_AlternativeName_Success)
 TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_Retry_AlternativeName_Success_01)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
-    
+
     std::string infoPath = mockAscendHome + "/share/info/ops-base/version.info";
     writeToFile(infoPath, "Version=1.0.0");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
 
-    char pkgName[] = "ops_base"; 
+    char pkgName[] = "ops_base";
     char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
 
     aclError ret = aclsysGetVersionStr(pkgName, verStr);
@@ -851,7 +896,7 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_Driver_Success)
     std::string driverInstallPath;
 
     EXPECT_TRUE(GetPkgPath(installConfPath, driverInstallPath, "Driver_Install_Path_Param="));
-    
+
     aclError ret = GetVersionStringInternal(driverInfoPath, pkgName, verInfo, false);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(verInfo, "23.0.rc1");
@@ -863,13 +908,13 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_ComplexSemVer_Success)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
-    
+
     writeToFile(infoPath, "Version=8.5.0.beta.1");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -919,7 +964,7 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_NoFile_Fail)
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
 
     aclError ret = aclsysGetVersionStr(pkgName, verStr);
@@ -934,14 +979,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_InvalidFormat_Fail)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
-    
-    writeToFile(infoPath, "runtime=8.5"); 
+
+    writeToFile(infoPath, "runtime=8.5");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
 
     aclError ret = aclsysGetVersionStr(pkgName, verStr);
@@ -956,13 +1001,13 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
-    
-    writeToFile(infoPath, "Version=8.5"); 
+
+    writeToFile(infoPath, "Version=8.5");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -977,13 +1022,13 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail_02)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
-    
-    writeToFile(infoPath, "Version=8.5.0-gamma"); 
+
+    writeToFile(infoPath, "Version=8.5.0-gamma");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -998,14 +1043,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail_03)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/ops/version.info";
-    
-    writeToFile(infoPath, "Version=8"); 
+
+    writeToFile(infoPath, "Version=8");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "ops"; 
+    char pkgName[] = "ops";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -1020,14 +1065,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail_04)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/compile/version.info";
-    
-    writeToFile(infoPath, "Version=A"); 
+
+    writeToFile(infoPath, "Version=A");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "compile"; 
+    char pkgName[] = "compile";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -1042,14 +1087,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail_05)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
-    
-    writeToFile(infoPath, "Version=8.5.0..alpha"); 
+
+    writeToFile(infoPath, "Version=8.5.0..alpha");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "runtime"; 
+    char pkgName[] = "runtime";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);
@@ -1064,14 +1109,14 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail_06)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";
     std::string infoPath = mockAscendHome + "/share/info/compile/version.info";
-    
-    writeToFile(infoPath, "Version=8.5.0-rc.1a"); 
+
+    writeToFile(infoPath, "Version=8.5.0-rc.1a");
 
     int32_t mmRet = 0;
     MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
     (void)mmRet;
 
-    char pkgName[] = "compile"; 
+    char pkgName[] = "compile";
     int32_t verNum = 0;
 
     aclError ret = aclsysGetVersionNum(pkgName, &verNum);

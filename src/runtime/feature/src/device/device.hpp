@@ -65,7 +65,7 @@ enum rtTschVersion {
     TS_VERSION_FFTSPLUS_TIMEOUT = 21,
     TS_VERSION_FFTSPLUS_TASKID_SAME_FIX = 22,
     TS_VERSION_MC2_RTS_SUPPORT_HCCL = 23,
-    TS_VERSION_IPC_NOTICE_910_B_93 = 24,
+    TS_VERSION_IPC_NOTICE_CLOUD_V2 = 24,
     TS_VERSION_MC2_RTS_SUPPORT_HCCL_DC = 25,
     TS_VERSION_REDUCV2_SUPPORT_DC = 26,
     TS_VERSION_TILING_KEY_SINK = 27,
@@ -79,6 +79,40 @@ enum rtTschVersion {
     TS_VERSION_AICPU_SINGLE_TIMEOUT = 35,
     TS_VERSION_LATEST
 };
+
+#define MAX_ACC_QOS_CFG_NUM 4
+#define QOS_CFG_RESERVED_LEN 8
+#define QOS_MASTER_BITMAP_LEN 4
+
+enum class QosMasterType : uint32_t {
+    MASTER_DVPP_ALL     = 0,
+    MASTER_DVPP_VPC     = 1,
+    MASTER_DVPP_VDEC    = 2,
+    MASTER_DVPP_JPEGE   = 3,
+    MASTER_DVPP_JPEGD   = 4,
+    MASTER_ROCE         = 5,
+    MASTER_NIC          = 6,
+    MASTER_PCIE         = 7,
+    MASTER_AICPU        = 8,
+    MASTER_AIC_DAT      = 9,
+    MASTER_AIC_INS      = 10,
+    MASTER_AIV_DAT      = 11,
+    MASTER_AIV_INS      = 12,
+    MASTER_SDMA         = 13,
+    MASTER_STARS        = 14,
+    MASTER_INVALID,
+};
+
+// 这个结构体需要和QOS drv中定义的结构体保持一致
+typedef struct qos_master_config_type {
+    QosMasterType type;
+    uint32_t mpamId;
+    uint32_t qos;
+    uint32_t pmg;
+    uint64_t bitmap[QOS_MASTER_BITMAP_LEN];
+    uint32_t mode = MAX_UINT32_NUM;
+    uint32_t reserved[QOS_CFG_RESERVED_LEN - 1];
+} qos_master_config_type_t;
 
 typedef struct {
     uint64_t addr;
@@ -138,6 +172,7 @@ class DvppGrp;
 class CtrlResEntry;
 class DeviceSqCqPool;
 class SqAddrMemoryOrder;
+class CtrlSQ;
 
 // Management of a Davinci device.
 class Device : public NoCopy { // Interface
@@ -236,9 +271,27 @@ public:
         return GetDevProperties().isStars;
     }
 
-    bool IsStarsV2Platform() const
+    bool IsDavidPlatform() const
     {
-        return false;
+        const rtPlatformType_t platformType = GetPlatformType();
+        return ((platformType == PLATFORM_DAVID_910_9599) || (platformType == PLATFORM_SOLOMON) ||
+                (platformType == PLATFORM_DAVID_910_9589) || (platformType == PLATFORM_DAVID_910_958A) ||
+                (platformType == PLATFORM_DAVID_910_958B) || (platformType == PLATFORM_DAVID_910_957B) ||
+                (platformType == PLATFORM_DAVID_910_957D) || (platformType == PLATFORM_DAVID_910_950Z) ||
+                (platformType == PLATFORM_DAVID_910_9579) || (platformType == PLATFORM_MC62CM12A) ||
+                (platformType == PLATFORM_DAVID_910_9591) || (platformType == PLATFORM_DAVID_910_9592) ||
+                (platformType == PLATFORM_DAVID_910_9581) || (platformType == PLATFORM_DAVID_910_9582) ||
+                (platformType == PLATFORM_DAVID_910_9584) || (platformType == PLATFORM_DAVID_910_9587) ||
+                (platformType == PLATFORM_DAVID_910_9588) || (platformType == PLATFORM_DAVID_910_9572) ||
+                (platformType == PLATFORM_DAVID_910_9575) || (platformType == PLATFORM_DAVID_910_9576) ||
+                (platformType == PLATFORM_DAVID_910_9574) || (platformType == PLATFORM_DAVID_910_9577) ||
+                (platformType == PLATFORM_DAVID_910_9578) || (platformType == PLATFORM_DAVID_910_957C) ||
+                (platformType == PLATFORM_DAVID_910_95A1) || (platformType == PLATFORM_DAVID_910_95A2) ||
+                (platformType == PLATFORM_DAVID_910_9595) || (platformType == PLATFORM_DAVID_910_9596) ||
+                (platformType == PLATFORM_DAVID_910_9585) || (platformType == PLATFORM_DAVID_910_9586) ||
+                (platformType == PLATFORM_DAVID_910_9583) || (platformType == PLATFORM_DAVID_910_9571) ||
+                (platformType == PLATFORM_DAVID_910_9573) || (platformType == PLATFORM_DAVID_910_950X) ||
+ 	            (platformType == PLATFORM_DAVID_910_950Y));
     }
 
     void SetDevType(bool isAddrFlatDev) const
@@ -280,7 +333,7 @@ public:
     virtual bool IsSupportStopOnStreamError(void) = 0;
     virtual uint64_t GetC2cCtrlAddr(void) = 0;
     virtual uint32_t GetC2cCtrlAddrLen(void) = 0;
-    virtual void SetC2cCtrlAddr(const uint64_t addr, const uint32_t addrLen) = 0; 	 
+    virtual void SetC2cCtrlAddr(const uint64_t addr, const uint32_t addrLen) = 0;
 
     virtual rtError_t AicpuModelLoad(void * const modelInfo) = 0;
     virtual rtError_t AicpuModelDestroy(const uint32_t modelId) = 0;
@@ -402,7 +455,7 @@ public:
     virtual void SetSimtStackPhyBase(void *simtStackPhyBaseAlign) = 0;
     virtual uint32_t GetSimtDvgWarpStkSize() const = 0;
     virtual uint32_t GetSimtWarpStkSize() const = 0;
-    virtual uint8_t GetStarsV2DieNum() const = 0;
+    virtual uint8_t GetDavidDieNum() const = 0;
     virtual rtError_t SetCurGroupInfo() = 0;
     virtual void GetErrorPcArr(const uint16_t devId, uint64_t **errorPc, uint32_t *cnt) const = 0;
     virtual uint32_t GetDeviceAllocStackSize() const = 0;
@@ -438,6 +491,7 @@ public:
     virtual rtError_t ClearEndGraphNotifyInfoByModel(Model* captureModel) = 0;
     virtual uint64_t AllocSqIdMemAddr() = 0;
     virtual void FreeSqIdMemAddr(const uint64_t sqIdAddr) = 0;
+    virtual CtrlSQ& GetCtrlSQ(void) const = 0;
     virtual void RegisterProgram(Program *prog) = 0;
     virtual void UnRegisterProgram(Program *prog) = 0;
     virtual bool ProgramSetMutexTryLock() = 0;

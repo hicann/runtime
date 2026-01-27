@@ -31,8 +31,13 @@ uint16_t TransKernelCreditCreditByChip(const uint16_t kernelCredit)
         creditStartValue = devProperty.creditStartValue;
         isGet = true;
     }
+
     if (creditStartValue != UINT16_MAX) {
-        // To prevent errors caused by kernelCredit = 0 in sqe, hardware calculates timeout by kernelCredit + 1.
+        /*
+        * To prevent errors caused by kernelCredit = 0 in sqe, hardware calculates timeout by kernelCredit + 1.
+        * If kernelCredit = 255, never timeout.
+        */
+        COND_PROC((kernelCredit == RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT), return RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT);
         return (kernelCredit == 0U) ? creditStartValue : (kernelCredit - 1U);
     }
     return kernelCredit;
@@ -73,7 +78,7 @@ uint16_t GetSdmaKernelCredit()
     const RtTimeoutConfig &timeoutCfg = Runtime::Instance()->GetTimeoutConfig();
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     const static bool timeoutFlag = IS_SUPPORT_CHIP_FEATURE(chipType,
- 	         RtOptionalFeatureType::RT_FEATURE_KERNEL_CREDIT_CALC_FROM_EXE_TIMEOUT);
+        RtOptionalFeatureType::RT_FEATURE_KERNEL_CREDIT_CALC_FROM_EXE_TIMEOUT);
     if (timeoutFlag && timeoutCfg.isCfgOpExcTaskTimeout) {
         TransExeTimeoutCfgToKernelCredit(timeoutCfg.opExcTaskTimeout, kernelCredit);
     } else if (timeoutCfg.isCfgOpExcTaskTimeout && timeoutCfg.isOpTimeoutMs) {

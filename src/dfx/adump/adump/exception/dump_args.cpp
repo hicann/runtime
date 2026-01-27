@@ -455,6 +455,7 @@ bool DumpArgs::GetIsDataTypeSizeByte(bool &isDataTypeSizeByte) const
     uint32_t platformType = 0;
     IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platformType), return false, "Get platform type failed.");
     auto it = platforms.find(static_cast<PlatformType>(platformType));
+    // david以前支持dfx的芯片上，二级指针的datatype size单位是byte；david后可能会新增小于1byte的datatype，因此该字段单位改为bit
     isDataTypeSizeByte = it != platforms.end() ? true: false;
     return true;
 }

@@ -17,6 +17,7 @@
 #include <fstream>
 #include "platform_log.h"
 #include "platform_infos_utils.h"
+#include "platform_error_define.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,9 +32,6 @@ const std::string STR_VECTOR_CORE_INTRINSIC_DTYPE_MAP = "VectorCoreintrinsicDtyp
 
 const std::string SOC_VERSION_ASCEND910 = "Ascend910";
 const std::string SOC_VERSION_ASCEND910A = "Ascend910A";
-
-const uint32_t PLATFORM_FAILED = 0xFFFFFFFF;
-const uint32_t PLATFORM_SUCCESS = 0;
 
 PlatformManagerV2 &PlatformManagerV2::Instance() {
   static PlatformManagerV2 platform_info;
@@ -273,7 +271,7 @@ uint32_t PlatformManagerV2::InitPlatformInfos(const std::string &soc_version) {
   return PLATFORM_SUCCESS;
 }
 
-uint32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe::PlatFormInfos &platform_info) {
+int32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe::PlatFormInfos &platform_info) {
   std::string realSocVersion = soc_version;
   if (realSocVersion == SOC_VERSION_ASCEND910) {
     realSocVersion = SOC_VERSION_ASCEND910A;
@@ -282,7 +280,7 @@ uint32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe:
     std::lock_guard<std::mutex> lock_guard(soc_lock_);
     if (soc_file_status_.count(realSocVersion) == 0) {
       if (InitPlatformInfos(realSocVersion) != PLATFORM_SUCCESS) {
-        return PLATFORM_FAILED;
+        return PLATFORM_ERROR_PARSE_FILE_FAILED;
       }
     }
     soc_file_status_[realSocVersion] = true;
@@ -290,24 +288,25 @@ uint32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe:
   auto iter = platform_infos_map_.find(realSocVersion);
   if (iter == platform_infos_map_.end()) {
     PF_LOGE("Cannot find platform_info by SoCVersion %s.", realSocVersion.c_str());
-    return PLATFORM_FAILED;
+    return PLATFORM_ERROR_NOT_FOUND;
   }
   platform_info = iter->second;
   return PLATFORM_SUCCESS;
 }
 
-uint32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version,
+int32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version,
                                        const std::string &label, const std::string &key, std::string &value) {
-  PF_LOGD("Begin to get soc[%s] info: label[%s], key[%s]", soc_version.c_str(), label.c_str(), key.c_str());
+  PF_LOGD("Begin to get soc[%s] info: label[%s], key[%s].", soc_version.c_str(), label.c_str(), key.c_str());
   fe::PlatFormInfos platform_info;
-  if (GetPlatformInfos(soc_version, platform_info) != PLATFORM_SUCCESS) {
-    return PLATFORM_FAILED;
+  auto ret = GetPlatformInfos(soc_version, platform_info);
+  if (ret != PLATFORM_SUCCESS) {
+    return ret;
   }
   if (!platform_info.GetPlatformResWithLock(label, key, value)) {
-    PF_LOGW("Failed to get platform info, lable[%s], key[%s]", label.c_str(), key.c_str());
-    return PLATFORM_FAILED;
+    PF_LOGW("Failed to get platform info, lable[%s], key[%s].", label.c_str(), key.c_str());
+    return PLATFORM_ERROR_NOT_FOUND;
   }
-  PF_LOGD("GetSocSpec lable[%s], key[%s], value[%s]", label.c_str(), key.c_str(), value.c_str());
+  PF_LOGD("GetSocSpec lable[%s], key[%s], value[%s].", label.c_str(), key.c_str(), value.c_str());
   return PLATFORM_SUCCESS;
 }
 

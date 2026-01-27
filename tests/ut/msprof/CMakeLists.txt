@@ -71,26 +71,57 @@ protobuf_generate(profiler
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto
 )
 
-add_subdirectory(ut/app)
-add_subdirectory(ut/device)
-add_subdirectory(ut/driver)
-add_subdirectory(ut/message)
-add_subdirectory(ut/profapi)
-add_subdirectory(ut/profhal)
-add_subdirectory(ut/streamio)
-add_subdirectory(ut/stub_utest)
-add_subdirectory(ut/transport)
+add_subdirectory(acp)
+add_subdirectory(app)
+add_subdirectory(common)
+add_subdirectory(device)
+add_subdirectory(driver)
+add_subdirectory(job_wrapper)
+add_subdirectory(message)
+add_subdirectory(msprof)
+add_subdirectory(msprofbin)
+add_subdirectory(profapi)
+add_subdirectory(profhal)
+add_subdirectory(streamio)
+add_subdirectory(stub_utest)
+add_subdirectory(transport)
+# add_subdirectory(st/cli)
+# add_subdirectory(st/geoption)
+# add_subdirectory(st/acljson)
+# add_subdirectory(st/api)
 
 ###################################################################################################
 
 set(MSPROF_TARGET
+    acp_utest
     application_utest
+    osal_linux_utest
+    osal_liteos_utest
+    device_utest
+    driver_utest
+    job_wrapper
     message_utest
+    msprofiler_utest
+    msprof_bin_utest
     prof_api_utest
     prof_hal_utest
     client_utest
     streamio_common_utest
     stub_file_utest
+    transport
+    # cli_stest
+    # geoption_stest
+    # acljson_stest
+    # proftransport_st_static
+    # profapi_lite_st
+    # api_dc_stest
+    # api_david_stest
+    # api_mini_v3_stest
+    # api_mdc_mini_v3_stest
+    # api_cloud_stest
+    # api_mdc_stest
+    # acl_api_stest
+    # api_tiny_stest
+    # profapi_share_st
 )
-
 add_custom_target(msprof_ut DEPENDS ${MSPROF_TARGET})

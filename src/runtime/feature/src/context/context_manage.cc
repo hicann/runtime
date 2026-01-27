@@ -316,6 +316,20 @@ void ContextManage::SetGlobalFailureErr(const uint32_t devId, const rtError_t er
     return;
 }
 
+void ContextManage::DeviceSetFaultType(const uint32_t devId, DeviceFaultType deviceFaultType)
+{
+    RT_LOG(RT_LOG_ERROR, "SetDeviceFaultType start, device_id=%u", devId);
+    const ReadProtect wp(&g_ctxMan.GetSetRwLock());
+    for (Context *const ctx : g_ctxMan.GetSetObj()) {
+        if (ctx != nullptr && ctx->Device_() != nullptr) {
+            COND_PROC((ctx->Device_()->Id_() != devId), continue);
+            ctx->Device_()->SetDeviceFaultType(deviceFaultType);
+        }
+    }
+    RT_LOG(RT_LOG_ERROR, "SetDeviceFaultType end");
+    return;
+}
+
 void ContextManage::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
 {
     RT_LOG(RT_LOG_INFO, "start");
@@ -385,7 +399,7 @@ rtError_t ContextManage::SnapShotProcessBackup()
             continue;
         }
         ret = ModelBackup(static_cast<int32_t>(devId));
-        ERROR_RETURN(ret, "ModelBackup failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
+        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     }
 
     // 申请host内存，保存所有launch过的算子.o
@@ -508,6 +522,9 @@ rtError_t ContextManage::ModelBackup(const int32_t devId)
         COND_RETURN_WARN((mdl->GetModelExecutorType() != EXECUTOR_TS),
             RT_ERROR_FEATURE_NOT_SUPPORT,
             "Snapshots cannot be created for models with the AICPU execution type.");
+        COND_RETURN_WARN(
+            (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
+            "Now, snapshot does not support aclGraph.");
         COND_RETURN_ERROR((!mdl->IsModelLoadComplete()),
             RT_ERROR_SNAPSHOT_BACKUP_FAILED,
             "The model is not complete, model_id=%u.", mdl->Id_());

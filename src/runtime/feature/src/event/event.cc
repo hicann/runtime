@@ -331,6 +331,7 @@ void Event::InitEventAllocFlag(int32_t streamId)
         if (rt->GetDisableThread()) {
             eventId_ = device_->GetDevProperties().timelineEventId;
         } else {
+            // In 1980+virtual, 1910,  use fixEventId TIMELINE_EVENT_ID when flag is RT_EVENT_TIME_LINE
             // stream mark should alloc id.
             eventId_ = (eventFlag_ == RT_EVENT_TIME_LINE) ? TIMELINE_EVENT_ID : INVALID_EVENT_ID;
         }

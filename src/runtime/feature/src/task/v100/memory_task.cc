@@ -86,7 +86,7 @@ void DoCompleteSuccessForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32
 
     (void)RecycleTaskResourceForMemcpyAsyncTask(taskInfo);
     if (memcpyAsyncTaskInfo->dmaKernelConvertFlag) {
-        // except for starsv2, free pcie-dma desc in ts_agent
+        // except for david, free pcie-dma desc in ts_agent
         return;
     }
 

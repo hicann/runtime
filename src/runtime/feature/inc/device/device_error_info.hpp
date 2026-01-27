@@ -56,74 +56,17 @@ enum rtErrorType : std::uint8_t {
     ERROR_TYPE_BUTT
 };
 
-const std::map<uint32_t, std::string> g_mulBitEccEventId = {
-    {0x80CD8008U, "L2BUFF multi bit Err."},
-    {0x80F2180DU, "HBMA/MATA Os Err."},
-    {0x80F38008U, "HBMA Multi Bit Ecc."},
-    {0x81338002U, "TS Dispatch Input Err"},
-    {0x81338004U, "TS Dispatch Config Err."},
-    {0x81338008U, "TS Dispatch Multi Bit Ecc."},
-    {0x813B8002U, "AIC Dispatch Input Error"},
-    {0x813B8004U, "AIC Dispatch Config Error."},
-    {0x813B8008U, "AIC Dispatch Multi Bit Ecc."},
-    {0x81478002U, "DVPP Dispatch Input Error"},
-    {0x81478004U, "DVPP Dispatch Config Error"},
-    {0x81478008U, "DVPP Dispatch Multi Bit Ecc."},
-    {0x815F8002U, "PERI Dispatch Input Error."},
-    {0x815F8004U, "PERI Dispatch Config Error"},
-    {0x815F8008U, "PERI Dispatch Multi Bit Ecc."},
-    {0x81938002U, "DSA Dispatch Input Error."},
-    {0x81938004U, "DSA Dispatch Config Error."},
-    {0x81938008U, "DSA Dispatch Multi Bit Ecc."},
-    {0x81958002U, "NIC Dispatch Input Error."},
-    {0x81958004U, "NIC Dispatch Config Error."},
-    {0x81958008U, "NIC Dispatch Multi Bit Ecc."},
-    {0x81978002U, "PCIE Dispatch Input Error."},
-    {0x81978004U, "PCIE Dispatch Config Error."},
-    {0x81978008U, "PCIE Dispatch Multi Bit Ecc."}
-};
+extern const std::map<uint32_t, std::string> g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList;
 
-const std::map<uint32_t, std::string> g_starsv2MulBitEccEventId = {
-    {0x80CD8008U, "L2BUFF multi bit Err."},
-    {0x80F2180DU, "HBMA/MATA Os Err."},
-    {0x80F38008U, "HBMA Multi Bit Ecc."},
-    {0x81338002U, "TS Dispatch Input Err"},
-    {0x81338004U, "TS Dispatch Config Err."},
-    {0x81338008U, "TS Dispatch Multi Bit Ecc."},
-    {0x813B8002U, "AIC Dispatch Input Error"},
-    {0x813B8004U, "AIC Dispatch Config Error."},
-    {0x81478002U, "DVPP Dispatch Input Error"},
-    {0x81478004U, "DVPP Dispatch Config Error"},
-    {0x815F8002U, "PERI Dispatch Input Error."},
-    {0x815F8004U, "PERI Dispatch Config Error"},
-    {0x81978002U, "PCIE Dispatch Input Error."},
-    {0x81978004U, "PCIE Dispatch Config Error."},
-    {0x81B58002U, "UB Dispatch Input Error."},
-    {0x81B58004U, "UB Dispatch Config Error."},
-    {0x813D8009U, "AIC AA Ring parity Error."},
-    {0x81AF8009U, "UB posion Error."}
-};
+extern const std::map<uint32_t, std::string> g_hcclRemoteMulBitEccEventIdBlkList;
 
-const std::map<uint32_t, std::string> g_starsv2L2MulBitEccEventIdBlkList = {
-    {0x80E01801U, "HBM Multi Bit Error."},
-    {0x80F2180DU, "HBMA/MATA Os Error."},
-    {0x80F38008U, "HBMA Multi Bit Ecc."},
-    {0x81338002U, "TS Dispatch Input Error"},
-    {0x81338004U, "TS Dispatch Config Error."},
-    {0x81338008U, "TS Dispatch Multi Bit Ecc."},
-    {0x813B8002U, "AIC Dispatch Input Error"},
-    {0x813B8004U, "AIC Dispatch Config Error."},
-    {0x81478002U, "DVPP Dispatch Input Error"},
-    {0x81478004U, "DVPP Dispatch Config Error"},
-    {0x815F8002U, "PERI Dispatch Input Error."},
-    {0x815F8004U, "PERI Dispatch Config Error"},
-    {0x81978002U, "PCIE Dispatch Input Error."},
-    {0x81978004U, "PCIE Dispatch Config Error."},
-    {0x81B58002U, "UB Dispatch Input Error."},
-    {0x81B58004U, "UB Dispatch Config Error."},
-    {0x813D8009U, "AIC AA Ring Parity Error."},
-    {0x81AF8009U, "UB Posion Error."}
-};
+extern const std::map<uint32_t, std::string> g_mulBitEccEventId;
+
+extern const std::map<uint32_t, std::string> g_mulBitEccEventIdBlkList;
+
+extern const std::map<uint32_t, std::string> g_l2MulBitEccEventIdBlkList;
+
+extern const std::map<uint32_t, std::string> g_ubMemTimeoutEventIdBlkList;
 
 enum rtSdmaErrorType : std::uint32_t {
     // Submission Descriptor read response error
@@ -147,17 +90,19 @@ enum rtAICPUErrorType : std::uint16_t {
 
     // aicpu processor
     AE_END_OF_SEQUENCE = 6,              // end of sequence
-    AE_STATUS_SILENT_FAULT = 7,          // silent fault
-    AE_STATUS_TASK_ABORT = 8,            // aicpu abort
-    AE_STATUS_STRESS_DETECT_FAULT = 9,   // stress detect slient fault
-    AE_STATUS_STRESS_DETECT_FAULT_NORAS = 10,   // stress detect slient fault
-    AE_STATUS_STRESS_DETECT_FAULT_LOW = 11,   // stress detect slient fault
-    AE_STATUS_STRESS_DETECT_FAULT_LOW_OFFLINE = 12,   // stress detect slient fault
+    AE_STATUS_SILENT_FAULT = 7,          // silent fault in 1980B
+    AE_STATUS_TASK_ABORT = 8,            // aicpu abort in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT = 9,   // stress detect slient fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_NORAS = 10,   // stress detect slient fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_LOW = 11,   // stress detect slient fault in 1980B
+    AE_STATUS_STRESS_DETECT_FAULT_LOW_OFFLINE = 12,   // stress detect slient fault in 1980B
     AE_TASK_WAIT = 101,                  // task wait for aicpu super task
 
     // [1000, 1099] is used by hccl
     AICPU_HCCL_OP_RETRY_FAILED = 1000,   // hccl op retry failed
     AICPU_HCCL_OP_SDMA_LINK_FAILED = 1001,   // hccl op sdma link failed
+    AICPU_HCCL_OP_UB_DDRC_FAILED = 1002,   // hccl op ub ddrc failed
+    AICPU_HCCL_OP_UB_POISON_FAILED = 1003,   // hccl op ub poison failed
 
     AE_BAD_PARAM = 11001,                // bad param
     AE_OPEN_SO_FAILED = 11002,           // open so failed
@@ -297,6 +242,22 @@ struct DeviceErrorInfo {
         AicpuErrorInfo  aicpuErrorInfo;
     }u;
 };
+
+struct EventRasFilter {
+    uint32_t eventId;
+    uint8_t subModuleId;
+    uint8_t errorRegisterIndex;
+    uint32_t bitMask;
+    std::string description;
+};
+
+extern const std::vector<EventRasFilter> g_ubNonMemPoisonRasList;
+
+extern const std::vector<EventRasFilter> g_ubMemPoisonRasList;
+
+extern const std::vector<EventRasFilter> g_ubMemPoisonRasOnlyPosisonList;
+
+extern const EventRasFilter g_ubMemTrafficTimeoutFilter;
 }
 }
 #endif

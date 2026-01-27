@@ -16,9 +16,11 @@
 #include "group_device.hpp"
 #include <tuple>
 #include "device.hpp"
-#include "base_starsv2.hpp"
+#include "base_david.hpp"
 #include "event_expanding.hpp"
+#include "ctrl_sq.hpp"
 #include "program.hpp"
+
 namespace cce {
 namespace runtime {
 
@@ -228,14 +230,14 @@ public:
     rtError_t AllocSPM(void **dptr, uint64_t size) override
     {
         COND_RETURN_ERROR(!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Not support spm, so not support AllocSPM.");
+            "MDC_AS31XM1X not support spm, so not support AllocSPM.");
         return spmPool_->AllocSPM(dptr, size);
     }
 
     rtError_t FreeSPM(const void * const dptr) override
     {
         if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL)) {
-            RT_LOG(RT_LOG_INFO, "Not support spm, so not support FreeSPM.");
+            RT_LOG(RT_LOG_INFO, "MDC_AS31XM1X not support spm, so not support FreeSPM.");
             return RT_ERROR_NONE;
         }
         return spmPool_->FreeSPM(dptr);
@@ -267,7 +269,7 @@ public:
     bool IsSPM(const void *dptr) override
     {
         if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL)) {
-            RT_LOG(RT_LOG_INFO, "Not support spm, so not support IsSPM");
+            RT_LOG(RT_LOG_INFO, "MDC_AS31XM1X not support spm, so not support IsSPM");
             return false;
         }
         return spmPool_->IsSPM(dptr);
@@ -584,9 +586,9 @@ public:
         simtStackPhyBaseAlign_ = simtStackPhyBaseAlign;
     }
 
-    uint8_t GetStarsV2DieNum() const override
+    uint8_t GetDavidDieNum() const override
     {
-        return starsv2DieNum_;
+        return davidDieNum_;
     }
 
     rtError_t SetCurGroupInfo() override;
@@ -683,7 +685,7 @@ public:
     }
 
     rtError_t AllocStackPhyBase() override;
-    rtError_t AllocStackPhyBaseStarsV2();
+    rtError_t AllocStackPhyBaseDavid();
     rtError_t AllocStackPhyBaseForCloudV2();
     rtError_t UbArgLoaderInit(void);
     void FreeStackPhyBase() override;
@@ -812,6 +814,12 @@ public:
 
     uint64_t AllocSqIdMemAddr() override;
     void FreeSqIdMemAddr(const uint64_t sqIdAddr) override;
+
+    CtrlSQ& GetCtrlSQ(void) const override
+    {
+        return *(ctrlSQ_.get());
+    }
+
     void RegisterProgram(Program *prog) override;
     void UnRegisterProgram(Program *prog) override;
     void UnregisterAllProgram();
@@ -821,6 +829,14 @@ public:
     void ProgramSetMutexUnLock() override {
         programMtx_.unlock();
     }
+
+    rtError_t SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index);
+
+    const std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM>& GetQosCfg()
+    {
+        return aicoreQosCfg_;
+    }
+
 private:
     bool JudgeIsEndGraphNotifyWaitExecuted(const Stream* const exeStream, Model* captureModel,
         std::list<uint32_t>& sqePosList) const;
@@ -833,6 +849,7 @@ private:
     rtError_t TschStreamSetup();
     rtError_t TschStreamAllocDsaAddr() const;
     rtError_t SetPrintFifoSize(const uint32_t value);
+    rtError_t SetSupportHcomcpuFlag();
     static void *MallocBufferForSqIdMem(const size_t size, void * const para);
     static void FreeBufferForSqIdMem(void * const addr, void * const para);
 
@@ -842,6 +859,7 @@ private:
     rtError_t InitStreamSyncEsched() const;
     rtError_t InitTsdQos();
     rtError_t InitPrintInfo();
+    rtError_t InitCtrlSQ();
 
     Stream *primaryStream_;
     Stream *tsFftsDsaStream_;
@@ -916,7 +934,7 @@ private:
     void *simtStackPhyBaseAlign_{nullptr};
     uint32_t simtWarpStkSize_{RT_KIS_SIMT_WARP_STK_SIZE};
     uint32_t simtDvgWarpStkSize_{RT_KIS_SIMT_DVG_WARP_STK_SIZE};
-    uint8_t starsv2DieNum_{1};
+    uint8_t davidDieNum_{1};
     std::set<uint16_t> syncEventMap_;
     std::mutex syncEventMapLock_;
     static const std::map<uint32_t, uint32_t> tsFeatureMap_;
@@ -948,7 +966,7 @@ private:
     Atomic<DeviceFaultType> deviceFaultType_{DeviceFaultType::NO_ERROR};
     Atomic<uint32_t> aixErrRecoverCnt_{0};
     bool isDrvSupportUserMem_ = false;
-    std::unordered_set<RtOptionalFeatureType> featureSet_;
+    std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
     DevProperties properties_;
     std::unordered_set<Event *> events_;
     std::mutex eventLock_;
@@ -975,8 +993,10 @@ private:
     size_t printblockLen_ = 0U;
     std::atomic<uint64_t> parseCounter_{0};
     BufferAllocator* sqIdMemAddrPool_{nullptr};
+    std::unique_ptr<CtrlSQ> ctrlSQ_ = nullptr;
     std::mutex programMtx_;
     std::unordered_set<Program *> programSet_;
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg_;
 };
 }
 }

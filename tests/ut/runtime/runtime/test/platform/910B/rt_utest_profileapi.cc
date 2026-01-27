@@ -21,6 +21,7 @@
 #include "prof_map_ge_model_device.hpp"
 #include "engine.hpp"
 #include "api_impl.hpp"
+#include "async_hwts_engine.hpp"
 #include "raw_device.hpp"
 #undef protected
 #undef private
@@ -248,6 +249,36 @@ TEST_F(ProfileApiTest, kernel_launch_l2_preload)
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+#if 0
+TEST_F(ProfileApiTest, kernel_launch_fusion)
+{
+    rtError_t error;
+    rtSmDesc_t desc;
+    void *args[] = {&error, NULL};
+
+    memset_s(&desc, sizeof(rtSmDesc_t), 0, sizeof(rtSmDesc_t));
+
+    error = rtKernelFusionStart(NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    desc.size = 128;
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &desc, stream_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtKernelFusionEnd(NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamSynchronize(NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+#endif
 
 static rtError_t kernel_launch_stub(const void *stubFunc,
                          uint32_t blockDim,
@@ -829,6 +860,24 @@ TEST_F(ProfileApiTest, SET_DEVICE_TEST_1)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+
+/*UT for profiler.cc SetDevice() "if (RT_ERROR_NONE != error)" Line:664*/
+TEST_F(ProfileApiTest, SET_DEVICE_TEST_2)
+{
+    rtError_t error;
+
+    Engine *engine = new AsyncHwtsEngine(NULL);
+    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtDeviceReset(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete engine;
 }
 
 TEST_F(ProfileApiTest, model_api)

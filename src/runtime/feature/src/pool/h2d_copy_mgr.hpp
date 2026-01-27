@@ -51,6 +51,12 @@ struct CpyAddrUbMgr {
     uint64_t devBaseAddr;
     uint64_t hostBaseAddr;
     uint64_t hostAddr;
+    uint32_t poolIndex;
+};
+
+struct memTsegInfo {
+    struct halTsegInfo devTsegInfo;
+    struct halTsegInfo hostTsegInfo;
 };
 
 struct CpyUbInfo {
@@ -59,6 +65,8 @@ struct CpyUbInfo {
     Device *device;
     mmRWLock_t *mapLock;
     std::unordered_map<uint64_t, CpyAddrUbMgr> cpyUbMap;
+    uint32_t poolIndex;
+    std::unordered_map<uint32_t, struct memTsegInfo *> memTsegInfoMap;
 };
 
 struct CpyHandle {
@@ -88,7 +96,7 @@ public:
     {
         return policy_;
     }
-    uint64_t GetUbHostAddr(const uint64_t devAddr);
+    uint64_t GetUbHostAddr(const uint64_t devAddr, void **devTsegInfo, void **hostTsegInfo);
     static void *MallocUbBuffer(const size_t size, void * const para);
     static void FreeUbBuffer(void * const addr, void * const para);
 private:
@@ -106,6 +114,9 @@ private:
     CpyUbInfo cpyInfoUbMap_;
     mmRWLock_t mapLock_;
 };
+
+rtError_t GetMemTsegInfo(const Device *const dev, void *devAddr, void *hostAddr, uint64_t size,
+    struct halTsegInfo *devTsegInfo, struct halTsegInfo *hostTsegInfo);
 }
 }
 

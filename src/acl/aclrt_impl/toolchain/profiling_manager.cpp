@@ -268,8 +268,10 @@ namespace acl {
         {AclProfType::AclrtIpcOpenEventHandle,                  "aclrtIpcOpenEventHandle"},
         {AclProfType::AclrtMemRetainAllocationHandle,           "aclrtMemRetainAllocationHandle"},
         {AclProfType::AclrtMemGetAllocationPropertiesFromHandle,"aclrtMemGetAllocationPropertiesFromHandle"},
-        {AclProfType::AclrtGetMemUsageInfo,                     "aclrtGetMemUsageInfo"},
         {AclProfType::AclrtHostMemMapCapabilities,              "aclrtHostMemMapCapabilities"},
+        {AclProfType::AclrtGetMemUsageInfo,                     "aclrtGetMemUsageInfo"},
+        {AclProfType::AclrtReserveMemAddressNoUCMemory,         "aclrtReserveMemAddressNoUCMemory"},
+        {AclProfType::AclrtMemGetAddressRange,                  "aclrtMemGetAddressRange"},
 };
 
 aclError RegisterType(const uint32_t index) {

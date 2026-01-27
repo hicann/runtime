@@ -29,7 +29,7 @@ struct TsKernelTask {
     uint32_t literalSize;
     uint16_t blockDim;
     uint8_t L2_size;
-    uint8_t schemMode;
+    uint8_t schemMode; // only CHIP_CLOUD or CHIP_DC aicore task use for batchmode.
     uint32_t priority : 3;
     uint32_t l2PreloadVirAddr : 26; // preserve the offset of l2_preload_ctrl's phy addr, not greater than 50M now
     uint32_t isConvertAddr : 3; // 1:TS_KERNEL_CONVERT, 2:TS_KERNEL_DUMPFLAG, 4:FUSION_KERNEL_DUMPFLAG
@@ -502,9 +502,9 @@ struct TsFusionDumpAddrSetTask {
 
 /**
  * @ingroup
- * @brief the struct define of task-based adc profiling type task
+ * @brief the struct define of task-based mdc profiling type task
  */
-struct TsProfTask {
+struct TsMdcProfTask {
     uint64_t profAddr;
     uint32_t length;
     uint8_t reserved[36]; // reserved 36 bytes
@@ -670,7 +670,7 @@ typedef struct tagTsCommand {
         TsDebugRegisterTask debugRegisterTask;
         TsDebugUnRegisterTask debugUnRegisterTask;
         TsFusionDumpAddrSetTask fusionDumpAddrSetTask;
-        TsProfTask profTask;
+        TsMdcProfTask mdcProfTask;
         TsRingBufferPassToDeviceTask ringBufferToDeviceTask;
         TsDebugRegisterForStreamTask debugRegisterForStreamTask;
         TsDebugUnRegisterForStreamTask debugUnRegisterForStreamTask;

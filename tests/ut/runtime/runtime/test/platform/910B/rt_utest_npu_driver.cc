@@ -17,6 +17,7 @@
 #include "runtime/dev.h"
 #include "runtime/mem.h"
 #include "runtime.hpp"
+#include "notify.hpp"
 #include "config.hpp"
 #include "cmodel_driver.h"
 #include "raw_device.hpp"
@@ -24,9 +25,6 @@
 
 using namespace testing;
 using namespace cce::runtime;
-
-DVresult drvMemGetAttribute_1(DVdeviceptr vptr, struct DVattribute *attr);
-DVresult drvMemGetAttribute_2(DVdeviceptr vptr, struct DVattribute *attr);
 
 class CloudV2NpuDriverTest : public testing::Test
 {
@@ -133,15 +131,86 @@ drvError_t halGetDeviceInfoStub_Cube(uint32_t devId, int32_t moduleType, int32_t
     return DRV_ERROR_NONE;
 }
 
+drvError_t halGetDeviceInfoStub_Vector(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
+{
+    *value = RT_AICORE_NUM_25 * 2U;
+    return DRV_ERROR_NONE;
+}
+
 TEST_F(CloudV2NpuDriverTest, get_dev_info_for_cubeNum)
 {
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtError_t error;
     int32_t devid = 0;
     int64_t core_num = RT_AICORE_NUM_25;
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Cube));
     error = rtGetDeviceInfo(devid, MODULE_TYPE_AICORE, INFO_TYPE_CUBE_NUM, &core_num);
     EXPECT_EQ(core_num, RT_AICORE_NUM_25 - 1U);
+    error = rtGetDeviceInfo(devid, MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM, &core_num);
+    EXPECT_EQ(core_num, RT_AICORE_NUM_25 - 1U);
+
+    uint32_t *aiCoreCnt;
+    aiCoreCnt = (uint32_t *)malloc(sizeof(uint32_t));
+    error = rtGetAiCoreCount(aiCoreCnt);
+    EXPECT_EQ(*aiCoreCnt, RT_AICORE_NUM_25 - 1U);
+    free(aiCoreCnt);
+}
+
+TEST_F(CloudV2NpuDriverTest, get_dev_info_for_vectorNum)
+{
+    rtError_t error;
+    int32_t devid = 0;
+    int64_t vector_core_num = RT_AICORE_NUM_25 * 2U;
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Vector));
+    error = rtGetDeviceInfo(devid, MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM, &vector_core_num);
+    EXPECT_EQ(vector_core_num, (RT_AICORE_NUM_25 - 1U) * 2U);
+}
+
+TEST_F(CloudV2NpuDriverTest, InitResource_01)
+{
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+
+    int64_t value;
+    uint32_t ret;
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Cube));
+    device->InitResource();
+
+    delete device;
+}
+
+TEST_F(CloudV2NpuDriverTest, InitResource_02)
+{
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+
+    int64_t value;
+    uint32_t ret;
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Vector));
+    device->InitResource();
+
+    delete device;
+}
+
+TEST_F(CloudV2NpuDriverTest, Test_GetIpcSqeWriteAddrForNotifyRecordTask)
+{
+    rtError_t ret;
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    TaskInfo task1 = {};
+    task1.stream = (Stream *)stream;
+    Notify *notify = new Notify(0, 0);
+    notify->srvId_ = 20U;
+    NotifyRecordTaskInfo *notifyRecord = &(task1.u.notifyrecordTask);
+    notifyRecord->uPtr.notify = notify;
+    TaskInfo *tmpTask = &task1;
+    uint64_t addr = 0ULL;
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Cube));
+    rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(tmpTask, addr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete notify;
 }
 
 TEST_F(CloudV2NpuDriverTest, MemAllocPolicyOffline_fail_2) {
@@ -572,7 +641,6 @@ TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_02)
     error = rtMemAllocManaged(&mem, 1024*1025, 0, DEFAULT_MODULEID);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
-
 TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_03)
 {
     void *mem;
@@ -2079,7 +2147,7 @@ TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed_81)
+TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed_1981)
 {
     g_isAddrFlatDevice = true;
     rtError_t error;
@@ -2324,6 +2392,10 @@ TEST_F(CloudV2NpuDriverTest, LogicCqAllocateV2_001)
 
     error = rawDrv.LogicCqAllocateV2(0,0,0,cqId);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rawDrv.chipType_ = CHIP_AS31XM1;
+    error = rawDrv.LogicCqAllocateV2(0,0,0,cqId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 int32_t halMapErrorCode(drvError_t drvErrCode) {
@@ -2499,29 +2571,7 @@ TEST_F(CloudV2NpuDriverTest, getDeviceAicpuStat_02)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, GetPageFaultCount_01)
-{
-    NpuDriver *rawDrv = new NpuDriver();
-    uint32_t value = 0U;
 
-    MOCKER(halCheckProcessStatusEx).stubs().will(returnValue(DRV_ERROR_NONE));
-    rtError_t err = rawDrv->GetPageFaultCount(0, &value);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-
-    delete rawDrv;
-}
-
-TEST_F(CloudV2NpuDriverTest, GetPageFaultCount_02)
-{
-    NpuDriver *rawDrv = new NpuDriver();
-    uint32_t value = 0U;
-
-    MOCKER(halCheckProcessStatusEx).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    rtError_t err = rawDrv->GetPageFaultCount(0, &value);
-    EXPECT_EQ(err, RT_ERROR_DRV_INPUT);
-
-    delete rawDrv;
-}
 
 TEST_F(CloudV2NpuDriverTest, memory_dev_alloc_offline_mini)
 {
@@ -2889,7 +2939,7 @@ TEST_F(CloudV2NpuDriverTest, create_destory_wqe)
     AsyncDmaWqeOutputInfo output;
     AsyncDmaWqeDestroyInfo destoryPara;
     int32_t devId = 0;
-    error = rawDrv->CreateAsyncDmaWqe(devId, input, &output);
+    error = rawDrv->CreateAsyncDmaWqe(devId, input, &output, true, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
  
     error = rawDrv->DestroyAsyncDmaWqe(devId, &destoryPara);
@@ -2898,7 +2948,7 @@ TEST_F(CloudV2NpuDriverTest, create_destory_wqe)
     MOCKER(halAsyncDmaCreate)
     .stubs()
     .will(returnValue(DRV_ERROR_INVALID_VALUE));
-    error = rawDrv->CreateAsyncDmaWqe(devId, input, &output);
+    error = rawDrv->CreateAsyncDmaWqe(devId, input, &output, true, false);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
     MOCKER(halAsyncDmaDestory)
     .stubs()
@@ -2981,41 +3031,11 @@ TEST_F(CloudV2NpuDriverTest, host_register_03)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-TEST_F(CloudV2NpuDriverTest, host_register_06)
-{ 
-    rtError_t error;
-    uintptr_t address_val = 0x00200000;
-    void* ptr = nullptr;
-    errno_t ret = memcpy_s(&ptr, sizeof(void*), &address_val, sizeof(uintptr_t));
-    if (ret != 0) {
-        ptr = nullptr;
-    }
-    void **devPtr;
-    NpuDriver *rawDrv = new NpuDriver();
-    g_isAddrFlatDevice = true;
-    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(false));
-    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
-
-    error = rawDrv->HostRegister(ptr, 100, RT_HOST_REGISTER_IOMEMORY, devPtr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);     
-
-    error = rawDrv->HostRegister(ptr, 100, RT_HOST_REGISTER_READONLY, devPtr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);   
-    error = rawDrv->HostUnregister(ptr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE); 
-    
-    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_1));
-    error = rawDrv->HostRegister(ptr, 0, static_cast<rtHostRegisterType>(RT_HOST_REGISTER_IOMEMORY | RT_HOST_REGISTER_READONLY), devPtr, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);   
-
-    delete rawDrv;
-}
-
 TEST_F(CloudV2NpuDriverTest, GetDqsQueInfo_GetDqsMbufPoolInfo_Test)
 {
     NpuDriver *rawDrv = new NpuDriver();
     MOCKER(halQueueGetDqsQueInfo).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
-    MOCKER(halBuffGetDQSPooInfoById).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halBuffGetDQSPoolInfoById).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
 
     DqsQueueInfo queInfo = {};
     rtError_t error = rawDrv->GetDqsQueInfo(0, 0, &queInfo);

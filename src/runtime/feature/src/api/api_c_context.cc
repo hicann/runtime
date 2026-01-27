@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -75,7 +75,7 @@ rtError_t rtsCtxGetSysParamOpt(rtSysParamOpt configOpt, int64_t *configVal)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), 
         RT_ERROR_INVALID_VALUE, configOpt, "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
-
+    
     const rtError_t ret = apiInstance->CtxGetSysParamOpt(configOpt, configVal);
     if (ret == RT_ERROR_NOT_SET_SYSPARAMOPT) {
         return ACL_ERROR_RT_SYSPARAMOPT_NOT_SET;

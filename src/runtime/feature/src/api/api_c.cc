@@ -279,7 +279,7 @@ rtError_t rtKernelConfigDump(uint32_t kind, uint32_t dumpSizePerBlock, uint32_t 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize, rtSmDesc_t *smDesc,
+rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, uint32_t argsSize, rtSmDesc_t *smDesc,
                          rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -314,7 +314,7 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, ui
     argsInfo.isNoNeedH2DCopy = (curStm->NonSupportModelCompile()) || (curStm->GetModelNum() == 0U) ? 0U : 1U;
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->KernelLaunch(stubFunc, blockDim, &argsInfo, smDesc, exeStream, 0U, nullptr);
+    const rtError_t ret = apiInstance->KernelLaunch(stubFunc, numBlocks, &argsInfo, smDesc, exeStream, 0U, nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;
@@ -323,7 +323,7 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, ui
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, const void* kernelInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -343,7 +343,7 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, blockDim, argsInfo, smDesc, static_cast<Stream *>(stm), nullptr);
+        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -351,7 +351,7 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t blockDim, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -370,7 +370,7 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, blockDim, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo);
+        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandleV2);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -378,7 +378,7 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
                                  rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -396,7 +396,7 @@ rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim, rtArgs
     Stream * const exeStream = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t err = apiInstance->KernelLaunch(stubFunc, blockDim, argsInfo, smDesc, exeStream, flags, nullptr);
+    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, smDesc, exeStream, flags, nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;
@@ -405,7 +405,7 @@ rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim, rtArgs
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
                                    rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -423,7 +423,7 @@ rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, rtAr
     Stream * const exeStream = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t err = apiInstance->KernelLaunch(stubFunc, blockDim, argsInfo, smDesc, exeStream, flags, cfgInfo);
+    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, smDesc, exeStream, flags, cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithFlagV2);
     launchArg.argCount = 0U;
@@ -453,7 +453,7 @@ rtError_t rtKernelLaunchFwk(const char_t *opName, void *args, uint32_t argsSize,
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                     const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc,
                                     rtStream_t stm, uint32_t flags)
 {
@@ -465,14 +465,14 @@ rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, 
         static_cast<const char_t *>(kernelName), ""};
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunch(&launchName, blockDim, argsInfo, smDesc, exeStream, flags);
+    const rtError_t ret = apiInstance->CpuKernelLaunch(&launchName, numBlocks, argsInfo, smDesc, exeStream, flags);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, uint32_t blockDim,
+rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, uint32_t numBlocks,
     const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -481,7 +481,7 @@ rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunch(launchNames, blockDim, argsInfo, smDesc, exeStream, flags);
+    const rtError_t ret = apiInstance->CpuKernelLaunch(launchNames, numBlocks, argsInfo, smDesc, exeStream, flags);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -489,7 +489,7 @@ rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, 
 
 VISIBILITY_DEFAULT
 rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t * const opName,
-    const uint32_t blockDim, const rtAicpuArgsEx_t *argsInfo, rtSmDesc_t * const smDesc,
+    const uint32_t numBlocks, const rtAicpuArgsEx_t *argsInfo, rtSmDesc_t * const smDesc,
     const rtStream_t stm, const uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -507,7 +507,7 @@ rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunchExWithArgs(opName, blockDim, argsInfo, smDesc,
+    const rtError_t ret = apiInstance->CpuKernelLaunchExWithArgs(opName, numBlocks, argsInfo, smDesc,
                                                                  exeStream, flags, kernelType);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1631,7 +1631,7 @@ rtError_t rtSetDeviceIdByGeModelIdx(uint32_t geModelIdx, uint32_t deviceId)
 {
     RT_LOG(RT_LOG_DEBUG, "geModelIdx:%u, deviceId:%u.", geModelIdx, deviceId);
     if (RtIsHeterogenous()) {
-        RT_LOG(RT_LOG_INFO, "Heterogenous do not support set device id by model id, geModelIdx:%u, deviceId:%u.",
+        RT_LOG(RT_LOG_INFO, "Heterogenous does not support set device id by model id, geModelIdx:%u, deviceId:%u.",
                geModelIdx, deviceId);
         return RT_ERROR_NONE;
     }
@@ -1774,7 +1774,7 @@ rtError_t rtModelSetExtId(rtModel_t mdl, uint32_t extId)
     Runtime *rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MODEL_ID_FOR_AICPU)) {
-        RT_LOG(RT_LOG_WARNING, "Chip type(%d) not support.", rtInstance->GetChipType());
+        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support.", rtInstance->GetChipType());
         return RT_GET_EXT_ERRCODE(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     Api * const apiInstance = Api::Instance();
@@ -2174,7 +2174,7 @@ rtError_t rtNotifyWaitWithTimeOut(rtNotify_t notify, rtStream_t stm, uint32_t ti
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
         return ACL_RT_SUCCESS;
     } else {
-        RT_LOG(RT_LOG_WARNING, "current chipType[%d] not support timeout config.", rtInstance->GetChipType());
+        RT_LOG(RT_LOG_WARNING, "current chipType[%d] does not support timeout config.", rtInstance->GetChipType());
         return rtNotifyWait(notify, stm);
     }
 }
@@ -2859,6 +2859,7 @@ rtError_t rtStarsTaskLaunchWithFlag(const void *taskSqe, uint32_t sqeLen, rtStre
     const rtError_t error = apiInstance->StarsTaskLaunch(taskSqe, sqeLen, streamPtr, flag);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtStarsTaskLaunchWithFlag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -3520,6 +3521,7 @@ rtError_t rtMultipleTaskInfoLaunch(const void * taskInfo, rtStream_t stm)
     const rtError_t ret = apiInstance->MultipleTaskInfoLaunch(
         RtPtrToPtr<const rtMultipleTaskInfo_t *>(taskInfo), exeStream, RT_DEFAULT_FLAG);
     (void)AwdStopThreadWatchdog(watchDogHandle);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3536,6 +3538,7 @@ rtError_t rtMultipleTaskInfoLaunchWithFlag(const void * taskInfo, rtStream_t stm
     const rtError_t ret = apiInstance->MultipleTaskInfoLaunch(
         RtPtrToPtr<const rtMultipleTaskInfo_t *>(taskInfo), exeStream, flag);
     (void)AwdStopThreadWatchdog(watchDogHandle);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3647,7 +3650,7 @@ rtError_t rtBinaryUnLoad(rtBinHandle binHandle)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t blockDim, rtLaunchArgsHandle argsHandle,
+rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t numBlocks, rtLaunchArgsHandle argsHandle,
                                      rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -3656,18 +3659,15 @@ rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t blockDim,
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(argsHandle, RT_ERROR_INVALID_VALUE);
     rtLaunchArgs_t* args = RtPtrToPtr<rtLaunchArgs_t*>(argsHandle);
     rtArgsEx_t *argsInfo = &(args->argsInfo);
-    const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
-    (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
+    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
                                                     static_cast<Stream *>(stm), nullptr);
-    (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t blockDim, rtLaunchArgsHandle argsHandle,
+rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t numBlocks, rtLaunchArgsHandle argsHandle,
                                        rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -3678,7 +3678,7 @@ rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t blockDi
     rtArgsEx_t *argsInfo = &(args->argsInfo);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
+    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
                                                     static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
@@ -3687,7 +3687,7 @@ rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t blockDi
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
+rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBlocks, const rtArgsEx_t * const argsInfo,
                                        rtStream_t stm, const rtTaskCfgInfo_t * const cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -3695,7 +3695,7 @@ rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDi
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), blockDim, argsInfo,
+    const rtError_t ret = apiInstance->LaunchKernel(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, argsInfo,
                                                     static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
@@ -3809,7 +3809,7 @@ RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * c
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
-    COND_RETURN_WITH_EXT_ERRCODE((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE,
+    COND_RETURN_WITH_EXT_ERRCODE((configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, 
         "Invalid system configOpt, current configOpt=%d, valid range is [0, %d).",
         configOpt, SYS_OPT_RESERVED);
     COND_RETURN_WITH_EXT_ERRCODE((configVal >= SYS_OPT_MAX) || (configVal < 0), RT_ERROR_INVALID_VALUE,
@@ -4220,7 +4220,7 @@ rtError_t rtDevVA2PA(uint64_t devAddr, uint64_t len, rtStream_t stm, bool isAsyn
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
+rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t numBlocks,
     rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -4240,7 +4240,7 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, blockDim, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo, true);
+        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo, true);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -4248,7 +4248,7 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -4265,7 +4265,7 @@ rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t blockDim, rtAr
     Stream * const exeStream = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t err = apiInstance->KernelLaunch(stubFunc, blockDim,
+    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks,
         argsInfo, smDesc, exeStream, flags, cfgInfo, true);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
@@ -4526,7 +4526,13 @@ rtError_t rtsSetDeviceTaskAbortCallback(const char_t *regName, rtsDeviceTaskAbor
 VISIBILITY_DEFAULT
 rtError_t rtsStreamStop(rtStream_t stm)
 {
-    return rtStreamClear(stm, RT_STREAM_STOP);
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    Stream * const exeStream = static_cast<Stream *>(stm);
+    const rtError_t error = apiInstance->StreamStop(exeStream);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
 }
 
 #ifdef __cplusplus

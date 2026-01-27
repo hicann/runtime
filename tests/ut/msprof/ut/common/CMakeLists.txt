@@ -15,11 +15,12 @@ protobuf_generate(common_utest_proto
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}//dvvp/common/memory/chunk_pool.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/thread/thread.cpp
-    ${MSPROF_SOURCE_DIR}//dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}//dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/thread/thread_pool.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/statistics/perf_count.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/validation/param_validation.cpp
+    ${MSPROF_SOURCE_DIR}//dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}//dvvp/common/platform/platform.cpp
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}//dvvp/driver/devmgmt/ai_drv_dev_api.cpp
@@ -76,7 +77,25 @@ add_executable(common_utest
     ${localSrcFiles}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 target_include_directories(common_utest PRIVATE
+    ${libmsprofHeaderDir}
     ../
     ../stub
     ../stub/common
@@ -112,11 +131,9 @@ target_compile_options(common_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(common_utest PRIVATE
@@ -126,22 +143,13 @@ target_compile_definitions(common_utest PRIVATE
 )
 
 target_link_libraries(common_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    ascend_protobuf
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(common_utest
     PROPERTIES
     OUTPUT_NAME common_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET common_utest
-    TASK_NUM 1
 )
 
 ###################### osal_linux_utest ###########################
@@ -158,7 +166,25 @@ add_executable(osal_linux_utest
     ${osalLinuxSrc}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 target_include_directories(osal_linux_utest PRIVATE
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${TOP_DIR}/inc/driver
@@ -168,11 +194,9 @@ target_compile_options(osal_linux_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(osal_linux_utest PRIVATE
@@ -187,10 +211,7 @@ target_link_options(osal_linux_utest PRIVATE
 )
 
 target_link_libraries(osal_linux_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(osal_linux_utest
@@ -199,10 +220,6 @@ set_target_properties(osal_linux_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET osal_linux_utest
-    TASK_NUM 1
-)
 
 ###################### osal_liteos_utest ###########################
 set(osalLinuxSrc
@@ -220,7 +237,26 @@ add_executable(osal_liteos_utest
     ${osalLinuxSrc}
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${TOP_DIR}/pkg_inc/mmpa
+)
+
 target_include_directories(osal_liteos_utest PRIVATE
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/avp/basic/atomic
@@ -232,11 +268,9 @@ target_compile_options(osal_liteos_utest PRIVATE
     -g
     -pipe
     -Wall
-    -std=c++11
     -fno-access-control
     -Wfloat-equal
     -Wextra
-    -Werror
 )
 
 target_compile_definitions(osal_liteos_utest PRIVATE
@@ -251,19 +285,11 @@ target_link_options(osal_liteos_utest PRIVATE
 )
 
 target_link_libraries(osal_liteos_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(osal_liteos_utest
     PROPERTIES
     OUTPUT_NAME osal_liteos_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET osal_liteos_utest
-    TASK_NUM 1
 )

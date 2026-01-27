@@ -64,7 +64,7 @@ rtError_t rtSnapShotProcessUnlock()
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessGetState(rtProcessState *state)
 {
-    rtError_t error = CheckSnapShotFeatureSupport();
+    const rtError_t error = CheckSnapShotFeatureSupport();
     if(error != RT_ERROR_NONE) {
         return error;
     }

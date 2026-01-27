@@ -9,6 +9,7 @@
  */
 
 #include <map>
+#include <algorithm>
 #include "acl_rt_impl.h"
 #include "runtime/mem.h"
 #include "runtime/rts/rts_mem.h"
@@ -24,6 +25,7 @@
 namespace {
 constexpr uint32_t MEM_SIZE_MAX = 96U;
 constexpr size_t DATA_MEMORY_ALIGN_SIZE = 32UL;
+constexpr unsigned int FLAG_START_DYNAMIC_ALLOC_MEM = 0x200U;
 
 static const std::map<aclDataType, rtDataType> kMapDataType = {
     { ACL_FLOAT, RT_DATA_TYPE_FP32 },
@@ -932,12 +934,11 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     bool IsHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
     // device alloc
     bool IsDeviceAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_DEVICE);
-    if (IsDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE)
+    if (IsDeviceAlloc && ((prop->memAttr == ACL_DDR_MEM_HUGE) || (prop->memAttr == ACL_DDR_MEM_NORMAL) || (prop->memAttr == ACL_DDR_MEM_P2P_HUGE) 
         || (prop->memAttr == ACL_DDR_MEM_P2P_NORMAL))) {
-            ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST/ACL_MEM_LOCATION_TYPE_HOST_NUMA.", 
-                static_cast<int32_t>(prop->memAttr));
-            return ACL_ERROR_INVALID_PARAM;
-        }
+        ACL_LOG_ERROR("memAttr [%d] only support ACL_MEM_LOCATION_TYPE_HOST/ACL_MEM_LOCATION_TYPE_HOST_NUMA.", static_cast<int32_t>(prop->memAttr));
+        return ACL_ERROR_INVALID_PARAM;
+    }
     switch (prop->memAttr) {
         case ACL_HBM_MEM_HUGE:
             rtProp.pg_type = HUGE_PAGE_TYPE;
@@ -1873,6 +1874,7 @@ aclError aclrtMemRetainAllocationHandleImpl(void* virPtr, aclrtDrvMemHandle *han
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemRetainAllocationHandle);
     ACL_LOG_DEBUG("start to execute aclrtMemRetainAllocationHandle");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
 
     const rtError_t rtErr = rtMemRetainAllocationHandle(virPtr, reinterpret_cast<rtDrvMemHandle*>(handle));
     if (rtErr != ACL_RT_SUCCESS) {
@@ -1882,14 +1884,42 @@ aclError aclrtMemRetainAllocationHandleImpl(void* virPtr, aclrtDrvMemHandle *han
     return ACL_SUCCESS;
 }
 
+//initialize the mapping table
+static const MemAttrMapping mapping[] {
+    {HUGE_PAGE_TYPE, HBM_TYPE, true, ACL_HBM_MEM_HUGE},
+    {NORMAL_PAGE_TYPE, HBM_TYPE, true, ACL_HBM_MEM_NORMAL},
+    {HUGE1G_PAGE_TYPE, HBM_TYPE, true, ACL_HBM_MEM_HUGE1G},
+    {NORMAL_PAGE_TYPE, P2P_DDR_TYPE, true, ACL_DDR_MEM_P2P_NORMAL},
+    {NORMAL_PAGE_TYPE, DDR_TYPE, true, ACL_MEM_NORMAL},
+    {HUGE_PAGE_TYPE, DDR_TYPE, true, ACL_MEM_HUGE},
+    {HUGE1G_PAGE_TYPE, DDR_TYPE, true, ACL_MEM_HUGE1G},
+    {HUGE_PAGE_TYPE, P2P_DDR_TYPE, true, ACL_MEM_P2P_HUGE},
+    {HUGE1G_PAGE_TYPE, P2P_DDR_TYPE, true, ACL_MEM_P2P_HUGE1G},
+    {NORMAL_PAGE_TYPE, HBM_TYPE, false, ACL_HBM_MEM_NORMAL},
+    {HUGE_PAGE_TYPE, HBM_TYPE, false, ACL_HBM_MEM_HUGE},
+    {HUGE1G_PAGE_TYPE, HBM_TYPE, false, ACL_HBM_MEM_HUGE1G},
+    {NORMAL_PAGE_TYPE, DDR_TYPE, false, ACL_MEM_NORMAL},
+    {HUGE_PAGE_TYPE, DDR_TYPE, false, ACL_MEM_HUGE},
+    {HUGE1G_PAGE_TYPE, DDR_TYPE, false, ACL_MEM_HUGE1G},
+    {NORMAL_PAGE_TYPE, P2P_HBM_TYPE, false, ACL_MEM_P2P_NORMAL},
+    {HUGE_PAGE_TYPE, P2P_HBM_TYPE, false, ACL_MEM_P2P_HUGE},
+    {HUGE1G_PAGE_TYPE, P2P_HBM_TYPE, false, ACL_MEM_P2P_HUGE1G}
+};
+
 aclError aclrtMemGetAllocationPropertiesFromHandleImpl(aclrtDrvMemHandle handle, aclrtPhysicalMemProp* prop)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemGetAllocationPropertiesFromHandle);
     ACL_LOG_DEBUG("start to execute AclrtMemGetAllocationPropertiesFromHandle");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(prop);
 
     rtDrvMemProp_t rtProp = {};
     const rtError_t rtErr = rtMemGetAllocationPropertiesFromHandle(reinterpret_cast<rtDrvMemHandle>(handle), &rtProp);
+
+    if (rtErr != ACL_RT_SUCCESS) {
+        ACL_LOG_CALL_ERROR("get handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
 
     prop->handleType = ACL_MEM_HANDLE_TYPE_NONE;
     prop->allocationType = ACL_MEM_ALLOCATION_TYPE_PINNED;
@@ -1897,31 +1927,69 @@ aclError aclrtMemGetAllocationPropertiesFromHandleImpl(aclrtDrvMemHandle handle,
     prop->location.id = rtProp.devid;
     prop->reserve = rtProp.reserve;
 
-    if(rtProp.mem_type != 0) {
-        ACL_LOG_ERROR("mem type is not 0.");
+    //host alloc
+    bool isHostAlloc = (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST) || (prop->location.type == ACL_MEM_LOCATION_TYPE_HOST_NUMA);
+
+    const auto& it = std::find_if(std::begin(mapping), std::end(mapping),
+        [rtProp, isHostAlloc](const MemAttrMapping& entry) {
+            return (entry.pgType == rtProp.pg_type) &&
+                (entry.memType == rtProp.mem_type) &&
+                (entry.isHostAlloc == isHostAlloc);
+        });
+    if (it != std::end(mapping)) {
+        prop->memAttr = it->memAttr;
+    } else {
+        ACL_LOG_ERROR("memAttr not found for pg_type=%u, mem_type=%u, isHostAlloc=%u",
+                      rtProp.pg_type, rtProp.mem_type, isHostAlloc);
         return ACL_ERROR_INVALID_PARAM;
     }
-    switch (rtProp.pg_type) {
-        case 0:
-            prop->memAttr = ACL_HBM_MEM_NORMAL;
-            break;
-        case 1:
-            prop->memAttr = ACL_HBM_MEM_HUGE;
-            break;
-        case 2:
-            prop->memAttr = ACL_HBM_MEM_HUGE1G;
-            break;
-        default:
-            ACL_LOG_ERROR("memAttr [%d] support ACL_HBM_MEM_HUGE/ACL_HBM_MEM_NORMAL/ACL_HBM_MEM_HUGE1G. "
-                          "Note that ACL_HBM_MEM_HUGE1G is only supported on certain products. "
-                          "For details, please refer to the manual.",
-                          static_cast<int32_t>(rtProp.pg_type));
-            return ACL_ERROR_INVALID_PARAM;
+    return ACL_SUCCESS;
+}
+
+aclError aclrtReserveMemAddressNoUCMemoryImpl(void **virPtr, size_t size, size_t alignment, void *expectPtr, uint64_t flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtReserveMemAddressNoUCMemory);
+    ACL_LOG_DEBUG("start to execute aclrtReserveMemAddressNoUCMemory, size = %zu", size);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
+
+    if (size == 0UL) {
+        ACL_LOG_ERROR("size is [%zu], reserve size must be greater than zero", size);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
+            std::vector<const char *>({"param", "value", "reason"}),
+            std::vector<const char *>({"size", std::to_string(size).c_str(), "reserve size must be greater than zero"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    if ((flags != 1ULL) && (flags != 0ULL)) {
+        ACL_LOG_ERROR("flags is [%lu], flags of page type must be 0 or 1", flags);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
+            std::vector<const char *>({"param", "value", "reason"}),
+            std::vector<const char *>({"size", std::to_string(flags).c_str(), "flags of page type must be 0 or 1"}));
+        return ACL_ERROR_INVALID_PARAM;
     }
 
-    if (rtErr != ACL_RT_SUCCESS) {
-        ACL_LOG_CALL_ERROR("get handle failed, runtime result = %d", static_cast<int32_t>(rtErr));
+    flags = flags | FLAG_START_DYNAMIC_ALLOC_MEM; // bit 9置1
+    const rtError_t rtErr = rtReserveMemAddress(virPtr, size, alignment, expectPtr, flags);
+    if (rtErr != RT_ERROR_NONE) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("reserve memory address without UCMemeory unsupport, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("reserve memory address without UCMemeory failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }   
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
+    return ACL_SUCCESS;
+}
+
+aclError aclrtMemGetAddressRangeImpl(void *ptr, void **pbase, size_t *psize)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemGetAddressRange);
+    ACL_LOG_DEBUG("start to execute aclrtMemGetAddressRange");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+    const rtError_t rtErr = rtMemGetAddressRange(ptr, pbase, psize);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call  aclrtMemGetAddressRange failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    ACL_LOG_INFO("successfully execute aclrtMemGetAddressRange");
     return ACL_SUCCESS;
 }

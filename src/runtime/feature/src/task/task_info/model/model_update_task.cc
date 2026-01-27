@@ -108,7 +108,7 @@ rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t
 
     RT_LOG(RT_LOG_INFO, "desStreamId=%u, destaskId=%u exeStreamId=%u,tilingTabLen=%u",
         desStreamId, destaskId, exeStreamId, tilingTabLen);
-    if (!stm->Device_()->IsStarsV2Platform()) {
+    if (!stm->Device_()->IsDavidPlatform()) {
         uint64_t tilingTaboffset = 0ULL;
         uint64_t tilingKeyOffset = 0ULL;
         uint64_t blockDimOffset = 0ULL;
@@ -145,7 +145,7 @@ rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t
         mdlUpdateTaskInfo->tilingKeyAddr = para->tilingKeyAddr;
         return RT_ERROR_NONE;
     }
-    // starsv2 process
+    // david process
     mdlUpdateTaskInfo->tilingKeyOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(para->tilingKeyAddr));
     mdlUpdateTaskInfo->blockDimOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(para->blockDimAddr));
     mdlUpdateTaskInfo->tilingTabOffset = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devCopyMem));

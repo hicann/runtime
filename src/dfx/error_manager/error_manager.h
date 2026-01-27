@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+/* WARNING: This is an internal header file. Any external reference to or inclusion of this file is prohibited. It will be
+  * deprecated once the compatibility periods expires.
+  * -------------------------------------------------------------------------------------------------------*/
 #ifndef ERROR_MANAGER_H_
 #define ERROR_MANAGER_H_
 

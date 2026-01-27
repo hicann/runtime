@@ -390,7 +390,7 @@ struct rtStarsLabelGotoSqe_t {
 struct RtStarsGetFloatStatusSqe {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t conds_sub_type;  
+    uint8_t conds_sub_type;  // CONDS_SUB_TYPE_LABEL_GET_FLOAT_STATUS, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernel_credit;
@@ -407,7 +407,7 @@ struct RtStarsGetFloatStatusSqe {
 struct RtStarsFunctionCallSqe {
     rtStarsSqeHeader_t sqeHeader;
 
-    uint8_t conds_sub_type; 
+    uint8_t conds_sub_type;  // CONDS_SUB_TYPE_STREAM_ACTIVE, 1910b tiny only
     uint8_t reserved0[3];
     uint16_t reserved1;
     uint8_t kernel_credit;

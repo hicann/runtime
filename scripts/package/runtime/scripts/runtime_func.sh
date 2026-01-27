@@ -219,10 +219,14 @@ get_pkg_toolchain() {
 get_stub_libs_from_filelist() {
     awk -v arch_name="$arch_name" 'BEGIN {
         FS=","
+        prefix=sprintf("^%s-linux/devlib/", arch_name)
         pat=sprintf("^%s-linux/devlib/(linux/%s/[^/]+\\.(so|a)$)", arch_name, arch_name)
     }
     {
-        if (match($4, pat, arr)) print(arr[1])
+        if (match($4, pat)) {
+            sub(prefix, "", $4)
+            print($4)
+        }
     }' $curpath/filelist.csv
 }
 

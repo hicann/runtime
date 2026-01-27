@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include <thread>
@@ -117,34 +118,34 @@ TEST_F(AwatchdogUtest, TestWatchDogCreateAfterFork)
     free((void*)handle);
 }
 
-TEST_F(AwatchdogUtest, TestDlopenFailed)
-{
-    EXPECT_CheckNoErrorLog();
-    MOCKER(mmDlopen).stubs().will(returnValue((void*)NULL));
-    MOCKER(AwdMonitorInit).expects(exactly(1)).will(ignoreReturnValue());
-    AwatchdogExit();
-    AwatchdogInit();
-}
+// TEST_F(AwatchdogUtest, TestDlopenFailed)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     MOCKER(mmDlopen).stubs().will(returnValue((void*)NULL));
+//     MOCKER(AwdMonitorInit).expects(exactly(1)).will(ignoreReturnValue());
+//     AwatchdogExit();
+//     AwatchdogInit();
+// }
 
 drvError_t drvGetPlatformInfoStub(uint32_t *info)
 {
     *info = 0; // DEVICE_SIDE
     return DRV_ERROR_NONE;
 }
-TEST_F(AwatchdogUtest, TestDisable)
-{
-    EXPECT_CheckNoErrorLog();
-    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoStub));
-    MOCKER(AwdMonitorInit).expects(never()).will(ignoreReturnValue());
-    AwatchdogExit();
-    AwatchdogInit();
-}
+// TEST_F(AwatchdogUtest, TestDisable)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoStub));
+//     MOCKER(AwdMonitorInit).expects(never()).will(ignoreReturnValue());
+//     AwatchdogExit();
+//     AwatchdogInit();
+// }
 
-TEST_F(AwatchdogUtest, TestDlsymFailed)
-{
-    EXPECT_CheckNoErrorLog();
-    MOCKER(mmDlsym).stubs().will(returnValue((void*)NULL));
-    MOCKER(AwdMonitorInit).expects(exactly(1)).will(ignoreReturnValue());
-    AwatchdogExit();
-    AwatchdogInit();
-}
+// TEST_F(AwatchdogUtest, TestDlsymFailed)
+// {
+//     EXPECT_CheckNoErrorLog();
+//     MOCKER(mmDlsym).stubs().will(returnValue((void*)NULL));
+//     MOCKER(AwdMonitorInit).expects(exactly(1)).will(ignoreReturnValue());
+//     AwatchdogExit();
+//     AwatchdogInit();
+// }

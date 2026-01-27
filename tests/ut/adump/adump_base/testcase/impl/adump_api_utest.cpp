@@ -30,13 +30,8 @@
 using namespace Adx;
 #define JSON_BASE ADUMP_BASE_DIR "stub/data/json/"
 
-constexpr uint32_t MODULE_ID_11 = 11;
-constexpr uint32_t MODULE_ID_12 = 12;
-constexpr uint32_t MODULE_ID_13 = 13;
-constexpr uint32_t MODULE_ID_14 = 14;
-constexpr uint32_t MODULE_ID_100 = 100;
-constexpr uint32_t INVALID_ACTION = 10;
-
+// test adump_api.cpp
+// test dump_manager.cpp
 class AdumpApiUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
@@ -539,7 +534,7 @@ TEST_F(AdumpApiUtest, Test_OP_Dump_Api_Error)
 
 TEST_F(AdumpApiUtest, Test_Callback_AdumpSetDump_AdumpUnSetDump)
 {
-    EXPECT_EQ(ADUMP_SUCCESS, AdumpRegisterCallback(MODULE_ID_11, AdumpCallbackFuncTest, AdumpCallbackFuncTest));
+    EXPECT_EQ(ADUMP_SUCCESS, AdumpRegisterCallback(11, AdumpCallbackFuncTest, AdumpCallbackFuncTest));
     std::string configData = ReadFileToString(JSON_BASE "datadump/dump_ge_tensor.json");
     int32_t ret = AdumpSetDump(configData.c_str(), configData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);
@@ -553,7 +548,7 @@ TEST_F(AdumpApiUtest, Test_AdumpSetDump_Callback_AdumpUnSetDump)
     std::string configData = ReadFileToString(JSON_BASE "datadump/dump_ge_tensor.json");
     int32_t ret = AdumpSetDump(configData.c_str(), configData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);
-    EXPECT_EQ(ADUMP_SUCCESS, AdumpRegisterCallback(MODULE_ID_12, AdumpCallbackFuncTest, AdumpCallbackFuncTest));
+    EXPECT_EQ(ADUMP_SUCCESS, AdumpRegisterCallback(12, AdumpCallbackFuncTest, AdumpCallbackFuncTest));
     ret = AdumpUnSetDump();
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     system("rm -rf ./ge/test_callback_info.json");
@@ -561,11 +556,10 @@ TEST_F(AdumpApiUtest, Test_AdumpSetDump_Callback_AdumpUnSetDump)
 
 TEST_F(AdumpApiUtest, Test_Invalid_Callback_AdumpSetDump_AdumpUnSetDump)
 {
-    EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(MODULE_ID_100, DumpEnableAction::DISABLE), ADUMP_FAILED);
-    EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(
-        MODULE_ID_100, static_cast<DumpEnableAction>(INVALID_ACTION)), ADUMP_FAILED);
-    EXPECT_EQ(ADUMP_FAILED, AdumpRegisterCallback(MODULE_ID_13, AdumpCallbackFuncTest, nullptr));
-    EXPECT_EQ(ADUMP_FAILED, AdumpRegisterCallback(MODULE_ID_14, nullptr, nullptr));
+    EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(100, DumpEnableAction::DISABLE), ADUMP_FAILED);
+    EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(100, static_cast<DumpEnableAction>(10)), ADUMP_FAILED);
+    EXPECT_EQ(ADUMP_FAILED, AdumpRegisterCallback(13, AdumpCallbackFuncTest, nullptr));
+    EXPECT_EQ(ADUMP_FAILED, AdumpRegisterCallback(14, nullptr, nullptr));
     std::string configData = ReadFileToString(JSON_BASE "datadump/dump_ge_tensor.json");
     int32_t ret = AdumpSetDump(configData.c_str(), configData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);

@@ -19,7 +19,11 @@ extern "C" {
 #endif
 
 #ifndef RTS_API
+#ifdef RTS_DLL_EXPORT
+#define RTS_API __declspec(dllexport)
+#else
 #define RTS_API
+#endif
 #endif
 
 #define STARS_EVENT_RECORD 0x4

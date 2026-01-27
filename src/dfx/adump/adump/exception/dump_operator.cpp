@@ -9,10 +9,7 @@
  */
 
 #include "dump_operator.h"
-#include "graph/types.h"
-#include "graph/utils/type_utils.h"
 #include "runtime/rt.h"
-
 #include "str_utils.h"
 #include "sys_utils.h"
 #include "file.h"
@@ -311,7 +308,7 @@ bool DumpOperator::IsTvmOperator() const
         IDE_LOGW("Convert imply_type string %s to int failed.", it->second.c_str());
         return false;
     }
-    return static_cast<domi::ImplyType>(implType) == domi::ImplyType::TVM;
+    return static_cast<ImplyType>(implType) == ImplyType::TVM;
 }
 
 std::string DumpOperator::GetTensorString(const DumpTensor &tensor)

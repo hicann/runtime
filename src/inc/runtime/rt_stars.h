@@ -205,7 +205,7 @@ RTS_API rtError_t rtGeneralCtrl(uintptr_t *ctrl, uint32_t num, uint32_t type);
 
 /**
  * @ingroup rt_stars
- * @brief translate addr
+ * @brief 5612(tiny) need translate addr
  * @param [out] needTranslate
  * @return RT_ERROR_NONE for ok, others failed
  */

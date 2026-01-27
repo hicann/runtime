@@ -17,6 +17,7 @@
 #include "feature_type.h"
 #include "device_properties.h"
 
+using namespace cce::runtime;
 namespace std {
     template<>
     struct hash<rtChipType_t> {
@@ -43,7 +44,6 @@ public:
         (void)mmRWLockInit(&devInfoLock);
         (void)mmRWLockInit(&socInfoLock);
         (void)mmRWLockInit(&soLock);
-        (void)mmRWLockInit(&featureLock);
         (void)mmRWLockInit(&propertiesLock);
         (void)mmRWLockInit(&devInfoProcLock);
     };
@@ -53,7 +53,6 @@ public:
         (void)mmRWLockDestroy(&devInfoLock);
         (void)mmRWLockDestroy(&socInfoLock);
         (void)mmRWLockDestroy(&soLock);
-        (void)mmRWLockDestroy(&featureLock);
         (void)mmRWLockDestroy(&propertiesLock);
         (void)mmRWLockDestroy(&devInfoProcLock);
     };
@@ -74,8 +73,7 @@ public:
     rtError_t GetPlatformSoName(rtChipType_t chip, std::string &soName);
 
     bool RegChipFeatureSet(rtChipType_t chip, const std::unordered_set<RtOptionalFeatureType> &f);
-    // 支持的在set里，对注册友好
-    rtError_t GetChipFeatureSet(rtChipType_t chip, std::unordered_set<RtOptionalFeatureType> &f);
+    rtError_t GetChipFeatureSet(rtChipType_t chip, std::array<bool, FEATURE_MAX_VALUE> &f);
     bool IsSupportChipFeature(rtChipType_t chip, RtOptionalFeatureType f);
     bool RegDevProperties(const rtChipType_t chip, const DevProperties& properties);
     rtError_t GetDevProperties(const rtChipType_t chip, DevProperties& properties);
@@ -97,13 +95,10 @@ private:
     std::vector<rtSocInfo_t> socInfos;
 
     mmRWLock_t soLock;
-    // 不同的chip所在的lib name
     std::unordered_map<rtChipType_t, std::string> platformSoName;
 
-    // Static feature
-    mmRWLock_t featureLock;
-    std::unordered_map<rtChipType_t, std::vector<bool>> feature;
-    std::unordered_map<rtChipType_t, std::unordered_set<RtOptionalFeatureType>> chipFeatureSet;
+    // Static feature table. each chip must be registered only once when startup. Dynamic registration is prohibited.
+    std::array<std::array<bool, FEATURE_MAX_VALUE>, CHIP_END> chipFeatureSet{{}};
 
     mmRWLock_t propertiesLock;
     std::unordered_map<rtChipType_t, DevProperties> propertiesMap;
@@ -143,6 +138,7 @@ private:
 #define GET_PLATFORM_LIB_INFO(chipType, soName) \
     cce::runtime::DevInfoManage::Instance().GetPlatformSoName((chipType), (soName))
 
+// each chip must be registered only once when startup. Dynamic registration is prohibited.
 #define REGISTER_CHIP_FEATURE_SET(chipType, feature)          \
     static bool g_RegisterFeature_##chipType ATTRIBUTE_USED = \
         cce::runtime::DevInfoManage::Instance().RegChipFeatureSet((chipType), (feature))

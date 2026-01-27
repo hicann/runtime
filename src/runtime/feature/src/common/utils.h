@@ -21,6 +21,7 @@ bool GetDriverPath(std::string &driverPath);
 std::string GetFileName(const std::string &path);
 std::string GetFilePathByExtension(const std::string &binPath, std::string extension);
 const std::string RealPathForFileNotExists(const std::string &inputPath);
+bool GetConfigIniValueDouble(const std::string &userFileName, const std::string &key, double &val);
 uint64_t GetQuickHash(const void *data, const size_t size);
 }
 }

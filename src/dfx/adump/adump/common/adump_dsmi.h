@@ -25,10 +25,19 @@ enum class SysPlatformType {
 };
 
 enum class PlatformType : uint32_t{
-    CHIP_CLOUD_TYPE = 1,
+    CHIP_MINI_TYPE = 0,
+    CHIP_CLOUD_TYPE,
+    CHIP_MDC_TYPE,
     CHIP_DC_TYPE = 4,
-    CHIP_CLOUD_V2 = 5,
-    END_TYPE = 16
+    CHIP_CLOUD_V2,
+    CHIP_MINI_V3_TYPE = 7,
+    CHIP_TINY_V1 = 8,
+    CHIP_NANO_V1 = 9,
+    CHIP_MDC_MINI_V3 = 11,
+    CHIP_MDC_LITE = 12,
+    CHIP_CLOUD_V3 = 13,
+    CHIP_CLOUD_V4 = 15,
+    END_TYPE
 };
 
 class AdumpDsmi {

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <atomic>
 #include "acl_dump.h"
 #include "adump_pub.h"
 #include "adump_api.h"
@@ -89,4 +90,16 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
         }
     }
     return ACL_SUCCESS;
+}
+
+/**
+ * @ingroup AscendCL
+ * @brief Get Exception Dump path.
+ *
+ * @retval path for success
+ * @retval NULL for failed
+ */
+const char* acldumpGetPath()
+{
+    return Adx::DumpManager::Instance().GetExtraDumpPath();
 }

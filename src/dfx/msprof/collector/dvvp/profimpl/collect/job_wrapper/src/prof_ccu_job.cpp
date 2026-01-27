@@ -159,8 +159,8 @@ int32_t ProfCcuStatJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
         return PROFILING_FAILED;
     }
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->interconnection_profiling.compare(MSVP_PROF_ON) != 0) {
-        MSPROF_LOGI("Ccu statistic not enabled with interconnection_profiling switch off.");
+    if (collectionJobCfg_->comParams->params->ccuInstr.compare(MSVP_PROF_ON) != 0) {
+        MSPROF_LOGI("Ccu statistic not enabled with ccuInstr switch off.");
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;

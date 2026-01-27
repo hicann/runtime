@@ -400,18 +400,21 @@ bool FileUtils::IsAbsolutePath(const std::string &path)
 #endif
 }
 
-bool FileUtils::IsPathHasPermission(const std::string &path) {
+bool FileUtils::IsPathHasPermission(const std::string &path, std::string &errorMsg) {
     std::string trustedPath;
     int32_t ret = FilePathIsReal(path, trustedPath);
     if (ret != IDE_DAEMON_OK) {
-        IDE_LOGE("The path %s is not a real path.", path.c_str());
+        errorMsg = "The dump_path " + path + " is not a real path.";
+        IDE_LOGE("%s", errorMsg.c_str());
         return false;
     }
 	constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
 	if (mmAccess2(trustedPath.c_str(), static_cast<INT32>(accessMode)) != EN_OK) {
-        IDE_LOGE("The path %s does not have read and write permission", trustedPath.c_str());
+        errorMsg = "The path " + trustedPath + " does not have read and write permission";
+        IDE_LOGE("%s", errorMsg.c_str());
 	    return false;
 	}
+    errorMsg.clear();
 	return true;
 }
 }

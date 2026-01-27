@@ -125,7 +125,7 @@ rtError_t Module::Load(Program * const prog)
     {
         TIMESTAMP_BEGIN(ModuleMemAlloc);
         const uint32_t devSize = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
-            (size + SIMT_PREFETCH_INCREASE_SIZE) : size;
+            (size + PREFETCH_INCREASE_SIZE) : size;
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN)) {
             alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
             devMem = device_->GetKernelMemoryPool()->Allocate(alignSize, readonly);

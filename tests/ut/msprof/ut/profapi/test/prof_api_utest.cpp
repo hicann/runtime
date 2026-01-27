@@ -68,6 +68,11 @@ TEST_F(PROF_API_UTTEST, PROF_NOTIFY_SETDEVICE)
   EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, true));
 }
 
+TEST_F(PROF_API_UTTEST, PROF_SETSTEPINFO)
+{
+  EXPECT_EQ(-1, profSetStepInfo(0, 0, nullptr));
+}
+
 TEST_F(PROF_API_UTTEST, PROF_REPORT_DATA)
 {
   EXPECT_EQ(0, MsprofReportData(0, 0, nullptr, 0));

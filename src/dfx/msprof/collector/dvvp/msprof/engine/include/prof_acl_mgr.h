@@ -250,6 +250,7 @@ public:
     int32_t PrepareStartAclApi(const MsprofConfig *config);
     int32_t PrepareStartAclApiParam(const MsprofConfig *config);
     int32_t PrepareStopAclApi(const MsprofConfig *config);
+    int32_t CheckConfigConsistency(const MsprofConfig *config);
     int32_t PrepareStartAclSubscribe(const MsprofConfig *config);
     int32_t ProfStartAclSubscribe(const MsprofConfig *config);
     int32_t PrepareStopAclSubscribe(const MsprofConfig *config) const;
@@ -259,6 +260,7 @@ public:
     void RegisterTransport(ProfImplRegisterTransport callback);
     void SetDeviceNotify(uint32_t deviceId, bool isOpenDevice);
     void SetDeviceNotifyAclApi(const uint32_t *deviceId, uint32_t devNums);
+    int32_t GetAllActiveDevices(std::vector<uint32_t> &activeList);
     bool GetDevicesNotify(const uint32_t *deviceId, uint32_t devNums, std::vector<uint32_t> &notifyList);
     void DumpStartInfoFile(uint32_t device);
     void SetProfWarmup();

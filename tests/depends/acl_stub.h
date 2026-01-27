@@ -38,6 +38,10 @@
 #include "adx_datadump_server.h"
 #include "adump_pub.h"
 #include "mmpa/mmpa_api.h"
+#if 0
+#include "./jpeg/src/jpeg_stub.h"
+#include "hi_dvpp_for_acl_internal.h"
+#endif
 
 #include <gmock/gmock.h>
 
@@ -136,7 +140,7 @@ public:
     virtual rtError_t rtMemcpyAsyncEx(void *dst, uint64_t destMax, const void *src, uint64_t count, rtMemcpyKind_t kind,
                                     rtStream_t stream, rtMemcpyConfig_t *memcpyConfig);
     virtual rtError_t rtMemsetAsync(void *ptr, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stream);
-    virtual rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+    virtual rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                                 const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                                 uint32_t flags);
     virtual rtError_t rtMemGetInfoEx(rtMemInfoType_t memInfoType, size_t *free, size_t *total);
@@ -148,9 +152,10 @@ public:
     virtual rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, void **handle);
     virtual rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc, const char *stubName,
                                          const void *devFunc, uint32_t funcMode);
-    virtual rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize,
+    virtual rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, uint32_t argsSize,
                                      rtSmDesc_t *smDesc, rtStream_t stream);
     virtual rtError_t rtGetSocVersion(char *version, const uint32_t maxLen);
+    virtual rtError_t rtGetSocSpec(const char *label, const char *key, char *value, uint32_t maxLen);
     virtual rtError_t rtGetGroupCount(uint32_t *count);
     virtual rtError_t rtGetGroupInfo(int32_t groupid, rtGroupInfo_t *groupInfo, uint32_t count);
     virtual rtError_t rtSetGroup(int32_t groupid);
@@ -247,6 +252,7 @@ public:
     virtual rtError_t rtMemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle);
     virtual rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
     virtual rtError_t rtReserveMemAddress(void **devPtr, size_t size, size_t alignment, void *devAddr, uint64_t flags);
+    virtual rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
     virtual rtError_t rtReleaseMemAddress(void *devPtr);
     virtual rtError_t rtMallocPhysical(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags);
     virtual rtError_t rtFreePhysical(rtDrvMemHandle handle);
@@ -259,7 +265,7 @@ public:
     virtual rtError_t rtCreateLaunchArgs(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
                                          void *argsData, rtLaunchArgsHandle *argsHandle);
     virtual rtError_t rtDestroyLaunchArgs(rtLaunchArgsHandle argsHandle);
-    virtual rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDim,
+    virtual rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBlocks,
                                                    const rtArgsEx_t *const argsInfo, rtStream_t stm, const rtTaskCfgInfo_t *const cfgInfo);
     virtual rtError_t rtMemExportToShareableHandle(rtDrvMemHandle handle, rtDrvMemHandleType handleType,
                                                    uint64_t flag, uint64_t *shareableHandle);
@@ -320,7 +326,7 @@ public:
     virtual rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle *funcHandle);
     virtual rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr);
 
-    virtual rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm, rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void* reserve);
+    virtual rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void* reserve);
     virtual rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle *handle);
     virtual rtError_t rtsKernelArgsInitByUserMem(rtFuncHandle funcHandle, rtArgsHandle argsHandle, void *userHostMem, size_t actualArgsSize);
     virtual rtError_t rtsKernelArgsFinalize(rtArgsHandle argsHandle);
@@ -434,10 +440,10 @@ public:
     virtual rtError_t rtsGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t *const phyDevId);
 
     virtual rtError_t rtsProfTrace(void *userdata, int32_t length, rtStream_t stream);
-    virtual rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim,
+    virtual rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks,
                                                  rtStream_t stm, rtKernelLaunchCfg_t *cfg,
                                                  const void *args, uint32_t argsSize, void *reserve);
-    virtual rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+    virtual rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                                   rtKernelLaunchCfg_t *cfg, void *hostArgs, uint32_t argsSize,
                                                   rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum);
     virtual rtError_t rtsGetFloatOverflowStatus(void *const outputAddr, const uint64_t outputSize, rtStream_t stm);
@@ -468,6 +474,9 @@ public:
     virtual rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId);
 
     virtual rtError_t rtsPersistentTaskClean(rtStream_t stream);
+
+    virtual rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func);
+    virtual rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData);
     
     // geterror function
     virtual rtError_t rtsGetErrorVerbose(uint32_t deviceId, rtErrorInfo* errorInfo);
@@ -477,7 +486,7 @@ public:
     virtual rtError_t rtSnapShotProcessBackup();
     virtual rtError_t rtSnapShotProcessRestore();
     virtual rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args);
- 	virtual rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
+    virtual rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
     // tdt function
     virtual int32_t TdtHostInit(uint32_t deviceId);
     virtual int32_t TdtHostPreparePopData();
@@ -606,7 +615,7 @@ public:
     MOCK_METHOD7(rtMemcpyAsyncEx, rtError_t(void *dst, uint64_t destMax, const void *src, uint64_t count,
                                             rtMemcpyKind_t kind, rtStream_t stream, rtMemcpyConfig_t *memcpyConfig));
     MOCK_METHOD5(rtMemsetAsync, rtError_t(void *ptr, uint64_t destMax, uint32_t value, uint64_t count, rtStream_t stream));
-    MOCK_METHOD7(rtCpuKernelLaunchWithFlag, rtError_t(const void *soName, const void *kernelName, uint32_t blockDim,
+    MOCK_METHOD7(rtCpuKernelLaunchWithFlag, rtError_t(const void *soName, const void *kernelName, uint32_t numBlocks,
             const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags));
     MOCK_METHOD3(rtMemGetInfoEx, rtError_t(rtMemInfoType_t memInfoType, size_t *free, size_t *total));
     MOCK_METHOD4(rtGetMemUsageInfo, rtError_t(uint32_t deviceId, rtMemUsageInfo_t *memUsageInfo, size_t inputNum, size_t *outputNum));
@@ -617,9 +626,10 @@ public:
     MOCK_METHOD2(rtDevBinaryRegister, rtError_t(const rtDevBinary_t *bin, void **handle));
     MOCK_METHOD5(rtFunctionRegister, rtError_t(void *binHandle, const void *stubFunc, const char *stubName,
                                                const void *devFunc, uint32_t funcMode));
-    MOCK_METHOD6(rtKernelLaunch, rtError_t(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize,
+    MOCK_METHOD6(rtKernelLaunch, rtError_t(const void *stubFunc, uint32_t numBlocks, void *args, uint32_t argsSize,
                                            rtSmDesc_t *smDesc, rtStream_t stream));
     MOCK_METHOD2(rtGetSocVersion, rtError_t(char *version, const uint32_t maxLen));
+    MOCK_METHOD4(rtGetSocSpec, rtError_t(const char *label, const char *key, char *value, uint32_t maxLen));
     MOCK_METHOD1(rtGetGroupCount, rtError_t(uint32_t *count));
     MOCK_METHOD3(rtGetGroupInfo, rtError_t(int32_t groupid, rtGroupInfo_t *groupInfo, uint32_t count));
     MOCK_METHOD1(rtSetGroup, rtError_t(int32_t groupid));
@@ -692,6 +702,7 @@ public:
     MOCK_METHOD2(rtMemRetainAllocationHandle, rtError_t(void* virPtr, rtDrvMemHandle *handle));
     MOCK_METHOD2(rtMemGetAllocationPropertiesFromHandle, rtError_t(rtDrvMemHandle handle, rtDrvMemProp_t* prop));
     MOCK_METHOD5(rtReserveMemAddress, rtError_t(void **devPtr, size_t size, size_t alignment, void *devAddr, uint64_t flags));
+    MOCK_METHOD3(rtMemGetAddressRange, rtError_t(void *ptr, void **pbase, size_t *psize));
     MOCK_METHOD1(rtReleaseMemAddress, rtError_t(void *devPtr));
     MOCK_METHOD4(rtMallocPhysical, rtError_t(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags));
     MOCK_METHOD1(rtFreePhysical, rtError_t(rtDrvMemHandle handle));
@@ -705,7 +716,7 @@ public:
     MOCK_METHOD5(rtCreateLaunchArgs, rtError_t(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
                                                void *argsData, rtLaunchArgsHandle *argsHandle));
     MOCK_METHOD1(rtDestroyLaunchArgs, rtError_t(rtLaunchArgsHandle argsHandle));
-    MOCK_METHOD5(rtLaunchKernelByFuncHandleV3, rtError_t(rtFuncHandle funcHandle, uint32_t blockDim,
+    MOCK_METHOD5(rtLaunchKernelByFuncHandleV3, rtError_t(rtFuncHandle funcHandle, uint32_t numBlocks,
                                                          const rtArgsEx_t *const argsInfo, rtStream_t stm,
                                                          const rtTaskCfgInfo_t *const cfgInfo));
     MOCK_METHOD4(rtMemExportToShareableHandle, rtError_t(rtDrvMemHandle handle, rtDrvMemHandleType handleType,
@@ -768,7 +779,7 @@ public:
     MOCK_METHOD3(rtsFuncGetByEntry, rtError_t(const rtBinHandle binHandle, const uint64_t funcEntry,
                                               rtFuncHandle *funcHandle));
     MOCK_METHOD3(rtsFuncGetAddr, rtError_t(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr));
-    MOCK_METHOD6(rtsLaunchKernelWithConfig, rtError_t(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+    MOCK_METHOD6(rtsLaunchKernelWithConfig, rtError_t(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                                       rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle,
                                                       void* reserve));
     MOCK_METHOD2(rtsKernelArgsInit, rtError_t(rtFuncHandle funcHandle, rtArgsHandle *handle));
@@ -794,6 +805,7 @@ public:
     MOCK_METHOD3(rtHostGetDevicePointer, rtError_t(void *pHost, void **pDevice, uint32_t flag));
     MOCK_METHOD1(rtsHostUnregister, rtError_t(void *ptr));
     MOCK_METHOD3(rtHostMemMapCapabilities, rtError_t(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities));
+
     MOCK_METHOD1(rtsGetThreadLastTaskId, rtError_t(uint32_t *taskId));
     MOCK_METHOD2(rtsStreamGetId, rtError_t(rtStream_t stm, int32_t *streamId));
 
@@ -889,10 +901,10 @@ public:
     MOCK_METHOD2(rtsGetPhyDevIdByLogicDevId, rtError_t(int32_t logicDevId, int32_t *const phyDevId));
 
     MOCK_METHOD3(rtsProfTrace, rtError_t(void *userdata, int32_t length, rtStream_t stream));
-    MOCK_METHOD7(rtsLaunchKernelWithDevArgs, rtError_t(rtFuncHandle funcHandle, uint32_t blockDim,
+    MOCK_METHOD7(rtsLaunchKernelWithDevArgs, rtError_t(rtFuncHandle funcHandle, uint32_t numBlocks,
                                               rtStream_t stm, rtKernelLaunchCfg_t *cfg,
                                               const void *args, uint32_t argsSize, void *reserve));
-    MOCK_METHOD8(rtsLaunchKernelWithHostArgs, rtError_t(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+    MOCK_METHOD8(rtsLaunchKernelWithHostArgs, rtError_t(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                                         rtKernelLaunchCfg_t *cfg, void *hostArgs, uint32_t argsSize,
                                                         rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum));
     MOCK_METHOD3(rtsGetFloatOverflowStatus, rtError_t(void *const outputAddr, const uint64_t outputSize, rtStream_t stm));
@@ -922,6 +934,9 @@ public:
     MOCK_METHOD2(rtsCntNotifyGetId, rtError_t(rtCntNotify_t cntNotify, uint32_t *notifyId));
 
     MOCK_METHOD1(rtsPersistentTaskClean, rtError_t(rtStream_t stream));
+
+    MOCK_METHOD2(rtGetFuncHandleFromExceptionInfo, rtError_t(const rtExceptionInfo_t *info, rtFuncHandle *func));
+    MOCK_METHOD3(rtBinarySetExceptionCallback, rtError_t(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData));
 
     // geterror function stub
     MOCK_METHOD2(rtsGetErrorVerbose, rtError_t(uint32_t deviceId, rtErrorInfo* errorInfo));

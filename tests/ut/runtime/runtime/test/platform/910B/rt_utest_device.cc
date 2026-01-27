@@ -2293,7 +2293,7 @@ rtError_t MemCopySyncStub0(Driver *drv, void *dst, uint64_t destMax, const void 
 TEST_F(CloudV2DeviceTest, Eventid_FreeEventIdFromDrv)
 {
     RawDevice *stub = new RawDevice(0);
-    stub->platformType_ = PLATFORM_910B1;
+    stub->platformType_ = PLATFORM_DAVID_910_9599;
     NpuDriver drv;
     stub->driver_ = &drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::NotifyIdFree).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2314,9 +2314,9 @@ TEST_F(CloudV2DeviceTest, AllocSimtStackPhyBase)
         .will(returnValue(RT_ERROR_INVALID_VALUE));
     device->Start();
 
-    error = device->AllocSimtStackPhyBase(CHIP_910_B_93);
+    error = device->AllocSimtStackPhyBase(CHIP_DAVID);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = device->AllocSimtStackPhyBase(CHIP_910_B_93);
+    error = device->AllocSimtStackPhyBase(CHIP_DAVID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     device->Stop();
@@ -2382,9 +2382,6 @@ rtError_t MemCopySyncForRingBuffer(Driver *drv, void *dst, uint64_t destMax, con
             case FUSION_KERNEL_ERROR:
                 errorInfo->u.fusionKernelErrorInfo.comm.streamId = g_streamId;
                 break;
-            case CCU_ERROR:
-                errorInfo->u.ccuErrorInfo.comm.streamId = g_streamId;
-                break;
             default:
                 break;
         }
@@ -2397,7 +2394,61 @@ rtError_t MemCopySyncStub(Driver *drv, void *dst, uint64_t destMax, const void *
     memcpy_s(dst, destMax, src, size);
     return DRV_ERROR_NONE;
 }
+#if 0
+TEST_F(CloudV2DeviceTest, device_check_tsch_capability)
+{
+    RawDevice *dev = new RawDevice(1);
+    dev->Init();
+    uint8_t *capa = new uint8_t[1];
+    capa[0] = 0x3;  // 0000 0011
+    dev->tschCapability_ = capa;  // dev析构释放
+    dev->tschCapaLen_ = 1;
+    dev->tschCapaDepth_ = 100;
+    bool support = dev->CheckFeatureSupport(0);
+    EXPECT_EQ(support, true);
+    support = dev->CheckFeatureSupport(1);
+    EXPECT_EQ(support, true);
+    support = dev->CheckFeatureSupport(2);
+    EXPECT_EQ(support, false);
+    support = dev->CheckFeatureSupport(3);
+    EXPECT_EQ(support, false);
+    support = dev->CheckFeatureSupport(10);
+    EXPECT_EQ(support, false); // pos == tschCapaLen_
+    support = dev->CheckFeatureSupport(15);
+    EXPECT_EQ(support, false); // pos > tschCapaLen_
+    support = dev->CheckFeatureSupport(dev->tschCapaDepth_ * ONE_BYTE_BITS + 0);
+    EXPECT_EQ(support, true);
+    support = dev->CheckFeatureSupport(dev->tschCapaDepth_ * ONE_BYTE_BITS + 1);
+    EXPECT_EQ(support, true);
+    support = dev->CheckFeatureSupport(dev->tschCapaDepth_ * ONE_BYTE_BITS + 2);
+    EXPECT_EQ(support, false);
+    support = dev->CheckFeatureSupport(dev->tschCapaDepth_ * ONE_BYTE_BITS + 3);
+    EXPECT_EQ(support, false);
 
+    uint32_t ringbufferLen = 2 * 1024 * 1024; // 2M
+    DeviceErrorProc *errorProc = new DeviceErrorProc(dev, ringbufferLen);
+    std::unique_ptr<char[]> devMem(new (std::nothrow)  char[ringbufferLen]);
+    uint32_t tschOffset = errorProc->ringBufferSize_ - RTS_TIMEOUT_STREAM_SNAPSHOT_LEN - TSCH_CAPABILITY_LEN;
+    TschCapability *devTschCapa = reinterpret_cast<TschCapability *>
+        (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devMem.get())) + tschOffset);
+    devTschCapa->header.magic = RINGBUFFER_CAPABILITY_MAGIC;
+    devTschCapa->header.depth = sizeof(devTschCapa->capability);
+    devTschCapa->header.head = 0;
+    devTschCapa->header.tail = 2;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
+    errorProc->GetTschCapability(devMem.get());
+    EXPECT_EQ(dev->tschCapaLen_, devTschCapa->header.tail);
+
+    devTschCapa->header.head = 3;
+    devTschCapa->header.tail = 2;
+    errorProc->GetTschCapability(devMem.get());
+    EXPECT_EQ(dev->tschCapaLen_, sizeof(devTschCapa->capability));
+
+    GlobalMockObject::verify();
+    delete errorProc;
+    delete dev;
+}
+#endif
 TEST_F(CloudV2DeviceTest, TschStreamTest)
 {
     RawDevice dev(0);

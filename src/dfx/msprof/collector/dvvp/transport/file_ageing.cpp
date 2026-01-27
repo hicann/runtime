@@ -36,6 +36,45 @@ FileAgeing::~FileAgeing()
 {
 }
 
+int32_t FileAgeing::Init2()
+{
+    unsigned long long totalVolume = 0;
+    if (Utils::GetVolumeSize(storageDir_, totalVolume, VolumeSize::TOTAL_SIZE) == PROFILING_FAILED) {
+        MSPROF_LOGE("Get totalVolume failed, storageDir_:%s, storage_limit:%s",
+            Utils::BaseName(storageDir_).c_str(), storageLimit_.c_str());
+        return PROFILING_FAILED;
+    }
+
+    unsigned long long availableVolume = 0;
+    if (Utils::GetVolumeSize(storageDir_, availableVolume, VolumeSize::AVAIL_SIZE) == PROFILING_FAILED) {
+        MSPROF_LOGE("Get availableVolume failed, storageDir_:%s, storage_limit:%s",
+            Utils::BaseName(storageDir_).c_str(), storageLimit_.c_str());
+        return PROFILING_FAILED;
+    }
+
+    uint64_t limit = GetStorageLimit();
+    if (limit == 0ULL) {
+        limit = availableVolume;
+        MSPROF_LOGI("limit is 0, set default value which equal to available volume");
+        if (availableVolume < STORAGE_RESERVED_VOLUME) {
+            MSPROF_LOGE("Available volume:%" PRIu64 " (%lluMB) less than 20MB. Data will not be collected.",
+                availableVolume, (availableVolume >> MOVE_BIT));
+            std::string errReason = "The available volume is less than 20MB. " +
+                std::string("Data will not be collected. ") +
+                "Check the available space in the current path " + storageDir_ + " and related profiling configurations";
+            std::string errValue = std::to_string(availableVolume >> MOVE_BIT) + "MB";
+            MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
+                std::vector<std::string>({"storage limit", errValue, errReason}));
+            return PROFILING_FAILED;
+        }
+    } else {
+        limit = (limit < totalVolume) ? limit : totalVolume;
+    }
+
+    InitAgeingParams(limit);
+    return PROFILING_SUCCESS;
+}
+
 void FileAgeing::InitAgeingParams(uint64_t limit)
 {
     storageVolumeUpThd_ = limit - STORAGE_RESERVED_VOLUME;

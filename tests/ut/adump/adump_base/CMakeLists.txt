@@ -57,6 +57,7 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_args.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/thread_manager.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/exception_dumper.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/exception/exception_dumper_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_ELF.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_core/dump_core.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_core/dump_core_register.cpp

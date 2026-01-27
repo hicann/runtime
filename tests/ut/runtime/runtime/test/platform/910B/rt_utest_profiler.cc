@@ -836,6 +836,85 @@ protected:
 };
 
 #define PROF_RUNTIME_PROFILE_LOG_MASK        0x00002000
+#if 0
+#define rtProfilerLogStart rtProfilerStart
+#define rtProfilerLogStop  rtProfilerStop
+
+TEST_F(ProfilerLogTest, ProfilerLog_Mixed_Test_01)
+{
+    rtError_t error;
+    uint16_t type_ori = PROF_RUNTIME_API;
+    uint16_t type_log = PROF_RUNTIME_PROFILE_LOG_MASK;
+    uint32_t deviceList[5]={1,2,3,4,5};
+
+    error = rtProfilerStart(type_ori, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtProfilerStop(type_ori, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ProfilerLogTest, ProfilerLog_Mixed_Test_02)
+{
+    rtError_t error;
+    uint16_t type_ori = PROF_RUNTIME_API;
+    uint16_t type_log = PROF_RUNTIME_PROFILE_LOG_MASK;
+    uint32_t deviceList[5]={1,2,3,4,5};
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerStart(type_ori, -1, NULL);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ProfilerLogTest, ProfilerLog_Mixed_Test_03)
+{
+    rtError_t error;
+    uint16_t type_ori = PROF_RUNTIME_API;
+    uint16_t type_log = PROF_RUNTIME_PROFILE_LOG_MASK;
+    uint32_t deviceList[5]={1,2,3,4,5};
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtProfilerStart(type_ori, -1, NULL);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStart(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtProfilerLogStop(type_log, -1, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+#endif
 
 class ProfilerLogFunctionTest : public testing::Test
 {
@@ -2367,6 +2446,29 @@ TEST_F(ProfilerTest, BinaryLoad_02)
     MOCKER_CPP_VIRTUAL(drv,&NpuDriver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     auto error = profiler->apiProfileDecorator_->BinaryLoad(&devBin, &program);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    profiler->SetApiProfEnable(false);
+    delete apiImpl_;
+}
+
+TEST_F(ProfilerTest, BinaryLoad_03)
+{
+    uint32_t binary[32];
+    rtDevBinary_t devBin;
+    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
+    devBin.version = 1;
+    devBin.length = sizeof(binary);
+    devBin.data = binary;
+    PlainProgram stubProg(Program::MACH_AI_CPU);
+    Program *program = &stubProg;
+    ApiImpl* apiImpl_ = new ApiImpl();
+    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
+    profiler->SetApiProfEnable(true);
+    NpuDriver drv;
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_DEVICE_NULL));
+    auto error = profiler->apiProfileDecorator_->BinaryLoad(&devBin, &program);
+    EXPECT_EQ(error, RT_ERROR_DEVICE_NULL);
     profiler->SetApiProfEnable(false);
     delete apiImpl_;
 }

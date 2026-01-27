@@ -100,6 +100,7 @@ typedef enum tag_ts_error {
     TS_ERROR_SUSPECT_MTE_ERROR = 0x5A,               /**< suspect mte error */
     TS_ERROR_AICORE_ERROR_SW = 0x5B,                 /**< aicore software error */
     TS_ERROR_AICORE_ERROR_HW_L = 0x5C,               /**< aicore Internal hardware error */
+    TS_ERROR_LINK_ERROR = 0x5D,                      /**< device link error*/
 
     TS_ERROR_DEBUG_INVALID_SQCQ = 0x70,              /**< debug invalid sqcq */
     TS_ERROR_DEBUG_WRONG_COMMAND_TYPE = 0x71,        /**< debug wrong command type */
@@ -161,9 +162,9 @@ typedef enum tag_ts_error {
     TS_ERROR_FFTSPLUS_TASK_EXCEPTION = 0x10F,        /* ftsplus exception */
     TS_ERROR_FFTSPLUS_TASK_TRAP = 0x110,             /* fftsplus trap exception */
     TS_ERROR_FFTSPLUS_TASK_TIMEOUT = 0x111,          /* fftsplus timeout */
-    TS_ERROR_TASK_BUS_ERROR = 0x112,                 /* bus error on starsv2 */
-    TS_ERROR_TASK_RES_CONFLICT_ERROR = 0x113,        /* res conflict error on starsv2 */
-    TS_ERROR_TASK_SW_STATUS_ERROR = 0x114,           /* sq sw status error on starsv2 */
+    TS_ERROR_TASK_BUS_ERROR = 0x112,                 /* bus error on david */
+    TS_ERROR_TASK_RES_CONFLICT_ERROR = 0x113,        /* res conflict error on david */
+    TS_ERROR_TASK_SW_STATUS_ERROR = 0x114,           /* sq sw status error on david */
     TS_ERROR_APP_QUEUE_FULL = 0x115,                 /* app queue full*/
     TS_ERROR_ABORT_UNFINISHED = 0x116,               /* ts is aborting */
     TS_ERROR_STARS_QOS_ERROR = 0x117,
@@ -199,6 +200,8 @@ typedef enum tag_ts_error {
     TS_ERROR_SDMA_LINK_ERROR = 0x222,                 /**< sdma link error */
     TS_ERROR_HCCL_OTHER_ERROR = 0x223,                /**< hccl other error */
     TS_ERROR_AICPU_HCCL_OP_RETRY_FAILED = 0x224,      /* aicpu hccl op retry failed */
+    TS_ERROR_LOCAL_MEM_ERROR = 0x225,                 /*local mem error*/
+    TS_ERROR_REMOTE_MEM_ERROR = 0x226,                /*remote mem error*/
     TS_ERROR_GET_PAGES_WRONG = 0x300,                 /* get pages wrong */
     // the following error codes are ts inner codes, no need return to runtime
     TS_EXEC_AGAIN = 0x900,                           /**< task exec again */
@@ -218,9 +221,9 @@ typedef enum tag_ts_error {
     TS_LOG_DEAMON_CORE_ID_INVALID = 0x90D,           /* core id invalid */
     TS_LOG_DEAMON_NO_VALID_CORE_ID = 0x90E,          /* no  valid core id */
     TS_LOG_DEAMON_CORE_ID_PG_DOWN = 0x90F,           /* core mask on pgmap */
-    TS_LOG_DEAMON_NOT_SUPPORT_CORE_MASK = 0x910,     
+    TS_LOG_DEAMON_NOT_SUPPORT_CORE_MASK = 0x910,     /* 1910b not support core mask */
     TS_LOG_DEAMON_SINGLE_COMMIT_INVALID = 0x911,     /* single commit invalid */
-    TS_LOG_DEAMON_NOT_SUPPORT_AIV_CORE_MASK = 0x912, /* not support aiv core mask */
+    TS_LOG_DEAMON_NOT_SUPPORT_AIV_CORE_MASK = 0x912, /* 1980 not support aiv core mask */
     TS_LOG_DEAMON_NOT_IN_POOL = 0x913,               /* 51 core maybe not in pool */
     TS_LOG_DEAMON_CORE_POOLING_STATUS_FAIL = 0x914,  /* 51 disable/enable core need pooling status */
     TS_ERROR_RESERVED,                               /**< unknow error */

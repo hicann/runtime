@@ -44,7 +44,6 @@ static uint16_t g_featureToTsVersionMapForV1R1C18[RT_FEATURE_MAX] = {0U};
 
 void FeatureToTsVersionInit(void)
 {
-    /* br_hisi_trunk_ai */
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_STARS_COMPATIBILITY] = 16U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_IPC_NOTICE_DC] = 17U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_OVER_FLOW_DEBUG] = 18U;
@@ -53,7 +52,7 @@ void FeatureToTsVersionInit(void)
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_FFTSPLUS_TIMEOUT] = 21U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_FFTSPLUS_TASKID_SAME_FIX] = 22U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_MC2_RTS_SUPPORT_HCCL] = 23U;
-    g_featureToTsVersionMapForTRUNK[RT_FEATURE_IPC_NOTICE_910_B_93] = 24U;
+    g_featureToTsVersionMapForTRUNK[RT_FEATURE_IPC_NOTICE_CLOUD_V2] = 24U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_MC2_RTS_SUPPORT_HCCL_DC] = 25U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_SUPPORT_REDUCEASYNC_V2_DC] = 26U;
     g_featureToTsVersionMapForTRUNK[RT_FEATURE_TILING_KEY_SINK] = TS_VERSION_TILING_KEY_SINK;
@@ -88,7 +87,7 @@ void FeatureToTsVersionInit(void)
     g_featureToTsVersionMapForV1R1C17[RT_FEATURE_FFTSPLUS_TIMEOUT] = 21U;
     g_featureToTsVersionMapForV1R1C17[RT_FEATURE_FFTSPLUS_TASKID_SAME_FIX] = 22U;
     g_featureToTsVersionMapForV1R1C17[RT_FEATURE_MC2_RTS_SUPPORT_HCCL] = 23U;
-    g_featureToTsVersionMapForV1R1C17[RT_FEATURE_IPC_NOTICE_910_B_93] = 24U;
+    g_featureToTsVersionMapForV1R1C17[RT_FEATURE_IPC_NOTICE_CLOUD_V2] = 24U;
     g_featureToTsVersionMapForV1R1C17[RT_FEATURE_MC2_RTS_SUPPORT_HCCL_DC] = 25U;
     g_featureToTsVersionMapForV1R1C17[RT_FEATURE_SUPPORT_REDUCEASYNC_V2_DC] = 26U;
 
@@ -100,7 +99,7 @@ void FeatureToTsVersionInit(void)
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_FFTSPLUS_TIMEOUT] = 21U;
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_FFTSPLUS_TASKID_SAME_FIX] = 22U;
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_MC2_RTS_SUPPORT_HCCL] = 23U;
-    g_featureToTsVersionMapForV1R1C18[RT_FEATURE_IPC_NOTICE_910_B_93] = 24U;
+    g_featureToTsVersionMapForV1R1C18[RT_FEATURE_IPC_NOTICE_CLOUD_V2] = 24U;
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_MC2_RTS_SUPPORT_HCCL_DC] = 25U;
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_SUPPORT_REDUCEASYNC_V2_DC] = 26U;
     g_featureToTsVersionMapForV1R1C18[RT_FEATURE_TILING_KEY_SINK] = TS_VERSION_TILING_KEY_SINK;

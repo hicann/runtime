@@ -35,7 +35,6 @@ include_directories(${BASE_DIR}/tests/depends/)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/runtime/feature/inc/kernel)
 include_directories(${BASE_DIR}/include/dfx)
-include_directories(${BASE_DIR}/src/dfx/adump/inc/metadef/external)
 
 set(UT_FILES
     "test.cpp"

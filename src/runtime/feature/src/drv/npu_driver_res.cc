@@ -20,7 +20,7 @@
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
-
+#include "raw_device.hpp"
 namespace cce {
 namespace runtime {
 
@@ -148,6 +148,48 @@ rtError_t NpuDriver::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUce
     return RT_GET_DRV_ERRCODE(drvRet);
 }
 
+rtError_t NpuDriver::GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg)
+{
+    int32_t bufSize = static_cast<int32_t>(sizeof(qos_master_config_type));
+    RT_LOG(RT_LOG_INFO, "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=%u, moduleType=%d, infoType=%d.",
+        deviceId, aicoreQosCfg.type, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
+    const rtError_t error = GetDeviceInfoByBuff(deviceId, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG,
+        static_cast<void *>(&aicoreQosCfg), &bufSize);
+    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Not support get acc event info.");
+    if ((error != RT_ERROR_NONE) || (bufSize != static_cast<int32_t>(sizeof(qos_master_config_type)))) {
+        RT_LOG(RT_LOG_ERROR, "Calling drv api halGetDeviceInfoByBuff failed, bufSize is %d, expect bufSize is %d, error=%#x.",
+            bufSize, sizeof(qos_master_config_type), static_cast<uint32_t>(error));
+        return RT_ERROR_DRV_ERR;
+    }
+    RT_LOG(RT_LOG_INFO, "The QOS info from halGetDeviceInfoByBuff is: type=%u, mpamId=%u, qos=%u, pmg=%u, mode=%u.",
+        aicoreQosCfg.type, aicoreQosCfg.mpamId, aicoreQosCfg.qos, aicoreQosCfg.pmg, aicoreQosCfg.mode);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetAicoreQosCfg(Device *dev)
+{
+    RawDevice *const rdev = RtPtrToPtr<RawDevice*>(dev);
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_DAT;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_INS;
+    for(int i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
+        rtError_t error = GetOneAicoreQosCfg(rdev->Id_(), aicoreQosCfg[i]);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "GetAicoreQosCfg failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
+            return error;
+        }
+        error = rdev->SetQosCfg(aicoreQosCfg[i], i);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "Set qos to device failed, drv devId=%u, index=%d.", rdev->Id_(), i);
+            return error;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::GetDeviceInfoByBuff(const uint32_t deviceId, const int32_t moduleType, const int32_t infoType,
     void * const buf, int32_t * const size)
 {
@@ -255,7 +297,7 @@ rtError_t NpuDriver::TaskAbortByType(const uint32_t deviceId, const uint32_t tsI
     size_t ackCount = sizeof(ts_ctrl_msg_body_t);
     COND_RETURN_ERROR((opType >= OP_INVALID), RT_ERROR_INVALID_VALUE, "Invalid abort param");
     killIn.type = opType;
-    if (opType == OP_ABORT_STREAM) {
+    if (opType == OP_ABORT_STREAM || opType == OP_STOP_STREAM) {
         killIn.u.kill_stream_info.sq_id = targetId;
     } else if (opType == OP_ABORT_MODEL) {
         killIn.u.kill_model_info.model_id = targetId;
@@ -276,7 +318,7 @@ rtError_t NpuDriver::TaskAbortByType(const uint32_t deviceId, const uint32_t tsI
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
         "device_id=%u, ts_id=%u, target_id=%u, drvRetCode=%d.", deviceId, tsId, targetId, static_cast<int32_t>(drvRet));
 
-    if (opType == OP_ABORT_STREAM) {
+    if (opType == OP_ABORT_STREAM || opType == OP_STOP_STREAM) {
         result = killAck.u.kill_stream_info.result;
     } else if (opType == OP_ABORT_MODEL) {
         result = killAck.u.kill_model_info.result;
@@ -1048,7 +1090,7 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqid(const int32_t deviceId, const uin
                                                uint64_t * const addr, uint32_t * const len)
 {
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_MAP_SQ_ADDR_TO_USER_SPACE))  {
-        return GetSqRegVirtualAddrBySqidForStarsV2(deviceId, tsId, sqId, addr);
+        return GetSqRegVirtualAddrBySqidForDavid(deviceId, tsId, sqId, addr);
     } else {
         struct halSqCqQueryInfo queryInfoIn = {};
         queryInfoIn.type = DRV_NORMAL_TYPE;
@@ -1118,7 +1160,7 @@ rtError_t NpuDriver::StreamIdAlloc(int32_t * const id, const uint32_t deviceId, 
     uint32_t drvFlag = ((streamFlag & RT_STREAM_CP_PROCESS_USE) != 0U) ?
         static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
     if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (vfId_ != MAX_UINT32_NUM)) {
-        resAllocInput.res[2U] = vfId_; // used for starsv2 vf scene
+        resAllocInput.res[2U] = vfId_; // used for david vf scene
         drvFlag |= (static_cast<uint32_t>(TSDRV_RES_RANGE_ID));
     }
     resAllocInput.res[1U] = drvFlag;
@@ -1292,7 +1334,7 @@ rtError_t NpuDriver::NotifyIdAlloc(const int32_t deviceId, uint32_t * const id, 
     uint32_t drvFlag = (notifyFlag == static_cast<uint32_t>(RT_NOTIFY_MC2)) ?
         static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
     if ((IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID)) && (vfId_ != MAX_UINT32_NUM)) {
-        resAllocInput.res[2U] = vfId_; // used for starsv2 vf scene
+        resAllocInput.res[2U] = vfId_; // used for david vf scene
         drvFlag |= (static_cast<uint32_t>(TSDRV_RES_RANGE_ID));
     }
     resAllocInput.res[1U] = drvFlag;
@@ -1482,11 +1524,15 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
     normalSqCqAllocOutputInfo.cqId = 0U;
 
     uint32_t sqeDepth = GetDevProperties().sqeDepth;
+    // 1910b cqeSize is 16U, sqeSepth is 2048U  cqeDepth is 1024
     if ((GetDevProperties().cqeSize == RT_VIRTUAL_CQE_SIZE) && (sqeDepth != UINT32_MAX)) {
         normalSqCqAllocInputInfo.cqeSize = RT_VIRTUAL_CQE_SIZE;
+        // CHIP_AS31XM1 support max sq depth 4096, cq depth keep the status quo
         normalSqCqAllocInputInfo.sqeDepth = sqeDepth;
     }
 
+    // 1980C sqeDepth/cqeDepth is 2048U when support sq alloc device mem
+    // 1980C sqeDepth/cqeDepth is 4096U when not support sq alloc device mem
     if ((GetDevProperties().cqeSize == RT_VIRTUAL_CQE_SIZE) && (sqeDepth == UINT32_MAX)) {
         normalSqCqAllocInputInfo.cqeSize = RT_VIRTUAL_CQE_SIZE;
         normalSqCqAllocInputInfo.sqeDepth = Runtime::macroValue_.rtsqDepth;
@@ -1494,7 +1540,7 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_SQCQ_ALLOC_EX)) {
-        normalSqCqAllocInputInfo.cqeSize = RT_STARSV2_VIRTUAL_CQE_SIZE;
+        normalSqCqAllocInputInfo.cqeSize = RT_DAVID_VIRTUAL_CQE_SIZE;
         normalSqCqAllocInputInfo.sqeDepth = Runtime::macroValue_.rtsqDepth;
         normalSqCqAllocInputInfo.cqeDepth = Runtime::macroValue_.rtsqDepth;
     }
@@ -2354,7 +2400,7 @@ rtError_t NpuDriver::SqBackup(const uint32_t deviceId, uint32_t *sqIdGroup, cons
             deviceId, sqIdCnt, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
- 
+
     RT_LOG(RT_LOG_INFO, "Success to backup NPU SQ, drv deviceId=%u, sqIdCnt=%zu.", deviceId, sqIdCnt);
     return RT_ERROR_NONE;
 }
@@ -2374,7 +2420,7 @@ rtError_t NpuDriver::SqRestore(const uint32_t deviceId, uint32_t *sqIdGroup, con
             deviceId, sqIdCnt, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
- 
+
     RT_LOG(RT_LOG_INFO, "Success to restore NPU SQ, drv deviceId=%u, sqIdCnt=%zu.", deviceId, sqIdCnt);
     return RT_ERROR_NONE;
 }

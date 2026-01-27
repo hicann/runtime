@@ -26,6 +26,7 @@
 #include "raw_device.hpp"
 #include "logger.hpp"
 #include "engine.hpp"
+#include "async_hwts_engine.hpp"
 #include "task_res.hpp"
 #include "rdma_task.h"
 #include "stars.hpp"

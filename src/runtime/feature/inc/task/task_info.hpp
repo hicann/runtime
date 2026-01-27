@@ -31,7 +31,7 @@ typedef struct tagTaskInfoStru {
     uint32_t error;
     uint32_t drvErr;
     uint32_t errorCode;
-    uint32_t dfxId;         /* for dump/profiling */
+    uint32_t taskSn;         /* for dump/profiling */
     uint32_t pos;
     uint32_t stmArgPos;
     uint32_t liteStreamResId;
@@ -69,9 +69,9 @@ typedef struct tagTaskInfoStru {
         EventResetTaskInfo eventResetTaskInfo;
         RemoteEventWaitTaskInfo remoteEventWaitTaskInfo;
         EventWaitTaskInfo eventWaitTaskInfo;
-        StarsV2EventRecordTaskInfo starsv2EventRecordTaskInfo;
-        StarsV2EventResetTaskInfo starsv2EventResetTaskInfo;
-        StarsV2EventWaitTaskInfo starsv2EventWaitTaskInfo;
+        DavidEventRecordTaskInfo davidEventRecordTaskInfo;
+        DavidEventResetTaskInfo davidEventResetTaskInfo;
+        DavidEventWaitTaskInfo davidEventWaitTaskInfo;
         MaintenanceTaskInfo maintenanceTaskInfo;
         CreateStreamTaskInfo createStreamTaskInfo;
         CreateL2AddrTaskInfo createL2AddrTaskInfo;
@@ -80,7 +80,7 @@ typedef struct tagTaskInfoStru {
         ProfilingDisableTaskInfo profilingDisableTaskInfo;
         OnlineProfEnableTaskInfo onlineProfEnableTaskInfo;
         OnlineProfDisableTaskInfo onlineProfDisableTaskInfo;
-        ProfTaskInfo profTaskInfo;
+        AdcProfTaskInfo adcProfTaskInfo;
         PCTraceTaskInfo pcTraceTaskInfo;
         ModelMaintainceTaskInfo modelMaintainceTaskInfo;
         ModelExecuteTaskInfo modelExecuteTaskInfo;
@@ -140,12 +140,14 @@ typedef struct tagTaskInfoStru {
         MemWaitValueTaskInfo memWaitValueTask;
         AicpuMsgVersionTaskInfo aicpuMsgVersionTask;
 
+        // 1952 DQS
         DqsCommonTaskInfo dqsEnqueueTask;
         DqsCommonTaskInfo dqsDequeueTask;
         DqsCommonTaskInfo dqsPrepareTask;
         DqsCommonTaskInfo dqsMbufFreeTask;
         DqsCommonTaskInfo dqsBatchDequeueTask;
         DqsCommonTaskInfo dqsCondCopyTask;
+        DqsCommonTaskInfo dqsFrameAlignTask;
         DqsZeroCopyTaskInfo dqsZeroCopyTask;
         DqsSchedEndTaskInfo dqsSchedEndTask;
         DqsInterChipProcTaskInfo dqsInterChipPreProcTask;
@@ -227,7 +229,7 @@ inline void SetNameArgs(TaskInfo *taskInfo, const void *const kernelSoName, cons
 }
 
 const char_t* GetSqeDescByType(const uint8_t sqeType);
-const char_t* GetStarsV2SqeDescByType(const uint8_t sqeType);
+const char_t* GetDavidSqeDescByType(const uint8_t sqeType);
 const char_t* GetTaskDescByType(const uint8_t taskType);
 bool IsNeedFreeStreamRes(const TaskInfo *task);
 void ResetCmdList(TaskInfo* taskInfo);
@@ -280,14 +282,14 @@ rtError_t ProfilingDisableTaskInit(TaskInfo * const taskInfo, const uint64_t pro
     const rtProfCfg_t *const profCfg);
 rtError_t OnlineProfEnableTaskInit(TaskInfo * const taskInfo, const uint64_t onlineProfilingAddr);
 rtError_t OnlineProfDisableTaskInit(TaskInfo * const taskInfo, const uint64_t onlineProfilingAddr);
-rtError_t ProfTaskInit(TaskInfo * const taskInfo, const uint64_t address, const uint32_t len);
+rtError_t AdcProfTaskInit(TaskInfo * const taskInfo, const uint64_t address, const uint32_t len);
 rtError_t PCTraceTaskInit(TaskInfo * const taskInfo, const uint16_t enableTaskIndex,
                           const uint16_t coreDims, std::shared_ptr<PCTrace> pcTracePtr);
 rtError_t ModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
                                   Model *const modelPtr, Stream *const opStreamPtr,
                                   const rtModelStreamType_t modelStreamType,
                                   const uint32_t firstTaskIndex);
-rtError_t StarsV2ModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
+rtError_t DavidModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
     Model *const modelPtr, Stream *const opStreamPtr, const rtModelStreamType_t modelStreamType,
     const uint32_t firstTaskIndex);
 rtError_t ModelExecuteTaskInit(TaskInfo * const taskInfo, Model *const modelPtr, const uint32_t modelIndex,
@@ -333,6 +335,8 @@ rtError_t NotifyRecordTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, c
                                void * const notify, bool isCountNotify = false);
 rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum,
     const CountNotifyWaitInfo * const cntNtfyInfo, void * const inNotify, const bool isCountNotify = false);
+rtError_t NotifyResetTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex,
+    const SingleBitNotifyRecordInfo * const singleInfo, void * const notify);
 rtError_t StreamSwitchTaskInitV1(TaskInfo *taskInfo, const void *const ptrAddr,
     const rtCondition_t condi, const int64_t valueNum, const Stream * const trueStream);
 rtError_t StreamSwitchTaskInitV2(TaskInfo *taskInfo, const void *const ptrAddr,
@@ -367,7 +371,8 @@ void FlipTaskInit(TaskInfo* taskInfo, const uint16_t flipNum);
 void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t *argsInfo);
 
 // others
-uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind);
+uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb = false, uint32_t cpyType = UINT32_MAX);
+rtError_t ConvertD2DCpyType(const Stream * const stm, uint32_t &cpyType, const void *const srcAddr, void *const desAddr);
 void TimeoutSetTaskInitV1(TaskInfo* taskInfo);
 void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
 void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo * const taskInfo);
@@ -417,7 +422,7 @@ uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo * const taskInfo);
 uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo);
 rtError_t UbDbSendTaskInit(TaskInfo *taskInfo, const rtUbDbInfo_t *dbInfo);
 void UbDirectSendTaskInit(TaskInfo *taskInfo, rtUbWqeInfo_t *wqeInfo);
-bool IsStarsV2UbDma(const uint32_t copyTypeFlag);
+bool IsDavidUbDma(const uint32_t copyTypeFlag);
 rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t destaskId, uint16_t exeStreamId,
                               void *devCopyMem, uint32_t tilingTabLen, rtMdlTaskUpdateInfo_t *para);
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo * const taskInfo);

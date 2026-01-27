@@ -378,7 +378,7 @@ RTS_API rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify);
  * @ingroup rt_stars
  * @brief destroy count notify object
  * @param [in] inCntNotify count notify object
- * @param [out] cntNotifyAddress count notify addr
+ * @param [out] cntNotifyAddress count notify address
  * @return RT_ERROR_NONE for ok, others failed
  */
 RTS_API rtError_t rtGetCntNotifyAddress(rtCntNotify_t const inCntNotify, uint64_t * const cntNotifyAddress,

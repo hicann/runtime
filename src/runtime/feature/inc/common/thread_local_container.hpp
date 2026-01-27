@@ -87,7 +87,7 @@ private:
     static std::string userSocVersion_;
     static std::mutex socVersionMutex_;
 };
-bool IsProcessTimeout(const mmTimespec &beginTime, int32_t totalTime);
+bool IsProcessTimeout(const mmTimespec &beginTime, int32_t totalTime, int32_t *remainTime = nullptr);
 
 }  // namespace runtime
 }  // namespace cce

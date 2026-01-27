@@ -29,17 +29,16 @@ namespace acl {
 
     std::mutex CannInfoUtils::mutex_;
     bool CannInfoUtils::initFlag_ = false;
-    CannInfo CannInfoUtils::currCannInfo_("", UNKNOWN_VERSION);
+    int32_t CannInfoUtils::currentRuntimeVersion_ = UNKNOWN_VERSION;
     std::string CannInfoUtils::swConfigPath_;
     std::string CannInfoUtils::defaultInstallPath_;
     aclCannAttr CannInfoUtils::attrArray_[MAX_CANN_ATTR_SIZE];
     size_t CannInfoUtils::attrNum_ = 0;
 
-    // INF_NAN, BF16 and JIT_COMPILE are not required to check runtime and driver version
     std::map<aclCannAttr, CannInfo> CannInfoUtils::attrToCannInfo_ = {
-        {ACL_CANN_ATTR_INF_NAN, CannInfo("INF_NAN", UNKNOWN_VERSION)},
-        {ACL_CANN_ATTR_BF16, CannInfo("BF16", UNKNOWN_VERSION)},
-        {ACL_CANN_ATTR_JIT_COMPILE, CannInfo("JIT_COMPILE", UNKNOWN_VERSION)},
+        {ACL_CANN_ATTR_INF_NAN, CannInfo("INF_NAN", "SoCInfo", "support_inf_nan")},
+        {ACL_CANN_ATTR_BF16, CannInfo("BF16", "SoCInfo", "support_bf16")},
+        {ACL_CANN_ATTR_JIT_COMPILE, CannInfo("JIT_COMPILE", "", "")},
     };
 
     aclError CannInfoUtils::GetAttributeList(const aclCannAttr **cannAttr, size_t *num)
@@ -94,14 +93,8 @@ namespace acl {
         }
 
         // parse current CannInfo
-        const char *socName = aclrtGetSocNameImpl();
-        std::string socVersion;
-        if (socName != nullptr) {
-            socVersion = std::string(socName);
-        }
-        currCannInfo_.socVersions.emplace_back(socVersion);
         const std::string runtimeVersionPath = defaultInstallPath_ + RUNTIME_VERSION_PATH;
-        ret = ParseVersionInfo(runtimeVersionPath, &currCannInfo_.runtimeVersion);
+        ret = ParseVersionInfo(runtimeVersionPath, &currentRuntimeVersion_);
         if (ret != ACL_SUCCESS) {
             ACL_LOG_WARN("cannot get runtime version in current environment!");
             return ACL_ERROR_INTERNAL_ERROR;
@@ -110,8 +103,8 @@ namespace acl {
         // check and update attr availability
         CheckAndUpdateAttrAvailability();
         initFlag_ = true;
-        ACL_LOG_INFO(
-            "Successfully initialized CannInfoUtils: current CannInfo[runtime = %d]", currCannInfo_.runtimeVersion);
+        ACL_LOG_INFO("Successfully initialized CannInfoUtils: current CannInfo[runtime = %d, attrNum = %zu]",
+                     currentRuntimeVersion_, attrNum_);
 
         return ACL_SUCCESS;
     }
@@ -176,33 +169,37 @@ namespace acl {
     bool CannInfoUtils::MatchVersionInfo(const CannInfo &configCannInfo)
     {
         // if version is not set, skip matching and return true
-        if (configCannInfo.runtimeVersion == UNKNOWN_VERSION) {
+        if (configCannInfo.minimumRuntimeVersion == UNKNOWN_VERSION) {
             return true;
         }
-        return (currCannInfo_.runtimeVersion >= configCannInfo.runtimeVersion);
+        return (currentRuntimeVersion_ >= configCannInfo.minimumRuntimeVersion);
     }
 
-    bool CannInfoUtils::MatchSocVersion(const std::vector<std::string> &swConfigSocVersions)
+    bool CannInfoUtils::CheckNPUFeatures(const CannInfo &configInfo)
     {
-        if (swConfigSocVersions.empty()) {
+        if (configInfo.socSpecLabel.empty() || configInfo.socSpecKey.empty()) {
+            // label 或 key 为空说明特性与芯片无关, 无需查询
             return true;
         }
-        const auto &target = currCannInfo_.socVersions.front();
-        for (const auto &pattern : swConfigSocVersions) {
-            if (target.find(pattern) == 0UL) {
-                return true;
-            }
+        constexpr uint32_t kMaxValueLen = 16UL;
+        char_t value[kMaxValueLen] = {0};
+        auto ret = rtGetSocSpec(configInfo.socSpecLabel.c_str(), configInfo.socSpecKey.c_str(), value, kMaxValueLen);
+        if (ret != RT_ERROR_NONE) {
+            ACL_LOG_WARN("Cannot get platform info, label = [%s], key = [%s]", configInfo.socSpecLabel.c_str(),
+                         configInfo.socSpecKey.c_str());
+            return false;
         }
-        return false;
+        // value "0" 或空 或非法内容 都认为 false
+        const std::string strVal(value);
+        return strVal == "1";
     }
 
     void CannInfoUtils::CheckAndUpdateAttrAvailability()
     {
         for (auto &item : attrToCannInfo_) {
             auto &swConfigInfo = item.second;
-            const auto &swConfigSocVersions = swConfigInfo.socVersions;
-            if (MatchVersionInfo(swConfigInfo) && MatchSocVersion(swConfigSocVersions)) {
-                ACL_LOG_DEBUG("support attribute aclCannAttr(%d)", static_cast<int32_t>(item.first));
+            if (MatchVersionInfo(swConfigInfo) && CheckNPUFeatures(swConfigInfo)) {
+                ACL_LOG_INFO("support cann attribute [%s]", swConfigInfo.readableAttrName.c_str());
                 swConfigInfo.isAvailable = 1;
                 attrArray_[attrNum_] = item.first;
                 ++attrNum_;

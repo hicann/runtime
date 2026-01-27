@@ -10,6 +10,11 @@
 include_guard(GLOBAL)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../inc/runtime/runtime_headers.cmake)
 
+set(XPU_TPRT_INC_DIR
+    ${RUNTIME_DIR}/src/runtime/tprt/inc/external
+    ${RUNTIME_DIR}/src/runtime/tprt/feature/inc
+)
+
 set(libruntime_v100_task_src_files
     src/task/task.cc
     src/task/task_submit/v100/task_submit.cc
@@ -130,9 +135,15 @@ set(libruntime_src_files_optional
     src/dfx/hifloat.cpp
     src/dfx/printf.cc
     src/drv/npu_driver_standard_soc.cc
+    src/engine/hwts/direct_hwts_engine.cc
+    src/engine/hwts/hwts_engine.cc
+    src/engine/hwts/async_hwts_engine.cc
+    src/engine/hwts/shm_cq.cc
     src/engine/engine_factory.cc
     src/event/ipc_event.cc
     src/kernel/binary_loader.cc
+    src/kernel/json_parse.cc
+    src/kernel/v100/binary_loader_c.cc
     src/profiler/api_profile_decorator_standard_soc.cc
     src/profiler/api_profile_log_decoratoc_standard_soc.cc
     src/task/task_to_sqe.cc
@@ -147,10 +158,16 @@ set(libruntime_api_src_files_optional
     src/api/api_preload_task.cc
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
-    src/api/api_starsv2.cc
+    src/api/api_david.cc
+    src/api/api_c_xpu.cc
 )
 
 #------------------------- runtime v100 -------------------------
+set(xpu_tprt_api_file
+    src/api_impl/api_error_xpu.cc
+    src/api_impl/v100/api_impl_v100.cc
+    src/api_impl/api_decorator_xpu.cc
+)
 set(libruntime_v100_src_files
     src/common/inner_thread_local.cpp
     src/api_impl/api_decorator.cc
@@ -161,7 +178,8 @@ set(libruntime_v100_src_files
     # for V100
     src/api_impl/api_impl_creator.cc
     src/api_impl/v100/api_impl_creator_c.cc
-
+    src/device/ctrl_sq.cc
+    src/device/ctrl_msg.cc
     src/config.cc
     src/device/device.cc
     src/device/raw_device.cc
@@ -188,15 +206,20 @@ set(libruntime_v100_src_files
     src/kernel/v100/kernel.cc
     src/kernel/elf.cc
     src/kernel/kernel.cc
+    src/kernel/v100/program_plat.cc
+    src/kernel/v100/binary_loader_plat.cc
     src/kernel/module.cc
     src/kernel/program.cc
+    src/kernel/program_common.cc
     src/launch/label.cc
     src/event/event.cc
     src/notify/notify.cc
     src/engine/logger.cc
     src/runtime.cc
+    src/runtime_v100/runtime_adapt.cc
     src/utils/capability.cc
     src/utils/osal.cc
+    src/engine/hwts/scheduler.cc
     src/dfx/atrace_log.cc
     src/dfx/pctrace.cc
     src/utils/subscribe.cc
@@ -216,6 +239,7 @@ set(libruntime_v100_src_files
     src/device/aicpu_err_msg.cc
     src/stream/dvpp_grp.cc
     src/engine/engine.cc
+    src/engine/hwts/package_rebuilder.cc
     src/engine/stars/stars_engine.cc
     src/task/ctrl_res_pool.cpp
     src/task/host_task.cc
@@ -233,8 +257,9 @@ set(libruntime_v100_src_files
     ${libruntime_arg_loader_files}
     src/device/device_state_callback_manager.cc
     src/stream/stream_state_callback_manager.cc
-    src/plugin_manage/plugin_old_arch.cc
+    src/plugin_manage/v100/plugin_old_arch.cc
     ${libruntime_src_files_optional}
+    ${xpu_tprt_api_file}
 )
 
 set(RUNTIME_INC_DIR_OPEN
@@ -247,6 +272,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dfx
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/drv
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc/engine/hwts
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/event
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/launch
@@ -263,6 +289,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/stars
     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream
     ${CMAKE_CURRENT_SOURCE_DIR}/src/task/inc
@@ -297,6 +324,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
+    ${XPU_TPRT_INC_DIR}
 )
 
 #------------------------- runtime common -------------------------
@@ -307,6 +335,7 @@ macro(add_runtime_common_library target_name)
 
     target_compile_definitions(${target_name} PRIVATE
         LOG_CPP
+        CANN_RUNTIME
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -317,7 +346,7 @@ macro(add_runtime_common_library target_name)
         -fno-strict-aliasing
         -Werror
         -Wextra
-        -Wfloat-equal
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
 
     target_include_directories(${target_name} PRIVATE
@@ -335,17 +364,19 @@ macro(add_runtime_common_library target_name)
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:platform_headers>
             $<BUILD_INTERFACE:atrace_headers>
-            dl
-            rt
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>
             -Wl,--no-as-needed
             mmpa
             c_sec
-            profapi_share
-            error_manager
-            ascend_hal_stub
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:profapi_share>
+            # error_manager仅在windows形态暂不需要
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:error_manager>
+            $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:ascend_hal>
+            $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            atrace_share
+            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             -Wl,--as-needed
@@ -353,6 +384,17 @@ macro(add_runtime_common_library target_name)
         PUBLIC
             npu_runtime_headers
     )
+    if("${ENABLE_TSD}" STREQUAL "true")
+        if("${TARGET_LINUX_DISTRIBUTOR_ID}" STREQUAL lhisilinux)
+            if("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 100)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3796/drv)
+            elseif("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 200)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3559dv100/drv)
+            endif()
+        endif()
+
+        target_link_libraries(${target_name} PRIVATE drvdevdrv aicpu_scheduler_so)
+    endif()
 
     if(ENABLE_ASAN)
         target_compile_definitions(${target_name} PRIVATE
@@ -370,17 +412,21 @@ macro(add_runtime_api_library target_name)
         src/plugin_manage/runtime_keeper.cc
         $<TARGET_OBJECTS:runtime_platform_910B>
         $<TARGET_OBJECTS:runtime_platform_kirin>
+        $<TARGET_OBJECTS:runtime_platform_others>
+        $<TARGET_OBJECTS:runtime_platform_tiny>
     )
 
     target_compile_definitions(${target_name} PRIVATE
         LOG_CPP
+        CANN_RUNTIME
         -DSTATIC_RT_LIB=0  # set 1 when not split so
         -DRUNTIME_API=1  # set 1 when split so and in libruntime.so
     )
 
     set_target_properties(${target_name}
         PROPERTIES
-        OUTPUT_NAME ${target_name}
+        WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+        OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,lib${target_name},${target_name}>
     )
 
     target_compile_options(${target_name} PRIVATE
@@ -390,7 +436,7 @@ macro(add_runtime_api_library target_name)
         -fno-strict-aliasing
         -Werror
         -Wextra
-        -Wfloat-equal
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
 
     target_include_directories(${target_name} PRIVATE
@@ -408,17 +454,19 @@ macro(add_runtime_api_library target_name)
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
             $<BUILD_INTERFACE:atrace_headers>
-            dl
-            rt
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>
             -Wl,--no-as-needed
             mmpa
             c_sec
-            profapi_share
-            error_manager
-            ascend_hal_stub
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:profapi_share>
+            # error_manager仅在windows形态暂不需要
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:error_manager>
+            $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:ascend_hal>
+            $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            atrace_share
+            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             runtime_common
@@ -427,6 +475,22 @@ macro(add_runtime_api_library target_name)
         PUBLIC
             npu_runtime_headers
     )
+    if("${ENABLE_TSD}" STREQUAL "true")
+        if("${TARGET_LINUX_DISTRIBUTOR_ID}" STREQUAL lhisilinux)
+            if("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 100)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3796/drv)
+            elseif("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 200)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3559dv100/drv)
+            endif()
+        endif()
+
+        target_link_libraries(${target_name} PRIVATE drvdevdrv aicpu_scheduler_so)
+    endif()
+
+    if("${hostchip}" STREQUAL "hi3559a")
+        target_compile_definitions(${target_name} PRIVATE
+                __RT_CFG_HOST_CHIP_HI3559A__)
+    endif()
 
     if(ENABLE_ASAN)
         target_compile_definitions(${target_name} PRIVATE
@@ -435,7 +499,15 @@ macro(add_runtime_api_library target_name)
 endmacro()
 
 set(libruntime_dev_info_src_files
+    platform/610_lite/dev_info_proc_func.cc
     platform/910_B_93/dev_info_proc_func.cc
+    platform/as31xm1/dev_info_proc_func.cc
+    platform/cloud/dev_info_proc_func.cc
+    platform/dc/dev_info_proc_func.cc
+    platform/adc/dev_info_proc_func.cc
+    platform/mini/dev_info_proc_func.cc
+    platform/mini_v3/dev_info_proc_func.cc
+    platform/tiny/dev_info_proc_func.cc
 )
 
 macro(add_runtime_v100_library target_name)
@@ -453,6 +525,7 @@ macro(add_runtime_v100_library target_name)
 
     target_compile_definitions(${target_name} PRIVATE
         LOG_CPP
+        CANN_RUNTIME
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -463,8 +536,8 @@ macro(add_runtime_v100_library target_name)
         -fno-common
         -fno-strict-aliasing
         $<$<STREQUAL:${CMAKE_CXX_COMPILER_VERSION},7.3.0>:-Werror>
-        -Wextra
-        -Wfloat-equal
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wextra>
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     )
 
     target_include_directories(${target_name} PRIVATE
@@ -482,17 +555,19 @@ macro(add_runtime_v100_library target_name)
             $<BUILD_INTERFACE:atrace_headers>
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:platform_headers>
-            dl
-            rt
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>
             -Wl,--no-as-needed
             mmpa
             c_sec
-            profapi_share
-            error_manager
-            ascend_hal_stub
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:profapi_share>
+            # error_manager仅在windows形态暂不需要
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:error_manager>
+            $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:ascend_hal>
+            $<$<AND:$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>,$<NOT:$<STREQUAL:${ENABLE_TSD},true>>>:ascend_hal_stub>
             awatchdog_share
             unified_dlog
-            atrace_share
+            $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
             runtime_common
@@ -501,6 +576,17 @@ macro(add_runtime_v100_library target_name)
         PUBLIC
             npu_runtime_headers
     )
+    if("${ENABLE_TSD}" STREQUAL "true")
+        if("${TARGET_LINUX_DISTRIBUTOR_ID}" STREQUAL lhisilinux)
+            if("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 100)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3796/drv)
+            elseif("${TARGET_LINUX_DISTRIBUTOR_RELEASE}" STREQUAL 200)
+                target_link_libraries(${target_name} PRIVATE -L${RUNTIME_DIR}/vendor/sdk/hi3559dv100/drv)
+            endif()
+        endif()
+
+        target_link_libraries(${target_name} PRIVATE drvdevdrv aicpu_scheduler_so)
+    endif()
 
     if(ENABLE_ASAN)
         target_compile_definitions(${target_name} PRIVATE

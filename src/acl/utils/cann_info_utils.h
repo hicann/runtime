@@ -25,17 +25,17 @@ namespace acl {
     // if version info is not set in swFeatureList.json, use UNKNOWN_VERSION as default value
     constexpr const int32_t UNKNOWN_VERSION = -1;
     constexpr const char_t *const SW_CONFIG_RUNTIME = "runtimeVersion";
-    constexpr const char_t *const SW_CONFIG_SOC_VERSION = "socVersionList";
 
     struct CannInfo {
-        std::string configKeyName;
-        int32_t runtimeVersion;
-        std::vector<std::string> socVersions;
+        std::string readableAttrName;
+        std::string socSpecLabel;
+        std::string socSpecKey;
+        int32_t minimumRuntimeVersion = UNKNOWN_VERSION;
         int32_t isAvailable = 0;
-        explicit CannInfo(const std::string &name, const int32_t runtime = UNKNOWN_VERSION) noexcept
-            : configKeyName(name), runtimeVersion(runtime)
-        {
-        }
+        explicit CannInfo(const std::string &attrName, const std::string &specLabel,
+                          const std::string &specKey) noexcept
+            : readableAttrName(attrName), socSpecLabel(specLabel), socSpecKey(specKey)
+        {}
     };
 
     class CannInfoUtils {
@@ -49,12 +49,12 @@ namespace acl {
         static aclError GetConfigInstallPath();
         static aclError ParseVersionInfo(const std::string &path, int32_t *version);
         static bool MatchVersionInfo(const CannInfo &configCannInfo);
-        static bool MatchSocVersion(const std::vector<std::string> &swConfigSocVersions);
+        static bool CheckNPUFeatures(const CannInfo &configInfo);
         static void CheckAndUpdateAttrAvailability();
 
         static std::mutex mutex_;
         static bool initFlag_;
-        static CannInfo currCannInfo_;
+        static int32_t currentRuntimeVersion_;
         static std::string swConfigPath_;
         static std::string defaultInstallPath_;
         static aclCannAttr attrArray_[MAX_CANN_ATTR_SIZE];

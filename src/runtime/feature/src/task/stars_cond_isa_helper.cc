@@ -596,12 +596,11 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t &funcCallPara,
 
     /* r1 = r4 */
     ConstructOpImmAndi(r4, r1, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, checkSqFsm.addi);
-    
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties prop;
-    rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
+    const rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
     RT_LOG(RT_LOG_DEBUG, "GetDevProperties, ret = %u", error);
-    uint32_t shamt = prop.rtsqShamt;
+    const uint32_t shamt = prop.rtsqShamt;
 
     // r1 is sqid
     ConstructOpImmAndi(r1, r1, shamt, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, checkSqFsm.andi1);
@@ -1343,12 +1342,11 @@ void ConstructStreamActiveFc(RtStarsStreamActiveFc &fc,
 
     /* r5 = r1 */
     ConstructOpImmAndi(r1, r5, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi);
-
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties prop;
-    rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
+    const rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
     RT_LOG(RT_LOG_DEBUG, "GetDevProperties, ret = %u", error);
-    uint32_t shamt = prop.rtsqShamt;
+    const uint32_t shamt = prop.rtsqShamt;
     
     ConstructOpImmAndi(r5, r5, shamt, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.andi1);
     /* r3 = fcPara.sqId */

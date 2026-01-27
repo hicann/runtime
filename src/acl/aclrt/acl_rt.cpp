@@ -51,6 +51,21 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
     return aclrtGetErrorCodeFromExceptionInfoImpl(info);
 }
 
+aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)
+{
+    return aclrtGetArgsFromExceptionInfoImpl(info, devArgsPtr, devArgsLen);
+}
+
+aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, aclrtFuncHandle *func)
+{
+    return aclrtGetFuncHandleFromExceptionInfoImpl(info, func);
+}
+
+aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
+{
+    return aclrtBinarySetExceptionCallbackImpl(binHandle, callback, userData);
+}
+
 aclError aclrtSubscribeReport(uint64_t threadId, aclrtStream stream)
 {
     return aclrtSubscribeReportImpl(threadId, stream);
@@ -601,10 +616,10 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
     return aclrtBinaryGetFunctionImpl(binHandle, kernelName, funcHandle);
 }
 
-aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t blockDim, const void *argsData, size_t argsSize,
+aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const void *argsData, size_t argsSize,
     aclrtStream stream)
 {
-    return aclrtLaunchKernelImpl(funcHandle, blockDim, argsData, argsSize, stream);
+    return aclrtLaunchKernelImpl(funcHandle, numBlocks, argsData, argsSize, stream);
 }
 
 aclError aclrtMemGetAccess(void *virPtr, aclrtMemLocation *location, uint64_t *flag) 
@@ -768,10 +783,10 @@ aclError aclrtKernelArgsParaUpdate(aclrtArgsHandle argsHandle, aclrtParamHandle 
     return aclrtKernelArgsParaUpdateImpl(argsHandle, paramHandle, param, paramSize);
 }
 
-aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t blockDim, aclrtStream stream,
+aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream,
     aclrtLaunchKernelCfg *cfg, aclrtArgsHandle argsHandle, void *reserve)
 {
-    return aclrtLaunchKernelWithConfigImpl(funcHandle, blockDim, stream, cfg, argsHandle, reserve);
+    return aclrtLaunchKernelWithConfigImpl(funcHandle, numBlocks, stream, cfg, argsHandle, reserve);
 }
 
 aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
@@ -1405,17 +1420,17 @@ aclError aclrtProfTrace(void *userdata, int32_t length, aclrtStream stream)
     return aclrtProfTraceImpl(userdata, length, stream);
 }
 
-aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t blockDim, const void *argsData, size_t argsSize,
+aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, const void *argsData, size_t argsSize,
     aclrtLaunchKernelCfg *cfg, aclrtStream stream)
 {
-    return aclrtLaunchKernelV2Impl(funcHandle, blockDim, argsData, argsSize, cfg, stream);
+    return aclrtLaunchKernelV2Impl(funcHandle, numBlocks, argsData, argsSize, cfg, stream);
 }
 
-aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t blockDim, aclrtStream stream,
+aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream,
                                        aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize,
                                        aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
 {
-    return aclrtLaunchKernelWithHostArgsImpl(funcHandle, blockDim, stream, cfg, hostArgs, argsSize,
+    return aclrtLaunchKernelWithHostArgsImpl(funcHandle, numBlocks, stream, cfg, hostArgs, argsSize,
                                              placeHolderArray, placeHolderNum);
 }
 
@@ -1692,4 +1707,14 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, aclrtPhysicalMemProp* prop)
 {
     return aclrtMemGetAllocationPropertiesFromHandleImpl(handle, prop);
+}
+
+aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t alignment, void *expectPtr, uint64_t flags)
+{
+    return aclrtReserveMemAddressNoUCMemoryImpl(virPtr, size, alignment, expectPtr, flags);
+}
+
+aclError aclrtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)
+{
+    return aclrtMemGetAddressRangeImpl(ptr, pbase, psize);
 }

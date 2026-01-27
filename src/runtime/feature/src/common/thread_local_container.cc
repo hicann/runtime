@@ -197,14 +197,24 @@ void GlobalContainer::SetEventModeRefCount(uint8_t value)
     eventModeSetRefCount = value;
 }
 
-bool IsProcessTimeout(const mmTimespec &beginTime, int32_t totalTime)
+bool IsProcessTimeout(const mmTimespec &beginTime, int32_t timeout, int32_t *remainTime)
 {
-    if (totalTime < 0) {
+    if (timeout < 0) {// never timeout
+        if (remainTime != nullptr) {
+            *remainTime = timeout;
+        }
         return false;
     }
     uint64_t count = 0ULL;
     count = GetTimeInterval(beginTime);
-    return (count >= static_cast<uint64_t>(totalTime));
+    if (count >= static_cast<uint64_t>(timeout)) {
+        return true;
+    }
+
+    if (remainTime != nullptr) {
+        *remainTime = timeout - static_cast<int32_t>(count);
+    }
+    return false;
 }
 
 }

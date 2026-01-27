@@ -59,7 +59,7 @@ set(runtimeut_src_task_list
 set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_c.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/src/api/api_starsv2.cc
+    ${TOP_DIR}/src/runtime/feature/src/api/api_david.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_preload_task.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_context.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_device.cc
@@ -160,8 +160,32 @@ set(runtimeut_src_common_list
 )
 
 set(runtimeut_platform_list
+    ${TOP_DIR}/src/runtime/feature/platform/610_lite/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/910_95/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/910_B_93/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/as31xm1/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/bs9sx1a/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/cloud/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/dc/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mc62cm12a/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/adc/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mini/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mini_v3/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/nano/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/tiny/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/910_96/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/610_lite/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/910_95/dev_info_proc_func.cc
     ${TOP_DIR}/src/runtime/feature/platform/910_B_93/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/as31xm1/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/cloud/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/dc/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mc62cm12a/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/adc/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mini/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/mini_v3/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/tiny/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/910_96/dev_info_proc_func.cc
 )
 
 set(runtimeut_910b_src_list
@@ -190,6 +214,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/device/device_snapshot.cc
     ${TOP_DIR}/src/runtime/feature/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/feature/src/device/sq_addr_memory_pool.cc
+    ${TOP_DIR}/src/runtime/feature/src/device/ctrl_sq.cc
+    ${TOP_DIR}/src/runtime/feature/src/device/ctrl_msg.cc
     ${TOP_DIR}/src/runtime/feature/src/drv/driver.cc
     ${TOP_DIR}/src/runtime/feature/src/drv/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/feature/src/model/model.cc
@@ -212,10 +238,11 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/runtime_keeper.cc
-    ${TOP_DIR}/src/runtime/feature/src/plugin_manage/plugin_old_arch.cc
+    ${TOP_DIR}/src/runtime/feature/src/plugin_manage/v100/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/feature/src/utils/capability.cc
     ${TOP_DIR}/src/runtime/feature/src/task/ctrl_res_pool.cpp
     ${TOP_DIR}/src/runtime/feature/src/utils/osal.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/scheduler.cc
     ${TOP_DIR}/src/runtime/feature/src/profiler/profiler.cc
     ${TOP_DIR}/src/runtime/feature/src/dfx/atrace_log.cc
     ${TOP_DIR}/src/runtime/feature/src/dfx/fp16_t.cpp
@@ -238,12 +265,26 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/task/task_to_sqe.cc
     ${TOP_DIR}/src/runtime/feature/src/drv/npu_driver_tiny.cpp
     ${TOP_DIR}/src/runtime/feature/src/engine/engine.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/package_rebuilder.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/stars/stars_engine.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/hwts_engine.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/async_hwts_engine.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/direct_hwts_engine.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/engine_factory.cc
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts/shm_cq.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_creator_c.cc
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
+    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_creator.cc
+ 	${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_creator_c.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/v100/binary_loader_c.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/json_parse.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/runtime_v100/runtime_adapt.cc
 )
 ###################################################################################################
 add_library(runtime_ut_910b_static_lib STATIC ${runtimeut_910b_src_list})
@@ -312,9 +353,12 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/inc/arg_loader
     ${TOP_DIR}/src/runtime/feature/inc/notify
     ${TOP_DIR}/src/runtime/feature/inc/profiler
+    ${TOP_DIR}/src/runtime/feature/inc/engine/hwts
+    ${TOP_DIR}/src/runtime/feature/inc/dqs
     ${TOP_DIR}/src/runtime/feature/src/api
     ${TOP_DIR}/src/runtime/feature/src/api_impl
     ${TOP_DIR}/src/runtime/feature/src/engine
+    ${TOP_DIR}/src/runtime/feature/src/engine/hwts
     ${TOP_DIR}/src/runtime/feature/src/engine/stars
     ${TOP_DIR}/src/runtime/feature/src/dfx
     ${TOP_DIR}/src/runtime/feature/src/stream
@@ -346,7 +390,6 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/abl/atrace/inc/awatchdog/
     ${TOP_DIR}/src/runtime/feature/src/task/
     ${TOP_DIR}/pkg_inc
-    ${TOP_DIR}/src/runtime/feature/inc/dqs
     ${TOP_DIR}/src/queue_schedule/dgwclient/inc
     ${TOP_DIR}/src/dfx/msprof/include/external/runtime/rts
     ${TOP_DIR}/src/inc/external
@@ -466,7 +509,6 @@ add_executable(runtime_utest_task_910B
     rt_utest_task_res.cc
     rt_utest_task.cc
     rt_utest_task_stars.cc
-    rt_utest_task_sqe.cc
 )
 
 target_compile_definitions(runtime_utest_task_910B PUBLIC
@@ -496,7 +538,7 @@ add_executable(runtime_utest_api_910B
     stub/hal_stub.cc
     stub/rt_utest_api_common_defination.cc
     main.cc
-    rt_utest_capture_api.cc
+    rt_utest_api_cloudv2.cc
     rt_utest_api.cc
     rt_utest_api_test.cc
     rt_error_code_test.cc
@@ -507,7 +549,7 @@ add_executable(runtime_utest_api_910B
     rt_utest_atrace_log.cc
     rt_utest_api_context.cc
     rt_utest_stars_engine.cc
-    rt_utest_event_910b.cc
+    rt_utest_event_cloud_v2.cc
     rt_utest_FftsPlustTaskLaunch.cc
     rt_utest_stream.cc
     rt_utest_elf.cc
@@ -519,10 +561,13 @@ add_executable(runtime_utest_api_910B
     rt_utest_ipc_event.cc
     rt_utest_macro_value.cc
     rt_utest_dfx_api.cc
+    rt_utest_direct_hwts_engine.cc
     rt_utest_driver.cc
+    rt_utest_engine.cc
     rt_utest_context.cc
     rt_utest_api_dfx.cc
     rt_utest_kernel.cc
+    rt_utest_kernellaunch.cc
     rt_utest_osal.cc
     rt_utest_pctrace.cc
     rt_utest_printf.cc
@@ -530,19 +575,6 @@ add_executable(runtime_utest_api_910B
     rt_utest_profiler.cc
     rt_utest_api_others.cc
     rt_utest_api_910b.cc
-    rt_utest_ttlv.cc
-    rt_utest_api_event.cc
-    rt_utest_api_test_910b.cc
-    rt_utest_api_disable_thread.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../common/dev_info_manage_test.cc
-    rt_api_test_910b.cc
-    rt_utest_model.cc
-    rt_utest_program.cc
-    rt_utest_binary_loader.cc
-    rt_utest_device_910b.cc
-    rt_utest_notify.cc
-    rt_utest_context_910b.cc
-    rt_utest_stream_910b.cc
 )
 
 target_compile_definitions(runtime_utest_api_910B PUBLIC

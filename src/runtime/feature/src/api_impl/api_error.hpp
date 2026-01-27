@@ -175,9 +175,9 @@ public:
     rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in) override;
     rtError_t HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr) override;
     rtError_t HostRegisterV2(void *ptr, uint64_t size, uint32_t flag) override;
-    rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) override;
     rtError_t HostUnregister(void *ptr) override;
     rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) override;
+    rtError_t HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag) override;
     rtError_t ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t ManagedMemFree(const void * const ptr) override;
@@ -255,6 +255,7 @@ public:
     rtError_t MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t *cfg) override;
     rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle) override;
     rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) override;
+    rtError_t MemGetAddressRange(void *ptr, void **pbase, size_t *psize) override;
     // new memory api
     rtError_t DevMalloc(void ** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise, const rtMallocConfig_t * const cfg) override;
     rtError_t MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) override;
@@ -333,8 +334,9 @@ public:
     rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId) override;
     rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t * const userDevId) override;
     rtError_t DeviceResourceClean(const int32_t devId) override;
-    rtError_t SetXpuDevice(rtXpuDevType devType, const uint32_t devId) override;
-    rtError_t ResetXpuDevice(rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) override;
     rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) override;
 
     // context
@@ -637,6 +639,7 @@ public:
     rtError_t ShmemSetPodPid(const char *name, uint32_t sdid, int32_t pid[], int32_t num) override;
     rtError_t DevVA2PA(uint64_t devAddr, uint64_t len, Stream *stm, bool isAsync) override;
     rtError_t StreamClear(Stream * const stm, rtClearStep_t step) override;
+    rtError_t StreamStop(Stream * const stm) override;
     rtError_t StreamAbort(Stream * const stm) override;
     rtError_t DebugSetDumpMode(const uint64_t mode) override;
     rtError_t DebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo) override;
@@ -673,6 +676,9 @@ public:
     // event mode
     rtError_t EventWorkModeSet(uint8_t mode) override;
     rtError_t EventWorkModeGet(uint8_t *mode) override;
+
+    rtError_t BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData) override;
+    rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle) override;
 private:
     rtError_t CheckArgs(const rtArgsEx_t * const argsInfo) const;
     rtError_t CheckCfg(const rtTaskCfgInfo_t * const cfgInfo) const;
@@ -683,8 +689,6 @@ private:
         const uint64_t srcPitch, const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind) const;
     rtMemcpyKind_t GetMemCpyKind(const rtMemcpyKind_t kind, const rtMemcpyKind newKind) const;
     rtError_t MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, const Stream * const stm) const;
-    rtError_t MemcpyAsyncCheckKindAndLocation(rtMemcpyKind_t *kind, rtMemLocationType srcRealLocation, 
-        rtMemLocationType dstRealLocation) const;
     rtError_t MemcpyKindAutoUpdate(const rtMemLocationType srcType, const rtMemLocationType dstType,
         rtMemcpyKind_t *kind) const;
     rtError_t MemcpyAsyncCheckAddrCfg(const uint64_t destMax, const uint64_t cnt,

@@ -32,8 +32,8 @@ struct rtKernelArray_t final {
 };
 
 struct TilingInfoExt {
-    uint32_t shareMemSize; // for starsv2 tiling key
-    bool simtFlag; // for starsv2 tiling key
+    uint32_t shareMemSize; // for david tiling key
+    bool simtFlag; // for david tiling key
 };
 
 struct TilingTabl final {
@@ -44,7 +44,7 @@ struct TilingTabl final {
     std::array<uint8_t, 3> rsv; // 3 bytes are reserved
 };
 
-struct TilingTablForStarsV2 final {
+struct TilingTablForDavid final {
     uint64_t tilingKey;
     std::array<uint64_t, 2> pcInfo; // the number of functions is 2
     uint32_t taskRation;
@@ -191,6 +191,16 @@ public:
         return baseAddr_[deviceId];
     }
 
+    void SetBinHandle(void *hanlde)
+    {
+        binHandle_ = hanlde;
+    }
+
+    void *GetBinHandle() const
+    {
+        return binHandle_;
+    }
+
     bool GetSupportMix() const
     {
         return isSupportMix_;
@@ -258,6 +268,7 @@ public:
     rtError_t Register(const void *data, const uint64_t length, const bool isLoadFromFile = false);
     // register only cpu kernel by json
     rtError_t RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInfos);
+    rtError_t XpuRegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInfos);
     // register only cpu kernel by single cpu info
     rtError_t RegisterSingleCpuKernel(const char *const funcName, const char *const kernelName,
         Kernel **kernelHandle);
@@ -296,10 +307,10 @@ public:
 
     rtError_t BuildTilingTbl(const Module *mdl, TilingTabl **tilingTab, uint32_t *kernelLen);
     rtError_t BuildTilingTblForNewFlow(TilingTabl **tilingTab, uint32_t *kernelLen);
-    rtError_t BuildTilingTblForStarsV2(const Module *mdl, TilingTablForStarsV2 **tilingTab, uint32_t *kernelLen);
-    rtError_t StarsV2BuildTilingTblForNewFlow(TilingTablForStarsV2 **tilingTab, uint32_t *kernelLen);
+    rtError_t BuildTilingTblForDavid(const Module *mdl, TilingTablForDavid **tilingTab, uint32_t *kernelLen);
+    rtError_t DavidBuildTilingTblForNewFlow(TilingTablForDavid **tilingTab, uint32_t *kernelLen);
     void DestroyTilingTbl(TilingTabl *tilingTab) const;
-    void DestroyTilingTblForStarsV2(TilingTablForStarsV2 *tilingTab) const;
+    void DestroyTilingTblForDavid(TilingTablForDavid *tilingTab) const;
     rtError_t CheckLoaded2Device();
     rtError_t Load2Device();
     virtual rtError_t ParserBinary()
@@ -330,6 +341,9 @@ public:
     std::string kernelNames_;
     std::mutex devValidMutex_[RT_MAX_DEV_NUM];
     Device *devicePtr_[RT_MAX_DEV_NUM] = {nullptr};
+    rtOpExceptionCallback opExceptionCallback_{nullptr};
+    void *opExceptionCallbackUserData_{nullptr};
+
 private:
     uint32_t progId_;
     uint32_t progType_;
@@ -342,6 +356,7 @@ private:
     SpinLock kernelMapLock_;
     void *baseAddr_[RT_MAX_DEV_NUM] = {nullptr};
     void *baseAddrAlign_[RT_MAX_DEV_NUM] = {nullptr};
+	void *binHandle_{nullptr};
     std::map<std::string, Kernel *> kernelNameMap_;
     uint64_t stackSize_{0ULL};        // 算子的栈大小，32k/16k
     SpinLock load2DeviceLock_;

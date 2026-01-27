@@ -12,7 +12,7 @@
 #define CCE_RUNTIME_MEMCPY_SQE_COMMON_H
 
 #include <cstdint>
-#include "starsv2_base.hpp"
+#include "task_info_base.hpp"
 
 namespace cce {
 namespace runtime {
@@ -147,9 +147,9 @@ struct CmoStride10 {
     uint32_t reserved[3];
 };
 
-struct RtStarsV2AsyncDmaSqe {
+struct RtDavidStarsAsyncDmaSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint16_t mode : 1;
@@ -175,9 +175,9 @@ struct RtStarsV2AsyncDmaSqe {
     uint32_t res7[10];
 };
 
-struct RtStarsV2PcieDmaSqe {
+struct RtDavidStarsPcieDmaSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint32_t res1;
@@ -213,9 +213,9 @@ struct RtStarsV2PcieDmaSqe {
     uint32_t res6;
 };
 
-struct RtStarsV2MemcpyPtrSqe {
+struct RtDavidStarsMemcpyPtrSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint32_t res1;

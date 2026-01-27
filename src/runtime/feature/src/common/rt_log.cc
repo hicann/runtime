@@ -11,7 +11,7 @@
 #include "rt_log.h"
 #include "dlog_pub.h"
 #include "securec.h"
-#if (!defined(CFG_DEV_PLATFORM_PC))
+#if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
 #include "error_manager.h"
 #endif
 #include "mmpa/mmpa_api.h"
@@ -23,7 +23,7 @@ void RecordErrorLog(const char *file, const int32_t line, const char *fun, const
         return;
     }
     char buf[RT_MAX_LOG_BUF_SIZE] = {0};
-#if (!defined(CFG_DEV_PLATFORM_PC))
+#if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
     std::string err = ErrorManager::GetInstance().GetLogHeader();
 #else
     std::string err = " ";
@@ -58,7 +58,7 @@ void RecordLog(int32_t level, const char *file, const int32_t line, const char *
 
 void ReportErrMsg(std::string errorCode, const std::vector<char> &valueString)
 {
-#if (!defined(CFG_DEV_PLATFORM_PC))
+#if (!defined(WIN32)) && (!defined(CFG_DEV_PLATFORM_PC))
     const std::string valueStr(valueString.data());
     ErrorManager::GetInstance().ATCReportErrMessage((errorCode), std::vector<std::string>({"extend_info"}),
         std::vector<std::string>({valueStr}));
@@ -191,6 +191,5 @@ void ProcessErrorCodeImpl(ErrorCode errCode, const char *file, const int32_t lin
 {
     PrintErrMsgToLog(errCode, file, line, func, values);
 }
-
 }  // namespace runtime
 }  // namespace cce

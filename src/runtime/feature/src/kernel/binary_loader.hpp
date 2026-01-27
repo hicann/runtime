@@ -20,6 +20,11 @@ public:
     BinaryLoader(const char_t * const binPath, const rtLoadBinaryConfig_t * const optionalCfg);
     BinaryLoader(const void * const data, const uint64_t length, const rtLoadBinaryConfig_t * const optionalCfg);
     rtError_t Load(Program **prog);
+    rtError_t XpuLoad(Program **prog) const;
+    std::string GetBinPath() const
+    {
+        return binPath_;
+    }
 private:
     ElfProgram* LoadProgram();
     ElfProgram* LoadFromFile();

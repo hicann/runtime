@@ -698,6 +698,7 @@ struct MemPoolUsedStatus {
 
 typedef struct {
     unsigned int poolId;
+    unsigned int pool_depth;
     unsigned long long dataPoolBaseAddr;
     unsigned int dataPoolBlkSize;
     unsigned int dataPoolBlkObjSize;
@@ -915,7 +916,7 @@ enum drvRegisterTpye {
     HOST_MEM_MAP_DEV_PCIE_TH,   /* HOST_MEM map to device, accessed by pcie_through */
     DEV_MEM_MAP_HOST,           /* DEV_MEM map to host */
     HOST_MEM_MAP_DMA,           /* Host va preprocess into dma addr to improve memcpy performance */
-    HOST_IO_MAP_DEV,            /* HOST_IO map to device */
+    HOST_IO_MAP_DEV,           /* HOST_IO map to device */
     HOST_REGISTER_MAX_TPYE
 };
 
@@ -1379,6 +1380,8 @@ typedef enum tagDrvSqCqPropType {
     DRV_SQCQ_PROP_CQ_DEPTH,
     DRV_SQCQ_PROP_SQE_SIZE,
     DRV_SQCQ_PROP_CQE_SIZE,
+    DRV_SQCQ_PROP_H2D_ASYNC_JETTY_INFO,
+    DRV_SQCQ_PROP_D2D_ASYNC_JETTY_INFO,
     DRV_SQCQ_PROP_MAX
 } drvSqCqPropType_t;
 
@@ -1465,6 +1468,13 @@ struct drvShrIdInfo {
     uint32_t rsv[2];
 };
 
+#define HAL_TSEG_INFO_RSV_LEN 16
+struct halTsegInfo {
+    uint32_t tseg_local_flag; /* 0 for remote tseg, 1 for local tseg*/
+    void *tseg_ptr; /* target segment addr */
+    unsigned int rsv[HAL_TSEG_INFO_RSV_LEN];
+};
+
 struct halSqTaskArgsInfo {
     drvSqCqType_t type;
     uint32_t tsId;
@@ -1472,20 +1482,36 @@ struct halSqTaskArgsInfo {
     uint32_t size;
     unsigned long long src; /* current process svm va addr */
     unsigned long long dst; /* cp process svm va addr */
-    uint32_t rsv[SQCQ_RESV_LENGTH];
+    struct halTsegInfo *srcTsegInfo; /* src struct halTsegInfo */
+    struct halTsegInfo *dstTsegInfo; /* dst struct halTsegInfo */
+    uint32_t rsv[SQCQ_RESV_LENGTH - 4];
 };
 
+enum drv_async_dma_type {
+    DRV_ASYNC_DMA_TYPE_NORMAL = 0U,
+    DRV_ASYNC_DMA_TYPE_SQE_UPDATE,
+    DRV_ASYNC_DMA_TYPE_MAX
+};
+
+struct drv_sqe_update_info {
+    uint32_t sq_id;
+    uint32_t sqe_pos;
+};
+
+#define ASYNC_RSV_LENGTH 8
 struct halAsyncDmaInputPara {
     drvSqCqType_t type;
     uint32_t tsId;          /* default is 0 */
     uint32_t sqId;
     uint32_t dir;           /* copy direction */
     uint32_t len;           /* copy length */
+    enum drv_async_dma_type async_dma_type;
     uint8_t *src;           /* source address */
     union {
-        uint8_t *dst;       /* destination address */
-        uint32_t sqe_pos;   /* sqe position, valid in PCIE connection */
+        uint8_t *dst;       /* destination address, when async_dma_type is DRV_ASYNC_DMA_TYPE_NORMAL */
+        struct drv_sqe_update_info info;   /* when async_dma_type is DRV_ASYNC_DMA_TYPE_SQE_UPDATE */
     };
+    uint32_t rsv[ASYNC_RSV_LENGTH];
 };
 
 struct halAsyncDmaOutputPara {
@@ -1499,6 +1525,7 @@ struct halAsyncDmaOutputPara {
         };
         struct DMA_ADDR dma_addr;
     };
+    uint32_t rsv[ASYNC_RSV_LENGTH];
 };
 
  struct halAsyncDmaDestoryPara {
@@ -1512,6 +1539,7 @@ struct halAsyncDmaOutputPara {
         };
         struct DMA_ADDR *dma_addr;
     };
+    uint32_t rsv[ASYNC_RSV_LENGTH];
 };
 
 struct halTaskSendInfo {
@@ -1594,6 +1622,8 @@ typedef enum tagDrvFeature {
     FEATURE_SVM_VMM_NORMAL_GRANULARITY = 6, /* host PAGE_SIZE alloc granularity */
     FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION = 7,
     FEATURE_SVM_MEM_HOST_UVA = 8,
+    FEATURE_DMS_GET_QOS_MASTER_CONFIG = 9,
+    FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID = 10,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

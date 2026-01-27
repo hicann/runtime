@@ -8,17 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <set>
-#include <thread>
-#include "mmpa_api.h"
 #include "log/adx_log.h"
 #include "path.h"
 #include "dump_manager.h"
 #include "sys_utils.h"
 #include "dump_args.h"
 #include "exception_info_common.h"
-#include "dump_tensor_plugin.h"
-#include "dump_core.h"
-#include "dump_memory.h"
 #include "kernel_info_collector.h"
 #include "exception_dumper.h"
 
@@ -27,7 +22,6 @@ namespace {
 constexpr char DEFAULT_DUMP_PATH[] = "./";
 constexpr char EXTRA_DUMP_PATH[] = "/extra-info/data-dump/";
 constexpr size_t MAX_DUMP_OP_NUM = (2048U * 2048U) / 20U;
-constexpr uint32_t TIMEOUT_THRESHOLD = 500U;
 }  // namespace
 
 // AdumpGetDFXInfoAddr chunk
@@ -82,12 +76,13 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
         IDE_CTRL_VALUE_WARN(status || argsExceptionStatus_, return ADUMP_SUCCESS, "dump type %d not start.", dumpType);
         IDE_CTRL_VALUE_FAILED(InitArgsExceptionMemory(), return ADUMP_FAILED, "Init args exception memory failed.");
         if (status && !argsExceptionStatus_) {
-            IDE_CTRL_VALUE_WARN(DumpTensorPlugin::Instance().InitPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED,
-                "Unable to initialize plugin function.");
+            IDE_CTRL_VALUE_WARN(LoadTensorPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED,
+                "Load tersor custom plugin failed.");
         }
         argsExceptionStatus_ = status;
     } else {
-        if (status == false) {  // detail exception dump can not off
+        // detail exception dump can not off
+        if (status == false) {
             static bool havePrint = false;
             if (!havePrint) {
                 IDE_RUN_LOGI("Can not turn off detail exception dump.");
@@ -100,17 +95,45 @@ int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig
         coredumpStatus_ = true;
     }
 
-    dumpPath_ = dumpConfig.dumpPath.empty() ? DEFAULT_DUMP_PATH : dumpConfig.dumpPath;
+    SetDumpPath(dumpConfig.dumpPath);
+    return ADUMP_SUCCESS;
+}
+
+int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
+{
+    IDE_CTRL_VALUE_FAILED(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
+    std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
+    if (dumpPath.empty()) {
+        return ADUMP_FAILED;
+    }
+
+    if (coredumpStatus_) {
+        return DumpDetailException(exception, dumpPath);
+    } else if (exceptionStatus_) {
+        return DumpNormalException(exception, dumpPath);
+    } else if (argsExceptionStatus_) {
+        return DumpArgsException(exception, dumpPath);
+    } else {
+        IDE_LOGW("Not enable exception dump.");
+        return ADUMP_FAILED;
+    }
     return ADUMP_SUCCESS;
 }
 
 void ExceptionDumper::SetDumpPath(const std::string &dumpPath)
 {
-    dumpPath_ = dumpPath;
+    dumpPath_ = dumpPath.empty() ? DEFAULT_DUMP_PATH : dumpPath;
     IDE_LOGI("Update exception dump path: %s", dumpPath_.c_str());
 }
 
-void ExceptionDumper::AddDumpOperator(const OperatorInfoV2 &opInfo)
+void ExceptionDumper::AddDumpOperator(const OperatorInfo &opInfo)
+{
+    OperatorInfoV2 dumpOperator = {};
+    DumpManager::Instance().ConvertOperatorInfo(opInfo, dumpOperator);
+    AddDumpOperatorV2(dumpOperator);
+}
+
+void ExceptionDumper::AddDumpOperatorV2(const OperatorInfoV2 &opInfo)
 {
     const std::lock_guard<std::mutex> lock(mutex_);
     if (opInfo.agingFlag) {
@@ -138,123 +161,31 @@ int32_t ExceptionDumper::DelDumpOperator(uint32_t deviceId, uint32_t streamId)
     return ADUMP_SUCCESS;
 }
 
-int32_t ExceptionDumper::DumpException(const rtExceptionInfo &exception)
+std::string ExceptionDumper::CreateDumpPath(Path &dumpPath) const
 {
-    IDE_CTRL_VALUE_FAILED(!destructionFlag_, return ADUMP_FAILED, "ExceptionDumper has been destructed.");
-    std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
-    if (dumpPath.empty()) {
-        return ADUMP_FAILED;
-    }
-
-    if (coredumpStatus_) {
-        if (coredumpEnableComplete_) {
-            std::lock_guard<std::mutex> lock(mutex_);
-            DumpCore core(dumpPath, exception.deviceid);
-            if (core.DumpCoreFile(exception) != ADUMP_SUCCESS) {
-                return ADUMP_FAILED;
-            }
-            Exit();
-        } else {
-            IDE_CTRL_VALUE_WARN(DumpTensorPlugin::Instance().InitPluginLib() == ADUMP_SUCCESS, return ADUMP_FAILED,
-                "Unable to initialize plugin function.");
-            return DumpArgsException(exception, dumpPath);
-        }
-    } else if (exceptionStatus_) {
-        DumpOperator excOp;
-        bool find = FindExceptionOperator(exception, excOp);
-        if (!find) {
-            return ADUMP_SUCCESS;
-        }
-
-        rtExceptionArgsInfo_t exceptionArgsInfo{};
-        rtExceptionExpandType_t exceptionTaskType = exception.expandInfo.type;
-        if (ExceptionInfoCommon::GetExceptionInfo(exception, exceptionTaskType, exceptionArgsInfo) != ADUMP_SUCCESS) {
-            IDE_LOGE("Get exception args info failed.");
-            return ADUMP_FAILED;
-        }
-        (void)excOp.RefreshAddrs(exceptionArgsInfo);
-        (void)excOp.LogExceptionInfo(exceptionArgsInfo);
-        KernelInfoCollector::DumpKernelErrorSymbols(exception);
-        (void)excOp.CopyOpKernelFile();
-
-        const int32_t ret = excOp.DumpException(exception.deviceid, dumpPath);
-        if (ret != ADUMP_SUCCESS) {
-            return ADUMP_FAILED;
-        }
-    } else if (argsExceptionStatus_) {
-        return DumpArgsException(exception, dumpPath);
-    } else {
-        IDE_LOGW("Not enable exception dump.");
-        return ADUMP_FAILED;
-    }
-    return ADUMP_SUCCESS;
-}
-
-int32_t ExceptionDumper::DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const
-{
-    void *exceptionCopy = DumpMemory::CopyHostToHost(&exception, sizeof(rtExceptionInfo));
-    if (exceptionCopy == nullptr) {
-        IDE_LOGE("Copy rtExceptionInfo failed.");
-        return ADUMP_FAILED;
-    }
-    std::thread([this, exceptionCopy]()
-    {
-        DumpArgs args;
-        rtExceptionInfo* exceptionPtr = static_cast<rtExceptionInfo*>(exceptionCopy);
-        rtError_t ret = rtSetDevice(exceptionPtr->deviceid);
-        if (ret != ADUMP_SUCCESS) {
-            IDE_LOGE("Execute rtSetDevice on device %u failed with result %d", exceptionPtr->deviceid, ret);
-        }
-        if (args.LoadArgsExceptionInfo(*exceptionPtr) != ADUMP_SUCCESS) {
-            IDE_LOGE("Fast recovery LoadArgsExceptionInfo failed.");
-        }
-        void* exceptionFree = static_cast<void*>(exceptionPtr);
-        DumpMemory::FreeHost(exceptionFree);
-    }).detach();
-    return ADUMP_SUCCESS;
-}
-
-int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath) const
-{
-    uint32_t timeout = 0;
-    rtError_t ret = rtGetOpExecuteTimeoutV2(&timeout);
-    if (ret != ACL_RT_SUCCESS) {
-        IDE_LOGE("Get operator timeout failed, ret: %d", ret);
-    } else {
-        IDE_LOGI("Get operator timeout %ums", timeout);
-        if (timeout < TIMEOUT_THRESHOLD) {
-            IDE_LOGE("Operator timeout %ums, enable fast recovery, not dump data to file.", timeout);
-            ret = DumpArgsExceptionFastRecovery(exception);
-            return ADUMP_SUCCESS;
-        }
-    }
-
-    KernelInfoCollector::DumpKernelErrorSymbols(exception);
-    DumpArgs args;
-    if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {
-        return ADUMP_FAILED;
-    }
-    if (args.DumpArgsExceptionInfo(exception.deviceid, dumpPath) != ADUMP_SUCCESS) {
-        return ADUMP_FAILED;
-    }
-    return ADUMP_SUCCESS;
+    IDE_CTRL_VALUE_FAILED(dumpPath.CreateDirectory(true), return "", "Create path[%s] failed",
+        dumpPath.GetCString());
+    IDE_CTRL_VALUE_FAILED(dumpPath.RealPath(), return "", "Get RealPath of [%s] failed, strerr=%s",
+        dumpPath.GetCString(), strerror(errno));
+    return dumpPath.GetString();
 }
 
 std::string ExceptionDumper::CreateDeviceDumpPath(uint32_t deviceId) const
 {
-    if (dumpPath_.empty()) {
-        return DEFAULT_DUMP_PATH;
-    }
+    // Create device dump path when exception call-backed
+    std::string dumpPath = dumpPath_.empty() ? DEFAULT_DUMP_PATH : dumpPath_;
+    Path deviceDumpPath(dumpPath);
+    deviceDumpPath.Append(EXTRA_DUMP_PATH).Append(std::to_string(deviceId));
+    return CreateDumpPath(deviceDumpPath);
+}
 
-    Path userDefinedDumpPath(dumpPath_);
-    userDefinedDumpPath.Append(EXTRA_DUMP_PATH).Append(std::to_string(deviceId));
-    if (!userDefinedDumpPath.CreateDirectory(true)) {
-        IDE_LOGE("Create directory for exception dump failed, dir: %s", userDefinedDumpPath.GetCString());
-        return "";
-    }
-    IDE_CTRL_VALUE_FAILED(userDefinedDumpPath.RealPath(), return "", "Get path: %s realpath failed, strerr=%s",
-        userDefinedDumpPath.GetCString(), strerror(errno));
-    return userDefinedDumpPath.GetString();
+std::string ExceptionDumper::CreateExtraDumpPath() const
+{
+    // Create extra dump path for tensor custom dump data
+    std::string dumpPath = dumpPath_.empty() ? DEFAULT_DUMP_PATH : dumpPath_;
+    Path extraDumpPath(dumpPath);
+    extraDumpPath.Append(EXTRA_DUMP_PATH);
+    return CreateDumpPath(extraDumpPath);
 }
 
 bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp)
@@ -294,6 +225,48 @@ bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, Du
 
     IDE_LOGW("Not find dump operator, target: %s", excOpIdentiy.GetString().c_str());
     return false;
+}
+
+int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath)
+{
+    // L1 Exception Dump
+    DumpOperator excOp;
+    bool find = FindExceptionOperator(exception, excOp);
+    if (!find) {
+        return ADUMP_SUCCESS;
+    }
+
+    rtExceptionArgsInfo_t exceptionArgsInfo{};
+    rtExceptionExpandType_t exceptionTaskType = exception.expandInfo.type;
+    if (ExceptionInfoCommon::GetExceptionInfo(exception, exceptionTaskType, exceptionArgsInfo) != ADUMP_SUCCESS) {
+        IDE_LOGE("Get exception args info failed.");
+        return ADUMP_FAILED;
+    }
+    (void)excOp.RefreshAddrs(exceptionArgsInfo);
+    (void)excOp.LogExceptionInfo(exceptionArgsInfo);
+    KernelInfoCollector::DumpKernelErrorSymbols(exception);
+    (void)excOp.CopyOpKernelFile();
+
+    const int32_t ret = excOp.DumpException(exception.deviceid, dumpPath);
+    if (ret != ADUMP_SUCCESS) {
+        return ADUMP_FAILED;
+    }
+    return ADUMP_SUCCESS;
+}
+
+int32_t ExceptionDumper::DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath) const
+{
+    // L0 Exception Dump
+    DumpArgs args;
+    if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {
+        return ADUMP_FAILED;
+    }
+
+    KernelInfoCollector::DumpKernelErrorSymbols(exception);
+    if (args.DumpArgsExceptionInfo(exception.deviceid, dumpPath) != ADUMP_SUCCESS) {
+        return ADUMP_FAILED;
+    }
+    return ADUMP_SUCCESS;
 }
 
 void ExceptionDumper::ExceptionModeDowngrade()

@@ -102,9 +102,9 @@ int main()
     void *otherDeviceAddr = nullptr;
     void *outDeviceAddr = nullptr;
     aclTensor *self = nullptr;
+    aclTensor *out = nullptr;
     aclTensor *other = nullptr;
     aclScalar *alpha = nullptr;
-    aclTensor *out = nullptr;
     std::vector<float> selfHostData = {0, 1, 2, 3, 4, 5, 6, 7};
     std::vector<float> outHostData = {0, 0, 0, 0, 0, 0, 0, 0};
     std::vector<float> otherHostData = {1, 1, 1, 2, 2, 2, 3, 3};
@@ -117,11 +117,12 @@ int main()
     // Create alpha aclScalar.
     alpha = aclCreateScalar(&alphaValue, aclDataType::ACL_FLOAT);
     if (alpha == nullptr) {
-        ERROR_LOG("Create alpha Scalar failed.");
+        ERROR_LOG("Create alpha Scalar failed ");
     }
     // Create out aclTensor.
     CHECK_ERROR(CreateAclTensor(outHostData, outShape, &outDeviceAddr, aclDataType::ACL_FLOAT, &out));
 
+    INFO_LOG("Get workspace size...");
     // 3. Call the CANN operator library API(Custom Implementation)
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
@@ -132,6 +133,7 @@ int main()
     if (workspaceSize > 0lu) {
         CHECK_ERROR(aclrtMalloc(&workspaceAddr, workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
     }
+    INFO_LOG("Begin to add...");
     // Call the Add operator
     CHECK_ERROR(aclnnAdd(workspaceAddr, workspaceSize, executor, stream));
 

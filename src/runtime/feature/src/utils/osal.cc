@@ -40,8 +40,10 @@ void *AlignedMalloc(const size_t aligned, const size_t size)
     UNUSED(aligned);
 #ifdef CFG_DEV_PLATFORM_PC
     return malloc(size);
-#else
+#elif !defined(WIN32)
     return aligned_alloc(aligned, size);
+#else
+    return malloc(size);
 #endif
 }
 
@@ -52,27 +54,54 @@ void AlignedFree(void * const addr)
 
 bool CompareAndExchange(volatile uint64_t * const addr, const uint64_t currentValue, const uint64_t val)
 {
+#ifndef WIN32
     return __sync_bool_compare_and_swap(addr, currentValue, val);
+#else
+    return currentValue == InterlockedCompareExchange64((volatile LONG64 *)addr, val, currentValue);
+#endif
 }
 
 bool CompareAndExchange(volatile uint32_t * const addr, const uint32_t currentValue, const uint32_t val)
 {
+#ifndef WIN32
     return __sync_bool_compare_and_swap(addr, currentValue, val);
+#else
+    return currentValue == InterlockedCompareExchange(addr, val, currentValue);
+#endif
 }
 
 void FetchAndOr(volatile uint64_t * const addr, const uint64_t val)
 {
+#ifndef WIN32
     (void)__sync_fetch_and_or(addr, val);
+#else
+    InterlockedOr(addr, val);
+#endif  // !WIN32
 }
 
 void FetchAndAnd(volatile uint64_t * const addr, const uint64_t val)
 {
+#ifndef WIN32
     (void)__sync_fetch_and_and(addr, val);
+#else
+    InterlockedAnd(addr, val);
+#endif  // !WIN32
 }
 
 uint64_t BitScan(const uint64_t val)
 {
+#ifndef WIN32
     return static_cast<uint64_t>(__builtin_ffsll(val) - 1);
+#else
+    DWORD bitIdx = 0;
+    // _BitScanForward64, If no set bit is found, 0 is returned; otherwise, 1 is returned.
+    uint8_t ret = _BitScanForward64(&bitIdx, val);
+    if (ret) {
+        return bitIdx;
+    } else {
+        return UINT64_MAX;
+    }
+#endif
 }
 
 class LocalThread : public Thread {
@@ -119,7 +148,11 @@ void *LocalThread::ThreadProc(void * const parameter)
 
     if (self->name_ != nullptr) {
         uint64_t threadHandle;
+#ifndef WIN32
         threadHandle = pthread_self();
+#else
+        threadHandle = mmGetTid();
+#endif
         if (mmSetThreadName(RtPtrToPtr<mmThread *>(&threadHandle), self->name_) != EN_OK) {
             RT_LOG_CALL_MSG(ERR_MODULE_SYSTEM, "mmSetThreadName failed, setname=%s!", self->name_);
         }
@@ -196,6 +229,19 @@ int32_t LocalThread::Start()
 
 bool LocalThread::IsAlive()
 {
+#ifdef WIN32
+    int32_t status = 0;
+    bool ret = GetExitCodeThread(interThread_, (LPDWORD)&status);
+    if (!ret) {
+        RT_LOG(RT_LOG_INFO, "GetExitCodeThread ret=%d, lastError=%d, status=%d", ret, GetLastError(), status);
+        return false;
+    }
+    if (status == STILL_ACTIVE) {
+        RT_LOG(RT_LOG_INFO, "GetExitCodeThread ret=%d, status=%d", ret, status);
+        return true;
+    }
+    return false;
+#endif
     return true;
 }
 
@@ -278,7 +324,11 @@ uint32_t PidTidFetcher::GetCurrentTid(void)
 uint64_t PidTidFetcher::GetCurrentUserTid(void)
 {
     uint64_t threadId;
+#ifndef WIN32
     threadId = pthread_self();
+#else
+    threadId = mmGetTid();
+#endif
     return threadId;
 }
 

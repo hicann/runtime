@@ -19,8 +19,13 @@
 extern "C" {
 #endif
 
+// If you need export the function of this library in Win32 dll, use __declspec(dllexport)
 #ifndef RTS_API
+#ifdef RTS_DLL_EXPORT
+#define RTS_API __declspec(dllexport)
+#else
 #define RTS_API
+#endif
 #endif
 
 typedef int32_t rtError_t;
@@ -355,6 +360,9 @@ typedef void (*rtTaskFailCallback)(rtExceptionInfo_t *exceptionInfo);
 typedef void (*rtDeviceStateCallback)(uint32_t devId, bool isOpen);
 
 typedef void (*rtStreamStateCallback)(rtStream_t stm, const bool isCreate);
+
+typedef void (*rtOpExceptionCallback)(rtExceptionInfo_t *exceptionInfo, void *userData);
+
 /**
  * @ingroup profiling_base
  * @brief dataType: rtProfCtrlType_t
@@ -597,9 +605,9 @@ RTS_API rtError_t rtSetExceptCallback(rtErrorCallback callback);
 
 /**
  * @ingroup profiling_base
- * @brief get binary device base addr, called by profiling
+ * @brief get binary device base address, called by profiling
  * @param [in]  handle  program handle
- * @param [out] deviceBase   device base addr
+ * @param [out] deviceBase   device base address
  * @return RT_ERROR_NONE for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */

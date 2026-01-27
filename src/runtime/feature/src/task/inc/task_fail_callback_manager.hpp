@@ -21,6 +21,9 @@ void TaskFailCallBackNotify(rtExceptionInfo_t *const exceptionInfo);
 rtError_t TaskFailCallBackReg(const char_t *regName, void *callback, void *args,
     TaskFailCallbackType type);
 
+void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo);
+rtError_t OpTaskFailCallbackReg(Program *binHandle, void *callback, void *userData);
+
 }
 }
 

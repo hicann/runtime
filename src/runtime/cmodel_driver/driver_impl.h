@@ -16,6 +16,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#ifdef DAVINCI_LHISI
+const uint32_t MAX_EVENT_NUM = 512;
+const uint32_t MAX_STREAM_NUM = 64;
+#else
 /*
  * @ingroup driver-stub
  * @brief Pilling there are 1024 events served each device.
@@ -27,8 +31,13 @@ extern "C" {
  * @brief Pilling there are 1024 streams served each device.
  */
 #define MAX_STREAM_NUM (1024)
+#endif
 
+#ifdef DAVINCI_CLOUD
+#define MAX_TASK_NUM (60000)
+#else
 #define MAX_TASK_NUM (32760)
+#endif
 
 #define MAX_SQCQ_NUM (1024)
 

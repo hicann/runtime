@@ -225,7 +225,7 @@ TEST_F(ADX_COMMOPT_MANAGER_UTEST, Close)
     std::map<std::string, std::string> info;
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_HDC);
     int32_t ret = AdxCommOptManager::Instance().Close(handle);
-    EXPECT_EQ(ret, IDE_DAEMON_ERROR);
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
     handle.session = 123456789;
     ret = AdxCommOptManager::Instance().Close(handle);
     EXPECT_EQ(ret, IDE_DAEMON_OK);

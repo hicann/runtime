@@ -7,18 +7,19 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
-#include "adx_dump_hdc_helper.h"
 #include "ascend_hal.h"
 #include "protocol/adx_msg_proto.h"
 #include "adx_datadump_callback.h"
 #include "log/adx_log.h"
 #include "memory_utils.h"
 #include "hdc_api.h"
+#include "adcore_api.h"
 #include "string_utils.h"
 #include "create_func.h"
 #include "sys_utils.h"
 #include "config.h"
+#include "adx_dump_hdc_helper.h"
+
 namespace Adx {
 AdxDumpHdcHelper::AdxDumpHdcHelper() : init_(false)
 {
@@ -137,14 +138,28 @@ IdeErrorT AdxDumpHdcHelper::DataProcess(const IDE_SESSION &session, const IdeDum
     CommHandle handle;
     handle.type = client_.type;
     handle.session = reinterpret_cast<OptHandle>(session);
+    IdeErrorT code = SessionIsConnected(handle);
+    IDE_CTRL_VALUE_FAILED(code == IDE_DAEMON_NONE_ERROR,
+        return code, "check session status failed, err=%d", static_cast<int32_t>(code));
     uint32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
         sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
     IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_WRITE_ERROR, "write dump file error");
-    IdeErrorT code = AdxMsgProto::RecvResponse(handle);
+    code = AdxMsgProto::RecvResponse(handle);
     IDE_CTRL_VALUE_FAILED((code == IDE_DAEMON_NONE_ERROR) || (code == IDE_DAEMON_DUMP_QUEUE_FULL),
         return code, "send file shake response failed, ret=%d", static_cast<int32_t>(code));
     IDE_LOGD("dump data process normal");
     return code;
+}
+
+IdeErrorT AdxDumpHdcHelper::SessionIsConnected(const CommHandle handle) const
+{
+    int32_t status = 0;
+    int32_t ret = AdxGetAttrByCommHandle(&handle, HDC_SESSION_ATTR_STATUS, &status);
+    if (ret != IDE_DAEMON_OK || status != HDC_SESSION_STATUS_CONNECT) {
+        IDE_LOGE("session is not connected, ret: %d, status: %d", ret, status);
+        return IDE_DAEMON_HDC_CHANNEL_ERROR;
+    }
+    return IDE_DAEMON_NONE_ERROR;
 }
 
 IdeErrorT AdxDumpHdcHelper::Finish(IDE_SESSION &session)

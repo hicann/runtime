@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include "driver/ascend_hal.h"
 #include "npu_driver_base.hpp"
+#include "device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -65,7 +66,7 @@ public:
 
     // Unegister host memory.
     rtError_t HostUnregister(void *ptr,  const uint32_t deviceId) override;
-
+    
     // Query host memory mapping capabilities.
     rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) override;
 
@@ -227,7 +228,7 @@ public:
         uint32_t &realCnt) override;
 
     rtError_t CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInfo &input, AsyncDmaWqeOutputInfo *output,
-                                bool isUbMode = true) override;
+                                bool isUbMode, bool isSqeUpdate) override;
     rtError_t DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestroyInfo *destroyPara,
                                 bool isUbMode = true) override;
 
@@ -299,8 +300,7 @@ public:
                          const int32_t infoType, int64_t * const val) override;
 
     rtError_t GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, uint64_t &addr) override;
-    rtError_t GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version,
-        uint32_t &isSupportHcomcpu) override;
+    rtError_t GetTsfwVersion(const uint32_t deviceId, const uint32_t tsId, uint32_t &version) override;
 
     // get phy device info
     rtError_t GetPhyDevInfo(const uint32_t phyId, const int32_t moduleType,
@@ -509,6 +509,7 @@ public:
     static rtError_t MemQueueDeQueueBuff(const int32_t devId, const uint32_t qid,
                                          const rtMemQueueBuff_t * const outBuf, const int32_t timeout);
     static rtError_t MemQueueQueryInfo(const int32_t devId, const uint32_t qid, rtMemQueueInfo_t * const queInfo);
+    static rtError_t MemQueueQueryInfoV2(const int32_t devId, const uint32_t qid, QueueInfo *memQueInfo);
     static rtError_t MemQueueQuery(const int32_t devId, const rtMemQueueQueryCmd_t cmd,
                                    const void * const inBuff, const uint32_t inLen,
                                    void * const outBuff, const uint32_t * const outLen);
@@ -590,6 +591,7 @@ public:
     static rtError_t FreePhysical(rtDrvMemHandle handle);
     static rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle);
     static rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
+    static rtError_t MemGetAddressRange(void *ptr, void **pbase, size_t *psize);
     static rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags);
     static rtError_t UnmapMem(void* devPtr);
     static rtError_t MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count);
@@ -659,6 +661,14 @@ public:
 
     static rtError_t SqBackup(const uint32_t deviceId, uint32_t *sqIdGroup, const size_t sqIdCnt);
     static rtError_t SqRestore(const uint32_t deviceId, uint32_t *sqIdGroup, const size_t sqIdCnt);
+
+    rtError_t GetCentreNotify(int32_t index, int32_t *value) override;
+    virtual rtError_t GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+        struct halTsegInfo *tsegInfo) override;
+    virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) override;
+    static rtError_t GetAicoreQosCfg(Device *dev);
+    rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                             int64_t &chipId, int64_t &dieId) override;
 private:
     rtError_t ManagedMemAllocInner(void **const dptr, const uint64_t size, const ManagedMemFlag flag,
         const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME);
@@ -681,10 +691,11 @@ private:
     rtError_t CreateIpcNotifyWithFlag(char_t * const name, const uint32_t len, const int32_t devId,
         uint32_t * const notifyId, const uint32_t tsId, const uint32_t notifyFlag) const;
 
-    rtError_t GetSqRegVirtualAddrBySqidForStarsV2(const int32_t deviceId, const uint32_t tsId,
+    rtError_t GetSqRegVirtualAddrBySqidForDavid(const int32_t deviceId, const uint32_t tsId,
         const uint32_t sqId, uint64_t * const addr) const;
-    
-    std::unordered_set<RtOptionalFeatureType> featureSet_;
+    static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg);
+
+    std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
     DevProperties properties_;
     rtChipType_t chipType_ = CHIP_END;
     uint32_t runMode_ = static_cast<uint32_t>(RT_RUN_MODE_RESERVED);

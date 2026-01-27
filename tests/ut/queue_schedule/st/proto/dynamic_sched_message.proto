@@ -1,0 +1,42 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+syntax = "proto3";
+package dynamic;
+
+message QueueAttrs {
+  uint32 queue_id = 1;
+  int32 device_type = 2; // CPU NPU
+  int32 device_id = 3;
+  uint32 logic_id = 4; // 动态请求全局id
+}
+
+message QueueInfo {
+    QueueAttrs queue_attrs = 1;
+    uint32 logic_group_id = 2;
+    uint32 model_uuid = 3;
+    int32 trans_id_old = 4;
+    int32 route_label_old = 5;
+    uint32 choose_logic_id = 6;
+    uint32 root_model_id = 7;
+    bool need_cache = 8;
+    uint64 trans_id = 9;
+    uint32 route_label = 10;
+}
+
+message FlowgwRequest {
+    int32 node_id = 1;
+    int32 input_index = 2;
+    repeated QueueInfo queue_infos = 3;
+}
+
+message FlowgwResponse {
+    repeated QueueInfo queue_infos = 1;
+}
+

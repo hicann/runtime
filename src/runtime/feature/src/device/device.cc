@@ -179,7 +179,7 @@ rtError_t GroupDevice::SetGroup(const int32_t grpId)
     const int32_t maxGroupId = GetDevProperties().maxGroupId;
     if ((grpId < MIN_GROUP_ID) || (grpId > maxGroupId)) {
         RT_LOG_OUTER_MSG_INVALID_PARAM(grpId,
- 	        "[" + std::to_string(MIN_GROUP_ID) + ", " + std::to_string(maxGroupId) + "]");
+            "[" + std::to_string(MIN_GROUP_ID) + ", " + std::to_string(maxGroupId) + "]");
         return RT_ERROR_INVALID_VALUE;
     }
 

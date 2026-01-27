@@ -90,6 +90,11 @@ std::string MiniV3Platform::GetMemoryUBMetrics()
 {
     return MINI_V3_MEMORYUB;
 }
+
+ProfAicoreMetrics MiniV3Platform::GetDefaultAicoreMetrics() const
+{
+    return PROF_AICORE_PIPE_EXECUTE_UTILIZATION;
+}
 }
 }
 }

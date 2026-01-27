@@ -325,7 +325,7 @@ rtError_t rtLaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, u
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     COND_RETURN_WARN(!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_UPDATE_SQE_TILING_KEY),
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "only support in 910_B_93.");
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "only support in cloud_v2.");
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -385,6 +385,7 @@ rtError_t rtLaunchKernelExByFuncHandle(rtFuncHandle funcHandle, rtLaunchConfig_t
     rtArgsEx_t *argsInfo = &(args->argsInfo);
     const rtError_t ret = apiInstance->LaunchKernelV3(RtPtrToPtr<Kernel *>(funcHandle), argsInfo,
         static_cast<Stream *>(stm), launchConfig);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -439,7 +440,7 @@ rtError_t rtsLaunchUpdateTask(rtStream_t destStm, uint32_t destTaskId, rtStream_
             const Runtime * const rtInstance = Runtime::Instance();
             NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
             if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_DSA_UPDATE)) {
-                RT_LOG(RT_LOG_WARNING, "only support in 910_B_93");
+                RT_LOG(RT_LOG_WARNING, "only support in cloud_v2");
                 return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
             }
 
@@ -609,11 +610,10 @@ rtError_t rtStreamCreateWithFlagsExternal(rtStream_t *stm, int32_t priority, uin
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    COND_RETURN_OUT_ERROR_MSG_CALL((priority != RT_STREAM_GREATEST_PRIORITY) &&
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((priority != RT_STREAM_GREATEST_PRIORITY) && 
         (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_CREATE_PRIORITY_GREATEST)),
-        GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE),
-        "chipType=%d not support set priority, priority=%d.",
-        chipType, priority);
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "The priority can be set only when chipType is " + std::to_string(CHIP_DC) + 
+        ". The actual chipType is " + std::to_string(chipType) + " and priority is " + std::to_string(priority));
 
     return rtStreamCreateWithFlags(stm, priority, flags);
 }
@@ -733,7 +733,7 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(chipType,
-        RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
+ 	    RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
     if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
             static_cast<int32_t>(chipType));
@@ -921,33 +921,20 @@ rtError_t rtsPersistentTaskClean(rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtSetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetXpuDevice(devType, devId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtResetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ResetXpuDevice(devType, devId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
 {
-   Api * const apiInstance = Api::Instance();
-   NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-   const rtError_t ret = apiInstance->CacheLastTaskOpInfo(infoPtr, infoSize);
-   ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-   return ACL_RT_SUCCESS;
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    const rtChipType_t chipType = rtInstance->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
+        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtCacheLastTaskOpInfo api.", chipType);
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    } 
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->CacheLastTaskOpInfo(infoPtr, infoSize);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
@@ -1045,15 +1032,15 @@ rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     std::string result = "";
-    const uint32_t ret = PlatformManagerV2::Instance().GetSocSpec(std::string(socVersion), std::string(label),
+    const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(std::string(socVersion), std::string(label),
         std::string(key), result);
     if (ret != RT_ERROR_NONE) {
-        if (ret == 0xFFFFFFFFU) {
+        if (ret == RT_ERROR_NOT_FOUND) {
             RT_LOG(RT_LOG_WARNING, "No platform info found from GetSocSpec.");
             return ret;
         }
         RT_LOG(RT_LOG_ERROR, "Get soc spec failed, ret = %u, please check.", ret);
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_PLATFORM);
+        return ret;
     }
 
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((maxLen < (result.size() + 1U)), RT_ERROR_INVALID_VALUE, maxLen,

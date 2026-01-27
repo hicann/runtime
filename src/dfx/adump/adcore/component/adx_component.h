@@ -47,6 +47,7 @@ public:
     virtual ComponentType GetType() = 0;
     virtual int32_t Process(const CommHandle &handle, const SharedPtr<MsgProto> &req) = 0;
     virtual int32_t UnInit() = 0;
+    virtual int32_t Terminate() { return 0; }
 };
 }
 #endif // ADX_COMMON_COMPONENT_H

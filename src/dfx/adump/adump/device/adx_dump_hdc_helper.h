@@ -24,6 +24,7 @@ public:
     IdeErrorT DataProcess(const IDE_SESSION &session, const IdeDumpChunk &dumpChunk);
     IdeErrorT Finish(IDE_SESSION &session);
 private:
+    IdeErrorT SessionIsConnected(const CommHandle handle) const;
     bool init_;
     CommHandle client_;
 };

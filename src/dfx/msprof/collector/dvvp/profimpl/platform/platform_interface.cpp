@@ -227,6 +227,17 @@ void PlatformInterface::SetSubscribeFeature()
     }
     supportedFeature_.insert(PLATFORM_AOE_SUPPORT_FUNC);
 }
+
+ProfAicoreMetrics PlatformInterface::GetDefaultAicoreMetrics() const
+{
+    return PROF_AICORE_PIPE_UTILIZATION;
+}
+
+uint64_t PlatformInterface::GetDefaultDataTypeConfig() const
+{
+    const uint64_t PROF_DEFAULT_SWITCH = PROF_ACL_API | PROF_TASK_TIME_L1 | PROF_TASK_TIME | PROF_AICORE_METRICS | PROF_AICPU_MODEL;
+    return PROF_DEFAULT_SWITCH;
+}
 }
 }
 }

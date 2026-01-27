@@ -25,7 +25,7 @@
 #include "dev_mgr_api.h"
 #include "aicpu_report_hdc.h"
 #include "devprof_drv_aicpu.h"
-#include "slog.h"
+#include "dlog_pub.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace Cann::Dvvp::Test;

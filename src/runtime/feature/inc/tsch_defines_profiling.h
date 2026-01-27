@@ -10,7 +10,7 @@
 #ifndef TS_TSCH_DEFINES_PROFILING_H
 #define TS_TSCH_DEFINES_PROFILING_H
 
-#ifndef DAVINCI_ADC_VOS
+#ifndef DAVINCI_MDC_VOS
 #if defined(__COMPILER_HUAWEILITEOS__)
 #include <los_typedef.h>
 #elif defined(__KERNEL__)
@@ -193,8 +193,8 @@ typedef struct tag_ts_profile_command {
     uint64_t buffer_addr;  // chl buf, for ts <--> drv data exchange
     uint32_t buffer_num;
     uint32_t fid;
-    uint64_t com_buf_addr;
-    uint32_t com_buf_len;
+    uint64_t com_buf_addr;  // 1980 only
+    uint32_t com_buf_len;   // 1980 only
     uint32_t sub_channel_id;
     uint32_t data_len;
     uint32_t pid;

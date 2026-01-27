@@ -40,6 +40,12 @@ protected:
     }
 };
 
+drvError_t drvGetLocalDevIDByHostDevID(uint32_t devIndex, uint32_t *hostDeviceId)
+{
+    *hostDeviceId = devIndex;
+    return DRV_ERROR_NONE;
+}
+
 TEST_F(ADPROF_OPEN_UTEST, CheckBindHostPid)
 {
     std::string hostPid("");

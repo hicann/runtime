@@ -1,0 +1,9 @@
+firmware start to upgrade  ----------------- 0%
+nve upgrade succ ----------------- 5%
+xloader upgrade succ ----------------- 10%
+m3fw upgrade succ ----------------- 15%
+uefi upgrade succ ----------------- 30%
+kernel upgrade succ ----------------- 70%
+tee upgrade succ ----------------- 75%
+rootfs upgrade succ ----------------- 95%
+dtb upgrade succ ----------------- 100%

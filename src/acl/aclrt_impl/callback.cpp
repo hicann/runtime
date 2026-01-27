@@ -92,6 +92,71 @@ uint32_t aclrtGetErrorCodeFromExceptionInfoImpl(const aclrtExceptionInfo *info)
     return info->retcode;
 }
 
+aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)
+{
+    if (info == nullptr) {
+        ACL_LOG_INNER_ERROR("exception information is null, get args failed.");
+        return ACL_ERROR_INVALID_EXCEPTION_INFO;
+    }
+
+    if (devArgsPtr == nullptr || devArgsLen == nullptr) {
+        ACL_LOG_INNER_ERROR("devArgsPtr or devArgsLen is null, get args failed.");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
+        *devArgsPtr = info->expandInfo.u.aicoreInfo.exceptionArgs.argAddr;
+        *devArgsLen = info->expandInfo.u.aicoreInfo.exceptionArgs.argsize;
+    } else if (info->expandInfo.type == RT_EXCEPTION_FUSION && 
+        info->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU) {
+        *devArgsPtr = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argAddr;
+        *devArgsLen = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argsize;
+    } else {
+        ACL_LOG_INNER_ERROR("exception information type = %d is invalid, get args failed.", info->expandInfo.type);
+        return ACL_ERROR_INVALID_EXCEPTION_INFO;
+    }
+    
+    return ACL_SUCCESS;
+}
+
+aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo *info, aclrtFuncHandle *func)
+{
+    if (info == nullptr) {
+        ACL_LOG_INNER_ERROR("exception information is null, get func failed.");
+        return ACL_ERROR_INVALID_EXCEPTION_INFO;
+    }
+
+    if (func == nullptr) {
+        ACL_LOG_INNER_ERROR("func is null, get func failed.");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    const rtError_t rtErr = rtGetFuncHandleFromExceptionInfo(info, func);
+    if (rtErr != ACL_RT_SUCCESS) {
+        ACL_LOG_CALL_ERROR("get func handle from exception info failed, runtime result = %d.", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    
+    return ACL_SUCCESS;
+}
+
+aclError aclrtBinarySetExceptionCallbackImpl(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
+{
+    ACL_LOG_INFO("start to execute aclrtBinarySetExceptionCallback.");
+    if (binHandle == nullptr || callback == nullptr) {
+        ACL_LOG_INNER_ERROR("binHandle or callback is null, set callback failed.");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    const rtError_t rtErr = rtBinarySetExceptionCallback(binHandle, callback, userData);
+    if (rtErr != ACL_RT_SUCCESS) {
+        ACL_LOG_CALL_ERROR("binary set exception callback failed, runtime result = %d.", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    
+    return ACL_SUCCESS;
+}
+
 aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void *userData, aclrtCallbackBlockType blockType,
     aclrtStream stream)
 {

@@ -22,10 +22,13 @@ ut_path_map["acl"]="/tests/ut/acl"
 ut_path_map["runtime"]="/tests/ut/runtime/runtime"
 ut_path_map["runtime_c"]="/tests/ut/runtime/runtime_c/testcase"
 ut_path_map["platform"]="/tests/ut/platform/ut"
+ut_path_map["qs"]="/tests/ut/queue_schedule"
+ut_path_map["aicpusd"]="/tests/ut/aicpu_sched"
 ut_path_map["slog"]="/tests/ut/slog"
 ut_path_map["atrace"]="/tests/ut/atrace"
 ut_path_map["msprof"]="/tests/ut/msprof"
 ut_path_map["adump"]="/tests/ut/adump"
+ut_path_map["tsd"]="/tests/ut/tsd"
 ut_path_map["error_manager"]="/tests/ut/error_manager"
 
 # print usage message
@@ -213,7 +216,7 @@ run_ut() {
       echo "WARNING: If an error occurs due to the version of the lcov tool, please select the appropriate parameters according to the prompts for adaptation."
       lcov -c -d ${ut_dir} -o cov/tmp.info
       lcov -r cov/tmp.info '/usr/*' "${OUTPUT_PATH}/*" "${BASEPATH}/tests/*" \
-       "${ASCEND_3RD_LIB_PATH}/*" "${BASEPATH}/build/*" -o cov/coverage.info
+        "${ASCEND_3RD_LIB_PATH}/*" "${BASEPATH}/build/*" -o cov/coverage.info
       cd ${BASEPATH}/cov
       genhtml coverage.info
     fi

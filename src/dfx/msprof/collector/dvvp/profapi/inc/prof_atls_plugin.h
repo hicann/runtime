@@ -12,6 +12,7 @@
 #include <map>
 #include "prof_plugin.h"
 #include "singleton/singleton.h"
+#include "prof_runtime_plugin.h"
 namespace ProfAPI {
 using ProfCommand = MsprofCommandHandle;
 class ProfAtlsPlugin : public ProfPlugin, public analysis::dvvp::common::singleton::Singleton<ProfAtlsPlugin> {
@@ -36,6 +37,8 @@ public:
     int32_t ProfUnSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId) override;
     int32_t ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, bool isOpen) override;
     int32_t ProfSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream) override;
+    int32_t ReportApiInfo(const uint64_t beginTime, const uint64_t endTime, const uint64_t itemId, const uint32_t apiType);
+    void BuildApiInfo(const std::pair<uint64_t, uint64_t> &profTime, const uint32_t apiType, const uint64_t itemId, MsprofApi &api);
     int32_t ProfFinalize() override;
     bool ProfHostFreqIsEnable() override;
 

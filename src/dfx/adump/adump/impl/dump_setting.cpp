@@ -106,7 +106,7 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig &dumpConfig)
     }
 
     InitDumpSwitch(dumpConfig.dumpSwitch & DUMP_SWITCH_MASK);
- 	IDE_LOGD("DumpOverflowInit finished.");
+    IDE_LOGD("DumpOverflowInit finished.");
     return ADUMP_SUCCESS;
 }
 

@@ -100,6 +100,26 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_mix_illegal_size)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_init_of_chip_as31xm1x)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    Device *device = rtInstance->DeviceRetain(0, 0);
+    UmaArgLoader argLdr(device);
+    rtSocType_t preType = rtInstance->GetSocType();
+    rtInstance->SetSocType(SOC_AS31XM1X);
+    int32_t aicpuCnt = rtInstance->GetAicpuCnt();
+    rtInstance->SetAicpuCnt(1);
+    rtError_t err = argLdr.Init();
+    EXPECT_EQ(RT_ERROR_NONE, err);
+    void *soNameAddr = nullptr;
+    argLdr.GetKernelInfoDevAddr("123", KernelInfoType::SO_NAME, &soNameAddr);
+    argLdr.GetKernelInfoDevAddr("456", KernelInfoType::KERNEL_NAME, &soNameAddr);
+    argLdr.RestoreAiCpuKernelInfo();
+    rtInstance->SetSocType(preType);
+    rtInstance->SetAicpuCnt(aicpuCnt);
+    rtInstance->DeviceRelease(device);
+}
+
 TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm)
 {
     int32_t devId = -1;
@@ -166,6 +186,37 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm_fail)
     delete loader;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
+
+#if 0
+TEST_F(CloudV2ArgLoaderTest, stub_arg_loader2)
+{
+    rtError_t error;
+    void * args[] = {NULL, NULL, NULL, NULL};
+    ArgLoaderResult result;
+    uint32_t value = 0;
+    StreamSwitchNLoadResult switchNResult;
+    ArgLoaderResult results;
+    rtStream_t trueStream[1];
+
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    g_launchArg.argCount = 1;
+
+    ArgLoader *loader = new ArgLoader(device);
+    loader->Init();
+    rtArgsWithTiling_t argsInfo = {};
+    argsInfo.args = &args;
+    argsInfo.argsSize = sizeof(args);
+    argsInfo.argsSizeWithoutTiling = sizeof(args);
+
+    error = loader->LoadCpuKernelArgs(args, sizeof(args), (Stream *)device->PrimaryStream_(), &results);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+
+
+    delete loader;
+
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+#endif
 
 TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_memcpy_fail)
 {

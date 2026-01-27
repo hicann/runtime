@@ -8,3 +8,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 add_subdirectory(910B)
+add_subdirectory(910_95)
+add_subdirectory(dc)
+add_subdirectory(mini_v3)
+add_subdirectory(cloud)
+add_subdirectory(adc)

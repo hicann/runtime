@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "acl_base.h"
+#include "acl/acl_base.h"
 #include "runtime/base.h"
-#include "toolchain/prof_common.h"
+#include "profiling/prof_common.h"
 #include "adump_api.h"
 
 namespace Adx {

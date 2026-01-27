@@ -21,6 +21,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
+        (void)rtSetSocVersion("Ascend310");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         RawDevice *rawDevice = new RawDevice(0);
@@ -125,7 +126,7 @@ TEST_F(NewCloudV2ApiTest, get_aiCoreCount_test)
     uint32_t *aiCoreCnt;
     aiCoreCnt = (uint32_t *)malloc(sizeof(uint32_t));
     Device *rawDevice = new RawDevice(0);
-    rawDevice->SetPlatformType(PLATFORM_910B1);
+    rawDevice->SetPlatformType(PLATFORM_MINI_V1);
     error = rtGetAiCoreCount(aiCoreCnt);
     EXPECT_EQ(error, RT_ERROR_NONE);
     free(aiCoreCnt);
@@ -2021,6 +2022,51 @@ TEST_F(NewCloudV2ApiTest, notify_create_with_flag_not_support)
 
     error = rtNotifyCreateWithFlag(device_id, &notify, flag);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(NewCloudV2ApiTest, rtCheckArchCompatibility_socVersion)
+{
+    rtError_t error;
+    char version[50] = {0};
+    int32_t canCompatible = 0;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    rtArchType_t oriArchType = rtInstance->GetArchType();
+    rtSocType_t socBak = rtInstance->GetSocType();
+
+    rtInstance->SetArchType(ARCH_C220);
+    rtInstance->SetSocType(SOC_ASCEND910B1);
+
+    // OmSocVersion is null
+    error = rtCheckArchCompatibility(nullptr, &canCompatible);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtCheckArchCompatibility("Ascend910B1", nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    // OmSocVersion is ""
+    error = rtCheckArchCompatibility("", &canCompatible);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    // OmSocVersion is not same as archType
+    error = rtCheckArchCompatibility("Ascend310", &canCompatible);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    // OmSocVersion is not find
+    error = rtCheckArchCompatibility("Ascend000", &canCompatible);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    // OmSocVersion is same as archType
+    error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    rtInstance->SetArchType(ARCH_V100);
+    rtInstance->SetSocType(SOC_ASCEND910B1);
+    error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    // restore all type
+    rtInstance->SetArchType(oriArchType);
+    rtInstance->SetSocType(socBak);
 }
 
 TEST_F(NewCloudV2ApiTest, notify_address_otherChipCloud)

@@ -42,10 +42,10 @@ rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t
     return funcHandle(taskInput, taskLen);
 }
 
-rtError_t ParmaPrefetchSqe::ConstructSqe(const rtParamBufDesc_t& paramBufDesc, rtPrefetchSqe_t* prefetchSqe,
+rtError_t PreLoadPrefetchSqe::ConstructSqe(const rtParamBufDesc_t& paramBufDesc, rtPrefetchSqe_t* prefetchSqe,
                                          uint32_t bufferLen, uint32_t* taskLen)
 {
-    constexpr uint16_t maxDataLen = PARMA_PARAM_BUFFER_MAX_N;
+    constexpr uint16_t maxDataLen = PRELOAD_PARAM_BUFFER_MAX_N;
     const uint16_t prefetchBufSize = paramBufDesc.prefetchBufSize;
     const uint16_t paramBufSize  = paramBufDesc.paramBufSize;
 
@@ -56,7 +56,7 @@ rtError_t ParmaPrefetchSqe::ConstructSqe(const rtParamBufDesc_t& paramBufDesc, r
     }
 
     const uint32_t totalSize = static_cast<uint32_t>((sizeof(rtPrefetchSqe_t) * prefetchBufSize) +
-        (sizeof(rtParmaSqe_t)) * paramBufSize);
+        (sizeof(rtPreLoadSqe_t)) * paramBufSize);
 
     if (bufferLen < totalSize) {
         RT_LOG(RT_LOG_ERROR, "prefetchBufSize [%u] and paramBufSize [%u] greater bufferLen [%u].",
@@ -74,11 +74,11 @@ rtError_t ParmaPrefetchSqe::ConstructSqe(const rtParamBufDesc_t& paramBufDesc, r
         prefetchSqe++;
     }
 
-    rtParmaSqe_t* parmaSqe = RtPtrToPtr<rtParmaSqe_t*>(prefetchSqe);
+    rtPreLoadSqe_t* preLoadSqe = RtPtrToPtr<rtPreLoadSqe_t*>(prefetchSqe);
     for (uint16_t i = 0U; i < paramBufSize; i++) {
-        parmaSqe->argOffsetAddrLow = get_low_32_addr(paramBufDesc.paramBufInfo[i]);
-        parmaSqe->argOffsetAddrHigh = get_high_32_addr(paramBufDesc.paramBufInfo[i]);
-        parmaSqe++;
+        preLoadSqe->argOffsetAddrLow = get_low_32_addr(paramBufDesc.paramBufInfo[i]);
+        preLoadSqe->argOffsetAddrHigh = get_high_32_addr(paramBufDesc.paramBufInfo[i]);
+        preLoadSqe++;
     }
 
     *taskLen = totalSize;
@@ -91,7 +91,7 @@ rtError_t ConstructAicoreParamSqe(const rtTaskInput_t* const taskInput, uint32_t
     rtPrefetchSqe_t* prefetchSqe = RtPtrToPtr<rtPrefetchSqe_t*>(taskInput->dataBuffer);
     const uint32_t bufferLen = taskInput->bufferLen;
     const rtParamBufDesc_t &paramBufDesc = taskInput->compilerInfo.u.nanoAicoreTask.u.paramBufDesc;
-    return ParmaPrefetchSqe::ConstructSqe(paramBufDesc, prefetchSqe, bufferLen, taskLen);
+    return PreLoadPrefetchSqe::ConstructSqe(paramBufDesc, prefetchSqe, bufferLen, taskLen);
 }
 
 rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32_t* taskLen)
@@ -111,7 +111,7 @@ rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32
     return RT_ERROR_NONE;
 }
 
-rtError_t ParmaStaticSqe::ConstructSqe(const rtHwtsStaticTaskDesc_t& hwtsTaskDesc, uint64_t argOffset,
+rtError_t PreLoadStaticSqe::ConstructSqe(const rtHwtsStaticTaskDesc_t& hwtsTaskDesc, uint64_t argOffset,
                                        rtStaticSqe_t* staticSqe, uint32_t* taskLen)
 {
     staticSqe->type = hwtsTaskDesc.type;
@@ -141,7 +141,7 @@ rtError_t ConstructAicoreStaticSqe(const rtTaskInput_t* const taskInput, uint32_
     const uint64_t argOffset = taskInput->argOffset;
 
     const rtHwtsStaticTaskDesc_t &hwtsTaskDesc = taskInput->compilerInfo.u.nanoAicoreTask.u.hwtsTaskDesc;
-    return ParmaStaticSqe::ConstructSqe(hwtsTaskDesc, argOffset, staticSqe, taskLen);
+    return PreLoadStaticSqe::ConstructSqe(hwtsTaskDesc, argOffset, staticSqe, taskLen);
 }
 
 rtError_t ConstructHostFuncStaticSqe(const rtTaskInput_t* const taskInput, uint32_t* taskLen)
@@ -150,10 +150,10 @@ rtError_t ConstructHostFuncStaticSqe(const rtTaskInput_t* const taskInput, uint3
     const uint64_t argOffset = taskInput->argOffset;
 
     const rtHwtsStaticTaskDesc_t &hwtsTaskDesc = taskInput->compilerInfo.u.nanoHostFuncTask.u.hwtsTaskDesc;
-    return ParmaStaticSqe::ConstructSqe(hwtsTaskDesc, argOffset, staticSqe, taskLen);
+    return PreLoadStaticSqe::ConstructSqe(hwtsTaskDesc, argOffset, staticSqe, taskLen);
 }
 
-rtError_t ParmaDynamicSqe::ConstructSqe(const rtHwtsDynamicTaskDesc_t& hwtsDynamicTaskDesc,
+rtError_t PreLoadDynamicSqe::ConstructSqe(const rtHwtsDynamicTaskDesc_t& hwtsDynamicTaskDesc,
                                         rtDynamicSqe_t* dynamicSqe, uint32_t* taskLen)
 {
     dynamicSqe->vld = hwtsDynamicTaskDesc.vld;
@@ -172,7 +172,7 @@ rtError_t ConstructAicoreDynamicSqe(const rtTaskInput_t* const taskInput, uint32
     rtDynamicSqe_t* dynamicSqe = RtPtrToPtr<rtDynamicSqe_t*>(taskInput->dataBuffer);
 
     const rtHwtsDynamicTaskDesc_t &hwtsDynamicTaskDesc = taskInput->compilerInfo.u.nanoAicoreTask.u.hwtsDynamicTaskDesc;
-    return ParmaDynamicSqe::ConstructSqe(hwtsDynamicTaskDesc, dynamicSqe, taskLen);
+    return PreLoadDynamicSqe::ConstructSqe(hwtsDynamicTaskDesc, dynamicSqe, taskLen);
 }
 
 
@@ -181,7 +181,7 @@ rtError_t ConstructHostFuncDynamicSqe(const rtTaskInput_t* const taskInput, uint
     rtDynamicSqe_t* dynamicSqe = RtPtrToPtr<rtDynamicSqe_t*>(taskInput->dataBuffer);
 
     const rtHwtsDynamicTaskDesc_t &taskDesc = taskInput->compilerInfo.u.nanoHostFuncTask.u.hwtsDynamicTaskDesc;
-    return ParmaDynamicSqe::ConstructSqe(taskDesc, dynamicSqe, taskLen);
+    return PreLoadDynamicSqe::ConstructSqe(taskDesc, dynamicSqe, taskLen);
 }
 
 }

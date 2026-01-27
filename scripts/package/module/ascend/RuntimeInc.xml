@@ -49,6 +49,10 @@
         <path value="$(TARGET_ENV)/include/experiment/metadef/common"/>
         <path value="$(TARGET_ENV)/include/experiment/metadef/common/util"/>
         <path value="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager"/>
+        <path value="$(TARGET_ENV)/include/experiment/runtime"/>
+        <path value="$(TARGET_ENV)/include/experiment/runtime/runtime"/>
+        <path value="$(TARGET_ENV)/include/experiment/msprof"/>
+        <path value="$(TARGET_ENV)/include/experiment/msprof/toolchain"/>
         <path value="compat"/>
     </dir_info>
     <file_info copy_type="source" src_path="" dst_path="include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
@@ -117,6 +121,7 @@
         <file value="rt_external_preload.h" install_mod="440" entity="true"/>
         <file value="rt_external_stars_define.h" install_mod="440" entity="true"/>
         <file value="rt_external_stream.h" install_mod="440" entity="true"/>
+        <file value="rt_external_dqs.h" install_mod="440" entity="true"/>
     </file_info>
      <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime" install_type="all">
         <file value="context.h" install_mod="440" entity="true"/>
@@ -129,7 +134,7 @@
         <file value="rt_dfx.h" install_mod="440" entity="true"/>
         <file value="rt_ffts_plus_define.h" install_mod="440" entity="true"/>
         <file value="rt_ffts_plus.h" install_mod="440" entity="true"/>
-        <file value="rt_ffts.h" install_mod="440" entity="true"/>
+        <file value="rt_ffts.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/runtime/runtime/rt_ffts.h" entity="true"/>
         <file value="rt_mem_queue.h" install_mod="440" entity="true"/>
         <file value="rt_model.h" install_mod="440" entity="true"/>
         <file value="rt_preload_task.h" install_mod="440" entity="true"/>
@@ -139,7 +144,7 @@
         <file value="rt.h" install_mod="440" entity="true"/>
         <file value="stars_interface.h" install_mod="440" entity="true"/>
         <file value="stream.h" install_mod="440" entity="true"/>
-        <file value="base.h" install_mod="440" entity="true"/>
+        <file value="base.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/runtime/runtime/base.h" entity="true"/>
         <file value="config.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime/rts" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts" install_type="all">
@@ -157,10 +162,10 @@
         <file value="rts.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
-        <file value="aprof_pub.h" install_mod="440" entity="true"/>
-        <file value="devprof_pub.h" install_mod="440" entity="true"/>
-        <file value="prof_api.h" install_mod="440" entity="true"/>
-        <file value="prof_common.h" install_mod="440" entity="true"/>
+        <file value="aprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/aprof_pub.h" entity="true"/>
+        <file value="devprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/devprof_pub.h" entity="true"/>
+        <file value="prof_api.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_api.h" entity="true"/>
+        <file value="prof_common.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_common.h" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/toolchain" install_path="$(TARGET_ENV)/pkg_inc/toolchain" install_type="all">
         <file value="prof_api.h" install_mod="440" entity="true"/>
@@ -192,18 +197,13 @@
         <file value="alog_pub.h" install_mod="440" entity="true"/>
         <file value="log_types.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/toolchain" install_path="$(TARGET_ENV)/include/toolchain" install_type="all">
-        <file value="slog.h" install_mod="440" entity="true"/>
-        <file value="dlog_pub.h" install_mod="440" entity="true"/>
-        <file value="log_types.h" install_mod="440" entity="true"/>
-    </file_info>
     <file_info copy_type="source" src_path="" dst_path="include/external/acl/error_codes" install_path="$(TARGET_ENV)/include/ge" install_type="all">
         <file value="ge_error_codes.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/base" install_path="$(TARGET_ENV)/pkg_inc/base" install_type="all">
         <file value="err_mgr.h" install_mod="440" entity="true"/>
-        <file value="dlog_pub.h" install_mod="440" entity="true"/>
-        <file value="log_types.h" install_mod="440" entity="true"/>
+        <file value="dlog_pub.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/slog.h"/>
+        <file value="log_types.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/log_types.h"/>
         <file value="plog.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
@@ -253,9 +253,46 @@
     <file_info copy_type="source" src_path="" dst_path="" install_path="compat" install_type="all">
         <file value="cann-tsch-compat.tar.gz" install_mod="440" entity="true" optional="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="data/platform_config/cann-dev" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+        <file value="Ascend910_9599.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9589.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_958a.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_958b.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9579.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_957b.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_957c.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_957d.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_950z.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9591.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9592.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9581.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9582.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9584.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9587.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9588.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9572.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9575.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9576.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9574.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9577.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9578.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9571.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9573.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9583.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9585.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9586.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9595.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_9596.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_95A1.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_95A2.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_950x.ini" install_mod="440" entity="true"/>
+        <file value="Ascend910_950y.ini" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="data/platform_config/cann" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="Ascend031.ini" install_mod="440" entity="true"/>
         <file value="Ascend035.ini" install_mod="440" entity="true"/>
+        <file value="Ascend035A.ini" install_mod="440" entity="true"/>
+        <file value="Ascend035B.ini" install_mod="440" entity="true"/>
         <file value="Ascend310B1.ini" install_mod="440" entity="true"/>
         <file value="Ascend310B2.ini" install_mod="440" entity="true"/>
         <file value="Ascend310B3.ini" install_mod="440" entity="true"/>
@@ -281,10 +318,15 @@
         <file value="Ascend910_9391.ini" install_mod="440" entity="true"/>
         <file value="Ascend910_9392.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B2C.ini" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="data/platform_config/kirin" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="KirinX90.ini" install_mod="440" entity="true"/>
         <file value="Kirin9030.ini" install_mod="440" entity="true"/>
     </file_info>
-     <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
         <file value="ascend_package_load.ini" install_mod="444" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
+        <file value="RuntimeConfig.ini" install_mod="444" entity="true"/>
     </file_info>
 </block>

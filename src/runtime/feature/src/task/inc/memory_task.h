@@ -19,7 +19,7 @@ namespace runtime {
 constexpr uint32_t MEM_WAIT_WRITE_VALUE_ADDRESS_LEN = 64U;
 
 rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo);
-rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isUbMode);
+rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isSqeUpdate = false);
 void ToCommandBodyForMemcpyAsyncTask(TaskInfo * const taskInfo, rtCommand_t *const command);
 void ConstructSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructPlaceHolderSqe(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
@@ -48,8 +48,8 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
 void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void MemWaitTaskUnInit(TaskInfo *taskInfo);
 uint32_t GetSendSqeNumForMemWaitTask(const TaskInfo * const taskInfo);
-void ReleaseCpyTmpMemForStarsV2(TaskInfo * const taskInfo);
-rtError_t AllocCpyTmpMemForStarsV2(TaskInfo * const taskInfo, uint32_t &cpyType,
+void ReleaseCpyTmpMemForDavid(TaskInfo * const taskInfo);
+rtError_t AllocCpyTmpMemForDavid(TaskInfo * const taskInfo, uint32_t &cpyType,
     const void *&srcAddr, void *&desAddr, const uint64_t addrSize);
 /* snapshot scene update task */
 rtError_t MemcpyAsyncTaskPrepare(TaskInfo * const updateTask, void ** const hostAddr);

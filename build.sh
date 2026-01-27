@@ -19,13 +19,13 @@ usage() {
   echo "Usage:"
   echo "  sh build.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
   echo "              [--ascend_install_path=<PATH>] [--cann_3rd_lib_path=<PATH>]"
-  echo "              [--asan] [--build_host_only]"
-  echo "              [--asan]"
+  echo "              [--asan] [--build_host_only] [--cov]"
   echo "              [--sign-script <PATH>] [--enable-sign] [--version <VERSION>]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"
   echo "    --asan         Enable AddressSanitizer"
+  echo "    --cov          Enable Coverage"
   echo "    --build_host_only         
                            Only build host target"
   echo "    -build-type=<TYPE>"
@@ -51,9 +51,10 @@ checkopts() {
   THREAD_NUM=$(grep -c ^processor /proc/cpuinfo)
   ENABLE_UT="off"
   ENABLE_COV="off"
+  ENABLE_GCOV="off"
   ASCEND_3RD_LIB_PATH="$BASEPATH/output/third_party"
   BUILD_TYPE="Release"
-  CUSTOM_SIGN_SCRIPT=""
+  CUSTOM_SIGN_SCRIPT="${BASEPATH}/scripts/sign/community_sign_build.py"
   ENABLE_SIGN="OFF"
   BUILD_HOST_ONLY="OFF"
   VERSION_INFO="8.5.0"
@@ -71,7 +72,7 @@ checkopts() {
   fi
   
   # Process the options
-  parsed_args=$(getopt -a -o j:hv -l help,pkg,verbose,build_host_only,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,asan,sign-script:,enable-sign,version: -- "$@") || {
+  parsed_args=$(getopt -a -o j:hv -l help,pkg,verbose,cov,build_host_only,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,asan,sign-script:,enable-sign,version: -- "$@") || {
     usage
     exit 1
   }
@@ -96,6 +97,10 @@ checkopts() {
         ;;
       --asan)
         ENABLE_ASAN="on"
+        shift
+        ;;
+      --cov)
+        ENABLE_GCOV="on"
         shift
         ;;
       --build_host_only)
@@ -178,6 +183,7 @@ build_rts() {
               -DASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH} \
               -DOPEN_SOURCE_DIR=${ASCEND_3RD_LIB_PATH} \
               -DENABLE_COV=${ENABLE_COV} \
+              -DENABLE_GCOV=${ENABLE_GCOV} \
               -DENABLE_ASAN=${ENABLE_ASAN} \
               -DENABLE_UT=${ENABLE_UT} \
               -DENABLE_SIGN=${ENABLE_SIGN} \

@@ -32,6 +32,161 @@ constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
 } // namespace
 
+const std::map<uint32_t, std::string> g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList = {
+    {0x80CD8008U, "L2BUFF multi bit Err."},
+    {0x80F2180DU, "HBMA/MATA Os Err."},
+    {0x80F38008U, "HBMA Multi Bit Ecc."},
+    {0x81338002U, "TS Dispatch Input Err."},
+    {0x81338004U, "TS Dispatch Config Err."},
+    {0x813B8002U, "AIC Dispatch Input Error."},
+    {0x813B8004U, "AIC Dispatch Config Error."},
+    {0x81478002U, "DVPP Dispatch Input Error."},
+    {0x81478004U, "DVPP Dispatch Config Error."},
+    {0x815F8002U, "PERI Dispatch Input Error."},
+    {0x815F8004U, "PERI Dispatch Config Error."},
+    {0x81978002U, "PCIE Dispatch Input Error."},
+    {0x81978004U, "PCIE Dispatch Config Error."},
+    {0x81B58002U, "UB Dispatch Input Error."},
+    {0x81B58004U, "UB Dispatch Config Error."},
+    {0x813D8009U, "AIC AA Bus Error."},
+    {0x81AF8008U, "UB multiple bit ecc error."},
+    {0x81B18008U, "UB PORT multiple bit ecc error."}
+};
+
+const std::map<uint32_t, std::string> g_hcclRemoteMulBitEccEventIdBlkList = {
+    {0x80CD8008U, "L2BUFF multi bit Err."},
+    {0x80F2180DU, "HBMA/MATA Os Err."},
+    {0x80F38008U, "HBMA Multi Bit Ecc."},
+    {0x81338002U, "TS Dispatch Input Err."},
+    {0x81338004U, "TS Dispatch Config Err."},
+    {0x813B8002U, "AIC Dispatch Input Error."},
+    {0x813B8004U, "AIC Dispatch Config Error."},
+    {0x81478002U, "DVPP Dispatch Input Error."},
+    {0x81478004U, "DVPP Dispatch Config Error."},
+    {0x815F8002U, "PERI Dispatch Input Error."},
+    {0x815F8004U, "PERI Dispatch Config Error."},
+    {0x81978002U, "PCIE Dispatch Input Error."},
+    {0x81978004U, "PCIE Dispatch Config Error."},
+    {0x81B58002U, "UB Dispatch Input Error."},
+    {0x81B58004U, "UB Dispatch Config Error."},
+    {0x813D8009U, "AIC AA Bus Error."},
+    {0x81B78009U, "UB AA bus error."},
+    {0x81AF8000U, "UB Module error."},
+    {0x81AF8004U, "UB software configuration error."},
+    {0x81AF8008U, "UB Multi Bit Ecc."},
+    {0x81B18008U, "UB_PORT Multi Bit Ecc."},
+    {0x81B1800DU, "UB_PORT link error."}
+};
+
+const std::vector<EventRasFilter> g_ubNonMemPoisonRasList = {
+    {0x81AF8009U, 0x03, 0x02, 0x10000000, "poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x40000000, "cpu seq data poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x20000000, "dwqe data poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x04000000, "P2P opertion poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x02000000, "UB IO traffic atomic operation poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x01000000, "UB IO traffic store operation poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00020000, "UB: RX DMA 2-bit ECC error in IO read returns poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00008000, "Read/atomic request address hitting DWQE space returns poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00002000, "Atomic write data poisoning / Atomic lookup table exception / Atomic timeout exception / Atomic packet header assembly exception returns poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00000800, "Read timeout exception / Read lookup table exception / Read packet header assembly exception returns poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00000200, "CCUA read operation returns poison."}
+};
+
+const std::vector<EventRasFilter> g_ubMemPoisonRasList = {
+    {0x81AF8009U, 0x03, 0x03, 0x80000000, "UB MEM Atomic data Poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x08000000, "UB MEM traffic poison."},
+    {0x81AF8009U, 0x03, 0x03, 0x00800000, "UB MEM read operation returned poison due to abnormal traffic."}
+};
+
+const std::vector<EventRasFilter> g_ubMemPoisonRasOnlyPosisonList = {
+    {0x81AF8009U, 0x03, 0x02, 0x10000000, "poison."}
+};
+
+const std::map<uint32_t, std::string> g_mulBitEccEventId = {
+    {0x80CD8008U, "L2BUFF multi bit Err."},
+    {0x80F2180DU, "HBMA/MATA Os Err."},
+    {0x80F38008U, "HBMA Multi Bit Ecc."},
+    {0x81338002U, "TS Dispatch Input Err"},
+    {0x81338004U, "TS Dispatch Config Err."},
+    {0x81338008U, "TS Dispatch Multi Bit Ecc."},
+    {0x813B8002U, "AIC Dispatch Input Error"},
+    {0x813B8004U, "AIC Dispatch Config Error."},
+    {0x813B8008U, "AIC Dispatch Multi Bit Ecc."},
+    {0x81478002U, "DVPP Dispatch Input Error"},
+    {0x81478004U, "DVPP Dispatch Config Error"},
+    {0x81478008U, "DVPP Dispatch Multi Bit Ecc."},
+    {0x815F8002U, "PERI Dispatch Input Error."},
+    {0x815F8004U, "PERI Dispatch Config Error"},
+    {0x815F8008U, "PERI Dispatch Multi Bit Ecc."},
+    {0x81938002U, "DSA Dispatch Input Error."},
+    {0x81938004U, "DSA Dispatch Config Error."},
+    {0x81938008U, "DSA Dispatch Multi Bit Ecc."},
+    {0x81958002U, "NIC Dispatch Input Error."},
+    {0x81958004U, "NIC Dispatch Config Error."},
+    {0x81958008U, "NIC Dispatch Multi Bit Ecc."},
+    {0x81978002U, "PCIE Dispatch Input Error."},
+    {0x81978004U, "PCIE Dispatch Config Error."},
+    {0x81978008U, "PCIE Dispatch Multi Bit Ecc."}
+};
+
+const std::map<uint32_t, std::string> g_mulBitEccEventIdBlkList = {
+    {0x80CD8008U, "L2BUFF multi bit Err."},
+    {0x80F2180DU, "HBMA/MATA Os Err."},
+    {0x80F38008U, "HBMA Multi Bit Ecc."},
+    {0x81338002U, "TS Dispatch Input Err."},
+    {0x81338004U, "TS Dispatch Config Err."},
+    {0x813B8002U, "AIC Dispatch Input Error."},
+    {0x813B8004U, "AIC Dispatch Config Error."},
+    {0x815F8002U, "PERI Dispatch Input Error."},
+    {0x815F8004U, "PERI Dispatch Config Error."},
+    {0x81978002U, "PCIE Dispatch Input Error."},
+    {0x81978004U, "PCIE Dispatch Config Error."},
+    {0x81B58002U, "UB Dispatch Input Error."},
+    {0x81B58004U, "UB Dispatch Config Error."},
+    {0x81AF8008U, "UB Multi Bit Ecc."},
+    {0x81B18008U, "UB_PORT Multi Bit Ecc."}
+};
+
+const std::map<uint32_t, std::string> g_l2MulBitEccEventIdBlkList = {
+    {0x80E01801U, "HBM Multi Bit Error."},
+    {0x80F2180DU, "HBMA/MATA Os Error."},
+    {0x80F38008U, "HBMA Multi Bit Ecc."},
+    {0x81338002U, "TS Dispatch Input Error"},
+    {0x81338004U, "TS Dispatch Config Error."},
+    {0x81338008U, "TS Dispatch Multi Bit Ecc."},
+    {0x813B8002U, "AIC Dispatch Input Error"},
+    {0x813B8004U, "AIC Dispatch Config Error."},
+    {0x81478002U, "DVPP Dispatch Input Error"},
+    {0x81478004U, "DVPP Dispatch Config Error"},
+    {0x815F8002U, "PERI Dispatch Input Error."},
+    {0x815F8004U, "PERI Dispatch Config Error"},
+    {0x81978002U, "PCIE Dispatch Input Error."},
+    {0x81978004U, "PCIE Dispatch Config Error."},
+    {0x81B58002U, "UB Dispatch Input Error."},
+    {0x81B58004U, "UB Dispatch Config Error."},
+    {0x813D8009U, "AIC AA Ring Parity Error."},
+    {0x81AF8009U, "UB Posion Error."}
+};
+
+const std::map<uint32_t, std::string> g_ubMemTimeoutEventIdBlkList = {
+    {0x81B58002U, "UB Dispatch Input Error."},
+    {0x81B58004U, "UB Dispatch Config Error."},
+    {0x81B78009U, "UB AA Bus Error."},
+    {0x81AF8000U, "UB Module Excerption."},
+    {0x81AF8004U, "UB Software Config Error."},
+    {0x81AF8008U, "UB Multi Bit Ecc."},
+    {0x81B18008U, "UB_PORT Multi Bit Ecc."},
+    {0x81B1800DU, "UB_PORT Link Error."}
+};
+
+const EventRasFilter g_ubMemTrafficTimeoutFilter = {
+    .eventId = UB_POISON_ERROR_EVENT_ID,
+    .subModuleId = 0x03,
+    .errorRegisterIndex = 0x03,
+    .bitMask = 0x100000,
+    .description = "UB MEM traffic timeout exception"
+};
+
 void DeviceErrorProc::PrintCoreErrorInfo(const DeviceErrorInfo *const coreInfo,
                                          const uint64_t errorNumber,
                                          const std::string &coreType,
@@ -249,50 +404,96 @@ static bool CheckSmmuFault(const uint32_t deviceId)
     return false;
 }
 
-static bool HasUceErr(const uint32_t deviceId, const std::map<uint32_t, std::string>& eventIdBlkList)
+bool HasBlacklistEventOnDevice(const uint32_t deviceId, const std::map<uint32_t, std::string>& eventIdBlkList)
 {
     constexpr uint32_t maxFaultNum = 128U;
-    std::vector<rtDmsFaultEvent> faultEventInfo(maxFaultNum);
+    rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
+    COND_RETURN_ERROR((faultEventInfo == nullptr), false, "new rtDmsFaultEvent failed.");
+    const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
+    (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
+
+    const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
+    ScopeGuard faultEventInfoRelease(releaseFunc);
     uint32_t eventCount = 0U;
-    rtError_t error = NpuDriver::GetAllFaultEvent(deviceId, &faultEventInfo[0U], maxFaultNum, &eventCount);
-    if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
-        RT_LOG(RT_LOG_EVENT, "Not support get all fault event");
-    } else if (error == RT_ERROR_NONE) {
-        for (size_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
-            const uint32_t eventId = faultEventInfo[faultIndex].eventId;
-            RT_LOG(RT_LOG_INFO, "eventId=%#" PRIx32, eventId);
-            if (eventIdBlkList.find(eventId) != eventIdBlkList.end()) {
-                RT_LOG(RT_LOG_ERROR, "Get uce error, eventId=%#" PRIx32 ".", eventId);
-                return true;
-            }
-        }
-    } else {
-        RT_LOG(RT_LOG_EVENT, "Get NpuDriver::GetAllFaultEvent ret %d.", error);
+    rtError_t error = GetDeviceFaultEvents(deviceId, faultEventInfo, eventCount, maxFaultNum);
+    if (error != RT_ERROR_NONE) {
+        return false;
     }
-    return false;
+    return IsHitBlacklist(faultEventInfo, eventCount, eventIdBlkList);
 }
 
 /* 检查是否存在黑名单中的UCE错误 */
 bool HasMemUceErr(const uint32_t deviceId, const std::map<uint32_t, std::string>& eventIdBlkList)
 {
     Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, false);
+    NULL_PTR_RETURN(curCtx->Device_(), false);
     if (curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
-        return HasUceErr(deviceId, eventIdBlkList);
+        return HasBlacklistEventOnDevice(deviceId, eventIdBlkList);
     }
-    return HasUceErr(deviceId, eventIdBlkList) || CheckSmmuFault(deviceId);
+    return HasBlacklistEventOnDevice(deviceId, eventIdBlkList) || CheckSmmuFault(deviceId);
+}
+
+bool IsHitBlacklist(const rtDmsFaultEvent *faultEventInfo, const uint32_t eventCount, const std::map<uint32_t, std::string>& eventIdBlkList)
+{
+    if (faultEventInfo == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "faultEventInfo is nullptr.");
+        return false;
+    }
+    std::string faultInfo;
+    for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
+        if (eventIdBlkList.find(faultEventInfo[faultIndex].eventId) != eventIdBlkList.end()) {
+            std::ostringstream oss;
+            oss << std::hex << faultEventInfo[faultIndex].eventId;
+            faultInfo = faultInfo + "[0x" + oss.str() + "]" + faultEventInfo[faultIndex].eventName;
+            RT_LOG(RT_LOG_INFO, "Fault message is: [%s].", faultInfo.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+bool IsFaultEventOccur(const uint32_t faultEventId, const rtDmsFaultEvent * const faultEventInfo, const uint32_t eventCount)
+{
+    if (faultEventInfo == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "faultEventInfo is nullptr.");
+        return false;
+    }
+    for (uint32_t faultIndex = 0; faultIndex < eventCount; faultIndex++) {
+        if (faultEventInfo[faultIndex].eventId == faultEventId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+rtError_t GetDeviceFaultEvents(const uint32_t deviceId, rtDmsFaultEvent *faultEventInfo,
+    uint32_t &eventCount, const uint32_t maxFaultNum)
+{
+    rtError_t error = RT_ERROR_NONE;
+    error = NpuDriver::GetAllFaultEvent(deviceId, faultEventInfo, maxFaultNum, &eventCount);
+    COND_RETURN_ERROR(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Not support get fault event.");
+    COND_RETURN_ERROR((error != RT_ERROR_NONE) || (eventCount > maxFaultNum), (error == RT_ERROR_NONE) ? RT_ERROR_DRV_ERR : error,
+        "Get fault event error, device_id=%u, eventCount=%u, maxFaultNum=%u, error=%#x.", deviceId,
+            eventCount, maxFaultNum, static_cast<uint32_t>(error));
+    return error;
 }
 
 void SetTaskMteErr(TaskInfo *errTaskPtr, const Device * const dev,
     const std::map<uint32_t, std::string>& eventIdBlkList)
 {
     // 若不支持ras上报接口，直接返回内存错误
+    bool hasSpecialErrorCode = false;
     if (Runtime::Instance()->GetHbmRasProcFlag() == HBM_RAS_NOT_SUPPORT) {
-        (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::MTE_ERROR);
-        errTaskPtr->mte_error = TS_ERROR_AICORE_MTE_ERROR;
+        SetDeviceFaultTypeByErrorType(dev, AICORE_ERROR, hasSpecialErrorCode);
+        RT_LOG(RT_LOG_WARNING, "Task Hbm Ras reporting is not supported.");
+        errTaskPtr->mte_error = (hasSpecialErrorCode ? TS_ERROR_AICORE_MTE_ERROR : TS_SUCCESS);
     } else {
         errTaskPtr->mte_error = HasMteErr(dev) ? TS_ERROR_AICORE_MTE_ERROR : TS_ERROR_SDMA_LINK_ERROR;
         if (errTaskPtr->mte_error == TS_ERROR_AICORE_MTE_ERROR) {
-            SetMteError(errTaskPtr, dev, RT_ERROR_DEVICE_MEM_ERROR);
+            MteErrorProc(errTaskPtr, dev, RT_ERROR_DEVICE_MEM_ERROR, hasSpecialErrorCode);
+            errTaskPtr->mte_error = (hasSpecialErrorCode ? TS_ERROR_AICORE_MTE_ERROR : TS_SUCCESS);
         } else if (HasMemUceErr(dev->Id_(), eventIdBlkList)) {
             errTaskPtr->mte_error = 0U;
         }
@@ -305,18 +506,73 @@ void GetMteErrFromCqeStatus(TaskInfo *errTaskPtr, const Device * const dev, cons
     if ((cqeStatus == TS_SDMA_STATUS_DDRC_ERROR) || (cqeStatus == TS_SDMA_STATUS_LINK_ERROR) ||
         (cqeStatus == TS_SDMA_STATUS_POISON_ERROR)) {
         // 若不支持ras上报接口，处理0x8、0x9和0xa直接返回内存错误
+        bool hasSpecialErrorCode= false;
         if (Runtime::Instance()->GetHbmRasProcFlag() == HBM_RAS_NOT_SUPPORT) {
-            (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::MTE_ERROR);
-            errTaskPtr->mte_error = TS_ERROR_SDMA_POISON_ERROR;
+            SetDeviceFaultTypeByErrorType(dev, SDMA_ERROR, hasSpecialErrorCode);
+            errTaskPtr->mte_error = (hasSpecialErrorCode ? TS_ERROR_SDMA_POISON_ERROR : TS_SUCCESS);
         } else {
             errTaskPtr->mte_error = HasMteErr(dev) ? TS_ERROR_SDMA_POISON_ERROR : TS_ERROR_SDMA_LINK_ERROR;
             if (errTaskPtr->mte_error == TS_ERROR_SDMA_POISON_ERROR) {
-                SetMteError(errTaskPtr, dev, RT_ERROR_SDMA_POISON_ERROR);
+                SetDeviceFaultTypeByErrorType(dev, SDMA_ERROR, hasSpecialErrorCode);
+                errTaskPtr->mte_error = (hasSpecialErrorCode ? TS_ERROR_SDMA_POISON_ERROR : TS_SUCCESS);
             } else if (HasMemUceErr(dev->Id_(), eventIdBlkList)) {
                 errTaskPtr->mte_error = 0U;
             }
         }
     }
+}
+
+bool IsEventRasMatch(const rtDmsFaultEvent &event, const EventRasFilter &filter)
+{
+    uint32_t rasCode = 0;
+    rasCode |= static_cast<uint32_t>(event.rasCode[0]) << 24;
+    rasCode |= static_cast<uint32_t>(event.rasCode[1]) << 16;
+    rasCode |= static_cast<uint32_t>(event.rasCode[2]) << 8;
+    rasCode |= static_cast<uint32_t>(event.rasCode[3]);
+    return (event.eventId == filter.eventId) && (event.subModuleId == filter.subModuleId) &&
+           (event.errorRegisterIndex == filter.errorRegisterIndex) && ((filter.bitMask & rasCode) != 0);
+}
+
+bool IsEventIdAndRasCodeMatch( const uint32_t deviceId, const std::vector<EventRasFilter>& ubNonMemPoisonRasList)
+{
+    constexpr uint32_t maxFaultNum = 128U;
+    rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
+    COND_RETURN_ERROR((faultEventInfo == nullptr), false, "new rtDmsFaultEvent failed.");
+    const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
+    (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
+
+    const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
+    ScopeGuard faultEventInfoRelease(releaseFunc);
+    uint32_t eventCount = 0U;
+    rtError_t error = GetDeviceFaultEvents(deviceId, faultEventInfo, eventCount, maxFaultNum);
+    if (error != RT_ERROR_NONE) {
+        return false;
+    }
+    // UB Bus Access Exception eventId
+    const uint32_t targetEventId = ubNonMemPoisonRasList.front().eventId;
+
+    for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
+        const auto& currentEvent = faultEventInfo[faultIndex];
+        const uint32_t eventId = currentEvent.eventId;
+        RT_LOG(RT_LOG_INFO, "eventId=%#" PRIx32, eventId);
+        if (eventId != targetEventId) {
+            continue;
+        }
+        for (const auto& filter : ubNonMemPoisonRasList) {
+            if (IsEventRasMatch(currentEvent, filter)) {
+                RT_LOG(RT_LOG_INFO,
+                    "[UB Security Event] Device: %u, Event ID: %#" PRIx32 ", subModuleId: 0x%02X, errorRegisterIndex: 0x%02X, bitMask: %u",
+                    deviceId,
+                    currentEvent.eventId,
+                    currentEvent.subModuleId,
+                    currentEvent.errorRegisterIndex, 
+                    filter.bitMask);
+
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, const uint32_t coreIdx,

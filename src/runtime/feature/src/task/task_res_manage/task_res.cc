@@ -163,6 +163,7 @@ bool TaskResManage::CreateTaskRes(Stream* stm)
         taskResCellSize += RTS_BUFF_ASSING_NUM;
         taskResCellSize &= (~(RTS_BUFF_ASSING_NUM - 1U));
     }
+
     const uint32_t taskPoolSize = taskPoolNum_ * taskResCellSize;
     taskResBaseAddr_ = new (std::nothrow) uint8_t[taskPoolSize];
     COND_RETURN_WARN((taskResBaseAddr_ == nullptr), false, "no memory for taskRes,"
@@ -191,6 +192,7 @@ bool TaskResManage::CreateTaskRes(Stream* stm)
     }
 
     // 4. pcieBar
+    // 310P alloc 1024 with aicoreErr
     const uint32_t taskNum = (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_NUM_DOT_EXPAND)) ? 
         taskPoolNum_ : (taskPoolNum_ + 1);
     const uint32_t pciePoolSize = taskNum * RTS_LITE_PCIE_BAR_COPY_SIZE;

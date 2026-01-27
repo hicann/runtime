@@ -39,4 +39,19 @@ extern "C" MSVP_PROF_API rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemT
 extern "C" MSVP_PROF_API rtError_t rtFree(void *devPtr);
 bool executeStub();
 
+aclError aclmdlLoadFromFile(const char * /* modelPath */, uint32_t *modelId)
+{
+    return ACL_ERROR_NONE;
+}
+
+aclError aclmdlUnload(uint32_t modelId)
+{
+    return ACL_ERROR_NONE;
+}
+
+aclError aclmdlExecute(uint32_t modelId, const void * /* input */, void * /* output */)
+{
+    return ACL_ERROR_NONE;
+}
+
 #endif

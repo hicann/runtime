@@ -15,7 +15,8 @@
 #include "utils.h"
 #include "program.hpp"
 #include "context.hpp"
-#include "nlohmann/json.hpp"
+#include "binary_loader_c.hpp"
+#include "json_parse.hpp"
 
 namespace cce {
 namespace runtime {
@@ -108,76 +109,6 @@ static rtError_t ParseDebugOptions(const nlohmann::json &kernelJson)
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;
-}
-
-static rtError_t GetJsonObj(const std::string &path, std::string &jsonFileRealPath, 
-                            nlohmann::json &kernelJsonObj)
-{
-    // json file have the same name with binary file. binary file suffix is .o, json file suffix is .json
-    std::string jsonFilePath;
-    const auto dotPos = path.find_last_of(".");
-    if (dotPos != std::string::npos) {
-        jsonFilePath = path.substr(0, dotPos);
-    }
-    jsonFilePath = jsonFilePath + ".json";
-
-    jsonFileRealPath = RealPath(jsonFilePath);
-    if (jsonFileRealPath.empty()) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-
-    std::ifstream f(jsonFileRealPath);
-    try {
-        kernelJsonObj = nlohmann::json::parse(f);
-    } catch (nlohmann::json::exception &e) {
-        RT_LOG(RT_LOG_ERROR, "Parse kenerl json file=[%s] failed, because %s.", jsonFileRealPath.c_str(), e.what());
-        return RT_ERROR_INVALID_VALUE;
-    }
-
-    return RT_ERROR_NONE;
-}
-
-static void GetCpuKernelFromJson(const nlohmann::json &jsonObj, std::vector<CpuKernelInfo> &kernelInfos)
-{
-    CpuKernelInfo kernelInfo{};
-    for (auto &op : jsonObj.items()) {
-        auto value = op.value();
-        if (!value.contains("opInfo")) {
-            RT_LOG(RT_LOG_WARNING, "opInfo does not exist, continue");
-            continue;
-        }
-
-        kernelInfo.key = op.key();
-        kernelInfo.funcName = "";
-        kernelInfo.kernelSo = "";
-        kernelInfo.opKernelLib = "";
-        kernelInfo.isUserDefined = false;
-        kernelInfo.hasOpKernelLib = false;
-
-        auto opInfo = value["opInfo"];
-        if (opInfo.contains("functionName")) {
-            kernelInfo.funcName = opInfo["functionName"].get<std::string>();
-        } else {
-            // 当前识别TF算子可以没有functionName
-            RT_LOG(RT_LOG_WARNING, "functionName does not exist, key=%s.");
-        }
-        if (opInfo.contains("kernelSo")) {
-            kernelInfo.kernelSo = opInfo["kernelSo"].get<std::string>();
-        } else {
-            RT_LOG(RT_LOG_WARNING, "kernelSo does not exist.");
-        }
-
-        if (opInfo.contains("opKernelLib")) {
-            kernelInfo.hasOpKernelLib = true;
-            kernelInfo.opKernelLib = opInfo["opKernelLib"].get<std::string>();
-        }
-        if (opInfo.contains("userDefined") && (opInfo["userDefined"].get<string>() == "True")) {
-            kernelInfo.isUserDefined = true;
-        }
-
-        kernelInfos.push_back(kernelInfo);
-    }
-    return;
 }
 
 rtError_t BinaryLoader::ParseLoadOptions()
@@ -420,6 +351,9 @@ ElfProgram* BinaryLoader::LoadFromData() const
         return nullptr;
     }
 
+    /* alse @see Runtime::MallocProgramAndReg 
+       CLOUD_V2 metainfo feature, if kernel has valid metainfo, will register kernel in new way with the metainfo,
+       such as funcType, taskRation... */
     if ((prog->ContainsAscendMeta()) && (prog->Machine() != Program::MACH_AI_MIX_KERNEL)) {
         prog->SetMachine(Program::MACH_AI_MIX_KERNEL);
     }
@@ -497,6 +431,7 @@ PlainProgram *BinaryLoader::LoadCpuMode1Program()
     }
 
     prog->RegCpuProgInfo(binaryBuffer_, binarySize_, soName_, cpuKernelMode_, isLoadFromFile_);
+
     return prog;
 }
 
@@ -556,6 +491,15 @@ rtError_t BinaryLoader::Load(Program **prog)
     }
 
     if (isLoadCpu_) {
+        const Runtime * const runtime = Runtime::Instance();
+        NULL_PTR_RETURN_MSG(runtime, RT_ERROR_INSTANCE_NULL);
+        Context * const curCtx = runtime->CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        const Device * const dev = curCtx->Device_();
+        NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+        if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
+            return XpuBinaryLoadFromFile(this, prog);
+        }
         return LoadCpu(prog);
     }
 

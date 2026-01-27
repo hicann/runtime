@@ -180,11 +180,11 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_910B1;
+            *value = PLATFORMCONFIG_CLOUD_V2_910B1;
             printf("\r\n halGetDeviceInfo:: moduleType = %d, infoType = %d, version value = %d",
                 moduleType,
                 infoType,
-                PLATFORMCONFIG_910B1);
+                PLATFORMCONFIG_CLOUD_V2_910B1);
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
             printf("\r\n halGetDeviceInfo:: moduleType = %d, infoType = %d, g_device_driver_version_stub = %d",
@@ -342,7 +342,7 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
             vCqShmInfo[starsSqe->phSqe.rt_streamID].taskId = starsSqe->phSqe.task_id;
             vCqShmInfo[starsSqe->phSqe.rt_streamID].valid = 0x5A5A5A5A;
         } else {
-            printf("halSqMsgSend: illegal stream_id=%u, chip_type is 910_B_93", starsSqe->phSqe.rt_streamID);
+            printf("halSqMsgSend: illegal stream_id=%u, chip_type is cloud_v2", starsSqe->phSqe.rt_streamID);
         }
     }
 
@@ -946,7 +946,6 @@ drvError_t halHostUnregisterEx(void *srcPtr, UINT32 devid, UINT32 flag)
 {
     return DRV_ERROR_NONE;
 }
-
 drvError_t halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32 *mem_map_cap)
 {
     return DRV_ERROR_NONE;
@@ -1826,7 +1825,7 @@ drvError_t halShrIdSetAttribute(const char *name, enum shrIdAttrType type, struc
     return DRV_ERROR_NONE;
 }
 
-drvError_t halBuffGetDQSPooInfoById(unsigned int poolId, DqsPoolInfo *poolInfo)
+drvError_t halBuffGetDQSPoolInfoById(unsigned int poolId, DqsPoolInfo *poolInfo)
 {
     return DRV_ERROR_NONE;
 }
@@ -1923,6 +1922,11 @@ drvError_t halGetMemUsageInfo(uint32_t dev_id, struct mem_module_usage *mem_usag
 TraStatus AtraceEventReportSync(TraEventHandle eventHandle)
 {
     return TRACE_SUCCESS;
+}
+
+drvError_t halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr *pbase, size_t *pszie)
+{
+    return DRV_ERROR_NONE;
 }
 
 #if defined(__cplusplus)

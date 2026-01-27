@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -40,22 +40,22 @@ rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, void **hdl)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
+rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
     void *hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(funcHandle, RT_ERROR_INVALID_VALUE);
-
+ 
     Kernel * const kernel = RtPtrToPtr<Kernel *>(funcHandle);
     const KernelRegisterType regType = kernel->GetKernelRegisterType();
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     RtArgsWithType argsWithType = {};
-    rtError_t ret;
+    rtArgsEx_t argsInfo = {};
+    rtCpuKernelArgs_t cpuArgsInfo = {};
     if (regType == RT_KERNEL_REG_TYPE_NON_CPU) {
-        rtArgsEx_t argsInfo = {};
         argsInfo.args = hostArgs;
         argsInfo.argsSize = argsSize;
         argsInfo.hostInputInfoPtr = RtPtrToPtr<rtHostInputInfo_t *>(placeHolderArray);
@@ -64,9 +64,7 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
 
         argsWithType.type = RT_ARGS_NON_CPU_EX;
         argsWithType.args.nonCpuArgsInfo = &argsInfo;
-        ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType, RtPtrToPtr<Stream *>(stm), cfg);
     } else {
-        rtCpuKernelArgs_t cpuArgsInfo = {};
         cpuArgsInfo.baseArgs.args = hostArgs;
         cpuArgsInfo.baseArgs.argsSize = argsSize;
         cpuArgsInfo.baseArgs.hostInputInfoPtr = RtPtrToPtr<rtHostInputInfo_t *>(placeHolderArray);
@@ -75,9 +73,10 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
 
         argsWithType.type = RT_ARGS_CPU_EX;
         argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
-        ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType, RtPtrToPtr<Stream *>(stm), cfg);
     }
 
+    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
+        RtPtrToPtr<Stream *>(stm), cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -85,7 +84,7 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
     const rtKernelLaunchCfg_t *cfg, rtCpuKernelArgs_t *argsInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -102,7 +101,7 @@ rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t blockDim, r
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_CPU_EX;
     argsWithType.args.cpuArgsInfo = argsInfo;
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, blockDim, &argsWithType,
+    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
         RtPtrToPtr<Stream *>(stm), cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
@@ -112,7 +111,7 @@ rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t blockDim, r
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
+rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
     rtArgsHandle argsHandle, void* reserve)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -125,7 +124,7 @@ rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, 
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_HANDLE;
     argsWithType.args.argHandle = RtPtrToPtr<RtArgsHandle *>(argsHandle);
-    const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), blockDim, &argsWithType,
+    const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, &argsWithType,
         static_cast<Stream *>(stm), cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
@@ -134,7 +133,7 @@ rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
+rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
                                      const void *args, uint32_t argsSize, void *reserve)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -166,7 +165,7 @@ rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim,
         argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
     }
 
-    const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), blockDim, &argsWithType,
+    const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, &argsWithType,
         static_cast<Stream *>(stm), cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
@@ -185,7 +184,7 @@ rtError_t rtLaunchDvppTask(const void *sqe, uint32_t sqeLen, rtStream_t stm, rtD
     const bool isNotSupport = !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_DVPP);
     COND_RETURN_WARN(isNotSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT,
         "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
-
+    
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtLaunchDvppTask);
@@ -207,7 +206,7 @@ rtError_t rtsLaunchRandomNumTask(const rtRandomNumTaskInfo_t *taskInfo, const rt
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
-    COND_RETURN_WARN(!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_RAND_GENERATOR),
+    COND_RETURN_WARN(!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_RAND_GENERATOR), 
         ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -248,7 +247,7 @@ rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle *argsHandle)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsInit(RtPtrToPtr<Kernel *>(funcHandle),
+    const rtError_t error = apiInstance->KernelArgsInit(RtPtrToPtr<Kernel *>(funcHandle), 
         RtPtrToPtr<RtArgsHandle **>(argsHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -271,7 +270,7 @@ rtError_t rtsKernelArgsAppendPlaceHolder(rtArgsHandle argsHandle, rtParaHandle *
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsAppendPlaceHolder(RtPtrToPtr<RtArgsHandle *>(argsHandle),
+    const rtError_t error = apiInstance->KernelArgsAppendPlaceHolder(RtPtrToPtr<RtArgsHandle *>(argsHandle), 
         RtPtrToPtr<ParaDetail **>(paraHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -283,7 +282,7 @@ rtError_t rtsKernelArgsGetPlaceHolderBuffer(rtArgsHandle argsHandle, rtParaHandl
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsGetPlaceHolderBuffer(RtPtrToPtr<RtArgsHandle *>(argsHandle),
+    const rtError_t error = apiInstance->KernelArgsGetPlaceHolderBuffer(RtPtrToPtr<RtArgsHandle *>(argsHandle), 
         RtPtrToPtr<ParaDetail *>(paraHandle), dataSize, bufferAddr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -295,7 +294,7 @@ rtError_t rtsKernelArgsGetHandleMemSize(rtFuncHandle funcHandle, size_t *memSize
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsGetHandleMemSize(RtPtrToPtr<Kernel *>(funcHandle),
+    const rtError_t error = apiInstance->KernelArgsGetHandleMemSize(RtPtrToPtr<Kernel *>(funcHandle), 
         memSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -307,7 +306,7 @@ rtError_t rtsKernelArgsGetMemSize(rtFuncHandle funcHandle, size_t userArgsSize, 
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsGetMemSize(RtPtrToPtr<Kernel *>(funcHandle),
+    const rtError_t error = apiInstance->KernelArgsGetMemSize(RtPtrToPtr<Kernel *>(funcHandle), 
         userArgsSize, actualArgsSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -319,7 +318,7 @@ rtError_t rtsKernelArgsInitByUserMem(rtFuncHandle funcHandle, rtArgsHandle argsH
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->KernelArgsInitByUserMem(RtPtrToPtr<Kernel *>(funcHandle),
+    const rtError_t error = apiInstance->KernelArgsInitByUserMem(RtPtrToPtr<Kernel *>(funcHandle), 
         RtPtrToPtr<RtArgsHandle *>(argsHandle), userHostMem, actualArgsSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -476,7 +475,7 @@ rtError_t rtsGetHardwareSyncAddr(void **addr)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const static bool isSupportSyncAddr = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
-        RtOptionalFeatureType::RT_FEATURE_KERNEL_INTER_CORE_SYNC_ADDR);
+ 	    RtOptionalFeatureType::RT_FEATURE_KERNEL_INTER_CORE_SYNC_ADDR);
     if (!isSupportSyncAddr) {
         REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
@@ -485,6 +484,27 @@ rtError_t rtsGetHardwareSyncAddr(void **addr)
     const rtError_t ret = apiInstance->GetC2cCtrlAddr(&c2cAddr, &len);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     *addr = RtValueToPtr<void*>(c2cAddr);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->BinarySetExceptionCallback(RtPtrToPtr<Program *>(binHandle),
+                                                                  RtPtrToPtr<void *>(callback), userData);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->GetFuncHandleFromExceptionInfo(info, RtPtrToPtr<Kernel **>(func));
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 

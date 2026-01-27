@@ -181,11 +181,11 @@ RTS_API rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t 
 
 /**
  * @ingroup rts_kernel
- * @brief get kernel pc start addr in device, if kernel is mix, the output param aicAddr and aivAddr are both valid,
- * otherwise, there will be only one valid addr.
+ * @brief get kernel pc start address in device, if kernel is mix, the output param aicAddr and aivAddr are both valid,
+ * otherwise, there will be only one valid address.
  * @param funcHandle the kernel
- * @param aicAddr output param: kernel pc start addr of aicore
- * @param aivAddr output param: kernel pc start addr of aivector
+ * @param aicAddr output param: kernel pc start address of aicore
+ * @param aivAddr output param: kernel pc start address of aivector
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr);
@@ -206,7 +206,7 @@ RTS_API rtError_t rtsRegisterCpuFunc(
  * @ingroup rts_kernel
  * @brief rts Launch Kernel
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stm  associated stream
  * @param [in] cfg task t-v config
  * @param [in] hostArgs  host args ptr
@@ -215,20 +215,20 @@ RTS_API rtError_t rtsRegisterCpuFunc(
  * @param [in] placeHolderNum  place holder num
  * @return RT_ERROR_NONE for ok
  */
-rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
+rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg,
     void *hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t *placeHolderArray, uint32_t placeHolderNum);
 
 /**
  * @ingroup rts_kernel
  * @brief rts Launch Kernel
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stm  associated stream
  * @param [in] cfg task t-v config
  * @param [in] argsInfo  args info
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+RTS_API rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
     const rtKernelLaunchCfg_t *cfg, rtCpuKernelArgs_t *argsInfo);
 
 /**
@@ -332,7 +332,7 @@ RTS_API rtError_t rtsUnSubscribeReport(uint64_t threadId, rtStream_t stm);
  * @ingroup rts_kernel
  * @brief rts Launch Kernel
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stm  associated stream
  * @param [in] cfg task t-v config
  * @param [in] argsHandle  args Handle
@@ -340,7 +340,7 @@ RTS_API rtError_t rtsUnSubscribeReport(uint64_t threadId, rtStream_t stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+RTS_API rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                             rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void *reserve);
 
 /**
@@ -528,15 +528,15 @@ RTS_API rtError_t rtsResetFloatOverflowStatus(rtStream_t stm);
  * @ingroup rts_kernel
  * @brief rts Launch Kernel
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stm  associated stream
  * @param [in] cfg task t-v config
- * @param [in] args  argment addr for kernel function
+ * @param [in] args  argment address for kernel function
  * @param [in] argsSize  argment size
  * @param [in] reserve  reserve param
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+RTS_API rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                              rtKernelLaunchCfg_t *cfg, const void *args, uint32_t argsSize,
                                              void *reserve);
 
@@ -552,7 +552,7 @@ RTS_API rtError_t rtsLaunchHostFunc(rtStream_t stm, const rtCallback_t callBackF
 
 /**
  * @ingroup rt_kernel
- * @brief Get Bin dev addr
+ * @brief Get Bin dev address
  * @param [in] binHandle    bin handle
  * @param [out] bin         bin addr
  * @param [out] binSize     bin size

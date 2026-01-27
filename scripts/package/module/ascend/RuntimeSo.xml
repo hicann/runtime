@@ -13,7 +13,10 @@
         <file value="libacl_rt_impl.so" file_type="shared"/>
         <file value="libacl_tdt_channel.so" file_type="shared"/>
         <file value="libacl_tdt_queue.so" file_type="shared"/>
+        <file value="libxpu_tprt.so" file_type="shared"/>
         <file value="libruntime.so" file_type="shared"/>
+        <file value="libruntime_v200.so" file_type="shared"/>
+        <file value="libruntime_v201.so" file_type="shared"/>
         <file value="libruntime_v100.so" file_type="shared"/>
         <file value="libruntime_common.so" file_type="shared"/>
         <file value="libc_sec.so" file_type="shared"/>

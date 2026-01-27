@@ -49,10 +49,10 @@ class ApiCloudDisableThreadDfxTest : public testing::Test
 protected:
     static void SetUpTestCase()
     {
-        (void)rtSetSocVersion("Ascend910B1");
+        (void)rtSetSocVersion("Ascend910");
         ((Runtime *)Runtime::Instance())->SetDisableThread(true);
 
-        int64_t hardwareVersion = CHIP_910_B_93 << 8;
+        int64_t hardwareVersion = CHIP_CLOUD << 8;
         driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL(driver_,
             &Driver::GetDevInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
@@ -120,7 +120,7 @@ rtEvent_t ApiCloudDisableThreadDfxTest::event_ = nullptr;
 void* ApiCloudDisableThreadDfxTest::binHandle_ = nullptr;
 char  ApiCloudDisableThreadDfxTest::function_ = 'a';
 uint32_t ApiCloudDisableThreadDfxTest::binary_[32] = {};
-rtChipType_t ApiCloudDisableThreadDfxTest::originType_ = CHIP_910_B_93;
+rtChipType_t ApiCloudDisableThreadDfxTest::originType_ = CHIP_CLOUD;
 Driver* ApiCloudDisableThreadDfxTest::driver_ = nullptr;
 
 TEST_F(ApiCloudDisableThreadDfxTest, kernel_launch_with_handle_task_full)

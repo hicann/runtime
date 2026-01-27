@@ -24,17 +24,26 @@ typedef struct {
 } stars_ioctl_cmd_args_t;
 
 typedef enum {
-    STARS_IOCTL_CMD_BIND_QUEUE = 0x100,
-    STARS_IOCTL_CMD_UNBIND_QUEUE,
-    STARS_IOCTL_CMD_GET_BIND_QUEUE,
-    STARS_IOCTL_CMD_GET_ALL_BIND_QUEUE,
-    STARS_IOCTL_CMD_BIND_QUEUE_MBUF_POOL,
-    STARS_IOCTL_CMD_UNBIND_QUEUE_MBUF_POOL,
-    STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE = 0x200,
-    STARS_IOCTL_CMD_INTERCHIP_SUBSCRIBE_QUEUE,
-    STARS_IOCTL_CMD_DQS_CONTROL_SPACE = 0x300,
-    STARS_IOCTL_CMD_DQS_INTER_CHIP_SPACE = 0x400,
+    STARS_IOCTL_CMD_BIND_QUEUE = 0x100, /* create queue bind cfg */
+    STARS_IOCTL_CMD_UNBIND_QUEUE = 0x101, /* delete queue bind cfg */
+    STARS_IOCTL_CMD_GET_BIND_QUEUE = 0x102, /* query queue bind cfg */
+    STARS_IOCTL_CMD_GET_ALL_BIND_QUEUE = 0x103, /* query all queue bind cfg */
+    STARS_IOCTL_CMD_BIND_QUEUE_MBUF_POOL = 0x104, /* create src queue mbuf pool bind info */
+    STARS_IOCTL_CMD_UNBIND_QUEUE_MBUF_POOL = 0x105, /* delete src queue mbuf pool bind info */
+    STARS_IOCTL_CMD_GET_QUEUE_MBUF_POOL = 0x106, /* get mbuf pool info */
+    STARS_IOCTL_CMD_BIND_FRAME_ALIGN_INFO = 0x107, /* bind frame algin cfg */
+    STARS_IOCTL_CMD_UNBIND_FRAME_ALIGN_INFO = 0x108, /* unbind frame algin cfg */
+    STARS_IOCTL_CMD_UPDATE_CS_FRAME_ALIGN_INFO = 0x109, /* update ctrl space frame align cfg */
+    STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE = 0x200, /* dqs acc subscribe, nn/dss/vpc+q */
+    STARS_IOCTL_CMD_INTERCHIP_SUBSCRIBE_QUEUE = 0x201, /* dqs inter chip subscribe */
+    STARS_IOCTL_CMD_DQS_CONTROL_SPACE = 0x300, /* create or delete dqs ctrl space shm for nn/dss/vpc+q */
+    STARS_IOCTL_CMD_DQS_INTER_CHIP_SPACE = 0x400, /* dqs inter chip sched shm manage */
 } stars_ioctl_cmd_t;
+
+/* 单次队列绑定、解绑ioctl请求所支持的操作数量；特别的，单个源队列（生产者队列）最大支持绑定128个目的队列（消费者队列） */
+#define STARS_DQS_MAX_QUEUE_OP_NUM                  128U
+#define STARS_DQS_MAX_INPUT_QUEUE_NUM               10U     // 输入队列最大数量
+#define STARS_DQS_MAX_OUTPUT_QUEUE_NUM              10U     // 输出队列最大数量
 
 typedef enum {
     STARS_QUEUE_OP_SUCCESS = 0,
@@ -43,23 +52,22 @@ typedef enum {
     STARS_ERROR_INTERNAL,                          // 内部错误
     STARS_ERROR_QUEUE_BIND_EXCEED,                 // 当前源队列绑定的目的队列已达上限
     STARS_ERROR_QUEUE_ALREADY_BOUND_TO_SRC,        // 当前目的队列已经与其他的源队列产生绑定关系
-    STARS_ERROR_QUEUE_UNBIND_BIND_INFO_NOT_EXIST,  // 要解绑的关系不存在
     STARS_ERROR_QUEUE_MBUF_POOL_NOT_MATCH,         // 未在controlSpace中找到需要绑定mbuf pool的队列
+    STARS_ERROR_QUEUE_NOT_SUB,                     // 目的队列未订阅时无法进行转发关系绑定
+    STARS_ERROR_QUEUE_FRAME_ALIGN_INFO_EXIST,      // 队列的帧对齐信息已经存在
 } stars_queue_op_error_t;
 
-#define MAX_STARS_CMD_QUEUE_NUM 10  // 一个源队列最多绑定10个目的队列
-
 typedef struct {
-    uint8_t bind_num;                                // 绑定关系数量
-    uint8_t reserve;                                 // 保留字段
-    uint16_t src_qid;                                // 源队列id
-    uint16_t dst_qid_list[MAX_STARS_CMD_QUEUE_NUM];  // 目的队列id
+    uint8_t count;                                      // 目的队列数量
+    uint8_t reserve;                                    // 保留字段
+    uint16_t src_qid;                                   // 源队列id
+    uint16_t dst_qid_list[STARS_DQS_MAX_QUEUE_OP_NUM];  // 目的队列id
 } stars_queue_bind_param_t;
 
 typedef struct {
-    uint8_t bind_num;
-    uint8_t reserve;
-    uint32_t error_code[MAX_STARS_CMD_QUEUE_NUM];
+    uint8_t count;                                   // 操作结果数量
+    uint8_t reserve[3];                              // 预留
+    uint32_t error_code[STARS_DQS_MAX_QUEUE_OP_NUM]; // 操作结果
 } stars_queue_op_result_t;
 
 typedef enum {
@@ -78,26 +86,26 @@ typedef struct {
 } stars_queue_bind_t;
 
 typedef struct {
-    uint8_t bind_num;
+    uint8_t count;  // 查询结果数量
     uint8_t reserve;
-    stars_queue_bind_t query_result[MAX_STARS_CMD_QUEUE_NUM];
+    stars_queue_bind_t bind[STARS_DQS_MAX_QUEUE_OP_NUM];  // 绑定关系查询结果，一个源队列支持
 } stars_queue_query_result_t;
 
 typedef enum {
-    STARS_QUEUE_UNBIND_TYPE_SRC = 0,
-    STARS_QUEUE_UNBIND_TYPE_DST,
-    STARS_QUEUE_UNBIND_TYPE_SRC_AND_DST,
+    STARS_QUEUE_UNBIND_TYPE_SRC = 0,        // 按源队列解绑
+    STARS_QUEUE_UNBIND_TYPE_DST,            // 按目的队列解绑
+    STARS_QUEUE_UNBIND_TYPE_SRC_AND_DST,    // 按源队列和目的队列解绑
 } stars_queue_unbind_type_t;
 
 typedef struct {
-    stars_queue_unbind_type_t type;  // 队列查询类型，支持根据源队列解除绑定或根据目的队列解除绑定
+    stars_queue_unbind_type_t type;
     stars_queue_bind_t queue;
 } stars_queue_unbind_info_t;
 
 typedef struct {
-    uint8_t unbind_num;  // 解绑请求数量
-    uint8_t reserve;
-    stars_queue_unbind_info_t queue_unbind_info[MAX_STARS_CMD_QUEUE_NUM];
+    uint8_t count;   // 解绑请求数量
+    uint8_t reserve[3];
+    stars_queue_unbind_info_t queue_unbind_info[STARS_DQS_MAX_QUEUE_OP_NUM]; // 解绑请求
 } stars_queue_unbind_param_t;
 
 typedef struct {
@@ -110,17 +118,18 @@ typedef struct {
     uint64_t mbuf_head_pool_base_addr;
     uint64_t mbuf_data_pool_base_addr;
     uint64_t mbuf_free_op_addr;
+    uint64_t mbuf_alloc_op_addr;
 } stars_queue_bind_mbuf_pool_item_t;
 
 typedef struct {
-    uint8_t bind_num;
-    stars_queue_bind_mbuf_pool_item_t queue_mbuf_pool_list[MAX_STARS_CMD_QUEUE_NUM];
+    uint8_t count;  // 生产者队列（源队列）mbuf pool信息绑定请求数量
+    stars_queue_bind_mbuf_pool_item_t queue_mbuf_pool_list[STARS_DQS_MAX_QUEUE_OP_NUM];
 } stars_queue_bind_mbuf_pool_param_t;
 
 typedef struct {
-    uint8_t unbind_num;
+    uint8_t count;  // mbuf pool解绑请求数量
     uint8_t reserve;
-    uint16_t queue_list[MAX_STARS_CMD_QUEUE_NUM];
+    uint16_t queue_list[STARS_DQS_MAX_QUEUE_OP_NUM]; // 要解绑的生产者队列id
 } stars_unbind_queue_mbuf_pool_param_t;
 
 typedef enum {
@@ -168,17 +177,78 @@ typedef struct {
     uint8_t ts_id;
     uint8_t stream_id;
     uint8_t count;
-    stars_subscribe_notify_t notify_list[MAX_STARS_CMD_QUEUE_NUM];
+    stars_subscribe_notify_t notify_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];
 } stars_queue_subscribe_acc_param_t;
 
-#define STARS_DQS_MAX_INPUT_QUEUE_NUM               10U  // 输入队列最大数量
-#define STARS_DQS_MAX_OUTPUT_QUEUE_NUM              10U  // 输出队列最大数量
-#define MAX_CACHE_SIZE 2
+typedef enum {
+    STARS_DQS_FRAME_MAIN_CHANNEL_ALIGN,  // 主通路对齐
+    STARS_DQS_FRAME_ALL_CHANNEL_ALIGN    // 全通路对齐
+} stars_dqs_frame_align_mode_t;
+
+typedef enum {
+    STARS_DQS_DROP_FRAME,          // 当前帧不处理，继续等待下一帧，直到所有输入都满足对齐时间阈值
+    STARS_DQS_USE_DEFAULT_FRAME,   // 使用默认帧
+    STARS_DQS_USE_HISTORY_FRAME    // 使用历史帧
+} stars_dqs_frame_align_timeout_mode_t;
+
 typedef struct {
-    uint32_t handle_array[MAX_CACHE_SIZE];
-    uint16_t cnt;
-    uint16_t reserve;
+    uint16_t qid;
+    uint16_t rsv;
+    stars_dqs_frame_align_mode_t frame_align_mode;
+    stars_dqs_frame_align_timeout_mode_t frame_align_timeout_mode;
+    uint32_t frame_align_timeout_threshold;
+    uint64_t default_input_addr; // dev va addr
+} stars_dqs_frame_align_item_t;
+
+// 帧对齐信息绑定参数信息
+typedef struct {
+    uint8_t count;
+    uint8_t rsv[3];
+    stars_dqs_frame_align_item_t frame_align_item_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];
+} stars_dqs_frame_align_bind_param_t;
+
+// 帧对齐信息解绑参数信息
+typedef struct {
+    uint8_t count;
+    uint8_t rsv[3];
+    uint16_t queue_list[STARS_DQS_MAX_INPUT_QUEUE_NUM]; // 要解绑的qid列表
+} stars_dqs_frame_align_unbind_param_t;
+
+// 绑定/解绑帧对齐结果信息，可以体现对应索引qid失败和成功结果
+typedef struct {
+    uint8_t count;
+    uint8_t rsv[3];
+    uint32_t error_code[STARS_DQS_MAX_INPUT_QUEUE_NUM];
+} stars_dqs_frame_align_op_result_t;
+
+typedef struct {
+    uint8_t count;
+    uint8_t rsv[3];
+    uint16_t queue_list[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];
+} stars_get_queue_mbuf_pool_info_param_t;
+
+typedef struct {
+    uint8_t count;
+    uint8_t rsv[3];
+    stars_queue_bind_mbuf_pool_item_t queue_mbuf_pool_list[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];
+} stars_dqs_queue_mbuf_pool_result_t;
+
+typedef struct {
+    uint8_t ts_id;
+    uint8_t stream_id;
+    uint16_t rsv;
+} stars_dqs_update_cs_frame_align_info_t;
+
+#define MAX_CACHE_SIZE 2
+
+typedef struct {
+	uint32_t handle_array[MAX_CACHE_SIZE];
+    uint16_t cnt; // 已经缓存的handle个数。
+    uint16_t reverse;
+    uint64_t syscnt; // 入队时间戳
+    uint64_t defaultAddr; // 默认数据地址
 } input_mbuf_cache_t;
+
 typedef struct {
     uint16_t stream_id;                                                         // stream id
     uint8_t input_queue_num;                                                    // 输入队列数量
@@ -186,7 +256,7 @@ typedef struct {
 
     uint16_t input_queue_ids[STARS_DQS_MAX_INPUT_QUEUE_NUM];                    // 输入队列id列表
     uint32_t input_mbuf_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];                    // 输入mbuf handle列表
-    input_mbuf_cache_t input_mbuf_cache_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];
+    input_mbuf_cache_t input_mbuf_cache_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];    // 多路输入场景下，输入mbuf handle的列表
 
     uint16_t output_queue_ids[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];                  // 输出队列id列表
     uint16_t output_mbuf_pool_ids[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];              // 输出队列所对应的mbuf pool id列表
@@ -210,6 +280,13 @@ typedef struct {
     uint64_t output_qmngr_enqueue_addrs[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];        // 输出队列qmngr enqueue操作寄存器地址
     uint64_t output_qmngr_ow_addrs[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];             // 输出队列qmngr overwrite操作寄存器地址
     uint64_t output_mbuf_alloc_addrs[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];           // 输出队列mbuf申请操作寄存器地址
+    uint64_t output_mbuf_free_addrs[STARS_DQS_MAX_OUTPUT_QUEUE_NUM];            // 输出队列mbuf释放操作寄存器地址
+
+    stars_dqs_frame_align_mode_t frame_align_mode;
+    stars_dqs_frame_align_timeout_mode_t frame_align_timeout_mode;
+    uint32_t frame_align_timeout_threshold;
+    uint64_t default_input_addr[STARS_DQS_MAX_INPUT_QUEUE_NUM];
+    uint64_t align_res; // 1 success, 0 fail
 } stars_dqs_ctrl_space_t;
 
 typedef struct {
@@ -278,6 +355,7 @@ typedef struct {
     uint32_t src_mbuf_handle;                               // 本片出队的mbuf handle
     uint32_t dst_mbuf_handle;                               // 对片申请的mbuf handle
     uint64_t src_mbuf_free_addr;                            // 本片mbuf释放操作寄存器
+    uint64_t dst_mbuf_free_addr;                            // 对片mbuf释放操作寄存器
     uint64_t dst_mbuf_alloc_addr;                           // 对片mbuf申请操作寄存器
     uint64_t dst_qmngr_enqueue_addr;                        // 对片qmngr enqueue操作寄存器地址
     uint64_t dst_qmngr_ow_addr;                             // 对片qmngr overwrite操作寄存器
@@ -292,8 +370,10 @@ typedef struct {
     uint64_t dst_mbuf_head_pool_base_addr;                  // 对片mbuf pool head基地址
     uint64_t dst_mbuf_data_pool_base_addr;                  // 对片mbuf pool data基地址
 
-    stars_memcpy_ptr_sdma_sqe_t mbuf_head_memcpy_sqe;       // SDMA拷贝SQE: 用于拷贝mbuf private info数据
-    stars_memcpy_ptr_sdma_sqe_t mbuf_data_memcpy_sqe;       // SDMA拷贝SQE: 用于拷贝mbuf data数据
+    /* SDMA拷贝SQE：用于拷贝mbuf private info数据, 必须64B对齐 */
+    __attribute__((aligned(64))) stars_memcpy_ptr_sdma_sqe_t mbuf_head_memcpy_sqe;
+    /* SDMA拷贝SQE: 用于拷贝mbuf data数据, 必须64B对齐 */
+    __attribute__((aligned(64))) stars_memcpy_ptr_sdma_sqe_t mbuf_data_memcpy_sqe;
 } stars_dqs_inter_chip_space_t;
 
 #ifdef __cplusplus

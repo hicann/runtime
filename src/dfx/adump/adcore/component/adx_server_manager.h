@@ -50,6 +50,7 @@ private:
     ComponentType GetComponentTypeByReqType(CmdClassT cmdType) const;
     void HandleConnectEvent(CommHandle handle);
     bool IsLinkOverload(HDC_SESSION session) const;
+    bool DispatchComponent(CommHandle &handle, SharedPtr<MsgProto> &msgPtr, HDC_SESSION session, ComponentType &comp);
 private:
     bool waitOver_;
     int32_t pid_;
@@ -60,6 +61,7 @@ private:
     std::unique_ptr<AdxEpoll> epoll_;
     std::map<ComponentType, std::unique_ptr<AdxComponent>> compMap_;
     std::map<std::string, EpollHandle> servers_;
+    std::map<std::string, uint32_t> faultyDevices_;
     BoundQueue<EpollHandle> handleQue_;
     int32_t linkNum_;
     std::mutex linkMtx_;

@@ -144,7 +144,7 @@ void Device::Run(const struct error_message::Context &errorContext)
     int32_t ret = PROFILING_SUCCESS;
     do {
         ret = jobAdapter_->StartProf(params_);
-        if (deviceResponseCallack_ != nullptr) {  // call response when start profiling
+        if (deviceResponseCallack_ != nullptr) {  // call cloud response when start profiling
             MSPROF_LOGI("Send response Device(%d)", indexId_);
             deviceResponseCallack_(indexId_);
         }

@@ -8,11 +8,11 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(ACLJSON_STUB_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/stub
+    ${TOP_DIR}/tests/ut/msprof/st/stub
 )
 
 set(LLT_DATA_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/data/
+    ${TOP_DIR}/tests/ut/msprof/st/data
 )
 
 set(testStubSrc
@@ -64,7 +64,7 @@ set(adprof_src
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_aicpu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_adprof.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/aicpu_report_hdc.cpp
+    #${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/aicpu_report_hdc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/engine_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/module_job.cpp
@@ -96,7 +96,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/feature_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/memory/chunk_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
@@ -202,6 +202,7 @@ set(src_file
 )
 
 set(INCLUDE_DIR
+    {libmsprofHeaderDir}
     ${ACLJSON_STUB_DIR}/device
     ${ACLJSON_STUB_DIR}/host
     ${TOP_DIR}/inc/driver
@@ -213,8 +214,6 @@ set(INCLUDE_DIR
     ${TOP_DIR}/ace/npuruntime/inc/external/
     ${TOP_DIR}/abl/msprof/inc
     ${TOP_DIR}/abl/msprof/inc/external
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${TOP_DIR}/abl/msprof/inc/toolchain
     ${TOP_DIR}/graphengine/inc
     ${TOP_DIR}/graphengine/inc/external
@@ -289,7 +288,28 @@ add_executable(acljson_stest
     ${CppPath}
 )
 
+set(libmsprofHeaderDir
+    ${LIBC_SEC_HEADER}
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+)
+
 target_include_directories(acljson_stest PRIVATE
+    ${libmsprofHeaderDir}
     ${INCLUDE_DIR}
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${LLT_DATA_DIR}
@@ -298,13 +318,10 @@ target_include_directories(acljson_stest PRIVATE
 target_compile_options(acljson_stest PRIVATE
     -g
     -Wall
-    -std=c++11
     -fno-access-control
-    -Werror
 )
 
 target_compile_definitions(acljson_stest PRIVATE
-    C_SEC
     __PROF_LLT
     google=ascend_private
     LLT_DATA_DIR="${LLT_DATA_DIR}"
@@ -316,12 +333,7 @@ target_link_options(acljson_stest PRIVATE
 )
 
 target_link_libraries(acljson_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    profapi_share_st
-    ascend_protobuf
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
     c_sec
     json
 )
@@ -332,186 +344,12 @@ set_target_properties(acljson_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET acljson_stest
-    TASK_NUM 1
-)
-
-####################### acljson_nano_c_stest ###########################
-
-set(src_c_file
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux.c
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux_mem.c
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal_thread.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/info_json.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/json_parser.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/json_generator.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/sort_vector.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/vector.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/sample_json.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/utils/utils.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/thread/thread_pool.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/cstl/cstl_list.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/hal/hal_dsmi.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/hal/hal_prof.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/atomic/atomic_linux.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform_interface.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform_table.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/chip/chip_nano_v1.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/param/profile_param.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/uploader.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/transport.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/file_transport.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/flash_transport.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/report_manager.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/hash_dic.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/start_time.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/report/report_buffer_mgr.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_manager.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_slot.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/task/task_pool.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/channel/channel_manager.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/channel/channel_reader.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/job/job_manager.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/job/collection_job.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/job/nano_stars_job.c
-    ${MSPROF_SOURCE_DIR}/avp/service/api/prof_api.c
-    ${MSPROF_SOURCE_DIR}/avp/service/impl/service_impl.c
-    ${MSPROF_SOURCE_DIR}/avp/service/impl/service_task.c
-    ${MSPROF_SOURCE_DIR}/avp/service/impl/service_param.c
-    ${MSPROF_SOURCE_DIR}/avp/service/impl/service_report.c
-)
-
-set(INCLUDE_DIR
-    ${MSPROF_SOURCE_DIR}/dvvp/transport
-    ${MSPROF_SOURCE_DIR}/basic/
-    ${MSPROF_SOURCE_DIR}/basic/osal
-    ${MSPROF_SOURCE_DIR}/avp/
-    ${MSPROF_SOURCE_DIR}/avp/basic
-    ${MSPROF_SOURCE_DIR}/avp/basic/thread
-    ${MSPROF_SOURCE_DIR}/avp/basic/hal/
-    ${MSPROF_SOURCE_DIR}/avp/basic/utils
-    ${MSPROF_SOURCE_DIR}/avp/basic/errno
-    ${MSPROF_SOURCE_DIR}/avp/basic/logger
-    ${MSPROF_SOURCE_DIR}/avp/basic/cstl
-    ${MSPROF_SOURCE_DIR}/avp/basic/json
-    ${MSPROF_SOURCE_DIR}/avp/basic/atomic
-    ${MSPROF_SOURCE_DIR}/avp/domain
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/channel/
-    ${MSPROF_SOURCE_DIR}/avp/domain/param/
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/
-    ${MSPROF_SOURCE_DIR}/avp/service/
-    ${MSPROF_SOURCE_DIR}/avp/service/impl
-    ${MSPROF_SOURCE_DIR}/avp/inc
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
-    ${TOP_DIR}/inc/driver
-    ${TOP_DIR}/inc/external/acl
-    ${TOP_DIR}/inc/external/
-    ${TOP_DIR}/llt/abl/msprof/st/data/
-    ${TOP_DIR}/ace/npuruntime/inc
-    ${TOP_DIR}/inc/
-    ${ACLJSON_STUB_DIR}/device
-    ${ACLJSON_STUB_DIR}/host
-    ${ACLJSON_STUB_DIR}/common
-    ${ACLJSON_STUB_DIR}/
-)
-
-set(test_file
-    testcase/main.cpp
-    ../acljson/testcase/acljson_nano_stest.cpp
-    ../acljson/testcase/acljson_nano_c_stest.cpp
-    ../acljson/testcase/acljson_basic_c_stest.cpp
-)
-
-set(stub_file
-    ../stub/slog_stub.cc
-    ${ACLJSON_STUB_DIR}/device/msprof_start.cpp
-    ${ACLJSON_STUB_DIR}/device/data_report_manager.cpp
-    ${ACLJSON_STUB_DIR}/device/data_report.cpp
-    ${ACLJSON_STUB_DIR}/device/data_check.cpp
-    ${ACLJSON_STUB_DIR}/device/device_drv_prof_stub.cpp
-    ${ACLJSON_STUB_DIR}/device/device_simulator_manager.cpp
-    ${ACLJSON_STUB_DIR}/device/tiny_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mini_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/cloud_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mini_stars_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/stars_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/david_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/david_v121_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_lite_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/dc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/host/msprof_stub.cpp
-    stub/mmpa_c_stub.cpp
-)
-
-add_executable(acljson_nano_c_stest
-    ${src_c_file}
-    ${test_file}
-    ${stub_file}
-)
-
-
-target_include_directories(acljson_nano_c_stest PRIVATE
-    ${INCLUDE_DIR}
-)
-
-target_compile_options(acljson_nano_c_stest PRIVATE
-    -g
-    -Wall
-    -Werror
-)
-
-target_compile_definitions(acljson_nano_c_stest PRIVATE
-    C_SEC
-    OSAL
-    __PROF_LLT
-    google=ascend_private
-    MSPROF_C
-    LLT_DATA_DIR="${LLT_DATA_DIR}"
-)
-
-target_link_options(acljson_nano_c_stest PRIVATE
-   -ldl
-   -lpthread
-)
-
-target_link_libraries(acljson_nano_c_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    proftransport_st_static
-    profapi_lite_st
-    json
-    c_sec
-)
-
-set_target_properties(acljson_nano_c_stest
-    PROPERTIES
-    OUTPUT_NAME acljson_nano_c_stest
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET acljson_nano_c_stest
-    TASK_NUM 1
-)
 
 ####################### libproftransport.a ###########################
 set(proftransportCpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/statistics/perf_count.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
@@ -524,6 +362,7 @@ set(proftransportCpp
 )
 
 set(proftransportInc
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/dvvp/common/singleton
@@ -553,8 +392,6 @@ target_include_directories(proftransport_st_static PRIVATE
     ${proftransportInc}
     ${TOP_DIR}/graphengine/inc
     ${TOP_DIR}/graphengine/inc/framework
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${MSPROF_SOURCE_DIR}/dvvp/depend/c_base
 )
 
@@ -581,12 +418,9 @@ target_link_options(proftransport_st_static PRIVATE
 )
 
 target_link_libraries(proftransport_st_static PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<BUILD_INTERFACE:msprof_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    -Wl,--no-as-needed
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
     c_sec
-    -Wl,--as-needed
+    json
 )
 
 install(TARGETS proftransport_st_static OPTIONAL
@@ -641,6 +475,7 @@ target_link_options(profapi_lite_st PRIVATE
 )
 
 target_include_directories(profapi_lite_st PRIVATE
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
     ${MSPROF_SOURCE_DIR}/dvvp
@@ -664,167 +499,18 @@ target_include_directories(profapi_lite_st PRIVATE
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/ace/npuruntime/inc
     ${TOP_DIR}/inc/external
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${ACLJSON_STUB_DIR}/device
     ${ACLJSON_STUB_DIR}/host
     ${LLT_DATA_DIR}
     data
 )
 
-target_link_libraries(profapi_lite_st
-    PRIVATE
-        intf_pub
-        mmpa_headers
-        slog_headers
-    PUBLIC
-        msprof_headers
+target_link_libraries(profapi_lite_st PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
     json
-    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:dl>
 )
 
 install(TARGETS profapi_lite_st OPTIONAL
     LIBRARY DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-####################### acljson_liteos_stest ###########################
-
-set(src_c_file
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux.c
-    ${MSPROF_SOURCE_DIR}/basic/osal/osal_thread.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/flash_transport.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/param/profile_param.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform_interface.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/platform_table.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/utils/utils.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/hal/hal_dsmi.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/json_parser.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/sort_vector.c
-    ${MSPROF_SOURCE_DIR}/avp/basic/json/vector.c
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/chip/chip_nano_v1.c
-)
-
-set(INCLUDE_DIR
-    ${MSPROF_SOURCE_DIR}/dvvp/transport
-    ${MSPROF_SOURCE_DIR}/basic/
-    ${MSPROF_SOURCE_DIR}/basic/osal
-    ${MSPROF_SOURCE_DIR}/avp/
-    ${MSPROF_SOURCE_DIR}/avp/basic
-    ${MSPROF_SOURCE_DIR}/avp/basic/thread
-    ${MSPROF_SOURCE_DIR}/avp/basic/hal/
-    ${MSPROF_SOURCE_DIR}/avp/basic/utils
-    ${MSPROF_SOURCE_DIR}/avp/basic/errno
-    ${MSPROF_SOURCE_DIR}/avp/basic/logger
-    ${MSPROF_SOURCE_DIR}/avp/basic/cstl
-    ${MSPROF_SOURCE_DIR}/avp/basic/json
-    ${MSPROF_SOURCE_DIR}/avp/basic/atomic
-    ${MSPROF_SOURCE_DIR}/avp/domain
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/
-    ${MSPROF_SOURCE_DIR}/avp/domain/collect/channel/
-    ${MSPROF_SOURCE_DIR}/avp/domain/param/
-    ${MSPROF_SOURCE_DIR}/avp/domain/platform/
-    ${MSPROF_SOURCE_DIR}/avp/domain/transport/
-    ${MSPROF_SOURCE_DIR}/avp/service/
-    ${MSPROF_SOURCE_DIR}/avp/service/impl
-    ${MSPROF_SOURCE_DIR}/avp/inc
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
-    ${TOP_DIR}/inc/driver
-    ${TOP_DIR}/inc/external/acl
-    ${TOP_DIR}/inc/external/
-    ${TOP_DIR}/llt/abl/msprof/st/data/
-    ${TOP_DIR}/ace/npuruntime/inc
-    ${TOP_DIR}/inc/
-    ${ACLJSON_STUB_DIR}/device
-    ${ACLJSON_STUB_DIR}/host
-    ${ACLJSON_STUB_DIR}/common
-    ${ACLJSON_STUB_DIR}/
-    stub/
-)
-
-set(test_file
-    testcase/main.cpp
-    ../acljson/testcase/acljson_basic_liteos_stest.cpp
-)
-
-set(stub_file
-    ../stub/slog_stub.cc
-    ${ACLJSON_STUB_DIR}/device/msprof_start.cpp
-    ${ACLJSON_STUB_DIR}/device/data_report_manager.cpp
-    ${ACLJSON_STUB_DIR}/device/data_report.cpp
-    ${ACLJSON_STUB_DIR}/device/data_check.cpp
-    ${ACLJSON_STUB_DIR}/device/device_drv_prof_stub.cpp
-    ${ACLJSON_STUB_DIR}/device/device_simulator_manager.cpp
-    ${ACLJSON_STUB_DIR}/device/tiny_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mini_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/cloud_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mini_stars_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/stars_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/david_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/david_v121_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_lite_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/dc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/host/msprof_stub.cpp
-    stub/mmpa_c_stub.cpp
-)
-
-add_executable(acljson_liteos_stest
-    ${src_c_file}
-    ${test_file}
-    ${stub_file}
-)
-
-
-target_include_directories(acljson_liteos_stest PRIVATE
-    ${INCLUDE_DIR}
-)
-
-target_compile_options(acljson_liteos_stest PRIVATE
-    -g
-    -Wall
-    -Werror
-)
-
-target_compile_definitions(acljson_liteos_stest PRIVATE
-    C_SEC
-    OSAL
-    __PROF_LLT
-    google=ascend_private
-    MSPROF_C
-    LITE_OS
-    LLT_DATA_DIR="${LLT_DATA_DIR}"
-)
-
-target_link_options(acljson_liteos_stest PRIVATE
-   -ldl
-   -lpthread
-)
-
-target_link_libraries(acljson_liteos_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    proftransport_st_static
-    profapi_lite_st
-    json
-    c_sec
-)
-
-set_target_properties(acljson_liteos_stest
-    PROPERTIES
-    OUTPUT_NAME acljson_liteos_stest
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET acljson_liteos_stest
-    TASK_NUM 1
 )

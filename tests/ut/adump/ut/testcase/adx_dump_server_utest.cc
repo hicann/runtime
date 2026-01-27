@@ -19,6 +19,7 @@
 #include "adx_datadump_server.h"
 #include "adx_dump_record.h"
 #include "ascend_hal.h"
+#include "adx_hdc_device.h"
 
 using namespace Adx;
 
@@ -99,4 +100,35 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInit)
     int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
     ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultDevice)
+{
+    SharedPtr<AdxDevice> device = std::make_shared<AdxHdcDevice>();
+    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice)
+    .stubs()
+    .will(returnValue(device));
+    AdxServerManager manager;
+    manager.TimerProcess();
+    EXPECT_EQ(1, manager.faultyDevices_.size());
+    manager.TimerProcess();
+    EXPECT_EQ(1, manager.faultyDevices_.size());
+    manager.TimerProcess();
+    EXPECT_EQ(0, manager.faultyDevices_.size());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultToNormalDevice)
+{
+    SharedPtr<AdxDevice> device = std::make_shared<AdxHdcDevice>();
+    MOCKER_CPP(&Adx::AdxCommOptManager::GetDevice)
+    .stubs()
+    .will(returnValue(device));
+    MOCKER_CPP(&Adx::AdxServerManager::ServerInit)
+    .stubs()
+    .will(returnValue(false)).then(returnValue(true));
+    AdxServerManager manager;
+    manager.TimerProcess();
+    EXPECT_EQ(1, manager.faultyDevices_.size());
+    manager.TimerProcess();
+    EXPECT_EQ(0, manager.faultyDevices_.size());
 }

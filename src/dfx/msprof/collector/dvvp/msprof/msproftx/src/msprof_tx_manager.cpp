@@ -106,8 +106,8 @@ void MsprofTxManager::DestroyStamp(const ACL_PROF_STAMP_PTR stamp) const
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("[DestroyStamp]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-                           std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when destroy" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+                           std::vector<std::string>({ "aclprofDestroyStamp", "stamp"}));
         return;
     }
     if (!isInit_) {
@@ -136,9 +136,8 @@ int32_t MsprofTxManager::SetStampCategory(ACL_PROF_STAMP_PTR stamp, uint32_t cat
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR(
-            "EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-            std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when set category" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+                           std::vector<std::string>({ "aclprofSetStampCategory", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -150,9 +149,8 @@ int32_t MsprofTxManager::SetStampPayload(ACL_PROF_STAMP_PTR stamp, const int32_t
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR(
-            "EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-            std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when set payload" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofSetStampPayload", "stamp"}));
         return PROFILING_FAILED;
     }
     if (value == nullptr) {
@@ -169,9 +167,8 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
 {
     if (stamp == nullptr) {
         MSPROF_LOGE("[SetStampTraceMessage]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR(
-            "EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-            std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when set traceMessage" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofSetStampTraceMessage", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -179,8 +176,8 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
     if (msgLen >= MAX_MSG_LEN) {
         MSPROF_LOGE("[SetStampTraceMessage]msg len(%u) is invalid, must less then 128 bytes", msgLen);
         std::string errorReason = "msg len should be less than" + std::to_string(MAX_MSG_LEN);
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-                           std::vector<std::string>({ std::to_string(msgLen), "stamp", errorReason }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofSetStampTraceMessage", "stamp"}));
         return PROFILING_FAILED;
     }
     auto ret = strncpy_s(stamp->txInfo.value.stampInfo.message, MAX_MSG_LEN - 1, msg, msgLen);
@@ -202,8 +199,8 @@ int32_t MsprofTxManager::Mark(ACL_PROF_STAMP_PTR stamp) const
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Mark]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-                           std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when mark" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofMark", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -272,8 +269,8 @@ int32_t MsprofTxManager::Push(ACL_PROF_STAMP_PTR stamp) const
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Push]aclprofStamp is nullptr");
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-                           std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when push" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofPush", "stamp"}));
         return PROFILING_FAILED;
     }
 
@@ -306,9 +303,8 @@ int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t *rangeId) con
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[RangeStart] stamp pointer is nullptr!");
-        MSPROF_INPUT_ERROR(
-            "EK0001", std::vector<std::string>({ "value", "param", "reason" }),
-            std::vector<std::string>({ "nullptr", "stamp", "stamp can not be nullptr when RangeStart" }));
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({ "api", "param"}),
+            std::vector<std::string>({ "aclprofRangeStart", "stamp"}));
         return PROFILING_FAILED;
     }
     auto &stampInfo = stamp->txInfo.value.stampInfo;

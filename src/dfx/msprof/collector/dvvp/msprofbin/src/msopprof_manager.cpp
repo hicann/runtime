@@ -26,7 +26,6 @@ using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::common::cmdlog;
 using namespace Analysis::Dvvp::App;
-using namespace Collector::Dvvp::Msprofbin;
 
 MsopprofManager::MsopprofManager()
 {

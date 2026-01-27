@@ -196,7 +196,7 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
     auto vaAddrInfos = GetOpVirtualAddrs();
     size_t offset = 0U;
     Context *curCtx = Runtime::Instance()->CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* stm = curCtx->DefaultStream_();
     for (auto it = vaAddrInfos.begin(); it != vaAddrInfos.end(); ++it) {
         void* addr = it->first;

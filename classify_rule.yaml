@@ -25,6 +25,8 @@ rts:
       - src/runtime/feature/src/common/performance_record.cc
       - src/runtime/feature/src/drv/npu_driver_win.cc
       - src/runtime/feature/src/drv/npu_driver_standard_soc_win.cc
+      - src/runtime/cmodel_driver
+
   llt:
     ut_check: true
     st_check: false
@@ -39,6 +41,56 @@ platform:
       - tests/depends/runtime
       - src/platform/platform_config
       - src/platform/stub
+  llt:
+    ut_check: true
+    st_check: false
+qs:
+  commiter:
+    "xxx"
+  team: "aicpu"
+  src:
+    release:
+      - src/queue_schedule
+    unrelease:
+      - tests/ut/queue_schedule
+  llt:
+    ut_check: true
+    st_check: false
+aicpusd:
+  commiter:
+    "xxx"
+  team: "aicpu"
+  src:
+    release:
+      - src/aicpu_sched
+    unrelease:
+      - tests/ut/aicpu_sched
+      - src/aicpu_sched/aicpu_schedule/common/feature_ctrl_common.cpp
+      - src/aicpu_sched/aicpu_cust_schedule/common/feature_ctrl_common.cpp
+  llt:
+    ut_check: true
+    st_check: false
+tsd:
+  commiter:
+    "xxx"
+  team: "aicpu"
+  src:
+    release:
+      - src/tsd/tsdclient
+    unrelease:
+      - tests/ut/tsd
+      - src/tsd/tsdaemon
+  llt:
+    ut_check: true
+    st_check: false
+dfx:
+  commiter:
+    "xxx"
+  team: "dfx"
+  src:
+    release:
+      - src/dfx
+    unrelease:
   llt:
     ut_check: true
     st_check: false

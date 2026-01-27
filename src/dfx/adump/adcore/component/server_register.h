@@ -10,7 +10,7 @@
 
 #ifndef ADX_SERVER_REGISTER_H
 #define ADX_SERVER_REGISTER_H
-#include <unordered_map>
+#include <map>
 #include <mutex>
 #include "ascend_hal.h"
 #include "component/adx_component.h"
@@ -26,7 +26,7 @@ public:
     int32_t ComponentServerCleanup(int32_t serverType);
 private:
     bool ServerManagerInit(const ServerInitInfo info);
-    std::unordered_map<int32_t, AdxServerManager> services_;
+    std::map<int32_t, AdxServerManager> services_;
     mutable std::mutex mtx_;
 };
 }

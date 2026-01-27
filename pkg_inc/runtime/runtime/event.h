@@ -44,7 +44,7 @@ typedef enum {
     RT_MODEL_ID,
     RT_NOTIFY_ID,
     RT_CMO_ID,
-    RT_CNT_NOTIFY_ID,    /* add starsv2 */
+    RT_CNT_NOTIFY_ID,    /* add start david */
     RT_INVALID_ID,
 } rtIdType_t;
 
@@ -114,7 +114,11 @@ typedef struct tagDmsFaultEvent {
     unsigned char severity;
     unsigned char assertion;
     char eventName[RT_DMS_MAX_EVENT_NAME_LENGTH];
-    char additionalInfo[RT_DMS_MAX_EVENT_DATA_LENGTH];
+    char additionalInfo[RT_DMS_MAX_EVENT_DATA_LENGTH - 9];
+    uint8_t subModuleId;
+    uint8_t errorRegisterIndex;
+    char reserved[3];
+    uint8_t rasCode[4];
     unsigned char osId;
     unsigned char resv[RT_DMS_MAX_EVENT_RESV_LENGTH]; /* reserve 32byte */
 } rtDmsFaultEvent;

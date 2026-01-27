@@ -16,6 +16,7 @@
 #include "driver/ascend_hal.h"
 #include "runtime/config.h"
 #include "runtime/mem.h"
+#include "platform_define.hpp"
 
 #ifndef CDQ_VECTOR_CAST
 namespace cce {
@@ -42,8 +43,19 @@ public:
     rtPlatformType_t GetPlatformTypeByConfig(uint32_t platformConfig) const;
     rtError_t InitHardwareInfo() const;
 private:
+    static void InitHardwareInfoCloudV1();
+    static void InitHardwareInfoMiniV2();
+    static void InitHardwareInfoDc();
     static void InitHardwareInfoCloudV2();
+    static void InitHardwareInfo910_95();
+    static void InitHardwareInfo910_5591();
+    static void InitHardwareInfoMiniV3();
+    static void InitHardwareInfoMini5612();
     static void InitHardwareInfo910B();
+    static void InitHardwareInfoBs9sx1a();
+    static void InitHardwareInfoAs31xm1x();
+    static void InitHardwareInfoLite();
+    static void InitHardwareInfoMc62cm12a();
     static HardWareConfig hardWareConfig_[PLATFORM_END];
 };
 }

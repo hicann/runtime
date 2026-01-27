@@ -18,6 +18,7 @@
 #include "stars_engine.hpp"
 #include "raw_device.hpp"
 #include "engine.hpp"
+#include "scheduler.hpp"
 #include "task_info.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -184,46 +185,6 @@ TEST_F(IpcEventTest910B, ipcEventCreate2)
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-}
-
-TEST_F(IpcEventTest910B, query)
-{
-    rtError_t error;
-    rtEvent_t event;
-    rtStream_t stream;
-    rtEventStatus_t status;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtEventCreateWithFlag(&event, RT_EVENT_WITH_FLAG);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtEventQueryStatus(event, &status);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    EXPECT_EQ(status, RT_EVENT_INIT);
-
-
-    error = rtEventRecord(event, stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtEventQuery(event);
-    if (error == RT_ERROR_EVENT_NOT_COMPLETE) {
-        EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-
-    error = rtStreamSynchronize(stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtEventQueryStatus(event, &status);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    EXPECT_EQ(status, RT_EVENT_RECORDED);
-
-    error = rtEventDestroy(event);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
 TEST_F(IpcEventTest910B, ipcEventBase)

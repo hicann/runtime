@@ -29,6 +29,7 @@ const std::string ASCEND_SHNAME_FILE_KERNEL_JSON(".ascend.file_kernel_json");
 constexpr uint8_t CORE_TYPE_AIC = RT_CORE_TYPE_AIC ;
 constexpr uint8_t CORE_TYPE_AIV = RT_CORE_TYPE_AIV;
 constexpr uint16_t CORE_SIZE_AIC = 25U;     // milan
+constexpr uint16_t CORE_SIZE_AIC_DAVID = 36U;     // david
 constexpr uint64_t INVALID_DATA_FLAG = 1LLU << 63U;
 constexpr uint8_t REG_DATA_VALID = 0U;
 constexpr uint8_t REG_DATA_INVALID = 1U;

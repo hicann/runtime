@@ -61,7 +61,7 @@ namespace {
         {
             std::ofstream ofs(fakeConfigFile, std::ios::trunc);
             // soc version is not a list, parse failed
-            nlohmann::json js = R"({"INF_NAN": {"runtimeVersion" : "7.1","socVersionList" : "910B"}})"_json;
+            nlohmann::json js = R"({"INF_NAN": {"runtimeVersion" : "7.1"}})"_json;
             ofs << js.dump();
             ofs.close();
         }

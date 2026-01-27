@@ -21,7 +21,7 @@
 #include "elf.hpp"
 #include "device.hpp"
 
-#define SIMT_PREFETCH_INCREASE_SIZE  (1280U)  //1280byte
+#define PREFETCH_INCREASE_SIZE  (1280U)  //1280byte
 namespace cce {
 namespace runtime {
 constexpr uint32_t KERNEL_ARRAY_SIZE_PER_ALLOC = 2048U;

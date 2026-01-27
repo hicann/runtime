@@ -667,7 +667,7 @@ RTS_API rtError_t rtSetExceptionExtInfo(const rtArgsSizeInfo_t * const sizeInfo)
  * @ingroup rt_kernel
  * @brief launch kernel to device
  * @param [in] stubFunc   stub function
- * @param [in] blockDim   block dimensions
+ * @param [in] numBlocks   block dimensions
  * @param [in] args   argments address for kernel function
  * @param [in] argsSize   argements size
  * @param [in] smDesc   shared memory description
@@ -675,7 +675,7 @@ RTS_API rtError_t rtSetExceptionExtInfo(const rtArgsSizeInfo_t * const sizeInfo)
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *args, uint32_t argsSize,
+RTS_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, uint32_t argsSize,
                                  rtSmDesc_t *smDesc, rtStream_t stm);
 
 /**
@@ -683,7 +683,7 @@ RTS_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *
  * @brief launch kernel with handle to device
  * @param [in] hdl             program
  * @param [in] tilingKey       tilingKey
- * @param [in] blockDim        block dimensions
+ * @param [in] numBlocks        block dimensions
  * @param [in] argsInfo        argments address for kernel function
  * @param [in] smDesc          shared memory description
  * @param [in] stm             associated stream
@@ -691,7 +691,7 @@ RTS_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
+RTS_API rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t numBlocks,
                                            rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                            const void *kernelInfo);
 
@@ -700,7 +700,7 @@ RTS_API rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, 
  * @brief launch kernel with handle to device
  * @param [in] hdl             program
  * @param [in] tilingKey       tilingKey
- * @param [in] blockDim        block dimensions
+ * @param [in] numBlocks        block dimensions
  * @param [in] argsInfo        argments address for kernel function
  * @param [in] smDesc          shared memory description
  * @param [in] stm             associated stream
@@ -708,14 +708,14 @@ RTS_API rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, 
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
+RTS_API rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t numBlocks,
     rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo);
 
 /**
  * @ingroup rtKernelLaunchWithFlag
  * @brief launch kernel to device
  * @param [in] stubFunc   stub function
- * @param [in] blockDim   block dimensions
+ * @param [in] numBlocks   block dimensions
  * @param [in] argsInfo   argments address for kernel function
  * @param [in] smDesc     shared memory description
  * @param [in] stm        associated stream
@@ -723,14 +723,14 @@ RTS_API rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+RTS_API rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
                                          rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags);
 
 /**
  * @ingroup rtKernelLaunchWithFlag
  * @brief launch kernel to device
  * @param [in] stubFunc   stub function
- * @param [in] blockDim   block dimensions
+ * @param [in] numBlocks   block dimensions
  * @param [in] argsInfo   argments address for kernel function
  * @param [in] smDesc     shared memory description
  * @param [in] stm        associated stream
@@ -739,7 +739,7 @@ RTS_API rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t blockDim
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+RTS_API rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo);
 
 /**
@@ -773,7 +773,7 @@ RTS_API rtError_t rtKernelLaunchFwk(const char_t *opName, void *args, uint32_t a
  * @brief launch cpu kernel to device  with dump identifier
  * @param [in] soName        so name
  * @param [in] kernelName    kernel name
- * @param [in] blockDim      block dimensions
+ * @param [in] numBlocks      block dimensions
  * @param [in] argsInfo      argments address for kernel function
  * @param [in] smDesc        shared memory description
  * @param [in] stm           associated stream
@@ -781,7 +781,7 @@ RTS_API rtError_t rtKernelLaunchFwk(const char_t *opName, void *args, uint32_t a
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                             const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                             uint32_t flags);
 
@@ -789,7 +789,7 @@ RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kern
  * @ingroup rtAicpuKernelLaunchWithFlag(in use)
  * @brief launch cpu kernel to device with dump identifier
  * @param [in] launchNames   names for kernel launch
- * @param [in] blockDim      block dimensions
+ * @param [in] numBlocks      block dimensions
  * @param [in] args          argments address for kernel function
  * @param [in] smDesc        shared memory description
  * @param [in] stm           associated stream
@@ -797,7 +797,7 @@ RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kern
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, uint32_t blockDim,
+RTS_API rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, uint32_t numBlocks,
                                               const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                               uint32_t flags);
 
@@ -806,7 +806,7 @@ RTS_API rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launc
  * @brief launch cpu kernel to device with dump identifier and kernelType
  * @param [in] kernelType    aicpu kernel type
  * @param [in] opName        address of op name
- * @param [in] blockDim      block dimensions
+ * @param [in] numBlocks      block dimensions
  * @param [in] argsInfo      argments address for kernel function
  * @param [in] smDesc        shared memory description
  * @param [in] stm           associated stream
@@ -815,7 +815,7 @@ RTS_API rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launc
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t * const opName,
-                                                const uint32_t blockDim, const rtAicpuArgsEx_t *argsInfo,
+                                                const uint32_t numBlocks, const rtAicpuArgsEx_t *argsInfo,
                                                 rtSmDesc_t * const smDesc, const rtStream_t stm,
                                                 const uint32_t flags);
 
@@ -1199,27 +1199,27 @@ rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionM
  * @ingroup rt_kernel
  * @brief Kernel Launch to device
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsHandle  args Handle
  * @param [in] stm  associated stream
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t blockDim, rtLaunchArgsHandle argsHandle,
+rtError_t rtLaunchKernelByFuncHandle(rtFuncHandle funcHandle, uint32_t numBlocks, rtLaunchArgsHandle argsHandle,
                                      rtStream_t stm);
 
 /**
  * @ingroup rt_kernel
  * @brief Kernel Launch to device
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsHandle  args Handle
  * @param [in] stm  associated stream
  * @param [in] cfgInfo task config info
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t blockDim, rtLaunchArgsHandle argsHandle,
+rtError_t rtLaunchKernelByFuncHandleV2(rtFuncHandle funcHandle, uint32_t numBlocks, rtLaunchArgsHandle argsHandle,
                                        rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo);
 
 /**
@@ -1357,14 +1357,14 @@ rtError_t rtBinaryLoadWithoutTilingKey(const void *data, const uint64_t length, 
  * @ingroup rt_kernel
  * @brief Kernel Launch to device
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsInfo  args info
  * @param [in] stm  associated stream
  * @param [in] cfgInfo task config info
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
+rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t numBlocks, const rtArgsEx_t * const argsInfo,
                                        rtStream_t stm, const rtTaskCfgInfo_t * const cfgInfo);
 
 /**
@@ -1372,7 +1372,7 @@ rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDi
  * @brief launch vector kernel with handle to device
  * @param [in] hdl             program
  * @param [in] tilingKey       tilingKey
- * @param [in] blockDim        block dimensions
+ * @param [in] numBlocks        block dimensions
  * @param [in] argsInfo        argments address for kernel function
  * @param [in] smDesc          shared memory description
  * @param [in] stm             associated stream
@@ -1380,21 +1380,21 @@ rtError_t rtLaunchKernelByFuncHandleV3(rtFuncHandle funcHandle, uint32_t blockDi
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t blockDim,
+RTS_API rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t numBlocks,
     rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo);
 
 /**
  * @ingroup rt_kernel
  * @brief Vector Kernel Launch to device
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsHandle  args Handle
  * @param [in] stm  associated stream
  * @param [in] cfgInfo task config info
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t blockDim, rtArgsEx_t *argsInfo,
+RTS_API rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo);
 /**
  * @ingroup rt_kernel
@@ -1434,6 +1434,25 @@ RTS_API rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue);
+
+/**
+ * @ingroup rt_kernel
+ * @brief set exception information callback handle to binHandle
+ * @param [in] binHandle binary bin handle
+ * @param [in] callback exception callback of binary bin handle
+ * @param [in] userData exception userData of binary bin handle
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData);
+
+/**
+ * @ingroup rt_kernel
+ * @brief get func handle from exception information
+ * @param [in] info pointer of exception information
+ * @param [in] func kernel func of exception information
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func);
 
 #if defined(__cplusplus)
 }

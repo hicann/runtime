@@ -8,11 +8,11 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(CLI_STUB_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/stub
+    ${TOP_DIR}/tests/ut/msprof/st/stub
 )
 
 set(LLT_DATA_DIR
-    ${TOP_DIR}/llt/abl/msprof/st/data/
+    ${TOP_DIR}/tests/ut/msprof/st/data
 )
 
 set(testStubSrc
@@ -108,7 +108,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/feature_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/memory/chunk_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
@@ -206,7 +206,7 @@ set(adprof_src
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_aicpu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_adprof.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/aicpu_report_hdc.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/aicpu_report_hdc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/engine_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/src/module_job.cpp
@@ -230,7 +230,29 @@ add_executable(cli_stest
     ${adprof_src}
 )
 
+set(libmsprofHeaderDir
+    ${LIBC_SEC_HEADER}
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${TOP_DIR}/tests/ut/msprof/st/stub
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+)
+
 target_include_directories(cli_stest PRIVATE
+    ${libmsprofHeaderDir}
     ${CLI_STUB_DIR}/device
     ${CLI_STUB_DIR}/host
     ${TOP_DIR}/inc/driver
@@ -241,8 +263,6 @@ target_include_directories(cli_stest PRIVATE
     ${TOP_DIR}/ace/npuruntime/inc
     ${TOP_DIR}/abl/msprof/inc
     ${TOP_DIR}/abl/msprof/inc/external
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/metadef/inc/external
     ${TOP_DIR}/abl/msprof/inc/toolchain
     ${TOP_DIR}/graphengine/inc
     ${TOP_DIR}/graphengine/inc/external
@@ -306,13 +326,10 @@ target_include_directories(cli_stest PRIVATE
 target_compile_options(cli_stest PRIVATE
     -g
     -Wall
-    -std=c++11
     -fno-access-control
-    -Werror
 )
 
 target_compile_definitions(cli_stest PRIVATE
-    C_SEC
     __PROF_LLT
     google=ascend_private
     LLT_DATA_DIR="${LLT_DATA_DIR}"
@@ -324,12 +341,7 @@ target_link_options(cli_stest PRIVATE
 )
 
 target_link_libraries(cli_stest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    profapi_share_st
-    ascend_protobuf
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
     c_sec
     json
 )
@@ -340,7 +352,3 @@ set_target_properties(cli_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET cli_stest
-    TASK_NUM 1
-)

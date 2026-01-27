@@ -518,7 +518,7 @@ rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId)
 rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32_t *val)
 {
     if (devFeatureType == RT_FEATURE_SYSTEM_TASKID_BIT_WIDTH) {
-        *val = 16;  // OBP:16, StarsV2:32
+        *val = 16;  // OBP:16, David:32
     }
     return RT_ERROR_NONE;
 }

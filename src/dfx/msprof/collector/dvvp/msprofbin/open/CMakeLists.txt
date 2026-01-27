@@ -14,18 +14,17 @@ protobuf_generate(msprofbin_proto
     TARGET
 )
 
-add_dependencies(msprofbin_proto host_protoc protobuf_host_build ascend_protobuf_static)
-
 set(msprofBinHeader
-    ${SOURCE_DIR}/src
-    ${runtime_INCLUDE_DIR}
-    ${third_party_INCLUDE_DIR}
-    ${MSPROF_DIR}/inc/toolchain
-    ${PROTOBUF_HOST_STATIC_INCLUDE}
     ../include
-    ../include/open
     ../../
     ../../app
+    ${LIBC_SEC_HEADER}
+    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/inc/aicpu
+    ${RUNTIME_DIR}/src/inc/
+    ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
+    ${RUNTIME_DIR}/src/dfx/error_manager
+    ${RUNTIME_DIR}/src/dfx/msprof/inc
     ../../common/utils
     ../../msprof/engine/include
     ../../host/include/
@@ -168,11 +167,6 @@ endif()
 add_executable(msprofbin
     ${msprofbinCpp}
 )
-
-link_directories(
-    ${INSTALL_LIBRARY_DIR}/stub
-)
-
 target_include_directories(msprofbin PRIVATE
     ${msprofBinHeader}
     ${CMAKE_CURRENT_SOURCE_DIR}/../
@@ -185,12 +179,11 @@ target_compile_options(msprofbin PRIVATE
     -fno-strict-aliasing
     -fno-common
     -Wall
-    -D_GLIBCXX_USE_CXX11_ABI=0
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wfloat-equal>
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wextra>
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wno-unused-parameter>
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wno-missing-field-initializers>
-    #$<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Werror>
+    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Werror>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
@@ -208,7 +201,6 @@ target_link_options(msprofbin PRIVATE
 )
 
 target_link_libraries(msprofbin PRIVATE
-    $<BUILD_INTERFACE:intf_pub_cxx17>
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:slog_headers>
@@ -218,11 +210,11 @@ target_link_libraries(msprofbin PRIVATE
 set_target_properties(msprofbin
     PROPERTIES
     OUTPUT_NAME msprof
-    LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIBRARY_DIR}/msprof
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../
 )
 
 install(TARGETS msprofbin OPTIONAL
-    RUNTIME DESTINATION ${INSTALL_LIBRARY_DIR}/profiler/bin
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
 )
 
 ### onetrack target interface
@@ -230,21 +222,14 @@ install(TARGETS msprofbin OPTIONAL
 add_library(msprofbinOnetrack_pub INTERFACE)
 
 target_link_libraries(msprofbinOnetrack_pub INTERFACE
-    $<BUILD_INTERFACE:intf_pub_cxx17>
+    $<BUILD_INTERFACE:intf_pub>
     c_sec
-    alog
+    unified_dlog
     mmpa
-    ascend_hal_stub
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,ascend_hal,ascend_hal_stub>
     ascend_protobuf_static
     -lpthread
     -ldl
 )
 
-add_dependencies(msprofbin msprofbin_proto ascend_hal_stub)
-
-set(msprof_whl
-    ${CMAKE_CURRENT_SOURCE_DIR}/../msprof-0.0.1-py3-none-any.whl
-)
-install(PROGRAMS ${msprof_whl}
-    DESTINATION ${INSTALL_LIBRARY_DIR}/profiler/profiler_tool OPTIONAL
-)
+add_dependencies(msprofbin msprofbin_proto)

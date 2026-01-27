@@ -34,6 +34,13 @@ void SetTaskMteErr(TaskInfo *errTaskPtr, const Device * const dev,
     const std::map<uint32_t, std::string>& eventIdBlkList = g_mulBitEccEventId);
 void GetMteErrFromCqeStatus(TaskInfo *errTaskPtr, const Device * const dev, const uint32_t cqeStatus,
     const std::map<uint32_t, std::string>& eventIdBlkList = g_mulBitEccEventId);
+rtError_t GetDeviceFaultEvents(const uint32_t deviceId, rtDmsFaultEvent *faultEventInfo,
+    uint32_t &eventCount, const uint32_t maxFaultNum = 128U);
+bool IsFaultEventOccur(const uint32_t faultEventId, const rtDmsFaultEvent * const faultEventInfo, const uint32_t eventCount);
+bool IsHitBlacklist(const rtDmsFaultEvent *faultEventInfo, const uint32_t eventCount, const std::map<uint32_t, std::string>& eventIdBlkList);
+bool IsEventRasMatch(const rtDmsFaultEvent &event, const EventRasFilter &filter);
+bool IsEventIdAndRasCodeMatch(const uint32_t deviceId, const std::vector<EventRasFilter> &ubNonMemPoisonRasList = g_ubNonMemPoisonRasList);
+bool HasBlacklistEventOnDevice(const uint32_t deviceId, const std::map<uint32_t, std::string>& eventIdBlkList = g_mulBitEccEventId);
 class DeviceErrorProc {
 public:
     explicit DeviceErrorProc(Device *dev);
@@ -224,7 +231,9 @@ uint32_t GetRingbufferElementNum();
 
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> &funcMap);
 uint16_t GetMteErrWaitCount();
-void SetMteError(const TaskInfo * const errTaskPtr, const Device * const dev, const int32_t errorCode);
+void MteErrorProc(const TaskInfo * const errTaskPtr, const Device * const dev,
+    const int32_t errorCode, bool &hasSpecialErrorCode);
+void SetDeviceFaultTypeByErrorType(const Device * const dev, const rtErrorType errorType, bool &hasSpecialErrorCode);
 }
 }
 #endif // CCE_RUNTIME_DEVICE_ERROR_PROC_HPP

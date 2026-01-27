@@ -341,6 +341,9 @@ typedef void (*rtTaskFailCallback)(rtExceptionInfo_t *exceptionInfo);
 typedef void (*rtDeviceStateCallback)(uint32_t devId, bool isOpen);
 
 typedef void (*rtStreamStateCallback)(rtStream_t stm, const bool isCreate);
+
+typedef void (*rtOpExceptionCallback)(rtExceptionInfo_t *exceptionInfo, void *userData);
+
 /**
  * @ingroup profiling_base
  * @brief dataType: rtProfCtrlType_t

@@ -14,9 +14,9 @@
 #include <unistd.h>
 #include <string>
 #include <map>
-#include "slog.h"
+#include "dlog_pub.h"
 #ifndef MSPROF_C
-#include "config/config_manager.h"
+#include "config_manager.h"
 #else
 #ifndef MSPROF_C_CPP
 #define MSPROF_MODULE_NAME PROFILING

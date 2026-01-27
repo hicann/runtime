@@ -502,6 +502,16 @@ int32_t AscendHalAdaptor::HalEschedCreateGrpEx(uint32_t devId, struct esched_grp
     MSPROF_LOGI("Can't find halEschedCreateGrpEx from ascend_hal library.");
     return DRV_ERROR_NOT_SUPPORT;
 }
+
+ProfAicoreMetrics Platform::GetDefaultAicoreMetrics() const
+{
+    return platform_->GetDefaultAicoreMetrics();
+}
+
+uint64_t Platform::GetDefaultDataTypeConfig() const
+{
+    return platform_->GetDefaultDataTypeConfig();
+}
 }
 }
 }

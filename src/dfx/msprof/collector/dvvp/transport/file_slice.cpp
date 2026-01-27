@@ -411,7 +411,7 @@ int32_t FileSlice::FileSliceFlushByJobID(const std::string &jobIDRelative, const
     std::map<std::string, uint64_t>::iterator it;
     std::string fileSliceName = "";
 
-    MSPROF_LOGI("[FileSliceFlushByJobID]jobIDRelative:%s, devID:%s",
+    MSPROF_LOGI("[FileSliceFlushByJobID]jobIDRelativePath:%s, devID:%s",
                 Utils::BaseName(jobIDRelative).c_str(), devID.c_str());
     fileSliceName.append(".").append(devID).append(".slice_");
     std::unique_lock<std::mutex> lk(sliceFileMtx_);

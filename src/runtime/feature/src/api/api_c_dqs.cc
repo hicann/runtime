@@ -56,14 +56,6 @@ rtError_t rtsDqsDequeue(const rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsDqsBatchDequeue(const rtStream_t stm)
-{
-    rtDqsTaskCfg_t taskCfg = {};
-    taskCfg.type = RT_DQS_TASK_BATCH_DEQUEUE;
-    return DqsTaskLaunch(stm, &taskCfg);
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsDqsZeroCopy(const rtStream_t stm, const rtDqsZeroCopyType copyType, rtZeroCopyCfg_t * const cfg)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(cfg, RT_ERROR_INVALID_VALUE);

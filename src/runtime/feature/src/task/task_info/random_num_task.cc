@@ -419,8 +419,8 @@ rtError_t CheckRandomNumTaskInfo(const rtRandomNumTaskInfo_t *taskInfo)
     ERROR_RETURN_MSG_INNER(error,
         "get random num data size failed, dataType=%d, retCode=%d", taskInfo->dataType, error);
 
-     NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE);
- 	NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomResultAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomCounterAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(taskInfo->randomResultAddr, RT_ERROR_INVALID_VALUE);
 
     // 随机种子和随机数个数均为64bit
     const rtRandomParaInfo_t seed = taskInfo->randomSeed;

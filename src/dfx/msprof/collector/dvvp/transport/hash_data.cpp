@@ -269,7 +269,7 @@ int32_t HashData::GetHashKeys(std::string &saveHashData) {
     for (size_t i = 0; i < currentHashSize; i++) {
         try {
             saveHashData.append(hashVector_[i].second);
-            saveHashData.append(HASH_DIC_DELIMITER);
+            saveHashData.append(STR2ID_DELIMITER);
             times++;
         } catch (const std::length_error& e) {
             MSPROF_LOGW("getHashKeys std::length error");

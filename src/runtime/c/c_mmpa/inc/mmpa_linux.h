@@ -137,10 +137,6 @@ static inline int32_t mmCloseFile(mmFileHandle *fd)
 static inline int32_t mmRealPath(const char *path, char *realPath, int32_t realPathLen)
 {
     (void)realPathLen;
-    if(path == NULL || realpath == NULL )
-    {
-        return EN_ERROR;
-    }
     return realpath(path, realPath) == NULL ? EN_ERROR : EN_OK;
 }
 
@@ -161,10 +157,6 @@ static inline long mmTellFile(mmFileHandle *fd)
 
 static inline void *mmMalloc(unsigned long long size)
 {
-    if(size == 0 ) {
-        return NULL;
-    }
-    
     return malloc(size);
 }
 

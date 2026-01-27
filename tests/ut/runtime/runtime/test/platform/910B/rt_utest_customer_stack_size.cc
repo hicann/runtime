@@ -247,6 +247,54 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask3)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
+TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask4)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    ret = rtSetDevice(0);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ElfProgram program(0);
+    program.SetStackSize(KERNEL_STACK_SIZE_16K);
+    Kernel kernel(NULL, "", 355, &program, 10);
+    kernel.SetMixType(MIX_AIC_AIV_MAIN_AIV);
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.bindFlag = false;
+    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.u.aicTaskInfo.kernel = &kernel;
+
+    rtStarsSqe_t command = {};
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    aicoreQosCfg[0].mode = 0;
+    aicoreQosCfg[1].mode = 0;
+    aicoreQosCfg[2].mode = 0;
+    aicoreQosCfg[3].mode = 0;
+
+    cce::runtime::RawDevice *dev = (cce::runtime::RawDevice*)(taskInfo.stream->Device_());
+    dev->SetQosCfg(aicoreQosCfg[0], 0);
+    dev->SetQosCfg(aicoreQosCfg[1], 1);
+    dev->SetQosCfg(aicoreQosCfg[2], 2);
+    dev->SetQosCfg(aicoreQosCfg[3], 3);
+    ConstructFftsMixSqeForDavinciTask(&taskInfo, &command);
+
+    MOCKER(cce::runtime::NpuDriver::GetDeviceInfoByBuff).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    cce::runtime::NpuDriver::GetAicoreQosCfg(dev);
+    MOCKER(cce::runtime::NpuDriver::GetOneAicoreQosCfg).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    cce::runtime::NpuDriver::GetAicoreQosCfg(dev);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtDeviceReset(0);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+}
+
+
 TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask)
 {
 
@@ -365,6 +413,48 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask3)
 
     error = rtDeviceReset(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask4)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    ret = rtSetDevice(0);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ElfProgram program(0);
+    program.SetStackSize(KERNEL_STACK_SIZE_16K);
+    Kernel kernel(NULL, "", 355, &program, 10);
+    kernel.SetMixType(NO_MIX);
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.bindFlag = false;
+    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.u.aicTaskInfo.kernel = &kernel;
+
+    rtStarsSqe_t command = {};
+
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    aicoreQosCfg[0].mode = 0;
+    aicoreQosCfg[1].mode = 0;
+    aicoreQosCfg[2].mode = 0;
+    aicoreQosCfg[3].mode = 0;
+
+    cce::runtime::RawDevice *dev = (cce::runtime::RawDevice*)(taskInfo.stream->Device_());
+    dev->SetQosCfg(aicoreQosCfg[0], 0);
+    dev->SetQosCfg(aicoreQosCfg[1], 1);
+    dev->SetQosCfg(aicoreQosCfg[2], 2);
+    dev->SetQosCfg(aicoreQosCfg[3], 3);
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &command);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtDeviceReset(0);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
 }
 
 TEST_F(CloudV2CustomerStackSize, AllocCustomerStackPhyBaseFailed)

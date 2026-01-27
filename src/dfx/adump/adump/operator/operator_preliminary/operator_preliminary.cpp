@@ -21,12 +21,10 @@
 #include "runtime/dev.h"
 
 namespace Adx {
-constexpr uint32_t OP_STACK_310P = 2;       // 310P上rts约定算子执行栈
 constexpr uint32_t SINGLE_STATS_BYTE = 8;   // 单个统计项的占用大小
 constexpr uint32_t BLOCK_MIN_SIZE = 32;     // 最小搬运单元
 constexpr uint32_t DCCI_SYNC_SIZE = 64;     // DCCI强制同步数据64B
 constexpr uint32_t MAX_STATS_NUM = 64;      // 最大统计项个数
-constexpr uint32_t OP_STACK_910B = 75;      // 910B上核数 25 + 50
 constexpr uint32_t INTEGER_KILOBYTE = 1024; // 表示1KB
 
 constexpr const char *const KFC_OPERATOR_STUB_NAME = "kfc_dump_stat_stub";

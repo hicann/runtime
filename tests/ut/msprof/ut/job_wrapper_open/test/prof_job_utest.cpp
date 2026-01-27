@@ -54,6 +54,12 @@ using namespace Analysis::Dvvp::MsprofErrMgr;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::driver;
 
+drvError_t drvGetLocalDevIDByHostDevID(uint32_t devIndex, uint32_t *hostDeviceId)
+{
+    *hostDeviceId = devIndex;
+    return DRV_ERROR_NONE;
+}
+
 class JOB_WRAPPER_PROF_TsCPu_JOB_OPEN_TEST: public testing::Test {
 protected:
     virtual void SetUp() {
@@ -2120,7 +2126,7 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Init) {
         .will(returnValue(false))
         .then(returnValue(true));
 
-    params->interconnection_profiling = "on";
+    params->ccuInstr = "on";
     collectionJobCfg_->comParams->params = params;
     // Ccu statistic not enabled in host profiling
     collectionJobCfg_->comParams->params->hostProfiling = true;
@@ -2130,8 +2136,8 @@ TEST_F(JOB_WRAPPER_CCU_STATISTIC_JOB_TEST, Init) {
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Init(collectionJobCfg_));
 
     EXPECT_EQ(PROFILING_SUCCESS, ccuStatJob->Init(collectionJobCfg_));
-    // Ccu statistic not enabled with interconnection_profiling switch off
-    params->interconnection_profiling = "off";
+    // Ccu statistic not enabled with ccuInstr switch off
+    params->ccuInstr = "off";
     EXPECT_EQ(PROFILING_FAILED, ccuStatJob->Init(collectionJobCfg_));
 }
 

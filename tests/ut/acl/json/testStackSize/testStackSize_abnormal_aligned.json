@@ -1,0 +1,7 @@
+{
+    "StackSize":{
+	    "aicore_stack_size":32768,
+        "simt_stack_size":200,
+        "simt_divergence_stack_size":300
+    }
+}

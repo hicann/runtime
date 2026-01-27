@@ -38,6 +38,7 @@ target_include_directories(platform_utest PRIVATE
         ${TOP_DIR}/src/platform
         ${TOP_DIR}/src/platform/inc
         ${TOP_DIR}/src/platform/inc/platform
+        ${TOP_DIR}/src/runtime/feature/inc
         ${TOP_DIR}/pkg_inc
         ${TOP_DIR}/pkg_inc/platform
         ${TOP_DIR}/abl/slog/inc
@@ -117,7 +118,9 @@ add_custom_target(
         platform_config_files
         COMMAND
         echo "-- Copy platform ini files start" && mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config" &&
-        cp -rf ${TOP_DIR}/src/platform/platform_config/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
+        cp -rf ${TOP_DIR}/src/platform/platform_config/cann-dev/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
+        cp -rf ${TOP_DIR}/src/platform/platform_config/cann/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
+        cp -rf ${TOP_DIR}/src/platform/platform_config/kirin/*.ini ${CMAKE_CURRENT_BINARY_DIR}/../data/platform_config/ &&
         echo "-- Copy platform ini files end"
 )
 

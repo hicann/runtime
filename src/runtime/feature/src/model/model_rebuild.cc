@@ -181,13 +181,13 @@ rtError_t Model::ReBuild(void)
     error = CheckRestoredSqStatus();
     ERROR_RETURN_MSG_INNER(error,"Check SQ status failed. retCode=%#x!",
         static_cast<uint32_t>(error));
-    
-    error = UpdateSnapShotSqe();
-    ERROR_RETURN_MSG_INNER(error,"update sqe failed. retCode=%#x!",
-        static_cast<uint32_t>(error));
 
     error = LoadCompleteByStream();
     ERROR_RETURN_MSG_INNER(error,"ReLoad complete failed. retCode=%#x!",
+        static_cast<uint32_t>(error));
+    
+    error = UpdateSnapShotSqe();
+    ERROR_RETURN_MSG_INNER(error,"update sqe failed. retCode=%#x!",
         static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_EVENT, "Success to rebuild model, id=%d.", id_);

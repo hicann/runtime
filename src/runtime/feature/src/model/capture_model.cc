@@ -31,6 +31,7 @@ constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_ASYNC = 1U;   /* async */
 
 CaptureModel::CaptureModel(ModelType type) : Model(type)
 {
+    beginCaptureTimeStamp_ = MsprofSysCycleTime();
 }
 
 CaptureModel::~CaptureModel() noexcept
@@ -325,7 +326,7 @@ void CaptureModel::ReportedStreamInfoForProfiling() const
     MsprofCompactInfo compactInfo;
     compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
     compactInfo.type = RT_PROFILE_TYPE_CAPTURE_STREAM_INFO;
-    compactInfo.timeStamp = MsprofSysCycleTime();
+    compactInfo.timeStamp = beginCaptureTimeStamp_;
     compactInfo.threadId = GetCurrentTid();
     compactInfo.dataLen = static_cast<uint32_t>(sizeof(MsprofCaptureStreamInfo));
     for (const auto &iter : singleOperStmIdAndCaptureStmIdMap_) {
@@ -345,12 +346,13 @@ void CaptureModel::ReportedStreamInfoForProfiling() const
             }
             RT_LOG(RT_LOG_DEBUG,
                 "Reported capture stream info for profiling successfully, captureStatus=%hu, stream_id=%hu, "
-                "original_stream_id=%hu, model_id=%hu, device_id=%hu.",
+                "original_stream_id=%hu, model_id=%hu, device_id=%hu, beginCaptureTimeStamp_=%" PRIu64 ".",
                 compactInfo.data.captureStreamInfo.captureStatus,
                 compactInfo.data.captureStreamInfo.modelStreamId,
                 compactInfo.data.captureStreamInfo.originalStreamId,
                 compactInfo.data.captureStreamInfo.modelId,
-                compactInfo.data.captureStreamInfo.deviceId);
+                compactInfo.data.captureStreamInfo.deviceId,
+                beginCaptureTimeStamp_);
         }
     }
     return;
@@ -715,6 +717,8 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMem(void)
             return RT_ERROR_TASK_NULL;
         }
 
+        COND_PROC((task->type != TS_TASK_TYPE_STREAM_ACTIVE), return RT_ERROR_TASK_BASE);
+
         StreamActiveTaskInfo *streamActiveTask = &(task->u.streamactiveTask);
         if (streamActiveTask->activeStream != nullptr) {
             streamActiveTask->activeStreamSqId = streamActiveTask->activeStream->GetSqId();
@@ -800,20 +804,20 @@ void CaptureModel::SetModelCacheOpInfoSwitch(const uint32_t status) const {
     }
 }
 
-rtError_t CaptureModel::FillShapeInfo(const TaskInfo* const taskInfo, const VOID * const infoPtr, const size_t infoSize,
+rtError_t CaptureModel::FillShapeInfo(const Stream* const stm, const VOID * const infoPtr, const size_t infoSize,
     MsprofShapeInfo * const shapeInfo) const
 {
     MsprofShapeHeader header;
-    header.modelId  = taskInfo->stream->Model_()->Id_();
-    header.deviceId = static_cast<uint32_t>(taskInfo->stream->Device_()->Id_());
-    header.streamId = static_cast<uint32_t>(taskInfo->stream->Id_());
-    header.taskId   = static_cast<uint32_t>(taskInfo->id);
+    header.modelId  = stm->Model_()->Id_();
+    header.deviceId = Context_()->Device_()->Id_();
+    header.streamId = InnerThreadLocalContainer::GetLastStreamId();
+    header.taskId   = InnerThreadLocalContainer::GetLastTaskId();
 
     MsprofShapeInfo tempShape;
     shapeInfo->magicNumber = tempShape.magicNumber;
     shapeInfo->level = MSPROF_REPORT_RUNTIME_LEVEL;
     shapeInfo->type = RT_PROFILE_TYPE_SHAPE_INFO;
-    shapeInfo->threadId = taskInfo->tid;
+    shapeInfo->threadId = stm->GetCurrentTid();
     shapeInfo->timeStamp = MsprofSysCycleTime();
 
     uint8_t* headerCursor = shapeInfo->data;
@@ -843,14 +847,7 @@ rtError_t CaptureModel::CacheLastTaskOpInfo(const void * const infoPtr, const si
         return RT_ERROR_MODEL_OP_CACHE_CLOSED;
     }
 
-    Device * const dev = Context_()->Device_();
     const uint32_t lastTaskId = InnerThreadLocalContainer::GetLastTaskId();
-    TaskInfo* taskInfo = dev->GetTaskFactory()->GetTask(stm->Id_(), static_cast<uint16_t>(lastTaskId));
-    if (unlikely(taskInfo == nullptr)) {
-        RT_LOG(RT_LOG_ERROR, "Stream or task is invalid, stream_id=%u, task_id=%u.", stm->Id_(), lastTaskId);
-        return RT_ERROR_TASK_NULL;
-    }
-
     const size_t totalSize = MS_PROF_SHAPE_INFO_SIZE + MS_PROF_SHAPE_HEADER_SIZE + infoSize;
     auto rawMemPtr = std::make_unique<uint8_t []>(totalSize);
     if (unlikely(rawMemPtr == nullptr)) {
@@ -860,7 +857,7 @@ rtError_t CaptureModel::CacheLastTaskOpInfo(const void * const infoPtr, const si
 
     MsprofShapeInfo *shapeInfo = RtPtrToPtr<MsprofShapeInfo *, uint8_t *>(rawMemPtr.get());
 
-    const rtError_t ret = FillShapeInfo(taskInfo, infoPtr, infoSize, shapeInfo);
+    const rtError_t ret = FillShapeInfo(stm, infoPtr, infoSize, shapeInfo);
     ERROR_RETURN(ret, "FillShapeInfo failed, stream_id=%d, task_id=%u.", stm->Id_(), lastTaskId);
  
     AddShapeInfo(rawMemPtr);
@@ -890,14 +887,14 @@ void CaptureModel::ReportShapeInfoForProfiling() const
         err = MsprofReportAdditionalInfo(0, shapeInfo, totalSize);
         if (err != MSPROF_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "Report capture shape info for profiling failed, stream_id=%u, task_id=%u, "
-            "model_id=%u, device_id=%u, total_len=%u, shape_len=%u, ret=%d.", header.streamId, header.taskId,
-                header.modelId, header.deviceId, shapeInfo->dataLen, shapeSize, err);
+            "model_id=%u, device_id=%u, thread_id=%u, total_len=%u, shape_len=%u, ret=%d.", header.streamId, header.taskId,
+                header.modelId, header.deviceId, shapeInfo->threadId, shapeInfo->dataLen, shapeSize, err);
             continue;
         }
         
         RT_LOG(RT_LOG_DEBUG, "Report capture shape info for profiling successfully, stream_id=%u, task_id=%u, "
-            "model_id=%u, device_id=%u, total_len=%u, shape_len=%u.", header.streamId, header.taskId, header.modelId,
-            header.deviceId, shapeInfo->dataLen, shapeSize);
+            "model_id=%u, device_id=%u, thread_id=%u, total_len=%u, shape_len=%u.", header.streamId, header.taskId, 
+            header.modelId, header.deviceId, shapeInfo->threadId, shapeInfo->dataLen, shapeSize);
     }
 }
 } // namespace runtime

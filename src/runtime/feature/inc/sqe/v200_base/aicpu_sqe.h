@@ -8,27 +8,26 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_STARSV2_AICPU_SQE_H
-#define CCE_RUNTIME_STARSV2_AICPU_SQE_H
+#ifndef CCE_RUNTIME_DAVID_AICPU_SQE_H
+#define CCE_RUNTIME_DAVID_AICPU_SQE_H
 
 #include "base.h"
 #include "task_info_base.hpp"
-#include "starsv2_base.hpp"
 #include "driver/ascend_hal_define.h"
 
 constexpr uint16_t MAGIC_NUMBER_FOR_AICPU_MSG_VERSION = 0x5A5AU;
 /* tsfw-aicpu msg version, begin with 0, if change aicpu parse way on different chip, should add 1. */
 /* 0 : for obp, primary aicpu parse way */
-/* 1 : beginning, for StarsV2, use tag_ts_aicpu_mail_box_cmd_type_new for aicpu msg cmd type */
+/* 1 : beginning, for David, use tag_ts_aicpu_mail_box_cmd_type_new for aicpu msg cmd type */
 enum RtAicpuMsgVersion : uint8_t {
     AICPU_MSG_VERSION_FOR_OBP   = 0,
-    AICPU_MSG_VERSION_FOR_STARSV2 = 1
+    AICPU_MSG_VERSION_FOR_DAVID = 1
 };
 
-enum RtStarsV2AicpuMsgCmdType : uint8_t {
+enum RtDavidAicpuMsgCmdType : uint8_t {
     TS_AICPU_MSG_VERSION    = 0,   /* 0 aicpu msg version */
-    TS_AICPU_MODEL_OPERATE  = 1,   /* 1 aicpu model operate on starsv2 */
-    TS_AICPU_TIMEOUT_CONFIG = 8    /* 8 aicpu timeout config on starsv2 */
+    TS_AICPU_MODEL_OPERATE  = 1,   /* 1 aicpu model operate on david */
+    TS_AICPU_TIMEOUT_CONFIG = 8    /* 8 aicpu timeout config on david */
 };
 
 namespace cce {
@@ -36,7 +35,7 @@ namespace runtime {
 #pragma pack(push)
 #pragma pack (1)
 
-struct StarsV2AicpuModelOperate {
+struct DavidStarsAicpuModelOperate {
     uint32_t modelInfoAddrLow;
     uint32_t modelInfoAddrHigh : 16;
     uint32_t res : 16;
@@ -46,7 +45,7 @@ struct StarsV2AicpuModelOperate {
     uint8_t reserved[3];
 };
 
-struct StarsV2AicpuTimeoutConfig {
+struct DavidStarsAicpuTimeoutConfig {
     uint32_t opWaitTimeoutEn : 1;
     uint32_t opExecuteTimeoutEn : 1;
     uint32_t rsv : 30;
@@ -54,27 +53,27 @@ struct StarsV2AicpuTimeoutConfig {
     uint32_t opExecuteTimeout;
 };
 
-struct StarsV2AicpuMsgVersion {
+struct DavidStarsAicpuMsgVersion {
     uint16_t magicNum;
     uint16_t version;
 };
 
-struct StarsV2AicpuUserData {
+struct DavidStarsAicpuUserData {
     uint32_t pid;
     uint8_t cmdType;
     uint8_t vfId;
     uint8_t tid;
     uint8_t tsId;
     union {
-        StarsV2AicpuModelOperate modelOperate;
-        StarsV2AicpuTimeoutConfig timeoutCfg;
-        StarsV2AicpuMsgVersion msgVersion;
+        DavidStarsAicpuModelOperate modelOperate;
+        DavidStarsAicpuTimeoutConfig timeoutCfg;
+        DavidStarsAicpuMsgVersion msgVersion;
     } u;
 };
 
-struct RtStarsV2AicpuControlSqe {
+struct RtDavidStarsAicpuControlSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     uint16_t res1;
@@ -92,7 +91,7 @@ struct RtStarsV2AicpuControlSqe {
 
     /* words4-9 use reserved field */
     /* word4-9 */
-    StarsV2AicpuUserData usrData;
+    DavidStarsAicpuUserData usrData;
 
     /* word10-13 */
     uint32_t res4[4];
@@ -115,9 +114,9 @@ union AicpuResv {
     } fusionSubTypeDesc;
     uint16_t res1;
 };
-struct RtStarsV2AicpuKernelSqe {
+struct RtDavidStarsAicpuKernelSqe {
     /* word0-1 */
-    rtStarsV2SqeHeader_t header;
+    rtDavidStarsSqeHeader_t header;
 
     /* word2 */
     AicpuResv resv;

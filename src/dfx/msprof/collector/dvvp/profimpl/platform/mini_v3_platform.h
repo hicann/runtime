@@ -20,6 +20,7 @@ public:
     MiniV3Platform();
     ~MiniV3Platform() override {}
     bool FeatureIsSupport(const PlatformFeature feature) const override;
+    ProfAicoreMetrics GetDefaultAicoreMetrics() const override;
 protected:
     std::string GetMemoryUBMetrics() override;
     std::set<PlatformFeature> epSupportFeature_;

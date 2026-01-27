@@ -92,6 +92,7 @@ drvError_t __attribute__((weak)) halMemImportFromShareableHandleV2(
     drv_mem_handle_type handle_type, struct MemShareHandle *share_handle, uint32_t devid, drv_mem_handle_t **handle);
 drvError_t __attribute__((weak)) halMemRetainAllocationHandle(drv_mem_handle_t **handle, void* ptr);
 drvError_t __attribute__((weak)) halMemGetAllocationPropertiesFromHandle(struct drv_mem_prop *prop, drv_mem_handle_t *handle);
+drvError_t __attribute__((weak)) halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr *pbase, size_t *psize);
 drvError_t __attribute__((weak)) halGetHostID(uint32_t *host_id);
 drvError_t __attribute__((weak)) halMemGetAllocationGranularity(const struct drv_mem_prop *prop,
     drv_mem_granularity_options option, size_t *granularity);
@@ -126,8 +127,9 @@ drvError_t __attribute__((weak)) halResAddrMap(unsigned int devId, struct res_ad
 drvError_t __attribute__((weak)) halResAddrUnmap(unsigned int devId, struct res_addr_info *res_info);
 
 drvError_t __attribute__((weak)) halHostUnregisterEx(void *srcPtr, UINT32 devid, UINT32 flag);
+drvError_t __attribute__((weak)) halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type,
+    UINT32 *mem_map_cap);
 drvError_t __attribute__((weak)) halHostRegister(void *srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void **dstPtr);
-drvError_t __attribute__((weak)) halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32 *mem_map_cap);
 drvError_t __attribute__((weak)) halShmemSetAttribute(const char *name, uint32_t type, uint64_t attr);
 drvError_t __attribute__((weak))
 halMemShareHandleSetAttribute(uint64_t shareableHandle, enum ShareHandleAttrType type, struct ShareHandleAttr attr);
@@ -143,7 +145,7 @@ drvError_t __attribute__((weak)) halMemcpyBatch(uint64_t dst[], uint64_t src[], 
 drvError_t __attribute__((weak)) halDeviceOpen(uint32_t devid, halDevOpenIn *in, halDevOpenOut *out);
 drvError_t __attribute__((weak)) halDeviceClose(uint32_t devid, halDevCloseIn *in);
 drvError_t __attribute__((weak)) halQueueGetDqsQueInfo(uint32_t devId, uint32_t qid, DqsQueueInfo *info);
-drvError_t __attribute__((weak)) halBuffGetDQSPooInfoById(uint32_t poolId, DqsPoolInfo *poolInfo);
+drvError_t __attribute__((weak)) halBuffGetDQSPoolInfoById(uint32_t poolId, DqsPoolInfo *poolInfo);
 
 drvError_t __attribute__((weak)) halProcessResBackup(halProcResBackupInfo *info);
 drvError_t __attribute__((weak)) halProcessResRestore(halProcResRestoreInfo *info);
@@ -179,8 +181,12 @@ DVresult __attribute__((weak)) halStreamBackup(uint32_t dev_id, struct stream_ba
 DVresult __attribute__((weak)) halStreamRestore(uint32_t dev_id, struct stream_backup_info *in);
 drvError_t __attribute__((weak)) halSetMemSharing(struct drvMemSharingPara *para);
 drvError_t __attribute__((weak)) halGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
+drvError_t __attribute__((weak)) halCentreNotifyGet(int index, int *value);
 drvError_t __attribute__((weak)) halDrvEventThreadInit(unsigned int devId);
 drvError_t __attribute__((weak)) halGetMemUsageInfo(uint32_t dev_id, struct mem_module_usage *mem_usage, size_t in_num, size_t *out_num);
+drvError_t __attribute__((weak)) halGetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+    struct halTsegInfo *tsegInfo);
+drvError_t __attribute__((weak)) halPutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo);
 };
 
 namespace cce {
@@ -223,6 +229,7 @@ enum class RtCtrlType {
         return RT_ERROR_NONE; \
 }
 
+#if (!defined(WIN32))
 #define DRV_ERROR_PROCESS(drvErrorCode, format, ...)                                                                 \
     do {                                                                                                             \
         if (&halMapErrorCode != nullptr) {                                                                           \
@@ -251,6 +258,10 @@ enum class RtCtrlType {
         }                                                                                                            \
         RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__);                                                      \
     } while (false)
+#else
+#define DRV_ERROR_PROCESS(drvErrorCode, format, ...)      \
+    RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__)
+#endif
 
 #if (!defined(WIN32))
 #define DRV_MALLOC_ERROR_PROCESS(drvErrorCode, moduleId, format, ...)                                                \

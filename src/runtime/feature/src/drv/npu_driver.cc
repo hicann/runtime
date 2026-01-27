@@ -129,7 +129,11 @@ uint32_t NpuDriver::RtGetRunMode()
 
 bool NpuDriver::IsSupportFeature(RtOptionalFeatureType f) const
 {
-    return (featureSet_.find(f) != featureSet_.end());
+    uint32_t index = static_cast<uint32_t>(f);
+    if (index >= featureSet_.size()) {
+        return false;
+    }
+    return featureSet_[index];
 }
 
 const DevProperties& NpuDriver::GetDevProperties(void) const
@@ -415,11 +419,17 @@ rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, ui
 {
     TIMESTAMP_NAME(__func__);
 
+    bool sentinelMode = Runtime::Instance()->GetSentinelMode();
     if (tsId == static_cast<uint32_t>(RT_TSV_ID)) {
         RT_LOG(RT_LOG_INFO, "Open device success, device_id=%u, tsId=%u.", deviceId, tsId);
         isTsvOpen_ = true;
-        return RT_ERROR_NONE;
+        if (!sentinelMode) {
+            return RT_ERROR_NONE;
+        }
     } else {
+        if (sentinelMode) {
+            return RT_ERROR_NONE;
+        }
         isTscOpen_ = true;
     }
 
@@ -1205,6 +1215,8 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         {FEATURE_SVM_VMM_NORMAL_GRANULARITY, "FEATURE_SVM_VMM_NORMAL_GRANULARITY"},
         {FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION, "FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION"},
         {FEATURE_SVM_MEM_HOST_UVA, "FEATURE_SVM_MEM_HOST_UVA"},
+        {FEATURE_DMS_GET_QOS_MASTER_CONFIG, "FEATURE_DMS_GET_QOS_MASTER_CONFIG"},
+        {FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID, "FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID"},
     };
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));
@@ -1218,24 +1230,34 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
     return isSupported;
 }
 
-rtError_t NpuDriver::MemQueueQueryInfo(const int32_t devId, const uint32_t qid, rtMemQueueInfo_t * const queInfo)
+rtError_t NpuDriver::MemQueueQueryInfoV2(const int32_t devId, const uint32_t qid, QueueInfo *memQueInfo)
 {
     RT_LOG(RT_LOG_DEBUG, "query queue info, drv devId=%d, qid=%u.", devId, qid);
 
     COND_RETURN_WARN(&halQueueQueryInfo == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueQueryInfo does not exist.");
-    QueueInfo memQueInfo = {};
-    const drvError_t drvRet = halQueueQueryInfo(static_cast<uint32_t>(devId), qid, &memQueInfo);
+    const drvError_t drvRet = halQueueQueryInfo(static_cast<uint32_t>(devId), qid, memQueInfo);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueQueryInfo failed: drv devId=%d, qid=%u, drvRetCode=%d.",
             devId, qid, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::MemQueueQueryInfo(const int32_t devId, const uint32_t qid, rtMemQueueInfo_t * const queInfo)
+{
+    QueueInfo memQueInfo = {};
+    const rtError_t ret = MemQueueQueryInfoV2(devId, qid, &memQueInfo);
+    ERROR_RETURN(ret, "queue info query failed, ret=%#x", static_cast<uint32_t>(ret));
+
     // only size is valid in host halQueueQueryInfo api
     queInfo->size = memQueInfo.size;
     queInfo->id = memQueInfo.id;
     queInfo->depth = static_cast<uint32_t>(memQueInfo.depth);
     queInfo->status = memQueInfo.status;
+
     return RT_ERROR_NONE;
 }
 
@@ -1593,10 +1615,10 @@ rtError_t NpuDriver::GetDqsQueInfo(const uint32_t devId, const uint32_t qid, Dqs
 
 rtError_t NpuDriver::GetDqsMbufPoolInfo(const uint32_t poolId, DqsPoolInfo *dqsPoolInfo)
 {
-    COND_RETURN_WARN(&halBuffGetDQSPooInfoById == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
-        "[drv api] halBuffGetDQSPooInfoById does not exist");
+    COND_RETURN_WARN(&halBuffGetDQSPoolInfoById == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halBuffGetDQSPoolInfoById does not exist");
 
-    const drvError_t drvRet = halBuffGetDQSPooInfoById(poolId, dqsPoolInfo);
+    const drvError_t drvRet = halBuffGetDQSPoolInfoById(poolId, dqsPoolInfo);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Get dqs mbuf pool info failed, poolId=%u, ret=%d",
             poolId, static_cast<int32_t>(drvRet));
@@ -1610,6 +1632,22 @@ rtError_t NpuDriver::GetDqsMbufPoolInfo(const uint32_t poolId, DqsPoolInfo *dqsP
         dqsPoolInfo->headPoolBaseAddr, dqsPoolInfo->headPoolBlkSize, dqsPoolInfo->headPoolBlkOffset,
         dqsPoolInfo->allocOpAddr, dqsPoolInfo->freeOpAddr);
 
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetCentreNotify(int32_t index, int32_t *value)
+{
+    COND_RETURN_WARN(&halCentreNotifyGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halCentreNotifyGet does not exist");
+
+    const drvError_t drvRet = halCentreNotifyGet(index, value);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "halCentreNotifyGet failed, index=%d, drvRet=%d",
+            index, static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_INFO, "Success, index=%d, value=%d.", index, *value);
     return RT_ERROR_NONE;
 }
 
@@ -1639,6 +1677,40 @@ rtError_t NpuDriver::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle,
         DRV_ERROR_PROCESS(drvRet, "[drv api] halMemGetAllocationPropertiesFromHandle failed: drvRetCode=%d", static_cast<int32_t>(drvRet));
     }
     return RT_GET_DRV_ERRCODE(drvRet);
+}
+
+rtError_t NpuDriver::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
+{
+    COND_RETURN_WARN(&halMemGetAddressRange == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemGetAddressRange does not exist");
+    DVdeviceptr drv_base = 0;
+    DVdeviceptr *drv_base_arg = (pbase == nullptr) ? nullptr : &drv_base;
+    const drvError_t drvRet = halMemGetAddressRange(RtPtrToPtr<DVdeviceptr>(ptr), drv_base_arg, psize);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halMemGetAddressRange failed: ptr=%p, drvRetCode=%d", ptr, static_cast<int32_t>(drvRet));
+    }
+    if (pbase != nullptr) {
+        *pbase = (void*)drv_base;
+    }
+    return RT_GET_DRV_ERRCODE(drvRet);
+}
+
+rtError_t NpuDriver::GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                                    int64_t &chipId, int64_t &dieId)
+{
+    rtError_t chipIdError = RT_ERROR_NONE;
+    rtError_t dieIdError = RT_ERROR_NONE;
+    if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID)) {
+        chipIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_CHIP_ID, &chipId);
+        dieIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_DIE_ID, &dieId);
+    } else {
+        chipIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
+        dieIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
+    }
+    ERROR_RETURN_MSG_INNER(chipIdError, "Get chipId fail, retCode=%#x, devId=%u, deviceId=%u, phyId=%u", 
+        chipIdError, devId, remoteDevId, remotePhyId);
+    ERROR_RETURN_MSG_INNER(dieIdError, "Get dieId fail, retCode=%#x, devId=%u, deviceId=%u, phyId=%u", 
+        dieIdError, devId, remoteDevId, remotePhyId);
+    return RT_ERROR_NONE;
 }
 }  // namespace runtime
 }  // namespace cce

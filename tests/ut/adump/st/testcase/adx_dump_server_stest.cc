@@ -1,0 +1,123 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+#include <gtest/gtest.h>
+#include "mockcpp/mockcpp.hpp"
+#define protected public
+#define private public
+
+#include "ide_dsmi_stub.h"
+#include "adx_log.h"
+#include "config.h"
+#include "component/adx_server_manager.h"
+#include "adx_datadump_server.h"
+#include "adx_dump_record.h"
+
+using namespace Adx;
+
+class ADX_DUMP_SERVER_STEST: public testing::Test {
+protected:
+    virtual void SetUp() {}
+    virtual void TearDown() {
+        GlobalMockObject::verify();
+    }
+};
+
+// normal scene
+TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_And_Uninit)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(invoke(rtGetRunModeHost));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+}
+
+TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerReInit_And_ReUninit)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(returnValue(1));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+}
+
+TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_AdxDumpRecord_InitFailed)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(invoke(rtGetRunModeHost));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
+        .stubs()
+        .will(returnValue(-1));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+}
+
+TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerInit_GetMode_Helper)
+{
+    rtRunMode info = RT_RUN_MODE_RESERVED;
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(returnValue((rtError_t)1));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+}
+
+TEST_F(ADX_DUMP_SERVER_STEST, AdxDataDumpServerUnInit)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(invoke(rtGetRunModeHost));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+
+    while(Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
+        Adx::AdxDumpRecord::Instance().UpdateDumpInitNum(false);
+    }
+
+    MOCKER_CPP(&Adx::AdxServerManager::Exit)
+    .stubs()
+    .will(returnValue(IDE_DAEMON_ERROR))
+    .then(returnValue(IDE_DAEMON_OK));
+
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+}
+
+// helper scene
+TEST_F(ADX_DUMP_SERVER_STEST, HelperAdxDataDumpServerInit)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(invoke(rtGetRunModeHost))
+        .then(invoke(rtGetRunModeDevice));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
+        .stubs()
+        .will(returnValue(-1));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    std::string hostPID = "456";
+    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DUMP_SERVER_STEST, HelperAdxDataDumpServerUnInit)
+{
+    MOCKER(rtGetRunMode)
+        .stubs()
+        .will(invoke(rtGetRunModeDevice));
+    MOCKER_CPP(&Adx::AdxServerManager::Exit)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_ERROR));
+    std::string hostPID = "456";
+    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}

@@ -47,6 +47,7 @@ constexpr uint32_t STREAM_SQ_MAX_DEPTH = 32768U;
 
 namespace cce {
 namespace runtime {
+constexpr uint64_t ABORT_STREAM_TIMEOUT = (60UL * 1000 * 1000);  // us
 class Event;
 class Context;
 class Device;
@@ -211,7 +212,7 @@ public:
 
     void StreamSyncFinishReport() const;
     // Block current host thread until all task ahead finish.
-    rtError_t Synchronize(const bool isNeedWaitSyncCq = false, int32_t timeout = -1);
+    virtual rtError_t Synchronize(const bool isNeedWaitSyncCq = false, int32_t timeout = -1);
 
     // Query state of event
     rtError_t Query(void) const;
@@ -688,12 +689,12 @@ public:
         return limitFlag_.Value();
     }
 
-    uint32_t GetTaskPosHead() const
+    virtual uint32_t GetTaskPosHead() const
     {
         return taskPosHead_.Value();
     }
 
-    uint32_t GetTaskPosTail() const
+    virtual uint32_t GetTaskPosTail() const
     {
         return taskPosTail_.Value();
     }
@@ -827,6 +828,16 @@ public:
         return isNeedRecvCqe_;
     }
 
+    void SetIsForceRecycle(bool flag)
+    {
+        isForceRecycle_ = flag;
+    }
+
+    bool GetIsForceRecycle()
+    {
+        return isForceRecycle_;
+    }
+
     uint16_t GetLastRecyclePos() const
     {
         return lastRecyclePos_;
@@ -879,12 +890,12 @@ public:
     rtError_t ModelWaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq);
     rtError_t StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq,
         int32_t timeout);
-
+    virtual bool IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId);
     bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead);
-    rtError_t SynchronizeImpl(const uint16_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout=-1);
-    rtError_t SynchronizeExecutedTask(const uint16_t taskId, const mmTimespec &beginTime, int32_t timeout);
+    rtError_t SynchronizeImpl(const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout=-1);
+    virtual rtError_t SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec &beginTime, int32_t timeout);
     rtError_t WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimespec &beginTime, int32_t timeout);
-    rtError_t GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint16_t &finishedId);
+    virtual rtError_t GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &finishedId);
     void *GetDvppRRTaskAddr(void);
     uint32_t GetMaxTryCount() const;
 
@@ -900,7 +911,7 @@ public:
 
     rtError_t EschedManage(const bool enFlag) const;
 
-    bool IsExistCqe(void) const;
+    virtual bool IsExistCqe(void) const;
     rtError_t CreateArgRecycleList(uint32_t size);
     void DestroyArgRecycleList(uint32_t size);
     virtual bool AddArgToRecycleList(TaskInfo * const tsk);
@@ -940,7 +951,7 @@ public:
     }
 
     rtError_t GetErrorForAbortOnFailure(rtError_t defaultError);
-    rtError_t CheckContextStatus(const bool isBlockDefaultStream=true) const;
+    virtual rtError_t CheckContextStatus(const bool isBlockDefaultStream=true) const;
     rtError_t CheckContextTaskSend(const TaskInfo * const workTask) const;
 
     void SetSyncRemainTime(const int32_t timeout)
@@ -1125,7 +1136,7 @@ public:
     void ShowStmDfxInfo(void);
     void StarsStmDfxCheck(uint64_t &beginCnt, uint64_t &endCnt, uint16_t &checkCount);
     void StmDfxCheck(uint64_t &beginCnt, uint64_t &endCnt, uint16_t &checkCount);
-    virtual rtError_t StarsV2UpdatePublicQueue(void) { return RT_ERROR_NONE; }
+    virtual rtError_t DavidUpdatePublicQueue(void) { return RT_ERROR_NONE; }
     virtual bool IsCntNotifyReachThreshold(void)   { return false; }
     virtual rtError_t ApplyCntNotifyId(int32_t &newEventId)
     {
@@ -1163,8 +1174,10 @@ public:
     bool GetForceRecycleFlag(bool flag) const;
     rtError_t CheckGroup();
     virtual void StarsShowPublicQueueDfxInfo(void) {}
-    // use for starsv2
-    virtual rtError_t StreamAbort(void) { return RT_ERROR_NONE; }
+    // use for david
+    rtError_t TaskAbortAndQueryStatus(const uint32_t opType);
+    rtError_t StreamAbort();
+    rtError_t StreamStop();
     virtual rtError_t StreamRecoverAbort(void) { return RT_ERROR_NONE; }
     virtual rtError_t ModelAbortById(uint32_t modelId);
     rtError_t UpdateTask(TaskInfo** updateTask);
@@ -1309,10 +1322,21 @@ public:
     {
         return beginCaptureThreadId_;
     }
+
+    void SetArgHandle(void *argHandle)
+    {
+        argsHandle_ = argHandle;
+    }
+
+    void *GetArgHandle() const
+    {
+        return argsHandle_;
+    }
 private:
     // submit create stream task
     rtError_t SubmitCreateStreamTask();
-    rtError_t GetSynchronizeError(rtError_t error);
+    virtual rtError_t GetSynchronizeError(rtError_t error);
+    rtError_t SubmitStreamRecycle(Stream* exeStream, bool isForceRecycle, uint16_t logicCqId, TaskInfo *&task) const;
     void ResetHostResourceForPersistentStream();
     void RecycleModelDelayRecycleTask();
 public:
@@ -1455,6 +1479,7 @@ private:
     uint32_t sqeBufferSize_{0U};
     uint32_t beginCaptureThreadId_{UINT32_MAX};
     uint64_t sqIdMemAddr_{0UL};
+    void *argsHandle_{nullptr};
 public:
     TaskResManage *taskResMang_{nullptr};
     bool isHasPcieBar_{false};

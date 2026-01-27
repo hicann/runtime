@@ -9,6 +9,7 @@
  */
 #ifndef KERNEL_INFO_COLLECTOR_H
 #define KERNEL_INFO_COLLECTOR_H
+#include <memory>
 #include <string>
 #include <vector>
 #include <elf.h>

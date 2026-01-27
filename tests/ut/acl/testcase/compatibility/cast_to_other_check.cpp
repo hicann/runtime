@@ -817,7 +817,6 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtFuncAttribute)
 
     EXPECT_EQ(sizeof(aclrtFuncAttribute), sizeof(rtFuncAttribute));
 }
-
 TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHacType)
 {
    EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_STARS, (uint32_t)RT_HAC_TYPE_STARS);
@@ -830,7 +829,6 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHacType)
    EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_DVPP, (uint32_t)RT_HAC_TYPE_DVPP);
    EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_UDMA, (uint32_t)RT_HAC_TYPE_UDMA);
    EXPECT_EQ((uint32_t)ACL_RT_HAC_TYPE_CCU, (uint32_t)RT_HAC_TYPE_CCU);
-
    EXPECT_EQ(sizeof(aclrtHacType), sizeof(rtHacType));
 }
 
@@ -840,4 +838,5 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostMemMapCapability)
    EXPECT_EQ((uint32_t)ACL_RT_HOST_MEM_MAP_SUPPORTED, (uint32_t)RT_HOST_MEM_MAP_SUPPORTED);
 
    EXPECT_EQ(sizeof(aclrtHostMemMapCapability), sizeof(rtHostMemMapCapability));
+
 }

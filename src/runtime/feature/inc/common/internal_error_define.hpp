@@ -106,6 +106,11 @@ constexpr int32_t RT_ERROR_SUSPECT_REMOTE_ERROR     = 0x0701002B;
 constexpr int32_t RT_ERROR_DEVICE_AICORE_ERROR_SW   = 0x0701002C;
 constexpr int32_t RT_ERROR_DEVICE_AICORE_ERROR_HW_L = 0x0701002D;
 constexpr int32_t RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL = 0x0701002E;
+constexpr int32_t RT_ERROR_LOCAL_MEM_ERROR          = 0x0701002F;
+constexpr int32_t RT_ERROR_REMOTE_MEM_ERROR         = 0x07010030;
+constexpr int32_t RT_ERROR_CCU_HCCL_MEM_ERROR       = 0x07010031;
+constexpr int32_t RT_ERROR_CCU_HCCL_REMOTE_ERROR    = 0x07010032;
+constexpr int32_t RT_ERROR_DEVICE_LINK_ERROR = 0x07010033;
 
 constexpr int32_t RT_ERROR_STREAM_BASE              = 0x07030000;
 constexpr int32_t RT_ERROR_STREAM_NULL              = 0x07030001;
@@ -461,6 +466,7 @@ constexpr int32_t RT_ERROR_CDQ_DATA_SIZE_EXCEED                        = 0x07190
 constexpr int32_t RT_ERROR_CDQ_BATCH_ABNORMAL                          = 0x0719000A;
 
 constexpr int32_t RT_ERROR_WAIT_TIMEOUT                                = 0x071A0000;
+constexpr int32_t RT_ERROR_NOT_FOUND                                   = 0x071A0001;
 
 constexpr int32_t RT_ERROR_TASKRES_BASE                                = 0x071C0000;
 constexpr int32_t RT_ERROR_TASKRES_QUEUE_FULL                          = 0x071C0001;
@@ -477,10 +483,15 @@ constexpr int32_t RT_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED           = 0x071D0
 constexpr int32_t RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED              = 0x071E0001;
 constexpr int32_t RT_ERROR_HOST_MEMORY_NOT_REGISTERED                  = 0x071E0002;
 
+constexpr int32_t RT_ERROR_PLATFORM_PARSE_FILE_FAILED                  = 0x071F0001;
+
 enum class DeviceFaultType : uint8_t {
-    MTE_ERROR,
+    L2_BUFFER_ERROR,
+    HBM_UCE_ERROR,
     AICORE_SW_ERROR,
     AICORE_HW_L_ERROR,
+    AICORE_UNKNOWN_ERROR,
+    LINK_ERROR,
     NO_ERROR
 };
 

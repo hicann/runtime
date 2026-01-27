@@ -97,7 +97,7 @@ rtError_t StreamSqCqManage::AllocStreamSqCq(const Stream * const newStm, const u
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamSqCqManage::AllocStarsV2StreamSqCq(const Stream * const newStm, const uint32_t priority, 
+rtError_t StreamSqCqManage::AllocDavidStreamSqCq(const Stream * const newStm, const uint32_t priority, 
     uint32_t drvFlag, uint32_t &sqId, uint32_t &cqId, uint64_t &sqAddr)
 {
     uint32_t info[SQCQ_RTS_INFO_LENGTH] = {};
@@ -118,16 +118,23 @@ rtError_t StreamSqCqManage::AllocStarsV2StreamSqCq(const Stream * const newStm, 
     sqId = 0U;
     cqId = 0U;
     FillStreamInfoEx(newStm, infoEx);
-    if(newStm->Device_()->GetVfId() != MAX_UINT32_NUM) {
+    if (newStm->Device_()->GetVfId() != MAX_UINT32_NUM) {
         drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_RANGE_ID));
     }
+    if (infoEx.body.streamFlag.bits.dqsInterChip == 1U) {
+        drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_RTS_RSV_SQCQ_ID));
+    }
+    if ((newStm->Flags() & RT_STREAM_PERSISTENT) != 0U) {
+        drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_TASK_SINK_SQ));
+    }
+
     rtError_t error = Alloc(streamId, drvFlag, sqId, cqId, info, sizeof(info),
                                   RtPtrToPtr<uint32_t *>(&infoEx), sizeof(rtStreamInfoExMsg_t));
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
     error = device_->Driver_()->GetSqAddrInfo(device_->Id_(), device_->DevGetTsId(), sqId, sqAddr);
     COND_LOG(error != RT_ERROR_NONE, "hal may not support get sq addr info, device_id=%u, retCode=%#x.", device_->Id_(), error);
     RT_LOG(RT_LOG_DEBUG, "Alloc sq cq: device_id=%u, stream_id=%u, sq_id=%u, cq_id=%u, drv_flag=%#x,"
-           "sq_addr=0x%llx.", device_->Id_(), streamId, sqId, cqId, drvFlag, sqAddr);
+           " sq_addr=0x%llx.", device_->Id_(), streamId, sqId, cqId, drvFlag, sqAddr);
     return error;
 }
 

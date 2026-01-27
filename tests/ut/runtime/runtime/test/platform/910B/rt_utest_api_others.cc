@@ -25,6 +25,7 @@ class RtOthersApiTest : public testing::Test
 protected:
     static void SetUpTestCase()
     {
+        (void)rtSetSocVersion("Ascend310");
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         RawDevice *rawDevice = new RawDevice(0);
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());

@@ -8,9 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "dev_info_manage.h"
-#include <map>
-#include <vector>
-#include <mutex>
 namespace cce {
 namespace runtime {
 DevInfoManage &DevInfoManage::Instance()
@@ -152,39 +149,38 @@ rtError_t DevInfoManage::GetPlatformSoName(rtChipType_t chip, std::string &soNam
 
 bool DevInfoManage::RegChipFeatureSet(rtChipType_t chip, const std::unordered_set<RtOptionalFeatureType> &f)
 {
-    if (isDestroy) {
+    if (isDestroy || (chip < CHIP_BEGIN) || (chip >= CHIP_END)) {
         return false;
     }
-    const WriteProtect lk(&featureLock);
-    // Append
-    chipFeatureSet[chip].insert(f.begin(), f.end());
+    std::array<bool, FEATURE_MAX_VALUE> feature = {false};
+    for (auto &i : f) {
+        uint32_t index = static_cast<uint32_t>(i);
+        feature[index] = true;
+    }
+    // for high performance, no lock.
+    // each chip must be registered only once. Dynamic registration is prohibited.
+    chipFeatureSet[chip] = feature;
     return true;
 }
 
-rtError_t DevInfoManage::GetChipFeatureSet(rtChipType_t chip, std::unordered_set<RtOptionalFeatureType> &f)
+rtError_t DevInfoManage::GetChipFeatureSet(rtChipType_t chip, std::array<bool, FEATURE_MAX_VALUE> &f)
 {
-    if (!isDestroy) {
-        const ReadProtect lk(&featureLock);
-        auto it = chipFeatureSet.find(chip);
-        if (it != chipFeatureSet.end()) {
-            f = it->second;
-            return RT_ERROR_NONE;
-        }
+    if (isDestroy || (chip < CHIP_BEGIN) || (chip >= CHIP_END)) {
+        return RT_ERROR_INVALID_VALUE;
     }
-    return RT_ERROR_INVALID_VALUE;
+    f = chipFeatureSet[chip];
+    return RT_ERROR_NONE;
 }
 
 bool DevInfoManage::IsSupportChipFeature(rtChipType_t chip, RtOptionalFeatureType f)
 {
-    if (isDestroy) {
+    if (isDestroy || (chip < CHIP_BEGIN) || (chip >= CHIP_END)) {
         return false;
     }
-    const ReadProtect lk(&featureLock);
-    auto it = chipFeatureSet.find(chip);
-    if (it != chipFeatureSet.end()) {
-        if (it->second.find(f) != it->second.end()) {
-            return true;
-        }
+    uint32_t index = static_cast<uint32_t>(f);
+    if (index < chipFeatureSet[chip].size()) {
+        // for high performance, no lock. only write once.
+        return chipFeatureSet[chip][index];
     }
     return false;
 }

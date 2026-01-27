@@ -1,0 +1,131 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+syntax = "proto3";
+package aicpu.dump;
+
+message Shape {
+    repeated uint64 dim = 1;
+}
+
+message DimRange{
+    uint64 dim_start = 1;
+    uint64 dim_end = 2;
+}
+
+enum AddressType {
+    TRADITIONAL_ADDR = 0;
+    NOTILING_ADDR = 1;
+    RAW_ADDR = 2;
+}
+
+message Workspace {
+    enum SpaceType {
+        LOG = 0;
+    }
+    SpaceType type = 1;
+    uint64 data_addr = 2;
+    uint64 size = 3;
+}
+
+message Output {
+    int32 data_type = 1;
+    int32 format = 2;
+    Shape shape = 3;
+    uint64 address = 4;
+    string original_name = 5;
+    int32 original_output_index = 6;
+    int32 original_output_data_type = 7;
+    int32 original_output_format = 8;
+    uint64 size = 9;
+    Shape origin_shape = 10;
+    AddressType addr_type = 11;
+    uint64 offset = 12;
+    repeated DimRange dim_range = 13;
+}
+
+message Input {
+    int32 data_type =1;
+    int32 format = 2;
+    Shape shape = 3;
+    uint64 address = 4;
+    uint64 size = 5;
+    Shape origin_shape = 6;
+    AddressType addr_type = 7;
+    uint64 offset = 8;
+}
+
+enum BufferType {
+    L1 = 0;
+}
+
+message OpBuffer {
+    BufferType buffer_type = 1;
+    uint64 address = 2;
+    uint64 size = 3;
+}
+
+message Op {
+    string op_name = 1;
+    string op_type = 2;
+}
+
+message OpAttr {
+    string name = 1;
+    string value = 2;
+}
+
+message Task {
+    enum TaskType {
+        AICORE = 0;
+        AICPU = 1;
+        DEBUG = 2;
+        SDMA = 3;
+        FFTSPLUS = 4;
+    }
+    uint32 task_id = 1;
+    uint32 stream_id = 2;
+    Op op = 3;
+    repeated Output output = 4;
+    bool end_graph = 5;
+    repeated Input input = 6;
+    repeated OpBuffer buffer = 7;
+    TaskType tasktype = 8;
+    uint32 context_id = 9;
+    repeated OpAttr attr = 10;
+    repeated Workspace space = 11;
+}
+
+enum DumpData {
+    TENSOR_DUMP_DATA = 0;
+    STATS_DUMP_DATA = 1;
+}
+
+message OpMappingInfo {
+    string dump_path = 1;
+    oneof model_name_param {
+        string model_name = 2;
+    }
+    oneof model_id_param {
+        uint32 model_id = 3;
+    }
+    oneof step_id {
+        uint64 step_id_addr = 4;
+    }
+    oneof iterations_per_loop {
+        uint64 iterations_per_loop_addr = 5;
+    }
+    oneof loop_cond {
+        uint64 loop_cond_addr = 6;
+    }
+    uint32 flag = 7; // 0x01 load, 0x00 unload
+    repeated Task task = 8;
+    string dump_step = 9;
+    DumpData dump_data = 10;
+}

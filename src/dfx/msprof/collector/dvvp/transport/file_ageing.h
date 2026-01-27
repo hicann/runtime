@@ -49,6 +49,7 @@ private:
     };
 
 private:
+    int32_t Init2();
     bool IsNoAgeingFile(const std::string &fileName) const;
     bool IsLastFile(const std::string &fileCountTag);
     uint64_t GetStorageLimit() const;

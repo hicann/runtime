@@ -277,36 +277,36 @@ void ToCommandBodyForOnlineProfDisableTask(TaskInfo * const taskInfo, rtCommand_
 
 #endif
 
-#if F_DESC("ProfTask")
-rtError_t ProfTaskInit(TaskInfo * const taskInfo, const uint64_t address, const uint32_t len)
+#if F_DESC("MdcProfTask")
+rtError_t AdcProfTaskInit(TaskInfo * const taskInfo, const uint64_t address, const uint32_t len)
 {
-    ProfTaskInfo *profTaskInfo = &(taskInfo->u.profTaskInfo);
+    AdcProfTaskInfo *adcProfTaskInfo = &(taskInfo->u.adcProfTaskInfo);
     TaskCommonInfoInit(taskInfo);
 
     taskInfo->type = TS_TASK_TYPE_ADCPROF;
     taskInfo->typeName = "ADC_PROF";
-    profTaskInfo->addr = address;
-    profTaskInfo->length = len;
+    adcProfTaskInfo->addr = address;
+    adcProfTaskInfo->length = len;
 
     return RT_ERROR_NONE;
 }
 
-void ToCommandBodyForProfTask(TaskInfo * const taskInfo, rtCommand_t *const command)
+void ToCommandBodyForAdcProfTask(TaskInfo * const taskInfo, rtCommand_t *const command)
 {
     rtError_t error;
     uint64_t offset = 0UL;
-    ProfTaskInfo *profTaskInfo = &(taskInfo->u.profTaskInfo);
+    AdcProfTaskInfo *adcProfTaskInfo = &(taskInfo->u.adcProfTaskInfo);
     Stream * const stream = taskInfo->stream;
     Driver * const driver = taskInfo->stream->Device_()->Driver_();
-    const uint64_t addr = profTaskInfo->addr;
+    const uint64_t addr = adcProfTaskInfo->addr;
 
     error = driver->MemAddressTranslate(static_cast<int32_t>(stream->Device_()->Id_()), addr, &offset);
-    COND_RETURN_VOID(error != RT_ERROR_NONE, "profTask address retCode=%#x, addr=%#" PRIx64 "", error, addr);
+    COND_RETURN_VOID(error != RT_ERROR_NONE, "MdcProfTask address retCode=%#x, addr=%#" PRIx64 "", error, addr);
 
-    RT_LOG(RT_LOG_INFO, "profTask offset=%#" PRIx64 ", virtual addr=%#" PRIx64 "", offset, addr);
+    RT_LOG(RT_LOG_INFO, "MdcProfTask offset=%#" PRIx64 ", virtual addr=%#" PRIx64 "", offset, addr);
 
-    command->u.profTask.profAddr = offset;
-    command->u.profTask.length = profTaskInfo->length;
+    command->u.mdcProfTask.profAddr = offset;
+    command->u.mdcProfTask.length = adcProfTaskInfo->length;
 }
 
 #endif

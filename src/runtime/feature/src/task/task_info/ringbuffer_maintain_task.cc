@@ -91,7 +91,7 @@ void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *con
     const rtError_t error = taskInfo->stream->Device_()->Driver_()->MemAddressTranslate(
         static_cast<int32_t>(taskInfo->stream->Device_()->Id_()),
         RtPtrToValue<void *>(ringBufMtTsk->deviceRingBufferAddr), &offset);
-    COND_RETURN_VOID(error != RT_ERROR_NONE, "profTask address error=%d", error);
+    COND_RETURN_VOID(error != RT_ERROR_NONE, "MdcProfTask address error=%d", error);
 
     sqe->u.ring_buffer_control_info.ringbuffer_offset = offset;
     sqe->u.ring_buffer_control_info.total_len = ringBufMtTsk->bufferLen;

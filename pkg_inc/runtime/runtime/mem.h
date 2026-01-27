@@ -686,6 +686,15 @@ typedef struct {
     uint64_t dst;
 } rtMemcpyAddrInfo;
 
+// user should give the right src and dst address, and the right len
+typedef struct {
+    uint64_t res0[4];
+    uint64_t src;
+    uint64_t dst;
+    uint32_t len;
+    uint32_t res1[3];
+} rtDavidMemcpyAddrInfo;
+
 RTS_API rtError_t rtMemcpyAsyncPtr(void *memcpyAddrInfo, uint64_t destMax, uint64_t count,
                                     rtMemcpyKind_t kind, rtStream_t stream, uint32_t qosCfg);
 
@@ -1386,6 +1395,18 @@ RTS_API rtError_t rtMemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *hand
 * @return RT_ERROR_DRV_ERR for driver error
 */
 RTS_API rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
+
+/**
+ * @ingroup dvrt_mem
+ * @brief get start address and size of memory block
+ * @param  [in] ptr Address whithin a certain memory block range
+ * @param  [out] pbase Start address of the memory block
+ * @param  [out] psize Size of th memory block
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
 #if defined(__cplusplus)
 }
 #endif

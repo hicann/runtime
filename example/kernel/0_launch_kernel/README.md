@@ -19,6 +19,8 @@
   # 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，此处以默认路径为例
   # 可在CANN包安装路径下查找ascendc.cmake，例如find ./ -name ascendc.cmake
   export ASCENDC_CMAKE_DIR=/usr/local/Ascend/cann/compiler/tikcpp/ascendc_kernel_cmake
+  # ${install_path}替换为CANN toolkit包的安装路径，默认安装在`/usr/local/Ascend`目录
+  export ASCEND_INSTALL_PATH=${install_path}/cann
   ```
 
   2.下载样例代码并上传至安装CANN软件的环境，切换到样例目录。

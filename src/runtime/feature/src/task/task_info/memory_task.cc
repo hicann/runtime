@@ -36,6 +36,75 @@ TIMESTAMP_EXTERN(rtMemcpyAsync_drvDeviceGetTransWay);
 TIMESTAMP_EXTERN(rtMemcpyAsync_drvMemConvertAddr);
 
 #if F_DESC("MemcpyAsyncTask")
+
+#ifdef __RT_CFG_HOST_CHIP_HI3559A__
+rtError_t AllocCpyTmpMem(TaskInfo * const taskInfo, uint32_t &cpyType,
+                         const void *&src, void *&des, uint64_t size)
+{
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    Stream * const stream = taskInfo->stream;
+    Driver * const driver = taskInfo->stream->Device_()->Driver_();
+    rtError_t error = RT_ERROR_NONE;
+    if ((cpyType == RT_MEMCPY_HOST_TO_DEVICE_EX) || (cpyType == RT_MEMCPY_HOST_TO_DEVICE)) {
+        cpyType = RT_MEMCPY_HOST_TO_DEVICE;
+        if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
+            error = driver->HostMemAlloc(&(memcpyAsyncTaskInfo->srcPtr), size, stream->Device_()->Id_());
+        } else {
+            error = driver->DevMemAlloc(&(memcpyAsyncTaskInfo->srcPtr), size,
+                                        RT_MEMORY_DEFAULT, stream->Device_()->Id_());
+        }
+        ERROR_RETURN(error, "Alloc src failed,size=%" PRIu64 "(bytes), device_id=%u, retCode=%#x",
+                               size, stream->Device_()->Id_(), error);
+        COND_RETURN_ERROR_MSG_INNER(memcpyAsyncTaskInfo->srcPtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+                                    "Alloc copy malloc failed, src ptr is null.");
+        errno_t rc = memcpy_s(memcpyAsyncTaskInfo->srcPtr, size, src, size);
+        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, rc != EOK, RT_ERROR_SEC_HANDLE,
+            "Memcpy_s failed, retCode is %d, size is %" PRIu64 "", rc, size);
+        src = (void *)memcpyAsyncTaskInfo->srcPtr;
+    } else if ((cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) || (cpyType == RT_MEMCPY_DEVICE_TO_HOST)) {
+        cpyType = RT_MEMCPY_DEVICE_TO_HOST;
+        memcpyAsyncTaskInfo->originalDes = des;
+        if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
+            error = driver->HostMemAlloc(&(memcpyAsyncTaskInfo->desPtr), size, stream->Device_()->Id_());
+        } else {
+            error = driver->DevMemAlloc(&(memcpyAsyncTaskInfo->desPtr), size,
+                                        RT_MEMORY_DEFAULT, stream->Device_()->Id_());
+        }
+        ERROR_RETURN(error, "Alloc dest failed, size=%u(bytes), device_id=%u, retCode=%#x",
+            size, stream->Device_()->Id_(), error);
+        COND_RETURN_ERROR_MSG_INNER(memcpyAsyncTaskInfo->desPtr == nullptr,
+                                    RT_ERROR_MEMORY_ALLOCATION, "Malloc dest ptr failed.");
+        des = (void *)memcpyAsyncTaskInfo->desPtr;
+        memcpyAsyncTaskInfo->isConcernedRecycle = true;
+    }
+    return error;
+}
+
+void ReleaseCpyTmpMem(TaskInfo * const taskInfo)
+{
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    Stream * const stream = taskInfo->stream;
+    Driver * const driver = taskInfo->stream->Device_()->Driver_();
+
+    if (memcpyAsyncTaskInfo->srcPtr != nullptr) {
+        if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
+            driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr);
+        } else {
+            driver->DevMemFree(memcpyAsyncTaskInfo->srcPtr, stream->Device_()->Id_());
+        }
+        memcpyAsyncTaskInfo->srcPtr = nullptr;
+    }
+
+    if (memcpyAsyncTaskInfo->desPtr != nullptr) {
+        if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
+            driver->HostMemFree(memcpyAsyncTaskInfo->desPtr);
+        } else {
+            driver->DevMemFree(memcpyAsyncTaskInfo->desPtr, stream->Device_()->Id_());
+        }
+        memcpyAsyncTaskInfo->desPtr = nullptr;
+    }
+}
+#else
 rtError_t AllocCpyTmpMem(TaskInfo * const taskInfo, uint32_t &cpyType,
                          const void *&srcAddr,
                          void *&desAddr,
@@ -129,7 +198,7 @@ void ReleaseCpyTmpMem(TaskInfo * const taskInfo)
     }
 }
 
-rtError_t AllocCpyTmpMemForStarsV2(TaskInfo * const taskInfo, uint32_t &cpyType,
+rtError_t AllocCpyTmpMemForDavid(TaskInfo * const taskInfo, uint32_t &cpyType,
     const void *&srcAddr, void *&desAddr, const uint64_t addrSize)
 {
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
@@ -151,9 +220,8 @@ rtError_t AllocCpyTmpMemForStarsV2(TaskInfo * const taskInfo, uint32_t &cpyType,
             "HostMemAlloc src address failed, malloc size is %" PRIu64, addrSize + asyncMemorySize);
         ERROR_RETURN(error, "HostMemAlloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
         const uintptr_t offset = reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) +
-                                    static_cast<uint64_t>(asyncMemoryAlignSize) -
-                                    (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) %
-                                    static_cast<uint64_t>(asyncMemoryAlignSize));
+            static_cast<uint64_t>(asyncMemoryAlignSize) -
+            (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) % static_cast<uint64_t>(asyncMemoryAlignSize));
         error = driver->MemCopySync(reinterpret_cast<void *>(offset), addrSize, srcAddr, addrSize, RT_MEMCPY_HOST_TO_HOST);
         COND_PROC_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, error,
             (void)driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr);
@@ -179,13 +247,14 @@ rtError_t AllocCpyTmpMemForStarsV2(TaskInfo * const taskInfo, uint32_t &cpyType,
                                  (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->desPtr) %
                                  static_cast<uint64_t>(asyncMemoryAlignSize));
         desAddr = reinterpret_cast<void *>(offset);
+        memcpyAsyncTaskInfo->isConcernedRecycle = true;
     }  else {
         // no operation
     }
     return error;
 }
 
-void ReleaseCpyTmpMemForStarsV2(TaskInfo * const taskInfo)
+void ReleaseCpyTmpMemForDavid(TaskInfo * const taskInfo)
 {
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Driver * const driver = taskInfo->stream->Device_()->Driver_();
@@ -199,6 +268,7 @@ void ReleaseCpyTmpMemForStarsV2(TaskInfo * const taskInfo)
         memcpyAsyncTaskInfo->desPtr = nullptr;
     }
 }
+#endif
 
 rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
                                 const void *&src, void *&des, uint64_t size)
@@ -237,6 +307,7 @@ rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
                                     "Malloc dest ptr failed, err=%#x, size=%" PRIu64 "(bytes), devId:%u.",
                                     error, size, stream->Device_()->Id_());
         des = (void *)memcpyAsyncTaskInfo->desPtr;
+        memcpyAsyncTaskInfo->isConcernedRecycle = true;
     } else {
         // no operation
     }
@@ -316,24 +387,60 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo)
     return RT_ERROR_NONE;
 }
 
-uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind)
+uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, uint32_t cpyType)
 {
     if (!Runtime::Instance()->GetConnectUbFlag()) {
         return 1U;
     }
-
-    if ((kind == RT_MEMCPY_HOST_TO_DEVICE) || (kind == RT_MEMCPY_DEVICE_TO_HOST) || 
-        (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
+    // ub图下沉场景
+    if (isModelByUb) {
+        return 1U;
+    }
+    // 单算子
+    if ((kind == RT_MEMCPY_HOST_TO_DEVICE) || (kind == RT_MEMCPY_DEVICE_TO_HOST) ||
+        (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX) ||
+        (cpyType == RT_MEMCPY_DIR_D2D_UB)) {
         return 2U;
     }
     return 1U;
+}
+
+rtError_t ConvertD2DCpyType(const Stream *const stm, uint32_t &cpyType, const void *const srcAddr, void *const desAddr)
+{
+    Driver *const driver = stm->Device_()->Driver_();
+    uint8_t transType = 0U;
+    TIMESTAMP_BEGIN(rtMemcpyAsync_drvDeviceGetTransWay);
+    const rtError_t error = driver->GetTransWayByAddr(RtPtrToUnConstPtr<void *>(srcAddr), desAddr, &transType);
+    TIMESTAMP_END(rtMemcpyAsync_drvDeviceGetTransWay);
+
+    ERROR_RETURN_MSG_INNER(
+        error, "D2D memcpy async, get channel type failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    switch (transType) {
+        case RT_MEMCPY_CHANNEL_TYPE_PCIe:
+            cpyType = RT_MEMCPY_DIR_D2D_PCIe;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= %u", cpyType);
+            break;
+        case RT_MEMCPY_CHANNEL_TYPE_HCCs:
+            cpyType = RT_MEMCPY_DIR_D2D_HCCs;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= %u", cpyType);
+            break;
+        case RT_MEMCPY_CHANNEL_TYPE_UB:
+            cpyType = RT_MEMCPY_DIR_D2D_UB;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType RT_MEMCPY_DIR_D2D_UB, direct= %u", cpyType);
+            break;
+        default:
+            cpyType = RT_MEMCPY_DIR_D2D_SDMA;
+            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= %u", cpyType);
+            break;
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t ConvertCpyType(TaskInfo * const taskInfo, const uint32_t cpyType,
                          const void *const srcAddr, void *const desAddr)
 {
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
-    Driver * const driver = taskInfo->stream->Device_()->Driver_();
     memcpyAsyncTaskInfo->copyKind = cpyType;
     uint32_t copyTypeTmp;
 
@@ -346,23 +453,8 @@ rtError_t ConvertCpyType(TaskInfo * const taskInfo, const uint32_t cpyType,
         copyTypeTmp = RT_MEMCPY_DIR_D2H;
         RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DEVICE_TO_HOST, direct=%u.", copyTypeTmp);
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_DEVICE) {
-        uint8_t transType = 0U;
-        TIMESTAMP_BEGIN(rtMemcpyAsync_drvDeviceGetTransWay);
-        const rtError_t error = driver->GetTransWayByAddr(const_cast<void *>(srcAddr), desAddr, &transType);
-        TIMESTAMP_END(rtMemcpyAsync_drvDeviceGetTransWay);
-
-        ERROR_RETURN_MSG_INNER(error, "D2D memcpy async, get channel type failed, retCode=%#x.", static_cast<uint32_t>(error));
-
-        if (static_cast<int32_t>(transType) == RT_MEMCPY_CHANNEL_TYPE_PCIe) {
-            copyTypeTmp = RT_MEMCPY_DIR_D2D_PCIe;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= %u", copyTypeTmp);
-        } else if (static_cast<int32_t>(transType) == RT_MEMCPY_CHANNEL_TYPE_HCCs) {
-            copyTypeTmp = RT_MEMCPY_DIR_D2D_HCCs;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= %u", copyTypeTmp);
-        } else {
-            copyTypeTmp = RT_MEMCPY_DIR_D2D_SDMA;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= %u", copyTypeTmp);
-        }
+        const rtError_t error = ConvertD2DCpyType(taskInfo->stream, copyTypeTmp, srcAddr, desAddr);
+        ERROR_RETURN_MSG_INNER(error, "D2D memcpy async, ConvertD2DCpyType failed, retCode=%#x.", static_cast<uint32_t>(error));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_ADD) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD;
         RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_ADD, direct= %u", copyTypeTmp);
@@ -422,7 +514,7 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
     } else if (kind == RT_MEMCPY_DEVICE_TO_HOST) {
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_D2H;
-    } else if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+    } else if (kind == RT_MEMCPY_DEVICE_TO_DEVICE){
         error = ConvertCpyType(taskInfo, kind, srcAddr, dst);
         ERROR_RETURN_MSG_INNER(error, "Convert copy type failed, retCode=%#x, kind=%u", error, kind);
     } else {
@@ -434,7 +526,7 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
     // d2d copy data convert
     if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) || 
         (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
-        if (stream->Device_()->IsStarsV2Platform()) {
+        if (stream->Device_()->IsDavidPlatform()) {
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         } else {
             memcpyAsyncTaskInfo->src = const_cast<void *>(srcAddr);
@@ -454,13 +546,13 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         memcpyAsyncTaskInfo->isConcernedRecycle = true;
         memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
         RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
-            ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
-            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
+        ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
+        dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
         return RT_ERROR_NONE;
     }
 }
 
-rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isUbMode)
+rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isSqeUpdate)
 {
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -468,34 +560,43 @@ rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTask
     const uint32_t devId = stream->Device_()->Id_();
     AsyncDmaWqeInputInfo input;
     (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo), 0, sizeof(AsyncDmaWqeInputInfo));
-    if (isUbMode) {
-        memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
-        input.destPtr = memcpyAsyncTaskInfo->destPtr;
-        input.sqId = stream->GetSqId();
-        input.tsId = stream->Device_()->DevGetTsId();
-    } else {
-        memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = false;
-        input.sqe_pos = updateTaskInfo->id;
-        input.sqId = updateTaskInfo->stream->GetSqId();
+    bool isUbMode = Runtime::Instance()->GetConnectUbFlag() ? true : false;
+    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = isUbMode ? true : false;
+
+    if (isSqeUpdate) {
+        input.info.sqe_pos = updateTaskInfo->id;
+        input.info.sqId = updateTaskInfo->stream->GetSqId();
         input.tsId = updateTaskInfo->stream->Device_()->DevGetTsId();
+    } else {
+        if (isUbMode) {
+            input.destPtr = memcpyAsyncTaskInfo->destPtr;
+            input.tsId = stream->Device_()->DevGetTsId();
+        } else {
+            RT_LOG(RT_LOG_ERROR, "pcie does not support");
+            return RT_ERROR_INVALID_VALUE;
+        }
     }
+    input.sqId = stream->GetSqId();
     input.src = memcpyAsyncTaskInfo->src;
     input.size = memcpyAsyncTaskInfo->size;
     input.cpyType = memcpyAsyncTaskInfo->copyType;
     AsyncDmaWqeOutputInfo output;
     (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
-    const rtError_t error = driver->CreateAsyncDmaWqe(devId, input, &output, isUbMode);
+    const rtError_t error = driver->CreateAsyncDmaWqe(devId, input, &output, isUbMode, isSqeUpdate);
     ERROR_RETURN_MSG_INNER(error, "drv create asyncDmaWqe failed, retCode=%#x.", static_cast<uint32_t>(error));
     if (isUbMode) {
+        // 模型场景下驱动接口wqe返回空，wqeLen返回0，不使用这两个参数
         memcpyAsyncTaskInfo->ubDma.jettyId = output.jettyId;
         memcpyAsyncTaskInfo->ubDma.functionId = output.functionId;
         memcpyAsyncTaskInfo->ubDma.dieId = output.dieId;
         memcpyAsyncTaskInfo->ubDma.wqeLen = output.wqeLen;
         memcpyAsyncTaskInfo->ubDma.wqePtr = output.wqe;
-        const errno_t ret = memcpy_s(memcpyAsyncTaskInfo->ubDma.wqe.data(), sizeof(rtStarsV2Sqe_t),
-            output.wqe, static_cast<size_t>(output.wqeLen));
-        COND_LOG_ERROR(ret != EOK, "Memcpy_s failed, retCode=%d, size=%zu(bytes).",
-            ret, static_cast<size_t>(output.wqeLen));
+        if (output.wqeLen != 0) {
+            const errno_t ret = memcpy_s(memcpyAsyncTaskInfo->ubDma.wqe.data(), sizeof(rtDavidSqe_t),
+                output.wqe, static_cast<size_t>(output.wqeLen));
+            COND_LOG_ERROR(ret != EOK, "Memcpy_s failed, retCode=%d, size=%zu(bytes).",
+                ret, static_cast<size_t>(output.wqeLen));
+        }
     } else {
          memcpyAsyncTaskInfo->dmaAddr = output.dmaAddr;
     }
@@ -517,8 +618,8 @@ rtError_t MemcpyAsyncTaskInitV3(TaskInfo * const taskInfo, uint32_t cpyType, con
 
     if (Runtime::Instance()->isRK3588HostCpu()) {
         error = AllocCpyTmpMemFor3588(taskInfo, cpyType, srcAddr, desAddr, cpySize);
-    } else if (stream->Device_()->IsStarsV2Platform()){
-        error = AllocCpyTmpMemForStarsV2(taskInfo, cpyType, srcAddr, desAddr, cpySize);
+    } else if (stream->Device_()->IsDavidPlatform()){
+        error = AllocCpyTmpMemForDavid(taskInfo, cpyType, srcAddr, desAddr, cpySize);
     } else {
         error = AllocCpyTmpMem(taskInfo, cpyType, srcAddr, desAddr, cpySize);
     }
@@ -550,7 +651,7 @@ rtError_t MemcpyAsyncTaskInitV3(TaskInfo * const taskInfo, uint32_t cpyType, con
     }
 
     const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
-    if (copyType == RT_MEMCPY_ADDR_D2D_SDMA && !stream->Device_()->IsStarsV2Platform()) {
+    if (copyType == RT_MEMCPY_ADDR_D2D_SDMA && !stream->Device_()->IsDavidPlatform()) {
         uint64_t sourceAddr;
         uint64_t destAddr;
         error = driver->MemAddressTranslate(devId, reinterpret_cast<uintptr_t>(srcAddr), &sourceAddr);
@@ -573,10 +674,8 @@ rtError_t MemcpyAsyncTaskInitV3(TaskInfo * const taskInfo, uint32_t cpyType, con
         if (!stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_PCIE_DMA_ASYNC_WITH_USER_VA)) {
             return RT_ERROR_NONE;
         }
-        if (IsStarsV2UbDma(memcpyAsyncTaskInfo->copyType)) {
-            COND_RETURN_ERROR_MSG_INNER(stream->GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT,
-                "Ub dma not support model stream, stream_id=%d.", stream->Id_());
-            error = ConvertAsyncDma(taskInfo, nullptr, true);
+        if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
+            error = ConvertAsyncDma(taskInfo, nullptr);
             ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDma failed, retCode=%#x.", error);
             taskInfo->needPostProc = true;
         } else if (IsPcieDma(memcpyAsyncTaskInfo->copyType) && (driver->GetRunMode() == RT_RUN_MODE_ONLINE)) {
@@ -587,7 +686,7 @@ rtError_t MemcpyAsyncTaskInitV3(TaskInfo * const taskInfo, uint32_t cpyType, con
             memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
             taskInfo->needPostProc = true;
         } else {
-            // 除StarsV2UbDma和PcieDma之外的其他情况不处理
+            // 除DavidUbDma和PcieDma之外的其他情况不处理
         }
         return RT_ERROR_NONE;
     }
@@ -749,6 +848,17 @@ void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, 
     *count = countNum;
 }
 
+static void PrintUbdmaErrorInfo(const MemcpyAsyncTaskInfo * const memcpyAsyncTaskInfo)
+{
+    if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
+        RT_LOG(RT_LOG_ERROR, "ub async copy error, die_id=%u, functionId=%u, jettyId=%u,"
+            " wqeLen=%d, is_ub_mode=%d, is_sqe_update=%d.",
+            memcpyAsyncTaskInfo->ubDma.dieId, memcpyAsyncTaskInfo->ubDma.functionId, memcpyAsyncTaskInfo->ubDma.jettyId,
+            memcpyAsyncTaskInfo->ubDma.wqeLen, memcpyAsyncTaskInfo->ubDma.isUbAsyncMode,
+            memcpyAsyncTaskInfo->isSqeUpdateH2D);
+    }
+}
+
 void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t devId)
 {
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
@@ -756,14 +866,15 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
     Driver * const driver = taskInfo->stream->Device_()->Driver_();
     const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
     const uint32_t copyKind = memcpyAsyncTaskInfo->copyKind;
-
-    const uint32_t taskId = taskInfo->id;
     const int32_t streamId = stream->Id_();
+
+    PrintUbdmaErrorInfo(memcpyAsyncTaskInfo);
+
     char_t errMsg[MSG_LENGTH] = {};
     char_t * const errStr = errMsg;
     int32_t countNum = sprintf_s(errStr, static_cast<size_t>(MSG_LENGTH),
         "Memory async copy failed, device_id=%u, stream_id=%d, task_id=%u, flip_num=%hu, ",
-        devId, streamId, taskId, taskInfo->flipNum);
+        devId, streamId, taskInfo->id, taskInfo->flipNum);
     COND_RETURN_VOID((countNum < 0) || (countNum > MSG_LENGTH), "sprintf_s failed, count=%d", countNum)
 
     Stream *const reportStream = GetReportStream(stream);
@@ -870,7 +981,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo)
             if (Runtime::Instance()->ChipIsHaveStars()) {
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_DATA_TYPE_BFP16);
             } else {
-                RT_LOG(RT_LOG_WARNING, "DataType=%u out of range or do not support.",
+                RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or not support.",
                     static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             }
@@ -880,7 +991,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo)
             // Should not run here.
             // if not support, it will return RT_ERROR_FEATURE_NOT_SUPPORT at context.cc's reduce ability check.
             // Only for code style, 0x80 is reserved value of STRAS opcode.
-            RT_LOG(RT_LOG_WARNING, "DataType=%u out of range or do not support.",
+            RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or not support.",
                    static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
             opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             break;
@@ -1016,7 +1127,7 @@ void ConstructPcieDmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
         sqe->length = memcpyAsyncTaskInfo->size;
         sqe->isDsaUpdate = 0U;
         sqe->isSqeUpdate = 0U;
-        // reserved for debug
+        // 1980C reserved for debug
         PrintSqe(command, "pcieDmaTask");
         RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64,
                stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->copyType, sqe->src, sqe->dst, sqe->length);
@@ -1155,10 +1266,10 @@ bool IsPcieDma(const uint32_t copyTypeFlag)
     }
 }
 
-bool IsStarsV2UbDma(const uint32_t copyTypeFlag)
+bool IsDavidUbDma(const uint32_t copyTypeFlag)
 {
     if ((Runtime::Instance()->GetConnectUbFlag()) && ((copyTypeFlag == RT_MEMCPY_DIR_H2D)
-        || (copyTypeFlag == RT_MEMCPY_DIR_D2H))) {
+        || (copyTypeFlag == RT_MEMCPY_DIR_D2H) || (copyTypeFlag == RT_MEMCPY_DIR_D2D_UB))) {
         return true;
     }
     return false;
@@ -1173,7 +1284,7 @@ void ConstructSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
     bool isMemcpyAsyncTaskSqeType = taskInfo->stream->Device_()->GetDevProperties().isMemcpyAsyncTaskSqeType;
     if (!isMemcpyAsyncTaskSqeType) {
         ConstructPlaceHolderSqe(taskInfo, command);
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask using PH SQE. stream_id=%d, task_id=%u",
+        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask in 1910b tiny using PH SQE. stream_id=%d, task_id=%u",
                static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id));
         return;
     }
@@ -1289,6 +1400,7 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const h
     Stream * const stream = updateTask->stream;
     const uint32_t devId = static_cast<uint32_t>(stream->Device_()->Id_());
     Driver * const driver = updateTask->stream->Device_()->Driver_();
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stream->Model_());
     rtStarsSqe_t sqe = {};
 
     /* alloc host memory */
@@ -1300,6 +1412,13 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const h
         devId, stream->Id_(), updateTask->id);
 
     ConstructAICoreSqeForDavinciTask(updateTask, &sqe);
+
+    if (stream->IsSoftwareSqEnable() && (captureModel != nullptr)) {
+        if (!captureModel->IsSendSqe()) {
+            (void)memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(stream->GetSqeBuffer()) + sizeof(rtStarsSqe_t) * updateTask->pos),
+                           sizeof(rtStarsSqe_t), RtPtrToPtr<void *, rtStarsSqe_t *>(&sqe), sizeof(rtStarsSqe_t));
+        }
+    }
 
     error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(&sqe),
                                 sizeof(sqe), RT_MEMCPY_HOST_TO_HOST);

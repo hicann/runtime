@@ -55,6 +55,7 @@ target_link_options(awatchdog_share
     PRIVATE
         -Wl,-z,relro,-z,now,-z,noexecstack
         -Wl,--gc-sections
+        $<$<CONFIG:Release>:-s>
 )
 
 target_link_libraries(awatchdog_share
@@ -121,11 +122,12 @@ target_link_options(awatchdog_stub_share
     PRIVATE
         -Wl,-z,relro,-z,now,-z,noexecstack
         -Wl,--gc-sections
+        $<$<CONFIG:Release>:-s>
 )
 
 target_link_libraries(awatchdog_stub_share
     PRIVATE
-        # $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:intf_pub>
     PUBLIC
         $<BUILD_INTERFACE:awatchdog_headers>
 )

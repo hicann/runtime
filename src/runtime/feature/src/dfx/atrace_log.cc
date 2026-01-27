@@ -153,7 +153,7 @@ void AtraceSubmitLog(AtraceSubmitType type, const AtraceParams &atraceParams)
 
 void TrySaveAtraceLogs(TraEventHandle handle)
 {
-    if (AtraceEventReportSync == nullptr) {
+    if (&AtraceEventReportSync == nullptr) {
         return;
     }
     const TraStatus ret = AtraceEventReportSync(handle);

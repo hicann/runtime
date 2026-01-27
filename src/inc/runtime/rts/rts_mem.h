@@ -60,9 +60,9 @@ RTS_API rtError_t rtsMemGetInfo(rtMemInfoType memInfoType, size_t *freeSize, siz
 /**
  * @ingroup rts_mem
  * @brief synchronized memcpy
- * @param [in] dst      destination addr pointer
- * @param [in] destMax  length of destination addr memory
- * @param [in] src      source addr pointer
+ * @param [in] dst      destination address pointer
+ * @param [in] destMax  length of destination address memory
+ * @param [in] src      source address pointer
  * @param [in] cnt      the number of byte to copy
  * @param [in] kind     memcpy type
  * @param [in] config   memcpy config
@@ -75,9 +75,9 @@ RTS_API rtError_t rtsMemcpy(void *dst, uint64_t destMax, const void *src, uint64
 /**
  * @ingroup rts_mem
  * @brief asynchronized memcpy
- * @param [in] dst      destination addr pointer
- * @param [in] destMax  length of destination addr memory
- * @param [in] src      source addr pointer
+ * @param [in] dst      destination address pointer
+ * @param [in] destMax  length of destination address memory
+ * @param [in] src      source address pointer
  * @param [in] cnt      the number of byte to copy
  * @param [in] kind     memcpy type
  * @param [in] config   memory copy config  
@@ -101,10 +101,10 @@ RTS_API rtError_t rtsGetMemcpyDescSize(rtMemcpyKind kind, size_t *descSize);
 /**
  * @ingroup rts_mem
  * @brief set memcpy desc
- * @param [in] desc     memcpy desc addr
+ * @param [in] desc     memcpy desc address
  * @param [in] kind     memcpy type
- * @param [in] srcAddr  source addr pointer
- * @param [in] dstAddr  destination addr pointer
+ * @param [in] srcAddr  source address pointer
+ * @param [in] dstAddr  destination address pointer
  * @param [in] count    the number of byte to copy
  * @param [in] config   memory copy config
  * @return RT_ERROR_NONE for ok
@@ -116,7 +116,7 @@ RTS_API rtError_t rtsSetMemcpyDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, void 
 /**
  * @ingroup rts_mem
  * @brief use desc to do memcpy
- * @param [in] desc   memcpy desc addr
+ * @param [in] desc   memcpy desc address
  * @param [in] kind   memcpy type
  * @param [in] config memory copy config
  * @param [in] stm    stream
@@ -237,7 +237,7 @@ RTS_API rtError_t rtsMemGetAllocationGranularity(rtDrvMemProp_t *prop, rtDrvMemG
  * @ingroup rts_mem
  * @brief set memory with uint32_t value
  * @param [in] devPtr
- * @param [in] destMax length of destination addr memory
+ * @param [in] destMax length of destination address memory
  * @param [in] val
  * @param [in] cnt byte num
  * @return RT_ERROR_NONE for ok, errno for failed
@@ -249,7 +249,7 @@ RTS_API rtError_t rtsMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64
  * @ingroup rts_mem
  * @brief set memory with uint32_t value async
  * @param [in] devPtr
- * @param [in] destMax length of destination addr memory
+ * @param [in] destMax length of destination address memory
  * @param [in] val
  * @param [in] cnt byte num
  * @param [in] stm
@@ -260,12 +260,12 @@ RTS_API rtError_t rtsMemsetAsync(void *ptr, uint64_t destMax, uint32_t val, uint
 
 /**
  * @ingroup rts_mem
- * @brief This command is used to reserve a virtual addr range
+ * @brief This command is used to reserve a virtual address range
  * @attention Only support ONLINE scene
- * @param [in] virPtr Resulting pointer to start of virtual addr range allocated.
- * @param [in] size Size of the reserved virtual addr range requested.
+ * @param [in] virPtr Resulting pointer to start of virtual address range allocated.
+ * @param [in] size Size of the reserved virtual address range requested.
  * @param [in] policy mem policy.
- * @param [in] expectAddr Expected virtual addr space start addr Currently, Currently unused, must be zero.
+ * @param [in] expectAddr Expected virtual address space start address Currently, Currently unused, must be zero.
  * @param [in] cfg Memory appication configuration, Currently unused, must be nullptr.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -275,9 +275,9 @@ RTS_API rtError_t rtsMemReserveAddress(void** virPtr, size_t size, rtMallocPolic
 
 /**
  * @ingroup rts_mem
- * @brief This command is used to free a virtual addr range reserved by halMemAddressReserve.
+ * @brief This command is used to free a virtual address range reserved by halMemAddressReserve.
  * @attention Only support ONLINE scene.
- * @param [in] virPtr Pointer to the addr of the virtual memory to be released.
+ * @param [in] virPtr Pointer to the address of the virtual memory to be released.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
@@ -311,7 +311,7 @@ RTS_API rtError_t rtsMemFreePhysical(rtMemHandle* handle);
 
 /**
  * @ingroup rts_mem
- * @brief This command is used to map an allocation handle to a reserved virtual addr range.
+ * @brief This command is used to map an allocation handle to a reserved virtual address range.
  * @attention Only support ONLINE scene.
  * @param [in] virPtr Address where memory will be mapped.
  * @param [in] size Size of the memory mapping.
@@ -326,9 +326,9 @@ RTS_API rtError_t rtsMemMap(void* virPtr, size_t size, size_t offset, rtMemHandl
 
 /**
  * @ingroup rts_mem
- * @brief This command is used to unmap the backing memory of a given addr range.
+ * @brief This command is used to unmap the backing memory of a given address range.
  * @attention Only support ONLINE scene.
- * @param [in] devPtr Starting addr for the virtual addr range to unmap.
+ * @param [in] devPtr Starting address for the virtual address range to unmap.
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  * @return RT_ERROR_DRV_ERR for driver error
@@ -398,8 +398,8 @@ RTS_API rtError_t rtsHostRegister(void *ptr, uint64_t size, rtHostRegisterType t
 /**
  * @ingroup rts_mem
  * @brief register an existing host memory range
- * @param ptr    memory pointer to memory to page-lock
- * @param size   size in bytes of the address range to page-lock in bytes
+ * @param ptr    memory pointer
+ * @param size   memory size
  * @param flag   flag for allocation input
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -420,7 +420,7 @@ RTS_API rtError_t rtsHostUnregister(void *ptr);
  * @brief return device pointer of mapped host memory registered by rtHostRegisterV2
  * @param pDevice   return device pointer for mapped memory
  * @param pHost     requested host pointer mapping
- * @param flag      flag for extensions (must be 0 for now)
+ * @param flag     flag for extensions (must be 0 for now)
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -437,8 +437,8 @@ RTS_API rtError_t rtsGetCmoDescSize(size_t *size);
 /**
  * @ingroup rts_mem
  * @brief set cmo desc
- * @param [in] cmoDes   cmo desc addr
- * @param [in] srcAddr  source addr ptr
+ * @param [in] cmoDes   cmo desc address
+ * @param [in] srcAddr  source address ptr
  * @param [in] srcLen   src mem Length
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
@@ -514,7 +514,7 @@ RTS_API rtError_t rtsGetP2PStatus(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t
  /**
  * @ingroup rts_mem
  * @brief make memory shared interprocess and get key
- * @param [in] ptr    device memory addr pointer
+ * @param [in] ptr    device memory address pointer
  * @param [in] size   identification byteCount
  * @param [out] key   identification key
  * @param [in] len    key length
@@ -540,7 +540,7 @@ RTS_API rtError_t rtsIpcMemClose(const char_t *key);
 /**
  * @ingroup rts_mem
  * @brief open a interprocess shared memory
- * @param [in|out] ptr  device memory addr pointer
+ * @param [in|out] ptr  device memory address pointer
  * @param [in] key  identification key
  * @param [in] flags flags for this operation. The valid flags are:
  *         RT_IPC_MEM_FLAG_DEFAULT : Default behavior.
@@ -566,8 +566,8 @@ RTS_API rtError_t rtsIpcMemSetImportPid(const char_t *key, int32_t pid[], int nu
 /**
  * @ingroup rts_mem
  * @brief Check mem type
- * @param [in] addrs  Memory addr array
- * @param [in] size  Memory addr array size
+ * @param [in] addrs  Memory address array
+ * @param [in] size  Memory address array size
  * @param [in] memType  Memory type
  * @param [out] checkResult  result of check
  * @param [in] reserve  reserve to be used
@@ -589,10 +589,10 @@ RTS_API rtError_t rtsDebugReadAICore(rtDebugMemoryParam *const param);
 /**
  * @ingroup rts_mem
  * @brief Asynchronous memcpy
- * @param [in] dst   destination addr pointer
- * @param [in] dstMax length of destination addr memory
+ * @param [in] dst   destination address pointer
+ * @param [in] dstMax length of destination address memory
  * @param [in] dstDataOffset  dst data addr offset
- * @param [in] src   source addr pointer
+ * @param [in] src   source address pointer
  * @param [in] cnt   the number of byte to copy
  * @param [in] srcDataOffset src data addr offset
  * @param [in] kind   memcpy type

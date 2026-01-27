@@ -140,6 +140,7 @@ target_compile_definitions(adx_hdc_dump_utest PRIVATE
 
 target_link_libraries(adx_hdc_dump_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
+    GTest::gtest
 )
 
 target_compile_options(adx_hdc_dump_utest PRIVATE

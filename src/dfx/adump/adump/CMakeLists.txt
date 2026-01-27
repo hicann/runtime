@@ -12,8 +12,6 @@
 set(ADUMP_ADUMP_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(INSTALL_LIBRARY_DIR lib)
 
-add_subdirectory(record_config)
-
 ####################### 预准备: 构建生成依赖的proto源码文件 ###########################
 set(adumpHostProto
     "${ADUMP_DIR}/proto/dump_task.proto"
@@ -46,6 +44,75 @@ target_include_directories(adump_headers INTERFACE
 )
 
 ########################### build artifacts ##########################
-include(adump_decouple/adump_server.cmake)
-include(adump_decouple/ascend_dump.cmake)
-include(adump_decouple/adump.cmake)
+if(PRODUCT)
+    if(PRODUCT STREQUAL "ascend031")
+        include(adump_ascend031/adump_server.cmake)
+        include(adump_ascend031/ascend_dump.cmake)
+        include(adump_ascend031/adump.cmake)
+    elseif(ENABLE_NPUF10 STREQUAL true OR
+            PRODUCT STREQUAL "npuf10" OR
+            PRODUCT STREQUAL "ascend310rc" OR
+            PRODUCT STREQUAL "ascend310Brcesl" OR
+            PRODUCT STREQUAL "ascend310Brcemu")
+        include(adump_couple/adump_server.cmake)
+        include(adump_couple/ascend_dump_close.cmake)
+        include(adump_couple/adump.cmake)
+    elseif(PRODUCT STREQUAL "ascend610" OR
+            PRODUCT STREQUAL "ascend610Lite" OR
+            PRODUCT STREQUAL "ascend610Liteesl" OR
+            PRODUCT STREQUAL "as31xm1" OR
+            PRODUCT STREQUAL "ascend035" OR
+            PRODUCT STREQUAL "mc62cm12a" OR
+            PRODUCT STREQUAL "mc62cm12aesl")
+        include(adump_couple/adump_server.cmake)
+        include(adump_couple/ascend_dump_close.cmake)
+        include(adump_couple/adump.cmake)
+    # open source
+    elseif(PRODUCT STREQUAL "ascend310Brc")
+        include(adump_couple/adump_server.cmake)
+        include(adump_couple/ascend_dump.cmake)
+        include(adump_couple/adump.cmake)
+
+    elseif(PRODUCT STREQUAL "ascend" OR
+            PRODUCT STREQUAL "helper310p" OR
+            PRODUCT STREQUAL "ascend310" OR
+            PRODUCT STREQUAL "ascend310B" OR
+            PRODUCT STREQUAL "ascend310Besl" OR
+            PRODUCT STREQUAL "ascend310Bemu" OR
+            PRODUCT STREQUAL "ascend310p" OR
+            PRODUCT STREQUAL "ascend910" OR
+            PRODUCT STREQUAL "ascend920" OR
+            PRODUCT STREQUAL "ascend920esl" OR
+            PRODUCT STREQUAL "ascend920emu" OR
+            PRODUCT STREQUAL "ascend910B" OR
+            PRODUCT STREQUAL "ascend910_93" OR
+            PRODUCT STREQUAL "ascend910_95" OR
+            PRODUCT STREQUAL "ascend910_95esl" OR
+            PRODUCT STREQUAL "ascend910_96" OR
+            PRODUCT STREQUAL "ascend910_96esl")
+        include(adump_decouple/adump_server_close.cmake)
+        include(adump_decouple/ascend_dump_close.cmake)
+        include(adump_decouple/adump.cmake)
+    # open source
+    elseif(PRODUCT STREQUAL "ascend310B" OR
+            PRODUCT STREQUAL "ascend310p" OR
+            PRODUCT STREQUAL "ascend910" OR
+            PRODUCT STREQUAL "ascend910B" OR
+            PRODUCT STREQUAL "ascend910_93")
+        include(adump_decouple/adump_server.cmake)
+        include(adump_decouple/ascend_dump.cmake)
+        include(adump_decouple/adump.cmake)
+    else()
+        message(STATUS "Unknown PRODUCT[${PRODUCT}], will build artifacts with default stragety")
+        include(adump_decouple/adump_server_close.cmake)
+        include(adump_decouple/ascend_dump_close.cmake)
+        include(adump_decouple/adump.cmake)
+    endif()
+else()
+    message(STATUS "No PRODUCT, will build artifacts with default stragety")
+    include(adump_decouple/adump_server_close.cmake)
+    include(adump_decouple/ascend_dump_close.cmake)
+    if (ENABLE_NPUF10 STREQUAL true)
+        include(adump_couple/adump.cmake)
+    endif()
+endif()

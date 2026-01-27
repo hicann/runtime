@@ -29,8 +29,10 @@ void ProcCqReportException(Device * const dev, rtLogicCqReport_t &logicCq,
     TaskInfo *reportTask, uint16_t streamId);
 // 处理完异常CQE后rt侧拉起sq
 rtError_t StarsResumeRtsq(const rtLogicCqReport_t *logicCq, const TaskInfo * const taskInfo);
-rtError_t RecycleTaskBySqHead(const Stream * const stm);
+rtError_t RecycleTaskBySqHead(Stream * const stm);
 rtError_t AdjustRecycleTaskID(const Stream * const stm, const uint32_t endTaskId, const uint16_t recyclePos);
+rtError_t RecycleTaskBySqHeadForRecyleThread(Stream * const stm);
+rtError_t RefreshForceRecyleFlagAndSendMaintainceTask(Stream * const stm);
 
 // ===================== 对外API =================================================================//
 TaskInfo* GetTaskInfo(const Device * const dev, uint32_t streamId, uint32_t pos);
@@ -39,7 +41,8 @@ void RecycleModelBindStreamAllTask(Stream * const stm, const bool cleanFlag);
 
 // 上层使用时，一定要加流同步锁StreamSyncLock
 rtError_t SyncTask(Stream * const stm, const uint32_t taskResPos, int32_t timeout);
-rtError_t TaskReclaimByStream(const Stream * const stm, const bool limited, const bool needLog = true);
+rtError_t SyncTaskForSeparateSendAndRecycle(Stream * const stm, const uint32_t taskResPos, int32_t timeout);
+rtError_t TaskReclaimByStream(Stream * const stm, const bool limited, const bool needLog = true);
 
 // device stop时，全量回收。异常析构流程可能进，因此跟老形态保持一致，不能加锁，加锁可能会出现递归锁
 rtError_t TaskReclaimAllStream(const Device * const dev);
@@ -50,6 +53,15 @@ rtError_t TryRecycleTask(Stream * const stm);
 // dvpp专用，老代码未见加锁
 rtError_t DvppWaitGroup(const Device * const dev, const DvppGrp *grp, rtDvppGrpCallback callBackFunc,
     const int32_t timeout);
+
+// 回收线程处理入口
+void RecycleThreadDoForStarsV2(Device *deviceInfo);
+bool GetPublicTask(Stream * const stm, const uint16_t endTaskSqPos, uint16_t &delPos,
+    TaskInfo **workTask, bool &earlyBreakFlag);
+void TryReclaimToTaskForDvppGrp(TaskInfo *workTask);
+rtError_t TaskReclaimForSeparatedStm(Stream *const stm);
+void ProcLogicCqUntilEmpty(const Stream *const stm);
+
 }
 }
 #endif

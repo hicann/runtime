@@ -11,7 +11,7 @@
 #define HCCL_MC2_DEFINE_H
 
 #include <cstdint>
-#include "acl_rt.h"
+#include "acl/acl_rt.h"
 
 namespace Adx {
 constexpr uint32_t RANK_NUM = 32;

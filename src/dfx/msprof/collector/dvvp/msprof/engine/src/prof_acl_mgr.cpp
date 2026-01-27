@@ -341,8 +341,12 @@ int32_t ProfAclMgr::ProfAclInit(const std::string &profResultPath)
     // Check path is valid
     if (!Utils::IsDirAccessible(path)) {
         MSPROF_LOGE("Dir is not accessible: %s", Utils::BaseName(path).c_str());
+        std::string errorReason = "The operation on directory " +  path + " is abnormal. [Error 13] Permission denied";
+        if (!Utils::IsDir(path)) {
+            errorReason = "The operation on directory " +  path + " is abnormal. [Error 20] Not a directory";
+        }
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
-            std::vector<std::string>({"output", path, "No permission to access the configuration path."}));
+            std::vector<std::string>({"output", path, errorReason}));
         return ACL_ERROR_INVALID_FILE;
     }
 
@@ -1457,6 +1461,13 @@ int32_t ProfAclMgr::MsprofAclJsonParamConstruct(NanoJson::Json &acljsonCfg)
     params_->taskTrace = GetJsonStringParam(acljsonCfg, "task_trace", MSVP_PROF_ON);
     params_->taskTrace = GetJsonStringParam(acljsonCfg, "task_time", MSVP_PROF_ON);
     params_->prof_level = params_->taskTrace;
+    if (GetJsonStringParam(acljsonCfg, "task_block", MSVP_PROF_OFF).compare(MSVP_PROF_ALL) == 0) {
+        params_->taskBlock = MSVP_PROF_ON;
+        params_->taskBlockShink = MSVP_PROF_OFF;
+    } else {
+        params_->taskBlock = GetJsonStringParam(acljsonCfg, "task_block", MSVP_PROF_OFF);
+        params_->taskBlockShink = params_->taskBlock.compare(MSVP_PROF_ON) ? MSVP_PROF_ON : MSVP_PROF_OFF;
+    }
     params_->taskTsfw = GetJsonStringParam(acljsonCfg, "task_tsfw", MSVP_PROF_OFF);
     params_->aicpuTrace = GetJsonStringParam(acljsonCfg, "aicpu", MSVP_PROF_OFF);
     params_->hcclTrace = GetJsonStringParam(acljsonCfg, "hccl", MSVP_PROF_OFF);
@@ -1497,12 +1508,17 @@ int32_t ProfAclMgr::MsprofAclJsonParamConstructTwo(NanoJson::Json &acljsonCfg)
     storageLimit_ = params_->storageLimit;
 
     params_->instrProfiling = GetJsonStringParam(acljsonCfg, "instr_profiling", MSVP_PROF_OFF);
-    params_->instrProfilingFreq = GetJsonIntParam(acljsonCfg, "instr_profiling_freq",
-        DEFAULT_PROFILING_INTERVAL_1000MS);
-    if ((params_->instrProfiling.compare(MSVP_PROF_ON) == 0) &&
-        (!ParamValidation::instance()->CheckInstrProfilingFreqValid(params_->instrProfilingFreq))) {
-        return MSPROF_ERROR_CONFIG_INVALID;
+    if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING)) {
+        MSPROF_LOGW("The argument: instr_profiling_freq is useless on the platform.");
+    } else {
+        params_->instrProfilingFreq = GetJsonIntParam(acljsonCfg, "instr_profiling_freq",
+            DEFAULT_PROFILING_INTERVAL_1000MS);
+        if ((params_->instrProfiling.compare(MSVP_PROF_ON) == 0) &&
+            (!ParamValidation::instance()->CheckInstrProfilingFreqValid(params_->instrProfilingFreq))) {
+            return MSPROF_ERROR_CONFIG_INVALID;
+        }
     }
+
     AddLowPowerConf(acljsonCfg);
     if (ProfParamsAdapter::instance()->HandleJsonConf(acljsonCfg, params_) != PROFILING_SUCCESS) {
         return MSPROF_ERROR_CONFIG_INVALID;
@@ -1603,7 +1619,13 @@ void ProfAclMgr::MsprofInitGeOptionsParamAdaper(SHARED_PTR_ALIA<analysis::dvvp::
     params->taskTrace = GetJsonStringParam(geoptionCfg, "task_trace", MSVP_PROF_ON);
     params->taskTrace = GetJsonStringParam(geoptionCfg, "task_time", MSVP_PROF_ON);
     params->prof_level = params->taskTrace;
-    params->taskBlock = GetJsonStringParam(geoptionCfg, "task_block", MSVP_PROF_OFF);
+    if (GetJsonStringParam(geoptionCfg, "task_block", MSVP_PROF_OFF).compare(MSVP_PROF_ALL) == 0) {
+        params->taskBlock = MSVP_PROF_ON;
+        params->taskBlockShink = MSVP_PROF_OFF;
+    } else {
+        params->taskBlock = GetJsonStringParam(geoptionCfg, "task_block", MSVP_PROF_OFF);
+        params->taskBlockShink = params->taskBlock.compare(MSVP_PROF_ON) ? MSVP_PROF_ON : MSVP_PROF_OFF;
+    }
     params->taskTsfw = GetJsonStringParam(geoptionCfg, "task_tsfw", MSVP_PROF_OFF);
     params->aicpuTrace = GetJsonStringParam(geoptionCfg, "aicpu", MSVP_PROF_OFF);
     params->hcclTrace = GetJsonStringParam(geoptionCfg, "hccl", MSVP_PROF_OFF);
@@ -1667,7 +1689,7 @@ int32_t ProfAclMgr::MsprofResultPathAdapter(const std::string &dir, std::string 
     }
     if (result.empty() || !analysis::dvvp::common::utils::Utils::IsDirAccessible(result)) {
         MSPROF_LOGE("Result path is empty or not accessible, result path: %s", result.c_str());
-        std::string errReason = "result path is empty or not accessible";
+        std::string errReason = "Result path is empty or not accessible";
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
             std::vector<std::string>({"output", result, errReason}));
         return PROFILING_FAILED;
@@ -1706,13 +1728,19 @@ int32_t ProfAclMgr::MsprofGeOptionsParamConstruct(const std::string &jobInfo,
     }
     storageLimit_ = params_->storageLimit;
     params_->memServiceflow = GetJsonStringParam(geoptionCfg, "sys_mem_serviceflow", MSVP_PROF_EMPTY_STRING);
+
     params_->instrProfiling = GetJsonStringParam(geoptionCfg, "instr_profiling", MSVP_PROF_OFF);
-    params_->instrProfilingFreq = GetJsonIntParam(geoptionCfg, "instr_profiling_freq",
-        DEFAULT_PROFILING_INTERVAL_1000MS);
-    if ((params_->instrProfiling.compare(MSVP_PROF_ON) == 0) &&
-        (!ParamValidation::instance()->CheckInstrProfilingFreqValid(params_->instrProfilingFreq))) {
-        return MSPROF_ERROR_CONFIG_INVALID;
+    if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING)) {
+        MSPROF_LOGW("The argument: instr_profiling_freq is useless on the platform.");
+    } else {
+        params_->instrProfilingFreq = GetJsonIntParam(geoptionCfg, "instr_profiling_freq",
+            DEFAULT_PROFILING_INTERVAL_1000MS);
+        if ((params_->instrProfiling.compare(MSVP_PROF_ON) == 0) &&
+            (!ParamValidation::instance()->CheckInstrProfilingFreqValid(params_->instrProfilingFreq))) {
+            return MSPROF_ERROR_CONFIG_INVALID;
+        }
     }
+
     AddLowPowerConf(geoptionCfg);
     std::string errInfo = "";
     std::string scaleInput = GetJsonStringParam(geoptionCfg, "scale", MSVP_PROF_EMPTY_STRING);
@@ -2136,6 +2164,7 @@ int32_t ProfAclMgr::MsprofFinalizeHandle(void)
             MSPROF_LOGE("Failed to finalize profiling on device %u", iter->first);
             MSPROF_INNER_ERROR("EK9999", "Failed to finalize profiling on device %u", iter->first);
         }
+        MSPROF_LOGI("save hash data in MsprofFinalizeHandle");
         // save hash data after IdeCloudProfileProcess
         HashData::instance()->SaveHashData(iter->first);
     }
@@ -2409,6 +2438,7 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
                 MSPROF_INNER_ERROR("EK9999", "Failed to stop profiling on device %u", devId);
                 return ACL_ERROR_PROFILING_FAILURE;
             }
+            MSPROF_LOGI("save hash data in ProfStopCommon");
             // save hash data after IdeCloudProfileProcess
             HashData::instance()->SaveHashData(devId);
             if (devId == DEFAULT_HOST_ID && iter->second.count > 1) {
@@ -2485,6 +2515,7 @@ int32_t ProfAclMgr::ProfStopPureCpu()
     if (iter != devTasks_.end() && !(iter->second.params->isCancel)) {
         iter->second.params->isCancel = true;
         ret = ProfManager::instance()->IdeCloudProfileProcess(iter->second.params);
+        MSPROF_LOGI("save hash data in ProfStopPureCpu");
         HashData::instance()->SaveHashData(iter->first);
         FUNRET_CHECK_EXPR_ACTION(ret != PROFILING_SUCCESS, return MSPROF_ERROR,
             "Failed to stop pure cpu task.");
@@ -2502,8 +2533,8 @@ int32_t ProfAclMgr::PrepareStartAclApi(const MsprofConfig *config)
     // check if 51 helper scene
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofStart", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofStart"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     // check if acl api mode
@@ -2570,8 +2601,8 @@ int32_t ProfAclMgr::PrepareStopAclApi(const MsprofConfig *config)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofStop", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofStop"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -2584,7 +2615,19 @@ int32_t ProfAclMgr::PrepareStopAclApi(const MsprofConfig *config)
         return ret;
     }
 
+    ret = CheckConfigConsistency(config);
+    if (ret != ACL_SUCCESS) {
+        return ret;
+    }
+    std::lock_guard<std::mutex> lk(mtx_);
+    params_->profMode = "";
+    return ACL_SUCCESS;
+}
+
+int32_t ProfAclMgr::CheckConfigConsistency(const MsprofConfig *config)
+{
     uint64_t dataTypeConfig = 0;
+    int32_t ret;
     for (uint32_t i = 0; i < config->devNums; i++) {
         ret = ProfAclGetDataTypeConfig(config->devIdList[i], dataTypeConfig);
         if (ret != ACL_SUCCESS) {
@@ -2598,8 +2641,6 @@ int32_t ProfAclMgr::PrepareStopAclApi(const MsprofConfig *config)
             return ACL_ERROR_INVALID_PROFILING_CONFIG;
         }
     }
-    std::lock_guard<std::mutex> lk(mtx_);
-    params_->profMode = "";
     return ACL_SUCCESS;
 }
 
@@ -2607,8 +2648,8 @@ int32_t ProfAclMgr::PrepareStartAclSubscribe(const MsprofConfig *config)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("Acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofModelSubscribe", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofModelSubscribe"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -2683,8 +2724,8 @@ int32_t ProfAclMgr::PrepareStopAclSubscribe(const MsprofConfig *config) const
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
         MSPROF_LOGE("acl api not support in helper");
-        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf", "platform"}),
-            std::vector<std::string>({"aclprofModelUnSubscribe", "SocCloud"}));
+        MSPROF_ENV_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofModelUnSubscribe"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -2799,6 +2840,23 @@ void ProfAclMgr::SetDeviceNotify(uint32_t deviceId, bool isOpenDevice)
     } else {
         devSet_.erase(deviceId);
     }
+}
+
+int32_t ProfAclMgr::GetAllActiveDevices(std::vector<uint32_t> &activeList)
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    for (auto id : devSet_) {
+        if (id == DEFAULT_HOST_ID) {
+            continue;
+        }
+        activeList.emplace_back(id);
+        MSPROF_LOGI("Get active device %u.", id);
+    }
+
+    if (!activeList.empty()) {
+        return ACL_SUCCESS;
+    }
+    return ACL_ERROR_PROFILING_FAILURE;
 }
 
 bool ProfAclMgr::GetDevicesNotify(const uint32_t *deviceId, uint32_t devNums, std::vector<uint32_t> &notifyList)

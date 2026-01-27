@@ -26,7 +26,8 @@ namespace acl {
             const char_t *const fileName, std::map<aclCannAttr, CannInfo> &cannInfoMap);
         static aclError GetDefaultDeviceIdFromFile(const char_t *const fileName, int32_t& devId);
         static aclError GetEventModeFromFile(const char_t *const fileName, uint8_t &event_mode, bool &found);
-        static aclError GetStackSize(const char_t *const fileName, size_t &aicoreStackSize, bool &exist);
+        static aclError GetStackSizeByType(const char_t *const fileName, const std::string &typeName, size_t &outSize,
+                                            bool &outExist);  
         static aclError ParseJson(const char_t *const configStr, nlohmann::json &js);
         static aclError GetConfigStrFromFile(const char_t *const fileName, std::string &configStr);
 

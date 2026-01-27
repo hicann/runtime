@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument('-ini', required=False, dest='ini', help='INPUT: The ini file')
     parser.add_argument('-crl', required=False, dest='crl', help='INPUT: The crl file')
 
-
+    # 1910_version
     parser.add_argument('-version', required=False, dest='ver', help='INPUT: The version number')
 
     # flag cmd

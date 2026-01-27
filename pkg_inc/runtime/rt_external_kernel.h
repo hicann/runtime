@@ -171,7 +171,7 @@ typedef struct tagRtSmCtrl {
  * @brief launch cpu kernel to device with dump identifier and kernelType
  * @param [in] kernelType    aicpu kernel type
  * @param [in] opName        address of op name
- * @param [in] blockDim      block dimensions
+ * @param [in] numBlocks      block dimensions
  * @param [in] argsInfo      argments address for kernel function
  * @param [in] smDesc        shared memory description
  * @param [in] stm           associated stream
@@ -180,7 +180,7 @@ typedef struct tagRtSmCtrl {
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t * const opName,
-                                                const uint32_t blockDim, const rtAicpuArgsEx_t *argsInfo,
+                                                const uint32_t numBlocks, const rtAicpuArgsEx_t *argsInfo,
                                                 rtSmDesc_t * const smDesc, const rtStream_t stm,
                                                 const uint32_t flags);
 
@@ -271,7 +271,7 @@ RTS_API rtError_t rtCCULaunch(rtCcuTaskInfo_t *taskInfo,  rtStream_t const stm);
  * @brief launch cpu kernel to device  with dump identifier
  * @param [in] soName        so name
  * @param [in] kernelName    kernel name
- * @param [in] blockDim      block dimensions
+ * @param [in] numBlocks      block dimensions
  * @param [in] argsInfo      argments address for kernel function
  * @param [in] smDesc        shared memory description
  * @param [in] stm           associated stream
@@ -279,7 +279,7 @@ RTS_API rtError_t rtCCULaunch(rtCcuTaskInfo_t *taskInfo,  rtStream_t const stm);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
+RTS_API rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t numBlocks,
                                             const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm,
                                             uint32_t flags);
 
@@ -348,7 +348,7 @@ typedef struct {
  * @ingroup rts_kernel
  * @brief rts Launch Kernel
  * @param [in] funcHandle  function Handle
- * @param [in] blockDim  block dimensions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stm  associated stream
  * @param [in] cfg task t-v config
  * @param [in] argsHandle  args Handle
@@ -356,7 +356,7 @@ typedef struct {
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t blockDim, rtStream_t stm,
+RTS_API rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                             rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void *reserve);
 
 /**
@@ -403,6 +403,36 @@ RTS_API rtError_t rtsNpuGetFloatOverFlowStatus(void *outputAddrPtr, uint64_t out
  */
 RTS_API rtError_t rtsNpuGetFloatOverFlowDebugStatus(void *outputAddrPtr, uint64_t outputSize, uint32_t checkMode,
                                                     rtStream_t stm);
+
+/**
+ * @ingroup rts_kernel
+ * @brief launch npu clear float status task
+ * @param [in] checkMode   check mode
+ * @param [in] stm   associated stream
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtsNpuClearFloatOverFlowStatus(uint32_t checkMode, rtStream_t stm);
+
+/**
+ * @ingroup rt_kernel
+ * @brief set exception information callback handle to binHandle
+ * @param [in] binHandle binary bin handle
+ * @param [in] callback exception callback of binary bin handle
+ * @param [in] userData exception userData of binary bin handle
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallback callback, void *userData);
+
+/**
+ * @ingroup rt_kernel
+ * @brief get func handle from exception information
+ * @param [in] info pointer of exception information
+ * @param [in] func kernel func of exception information
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func);
+
 #if defined(__cplusplus)
 }
 #endif

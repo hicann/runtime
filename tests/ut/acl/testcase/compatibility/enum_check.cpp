@@ -1013,7 +1013,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtHacType)
 
     value = (aclrtHacType)2;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIC);
-
+    
     value = (aclrtHacType)3;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIV);
     
@@ -1025,7 +1025,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtHacType)
 
     value = (aclrtHacType)6;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_SDMA);
-    
+
     value = (aclrtHacType)7;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_DVPP);
 

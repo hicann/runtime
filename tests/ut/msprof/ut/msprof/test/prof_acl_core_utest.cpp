@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <string.h>
 #include <google/protobuf/util/json_util.h>
-#include "config/config_manager.h"
+#include "config_manager.h"
 #include "config/feature_manager.h"
 #include "data_struct.h"
 #include "errno/error_code.h"

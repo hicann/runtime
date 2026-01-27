@@ -523,8 +523,8 @@ bool ParamValidation::CheckParamL0L1Invalid(const std::string &switchName, const
     }
     if (!Platform::instance()->CheckIfSupport(switchName)) {
         MSPROF_LOGE("Argument [%s] is not supported.", switchName.c_str());
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"config", "value", "reason"}),
-            std::vector<std::string>({switchName, switchStr, "Argument is not supported."}));
+        MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}),
+            std::vector<std::string>({switchName}));
         return false;
     }
     if (switchStr.compare(MSVP_PROF_L3) == 0 && !Platform::instance()->CheckIfSupport(PLATFORM_TASK_TRACE_L3)) {
@@ -555,15 +555,15 @@ bool ParamValidation::CheckParamL0L1Invalid(const std::string &switchName, const
 
 bool ParamValidation::CheckParamEmptyInvalid(const std::string &switchName, const std::string &switchStr) const
 {
+    if (!Platform::instance()->CheckIfSupport(switchName)) {
+        MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}),
+            std::vector<std::string>({switchName}));
+        MSPROF_LOGE("Argument [%s] is not supported.", switchName.c_str());
+        return false;
+    }
     if (switchStr.empty()) {
         MSPROF_LOGI("Argument %s is empty.", switchName.c_str());
         return true;
-    }
-    if (!Platform::instance()->CheckIfSupport(switchName)) {
-        MSPROF_LOGE("Argument [%s] is not supported.", switchName.c_str());
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"config", "value", "reason"}),
-            std::vector<std::string>({switchName, switchStr, "Argument is not supported."}));
-        return false;
     }
     if (switchStr.compare(MSVP_PROF_ON) == 0 ||
         switchStr.compare(MSVP_PROF_OFF) == 0) {
@@ -992,8 +992,8 @@ bool ParamValidation::CheckStorageLimit(SHARED_PTR_ALIA<analysis::dvvp::message:
         MSPROF_LOGI("storage_limit is empty");
         return true;
     }
-    std::string errReason = "storage-limit should be in range [" + std::to_string(STORAGE_LIMIT_DOWN_THD) +
-        "," + std::to_string(UINT32_MAX) + "], end with MB";
+    std::string errReason = "The storage_limit should be in range [" + std::to_string(STORAGE_LIMIT_DOWN_THD) +
+        "," + std::to_string(UINT32_MAX) + "] and end with MB";
 
     const uint32_t unitLen = strlen(STORAGE_LIMIT_UNIT);
     if (storageLimit.size() <= unitLen) {
@@ -1044,16 +1044,12 @@ bool ParamValidation::CheckStorageLimit(SHARED_PTR_ALIA<analysis::dvvp::message:
 
 bool ParamValidation::CheckInstrProfilingFreqValid(const uint32_t instrFreq) const
 {
-    if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING)) {
-        MSPROF_LOGW("The argument: instr_profiling_freq is useless on the platform.");
-        return true;
-    }
     if ((instrFreq < INSTR_PROFILING_SAMPLE_FREQ_MIN) || (instrFreq > INSTR_PROFILING_SAMPLE_FREQ_MAX)) {
         MSPROF_LOGE("instr_profiling_freq %u cycle is invalid (%u~%u).", instrFreq, INSTR_PROFILING_SAMPLE_FREQ_MIN,
             INSTR_PROFILING_SAMPLE_FREQ_MAX);
-        std::string errReason = "instr_profiling_freq should be in range [" +
+        std::string errReason = "The instr_profiling_freq should be in range [" +
             std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MIN) +
-            "," + std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MAX) + "] cycle";
+            "," + std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MAX) + "]";
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
             std::vector<std::string>({"instr_profiling_freq", std::to_string(instrFreq), errReason}));
         return false;
@@ -1103,8 +1099,8 @@ bool ParamValidation::CheckFreqIsValid(const std::string &switchName, uint32_t f
     }
     if (!Platform::instance()->CheckIfSupport(switchName)) {
         MSPROF_LOGE("Argument [%s] is not supported.", switchName.c_str());
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"config", "value", "reason"}),
-            std::vector<std::string>({switchName, std::to_string(freq), "Argument is not supported."}));
+        MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}),
+            std::vector<std::string>({switchName}));
         return false;
     }
     auto it = freqRange.find(switchName);

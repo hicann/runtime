@@ -21,7 +21,7 @@ typedef int32_t (*rtKernelLaunchFillFunc)(void* cfgAddr, uint32_t cfglen);
 typedef enum tagRtTaskBuffType {
     HWTS_STATIC_TASK_DESC = 0,       /**< static task */
     HWTS_DYNAMIC_TASK_DESC = 1,      /**< dynamic task */
-    PARAM_TASK_INFO_DESC = 2,        /**< parma task */
+    PARAM_TASK_INFO_DESC = 2,        /**< task param */
     MAX_TASK,
 } rtTaskBuffType_t;
 
@@ -74,11 +74,11 @@ typedef struct {
 // The size of the Param Buffer is variable and depends on the number of inputs and
 // outputs of the operator in actual applications.
 // It is estimated that the size of the Param Buffer does not exceed 128.
-#define PARMA_PARAM_BUFFER_MAX_N 128U
+#define PRELOAD_PARAM_BUFFER_MAX_N 128U
 typedef struct {
-    rtPrefetchBufInfo_t prefetchBufInfo[PARMA_PARAM_BUFFER_MAX_N];
+    rtPrefetchBufInfo_t prefetchBufInfo[PRELOAD_PARAM_BUFFER_MAX_N];
     uint16_t prefetchBufSize;
-    uint64_t paramBufInfo[PARMA_PARAM_BUFFER_MAX_N];
+    uint64_t paramBufInfo[PRELOAD_PARAM_BUFFER_MAX_N];
     uint16_t paramBufSize;
     uint32_t bufSize;
     void* bufInfo;

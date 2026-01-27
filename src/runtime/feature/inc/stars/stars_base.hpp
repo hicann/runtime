@@ -22,7 +22,7 @@ constexpr uint32_t SQE_BIZ_FLAG_BIUPERF = 0x2U;
 constexpr uint32_t SQE_BIZ_FLAG_L2CACHE = 0x4U;
 constexpr uint8_t SQE_DCACHE_LOCK_FLAG = 0x8U;
 constexpr uint32_t SQE_NUM_PER_STARS_TASK_MAX = 4U;
-constexpr uint32_t SQE_NUM_PER_STARSV2_TASK_MAX = 5U;
+constexpr uint32_t SQE_NUM_PER_DAVID_TASK_MAX = 5U;
 constexpr uint64_t TS_STARS_COND_DFX_SIZE = 128ULL;
 constexpr uint32_t TS_STARS_ERROR_MAX_INDEX = 6U;
 
@@ -31,7 +31,7 @@ constexpr uint32_t STARS_DVPP_SQE_CMDLIST_ADDR_LOW_IDX = 12U;
 constexpr uint32_t STARS_DVPP_SQE_CMDLIST_ADDR_HIGH_IDX = 13U;
 
 constexpr uint8_t RT_STARS_DEFAULT_KERNEL_CREDIT = 254U;
-constexpr uint8_t RT_STARS_DEFAULT_KERNEL_CREDIT_STARSV2 = 253U;
+constexpr uint8_t RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID = 253U;
 constexpr uint8_t RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT_MIN = 8U;
 constexpr uint8_t RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT_MAX = 16U;
 constexpr uint8_t RT_STARS_ADJUST_KERNEL_CREDIT = 254U;
@@ -88,7 +88,7 @@ enum RtStarsMemcpyAsyncOperationKind {
     RT_STARS_MEMCPY_ASYNC_OP_KIND_EQUAL    = 0x04
 };
 
-
+// 1910b tiny conds op sub type
 enum RtCondsSubType {
     CONDS_SUB_TYPE_MODEL_EXEC = 1,
     CONDS_SUB_TYPE_RDMA_1 = 2,
@@ -111,6 +111,7 @@ enum RtCondsSubType {
     CONDS_SUB_TYPE_DQS_ADSPC = 19,
     CONDS_SUB_TYPE_DQS_BATCH_DEQUEUE = 20,
     CONDS_SUB_TYPE_DQS_CONDITION_COPY = 21,
+    CONDS_SUB_TYPE_DQS_FRAME_ALIGN = 22,
     CONDS_SUB_TYPE_MAX = 22,
 };
 

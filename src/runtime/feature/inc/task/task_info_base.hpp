@@ -17,7 +17,7 @@
 #include "stars_cond_isa_define.hpp"
 #include "module.hpp"
 #include "stars_base.hpp"
-#include "starsv2_base.hpp"
+
 #define RTS_LITE_PCIE_BAR_COPY_SIZE (1024U)
 #define UB_DIRECT_WQE_MIN_LEN (64)
 #define UB_DIRECT_WQE_MAX_LEN (128)
@@ -53,6 +53,26 @@ struct rtStarsSqeHeader_t {
     uint16_t task_id;
 };
 
+struct rtDavidStarsSqeHeader_t {
+    /* word0 */
+    uint8_t type : 6;
+    uint8_t lock : 1;
+    uint8_t unlock : 1;
+    uint8_t ie : 1;
+    uint8_t preP : 1;
+    uint8_t postP : 1;
+    uint8_t wrCqe : 1;
+    uint8_t ptrMode : 1;
+    uint8_t rttMode : 1;
+    uint8_t headUpdate : 1;
+    uint8_t reserved : 1;
+    uint16_t blockDim;
+
+    /* word1 */
+    uint16_t rtStreamId;
+    uint16_t taskId;
+};
+
 struct RtFftsSqe {
     // 0-7 bytes
     rtStarsSqeHeader_t sqeHeader;
@@ -85,6 +105,14 @@ struct rtStarsCommonSqe_t {
     rtStarsSqeHeader_t sqeHeader;  // word 0-1
     uint32_t commandCustom[14];       // word 2-15 is custom define by command.
 };
+
+struct rtDavidStarsCommonSqe_t {
+    /* word0-1 */
+    rtDavidStarsSqeHeader_t sqeHeader;
+
+    /* word2-15 */
+    uint32_t commandCustom[14];       // word 2-15 is custom define by command.
+};
 #pragma pack(pop)
 
 struct DavinciTaskInfoCommon {
@@ -108,7 +136,7 @@ struct AicTaskInfo {
     Kernel *kernel;
     Program *progHandle;
     uint64_t tilingKey;
-    uint64_t funcAddr;    
+    uint64_t funcAddr;    /* only for 1910 or 1980 virtual (because of sending thread) */
     uint64_t funcAddr1;
     uint64_t smDescData;
     uint32_t smSize;
@@ -390,7 +418,7 @@ struct StarsCommonTaskInfo {
     void *randomDevAddr;
     union {
         rtStarsCommonSqe_t commonSqe;
-        rtStarsV2CommonSqe_t commonStarsV2Sqe;
+        rtDavidStarsCommonSqe_t commonDavidSqe;
     } commonStarsSqe;
     uint32_t flag;
     uint32_t errorTimes;
@@ -404,13 +432,13 @@ struct CommonCmdTaskInfo {
 };
 
 // =============================
-enum rtStarsV2UbDmaSqeMode : uint16_t {
-    RT_STARSV2_SQE_DIRECTWQE_MODE        = 0, // direct wqe
-    RT_STARSV2_SQE_DOORBELL_MODE         = 1, // doorbell
+enum rtDavidUbDmaSqeMode : uint16_t {
+    RT_DAVID_SQE_DIRECTWQE_MODE        = 0, // direct wqe
+    RT_DAVID_SQE_DOORBELL_MODE         = 1, // doorbell
     RT_STARS_SQE_MODE_END              = 2
 };
 
-struct StarsV2UbDbinfo {
+struct DavidUbDbinfo {
     uint16_t jettyId;
     uint16_t funcId;
     uint16_t piVal;
@@ -420,7 +448,7 @@ struct StarsV2UbDbinfo {
 struct UbSendTaskInfo {
     uint8_t wrCqe;
     uint8_t dbNum;
-    std::array<StarsV2UbDbinfo, UB_DB_SEND_MAX_NUM> info;
+    std::array<DavidUbDbinfo, UB_DB_SEND_MAX_NUM> info;
 };
 
 struct DirectSendTaskInfo {

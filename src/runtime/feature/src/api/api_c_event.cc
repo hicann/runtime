@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -85,7 +85,7 @@ rtError_t rtsEventGetId(rtEvent_t evt, uint32_t *evtId)
 
 VISIBILITY_DEFAULT
 rtError_t rtsEventQueryStatus(rtEvent_t evt, rtEventRecordStatus *status)
-{
+{   
     return rtEventQueryStatus(evt, RtPtrToPtr<rtEventStatus_t *>(status));
 }
 
@@ -144,8 +144,8 @@ rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag)
     const rtError_t rtRet = rtGetDevice(&deviceId);
     if (unlikely((rtRet) != ACL_RT_SUCCESS)) {
         return rtRet;
-    }
-
+    }    
+    
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->NotifyCreate(deviceId, RtPtrToPtr<Notify **>(notify), flag);
@@ -207,7 +207,7 @@ rtError_t rtNotifyResetAll()
     const rtError_t rtRet = rtGetDevice(&deviceId);
     if (unlikely((rtRet) != RT_ERROR_NONE)) {
         return rtRet;
-    }
+    }  
 
     RT_LOG(RT_LOG_INFO, "start to reset all notify, deviceId=%d.", deviceId);
     return rtResourceClean(deviceId, RT_NOTIFY_ID);

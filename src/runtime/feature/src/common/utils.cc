@@ -164,6 +164,56 @@ const std::string RealPathForFileNotExists(const std::string &inputPath)
     return fullPath;
 }
 
+bool GetConfigIniValueDouble(const std::string &userFileName, const std::string &key, double &val)
+{
+    const std::string fileName = RealPath(userFileName);
+    if (fileName.empty()) {
+        RT_LOG(RT_LOG_INFO, "file does not exist or can not access, path=[%s]", userFileName.c_str());
+        return false;
+    }
+
+    std::ifstream ifs(fileName, std::ifstream::in);
+    if (!ifs.is_open()) {
+        RT_LOG(RT_LOG_INFO, "file %s does not exist or can not access.", fileName.c_str());
+        return false;
+    }
+
+    bool result = false;
+    std::string line;
+    std::string valueOfStr;
+    while (std::getline(ifs, line)) {
+        const std::size_t found = line.find(key);
+        if (found == 0UL) {
+            valueOfStr = line.substr(key.length());
+            result = true;
+            break;
+        }
+    }
+    ifs.close();
+
+    if (result) {
+        try {
+            val = std::stod(valueOfStr);
+        } catch (const std::invalid_argument& ia) {
+            RT_LOG(RT_LOG_WARNING, "%s failed: invalid_argument, string(%s), file(%s).",
+                ia.what(), line.c_str(), fileName.c_str());
+            result = false;
+        } catch (const std::out_of_range& oor) {
+            RT_LOG(RT_LOG_WARNING, "%s failed: out_of_range, string(%s), file(%s).",
+                oor.what(), line.c_str(), fileName.c_str());
+            result = false;
+        }
+
+        RT_LOG(RT_LOG_INFO, "read file %s result: value=%f, valueOfStr=%s.",
+            fileName.c_str(), val, valueOfStr.c_str());
+    }
+
+    if (!result) {
+        RT_LOG(RT_LOG_WARNING, "read file %s failed.", fileName.c_str());
+    }
+    return result;
+}
+
 uint64_t GetQuickHash(const void *data, const size_t size)
 {
     // Using the FNV-1a algorithm for hash computation offers faster speed.

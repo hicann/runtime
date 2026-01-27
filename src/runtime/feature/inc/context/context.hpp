@@ -79,7 +79,6 @@ constexpr uint32_t TS_NUM_ADC = 2U;
 constexpr uint32_t OVERFLOW_ADDR_MAX_SIZE = 512U;
 extern bool g_isAddrFlatDevice;
 rtError_t LaunchAicpuKernelForCpuSo(const rtKernelLaunchNames_t * const launchNames, const rtArgsEx_t * const argsInfo, Stream * const stm);
-
 class ContextCallBack : public ThreadRunnable {
     void Run(const void * const param) override;
 public:
@@ -116,7 +115,8 @@ public:
     rtError_t LaunchKernelGetPrefetchCnt(const Kernel * const kernelPtr, const Program * const prog,
         uint32_t &icachePrefetchCnt1, uint32_t &icachePrefetchCnt2, uint8_t &mixType) const;
 
-    rtError_t LaunchKernelEx(const void * const args, const uint32_t argsSize, const uint32_t flags, Stream * const stm);
+    rtError_t LaunchKernelEx(const void * const args, const uint32_t argsSize, const uint32_t flags,
+        Stream * const stm);
 
     rtError_t LaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
         const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag);
@@ -168,10 +168,10 @@ public:
         const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind, uint64_t * const realSize,
         Stream * const stm, const uint64_t fixedSize);
 
-    rtError_t StreamCreate(const uint32_t prio, const uint32_t flag, Stream ** const result, DvppGrp *grp = nullptr,
+    virtual rtError_t StreamCreate(const uint32_t prio, const uint32_t flag, Stream ** const result, DvppGrp *grp = nullptr,
         const bool isSoftWareSqEnable = false);
 
-    rtError_t StreamDestroy(Stream * const stm, bool flag = true);
+    virtual rtError_t StreamDestroy(Stream * const stm, bool flag = true);
 
     void SetStreamsStatus(rtError_t status);
 
@@ -299,6 +299,7 @@ public:
     rtError_t DebugReadAICore(rtDebugMemoryParam_t *const param);
     rtError_t GetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
         rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num) const;
+    Stream *GetCtrlSQStream() const;
 
     void SetDefaultStream(Stream *stm)
     {
@@ -476,13 +477,13 @@ public:
         return streams_;
     }
 
-    rtError_t LaunchKernelPrepare(uint32_t &smArgsSize, Kernel *&registeredKernel,
+    rtError_t LaunchKernelPrepare(const rtChipType_t chipType, uint32_t &smArgsSize, Kernel *&registeredKernel,
         Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc, rtL2Ctrl_t *&l2ctrl,
         uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey, uint32_t &prefetchCnt1,
         uint32_t &prefetchCnt2);
     rtError_t LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const rtArgsEx_t *&argsInfo,
                                  ArgLoaderResult &result, const uint32_t smArgsSize, const Program * const programPtr);
-    rtError_t SyncNonFailModeStreams(const std::list<Stream *> &streams, int32_t timeout, uint64_t start) const;
+    rtError_t SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const;
     void LaunchKernelRecycle(ArgLoaderResult &result, TaskInfo *&recycleTask, const Program * const prog) const;
     void GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList);
     void GetModelList(rtModelList_t *mdlList);
@@ -514,7 +515,7 @@ public:
     void TryToRecycleProgPool(uint32_t latestPoolIdx);
     void TryToRecycleCtxPool(uint32_t latestPoolIdx);
     void TryToRecycleDevPool(uint32_t latestPoolIdx) const;
-    rtError_t TaskReclaimforSyncDevice(uint64_t startTime, int32_t timeout);
+    rtError_t TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t timeout);
 
     std::mutex &GetCaptureLock()
     {
@@ -577,7 +578,7 @@ public:
     rtError_t CreateContextCallBackThread();
     void DestroyContextCallBackThread();
     std::mutex callbackTheadMutex_;
-    rtError_t CheckStatus(const Stream * const stm = nullptr, const bool isBlockDefault = true);
+    virtual rtError_t CheckStatus(const Stream * const stm = nullptr, const bool isBlockDefault = true);
     rtError_t CheckTaskSend(const TaskInfo * const workTask);
     // ctxMode_ 只是遇错模式的配置,是否出错从GetFailureError获取.
     TsStreamFailureMode GetCtxMode() const
@@ -604,16 +605,17 @@ private:
 
     rtError_t ConfigPCTraceTask(const Kernel * const registeredKernel, std::shared_ptr<PCTrace> &rtPCTrace,
         const uint32_t coreDim, Stream * const stm, const uint16_t taskId, Module * const mdl);
-    rtError_t TearDownStream(Stream *stm, bool flag = true) const;
+    virtual rtError_t TearDownStream(Stream *stm, bool flag = true) const;
     bool IsStreamNotSync(const uint32_t flags) const;
 
     void TryAllocFastCq();
-    bool IsSyncTimeout(int32_t timeout, uint64_t start) const;
 
     rtError_t CheckCaptureModelValidity(Model * const captureMdl) const;
 
-private:
+protected:
     Device *device_;
+
+private:
     Stream *defaultStream_;
     Stream *onlineStream_;   /* process online task */
 

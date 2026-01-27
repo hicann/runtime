@@ -1,0 +1,68 @@
+{
+    "profiler": "on",
+    "cann": {
+        "uploader_queue_len": 512,
+        "modules": [
+            {
+                "module": "ACL",
+                "prof_switch": "on"
+            },
+            {
+                "module": "FRAMEWORK",
+                "prof_switch": "on"
+            },
+            {
+                "module": "RUNTIME",
+                "prof_switch": "on"
+            }
+        ],
+        "reporters": [
+            {
+                "reporter": "API_EVENT",
+                "reporter_switch": "on",
+                "report_buffer_len": 16384
+            },
+            {
+                "reporter": "COMPACT",
+                "reporter_switch": "off"
+            },
+            {
+                "reporter": "ADDITIONAL",
+                "reporter_switch": "on"
+            }
+        ]
+    },
+    "device": {
+        "poll_peroid": 1000,
+        "channels": [
+            {
+                "channel": 6,
+                "peroid": 100,
+                "channel_buffer_size": 4096,
+                "driver_buffer_size": 2048,
+                "threshold": 80,
+                "prof_switch": "on",
+                "reporter_switch": "off"
+            },
+            {
+                "channel": 7,
+                "peroid": 2000,
+                "channel_buffer_size": 4096,
+                "driver_buffer_size": 4096,
+                "threshold": 80,
+                "prof_switch": "on",
+                "reporter_switch": "off"
+            },
+            {
+                "channel": 45,
+                "peroid": 2000,
+                "channel_buffer_size": 4096,
+                "driver_buffer_size": 4096,
+                "threshold": 1,
+                "prof_switch": "on",
+                "reporter_switch": "off"
+            }
+        ]
+    },
+    "duration": 10000
+}

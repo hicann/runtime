@@ -17,6 +17,7 @@
 #include "dump_operator.h"
 #include "dump_setting.h"
 #include "adump_api.h"
+#include "path.h"
 
 namespace Adx {
 class ExceptionDumper {
@@ -28,7 +29,9 @@ public:
     inline bool GetArgsExceptionStatus() const;
     inline bool GetCoredumpStatus() const;
     void SetDumpPath(const std::string &dumpPath);
-    void AddDumpOperator(const OperatorInfoV2 &opInfo);
+    std::string CreateExtraDumpPath() const;
+    void AddDumpOperator(const OperatorInfo &opInfo);
+    void AddDumpOperatorV2(const OperatorInfoV2 &opInfo);
     int32_t DelDumpOperator(uint32_t deviceId, uint32_t streamId);
     int32_t DumpException(const rtExceptionInfo &exception);
     void ExceptionModeDowngrade();
@@ -38,10 +41,15 @@ public:
 #endif
 
 private:
+    std::string CreateDumpPath(Path &dumpPath) const;
     std::string CreateDeviceDumpPath(uint32_t deviceId) const;
     bool FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp);
     int32_t DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath) const;
+    int32_t DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath) const;
     int32_t DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const;
+    int32_t DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath);
+    int32_t DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath);
+    int32_t LoadTensorPluginLib();
     bool InitArgsExceptionMemory() const;
     void Exit() const;
     bool coredumpStatus_{ false };

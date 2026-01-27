@@ -552,11 +552,6 @@ rtError_t ApiDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
     return impl_->HostRegisterV2(ptr, size, flag);
 }
 
-rtError_t ApiDecorator::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
-{
-    return impl_->HostGetDevicePointer(pHost, pDevice, flag);
-}
-
 rtError_t ApiDecorator::HostUnregister(void *ptr)
 {
     return impl_->HostUnregister(ptr);
@@ -565,6 +560,12 @@ rtError_t ApiDecorator::HostUnregister(void *ptr)
 rtError_t ApiDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
 {
     return impl_->HostMemMapCapabilities(deviceId, hacType, capabilities);
+}
+
+
+rtError_t ApiDecorator::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
+{
+    return impl_->HostGetDevicePointer(pHost, pDevice, flag);
 }
 
 rtError_t ApiDecorator::ManagedMemAlloc(void ** const ptr, const uint64_t size, const uint32_t flag,
@@ -1973,6 +1974,11 @@ rtError_t ApiDecorator::StreamClear(Stream * const stm, rtClearStep_t step)
     return impl_->StreamClear(stm, step);
 }
 
+rtError_t ApiDecorator::StreamStop(Stream * const stm)
+{
+    return impl_->StreamStop(stm);
+}
+
 rtError_t ApiDecorator::StreamAbort(Stream * const stm)
 {
     return impl_->StreamAbort(stm);
@@ -2481,16 +2487,7 @@ rtError_t ApiDecorator::CacheLastTaskOpInfo(const void * const infoPtr, const si
     return impl_->CacheLastTaskOpInfo(infoPtr, infoSize);
 }
 
-rtError_t ApiDecorator::SetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    return impl_->SetXpuDevice(devType, devId);
-}
-rtError_t ApiDecorator::ResetXpuDevice(rtXpuDevType devType, const uint32_t devId)
-{
-    return impl_->ResetXpuDevice(devType, devId);
-}
-
-rtError_t ApiDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle)
+rtError_t ApiDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)
 {
     return impl_->MemRetainAllocationHandle(virPtr, handle);
 }
@@ -2503,6 +2500,21 @@ rtError_t ApiDecorator::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle hand
 rtError_t ApiDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
     return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
+}
+
+rtError_t ApiDecorator::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
+{
+    return impl_->MemGetAddressRange(ptr, pbase, psize);
+}
+
+rtError_t ApiDecorator::BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData)
+{
+    return impl_->BinarySetExceptionCallback(binHandle, callback, userData);
+}
+
+rtError_t ApiDecorator::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, Kernel ** const funcHandle)
+{
+    return impl_->GetFuncHandleFromExceptionInfo(info, funcHandle);
 }
 
 }  // namespace runtime

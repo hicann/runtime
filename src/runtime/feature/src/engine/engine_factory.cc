@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "engine_factory.hpp"
+#include "direct_hwts_engine.hpp"
+#include "async_hwts_engine.hpp"
 #include "engine.hpp"
 #include "stars_engine.hpp"
 
@@ -25,7 +27,24 @@ Engine *EngineFactory::CreateEngine(const rtChipType_t chipType, Device *dev)
     if (dev->IsStarsPlatform()) {
         newEngine = new (std::nothrow) StarsEngine(dev);
         RT_LOG(RT_LOG_INFO, "new StarsEngine, Runtime_alloc_size %zu", sizeof(StarsEngine));
+    } else if (props.taskEngineType == EngineCreateType::DIRECT_HWTS_ENGINE) {
+        newEngine = new (std::nothrow) DirectHwtsEngine(dev);
+        RT_LOG(RT_LOG_INFO, "new DirectHwtsEngine, Runtime_alloc_size %zu", sizeof(DirectHwtsEngine));
+    } else {
+        newEngine = new (std::nothrow) AsyncHwtsEngine(dev);
+        RT_LOG(RT_LOG_INFO, "new Engine, Runtime_alloc_size %zu", sizeof(AsyncHwtsEngine));
     }
+    COND_RETURN_ERROR((newEngine == nullptr), nullptr, "Create engine failed, engine is null.");
+    error = newEngine->Init();
+    COND_RETURN_INFO((error == RT_ERROR_NONE), newEngine, "Engine init success.");
+
+    // 如果是RT_ERROR_DRV_INPUT失败，可能是sharedcq资源创建失败，退化到默认引擎
+    COND_PROC_RETURN_ERROR((error != RT_ERROR_DRV_INPUT), nullptr, DELETE_O(newEngine), "Engine init failed.");
+    delete newEngine;
+    newEngine = new (std::nothrow) AsyncHwtsEngine(dev);
+    COND_RETURN_ERROR((newEngine == nullptr), nullptr, "Create engine failed, engine is null.");
+    RT_LOG(RT_LOG_INFO, "New Engine, Runtime_alloc_size %zu", sizeof(AsyncHwtsEngine));
+    error = newEngine->Init();
     COND_PROC_RETURN_ERROR((error != RT_ERROR_NONE), nullptr, DELETE_O(newEngine), "Engine init failed.");
 
     RT_LOG(RT_LOG_INFO, "Engine init success.");

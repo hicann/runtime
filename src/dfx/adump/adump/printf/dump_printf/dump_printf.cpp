@@ -7,9 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "dump_printf.h"
+
 
 #include <iostream>
+#include <unordered_map>
 #include <unordered_set>
 #include <sstream>
 #include <functional>
@@ -25,7 +26,10 @@
 #include "dump_memory.h"
 #include "sys_utils.h"
 #include "dump_printf_platform.h"
+#include "dump_datatype.h"
+#include "dump_printf.h"
 
+using namespace Adx;
 namespace {
 constexpr size_t ADX_SIMT_BLOCK_NUM = 72U;
 constexpr size_t ADX_PRINT_ARG_LEN = 8U;
@@ -307,44 +311,44 @@ static std::string AdxGetCoreTypeId(const uint32_t core, const uint8_t coreType)
     return "AIV-" + std::to_string(core);  // AIV+MIX场景
 }
 
-static const std::unordered_map<uint32_t, std::function<void(const void *, const size_t)>> ADX_PRINT_CALLS {
-    {ge::DT_UINT8, AdxPrintTensor<uint8_t>},
-    {ge::DT_INT8, AdxPrintTensor<int8_t>},
-    {ge::DT_INT16, AdxPrintTensor<int16_t>},
-    {ge::DT_UINT16, AdxPrintTensor<uint16_t>},
-    {ge::DT_INT32, AdxPrintTensor<int32_t>},
-    {ge::DT_UINT32, AdxPrintTensor<uint32_t>},
-    {ge::DT_INT64, AdxPrintTensor<int64_t>},
-    {ge::DT_UINT64, AdxPrintTensor<uint64_t>},
-    {ge::DT_FLOAT, AdxPrintTensor<float>},
-    {ge::DT_FLOAT16, AdxPrintTensor<Adx::fp16_t>},
-    {ge::DT_BF16, AdxPrintTensor<Adx::BFloat16>},
-    {ge::DT_HIFLOAT8, AdxPrintTensor<Adx::HiFloat8>},
-    {ge::DT_FLOAT8_E5M2, AdxPrintTensor<Adx::Fp8E5M2>},
-    {ge::DT_FLOAT8_E4M3FN, AdxPrintTensor<Adx::Fp8E4M3>},
-    {ge::DT_FLOAT8_E8M0, AdxPrintTensor<Adx::Fp8E8M0>},
-    {ge::DT_BOOL, AdxPrintBoolTensor},
+static const std::unordered_map<GeDataType, std::function<void(const void *, const size_t)>> ADX_PRINT_CALLS {
+    {GeDataType::DT_UINT8, AdxPrintTensor<uint8_t>},
+    {GeDataType::DT_INT8, AdxPrintTensor<int8_t>},
+    {GeDataType::DT_INT16, AdxPrintTensor<int16_t>},
+    {GeDataType::DT_UINT16, AdxPrintTensor<uint16_t>},
+    {GeDataType::DT_INT32, AdxPrintTensor<int32_t>},
+    {GeDataType::DT_UINT32, AdxPrintTensor<uint32_t>},
+    {GeDataType::DT_INT64, AdxPrintTensor<int64_t>},
+    {GeDataType::DT_UINT64, AdxPrintTensor<uint64_t>},
+    {GeDataType::DT_FLOAT, AdxPrintTensor<float>},
+    {GeDataType::DT_FLOAT16, AdxPrintTensor<Adx::fp16_t>},
+    {GeDataType::DT_BF16, AdxPrintTensor<Adx::BFloat16>},
+    {GeDataType::DT_HIFLOAT8, AdxPrintTensor<Adx::HiFloat8>},
+    {GeDataType::DT_FLOAT8_E5M2, AdxPrintTensor<Adx::Fp8E5M2>},
+    {GeDataType::DT_FLOAT8_E4M3FN, AdxPrintTensor<Adx::Fp8E4M3>},
+    {GeDataType::DT_FLOAT8_E8M0, AdxPrintTensor<Adx::Fp8E8M0>},
+    {GeDataType::DT_BOOL, AdxPrintBoolTensor},
 };
 
 
-static const std::unordered_map<uint32_t,
+static const std::unordered_map<GeDataType,
     std::function<size_t(const void *, const size_t, const std::vector<size_t> &, std::string &, const size_t)>>
-    ADX_PRINT_BY_SHAPE_CALLS{{ge::DT_UINT8, AdumpPrintValidElems<uint8_t>},
-        {ge::DT_INT8, AdumpPrintValidElems<int8_t>},
-        {ge::DT_INT16, AdumpPrintValidElems<int16_t>},
-        {ge::DT_UINT16, AdumpPrintValidElems<uint16_t>},
-        {ge::DT_INT32, AdumpPrintValidElems<int32_t>},
-        {ge::DT_UINT32, AdumpPrintValidElems<uint32_t>},
-        {ge::DT_INT64, AdumpPrintValidElems<int64_t>},
-        {ge::DT_UINT64, AdumpPrintValidElems<uint64_t>},
-        {ge::DT_FLOAT, AdumpPrintValidElems<float>},
-        {ge::DT_FLOAT16, AdumpPrintValidElems<Adx::fp16_t>},
-        {ge::DT_BOOL, AdumpPrintValidBoolElems},
-        {ge::DT_BF16, AdumpPrintValidElems<Adx::BFloat16>},
-        {ge::DT_HIFLOAT8, AdumpPrintValidElems<Adx::HiFloat8>},
-        {ge::DT_FLOAT8_E5M2, AdumpPrintValidElems<Adx::Fp8E5M2>},
-        {ge::DT_FLOAT8_E4M3FN, AdumpPrintValidElems<Adx::Fp8E4M3>},
-        {ge::DT_FLOAT8_E8M0, AdumpPrintValidElems<Adx::Fp8E8M0>}};
+    ADX_PRINT_BY_SHAPE_CALLS{{GeDataType::DT_UINT8, AdumpPrintValidElems<uint8_t>},
+        {GeDataType::DT_INT8, AdumpPrintValidElems<int8_t>},
+        {GeDataType::DT_INT16, AdumpPrintValidElems<int16_t>},
+        {GeDataType::DT_UINT16, AdumpPrintValidElems<uint16_t>},
+        {GeDataType::DT_INT32, AdumpPrintValidElems<int32_t>},
+        {GeDataType::DT_UINT32, AdumpPrintValidElems<uint32_t>},
+        {GeDataType::DT_INT64, AdumpPrintValidElems<int64_t>},
+        {GeDataType::DT_UINT64, AdumpPrintValidElems<uint64_t>},
+        {GeDataType::DT_FLOAT, AdumpPrintValidElems<float>},
+        {GeDataType::DT_FLOAT16, AdumpPrintValidElems<Adx::fp16_t>},
+        {GeDataType::DT_BOOL, AdumpPrintValidBoolElems},
+        {GeDataType::DT_BF16, AdumpPrintValidElems<Adx::BFloat16>},
+        {GeDataType::DT_HIFLOAT8, AdumpPrintValidElems<Adx::HiFloat8>},
+        {GeDataType::DT_FLOAT8_E5M2, AdumpPrintValidElems<Adx::Fp8E5M2>},
+        {GeDataType::DT_FLOAT8_E4M3FN, AdumpPrintValidElems<Adx::Fp8E4M3>},
+        {GeDataType::DT_FLOAT8_E8M0, AdumpPrintValidElems<Adx::Fp8E8M0>}};
 
 static void AdxPrintFormatD(const uint8_t *paramBegin, std::string &printInfo,
                      const size_t paramIndex, const size_t maxLen)
@@ -455,28 +459,28 @@ static const std::unordered_map<std::string, std::function<void(const uint8_t *,
         {"s", AdxPrintFormatS}
 };
  
-static const std::unordered_map<uint32_t, uint16_t> ADX_DATA_TYPE_SIZE {
-    {ge::DT_UINT8, 1U},
-    {ge::DT_INT8, 1U},
-    {ge::DT_BOOL, 1U},
-    {ge::DT_INT16, ADX_INT16_SIZE},
-    {ge::DT_UINT16, ADX_INT16_SIZE},
-    {ge::DT_INT32, ADX_INT32_SIZE},
-    {ge::DT_UINT32, ADX_INT32_SIZE},
-    {ge::DT_INT64, ADX_INT64_SIZE},
-    {ge::DT_UINT64, ADX_INT64_SIZE},
-    {ge::DT_FLOAT, ADX_INT32_SIZE},
-    {ge::DT_FLOAT16, ADX_INT16_SIZE},
-    {ge::DT_BF16, ADX_INT16_SIZE},
-    {ge::DT_HIFLOAT8, 1U},
-    {ge::DT_FLOAT8_E5M2, 1U},
-    {ge::DT_FLOAT8_E4M3FN, 1U},
-    {ge::DT_FLOAT8_E8M0, 1U}
+static const std::unordered_map<GeDataType, uint16_t> ADX_DATA_TYPE_SIZE {
+    {GeDataType::DT_UINT8, 1U},
+    {GeDataType::DT_INT8, 1U},
+    {GeDataType::DT_BOOL, 1U},
+    {GeDataType::DT_INT16, ADX_INT16_SIZE},
+    {GeDataType::DT_UINT16, ADX_INT16_SIZE},
+    {GeDataType::DT_INT32, ADX_INT32_SIZE},
+    {GeDataType::DT_UINT32, ADX_INT32_SIZE},
+    {GeDataType::DT_INT64, ADX_INT64_SIZE},
+    {GeDataType::DT_UINT64, ADX_INT64_SIZE},
+    {GeDataType::DT_FLOAT, ADX_INT32_SIZE},
+    {GeDataType::DT_FLOAT16, ADX_INT16_SIZE},
+    {GeDataType::DT_BF16, ADX_INT16_SIZE},
+    {GeDataType::DT_HIFLOAT8, 1U},
+    {GeDataType::DT_FLOAT8_E5M2, 1U},
+    {GeDataType::DT_FLOAT8_E4M3FN, 1U},
+    {GeDataType::DT_FLOAT8_E8M0, 1U}
 };
  
 static void GetDataTypeSize(uint32_t dataType, uint16_t &size)
 {
-    const auto &iter = ADX_DATA_TYPE_SIZE.find(dataType);
+    const auto &iter = ADX_DATA_TYPE_SIZE.find(static_cast<GeDataType>(dataType));
     if (iter != ADX_DATA_TYPE_SIZE.end()) {
         size = iter->second;
     } else {
@@ -489,7 +493,7 @@ static void AdxDumpPrintTensorWithShape(const AdxDumpMessageHead *const tensorHe
                                         const std::vector<size_t> &shape, const size_t totalNum, const size_t elementsNum)
 {
     IDE_LOGI("print tensor by shape, totalNum is %zu, elementsNum is %zu.", totalNum, elementsNum);
-    const auto &iter = ADX_PRINT_BY_SHAPE_CALLS.find(tensorHead->dataType);
+    const auto &iter = ADX_PRINT_BY_SHAPE_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
     if (iter != ADX_PRINT_BY_SHAPE_CALLS.end()) {
         const uint8_t *const data = (const uint8_t *)(tensorHead) + sizeof(AdxDumpMessageHead);
         if (totalNum != 0) {
@@ -542,7 +546,7 @@ static void AdxDumpJugdeShape(const std::vector<size_t> &shape, const size_t act
 
 static void AdxDumpPrintTensorWithoutShape(const AdxDumpMessageHead *const tensorHead, const size_t dataNum)
 {
-    const auto &iter = ADX_PRINT_CALLS.find(tensorHead->dataType);
+    const auto &iter = ADX_PRINT_CALLS.find(static_cast<GeDataType>(tensorHead->dataType));
     if (iter != ADX_PRINT_CALLS.end()) {
         const uint8_t *const data = (const uint8_t *)(tensorHead) + sizeof(AdxDumpMessageHead);
         (iter->second)(static_cast<const void *>(data), dataNum);

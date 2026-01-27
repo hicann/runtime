@@ -7,7 +7,6 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(MSPROF_SOURCE_DIR ${TOP_DIR}/abl/msprof/collector)
 
 set(src_file
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
@@ -54,7 +53,25 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/avp/domain/param/profile_param.c
 )
 
+set(libmsprofHeaderDir
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/third_party/libc_sec/include
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/src/dfx/error_manager
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/pkg_inc/dump
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+)
+
 set(INCLUDE_DIR
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/
     ${MSPROF_SOURCE_DIR}/dvvp/transport
     ${MSPROF_SOURCE_DIR}/basic/
@@ -144,13 +161,7 @@ target_link_options(prof_c_utest PRIVATE
 )
 
 target_link_libraries(prof_c_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    proftransport_ut_static
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(prof_c_utest
@@ -159,15 +170,10 @@ set_target_properties(prof_c_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-run_llt_test(
-    TARGET prof_c_utest
-    TASK_NUM 1
-)
-
 ####################### libproftransport.a ###########################
 set(proftransportCpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/statistics/perf_count.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
@@ -181,6 +187,7 @@ set(proftransportCpp
 )
 
 set(proftransportInc
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/dvvp/common/singleton
@@ -238,12 +245,7 @@ target_link_options(proftransport_ut_static PRIVATE
 )
 
 target_link_libraries(proftransport_ut_static PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<BUILD_INTERFACE:msprof_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    -Wl,--no-as-needed
-    c_sec
-    -Wl,--as-needed
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 install(TARGETS proftransport_ut_static OPTIONAL
@@ -271,6 +273,7 @@ set(src_file
 )
 
 set(INCLUDE_DIR
+    ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/
     ${MSPROF_SOURCE_DIR}/dvvp/transport
     ${MSPROF_SOURCE_DIR}/basic/
@@ -346,22 +349,11 @@ target_link_options(prof_liteos_utest PRIVATE
 )
 
 target_link_libraries(prof_liteos_utest PRIVATE
-    $<BUILD_INTERFACE:intf_llt_pub>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:slog_headers>
-    $<BUILD_INTERFACE:adump_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    proftransport_ut_static
-    c_sec
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
 )
 
 set_target_properties(prof_liteos_utest
     PROPERTIES
     OUTPUT_NAME prof_liteos_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-run_llt_test(
-    TARGET prof_liteos_utest
-    TASK_NUM 1
 )

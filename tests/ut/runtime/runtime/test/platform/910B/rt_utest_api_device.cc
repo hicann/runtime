@@ -356,7 +356,7 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsDeviceGetStreamPriorityRange)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2ApiDeviceTest, TestRtsDeviceGetCapabilityTaskIdBitWidthOnStarsV2)
+TEST_F(CloudV2ApiDeviceTest, TestRtsDeviceGetCapabilityTaskIdBitWidthOnDavid)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     int32_t value = 0;

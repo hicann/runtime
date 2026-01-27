@@ -37,8 +37,8 @@ bool Platform::CheckIfSupportAdprof(uint32_t deviceId) const
         MSPROF_LOGI("Current version not support driver channel.");
         return false;
     }
-    constexpr uint32_t vmngNormalNoneSplitMode = 0;
     uint32_t mode = 0;
+    constexpr uint32_t vmngNormalNoneSplitMode = 0;
     int32_t ret = ascendHalAdaptor_.DrvGetDeviceSplitMode(deviceId, &mode);
     if (ret != DRV_ERROR_NONE) {
         MSPROF_LOGE("Call drvGetDeviceSplitMode failed, return:%d.", ret);
