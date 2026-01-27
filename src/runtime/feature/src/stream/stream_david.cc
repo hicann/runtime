@@ -28,6 +28,7 @@
 #include "inner_thread_local.hpp"
 #include "stream_c.hpp"
 #include "stream_state_callback_manager.hpp"
+#include <thread>
 
 namespace cce {
 namespace runtime {
@@ -1104,10 +1105,10 @@ uint32_t DavidStream::GetArgPos()
     return UINT32_MAX;
 }
 
-
 bool DavidStream::IsSeparateSendAndRecycle()
 {
-    return false;
+    return device_->IsStarsPlatform() && device_->GetIsChipSupportRecycleThread() &&
+        !IsBindDvppGrp() && !IsSoftwareSqEnable() && ((Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE)) == 0U);
 }
 
 bool DavidStream::IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId)
@@ -1140,6 +1141,36 @@ uint32_t DavidStream::GetTaskPosTail() const
 
     TaskResManageDavid *taskRes = RtPtrToPtr<TaskResManageDavid *>(taskResMang_);
     return static_cast<uint32_t>(taskRes->GetTaskPosTail());
+}
+
+bool DavidStream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId, const uint16_t sqHead)
+{
+    constexpr uint16_t LARGER_THRESHOLD = 10U;
+    constexpr uint16_t SLEEP_UNIT = 5U;
+    constexpr uint16_t perSchedYield = 100U;
+    uint16_t exeTaskId = (finishedId == MAX_UINT16_NUM) ? GetExecuteEndTaskId() : finishedId;
+
+    COND_RETURN_DEBUG(taskResMang_ == nullptr, false, "taskResMang_ is null");
+    uint16_t taskPoolNum = this->taskResMang_->GetTaskPoolNum();
+    uint16_t distence = (taskPoolNum + taskId - exeTaskId) % taskPoolNum;
+
+    if (distence >= LARGER_THRESHOLD) { // if more than 10 tasks are not yet executed complete, sleep 50us.
+        std::this_thread::sleep_for(std::chrono::microseconds(LARGER_THRESHOLD * SLEEP_UNIT));
+    } else if (distence >= 1U) {
+        uint32_t count = 0U;
+        const uint64_t beginTime = GetWallUs();
+        while (GetWallUs() - beginTime < SLEEP_UNIT) { // whin 10 tasks, yield 5us at most
+            if (IsTaskExcuted(GetExecuteEndTaskId(), taskId) || (sqHead == GetTaskPosTail())) {
+                return true;
+            }
+            count++;
+            if (count % perSchedYield == 0) {
+                std::this_thread::yield();
+            }
+        }
+    }
+
+    return false;
 }
 
 }  // namespace runtime

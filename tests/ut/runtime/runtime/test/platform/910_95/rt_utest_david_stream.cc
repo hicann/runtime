@@ -746,3 +746,96 @@ TEST_F(DavidStreamTest, TestCreateStreamAndGet)
     res = rtStreamDestroy(stream);
     EXPECT_EQ(res, RT_ERROR_NONE);
 }
+
+TEST_F(DavidStreamTest, IsTaskExcuted_Test)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    uint32_t executeEndTaskid = 10;
+    uint32_t taskId = 5;
+    bool result = stream->IsTaskExcuted(executeEndTaskid, taskId);
+    EXPECT_EQ(result, true);
+}
+ 
+TEST_F(DavidStreamTest, SeparateSendAndRecycleError)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsSeparateSendAndRecycle)
+        .stubs()
+        .will(returnValue(true));
+
+    rtError_t error = stream->ResClear();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+ 
+TEST_F(DavidStreamTest, TestSeparateSendAndRecycle3) {
+    DavidStream *stream = (DavidStream *)stream_;
+    rtError_t ret;
+    MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsSeparateSendAndRecycle)
+        .stubs()
+        .will(returnValue(true));
+    stream->SetBindFlag(false);
+    ret = SubmitTaskPostProc(stream, 0, true, 100);
+
+    EXPECT_EQ(ret, RT_ERROR_NONE); 
+}
+ 
+TEST_F(DavidStreamTest, GetTaskPosHead_taskResMangIsNull)
+{
+    DavidStream *stream = new DavidStream(device_, 0, 0, nullptr);
+    uint32_t posHead = stream->GetTaskPosHead();
+    EXPECT_EQ(posHead, 0U);
+    delete stream;
+}
+
+TEST_F(DavidStreamTest, GetTaskPosTail_taskResMangIsNull)
+{
+    DavidStream *stream = new DavidStream(device_, 0, 0, nullptr);
+    uint32_t posTail = stream->GetTaskPosTail();
+    EXPECT_EQ(posTail, 0U);
+    delete stream;
+}
+
+TEST_F(DavidStreamTest, SeparateSendAndRecycleError2)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsSeparateSendAndRecycle)
+        .stubs()
+        .will(returnValue(true));
+    
+    rtError_t error = stream->ResClear();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(DavidStreamTest, TestSeparateSendAndRecycle4)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    rtError_t ret;
+    MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsSeparateSendAndRecycle)
+        .stubs()
+        .will(returnValue(true));
+    stream->SetBindFlag(false);
+    ret = SubmitTaskPostProc(stream, 0, true, 100);
+    EXPECT_EQ(ret, RT_ERROR_NONE); 
+}
+
+TEST_F(DavidStreamTest, TestSyncDelayTime)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+
+    uint16_t finishedId = 10U;
+    uint16_t taskId = 30U;
+    uint16_t sqHead = 0U;
+    bool isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(isFinish, false); 
+
+    finishedId = 25U;
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(isFinish, true); 
+
+    sqHead = 1U;
+    MOCKER_CPP_VIRTUAL((DavidStream*)stream, &DavidStream::IsTaskExcuted)
+        .stubs()
+        .will(returnValue(false));
+    isFinish = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(isFinish, false); 
+}
