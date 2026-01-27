@@ -25,7 +25,7 @@ namespace aicpu {
     status_t GetAicpuRunModeStub(uint32_t &runMode)
     {
         std::cout << "GetAicpuRunMode at stub" << std::endl;
-        runMode = AicpuRunMode::PROCESS_SOCKET_MODE; // MDC
+        runMode = AicpuRunMode::PROCESS_SOCKET_MODE; // ADC
         return AICPU_ERROR_NONE;
     }
 

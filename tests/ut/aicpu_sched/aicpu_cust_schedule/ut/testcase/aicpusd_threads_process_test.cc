@@ -105,7 +105,7 @@ TEST_F(ComputeProcessTest, SubmitRandomKernelTaskDrvFail)
     EXPECT_EQ(schRet, AICPU_SCHEDULE_ERROR_DRV_ERR);
 }
 
-TEST_F(ComputeProcessTest, SubmitSplitKernelTaskMdcSuccess)
+TEST_F(ComputeProcessTest, SubmitSplitKernelTaskAdcSuccess)
 {
     ComputeProcess inst;
     const int32_t ret = inst.RegisterScheduleTask();
@@ -153,7 +153,7 @@ TEST_F(ComputeProcessTest, SubmitSplitKernelTaskAddTaskFail)
     EXPECT_EQ(schRet, AICPU_SCHEDULE_ERROR_INNER_ERROR);
 }
 
-TEST_F(ComputeProcessTest, SubmitSplitKernelTaskMdcFail)
+TEST_F(ComputeProcessTest, SubmitSplitKernelTaskAdcFail)
 {
     ComputeProcess inst;
     const int32_t ret = inst.RegisterScheduleTask();

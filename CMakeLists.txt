@@ -59,7 +59,6 @@ include(cmake/third_party/protobuf.cmake)
 include(cmake/third_party/json.cmake)
 include(cmake/third_party/acl_compat.cmake)
 include(cmake/third_party/csec.cmake)
-include(cmake/third_party/aicpu.cmake)
 
 if (ENABLE_COV OR ENABLE_UT)
     set(DEFAULT_BUILD_TYPE "Debug")
@@ -95,6 +94,7 @@ add_subdirectory(src/mmpa)
 add_subdirectory(cmake/stub)
 add_subdirectory(src/dfx/log/liblog)
 add_subdirectory(src/dfx/trace)
+add_subdirectory(src/tsd)
 add_subdirectory(src/dfx/error_manager)
 add_subdirectory(src/dfx/msprof)
 add_subdirectory(src/platform)
@@ -127,7 +127,6 @@ set(NPU_DEPENDENCIES platform runtime_v100 runtime runtime_common acl_rt_impl ac
         mmpa static_mmpa error_manager stub_error_manager runtime_platform_others 
         xpu_tprt runtime_v200 runtime_model runtime_platform_910B
         runtime_v201 runtime_model_v200 copy_acl_headers_and_libs generate_runtime_version_file
-        copy_aicpu_libs
 )
 
 if (NOT ENABLE_COV AND NOT ENABLE_UT)

@@ -18,54 +18,54 @@
 
 using namespace aicpu;
 
-class AICPUScheduleStubMdcAndAndroidTEST : public testing::Test {
+class AICPUScheduleStubAdcAndAndroidTEST : public testing::Test {
 protected:
     static void SetUpTestCase() {
-        std::cout << "AICPUScheduleStubMdcAndAndroidTEST SetUpTestCase" << std::endl;
+        std::cout << "AICPUScheduleStubAdcAndAndroidTEST SetUpTestCase" << std::endl;
     }
 
     static void TearDownTestCase() {
-        std::cout << "AICPUScheduleStubMdcAndAndroidTEST TearDownTestCase" << std::endl;
+        std::cout << "AICPUScheduleStubAdcAndAndroidTEST TearDownTestCase" << std::endl;
     }
 
     virtual void SetUp()
     {
-        std::cout << "AICPUScheduleStubMdcAndAndroidTEST SetUP" << std::endl;
+        std::cout << "AICPUScheduleStubAdcAndAndroidTEST SetUP" << std::endl;
     }
 
     virtual void TearDown()
     {
-        std::cout << "AICPUScheduleStubMdcAndAndroidTEST TearDown" << std::endl;
+        std::cout << "AICPUScheduleStubAdcAndAndroidTEST TearDown" << std::endl;
     }
 };
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, IsProfOpen) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, IsProfOpen) {
     EXPECT_EQ(IsProfOpen(), false);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, GetSystemTick) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, GetSystemTick) {
     EXPECT_EQ(GetSystemTick(), 0);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, UpdateModelMode) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, UpdateModelMode) {
     UpdateModelMode(false);
     bool ret = IsModelProfOpen();
     EXPECT_EQ(ret, false);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, GetSystemTickFreq) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, GetSystemTickFreq) {
     EXPECT_EQ(GetSystemTickFreq(), 1);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, SetProfHandle) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, SetProfHandle) {
     EXPECT_EQ(SetProfHandle(nullptr), 0);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, NowMicros) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, NowMicros) {
     EXPECT_EQ(NowMicros(), 1);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, InitProfiling) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, InitProfiling) {
     InitProfiling(0, 0, 0);
     InitProfilingDataInfo(0, 0, 0);
     LoadProfilingLib();
@@ -79,11 +79,11 @@ TEST_F(AICPUScheduleStubMdcAndAndroidTEST, InitProfiling) {
     EXPECT_EQ(profMsg.tag_[0], 'a');
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, SetMsprofReporterCallback) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, SetMsprofReporterCallback) {
     MsprofReporterCallback reportCallback;
     EXPECT_EQ(SetMsprofReporterCallback(reportCallback), 0);
 }
 
-TEST_F(AICPUScheduleStubMdcAndAndroidTEST, IsSupportedProfData) {
+TEST_F(AICPUScheduleStubAdcAndAndroidTEST, IsSupportedProfData) {
     EXPECT_EQ(IsSupportedProfData(), false);
 }

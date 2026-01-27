@@ -18,20 +18,20 @@ namespace AicpuSchedule {
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 
 typedef enum tagChipType {
-    CHIP_CLOUD = 1,
-    CHIP_CLOUD_V2 = 5,
-    CHIP_950 = 15,
+    CHIP_ASCEND_910A = 1,
+    CHIP_ASCEND_910B = 5,
+    CHIP_ASCEND_950 = 15,
 } ChipType_t;
 
 void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
 {
     const ChipType_t chipType = static_cast<ChipType_t>(AICPU_PLAT_GET_CHIP(static_cast<uint64_t>(hardwareVersion)));
 
-    if ((chipType == CHIP_CLOUD) || (chipType == CHIP_CLOUD_V2) || (chipType == CHIP_950)) {
+    if ((chipType == CHIP_ASCEND_910A) || (chipType == CHIP_ASCEND_910B) || (chipType == CHIP_ASCEND_950)) {
         aicpuFeatureBindPidByHal_ = true;
     }
 
-    if ((chipType == CHIP_CLOUD_V2) && (&halGetSocVersion != nullptr)) {
+    if ((chipType == CHIP_ASCEND_910B) && (&halGetSocVersion != nullptr)) {
         char_t socVersion[SOC_VERSION_LEN] = {};
         const auto drvRet = halGetSocVersion(deviceId, &socVersion[0U], SOC_VERSION_LEN);
         aicpusd_info("socVersion is %s", &socVersion[0U]);

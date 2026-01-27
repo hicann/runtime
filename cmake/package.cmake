@@ -28,7 +28,10 @@ message(STATUS "CMAKE_BINARY_DIR = ${CMAKE_BINARY_DIR}")
 if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/makeself-fetch.cmake)
     set(INSTALL_DIR runtime/lib)
-    set(SCHED_TARGETS dgw_client)
+    set(SCHED_TARGETS dgw_client tsdclient)
+else()
+    set(INSTALL_DIR runtime/lib)
+    set(SCHED_TARGETS tsdclient)
 endif()
 
 set(script_prefix ${CMAKE_CURRENT_SOURCE_DIR}/scripts/package/runtime/scripts)
@@ -385,12 +388,6 @@ install(TARGETS queue_schedule
 install(TARGETS host_aicpu_scheduler_so
     LIBRARY DESTINATION ${INSTALL_DIR} OPTIONAL
     ARCHIVE DESTINATION ${INSTALL_DIR} OPTIONAL
-)
-
-set(AICPU_TAR_DIR ${RUNTIME_DIR}/build/lib_aicpu)
-install(FILES
-    ${AICPU_TAR_DIR}/libtsdclient.so
-    DESTINATION runtime/lib
 )
 
 if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)

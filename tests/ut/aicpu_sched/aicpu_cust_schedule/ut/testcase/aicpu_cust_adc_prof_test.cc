@@ -21,28 +21,28 @@
 
 using namespace aicpu;
 
-class AICPUCustScheduleStubMdcProfTEST : public testing::Test {
+class AICPUCustScheduleStubAdcProfTEST : public testing::Test {
 protected:
     static void SetUpTestCase() {
-        std::cout << "AICPUCustScheduleStubMdcProfTEST SetUpTestCase" << std::endl;
+        std::cout << "AICPUCustScheduleStubAdcProfTEST SetUpTestCase" << std::endl;
     }
 
     static void TearDownTestCase() {
-        std::cout << "AICPUCustScheduleStubMdcProfTEST TearDownTestCase" << std::endl;
+        std::cout << "AICPUCustScheduleStubAdcProfTEST TearDownTestCase" << std::endl;
     }
 
     virtual void SetUp()
     {
-        std::cout << "AICPUCustScheduleStubMdcProfTEST SetUP" << std::endl;
+        std::cout << "AICPUCustScheduleStubAdcProfTEST SetUP" << std::endl;
     }
 
     virtual void TearDown()
     {
-        std::cout << "AICPUCustScheduleStubMdcProfTEST TearDown" << std::endl;
+        std::cout << "AICPUCustScheduleStubAdcProfTEST TearDown" << std::endl;
     }
 };
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, CustIsProfOpen) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, CustIsProfOpen) {
     GetSystemTick();
     GetSystemTickFreq();
     auto ret = IsProfOpen();
@@ -50,7 +50,7 @@ TEST_F(AICPUCustScheduleStubMdcProfTEST, CustIsProfOpen) {
 
 }
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, CustSetProfHandle) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, CustSetProfHandle) {
     NowMicros();
     std::string test = "test";
     SendToProfiling(test, test);
@@ -59,7 +59,7 @@ TEST_F(AICPUCustScheduleStubMdcProfTEST, CustSetProfHandle) {
     EXPECT_EQ(ret, 0);
 }
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, CustSetMsprofReporterCallback) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, CustSetMsprofReporterCallback) {
     char tag[3] = {'a', 'b', 'c'};
     ProfMessage profMsg(tag);
     InitProfiling(0, 0, 0);
@@ -72,14 +72,14 @@ TEST_F(AICPUCustScheduleStubMdcProfTEST, CustSetMsprofReporterCallback) {
     EXPECT_EQ(ret, static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS));
 }
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, CustIsSupportedProfData) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, CustIsSupportedProfData) {
     auto ret = IsSupportedProfData();
     EXPECT_EQ(ret, false);
 }
 
 extern int SetQueueWorkMode(unsigned int devid, unsigned int qid, int mode);
 extern int buff_get_phy_addr (void *buf, unsigned long long *phyAddr);
-TEST_F(AICPUCustScheduleStubMdcProfTEST, CustDCStubTest) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, CustDCStubTest) {
     int ret = SetQueueWorkMode(0, 0, 0);
     EXPECT_EQ(ret, 0);
 
@@ -142,12 +142,12 @@ TEST_F(AICPUCustScheduleStubMdcProfTEST, CustDCStubTest) {
     EXPECT_EQ(openRet, false);
 }
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, StubGetErrDesc) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, StubGetErrDesc) {
     std::string ret = tdt::StatusFactory::GetInstance()->GetErrDesc(2);
     EXPECT_EQ(ret, "");
 }
 
-TEST_F(AICPUCustScheduleStubMdcProfTEST, StubGetErrCodeDesc) {
+TEST_F(AICPUCustScheduleStubAdcProfTEST, StubGetErrCodeDesc) {
     std::string ret = tdt::StatusFactory::GetInstance()->GetErrCodeDesc(2);
     EXPECT_EQ(ret, "");
 }
