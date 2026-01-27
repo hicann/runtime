@@ -111,8 +111,8 @@ TEST_F(ApiTest6, Need_Translate_TEST)
     bool bNeed = false;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t ori_chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     rtError_t error = rtNeedDevVA2PA(&bNeed);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);
@@ -123,8 +123,8 @@ TEST_F(ApiTest6, TINY_ALLOC_STACK_TEST)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t ori_chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
 
     int32_t devId = 0;
     rtContext_t ctx;
@@ -155,8 +155,8 @@ TEST_F(ApiTest6, Translate_VA_2_PA_TEST_SYNC)
     bool isAsync = false;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t ori_chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     rtError_t error = rtDevVA2PA(devAddr, len, stream, isAsync);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);
@@ -171,8 +171,8 @@ TEST_F(ApiTest6, Translate_VA_2_PA_TEST_SYNC_FAIL)
     bool isAsync = false;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t ori_chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     rtError_t error = rtDevVA2PA(devAddr, len, stream, isAsync);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);
@@ -189,8 +189,8 @@ TEST_F(ApiTest6, Translate_VA_2_PA_TEST_ASYNC)
     bool isAsync = true;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t ori_chipType = rtInstance->GetChipType();
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     error = rtDevVA2PA(devAddr, len, stream, isAsync);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);

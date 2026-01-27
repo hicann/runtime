@@ -16,12 +16,12 @@ namespace cce {
 namespace runtime {
 
 static constexpr rtSocInfo_t CHIP_5612_SOC_INFO[] = {
-    {SOC_ASCEND320T, CHIP_5612, ARCH_T300, "Ascend031"},
+    {SOC_ASCEND320T, CHIP_ASCEND_031, ARCH_T300, "Ascend031"},
 };
 
 BATCH_REGISTER_SOC_INFO(CHIP_5612_SOC_INFO, sizeof(CHIP_5612_SOC_INFO) / sizeof(rtSocInfo_t));
 
-REGISTER_PLATFORM_LIB_INFO(CHIP_5612, "libruntime_v100.so");
+REGISTER_PLATFORM_LIB_INFO(CHIP_ASCEND_031, "libruntime_v100.so");
 
 static const std::unordered_set<RtOptionalFeatureType> CHIP_5612_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DFX_HWTS_LOG,
@@ -57,7 +57,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_5612_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY
 };
 
-REGISTER_CHIP_FEATURE_SET(CHIP_5612, CHIP_5612_FEATURE);
+REGISTER_CHIP_FEATURE_SET(CHIP_ASCEND_031, CHIP_5612_FEATURE);
 
 static constexpr uint32_t CQE_DEPTH = 2048U;
 static constexpr uint32_t SQE_DEPTH = 2048U;
@@ -160,6 +160,6 @@ static const DevProperties CHIP_5612_PROPERTIES = {
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
 };
 
-REGISTER_DEV_PROPERTIES(CHIP_5612, CHIP_5612_PROPERTIES);
+REGISTER_DEV_PROPERTIES(CHIP_ASCEND_031, CHIP_5612_PROPERTIES);
 }
 }

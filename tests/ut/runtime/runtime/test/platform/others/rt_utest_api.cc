@@ -1082,7 +1082,7 @@ TEST_F(ApiTest, start5612spmpool)
     Runtime *rtInstance = (Runtime *) Runtime::Instance();
     rtSocType_t oldSocType = rtInstance->GetSocType();
     Runtime::Instance()->SetSocType(SOC_ASCEND320T);
-    int64_t hardwareVersion = CHIP_5612 << 8;
+    int64_t hardwareVersion = CHIP_ASCEND_031 << 8;
     driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver_,
         &Driver::GetDevInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
@@ -1273,8 +1273,8 @@ TEST_F(ApiTest, rtStreamWaitEventWithTimeout)
     error = rtStreamWaitEventWithTimeout(nullptr, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    rtInstance->SetChipType(CHIP_5612);
-    GlobalContainer::SetRtChipType(CHIP_5612);
+    rtInstance->SetChipType(CHIP_ASCEND_031);
+    GlobalContainer::SetRtChipType(CHIP_ASCEND_031);
     error = rtStreamWaitEventWithTimeout(nullptr, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -6416,7 +6416,7 @@ TEST_F(ApiTest, rtGetSocVersion)
  
     drvStubInit(SOC_ASCEND320T);
     rtInstance->InitSocType();
-    rtInstance->MacroInit(CHIP_5612);
+    rtInstance->MacroInit(CHIP_ASCEND_031);
  
     // restore soc type
     drvStubInit(socBak);

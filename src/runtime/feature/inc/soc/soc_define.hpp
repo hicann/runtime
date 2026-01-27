@@ -123,9 +123,9 @@ typedef enum tagRtChipType {
     CHIP_910_B_93 = 5,
     CHIP_NO_DEVICE = 6,
     CHIP_MINI_V3 = 7,
-    CHIP_5612 = 8, /* 1910b tiny */
+    CHIP_ASCEND_031 = 8, /* 1910b tiny */
     CHIP_NANO = 9,
-    CHIP_1636 = 10,
+    CHIP_RESERVED = 10,
     CHIP_AS31XM1 = 11,
     CHIP_610LITE = 12,
     CHIP_CLOUD_V3 = 13, // drive used, runtime not used

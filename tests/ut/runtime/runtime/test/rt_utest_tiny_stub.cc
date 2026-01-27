@@ -662,7 +662,7 @@ TEST_F(TinyStubTest, engine_stub)
 {
     RawDevice *device = new RawDevice(0);
     StarsEngine *engine = nullptr;
-    engine = static_cast<cce::runtime::StarsEngine*>(EngineFactory::CreateEngine(CHIP_5612, device));
+    engine = static_cast<cce::runtime::StarsEngine*>(EngineFactory::CreateEngine(CHIP_ASCEND_031, device));
     EXPECT_NE(engine, nullptr);
     delete engine;
     delete device;

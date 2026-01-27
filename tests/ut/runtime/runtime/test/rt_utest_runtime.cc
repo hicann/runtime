@@ -571,6 +571,13 @@ TEST_F(RuntimeTest, ut_LoadFunction)
     GlobalContainer::SetRtChipType(chipType);
 }
 
+TEST_F(RuntimeTest, SocTypeByChipType)
+{
+    Runtime rt; // no init
+    rt.SetSocTypeByChipType(0x0800, 0, 0);
+    EXPECT_NE(rt.GetSocType(), SOC_BEGIN);
+}
+
 extern "C" {
 int TsdOpenExStub(uint32_t a, uint32_t b, uint32_t c)
 {

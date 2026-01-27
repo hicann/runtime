@@ -3130,12 +3130,12 @@ TEST_F(DavidTaskTest, InitFuncStreamSwitchTaskV1)
     EXPECT_EQ(error, RT_ERROR_DEVICE_INVALID);
     error = InitFuncCallParaForStreamActiveTask(&switchtask, activeExPara, CHIP_MINI_V3);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = InitFuncCallParaForStreamActiveTask(&switchtask, activeExPara, CHIP_5612);
+    error = InitFuncCallParaForStreamActiveTask(&switchtask, activeExPara, CHIP_ASCEND_031);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stub->starsRegBaseAddr_ = 0;
     error = InitFuncCallParaForStreamSwitchTaskV1(&switchtask, switchfcPara, CHIP_DAVID);
     EXPECT_EQ(error, RT_ERROR_DEVICE_INVALID);
-    error = InitFuncCallParaForStreamSwitchTaskV1(&switchtask, switchfcPara, CHIP_5612);
+    error = InitFuncCallParaForStreamSwitchTaskV1(&switchtask, switchfcPara, CHIP_ASCEND_031);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = InitFuncCallParaForStreamSwitchTaskV2(&switchtask, switchfcExPara, CHIP_DAVID);
     EXPECT_EQ(error, RT_ERROR_DEVICE_INVALID);
@@ -3164,7 +3164,7 @@ TEST_F(DavidTaskTest1, InitFuncStreamSwitchTaskV2)
     stream_->executedTimesSvm_ = static_cast<uint16_t *>(buf);
     rtStarsStreamSwitchExFcPara_t switchfcExPara = {};
     stub->starsRegBaseAddr_ = 0;
-    error = InitFuncCallParaForStreamSwitchTaskV2(&switchtask, switchfcExPara, CHIP_5612);
+    error = InitFuncCallParaForStreamSwitchTaskV2(&switchtask, switchfcExPara, CHIP_ASCEND_031);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsStreamActiveFcPara_t activeExPara = {};
     free(buf);

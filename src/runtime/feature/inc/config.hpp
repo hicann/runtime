@@ -29,10 +29,6 @@ constexpr uint32_t RUNTIME_PUBLIC_VERSION = 1001U;
 
 struct HardWareConfig {
     uint32_t platformConfig; /* PlatformInfo */
-    rtAiCoreSpec_t aiCoreSpec;               /* AiCoreSpec */
-    rtAiCoreMemorySize_t aiCoreMemorySize;   /* AiCoreMemorySize */
-    rtAiCoreMemoryRates_t aiCoreMemoryRates; /* AiCoreMemoryRates */
-    rtMemoryConfig_t memoryConfig;           /* MemoryConfig */
 };
 
 // runtime config management
@@ -50,7 +46,7 @@ private:
     static void InitHardwareInfo910_95();
     static void InitHardwareInfo910_5591();
     static void InitHardwareInfoMiniV3();
-    static void InitHardwareInfoMini5612();
+    static void InitHardwareInfoAscend031();
     static void InitHardwareInfo910B();
     static void InitHardwareInfoBs9sx1a();
     static void InitHardwareInfoAs31xm1x();
