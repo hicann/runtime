@@ -75,8 +75,8 @@ using namespace AicpuSchedule;
 using namespace aicpu;
 
 namespace {
-constexpr uint64_t CHIP_MDC = 2U;
-constexpr uint64_t CHIP_CLOUD_V2 = 5U;
+constexpr uint64_t CHIP_ADC = 2U;
+constexpr uint64_t CHIP_ASCEND_910B = 5U;
 constexpr uint32_t mbufDataOffSet = 10;
 constexpr uint32_t maxMbufNumInMbuflist = 20;
 constexpr uint32_t mbufSize = 128;
@@ -268,7 +268,7 @@ drvError_t halGetDeviceInfoFake1(uint32_t devId, int32_t moduleType, int32_t inf
     }
 
     if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_VERSION)) {
-        *value = CHIP_MDC << 8;
+        *value = CHIP_ADC << 8;
     }
     return DRV_ERROR_NONE;
 }
@@ -2957,9 +2957,9 @@ TEST_F(AICPUScheduleTEST, CheckBindHostPid005) {
     EXPECT_EQ(bindPidRet, AICPU_SCHEDULE_ERROR_DRV_ERR);
 }
 
-TEST_F(AICPUScheduleTEST, InitSocType_CHIP_CLOUD_V2) {
+TEST_F(AICPUScheduleTEST, InitSocType_CHIP_ASCEND_910B) {
     AicpuDrvManager inst;
-    int64_t deviceInfo = CHIP_CLOUD_V2 << 8;
+    int64_t deviceInfo = CHIP_ASCEND_910B << 8;
     MOCKER(halGetDeviceInfo)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&deviceInfo))

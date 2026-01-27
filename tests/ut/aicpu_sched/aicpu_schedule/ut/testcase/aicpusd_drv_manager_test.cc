@@ -57,8 +57,8 @@ protected:
 };
 
 namespace {
-    constexpr uint64_t CHIP_MDC = 2U;
-    constexpr uint64_t CHIP_CLOUD_V2 = 5U;
+    constexpr uint64_t CHIP_ADC = 2U;
+    constexpr uint64_t CHIP_ASCEND_910B = 5U;
     const std::map<EVENT_ID, SCHEDULE_PRIORITY> eventPriority = {
         {EVENT_ID::EVENT_RANDOM_KERNEL, SCHEDULE_PRIORITY::PRIORITY_LEVEL0},
         {EVENT_ID::EVENT_SPLIT_KERNEL, SCHEDULE_PRIORITY::PRIORITY_LEVEL0},
@@ -84,7 +84,7 @@ namespace {
         }
 
         if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_VERSION)) {
-            *value = CHIP_MDC << 8;
+            *value = CHIP_ADC << 8;
         }
         return DRV_ERROR_NONE;
     }
@@ -523,9 +523,9 @@ TEST_F(AICPUDrvManagerTEST, InitDrvMgr_001) {
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
 }
 
-TEST_F(AICPUDrvManagerTEST, InitSocType_CHIP_CLOUD_V2) {
+TEST_F(AICPUDrvManagerTEST, InitSocType_CHIP_ASCEND_910B) {
     AicpuDrvManager inst;
-    int64_t deviceInfo = CHIP_CLOUD_V2 << 8;
+    int64_t deviceInfo = CHIP_ASCEND_910B << 8;
     MOCKER(halGetDeviceInfo)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&deviceInfo))

@@ -120,10 +120,10 @@ target_compile_definitions(aicpu_custom_schedule_utest PRIVATE
 # test for stub? to delete
 add_executable(aicpu_custom_schedule_utest_dc
     ${SRC_PATH}/stub/dc.cpp
-    ${SRC_PATH}/stub/mdc_prof.cpp
+    ${SRC_PATH}/stub/adc_prof.cpp
     ${SRC_PATH}/stub/aicpusd_resource_limit.cpp
     testcase/aicpu_cust_monitor_dc_test.cc
-    testcase/aicpu_cust_mdc_prof_test.cc
+    testcase/aicpu_cust_adc_prof_test.cc
     main_ut.cc
 )
 

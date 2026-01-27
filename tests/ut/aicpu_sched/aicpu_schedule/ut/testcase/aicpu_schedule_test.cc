@@ -4754,7 +4754,7 @@ TEST_F(AICPUScheduleTEST, GetLogLevel_001)
     EXPECT_EQ(ret, -1);
 }
 
-TEST_F(AICPUScheduleTEST, AddToCgroup_Mdc)
+TEST_F(AICPUScheduleTEST, AddToCgroup_Adc)
 {
 
     MOCKER_CPP(&FeatureCtrl::ShouldAddtocGroup).stubs().will(returnValue(false));

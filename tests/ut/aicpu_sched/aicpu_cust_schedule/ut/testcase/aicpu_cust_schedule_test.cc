@@ -76,8 +76,8 @@ protected:
 };
 
 namespace {
-    constexpr uint64_t CHIP_MDC = 2U;
-    constexpr uint64_t CHIP_CLOUD_V2 = 5U;
+    constexpr uint64_t CHIP_ADC = 2U;
+    constexpr uint64_t CHIP_ASCEND_910B = 5U;
     drvError_t halGetDeviceInfoFake1(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
     {
         if (moduleType == 1 && infoType == 3) {
@@ -88,7 +88,7 @@ namespace {
         }
 
         if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_VERSION)) {
-            *value = CHIP_MDC << 8;
+            *value = CHIP_ADC << 8;
         }
         return DRV_ERROR_NONE;
     }
@@ -2521,9 +2521,9 @@ TEST_F(AICPUCustScheduleTEST, MainTestPmStart_03) {
     GlobalMockObject::verify();
 }
 
-TEST_F(AICPUCustScheduleTEST, InitSocType_CHIP_CLOUD_V2) {
+TEST_F(AICPUCustScheduleTEST, InitSocType_CHIP_ASCEND_910B) {
     AicpuDrvManager inst;
-    int64_t deviceInfo = CHIP_CLOUD_V2 << 8;
+    int64_t deviceInfo = CHIP_ASCEND_910B << 8;
     MOCKER(halGetDeviceInfo)
         .stubs()
         .with(any(), any(), any(), outBoundP(&deviceInfo))

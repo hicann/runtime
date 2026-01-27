@@ -1,0 +1,310 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+syntax = "proto3";
+package tsd;
+
+message InitMsg
+{
+    int32 pid = 1;
+}
+
+message InitRspMsg
+{
+    uint32 init_result = 1;
+}
+
+message DataMemoryInfo
+{
+     uint64 addr = 1;
+     uint32 size = 2;
+}
+
+message RecvAddressMsg
+{
+    repeated uint64 ctrl_va_address = 1;
+    repeated DataMemoryInfo data_va_address = 2;
+}
+message StartResultMsg
+{
+    uint32 result = 2;
+}
+message DataMsg
+{
+    uint32 graph_id = 1;
+    uint32 engine_id = 2;
+    uint32 port_id = 3;
+    string message_name = 4;
+    bytes data_str = 5;
+    uint64 req_id = 6;  // req_id用来跟踪数据流，每次用户注入数据时产生此id，并随着数据流进行透传
+}
+
+message ChannelName
+{
+    string channel_name = 1;
+}
+
+message TDTElement
+{
+    string channelName = 1;
+}
+
+message qsInitGroupName
+{
+    string qs_init_group_name = 1;
+}
+
+message TdtServerException
+{
+    uint32 result = 1;
+}
+
+message LogLevel
+{
+    string log_level = 1;
+}
+
+message CcecpuLogLevel
+{
+    string ccecpu_log_level = 1;
+}
+
+message AicpuLogLevel
+{
+    string aicpu_log_level = 1;
+}
+
+message ProcessSignPid
+{
+    uint32 proc_pid = 1;
+    string proc_sign = 2;
+}
+
+message TdtDataElemMsg
+{
+    string channel_name = 1;
+    uint64 index = 2;
+    uint64 data_type = 3;
+    uint64 label = 4;
+    uint64 data_len = 5;
+    bool is_block = 6;
+    uint64 block_num = 7;
+    uint64 head_md5 = 8;
+    uint64 tail_md5 = 9;
+    string tensor_name = 10;
+    string tensor_shape = 11;
+    string tensor_type = 12;
+    uint32 cnt= 13;
+    uint32 current_cnt = 14;
+}
+
+// for error message
+message ErrInfo
+{
+    string message = 1;
+    string error_log = 2;
+    string error_code = 3;
+}
+
+message AscendAicpuPath
+{
+    string ascend_aicpu_path = 1;
+}
+message BindHostPidPara
+{
+    uint32 process_type = 1;
+    int32  device_pid = 2;
+    int32  host_pid = 3;
+}
+message EnvPara
+{
+    string env_name = 1;
+    string env_value = 2;
+}
+message HelperSubProcess
+{
+    uint32 process_type = 1;
+    uint32 sub_proc_pid = 2;
+    string file_path = 3;
+    repeated EnvPara env_list = 4;
+    repeated string ext_param_list = 5;
+}
+message SubProcStatus
+{
+    uint32 sub_proc_pid = 1;
+    uint32 proc_status = 2;
+}
+
+message SinkPackageConfig
+{
+    string package_name = 1;
+    uint32 file_dec_dst_dir = 2;
+}
+
+message SinkPackageHashCodeInfo
+{
+    string package_name = 1;
+    string hash_code = 2;
+}
+
+message HDCMessage
+{
+    enum MsgType
+    {
+        INIT = 0;
+        INIT_RSP = 1;
+        CREATE_MEMORYPOOL = 2;
+        DESTORY_MEMORYPOOL = 3;
+        START_RESULT = 5;
+        TSD_START_PROC_MSG = 6; //拉起tsd下面的其他进程消息
+        TSD_CLOSE_PROC_MSG = 7; //关闭tsd下面的其他进程消息
+        TSD_START_PROC_RSP = 8; //拉起tsd下面的其他进程反馈消息
+        TSD_CLOSE_PROC_RSP = 9; //拉起tsd下面的其他进程反馈消息
+        SOCKET_CLOSED = 10;       //tsdclient链路断开消息
+        RELEASE_ADDR = 11;
+        START_FAST_RECV = 12;
+        DESTROY_RESULT = 13;
+        RESET_CONFIG = 14;
+        UPDATE_MEMORY_SIZE = 15;
+        UPDATE_RECV_POOL = 16;
+        ENLARGE_RECV_POOL = 17; //扩大接收内存池
+        REDUCE_RECV_POOL = 18; //缩小接收内存池
+        ENLARGE_RESULT = 19; //扩大内存池结果
+        REDUCE_RESULT = 20; //缩小内存池结果
+        RESET_CONFIG_RESULT = 21; //返回更新结果
+        TDT_ELEMENT = 22; // tdt element
+        CHANNEL_NAME = 23; // tdt channel obj
+        TDT_SERVER_EXCEPTION = 24; //返回tdt发送通道结果
+        TDT_PIDMSG_RESULT = 26;
+        TDT_NORMAL_CHANNEL_SEND = 27;
+        TDT_END_OF_SEQUENCE = 28;
+        TDT_SERVER_CLOSE_HDC = 29;
+        TSD_UPDATE_PROIFILING_MSG = 30; // update profiling mode消息
+        TSD_UPDATE_PROIFILING_RSP = 31; // update profiling mode反馈消息
+        TEST_HDC_SEND = 32; // message send by client when create session
+        TEST_HDC_RSP = 33;  // message response from server when session create success
+        TUNING_DATA_TRANSFER = 34; // userd for log-summary version check
+        TSD_CHECK_PACKAGE = 35; // used for check whether need to send aicpu package
+        TSD_CHECK_PACKAGE_RSP = 36; // used for response whether need to send aicpu package
+        TSD_START_QS_MSG = 37; // usd for open queue sheduler process
+        TSD_GET_PID_QOS = 38; // get pid qos from aicpu
+        TSD_GET_PID_QOS_RSP = 39; // get pid qos from aicpu rsp
+        TSD_GET_SUPPORT_CAPABILITY_LEVEL = 40; // get support feature
+        TSD_GET_SUPPORT_CAPABILITY_LEVEL_RSP = 41; // get support feature rsp
+        TSD_DRV_BIND_HOST_PID = 42; // driver bind host pid request
+        TSD_DRV_BIND_HOST_PID_RSP = 43; // bind host pid rsp
+        TSD_GET_DEVICE_RUNTIME_CHECKCODE = 44; // runtime checkcode on device
+        TSD_GET_DEVICE_RUNTIME_CHECKCODE_RSP = 45; // runtime checkcode on device rsp
+        TSD_REMOVE_FILE = 46; // remove device file
+        TSD_REMOVE_FILE_RSP = 47; // remove device file rsp
+        TSD_OPEN_SUB_PROC = 48;  // open sub proc  nn  or udf
+        TSD_OPEN_SUB_PROC_RSP = 49; // open sub proc  nn  or udf rsp
+        TSD_CLOSE_SUB_PROC = 50; // close sub proc  nn  or udf
+        TSD_CLOSE_SUB_PROC_RSP = 51; // close sub proc  nn  or udf
+        TSD_GET_SUB_PROC_STATUS = 52; //get sub proc status
+        TSD_GET_SUB_PROC_STATUS_RSP = 53; //get sub proc status rsp
+        TSD_OM_PKG_DECOMPRESS_STATUS = 54; //get om pkg status
+        TSD_OM_PKG_DECOMPRESS_STATUS_RSP = 55; //get om pkg status rsp
+        TSD_GET_DEVICE_DSHAPE_CHECKCODE = 56; // dynamic shape checkcode on device
+        TSD_GET_DEVICE_DSHAPE_CHECKCODE_RSP = 57; // dynamic shape checkcode on device rsp
+        TSD_SUPPORT_OM_INNER_DEC = 58; // tsd支持om内部二次压缩
+        TSD_SUPPORT_OM_INNER_DEC_RSP = 59; // tsd支持om内部二次压缩 rsp
+        TSD_CLOSE_SUB_PROC_LIST = 60; // 批量关闭subproc
+        TSD_CLOSE_SUB_PROC_LIST_RSP = 61; // 批量关闭subproc rsp
+        TSD_GET_SUPPORT_ADPROF = 62; // get support adprof
+        TSD_GET_SUPPORT_ADPROF_RSP = 63; // get support adprof rsp
+        TSD_CHECK_PACKAGE_RETRY = 64; // used for check whether need to send aicpu package
+        TSD_CHECK_PACKAGE_RETRY_RSP = 65; // used for response whether need to send aicpu package
+        HDC_RECV_ERROR = 66; // hdc recv msg fail
+        TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL = 67; // 获取device侧包checkcode
+        TSD_GET_DEVICE_PACKAGE_CHECKCODE_NORMAL_RSP = 68; // 获取device侧包checkcode response
+        TSD_UPDATE_PACKAGE_PROCESS_CONFIG = 69; // 包配置消息加载
+        TSD_UPDATE_PACKAGE_PROCESS_CONFIG_RSP = 70; // 包配置消息加载response
+        TSD_GET_DEVICE_CANN_HS_CHECKCODE = 71; // CANN HS包加载下发hash消息
+        TSD_GET_DEVICE_CANN_HS_CHECKCODE_RSP = 72; // CANN HS包加载下发hash消息response
+    }
+
+    message VersionInfo
+    {
+        message FeatureList
+        {
+            MsgType msg_type = 1;
+            repeated string feature = 2;
+        }
+        uint32 version = 1;
+        repeated FeatureList feature_list = 2;
+    }
+
+    uint32 graph_id =1;
+    MsgType type=2;
+    InitMsg init_req=3;
+    InitRspMsg init_rsp=4;
+    uint32 service_type=5;
+    StartResultMsg start_result_msg=7;
+
+    uint32 device_id =13; // devceId,启动时传递的是真实的值模四之后的值
+    ProcessSignPid proc_sign_pid =14; // fmk进程的pid绑定随机数sign
+    uint32 real_device_id =15; // fmk进程发送过来的真实的deviceId
+
+    RecvAddressMsg recv_addr_msg=16;
+    uint32 memory_size=18;
+    uint64 job_id=19; // job_id用来区分不同的任务，在CreateGraoh时将会产生此id并透传给相应的Graph实例
+
+    uint32 update_config_result = 20;
+    uint64 req_id = 21;
+    TDTElement tdt_element = 22;
+    ChannelName channel_name = 23;
+    TdtServerException tdt_server_exception= 24;
+    uint32 tsd_rsp_code = 25; // 拉起进程是否成功的response
+    uint32 profiling_mode = 28;
+    uint32 rank_size = 29; // 根据ranksize决定是否拉起hccp
+    TdtDataElemMsg tdt_data_element = 30;
+    bool start_hccp = 31; // 设置通知device拉起hccp的状态位
+    bool start_cp = 32; // 设置通知device拉起cp的状态位
+    VersionInfo version_info = 33; //client和device进行版本校验
+    uint32 check_code = 34; // aicpu算子包校验码
+    LogLevel log_level = 35; // 设置device拉起子进程的日志级别
+    int32 vf_id = 36; // vfid区分租户
+    ErrInfo error_info = 37; // for error message
+    uint32 device_mode = 38; //  check if is die mode or chip mode
+    qsInitGroupName qs_init_group_name = 39; // groupName for qs when qs started
+    uint64 sched_policy = 40;
+    int64 pid_of_qos = 41;
+    AscendAicpuPath ascend_aicpu_path = 42; // env ascend aicpu path
+    uint32 capability_level = 43; // 获取tsd能力level
+    BindHostPidPara bind_para = 44; // bindhostpid 接口信息
+    string remove_file_path = 45; // helper删除文件路径
+    uint32 close_sub_proc_pid = 46; // helper 关闭子进程的id
+    HelperSubProcess helper_sub_proc = 47; // 拉起helpersub的参数
+    repeated SubProcStatus sub_proc_status_list = 48; // helper sub status 信息
+    uint32 helper_sub_pid = 49; // helper sub 的pid
+    string omfile_name = 50; // omfilename
+    bool before_send_pkg = 51; // before send pkg get device checkcode flag
+    string ascend_install_path = 52; // cann 包安装路径
+    repeated uint32 sub_proc_type_list = 53; // 子进程type列表
+    repeated SubProcStatus close_sub_list = 54; // close 子进程列表
+    string host_lib_path = 55; // host 进程ld_path
+    bool support_adprof = 56; // 获取adporf support
+    uint32 aicpu_sched_mode = 57; // aicpu进程调度方式, 以中断方式或msgq方式
+    uint32 extendpkg_check_code = 58; // extend 包 checkcode
+    bool asan = 59; // asan
+    bool wait_flag = 60; // wait flag
+    CcecpuLogLevel ccecpu_log_level = 61; // ccecpu_log_level
+    AicpuLogLevel aicpu_log_level = 62; // aicpu_log_level
+    bool device_idle = 63; // device 当前是否idle
+    uint32 package_worker_type = 64; // device 侧的package type
+    uint32 package_max_process_time = 65; // device 侧包解压完成的最大时间单位s
+    uint32 package_type = 66; // host 发送到device的包类型
+    uint32 ascendcpppkg_check_code = 67; // ascendcpp 包 checkcode
+    uint32 tsdclient_capability_level = 68; // tsdclient包能力level
+    repeated SinkPackageConfig sink_pkg_con_list = 69; // 下沉包配置文件
+    string package_config_hash_code = 70; // 下沉包配置文件hash值
+    repeated SinkPackageHashCodeInfo package_hash_code_list = 71; // 下沉包所有hashcode
+}

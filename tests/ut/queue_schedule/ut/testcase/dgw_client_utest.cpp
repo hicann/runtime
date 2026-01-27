@@ -32,7 +32,7 @@ using namespace std;
 using namespace bqs;
 
 namespace {
-    constexpr uint64_t CHIP_CLOUD = 1U;
+    constexpr uint64_t CHIP_ASCEND_910A = 1U;
     drvError_t halEschedSubmitEventSyncFake(unsigned int devId,
         struct event_summary *event, int timeout, struct event_reply *reply)
     {
@@ -86,7 +86,7 @@ namespace {
     drvError_t halGetDeviceInfoFake1(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
     {
         if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_VERSION)) {
-            *value = CHIP_CLOUD << 8;
+            *value = CHIP_ASCEND_910A << 8;
         }
         return DRV_ERROR_NONE;
     }
@@ -1139,7 +1139,7 @@ TEST_F(DgwClientUtest, IsSupportSetVisibleDevices2)
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoFake1));
     auto ret = DgwClient::GetPlatformInfo(0U);
     EXPECT_EQ(ret, 0);
-    auto supRet = QSFeatureCtrl::IsSupportSetVisibleDevices(CHIP_CLOUD);
+    auto supRet = QSFeatureCtrl::IsSupportSetVisibleDevices(CHIP_ASCEND_910A);
     EXPECT_EQ(supRet, true);
 }
 

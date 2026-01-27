@@ -11,18 +11,18 @@
 
 namespace bqs {
     typedef enum tagChipType {
-        CHIP_CLOUD = 1,
-        CHIP_CLOUD_V2 = 5,
-        CHIP_950 = 15,
+        CHIP_ASCEND_910A = 1,
+        CHIP_ASCEND_910B = 5,
+        CHIP_ASCEND_950 = 15,
         CHIP_CLOUD_V5 = 16,
     } ChipType_t;
 
     bool QSFeatureCtrl::IsSupportSetVisibleDevices(int64_t chip) {
         ChipType_t g_chipType = static_cast<ChipType_t>(chip);
         switch (g_chipType) {
-            case CHIP_CLOUD:
-            case CHIP_CLOUD_V2:
-            case CHIP_950:
+            case CHIP_ASCEND_910A:
+            case CHIP_ASCEND_910B:
+            case CHIP_ASCEND_950:
                 return true;
             default:
                 return false;
