@@ -83,6 +83,7 @@ namespace {
         return DRV_ERROR_NONE;
     }
 
+    constexpr uint64_t CHIP_ASCEND_910A = 1U;
     drvError_t halGetDeviceInfoFake1(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
     {
         if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_VERSION)) {
