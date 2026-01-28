@@ -116,7 +116,9 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {TS_TASK_TYPE_CCU_LAUNCH, "CCU_LAUNCH"},
         {TS_TASK_TYPE_FUSION_KERNEL, "KERNEL_FUSION"},
         {TS_TASK_TYPE_CAPTURE_RECORD, "CAPTURE_RECORD"},
-        {TS_TASK_TYPE_CAPTURE_WAIT  , "CAPTURE_WAIT"},
+        {TS_TASK_TYPE_CAPTURE_WAIT, "CAPTURE_WAIT"},
+        {TS_TASK_TYPE_IPC_RECORD, "IPC_EVENT_RECORD"},
+        {TS_TASK_TYPE_IPC_WAIT, "IPC_EVENT_WAIT"},
         // memcpy info
         {RT_PROFILE_TYPE_MEMCPY_INFO, "memcpy_info"},
 
