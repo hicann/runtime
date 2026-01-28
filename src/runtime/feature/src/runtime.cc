@@ -1932,8 +1932,12 @@ rtError_t Runtime::AllKernelRegister(Program * const prog, const bool isHostApiR
         // static kernel register with using tilingkey as 0
         if ((!isHostApiReg) || (isHostApiReg && (!staticKernel))) {
             error = GetTilingValue(kernelInfoExt, tilingValue);
-            COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
-                "current kernels not suit dynamic tilingkey rule.");
+            if (error != RT_ERROR_NONE) {
+                const std::string kernelInfo = kernels[idx].name;
+                RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1003, "Register kernel " + kernelInfo,
+                    kernelInfoExt.c_str(), "tiling", "a 64-bit unsigned long integer");
+                return RT_ERROR_INVALID_VALUE;
+            }
         }
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX)) {
             const bool getProgFlag = (isHostApiReg ? false : true);
