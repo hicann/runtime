@@ -1626,6 +1626,8 @@ void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc,
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
+    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+                RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
@@ -1655,7 +1657,7 @@ void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc,
     endOffset = endOffset / sizeof(uint32_t);
 
     // load devAddr data from hbm to r2
-    ConstructLoadImm(r2, fcPara.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadValue);
+    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
 
     // read value1 to r1
     ConstructLHWI(r1, value1, fc.lhwi3);
@@ -1710,6 +1712,8 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
+    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+                    RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
@@ -1739,7 +1743,7 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
     endOffset = endOffset / sizeof(uint32_t);
 
     // load devAddr data from hbm to r2
-    ConstructLoadImm(r2, fcPara.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadValue);
+    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
 
     // read value1 to r1
     ConstructLHWI(r1, value1, fc.lhwi3);
