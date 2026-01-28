@@ -367,6 +367,7 @@ struct RtStarsMemWaitValueInstrFcPara {
     uint64_t sqIdMemAddr;
     uint32_t flag;
     uint32_t sqHeadPre;
+    uint16_t awSize;
 };
 
 #pragma pack(pop)

@@ -1626,7 +1626,7 @@ static void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitVal
     fcPara.sqId = stream->GetSqId();
     fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
     fcPara.sqHeadPre = firstSqePos;
-
+    fcPara.awSize = memWaitValueTask->awSize;
     return;
 }
 
@@ -1644,6 +1644,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
     memWaitValueTask->funcCallSvmMem2 = nullptr;
     memWaitValueTask->writeValueAddr = nullptr;
     memWaitValueTask->funCallMemSize2 = 0ULL;
+    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
     const rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);
 
@@ -1742,7 +1743,7 @@ void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const com
 {
     RtStarsMemWaitValueInstrFcPara fcPara = {};
     InitFuncCallParaForMemWaitTask(taskInfo, fcPara);
- 
+
     ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
     ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]), fcPara);
 

@@ -127,7 +127,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *cons
     fcPara.maxLoop = 30ULL;  /* the max loop num */
     fcPara.sqId = stream->GetSqId();
     fcPara.sqHeadPre = taskInfo->id; /* = taskResATail_ before alloc */
-
+    fcPara.awSize = memWaitValueTask->awSize;
     ConstructFirstDavidSqeForMemWaitValueTask(taskInfo, davidSqe);
     rtDavidSqe_t *sqeAddr = &davidSqe[MEM_WAIT_SQE_INDEX_1];
     if (sqBaseAddr != 0ULL) {
