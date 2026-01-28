@@ -125,7 +125,7 @@ bash build.sh
 ```
 更多编译参数可以通过`bash build.sh -h`查看。
 
-编译完成之后会在`build_out`目录下生产`cann-npu-runtime_<version>_linux-<arch>.run`软件包。
+编译完成之后会在`build_out`目录下生成`cann-npu-runtime_<version>_linux-<arch>.run`软件包。
 \<version>表示版本号。
 \<arch>表示操作系统架构，取值包括x86_64与aarch64。
 可执行如下命令安装编译生成的Runtime软件包：

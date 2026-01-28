@@ -91,7 +91,7 @@ Runtime API参考的目录如下：
     -   [aclrtActiveStream](api_docs/aclrtActiveStream.md)
     -   [aclrtSwitchStream](api_docs/aclrtSwitchStream.md)
     -   [aclrtRegStreamStateCallback](api_docs/aclrtRegStreamStateCallback.md)
-    -   [acIrtStreamStop](api_docs/acIrtStreamStop.md)
+    -   [aclrtStreamStop](api_docs/aclrtStreamStop.md)
     -   [aclrtPersistentTaskClean](api_docs/aclrtPersistentTaskClean.md)
     -   [aclrtStreamGetPriority](api_docs/aclrtStreamGetPriority.md)
     -   [aclrtStreamGetFlags](api_docs/aclrtStreamGetFlags.md)
