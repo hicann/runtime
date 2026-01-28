@@ -353,10 +353,11 @@ ElfProgram* BinaryLoader::LoadFromData() const
 
     /* alse @see Runtime::MallocProgramAndReg 
        CLOUD_V2 metainfo feature, if kernel has valid metainfo, will register kernel in new way with the metainfo,
-       such as funcType, taskRation... */
-    if ((prog->ContainsAscendMeta()) && (prog->Machine() != Program::MACH_AI_MIX_KERNEL)) {
-        prog->SetMachine(Program::MACH_AI_MIX_KERNEL);
-    }
+       such as funcType, taskRation...
+    */
+    COND_PROC(((prog->ContainsAscendMeta()) && (prog->Machine() != Program::MACH_AI_MIX_KERNEL) &&
+        !IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_MACHINE_CVMIX)),
+        prog->SetMachine(Program::MACH_AI_MIX_KERNEL);)
 
     prog->SetElfMagic(magic_);
     return prog;
