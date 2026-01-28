@@ -4858,8 +4858,9 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
 
     CaptureModeEnter(stm, mode);
 
-    RT_LOG(RT_LOG_EVENT, "capture begin success, device_id=%u, original stream_id=%d, capture stream_id=%d, model_id=%u.",
-        device_->Id_(), streamId, stm->GetCaptureStream()->Id_(), captureModel->Id_());
+    RT_LOG(RT_LOG_EVENT, "capture begin success, device_id=%u, model_id=%u,"
+ 	    " original stream_id=%d, capture stream_id=%d, stream_status=%d.",
+ 	    device_->Id_(), captureModel->Id_(), streamId, stm->GetCaptureStream()->Id_(), stm->GetCaptureStatus());
 
     return RT_ERROR_NONE;
 }
@@ -5096,13 +5097,16 @@ rtError_t Context::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptur
     Stream *captureStream = stm->GetCaptureStream();
     const rtStreamCaptureStatus statusTmp = stm->GetCaptureStatus();
     Model *mdlTmp = nullptr;
+    uint32_t modelId = 0xFFFFU;
 
     if ((statusTmp != RT_STREAM_CAPTURE_STATUS_NONE) && (captureStream != nullptr)) {
         mdlTmp = captureStream->Model_();
         if (mdlTmp == nullptr) {
             RT_LOG(RT_LOG_WARNING, "stream is not in capture status, device_id=%u, stream_id=%d.",
                 device_->Id_(), stm->Id_());
-        }
+        } else {
+ 	        modelId = mdlTmp->Id_();
+ 	    }
     }
 
     if (status != nullptr) {
@@ -5112,6 +5116,9 @@ rtError_t Context::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptur
     if (captureMdl != nullptr) {
         *captureMdl = mdlTmp;
     }
+
+    RT_LOG(RT_LOG_INFO, "device_id=%u, model_id=%u, original stream_id=%d, stream_status=%d",
+ 	    device_->Id_(), modelId, stm->Id_(), statusTmp);
 
     return RT_ERROR_NONE;
 }

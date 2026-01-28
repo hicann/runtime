@@ -267,10 +267,10 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream * const stm)
             return error;
         }
         SetAddStreamMap(stm, stm->GetCaptureStream());
-        RT_LOG(RT_LOG_DEBUG,
-               "add stream to capture model, model_id=%u, "
-               "device_id=%u, add stream_id=%d, capture stream_id=%d, retCode=%#x.",
-               Id_(), Context_()->Device_()->Id_(), streamId, stm->GetCaptureStream()->Id_(),error);
+        RT_LOG(RT_LOG_INFO,
+ 	        "add stream to capture model, device_id=%u, model_id=%u, "
+ 	        "add stream_id=%d, stream_status=%d, capture stream_id=%d, retCode=%#x.", Context_()->Device_()->Id_(),
+ 	        Id_(), streamId, stm->GetCaptureStatus(), stm->GetCaptureStream()->Id_(), error);
     } else {
         RT_LOG(RT_LOG_WARNING,
             "already add stream_id=%d to capture model, device_id=%u, model_id=%u.", streamId, Context_()->Device_()->Id_(), Id_());
