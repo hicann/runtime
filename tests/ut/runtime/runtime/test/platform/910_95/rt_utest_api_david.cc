@@ -9407,7 +9407,7 @@ TEST_F(ApiDavidTest, rtsValueWait_failed)
     defaultStm->SetSqMemAttr(false);
     defaultStm->Context_()->DefaultStream_()->SetSqMemAttr(false);
     defaultStm->abortStatus_ = RT_ERROR_NONE;
-    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     defaultStm->SetSqBaseAddr(newSqAddr);

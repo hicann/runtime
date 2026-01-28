@@ -116,6 +116,7 @@ void ConstructDavidSqeForLabelSetTask(TaskInfo * const taskInfo, rtDavidSqe_t * 
 void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
 {
     constexpr uint8_t MEM_WAIT_SQE_INDEX_1 = 1U;
+    constexpr uint8_t MEM_WAIT_SQE_INDEX_2 = 2U;
 
     RtStarsMemWaitValueInstrFcPara fcPara = {};
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
@@ -126,15 +127,36 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *cons
     fcPara.flag = memWaitValueTask->flag;
     fcPara.maxLoop = 30ULL;  /* the max loop num */
     fcPara.sqId = stream->GetSqId();
-    fcPara.sqHeadPre = taskInfo->id; /* = taskResATail_ before alloc */
+    fcPara.sqHeadPre = (taskInfo->id + 1) % stream->GetSqDepth(); /* = taskResATail_ before alloc */
     fcPara.awSize = memWaitValueTask->awSize;
-    ConstructFirstDavidSqeForMemWaitValueTask(taskInfo, davidSqe);
-    rtDavidSqe_t *sqeAddr = &davidSqe[MEM_WAIT_SQE_INDEX_1];
+
+    // two sqes probably trigger a software constraint when the stream is full, add a nop sqe to evade
+    ConstructNopSqeForMemWaitValueTask(taskInfo, davidSqe);
+
+    rtDavidSqe_t *writeSqeAddr = &davidSqe[MEM_WAIT_SQE_INDEX_1];
     if (sqBaseAddr != 0ULL) {
         const uint32_t pos = taskInfo->id + MEM_WAIT_SQE_INDEX_1;
-        sqeAddr = GetSqPosAddr(sqBaseAddr, pos);
+        writeSqeAddr = GetSqPosAddr(sqBaseAddr, pos);
     }
-    ConstructSecondDavidSqeForMemWaitValueTask(taskInfo, sqeAddr, fcPara);
+    ConstructFirstDavidSqeForMemWaitValueTask(taskInfo, writeSqeAddr);
+
+    rtDavidSqe_t *condSqeAddr = &davidSqe[MEM_WAIT_SQE_INDEX_2];
+    if (sqBaseAddr != 0ULL) {
+        const uint32_t pos = taskInfo->id + MEM_WAIT_SQE_INDEX_2;
+        condSqeAddr = GetSqPosAddr(sqBaseAddr, pos);
+    }
+    ConstructSecondDavidSqeForMemWaitValueTask(taskInfo, condSqeAddr, fcPara);
+}
+
+void ConstructNopSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe)
+{
+    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
+
+    RtDavidPlaceHolderSqe *const sqe = &(davidSqe->phSqe);
+    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
+    sqe->taskType = TS_TASK_TYPE_NOP;
+    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+    PrintDavidSqe(davidSqe, "MemWaitValueTask nop sqe");
 }
 
 void ConstructFirstDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe)
@@ -160,8 +182,8 @@ void ConstructFirstDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t 
     sqe->writeAddrLow = static_cast<uint32_t>(devAddr & MASK_32_BIT);
     sqe->writeAddrHigh = static_cast<uint32_t>((devAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
 
-    PrintDavidSqe(davidSqe, "MemWaitValueTask first sqe");
-    RT_LOG(RT_LOG_INFO, "MemWaitValueTask first sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
+    PrintDavidSqe(davidSqe, "MemWaitValueTask value write sqe");
+    RT_LOG(RT_LOG_INFO, "MemWaitValueTask value write sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
         "value=0x%llx, taskSn=%u", stream->Id_(), taskInfo->id, devAddr, value, taskInfo->taskSn);
 }
 
@@ -197,8 +219,8 @@ void ConstructSecondDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t
     // func call size is rs2[19:0]*4Byte
     ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), sqe);
 
-    PrintDavidSqe(davidSqe, "MemWaitValueTask second sqe");
-    RT_LOG(RT_LOG_INFO, "MemWaitValueTask second sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
+    PrintDavidSqe(davidSqe, "MemWaitValueTask condition sqe");
+    RT_LOG(RT_LOG_INFO, "MemWaitValueTask condition sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
         "value=0x%llx, sqHeadPre=%u, flag=%u, taskSn=%u", taskInfo->stream->Id_(), taskInfo->id,
         fcPara.devAddr, fcPara.value, fcPara.sqHeadPre, fcPara.flag, taskInfo->taskSn);
 }

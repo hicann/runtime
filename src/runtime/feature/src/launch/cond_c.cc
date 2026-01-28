@@ -208,10 +208,10 @@ rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
         stm->StreamUnLock();
     };
     stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtMemWaitValueTask, stm, pos, dstStm, MEM_WAIT_SQE_NUM);
+    error = AllocTaskInfoForCapture(&rtMemWaitValueTask, stm, pos, dstStm, MEM_WAIT_V2_SQE_NUM);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtMemWaitValueTask, dstStm, pos, MEM_WAIT_SQE_NUM);
+    SaveTaskCommonInfo(rtMemWaitValueTask, dstStm, pos, MEM_WAIT_V2_SQE_NUM);
     ScopeGuard tskErrRecycle(errRecycle);
     rtMemWaitValueTask->typeName = "MEM_WAIT_VALUE";
     rtMemWaitValueTask->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
