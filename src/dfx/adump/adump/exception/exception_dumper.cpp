@@ -179,13 +179,19 @@ std::string ExceptionDumper::CreateDeviceDumpPath(uint32_t deviceId) const
     return CreateDumpPath(deviceDumpPath);
 }
 
-std::string ExceptionDumper::CreateExtraDumpPath() const
+std::string ExceptionDumper::CreateExtraDumpPath()
 {
     // Create extra dump path for tensor custom dump data
     std::string dumpPath = dumpPath_.empty() ? DEFAULT_DUMP_PATH : dumpPath_;
     Path extraDumpPath(dumpPath);
     extraDumpPath.Append(EXTRA_DUMP_PATH);
-    return CreateDumpPath(extraDumpPath);
+    extraDumpPath_ = CreateDumpPath(extraDumpPath);
+    return extraDumpPath_;
+}
+
+const char* ExceptionDumper::GetExtraDumpCPath() const
+{
+    return extraDumpPath_.empty() ? nullptr : extraDumpPath_.c_str();
 }
 
 bool ExceptionDumper::FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp)

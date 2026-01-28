@@ -62,6 +62,7 @@ private:
     void DumpDeviceKernelBin(const rtExceptionKernelInfo_t &kernelInfo, std::vector<GlobalMemInfo> &memInfoList);
     void DumpHostFile(const rtExceptionArgsInfo_t &argsInfo);
     void DumpHostFile(const std::string &filePath, uint32_t sectionType, const std::string &sectionName);
+    void DumpKernelInfo(const std::string &kernelName);
     void DumpGlobalAuxInfo(const std::vector<GlobalMemInfo> &memInfoList);
     int32_t D2HMemcpyWithCheck(const GlobalMemInfo &memInfo, std::string &data) const;
     int32_t D2HMemcpyWithNoCheck(const GlobalMemInfo &memInfo, std::string &data) const;

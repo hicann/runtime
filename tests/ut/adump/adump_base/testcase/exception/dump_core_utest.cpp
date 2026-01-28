@@ -268,6 +268,7 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP)
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.host_kernel_object"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_json"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_object"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.kernel_info"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.local.1"));
 
     system("rm -r /tmp/adump_coredump_utest");
@@ -348,6 +349,7 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_OLD)
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.host_kernel_object"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_json"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_object"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.kernel_info"));
     EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.local.1"));
 }
 

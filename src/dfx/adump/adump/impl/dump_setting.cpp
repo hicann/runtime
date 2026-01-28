@@ -115,6 +115,11 @@ std::string DumpSetting::GetDumpPath() const
     return dumpPath_.GetString();
 }
 
+const char* DumpSetting::GetDumpCPath() const
+{
+    return dumpPath_.Empty() ? nullptr : dumpPath_.GetCString();
+}
+
 uint32_t DumpSetting::GetDumpMode() const
 {
     return dumpMode_;

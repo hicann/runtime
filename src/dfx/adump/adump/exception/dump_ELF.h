@@ -31,6 +31,7 @@ namespace ELF {
 #define ASCEND_SHTYPE_HOST_KERNEL_OBJECT    (SHT_LOUSER + 7)
 #define ASCEND_SHTYPE_FILE_KERNEL_OBJECT    (SHT_LOUSER + 8)
 #define ASCEND_SHTYPE_FILE_KERNEL_JSON      (SHT_LOUSER + 9)
+#define ASCEND_SHTYPE_KERNEL_INFO           (SHT_LOUSER + 10)
 
 class Section {
 public:

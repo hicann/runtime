@@ -30,6 +30,7 @@ public:
     DumpSetting() = default;
     int32_t Init(const DumpType type, const DumpConfig &dumpConfig);
     std::string GetDumpPath() const;
+    const char* GetDumpCPath() const;
     uint32_t GetDumpMode() const;
     bool GetDumpStatus() const;
     bool GetDumpDebugStatus() const;

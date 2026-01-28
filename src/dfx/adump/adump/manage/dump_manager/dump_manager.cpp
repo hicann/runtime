@@ -498,11 +498,17 @@ int32_t DumpManager::StopDumpArgs()
     return 0;
 }
 
-const char* DumpManager::GetExtraDumpPath()
+const char* DumpManager::GetExceptionDumpPath()
 {
     std::lock_guard<std::mutex> lk(resourceMtx_);
-    static std::string path = exceptionDumper_.CreateExtraDumpPath();
-    return path.empty() ? nullptr: path.c_str();
+    exceptionDumper_.CreateExtraDumpPath();
+    return exceptionDumper_.GetExtraDumpCPath();
+}
+
+const char* DumpManager::GetDataDumpPath()
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    return dumpSetting_.GetDumpCPath();
 }
 
 int32_t DumpManager::SaveFile(const char *data, size_t dataLen, const char *fileName, SaveType type)

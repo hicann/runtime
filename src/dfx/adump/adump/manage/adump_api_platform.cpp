@@ -99,7 +99,17 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
  * @retval path for success
  * @retval NULL for failed
  */
-const char* acldumpGetPath()
+const char* acldumpGetPath(acldumpType dumpType)
 {
-    return Adx::DumpManager::Instance().GetExtraDumpPath();
+    switch (dumpType) {
+        case acldumpType::AIC_ERR_BRIEF_DUMP:
+        case acldumpType::AIC_ERR_NORM_DUMP:
+        case acldumpType::AIC_ERR_DETAIL_DUMP:
+            return Adx::DumpManager::Instance().GetExceptionDumpPath();
+        case acldumpType::DATA_DUMP:
+        case acldumpType::OVERFLOW_DUMP:
+            return Adx::DumpManager::Instance().GetDataDumpPath();
+        default:
+            return nullptr;
+    }
 }
