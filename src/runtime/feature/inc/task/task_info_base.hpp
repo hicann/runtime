@@ -127,6 +127,7 @@ struct AicTaskInfo {
     rtArgsSizeInfo_t inputArgsSize;
     uint32_t blockDimOffset;
     uint32_t dynamicShareMemSize;
+    uint32_t simtDcuSmSize;
     uint64_t timeout; // uint in us
 };
 
@@ -175,6 +176,7 @@ struct FusionTaskInfoAicPart {
     uint16_t resv;
     rtArgsSizeInfo_t inputArgsSize;
     uint32_t dynamicShareMemSize;
+    uint32_t simtDcuSmSize;
 };
 
 struct FusionTaskInfo {

@@ -216,14 +216,14 @@ public:
         return funcType_;
     }
 
-    void SetSimtFlag_(bool flag)
+    void SetKernelVfType_(uint32_t type)
     {
-        simtFlag_ = flag;
+        kernelVfType_ = type;
     }
 
-    bool SimtFlag_() const
+    uint32_t KernelVfType_() const
     {
-        return simtFlag_;
+        return kernelVfType_;
     }
 
     void SetShareMemSize_(uint32_t shareMemSize)
@@ -417,7 +417,7 @@ private:
     int32_t elfDataFlag_;
     uint64_t nameId_; // hash id for profiling
     std::mutex kernelMtx_;
-	bool simtFlag_;
+	uint32_t kernelVfType_;
     uint32_t shareMemSize_;
     uint32_t prefetchCnt1_;
     uint32_t prefetchCnt2_;

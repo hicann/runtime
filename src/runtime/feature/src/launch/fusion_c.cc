@@ -31,6 +31,31 @@ constexpr uint8_t RT_MISSION_INDEX_TWO = 2U;
 constexpr uint8_t RT_MISSION_INDEX_THREE = 3U;
 constexpr uint8_t RT_MISSION_INDEX_FOUR = 4U;
 
+static rtError_t CheckFusionDynSizeValid(TaskInfo* taskInfo, const rtFunsionTaskInfo_t * const fusionKernel)
+{
+    if ((taskInfo == nullptr) || (fusionKernel == nullptr)) {
+        return RT_ERROR_NONE;
+    }
+
+    const uint32_t subKernelNum = fusionKernel->subTaskNum;
+    for (uint32_t idx = 0; idx < subKernelNum; idx++) {
+        uint32_t subKernelType = fusionKernel->subTask[idx].type;
+        if (subKernelType == RT_FUSION_AICORE) {
+            FusionTaskInfoAicPart *aicPart = &(taskInfo->u.fusionKernelTask.aicPart);
+            Kernel *kernel = aicPart->kernel;
+            if (kernel == nullptr) {
+                continue;
+            }
+
+            rtError_t ret = CheckAndGetTotalShareMemorySize(kernel, aicPart->dynamicShareMemSize, aicPart->simtDcuSmSize);
+            if (ret != RT_ERROR_NONE) {
+                return ret;
+            }
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 static rtError_t PreProcAicAivTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask, const Stream * const stm,
     Program *&prog, rtAicAivFusionInfo_t *aicAivInfo, LaunchTaskCfgInfo_t *launchTaskCfg)
 {
@@ -394,6 +419,10 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     }
     FusionKernelTaskProc(fusionKernel, taskInfo, &aicAivInfo, &launchTaskCfg, ccuArgSize);
 
+    // for simt
+    error = CheckFusionDynSizeValid(taskInfo, fusionKernel);
+    ERROR_RETURN_MSG_INNER(error, "Failed to check SimtSmSize, stream_id=%d, retCode=%#x.", stm->Id_(),
+                           static_cast<uint32_t>(error));
     if (argsInfo != nullptr) {
         error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
         ERROR_RETURN_MSG_INNER(error, "Failed to load args with stm pool, stream_id=%d, useArgPool=%u, retCode=%#x.",

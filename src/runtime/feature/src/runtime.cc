@@ -1490,7 +1490,7 @@ rtError_t Runtime::JudgeOffsetByMixType(Program * const prog, const void * const
     rtKernelContent aivInfo = {0, 0, false, 0};
     prog->KernelContent(mixAicName.c_str(), &aicInfo);
     prog->KernelContent(mixAivName.c_str(), &aivInfo);
-    info1->simtFlag = aivInfo.simtFlag;
+    info1->kernelVfType = aivInfo.kernelVfType;
     info1->shareMemSize = aivInfo.shareMemSize;
 
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, ((aicInfo.offset == UINT32_MAX) && (aivInfo.offset == UINT32_MAX)),
@@ -1529,7 +1529,7 @@ rtError_t Runtime::GetOffsetByCustomKernelType(Program *prog, const uint32_t ker
     rtKernelContent aivInfo = {UINT32_MAX, 0, false, 0};
     prog->KernelContent(mixAicName.c_str(), &aicInfo);
     prog->KernelContent(mixAivName.c_str(), &aivInfo);
-    info1->simtFlag = aivInfo.simtFlag;
+    info1->kernelVfType = aivInfo.kernelVfType;
     info1->shareMemSize = aivInfo.shareMemSize;
 
     if (kernelType == static_cast<uint32_t>(MIX_AIC)) {
@@ -1637,9 +1637,9 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
         "Kernel register failed, new Kernel failed.");
 
     RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu, type=%u, funcMode=%u, kernelInfoExt=%s, "
-        "offset1=%u, length1=%u, offset2=%u, length2=%u, mixType=%hhu, simtFlag=%d, shareMemSize=%u.",
+        "offset1=%u, length1=%u, offset2=%u, length2=%u, mixType=%hhu, kernelVfType=%u, shareMemSize=%u.",
         sizeof(Kernel), prog->Machine(), funcModeInner, RtPtrToPtr<const char_t *>(kernelInfoExt),
-        info1.offset, info1.length, info2.offset, info2.length, mixType, info1.simtFlag, info1.shareMemSize);
+        info1.offset, info1.length, info2.offset, info2.length, mixType, info1.kernelVfType, info1.shareMemSize);
 
     const uint32_t nameOffset = prog->AppendKernelName(RtPtrToPtr<const char_t *>(kernelInfoExt));
     kernelPtr->SetNameOffset(nameOffset);
@@ -1647,7 +1647,7 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
     kernelPtr->SetKernelLength1(info1.length);
     kernelPtr->SetKernelLength2(info2.length);
     (void)GetPrefetchCnt(prog, kernelPtr);
-    kernelPtr->SetSimtFlag_(info1.simtFlag);
+    kernelPtr->SetKernelVfType_(info1.kernelVfType);
     kernelPtr->SetShareMemSize_(info1.shareMemSize);
     if ((funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_RECORDLOOP) ||
         (funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_SKIPLOOP) ||
@@ -1688,7 +1688,7 @@ static void SetKernelAttributes(Program * const prog, Kernel *kernel, const RtKe
     kernel->SetElfDataFlag(rtKernel->elfDataFlag);
     kernel->SetKernelLength1(static_cast<uint32_t>(rtKernel->length));
     kernel->SetMinStackSize1(rtKernel->minStackSize);
-    kernel->SetSimtFlag_(rtKernel->simtFlag);
+    kernel->SetKernelVfType_(rtKernel->kernelVfType);
     kernel->SetShareMemSize_(rtKernel->shareMemSize);
 }
 
@@ -1721,10 +1721,10 @@ rtError_t Runtime::AllocAndAddKernel(Program *prog, Kernel **kernelPtr, const Rt
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *kernelPtr == nullptr, RT_ERROR_KERNEL_NEW,
         "Mix kernel register failed, new Kernel failed.");
     RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu, funcType=%u, kernel_name=%s, mix_type=%u, offset=%u, length=%u, "
-        "taskRation=%u, kernelType=%u, simtFlag=%d, shareMemSize=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u.",
+        "taskRation=%u, kernelType=%u, kernelVfType=%u, shareMemSize=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u.",
         sizeof(Kernel), kernel->funcType, kernel->name, mixType,
         static_cast<uint32_t>(kernel->offset), static_cast<uint32_t>(kernel->length),
-        kernel->taskRation, kernelType, kernel->simtFlag, kernel->shareMemSize,
+        kernel->taskRation, kernelType, kernel->kernelVfType, kernel->shareMemSize,
         RtPtrToValue(kernel->dfxAddr), kernel->dfxSize);
     SetKernelAttributes(prog, *kernelPtr, kernel, kernelType, kernelInfo);
     if (mixType != NO_MIX) {
@@ -1737,14 +1737,15 @@ rtError_t Runtime::AllocAndAddKernel(Program *prog, Kernel **kernelPtr, const Rt
             (*kernelPtr)->SetKernelLength2(static_cast<uint32_t>(kernels[idx].length));
             (*kernelPtr)->SetMinStackSize2(kernels[idx].minStackSize);
             (*kernelPtr)->SetMixMinStackSize();
-            (*kernelPtr)->SetSimtFlag_((*kernelPtr)->SimtFlag_() || kernels[idx].simtFlag);
+            uint32_t vfType = (mixType == MIX_AIV) ? (*kernelPtr)->KernelVfType_() : kernels[idx].kernelVfType;
+            (*kernelPtr)->SetKernelVfType_(vfType);
             uint32_t shareMemSize = (mixType == MIX_AIV) ? (*kernelPtr)->ShareMemSize_() : kernels[idx].shareMemSize;
             (*kernelPtr)->SetShareMemSize_(shareMemSize);
             const uint8_t type = kernels[idx].funcType == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN ?
                 MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
             (*kernelPtr)->SetMixType(type);
-            RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, simtFlag=%d, shareMemSize=%u.",
-                (*kernelPtr)->Offset2_(), static_cast<uint32_t>(kernels[idx].length), type, (*kernelPtr)->SimtFlag_(), (*kernelPtr)->ShareMemSize_());
+            RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
+                (*kernelPtr)->Offset2_(), static_cast<uint32_t>(kernels[idx].length), type, (*kernelPtr)->KernelVfType_(), (*kernelPtr)->ShareMemSize_());
             break;
         }
     }
@@ -1948,16 +1949,17 @@ rtError_t Runtime::AllKernelRegister(Program * const prog, const bool isHostApiR
                 kernelPtrTmp->SetMinStackSize2(kernels[idx].minStackSize);
                 kernelPtrTmp->SetMixMinStackSize();
                 kernelPtrTmp->SetMixType(MIX_AIC_AIV_MAIN_AIC);
-                kernelPtrTmp->SetSimtFlag_(kernelPtrTmp->SimtFlag_() || kernels[idx].simtFlag);
+                uint32_t vfType = (mixType == MIX_AIV) ? kernels[idx].kernelVfType : kernelPtrTmp->KernelVfType_();
+                kernelPtrTmp->SetKernelVfType_(vfType);
                 uint32_t shareMemSize = (mixType == MIX_AIV) ? kernels[idx].shareMemSize : kernelPtrTmp->ShareMemSize_();
                 kernelPtrTmp->SetShareMemSize_(shareMemSize);
                 (void)GetPrefetchCnt(prog, kernelPtrTmp);
                 if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_INIT_BY_CTRL_CODE)) {
                     continue;
                 }
-                RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, simtFlag=%d, shareMemSize=%u.",
+                RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, kernelVfType=%u, shareMemSize=%u.",
                     kernelPtrTmp->Offset2_(), static_cast<uint32_t>(kernels[idx].length),
-                    kernelPtrTmp->SimtFlag_(), kernelPtrTmp->ShareMemSize_());
+                    kernelPtrTmp->KernelVfType_(), kernelPtrTmp->ShareMemSize_());
                 continue;
             }
         }
@@ -1966,11 +1968,11 @@ rtError_t Runtime::AllKernelRegister(Program * const prog, const bool isHostApiR
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, kernelPtr == nullptr, RT_ERROR_KERNEL_NEW,
             "All kernel register failed, new Kernel failed.");
         RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu, type=%u, kernel_name=%s, tilingkey=%" PRIu64
-               ", offset=%u, length=%u, dfxAddr=0x%llx, dfxSize=%u, simtFlag=%d, shareMemSize=%u.",
+               ", offset=%u, length=%u, dfxAddr=0x%llx, dfxSize=%u, kernelVfType=%u, shareMemSize=%u.",
                sizeof(Kernel), prog->Machine(), kernels[idx].name, kernelPtr->TilingKey(),
                static_cast<uint32_t>(kernels[idx].offset), static_cast<uint32_t>(kernels[idx].length),
                RtPtrToValue(kernels[idx].dfxAddr), kernels[idx].dfxSize,
-               kernels[idx].simtFlag, kernels[idx].shareMemSize);
+               kernels[idx].kernelVfType, kernels[idx].shareMemSize);
 
         SetKernelAttributes(prog, kernelPtr, &kernels[idx], kernelPtr->KernelType_(), nullptr);
         (void)GetPrefetchCnt(prog, kernelPtr);
@@ -1998,11 +2000,11 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *kernelPtr == nullptr, RT_ERROR_KERNEL_NEW,
         "Mix kernel register failed, new Kernel failed.");
     RT_LOG(RT_LOG_INFO, "new kernel size %zu, funcType=%u, kernel_name=%s, mix_type=%u, offset=%u, length=%u, "
-        "taskRation=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, kernelType=%u, simtFlag=%d, shareMemSize=%u.",
+        "taskRation=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, kernelType=%u, kernelVfType=%u, shareMemSize=%u.",
         sizeof(Kernel), kernel->funcType, kernel->name, mixType,
         static_cast<uint32_t>(kernel->offset), static_cast<uint32_t>(kernel->length), kernel->taskRation,
         RtPtrToValue(kernel->dfxAddr), kernel->dfxSize,
-        kernelType, kernel->simtFlag, kernel->shareMemSize);
+        kernelType, kernel->kernelVfType, kernel->shareMemSize);
     const uint32_t nameOffset = prog->AppendKernelName(kernel->name);
     (*kernelPtr)->SetNameOffset(nameOffset);
     (*kernelPtr)->SetKernelType_(kernelType);
@@ -2011,7 +2013,7 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     (*kernelPtr)->SetElfDataFlag(kernel->elfDataFlag);
     (*kernelPtr)->SetKernelLength1(static_cast<uint32_t>(kernel->length));
     (*kernelPtr)->SetMinStackSize1(kernel->minStackSize);
-    (*kernelPtr)->SetSimtFlag_(kernel->simtFlag);
+    (*kernelPtr)->SetKernelVfType_(kernel->kernelVfType);
     (*kernelPtr)->SetShareMemSize_(kernel->shareMemSize);
     (void)GetPrefetchCnt(prog, *kernelPtr);
     bool isRepeated = false;
@@ -2061,15 +2063,16 @@ bool Runtime::IsFoundKernelByTilingKey(Program * const prog, const RtKernel * co
         kernelTmp->SetKernelLength2(static_cast<uint32_t>(kernel->length));
         kernelTmp->SetMinStackSize2(kernel->minStackSize);
         kernelTmp->SetMixMinStackSize();
-        kernelTmp->SetSimtFlag_(kernelTmp->SimtFlag_() || kernel->simtFlag);
+        uint32_t vfType = (mixType == MIX_AIV) ? kernel->kernelVfType : kernelTmp->KernelVfType_();
+        kernelTmp->SetKernelVfType_(vfType);
         uint32_t shareMemSize = (mixType == MIX_AIV) ? kernel->shareMemSize : kernelTmp->ShareMemSize_();
         kernelTmp->SetShareMemSize_(shareMemSize);
         const uint8_t type = kernel->funcType == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN ?
             MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
         kernelTmp->SetMixType(type);
         (void)GetPrefetchCnt(prog, kernelTmp);
-        RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, simtFlag=%d, shareMemSize=%u.",
-            kernelTmp->Offset2_(), static_cast<uint32_t>(kernel->length), type, kernelTmp->SimtFlag_(), kernelTmp->ShareMemSize_());
+        RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
+            kernelTmp->Offset2_(), static_cast<uint32_t>(kernel->length), type, kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
     }
     Runtime::Instance()->PutProgram(prog);
 
@@ -2382,16 +2385,17 @@ rtError_t Runtime::MixKernelRegister(Program * const prog)
                 kernelTmp->SetKernelLength2(static_cast<uint32_t>(kernels[idx].length));
                 kernelTmp->SetMinStackSize2(kernels[idx].minStackSize);
                 kernelTmp->SetMixMinStackSize();
-                kernelTmp->SetSimtFlag_(kernelTmp->SimtFlag_() || kernels[idx].simtFlag);
+                uint32_t vfType = (mixType == MIX_AIV) ? kernels[idx].kernelVfType : kernelTmp->KernelVfType_();
+                kernelTmp->SetKernelVfType_(vfType);
                 uint32_t shareMemSize = (mixType == MIX_AIV) ? kernels[idx].shareMemSize : kernelTmp->ShareMemSize_();
                 kernelTmp->SetShareMemSize_(shareMemSize);
                 const uint8_t type = kernels[idx].funcType == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN ?
                     MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
                 kernelTmp->SetMixType(type);
                 (void)GetPrefetchCnt(prog, kernelTmp);
-                RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, simtFlag=%d, shareMemSize=%u.",
+                RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
                     kernelTmp->Offset2_(), static_cast<uint32_t>(kernels[idx].length), type,
-                    kernelTmp->SimtFlag_(), kernelTmp->ShareMemSize_());
+                    kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
                 continue;
             }
         }
@@ -2401,10 +2405,10 @@ rtError_t Runtime::MixKernelRegister(Program * const prog)
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, kernelPtr == nullptr, RT_ERROR_KERNEL_NEW,
             "Mix kernel register failed, new Kernel failed.");
         RT_LOG(RT_LOG_INFO, "Runtime_alloc_size %zu, funcType=%u, kernel_name=%s, mix_type=%u, offset=%u, length=%u, "
-            "taskRation=%u, kernelType=%u, simtFlag=%d, shareMemSize=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u.",
+            "taskRation=%u, kernelType=%u, kernelVfType=%u, shareMemSize=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u.",
             sizeof(Kernel), kernels[idx].funcType, kernels[idx].name, mixType,
             static_cast<uint32_t>(kernels[idx].offset), static_cast<uint32_t>(kernels[idx].length),
-            kernels[idx].taskRation, kernelType, kernels[idx].simtFlag, kernels[idx].shareMemSize,
+            kernels[idx].taskRation, kernelType, kernels[idx].kernelVfType, kernels[idx].shareMemSize,
             RtPtrToValue(kernels[idx].dfxAddr), kernels[idx].dfxSize);
         SetKernelAttributes(prog, kernelPtr, &kernels[idx], kernelType, nullptr);
         (void)GetPrefetchCnt(prog, kernelPtr);

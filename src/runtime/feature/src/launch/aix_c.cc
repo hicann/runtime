@@ -26,17 +26,42 @@ TIMESTAMP_EXTERN(rtKernelLaunch_ArgLoad);
 TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 
+rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t dynamicShareMemSize, uint32_t &simtDcuSmSize)
+{
+    /*
+        aic only - 1982:      校验dynamicSmSize必须是0, sqe中dcuSmSize=256K
+        simd     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize<=256K, sqe中dcuSmSize=256K
+        simt     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize+dcache(32K)<=256K, sqe中dcuSmSize=compilerAllocUbSize+dynamicSmSize
+    */
+    bool canUseSimt = (kernel->KernelVfType_() != 0);
+    bool simtFlag = (kernel->KernelVfType_() == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
+                    (kernel->KernelVfType_() == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
+    uint32_t totalSmSize = kernel->ShareMemSize_() + dynamicShareMemSize;
+    uint32_t maxSmSize = simtFlag ? RT_SIMT_REMAIN_UB_SIZE : RT_SIMT_UB_SIZE;
+    maxSmSize = canUseSimt ? maxSmSize : 0U;
+    /* simt dcu_size should 128 Byte align */
+    totalSmSize = simtFlag ? ((totalSmSize + RT_SIMT_SHARE_MEM_ALIGN_LEN - 1)/ RT_SIMT_SHARE_MEM_ALIGN_LEN * RT_SIMT_SHARE_MEM_ALIGN_LEN)
+                  : totalSmSize;
+    // aic only operator not check now
+    if (canUseSimt && (totalSmSize > maxSmSize)) {
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The size of the dynamic shared memory is %uB, and the size of the"
+                         " shared memory required by the operator kernel is %uB. The sum of these two sizes must be less than %uB.",
+                         dynamicShareMemSize, kernel->ShareMemSize_(), maxSmSize);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    simtDcuSmSize = simtFlag ? totalSmSize: RT_SIMT_UB_SIZE;
+    return RT_ERROR_NONE;
+}
+
 static rtError_t CheckDynSizeValid(TaskInfo* taskInfo, const Kernel * const kernel)
 {
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    if (kernel != nullptr && kernel->SimtFlag_()) {
-        if (aicTaskInfo->dynamicShareMemSize > (RT_SIMT_REMAIN_UB_SIZE - kernel->ShareMemSize_())) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "dynamicSmSize=%u, kernelSmSize=%u, sum>%u.",
-                aicTaskInfo->dynamicShareMemSize, kernel->ShareMemSize_(), RT_SIMT_REMAIN_UB_SIZE);
-            return RT_ERROR_INVALID_VALUE;
-        }
+    if ((taskInfo == nullptr) || (kernel == nullptr)) {
+        return RT_ERROR_NONE;
     }
-    return RT_ERROR_NONE;
+
+    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    return CheckAndGetTotalShareMemorySize(kernel, aicTaskInfo->dynamicShareMemSize, aicTaskInfo->simtDcuSmSize);
 }
 
 static void SetArgsAix(const rtArgsEx_t * const argsInfo, TaskInfo * const taskInfo, DavidArgLoaderResult * const result)
@@ -253,11 +278,11 @@ rtError_t StreamLaunchKernelV1(const void * const stubFunc, const uint32_t coreD
     aicTask->funcAddr1 = addr2;
     aicTask->progHandle = prog;
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelType=%u, funcType=%u, arg_size=%u, taskRation=%u, "
-        "mixType=%hhu, simtFlag=%d, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+        "mixType=%hhu, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "flag=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
         stm->Id_(), registeredKernel->Name_().c_str(), kernelType, registeredKernel->GetFuncType(),
         argsInfo->argsSize, registeredKernel->GetTaskRation(), mixType,
-        registeredKernel->SimtFlag_(), aicTask->dynamicShareMemSize, addr1, addr2,
+        registeredKernel->KernelVfType_(), aicTask->dynamicShareMemSize, addr1, addr2,
         flag, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
         aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
 
@@ -299,7 +324,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     uint32_t taskRation = 0U;
     uint32_t funcType = 0U;
     std::string name = "";
-    bool simtFlag = false;
+    uint32_t kernelVfType = 0U;
     Kernel *registeredKernel = nullptr;
     Runtime * const rt = Runtime::Instance();
     TaskInfo *kernelTask = nullptr;
@@ -316,7 +341,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
         taskRation = registeredKernel->GetTaskRation();
         funcType = registeredKernel->GetFuncType();
         name = registeredKernel->Name_();
-        simtFlag = registeredKernel->SimtFlag_();
+        kernelVfType = registeredKernel->KernelVfType_();
     }
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);,
@@ -364,10 +389,10 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     aicTask->funcAddr = addr1;
     aicTask->funcAddr1 = addr2;
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelType=%u, funcType=%u, "
-           "arg_size=%u, mixType=%u, taskRation=%u, simtFlag=%d, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+           "arg_size=%u, mixType=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
            "flag=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
            stm->Id_(), name.c_str(), kernelType, funcType, argsInfo->argsSize, mixType, taskRation,
-           simtFlag, aicTask->dynamicShareMemSize, addr1, addr2, flag, aicTask->comm.kernelFlag, aicTask->qos,
+           kernelVfType, aicTask->dynamicShareMemSize, addr1, addr2, flag, aicTask->comm.kernelFlag, aicTask->qos,
            aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = UpdateDavidKernelTaskSubmit(kernelTask, stm);
@@ -475,11 +500,11 @@ rtError_t StreamLaunchKernelV2(Kernel * const kernel, const uint32_t coreDim, St
     SetArgsAix(argsInfo, kernelTask, &result);
 
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelType=%u, funcType=%u, arg_size=%u, "
-        "coreDim=%u, taskRation=%u, simtFlag=%d, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+        "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
         "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
         "groupDim=%u, groupBlockDim=%u.",
         stm->Id_(), kernel->Name_().c_str(), kernelType, kernel->GetFuncType(), argsInfo->argsSize,
-        coreDim, kernel->GetTaskRation(), kernel->SimtFlag_(),
+        coreDim, kernel->GetTaskRation(), kernel->KernelVfType_(),
         aicTask->dynamicShareMemSize, kernelPc1, kernelPc2, aicTask->comm.kernelFlag, aicTask->qos,
         aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
         aicTask->groupDim, aicTask->groupBlockDim);

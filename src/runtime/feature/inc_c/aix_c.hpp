@@ -31,6 +31,7 @@ namespace runtime {
     rtError_t ConstructStreamLaunchKernelV2ExtendArgs(const rtArgsEx_t *argsInfo,
         const rtTaskCfgInfo_t * const cfgInfo, const LaunchTaskCfgInfo_t * const launchTaskCfg,
         const TaskCfg * const taskCfg, rtStreamLaunchKernelV2ExtendArgs_t *extendArgs);
+    rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t dynamicShareMemSize, uint32_t &simtDcuSmSize);
 
 }  // namespace runtime
 }  // namespace cce

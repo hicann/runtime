@@ -15,6 +15,7 @@
 #include "context.hpp"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "raw_device.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -315,6 +316,31 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel_For_David)
         EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
         program->kernelPos_ = kernelPos;
 
+        delete program;
+}
+
+TEST_F(ProgramTest, Program_build_tiling_tbl_For_David)
+{
+        rtError_t error;
+        Device * device = new RawDevice(0);
+        Program* program = new ElfProgram();
+        program->SetIsNewBinaryLoadFlow(false);
+        program->kernelPos_ = 1;
+        Module *mdl = new Module(device);
+        program->KernelTable_ = new (std::nothrow) rtKernelArray_t[1U];
+        int32_t fun1;
+        Kernel * kernel2 = new Kernel(&fun1, "f1", "", program, 10);
+        program->KernelTable_->kernel = kernel2;
+ 
+        TilingTablForDavid *tilingTabForDavid2 = nullptr;
+        uint32_t kernelLen2 = 0U;
+        error = program->BuildTilingTblForDavid(mdl, &tilingTabForDavid2, &kernelLen2);
+        EXPECT_EQ(kernelLen2, 1);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+        free(tilingTabForDavid2);
+ 
+        delete device;
+        delete mdl;
         delete program;
 }
 
@@ -712,6 +738,29 @@ TEST_F(ProgramTest, KERNEL_CONTENT_FAIL)
     EXPECT_EQ(info.offset, 0U);
     program->KernelContent(nullptr, nullptr);
 
+    delete program;
+}
+
+TEST_F(ProgramTest, KERNEL_CONTENT_TEST)
+{
+    uint32_t error;
+    uint64_t tilingValue = 0ULL;
+    rtKernelContent info = {UINT32_MAX, 0, false, 0};
+    ElfProgram* program = new ElfProgram();
+    char symbol[]="conv";
+    const std::string opName ="conv";
+    program->elfData_->kernel_num = 1U;
+    program->kernels_ = new (std::nothrow) RtKernel[program->elfData_->kernel_num];
+    program->kernels_->name = new char[10U];
+    strcpy(program->kernels_->name, "conv");
+    program->kernels_->length = 0U;
+    program->kernels_->offset = 2U;
+    program->kernels_->kernelVfType = 0U;
+    program->kernels_->shareMemSize = 0U;
+ 
+    program->KernelContent(symbol, &info);
+    EXPECT_EQ(info.offset, 2U);
+ 
     delete program;
 }
 

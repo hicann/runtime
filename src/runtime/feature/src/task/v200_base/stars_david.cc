@@ -126,6 +126,7 @@ void AixKernelTaskInitForFusion(TaskInfo * const taskInfo, const rtAicAivFusionI
     aicPart->schemMode = launchTaskCfg->schemMode;
 
     aicPart->dynamicShareMemSize = 0U;
+    aicPart->simtDcuSmSize = RT_SIMT_UB_SIZE;
     aicPart->groupDim = 0U;
     aicPart->groupBlockDim = 0U;
     aicPart->funcAddr = aicAivInfo->funcAddr;
@@ -1185,11 +1186,8 @@ template<typename T>
 static void ConstructAivSqePart(const T * const kernelInfo, RtDavidStarsAicAivKernelSqe * const sqe, uint64_t addr)
 {
     const uint64_t funcAddr = kernelInfo->funcAddr;
-    sqe->aivSimtDcuSmSize = RT_SIMT_UB_SIZE;
     uint32_t prefetchCnt1 = 0U;
     if (kernelInfo->kernel != nullptr) {
-        sqe->aivSimtDcuSmSize = (kernelInfo->kernel->SimtFlag_()) ?
-            (kernelInfo->kernel->ShareMemSize_() + kernelInfo->dynamicShareMemSize) : RT_SIMT_UB_SIZE;
         prefetchCnt1 = kernelInfo->kernel->PrefetchCnt1_();
     }
     /* word0-1 */
@@ -1224,6 +1222,7 @@ static void ConstructAivSqePart(const T * const kernelInfo, RtDavidStarsAicAivKe
     sqe->aivStartPcHigh = static_cast<uint16_t>(funcAddr >> UINT32_BIT_NUM);
 
     /* word11-15 */
+    sqe->aivSimtDcuSmSize = kernelInfo->simtDcuSmSize;
     sqe->aicTaskParamPtrLow = 0U;
     sqe->aicTaskParamPtrHigh = 0U;
     sqe->aivTaskParamPtrLow = static_cast<uint32_t>(addr);
@@ -1295,21 +1294,19 @@ template<typename T>
 static void ConstructMixSqePart(T * const kernelInfo, RtDavidStarsAicAivKernelSqe * const sqe, uint64_t addr)
 {
     /* word11 */
-    sqe->aivSimtDcuSmSize = RT_SIMT_UB_SIZE;
     uint8_t mixType = static_cast<uint8_t>(NO_MIX);
     const uint64_t funcAddr = kernelInfo->funcAddr;
     const uint64_t funcAddr2 = kernelInfo->funcAddr1;
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
     if (kernelInfo->kernel != nullptr) {
-        sqe->aivSimtDcuSmSize = (kernelInfo->kernel->SimtFlag_()) ?
-            (kernelInfo->kernel->ShareMemSize_() + kernelInfo->dynamicShareMemSize) : RT_SIMT_UB_SIZE;
         mixType = kernelInfo->kernel->GetMixType();
         prefetchCnt1 = kernelInfo->kernel->PrefetchCnt1_();
         prefetchCnt2 = kernelInfo->kernel->PrefetchCnt2_();
     }
     sqe->mix = 0U;
     sqe->piMix = 0U;
+    sqe->aivSimtDcuSmSize = kernelInfo->simtDcuSmSize;
     switch (mixType) {
         case MIX_AIC:
             /* word6 */
@@ -1455,11 +1452,7 @@ static void ConstructAicSqePart(T * const kernelInfo, RtDavidStarsAicAivKernelSq
     sqe->aivStartPcHigh = 0U;
 
     /* word11-15 */
-    sqe->aivSimtDcuSmSize = RT_SIMT_UB_SIZE;
-    if (kernelInfo->kernel != nullptr) {
-        sqe->aivSimtDcuSmSize = (kernelInfo->kernel->SimtFlag_()) ?
-            (kernelInfo->kernel->ShareMemSize_() + kernelInfo->dynamicShareMemSize) : RT_SIMT_UB_SIZE;
-    }
+    sqe->aivSimtDcuSmSize = kernelInfo->simtDcuSmSize;
     sqe->aicTaskParamPtrLow = static_cast<uint32_t>(addr);
     sqe->aicTaskParamPtrHigh = (sqe->aicTaskParamPtrHigh & 0xFFF00000U) | static_cast<uint32_t>(addr >> UINT32_BIT_NUM);
     sqe->aivTaskParamPtrLow = 0U;

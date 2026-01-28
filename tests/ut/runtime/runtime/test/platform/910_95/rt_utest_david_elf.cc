@@ -130,12 +130,8 @@ TEST_F(ELFTest, ELF_Process_Object_13)
     EXPECT_EQ(kernelInfo.funcType, KERNEL_FUNCTION_TYPE_AICORE);
     EXPECT_EQ(kernelInfo.crossCoreSync, FUNC_USE_SYNC);
 
-    EXPECT_EQ(kernelInfo.simtFlag, true);
-    EXPECT_EQ(kernelInfo.shareMemSizeFlag, true);
+    EXPECT_EQ(kernelInfo.kernelVfType, static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     EXPECT_EQ(kernelInfo.shareMemSize, 2048U);
-
-    bool valid = CheckShareMemSizeValid(&kernelInfo);
-    EXPECT_EQ(valid, true);
 
     delete elfData;
     elfData = nullptr;
@@ -201,12 +197,8 @@ TEST_F(ELFTest, ELF_Process_Object_SIMT_ERROR1)
 
     ElfKernelInfo kernelInfo = {0, 0};
     GetKernelTlvInfo(buf, totalLen, &kernelInfo);
-    EXPECT_EQ(kernelInfo.simtFlag, true);
-    EXPECT_EQ(kernelInfo.shareMemSizeFlag, false);
+    EXPECT_EQ(kernelInfo.kernelVfType, static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     EXPECT_EQ(kernelInfo.shareMemSize, 0);
-
-    bool valid = CheckShareMemSizeValid(&kernelInfo);
-    EXPECT_EQ(valid, false);
 
     delete elfData;
     elfData = nullptr;
@@ -279,12 +271,8 @@ TEST_F(ELFTest, ELF_Process_Object_SIMT_ERROR2)
 
     ElfKernelInfo kernelInfo = {0, 0};
     GetKernelTlvInfo(buf, totalLen, &kernelInfo);
-    EXPECT_EQ(kernelInfo.simtFlag, true);
-    EXPECT_EQ(kernelInfo.shareMemSizeFlag, true);
+    EXPECT_EQ(kernelInfo.kernelVfType, static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     EXPECT_EQ(kernelInfo.shareMemSize, 255 * 1024U);
-
-    bool valid = CheckShareMemSizeValid(&kernelInfo);
-    EXPECT_EQ(valid, false);
 
     delete elfData;
     elfData = nullptr;

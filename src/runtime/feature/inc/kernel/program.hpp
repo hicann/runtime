@@ -33,7 +33,7 @@ struct rtKernelArray_t final {
 
 struct TilingInfoExt {
     uint32_t shareMemSize; // for david tiling key
-    bool simtFlag; // for david tiling key
+    uint32_t kernelVfType; // for david tiling key
 };
 
 struct TilingTabl final {
