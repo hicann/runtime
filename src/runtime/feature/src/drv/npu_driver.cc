@@ -1216,7 +1216,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         {FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION, "FEATURE_TRSDRV_IS_SQ_SUPPORT_DYNAMIC_BIND_VERSION"},
         {FEATURE_SVM_MEM_HOST_UVA, "FEATURE_SVM_MEM_HOST_UVA"},
         {FEATURE_DMS_GET_QOS_MASTER_CONFIG, "FEATURE_DMS_GET_QOS_MASTER_CONFIG"},
-        {FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID, "FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID"},
+        {FEATURE_DMS_QUERY_CHIP_DIE_ID, "FEATURE_DMS_QUERY_CHIP_DIE_ID"},
     };
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));
@@ -1699,7 +1699,7 @@ rtError_t NpuDriver::GetChipIdDieId(const uint32_t devId, const uint32_t remoteD
 {
     rtError_t chipIdError = RT_ERROR_NONE;
     rtError_t dieIdError = RT_ERROR_NONE;
-    if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID)) {
+    if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
         chipIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_CHIP_ID, &chipId);
         dieIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_DIE_ID, &dieId);
     } else {
