@@ -54,7 +54,7 @@ EOF
 }
 
 setenv_main() {
-    local version_dirpath install_dirpath ld_library_path path driver_install_path_param dep_hal_path
+    local version_dirpath install_dirpath my_ld_library_path my_path driver_install_path_param dep_hal_path
     local dep_hal_name="libascend_hal.so"
     local dep_info_file="/etc/ascend_install.info"
     local is_install_driver="n"
@@ -69,13 +69,13 @@ setenv_main() {
     remove_env "PYTHONPATH" "$remove_regex"
 
     # 判断driver包是否存在
-    ld_library_path="$LD_LIBRARY_PATH"
-    if [ ! -z "$ld_library_path" ]; then
-        ld_library_path="$(echo "$ld_library_path" | tr ':' ' ')"
-        for path in ${ld_library_path}; do
-            if echo "$path" | grep -q "driver"; then
-                if [ -d "$path" ]; then
-                    dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null || true)"
+    my_ld_library_path="$LD_LIBRARY_PATH"
+    if [ ! -z "$my_ld_library_path" ]; then
+        my_ld_library_path="$(echo "$my_ld_library_path" | tr ':' ' ')"
+        for my_path in ${my_ld_library_path}; do
+            if echo "$my_path" | grep -q "driver"; then
+                if [ -d "$my_path" ]; then
+                    dep_hal_path="$(find "$my_path" -name "$dep_hal_name" 2> /dev/null || true)"
                     if [ ! -z "${dep_hal_path}" ]; then
                         is_install_driver="y"
                     fi
@@ -87,9 +87,9 @@ setenv_main() {
     if [ -f "$dep_info_file" ]; then
         driver_install_path_param="$(grep -iw driver_install_path_param $dep_info_file | cut --only-delimited -d"=" -f2-)"
         if [ ! -z "${driver_install_path_param}" ]; then
-            path="${driver_install_path_param}/driver/lib64"
-            if [ -d "$path" ]; then
-                dep_hal_path="$(find "$path" -name "$dep_hal_name" 2> /dev/null || true)"
+            my_path="${driver_install_path_param}/driver/lib64"
+            if [ -d "$my_path" ]; then
+                dep_hal_path="$(find "$my_path" -name "$dep_hal_name" 2> /dev/null || true)"
                 if [ ! -z "${dep_hal_path}" ]; then
                     is_install_driver="y"
                 fi
