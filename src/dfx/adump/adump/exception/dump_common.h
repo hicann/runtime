@@ -25,6 +25,7 @@ const std::string ASCEND_SHNAME_AUXINFO_LOCAL(".ascend.auxinfo.local");
 const std::string ASCEND_SHNAME_HOST_KERNEL_OBJECT(".ascend.host_kernel_object");
 const std::string ASCEND_SHNAME_FILE_KERNEL_OBJECT(".ascend.file_kernel_object");
 const std::string ASCEND_SHNAME_FILE_KERNEL_JSON(".ascend.file_kernel_json");
+const std::string ASCEND_SHNAME_KERNEL_INFO(".ascend.kernel_info");
 
 constexpr uint8_t CORE_TYPE_AIC = RT_CORE_TYPE_AIC ;
 constexpr uint8_t CORE_TYPE_AIV = RT_CORE_TYPE_AIV;

@@ -567,3 +567,19 @@ TEST_F(AdumpApiUtest, Test_Invalid_Callback_AdumpSetDump_AdumpUnSetDump)
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     system("rm -rf ./ge/test_callback_info.json");
 }
+
+TEST_F(AdumpApiUtest, Test_acldumpGetPath)
+{
+    const char *path = acldumpGetPath(static_cast<acldumpType>(0));
+    EXPECT_EQ(path, nullptr);
+    MOCKER_CPP(&Path::CreateDirectory).stubs().will(returnValue(false)).then(returnValue(true));
+    path = acldumpGetPath(acldumpType::AIC_ERR_BRIEF_DUMP);
+    EXPECT_EQ(path, nullptr);
+    MOCKER_CPP(&Path::RealPath).stubs().will(returnValue(true));
+    path = acldumpGetPath(acldumpType::AIC_ERR_BRIEF_DUMP);
+    EXPECT_NE(path, nullptr);
+    EXPECT_EQ(path, DumpManager::Instance().exceptionDumper_.extraDumpPath_.c_str());
+    path = acldumpGetPath(acldumpType::DATA_DUMP);
+    EXPECT_NE(path, nullptr);
+    EXPECT_EQ(path, DumpManager::Instance().dumpSetting_.dumpPath_.path_.c_str());
+}

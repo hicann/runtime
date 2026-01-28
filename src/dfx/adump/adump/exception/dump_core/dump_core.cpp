@@ -508,6 +508,7 @@ void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
         DumpHostFile(jsonFilePath, ASCEND_SHTYPE_FILE_KERNEL_JSON, ASCEND_SHNAME_FILE_KERNEL_JSON);
         std::string kernelFilePath = jsonFilePath.substr(0, jsonFilePath.size() - JSON_SUFFIX_LEN) + ".o";
         DumpHostFile(kernelFilePath, ASCEND_SHTYPE_FILE_KERNEL_OBJECT, ASCEND_SHNAME_FILE_KERNEL_OBJECT);
+        DumpKernelInfo(kernelName);
         break;
     }
 }
@@ -531,6 +532,18 @@ void DumpCore::DumpHostFile(const std::string &filePath, uint32_t sectionType, c
     } while (0);
 
     file.close();
+}
+
+void DumpCore::DumpKernelInfo(const std::string &kernelName)
+{
+    std::string content;
+    uint32_t nameSize = static_cast<uint32_t>(kernelName.length());
+    content.append(reinterpret_cast<const char *>(&nameSize), sizeof(nameSize));
+    content.append(kernelName);
+    ELF::SectionPtr curSection = coreFile_.AddSection(ASCEND_SHTYPE_KERNEL_INFO, ASCEND_SHNAME_KERNEL_INFO);
+    IDE_CTRL_VALUE_FAILED_NODO(curSection != nullptr, return,
+        "Create %s section failed.",ASCEND_SHNAME_KERNEL_INFO.c_str());
+    curSection->SetData(content);
 }
 
 void DumpCore::DumpGlobalAuxInfo(const std::vector<GlobalMemInfo> &memInfoList)

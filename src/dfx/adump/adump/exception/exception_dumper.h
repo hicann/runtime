@@ -29,7 +29,8 @@ public:
     inline bool GetArgsExceptionStatus() const;
     inline bool GetCoredumpStatus() const;
     void SetDumpPath(const std::string &dumpPath);
-    std::string CreateExtraDumpPath() const;
+    std::string CreateExtraDumpPath();
+    const char* GetExtraDumpCPath() const;
     void AddDumpOperator(const OperatorInfo &opInfo);
     void AddDumpOperatorV2(const OperatorInfoV2 &opInfo);
     int32_t DelDumpOperator(uint32_t deviceId, uint32_t streamId);
@@ -58,6 +59,7 @@ private:
     bool argsExceptionStatus_{ false };
     bool destructionFlag_{false};
     std::string dumpPath_;
+    std::string extraDumpPath_;
     DumpSetting setting_;
     std::mutex mutex_;
     std::deque<DumpOperator> agingOperators_;

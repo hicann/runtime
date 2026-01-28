@@ -52,7 +52,8 @@ public:
     void AddExceptionOpV2(const OperatorInfoV2 &opInfo);
     void ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const;
     std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &tensorInfos) const;
-    const char* GetExtraDumpPath();
+    const char* GetExceptionDumpPath();
+    const char* GetDataDumpPath();
 
 public:
     static std::vector<std::shared_ptr<OperatorPreliminary>> operatorMap_;

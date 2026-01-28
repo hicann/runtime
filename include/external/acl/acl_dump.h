@@ -11,14 +11,13 @@
 #define INC_EXTERNAL_ACL_DUMP_H_
 
 #include <stdint.h>
+#include "acl_base.h"
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 #define ACL_DUMP_API __declspec(dllexport)
 #else
 #define ACL_DUMP_API __attribute__((visibility("default")))
 #endif
-
-#include "acl_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,11 +26,11 @@ extern "C" {
 #define ACL_DUMP_MAX_FILE_PATH_LENGTH    4096
 typedef struct acldumpChunk  {
     char       fileName[ACL_DUMP_MAX_FILE_PATH_LENGTH];   // file name, absolute path
-    uint32_t   bufLen;                           // dataBuf length
-    uint32_t   isLastChunk;                      // is last chunk. 0: not 1: yes
-    int64_t    offset;                           // Offset in file. -1: append write
-    int32_t    flag;                             // flag
-    uint8_t    dataBuf[0];                       // data buffer
+    uint32_t   bufLen;                                    // dataBuf length
+    uint32_t   isLastChunk;                               // is last chunk. 0: not 1: yes
+    int64_t    offset;                                    // Offset in file. -1: append write
+    int32_t    flag;                                      // flag
+    uint8_t    dataBuf[0];                                // data buffer
 } acldumpChunk;
 
 ACL_DUMP_API aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t),
@@ -63,14 +62,24 @@ ACL_FUNC_VISIBILITY aclError aclopStartDumpArgs(uint32_t dumpType, const char *p
  */
 ACL_FUNC_VISIBILITY aclError aclopStopDumpArgs(uint32_t dumpType);
 
+enum acldumpType {
+    AIC_ERR_BRIEF_DUMP = 1,         // lite exception dump
+    AIC_ERR_NORM_DUMP = 2,          // normal exception dump
+    AIC_ERR_DETAIL_DUMP = 3,        // coredump mode
+    DATA_DUMP = 4,                  // tensor data dump
+    OVERFLOW_DUMP = 5               // overflow dump
+};
+
 /**
  * @ingroup AscendCL
- * @brief Get exception dump path for tensor custom dump data.
+ * @brief Get dump path.
+ *
+ * @param dumpType [IN]   type of dump path
  *
  * @retval path for success
  * @retval NULL for failed
  */
-ACL_FUNC_VISIBILITY const char* acldumpGetPath();
+ACL_FUNC_VISIBILITY const char* acldumpGetPath(acldumpType dumpType);
 
 #ifdef __cplusplus
 }
