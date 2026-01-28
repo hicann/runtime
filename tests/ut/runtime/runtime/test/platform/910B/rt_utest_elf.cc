@@ -1604,7 +1604,7 @@ TEST_F(CloudV2ELFTest, UnifiedOneKernelRegister_Function_Entry)
     ElfProgram prog;
     RtKernel kernel;
     kernel.name = "symbol";
-    kernel.simtFlag = false;
+    kernel.kernelVfType = 0U;
     kernel.funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY;
     MOCKER_CPP(&ElfProgram::CreateNewKernel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = prog.UnifiedOneKernelRegister(&kernel);

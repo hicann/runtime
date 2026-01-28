@@ -197,8 +197,7 @@ struct ElfKernelInfo {
     uint16_t taskRation[2];
     const void *dfxAddr;
     uint16_t dfxSize;
-    bool simtFlag;
-    bool shareMemSizeFlag;
+    uint32_t kernelVfType;
     uint32_t shareMemSize;
     int32_t elfDataFlag;
     uint16_t userArgsNum;
@@ -318,7 +317,7 @@ struct RtKernel final {
     const void *dfxAddr;
     uint16_t dfxSize;
     uint8_t reserved; // 填补空间以保持四字节对齐
-    bool simtFlag;
+    uint32_t kernelVfType;
     uint32_t shareMemSize;
     int32_t elfDataFlag;
     uint16_t userArgsNum;
@@ -330,7 +329,7 @@ struct RtKernel final {
 struct rtKernelContent {
     uint32_t length;
     uint32_t offset;
-    bool simtFlag;
+    uint32_t kernelVfType;
     uint32_t shareMemSize;
 };
 
@@ -392,7 +391,6 @@ std::unique_ptr<Elf_Internal_Sym[]> Get64bitElfSymbols(const rtElfData * const e
 std::unique_ptr<char_t[]> GetStringTableCopy(const char_t * const src, const uint64_t size);
 
 void GetKernelTlvInfo(const uint8_t *buf, uint32_t bufLen, ElfKernelInfo *tlvInfo);
-bool CheckShareMemSizeValid(const ElfKernelInfo * const kernelInfo);
 void UpdateFuncTypeByProgType(ElfKernelInfo * const kernelInfo, const uint32_t progType, bool *isUpdate);
 rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap);
 

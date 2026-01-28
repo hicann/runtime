@@ -1662,7 +1662,7 @@ TEST_F(TaskTestV201, Test_Construct_Simt_Sqe)
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
     kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
-    kernel->SetSimtFlag_(true);
+    kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     kernel->SetShareMemSize_(8192);
 
     uint64_t sqBaseAddr = 0U;

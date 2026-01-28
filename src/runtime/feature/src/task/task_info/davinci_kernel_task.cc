@@ -83,6 +83,7 @@ static void AicTaskInitCommon(TaskInfo *taskInfo, const uint32_t mach, const uin
 
     aicTaskInfo->mixOpt = false;
     aicTaskInfo->dynamicShareMemSize = 0U;
+    aicTaskInfo->simtDcuSmSize = RT_SIMT_UB_SIZE;
     aicTaskInfo->groupDim = 0U;
     aicTaskInfo->groupBlockDim = 0U;
 

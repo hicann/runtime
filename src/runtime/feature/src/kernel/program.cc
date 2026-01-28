@@ -527,7 +527,7 @@ rtError_t Program::DavidBuildTilingTblForNewFlow(TilingTablForDavid **tilingTab,
         tilingTabInfo[idx].pcInfo[1] = function2;
         tilingTabInfo[idx].taskRation = kernel->GetTaskRation();
         tilingTabInfo[idx].mixType = kernel->GetMixType();
-        tilingTabInfo[idx].u.tilingInfoExt.simtFlag = kernel->SimtFlag_();
+        tilingTabInfo[idx].u.tilingInfoExt.kernelVfType = kernel->KernelVfType_();
         tilingTabInfo[idx].u.tilingInfoExt.shareMemSize = kernel->ShareMemSize_();
         tilingTabInfo[idx].rsv = {0U};
         idx++;
@@ -574,7 +574,7 @@ rtError_t Program::BuildTilingTblForDavid(const Module *mdl, TilingTablForDavid 
         (void)mdl->GetTaskRation(KernelTable_[i].kernel, tilingTabInfo[i].taskRation);
         tilingTabInfo[i].mixType = KernelTable_[i].kernel->GetMixType();
         tilingTabInfo[i].rsv = {0U};
-        tilingTabInfo[i].u.tilingInfoExt.simtFlag = KernelTable_[i].kernel->SimtFlag_();
+        tilingTabInfo[i].u.tilingInfoExt.kernelVfType = KernelTable_[i].kernel->KernelVfType_();
         tilingTabInfo[i].u.tilingInfoExt.shareMemSize = KernelTable_[i].kernel->ShareMemSize_();
         RT_LOG(RT_LOG_INFO,
             "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64 ",taskRation=%u,mixType=%u,i=%u.",
@@ -1012,7 +1012,7 @@ void ElfProgram::KernelContent(const void * const symbol, rtKernelContent *info)
             if (strcmp(kernels_[idx].name, static_cast<const char_t *>(symbol)) == 0) {
                 info->length = static_cast<uint32_t>(kernels_[idx].length);
                 info->offset= static_cast<uint32_t>(kernels_[idx].offset);
-                info->simtFlag = kernels_[idx].simtFlag;
+                info->kernelVfType = kernels_[idx].kernelVfType;
                 info->shareMemSize = kernels_[idx].shareMemSize;
                 return;
             }
@@ -1284,7 +1284,7 @@ void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * cons
     kernelObj->SetKernelLength1(static_cast<uint32_t>(kernel->length));
     kernelObj->SetMinStackSize1(kernel->minStackSize);
     kernelObj->SetUserParaNum(kernel->userArgsNum);
-    kernelObj->SetSimtFlag_(kernel->simtFlag);
+    kernelObj->SetKernelVfType_(kernel->kernelVfType);
     kernelObj->SetShareMemSize_(kernel->shareMemSize);
 
     // only kernel with metainfo contains these info

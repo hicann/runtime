@@ -24,7 +24,7 @@ Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, con
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType), taskRation_(taskRation),
       funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
-      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
+      kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
 {
     if (kernelInfoExtern != nullptr) {
         kernelInfoExt_ = std::string(kernelInfoExtern);
@@ -47,7 +47,7 @@ Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, con
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType),
       taskRation_(taskRation), funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
-      simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
+      kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
 {
     if (taskRation_ == NONE_TASK_RATION) {
         DevProperties prop;
@@ -63,7 +63,7 @@ Kernel::Kernel(const std::string &cpuKernelSo, const std::string &cpuFunctionNam
     : program_(nullptr), kernelType_(0), stubFun_(nullptr), name_(cpuOpType), kernelInfoExt_(""), tilingKey_(0ULL), offset1_(0U), offset2_(0U),
 	  length1_(0U), length2_(0U), pctraceFlag_(0U), nameOffset_(0U), mixType_(0U), taskRation_(0U), funcType_(0U), userParaNum_(0U),
       systemParaNum_(0U), dfxAddr_(nullptr), dfxSize_(0U), elfDataFlag_(0),
-      nameId_(0U), simtFlag_(false), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U),
+      nameId_(0U), kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U),
 	  cpuOpType_(cpuOpType), cpuKernelSo_(cpuKernelSo), cpuFunctionName_(cpuFunctionName)
 {
 }

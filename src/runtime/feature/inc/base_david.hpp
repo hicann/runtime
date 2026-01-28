@@ -35,6 +35,8 @@ constexpr uint32_t STACK_PHY_BASE_ALIGN_BIT = 7U;
 
 constexpr uint32_t RT_DAVID_AICORE_NUM = 36U;
 constexpr uint32_t RT_DAVID_AIVECTOR_NUM = 72U;
+
+constexpr uint32_t RT_SIMT_SHARE_MEM_ALIGN_LEN = 128U;
 }
 }
 

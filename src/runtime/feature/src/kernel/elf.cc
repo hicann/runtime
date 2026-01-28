@@ -533,7 +533,6 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
     const ElfKernelReportSzInfo *reportSzInfo = nullptr;
     const ElfKernelMinStackSizeInfo *minStackSizeInfo = nullptr;
     const ElfKernelFunctionEntryInfo *functionEntryInfo = nullptr;
-    uint32_t aivType = 0U;
     uint16_t tlvLength = 0U;
 
     switch (static_cast<int32_t>(tlvType)) {
@@ -563,17 +562,14 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
             break;
         case FUNC_META_TYPE_AIV_TYPE_FLAG:
             aivTypeInfo = RtPtrToUnConstPtr<ElfKernelAivTypeInfo*>(RtPtrToPtr<const ElfKernelAivTypeInfo*>(buf));
-            aivType = static_cast<uint32_t>(GetByte(RtPtrToPtr<const uint8_t *>(&(aivTypeInfo->aivType)),
-                sizeof(uint32_t)));
-            tlvInfo->simtFlag = (aivType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
-                                (aivType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
-            RT_LOG(RT_LOG_INFO, "aivType=%u", aivType);
+            tlvInfo->kernelVfType = static_cast<uint32_t>(GetByte(RtPtrToPtr<const uint8_t *>(&(aivTypeInfo->aivType)),
+                                    sizeof(uint32_t)));
+            RT_LOG(RT_LOG_INFO, "kernelVfType=%u", tlvInfo->kernelVfType);
             break;
         case FUNC_META_TYPE_COMPILER_ALLOC_UB_SIZE:
             reportSzInfo = RtPtrToPtr<const ElfKernelReportSzInfo *>(buf);
             tlvInfo->shareMemSize = static_cast<uint32_t>(
                 GetByte(RtPtrToPtr<const uint8_t *>(&(reportSzInfo->shareMemSize)), sizeof(uint32_t)));
-            tlvInfo->shareMemSizeFlag = true;
             RT_LOG(RT_LOG_INFO, "shareMemSize=%u.", tlvInfo->shareMemSize);
             break;
         case FUNC_META_TYPE_SU_STACK_SIZE:
@@ -744,23 +740,6 @@ void ParseElfStackInfoFromSection(rtElfData * const elfData, const uint8_t *buf,
     return;
 }
 
-bool CheckShareMemSizeValid(const ElfKernelInfo *const kernelInfo)
-{
-    if (kernelInfo->simtFlag) {
-        if (!kernelInfo->shareMemSizeFlag) {
-            RT_LOG(RT_LOG_ERROR, "kernel has simtFlag no reportShareMemSize");
-            return false;
-        }
-
-        if (kernelInfo->shareMemSize > RT_SIMT_REMAIN_UB_SIZE) {
-            RT_LOG(RT_LOG_ERROR, "reportShareMemSize is invalid, shareMemSize=%u, maxShareMemSize=%u.",
-                kernelInfo->shareMemSize, RT_SIMT_REMAIN_UB_SIZE);
-            return false;
-        }
-    }
-    return true;
-}
-
 void UpdateFuncTypeByProgType(ElfKernelInfo * const kernelInfo, const uint32_t progType, bool *isUpdate)
 {
     if (*isUpdate == false) {
@@ -793,8 +772,7 @@ static void kernelInfoInit(rtElfData * const elfData, Elf_Internal_Shdr *section
     kernelInfo->crossCoreSync = static_cast<uint32_t>(FUNC_NO_USE_SYNC);
     kernelInfo->taskRation[0] = 0U; // init value 0
     kernelInfo->taskRation[1] = 0U; // init value 0
-    kernelInfo->simtFlag = false;
-    kernelInfo->shareMemSizeFlag = false;
+    kernelInfo->kernelVfType = 0U;
     kernelInfo->shareMemSize = 0U;
     kernelInfo->dfxAddr = (RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) + section->sh_offset);
     kernelInfo->dfxSize = static_cast<uint16_t>(section->sh_size);
@@ -877,23 +855,18 @@ static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *se
             UpdateFuncTypeByProgType(kernelInfo, progType, isUpdate);
         }
         (void)kernelName.assign(stringTab.substr(ELF_SECTION_PREFIX_ASCEND_META.size()));
-        if (!CheckShareMemSizeValid(kernelInfo)) {
-            RT_LOG(RT_LOG_ERROR, "kernel_name=%s, checkShareMemSizeValid"
-                "funcType=%u, simtFlag=%d, shareMemSizeFlag=%d, shareMemSize=%u.",
-                kernelName.c_str(), kernelInfo->funcType, kernelInfo->simtFlag,
-                kernelInfo->shareMemSizeFlag, kernelInfo->shareMemSize);
-            delete kernelInfo;
-            return;
+        if (kernelInfo->kernelVfType == 0U) {
+            kernelInfo->shareMemSize = 0U;
         }
         kernelInfoMap[kernelName] = kernelInfo;
         RT_LOG(RT_LOG_INFO, "kernel_name=%s, ration[0]=%u, ration[1]=%u, isSupportMix=%d, isUpdate=%d, "
             "dfxAddr=0x%llx, dfxSize=%u, "
-            "funcType=%u, crossCoreSync=%u, simtFlag=%d, shareMemSizeFlag=%d, shareMemSize=%u, minStackSize=%u, "
+            "funcType=%u, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, "
             "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
             kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1], *isSupportMix, *isUpdate, 
             RtPtrToValue(kernelInfo->dfxAddr), kernelInfo->dfxSize,
             kernelInfo->funcType, kernelInfo->crossCoreSync,
-            kernelInfo->simtFlag, kernelInfo->shareMemSizeFlag, kernelInfo->shareMemSize, kernelInfo->minStackSize,
+            kernelInfo->kernelVfType, kernelInfo->shareMemSize, kernelInfo->minStackSize,
             kernelInfo->isSupportFuncEntry, kernelInfo->functionEntryFlag, kernelInfo->functionEntry);
     } else if (stringTab.find(ELF_SECTION_ASCEND_STACK_SIZE_RECORD) != std::string::npos) {
         ParseElfStackInfoFromSection(elfData, (RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) + section->sh_offset),
@@ -1047,7 +1020,7 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
         kernels[index].crossCoreSync = iter->second->crossCoreSync;
         // default task ratio for task ration MIX_AIC_AIV_MAIN_AIC/MIX_AIC_AIV_MAIN_AIV
         kernels[index].taskRation = DEFAULT_TASK_RATION;
-        kernels[index].simtFlag = iter->second->simtFlag;
+        kernels[index].kernelVfType = iter->second->kernelVfType;
         kernels[index].shareMemSize = iter->second->shareMemSize;
         kernels[index].minStackSize = iter->second->minStackSize;
         RT_LOG(RT_LOG_INFO, "update dfx and funcType info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u",

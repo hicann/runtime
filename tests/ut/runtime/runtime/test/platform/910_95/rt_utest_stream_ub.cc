@@ -54,6 +54,7 @@
 #include "thread_local_container.hpp"
 #include "config_define.hpp"
 #include "task_recycle.hpp"
+#include "elf.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -4759,6 +4760,7 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
 
     Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
     kernel->SetKernelType_(Program::MACH_AI_VECTOR);
+    kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
 
     error = rtLaunchKernelExByFuncHandle(func_handle, &launchConfig, argsHandle, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -9906,7 +9908,7 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     launchConfig.attrs = attrs;
 
     Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
-    kernel->SetSimtFlag_(true);
+    kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     kernel->SetShareMemSize_(2048);
     kernel->SetKernelType_(Program::MACH_AI_VECTOR);
 
@@ -14038,6 +14040,7 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     pTask->u.fusionKernelTask.aicPart.kernel->mixType_ = NO_MIX;
     error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
     stream_->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     rtModelDestroy(model);
     taskResMng->ResetTaskRes();
