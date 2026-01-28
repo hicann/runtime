@@ -1267,6 +1267,7 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const h
     Stream * const stream = updateTask->stream;
     const uint32_t devId = static_cast<uint32_t>(stream->Device_()->Id_());
     Driver * const driver = updateTask->stream->Device_()->Driver_();
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stream->Model_());
     rtStarsSqe_t sqe = {};
 
     /* alloc host memory */
@@ -1278,6 +1279,13 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const h
         devId, stream->Id_(), updateTask->id);
 
     ConstructAICoreSqeForDavinciTask(updateTask, &sqe);
+
+    if (stream->IsSoftwareSqEnable() && (captureModel != nullptr)) {
+        if (!captureModel->IsSendSqe()) {
+            (void)memcpy_s(RtPtrToPtr<void *>(stream->GetSqeBuffer() + sizeof(rtStarsSqe_t) * updateTask->pos),
+                           sizeof(rtStarsSqe_t), RtPtrToPtr<void *, rtStarsSqe_t *>(&sqe), sizeof(rtStarsSqe_t));
+        }
+    }
 
     error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(&sqe),
                                 sizeof(sqe), RT_MEMCPY_HOST_TO_HOST);

@@ -710,6 +710,8 @@ rtError_t CaptureModel::UpdateStreamActiveTaskFuncCallMem(void)
             return RT_ERROR_TASK_NULL;
         }
 
+        COND_PROC((task->type != TS_TASK_TYPE_STREAM_ACTIVE), return RT_ERROR_TASK_BASE);
+
         StreamActiveTaskInfo *streamActiveTask = &(task->u.streamactiveTask);
         if (streamActiveTask->activeStream != nullptr) {
             streamActiveTask->activeStreamSqId = streamActiveTask->activeStream->GetSqId();

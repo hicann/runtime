@@ -229,6 +229,11 @@ public:
         return sqBindMutex_.unlock();
     }
 
+    bool IsSendSqe(void) const
+    {
+        return isSqeSendFinish_;
+    }
+
     rtError_t ReleaseNotifyId(void);
     rtError_t UpdateNotifyId(Stream * const exeStream);
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
