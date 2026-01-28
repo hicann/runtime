@@ -1,4 +1,4 @@
-# acIrtStreamStop
+# aclrtStreamStop
 
 ## 产品支持情况
 
