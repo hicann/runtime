@@ -231,8 +231,8 @@ rtError_t KernelTable::Add(Kernel *&addKernel)
         rtKernelArrPos_ += 1;
     } else {
         const std::string temp = kernelArr_[halfSearchResult.matchIndex].kernel->Name_();
-        RT_LOG_CALL_MSG(ERR_MODULE_TBE, "Add kernel failed, using registered stubfun=%p --> kernel_name=%s", stub,
-                        temp.c_str());
+        RT_LOG(RT_LOG_WARNING, "Add kernel failed, using registered stubfun=%p --> kernel_name=%s",
+            stub, temp.c_str());
         kernelMapLock_.Unlock();
         return RT_ERROR_KERNEL_DUPLICATE;
     }

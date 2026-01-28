@@ -591,6 +591,10 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_STATIC_TEST_1)
     std::cout<<"call rtFunctionRegister out:"<<error<<std::endl;
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // test KERNEL_DUPLICATE
+    error = rtFunctionRegister(bin_handle, stubFunc, funcName, (void *)opName, regifuncMode);
+    EXPECT_EQ(error, ACL_ERROR_RT_KERNEL_DUPLICATE);
+
     error = rtDevBinaryUnRegister(bin_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
