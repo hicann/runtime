@@ -407,7 +407,7 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
             val = RT_NOTIFY_INVALID_SRV_ID;
         }
         srvId_ = static_cast<uint32_t>(val);
-        if (NpuDriver::CheckIsSupportFeature(localDevId_, FEATURE_DMS_QUERY_CHIP_DIE_ID_BY_PHY_ID)) {
+        if (NpuDriver::CheckIsSupportFeature(localDevId_, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
             RT_LOG(RT_LOG_INFO, "name=%s phyId=%u", ipcNotifyName, phyId_);
             return RT_ERROR_NONE;
         }

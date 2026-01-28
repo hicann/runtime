@@ -1411,7 +1411,7 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
             }
         }
 
-        rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
+        const rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "set kernel function entry failed! errCode = %d.", error);
             return nullptr;
