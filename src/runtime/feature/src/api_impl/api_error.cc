@@ -111,7 +111,6 @@ rtError_t ApiErrorDecorator::FunctionRegister(Program * const prog, const void *
     NULL_PTR_RETURN_MSG_OUTER(stubName, RT_ERROR_INVALID_VALUE);
 
     const rtError_t error = impl_->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
-    COND_PROC((error == RT_ERROR_KERNEL_DUPLICATE), return error;);
     ERROR_RETURN(error, "Register function failed, funcName=%s.", ((stubName != nullptr) ? stubName : "(none)"));
     return error;
 }
