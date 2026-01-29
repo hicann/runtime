@@ -388,6 +388,16 @@ public:
     {
         return cpuFuncNameDevAddr_[devId];
     }
+
+    void SetSchedMode(const uint32_t schedMode)
+    {
+        schedMode_ = schedMode;
+    }
+
+    uint32_t GetSchedMode() const
+    {
+        return schedMode_;
+    }
 private:
     Program *program_;
     uint32_t kernelType_;
@@ -421,6 +431,7 @@ private:
     uint32_t shareMemSize_;
     uint32_t prefetchCnt1_;
     uint32_t prefetchCnt2_;
+    uint32_t schedMode_{static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL)};
     KernelRegisterType kernelRegisterType_ = KernelRegisterType::RT_KERNEL_REG_TYPE_NON_CPU;
 
     // user for cpu Kernel

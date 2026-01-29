@@ -4301,7 +4301,6 @@ rtError_t ApiImpl::ModelSetSchGroupId(Model * const mdl, const int16_t schGrpId)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_SCHED_GROUP)) {
-        const Runtime * const rtInstance = Runtime::Instance();
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -4485,9 +4484,7 @@ rtError_t ApiImpl::IpcCloseMemory(const void * const ptr)
     RT_LOG(RT_LOG_DEBUG, "Start close ipc memory.");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -4518,9 +4515,7 @@ rtError_t ApiImpl::IpcDestroyMemoryName(const char_t * const name)
     RT_LOG(RT_LOG_DEBUG, "Destroy ipc memory. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -4550,9 +4545,7 @@ rtError_t ApiImpl::SetIpcMemPid(const char_t * const name, int32_t pid[], const 
     RT_LOG(RT_LOG_DEBUG, "Set ipc mem pid. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
-    const rtChipType_t chipType = rtInstance->GetChipType();
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;

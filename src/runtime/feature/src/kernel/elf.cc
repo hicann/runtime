@@ -533,6 +533,7 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
     const ElfKernelReportSzInfo *reportSzInfo = nullptr;
     const ElfKernelMinStackSizeInfo *minStackSizeInfo = nullptr;
     const ElfKernelFunctionEntryInfo *functionEntryInfo = nullptr;
+    const ElfKernelSchedModeInfo *schedModeInfo = nullptr;
     uint16_t tlvLength = 0U;
 
     switch (static_cast<int32_t>(tlvType)) {
@@ -591,6 +592,15 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t *buf, ElfKernel
             tlvInfo->functionEntry = functionEntryInfo->functionEntry;
             RT_LOG(RT_LOG_INFO, "tlvLength=%u, isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".", 
                 tlvLength, tlvInfo->isSupportFuncEntry, tlvInfo->functionEntryFlag, tlvInfo->functionEntry);
+            break;
+        case FUNC_META_TYPE_SCHED_MODE_INFO:
+            schedModeInfo = RtPtrToPtr<const ElfKernelSchedModeInfo *>(buf);
+            tlvLength = static_cast<uint16_t>(
+                GetByte(RtPtrToPtr<const uint8_t *, const uint16_t *>(&(schedModeInfo->head.length)),
+                    static_cast<int32_t>(sizeof(uint16_t))));
+            tlvInfo->schedMode = static_cast<uint32_t>(
+                GetByte(RtPtrToPtr<const uint8_t *, const uint32_t *>(&(schedModeInfo->schedMode)), tlvLength));
+            RT_LOG(RT_LOG_INFO, "tlvLength=%u, schedMode=%u.", tlvLength, tlvInfo->schedMode);
             break;
         default:
             break;
@@ -780,6 +790,7 @@ static void kernelInfoInit(rtElfData * const elfData, Elf_Internal_Shdr *section
     kernelInfo->functionEntry = 0U;
     kernelInfo->functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
     kernelInfo->isSupportFuncEntry = false;
+    kernelInfo->schedMode = static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL);
 }
 
 static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *section,
@@ -1292,6 +1303,21 @@ rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, 
     return RT_ERROR_NONE;
 }
 
+static rtError_t SetKernelSchedMode(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
+{
+    for (uint32_t i = 0; i < kernelsNum; ++i) {
+        const auto it = kernelInfoMap.find(std::string(kernels[i].name));
+        if (it == kernelInfoMap.end()) {
+            continue;
+        }
+        COND_RETURN_ERROR(it->second->schedMode >= RT_SCHEM_MODE_END, RT_ERROR_INVALID_VALUE,
+            "unsupport schedMode: %u, valid range is [0, %d)", it->second->schedMode, RT_SCHEM_MODE_END);
+        kernels[i].schedMode = it->second->schedMode;
+        RT_LOG(RT_LOG_INFO, "kernel_name=%s, schedMode=%u.", kernels[i].name, kernels[i].schedMode);
+    }
+    return RT_ERROR_NONE;
+}
+
 /* Dump the symbol table.  */
 static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t progType, bool *isSupportMix)
 {
@@ -1384,9 +1410,15 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
             }
         }
 
-        const rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
+        rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "set kernel function entry failed! errCode = %d.", error);
+            RT_LOG(RT_LOG_ERROR, "set kernel function entry failed, ret=%d.", error);
+            return nullptr;
+        }
+
+        error = SetKernelSchedMode(kernels, elfData->kernel_num, kernelInfoMap);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "set kernel schedMode failed, ret=%d.", error);
             return nullptr;
         }
         kernelsGuard.ReleaseGuard();
