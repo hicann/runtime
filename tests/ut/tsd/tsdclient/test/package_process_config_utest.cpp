@@ -64,9 +64,10 @@ bool WriteConfigFile3(const std::string fileName)
         std::cout<<"Can not creat file."<<std::endl;
         return false;
     }
-    outFile << "install_path:2"<<std::endl;
+    outFile << "install_path:3"<<std::endl;
     outFile << "optional:true"<<std::endl;
-    outFile << "package_path:opp"<<std::endl;
+    outFile << "package_path:oppp"<<std::endl;
+    
     outFile.close();
     std::ifstream inFile(fileName);
     if(!inFile) {
