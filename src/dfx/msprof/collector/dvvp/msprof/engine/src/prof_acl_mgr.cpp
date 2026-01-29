@@ -1539,6 +1539,8 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json &acljsonCfg) 
         auto exist = std::find(ACLJSON_CONFIG_VECTOR.begin(), ACLJSON_CONFIG_VECTOR.end(), iter->first);
         if (exist == ACLJSON_CONFIG_VECTOR.end()) {
             MSPROF_LOGE("Invalid acl json config: %s", iter->first.c_str());
+            MSPROF_INPUT_ERROR("EK0005", std::vector<std::string>({"param"}),
+                std::vector<std::string>({iter->first.c_str()}));
             return MSPROF_ERROR_CONFIG_INVALID;
         }
         if (iter->first == "hccl") {
