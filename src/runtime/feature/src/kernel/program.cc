@@ -1286,6 +1286,7 @@ void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * cons
     kernelObj->SetUserParaNum(kernel->userArgsNum);
     kernelObj->SetKernelVfType_(kernel->kernelVfType);
     kernelObj->SetShareMemSize_(kernel->shareMemSize);
+    kernelObj->SetSchedMode(kernel->schedMode);
 
     // only kernel with metainfo contains these info
     if (Machine() == Program::MACH_AI_MIX_KERNEL) {

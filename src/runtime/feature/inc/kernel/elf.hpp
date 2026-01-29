@@ -111,6 +111,7 @@ enum {
     FUNC_META_TYPE_AIV_TYPE_FLAG    = 12U,       // for simt, corresponding enum AivTypeFlag
     FUNCTION_META_TYPE_FUNCTION_ENTRY_INFO = 14U,
     FUNC_META_TYPE_BLOCK_DIM_INFO   = 15U,
+    FUNC_META_TYPE_SCHED_MODE_INFO   = 18U,
 };
 
 enum class AivTypeFlag : uint32_t {
@@ -191,6 +192,11 @@ struct ElfBinaryAddrInfo {
     uint32_t type;
 };
 
+struct ElfKernelSchedModeInfo {
+    ElfTlvHead head;
+    uint32_t schedMode;
+};
+
 struct ElfKernelInfo {
     uint32_t funcType;
     uint32_t crossCoreSync;
@@ -205,6 +211,7 @@ struct ElfKernelInfo {
     uint64_t functionEntry;
     bool isSupportFuncEntry;
     uint8_t functionEntryFlag;
+    uint32_t schedMode;
 };
 
 struct Elf_Internal_Ehdr {
@@ -324,6 +331,7 @@ struct RtKernel final {
     uint32_t minStackSize;
     uint64_t functionEntry;         // the same as tiling key
     KernelFunctionEntryType funcEntryType;
+    uint32_t schedMode;
 };
 
 struct rtKernelContent {

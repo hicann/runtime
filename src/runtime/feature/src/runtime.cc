@@ -1690,6 +1690,7 @@ static void SetKernelAttributes(Program * const prog, Kernel *kernel, const RtKe
     kernel->SetMinStackSize1(rtKernel->minStackSize);
     kernel->SetKernelVfType_(rtKernel->kernelVfType);
     kernel->SetShareMemSize_(rtKernel->shareMemSize);
+    kernel->SetSchedMode(rtKernel->schedMode);
 }
 
 bool IsKernelMatch(const char_t *kernelInfoExt, const char_t *kernelName)
@@ -1861,6 +1862,7 @@ void Runtime::InitKernel(
         } else {
             RT_LOG(RT_LOG_WARNING, "NO_MIX kernel prog->GetKernel fail");
         }
+        kernelPtr->SetSchedMode(kernel.schedMode);
     } else if (mixType == static_cast<uint8_t>(MIX_AIC)) {
         BuildMixKernel(prog, kernelInfoExt, kernelPtr, 0, true);
     } else if (mixType == static_cast<uint8_t>(MIX_AIV)) {
@@ -1891,6 +1893,7 @@ void Runtime::BuildMixKernel(
             kernelPtr->SetMinStackSize2(kernel.minStackSize);
             kernelPtr->SetMixMinStackSize();
         }
+        kernelPtr->SetSchedMode(kernel.schedMode);
     } else {
         RT_LOG(RT_LOG_WARNING, "mix kernel build prog->GetKernel fail");
     }
@@ -2015,6 +2018,7 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     (*kernelPtr)->SetMinStackSize1(kernel->minStackSize);
     (*kernelPtr)->SetKernelVfType_(kernel->kernelVfType);
     (*kernelPtr)->SetShareMemSize_(kernel->shareMemSize);
+    (*kernelPtr)->SetSchedMode(kernel->schedMode);
     (void)GetPrefetchCnt(prog, *kernelPtr);
     bool isRepeated = false;
     const rtError_t error = prog->AllKernelAdd(*kernelPtr, isRepeated);

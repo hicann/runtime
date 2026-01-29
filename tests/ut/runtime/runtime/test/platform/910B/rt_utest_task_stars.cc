@@ -32,6 +32,7 @@
 #include "capture_model_utils.hpp"
 #include "config_define.hpp"
 #include "task_res.hpp"
+#include "davinci_kernel_task.h"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -1552,4 +1553,111 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(StarsTaskTest, SQE_SET_SchedMode)
+{
+    TaskInfo taskInfo{};
+    AicTaskInfo aicTaskInfo;
+    PlainProgram stubProg(Program::MACH_AI_CPU);
+    Program *program = &stubProg;
+    int32_t fun1;
+    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+
+    k1->SetMixType(NO_MIX);
+
+    taskInfo.u.aicTaskInfo = aicTaskInfo;
+    taskInfo.u.aicTaskInfo.kernel = k1;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+
+    rtStarsSqe_t sqe;
+    RtFftsPlusKernelSqe fftsPlusKernelSqe;
+    sqe.fftsPlusKernelSqe = fftsPlusKernelSqe;
+
+    rtStream_t stream = NULL;
+    auto error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    taskInfo.stream = (Stream* )stream;
+
+    // 优先级配置校验1
+    taskInfo.u.aicTaskInfo.schemMode = RT_SCHEM_MODE_NORMAL;
+    k1->SetSchedMode(RT_SCHEM_MODE_BATCH);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.fftsPlusKernelSqe.schem, RT_SCHEM_MODE_NORMAL);
+
+    // 优先级配置校验2
+    taskInfo.u.aicTaskInfo.schemMode = RT_SCHEM_MODE_END;
+    k1->SetSchedMode(RT_SCHEM_MODE_BATCH);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    EXPECT_EQ(sqe.fftsPlusKernelSqe.schem, RT_SCHEM_MODE_BATCH);
+
+    rtStreamDestroy(stream);
+    delete k1;
+}
+
+TEST_F(StarsTaskTest, SchedMode_CheckBlockDim)
+{
+    TaskInfo taskInfo{};
+    AicTaskInfo aicTaskInfo;
+    PlainProgram stubProg(Program::MACH_AI_CPU);
+    Program *program = &stubProg;
+    int32_t fun1;
+    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+
+    k1->SetMixType(NO_MIX);
+    k1->SetSchedMode(RT_SCHEM_MODE_BATCH);
+
+    taskInfo.u.aicTaskInfo = aicTaskInfo;
+    taskInfo.u.aicTaskInfo.kernel = k1;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.u.aicTaskInfo.schemMode = RT_SCHEM_MODE_END;
+    
+    rtStarsSqe_t sqe;
+    RtFftsPlusKernelSqe fftsPlusKernelSqe;
+    sqe.fftsPlusKernelSqe = fftsPlusKernelSqe;
+
+    rtStream_t stream = NULL;
+    auto error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    taskInfo.stream = (Stream* )stream;
+
+    // blockDim校验
+    taskInfo.u.aicTaskInfo.comm.dim = 10;
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+
+    // sqeType
+    taskInfo.u.aicTaskInfo.machine = 2;
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+
+    taskInfo.u.aicTaskInfo.machine = 3;
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+
+    taskInfo.u.aicTaskInfo.machine = 4;
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+
+    rtFftsPlusMixAicAivCtx_t fftsCtx;
+    fftsCtx.contextType = RT_CTX_TYPE_MIX_AIC;
+    uint32_t minStackSize = 0;
+    taskInfo.u.aicTaskInfo.kernel->SetMixType(MIX_AIC);
+    FillFftsAicAivCtxForDavinciTask(&taskInfo, &fftsCtx, minStackSize);
+
+    taskInfo.u.aicTaskInfo.kernel->SetMixType(MIX_AIV);
+    FillFftsAicAivCtxForDavinciTask(&taskInfo, &fftsCtx, minStackSize);
+
+    taskInfo.u.aicTaskInfo.kernel->SetMixType(NO_MIX);
+    FillFftsAicAivCtxForDavinciTask(&taskInfo, &fftsCtx, minStackSize);
+
+    rtCommand_t command{};
+
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    ToCommandBodyForAicAivTask(&taskInfo, &command);
+
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AIVEC;
+    ToCommandBodyForAicAivTask(&taskInfo, &command);
+
+    taskInfo.type = TS_TASK_TYPE_KERNEL_MIX_AIC;
+    ToCommandBodyForAicAivTask(&taskInfo, &command);
+
+    rtStreamDestroy(stream);
+    delete k1;
 }

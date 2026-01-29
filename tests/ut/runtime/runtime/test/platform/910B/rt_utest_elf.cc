@@ -1617,3 +1617,15 @@ TEST_F(CloudV2ELFTest, UnifiedOneKernelRegister_Function_Entry)
     EXPECT_EQ(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
 }
+
+TEST_F(CloudV2ELFTest, ElfParseTlvInfo_Sched_Mode)
+{
+    ElfKernelSchedModeInfo kernelSchedModeInfo;
+    kernelSchedModeInfo.head.type = FUNC_META_TYPE_SCHED_MODE_INFO;
+    kernelSchedModeInfo.head.length = sizeof(kernelSchedModeInfo) - sizeof(ElfTlvHead);
+    kernelSchedModeInfo.schedMode = 1;
+    ElfKernelInfo tlvInfo;
+
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t *>(&kernelSchedModeInfo), sizeof(ElfKernelSchedModeInfo), &tlvInfo);
+    EXPECT_EQ(tlvInfo.schedMode, 1);
+}
