@@ -5618,7 +5618,7 @@ rtError_t ApiImpl::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUceIn
         memcpy_s(memUceInfo, sizeof(rtMemUceInfo), GlobalContainer::GetMemUceInfo(deviceId), sizeof(rtMemUceInfo));
     } else {
         error = NpuDriver::GetMemUceInfo(deviceId, memUceInfo);
-        if (error == RT_ERROR_NONE) {
+        if ((error == RT_ERROR_NONE) && (memUceInfo->count != 0U)) {
             GlobalContainer::InsertMemUceInfo(deviceId, memUceInfo);
         }
     }
