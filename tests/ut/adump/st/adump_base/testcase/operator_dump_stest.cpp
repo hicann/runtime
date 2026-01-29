@@ -425,5 +425,5 @@ TEST_F(OperatorDumpStest, Test_AdumpSetDumpConfig_KfcNotExisted)
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
     MOCKER_CPP(&FileUtils::IsFileExist).stubs().will(returnValue(false));
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
-    EXPECT_EQ(DumpManager::Instance().GetBinName(), "kfc_dump_stat_ascend910_95.o");
+    EXPECT_EQ(DumpManager::Instance().GetBinName(), "kfc_dump_stat_ascend950.o");
 }

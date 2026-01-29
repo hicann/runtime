@@ -999,7 +999,7 @@ TEST_F(FILE_STEST, Test_Write_Read_Failed)
 class ADX_SIMT_PRINTF_STEST: public testing::Test {
 protected:
     virtual void SetUp() {
-        setenv("ADX_LLT_SOC_VERSION", "Ascend910_9599", 1);
+        setenv("ADX_LLT_SOC_VERSION", "Ascend950PR_9599", 1);
     }
     virtual void TearDown() {
         setenv("ADX_LLT_SOC_VERSION", "", 1);
