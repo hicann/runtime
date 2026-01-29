@@ -28,7 +28,7 @@ if (PRODUCT)
     if ((${PRODUCT} STREQUAL ascend310p) OR (${PRODUCT} STREQUAL ascend910) OR
         (${PRODUCT} STREQUAL ascend910B) OR
         (${PRODUCT} STREQUAL ascend310B) OR (${PRODUCT} STREQUAL ascend310Brc) OR
-        (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+        (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
         (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl) OR
         (${PRODUCT} STREQUAL helper310p))
         SET(SUPPORT_IAM true)
@@ -44,7 +44,7 @@ SET(CMS_CBB_VERIFY_PKT false)
 if (PRODUCT)
     if ((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
         (${PRODUCT} STREQUAL ascend310B) OR (${PRODUCT} STREQUAL ascend310Brc) OR
-        (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+        (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
         (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl) OR
         (${PRODUCT} STREQUAL ascend))
         SET(CMS_CBB_VERIFY_PKT true)
@@ -55,7 +55,7 @@ SET(TSD_DEPLOY_ON_HOST false)
 
 if (PRODUCT)
     if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
-         (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+         (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
          (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl)) AND (${PRODUCT_SIDE} STREQUAL "host"))
         SET(TSD_DEPLOY_ON_HOST true)
     endif()
@@ -65,7 +65,7 @@ SET(TSD_SUPPORT_SUBPROC_SAFE_START false)
 
 if (PRODUCT)
     if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR (${PRODUCT} STREQUAL ascend310p) OR
-         (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+         (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
          (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl)) AND
         (${PRODUCT_SIDE} STREQUAL "device"))
         SET(TSD_SUPPORT_SUBPROC_SAFE_START true)
@@ -101,7 +101,7 @@ SET(TSD_SUPPORT_AI_SERVER_NO310P false)
 
 if (PRODUCT)
     if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
-         (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+         (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
          (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl)) AND (${PRODUCT_SIDE} STREQUAL "device"))
         SET(TSD_SUPPORT_AI_SERVER_NO310P true)
     endif()
@@ -112,7 +112,7 @@ SET(UDF_SAFE_START false)
 if (PRODUCT)
     if ((${PRODUCT} STREQUAL helper310p) OR
         (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
-          (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+          (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
           (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl)) AND
         (${PRODUCT_SIDE} STREQUAL "device")))
         SET(UDF_SAFE_START true)
@@ -133,7 +133,7 @@ if (PRODUCT)
         (${PRODUCT} STREQUAL ascend910) OR
         (${PRODUCT} STREQUAL ascend310B) OR
         (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
-          (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl)) AND
+          (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl)) AND
         (${PRODUCT_SIDE} STREQUAL "device")))
         SET(AICPU_CUST_SAFE_START true)
     endif()
@@ -143,13 +143,13 @@ if (PRODUCT)
     endif()
 
     if ((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR (${PRODUCT} STREQUAL ascend310B) OR
-        (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+        (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
         (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl))
         SET(TSD_VDEVICE_MODE true)
     endif()
 
     if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR (${PRODUCT} STREQUAL helper310p) OR
-         (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+         (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
          (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl))
          AND (${PRODUCT_SIDE} STREQUAL "device"))
         SET(TSD_SET_FIFO_MODE true)
@@ -164,7 +164,7 @@ if (PRODUCT)
         SET(TSD_SUPPORT_DRIVER_EXTEND true)
     endif()
 
-    if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910_95) OR (${PRODUCT} STREQUAL ascend910_95esl) OR
+    if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
          (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl))
          AND (${PRODUCT_SIDE} STREQUAL "device"))
         SET(TSD_SUPPORT_ASCENDCPP true)
