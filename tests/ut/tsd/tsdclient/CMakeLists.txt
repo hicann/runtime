@@ -47,6 +47,8 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/tsd_hash_verify.cpp
     ${TSD_SRC_PATH}/common/src/tsd_path_mgr.cpp
     ${TSD_SRC_PATH}/common/src/version_verify.cpp
+    ${TSD_SRC_PATH}/common/src/domain_socket_server.cpp
+    ${TSD_SRC_PATH}/common/src/message_parse_server.cpp
 )
 set(TSD_UT_TEST_SRC_FILE
     test/aicpu_package_process_utest.cpp
@@ -59,6 +61,21 @@ set(TSD_UT_TEST_SRC_FILE
     test/dshape_package_worker_utest.cpp
     test/common_sink_package_worker_utest.cpp
     test/domain_socket_client_utest.cpp
+    test/om_package_worker_utest.cpp
+    test/package_process_config_utest.cpp
+    test/package_verify_utest.cpp
+    test/package_worker_factory_utest.cpp
+    test/package_worker_utest.cpp
+    test/tsdclient_utest.cpp
+    test/version_verify_utest.cpp
+    test/runtime_package_worker_utest.cpp
+    test/process_util_utest.cpp
+    test/package_worker_utils_utest.cpp
+    test/hash_verify_utest.cpp
+    test/path_mgr_utest.cpp
+    test/log_utest.cpp
+    test/domain_socket_server_utest.cpp
+    test/internal_api_utest.cpp
     test/main.cpp
     ../stub/stub_mmpa.cpp
     ../stub/stub_appmon.cpp
