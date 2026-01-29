@@ -473,7 +473,7 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {

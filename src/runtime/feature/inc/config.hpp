@@ -43,7 +43,7 @@ private:
     static void InitHardwareInfoMiniV2();
     static void InitHardwareInfoDc();
     static void InitHardwareInfoCloudV2();
-    static void InitHardwareInfo910_95();
+    static void InitHardwareInfo950();
     static void InitHardwareInfo910_5591();
     static void InitHardwareInfoMiniV3();
     static void InitHardwareInfoAscend031();

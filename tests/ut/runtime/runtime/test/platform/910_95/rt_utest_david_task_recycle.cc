@@ -57,7 +57,7 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {
@@ -73,10 +73,10 @@ protected:
     {
         // backup oringal attribute of runtime
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_disableThread = rtInstance->GetDisableThread();
@@ -103,10 +103,10 @@ protected:
             .stubs()
             .will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         MOCKER(TaskUnInitProc).stubs().will(returnValue(0));
         rtSetDevice(0);
@@ -669,7 +669,7 @@ TEST_F(DavidTaskRecycleTest, TaskReclaimByStreamV2)
 TEST_F(DavidTaskRecycleTest, TryReclaimToTask)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_910_9599;
+    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_950PR_9599;
     uint32_t support = RT_CAPABILITY_SUPPORT;
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::CheckSupportPcieBarCopy)
         .stubs()
@@ -1191,10 +1191,10 @@ protected:
     {
         // backup oringal attribute of runtime
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_disableThread = rtInstance->GetDisableThread();
@@ -1221,10 +1221,10 @@ protected:
             .stubs()
             .will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         rtSetDevice(0);
         std::cout << "TaskResManageTest SetUp end" << std::endl;
@@ -1439,7 +1439,7 @@ TEST_F(DavidTaskRecycleTest, DavidTaskRecycleTest2) {
 
 TEST_F(DavidTaskRecycleTest, TryReclaimToTask_DelWorkTaskIsNull) {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_910_9599;
+    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_950PR_9599;
     uint32_t support = RT_CAPABILITY_SUPPORT;
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::CheckSupportPcieBarCopy)
         .stubs()
@@ -1477,7 +1477,7 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask_DelWorkTaskIsNull) {
 
 TEST_F(DavidTaskRecycleTest, TryReclaimToTask_EarlyBreak) {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_910_9599;
+    ((RawDevice *)device)->platformType_ = PLATFORM_DAVID_950PR_9599;
     uint32_t support = RT_CAPABILITY_SUPPORT;
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::CheckSupportPcieBarCopy)
         .stubs()

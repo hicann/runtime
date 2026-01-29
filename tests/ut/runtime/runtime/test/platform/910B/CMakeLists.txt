@@ -161,7 +161,7 @@ set(runtimeut_src_common_list
 
 set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/feature/platform/610_lite/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/feature/platform/910_95/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/feature/platform/950/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/910_B_93/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/as31xm1/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/bs9sx1a/dev_info_reg.cc
@@ -175,7 +175,7 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/feature/platform/tiny/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/910_96/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/feature/platform/610_lite/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/feature/platform/910_95/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/feature/platform/950/dev_info_proc_func.cc
     ${TOP_DIR}/src/runtime/feature/platform/910_B_93/dev_info_proc_func.cc
     ${TOP_DIR}/src/runtime/feature/platform/as31xm1/dev_info_proc_func.cc
     ${TOP_DIR}/src/runtime/feature/platform/cloud/dev_info_proc_func.cc

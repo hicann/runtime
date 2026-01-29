@@ -2061,7 +2061,7 @@ rtError_t ApiImplDavid::LaunchHostFunc(Stream * const stm, const rtCallback_t ca
     UNUSED(stm);
     UNUSED(callBackFunc);
     UNUSED(fnData);;
-    RT_LOG(RT_LOG_WARNING, "ascend910_95 does not support rtsLaunchHostFunc.");
+    RT_LOG(RT_LOG_WARNING, "ascend950 does not support rtsLaunchHostFunc.");
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

@@ -526,7 +526,7 @@ set(libruntime_model_dev_info_src_files
 if(NOT ${TARGET_SYSTEM_NAME} STREQUAL "Windows")
 
 # ---------------------------------- runtime_cmodel runtime_camodel ----------------------------------
-SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend910_9599 mc62cm12a)
+SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend950pr_9599 mc62cm12a)
 
 add_library(runtime_model OBJECT
     ${libruntime_cmodel_src_files}
@@ -573,7 +573,7 @@ target_link_libraries(runtime_model PRIVATE
 )
 
 set(libruntime_cmodel_v200_dev_info_src_files
-    platform/910_95/dev_info_proc_func.cc
+    platform/950/dev_info_proc_func.cc
     platform/mc62cm12a/dev_info_proc_func.cc
     platform/910_96/dev_info_proc_func.cc
 )
@@ -624,7 +624,7 @@ target_link_libraries(runtime_model_v200 PRIVATE
 
 foreach(product_type ${PRODUCT_TYPE_LIST})
     # ---------------------------------- runtime_cmodel ----------------------------------
-    if("${product_type}" STREQUAL "ascend910_9599")
+    if("${product_type}" STREQUAL "ascend950pr_9599")
     add_library(runtime_cmodel_${product_type}
         SHARED
         $<TARGET_OBJECTS:runtime_model_v200>
@@ -672,7 +672,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
             )
 
     # -------------------------------- runtime_camodel --------------------------------
-    if("${product_type}" STREQUAL "ascend910_9599" OR "${product_type}" STREQUAL "mc62cm12a")
+    if("${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "mc62cm12a")
     add_library(runtime_camodel_${product_type}
         SHARED
         $<TARGET_OBJECTS:runtime_model_v200>

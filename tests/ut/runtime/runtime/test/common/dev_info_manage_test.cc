@@ -141,44 +141,44 @@ void test_soc_info_by_soc_type_and_name(const rtSocType_t socType, const char_t 
  
 TEST_F(DevInfoManageTest, GetSocInfo_David_V120_test)
 {
-    const rtSocType_t socType_957c = SOC_ASCEND910_957C;
-    const char_t *const socName_957c = "Ascend910_957c";
+    const rtSocType_t socType_957c = SOC_ASCEND950PR_957C;
+    const char_t *const socName_957c = "Ascend950PR_957c";
     test_soc_info_by_soc_type_and_name(socType_957c, socName_957c);
  
-    const rtSocType_t socType_95a1 = SOC_ASCEND910_95A1;
-    const char_t *const socName_95a1 = "Ascend910_95A1";
+    const rtSocType_t socType_95a1 = SOC_ASCEND950DT_95A1;
+    const char_t *const socName_95a1 = "Ascend950DT_95A1";
     test_soc_info_by_soc_type_and_name(socType_95a1, socName_95a1);
  
-    const rtSocType_t socType_95a2 = SOC_ASCEND910_95A2;
-    const char_t *const socName_95a2 = "Ascend910_95A2";
+    const rtSocType_t socType_95a2 = SOC_ASCEND950DT_95A2;
+    const char_t *const socName_95a2 = "Ascend950DT_95A2";
     test_soc_info_by_soc_type_and_name(socType_95a2, socName_95a2);
  
-    const rtSocType_t socType_9595 = SOC_ASCEND910_9595;
-    const char_t *const socName_9595 = "Ascend910_9595";
+    const rtSocType_t socType_9595 = SOC_ASCEND950DT_9595;
+    const char_t *const socName_9595 = "Ascend950DT_9595";
     test_soc_info_by_soc_type_and_name(socType_9595, socName_9595);
  
-    const rtSocType_t socType_9596 = SOC_ASCEND910_9596;
-    const char_t *const socName_9596 = "Ascend910_9596";
+    const rtSocType_t socType_9596 = SOC_ASCEND950DT_9596;
+    const char_t *const socName_9596 = "Ascend950DT_9596";
     test_soc_info_by_soc_type_and_name(socType_9596, socName_9596);
  
-    const rtSocType_t socType_9585 = SOC_ASCEND910_9585;
-    const char_t *const socName_9585 = "Ascend910_9585";
+    const rtSocType_t socType_9585 = SOC_ASCEND950DT_9585;
+    const char_t *const socName_9585 = "Ascend950DT_9585";
     test_soc_info_by_soc_type_and_name(socType_9585, socName_9585);
  
-    const rtSocType_t socType_9586 = SOC_ASCEND910_9586;
-    const char_t *const socName_9586 = "Ascend910_9586";
+    const rtSocType_t socType_9586 = SOC_ASCEND950DT_9586;
+    const char_t *const socName_9586 = "Ascend950DT_9586";
     test_soc_info_by_soc_type_and_name(socType_9586, socName_9586);
  
-    const rtSocType_t socType_9583 = SOC_ASCEND910_9583;
-    const char_t *const socName_9583 = "Ascend910_9583";
+    const rtSocType_t socType_9583 = SOC_ASCEND950DT_9583;
+    const char_t *const socName_9583 = "Ascend950DT_9583";
     test_soc_info_by_soc_type_and_name(socType_9583, socName_9583);
  
-    const rtSocType_t socType_9571 = SOC_ASCEND910_9571;
-    const char_t *const socName_9571 = "Ascend910_9571";
+    const rtSocType_t socType_9571 = SOC_ASCEND950DT_9571;
+    const char_t *const socName_9571 = "Ascend950DT_9571";
     test_soc_info_by_soc_type_and_name(socType_9571, socName_9571);
  
-    const rtSocType_t socType_9573 = SOC_ASCEND910_9573;
-    const char_t *const socName_9573 = "Ascend910_9573";
+    const rtSocType_t socType_9573 = SOC_ASCEND950DT_9573;
+    const char_t *const socName_9573 = "Ascend950DT_9573";
     test_soc_info_by_soc_type_and_name(socType_9573, socName_9573);
 }
  
@@ -196,34 +196,34 @@ void test_dev_info_by_soc_name(const char_t *const socName)
  
 TEST_F(DevInfoManageTest, get_david_v120_dev_info_test)
 {
-    const char_t *const socName_957c = "Ascend910_957c";
+    const char_t *const socName_957c = "Ascend950PR_957c";
     test_dev_info_by_soc_name(socName_957c);
  
-    const char_t *const socName_95a1 = "Ascend910_95A1";
+    const char_t *const socName_95a1 = "Ascend950DT_95A1";
     test_dev_info_by_soc_name(socName_95a1);
  
-    const char_t *const socName_95a2 = "Ascend910_95A2";
+    const char_t *const socName_95a2 = "Ascend950DT_95A2";
     test_dev_info_by_soc_name(socName_95a2);
  
-    const char_t *const socName_9595 = "Ascend910_9595";
+    const char_t *const socName_9595 = "Ascend950DT_9595";
     test_dev_info_by_soc_name(socName_9595);
  
-    const char_t *const socName_9596 = "Ascend910_9596";
+    const char_t *const socName_9596 = "Ascend950DT_9596";
     test_dev_info_by_soc_name(socName_9596);
  
-    const char_t *const socName_9585 = "Ascend910_9585";
+    const char_t *const socName_9585 = "Ascend950DT_9585";
     test_dev_info_by_soc_name(socName_9585);
  
-    const char_t *const socName_9586 = "Ascend910_9586";
+    const char_t *const socName_9586 = "Ascend950DT_9586";
     test_dev_info_by_soc_name(socName_9586);
  
-    const char_t *const socName_9583 = "Ascend910_9583";
+    const char_t *const socName_9583 = "Ascend950DT_9583";
     test_dev_info_by_soc_name(socName_9583);
  
-    const char_t *const socName_9571 = "Ascend910_9571";
+    const char_t *const socName_9571 = "Ascend950DT_9571";
     test_dev_info_by_soc_name(socName_9571);
  
-    const char_t *const socName_9573 = "Ascend910_9573";
+    const char_t *const socName_9573 = "Ascend950DT_9573";
     test_dev_info_by_soc_name(socName_9573);
 }
 

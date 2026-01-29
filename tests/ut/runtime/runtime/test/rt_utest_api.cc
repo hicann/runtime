@@ -3665,7 +3665,7 @@ TEST_F(ApiTest, rtGetOpTimeOutV2_notset)
 
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    rtInstance->SetSocType(SOC_ASCEND910_957D);
+    rtInstance->SetSocType(SOC_ASCEND950PR_957D);
     error = rtGetOpExecuteTimeoutV2(&timeout);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(timeout, 1090922);
@@ -3763,7 +3763,7 @@ TEST_F(ApiTest, rtGetOpTimeOutV2_set)
 
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    rtInstance->SetSocType(SOC_ASCEND910_957D);
+    rtInstance->SetSocType(SOC_ASCEND950PR_957D);
     error = rtGetOpExecuteTimeoutV2(&timeout);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(timeout, 4295);

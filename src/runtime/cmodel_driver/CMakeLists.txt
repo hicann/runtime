@@ -7,7 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend910_9599 mc62cm12a)
+SET(PRODUCT_TYPE_LIST ascend310 ascend610 bs9sx1a ascend310p ascend910 hi3796cv300es hi3796cv300cs ascend910B1 ascend310B ascend610Lite ascend950pr_9599 mc62cm12a)
 
 SET(CMODEL_DRIVER_SRC
     driver_api.c
@@ -33,7 +33,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         SET(MODEL_VERSION MODEL_V100)
     endif()
 
-    if("${product_type}" STREQUAL "ascend310" OR "${product_type}" STREQUAL "ascend910_9599" OR "${product_type}" STREQUAL "mc62cm12a")
+    if("${product_type}" STREQUAL "ascend310" OR "${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "mc62cm12a")
         SET(MODEL_DRIVER_ADAPT_DEFINITIONS PLATFORM_MINI_V1)
     elseif("${product_type}" STREQUAL "ascend610" OR "${product_type}" STREQUAL "ascend310p")
         SET(MODEL_DRIVER_ADAPT_DEFINITIONS PLATFORM_MINI_V2)
@@ -117,7 +117,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         -fsigned-char
     )
 
-    if("${product_type}" STREQUAL "ascend910B1" OR "${product_type}" STREQUAL "ascend310B" OR "${product_type}" STREQUAL "ascend910_9599" OR "${product_type}" STREQUAL "mc62cm12a")
+    if("${product_type}" STREQUAL "ascend910B1" OR "${product_type}" STREQUAL "ascend310B" OR "${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "mc62cm12a")
         target_link_libraries(npu_drv_pvmodel_${product_type} PRIVATE
             $<BUILD_INTERFACE:intf_pub>
             $<BUILD_INTERFACE:tsch_headers>
@@ -172,7 +172,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         -fsigned-char
     )
 
-    if("${product_type}" STREQUAL "ascend910B1" OR "${product_type}" STREQUAL "ascend310B" OR "${product_type}" STREQUAL "ascend910_9599" OR "${product_type}" STREQUAL "mc62cm12a")
+    if("${product_type}" STREQUAL "ascend910B1" OR "${product_type}" STREQUAL "ascend310B" OR "${product_type}" STREQUAL "ascend950pr_9599" OR "${product_type}" STREQUAL "mc62cm12a")
         target_link_libraries(npu_drv_camodel_${product_type} PRIVATE
             $<BUILD_INTERFACE:intf_pub>
             $<BUILD_INTERFACE:tsch_headers>

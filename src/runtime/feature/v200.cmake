@@ -417,7 +417,7 @@ set(RUNTIME_INC_DIR_V201
 )
 
 set(libruntime_v200_dev_info_src_files
-    platform/910_95/dev_info_proc_func.cc
+    platform/950/dev_info_proc_func.cc
     platform/910_96/dev_info_proc_func.cc
 )
 

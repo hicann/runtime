@@ -80,7 +80,7 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {
@@ -105,7 +105,7 @@ static drvError_t stubDavidGetConnectUbFlagFail(uint32_t devId, int32_t moduleTy
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_HD_CONNECT_TYPE) {
@@ -154,9 +154,9 @@ protected:
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        dev_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         Driver *driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL((NpuDriver *)(driver_), &NpuDriver::GetRunMode)
             .stubs()
@@ -206,19 +206,19 @@ protected:
     virtual void SetUp()
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_chipType = rtInstance->GetChipType();
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        dev_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         rtStreamCreate(&streamHandle_, 0);
         stream_ = (Stream *)streamHandle_;
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -256,10 +256,10 @@ protected:
     virtual void SetUp()
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_disableThread = rtInstance->GetDisableThread();
@@ -269,7 +269,7 @@ protected:
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtSetDevice(0);
         dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        dev_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         rtStreamCreate(&streamHandle_, 0);
         stream_ = (Stream *)streamHandle_;
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -315,9 +315,9 @@ protected:
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        dev_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         Driver *driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL((NpuDriver *)(driver_), &NpuDriver::GetRunMode)
             .stubs()
@@ -424,9 +424,9 @@ protected:
         rtInstance->SetChipType(CHIP_DAVID);
         GlobalContainer::SetRtChipType(CHIP_DAVID);
         rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         dev_ = rtInstance->DeviceRetain(0, 0);
-        dev_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        dev_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         Driver *driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL((NpuDriver *)(driver_), &NpuDriver::GetRunMode)
             .stubs()
@@ -1595,10 +1595,10 @@ protected:
     static void SetUpTestCase()
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         g_disableThread = rtInstance->GetDisableThread();
@@ -3106,7 +3106,7 @@ TEST_F(DavidTaskTest, InitFuncStreamSwitchTaskV1)
     drv.chipType_ = CHIP_DAVID;
     stub->driver_ = &drv;
 
-    stub->platformType_ = PLATFORM_DAVID_910_9599;
+    stub->platformType_ = PLATFORM_DAVID_950PR_9599;
     stub->platformConfig_ = (0xE << 8);
     void *buf = malloc(2);
 
@@ -3155,7 +3155,7 @@ TEST_F(DavidTaskTest1, InitFuncStreamSwitchTaskV2)
     NpuDriver drv;
     drv.chipType_ = CHIP_DAVID;
     stub->driver_ = &drv;
-    stub->platformType_ = PLATFORM_DAVID_910_9599;
+    stub->platformType_ = PLATFORM_DAVID_950PR_9599;
     stub->platformConfig_ = (0xE << 8);
     void *buf = malloc(2);
 
@@ -3181,7 +3181,7 @@ TEST_F(DavidTaskTest1, model_maintaince_init_david)
     NpuDriver drv;
     drv.chipType_ = CHIP_DAVID;
     stub->driver_ = &drv;
-    stub->platformType_ = PLATFORM_DAVID_910_9599;
+    stub->platformType_ = PLATFORM_DAVID_950PR_9599;
     stub->platformConfig_ = (0xE << 8);
     ret = rtModelCreate((rtModel_t *)&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -3637,7 +3637,7 @@ protected:
 
     virtual void SetUp()
     {
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         originType_ = Runtime::Instance()->GetChipType();
         Runtime::Instance()->SetDisableThread(true);
@@ -3650,10 +3650,10 @@ protected:
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
             .will(returnValue(RT_ERROR_NONE));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
 
         capability_group_info capGroupInfos;
@@ -3692,7 +3692,7 @@ class DavidVfApiTest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         originType_ = Runtime::Instance()->GetChipType();
         Runtime::Instance()->SetDisableThread(true);
@@ -3705,10 +3705,10 @@ protected:
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
             .will(returnValue(RT_ERROR_NONE));
-        char *socVer = "Ascend910_9599";
+        char *socVer = "Ascend950PR_9599";
         MOCKER(halGetSocVersion)
             .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any())
+            .with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
             .will(returnValue(DRV_ERROR_NONE));
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
 
