@@ -920,6 +920,51 @@ void RawDevice::FreeCustomerStackPhyBase()
     }
 }
 
+static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg)
+{
+    int32_t bufSize = static_cast<int32_t>(sizeof(qos_master_config_type));
+    RT_LOG(RT_LOG_INFO, "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=%u, moduleType=%d, infoType=%d.",
+        deviceId, aicoreQosCfg.type, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
+    const rtError_t error = NpuDriver::GetDeviceInfoByBuff(deviceId, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG,
+        static_cast<void *>(&aicoreQosCfg), &bufSize);
+    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Not support get aicore qos config.");
+    if ((error != RT_ERROR_NONE) || (bufSize != static_cast<int32_t>(sizeof(qos_master_config_type)))) {
+        RT_LOG(RT_LOG_ERROR, "Calling drv api halGetDeviceInfoByBuff failed, bufSize is %d, expect bufSize is %d, error=%#x.",
+            bufSize, sizeof(qos_master_config_type), static_cast<uint32_t>(error));
+        return RT_ERROR_DRV_ERR;
+    }
+    RT_LOG(RT_LOG_INFO, "The QOS info from halGetDeviceInfoByBuff is: type=%u, mpamId=%u, qos=%u, pmg=%u, mode=%u.",
+        aicoreQosCfg.type, aicoreQosCfg.mpamId, aicoreQosCfg.qos, aicoreQosCfg.pmg, aicoreQosCfg.mode);
+    return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::InitQosCfg()
+{
+    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_DAT;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
+    aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_INS;
+    for(int i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
+        rtError_t error = GetOneAicoreQosCfg(deviceId_, aicoreQosCfg[i]);
+        if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
+            RT_LOG(RT_LOG_WARNING, "Not support get aicore qos config.");
+            return RT_ERROR_NONE;
+        }
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "InitQosCfg failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
+            return error;
+        }
+        error = SetQosCfg(aicoreQosCfg[i], i);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "Set qos to device failed, drv devId=%u, index=%d.", deviceId_, i);
+            return error;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t RawDevice::Start()
 {
     COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "there has primaryStream");
@@ -950,6 +995,14 @@ rtError_t RawDevice::Start()
         error = AllocCustomerStackPhyBase();
         ERROR_GOTO_MSG_INNER(
             error, ERROR_FREE, "alloc customer stack phy failed, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+
+    if (NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_DMS_GET_QOS_MASTER_CONFIG)) {
+        error = InitQosCfg();
+        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "get acc qos cfg failed, retCode=%#x, drv deviceId=%u.",
+            static_cast<uint32_t>(error), deviceId_);
+    } else {
+        RT_LOG(RT_LOG_WARNING, "Driver do not support the FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
     }
 
     error = engine_->Start();
@@ -2243,5 +2296,24 @@ void RawDevice::UnregisterAllProgram() {
     programSet_.clear();
     programMtx_.unlock();
 }
+
+rtError_t RawDevice::SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index)
+{
+    COND_RETURN_ERROR(index >= MAX_ACC_QOS_CFG_NUM, RT_ERROR_INVALID_VALUE,
+                    "index is invalid, index=%u.", index);
+
+    aicoreQosCfgs_.aicoreQosCfg[index].type = qosCfg.type;
+    aicoreQosCfgs_.aicoreQosCfg[index].mpamId = qosCfg.mpamId;
+    aicoreQosCfgs_.aicoreQosCfg[index].qos = qosCfg.qos;
+    aicoreQosCfgs_.aicoreQosCfg[index].pmg = qosCfg.pmg;
+    aicoreQosCfgs_.aicoreQosCfg[index].mode = qosCfg.mode;
+    if (qosCfg.mode == 0) {
+        // 任意一个aicoreQosCfg被设置为0，就认为是需要更新sqe的场景
+        aicoreQosCfgs_.isAicoreQosConfiged = TRUE;
+    }
+
+    return RT_ERROR_NONE;
+}
+
 }  // namespace runtime
 }

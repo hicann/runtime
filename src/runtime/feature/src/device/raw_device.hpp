@@ -821,6 +821,14 @@ public:
     void ProgramSetMutexUnLock() override {
         programMtx_.unlock();
     }
+
+    rtError_t SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index);
+    
+    const qos_master_config_t& GetQosCfg()
+    {
+        return aicoreQosCfgs_;
+    }
+
 private:
     bool JudgeIsEndGraphNotifyWaitExecuted(const Stream* const exeStream, Model* captureModel,
         std::list<uint32_t>& sqePosList) const;
@@ -842,6 +850,7 @@ private:
     rtError_t InitStreamSyncEsched() const;
     rtError_t InitTsdQos();
     rtError_t InitPrintInfo();
+    rtError_t InitQosCfg();
 
     Stream *primaryStream_;
     Stream *tsFftsDsaStream_;
@@ -977,6 +986,7 @@ private:
     BufferAllocator* sqIdMemAddrPool_{nullptr};
     std::mutex programMtx_;
     std::unordered_set<Program *> programSet_;
+    qos_master_config_t aicoreQosCfgs_;
 };
 }
 }
