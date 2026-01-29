@@ -17,8 +17,8 @@ constexpr size_t ADX_CORETYPE_ID_OFFSET = 50U;
 constexpr size_t ADX_BLOCK_NUM = 75U;
 constexpr size_t ADX_MAX_STR_LEN = 1024U * 1024U;
 constexpr size_t ADX_SOC_VERSION_MAX = 50U;
-constexpr const char* PREFIX_ASCEND910_95 = "Ascend910_95";
-constexpr size_t ADX_MAX_AICORE_ON_ASCEND910_95 = 36U;
+constexpr const char* PREFIX_ASCEND950 = "Ascend950";
+constexpr size_t ADX_MAX_AICORE_ON_ASCEND950 = 36U;
 constexpr uint32_t ADX_SYNC_TIMEOUT = 60000U;
 constexpr uint32_t ADX_DAVID_TIMEOUT = 60000U * 30U;
 } // namespace
@@ -27,13 +27,13 @@ constexpr uint32_t ADX_DAVID_TIMEOUT = 60000U * 30U;
 extern "C" {
 #endif
 
-bool AdxIsAscend91095();
+bool AdxIsAscend950();
 
-bool AdxIsAscend91095()
+bool AdxIsAscend950()
 {
     char socType[ADX_SOC_VERSION_MAX];
     if ((rtGetSocVersion(socType, ADX_SOC_VERSION_MAX) == RT_ERROR_NONE) &&
-        (strncmp(socType, PREFIX_ASCEND910_95, strlen(PREFIX_ASCEND910_95)) == 0)) {
+        (strncmp(socType, PREFIX_ASCEND950, strlen(PREFIX_ASCEND950)) == 0)) {
         return true;
     }
 
@@ -42,16 +42,16 @@ bool AdxIsAscend91095()
 
 size_t AdxGetCoreTypeIDOffset()
 {
-    if (AdxIsAscend91095()) {
-        return ADX_MAX_AICORE_ON_ASCEND910_95 * 2;  //  2: 2 vector core in aicore
+    if (AdxIsAscend950()) {
+        return ADX_MAX_AICORE_ON_ASCEND950 * 2;  //  2: 2 vector core in aicore
     }
 
     return ADX_CORETYPE_ID_OFFSET;
 }
 
 size_t AdxGetBlockNum() {
-    if (AdxIsAscend91095()) {
-        return ADX_MAX_AICORE_ON_ASCEND910_95 * 3;  //  3: 2 vector and 1 cube in aicore
+    if (AdxIsAscend950()) {
+        return ADX_MAX_AICORE_ON_ASCEND950 * 3;  //  3: 2 vector and 1 cube in aicore
     }
 
     return ADX_BLOCK_NUM;
@@ -60,13 +60,13 @@ size_t AdxGetBlockNum() {
 bool AdxEnableSimtDump(size_t dumpWorkSpaceSize)
 {
     // AdxGetBlockNum() * ADX_MAX_STR_LEN is the max dump workspace size for simd.
-    return AdxIsAscend91095() && dumpWorkSpaceSize > AdxGetBlockNum() * ADX_MAX_STR_LEN;
+    return AdxIsAscend950() && dumpWorkSpaceSize > AdxGetBlockNum() * ADX_MAX_STR_LEN;
 }
 
  int32_t GetStreamSynchronizeTimeout()
 {
     int32_t timeout = ADX_SYNC_TIMEOUT; // 超时时间设置为1分钟
-    if (AdxIsAscend91095()) {
+    if (AdxIsAscend950()) {
         timeout = ADX_DAVID_TIMEOUT;  // 82暂时设置30分钟
     }
     return timeout;

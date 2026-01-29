@@ -86,8 +86,8 @@ if(PRODUCT)
             PRODUCT STREQUAL "ascend920emu" OR
             PRODUCT STREQUAL "ascend910B" OR
             PRODUCT STREQUAL "ascend910_93" OR
-            PRODUCT STREQUAL "ascend910_95" OR
-            PRODUCT STREQUAL "ascend910_95esl" OR
+            PRODUCT STREQUAL "ascend950" OR
+            PRODUCT STREQUAL "ascend950esl" OR
             PRODUCT STREQUAL "ascend910_96" OR
             PRODUCT STREQUAL "ascend910_96esl")
         include(adump_decouple/adump_server_close.cmake)
