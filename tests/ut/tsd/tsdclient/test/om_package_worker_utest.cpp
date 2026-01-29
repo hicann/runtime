@@ -18,8 +18,10 @@
  #undef private 
  #undef protected
 
- using namespace tsd; 
 
+ using namespace tsd; 
+ 
+ 
  namespace { 
  std::string GetWorkDir() 
  {
@@ -27,7 +29,8 @@
      if ((user == nullptr) || (user->pw_dir == nullptr)) { 
          return ""; 
      } 
-
+ 
+ 
      std::string pwDir = user->pw_dir; 
      std::string workdir = pwDir + "/tmp/" + std::to_string(getpid()) + "tsd_package_worker/"; 
      return workdir; 
@@ -249,4 +252,16 @@
      MOCKER(PackSystem).stubs().will(returnValue(-1)); 
      const auto ret = inst.FindAndDecompressOmInnerPkg(); 
      EXPECT_EQ(ret, -1); 
+ }
+
+  
+ TEST_F(OmPackageWorkerTest, GetOmFileStatusSucc) 
+ { 
+     const OmPackageWorker inst({0U, 1U}); 
+     MOCKER(open, int(const char*, int)).stubs().will(returnValue(0));
+     MOCKER(PackSystem).stubs().will(returnValue(0)); 
+     MOCKER(read).stubs().will(returnValue((ssize_t)2));
+     MOCKER(strncmp).stubs().will(returnValue(0));
+     auto ret = inst.FindAndDecompressOmInnerPkg(); 
+     EXPECT_EQ(ret, 0);
  }

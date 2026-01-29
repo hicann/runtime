@@ -104,6 +104,50 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadAndUnloadExtendPackageESuccess)
     EXPECT_EQ(ret, TSD_OK);
 }
 
+TEST_F(AicpuThreadPackageWorkerTest, LoadPackageSucc)
+{
+    AicpuThreadPackageWorker inst({0U, 0U});
+    inst.SetCheckCode(1);
+    const std::string path = "/home/test";
+    const std::string name = "Ascend-aicpu_syskernels.tar.gz";
+    inst.PreProcessPackage(path, name);
+    inst.decomPackagePath_ = BasePackageWorker::PackagePath(path, name);
+    MOCKER_CPP_VIRTUAL(inst, &AicpuThreadPackageWorker::IsNeedLoadPackage).stubs().will(returnValue(true));
+    MOCKER_CPP(&PackageWorkerUtils::MakeDirectory).stubs().will(returnValue(TSD_OK));
+    MOCKER_CPP_VIRTUAL(inst, &AicpuThreadPackageWorker::PostProcessPackage).stubs().will(returnValue(TSD_OK));
+    MOCKER_CPP(&PackageWorkerUtils::VerifyPackage).stubs().will(returnValue(TSD_OK));
+    MOCKER(PackSystem).stubs().will(returnValue(0));
+    auto ret = inst.LoadPackage(path, name);
+    EXPECT_EQ(ret, TSD_OK);
+}
+
+TEST_F(AicpuThreadPackageWorkerTest, LoadPackageFail)
+{
+    AicpuThreadPackageWorker inst({0U, 0U});
+    inst.SetCheckCode(1);
+    const std::string path = "/home/test";
+    const std::string name = "Ascend-aicpu_syskernels.tar.gz";
+    MOCKER_CPP_VIRTUAL(inst, &AicpuThreadPackageWorker::IsNeedLoadPackage).stubs().will(returnValue(true));
+    auto ret = inst.LoadPackage(path, name);
+    EXPECT_EQ(ret, TSD_VERIFY_OPP_FAIL);
+    MOCKER_CPP(&PackageWorkerUtils::VerifyPackage).stubs().will(returnValue(TSD_OK));
+    ret = inst.LoadPackage(path, name);
+    EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
+}
+
+TEST_F(AicpuThreadPackageWorkerTest, LoadPackage)
+{
+    const AicpuThreadPackageWorker inst({0U, 0U});
+    inst.SetCheckCode(1);
+    inst.SetOriginPackageSize(2);
+    const std::string path = "/home/test";
+    const std::string name = "Ascend-aicpu_syskernels.tar.gz";
+    auto ret = inst.IsNeedLoadPackage();
+    EXPECT_EQ(ret, false);
+    inst.GetMovePackageToDecompressDirCmd();
+    inst.GetDecompressPackageCmd();
+}
+
 TEST_F(AicpuThreadPackageWorkerTest, LoadPackageNoNeedLoad)
 {
     const AicpuThreadPackageWorker inst({0U, 0U});
@@ -136,6 +180,16 @@ TEST_F(AicpuThreadPackageWorkerTest, PostProcessPackageMoveSoFail)
     MOCKER_CPP(&AicpuPackageProcess::MoveSoToSandBox).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
     const auto ret = inst.PostProcessPackage();
+    EXPECT_EQ(ret, TSD_OK);
+}
+
+TEST_F(AicpuThreadPackageWorkerTest, ExtendPostProcessSucc)
+{
+    ExtendThreadPackageWorker inst({0U, 0U});
+
+    MOCKER_CPP(&AicpuPackageProcess::CopyExtendSoToCommonSoPath).stubs()
+        .will(returnValue(static_cast<uint32_t>(TSD_OK)));
+    const TSD_StatusT ret = inst.PostProcessPackage();
     EXPECT_EQ(ret, TSD_OK);
 }
 

@@ -15,7 +15,7 @@
  #define private public 
  #define protected public 
  #include "inc/package_worker.h" 
- #include "inc/aicpu_process_package_worker.h" 
+ #include "inc/aicpu_process_package_worker.h"
  #undef private 
  #undef protected 
  #include "inc/package_worker_utils.h" 
@@ -119,4 +119,15 @@
      const auto ret = packageWorker->LoadPackage(PackageWorkerType::PACKAGE_WORKER_AICPU_PROCESS, 
                                                  "/home/test", "Ascend-aicpu_syskernels.tar.gz"); 
      EXPECT_EQ(ret, TSD_INTERNAL_ERROR); 
+ }
+
+  TEST_F(PackageWorkerTest, UnloadPackageSucc) 
+ { 
+    PackageWorkerParas paras;
+    PackageWorkerFactory &inst = PackageWorkerFactory().GetInstance();
+    std::shared_ptr<PackageWorker> packageWorker = PackageWorker::GetInstance(0, 0);
+    auto reworker = inst.CreatePackageWorker(PackageWorkerType::PACKAGE_WORKER_AICPU_PROCESS, paras);
+    MOCKER_CPP(&PackageWorker::GetPackageWorker).stubs().will(returnValue(reworker));
+    const auto ret = packageWorker->UnloadPackage(PackageWorkerType::PACKAGE_WORKER_AICPU_PROCESS); 
+    EXPECT_EQ(ret, TSD_OK); 
  }
