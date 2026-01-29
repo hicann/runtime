@@ -163,11 +163,10 @@ struct starsOstTaskOneCoreInfo {
 
 struct DavidOneCoreErrorInfo {
     uint64_t coreId;
-    uint64_t aicError[3];
     uint64_t pcStart;
     uint64_t currentPC;
     uint64_t scErrInfo;
-    uint64_t suErrInfo[2];
+    uint64_t suErrInfo[4];
     uint64_t mteErrInfo;
     uint64_t vecErrInfo;
     uint64_t cubeErrInfo;
