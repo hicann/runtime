@@ -5825,8 +5825,15 @@ void Runtime::ProcHBMRas(const uint32_t devId)
 void Runtime::ReportHBMRasProc(void)
 {
     if (hbmRasProcFlag_ == HBM_RAS_WAIT_PROC) {
-        // 上一次发现告警，此处已等待10ms，再等待190ms开始上报
-        (void)mmSleep(190U);
+        // 上一次发现告警，此处已等待10ms，每隔10ms唤醒回收线程，共等待190ms开始上报
+        for (uint32_t i = 0U; hbmRasThreadRunFlag_ == true && i < 19U; i++) {
+            Device *dev = GetDevice(rasInfo_.devId, 0U, false);
+            if (dev != nullptr && !dev->IsDeviceRelease()) {
+                RT_LOG(RT_LOG_DEBUG, "wake up the recycle thread to receive cqe.");
+                dev->WakeUpRecycleThread();
+            }
+            (void)mmSleep(10U);
+        }
         ProcHBMRas(rasInfo_.devId);
         hbmRasProcFlag_ = HBM_RAS_WORKING;
         return;
