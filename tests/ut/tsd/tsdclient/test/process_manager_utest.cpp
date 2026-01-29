@@ -3018,15 +3018,15 @@ TEST_F(ProcessManagerTest, OpenNetService_01)
 TEST_F(ProcessManagerTest, OpenNetService_02)
 {
     ProcessModeManager processModeManager(0U, 0);
+    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     MOCKER_CPP(&HdcClient::Init).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::CreateHdcSession).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
     NetServiceOpenArgs args;
-    args.extParamCnt = 1U;
     ProcExtParam extParamList;
+    args.extParamCnt = 1U;
     std::string extPam("levevl=5");
     extParamList.paramInfo = extPam.c_str();
     extParamList.paramLen = extPam.size();
@@ -3111,4 +3111,73 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_failed)
     processModeManager.loadPackageErrorMsg_ = "test error";
     auto ret = processModeManager.LoadPackageToDeviceByConfig();
     EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+}
+
+TEST_F(ProcessManagerTest, CompareAndSendCommonSinkPkg_Success)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    MOCKER_CPP(&ProcessModeManager::SendHostPackageComplex).stubs().will(returnValue(TSD_OK));
+    EXPECT_EQ(processModeManager.CompareAndSendCommonSinkPkg("pkgPureName", "hostPkgHash", 0, "orgFile", "dstFile"),
+              TSD_OK);
+}
+
+TEST_F(ProcessManagerTest, SupportLoadPkg)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    EXPECT_TRUE(processModeManager.SupportLoadPkg("unknown_pkg"));
+
+    EXPECT_FALSE(processModeManager.SupportLoadPkg("cann-udf-compat.tar.gz"));
+
+    MOCKER_CPP(&ProcessModeManager::GetPlatInfoChipType).stubs().will(returnValue(static_cast<uint32_t>(tsd::CHIP_DC)));
+    EXPECT_TRUE(processModeManager.SupportLoadPkg("aicpu_hcomm.tar.gz"));
+    EXPECT_FALSE(processModeManager.SupportLoadPkg("cann-tsch-compat.tar.gz"));
+}
+
+TEST_F(ProcessManagerTest, LoadPakcageToDeviceByConfig_Fail_For_Unsupport)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
+    EXPECT_EQ(processModeManager.LoadPackageToDeviceByConfig(), TSD_OK);
+}
+
+TEST_F(ProcessManagerTest, LoadPakcageToDeviceByConfig_Fail_For_Drv_Fail)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
+    MOCKER(drvHdcGetTrustedBasePathV2).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+    EXPECT_EQ(processModeManager.LoadPackageToDeviceByConfig(), TSD_INTERNAL_ERROR);
+}
+
+TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_Success)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+
+    PackConfDetail detail = {};
+    PackageProcessConfig pkgConInst;
+    MOCKER_CPP(&PackageProcessConfig::GetInstance).stubs().will(returnValue(&pkgConInst));
+    pkgConInst.configMap_["cann-tsch-compat.tar.gz"] = detail;
+
+    std::string orgFile = "origin";
+    MOCKER_CPP(&PackageProcessConfig::GetPkgHostAndDeviceDstPath)
+        .stubs()
+        .with(mockcpp::any(), orgFile, mockcpp::any(), mockcpp::any())
+        .will(returnValue(TSD_OK));
+    MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg).stubs().will(returnValue(TSD_OK));
+
+    EXPECT_EQ(processModeManager.LoadPackageToDeviceByConfig(), TSD_OK);
+}
+
+TEST_F(ProcessManagerTest, GetCurHostMutexFile)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(false), "libqueue_schedule.so");
+
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE)).then(returnValue(DRV_ERROR_NONE));
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "libqueue_schedule.so");
+
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "sink_file_mutex_0.cfg");
 }
