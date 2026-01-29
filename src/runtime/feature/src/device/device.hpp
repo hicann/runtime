@@ -279,24 +279,24 @@ public:
     bool IsDavidPlatform() const
     {
         const rtPlatformType_t platformType = GetPlatformType();
-        return ((platformType == PLATFORM_DAVID_910_9599) || (platformType == PLATFORM_SOLOMON) ||
-                (platformType == PLATFORM_DAVID_910_9589) || (platformType == PLATFORM_DAVID_910_958A) ||
-                (platformType == PLATFORM_DAVID_910_958B) || (platformType == PLATFORM_DAVID_910_957B) ||
-                (platformType == PLATFORM_DAVID_910_957D) || (platformType == PLATFORM_DAVID_910_950Z) ||
-                (platformType == PLATFORM_DAVID_910_9579) || (platformType == PLATFORM_MC62CM12A) ||
-                (platformType == PLATFORM_DAVID_910_9591) || (platformType == PLATFORM_DAVID_910_9592) ||
-                (platformType == PLATFORM_DAVID_910_9581) || (platformType == PLATFORM_DAVID_910_9582) ||
-                (platformType == PLATFORM_DAVID_910_9584) || (platformType == PLATFORM_DAVID_910_9587) ||
-                (platformType == PLATFORM_DAVID_910_9588) || (platformType == PLATFORM_DAVID_910_9572) ||
-                (platformType == PLATFORM_DAVID_910_9575) || (platformType == PLATFORM_DAVID_910_9576) ||
-                (platformType == PLATFORM_DAVID_910_9574) || (platformType == PLATFORM_DAVID_910_9577) ||
-                (platformType == PLATFORM_DAVID_910_9578) || (platformType == PLATFORM_DAVID_910_957C) ||
-                (platformType == PLATFORM_DAVID_910_95A1) || (platformType == PLATFORM_DAVID_910_95A2) ||
-                (platformType == PLATFORM_DAVID_910_9595) || (platformType == PLATFORM_DAVID_910_9596) ||
-                (platformType == PLATFORM_DAVID_910_9585) || (platformType == PLATFORM_DAVID_910_9586) ||
-                (platformType == PLATFORM_DAVID_910_9583) || (platformType == PLATFORM_DAVID_910_9571) ||
-                (platformType == PLATFORM_DAVID_910_9573) || (platformType == PLATFORM_DAVID_910_950X) ||
- 	            (platformType == PLATFORM_DAVID_910_950Y));
+        return ((platformType == PLATFORM_DAVID_950PR_9599) || (platformType == PLATFORM_SOLOMON) ||
+ 	            (platformType == PLATFORM_DAVID_950PR_9589) || (platformType == PLATFORM_DAVID_950PR_958A) ||
+ 	            (platformType == PLATFORM_DAVID_950PR_958B) || (platformType == PLATFORM_DAVID_950PR_957B) ||
+ 	            (platformType == PLATFORM_DAVID_950PR_957D) || (platformType == PLATFORM_DAVID_950PR_950Z) ||
+ 	            (platformType == PLATFORM_DAVID_950PR_9579) || (platformType == PLATFORM_MC62CM12A) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9591) || (platformType == PLATFORM_DAVID_950DT_9592) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9581) || (platformType == PLATFORM_DAVID_950DT_9582) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9584) || (platformType == PLATFORM_DAVID_950DT_9587) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9588) || (platformType == PLATFORM_DAVID_950DT_9572) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9575) || (platformType == PLATFORM_DAVID_950DT_9576) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9574) || (platformType == PLATFORM_DAVID_950DT_9577) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9578) || (platformType == PLATFORM_DAVID_950PR_957C) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_95A1) || (platformType == PLATFORM_DAVID_950DT_95A2) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9595) || (platformType == PLATFORM_DAVID_950DT_9596) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9585) || (platformType == PLATFORM_DAVID_950DT_9586) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9583) || (platformType == PLATFORM_DAVID_950DT_9571) ||
+ 	            (platformType == PLATFORM_DAVID_950DT_9573) || (platformType == PLATFORM_DAVID_950DT_950X) ||
+ 	  	        (platformType == PLATFORM_DAVID_950DT_950Y));
     }
 
     void SetDevType(bool isAddrFlatDev) const

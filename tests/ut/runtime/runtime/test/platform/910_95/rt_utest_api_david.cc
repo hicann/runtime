@@ -3869,7 +3869,7 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
         } else {
@@ -3885,8 +3885,8 @@ protected:
     static void SetUpTestCase()
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
-        char *socVer = "Ascend910_9599";
-        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
+        char *socVer = "Ascend950PR_9599";
+        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
         std::cout << "ApiDavidTest SetUP" << std::endl;
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         rtInstance->SetDisableThread(true);
@@ -3915,8 +3915,8 @@ protected:
         MOCKER_CPP_VIRTUAL(driver,
             &Driver::GetDevInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
             .will(returnValue(RT_ERROR_NONE));
-        char *socVer = "Ascend910_9599";
-        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_9599")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
+        char *socVer = "Ascend950PR_9599";
+        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
         MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq)
                 .stubs()
                 .will(returnValue(RT_ERROR_NONE));
@@ -3938,9 +3938,9 @@ protected:
                 .stubs()
                 .will(returnValue(RT_ERROR_NONE));
         rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-        device_->SetPlatformType(PLATFORM_DAVID_910_9599);
+        device_->SetPlatformType(PLATFORM_DAVID_950PR_9599);
         engine_ = ((RawDevice *)device_)->engine_;
 
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, 0);
@@ -7127,19 +7127,19 @@ TEST_F(ApiDavidTest, test_GetHardVerBySocVer)
 {
     int64_t hardwareVersion = 0;
     rtError_t ret = GetHardVerBySocVer(0, hardwareVersion);
-    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_910_9599);
+    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_950PR_9599);
     GlobalMockObject::verify();
-    char *socVer = "Ascend910_950z";
-    MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend910_950z")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
+    char *socVer = "Ascend950PR_950z";
+    MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_950z")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
     hardwareVersion = 0;
     ret = GetHardVerBySocVer(0, hardwareVersion);
-    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_910_950Z);
+    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_950PR_950Z);
     GlobalMockObject::verify();
     MOCKER(halGetDeviceInfo).stubs().will(invoke(stubDavidGetDeviceInfo));
     MOCKER(halGetSocVersion).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
     hardwareVersion = 0;
     ret = GetHardVerBySocVer(0, hardwareVersion);
-    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_910_9599);
+    EXPECT_EQ(hardwareVersion, PLATFORMCONFIG_DAVID_950PR_9599);
     GlobalMockObject::verify();
     MOCKER(halGetSocVersion).stubs().will(returnValue(DRV_ERROR_NO_PROCESS));
     hardwareVersion = 0;

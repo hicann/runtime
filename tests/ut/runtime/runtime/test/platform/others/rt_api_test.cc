@@ -121,7 +121,7 @@ TEST_F(ApiAbnormalTest, rtsGetMemcpyDescSize_DavidChip_Success)
     char oriSocVersion[128] = {0};
     rtGetSocVersion(oriSocVersion, 128);
     GlobalContainer::SetHardwareChipType(CHIP_END);
-    (void)rtSetSocVersion("ASCEND910_958A");
+    (void)rtSetSocVersion("ASCEND950PR_958A");
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t oriChipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);

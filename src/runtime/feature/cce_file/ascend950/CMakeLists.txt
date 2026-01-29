@@ -13,7 +13,7 @@ set(DCACHE_LOCK_AIV_SOURCE ${CMAKE_CURRENT_LIST_DIR}/dcache_lock_aiv.cce)
 set(DCACHE_LOCK_AIV_OBJ    ${CMAKE_CURRENT_BINARY_DIR}/dcache_lock_aiv.o)
 set(DCACHE_LOCK_MIX_OBJ    ${CMAKE_CURRENT_BINARY_DIR}/dcache_lock_mix.o)
 
-add_custom_target(dcache_lock_op_910_95
+add_custom_target(dcache_lock_op_950
         DEPENDS ${DCACHE_LOCK_MIX_OBJ}
 )
 
@@ -26,7 +26,7 @@ add_custom_command(OUTPUT ${DCACHE_LOCK_MIX_OBJ}
 )
 
 install(FILES ${DCACHE_LOCK_MIX_OBJ}
-    DESTINATION lib/ascend910_95
+    DESTINATION lib/ascend950
     OPTIONAL
 )
 message("${DCACHE_LOCK_AIC_SOURCE}")

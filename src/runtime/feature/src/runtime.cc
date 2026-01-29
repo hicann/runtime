@@ -459,103 +459,103 @@ void Runtime::InitSocTypeFrom910Version(const int64_t hardwareVersion)
     const RtPGVersion pgVer = static_cast<RtPGVersion>(PLAT_GET_VER(static_cast<uint64_t>(hardwareVersion)));
     switch (pgVer) {
         case PG_VER_BIN0:
-            socType_ = SOC_ASCEND910_9599;
-            break;
-        case PG_VER_BIN1:
-            socType_ = SOC_ASCEND910_9589;
-            break;
-        case PG_VER_BIN2:
-            socType_ = SOC_ASCEND910_958A;
-            break;
-        case PG_VER_BIN3:
-            socType_ = SOC_ASCEND910_958B;
-            break;
-        case PG_VER_BIN4:
-            socType_ = SOC_ASCEND910_957B;
-            break;
-        case PG_VER_BIN5:
-            socType_ = SOC_ASCEND910_957D;
-            break;
-        case PG_VER_BIN6:
-            socType_ = SOC_ASCEND910_950Z;
-            break;
-        case PG_VER_BIN7:
-            socType_ = SOC_ASCEND910_9579;
-            break;
-        case PG_VER_BIN11:
-            socType_ = SOC_ASCEND910_9591;
-            break;
-        case PG_VER_BIN12:
-            socType_ = SOC_ASCEND910_9592;
-            break;
-        case PG_VER_BIN13:
-            socType_ = SOC_ASCEND910_9581;
-            break;
-        case PG_VER_BIN14:
-            socType_ = SOC_ASCEND910_9582;
-            break;
-        case PG_VER_BIN15:
-            socType_ = SOC_ASCEND910_9584;
-            break;
-        case PG_VER_BIN16:
-            socType_ = SOC_ASCEND910_9587;
-            break;
-        case PG_VER_BIN17:
-            socType_ = SOC_ASCEND910_9588;
-            break;
-        case PG_VER_BIN18:
-            socType_ = SOC_ASCEND910_9572;
-            break;
-        case PG_VER_BIN19:
-            socType_ = SOC_ASCEND910_9575;
-            break;
-        case PG_VER_BIN20:
-            socType_ = SOC_ASCEND910_9576;
-            break;
-        case PG_VER_BIN21:
-            socType_ = SOC_ASCEND910_9574;
-            break;
-        case PG_VER_BIN22:
-            socType_ = SOC_ASCEND910_9577;
-            break;
-        case PG_VER_BIN23:
-            socType_ = SOC_ASCEND910_9578;
-            break;
-        case PG_VER_BIN24:
-            socType_ = SOC_ASCEND910_957C;
-            break;
-        case PG_VER_BIN25:
-            socType_ = SOC_ASCEND910_95A1;
-            break;
-        case PG_VER_BIN26:
-            socType_ = SOC_ASCEND910_95A2;
-            break;
-        case PG_VER_BIN27:
-            socType_ = SOC_ASCEND910_9595;
-            break;
-        case PG_VER_BIN28:
-            socType_ = SOC_ASCEND910_9596;
-            break;
-        case PG_VER_BIN29:
-            socType_ = SOC_ASCEND910_9585;
-            break;
-        case PG_VER_BIN30:
-            socType_ = SOC_ASCEND910_9586;
-            break;
-        case PG_VER_BIN31:
-            socType_ = SOC_ASCEND910_9583;
-            break;
-        case PG_VER_BIN32:
-            socType_ = SOC_ASCEND910_9571;
-            break;
-        case PG_VER_BIN33:
-            socType_ = SOC_ASCEND910_9573;
-            break;
-        case PG_VER_BIN34:
-            socType_ = SOC_ASCEND910_950X;
-            break;
-        case PG_VER_BIN35:
-            socType_ = SOC_ASCEND910_950Y;
+ 	        socType_ = SOC_ASCEND950PR_9599;
+ 	        break;
+ 	    case PG_VER_BIN1:
+ 	        socType_ = SOC_ASCEND950PR_9589;
+ 	        break;
+ 	    case PG_VER_BIN2:
+ 	        socType_ = SOC_ASCEND950PR_958A;
+ 	        break;
+ 	    case PG_VER_BIN3:
+ 	        socType_ = SOC_ASCEND950PR_958B;
+ 	        break;
+ 	    case PG_VER_BIN4:
+ 	        socType_ = SOC_ASCEND950PR_957B;
+ 	        break;
+ 	    case PG_VER_BIN5:
+ 	        socType_ = SOC_ASCEND950PR_957D;
+ 	        break;
+ 	    case PG_VER_BIN6:
+ 	        socType_ = SOC_ASCEND950PR_950Z;
+ 	        break;
+ 	    case PG_VER_BIN7:
+ 	        socType_ = SOC_ASCEND950PR_9579;
+ 	        break;
+ 	    case PG_VER_BIN11:
+ 	        socType_ = SOC_ASCEND950DT_9591;
+ 	        break;
+ 	    case PG_VER_BIN12:
+ 	        socType_ = SOC_ASCEND950DT_9592;
+ 	        break;
+ 	    case PG_VER_BIN13:
+ 	        socType_ = SOC_ASCEND950DT_9581;
+ 	        break;
+ 	    case PG_VER_BIN14:
+ 	        socType_ = SOC_ASCEND950DT_9582;
+ 	        break;
+ 	    case PG_VER_BIN15:
+ 	        socType_ = SOC_ASCEND950DT_9584;
+ 	        break;
+ 	    case PG_VER_BIN16:
+ 	        socType_ = SOC_ASCEND950DT_9587;
+ 	        break;
+ 	    case PG_VER_BIN17:
+ 	        socType_ = SOC_ASCEND950DT_9588;
+ 	        break;
+ 	    case PG_VER_BIN18:
+ 	        socType_ = SOC_ASCEND950DT_9572;
+ 	        break;
+ 	    case PG_VER_BIN19:
+ 	        socType_ = SOC_ASCEND950DT_9575;
+ 	        break;
+ 	    case PG_VER_BIN20:
+ 	        socType_ = SOC_ASCEND950DT_9576;
+ 	        break;
+ 	    case PG_VER_BIN21:
+ 	        socType_ = SOC_ASCEND950DT_9574;
+ 	        break;
+ 	    case PG_VER_BIN22:
+ 	        socType_ = SOC_ASCEND950DT_9577;
+ 	        break;
+ 	    case PG_VER_BIN23:
+ 	        socType_ = SOC_ASCEND950DT_9578;
+ 	        break;
+ 	    case PG_VER_BIN24:
+ 	        socType_ = SOC_ASCEND950PR_957C;
+ 	        break;
+ 	    case PG_VER_BIN25:
+ 	        socType_ = SOC_ASCEND950DT_95A1;
+ 	        break;
+ 	    case PG_VER_BIN26:
+ 	        socType_ = SOC_ASCEND950DT_95A2;
+ 	        break;
+ 	    case PG_VER_BIN27:
+ 	        socType_ = SOC_ASCEND950DT_9595;
+ 	        break;
+ 	    case PG_VER_BIN28:
+ 	        socType_ = SOC_ASCEND950DT_9596;
+ 	        break;
+ 	    case PG_VER_BIN29:
+ 	        socType_ = SOC_ASCEND950DT_9585;
+ 	        break;
+ 	    case PG_VER_BIN30:
+ 	        socType_ = SOC_ASCEND950DT_9586;
+ 	        break;
+ 	    case PG_VER_BIN31:
+ 	        socType_ = SOC_ASCEND950DT_9583;
+ 	        break;
+ 	    case PG_VER_BIN32:
+ 	        socType_ = SOC_ASCEND950DT_9571;
+ 	        break;
+ 	    case PG_VER_BIN33:
+ 	        socType_ = SOC_ASCEND950DT_9573;
+ 	        break;
+ 	    case PG_VER_BIN34:
+ 	        socType_ = SOC_ASCEND950DT_950X;
+ 	        break;
+ 	    case PG_VER_BIN35:
+ 	        socType_ = SOC_ASCEND950DT_950Y;
             break;
         default:
             socType_ = SOC_END;
@@ -1157,7 +1157,7 @@ static rtError_t GetDcacheLockMixPath(std::string &binaryPath)
         diff = find - findr;
     }
     binaryPath = libPath.substr(findr + 1U, diff - 1U);
-    binaryPath = binaryPath + "/ascend910_95/";
+    binaryPath = binaryPath + "/ascend950/";
 
     RT_LOG(RT_LOG_INFO, "path:%s, diff:%u, find:%u, findr:%u, npos:%u.", binaryPath.c_str(), diff, find, findr,
            libPath.npos);

@@ -207,7 +207,7 @@ drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType
 {
     if (value) {
         if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_910_9599;
+            *value = PLATFORMCONFIG_DAVID_950PR_9599;
         } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
             *value = g_device_driver_version_stub;
             printf("\r\n halGetDeviceInfo:: moduleType = %d, infoType = %d, g_device_driver_version_stub = %d",
@@ -1579,7 +1579,7 @@ drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *
 
 drvError_t halGetSocVersion(uint32_t devId, char *soc_version, uint32_t len)
 {
-    error_t err = strcpy_s(soc_version, len, "Ascend910_9599");
+    error_t err = strcpy_s(soc_version, len, "Ascend950PR_9599");
     if (err != EOK) {
     return DRV_ERROR_NOT_SUPPORT;
     }

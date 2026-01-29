@@ -791,7 +791,7 @@ class CloudV2TaskTest1 : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
-        (void)rtSetSocVersion("Ascend910_9599");
+        (void)rtSetSocVersion("Ascend950PR_9599");
         (void)rtSetDevice(0);
         std::cout << "task test start: " << std::endl;
     }

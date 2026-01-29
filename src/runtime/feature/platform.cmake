@@ -138,7 +138,7 @@ endmacro()
 macro(runtime_platform_others_obj target_name)
     add_library(runtime_platform_others OBJECT
         platform/610_lite/dev_info_reg.cc
-        platform/910_95/dev_info_reg.cc
+        platform/950/dev_info_reg.cc
         platform/as31xm1/dev_info_reg.cc
         platform/bs9sx1a/dev_info_reg.cc
         platform/cloud/dev_info_reg.cc

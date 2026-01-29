@@ -81,37 +81,37 @@ constexpr uint32_t BANDWITH_MBS = 1024U * 1024U;
 #define PLATFORMCONFIG_CLOUD_V2_910B2C           PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                        (static_cast<uint32_t>(CHIP_910_B_93)), \
                                                        (static_cast<uint32_t>(RT_VER_BIN8)))
-/* ----------------------------------------DAVID_910_95---------------------------------------- */
+/* ----------------------------------------DAVID_950---------------------------------------- */
 /* --------platform-------- */
-#define PLATFORMCONFIG_DAVID_910_9599        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_9599        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN0)))
 
-#define PLATFORMCONFIG_DAVID_910_9589        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_9589        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN1)))
 
-#define PLATFORMCONFIG_DAVID_910_958A        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_958A        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN2)))
 
-#define PLATFORMCONFIG_DAVID_910_958B        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_958B        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN3)))
 
-#define PLATFORMCONFIG_DAVID_910_957B        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_957B        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN4)))
 
-#define PLATFORMCONFIG_DAVID_910_957D        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_957D        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN5)))
 
-#define PLATFORMCONFIG_DAVID_910_950Z        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_950Z        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN6)))
 
-#define PLATFORMCONFIG_DAVID_910_9579        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_9579        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN7)))
 
@@ -119,103 +119,103 @@ constexpr uint32_t BANDWITH_MBS = 1024U * 1024U;
                                                        (static_cast<uint32_t>(CHIP_CLOUD_V5)), \
                                                        (static_cast<uint32_t>(VER_NA)))
 
-#define PLATFORMCONFIG_DAVID_910_9591        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9591        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN11)))
 
-#define PLATFORMCONFIG_DAVID_910_9592        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9592        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN12)))
 
-#define PLATFORMCONFIG_DAVID_910_9581        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9581        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN13)))
 
-#define PLATFORMCONFIG_DAVID_910_9582        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9582        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN14)))
 
-#define PLATFORMCONFIG_DAVID_910_9584        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9584        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN15)))
 
-#define PLATFORMCONFIG_DAVID_910_9587        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9587        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN16)))
 
-#define PLATFORMCONFIG_DAVID_910_9588        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9588        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN17)))
 
-#define PLATFORMCONFIG_DAVID_910_9572        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9572        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN18)))
 
-#define PLATFORMCONFIG_DAVID_910_9575        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9575        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN19)))
 
-#define PLATFORMCONFIG_DAVID_910_9576        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9576        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN20)))
 
-#define PLATFORMCONFIG_DAVID_910_9574        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9574        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN21)))
 
-#define PLATFORMCONFIG_DAVID_910_9577        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9577        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN22)))
 
-#define PLATFORMCONFIG_DAVID_910_9578        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9578        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN23)))
 
-#define PLATFORMCONFIG_DAVID_910_957C        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950PR_957C        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN24)))
 
-#define PLATFORMCONFIG_DAVID_910_95A1        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_95A1        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN25)))
  
-#define PLATFORMCONFIG_DAVID_910_95A2        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_95A2        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN26)))
  
-#define PLATFORMCONFIG_DAVID_910_9595        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9595        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN27)))
  
-#define PLATFORMCONFIG_DAVID_910_9596        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9596        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN28)))
  
-#define PLATFORMCONFIG_DAVID_910_9585        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9585        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN29)))
  
-#define PLATFORMCONFIG_DAVID_910_9586        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9586        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN30)))
  
-#define PLATFORMCONFIG_DAVID_910_9583        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9583        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN31)))
  
-#define PLATFORMCONFIG_DAVID_910_9571        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9571        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN32)))
  
-#define PLATFORMCONFIG_DAVID_910_9573        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_9573        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
                                                     (static_cast<uint32_t>(PG_VER_BIN33)))
 
-#define PLATFORMCONFIG_DAVID_910_950X        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_950X        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
  	                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
  	                                                     (static_cast<uint32_t>(PG_VER_BIN34)))
  	 
-#define PLATFORMCONFIG_DAVID_910_950Y        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
+#define PLATFORMCONFIG_DAVID_950DT_950Y        PLAT_COMBINE((static_cast<uint32_t>(ARCH_V100)), \
  	                                                     (static_cast<uint32_t>(CHIP_DAVID)), \
  	                                                     (static_cast<uint32_t>(PG_VER_BIN35)))
 #if defined(__cplusplus)
