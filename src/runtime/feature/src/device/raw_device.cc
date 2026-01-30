@@ -2148,6 +2148,7 @@ rtError_t RawDevice::ParsePrintInfo(const Device * const dev)
     ParseSimdPrintInfo();
     ParseSimtPrintInfo(dev);
     ++parseCounter_;
+    return RT_ERROR_NONE;
 }
 
 void RawDevice::WaitForParsePrintf() const

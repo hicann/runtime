@@ -477,7 +477,7 @@ public:
         return streams_;
     }
 
-    rtError_t LaunchKernelPrepare(const rtChipType_t chipType, uint32_t &smArgsSize, Kernel *&registeredKernel,
+    rtError_t LaunchKernelPrepare(uint32_t &smArgsSize, Kernel *&registeredKernel,
         Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc, rtL2Ctrl_t *&l2ctrl,
         uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey, uint32_t &prefetchCnt1,
         uint32_t &prefetchCnt2);

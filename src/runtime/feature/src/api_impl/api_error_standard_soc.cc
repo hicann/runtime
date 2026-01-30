@@ -455,7 +455,7 @@ rtError_t ApiErrorDecorator::IpcGetEventHandle(IpcEvent * const evt, rtIpcEventH
     NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
     COND_RETURN_OUT_ERROR_MSG_CALL(evt->GetEventFlag() != RT_EVENT_IPC, RT_ERROR_INVALID_VALUE,
-        "only support RT_EVENT_IPC call rtIpcGetEventHandle, current flag %d.", evt->GetEventFlag());
+        "only support RT_EVENT_IPC call rtIpcGetEventHandle, current flag %" PRIu64 ".", evt->GetEventFlag());
     return impl_->IpcGetEventHandle(evt, handle);
 }
 

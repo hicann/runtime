@@ -800,7 +800,7 @@ TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 TIMESTAMP_EXTERN(rtKernelLaunch_CpuArgLoad);
 
-rtError_t Context::LaunchKernelPrepare(const rtChipType_t chipType, uint32_t &smArgsSize,
+rtError_t Context::LaunchKernelPrepare(uint32_t &smArgsSize,
     Kernel *&registeredKernel, Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
     rtL2Ctrl_t *&l2ctrl, uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
     uint32_t &prefetchCnt1, uint32_t &prefetchCnt2)
@@ -1224,7 +1224,6 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     AicTaskInfo *aicTask = nullptr;
     Program *prog = nullptr;
     Module *launchMdl = nullptr;
-    const rtChipType_t chipType = device_->GetChipType();
     bool mixOpt = false;
     Kernel *registeredKernel = nullptr;
     bool isNeedAllocSqeDevBuf = false;
@@ -1236,7 +1235,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(chipType, smArgsSize, registeredKernel, prog, kernelType, launchMdl, stubFunc,
+    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, stubFunc,
         l2ctrl, addr1, addr2, nullptr, 0, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
@@ -1354,7 +1353,6 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
     Kernel *registeredKernel = nullptr;
-    const rtChipType_t chipType = device_->GetChipType();
     bool mixOpt = false;
     rtError_t errorReason;
     uint32_t taskRation = 0U;
@@ -1369,7 +1367,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d."
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(chipType, smArgsSize, registeredKernel, prog, kernelType, launchMdl, nullptr,
+    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, nullptr,
         l2ctrl, addr1, addr2, progHandle, tilingKey, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");

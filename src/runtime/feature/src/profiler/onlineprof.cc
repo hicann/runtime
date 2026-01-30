@@ -31,7 +31,6 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream * const stm)
     Device * const dev = stm->Device_();
     Driver * const deviceDrv = dev->Driver_();
     constexpr uint64_t memSize = static_cast<uint64_t>(ONLINEPROF_MEM_SIZE) * 2UL;
-    const rtChipType_t chipType = stm->Device_()->GetChipType();
     Runtime * const rtInstance = Runtime::Instance();
     const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, memSize);
     ret = deviceDrv->DevMemAlloc(&deviceMem, memSize, memType, dev->Id_());
