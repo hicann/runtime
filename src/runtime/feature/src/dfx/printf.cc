@@ -1063,7 +1063,6 @@ rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, co
     const BlockWriteInfo *writeInfo =
     RtPtrToPtr<const BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
     // 校验readIdx和writeIdx在合法的范围内
-    const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
     COND_RETURN_ERROR((readInfo->readIdx > writeInfo->writeIdx), RT_ERROR_INVALID_VALUE,
         "Read idx %llu cannot be greater than write idx %llu.", readInfo->readIdx, writeInfo->writeIdx);
     // 表示没有信息更新

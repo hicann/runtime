@@ -838,7 +838,6 @@ rtError_t Model::LoadCompleteByStream(void)
     TaskInfo submitTask = {};
     TaskInfo submitTaskInfo = {};
     TaskInfo *maintainceTask = nullptr;
-    bool isNeedStreamReuse = false;
     const bool isContextContainAicpuModel = this->Context_()->GetAicpuExecuteModel();
 
     const bool isNeedLoadAicpuModel = NeedLoadAicpuModelTask();
@@ -868,7 +867,6 @@ rtError_t Model::LoadCompleteByStream(void)
         sinkStream->SetLatestModlId(id_);
         if (sinkStream->GetModelNum() > 1) {
             RT_LOG(RT_LOG_EVENT, "stream[%d] reused by model[%d].", sinkStream->Id_(), id_);
-            isNeedStreamReuse = true;
         }
     }
     ERROR_RETURN_MSG_INNER(syncError, "Failed to synchronize sink stream, retCode=%#x!",
