@@ -29,9 +29,11 @@ namespace {
     constexpr uint32_t HCCL_COMM_TIMEOUT_CURSOR = 4U;
 }
 namespace AicpuSchedule {
+    bool AicpuModelManager::isUsed_(false);
     AicpuModelManager &AicpuModelManager::GetInstance()
     {
         static AicpuModelManager instance;
+        isUsed_ = true;
         return instance;
     }
 
@@ -703,5 +705,10 @@ namespace AicpuSchedule {
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         return AICPU_SCHEDULE_OK;
+    }
+
+    bool AicpuModelManager::IsUsed()
+    {
+        return AicpuModelManager::isUsed_;
     }
 }

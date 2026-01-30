@@ -140,6 +140,8 @@ namespace AicpuSchedule {
 
         StatusCode GetModelMsgQueues(const uint32_t modelId, const bool isInput, int32_t &queueId) const;
 
+        static bool IsUsed();
+
     private:
         AicpuModelManager();
 
@@ -170,6 +172,7 @@ namespace AicpuSchedule {
         uint32_t hcclCommEmbRefs_{0U};
         uint32_t hcclCommSyncRefs_{0U};
         std::vector<uint64_t> registerMemory_;
+        static bool isUsed_;
     };
 }
 #endif // MAIN_AICPUSD_MODEL_EXECUTE_H

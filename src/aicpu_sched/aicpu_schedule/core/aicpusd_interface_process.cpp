@@ -522,7 +522,10 @@ namespace AicpuSchedule {
      */
     int32_t AicpuScheduleInterface::Destroy() const
     {
-        return AicpuModelManager::GetInstance().Exit();
+        if (AicpuModelManager::IsUsed()) {
+            return AicpuModelManager::GetInstance().Exit();
+        }
+        return AICPU_SCHEDULE_OK;
     }
 
     /**
