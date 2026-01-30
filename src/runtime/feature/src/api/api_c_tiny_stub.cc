@@ -606,88 +606,6 @@ rtError_t rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsDqsSchedConfig(const rtStream_t stm, rtDqsSchedCfg_t * const config)
-{
-    (void)stm;
-    (void)config;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsNotifyWait(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsDequeue(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsZeroCopy(const rtStream_t stm, const rtDqsZeroCopyType copyType, rtZeroCopyCfg_t * const cfg)
-{
-    (void)stm;
-    (void)copyType;
-    (void)cfg;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsPrepare(const rtStream_t stm, rtDqsPrepareCfg_t * const cfg)
-{
-    (void)stm;
-    (void)cfg;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsEnqueue(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsFree(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsFrameAlign(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsSchedEnd(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsInterChipInit(const rtStream_t stm)
-{
-    (void)stm;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDqsLaunchAdspcTask(const rtStream_t stm, rtDqsAdspcTaskCfg_t *const adspcParam)
-{
-    (void)stm;
-    (void)adspcParam;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessLock()
 {
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
@@ -810,6 +728,14 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
     UNUSED(funcHandle);
     UNUSED(attrType);
     UNUSED(attrValue);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtLaunchDqsTask(const rtStream_t stm, const rtDqsTaskCfg_t* const taskCfg)
+{
+    UNUSED(stm);
+    UNUSED(taskCfg);
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 #ifdef __cplusplus
