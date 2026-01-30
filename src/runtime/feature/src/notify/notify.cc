@@ -409,7 +409,6 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
         srvId_ = static_cast<uint32_t>(val);
         if (NpuDriver::CheckIsSupportFeature(localDevId_, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
             RT_LOG(RT_LOG_INFO, "name=%s phyId=%u", ipcNotifyName, phyId_);
-            return RT_ERROR_NONE;
         }
         error = driver_->GetDeviceIndexByPhyId(phyId_, &deviceId_);
         ERROR_RETURN_MSG_INNER(error, "Failed to get devId, retCode=%#x, PhyId=%u",
