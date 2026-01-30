@@ -11,6 +11,8 @@
 ################### libadump_server.a begin ############################
 set(adumpServerHeaderList
     ${ADUMP_DIR}/external
+    ${PROJECT_TOP_DIR}/include/external/acl
+    ${PROJECT_TOP_DIR}/include/external
 )
 
 set(adumpServerSrcList
