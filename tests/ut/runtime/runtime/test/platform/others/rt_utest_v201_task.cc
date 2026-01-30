@@ -390,9 +390,8 @@ TEST_F(TaskTestV201, Test_DqsTask_01)
     cfg.type = RT_DQS_TASK_DEQUEUE;
     rtError_t error = DqsLaunchTask(stm, &cfg);
     EXPECT_NE(error, RT_ERROR_NONE);
-    rtDqsPrepareCfg_t prepareCfg = {};
     cfg.type = RT_DQS_TASK_PREPARE_OUT;
-    cfg.cfg = &prepareCfg;
+    cfg.cfg = nullptr;
     error = DqsLaunchTask(stm, &cfg);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -1059,7 +1058,7 @@ TEST_F(TaskTestV201, TestDqsAdspcTaskWithParamError)
 
     rtDqsTaskCfg_t cfg = {};
     cfg.type = RT_DQS_TASK_ADSPC;
-    rtDqsAdspcTaskParam_t param = {};
+    rtDqsAdspcTaskCfg_t param = {};
     cfg.cfg = &param;
     rtError_t error = DqsLaunchTask(stm, &cfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -1129,7 +1128,7 @@ TEST_F(TaskTestV201, TestDqsAdspcTaskWithCqeDepthError)
 
     rtDqsTaskCfg_t cfg = {};
     cfg.type = RT_DQS_TASK_ADSPC;
-    rtDqsAdspcTaskParam_t param = {};
+    rtDqsAdspcTaskCfg_t param = {};
     param.cqDepth = 7U;
     cfg.cfg = &param;
     rtError_t error = DqsLaunchTask(stm, &cfg);

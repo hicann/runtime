@@ -50,14 +50,6 @@ typedef enum {  // 零拷贝时，64bit的地址拆分为两个32bit地址，分
     RT_DQS_ZERO_COPY_ADDR_ORDER_HIGH32_FIRST = 1,  // 拷贝到目标二进指针地址时，高32bit在前
 } rtDqsZeroCopyAddrOrderType;
 
-typedef union {
-    struct {
-        uint32_t width;         // DSS input width
-        uint32_t height;        // DSS output width
-        uint32_t reserved[6];
-    } dssPrepare;
-} rtDqsPrepareCfg_t;
-
 typedef struct {
     uint8_t type;                                             // 硬化调度类型，参考 rtDqsSchedType
     uint8_t reserve;                                          // 预留
@@ -68,14 +60,6 @@ typedef struct {
 } rtDqsSchedCfg_t;
 
 typedef rtDqsSchedCfg_t rtDqsSchedConfig_t;
-
-typedef struct {
-    rtDqsZeroCopyAddrOrderType cpyAddrOrder;  // 拷贝到目标二进指针地址时，高32位和低32位的安排顺序。
-    uint16_t queueId;                         // 队列id
-    uint16_t count;                           // offset和dest数组的数量
-    uint64_t *dest;                           // 目标地址的指针数组
-    uint64_t *offset;                         // offset数组
-} rtZeroCopyCfg_t;
 
 // 用于归一接口
 typedef struct {
@@ -106,8 +90,6 @@ typedef struct {
     uint64_t cqHeadRegAddr;     // ADSPC CQ head寄存器地址
     uint64_t cqTailRegAddr;     // ADSPC CQ tail寄存器地址
 } rtDqsAdspcTaskCfg_t;
-
-typedef rtDqsAdspcTaskCfg_t rtDqsAdspcTaskParam_t;
  
 typedef enum {
     RT_DQS_TASK_SCHED_CONFIG,
@@ -130,122 +112,6 @@ typedef struct {
     uint32_t rsv;
     void *cfg;
 } rtDqsTaskCfg_t;
-
-/**
- * @ingroup rts_dqs
- * @brief Set DQS(Deterministic Queue Scheduler) schedule config to the related control stream.
- * 
- * @param stm dqs control stream, created with stream flag RT_STREAM_DQS_CONTROL
- * @param config dqs schedule config, including input/ouput queue info, ouput mbuf pool, input/out addr, etc.
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsSchedConfig(const rtStream_t stm, rtDqsSchedConfig_t * const config) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch notify wait task for input queue data in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsNotifyWait(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch input dequeue task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsDequeue(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch zero copy task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @param copyType copy input or output data
- * @param cfg copy config
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsZeroCopy(
-    const rtStream_t stm, const rtDqsZeroCopyType copyType, rtZeroCopyCfg_t *const cfg) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch prepare task(copy output data or flush task description) in dqs control stream.
- * 
- * @param stm dqs control stream
- * @param cfg prepare config
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsPrepare(const rtStream_t stm, rtDqsPrepareCfg_t * const cfg) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch output enqueue task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsEnqueue(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch input data free task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsFree(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch frame align task dqs control stream. This task is only used when input queue is multiple.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsFrameAlign(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch dqs schedule end task in dqs control stream.
- * 
- * @param stm dqs control stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsSchedEnd(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Init all inter chip c-core and sdma tasks in dqs inter chip stream
- * 
- * @param stm dqs inter chip stream
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsInterChipInit(const rtStream_t stm) RTS_WEAK;
-
-/**
- * @ingroup rts_dqs
- * @brief Launch ADSPC task in stream
- * 
- * @param stm the stream to launch task
- * @param adspcParam the Adspc task param
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsDqsLaunchAdspcTask(const rtStream_t stm, rtDqsAdspcTaskParam_t * const adspcParam) RTS_WEAK;
 
 /**
  * @ingroup rts_dqs
