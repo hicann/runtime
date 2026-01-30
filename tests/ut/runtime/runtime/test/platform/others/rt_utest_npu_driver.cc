@@ -1434,8 +1434,9 @@ TEST_F(NpuDriverTest, NOTIFY_TEST_3)
     uint32_t notifyId;
     uint32_t tsId;
     uint32_t isPod;
+    uint32_t adcDieId;
 
-    error = rawDrv->OpenIpcNotify(openPara, &phyId, &notifyId, &tsId, &isPod);
+    error = rawDrv->OpenIpcNotify(openPara, &phyId, &notifyId, &tsId, &isPod, &adcDieId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete rawDrv;
@@ -2016,6 +2017,7 @@ TEST_F(NpuDriverTest2, raw_driver)
     uint32_t pid;
     uint32_t isPod;
     int32_t chipId;
+    uint32_t adcDieId;
     error = driver.NotifyIdAlloc(devId, &notifyId, tsId);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = driver.NotifyIdFree(devId, notifyId, tsId);
@@ -2026,7 +2028,7 @@ TEST_F(NpuDriverTest2, raw_driver)
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
     error = driver.CreateIpcNotify("tmp", len, devId, &notifyId, tsId);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = driver.OpenIpcNotify(openPara, &phyId, &notifyId, &tsId, &isPod);
+    error = driver.OpenIpcNotify(openPara, &phyId, &notifyId, &tsId, &isPod, &adcDieId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = driver.NotifyGetAddrOffset(devId, notifyId, &devAddrOffset, tsId);

@@ -75,6 +75,15 @@ drvError_t halShrIdOpen_stub_pod(const char *name, struct drvShrIdInfo *info)
     return DRV_ERROR_NONE;
 }
 
+drvError_t halParseSDID_parse_stub(uint32_t sdid, struct halSDIDParseInfo *sdid_parse)
+{
+    sdid_parse->server_id = 0;
+    sdid_parse->chip_id = 0;
+    sdid_parse->die_id = 0;
+    sdid_parse->udevid = 0;
+    return DRV_ERROR_NONE;
+}
+
 drvError_t testResourceIdAlloc(uint32_t devId, struct halResourceIdInputInfo *in, struct halResourceIdOutputInfo *out)
 {
     out->resourceId = 0;
@@ -395,6 +404,22 @@ TEST_F(NotifyTest, notify_ipc_pod_open)
     MOCKER(halShrIdOpen)
              .stubs()
              .will(invoke(halShrIdOpen_stub_pod));
+    error = notify->OpenIpcNotify("test_ipc", RT_NOTIFY_FLAG_SHR_ID_SHADOW);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete notify;
+}
+
+TEST_F(NotifyTest, notify_ipc_shadow_open)
+{
+    MOCKER(halShrIdOpen)
+        .stubs()
+        .will(invoke(halShrIdOpen_stub_pod));
+    MOCKER(halParseSDID)
+        .stubs()
+        .will(invoke(halParseSDID_parse_stub));
+
+    rtError_t error;
+    Notify *notify = new Notify(0, 0);
     error = notify->OpenIpcNotify("test_ipc", RT_NOTIFY_FLAG_SHR_ID_SHADOW);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete notify;

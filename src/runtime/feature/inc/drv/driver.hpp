@@ -419,7 +419,7 @@ public:
 
     // Open IPC Notify
     virtual rtError_t OpenIpcNotify(const IpcNotifyOpenPara &openPara, uint32_t * const phyId,
-        uint32_t * const notifyId, uint32_t * const tsId, uint32_t * const isPod) = 0;
+        uint32_t * const notifyId, uint32_t * const tsId, uint32_t * const isPod, uint32_t * const adcDieId) = 0;
 
     // Close IPC Notify
     virtual rtError_t CloseIpcNotify(const char_t * const name, const int32_t devId,

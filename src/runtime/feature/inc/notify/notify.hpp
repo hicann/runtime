@@ -56,6 +56,12 @@ public:
     {
         return dieId_;
     }
+
+    uint32_t GetAdcDieId() const
+    {
+        return adcDieId_;
+    }
+
     void SetEndGraphModel(Model * const model)
     {
         endGraphModel_ = model;
@@ -126,6 +132,11 @@ public:
     {
         return isIpcNotify_;
     }
+
+    bool IsIpcCreator() const
+    {
+        return isIpcCreator_;
+    }
     rtError_t AllocId();
     rtError_t FreeId();
 private:
@@ -140,6 +151,7 @@ private:
     uint32_t tsId_;
     uint32_t deviceId_;
     uint32_t dieId_;
+    uint32_t adcDieId_;  // The adcDieId_ variable indicates the dieid in the ADC form.
     Model *endGraphModel_;
     uint32_t lastLocalId_;
     uint64_t lastBaseAddr_;
