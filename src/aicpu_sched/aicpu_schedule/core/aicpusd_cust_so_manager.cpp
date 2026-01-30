@@ -605,11 +605,6 @@ namespace AicpuSchedule {
     bool HashCalculator::GetSameFileInfo(const FileInfo &fileInfo, FileHashInfo &existedFileHashInfo) {
         UpdateCache();
 
-        if (GetSameSizeFileFromCache(fileInfo.size, existedFileHashInfo)) {
-            aicpusd_info("The file has same existed file, so=%s, size=%lu", fileInfo.name.c_str(), fileInfo.size);
-            return true;
-        }
-
         const uint64_t hashValue = GetQuickHash(fileInfo.data, fileInfo.size);
         if (GetSameHashFileFromCache(hashValue, existedFileHashInfo)) {
             aicpusd_info("The file has same existed file after hash compare, so=%s, hash=%lu",
@@ -650,18 +645,6 @@ namespace AicpuSchedule {
                 AddHashInfoToCache(hashInfo);
             }
         }
-    }
-
-    bool HashCalculator::GetSameSizeFileFromCache(const size_t fileSize, FileHashInfo &existedFileHashInfo) const
-    {
-        for (const auto &hashInfo : cache_) {
-            if (fileSize == hashInfo.fileSize) {
-                existedFileHashInfo = hashInfo;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     bool HashCalculator::GetSameHashFileFromCache(const uint64_t hashValue, FileHashInfo &existedFileHashInfo) const

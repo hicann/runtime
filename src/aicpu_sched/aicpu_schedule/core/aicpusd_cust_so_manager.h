@@ -41,7 +41,6 @@ namespace AicpuSchedule {
         }
     private:
         void UpdateCache();
-        bool GetSameSizeFileFromCache(const size_t fileSize, FileHashInfo &existedFileHashInfo) const;
         bool GetSameHashFileFromCache(const uint64_t hashValue, FileHashInfo &existedFileHashInfo) const;
         int32_t GenerateFileHashInfo(const std::string &filePath, FileHashInfo &hashInfo) const;
         void AddHashInfoToCache(const FileHashInfo &hashInfo);

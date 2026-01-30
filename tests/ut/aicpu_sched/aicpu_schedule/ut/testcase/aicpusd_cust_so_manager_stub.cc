@@ -105,11 +105,6 @@ namespace AicpuSchedule {
         return;
     }
 
-    bool HashCalculator::GetSameSizeFileFromCache(const size_t fileSize, FileHashInfo &existedFileHashInfo) const
-    {
-        return true;
-    }
-
     bool HashCalculator::GetSameHashFileFromCache(const uint64_t hashValue, FileHashInfo &existedFileHashInfo) const
     {
         return true;
