@@ -736,6 +736,11 @@ public:
         return simtEnable_;
     }
 
+    uint32_t GetSimtPrintLen() const override
+    {
+        return simtPrintLen_;
+    }
+
     void* GetSimtPrintfAddr() const override
     {
         return simtPrintfAddr_;
@@ -777,8 +782,8 @@ public:
     {
         return deviceSnapshot_;
     }
-    rtError_t ParsePrintInfo(const Device * const dev) override;
-    rtError_t ParseSimtPrintInfo(const Device * const dev) override;
+    rtError_t ParsePrintInfo() override;
+    rtError_t ParseSimtPrintInfo() override;
     rtError_t ParseSimdPrintInfo() override;
     void WaitForParsePrintf() const override;
     rtError_t GetPrintFifoAddress(uint64_t * const addr, const uint32_t model) override;
@@ -1015,7 +1020,7 @@ private:
     void *printfAddr_ = nullptr;
     void *simtPrintfAddr_ = nullptr;
     uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // device 备份
- 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_1024K}; // device 备份
+ 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_2M}; // device 备份
     bool simdEnable_{false};
     bool simtEnable_{false};
     std::atomic<uint64_t> parseCounter_{0};

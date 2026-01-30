@@ -986,7 +986,7 @@ private:
     RefObject<Device *> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM];  // Last one is stub device
     uint32_t deviceCustomerStackSize_{KERNEL_STACK_SIZE_32K};  // 全局共享，所有device生效，向上取整到16KB对齐
     uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // 全局共享
- 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_1024K}; // 全局共享
+ 	uint32_t simtPrintLen_{SIMT_FIFO_SIZE_2M}; // 全局共享
     ObjAllocator<RefObject<Program *>> *programAllocator_;
     Device *xpuDevice_{nullptr};
     Context *xpuCtxt_{nullptr};

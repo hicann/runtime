@@ -1288,7 +1288,7 @@ void Engine::PrintfRun()
     InnerThreadLocalContainer::SetCurCtx(ctx);
     while (printThreadRunFlag_ && !Runtime::Instance()->IsExiting()) {
         (void)mmSleep(200U);
-        (void)dev->ParsePrintInfo(dev);
+        (void)dev->ParsePrintInfo();
     }
 }
 }  // namespace runtime

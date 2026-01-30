@@ -165,7 +165,7 @@ TEST_F(PrintfTest, TestInitSimtPrintf) {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
     dev->simtEnable_ = true;
-    error = dev->ParseSimtPrintInfo(dev);
+    error = dev->ParseSimtPrintInfo();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     const size_t blockSize = 1024 * 1024;
