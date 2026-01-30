@@ -321,8 +321,8 @@ public:
                                const uint32_t notifyId, const uint32_t tsId) override;
 
     // Open IPC Notify
-    rtError_t OpenIpcNotify(const IpcNotifyOpenPara &openPara, uint32_t * const phyId,
-        uint32_t * const notifyId, uint32_t * const tsId, uint32_t * const isPod) override;
+    rtError_t OpenIpcNotify(const IpcNotifyOpenPara &openPara, uint32_t * const phyId, uint32_t * const notifyId,
+        uint32_t * const tsId, uint32_t * const isPod, uint32_t * const adcDieId) override;
 
     // Close IPC Notify
     rtError_t CloseIpcNotify(const char_t * const name, const int32_t devId,

@@ -206,24 +206,26 @@ static rtError_t GetIpcSqeWriteAddrByTsId(const TaskInfo * const taskInfo, uint6
     const NotifyRecordTaskInfo *const notifyRecord = &(taskInfo->u.notifyrecordTask);
     const Notify *const notify = notifyRecord->uPtr.notify;
     const uint32_t notifyId = taskInfo->u.notifyrecordTask.notifyId;
-    const uint32_t chipId = notify->GetPhyDevId();  // 投片阶段，和tsdrv对齐，phyId即chipId
-    uint32_t dieId = notify->GetDieId();
+    const uint32_t serverId = notify->GetServiceId();
+    uint32_t dieId = notify->GetAdcDieId();
     const uint32_t tsId = notify->GetTsId();
     const uint32_t notifyCntPerTable =
         (tsId == 0U) ? STARS_MC62CM12A_NOTIFY_NUM_OF_SINGLE_TABLE_P : STARS_MC62CM12A_NOTIFY_NUM_OF_SINGLE_TABLE_F;
     uint64_t baseAddr = (tsId == 0U) ? RT_MC62CM12A_STARS_P_BASE_ADDR : RT_MC62CM12A_STARS_F_BASE_ADDR;
-    if (dieId == 2U) {  // dieId = 2固定是F DIE，仅有一个die，因此计算notify地址无需对die偏移
-        dieId = 0U;
+    if (dieId == 2U) {  // dieId=2时固定是Fdie, Fdie仅有一个, 因此计算notify地址时无需对die偏移
+        baseAddr += STARS_MC62CM12A_NOTIFY_BASE_ADDR + static_cast<uint64_t>(serverId) * RT_MC62CM12A_CHIP_ADDR_OFFSET;
+    } else {
+        baseAddr += STARS_MC62CM12A_NOTIFY_BASE_ADDR + static_cast<uint64_t>(serverId) * RT_MC62CM12A_CHIP_ADDR_OFFSET +
+            static_cast<uint64_t>(dieId) * RT_MC62CM12A_DIE_ADDR_OFFSET;
     }
-    baseAddr += STARS_MC62CM12A_NOTIFY_BASE_ADDR + static_cast<uint64_t>(chipId) * RT_MC62CM12A_CHIP_ADDR_OFFSET +
-        static_cast<uint64_t>(dieId) * RT_MC62CM12A_DIE_ADDR_OFFSET;
+
     const uint64_t notifyTableId = static_cast<uint64_t>(notifyId) / notifyCntPerTable;
     const uint32_t notifySeparateId = (notifyId % notifyCntPerTable) / STARS_MC62CM12A_NOTIFY_TABLE_SEPARATE_NUM;
     const uint64_t notifyPos =
         (static_cast<uint64_t>(notifyId) % notifyCntPerTable) % STARS_MC62CM12A_NOTIFY_TABLE_SEPARATE_NUM;
     addr = baseAddr + (notifyTableId * STARS_MC62CM12A_NOTIFY_TABLE_OFFSET) + (notifyPos * STARS_MC62CM12A_NOTIFY_OFFSET) +
         (notifySeparateId * STARS_MC62CM12A_NOTIFY_ID_4K_SEPARATE);
-    RT_LOG(RT_LOG_INFO, "notifyId:%u, chipId=%u, dieId=%u, tsId=%u, baseAddr=0x%llx", notifyId, chipId, dieId, tsId, addr);
+    RT_LOG(RT_LOG_INFO, "ipcNotifyId=%u, serverId=%u, dieId=%u, tsId=%u, baseAddr=%#llx", notifyId, serverId, dieId, tsId, addr);
 
     return RT_ERROR_NONE;
 }

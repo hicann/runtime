@@ -792,7 +792,7 @@ rtError_t NpuDriver::DestroyIpcNotify(const char_t * const name, const int32_t d
 
 static rtError_t OpenIpcNotifyWithFlag(const IpcNotifyOpenPara &openPara,
     uint32_t * const phyId, uint32_t * const notifyId, uint32_t * const tsId,
-    uint32_t * const isPod)
+    uint32_t * const isPod, uint32_t * const adcDieId)
 {
     if (&halShrIdOpen == nullptr) {
         RT_LOG(RT_LOG_WARNING, "Driver unspport with flag, name=%s", openPara.name);
@@ -825,17 +825,18 @@ static rtError_t OpenIpcNotifyWithFlag(const IpcNotifyOpenPara &openPara,
     *phyId = drvInfo.devid; // driver returns phyId instead of devId
     *notifyId = drvInfo.shrid;
     *tsId = drvInfo.tsid;
+    *adcDieId = drvInfo.rsv[0]; // rsv[0] is adcDieId
     if ((drvInfo.flag & static_cast<uint32_t>(TSDRV_FLAG_SHR_ID_SHADOW)) != 0U) {
         *isPod = 1U;
     }
 
-    RT_LOG(RT_LOG_INFO, "Open ipc notify success,phyId=%u, name=%s, notifyId=%u, tsId=%u.",
-           *phyId, openPara.name, *notifyId, *tsId);
+    RT_LOG(RT_LOG_INFO, "Open ipc notify success,phyId=%u, name=%s, notifyId=%u, tsId=%u, adcDieId=%u.",
+           *phyId, openPara.name, *notifyId, *tsId, *adcDieId);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::OpenIpcNotify(const IpcNotifyOpenPara &openPara, uint32_t * const phyId,
-    uint32_t * const notifyId, uint32_t * const tsId, uint32_t * const isPod)
+    uint32_t * const notifyId, uint32_t * const tsId, uint32_t * const isPod, uint32_t * const adcDieId)
 {
     const bool isNewChip =
         IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_NON_UNIFIED_ADDR) &&
@@ -843,10 +844,10 @@ rtError_t NpuDriver::OpenIpcNotify(const IpcNotifyOpenPara &openPara, uint32_t *
     RT_LOG(RT_LOG_INFO, "open notify name=%s, type=%d", openPara.name, isNewChip);
 
     if (isNewChip) {
-        return OpenIpcNotifyWithFlag(openPara, phyId, notifyId, tsId, isPod);
+        return OpenIpcNotifyWithFlag(openPara, phyId, notifyId, tsId, isPod, adcDieId);
     }
 
-    return OpenIpcNotifyWithFlag(openPara, phyId, notifyId, tsId, isPod);
+    return OpenIpcNotifyWithFlag(openPara, phyId, notifyId, tsId, isPod, adcDieId);
 }
 
 rtError_t NpuDriver::CloseIpcNotify(const char_t * const name, const int32_t devId,

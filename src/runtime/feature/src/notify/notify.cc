@@ -25,7 +25,7 @@ namespace runtime {
 Notify::Notify(const uint32_t devId, const uint32_t taskSchId)
     : NoCopy(), notifyid_(MAX_UINT32_NUM), phyId_(0U), isIpcNotify_(false),
       isIpcCreator_(false), driver_(nullptr), tsId_(taskSchId),
-      deviceId_(devId), dieId_(0U), endGraphModel_(nullptr),
+      deviceId_(devId), dieId_(0U), adcDieId_(0U), endGraphModel_(nullptr),
       lastLocalId_(MAX_UINT32_NUM), lastBaseAddr_(0UL), lastIsPcie_(false),
       notifyFlag_(0U), localDevId_(UINT32_MAX),
       srvId_(RT_NOTIFY_INVALID_SRV_ID), chipId_(0U), isPod_(false)
@@ -391,7 +391,7 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
     uint32_t isPod = 0U;
 
     IpcNotifyOpenPara openPara = {ipcNotifyName, flag, localDevId_, dev->DevGetTsId()};
-    rtError_t error = driver_->OpenIpcNotify(openPara, &phyId_, &curNotifyId, &curTsId, &isPod);
+    rtError_t error = driver_->OpenIpcNotify(openPara, &phyId_, &curNotifyId, &curTsId, &isPod, &adcDieId_);
     ERROR_RETURN_MSG_INNER(error, "Failed to OpenIpcNotify, retCode=%#x!", static_cast<uint32_t>(error));
 
     isIpcNotify_ = true;
@@ -414,17 +414,17 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
         error = driver_->GetDeviceIndexByPhyId(phyId_, &deviceId_);
         ERROR_RETURN_MSG_INNER(error, "Failed to get devId, retCode=%#x, PhyId=%u",
             static_cast<uint32_t>(error), phyId_);
-        RT_LOG(RT_LOG_INFO, "name=%s phyId=%u deviceId=%u", ipcNotifyName, phyId_, deviceId_);
+        RT_LOG(RT_LOG_INFO, "name=%s, phyId=%u, deviceId=%u, srvId=%u", ipcNotifyName, phyId_, deviceId_, srvId_);
     } else {
         error = driver_->ParseSDID(phyId_, &srvId_, &chipId_, &dieId_, &deviceId_);
         ERROR_RETURN_MSG_INNER(error, "phyId=%u", phyId_);
-        RT_LOG(RT_LOG_INFO, "sdid=0x%x, srvid=%u, chipId=%u, dieId=%u, deviceId_=%u",
-            phyId_, srvId_, chipId_, dieId_, deviceId_);
+        RT_LOG(RT_LOG_INFO, "sdid=%#x, srvId=%u, chipId=%u, dieId=%u, adcDieId=%u, deviceId=%u",
+            phyId_, srvId_, chipId_, dieId_, adcDieId_, deviceId_);
         isPod_ = true;
     }
     COND_RETURN_ERROR(((isPod_ == true) && (srvId_ > RT_NOTIFY_MAX_SRV_ID)), RT_ERROR_INVALID_VALUE,
-        "phyId_=0x%x, srvid=%u, chipId=%u, dieId=%u,",
-        phyId_, srvId_, chipId_, dieId_);
+        "phyId_=%#x, srvId=%u, chipId=%u, dieId=%u, adcDieId=%u",
+        phyId_, srvId_, chipId_, dieId_, adcDieId_);
     return error;
 }
 }

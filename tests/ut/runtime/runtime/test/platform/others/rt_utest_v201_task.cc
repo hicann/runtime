@@ -1279,6 +1279,9 @@ TEST_F(TaskTestV201, Test_GetIpcSqeWriteAddrForNotifyRecordTask)
     uint64_t addr = 0ULL;
     rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(tmpTask, addr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    notify->adcDieId_ = 2;
+    error = GetIpcSqeWriteAddrForNotifyRecordTask(tmpTask, addr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
     void *dptr = nullptr;
     error = ((NpuDriver *)(device_->Driver_()))

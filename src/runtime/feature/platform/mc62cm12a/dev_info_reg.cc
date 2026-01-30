@@ -88,6 +88,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MODEL_ID_FOR_AICPU,
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC,
+    RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
     RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY,

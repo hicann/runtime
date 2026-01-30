@@ -63,7 +63,7 @@ rtError_t NtyRecord(Notify * const inNotify, Stream * const streamIn)
            inNotify->GetNotifyId(), inNotify->GetLastLocalId(), inNotify->GetLastBaseAddr(), streamIn->Device_()->Id_());
 
     bool isIpc = false;
-    if (inNotify->IsIpcNotify()) {
+    if (inNotify->IsIpcNotify() && (inNotify->IsIpcCreator() == false)) {
         isIpc = true;
     }
     SingleBitNotifyRecordInfo singleInfo = {isIpc, false, inNotify->GetLastIsPcie(), inNotify->IsPod(),
