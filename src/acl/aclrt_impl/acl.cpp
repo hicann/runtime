@@ -205,8 +205,8 @@ namespace {
             const std::string& typeName = entry.second;
 
             aclError ret = SetPrintFifoSizeByType(configPath, limitType, typeName);
-            if (ret == ACL_ERROR_FAILURE) {
-                return ret; // 如果返回 ACL_ERROR_FAILURE，直接返回错误
+            if (ret != ACL_SUCCESS) {
+                return ret;
             }
         }
         return ACL_SUCCESS;

@@ -35,6 +35,7 @@
 #include "error_code.h"
 #include "task_execute_time.h"
 #include "ffts_task.h"
+#include "printf.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1532,6 +1533,45 @@ rtError_t GetArgsInfo(TaskInfo* taskInfo)
     return RT_ERROR_NONE;
 }
 
+void HandleSimtPrintErrorInfo(Device * const dev) { 
+    const uint32_t fifoSize = dev->GetSimtPrintLen(); 
+    void* simtPrintfAddr = dev->GetSimtPrintfAddr(); 
+    if (simtPrintfAddr == nullptr) { 
+        RT_LOG(RT_LOG_WARNING, "Simt printf addr is nullptr, device_id=%u", dev->Id_()); 
+        return; 
+    } 
+    void *hostBlockSrc = nullptr; 
+    rtError_t error = dev->Driver_()->HostMemAlloc(&hostBlockSrc, fifoSize, dev->Id_()); 
+    if (error != RT_ERROR_NONE) { 
+        RT_LOG(RT_LOG_ERROR, "Malloc host memory for fifo d2h failed, retCode=%#x, device_id=%u",  
+            static_cast<uint32_t>(error), dev->Id_()); 
+        return; 
+    } 
+
+    // D2H拷贝 
+    error = dev->Driver_()->MemCopySync(hostBlockSrc, fifoSize, simtPrintfAddr, fifoSize,   
+        RT_MEMCPY_DEVICE_TO_HOST, false); 
+    if (error != RT_ERROR_NONE) { 
+        (void)dev->Driver_()->HostMemFree(hostBlockSrc); 
+        RT_LOG(RT_LOG_ERROR, "Memcpy failed, size=%lu(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x," 
+            " device_id=%u", fifoSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST),  
+            static_cast<uint32_t>(error), dev->Id_()); 
+        return; 
+    } 
+
+    // 解析头部信息 
+    const uint8_t * const blockAddr = RtPtrToPtr<const uint8_t * const>(hostBlockSrc); 
+    const BlockReadInfo *readInfo = RtPtrToPtr<const BlockReadInfo *>(blockAddr + sizeof(BlockInfo)); 
+    const BlockWriteInfo *writeInfo = 
+        RtPtrToPtr<const BlockWriteInfo *>(blockAddr + fifoSize - sizeof(BlockWriteInfo)); 
+
+    RT_LOG(RT_LOG_ERROR, "simt fifo block info, device_id=%u, simt readIdx=%llu, simt writeIdx=%llu," 
+        " write packIdx=%llu, simt print tlvCnt=%llu", dev->Id_(), readInfo->readIdx, writeInfo->writeIdx, 
+        writeInfo->packIdx, dev->GetSimtPrintTlvCnt()); 
+    (void)dev->Driver_()->HostMemFree(hostBlockSrc); 
+    return; 
+}
+
 void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     const uint32_t taskId = taskInfo->id;
@@ -1599,6 +1639,11 @@ void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
             "flip_num=%hu, fault kernel_name=%s, fault kernel info ext=%s, program id=%u, hash=%s.", devId, streamId,
             reportStream->Id_(), taskId, taskInfo->flipNum, kernelNameStr.c_str(), kernelInfoExt.c_str(),
             programPtr->Id_(), hashInfo.c_str());
+ 
+        Device * const dev = RtPtrToPtr<Device*>(taskInfo->stream->Device_()); 
+        if (dev->GetPrintSimtEnable()) { 
+            HandleSimtPrintErrorInfo(dev); 
+        }
     }
 }
 

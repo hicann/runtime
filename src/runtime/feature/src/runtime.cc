@@ -51,7 +51,6 @@
 #include "dev_info_manage.h"
 #include "global_state_manager.hpp"
 #include "kernel.hpp"
-#include "printf.hpp"
 
 namespace cce {
 namespace runtime {
@@ -6111,19 +6110,21 @@ rtError_t Runtime::SubscribeCallback(const uint64_t threadId, Stream *stm, void 
 
 rtError_t Runtime::SetSimdPrintFifoSize(uint32_t val)
 {
-    constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val <= MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
-    val, "greater than " + std::to_string(MIN_FIFO_PRINTF_SIZE));
-    printblockLen_ = val;
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((val < SIMD_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE, 
+        val, "[" + std::to_string(SIMD_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
+    uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
+    printblockLen_ = assignVal;
+    RT_LOG(RT_LOG_DEBUG, "Set simd printf fifo size succ, origin val=%u, assgin val=%u", val, printblockLen_);
     return RT_ERROR_NONE;
 }
 
 rtError_t Runtime::SetSimtPrintFifoSize(uint32_t val)
 {
-    constexpr uint32_t MIN_FIFO_PRINTF_SIZE = sizeof(BlockInfo) + sizeof(DumpInfoHead) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(val <= MIN_FIFO_PRINTF_SIZE, RT_ERROR_INVALID_VALUE, 
-    val, "greater than " + std::to_string(MIN_FIFO_PRINTF_SIZE));
-    simtPrintLen_ = val;
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((val < SIMT_MIN_FIFO_PRINTF_SIZE || val > MAX_FIFO_PRINTF_SIZE), RT_ERROR_INVALID_VALUE, 
+        val, "[" + std::to_string(SIMT_MIN_FIFO_PRINTF_SIZE) + ", " + std::to_string(MAX_FIFO_PRINTF_SIZE) + "]");
+    uint32_t assignVal = (val + PRINTF_FIFO_ASSIGN - 1) / PRINTF_FIFO_ASSIGN * PRINTF_FIFO_ASSIGN;
+    simtPrintLen_ = assignVal;
+    RT_LOG(RT_LOG_DEBUG, "Set simt printf fifo size succ, origin val=%u, assgin val=%u", val, simtPrintLen_);
     return RT_ERROR_NONE;
 }
 

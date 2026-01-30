@@ -55,6 +55,7 @@
 #include "davinci_kernel_task.h"
 #include "stub_task.hpp"
 #include "task_info.hpp"
+#include "printf.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -657,6 +658,55 @@ TEST_F(TaskTest, davinci_kernel_task_print6)
     PrintErrorInfo(&task, 0);
 
     rtStreamDestroy(stream);
+}
+
+TEST_F(TaskTest, davinci_kernel_task_print7)
+{
+    GlobalMockObject::verify();
+    TaskInfo task = {};
+    rtError_t error;
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    EXPECT_NE(rtInstance, nullptr);
+    rtInstance->SetSimtPrintFifoSize(1048576U);
+    EXPECT_EQ(rtInstance->GetSimtPrintFifoSize(), 1048576U);
+
+    RawDevice *device = new RawDevice(0);
+    EXPECT_NE(device, nullptr);
+    device->Init();
+    device->simtEnable_ = true;
+    Stream *stream = new Stream(device, 0);
+
+    InitByStream(&task, stream);
+    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
+
+    PlainProgram stubProg(Program::MACH_AI_CORE);
+    Program *program = &stubProg;
+    int32_t fun1;
+    Kernel * kernel = new Kernel(&fun1, "f1", 1, program, 10);
+    kernel->SetMixType(0);
+    AicTaskInfo *aicTaskInfo = &(task.u.aicTaskInfo);
+    aicTaskInfo->kernel = kernel;
+
+    Module module(device);
+    MOCKER_CPP(&Context::GetModule)
+        .stubs()
+        .will(returnValue(&module));
+    PrintErrorInfo(&task, 0);
+
+    device->simtPrintLen_ = 1048576U;
+    std::vector<uint8_t> hostData(1048576U, 0);
+    error = InitSimtPrintf(hostData.data(), 1048576U, device->driver_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->simtPrintfAddr_ = hostData.data();
+    PrintErrorInfo(&task, 0);
+
+    delete kernel;
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
 }
 
 TEST_F(TaskTest, base_task_print0)

@@ -69,7 +69,11 @@ constexpr uint32_t PRINT_SIMT = 1U;
 #define ELF_VERSION_MAGIC         0x5A5AU
 
 #define SIMD_FIFO_PER_CORE_SIZE_32K 32768U
-#define SIMT_FIFO_SIZE_1024K      1048576U
+#define SIMT_FIFO_SIZE_2M           (2U *1024U * 1024U)
+#define SIMD_MIN_FIFO_PRINTF_SIZE   1024U
+#define SIMT_MIN_FIFO_PRINTF_SIZE   (1024U * 1024U)
+#define MAX_FIFO_PRINTF_SIZE        (64U *1024U * 1024U) // simd与 simt print fifo 最大值
+#define PRINTF_FIFO_ASSIGN          8U
 
 #define GET_VERSION_MAGIC(val) (((val) >> 16U) & 0xFFFFU)
 #define GET_STACK_TYPE(val)    (((val) >> 8U) & 0xFFU)

@@ -232,7 +232,7 @@ const std::unordered_map<std::string,
 };
 
 const std::unordered_map<std::string,
-    std::function<void(const uint8_t *,std::string &, const uint32_t)>> PRINT_FORMAT_CALLS {
+    std::function<void(const uint8_t *,std::string &, const uint32_t)>> SIMD_PRINT_FORMAT_CALLS {
     {"d", &PrintFormatD},
     {"ld", &PrintFormatD},
     {"lld", &PrintFormatD},
@@ -280,7 +280,7 @@ std::string ParseFormat(const char *format)
 
 void ParsePrintToLog(const char *format, const uint8_t *paramBegin, const uint32_t paramNum, const bool isAssert, uint32_t flag)
 {
-    const auto& formatMap = (flag == PRINT_SIMT) ? SIMT_PRINT_FORMAT_CALLS : PRINT_FORMAT_CALLS;
+    const auto& formatMap = (flag == PRINT_SIMT) ? SIMT_PRINT_FORMAT_CALLS : SIMD_PRINT_FORMAT_CALLS;
     uint32_t paramIndex = 0U;
     std::string printInfo = "";
     while ((*format) != '\0') {
@@ -1003,9 +1003,11 @@ static rtError_t CollectDumpInfoFromBuffer(const uint8_t* dumpReadStartAddr,
 
     while (processedLen < totalReadBufLen) {
         const DumpInfoHead *dumpHead = RtPtrToPtr<const DumpInfoHead *>(dumpReadStartAddr + processedLen);
-        // 只处理 asset 和 print 类型，其他均视为无效类型
+        // packIdx和tlvCnt相等表示数据已经处理结束，只处理 asset 和 print 类型，其他均视为无效类型
         if ((packIdx == device->GetSimtPrintTlvCnt()) || 
             (dumpHead->type != DumpType::DUMP_SIMT_ASSERT && dumpHead->type != DumpType::DUMP_SIMT_PRINTF)) {
+            RT_LOG(RT_LOG_DEBUG, "collect dump info break, packIdx=%llu, tlvCnt=%llu, type %u", packIdx,
+                device->GetSimtPrintTlvCnt(), dumpHead->type);
             break;
         }
 

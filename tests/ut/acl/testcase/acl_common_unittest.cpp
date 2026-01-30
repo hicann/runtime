@@ -243,6 +243,12 @@ TEST_F(UTEST_ACL_Common, SetFifoSizeTest)
     ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_02.json");
     EXPECT_EQ(ret, ACL_ERROR_FAILURE);
 
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillRepeatedly(Return(0));
+    ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_03.json");
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
     ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_03.json");
     EXPECT_EQ(ret, ACL_SUCCESS);
     
