@@ -252,7 +252,7 @@ Context *ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 
     // 异构场景不支持隐式setdevice
     if (RtIsHeterogenous()) {
-        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogenous do not support set device.");
+        RT_LOG(RT_LOG_DEBUG, "current ctx is nullptr, Heterogenous does not support set device.");
         return nullptr;
     }
 
@@ -1890,14 +1890,14 @@ rtError_t ApiImpl::StreamSetMode(Stream * const stm, const uint64_t stmMode)
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    const uint64_t failmode = (stmMode & 0x1U);
     Stream * const curStm = stm;
     if (curStm->GetBindFlag()) {
-        RT_LOG(RT_LOG_ERROR, "stream binded with model, do not support set failure mode stream_id=%d.",
+        RT_LOG(RT_LOG_ERROR, "stream binded with model, does not support set failure mode stream_id=%d.",
             curStm->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
+    const uint64_t failmode = (stmMode & 0x1U);
     if (curStm->GetFailureMode() == failmode) {
         RT_LOG(RT_LOG_INFO, "input mode is same with the current mode which is %llu stream_id=%d.",
             failmode, curStm->Id_());
@@ -1905,14 +1905,14 @@ rtError_t ApiImpl::StreamSetMode(Stream * const stm, const uint64_t stmMode)
     }
 
     if ((curStm->GetFailureMode() == STOP_ON_FAILURE) && (failmode == CONTINUE_ON_FAILURE)) {
-        RT_LOG(RT_LOG_ERROR, "input mode is %llu, the current mode is Stop, do not support change stream_id=%d.",
+        RT_LOG(RT_LOG_ERROR, "input mode is %llu, the current mode is Stop, does not support change stream_id=%d.",
             failmode, curStm->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     // GetMode取到的是配置的模式,不会改变为Abort,当stm状态是Abort，但是配置还是Continue时，需要支持接口配置为Stop.
     const bool isStopSet = ((curStm->GetMode() & STREAM_FAILURE_MODE_MASK) == STOP_ON_FAILURE);
     if ((curStm->GetFailureMode() == ABORT_ON_FAILURE) && isStopSet) {
-        RT_LOG(RT_LOG_ERROR, "input mode is %llu, the current mode is Abort, do not support change stream_id=%d.",
+        RT_LOG(RT_LOG_ERROR, "input mode is %llu, the current mode is Abort, does not support change stream_id=%d.",
             failmode, curStm->Id_());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -7047,7 +7047,7 @@ rtError_t ApiImpl::ReleaseMemAddress(void* devPtr)
 rtError_t ApiImpl::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags)
 {
     /* 输出参数handle在上下文中作为一个整体使用, 内部的devid不用进行转换 */
-    RT_LOG(RT_LOG_INFO, "Start to MallocPhysical");
+    RT_LOG(RT_LOG_INFO, "Start to MallocPhysical, size=%zu", size);
     return NpuDriver::MallocPhysical(handle, size, prop, flags);
 }
 

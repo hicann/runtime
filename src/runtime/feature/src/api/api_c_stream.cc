@@ -316,9 +316,6 @@ VISIBILITY_DEFAULT
 rtError_t rtStreamGetMode(rtStream_t const stm, uint64_t * const stmMode)
 {
     const Stream * const exeStream = static_cast<Stream *>(stm);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->StreamGetMode(exeStream, stmMode);
@@ -521,8 +518,6 @@ RTS_API rtError_t rtSetStreamOverflowSwitch(rtStream_t stm, uint32_t flags)
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtGetStreamOverflowSwitch(rtStream_t stm, uint32_t *flags)
 {
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const targetStm = static_cast<Stream *>(stm);
@@ -629,8 +624,6 @@ VISIBILITY_DEFAULT
 rtError_t rtStreamAbort(rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 

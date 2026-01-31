@@ -113,8 +113,6 @@ rtError_t rtDeviceResourceClean(const int32_t devId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtError_t error = apiInstance->DeviceResourceClean(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

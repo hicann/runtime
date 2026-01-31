@@ -129,8 +129,6 @@ rtError_t rtsMemcpy2DAsync(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config,
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
 
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemCopy2DAsync(params->dst, params->dstPitch, params->src,

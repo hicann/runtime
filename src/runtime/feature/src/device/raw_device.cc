@@ -1018,7 +1018,7 @@ rtError_t RawDevice::Start()
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "get acc qos cfg failed, retCode=%#x, drv deviceId=%u.",
             static_cast<uint32_t>(error), deviceId_);
     } else {
-        RT_LOG(RT_LOG_WARNING, "Driver do not support the FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
+        RT_LOG(RT_LOG_WARNING, "Driver does not support FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
     }
 
     error = engine_->Start();
@@ -1428,7 +1428,7 @@ rtError_t RawDevice::DevSetLimit(const rtLimitType_t type, const uint32_t val)
 
 rtError_t RawDevice::DevSetTsId(const uint32_t taskSchId)
 {
-    RT_LOG(RT_LOG_INFO, "DevSetTsId, tsId=%u", taskSchId);
+    RT_LOG(RT_LOG_INFO, "tsId=%u", taskSchId);
     tsId_ = taskSchId;
     return RT_ERROR_NONE;
 }
@@ -2156,13 +2156,14 @@ rtError_t RawDevice::ParsePrintInfo()
 
 void RawDevice::WaitForParsePrintf() const
 {
-    RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread!");
     if (!engine_->isEnablePrintfThread()) {
         RT_LOG(RT_LOG_DEBUG, "The print thread is not enabled.");
         return;
     }
     uint64_t curParseCounter = parseCounter_;
     uint32_t i = 0;
+
+    RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread!");
     while (curParseCounter == parseCounter_) {
         if (i == WAIT_PRINTF_THREAD_TIME_MAX) {
             break;

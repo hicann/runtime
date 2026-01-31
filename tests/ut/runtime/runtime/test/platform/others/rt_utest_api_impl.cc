@@ -49,6 +49,7 @@
 #include "stream_c.hpp"
 #include "fast_recover.hpp"
 #include "rts.h"
+#include "heterogenous.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -700,6 +701,82 @@ TEST_F(ApiImplTest, rts_api_impl_test5)
 
     delete k1;
     delete stream;
+}
+
+TEST_F(ApiImplTest, api_StreamSetMode_test1)
+{
+    rtError_t error;
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    int32_t version = device->GetTschVersion();    
+    ApiImpl *impl = new ApiImpl();
+    Stream *stream = new Stream(device, 0);
+    stream->SetMode(STOP_ON_FAILURE);
+
+    // ts version not support
+    error = impl->StreamSetMode(stream, STOP_ON_FAILURE);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    // update ts version
+    device->SetTschVersion(TS_VERSION_SET_STREAM_MODE);
+
+    // stream bind to model
+    stream->SetBindFlag(true);
+    error = impl->StreamSetMode(stream, STOP_ON_FAILURE);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+    stream->SetBindFlag(false);  // restore bind flag
+
+    // mode-to-be-set is same with old
+    stream->SetFailureMode(STOP_ON_FAILURE);
+    error = impl->StreamSetMode(stream, STOP_ON_FAILURE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    // cur is STOP_ON_FAILURE, to-be-set is CONTINUE_ON_FAILURE
+    error = impl->StreamSetMode(stream, CONTINUE_ON_FAILURE);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    device->SetTschVersion(version);
+    delete stream;
+    delete impl;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ApiImplTest, api_StreamSetMode_test2)
+{
+    rtError_t error;
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    int32_t version = device->GetTschVersion();    
+    ApiImpl *impl = new ApiImpl();
+    Stream *stream = new Stream(device, 0);
+    stream->SetMode(STOP_ON_FAILURE);
+    stream->SetFailureMode(ABORT_ON_FAILURE);
+
+    // update ts version
+    device->SetTschVersion(TS_VERSION_SET_STREAM_MODE);
+
+    // mode is STOP_ON_FAILURE
+    // stream failmode is ABORT_ON_FAILURE
+    error = impl->StreamSetMode(stream, ABORT_ON_FAILURE);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    device->SetTschVersion(version);
+    delete stream;
+    delete impl;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ApiImplTest, api_CheckCurCtxValid_test)
+{
+    MOCKER(&RtIsHeterogenous).stubs().will(returnValue(true));
+    rtError_t error;
+    Runtime *rtInstance = ((Runtime *)Runtime::Instance());
+    rtInstance->SetDefaultDeviceId(0);
+
+    ApiImpl *impl = new ApiImpl();
+    error = impl->CheckCurCtxValid(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete impl;
+    GlobalMockObject::verify();
 }
 
 TEST_F(ApiImplTest, api_DvppGroupCreate)
