@@ -497,6 +497,8 @@ private:
     TSD_StatusT LoadFileAndWaitRsp(const std::string &pkgPureName, const std::string &hostPkgHash,
                                    const int32_t peerNode, const std::string &orgFile, const std::string &dstFile);
     TSD_StatusT GetCannHsPkgCheckCode(const std::string &pkgPureName, const std::string &hostPkgHash);
+    bool IsSupportCommonSink();
+
     std::string logLevel_;
     uint32_t tsdSessionId_;
     std::shared_ptr<HdcClient> hdcTsdClient_;

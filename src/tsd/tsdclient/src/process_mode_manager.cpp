@@ -197,10 +197,29 @@ TSD_StatusT ProcessModeManager::Close(const uint32_t flag)
     return TSD_OK;
 }
 
+bool ProcessModeManager::IsSupportCommonSink()
+{
+    if (!hasGetHostSoPath_) {
+        hostSoPath_ = GetHostSoPath();
+        hasGetHostSoPath_ = true;
+    }
+
+    if (!hostSoPath_.empty()) {
+        const std::string mutexFile = hostSoPath_ + MUTEX_FILE_PREFIX + "0.cfg";
+        if (CheckRealPath(mutexFile)) {
+            TSD_RUN_INFO("mutexFile[%s] found means supporting common sink", mutexFile.c_str());
+            return true;
+        }
+    }
+
+    TSD_INFO("hostSoPath is %s.", hostSoPath_.c_str());
+    return IsSupportCommonInterface(TSD_SUPPORT_COMMON_SINK_PKG_CONFIG);
+}
+
 TSD_StatusT ProcessModeManager::LoadSysOpKernel()
 {
     bool loadAicpuKernelFlag = true;
-    if (IsSupportCommonInterface(TSD_SUPPORT_COMMON_SINK_PKG_CONFIG)) {
+    if (IsSupportCommonSink()) {
         std::string packageTitle;
         (void)GetPackageTitle(packageTitle);
         std::string pkgName = packageTitle + "-aicpu_legacy.tar.gz";
@@ -1256,7 +1275,7 @@ TSD_StatusT ProcessModeManager::GetDeviceHsPkgCheckCode(const uint32_t checkCode
 
 TSD_StatusT ProcessModeManager::LoadRuntimePkgToDevice()
 {
-    if (IsSupportCommonInterface(TSD_SUPPORT_COMMON_SINK_PKG_CONFIG) &&
+    if (IsSupportCommonSink() &&
         (&drvHdcSendFileV2 != nullptr) &&
         (&drvHdcGetTrustedBasePathV2 != nullptr)) {
         LoadPackageConfigInfoToDevice();
@@ -2137,7 +2156,7 @@ TSD_StatusT ProcessModeManager::CloseNetService()
 
 TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
 {
-    if ((IsSupportCommonInterface(TSD_SUPPORT_COMMON_SINK_PKG_CONFIG) == false) ||
+    if ((IsSupportCommonSink() == false) ||
         (&drvHdcSendFileV2 == nullptr) ||
         (&drvHdcGetTrustedBasePathV2 == nullptr) ||
         IsAdcEnv()) {
@@ -2243,7 +2262,7 @@ bool ProcessModeManager::SupportLoadPkg(const std::string &pkgName) const
 
 TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
 {
-    if ((IsSupportCommonInterface(TSD_SUPPORT_COMMON_SINK_PKG_CONFIG) == false) ||
+    if ((IsSupportCommonSink() == false) ||
         (&drvHdcSendFileV2 == nullptr) ||
         (&drvHdcGetTrustedBasePathV2 == nullptr) ||
         IsAdcEnv()) {

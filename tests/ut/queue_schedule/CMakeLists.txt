@@ -8,5 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+include_directories(${OPEN_SOURCE_DIR}/boost-1.87.0)
 add_subdirectory(ut)
 add_subdirectory(st)
