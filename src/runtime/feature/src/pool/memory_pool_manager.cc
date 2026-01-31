@@ -155,5 +155,33 @@ void MemoryPoolManager::CheckAndReleasePools()
     }
 }
 
+std::mutex *MemoryPoolManager::GetMemoryPoolAdviseMutex(void *ptr)
+{
+    for (MemoryPool *pool : pools_) {
+        if (pool->Contains(ptr)) {
+            RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", ptr=%#" PRIx64 "",
+                device_->Id_(), pool, pool->GetAddr(), ptr);
+            return pool->GetMemoryPoolAdviseMutex();
+        }
+    }
+    
+    RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, ptr=%#" PRIx64 "", device_->Id_(), ptr);
+    return nullptr;
+}
+
+const void *MemoryPoolManager::GetMemoryPoolBaseAddr(void *ptr)
+{
+    for (MemoryPool *pool : pools_) {
+        if (pool->Contains(ptr)) {
+            RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", ptr=%#" PRIx64 "",
+                device_->Id_(), pool, pool->GetAddr(), ptr);
+            return pool->GetAddr();
+        }
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, ptr=%#" PRIx64 "", device_->Id_(), ptr);
+    return nullptr;
+}
+
 }  // namespace runtime
 }  // namespace cce

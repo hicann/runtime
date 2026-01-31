@@ -111,5 +111,11 @@ void *MemoryPool::AllocDevMem(const uint32_t size) const
     }
     return addr;
 }
+
+std::mutex *MemoryPool::GetMemoryPoolAdviseMutex()
+{
+    return &mutexAdviseMem_;
+}
+
 }  // namespace runtime
 }  // namespace cce

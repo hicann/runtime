@@ -1210,8 +1210,10 @@ static void ConstructAivSqePart(const T * const kernelInfo, RtDavidStarsAicAivKe
     sqe->aivQos = kernelInfo->qos;
     sqe->aivWrrRd = RT_DAVID_AIV_WRR_RD;
     sqe->aivWrrWr = RT_DAVID_AIV_WRR_WR;
-    sqe->schem = static_cast<uint16_t>(kernelInfo->schemMode);
+    sqe->schem = kernelInfo->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END) ?
+        static_cast<uint16_t>(RT_SCHEM_MODE_NORMAL) : static_cast<uint16_t>(kernelInfo->schemMode);
     sqe->ratio = 1U;            // only ratio is 1.
+    RT_LOG(RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u", kernelInfo->schemMode, sqe->schem, sqe->ratio);
 
     /* word8-9 */
     sqe->aicStartPcLow = 0U;
@@ -1439,9 +1441,10 @@ static void ConstructAicSqePart(T * const kernelInfo, RtDavidStarsAicAivKernelSq
     sqe->aivQos = 0U;
     sqe->aivWrrRd = 0U;
     sqe->aivWrrWr = 0U;
-    sqe->schem = static_cast<uint16_t>(kernelInfo->schemMode);
+    sqe->schem = kernelInfo->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END) ?
+        static_cast<uint16_t>(RT_SCHEM_MODE_NORMAL) : static_cast<uint16_t>(kernelInfo->schemMode);
     sqe->ratio = 1U;            // only ratio is 1.
-    RT_LOG(RT_LOG_INFO, "set cfgInfo schemMode=%u, ratio=%u", kernelInfo->schemMode, sqe->ratio);
+    RT_LOG(RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u", kernelInfo->schemMode, sqe->schem, sqe->ratio);
 
     /* word8-9 */
     sqe->aicStartPcLow = static_cast<uint32_t>(funcAddr);
@@ -1531,8 +1534,10 @@ static void ConstructDavidMixSqeForDavinciTask(TaskInfo *taskInfo, rtDavidSqe_t 
     }
 
     SetMixStartPcAndParam(taskInfo, command);
-    sqe->schem = static_cast<uint16_t>(aicTaskInfo->schemMode);
+    sqe->schem = aicTaskInfo->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END) ?
+        static_cast<uint16_t>(RT_SCHEM_MODE_NORMAL) : static_cast<uint16_t>(aicTaskInfo->schemMode);
     sqe->ratio = 1U;            // only ratio is 1.
+    RT_LOG(RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u", aicTaskInfo->schemMode, sqe->schem, sqe->ratio);
     if (sqe->mix == 1U) {
         sqe->ratio = taskRation;    // ratio from elf
         if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == DEFAULT_TASK_RATION)) {
@@ -1706,8 +1711,10 @@ static void ConstructMixSubSqe(const TaskInfo *const taskInfo, rtDavidSqe_t * co
 
     SetMixStartPcAndParamForFusionKernel(taskInfo, sqeAddr);
 
-    sqe->schem = static_cast<uint16_t>(aicPart->schemMode);
+    sqe->schem = aicPart->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END) ?
+        static_cast<uint16_t>(RT_SCHEM_MODE_NORMAL) : static_cast<uint16_t>(aicPart->schemMode);
     sqe->ratio = 1U;            // only ratio is 1.
+    RT_LOG(RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u", aicPart->schemMode, sqe->schem, sqe->ratio);
     if (sqe->mix == 1U) {
         sqe->ratio = taskRation;    // ratio from elf
         if ((sqe->header.type == RT_DAVID_SQE_TYPE_AIC) && (sqe->ratio == DEFAULT_TASK_RATION)) {

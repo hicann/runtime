@@ -31,7 +31,7 @@ public:
     void *AllocDevMem(const uint32_t size) const;
     
     // 分配内存
-    void* Allocate(size_t size);
+    void *Allocate(size_t size);
 
     // 释放内存
     void Release(void* address, size_t size);
@@ -43,19 +43,23 @@ public:
 
     bool GetReadOnlyFlag() const;
  
-    const void* GetAddr() const;
+    const void *GetAddr() const;
+
+    std::mutex *GetMemoryPoolAdviseMutex();
 private:
     // 内存块链表
     MemoryList* memoryList_ = nullptr;
 
     // 内存池起始地址
-    void* addr_ = nullptr;
+    void *addr_ = nullptr;
 
     Device *device_ = nullptr;
     Driver *driver_ = nullptr;
     // 已使用的内存大小
     size_t usedSize_ = 0U;
     bool isReadOnly_ = false;
+
+    std::mutex mutexAdviseMem_;
 };
 }
 }

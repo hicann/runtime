@@ -38,6 +38,9 @@ public:
     void CheckAndReleasePools();
 
     bool Contains(void* ptr);
+
+    std::mutex *GetMemoryPoolAdviseMutex(void* ptr);
+    const void *GetMemoryPoolBaseAddr(void *ptr);
 private:
     // 创建一个新的内存池并增加池的数量
     rtError_t AddMemoryPool(const bool readOnly);

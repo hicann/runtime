@@ -5126,6 +5126,21 @@ rtError_t Runtime::GetUserDevIdByDeviceId(const uint32_t deviceId, uint32_t * co
     return RT_ERROR_NONE;
 }
 
+static void BinaryMemFree(const Device * const device, Program * const prog, uint32_t alignSize)
+{
+    Driver * const curDrv = device->Driver_();
+
+    if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
+        device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
+    } else {
+        (void)curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
+    }
+    prog->SetBinBaseAddr(nullptr, device->Id_());
+    prog->SetBinAlignBaseAddr(nullptr, device->Id_());
+
+    return;
+}
+
 rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
 {
     void *devMem = nullptr;
@@ -5135,6 +5150,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     uint32_t alignSize = 0U;
     rtError_t error = RT_ERROR_NONE;
     Driver * const curDrv = device->Driver_();
+    bool isPoolMem = true;
 
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NULL);
     size = prog->LoadSize();
@@ -5154,11 +5170,13 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL)) {
         alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
         devMem = device->GetKernelMemoryPool()->Allocate(static_cast<size_t>(alignSize), readonly);
+        isPoolMem = true;
     }
 
     if (devMem == nullptr) {
         error = curDrv->DevMemAlloc(&devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE),
             RT_MEMORY_HBM, device->Id_(), DEFAULT_MODULEID, true, readonly);
+        isPoolMem = false;
     }
     TIMESTAMP_END(rtBinaryLoad_DevMemAlloc);
 
@@ -5177,21 +5195,16 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     }
     prog->SetBinAlignBaseAddr(devMem, device->Id_());
 
-    TIMESTAMP_BEGIN(rtBinaryLoad_MemCopySync);
-    error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(size), data,
-        static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
-    TIMESTAMP_END(rtBinaryLoad_MemCopySync);
+    if (isPoolMem) {
+        error = prog->BinaryPoolMemCopySync(devMem, size, data, device, readonly);
+    } else {
+        error = prog->BinaryMemCopySync(devMem, size, data, device, readonly);
+    }
+
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR,  "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
             size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
-
-        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
-            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
-        } else {
-            (void)curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
-        }
-        prog->SetBinBaseAddr(nullptr, device->Id_());
-        prog->SetBinAlignBaseAddr(nullptr, device->Id_());
+        BinaryMemFree(device, prog, alignSize);
         return error;
     }
 
