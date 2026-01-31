@@ -23,7 +23,7 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。<br>不支持传NULL（表示默认Stream）。 |
+| stream | 输入 | 指定Stream。 |
 | stmAttrType | 输入 | 属性类型。 |
 | value | 输出 | 属性值。 |
 

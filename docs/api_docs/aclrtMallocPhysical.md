@@ -38,10 +38,30 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 
 ## 约束说明
 
--   当前版本仅支持申请ACL\_HBM\_MEM\_HUGE（2M粒度对齐的大页内存）、ACL\_HBM\_MEM\_HUGE1G（1G粒度对齐的大页内存）、ACL\_HBM\_MEM\_NORMAL（普通页内存）类型的内存。即使传入ACL\_HBM\_MEM\_NORMAL类型，系统内部也会按照ACL\_HBM\_MEM\_HUGE类型申请大页内存。
+-   针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，当内存所在位置aclrtPhysicalMemProp.location.type = ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA，且内存属性类型aclrtPhysicalMemProp.aclrtMemAttr为P2P选项（例如ACL\_MEM\_P2P\_HUGE）时，可申请到的最大内存大小根据服务器型号、Bios版本会有所不同。建议通过aclrtMallocPhysic接口按内存规划尝试申请，以确认内存是否足够。
+-   内存属性类型aclrtPhysicalMemProp.aclrtMemAttr当前仅支持如下选项：
+    -   ACL\_MEM\_NORMAL：普通内存。
+    -   ACL\_MEM\_HUGE：2M粒度对齐的大页内存。
+    -   ACL\_MEM\_HUGE1G：1G粒度对齐的大页内存，仅支持Device。
 
-    各产品型号对ACL\_HBM\_MEM\_HUGE1G选项的支持情况不同，如下：
+        仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
 
-    -   Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持该选项。
-    -   Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持该选项。
+    -   ACL\_MEM\_P2P\_NORMAL：用于Device间数据复制的普通内存。
+    -   ACL\_MEM\_P2P\_HUGE：用于Device间数据复制的大页内存，内存申请粒度为2M。
+    -   ACL\_MEM\_P2P\_HUGE1G：用于Device间数据复制的大页内存，内存申请粒度为1G，仅支持Device。
+
+        仅Atlas A3 训练系列产品/Atlas A3 推理系列产品中的部分互联形态支持该类型，以接口实际返回情况为准。
+
+        其它型号当前不支持该类型。
+
+    -   ACL\_HBM\_MEM\_HUGE：2M粒度对齐的大页内存。
+    -   ACL\_HBM\_MEM\_HUGE1G：1G粒度对齐的大页内存，仅支持Device。
+
+        Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
+
+    -   ACL\_HBM\_MEM\_NORMAL：普通内存，接口内部会按照ACL\_HBM\_MEM\_HUGE类型申请大页内存。
+    -   ACL\_DDR\_MEM\_HUGE：大页内存，仅支持Host内存。
+    -   ACL\_DDR\_MEM\_NORMAL：普通内存，仅支持Host内存。
+    -   ACL\_DDR\_MEM\_P2P\_HUGE：用于Device间数据复制的大页内存，仅支持Host内存。
+    -   ACL\_DDR\_MEM\_P2P\_NORMAL：用于Device间数据复制的普通内存，仅支持Host内存。
 

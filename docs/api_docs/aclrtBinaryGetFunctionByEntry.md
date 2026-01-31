@@ -6,6 +6,8 @@
 
 根据Function Entry获取核函数句柄。
 
+对于同一个binHandle，首次调用aclrtBinaryGetFunctionByEntry接口时，会默认将binHandle关联的算子二进制数据拷贝至当前Context对应的Device上。
+
 ## 函数原型
 
 ```

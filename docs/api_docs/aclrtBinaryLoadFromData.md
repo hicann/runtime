@@ -10,7 +10,7 @@
 
 ## 功能说明
 
-从内存加载并解析算子二进制数据，同时默认将算子二进制数据拷贝至当前Context对应的Device上，输出指向算子二进制的binHandle。
+从内存加载并解析算子二进制数据，输出指向算子二进制的binHandle。
 
 调用本接口用于加载AI CPU算子信息（aclrtBinaryLoadOption.type包含ACL\_RT\_BINARY\_LOAD\_OPT\_CPU\_KERNEL\_MODE）时，还需配合使用[aclrtRegisterCpuFunc](aclrtRegisterCpuFunc.md)接口注册AI CPU算子。
 

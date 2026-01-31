@@ -15,7 +15,7 @@
 ## 函数原型
 
 ```
-aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t blockDim, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
+aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)
 ```
 
 ## 参数说明
@@ -24,7 +24,7 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t bloc
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | funcHandle | 输入 | 核函数句柄。 |
-| blockDim | 输入 | 指定核函数将会在几个核上执行。 |
+| numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
 | stream | 输入 | 指定执行任务的Stream。 |
 | cfg | 输入 | 任务下发的配置信息。<br>不指定配置时，此处可传NULL。 |
 | hostArgs | 输入 | 存放核函数所有入参数据的Host内存地址指针。 |
@@ -44,5 +44,7 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t bloc
 | 接口 | 核函数参数值的传入方式 | 核函数参数值的存放位置 | 是否可指定任务下发的配置信息 |
 | --- | --- | --- | --- |
 | [aclrtLaunchKernel](aclrtLaunchKernel.md) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 否 |
+| [aclrtLaunchKernelV2](aclrtLaunchKernelV2.md) | 在接口中指定存放核函数所有入参数据的Device内存地址指针 | Device内存 | 是 |
 | [aclrtLaunchKernelWithConfig](aclrtLaunchKernelWithConfig.md) | 在接口中指定参数列表句柄aclrtArgsHandle | Host内存 | 是 |
+| [aclrtLaunchKernelWithHostArgs](aclrtLaunchKernelWithHostArgs.md) | 在接口中指定存放核函数所有入参数据的Host内存地址指针 | Host内存 | 是 |
 
