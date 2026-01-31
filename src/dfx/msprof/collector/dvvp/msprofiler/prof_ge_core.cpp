@@ -44,9 +44,9 @@ Status aclgrphProfInit(CONST_CHAR_PTR profilerPath, uint32_t length)
     }
 
     if (ProfAclInit(ACL_GRPH_API_TYPE, profilerPath, length) != 0) {
-        return FAILED;
+        return GE_PROF_FAILED;
     }
-    return SUCCESS;
+    return GE_PROF_SUCCESS;
 }
 
 Status aclgrphProfFinalize()
@@ -185,26 +185,26 @@ Status aclgrphProfDestroyConfig(ACL_GRPH_PROF_CONFIG_PTR profilerConfig)
         MSPROF_LOGE("Destroy profilerConfig failed, profilerConfig must not be nullptr");
         MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config"}),
             std::vector<std::string>({"profilerConfig"}));
-        return FAILED;
+        return GE_PROF_FAILED;
     }
     delete profilerConfig;
     MSPROF_LOGI("Successfully destroy prof config.");
-    return SUCCESS;
+    return GE_PROF_SUCCESS;
 }
 
 Status aclgrphProfStart(ACL_GRPH_PROF_CONFIG_PTR profilerConfig)
 {
     if (ProfAclStart(ACL_GRPH_API_TYPE, &profilerConfig->config) != 0) {
-        return FAILED;
+        return GE_PROF_FAILED;
     }
-    return SUCCESS;
+    return GE_PROF_SUCCESS;
 }
 
 Status aclgrphProfStop(ACL_GRPH_PROF_CONFIG_PTR profilerConfig)
 {
     if (ProfAclStop(ACL_GRPH_API_TYPE, &profilerConfig->config) != 0) {
-        return FAILED;
+        return GE_PROF_FAILED;
     }
-    return SUCCESS;
+    return GE_PROF_SUCCESS;
 }
 } // namespace ge

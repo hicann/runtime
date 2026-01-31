@@ -21,9 +21,12 @@
 #include <string>
 #include <vector>
 
-#include "ge_common/ge_api_error_codes.h"
-
 namespace ge {
+ using Status = uint32_t;
+ 	 
+static const uint32_t GE_PROF_SUCCESS = 0;
+static const uint32_t GE_PROF_FAILED = 4700059007;
+
 enum ProfDataTypeConfig {
     kProfTaskTime       = 0x0002,
     kProfAiCoreMetrics  = 0x0004,
