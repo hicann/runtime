@@ -309,6 +309,7 @@ int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t *rangeId) con
     }
     auto &stampInfo = stamp->txInfo.value.stampInfo;
     stampInfo.startTime = Platform::instance()->PlatformSysCycleTime();
+    stamp->isEnable = 1;
     *rangeId = stampPool_->GetIdByStamp(stamp);
     MSPROF_LOGD("[RangeStart] save stamp success, rangeId is %u", *rangeId);
     return PROFILING_SUCCESS;

@@ -70,6 +70,7 @@ int32_t ProfStampPool::Init(uint32_t size)
             node->next = g_stampPoolHandle->memPool + i + 1;
         }
         node->txInfo.infoType = 0;
+        node->isEnable = 0;
         node->txInfo.value.stampInfo.processId = static_cast<uint32_t>(OsalGetPid());
         node->txInfo.value.stampInfo.dataTag = MSPROF_MSPROFTX_DATA_TAG;
         node->txInfo.value.stampInfo.magicNumber = static_cast<uint16_t>(MSPROF_DATA_HEAD_MAGIC_NUM);
@@ -177,7 +178,12 @@ MsprofStampInstance* ProfStampPool::GetStampById(uint32_t id) const
     if (id >= CURRENT_STAMP_SIZE) {
         return nullptr;
     }
-    return g_stampInstanceAddr[id];
+
+    if (g_stampInstanceAddr[id] != nullptr && g_stampInstanceAddr[id]->isEnable) {
+        return g_stampInstanceAddr[id];
+    }
+    
+    return nullptr;
 }
 
 int32_t ProfStampPool::GetIdByStamp(const MsprofStampInstance* const stamp) const
