@@ -156,7 +156,6 @@ enum RtDavidCoreErrorType : std::uint16_t {
 constexpr uint32_t TS_SDMA_STATUS_DDRC_ERROR = 0x8U;
 constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
-constexpr uint32_t DIE_ID_SHIFT_BITS = 5U;
 }
 
 enum RtAixSubErrorType : std::uint8_t {
@@ -659,7 +658,7 @@ static void GetExceptionArgsForFusionKernelTask(const TaskInfo * const taskInfo,
     return;
 }
 
-static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, RtDavidStarsCcuSqe * const ccuSqe,
+static void SetCcuExceptionSqeInfo(rtCcuSqeDetailInfo_t * const sqeInfo, RtDavidStarsCcuSqe * const ccuSqe,
     uint32_t inputIdx, uint32_t outputIdx)
 {
     uint64_t* args = sqeInfo[outputIdx].args;
@@ -679,70 +678,6 @@ static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, RtD
     return;
 }
 
-static void ParseCcuDfxInfo(rtMultiCCUExDetailInfo_t * const multiCcuInfo, const StarsDeviceErrorInfo * const info)
-{
- 	std::unordered_map<uint32_t, const StarsCcuDfxInfo*> dfxInfoMap;
- 	for (uint8_t idx = 0U; idx < info->u.ccuErrorInfo.comm.coreNum; idx++) {
- 	    const StarsCcuDfxInfo *dfxInfo = &(info->u.ccuErrorInfo.dfxInfo[idx]);
- 	    uint32_t key = (dfxInfo->dieId) << DIE_ID_SHIFT_BITS | (dfxInfo->missionId);
- 	    dfxInfoMap.emplace(key, dfxInfo);
- 	}
- 	for (uint8_t idx = 0U; idx < multiCcuInfo->ccuMissionNum; idx++) {
- 	    uint8_t dieId = multiCcuInfo->missionInfo[idx].dieId;
- 	    uint8_t missionId = multiCcuInfo->missionInfo[idx].missionId;
- 	    uint32_t key = dieId << DIE_ID_SHIFT_BITS | missionId;
- 	    auto it = dfxInfoMap.find(key);
- 	    if (it != dfxInfoMap.end()) {
- 	        const StarsCcuDfxInfo *dfxInfo = it->second;
- 	        multiCcuInfo->missionInfo[idx].status = dfxInfo->status;
- 	        multiCcuInfo->missionInfo[idx].subStatus = dfxInfo->subStatus;
- 	        int ret = memcpy_s(multiCcuInfo->missionInfo[idx].panicLog, MAX_CCU_EXCEPTION_INFO_SIZE,
- 	            dfxInfo->panicLog, MAX_CCU_EXCEPTION_INFO_SIZE);
- 	        if (ret != 0) {
- 	            RT_LOG(RT_LOG_ERROR, "memcpy failed, die_id=%u, mission_id=%u", dieId, missionId);
- 	        }
- 	    }
- 	}
- 	RT_LOG(RT_LOG_ERROR, "parse ccu dfx info, core_num=%u, mission_num=%u.", info->u.ccuErrorInfo.comm.coreNum,
- 	    multiCcuInfo->ccuMissionNum);
-}
-
-static void HandleFusionKernelCcuException(rtExceptionExpandInfo_t * const expandInfo, const TaskInfo * const taskInfo,
- 	const StarsDeviceErrorInfo * const info, rtDavidSqe_t *sqe)
-{
- 	rtFusionExDetailInfo_t* fusionDetail = &(expandInfo->u.fusionInfo);
- 	fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum = taskInfo->u.fusionKernelTask.ccuSqeNum;
- 	if (taskInfo->u.fusionKernelTask.ccuArgSize == RT_CCU_SQE32B_ARGS_SIZE) {
- 	    COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > FUSION_SUB_TASK_MAX_CCU_NUM,
- 	        "32B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
- 	    RtDavidStarsCcuSqe32B *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe32B *, rtDavidSqe_t *>(sqe);
- 	    for (uint8_t idx = 0U; idx < taskInfo->u.fusionKernelTask.ccuSqeNum; idx++) {
- 	        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].dieId = ccuSqe[idx].resv.ccuResvDesc1.dieId;
- 	        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].instrId = ccuSqe[idx].instStartId;
- 	        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].missionId = ccuSqe[idx].resv.ccuResvDesc1.missionId;
- 	        (void)memcpy_s(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].args, sizeof(uint64_t),
- 	            ccuSqe[idx].usrData, sizeof(uint64_t));
- 	        RT_LOG(RT_LOG_ERROR, "32B:coreNum=%u, dieId=%hhu, missionId=%hhu, instrId=%hu, args=%#x.",
- 	            info->u.ccuErrorInfo.comm.coreNum,
- 	            fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].dieId,
- 	            fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].missionId,
- 	            fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].instrId,
- 	            fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].args[0U]);
- 	    }
- 	} else {
- 	    COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > 2U,
- 	        "128B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
- 	    RtDavidStarsCcuSqe *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe *, rtDavidSqe_t *>(sqe);
- 	    uint8_t idx = 0U;
- 	    for (uint8_t num = 0U; num < taskInfo->u.fusionKernelTask.ccuSqeNum; num++) {
- 	        SetCcuExceptionSqeInfo(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo, ccuSqe, static_cast<uint32_t>(idx), 
- 	            static_cast<uint32_t>(num));
- 	        idx += 2U;
- 	    }
- 	}
- 	ParseCcuDfxInfo(&(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg), info);
-}
-
 static void ParseAndGetCcuExceptionInfo(rtExceptionExpandInfo_t * const expandInfo, const TaskInfo * const taskInfo,
     const StarsDeviceErrorInfo * const info)
 {
@@ -750,13 +685,49 @@ static void ParseAndGetCcuExceptionInfo(rtExceptionExpandInfo_t * const expandIn
     if (taskInfo->type == TS_TASK_TYPE_CCU_LAUNCH) {
         COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > 1U,
             "ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
-        expandInfo->u.ccuInfo.ccuMissionNum = 1U;
+        expandInfo->u.ccuInfo.ccuTaskNum = 1U;
+        expandInfo->u.ccuInfo.panicLogNum = info->u.ccuErrorInfo.comm.coreNum;
         RtDavidStarsCcuSqe *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe *, rtDavidSqe_t *>(sqe);
         /* ccu launch only has 1 ccu task */
-        SetCcuExceptionSqeInfo(expandInfo->u.ccuInfo.missionInfo, ccuSqe, 0U, 0U);
-        ParseCcuDfxInfo(&(expandInfo->u.ccuInfo), info);
+        SetCcuExceptionSqeInfo(expandInfo->u.ccuInfo.sqeInfo, ccuSqe, 0U, 0U);
+        (void)memcpy_s(expandInfo->u.ccuInfo.panicLog[0U], MAX_CCU_EXCEPTION_INFO_SIZE,
+            info->u.ccuErrorInfo.panicLog[0U], MAX_CCU_EXCEPTION_INFO_SIZE);
     } else if (taskInfo->type == TS_TASK_TYPE_FUSION_KERNEL) {
-        HandleFusionKernelCcuException(expandInfo, taskInfo, info, sqe);
+        rtFusionExDetailInfo_t* fusionDetail = &(expandInfo->u.fusionInfo);
+        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.ccuTaskNum = taskInfo->u.fusionKernelTask.ccuSqeNum;
+        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.panicLogNum = info->u.ccuErrorInfo.comm.coreNum;
+        if (taskInfo->u.fusionKernelTask.ccuArgSize == RT_CCU_SQE32B_ARGS_SIZE) {
+            COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > FUSION_SUB_TASK_MAX_CCU_NUM,
+                "32B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
+            RtDavidStarsCcuSqe32B *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe32B *, rtDavidSqe_t *>(sqe);
+            for (uint8_t idx = 0U; idx < taskInfo->u.fusionKernelTask.ccuSqeNum; idx++) {
+                fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].dieId = ccuSqe[idx].resv.ccuResvDesc1.dieId;
+                fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].instrId = ccuSqe[idx].instStartId;
+                fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].missionId = ccuSqe[idx].resv.ccuResvDesc1.missionId;
+                (void)memcpy_s(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].args, sizeof(uint64_t),
+                    ccuSqe[idx].usrData, sizeof(uint64_t));
+                RT_LOG(RT_LOG_ERROR, "32B:coreNum=%u, dieId=%hhu, missionId=%hhu, instrId=%hu, args=%#x.",
+                    info->u.ccuErrorInfo.comm.coreNum,
+                    fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].dieId,
+                    fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].missionId,
+                    fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].instrId,
+                    fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo[idx].args[0U]);
+            }
+        } else {
+            COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > 2U,
+                "128B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
+            RtDavidStarsCcuSqe *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe *, rtDavidSqe_t *>(sqe);
+            uint8_t idx = 0U;
+            for (uint8_t num = 0U; num < taskInfo->u.fusionKernelTask.ccuSqeNum; num++) {
+                SetCcuExceptionSqeInfo(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.sqeInfo, ccuSqe, static_cast<uint32_t>(idx), 
+                    static_cast<uint32_t>(num));
+                idx += 2U;
+            }
+        }
+        for (uint8_t idx = 0U; idx < info->u.ccuErrorInfo.comm.coreNum; idx++) {
+            (void)memcpy_s(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.panicLog[idx], MAX_CCU_EXCEPTION_INFO_SIZE,
+                info->u.ccuErrorInfo.panicLog[idx], MAX_CCU_EXCEPTION_INFO_SIZE);
+        }
     }
 }
 
@@ -804,7 +775,7 @@ static void TaskFailCallBackForCcuTask(const TaskInfo * const taskInfo, const ui
     exceptionInfo.tid = threadId;
     exceptionInfo.deviceid = deviceId;
     expandInfo->type = RT_EXCEPTION_CCU;
-    RT_LOG(RT_LOG_WARNING, "ccu kernel task: stream_id=%d, exception_task_id=%u, expandType=%u, retCode=%#x.",
+    RT_LOG(RT_LOG_WARNING, "fusion kernel task: stream_id=%d, exception_task_id=%u, expandType=%u, retCode=%#x.",
         streamId, exceptionInfo.taskid, expandInfo->type, exceptionInfo.retcode);
 
     TaskFailCallBackNotify(&exceptionInfo);
@@ -855,6 +826,24 @@ rtError_t ProcessDavidStarsWaitTimeoutErrorInfo(const StarsDeviceErrorInfo * con
     }
 
     const uint8_t type = info->u.timeoutErrorInfo.waitType;
+    if (type == RT_DAVID_SQE_TYPE_FUSION) {
+        RT_LOG_CALL_MSG(ERR_MODULE_TBE, "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
+            "fusion wait timeout occurred during task execution, stream_id:%hu, sq_id:%hu, task_pos:%hu, "
+            "sub_type=%u, timeout=%us.", info->u.timeoutErrorInfo.chipId, info->u.timeoutErrorInfo.dieId, errorNumber,
+            info->u.timeoutErrorInfo.streamId, info->u.timeoutErrorInfo.sqId, info->u.timeoutErrorInfo.taskId,
+            info->u.timeoutErrorInfo.wait.fusionInfo.subType, info->u.timeoutErrorInfo.wait.fusionInfo.timeout);
+        TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), info);
+    }
+    if (type == RT_DAVID_SQE_TYPE_CCU) {
+        RT_LOG_CALL_MSG(ERR_MODULE_TBE, "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
+            "ccu wait timeout occurred during task execution, stream_id=%hu, sq_id=%hu, task_pos=%hu, mission_id=%hu, "
+            "dieid=%u, ccu_size=%u, timeout=%us.",
+            info->u.timeoutErrorInfo.chipId, info->u.timeoutErrorInfo.dieId, errorNumber,
+            info->u.timeoutErrorInfo.streamId, info->u.timeoutErrorInfo.sqId, info->u.timeoutErrorInfo.taskId,
+            info->u.timeoutErrorInfo.wait.ccuInfo.missionId, info->u.timeoutErrorInfo.wait.ccuInfo.dieId,
+            info->u.timeoutErrorInfo.wait.ccuInfo.ccuSize, info->u.timeoutErrorInfo.wait.ccuInfo.timeout);
+        TaskFailCallBackForCcuTask(errTaskPtr, dev->Id_(), info);
+    }
     if (type == RT_DAVID_SQE_TYPE_NOTIFY_WAIT) {
         RT_LOG_CALL_MSG(ERR_MODULE_SYSTEM, "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
             "wait timeout occurred during task execution, stream_id:%hu, sq_id:%hu, task_pos:%hu, "
