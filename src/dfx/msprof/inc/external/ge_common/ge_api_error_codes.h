@@ -8,13 +8,13 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef INC_EXTERNAL_GE_COMMON_RUNTIME_API_ERROR_CODES_H_
-#define INC_EXTERNAL_GE_COMMON_RUNTIME_API_ERROR_CODES_H_
+#ifndef INC_EXTERNAL_GE_COMMON_GE_API_ERROR_CODES_H_
+#define INC_EXTERNAL_GE_COMMON_GE_API_ERROR_CODES_H_
 
 #include <map>
 #include <string>
 #include "ge_error_codes.h"
-#include "runtime_api_types.h"
+#include "ge_api_types.h"
 #include "graph/ascend_string.h"
 
 #ifdef __GNUC__
@@ -123,4 +123,4 @@ GE_ERRORNO(0b11, 0b11, 0b111, 0xFFU, 0b11111, FAILED, 0xFFFU, "failed"); /*lint 
 namespace ge {
   GE_ERRORNO_DEFINE(0b01, 0b01, 0b000, 8, 0, END_OF_SEQUENCE, 7);
 }
-#endif  // INC_EXTERNAL_GE_COMMON_RUNTIME_API_ERROR_CODES_H_
+#endif  // INC_EXTERNAL_GE_COMMON_GE_API_ERROR_CODES_H_

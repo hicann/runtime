@@ -53,8 +53,6 @@ target_include_directories(acl_rt_impl PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${RUNTIME_DIR}/pkg_inc
-    ${RUNTIME_DIR}/pkg_inc/runtime
-    ${RUNTIME_DIR}/pkg_inc/runtime/runtime
     ${RUNTIME_DIR}/pkg_inc/dump
     ${RUNTIME_DIR}/src
     ${RUNTIME_DIR}/src/dfx/error_manager
