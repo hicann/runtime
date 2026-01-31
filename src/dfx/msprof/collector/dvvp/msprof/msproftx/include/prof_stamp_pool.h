@@ -26,6 +26,7 @@ constexpr uint32_t CURRENT_STAMP_SIZE = 100;
 
 struct MsprofStampInstance {
     MsprofTxInfo txInfo;
+    int8_t isEnable;
     int32_t id;
     struct MsprofStampInstance* next;
     struct MsprofStampInstance* prev;
