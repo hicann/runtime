@@ -23,7 +23,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定待停止任务的Stream。<br>不支持传NULL，否则返回报错。<br>不支持使用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口来绑定模型运行实例的Stream。 |
+| stream | 输入 | 指定待停止任务的Stream。<br>不支持使用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口来绑定模型运行实例的Stream。 |
 
 ## 返回值说明
 

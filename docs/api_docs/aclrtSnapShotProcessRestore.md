@@ -1,5 +1,7 @@
 # aclrtSnapShotProcessRestore
 
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
 ## 产品支持情况
 
 
@@ -27,4 +29,8 @@ aclError aclrtSnapShotProcessRestore()
 ## 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
+
+## 约束说明
+
+恢复和备份需要在同一个Device上（指Device ID相同）。恢复时，若Device被其他进程占用，则恢复失败。
 

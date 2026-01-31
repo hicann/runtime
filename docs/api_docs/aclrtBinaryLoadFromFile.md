@@ -10,9 +10,9 @@
 
 ## 功能说明
 
-从文件加载并解析算子二进制文件，同时将算子二进制文件数据拷贝至当前Context对应的Device上，输出指向算子二进制的binHandle。
+从文件加载并解析算子二进制文件，输出指向算子二进制的binHandle。
 
-对于AI Core算子，若使用本接口加载并解析算子二进制文件，需配套使用[aclrtLaunchKernelWithConfig](aclrtBinaryLoadFromFile.md)、[aclrtLaunchKernelV2](aclrtLaunchKernelV2.md)、[aclrtLaunchKernelWithHostArgs](aclrtLaunchKernelWithHostArgs.md)接口下发计算任务。
+对于AI Core算子，若使用本接口加载并解析算子二进制文件，需配套使用[aclrtLaunchKernelWithConfig](aclrtBinaryLoadFromFile.md)、[aclrtLaunchKernelV2](aclrtLaunchKernelV2.md)或[aclrtLaunchKernelWithHostArgs](aclrtLaunchKernelWithHostArgs.md)接口下发计算任务。
 
 ## 函数原型
 
