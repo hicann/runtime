@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef INC_EXTERNAL_GE_GE_PROF_H_
-#define INC_EXTERNAL_GE_GE_PROF_H_
+#ifndef INC_EXTERNAL_RUNTIME_RUNTIME_PROF_H_
+#define INC_EXTERNAL_RUNTIME_RUNTIME_PROF_H_
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 #define MSVP_PROF_API __declspec(dllexport)
@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ge_common/ge_api_error_codes.h"
+#include "ge_common/runtime_api_error_codes.h"
 
 namespace ge {
 enum ProfDataTypeConfig {
@@ -106,4 +106,4 @@ MSVP_PROF_API Status aclgrphProfStop(aclgrphProfConfig *profiler_config);
 
 }  // namespace ge
 
-#endif  // INC_EXTERNAL_GE_GE_PROF_H_
+#endif  // INC_EXTERNAL_RUNTIME_RUNTIME_PROF_H_
