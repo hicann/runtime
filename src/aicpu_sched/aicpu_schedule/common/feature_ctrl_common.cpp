@@ -22,4 +22,5 @@ bool FeatureCtrl::aicpuFeatureSetModelNullData_ = true;
 uint16_t FeatureCtrl::tsMsgVersion_ = 0;
 std::atomic<bool> FeatureCtrl::isSetTsMsgVersion_ = false;
 bool FeatureCtrl::aicpuFeatureUseMsqV2_ = false;
+bool FeatureCtrl::isNeedBatchLoadSo_ = true;
 }

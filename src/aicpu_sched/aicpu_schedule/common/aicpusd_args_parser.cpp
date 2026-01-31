@@ -212,6 +212,21 @@ namespace AicpuSchedule {
         return true;
     }
 
+    bool ArgsParser::ParseAicpuProcNum(const std::string &para) 
+    {
+        uint32_t val = 0;
+        if (!AicpuUtil::TransStrToUint(para, val)) {
+            return false;
+        }
+
+        if (val < 0) {
+            return false;
+        }
+
+        aicpuProcNum_ = val;
+        return true;
+    }
+
     bool ArgsParser::ParseGrpNameNum(const std::string &para)
     {
         int32_t val = 0;
@@ -265,7 +280,8 @@ namespace AicpuSchedule {
             << ", profilingMode=" << profilingMode_ << ", vfId=" << vfId_ << ", logLevel=" << logLevel_
             << ", ccecpulogLevel=" << ccecpulogLevel_ << ", aicpulogLevel=" << aicpulogLevel_
             << ", deviceMode=" << deviceMode_ << ", aicpuSchedMode=" << aicpuSchedMode_
-            << ", hostProcName=" << hostProcName_ << ", grpNameNum=" << grpNameNum_ << ", grpNameList=[";
+            << ", hostProcName=" << hostProcName_ << ", grpNameNum=" << grpNameNum_ << ", aicpuProcNum=" << aicpuProcNum_
+            << ", grpNameList=[";
 
         for (const std::string &iter : grpNameList_) {
             oss << iter << ",";

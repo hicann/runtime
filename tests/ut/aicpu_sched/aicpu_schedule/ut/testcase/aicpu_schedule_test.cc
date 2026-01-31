@@ -3790,6 +3790,39 @@ TEST_F(AICPUScheduleTEST, RegQueueScheduleModuleCallBack_Fail2) {
     GlobalMockObject::verify();
 }
 
+TEST_F(AICPUScheduleTEST, SetBatchLoadMode_Succ) {
+    char processName[] = "aicpu_scheduler";
+    char paramDeviceIdOk[] = "--deviceId=1";
+    char paramPidOk[] = "--pid=2";
+    char paramPidSignOk[] = "--pidSign=12345A";
+    char paramModeOk[] = "--profilingMode=1";
+    char paramLogLevelOk[] = "--logLevelInPid=0";
+    char paramGrpNameOk[] = "--groupNameList=Grp1,Grp2";
+    char paramGrpNumOk[] = "--groupNameNum=2";
+    char paramDeviceModel[] = "--deviceMode=0";
+    char aicpuProcNum[] = "--aicpuProcNum=49";
+    uint64_t rest = 0;
+    MOCKER(system).stubs().will(returnValue(0));
+    MOCKER(halGrpAttach).stubs().will(returnValue(0));
+    MOCKER(dlopen).stubs().will(returnValue((void *)(&rest)));
+    MOCKER(dlsym).stubs().will(invoke(dlsymStubAicpuSdMain));
+    MOCKER(dlclose).stubs().will(invoke(dlcloseStub));
+    MOCKER(halGetDeviceCountFromChip).stubs().will(returnValue(0));
+    MOCKER(halGetDeviceFromChip).stubs().will(returnValue(0));
+    MOCKER(halBuffInit).stubs().will(returnValue(0));
+    MOCKER(StartupResponse).stubs().will(returnValue(0));
+    MOCKER(RegEventMsgCallBackFunc).stubs().will(returnValue(1));
+
+    char* argv[] = {processName, paramDeviceIdOk, paramPidOk, paramPidSignOk, paramModeOk, paramLogLevelOk, paramGrpNameOk, paramGrpNumOk, paramDeviceModel, aicpuProcNum};
+    int32_t argc = 10;
+    MOCKER_CPP(&AicpuScheduleInterface::InitAICPUScheduler)
+        .stubs()
+        .will(returnValue(0));
+    int32_t ret = ComputeProcessMain(argc, argv);
+    EXPECT_EQ(ret, 0);
+    GlobalMockObject::verify();
+}
+
 TEST_F(AICPUScheduleTEST, FFTSPlusProcessInputDump_baseaddr_null_threadId_over) {
     OpDumpTask task(0, 0);
     ::toolkit::dumpdata::OpInput *opInput = task.baseDumpData_.add_input();

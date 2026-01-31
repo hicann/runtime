@@ -225,6 +225,7 @@ TEST_F(AicpuSdArgsParserTest, GetParaParsedStrSuccess)
     std::string expectedParsedStr = "deviceId=1, hostPid=2, pidSign=00000, profilingMode=1, vfId=3, logLevel=4, ";
     expectedParsedStr.append("ccecpulogLevel=-1, aicpulogLevel=-1, ")
                      .append("deviceMode=6, aicpuSchedMode=0, hostProcName=runtime_test, grpNameNum=3, ")
+                     .append("aicpuProcNum=0, ")
                      .append("grpNameList=[GrpA,_Grp_B,__--*Grp_C,]");
     EXPECT_STREQ(argsParser.GetParaParsedStr().c_str(), expectedParsedStr.c_str());
 }
@@ -494,6 +495,19 @@ TEST_F(AicpuSdArgsParserTest, ParseGrpNameListSuccess)
     for (uint32_t i = 0; i < grpName.size(); i++) {
         EXPECT_STREQ(grpName[i].c_str(), expectedGrpName[i].c_str());
     }
+}
+
+TEST_F(AicpuSdArgsParserTest, ParseAicpuProcNumSuccess)
+{
+    ArgsParser argsParser;
+    const std::string para = "33";
+    bool ret = argsParser.ParseAicpuProcNum(para);
+    EXPECT_EQ(ret, true);
+    uint32_t proNum =  argsParser.GetAicpuProcNum();
+    EXPECT_EQ(proNum, 33);
+    const std::string paraabc = "abc";
+    ret = argsParser.ParseAicpuProcNum(paraabc);
+    EXPECT_EQ(ret, false);
 }
 
 TEST_F(AicpuSdArgsParserTest, ParseHostProcNameSuccess)

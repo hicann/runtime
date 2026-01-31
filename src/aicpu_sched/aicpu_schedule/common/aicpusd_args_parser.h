@@ -33,6 +33,7 @@ namespace {
     const std::string PARAM_GRP_NAME_LIST = "--groupNameList=";
     const std::string PARAM_HOST_PROC_NAME = "--hostProcName=";
     const std::string PARAM_QSGRP_NAME_LIST = "--qsInitGroupName=";
+    const std::string PARAM_AICPU_PROC_NUM = "--aicpuProcNum=";
     constexpr int32_t ERROR_LOG = 3;
     constexpr int32_t EVENT_LOG = 1;
     constexpr int32_t DEBUG_LOG = 0;
@@ -46,8 +47,8 @@ namespace {
     public:
         ArgsParser() : deviceId_(0U), hostPid_(0U), pidSign_(""), profilingMode_(0U), vfId_(0U),
                        logLevel_(ERROR_LOG), eventLevel_(EVENT_LOG), ccecpulogLevel_(-1), aicpulogLevel_(-1),
-                       deviceMode_(0U), aicpuSchedMode_(SCHED_MODE_INTERRUPT), grpNameNum_(0U), grpNameList_({}),
-                       hostProcName_({}), qsGrpNameList_({}), withDeviceId_(false), withHostPid_(false),
+                       deviceMode_(0U), aicpuSchedMode_(SCHED_MODE_INTERRUPT), grpNameNum_(0U), aicpuProcNum_(0U),
+                       grpNameList_({}), hostProcName_({}), qsGrpNameList_({}), withDeviceId_(false), withHostPid_(false),
                        withPidSign_(false), withGrpNameNum_(false), withGrpNameList_(false),
                        argsParseFuncMap_({{PARAM_DEVICEID, &ArgsParser::ParseDeviceId},
                                           {PARAM_HOST_PID, &ArgsParser::ParseHostPid},
@@ -62,7 +63,9 @@ namespace {
                                           {PARAM_GRP_NAME_NUM, &ArgsParser::ParseGrpNameNum},
                                           {PARAM_GRP_NAME_LIST, &ArgsParser::ParseGrpNameList},
                                           {PARAM_HOST_PROC_NAME, &ArgsParser::ParseHostProcName},
-                                          {PARAM_QSGRP_NAME_LIST, &ArgsParser::ParseQsGrpNameList}}) {};
+                                          {PARAM_QSGRP_NAME_LIST, &ArgsParser::ParseQsGrpNameList},
+                                          {PARAM_AICPU_PROC_NUM, &ArgsParser::ParseAicpuProcNum}})
+                                          {};
 
         ~ArgsParser() = default;
 
@@ -132,6 +135,11 @@ namespace {
             return grpNameNum_;
         }
 
+        inline uint32_t GetAicpuProcNum() const
+        {
+            return aicpuProcNum_;
+        }
+
         inline std::vector<std::string> GetGrpNameList() const
         {
             return grpNameList_;
@@ -164,6 +172,7 @@ namespace {
         bool ParseGrpNameList(const std::string &para);
         bool ParseHostProcName(const std::string &para);
         bool ParseQsGrpNameList(const std::string &para);
+        bool ParseAicpuProcNum(const std::string &para);
         static void SplitGrpNameList(const std::string &grpNamePara, std::vector<std::string> &grpNameList);
 
         ArgsParser(ArgsParser const &) = delete;
@@ -183,6 +192,7 @@ namespace {
         uint32_t deviceMode_;
         AicpuSchedMode aicpuSchedMode_;
         uint32_t grpNameNum_;
+        uint32_t aicpuProcNum_;
         std::vector<std::string> grpNameList_;
         std::string hostProcName_;
         std::vector<std::string> qsGrpNameList_;
