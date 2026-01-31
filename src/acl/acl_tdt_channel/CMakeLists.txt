@@ -23,6 +23,8 @@ target_include_directories(acl_tdt_channel PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_BINARY_DIR}/include_acl/tdt
+    ${RUNTIME_DIR}/pkg_inc/runtime/runtime
+ 	${RUNTIME_DIR}/src/inc
 )
 
 target_compile_options(acl_tdt_channel PRIVATE

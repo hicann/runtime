@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../inc/runtime/runtime_headers.cmake)
+include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 set(libruntime_cmodel_v100_task_src_files
     src/task/task.cc
@@ -106,7 +106,7 @@ set(libruntime_cmodel_v200_task_src_files
     src/task/v200/task_checker.cc
 )
 
-set(libruntime_cmodel_api_src_files
+set(libruntime_cmodel_api_src_files_cmodel
     src/api/api_c.cc
     src/api/api_c_context.cc
     src/api/api_c_device.cc
@@ -244,7 +244,7 @@ set(libruntime_cmodel_src_files
     src/api_impl/v100/api_impl_creator_c.cc
     src/device/ctrl_msg.cc
     src/device/ctrl_sq.cc
-    src/drv/v100/npu_driver.cc
+    src/drv/v100/
     src/config.cc
     src/device/device.cc
     src/device/raw_device.cc
@@ -314,7 +314,7 @@ set(libruntime_cmodel_src_files
     ${libruntime_cmodel_v100_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
-    ${libruntime_cmodel_stream_src_files}
+    ${libruntime_cmodel_stream_src_files_cmodel}
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
@@ -428,7 +428,7 @@ set(libruntime_cmodel_v200_src_files
     ${libruntime_cmodel_v200_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
-    ${libruntime_cmodel_v200_stream_src_files}
+    ${libruntime_cmodel_v200_stream_src_files_cmodel}
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
@@ -437,10 +437,8 @@ set(libruntime_cmodel_v200_src_files
     ${common_src_files_cmodel}
     src/api_impl/v201/api_impl_v200_adapt.cc
     ${xpu_tprt_api_file}
-    $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_cmodel_src_files_optional}>
-    $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_cmodel_api_src_files}>
-    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
-    $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_src_files_include_for_tiny}>
+    ${libruntime_cmodel_src_files_optional}
+ 	${libruntime_cmodel_api_src_files}
 )
 
 set(RUNTIME_CMODEL_INC_DIR_COMMON
@@ -544,6 +542,7 @@ add_library(runtime_model OBJECT
 target_include_directories(runtime_model PRIVATE
     ${RUNTIME_CMODEL_INC_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../cmodel_driver
+    ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
 )
 
 target_compile_definitions(runtime_model PRIVATE
@@ -594,6 +593,7 @@ add_library(runtime_model_v200 OBJECT
 target_include_directories(runtime_model_v200 PRIVATE
     ${RUNTIME_CMODEL_INC_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../cmodel_driver
+    ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
 )
 
 target_compile_definitions(runtime_model_v200 PRIVATE
@@ -655,9 +655,9 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         rt
         c_sec
         npu_drv_pvmodel_${product_type}
-        -Wl, --no-as-needed
+        -Wl,--no-as-needed
         unified_dlog
-        -Wl, --as-needed
+        -Wl,--as-needed
         json
         awatchdog_share
     )
@@ -701,9 +701,9 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         rt
         c_sec
         npu_drv_camodel_${product_type}
-        -Wl, --no-as-needed
+        -Wl,--no-as-needed
         unified_dlog
-        -Wl, --as-needed
+        -Wl,--as-needed
         json
         awatchdog_share
     )

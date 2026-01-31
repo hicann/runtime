@@ -20,6 +20,7 @@ SET(CMODEL_DRIVER_INCLUDE
     ${RUNTIME_DIR}/inc
     ${RUNTIME_DIR}/inc/external
     ${RUNTIME_DIR}/abl/libc_sec/include
+    ${RUNTIME_DIR}/include
     )
 
 foreach(product_type ${PRODUCT_TYPE_LIST})
