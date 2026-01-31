@@ -440,6 +440,7 @@ else()
     add_executable(aicpu_scheduler
         ${CMAKE_CURRENT_SOURCE_DIR}/execute/main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_args_parser.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/common/feature_ctrl_common.cpp
     )
 
     target_compile_definitions(aicpu_scheduler PRIVATE

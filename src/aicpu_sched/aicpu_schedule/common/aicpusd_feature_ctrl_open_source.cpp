@@ -93,7 +93,7 @@ bool FeatureCtrl::BindCpuOnlyOneDevice()
 
 bool FeatureCtrl::LoadKernelSo()
 {
-    return true;
+    return isNeedBatchLoadSo_;
 }
 
 bool FeatureCtrl::IfCheckEventSender()
