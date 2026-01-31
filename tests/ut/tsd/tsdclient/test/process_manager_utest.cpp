@@ -3181,3 +3181,45 @@ TEST_F(ProcessManagerTest, GetCurHostMutexFile)
 
     EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "sink_file_mutex_0.cfg");
 }
+
+TEST_F(ProcessManagerTest, IsSupportCommonSink_No_With_hostSoPathEmpty)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string emptyPath = "";
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath).stubs().will(returnValue(emptyPath));
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
+
+    EXPECT_FALSE(processModeManager.IsSupportCommonSink());
+}
+
+TEST_F(ProcessManagerTest, IsSupportCommonSink_No_With_hostSoPathInvalid)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string hostSoPath = "/usr/local/ascend/driver/";
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath).stubs().will(returnValue(hostSoPath));
+    MOCKER(CheckRealPath).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
+
+    EXPECT_FALSE(processModeManager.IsSupportCommonSink());
+}
+
+TEST_F(ProcessManagerTest, IsSupportCommonSink_Yes_With_hostSoPathValid)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string hostSoPath = "/usr/local/ascend/driver/";
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath).stubs().will(returnValue(hostSoPath));
+    MOCKER(CheckRealPath).stubs().will(returnValue(true));
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(false));
+
+    EXPECT_TRUE(processModeManager.IsSupportCommonSink());
+}
+
+TEST_F(ProcessManagerTest, IsSupportCommonSink_Yes_With_hostSoPathEmpty)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string emptyPath = "";
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath).stubs().will(returnValue(emptyPath));
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
+
+    EXPECT_TRUE(processModeManager.IsSupportCommonSink());
+}

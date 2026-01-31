@@ -15,6 +15,7 @@ set(AICPU_SCHED_PATH
 add_library(intf_aicpu_llt_pub INTERFACE)
 target_include_directories(intf_aicpu_llt_pub INTERFACE
   ${OPEN_SOURCE_DIR}/mockcpp_src/include
+  ${OPEN_SOURCE_DIR}/boost-1.87.0
 )
 target_compile_definitions(intf_aicpu_llt_pub INTERFACE
   _GLIBCXX_USE_CXX11_ABI=0
