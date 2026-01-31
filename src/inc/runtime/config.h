@@ -28,6 +28,19 @@ typedef enum tagRtAicpuScheType {
     SCHEDULE_HARDWARE, /* HWTS Schedule */
 } rtAicpuScheType;
 
+typedef enum tagRtDeviceCapabilityType {
+	RT_SCHEDULE_SOFTWARE = 0, // Software Schedule
+	RT_SCHEDULE_SOFTWARE_OPT,
+	RT_SCHEDULE_HARDWARE, // HWTS Schedule
+	RT_AICPU_BLOCKING_OP_NOT_SUPPORT,
+	RT_AICPU_BLOCKING_OP_SUPPORT, // 1910/1980/51 ts support AICPU blocking operation
+	RT_MODE_NO_FFTS, // no ffts
+	RT_MODE_FFTS, // 81 get ffts work mode, ffts
+	RT_MODE_FFTS_PLUS, // 81 get ffts work mode, ffts plus
+	RT_DEV_CAP_SUPPORT, // Capability Support
+	RT_DEV_CAP_NOT_SUPPORT, // Capability not support
+} rtDeviceCapabilityType;
+
 typedef enum tagRtCubeFracMKNFp16 {
     RT_CUBE_MKN_FP16_2_16_16 = 0,
     RT_CUBE_MKN_FP16_4_16_16,

@@ -67,17 +67,6 @@ RTS_API rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t de
  * @param [out] createCtx   created context
  * @param [in] flags   context creation flag. set to 0.
  * @param [in] devId    device to create context on
- * @param [in] deviceMode    the device mode
- * @return RT_ERROR_NONE for ok
- */
-RTS_API rtError_t rtCtxCreateV2(rtContext_t *createCtx, uint32_t flags, int32_t devId, rtDeviceMode deviceMode);
-
-/**
- * @ingroup rt_context
- * @brief create context and associates it with the calling thread
- * @param [out] createCtx   created context
- * @param [in] flags   context creation flag. set to 0.
- * @param [in] devId    device to create context on
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId);
