@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef INC_EXTERNAL_GE_COMMON_RUNTIME_API_TYPES_H_
-#define INC_EXTERNAL_GE_COMMON_RUNTIME_API_TYPES_H_
+#ifndef INC_EXTERNAL_GE_COMMON_GE_API_TYPES_H_
+#define INC_EXTERNAL_GE_COMMON_GE_API_TYPES_H_
 
 #include <cstdint>
 #include <string>
@@ -774,4 +774,4 @@ static const char_t *const OP_EXEC_NEVER_TIMEOUT = "_op_exec_never_timeout";
 } // public_attr
 }  // namespace ge
 #endif // GE_API_TYPES_DEF
-#endif  // INC_EXTERNAL_GE_COMMON_RUNTIME_API_TYPES_H_
+#endif  // INC_EXTERNAL_GE_COMMON_GE_API_TYPES_H_

@@ -201,37 +201,17 @@ typedef enum {
  */
 typedef void *rtBinHandle;
 
-typedef enum ErrRegInfoIdxV100 {
-    RT_V100_AIC_ERR_0 = 0,
-    RT_V100_AIC_ERR_1,
-    RT_V100_AIC_ERR_2,
-    RT_V100_AIC_ERR_3,
-    RT_V100_AIC_ERR_4,
-    RT_V100_AIC_ERR_5,
-    RT_V100_BIU_ERR_0,
-    RT_V100_BIU_ERR_1,
-    RT_V100_CCU_ERR_0,
-    RT_V100_CCU_ERR_1,
-    RT_V100_CUBE_ERR_0,
-    RT_V100_CUBE_ERR_1,
-    RT_V100_IFU_ERR_0,
-    RT_V100_IFU_ERR_1,
-    RT_V100_MTE_ERR_0,
-    RT_V100_MTE_ERR_1,
-    RT_V100_VEC_ERR_0,
-    RT_V100_VEC_ERR_1,
-    RT_V100_FIXP_ERR_0,
-    RT_V100_FIXP_ERR_1
-} rtErrRegInfoIdxV100_t;
-
-#define RT_ERR_REG_NUMS  (64U)
+#define ERR_REG_MAX_CORE_NUM 75U
 typedef struct rtExceptionErrRegInfo {
     uint32_t coreId;
     rtCoreType_t coreType;
-    uint64_t startPC;
-    uint64_t currentPC;
-    uint32_t errReg[RT_ERR_REG_NUMS];
+    uint32_t errReg[20];
 } rtExceptionErrRegInfo_t;
+
+typedef struct rtErrRegInfo {
+    uint32_t coreNum;
+    rtExceptionErrRegInfo_t exceptionErrReg[ERR_REG_MAX_CORE_NUM];
+} rtErrRegInfo_t;
 
 typedef struct rtExceptionKernelInfo {
     uint32_t binSize;
@@ -242,6 +222,7 @@ typedef struct rtExceptionKernelInfo {
     uint16_t dfxSize;
     uint8_t reserved[2]; // 填补空间以保持四字节对齐
     int32_t elfDataFlag;
+    rtErrRegInfo_t errRegInfo;  // 当前仅在device-v100上使用
 } rtExceptionKernelInfo_t;
 
 typedef struct rtExceptionArgsInfo {
@@ -657,18 +638,6 @@ RTS_API rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStat
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtRegTaskFailCallbackByModule(const char_t *moduleName, rtTaskFailCallback callback);
-
-/**
- * @ingroup dvrt_base
- * @brief get exception register info while core exception
- * @param [in] exceptionInfo used to find error register info
- * @param [out] exceptionErrRegInfo exception error register info array
- * @param [out] num the num of elements in the array
- * @return RT_ERROR_NONE for ok, errno for failed
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
-    rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num);
 
 /**
  * @ingroup dvrt_base

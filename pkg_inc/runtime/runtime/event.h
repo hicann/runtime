@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #define RT_IPCINT_MSGLEN_MAX     (0x8U)
+#define RT_IPC_EVENT_RSV         (0x37U)
 #define RT_IPC_HANDLE_SIZE       (64U)
 typedef enum rtEventWaitStatus {
     EVENT_STATUS_COMPLETE = 0,
@@ -32,7 +33,9 @@ typedef enum rtEventStatus {
 } rtEventStatus_t;
 
 typedef struct rtIpcEventHandle {
-    char reserved[RT_IPC_HANDLE_SIZE];
+    void* ipcHandle; // share ipc handle
+    uint8_t ipcType; // 1: ipc event; 2: ipc mem
+    uint8_t rsv[RT_IPC_EVENT_RSV];
 } rtIpcEventHandle_t;
 
 typedef enum {

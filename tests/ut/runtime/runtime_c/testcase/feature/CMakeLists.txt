@@ -7,7 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${TOP_DIR}/src/inc/runtime/runtime_headers.cmake)
 
 set(C_BASE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_base)
 set(C_MMPA_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_mmpa)

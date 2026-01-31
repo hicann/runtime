@@ -10,7 +10,7 @@
 #ifndef MSPROF_ENGINE_GE_CORE_H
 #define MSPROF_ENGINE_GE_CORE_H
 
-#include "runtime/runtime_prof.h"
+#include "ge/ge_prof.h"
 #include "prof_api_common.h"
 
 namespace ge {
