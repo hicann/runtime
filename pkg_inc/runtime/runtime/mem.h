@@ -1070,6 +1070,14 @@ typedef struct tagUbWqeInfo {
     uint16_t wqePtrLen;
 } rtUbWqeInfo_t;
 
+typedef enum tagAdviseMemType {
+    RT_ADVISE_PERSISTENT = 0,
+    RT_ADVISE_DEV_MEM = 1,
+    RT_ADVISE_ACCESS_READONLY = 2,
+    RT_ADVISE_ACCESS_READWRITE = 3,
+    RT_ADVISE_TYPE_MAX
+} rtAdviseMemType;
+
 /**
  * @ingroup rt_stars
  * @brief ub doorbell send
