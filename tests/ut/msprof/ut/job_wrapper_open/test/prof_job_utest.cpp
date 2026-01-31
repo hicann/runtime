@@ -1413,7 +1413,6 @@ TEST_F(JOB_WRAPPER_PROF_CTRLCPU_JOB_TEST, StoreData) {
     remove("./test");
 }
 
-
 class JOB_WRAPPER_PROF_SYSSTAT_JOB_TEST: public testing::Test {
 protected:
     virtual void SetUp() {
