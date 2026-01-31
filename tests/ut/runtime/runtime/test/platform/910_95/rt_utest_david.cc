@@ -1822,18 +1822,17 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell_DoCompleteSuccess)
 
 void TaskFailCallBackForFusionKernelTask32B(rtExceptionInfo_t *exceptionInfo)
 {
-    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuTaskNum, 8U);
-    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.panicLogNum, 4U);
+    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum, 8U);
     EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_FUSION);
     EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.type, RT_FUSION_AICORE_CCU);
-    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuTaskNum;
+    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum;
          idx++) {
         rtFusionAICoreCCUExDetailInfo_t info = exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo;
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].dieId, (idx % 2U));
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].instrId, idx + 2U);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].missionId, idx + 4U);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].args[0], 0xFFFFFFFFFFFFFFFF);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].args[1], 0U);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].dieId, (idx % 2U));
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].instrId, idx + 2U);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].missionId, idx);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].args[0], 0xFFFFFFFFFFFFFFFF);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].args[1], 0U);
     }
 }
 
@@ -1888,7 +1887,7 @@ TEST_F(DavidTaskTest, ccu_task_dev_error_proc_for_fusion_32B)
     for (uint8_t idx = 0U; idx < task.u.fusionKernelTask.ccuSqeNum; idx++) {
         ccuSqe[idx].resv.ccuResvDesc1.dieId = (idx % 2U);
         ccuSqe[idx].instStartId = idx + 2U;
-        ccuSqe[idx].resv.ccuResvDesc1.missionId = idx + 4U;
+        ccuSqe[idx].resv.ccuResvDesc1.missionId = idx;
         ccuSqe[idx].usrData[0U] = 0xFFFFFFFF;
         ccuSqe[idx].usrData[1U] = 0xFFFFFFFF;
     }
@@ -1906,18 +1905,17 @@ TEST_F(DavidTaskTest, ccu_task_dev_error_proc_for_fusion_32B)
 
 void TaskFailCallBackForFusionKernelTask128B(rtExceptionInfo_t *exceptionInfo)
 {
-    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuTaskNum, 2U);
-    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.panicLogNum, 2U);
+    EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum, 2U);
     EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_FUSION);
     EXPECT_EQ(exceptionInfo->expandInfo.u.fusionInfo.type, RT_FUSION_AICORE_CCU);
-    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuTaskNum;
+    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum;
          idx++) {
         rtFusionAICoreCCUExDetailInfo_t info = exceptionInfo->expandInfo.u.fusionInfo.u.aicoreCcuInfo;
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].dieId, (idx % 2U));
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].instrId, idx + 2U);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].missionId, idx + 4U);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].args[0], 0xFFFFFFFFFFFFFFFF);
-        EXPECT_EQ(info.ccuDetailMsg.sqeInfo[idx].args[1], 0U);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].dieId, (idx % 2U));
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].instrId, idx + 2U);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].missionId, idx + 4U);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].args[0], 0xFFFFFFFFFFFFFFFF);
+        EXPECT_EQ(info.ccuDetailMsg.missionInfo[idx].args[1], 0U);
     }
 }
 
@@ -2703,19 +2701,18 @@ TEST_F(DavidTaskTest, ProcessStarsSdmaErrorInfo03)
 
 void TaskFailCallBackForCcuTaskStub(rtExceptionInfo_t *exceptionInfo)
 {
-    EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.panicLogNum, 1U);
-    EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.ccuTaskNum, 1U);
+    EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.ccuMissionNum, 1U);
     EXPECT_EQ(exceptionInfo->expandInfo.type, RT_EXCEPTION_CCU);
-    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.ccuInfo.ccuTaskNum; idx++) {
-        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.sqeInfo[idx].dieId, 1U);
-        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.sqeInfo[idx].instrId, 2U);
-        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.sqeInfo[idx].missionId, 4U);
+    for (uint32_t idx = 0U; idx < exceptionInfo->expandInfo.u.ccuInfo.ccuMissionNum; idx++) {
+        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.missionInfo[idx].dieId, 1U);
+        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.missionInfo[idx].instrId, 2U);
+        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.missionInfo[idx].missionId, 4U);
     }
     for (uint8_t idx = 0U; idx < 5; idx++) {
-        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.sqeInfo[0U].args[idx], 0xFFFFFFFFFFFFFFFF);
+        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.missionInfo[0U].args[idx], 0xFFFFFFFFFFFFFFFF);
     }
     for (uint8_t idx = 5U; idx < 13U; idx++) {
-        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.sqeInfo[0U].args[idx], 0U);
+        EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.missionInfo[0U].args[idx], 0U);
     }
 }
 

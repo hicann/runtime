@@ -341,10 +341,18 @@ struct StarsHcclFftsplusTimeoutInfo {
     } contextInfo;
 };
 
+struct StarsCcuDfxInfo{
+ 	uint8_t dieId;
+ 	uint8_t missionId;
+ 	uint8_t status;
+ 	uint8_t subStatus;
+ 	uint8_t panicLog[MAX_CCU_EXCEPTION_INFO_SIZE];
+};
+
 struct StarsCcuErrorInfo {
     StarsErrorCommonInfo comm;
     rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX - 1U];
-    uint8_t panicLog[FUSION_SUB_TASK_MAX_CCU_NUM][MAX_CCU_EXCEPTION_INFO_SIZE];
+    StarsCcuDfxInfo dfxInfo[FUSION_SUB_TASK_MAX_CCU_NUM];
 };
 
 struct StarsFusionKernelErrorInfo {
