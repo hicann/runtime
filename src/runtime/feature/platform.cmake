@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../inc/runtime/runtime_headers.cmake)
+include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 
 set(RUNTIME_INC_DIR_COMMON_PLATFORM
@@ -73,6 +73,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/include
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
+    ${RUNTIME_DIR}/include/external/acl/error_codes
 )
 
 #------------------------- runtime platform -------------------------

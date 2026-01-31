@@ -194,6 +194,7 @@ typedef enum tagRtMemcpyChannelType {
     RT_MEMCPY_CHANNEL_TYPE_INNER = 0,  // 1P
     RT_MEMCPY_CHANNEL_TYPE_PCIe,
     RT_MEMCPY_CHANNEL_TYPE_HCCs,  // not support now
+    RT_MEMCPY_CHANNEL_TYPE_UB,
     RT_MEMCPY_CHANNEL_TYPE_RESERVED,
 } rtMemcpyChannelType_t;
 
