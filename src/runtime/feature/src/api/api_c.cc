@@ -224,8 +224,6 @@ rtError_t rtKernelGetAddrAndPrefCnt(void *hdl, const uint64_t tilingKey,
                                     const void * const stubFunc, const uint32_t flag,
                                     void **addr, uint32_t *prefetchCnt)
 {
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->KernelGetAddrAndPrefCnt(hdl, tilingKey, stubFunc, flag, addr, prefetchCnt);
@@ -771,8 +769,6 @@ rtError_t rtEventSynchronizeWithTimeout(rtEvent_t evt, const int32_t timeout)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     TIMESTAMP_BEGIN(rtEventSynchronizeWithTimeout);
     Event * const eventPtr = static_cast<Event *>(evt);
     const rtError_t error = apiInstance->EventSynchronize(eventPtr, timeout);
@@ -1057,15 +1053,11 @@ VISIBILITY_DEFAULT
 rtError_t rtMallocCached(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    rtError_t error;
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
     TIMESTAMP_BEGIN(rtMallocCached);
-    error = apiInstance->DevMalloc(devPtr, size, type, moduleId);
+    const rtError_t error = apiInstance->DevMalloc(devPtr, size, type, moduleId);
     TIMESTAMP_END(rtMallocCached);
     if (unlikely(error != RT_ERROR_NONE)) {
         return GetRtExtErrCodeAndSetGlobalErr(error);
@@ -1338,8 +1330,6 @@ rtError_t rtMemcpy2dAsync(void *dst, uint64_t dstPitch, const void *src, uint64_
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
 
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, exeStream, kind);
@@ -1355,14 +1345,13 @@ rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t devId)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (flags == RT_CTX_GEN_MODE) {
-        RT_LOG(RT_LOG_WARNING, "RT_CTX_GEN_MODE does not support");
+        RT_LOG(RT_LOG_WARNING, "RT_CTX_GEN_MODE is not supported.");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+
+    TIMESTAMP_NAME(__func__);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->ContextCreate(RtPtrToPtr<Context **>(createCtx), devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -1705,11 +1694,9 @@ rtError_t rtProfSetProSwitch(void *data, uint32_t len)
         }
     }
 
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
-        Api * const apiInstance = Api::Instance();
-        NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
         const rtError_t error = apiInstance->ProfilerStart(profilerConfig->profSwitch,
             static_cast<int32_t>(profilerConfig->devNums), profilerConfig->devIdList,
             profilerConfig->cacheFlag, profilerConfig->profSwitchHi);
@@ -1721,8 +1708,6 @@ rtError_t rtProfSetProSwitch(void *data, uint32_t len)
             Runtime::Instance()->SetL2CacheProfFlag(true);
         }
     } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
-        Api * const apiInstance = Api::Instance();
-        NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
         const rtError_t error = apiInstance->ProfilerStop(profilerConfig->profSwitch,
             static_cast<int32_t>(profilerConfig->devNums), profilerConfig->devIdList, profilerConfig->profSwitchHi);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1733,7 +1718,7 @@ rtError_t rtProfSetProSwitch(void *data, uint32_t len)
             Runtime::Instance()->SetL2CacheProfFlag(false);
         }
     } else {
-        RT_LOG(RT_LOG_INFO, "runtime isn't support type:%u", profilerConfig->type);
+        RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig->type);
     }
 
     return ACL_RT_SUCCESS;
@@ -2009,8 +1994,6 @@ rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallbac
 VISIBILITY_DEFAULT
 rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt)
 {
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetAiCoreCount(aiCoreCnt);
@@ -2022,8 +2005,6 @@ rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt)
 VISIBILITY_DEFAULT
 rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt)
 {
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetAiCpuCount(aiCpuCnt);
@@ -2063,8 +2044,6 @@ rtError_t rtNotifyDestroy(rtNotify_t notify)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
 
     TIMESTAMP_BEGIN(rtNotifyDestroy);
     Notify * const notifyPtr = static_cast<Notify *>(notify);
@@ -2101,8 +2080,6 @@ rtError_t rtResourceClean(int32_t devId, rtIdType_t type)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtError_t error = apiInstance->ResourceClean(devId, type);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2114,8 +2091,6 @@ rtError_t rtNotifyRecord(rtNotify_t notify, rtStream_t stm)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
 
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -2186,8 +2161,6 @@ rtError_t rtGetNotifyID(rtNotify_t notify, uint32_t *notifyId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
 
     Notify * const notifyPtr = static_cast<Notify *>(notify);
     const rtError_t error = apiInstance->GetNotifyID(notifyPtr, notifyId);
@@ -2226,8 +2199,6 @@ rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
 
     Notify * const notifyPtr = static_cast<Notify *>(notify);
     const rtError_t error = apiInstance->GetNotifyPhyInfo(notifyPtr, notifyInfo);
@@ -2340,7 +2311,7 @@ rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (flags == RT_CTX_GEN_MODE) {
-        RT_LOG(RT_LOG_WARNING, "RT_CTX_GEN_MODE does not support");
+        RT_LOG(RT_LOG_WARNING, "RT_CTX_GEN_MODE is not supported.");
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     Api * const apiInstance = Api::Instance();
@@ -2470,7 +2441,7 @@ rtError_t rtLabelCreateEx(rtLabel_t *lbl, rtStream_t stm)
 {
     UNUSED(lbl);
     UNUSED(stm);
-    RT_LOG(RT_LOG_WARNING, "feature not support");
+    RT_LOG(RT_LOG_WARNING, "feature is not supported");
     return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
@@ -2626,8 +2597,6 @@ rtError_t rtSetCtxINFMode(bool infMode)
 VISIBILITY_DEFAULT
 rtError_t rtSetDeviceWithoutTsd(int32_t devId)
 {
-    const auto rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance(API_ENV_FLAGS_NO_TSD);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_NAME(__func__);
@@ -2776,8 +2745,6 @@ rtError_t rtSetOpExecuteTimeOut(uint32_t timeout)
 VISIBILITY_DEFAULT
 rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout)
 {
-    const Runtime *const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->SetOpExecuteTimeOut(timeout, RT_TIME_UNIT_TYPE_MS);
@@ -3750,9 +3717,6 @@ VISIBILITY_DEFAULT
 rtError_t rtBinaryGetMetaInfo(const rtBinHandle binHandle, const rtBinaryMetaType type, void *data, const uint32_t length)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->BinaryGetMetaInfo(RtPtrToPtr<Program *>(binHandle), type, data, length);
@@ -3765,9 +3729,6 @@ VISIBILITY_DEFAULT
 rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionMetaType type, void *data, const uint32_t length)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->FunctionGetMetaInfo(RtPtrToPtr<const Kernel *>(funcHandle), type, data, length);
