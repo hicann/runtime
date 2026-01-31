@@ -16,6 +16,12 @@ namespace runtime {
 StreamSqCqManage::StreamSqCqManage(Device * const dev) : NoCopy(), device_(dev), normalCq_(UINT32_MAX) {}
 void StreamSqCqManage::FillStreamInfoEx(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const
 {
+    FillStreamAttrSimt(stm, infoEX);
+    FillStreamAttrDqsInterChip(stm, infoEX);
+}
+
+void StreamSqCqManage::FillStreamAttrSimt(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const
+{
     if (!stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
         return;
     }
@@ -27,12 +33,8 @@ void StreamSqCqManage::FillStreamInfoEx(const Stream * const stm, rtStreamInfoEx
     }
     if ((stm->Flags() & RT_STREAM_ACSQ_LOCK) != 0U) {
         infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_STREAM);
-        infoEX.body.streamFlag.u32 = 0x3U;
-    }
-    if (((stm->Flags() & RT_STREAM_DQS_INTER_CHIP) != 0U) && 
-        stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP)) {
-        infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_STREAM);
-        infoEX.body.streamFlag.bits.dqsInterChip = 1U;
+        infoEX.body.streamFlag.bits.sqLock = 1U;
+        infoEX.body.streamFlag.bits.waitLock = 1U;
     }
 
     const uint64_t stackPhyAddr = RtPtrToValue(stm->Device_()->GetSimtStackPhyBase());
@@ -46,6 +48,19 @@ void StreamSqCqManage::FillStreamInfoEx(const Stream * const stm, rtStreamInfoEx
            " WarpStkSize=%u, DvgWarpStkSize=%u.",
            infoEX.body.validFlag, infoEX.body.poolId, infoEX.body.poolIdMax, stackPhyAddr, 
            infoEX.body.kisSimtWarpStkSize, infoEX.body.kisSimtDvgWarpStkSize);
+}
+
+void StreamSqCqManage::FillStreamAttrDqsInterChip(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const
+{
+    if (!stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP) ||
+        ((stm->Flags() & RT_STREAM_DQS_INTER_CHIP) == 0U)) {
+        return;
+    }
+
+    infoEX.body.validFlag |= static_cast<uint64_t>(InfoExValidFlag::INFO_EX_BODY_FLAG_STREAM);
+    infoEX.body.streamFlag.bits.dqsInterChip = 1U;
+    RT_LOG(RT_LOG_DEBUG, "Alloc sq cq info, stream_id=%d, dqsInterChip=%u", stm->Id_(),
+        infoEX.body.streamFlag.bits.dqsInterChip);
 }
 
 rtError_t StreamSqCqManage::AllocStreamSqCq(const Stream * const newStm, const uint32_t priority, uint32_t drvFlag,

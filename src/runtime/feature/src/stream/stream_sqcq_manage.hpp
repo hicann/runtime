@@ -92,6 +92,8 @@ public:
     rtError_t AllocDavidStreamSqCq(const Stream * const newStm, const uint32_t priority, 
         uint32_t drvFlag, uint32_t &sqId, uint32_t &cqId, uint64_t &sqAddr);
     void FillStreamInfoEx(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const;
+    void FillStreamAttrDqsInterChip(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const;
+    void FillStreamAttrSimt(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const;
     rtError_t UpdateStreamSqCq(Stream *newStm);
     rtError_t ReAllocSqCqId(const Stream * const newStm);
     rtError_t DeAllocStreamSqCq(const uint32_t streamId, const uint32_t normalCqId, uint32_t drvFlag);
