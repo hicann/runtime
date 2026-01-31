@@ -64,7 +64,6 @@ Module::~Module() noexcept
 }
 
 TIMESTAMP_EXTERN(ModuleMemAlloc);
-TIMESTAMP_EXTERN(ModuleMemCpy);
 TIMESTAMP_EXTERN(ModuleLoadProgram);
 
 rtError_t Module::Load(Program * const prog)
@@ -77,6 +76,7 @@ rtError_t Module::Load(Program * const prog)
     rtError_t error = RT_ERROR_NONE;
     Driver * const curDrv = device_->Driver_();
     const rtChipType_t chipType = device_->GetChipType();
+    bool isPoolMem = true;
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NULL);
 
     const uint32_t machineType = prog->Machine();
@@ -129,11 +129,13 @@ rtError_t Module::Load(Program * const prog)
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN)) {
             alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
             devMem = device_->GetKernelMemoryPool()->Allocate(alignSize, readonly);
+            isPoolMem = true;
         }
 
         if (devMem == nullptr) {
             error = curDrv->DevMemAlloc(&devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE),
                 RT_MEMORY_HBM, device_->Id_(), DEFAULT_MODULEID, true, readonly);
+            isPoolMem = false;
             ERROR_GOTO(error, FAIL_FREE, "Malloc device program failed, retCode=%#x.", static_cast<uint32_t>(error));
         }
 
@@ -156,13 +158,15 @@ rtError_t Module::Load(Program * const prog)
             prog->SetBinAlignBaseAddr(devMem, device_->Id_());
         }
 
-        TIMESTAMP_BEGIN(ModuleMemCpy);
-        error = curDrv->MemCopySync(baseAddrAlign_, static_cast<uint64_t>(size), data,
-            static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
+        if (isPoolMem) {
+            error = prog->BinaryPoolMemCopySync(baseAddrAlign_, size, data, device_, readonly);
+        } else {
+            error = prog->BinaryMemCopySync(baseAddrAlign_, size, data, device_, readonly);
+        }
+
         ERROR_GOTO_MSG_INNER(error, FAIL_FREE, "Memcpy failed, size=%u(bytes),"
             "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
             size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
-        TIMESTAMP_END(ModuleMemCpy);
     }
     RT_LOG(RT_LOG_DEBUG, "Load on device addr=%p, size=%u(bytes), program id=%u.", baseAddrAlign_, size, prog->Id_());
     programId_ = prog->Id_();

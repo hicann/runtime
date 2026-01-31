@@ -279,3 +279,71 @@ TEST_F(MemoryPoolManagerTest, kernel_memory_pool_add_pool_fail)
     delete rawDrv;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
+
+TEST_F(MemoryPoolManagerTest, get_memory_pool_advise_mutex_fail)
+{
+    int32_t devId = -1;
+    rtError_t error;
+    Device *device;
+
+    NpuDriver * rawDrv = new NpuDriver();
+
+    void *memBase = (void*)100;
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    int64_t aiCpuCnt = 1;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetDevInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&aiCpuCnt, sizeof(aiCpuCnt)))
+        .will(returnValue(RT_ERROR_NONE));
+    error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device = ((Runtime *)Runtime::Instance())->DeviceRetain(devId, 0);
+
+    MemoryPoolManager* kernelMemPoolMng = new (std::nothrow) MemoryPoolManager(device);
+    std::mutex * adviseMutex = kernelMemPoolMng->GetMemoryPoolAdviseMutex(nullptr);
+    EXPECT_EQ(adviseMutex, nullptr);
+
+    delete kernelMemPoolMng;
+    delete rawDrv;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(MemoryPoolManagerTest, get_memory_pool_base_addr_fail)
+{
+    int32_t devId = -1;
+    rtError_t error;
+    Device *device;
+
+    NpuDriver * rawDrv = new NpuDriver();
+
+    void *memBase = (void*)100;
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    int64_t aiCpuCnt = 1;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetDevInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&aiCpuCnt, sizeof(aiCpuCnt)))
+        .will(returnValue(RT_ERROR_NONE));
+    error = rtGetDevice(&devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device = ((Runtime *)Runtime::Instance())->DeviceRetain(devId, 0);
+
+    MemoryPoolManager* kernelMemPoolMng = new (std::nothrow) MemoryPoolManager(device);
+    const void * baseAddr = kernelMemPoolMng->GetMemoryPoolBaseAddr(nullptr);
+    EXPECT_EQ(baseAddr, nullptr);
+
+    delete kernelMemPoolMng;
+    delete rawDrv;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}

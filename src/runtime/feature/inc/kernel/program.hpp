@@ -328,6 +328,10 @@ public:
     void SetProgramInvalidToDevice(const uint32_t deviceId);
     void SetDeviceSoAndNameInvalid(const uint32_t deviceId);
     bool IsDeviceSoAndNameValid(const uint32_t deviceId);
+    rtError_t BinaryMemCopySync(void * const devMem, const uint32_t size, void * const data,
+        const Device * const device, const bool readonly);
+    rtError_t BinaryPoolMemCopySync(void * const devMem, const uint32_t size, void * const data,
+        const Device * const device, const bool readonly);
 
     rtKernelArray_t *KernelTable_;
     uint32_t kernelCount_;

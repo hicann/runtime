@@ -1703,5 +1703,99 @@ rtError_t Program::FreeSoAndNameByDeviceId(const uint32_t deviceId)
     return error;
 }
 
+static rtError_t BinaryMemAdvise(void * const devMem, const uint32_t devSize, rtAdviseMemType adviseType,
+    const Device * const device, const bool readonly)
+{
+    if (!readonly) {
+        return RT_ERROR_NONE;
+    }
+
+    uint32_t devId = device->Id_();
+    Driver * const curDrv = device->Driver_();
+
+    rtError_t error = curDrv->MemAdvise(devMem, static_cast<uint64_t>(devSize), static_cast<uint32_t>(adviseType), devId);
+    // for compatibility between new and old packages, do not handle RT_ERROR_DRV_NOT_SUPPORT and RT_ERROR_DRV_INPUT.
+    if ((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT) && (error != RT_ERROR_DRV_INPUT)) {
+        RT_LOG(RT_LOG_ERROR, "advise memory, error=%u, dev_mem=%p, dev_size=%u, advise_type=%d, device_id=%u.", error, devMem, devSize, adviseType, devId);
+        return error;
+    }
+
+    RT_LOG(RT_LOG_INFO, "advise memory, dev_mem=%p, dev_size=%u, advise_type=%d, device_id=%u.", devMem, devSize, adviseType, devId);
+    return RT_ERROR_NONE;
+}
+
+TIMESTAMP_EXTERN(BinaryMemCpy);
+
+rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t size, void * const data,
+    const Device * const device, const bool readonly)
+{
+    uint32_t devId = device->Id_();
+    Driver * const curDrv = device->Driver_();
+
+    RT_LOG(RT_LOG_INFO, "binary memcpy to dev_mem, dev_mem=%p, size=%u, device_id=%u, readonly=%d.",
+        devMem, size, devId, readonly);
+
+    // in the UB scenario, read-only memory cannot be directly copied from host to device (H2D).
+    // the memory needs to be set as readable and writable first.
+    rtError_t error = BinaryMemAdvise(devMem, size, RT_ADVISE_ACCESS_READWRITE, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, size=%u(bytes),"
+        "type=%d(RT_ADVISE_ACCESS_READWRITE), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
+
+    TIMESTAMP_BEGIN(BinaryMemCpy);
+    error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(size), data,
+        static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
+    ERROR_RETURN_MSG_INNER(error, "memcpy failed, size=%u(bytes),"
+        "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
+    TIMESTAMP_END(BinaryMemCpy);
+
+    // after the host-to-device (H2D) transfer is completed, the memory needs to be set as read-only.
+    error = BinaryMemAdvise(devMem, size, RT_ADVISE_ACCESS_READONLY, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, size=%u(bytes),"
+        "type=%d(RT_ADVISE_ACCESS_READONLY), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
+    
+    return RT_ERROR_NONE;
+}
+
+rtError_t Program::BinaryPoolMemCopySync(void * const devMem, const uint32_t size, void * const data,
+    const Device * const device, const bool readonly)
+{
+    uint32_t devId = device->Id_();
+    Driver * const curDrv = device->Driver_();
+    // get the base address of the memory pool corresponding to the current memory.
+    void *tmpAddr = const_cast<void *>(device->GetKernelMemoryPool()->GetMemoryPoolBaseAddr(devMem));
+    void *const baseAddr = tmpAddr;
+    // lock the current memory pool block.
+    std::lock_guard<std::mutex> lock(*(device->GetKernelMemoryPool()->GetMemoryPoolAdviseMutex(devMem)));
+
+    RT_LOG(RT_LOG_INFO, "binary memcpy to pool_mem, dev_mem=%p, size=%u, device_id=%u, readonly=%d.",
+        devMem, size, devId, readonly);
+
+    // in the UB scenario, read-only memory cannot be directly copied from host to device (H2D).
+    // the memory needs to be set as readable and writable first.
+    rtError_t error = BinaryMemAdvise(baseAddr, size, RT_ADVISE_ACCESS_READWRITE, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise pool_mem failed, size=%u(bytes),"
+        "type=%d(RT_ADVISE_ACCESS_READWRITE), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
+
+    TIMESTAMP_BEGIN(BinaryMemCpy);
+    error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(size), data,
+        static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
+    ERROR_RETURN_MSG_INNER(error, "memcpy failed, size=%u(bytes),"
+        "type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error), devId);
+    TIMESTAMP_END(BinaryMemCpy);
+
+    // after the host-to-device (H2D) transfer is completed, the memory needs to be set as read-only.
+    error = BinaryMemAdvise(baseAddr, size, RT_ADVISE_ACCESS_READONLY, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise pool_mem failed, size=%u(bytes),"
+        "type=%d(RT_ADVISE_ACCESS_READONLY), retCode=%#x, device_id=%u.",
+        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
+    
+    return RT_ERROR_NONE;
+}
+
 }
 }

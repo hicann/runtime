@@ -169,7 +169,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DOT_GET_GROUP_AIC_NUM,
     RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_DATA_READ_ONLY,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX_DEGENERATE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,

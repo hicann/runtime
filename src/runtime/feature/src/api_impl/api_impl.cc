@@ -163,6 +163,7 @@ TIMESTAMP_EXTERN(rtMemcpyAsync);
 TIMESTAMP_EXTERN(rtsMemcpyAsync);
 TIMESTAMP_EXTERN(rtMemcpyAsyncV2);
 TIMESTAMP_EXTERN(rtMemcpyAsyncWithCfg);
+TIMESTAMP_EXTERN(BinaryMemCpy);
 TIMESTAMP_EXTERN(rtMemcpyAsyncEx);
 TIMESTAMP_EXTERN(rtsSetMemcpyDesc);
 TIMESTAMP_EXTERN(rtsMemcpyAsyncWithDesc);
@@ -3567,6 +3568,7 @@ void ApiImpl::DumpTimeStampPart2() const
     TIMESTAMP_DUMP(rtStreamDestroy_drvStreamIdFree);
     TIMESTAMP_DUMP(rtStreamDestroy_drvMemFreeManaged_arg);
     TIMESTAMP_DUMP(rtMemcpyAsyncWithCfg);
+    TIMESTAMP_DUMP(BinaryMemCpy);
     TIMESTAMP_DUMP(rtMemcpyAsync_drvDeviceGetTransWay);
     TIMESTAMP_DUMP(rtMemcpyAsync_drvMemConvertAddr);
     TIMESTAMP_DUMP(rtMemcpyAsync_drvMemDestroyAddr);
