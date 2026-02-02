@@ -52,10 +52,6 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
       hasSendConfigFile_(false),
       loadPackageErrorMsg_("")
 {
-#ifndef WIN_TSD
-    initHostFlag_ = false;
-    domainSocketClientPtr_ = nullptr;
-#endif
     GetLogLevel();
     SetTsdStartInfo(false, false, false);
     const auto ret = memset_s(&procSign_, sizeof(procSign_), 0x00, sizeof(procSign_));
@@ -70,11 +66,6 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
 
 void ProcessModeManager::Destroy()
 {
-#ifndef WIN_TSD
-    if (domainSocketClientPtr_ != nullptr) {
-        domainSocketClientPtr_->Destroy();
-    }
-#endif
     TSD_CHECK_NULLPTR_VOID(hdcTsdClient_);
     initFlag_ = false;
     SetTsdStartInfo(false, false, false);

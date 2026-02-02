@@ -14,9 +14,6 @@
 #include "inc/client_manager.h"
 #include "inc/hdc_client.h"
 #include "proto/tsd_message.pb.h"
-#ifndef WIN_TSD
-#include "inc/domain_socket_client.h"
-#endif
 
 namespace tsd {
 struct TsdStartStatusInfo {
@@ -144,19 +141,7 @@ public:
 
     TSD_StatusT ProcessQueueForAdc();
 
-    TSD_StatusT CloseInHost();
-
-    TSD_StatusT OpenInHost();
-
     TSD_StatusT ConstructCloseMsg(HDCMessage &msg);
-
-    TSD_StatusT SendCloseMsgInHost();
-
-    TSD_StatusT SendOpenMsgInHost();
-
-    TSD_StatusT WaitHostRsp();
-
-    TSD_StatusT InitDomainSocketClient();
 
     TSD_StatusT LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen, const char_t *const fileName,
                                  const uint64_t fileNameLen) override;
@@ -412,13 +397,6 @@ private:
 
     /**
      * @ingroup ProcessModeManager
-     * @brief get dieId from chipId for chip mode
-     * @return TSD_OK when SUCCESS
-     */
-    TSD_StatusT GetDeviceIdForChipMode();
-
-    /**
-     * @ingroup ProcessModeManager
      * @brief save check code from device package
      * @return void
      */
@@ -515,10 +493,6 @@ private:
     std::string startOrStopFailCode_;
     uint64_t schedPolicy_;
     int64_t pidQos_;
-#ifndef WIN_TSD
-    std::atomic_bool initHostFlag_;
-    std::shared_ptr<DomainSocketClient> domainSocketClientPtr_;
-#endif
     uint32_t tsdSupportLevel_;
     uint32_t openSubPid_;
     ProcStatusInfo *pidArry_;

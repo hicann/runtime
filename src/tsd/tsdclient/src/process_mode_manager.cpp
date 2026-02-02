@@ -129,11 +129,6 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
         TSD_ERROR("ProcessQueueForAdc error");
         return ret;
     }
-    ret = OpenInHost();
-    if (ret != TSD_OK) {
-        TSD_ERROR("open in host error");
-        return ret;
-    }
 
     TSD_RUN_INFO("[TsdClient][deviceId=%u] [sessionId=%u] start hccp and computer process success", logicDeviceId_, tsdSessionId_);
     return TSD_OK;
@@ -179,11 +174,7 @@ TSD_StatusT ProcessModeManager::Close(const uint32_t flag)
     } else {
         TSD_RUN_INFO("Enable quick tsd close, close will only in host.");
     }
-    const TSD_StatusT ret = CloseInHost();
-    if (ret != TSD_OK) {
-        // for test error no return
-        TSD_ERROR("close in host failed");
-    }
+
     hdcTsdClient_->Destroy();
     hdcTsdClient_ = nullptr;
     rspCode_ = ResponseCode::FAIL;

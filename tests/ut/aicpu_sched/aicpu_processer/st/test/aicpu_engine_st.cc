@@ -31,7 +31,6 @@
 #include <iostream>
 #include <fstream>
 #include "aicpu_event_struct.h"
-#include "host_cpu_processer.hpp"
 using namespace std;
 using namespace testing;
 using namespace cce;
@@ -43,15 +42,6 @@ using namespace aicpu::FWKAdapter;
 #define SIMPLE_TEST_SO  "libengine_st_simple_so.so"
 
 //extern void aeClear();
-
-namespace cce {
-void GetAicpuDeployContextOnHostCpu(DeployContext &deployCtx)
-{
-    deployCtx = DeployContext::HOSTCPU;
-    return;
-}
-}
-
 class AicpuEngineSTest : public testing::Test {
 protected:
     static void SetUpTestCase()
@@ -563,21 +553,6 @@ TEST_F(AicpuEngineSTest, CallKernelApi_SUC2)
     EXPECT_EQ(AE_STATUS_SUCCESS, ret);
 }
 
-TEST_F(AicpuEngineSTest, CallKernelApi_SUC3)
-{
-    auto aiKernelsLibAicpu = cce::AIKernelsLibAiCpu::GetInstance();
-    MOCKER_CPP(&cce::MultiSoManager::GetApi).stubs().will(invoke(StubMultileGetApi));
-    MOCKER(GetAicpuDeployContext).stubs().will(invoke(GetAicpuDeployContextOnHostCpu));
-    std::string kernelSo = {"libcpu_kernels.soruncpukernel"};
-    aicpu::HwtsCceKernel kernel;
-    kernel.kernelSo = (uintptr_t) kernelSo.data();
-    int32_t ret = aiKernelsLibAicpu->CallKernelApi(aicpu::KERNEL_TYPE_AICPU, &kernel);
-
-    aiKernelsLibAicpu->DestroyInstance();
-
-    EXPECT_EQ(AE_STATUS_SUCCESS, ret);
-}
-
 TEST_F(AicpuEngineSTest, TransformKernelErrorCodeSilentFault)
 {
     const auto ret = cce::AIKernelsLibAiCpu::GetInstance()->TransformKernelErrorCode(501, "libaicpu.so", "silenfault");
@@ -651,7 +626,6 @@ TEST_F(AicpuEngineSTest, BatchLoadEmptySo_Success)
 }
 
 TEST_F(AicpuEngineSTest, Init_001) {
-    MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
     setenv("HOME", "/usr/lib64/", 1);
     AIKernelsLibFWK *instance = AIKernelsLibFWK::GetInstance();
     const auto ret = instance->Init();
@@ -659,7 +633,6 @@ TEST_F(AicpuEngineSTest, Init_001) {
 }
 
 TEST_F(AicpuEngineSTest, Init_002) {
-    MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
     setenv("ASCEND_AICPU_PATH", "/usr/lib64/", 1);
     AIKernelsLibFWK *instance = AIKernelsLibFWK::GetInstance();
     const auto ret = instance->Init();
@@ -667,7 +640,6 @@ TEST_F(AicpuEngineSTest, Init_002) {
 }
 
 TEST_F(AicpuEngineSTest, Init_003) {
-    MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
     setenv("HOME", "/usr/lib64/", 1);
     MOCKER(aicpu::GetAicpuRunMode).stubs().will(invoke(GetAicpuRunModeStub));
     AIKernelsLibFWK *instance = AIKernelsLibFWK::GetInstance();

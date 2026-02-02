@@ -51,16 +51,6 @@ if (PRODUCT)
     endif()
 endif()
 
-SET(TSD_DEPLOY_ON_HOST false)
-
-if (PRODUCT)
-    if (((${PRODUCT} STREQUAL ascend910B) OR (${PRODUCT} STREQUAL ascend910C) OR
-         (${PRODUCT} STREQUAL ascend950) OR (${PRODUCT} STREQUAL ascend950esl) OR
-         (${PRODUCT} STREQUAL ascend910_96) OR (${PRODUCT} STREQUAL ascend910_96esl)) AND (${PRODUCT_SIDE} STREQUAL "host"))
-        SET(TSD_DEPLOY_ON_HOST true)
-    endif()
-endif()
-
 SET(TSD_SUPPORT_SUBPROC_SAFE_START false)
 
 if (PRODUCT)

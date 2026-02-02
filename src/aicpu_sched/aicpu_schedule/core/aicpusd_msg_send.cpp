@@ -90,7 +90,7 @@ void AicpuMsgSend::SendEvent()
         sched.grp_id = 0U; // default : 0
         DeployContext deployCtx = DeployContext::DEVICE;
         (void)GetAicpuDeployContext(deployCtx);
-        if ((deployCtx == DeployContext::HOST) || (deployCtx == DeployContext::HOSTCPU)) {
+        if (deployCtx == DeployContext::HOST) {
             sched.dst_engine = static_cast<uint32_t>(CCPU_HOST);
             aicpusd_info("SendEvent to dst engine: %u, modelId: %u", sched.dst_engine, subEventInfo.modelId);
         }
@@ -157,7 +157,7 @@ int32_t AicpuMsgSend::SendAICPUSubEvent(const char_t * const msg, const uint32_t
     eventInfoSummary.grp_id = grpId;
     DeployContext deployCtx = DeployContext::DEVICE;
     (void)GetAicpuDeployContext(deployCtx);
-    if ((deployCtx == DeployContext::HOST) || (deployCtx == DeployContext::HOSTCPU) ||
+    if ((deployCtx == DeployContext::HOST) ||
         (subEventId == static_cast<uint32_t>(AICPU_SUB_EVENT_ACTIVE_MODEL))) {
         eventInfoSummary.dst_engine = static_cast<uint32_t>(CCPU_LOCAL);
         aicpusd_info("SendAICPUSubEvent to dst engine: %u", eventInfoSummary.dst_engine);

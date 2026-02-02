@@ -80,7 +80,6 @@ target_compile_definitions(tsdclient PRIVATE
     NOMINMAX
     google=ascend_private
     $<$<STREQUAL:${SUPPORT_IAM},true>:SUPPORT_IAM>
-    $<$<STREQUAL:${TSD_DEPLOY_ON_HOST},true>:TSD_DEPLOY_ON_HOST>
 )
 
 target_link_options(tsdclient PRIVATE
@@ -110,17 +109,6 @@ set_target_properties(tsdclient
 
 #---------------------------------------------------------------------------------------------------linux
 else()
-
-set(host_tsd_src_files_tsd_client
-    ${BASE_DIR}/common/src/domain_socket_common.cpp
-    ${BASE_DIR}/common/src/domain_socket_client.cpp
-)
-
-set(host_tsd_include_files_tsd_client
-    ${BASE_DIR}/common/src/domain_socket_common.h
-    ${BASE_DIR}/common/src/domain_socket_client.h
-)
-
 # linux
 #######################################################################################################################
 # libtsdclient.so linux
@@ -152,7 +140,6 @@ add_library(tsdclient SHARED
     $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend615>,$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${CMAKE_CURRENT_SOURCE_DIR}/src/stub/stub_dc.cpp>
     ${tdt_common_files}
     ${PROTO_SRCS}
-    ${host_tsd_src_files_tsd_client}
     src/stub/stub_process_mode_nowin.cpp
 )
 

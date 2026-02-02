@@ -21,8 +21,6 @@
 #include "ae_kernel_lib_aicpu.hpp"
 #include "aicpu_context.h"
 #include "aicpu_event_struct.h"
-#include "host_cpu_processer.hpp"
-#include "stub_host_cpu.h"
 #undef private
 
 using namespace aicpu;
@@ -357,50 +355,6 @@ namespace aicpu {
             MOCKER(aicpu::IsCustAicpuSd).stubs().will(returnValue(true));
             ret = aiKernelsLibAiCpu_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU, &kernel_);
             EXPECT_EQ(ret, 505U);
-        }
-
-        TEST_F(AIKernelsLibAiCpuSTest, CallKernelApi_HOSTCPU_SUCCESS)
-        {
-             MOCKER_CPP(&cce::MultiSoManager::GetApi,
-                       aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char *, const char *,
-                                                           void **))
-                .stubs()
-                .will(invoke(GetSuccessApiStub));
-            std::string kernelSo_ = {"libcpu_kernels.soruncpukernel"};
-            kernel_.kernelSo = (uintptr_t) kernelSo_.data();
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-            int32_t ret = aiKernelsLibAiCpu_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU, &kernel_);
-            EXPECT_EQ(AE_STATUS_SUCCESS, ret);
-        }
-
-        TEST_F(AIKernelsLibAiCpuSTest, CallKernelApi_HOSTCPU_Fail_001)
-        {
-             MOCKER_CPP(&cce::MultiSoManager::GetApi,
-                       aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char *, const char *,
-                                                           void **))
-                .stubs()
-                .will(invoke(GetSuccessApiStub));
-            std::string kernelSo_ = {"libcpu_kernels.soruncpukernel"};
-            kernel_.kernelSo = (uintptr_t) kernelSo_.data();
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-            MOCKER(strncpy_s).stubs().will(returnValue(1));
-            int32_t ret = aiKernelsLibAiCpu_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU, &kernel_);
-            EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
-        }
-
-        TEST_F(AIKernelsLibAiCpuSTest, CallKernelApi_HOSTCPU_Fail_002)
-        {
-             MOCKER_CPP(&cce::MultiSoManager::GetApi,
-                       aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char *, const char *,
-                                                           void **))
-                .stubs()
-                .will(invoke(GetSuccessApiStub));
-            std::string kernelSo_ = {"libcpu_kernels.soruncpukernel"};
-            kernel_.kernelSo = (uintptr_t) kernelSo_.data();
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-            MOCKER(strncpy_s).stubs().will(returnValue(0)).then(returnValue(1));
-            int32_t ret = aiKernelsLibAiCpu_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU, &kernel_);
-            EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
         }
 
         TEST_F(AIKernelsLibAiCpuSTest, ContextSet_SUCC_001)

@@ -9,7 +9,6 @@
  */
 
 #include "ae_kernel_lib_fwk.hpp"
-#include "host_cpu_processer.hpp"
 #include "securec.h"
 #include "aicpu_context.h"
 #include "aicpu_event_struct.h"
@@ -27,8 +26,6 @@ namespace {
     constexpr const char *AICPU_SO_UNCOMPRESS_PATH = "aicpu_kernels_device";
     constexpr const uint32_t MAX_SO_PATH = 4096U;
     constexpr const char_t *THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
-    // aicpu kernels host path
-    constexpr const char_t *AICPU_SO_ROOT_DIR_HOST = "opp/built-in/op_impl/host_aicpu/";
     constexpr const char_t *HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/aicpu_kernels/";
 }
 
@@ -150,27 +147,6 @@ namespace cce {
                 soFile_ = baseSoFile;
                 AE_RUN_INFO_LOG(AE_MODULE_ID, "So does not exist in path %s, use default soFile %s.",
                                 soPath.c_str(), baseSoFile.c_str());
-            }
-        }
-        DeployContext deployCtx = DeployContext::DEVICE;
-        GetAicpuDeployContext(deployCtx);
-        if (deployCtx == DeployContext::HOSTCPU) {
-            std::string aicpuOpPath;
-            const char_t *const envValue = std::getenv("ASCEND_AICPU_PATH");
-            if ((envValue == nullptr) || (*envValue == '\0')) {
-                AE_INFO_LOG(AE_MODULE_ID, "environment variable ASCEND_AICPU_PATH is not set");
-            } else {
-                aicpuOpPath = std::string(envValue);
-            }
-
-            if (aicpuOpPath.empty()) {
-                aicpuOpPath = "/usr/local/Ascend/";
-                AE_INFO_LOG(AE_MODULE_ID, "use default value[%s]", aicpuOpPath.c_str());
-            }
-            if ((aicpuOpPath.length() > 0U) && ((aicpuOpPath.at((aicpuOpPath.length()) - 1U)) == '/')) {
-                soFile_ = aicpuOpPath + AICPU_SO_ROOT_DIR_HOST + TF_SO_NAME;
-            } else {
-                soFile_ = aicpuOpPath + "/" + AICPU_SO_ROOT_DIR_HOST + TF_SO_NAME;
             }
         }
         AE_INFO_LOG(AE_MODULE_ID, "FWKernelTfImpl init success, soFile_=%s.", soFile_.c_str());

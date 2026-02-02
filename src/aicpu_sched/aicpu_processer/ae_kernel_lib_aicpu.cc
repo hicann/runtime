@@ -14,17 +14,12 @@
 #include <memory>
 #include "securec.h"
 #include "aicpu_event_struct.h"
-#include "host_cpu_processer.hpp"
 #ifdef AICPU_PROFILING
 #include "aicpu_prof/profiling_adp.h"
 #endif
 
 namespace cce {
     namespace {
-        // libcpu_kernels.so name len
-        constexpr uint32_t AE_LIB_CPU_KERNELS_SO_NAME = 17U;
-        // runcpukernel name len
-        constexpr uint32_t AE_RUN_CPU_KERNEL_NAME = 12U;
         // aicpu device side blockdim entry function name
         constexpr char const *kRunFuncName = "RunCpuKernelWithBlock";
         // 动态白名单
@@ -75,26 +70,6 @@ namespace cce {
         instance_ = nullptr;
     }
 
-    aeStatus_t AIKernelsLibAiCpu::GetKernelNameAndKernelSoNameForHostCpu(char_t *kernelName, char_t *kernelSoName,
-                                                                         char_t *paramKernelSo) const
-    {
-        errno_t retCpy = strncpy_s(&kernelSoName[0], AE_LIB_CPU_KERNELS_SO_NAME + 1U, paramKernelSo,
-                                   AE_LIB_CPU_KERNELS_SO_NAME);
-        if (retCpy != EOK) {
-            AE_ERR_LOG(AE_MODULE_ID, "copy paramKernelSo failed, retCpy=%d.", retCpy);
-            return AE_STATUS_INNER_ERROR;
-        }
-        char_t *paramKernelName = PtrToPtr<void, char_t>(ValueToPtr(
-                                  PtrToValue(paramKernelSo) + AE_LIB_CPU_KERNELS_SO_NAME));
-        retCpy = strncpy_s(&kernelName[0], AE_RUN_CPU_KERNEL_NAME + 1U, paramKernelName, AE_RUN_CPU_KERNEL_NAME);
-        if (retCpy != EOK) {
-            AE_ERR_LOG(AE_MODULE_ID, "copy paramKernelName failed, retCpy=%d.", retCpy);
-            return AE_STATUS_INNER_ERROR;
-        }
-
-        return AE_STATUS_SUCCESS;
-    }
-
     aeStatus_t AIKernelsLibAiCpu::GetKernelNameAndKernelSoName(char_t *kernelName, char_t *kernelSoName,
                                                                const char_t *paramKernelSo,
                                                                const aicpu::HwtsCceKernel *cceKernelBase) const
@@ -137,21 +112,11 @@ namespace cce {
         }
         char_t kernelName[AE_MAX_KERNEL_NAME + 1U] = {};
         char_t kernelSoName[AE_MAX_SO_NAME + 1U] = {};
-        DeployContext deployCtx = DeployContext::DEVICE;
-        GetAicpuDeployContext(deployCtx);
         aeStatus_t ret = AE_STATUS_SUCCESS;
-        if (deployCtx == DeployContext::HOSTCPU) {
-            ret = GetKernelNameAndKernelSoNameForHostCpu(kernelName, kernelSoName, paramKernelSo);
-            if (ret != AE_STATUS_SUCCESS) {
-                AE_ERR_LOG(AE_MODULE_ID, "get kernelName and kernelSoName for hostCpu failed, ret=%u.", ret);
-                return ret;
-            }
-        } else {
-            ret = GetKernelNameAndKernelSoName(kernelName, kernelSoName, paramKernelSo, cceKernelBase);
-            if (ret != AE_STATUS_SUCCESS) {
-                AE_ERR_LOG(AE_MODULE_ID, "get kernelName and kernelSoName failed, ret=%u.", ret);
-                return ret;
-            }
+        ret = GetKernelNameAndKernelSoName(kernelName, kernelSoName, paramKernelSo, cceKernelBase);
+        if (ret != AE_STATUS_SUCCESS) {
+            AE_ERR_LOG(AE_MODULE_ID, "get kernelName and kernelSoName failed, ret=%u.", ret);
+            return ret;
         }
         void *funcAddr = nullptr;
         ret = soMngr_.GetApi(kernelType, &kernelSoName[0], &kernelName[0], &funcAddr);

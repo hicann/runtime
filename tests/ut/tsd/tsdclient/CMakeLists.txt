@@ -27,8 +27,6 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/aicpu_thread_package_worker.cpp
     ${TSD_SRC_PATH}/common/src/base_package_worker.cpp
     ${TSD_SRC_PATH}/common/src/common_sink_package_worker.cpp
-    ${TSD_SRC_PATH}/common/src/domain_socket_client.cpp
-    ${TSD_SRC_PATH}/common/src/domain_socket_common.cpp
     ${TSD_SRC_PATH}/common/src/dshape_package_worker.cpp
     ${TSD_SRC_PATH}/common/src/hdc_client.cpp
     ${TSD_SRC_PATH}/common/src/hdc_common.cpp
@@ -47,7 +45,6 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/tsd_hash_verify.cpp
     ${TSD_SRC_PATH}/common/src/tsd_path_mgr.cpp
     ${TSD_SRC_PATH}/common/src/version_verify.cpp
-    ${TSD_SRC_PATH}/common/src/domain_socket_server.cpp
     ${TSD_SRC_PATH}/common/src/message_parse_server.cpp
 )
 set(TSD_UT_TEST_SRC_FILE
@@ -60,7 +57,6 @@ set(TSD_UT_TEST_SRC_FILE
     test/thread_manager_utest.cpp
     test/dshape_package_worker_utest.cpp
     test/common_sink_package_worker_utest.cpp
-    test/domain_socket_client_utest.cpp
     test/om_package_worker_utest.cpp
     test/package_process_config_utest.cpp
     test/package_verify_utest.cpp
@@ -74,7 +70,6 @@ set(TSD_UT_TEST_SRC_FILE
     test/hash_verify_utest.cpp
     test/path_mgr_utest.cpp
     test/log_utest.cpp
-    test/domain_socket_server_utest.cpp
     test/internal_api_utest.cpp
     test/main.cpp
     ../stub/stub_mmpa.cpp

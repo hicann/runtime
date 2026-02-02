@@ -22,8 +22,6 @@
 #include "ae_so_manager.hpp"
 #include "aicpu_context.h"
 #include "aicpu_event_struct.h"
-#include "stub_host_cpu.h"
-#include "host_cpu_processer.hpp"
 #include "ae_kernel_lib_manager.hpp"
 #undef private
 
@@ -411,27 +409,6 @@ namespace aicpu {
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
         }
 
-        TEST_F(SoManagerUTest, MultiSoManager_GetInnerSoPath_06)
-        {
-            MultiSoManager multiSoManager;
-            string soName = "";
-            string soPath = "";
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-            auto ret = multiSoManager.GetInnerSoPath(soName, soPath);
-            EXPECT_EQ(AE_STATUS_SUCCESS, ret);
-        }
-
-        TEST_F(SoManagerUTest, MultiSoManager_GetInnerSoPath_07)
-        {
-            MultiSoManager multiSoManager;
-            string soName = "";
-            string soPath = "";
-            setenv("ASCEND_AICPU_PATH", "/usr/lib64/", 1);
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-            auto ret = multiSoManager.GetInnerSoPath(soName, soPath);
-            EXPECT_EQ(AE_STATUS_SUCCESS, ret);
-        }
-
         TEST_F(SoManagerUTest, MultiSoManager_GetContextError)
         {
             MultiSoManager multiSoManager;
@@ -441,7 +418,6 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModePCIE));
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
             MOCKER(aicpu::aicpuGetContext)
                 .stubs()
                 .will(returnValue(AICPU_ERROR_FAILED));
@@ -458,7 +434,6 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModePCIE));
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
             char_t *dirName = "/usr/local/Ascend";
             MOCKER(getenv)
                 .stubs()
@@ -476,7 +451,6 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModePCIE));
-            MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
             char *dirName = nullptr;
             MOCKER(getenv)
                 .stubs()
@@ -494,7 +468,6 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModePCIE));
-            MOCKER(GetAicpuDeployContext).stubs().with(outBound(DeployContext::DEVICE)).will(returnValue(0));
             auto ret = multiSoManager.GetInnerSoPath(soName, soPath);
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
         }

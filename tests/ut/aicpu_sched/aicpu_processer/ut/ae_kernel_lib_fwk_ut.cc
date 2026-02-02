@@ -12,8 +12,6 @@
 #include "mockcpp/mockcpp.hpp"
 #define private public
 #include "ae_kernel_lib_fwk.hpp"
-#include "host_cpu_processer.hpp"
-#include "stub_host_cpu.h"
 #undef private
 
 using namespace cce;
@@ -172,19 +170,4 @@ TEST_F(AeKernelLibFwkTest, GetThreadModelTfKernelPathTest_02)
     fwkImpl.GetThreadModelSoPath(inputStr);
     EXPECT_EQ(soPath, "");
     GlobalMockObject::verify();
-}
-TEST_F(AeKernelLibFwkTest, Init_001) {
-    MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-    setenv("HOME", "/usr/lib64/", 1);
-    AIKernelsLibFWK *instance = AIKernelsLibFWK::GetInstance();
-    const auto ret = instance->Init();
-    EXPECT_EQ(ret, AE_STATUS_SUCCESS);
-}
-
-TEST_F(AeKernelLibFwkTest, Init_002) {
-    MOCKER_CPP(&cce::GetAicpuDeployContext).stubs().will(invoke(cce::GetAicpuDeployContextOnHostCpu));
-    setenv("ASCEND_AICPU_PATH", "/usr/lib64/", 1);
-    AIKernelsLibFWK *instance = AIKernelsLibFWK::GetInstance();
-    const auto ret = instance->Init();
-    EXPECT_EQ(ret, AE_STATUS_SUCCESS);
 }

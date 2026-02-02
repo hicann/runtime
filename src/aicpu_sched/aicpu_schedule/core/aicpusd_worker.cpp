@@ -209,7 +209,7 @@ namespace AicpuSchedule {
             return;
         }
 
-        if ((deployCtx == DeployContext::DEVICE) || (deployCtx == DeployContext::HOSTCPU)) {
+        if (deployCtx == DeployContext::DEVICE) {
             if (AicpuSchedule::ThreadPool::Instance().SetAffinity(threadIndex, deviceId) != AICPU_SCHEDULE_OK) {
                 AicpuSchedule::ThreadPool::Instance().PostSem(threadIndex);
                 return;
@@ -299,12 +299,6 @@ namespace AicpuSchedule {
 
     int32_t ThreadPool::AddPidToTask(const size_t threadIndex)
     {
-        DeployContext deployCtx = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtx);
-        if (deployCtx == DeployContext::HOSTCPU) {
-            return AICPU_SCHEDULE_OK;
-        }
-
         if (FeatureCtrl::IsBindPidByHal()) {
             if (&halBindCgroup != nullptr) {
                aicpusd_info("Bind pid by hal index:%zu.", threadIndex);
