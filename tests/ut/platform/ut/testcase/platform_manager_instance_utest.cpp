@@ -207,6 +207,7 @@ TEST_F(PlatformManagerUTest, platform_instance_009) {
   PlatFormInfos platform_infos;
   OptionalInfos optional_infos;
   (void)instance.GetPlatformInfos(soc_version, platform_infos, optional_infos);
+  auto fixpipe_map = optional_infos.GetFixPipeDtypeMap();
   uint32_t aicore_num = platform_infos.GetCoreNumByType("AiCore");
   uint32_t vector_core_num = platform_infos.GetCoreNumByType("VectorCore");
   EXPECT_EQ(vector_core_num, 1);
