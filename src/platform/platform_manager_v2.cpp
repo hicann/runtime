@@ -24,7 +24,7 @@ extern "C" {
 #endif // __cplusplus
 
 const std::string FIXPIPE_CONFIG_KEY = "Intrinsic_fix_pipe_";
-const std::string PLATFORM_RELATIVE_PATH = "../data/platform_config";
+const std::string PLATFORM_RELATIVE_PATH = "data/platform_config";
 const std::string INI_FILE_SUFFIX = ".ini";
 
 const std::string STR_AI_CORE_INTRINSIC_DTYPE_MAP = "AICoreintrinsicDtypeMap";
@@ -255,8 +255,23 @@ std::string PlatformManagerV2::GetSoFilePath() {
   return real_file_path;
 }
 
+std::string PlatformManagerV2::GetConfigFilePath() {
+  std::string so_file_path = GetSoFilePath();
+  while (!so_file_path.empty() && so_file_path.back() == '/') {
+    so_file_path.pop_back();
+  }
+  size_t pos = so_file_path.find_last_of("/\\");
+  if (pos == std::string::npos) {
+    return "";
+  }
+  so_file_path = so_file_path.substr(0, pos + 1);
+  PF_LOGI("Current so file path is [%s].", so_file_path.c_str());
+
+  return RealPath(so_file_path + PLATFORM_RELATIVE_PATH);
+}
+
 uint32_t PlatformManagerV2::InitPlatformInfos(const std::string &soc_version) {
-  std::string cfg_file_real_path = RealPath(GetSoFilePath() + PLATFORM_RELATIVE_PATH);
+  std::string cfg_file_real_path = GetConfigFilePath();
   if (cfg_file_real_path.empty()) {
     PF_LOGE("File path[%s] is not valid.", cfg_file_real_path.c_str());
     return PLATFORM_FAILED;
