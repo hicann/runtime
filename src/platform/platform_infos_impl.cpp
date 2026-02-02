@@ -102,10 +102,12 @@ void OptionalInfosImpl::SetSocVersion(std::string soc_version) { soc_version_ = 
 
 void OptionalInfosImpl::SetFixPipeDtypeMap(
     const std::map<std::string, std::vector<std::string>>& fixpipe_dtype_map) {
+  std::lock_guard<std::mutex> lock(mtx_);
   fixpipe_dtype_map_ = fixpipe_dtype_map;
 }
 
 std::map<std::string, std::vector<std::string>> OptionalInfosImpl::GetFixPipeDtypeMap() {
+  std::lock_guard<std::mutex> lock(mtx_);
   return fixpipe_dtype_map_;
 }
 
