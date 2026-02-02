@@ -297,7 +297,7 @@ namespace AicpuSchedule {
             return status;
         }
         const bool cpuMode = GetCpuMode();
-        if ((deployCtx == DeployContext::DEVICE || deployCtx == DeployContext::HOSTCPU) && (!cpuMode)) {
+        if ((deployCtx == DeployContext::DEVICE) && (!cpuMode)) {
             const int32_t bindPidRet = BindHostPid(pidSign, vfId);
             if (bindPidRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("check bind pid sign failed, ret[%d].", bindPidRet);
@@ -335,10 +335,8 @@ namespace AicpuSchedule {
             return conRet;
         }
 
-        if (deployCtx != DeployContext::HOSTCPU) {
-            // init AicpuCustSoManager
-            (void)AicpuSchedule::AicpuCustSoManager::GetInstance().InitAicpuCustSoManager(runMode_, schedMode);
-        }
+        // init AicpuCustSoManager
+        (void)AicpuSchedule::AicpuCustSoManager::GetInstance().InitAicpuCustSoManager(runMode_, schedMode);
         aicpusd_info("Success to start compute process, deviceId[%u], hostPid[%d], runMode[%u]",
                      deviceVec[FIRST_INDEX], hostPid, runMode_);
         UpdateOrInsertStartFlag(deviceVec[0], true);

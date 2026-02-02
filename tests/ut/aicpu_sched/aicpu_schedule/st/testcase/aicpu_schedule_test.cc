@@ -290,12 +290,6 @@ StatusCode GetAicpuDeployContextOnHost(DeployContext &deployCtx)
     return AICPU_SCHEDULE_OK;
 }
 
-StatusCode GetAicpuDeployContextOnHostCpu(DeployContext &deployCtx)
-{
-    deployCtx = DeployContext::HOSTCPU;
-    return AICPU_SCHEDULE_OK;
-}
-
 int32_t ExecuteTaskTestStub(const AicpuTaskInfo &kernelTaskInfo, const RunContext &taskContext)
 {
     *(const_cast<int32_t *>(&taskContext.gotoTaskIndex)) = 0;
@@ -5297,16 +5291,6 @@ TEST_F(AICPUScheduleTEST, AddToCgroup_ERROR_001)
         .will(returnValue(-1));
     int32_t ret = ComputeProcessMain(argc, argv);
     EXPECT_EQ(ret, -1);
-}
-
-TEST_F(AICPUScheduleTEST, GetNormalAicpuInfoSuccess1OnHostCpu) {
-    std::vector<uint32_t> device_vec;
-    device_vec.push_back(32U);
-    int64_t expect_aicpuNum = 64;
-    MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoFake1OnHost));
-    MOCKER(GetAicpuDeployContext).stubs().will(invoke(GetAicpuDeployContextOnHostCpu));
-    int ret = AicpuDrvManager::GetInstance().GetNormalAicpuInfo(device_vec);
-    EXPECT_EQ(ret, DRV_ERROR_NONE);
 }
 
 TEST_F(AICPUScheduleTEST, GetNormalAicpuInfoSuccess1OnHost) {

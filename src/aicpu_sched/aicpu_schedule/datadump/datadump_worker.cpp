@@ -177,7 +177,7 @@ namespace AicpuSchedule {
             return;
         }
 
-        if (deployCtx == DeployContext::DEVICE || deployCtx == DeployContext::HOSTCPU) {
+        if (deployCtx == DeployContext::DEVICE) {
             if (AicpuSchedule::ThreadPool::Instance().SetAffinity(threadIndex, deviceId)
                 != AICPU_SCHEDULE_OK) {
                 AicpuSchedule::ThreadPool::Instance().PostSem(threadIndex);
@@ -232,28 +232,24 @@ namespace AicpuSchedule {
 
     int32_t ThreadPool::AddPidToTask(const size_t threadIndex)
     {
-        DeployContext deployCtx = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtx);
-        if (deployCtx != DeployContext::HOSTCPU) {
-            if (FeatureCtrl::IsBindPidByHal()) {
-                if (&halBindCgroup != nullptr) {
-                    aicpusd_info("Bind pid by hal index:%zu.", threadIndex);
-                    const drvError_t drvRet = halBindCgroup(BIND_AICPU_CGROUP);
-                    if (drvRet != DRV_ERROR_NONE) {
-                        aicpusd_err("halBindCgroup failed, ret[%d]", drvRet);
-                        return AICPU_SCHEDULE_ERROR_FROM_DRV;
-                    }
-                    aicpusd_info("halBindCgroup success");
+        if (FeatureCtrl::IsBindPidByHal()) {
+            if (&halBindCgroup != nullptr) {
+                aicpusd_info("Bind pid by hal index:%zu.", threadIndex);
+                const drvError_t drvRet = halBindCgroup(BIND_AICPU_CGROUP);
+                if (drvRet != DRV_ERROR_NONE) {
+                    aicpusd_err("halBindCgroup failed, ret[%d]", drvRet);
+                    return AICPU_SCHEDULE_ERROR_FROM_DRV;
                 }
-            } else {
-                aicpusd_run_info("AddPidToTask by WriteTidForAffinity");
-                auto ret = WriteTidForAffinity(threadIndex);
-                if (ret != static_cast<int32_t>(AICPU_SCHEDULE_OK)) {
-                    aicpusd_err("WriteTidForAffinity failed, ret[%d]", ret);
-                    return static_cast<int32_t>(AICPU_SCHEDULE_ERROR_INIT_FAILED);
-                }
-                aicpusd_info("WriteTidForAffinity success");
+                aicpusd_info("halBindCgroup success");
             }
+        } else {
+            aicpusd_run_info("AddPidToTask by WriteTidForAffinity");
+            auto ret = WriteTidForAffinity(threadIndex);
+            if (ret != static_cast<int32_t>(AICPU_SCHEDULE_OK)) {
+                aicpusd_err("WriteTidForAffinity failed, ret[%d]", ret);
+                return static_cast<int32_t>(AICPU_SCHEDULE_ERROR_INIT_FAILED);
+            }
+            aicpusd_info("WriteTidForAffinity success");
         }
         return AICPU_SCHEDULE_OK;
     }

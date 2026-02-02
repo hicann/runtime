@@ -24,8 +24,6 @@
 #include "ae_def.hpp"
 #include "aicpu_context.h"
 #include "aicpu_event_struct.h"
-#include "host_cpu_processer.hpp"
-#include "stub_host_cpu.h"
 
 
 

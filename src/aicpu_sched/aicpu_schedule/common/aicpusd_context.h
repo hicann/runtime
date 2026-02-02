@@ -16,7 +16,6 @@ namespace AicpuSchedule {
 enum class DeployContext {
     DEVICE = 0,
     HOST = 1,
-    HOSTCPU = 2,
 };
 
 /**

@@ -57,7 +57,6 @@ set(AICPU_SCHED_TARGET
   aicpu_prof_llt_ut
   aicpu_aicpuschedule_utest
   aicpu_aicpuschedule_utest_host_cpu
-  aicpu_aicpuschedule_utest_hostaicpu
   aicpu_thread_datadump_utest
   aicpu_aicpuschedule_utest_open
   aicpu_sharder_utest

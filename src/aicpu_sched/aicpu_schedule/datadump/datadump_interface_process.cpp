@@ -130,7 +130,7 @@ namespace AicpuSchedule {
             return status;
         }
         const bool cpuMode = GetCpuMode();
-        if ((deployCtx == DeployContext::DEVICE || deployCtx == DeployContext::HOSTCPU) && (!cpuMode)) {
+        if ((deployCtx == DeployContext::DEVICE) && (!cpuMode)) {
             const int32_t bindPidRet = BindHostPid(pidSign, vfId);
             if (bindPidRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("check bind pid sign failed, ret[%d].", bindPidRet);

@@ -35,12 +35,6 @@ namespace cce {
         static void DestroyInstance();
 
         /**
-         * Implement get kernelName and kernelSoName for hostCpu
-         */
-        aeStatus_t GetKernelNameAndKernelSoNameForHostCpu(char_t *kernelName, char_t *kernelSoName,
-                                                          char_t *paramKernelSo) const;
-
-        /**
          * Implement get kernelName and kernelSoName
          */
         aeStatus_t GetKernelNameAndKernelSoName(char_t *kernelName, char_t *kernelSoName,

@@ -303,32 +303,6 @@ target_link_libraries(aicpu_aicpuschedule_stest_host_cpu PRIVATE
     ${COMMON_C_LINK}
 )
 
-add_executable(aicpu_aicpuschedule_stest_hostaicpu
-    ${SRC_PATH}/stub/hostaicpu.cpp
-    ${SRC_PATH}/stub/hostaicpu.cpp
-    ${SRC_PATH}/core/aicpusd_resource_limit.cpp
-    ${SRC_PATH}/core/aicpusd_message_queue.cpp
-    ${SRC_PATH}/common/aicpusd_feature_ctrl_open_source.cpp
-    ${SRC_PATH}/common/feature_ctrl_common.cpp
-    ${RUNTIME_DIR}/tests/ut/aicpu_sched/aicpu_schedule/stub/slog_stub.cpp
-    testcase/host_cpu_stub.c
-    testcase/hostaicpu_driver.cc
-    main_st.cc
-)
-
-target_include_directories(aicpu_aicpuschedule_stest_hostaicpu PRIVATE
-    ${COMMON_C_INCLUDES}
-    ${SRC_PATH}/stub
-)
-
-target_compile_definitions(aicpu_aicpuschedule_stest_hostaicpu PRIVATE
-    ${COMMON_DEF}
-)
-
-target_link_libraries(aicpu_aicpuschedule_stest_hostaicpu PRIVATE
-    ${COMMON_C_LINK}
-)
-
 add_executable(aicpu_thread_datadump_stest
     ${SRC_PATH}/datadump/datadump_interface.cpp
     ${SRC_PATH}/common/aicpusd_sqe_adapter.cpp

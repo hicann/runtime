@@ -31,7 +31,6 @@ set(ENGINE_SRC_FILES
     ${SRC_PATH}/ae_kernel_lib_aicpu.cc
     ${SRC_PATH}/ae_kernel_lib_aicpu_kfc.cpp
     ${SRC_PATH}/stub/aicpu_context.cpp
-    ${SRC_PATH}/stub/host_cpu_processer.cpp
     ${SRC_PATH}/ae_kernel_lib_base.cc
 )
 

@@ -19,7 +19,6 @@
 #include "inc/process_mode_manager.h"
 #include "inc/hdc_client.h"
 #include "src/env_internal_api.h"
-#include "inc/domain_socket_client.h"
 #undef private
 #undef protected
 
@@ -612,9 +611,6 @@ TEST_F(ProcessManagerTest, TsdOpenCallSyncSucc)
     MOCKER_CPP(&ProcessModeManager::CheckNeedToOpen)
         .stubs()
         .will(returnValue(true));
-    MOCKER_CPP(&ProcessModeManager::GetDeviceIdForChipMode)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&ProcessModeManager::LoadSysOpKernel)
         .stubs()
         .will(returnValue(tsd::TSD_OK));
@@ -883,334 +879,12 @@ TEST_F(ProcessManagerTest, waitRspFail004)
     EXPECT_EQ(ret, tsd::TSD_ADD_AICPUSD_TO_CGROUP_FAILED);
 }
 
-TEST_F(ProcessManagerTest, InitDomainSocketClient_test)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&DomainSocketClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&DomainSocketClient::TsdRecvData)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.InitDomainSocketClient();
-    ret = processModeManager.WaitHostRsp();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, SendOpenMsgInHost_test)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::ConstructOpenMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.InitDomainSocketClient();
-    ret = processModeManager.SendOpenMsgInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, SendOpenMsgInHost_Fail_001)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::ConstructOpenMsg)
-        .stubs()
-        .will(returnValue(1));
-    auto ret = processModeManager.SendOpenMsgInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, SendOpenMsgInHost_Fail_002)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::ConstructOpenMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(1));
-    auto ret = processModeManager.InitDomainSocketClient();
-    ret = processModeManager.SendOpenMsgInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, OpenInHost_fail_3)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::InitDomainSocketClient)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendOpenMsgInHost)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.OpenInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, OpenInHost_fail_4)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::InitDomainSocketClient)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendOpenMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(1));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.OpenInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, OpenInHost_test)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::InitDomainSocketClient)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendOpenMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.OpenInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, OpenInHost_fail_1)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(1));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::InitDomainSocketClient)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendOpenMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    auto ret = processModeManager.OpenInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, CloseInHost_test)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendCloseMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    processModeManager.initHostFlag_ = true;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    auto ret = processModeManager.CloseInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, CloseInHost_fail_1)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(false));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    processModeManager.initHostFlag_ = true;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    auto ret = processModeManager.CloseInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, CloseInHost_fail_2)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendCloseMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    processModeManager.initHostFlag_ = false;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    auto ret = processModeManager.CloseInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, CloseInHost_fail_3)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendCloseMsgInHost)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    processModeManager.initHostFlag_ = true;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    auto ret = processModeManager.CloseInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, CloseInHost_fail_4)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ProcessModeManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER(access).stubs()
-        .will(returnValue(0));
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::SendCloseMsgInHost)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitHostRsp)
-        .stubs()
-        .will(returnValue(1));
-    processModeManager.rspCode_ = ResponseCode::SUCCESS;
-    processModeManager.initHostFlag_ = true;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    auto ret = processModeManager.CloseInHost();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, GetDeviceIdForChipMode_test)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER(halGetDeviceCountFromChip).stubs()
-        .will(returnValue(0));
-
-    MOCKER(halGetDeviceFromChip).stubs()
-        .will(returnValue(0));
-    auto ret = processModeManager.GetDeviceIdForChipMode();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, GetDeviceIdForChipMode_fail_1)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER(halGetDeviceCountFromChip).stubs()
-        .will(returnValue(1));
-    auto ret = processModeManager.GetDeviceIdForChipMode();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(ProcessManagerTest, GetDeviceIdForChipMode_fail_2)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER(halGetDeviceCountFromChip).stubs()
-        .will(returnValue(0));
-    MOCKER(halGetDeviceFromChip).stubs()
-        .will(returnValue(1));
-    auto ret = processModeManager.GetDeviceIdForChipMode();
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
 TEST_F(ProcessManagerTest, ConstructCloseMsg_test)
 {
     ProcessModeManager processModeManager(deviceId, 0);
     HDCMessage msg;
     auto ret = processModeManager.ConstructCloseMsg(msg);
     EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, SendCloseMsgInHost_01)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    HDCMessage msg;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    auto ret = processModeManager.SendCloseMsgInHost();
-    EXPECT_EQ(ret, tsd::TSD_OK);
-}
-
-TEST_F(ProcessManagerTest, SendCloseMsgInHost_02)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    HDCMessage msg;
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
-    MOCKER_CPP(&DomainSocketClient::SendMsg)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::ConstructCloseMsg)
-        .stubs()
-        .will(returnValue(1));
-    auto ret = processModeManager.SendCloseMsgInHost();
-    EXPECT_NE(ret, tsd::TSD_OK);
 }
 
 TEST_F(ProcessManagerTest, ProcessQueueForAdc_001)
@@ -1225,7 +899,6 @@ TEST_F(ProcessManagerTest, ProcessQueueForAdc_001)
     MOCKER_CPP(&ProcessModeManager::SyncQueueAuthority)
         .stubs()
         .will(returnValue(1));
-    processModeManager.domainSocketClientPtr_ = DomainSocketClient::GetInstance(0U);
     auto ret = processModeManager.ProcessQueueForAdc();
     EXPECT_NE(ret, tsd::TSD_OK);
 }
@@ -2647,7 +2320,6 @@ TEST_F(ProcessManagerTest, CloseSuccess2)
     processModeManager.hdcTsdClient_ = HdcClient::GetInstance(deviceId, HDCServiceType::TSD);
     MOCKER_CPP(&ProcessModeManager::SendCloseMsg).stubs().will(returnValue(static_cast<uint32_t>(TSD_OK)));
     MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(static_cast<uint32_t>(TSD_OK)));
-    MOCKER_CPP(&ProcessModeManager::CloseInHost).stubs().will(returnValue(static_cast<uint32_t>(TSD_OK)));
     processModeManager.initFlag_ = true;
     const auto ret = processModeManager.Close(0);
     EXPECT_EQ(ret, TSD_OK);

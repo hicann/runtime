@@ -22,7 +22,7 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
 {
     DeployContext deployCtx = DeployContext::DEVICE;
     (void)GetAicpuDeployContext(deployCtx);
-    if ((deployCtx == DeployContext::HOSTCPU) || (FeatureCtrl::IsAosCore()) || (!FeatureCtrl::ShouldAddtocGroup()) || (AicpuUtil::IsFpga())) {
+    if ((FeatureCtrl::IsAosCore()) || (!FeatureCtrl::ShouldAddtocGroup()) || (AicpuUtil::IsFpga())) {
         aicpusd_run_info("No need to add cgroup");
         return true;
     }

@@ -9,7 +9,6 @@
  */
 
 #include "ae_so_manager.hpp"
-#include "host_cpu_processer.hpp"
 #include <memory>
 #include <mutex>
 #include <cstdlib>
@@ -27,7 +26,6 @@ namespace cce {
     namespace {
         // aicpu so root dir, must be absolute path
         constexpr const char_t *AICPU_SO_ROOT_DIR = "/usr/lib64/aicpu_kernels/";
-        constexpr const char_t *AICPU_SO_ROOT_DIR_HOST = "opp/built-in/op_impl/host_aicpu/";
         // aicpu so root dir, old path only for hccl
         constexpr const char_t *AICPU_SO_ROOT_DIR_OLD_PATH = "/usr/lib64/";
         // cust so path for cust_aicpu_sd: CustAiCpuUser
@@ -127,22 +125,18 @@ aeStatus_t SingleSoManager::CheckSoFile(const std::string &guardDirName, const s
         return AE_STATUS_OPEN_SO_FAILED;
     }
 
-    DeployContext deployCtx = DeployContext::DEVICE;
-    GetAicpuDeployContext(deployCtx);
-    if (deployCtx != DeployContext::HOSTCPU) {
-        std::string tmpGuardDirName(guardDirName);
-        if (tmpGuardDirName[tmpGuardDirName.size() - 1UL] != '/') {
-            (void)tmpGuardDirName.append("/");
-        }
+    std::string tmpGuardDirName(guardDirName);
+    if (tmpGuardDirName[tmpGuardDirName.size() - 1UL] != '/') {
+        (void)tmpGuardDirName.append("/");
+    }
 
-        const std::string pathStr(path.get());
-        const std::string realSoPath = GetRealCustSoPath();
-        if ((strncmp(path.get(), tmpGuardDirName.c_str(), tmpGuardDirName.length()) != 0) &&
-            (pathStr.find(realSoPath) == std::string::npos)) {
-            AE_ERR_LOG(AE_MODULE_ID, "Invalid so file with dir:%s so:%s, should be %s or %s",
-                       path.get(), soFile.c_str(), tmpGuardDirName.data(), realSoPath.c_str());
-            return AE_STATUS_OPEN_SO_FAILED;
-        }
+    const std::string pathStr(path.get());
+    const std::string realSoPath = GetRealCustSoPath();
+    if ((strncmp(path.get(), tmpGuardDirName.c_str(), tmpGuardDirName.length()) != 0) &&
+        (pathStr.find(realSoPath) == std::string::npos)) {
+        AE_ERR_LOG(AE_MODULE_ID, "Invalid so file with dir:%s so:%s, should be %s or %s",
+                   path.get(), soFile.c_str(), tmpGuardDirName.data(), realSoPath.c_str());
+        return AE_STATUS_OPEN_SO_FAILED;
     }
     return AE_STATUS_SUCCESS;
 }
@@ -431,36 +425,13 @@ aeStatus_t MultiSoManager::GetInnerSoPath(const std::string &soName, std::string
         AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed.");
         return AE_STATUS_INNER_ERROR;
     }
-    DeployContext deployCtx = DeployContext::DEVICE;
-    GetAicpuDeployContext(deployCtx);
-    if (deployCtx == DeployContext::HOSTCPU) {
-        std::string aicpuOpPath;
-        const char_t *const envValue = std::getenv("ASCEND_AICPU_PATH");
-        if ((envValue == nullptr) || (*envValue == '\0')) {
-            AE_INFO_LOG(AE_MODULE_ID, "environment variable ASCEND_AICPU_PATH is not set");
-        } else {
-            aicpuOpPath = std::string(envValue);
-        }
-
-        if (aicpuOpPath.empty()) {
-            aicpuOpPath = "/usr/local/Ascend/";
-            AE_INFO_LOG(AE_MODULE_ID, "use default value[%s]", aicpuOpPath.c_str());
-        }
-        if ((aicpuOpPath.length() > 0U) && ((aicpuOpPath.at((aicpuOpPath.length()) - 1U)) == '/')) {
-            soPath = aicpuOpPath + AICPU_SO_ROOT_DIR_HOST;
-        } else {
-            soPath = aicpuOpPath + "/" + AICPU_SO_ROOT_DIR_HOST;
-        }
-    } else {
-        // libtf_kernels.so and libaicpu_kernels.so and libcpu_kernels.so and libpt_kernels.so path from context
-        soPath = AICPU_SO_ROOT_DIR;
-        (void) HELPER_AICPU_OPKERNEL_PATH_HEAD;
+    // libtf_kernels.so and libaicpu_kernels.so and libcpu_kernels.so and libpt_kernels.so path from context
+    soPath = AICPU_SO_ROOT_DIR;
+    (void) HELPER_AICPU_OPKERNEL_PATH_HEAD;
 #ifdef AICPU_KERNEL_HELPER
         soPath = HELPER_AICPU_OPKERNEL_PATH_HEAD;
 #endif
-        (void)soPath.append(std::to_string(aicpu::GetUniqueVfId())).append("/").append(AICPU_SO_UNCOMPRESS_DIR)
-                    .append("/");
-    }
+    (void)soPath.append(std::to_string(aicpu::GetUniqueVfId())).append("/").append(AICPU_SO_UNCOMPRESS_DIR).append("/");
 
     return AE_STATUS_SUCCESS;
 }

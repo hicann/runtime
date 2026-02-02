@@ -35,10 +35,6 @@ constexpr size_t FIRST_INDEX = 0LU;
 constexpr const uint32_t DEVICE_MAX_SPLIT_NUM = 16U;
 // max number of eatch device cpu
 constexpr const uint32_t DEVICE_MAX_CPU_NUM = 16U;
-// max number of eatch host cpu bitmap
-constexpr const uint32_t HOST_CPU_BITMAP_LEN = 8U;
-// max number of eatch host cpu
-constexpr const uint32_t HOST_MAX_CPU_NUM_PER_BITMAP = 64U;
 // 查询bind信息间隔
 constexpr uint32_t QUERY_BIND_HOST_PID_INTERVBALE = 10000U;
 // 查询bind超时时间
@@ -71,8 +67,6 @@ namespace AicpuSchedule {
             }
             deviceIdTmp = static_cast<uint32_t>(pfDeviceId);
         }
-        DeployContext deployCtx = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtx);
         int64_t aicpuNum = 0;
         int64_t aicpuOsSched = 0;
         int64_t ccpuNum = 0;
@@ -81,27 +75,25 @@ namespace AicpuSchedule {
         int64_t dcpuOsSched = 0;
         int64_t tsCpuNum = 0;
         int64_t tsCpuOsSched = 0;
-        if (deployCtx != DeployContext::HOSTCPU) {
-            uint32_t retDrv = static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_AICPU,
-                INFO_TYPE_CORE_NUM, &aicpuNum));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_AICPU,
-                INFO_TYPE_OS_SCHED, &aicpuOsSched));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_CCPU,
-                INFO_TYPE_CORE_NUM, &ccpuNum));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_CCPU,
-                INFO_TYPE_OS_SCHED, &ccpuOsSched));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_DCPU,
-                INFO_TYPE_CORE_NUM, &dcpuNum));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_DCPU,
-                INFO_TYPE_OS_SCHED, &dcpuOsSched));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_TSCPU,
-                INFO_TYPE_CORE_NUM, &tsCpuNum));
-            retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_TSCPU,
-                INFO_TYPE_OS_SCHED, &tsCpuOsSched));
-            if (retDrv != 0U) {
-                aicpusd_err("AicpuGetDeviceInfo failed, ret[%u]", retDrv);
-                return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-            }
+        uint32_t retDrv = static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_AICPU,
+            INFO_TYPE_CORE_NUM, &aicpuNum));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_AICPU,
+            INFO_TYPE_OS_SCHED, &aicpuOsSched));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_CCPU,
+            INFO_TYPE_CORE_NUM, &ccpuNum));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_CCPU,
+            INFO_TYPE_OS_SCHED, &ccpuOsSched));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_DCPU,
+            INFO_TYPE_CORE_NUM, &dcpuNum));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_DCPU,
+            INFO_TYPE_OS_SCHED, &dcpuOsSched));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_TSCPU,
+            INFO_TYPE_CORE_NUM, &tsCpuNum));
+        retDrv |= static_cast<uint32_t>(AicpuGetDeviceInfo(deviceIdTmp, MODULE_TYPE_TSCPU,
+            INFO_TYPE_OS_SCHED, &tsCpuOsSched));
+        if (retDrv != 0U) {
+            aicpusd_err("AicpuGetDeviceInfo failed, ret[%u]", retDrv);
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
         }
 
         if (FeatureCtrl::IsAosCore()) {
@@ -144,85 +136,53 @@ namespace AicpuSchedule {
 
     int32_t AicpuDrvManager::GetNormalAicpuInfo(const std::vector<uint32_t> &deviceVec)
     {
-        DeployContext deployCtxTmp = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtxTmp);
-        if (deployCtxTmp == DeployContext::HOSTCPU) {
-            int64_t hostAicpuNum = 0;
-            int64_t hostAicpuBitMap[HOST_CPU_BITMAP_LEN] = {};
-            int32_t ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_HOST_AICPU, INFO_TYPE_CORE_NUM,
-                                             &hostAicpuNum);
+        int64_t aicpuNum = 0;
+        int64_t aicpuBitMap = 0;
+        int32_t ret = 0;
+        if (FeatureCtrl::IsVfModeCheckedByDeviceId(deviceVec[0])) {
+            ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_PF_CORE_NUM, &aicpuNum);
             if (ret != DRV_ERROR_NONE) {
                 return AICPU_SCHEDULE_ERROR_INIT_FAILED;
             }
-
-            ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_HOST_AICPU, INFO_TYPE_OCCUPY,
-                                     &hostAicpuBitMap[0]);
+            ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_PF_OCCUPY, &aicpuBitMap);
             if (ret != DRV_ERROR_NONE) {
                 return AICPU_SCHEDULE_ERROR_INIT_FAILED;
             }
-
-            aicpusd_run_info("halGetDeviceInfo aicpuNum[%lu]", hostAicpuNum);
-            aicpuNumPerDev_ = static_cast<uint32_t>(hostAicpuNum);
-            aicpuIdVec_.clear();
-            for (uint32_t i = 0; i < HOST_CPU_BITMAP_LEN; i++) {
-                aicpusd_run_info("halGetDeviceInfo bitmap[%u], [%llu]", i, hostAicpuBitMap[i]);
-                for (uint32_t j = 0; j < HOST_MAX_CPU_NUM_PER_BITMAP; j++) {
-                    if (hostAicpuBitMap[i] & 0x1) {
-                        aicpuIdVec_.push_back(i * HOST_MAX_CPU_NUM_PER_BITMAP + j);
-                    }
-                    hostAicpuBitMap[i] = hostAicpuBitMap[i] >> 1;
-                }
-            }
-            return AICPU_SCHEDULE_OK;
         } else {
-            int64_t aicpuNum = 0;
-            int64_t aicpuBitMap = 0;
-            int32_t ret = 0;
-            if (FeatureCtrl::IsVfModeCheckedByDeviceId(deviceVec[0])) {
-                ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_PF_CORE_NUM, &aicpuNum);
-                if (ret != DRV_ERROR_NONE) {
-                    return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-                }
-                ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_PF_OCCUPY, &aicpuBitMap);
-                if (ret != DRV_ERROR_NONE) {
-                    return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-                }
-            } else {
-                ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, &aicpuNum);
-                if (ret != DRV_ERROR_NONE) {
-                    return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-                }
-                ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_OCCUPY, &aicpuBitMap);
-                if (ret != DRV_ERROR_NONE) {
-                    return AICPU_SCHEDULE_ERROR_INIT_FAILED;
-                }
-            }
-
-            aicpusd_run_info("aicpuBitMap[%lld], aicpuNum[%lld].", aicpuBitMap, aicpuNum);
-            aicpuNumPerDev_ = static_cast<uint32_t>(aicpuNum);
-            aicpuIdVec_.clear();
-
-            DeployContext deployCtx = DeployContext::DEVICE;
-            (void)GetAicpuDeployContext(deployCtx);
-            if (deployCtx == DeployContext::HOST) {
-                for (int64_t i = 0; i < aicpuNum; ++i) {
-                    aicpuIdVec_.push_back(i);
-                }
-                return AICPU_SCHEDULE_OK;
-            }
-
-            for (uint32_t i = 0U; i < DEVICE_MAX_CPU_NUM; i++) {
-                if ((aicpuBitMap & 0x1LL) != 0LL) {
-                    aicpuIdVec_.push_back(i);
-                }
-                aicpuBitMap = aicpuBitMap >> 1;
-            }
-            if (static_cast<uint32_t>(aicpuNum) != aicpuIdVec_.size()) {
-                aicpusd_err("aicpunum bitmap error, aicpuNum[%lld],aicpuIdVecSize[%u]", aicpuNum, aicpuIdVec_.size());
+            ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, &aicpuNum);
+            if (ret != DRV_ERROR_NONE) {
                 return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+            }
+            ret = AicpuGetDeviceInfo(deviceVec[FIRST_INDEX], MODULE_TYPE_AICPU, INFO_TYPE_OCCUPY, &aicpuBitMap);
+            if (ret != DRV_ERROR_NONE) {
+                return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+            }
+        }
+
+        aicpusd_run_info("aicpuBitMap[%lld], aicpuNum[%lld].", aicpuBitMap, aicpuNum);
+        aicpuNumPerDev_ = static_cast<uint32_t>(aicpuNum);
+        aicpuIdVec_.clear();
+
+        DeployContext deployCtx = DeployContext::DEVICE;
+        (void)GetAicpuDeployContext(deployCtx);
+        if (deployCtx == DeployContext::HOST) {
+            for (int64_t i = 0; i < aicpuNum; ++i) {
+                aicpuIdVec_.push_back(i);
             }
             return AICPU_SCHEDULE_OK;
         }
+
+        for (uint32_t i = 0U; i < DEVICE_MAX_CPU_NUM; i++) {
+            if ((aicpuBitMap & 0x1LL) != 0LL) {
+                aicpuIdVec_.push_back(i);
+            }
+            aicpuBitMap = aicpuBitMap >> 1;
+        }
+        if (static_cast<uint32_t>(aicpuNum) != aicpuIdVec_.size()) {
+            aicpusd_err("aicpunum bitmap error, aicpuNum[%lld],aicpuIdVecSize[%u]", aicpuNum, aicpuIdVec_.size());
+            return AICPU_SCHEDULE_ERROR_INIT_FAILED;
+        }
+        return AICPU_SCHEDULE_OK;
     }
 
     int32_t AicpuDrvManager::GetCcpuInfo(const std::vector<uint32_t> &deviceVec)
@@ -429,7 +389,7 @@ namespace AicpuSchedule {
                 return status;
             }
             const uint32_t aicpuNum = GetAicpuNumPerDevice();
-            if ((deployCtx == DeployContext::HOST) || (deployCtx == DeployContext::HOSTCPU) || (aicpuNum == 0U)) {
+            if ((deployCtx == DeployContext::HOST) || (aicpuNum == 0U)) {
                 cpuGrpType = GRP_TYPE_BIND_CP_CPU;
             }
             aicpusd_info("Create group[%u], device[%d], type[%d]", grpId, deviceVec_[i], cpuGrpType);
@@ -624,13 +584,7 @@ namespace AicpuSchedule {
     uint32_t AicpuDrvManager::GetAicpuNum() const
     {
         aicpusd_info("Get aicpu core num[%u], device num[%zu]", aicpuNumPerDev_, deviceNum_);
-        DeployContext deployCtx = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtx);
-        if (deployCtx == DeployContext::HOSTCPU) {
-            return aicpuNumPerDev_;
-        } else {
-            return aicpuNumPerDev_ * static_cast<uint32_t>(deviceNum_);
-        }
+        return aicpuNumPerDev_ * static_cast<uint32_t>(deviceNum_);
     }
 
     std::vector<uint32_t> AicpuDrvManager::GetDeviceList() const
@@ -686,15 +640,6 @@ namespace AicpuSchedule {
         if (FeatureCtrl::IsAosCore()) {
             // connot overflow
             return ((aicpuBaseId_ + aicpuNumPerDev_) * deviceId) + aicpuBaseId_ + aicpuLogIndex;
-        } 
-        DeployContext deployCtx = DeployContext::DEVICE;
-        (void)GetAicpuDeployContext(deployCtx);
-        if (deployCtx == DeployContext::HOSTCPU) {
-            if (aicpuIdVec_.size() == 0) {
-                return INVALID_AICPU_ID;
-            } else {
-                return aicpuIdVec_[aicpuLogIndex];
-            }
         }
         if (FeatureCtrl::BindCpuOnlyOneDevice()) {
             // 只有一个device，vf切分到同一容器时会产生多个deviceId。

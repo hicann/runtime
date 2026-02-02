@@ -21,7 +21,6 @@ set (aicpu_processer_files
     ae_kernel_lib_fwk.cc
     ae_kernel_lib_aicpu.cc
     ae_kernel_lib_aicpu_kfc.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/stub/host_cpu_processer.cpp
 )
 set(inc_path
     ${CMAKE_CURRENT_SOURCE_DIR}
