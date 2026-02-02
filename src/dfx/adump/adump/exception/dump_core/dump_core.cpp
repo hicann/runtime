@@ -499,6 +499,7 @@ void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
     std::string kernelName = collector.GetProcessedKernelName();
     IDE_CTRL_VALUE_FAILED(!kernelName.empty(), return, "Get kernel name failed.");
     IDE_LOGI("kernel name: %s", kernelName.c_str());
+    DumpKernelInfo(kernelName);
 
     for (const auto &path : searchPath) {
         std::string jsonFilePath = collector.SearchJsonFiles(path, kernelName);
@@ -508,7 +509,6 @@ void DumpCore::DumpHostFile(const rtExceptionArgsInfo_t &argsInfo)
         DumpHostFile(jsonFilePath, ASCEND_SHTYPE_FILE_KERNEL_JSON, ASCEND_SHNAME_FILE_KERNEL_JSON);
         std::string kernelFilePath = jsonFilePath.substr(0, jsonFilePath.size() - JSON_SUFFIX_LEN) + ".o";
         DumpHostFile(kernelFilePath, ASCEND_SHTYPE_FILE_KERNEL_OBJECT, ASCEND_SHNAME_FILE_KERNEL_OBJECT);
-        DumpKernelInfo(kernelName);
         break;
     }
 }
