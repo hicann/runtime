@@ -26,7 +26,7 @@ usage() {
   echo "    -h, --help     Print usage"
   echo "    --asan         Enable AddressSanitizer"
   echo "    --cov          Enable Coverage"
-  echo "    --build_host_only         
+  echo "    --build_host_only
                            Only build host target"
   echo "    -build-type=<TYPE>"
   echo "                   Specify build type (TYPE options: Release/Debug), Default: Release"
@@ -70,9 +70,9 @@ checkopts() {
   else
     echo "env ASCEND_HOME_PATH not exists: ${ASCEND_HOME_PATH}"
   fi
-  
+
   # Process the options
-  parsed_args=$(getopt -a -o j:hv -l help,pkg,verbose,cov,build_host_only,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,asan,sign-script:,enable-sign,version: -- "$@") || {
+  parsed_args=$(getopt -a -o j:hvf: -l help,pkg,verbose,cov,build_host_only,ascend_install_path:,build-type:,cann_3rd_lib_path:,ascend_3rd_lib_path:,asan,sign-script:,enable-sign,version: -- "$@") || {
     usage
     exit 1
   }
@@ -135,6 +135,15 @@ checkopts() {
         VERSION_INFO=$2
         shift 2
         ;;
+      -f)
+        CHANGED_FILES_FILE="$2"
+        if [ ! -f "$CHANGED_FILES_FILE" ]; then
+          echo "Error: File $CHANGED_FILES_FILE not found"
+          exit 1
+        fi
+        CHANGED_FILES=$(cat "$CHANGED_FILES_FILE")
+        shift 2
+        ;;
       --)
         shift
         break
@@ -146,6 +155,56 @@ checkopts() {
         ;;
     esac
   done
+}
+
+# check if changed files only include docs/, example/ or README.md
+# usage: check_changed_files "file1 file2 file3"
+check_changed_files() {
+  local changed_files="$1"
+  local skip_build=true
+
+  # if no changed files provided, return false (don't skip build)
+  if [ -z "$changed_files" ]; then
+    return 1
+  fi
+
+  # check each changed file
+  for file in $changed_files; do
+    # remove leading/trailing spaces and quotes
+    file=$(echo "$file" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
+
+    # check if file is README.md (case insensitive)
+    if echo "$file" | grep -qi "^README\.md$"; then
+      continue
+    fi
+
+    # check if file is CONTRIBUTING.md (case insensitive)
+    if echo "$file" | grep -qi "^CONTRIBUTING\.md$"; then
+      continue
+    fi
+
+    # check if file is in docs/ directory
+    if echo "$file" | grep -q "^docs/"; then
+      continue
+    fi
+
+    # check if file is in example/ directory
+    if echo "$file" | grep -q "^example/"; then
+      continue
+    fi
+
+    # if any file doesn't match the above patterns, don't skip build
+    skip_build=false
+    break
+  done
+
+  if [ "$skip_build" = true ]; then
+    echo "[INFO] Changed files only contain docs/, example/, README.md or CONTRIBUTING.md, skipping build."
+    echo "[INFO] Changed files: $changed_files"
+    return 0
+  fi
+
+  return 1
 }
 
 mk_dir() {
@@ -214,6 +273,13 @@ build_rts() {
 
 main() {
   checkopts "$@"
+
+  # check if changed files only contain docs/, example/ or README.md
+  if [ -n "$CHANGED_FILES" ]; then
+    if check_changed_files "$CHANGED_FILES"; then
+      exit 200
+    fi
+  fi
 
   # build start
   echo "---------------- build start ----------------"
