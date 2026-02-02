@@ -724,9 +724,13 @@ rtError_t NpuDriver::MemAdvise(void * const devPtr, const uint64_t cnt, const ui
     const drvError_t drvRet = halMemAdvise(RtPtrToPtr<DVdeviceptr>(devPtr),
         static_cast<size_t>(cnt), advise, static_cast<DVdevice>(devid));
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "[drv api] MemAdvise failed: device_id=%u, count=%" PRIu64
-            ", advise=%u, drvRetCode=%u", devid, cnt, advise, static_cast<uint32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
+        if ((drvRet == DRV_ERROR_INVALID_VALUE) && (advise == RT_ADVISE_ACCESS_READWRITE || advise == RT_ADVISE_ACCESS_READONLY)) {
+            RT_LOG(RT_LOG_WARNING, "[drv api] old version does not support the advise, advise=%u, device_id=%u", advise, devid);
+        } else {
+            DRV_ERROR_PROCESS(drvRet, "[drv api] MemAdvise failed: device_id=%u, count=%" PRIu64
+                ", advise=%u, drvRetCode=%u", devid, cnt, advise, static_cast<uint32_t>(drvRet));
+            return RT_GET_DRV_ERRCODE(drvRet);
+        }
     }
 
     return RT_ERROR_NONE;

@@ -2258,6 +2258,12 @@ TEST_F(NpuDriverTest2, MemAdvise_fail) {
     int32_t tmp = 0;
     error = rawDrv->MemAdvise(&tmp, 0, 0, 0);
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+
+    error = rawDrv->MemAdvise(&tmp, 0, 2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rawDrv->MemAdvise(&tmp, 0, 3, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete rawDrv;
 }
 
