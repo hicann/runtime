@@ -466,7 +466,8 @@ macro(add_runtime_v200_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
@@ -573,7 +574,8 @@ macro(add_runtime_v201_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
