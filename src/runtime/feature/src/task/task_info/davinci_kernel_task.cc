@@ -227,8 +227,6 @@ static uint32_t GetSchemMode(AicTaskInfo* const taskInfo)
 
 static void CheckCoreLimit(TaskInfo* const taskInfo, const rtDevResLimitType_t resType, const uint16_t blockDim)
 {
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-
     const uint32_t coreNum = taskInfo->stream->Device_()->GetResInitValue(resType);
     COND_RETURN_VOID_WARN(blockDim > coreNum,
         "blockDim exceeds coreNum, drv devId=%u, resType=%d, blockDim=%hu, coreNum=%u",
@@ -319,7 +317,6 @@ void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t *const command)
 
     command->u.kernelTask.isConvertAddr = 0U;
     bool needConvert = true;
-    Runtime *const rtInstance = Runtime::Instance();
     uint8_t l2Size = 0U;
     needConvert = false;
 
