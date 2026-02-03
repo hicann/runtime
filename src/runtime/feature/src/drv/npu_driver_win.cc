@@ -454,6 +454,63 @@ rtError_t NpuDriver::MemQueueInit(const int32_t devId)
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::MemQueueReset(const int32_t devId, const uint32_t qid)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::MemQueueExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
+        const char * const shareName)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    UNUSED(peerDevId);
+    UNUSED(shareName);
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueUnExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
+        const char * const shareName)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    UNUSED(peerDevId);
+    UNUSED(shareName);
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueImport(const int32_t devId, const int32_t peerDevId, const char * const shareName,
+        uint32_t * const qid)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    UNUSED(peerDevId);
+    UNUSED(shareName);
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueUnImport(const int32_t devId, const uint32_t qid, const int32_t peerDevId, 
+        const char * const shareName)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    UNUSED(peerDevId);
+    UNUSED(shareName);
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueGrant(const int32_t devId, const uint32_t qid, const int32_t pid,
+                                   const rtMemQueueShareAttr_t * const attr)
+{
+    UNUSED(devId);
+    UNUSED(qid);
+    UNUSED(pid);
+    UNUSED(attr);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::MemQueueSet(const int32_t devId, const rtMemQueueSetCmdType cmd,
     const rtMemQueueSetInputPara * const input)
 {
