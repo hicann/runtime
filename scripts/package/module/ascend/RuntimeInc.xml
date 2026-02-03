@@ -256,7 +256,6 @@
     <file_info copy_type="source" src_path="" dst_path="data/platform_config/cann-dev" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="Ascend950PR_9599.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_9589.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_958a.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_958b.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_9579.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_957b.ini" install_mod="440" entity="true"/>
