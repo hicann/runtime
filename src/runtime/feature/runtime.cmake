@@ -341,7 +341,8 @@ macro(add_runtime_common_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fno-common
         -fno-strict-aliasing
         -Werror
@@ -430,7 +431,8 @@ macro(add_runtime_api_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
@@ -531,7 +533,8 @@ macro(add_runtime_v100_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
