@@ -9,14 +9,8 @@
  */
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
-#include "mmpa/mmpa_api.h"
 #include "driver/ascend_inpackage_hal.h"
-#include "task.hpp"
-#include "driver.hpp"
-#include "securec.h"
 #include "runtime.hpp"
-#include "osal.hpp"
-#include "arg_loader.hpp"
 
 #ifdef CFG_DEV_PLATFORM_PC
 #include "cmodel_driver.h"
