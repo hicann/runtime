@@ -735,6 +735,134 @@ rtError_t NpuDriver::MemQueueInit(const int32_t devId)
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::MemQueueReset(const int32_t devId, const uint32_t qid)
+{
+    RT_LOG(RT_LOG_INFO, "drv devId=%d, qid=%u.", devId, qid);
+    COND_RETURN_WARN(&halQueueReset == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueReset does not exist.");
+    const drvError_t drvRet = halQueueReset(static_cast<uint32_t>(devId), qid);
+    COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueReset does not support.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueReset failed: device_id=%d, qid=%u, drvRetCode=%d.",
+            devId, qid, static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::MemQueueExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
+        const char * const shareName)
+{
+    COND_RETURN_WARN(&halQueueExport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueExport does not exist.");
+    TIMESTAMP_NAME(__func__);
+    RT_LOG(RT_LOG_INFO, "Export mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d .", 
+        devId, qid, peerDevId);
+
+    shareQueInfo queInfo = {};
+    queInfo.peerDevId = peerDevId;
+    errno_t ret = strcpy_s(queInfo.shareQueName, SHARE_QUEUE_NAME_LEN, shareName);
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_INVALID_VALUE, "strcpy_s failed!");
+
+    const drvError_t drvRet = halQueueExport(devId, qid, &queInfo);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueExport failed: device_id=%d, qid=%d, peerDevId=%d.",
+            devId, qid, peerDevId);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueUnExport(const int32_t devId, const uint32_t qid, const int32_t peerDevId,
+        const char * const shareName)
+{
+    COND_RETURN_WARN(&halQueueUnexport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueUnExport does not exist.");
+    TIMESTAMP_NAME(__func__);
+    RT_LOG(RT_LOG_INFO, "UnExport mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d .", 
+        devId, qid, peerDevId);
+
+    shareQueInfo queInfo = {};
+    queInfo.peerDevId = peerDevId;
+    errno_t ret = strcpy_s(queInfo.shareQueName, SHARE_QUEUE_NAME_LEN, shareName);
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_INVALID_VALUE, "strcpy_s failed!");
+
+    const drvError_t drvRet = halQueueUnexport(devId, qid, &queInfo);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueUnExport failed: device_id=%d, qid=%d, peerDevId=%d.",
+            devId, qid, peerDevId);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueImport(const int32_t devId, const int32_t peerDevId, const char * const shareName,
+        uint32_t * const qid)
+{
+    COND_RETURN_WARN(&halQueueImport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueImport does not exist.");
+    TIMESTAMP_NAME(__func__);
+    RT_LOG(RT_LOG_INFO, "Import mem queue, drv deviceId=%d, peerDevId=%dm.", 
+        devId, peerDevId);
+
+    shareQueInfo queInfo = {};
+    queInfo.peerDevId = peerDevId;
+    errno_t ret = strcpy_s(queInfo.shareQueName, SHARE_QUEUE_NAME_LEN, shareName);
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_INVALID_VALUE, "strcpy_s failed!");
+
+    const drvError_t drvRet = halQueueImport(devId, &queInfo, qid);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueImport failed: device_id=%d, peerDevId=%d.",
+            devId, peerDevId);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueUnImport(const int32_t devId, const uint32_t qid, const int32_t peerDevId, 
+        const char * const shareName)
+{
+    COND_RETURN_WARN(&halQueueUnimport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueUnImport does not exist.");
+    TIMESTAMP_NAME(__func__);
+    RT_LOG(RT_LOG_INFO, "UnImport mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d.", devId, qid, 
+        peerDevId);
+
+    shareQueInfo queInfo = {};
+    queInfo.peerDevId = peerDevId;
+    errno_t ret = strcpy_s(queInfo.shareQueName, SHARE_QUEUE_NAME_LEN, shareName);
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_INVALID_VALUE, "strcpy_s failed!");
+
+    const drvError_t drvRet = halQueueUnimport(devId, qid, &queInfo);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueUnimport failed: device_id=%d, peerDevId=%d.",
+            devId, peerDevId);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;    
+}
+
+rtError_t NpuDriver::MemQueueGrant(const int32_t devId, const uint32_t qid, const int32_t pid,
+                                   const rtMemQueueShareAttr_t * const attr)
+{
+    RT_LOG(RT_LOG_INFO, "grant mem queue, drv devId=%d, qid=%u, pid=%d.", devId, qid, pid);
+
+    COND_RETURN_WARN(&halQueueGrant == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halQueueGrant does not exist.");
+    QueueShareAttr drvAttr = {};
+    drvAttr.manage = attr->manage;
+    drvAttr.read = attr->read;
+    drvAttr.write = attr->write;
+    const drvError_t drvRet = halQueueGrant(static_cast<uint32_t>(devId), static_cast<int32_t>(qid), pid, drvAttr);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halQueueGrant failed: device_id=%d, qid=%u, pid=%d, drvRetCode=%d.", devId,
+            qid, pid, static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::MemQueueSet(const int32_t devId, const rtMemQueueSetCmdType cmd,
     const rtMemQueueSetInputPara * const input)
 {
