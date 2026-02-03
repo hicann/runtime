@@ -24,8 +24,8 @@
 namespace ge {
  using Status = uint32_t;
  	 
-static const uint32_t GE_PROF_SUCCESS = 0;
-static const uint32_t GE_PROF_FAILED = 4700059007;
+static const uint32_t GE_PROF_SUCCESS = 0U;
+static const uint32_t GE_PROF_FAILED = 4700059007U;
 
 enum ProfDataTypeConfig {
     kProfTaskTime       = 0x0002,
