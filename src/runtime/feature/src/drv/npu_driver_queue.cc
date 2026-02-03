@@ -9,17 +9,9 @@
  */
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
-#include "mmpa/mmpa_api.h"
 #include "driver/ascend_inpackage_hal.h"
-#include "task.hpp"
-#include "driver.hpp"
-#include "securec.h"
-#include "runtime.hpp"
-#include "osal.hpp"
-#include "arg_loader.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
-#include "npu_driver_record.hpp"
 
 namespace {
     constexpr int32_t MEMQ_EVENT_CROSS_DEV_VERSION = 0x72316; // MAJOR:0x07, MINOR:0x23, PATCH:0x16

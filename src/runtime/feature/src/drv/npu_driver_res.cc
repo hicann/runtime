@@ -9,17 +9,11 @@
  */
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
-#include "mmpa/mmpa_api.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "task.hpp"
-#include "driver.hpp"
-#include "securec.h"
 #include "runtime.hpp"
-#include "osal.hpp"
-#include "arg_loader.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
-#include "npu_driver_record.hpp"
 namespace cce {
 namespace runtime {
 
