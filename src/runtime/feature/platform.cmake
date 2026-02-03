@@ -87,7 +87,8 @@ macro(runtime_platform_910B_obj target_name)
     )
 
     target_compile_options(runtime_platform_910B PRIVATE
-            -O3
+            $<$<CONFIG:Debug>:-O0>
+            $<$<NOT:$<CONFIG:Debug>>:-O3>
             -fvisibility=hidden
             -fno-common
             -fno-strict-aliasing
@@ -117,7 +118,8 @@ macro(runtime_platform_kirin_obj target_name)
     )
 
     target_compile_options(runtime_platform_kirin PRIVATE
-            -O3
+            $<$<CONFIG:Debug>:-O0>
+            $<$<NOT:$<CONFIG:Debug>>:-O3>
             -fvisibility=hidden
             -fno-common
             -fno-strict-aliasing
@@ -159,7 +161,8 @@ macro(runtime_platform_others_obj target_name)
     )
 
     target_compile_options(runtime_platform_others PRIVATE
-            -O3
+            $<$<CONFIG:Debug>:-O0>
+            $<$<NOT:$<CONFIG:Debug>>:-O3>
             -fvisibility=hidden
             -fno-common
             -fno-strict-aliasing
@@ -188,7 +191,8 @@ target_include_directories(runtime_platform_tiny PRIVATE
 )
 
 target_compile_options(runtime_platform_tiny PRIVATE
-        -O3
+        $<$<CONFIG:Debug>:-O0>
+        $<$<NOT:$<CONFIG:Debug>>:-O3>
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
