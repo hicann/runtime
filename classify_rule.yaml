@@ -75,10 +75,9 @@ tsd:
   team: "aicpu"
   src:
     release:
-      - src/tsd/tsdclient
+      - src/tsd
     unrelease:
       - tests/ut/tsd
-      - src/tsd/tsdaemon
   llt:
     ut_check: true
     st_check: false
