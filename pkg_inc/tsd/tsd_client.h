@@ -16,7 +16,7 @@
 #include <memory>
 #include <mutex>
 #include "tsd/status.h"
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 
 #ifdef WIN_TSD
 #define TDT_LIB_EXPORT __declspec(dllexport)
