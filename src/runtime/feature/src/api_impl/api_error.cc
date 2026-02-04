@@ -1484,7 +1484,7 @@ rtError_t ApiErrorDecorator::HostRegister(void *ptr, uint64_t size, rtHostRegist
     return error;
 }
 
-rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, size_t size, uint32_t flag)
+rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_MSG_OUTER(size);
