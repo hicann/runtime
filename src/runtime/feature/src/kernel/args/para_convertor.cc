@@ -129,6 +129,7 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg &taskCfg, const rtKernelLaunchCfg_t*
     taskCfg.base.dumpflag = RT_KERNEL_DEFAULT;
     taskCfg.isExtendValid = 1U;
     taskCfg.extend.timeout = 0UL; // 默认值0U，代表默认超时时间
+    taskCfg.base.schemMode = static_cast<uint8_t>(RT_SCHEM_MODE_END);
     // cfg support nullptr, no need process
     NULL_PTR_RETURN_NOLOG(cfg, RT_ERROR_NONE);
     NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
