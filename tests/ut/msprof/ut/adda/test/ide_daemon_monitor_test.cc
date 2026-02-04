@@ -12,7 +12,7 @@
 
 #include "ide_daemon_hdc_test.h"
 #include "mmpa_stub.h"
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "ide_daemon_monitor.h"
 
 struct IdeMonitorMgr {

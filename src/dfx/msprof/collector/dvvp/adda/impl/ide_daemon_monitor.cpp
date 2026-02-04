@@ -10,7 +10,7 @@
 #include "ide_daemon_monitor.h"
 #include <string>
 #include "ide_common_util.h"
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "mmpa_api.h"
 #include "thread.h"
 #include "msprof_dlog.h"

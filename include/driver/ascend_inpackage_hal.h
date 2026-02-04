@@ -6,6 +6,22 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
+ *
+ * The code snippet comes from CANN project
+ *
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2019. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef __ASCEND_INPACKAGE_HAL_H__
@@ -86,7 +102,7 @@ DV_ONLINE DVresult drvMemInitSvmDevice(int hostpid, unsigned int vfid, unsigned 
 
 /**
  * @ingroup driver
- * @brief get borad id
+ * @brief get board id
  * @attention This function is only can be called by components in driver of device,
  *  if the components is not in driver of device, don't use this function.
  * @param [in] dev_id device id
@@ -216,7 +232,7 @@ drvError_t halTsCmdlistMemUnMap(unsigned int devId, unsigned int tsId);
  * @param [in] img_path  verify image path.
  * @param [in] cmd_type  head type.
  * @param [in] buf  the buff to save head info.
- * @param [in] buf_len  input buff length, when proc succ, the value should be change to actural value length
+ * @param [in] buf_len  input buff length, when proc succ, the value should be change to actual value length
  * @return  0  success, return others fail
  */
 int halGetImgHeadInfo(HAL_IMG_ID image_id, const char *img_path, HAL_IMG_HEAD_TYPE cmd_type, char *buf, int* buf_len);
@@ -257,7 +273,7 @@ typedef enum  {
 
 typedef struct {
     UADK_DIGEST_ALG alg;
-    unsigned int task_mode; /**< 0:loop query, 1:intrrupt nofity */
+    unsigned int task_mode; /**< 0:loop query, 1:interrupt notify */
     int rsv[4];
 } uadk_digest_param;
 
@@ -275,7 +291,7 @@ DLLEXPORT int uadk_digest_init(DIGEST_CTX *handle, uadk_digest_param *param);
 
 /**
  * @ingroup driver
- * @brief alloc digest memery
+ * @brief alloc digest memory
  * @attention
  * @param [in] handle  digest context handle
  * @param [in] len  buffer length
@@ -336,6 +352,14 @@ DLLEXPORT int uadk_digest_uninit(DIGEST_CTX handle);
  */
 drvError_t halGetPhyDevIdByLogicDevId(unsigned int dev_id, unsigned int *phy_dev_id);
 
+/**
+* @ingroup driver
+* @brief get network device info.
+* @attention null
+* @return 0 success
+*/
+DLLEXPORT int dsmi_cmd_get_network_device_info(int device_id, const char *inbuf, unsigned int size_in, char *outbuf,
+                                               unsigned int *size_out);
 
 /**
  * @ingroup driver
@@ -420,7 +444,7 @@ DLLEXPORT int drv_hw_deflate(struct drv_zip_stream *zstrm, int flush);
  * @brief deflate end
  * @attention null
  * @param [inout] zstrm  zip stream
- * @return   HZIP_OK   sucess
+ * @return   HZIP_OK   success
  * @return   other  fail
  */
 DLLEXPORT int drv_hw_deflateEnd(struct drv_zip_stream *zstrm);
@@ -468,7 +492,7 @@ DLLEXPORT int drv_hw_inflate(struct drv_zip_stream *zstrm, int flush);
  * @brief inflate end
  * @attention null
  * @param [inout] zstrm  zip stream
- * @return   HZIP_OK   sucess
+ * @return   HZIP_OK   success
  * @return   other  fail
  */
 DLLEXPORT int drv_hw_inflateEnd(struct drv_zip_stream *zstrm);
@@ -522,7 +546,7 @@ struct prof_sample_register_para {
 
 /**
  * @ingroup driver
- * @brief register prof channel smaple handle
+ * @brief register prof channel sample handle
  * @attention null
  * @param [in] dev_id : device id
  * @param [in] chan_id : channel id

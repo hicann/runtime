@@ -24,7 +24,8 @@ import re
 PATTERN_FUNCTION = re.compile(r'.+\w+\([^;]*\);')
 PATTERN_FUNCTION_WEAK = re.compile(r'.+\w+\([^;]*\) ASCEND_HAL_WEAK;')
 INGORE_LIST = ["#ifndef __ASCEND_HAL_H__", "#ifndef ASCEND_EXTERNAL_H", 
-    "#ifndef __ASCEND_INPACKAGE_HAL_H__", "#ifndef TS_API_H", "#ifndef __DRV_INTERNAL_H__"]
+    "#ifndef __ASCEND_INPACKAGE_HAL_H__", "#ifndef TS_API_H", "#ifndef __DRV_INTERNAL_H__",
+    "#ifndef ASCEND_HAL_BASE_H"]
 
 def collect_content(file_path):
     """

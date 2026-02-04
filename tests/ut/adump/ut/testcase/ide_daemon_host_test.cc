@@ -23,7 +23,7 @@
 #include "common/config.h"
 extern "C" {
 #include "dsmi_common_interface.h"
-#include "peripheral_api.h"
+#include "ascend_hal.h"
 }
 
 using namespace IdeDaemon::Common::Config;

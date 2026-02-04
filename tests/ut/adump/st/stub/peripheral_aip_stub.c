@@ -7,18 +7,13 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "peripheral_api.h"
+#include <stdint.h>
 
 uint32_t QueryCameraIds(int* cameraIds, uint32_t* count)
 {
     cameraIds[0] = 0;
     *count = 1;
     return 1;
-}
-
-enum CameraStatus  QueryCameraStatus(int cameraId)
-{
-    return CAMERA_STATUS_OPEN;
 }
 
 int IsChipAlive(char* chipName)

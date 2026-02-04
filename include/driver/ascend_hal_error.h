@@ -6,6 +6,22 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
+ *
+ * The code snippet comes from CANN project
+ *
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2020. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #ifndef __ASCEND_HAL_ERROR_H__
 #define __ASCEND_HAL_ERROR_H__
@@ -29,7 +45,7 @@ typedef enum tagDrvError {
     DRV_ERROR_NOT_EXIST = 11,        /**< there is resource*/
     DRV_ERROR_REPEATED_USERD = 12,
     DRV_ERROR_BUSY = 13,                /**< task already running */
-    DRV_ERROR_NO_RESOURCES = 14,        /**< driver short of resouces */
+    DRV_ERROR_NO_RESOURCES = 14,        /**< driver short of resources */
     DRV_ERROR_OUT_OF_CMD_SLOT = 15,
     DRV_ERROR_WAIT_TIMEOUT = 16,       /**< driver wait timeout*/
     DRV_ERROR_IOCRL_FAIL = 17,         /**< driver ioctl fail*/
@@ -123,7 +139,8 @@ typedef enum tagDrvError {
     DRV_ERROR_NET_UNREACH = 95,         /**< net error or device failure*/
     DRV_ERROR_TRANS_LINK_ABNORMAL = 96,
     DRV_ERROR_TRANS_LINK_ACK_TIMEOUT_ERR = 97,
-    DRV_ERROR_CALL_NO_RETRY,            /**< Function call error，no need to retry */   
+    DRV_ERROR_CALL_NO_RETRY = 98,       /**< Function call error，no need to retry */
+    DRV_ERROR_CONNECT = 99,
     DRV_ERROR_NOT_SUPPORT = 0xfffe,
     DRV_ERROR_RESERVED
 } drvError_t;//lint !e116 !e17

@@ -6,6 +6,22 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
+ *
+ * The code snippet comes from CANN project
+ *
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2019. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 
@@ -93,7 +109,7 @@ struct buff_cfg {
     unsigned int cfg_id;         /**< cfg id, 0~7 */
     unsigned int total_size;  /**< memzone total size, must below 256M */
     unsigned int blk_size;       /**< the size of each blk in this memzone  */
-    unsigned int max_buf_size;   /**< max buff size could allocte, */
+    unsigned int max_buf_size;   /**< max buff size could allocate, */
     unsigned int page_type;      /**< page type of memzone, could be PAGE_NORMAL or PAGE_HUGET_ONLY */
     int reserve[BUFF_RESERVE_LEN];   /**< for reserve */
 };
@@ -303,7 +319,7 @@ DLLEXPORT int halGrpAddProc(const char *name, int pid, GroupShareAttr attr) ASCE
 
 /**
 * @ingroup driver
-* @brief attach proccess to check permission in grp
+* @brief attach process to check permission in grp
 * @attention null
 * @param [in] name, grp name
 * @param [in] timeout, time out ms
@@ -519,7 +535,7 @@ typedef struct {
     int subF2NFGroupId;
     int subF2NFPid;
     void* headDataPtr;
-    unsigned int entity_type; /* 0: soft queue; 1: Qmngr queue; 2: GQM queue */
+    unsigned int entity_type; /* 0：soft queue; 1: Qmngr queue；2: GQM queue */
     int reserve[QUEUE_INFO_RESERVE_LEN];
     QueueStat stat;
 }QueueInfo;
@@ -595,6 +611,7 @@ typedef enum {
     QUEUE_QUERY_QUEUE_MBUF_INFO,
     QUEUE_QUERY_MAX_IOVEC_NUM,
     QUEUE_QUERY_DEPLOY_TYPE,
+    QUEUE_QUERY_SUPPORT_INTER_DEV_QUE,
     QUEUE_QUERY_CMD_MAX,
 } QueueQueryCmdType;
 
@@ -647,6 +664,10 @@ typedef struct {
     unsigned int deployType;
 } QueQueryDeployInfo;
 
+typedef struct {
+    unsigned int value; /* 0:not support; 1:support */
+} QueQuerySupportInterDevQue;
+
 #define MAX_QUEUE_NUM 8192
 typedef union {
     QueQueryQueueAttrInfo queQueryQueueAttrInfo;
@@ -654,6 +675,7 @@ typedef union {
     QueQueryQueueMbufInfo queQueryQueueMbufInfo;
     QueQueryMaxIovecNum queQueryMaxIovecNum;
     QueQueryDeployInfo queQueryDeployInfo;
+    QueQuerySupportInterDevQue queQuerySupportInterDevQue;
 } QueueQueryOutput;
 
 typedef enum {

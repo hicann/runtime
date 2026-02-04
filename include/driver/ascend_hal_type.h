@@ -7,8 +7,18 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
-#ifndef DSMI_COMMON_INTERFACE_BASE_H
-#define DSMI_COMMON_INTERFACE_BASE_H
-
+ 
+#ifndef __ASCEND_HAL_TYPE_H__
+#define __ASCEND_HAL_TYPE_H__
+ 
+typedef signed char int8_t;
+typedef signed int int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+ 
+typedef unsigned long long UINT64;
+typedef unsigned int UINT32;
+typedef unsigned short UINT16;
+typedef unsigned char UINT8;
+ 
 #endif

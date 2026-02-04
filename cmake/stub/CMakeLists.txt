@@ -23,11 +23,12 @@ add_library(ascend_hal_stub SHARED)
 
 set(LOCAL_ASCEND_H_FILE_PATH ${RUNTIME_DIR}/include/driver/ascend_hal.h)
 set(LOCAL_ASCEND_H_FILE_PATH1 ${RUNTIME_DIR}/include/driver/ascend_hal_external.h)
+set(LOCAL_ASCEND_H_FILE_PATH2 ${RUNTIME_DIR}/include/driver/ascend_hal_base.h)
 set(LOCAL_ASCEND_C_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/ascend_hal.c)
 
 add_custom_command(
     OUTPUT ${LOCAL_ASCEND_C_FILE_PATH}
-    COMMAND ${RUNTIME_PYTHON} ${LOCAL_H2C_PY_PATH} -i ${LOCAL_ASCEND_H_FILE_PATH} ${LOCAL_ASCEND_H_FILE_PATH1} -o ${LOCAL_ASCEND_C_FILE_PATH}
+    COMMAND ${RUNTIME_PYTHON} ${LOCAL_H2C_PY_PATH} -i ${LOCAL_ASCEND_H_FILE_PATH} ${LOCAL_ASCEND_H_FILE_PATH1} ${LOCAL_ASCEND_H_FILE_PATH2} -o ${LOCAL_ASCEND_C_FILE_PATH}
 )
 
 target_sources(ascend_hal_stub PRIVATE
@@ -68,6 +69,7 @@ install(FILES   ${RUNTIME_DIR}/include/driver/ascend_hal_define.h
                 ${RUNTIME_DIR}/include/driver/ascend_hal_error.h
                 ${RUNTIME_DIR}/include/driver/ascend_hal.h
                 ${RUNTIME_DIR}/include/driver/ascend_hal_external.h
+                ${RUNTIME_DIR}/include/driver/ascend_hal_base.h
     DESTINATION ${INSTALL_INCLUDE_DIR}/ascend_hal/driver COMPONENT opensdk EXCLUDE_FROM_ALL
 )
 if (PACKAGE STREQUAL "opensdk")

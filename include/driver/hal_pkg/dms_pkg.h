@@ -8,21 +8,30 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef __NIC_UIO_INTERFACE_H__
-#define __NIC_UIO_INTERFACE_H__
+#ifndef DMS_PKG_H
+#define DMS_PKG_H
 
-#ifdef __cplusplus
-extern "C" {
+#define MAX_RECORD_PA_NUM_PER_DEV    20U
+
+struct va_info {
+    unsigned short size;
+    unsigned char reserved[6];
+    unsigned long long va_addr;
+};
+
+struct hbm_pa_va_info {
+    unsigned int dev_id;
+    unsigned int host_pid;
+    unsigned int va_num;
+    struct va_info va_info[MAX_RECORD_PA_NUM_PER_DEV];
+};
+
+struct memory_fault_timestamp {
+    unsigned int dev_id;
+    unsigned int host_pid;
+    unsigned int event_id;
+    unsigned int reserved; /* for byte alignment */
+    unsigned long long syscnt; /* event occur syscnt*/
+};
+
 #endif
-
-#include <stdint.h>
-
-// Export Interfaces
-int uio_open_device(const char *uio_device_name);
-int uio_close_device(const char *uio_device_name);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // __NIC_UIO_INTERFACE_H__
