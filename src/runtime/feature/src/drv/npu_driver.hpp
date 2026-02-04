@@ -667,6 +667,8 @@ public:
     virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) override;
     rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
                              int64_t &chipId, int64_t &dieId) override;
+    rtError_t GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                              const int32_t infoType, int64_t * const val) override;
 private:
     rtError_t ManagedMemAllocInner(void **const dptr, const uint64_t size, const ManagedMemFlag flag,
         const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME);

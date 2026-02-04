@@ -1025,7 +1025,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTest)
     rtStarsSqe_t sqe = {};
 
     single_notify->srvId_ = 0U;
-    int64_t topologyType = TOPOLOGY_PIB;
+    int64_t topologyType = TOPOLOGY_UB;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetPairDevicesInfo).expects(once())
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topologyType, sizeof(topologyType))).will(returnValue(RT_ERROR_NONE));
     ToConstructSqe(task, &sqe);
