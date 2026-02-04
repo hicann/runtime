@@ -2547,7 +2547,7 @@ rtError_t ApiImpl::HostRegister(void *ptr, uint64_t size, rtHostRegisterType typ
         curCtx->Device_()->Id_());
 }
 
-rtError_t ApiImpl::HostRegisterV2(void *ptr, size_t size, uint32_t flag)
+rtError_t ApiImpl::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
     TIMESTAMP_NAME(__func__);
