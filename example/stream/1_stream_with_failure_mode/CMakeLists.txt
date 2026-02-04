@@ -12,9 +12,8 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 # project information
-project(stream_with_failure_mode)
+project(Runtime_Sample)
 set(SOC_VERSION $ENV{SOC_VERSION})
-set(ASCEND_CANN_PACKAGE_PATH $ENV{ASCEND_CANN_PACKAGE_PATH})
 set(ASCENDC_CMAKE_DIR $ENV{ASCENDC_CMAKE_DIR})
 set(RUN_MODE "npu" CACHE STRING "run mode: npu")
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type Release/Debug (default Debug)" FORCE)
