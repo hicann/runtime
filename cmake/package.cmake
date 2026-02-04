@@ -216,6 +216,10 @@ install(FILES
     OPTIONAL
 )
 
+install(DIRECTORY ${RUNTIME_DIR}/include/driver
+    DESTINATION runtime/pkg_inc
+)
+
 install(FILES
     pkg_inc/profiling/aprof_pub.h
     pkg_inc/profiling/devprof_pub.h

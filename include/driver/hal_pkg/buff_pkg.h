@@ -7,8 +7,20 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#ifndef BUFF_PKG_H
+#define BUFF_PKG_H
 
-#ifndef DSMI_COMMON_INTERFACE_BASE_H
-#define DSMI_COMMON_INTERFACE_BASE_H
+typedef struct {
+    unsigned int admin : 1;     /* admin permission, can add other proc to grp */
+    unsigned int read : 1;     /* rsv, not support */
+    unsigned int write : 1;    /* read and write permission */
+    unsigned int alloc : 1;    /* alloc permission (have read and write permission) */
+    unsigned int rsv : 28;
+}GroupShareAttr;
+
+typedef struct {
+    unsigned long long addr; /* cache memory addr */
+    unsigned long long size; /* cache memory size */
+} GrpQueryGroupAddrInfo; /* cmd: GRP_QUERY_GROUP_ADDR_INFO */
 
 #endif

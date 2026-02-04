@@ -16,7 +16,7 @@
 #include "log_pm.h"
 
 #ifdef SCRIPT_MONITOR
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "log_path_mgr.h"
 #include "start_single_process.h"
 #include "log_file_info.h"

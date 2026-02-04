@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "ide_daemon_monitor.h"
 
 void appmon_client_exit(client_info_t *clnt)

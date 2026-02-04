@@ -10,7 +10,7 @@
 #ifndef ASCEND_HAL_STUB_H
 #define ASCEND_HAL_STUB_H
 
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "ascend_hal.h"
 #include "log_pm_sig.h"
 #include <sys/shm.h>

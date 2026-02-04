@@ -16,6 +16,7 @@
         <path value="$(TARGET_ENV)/include/ge"/>
         <path value="$(TARGET_ENV)/include/dump"/>
         <path value="$(TARGET_ENV)/include/driver"/>
+        <path value="$(TARGET_ENV)/include/driver/hal_pkg"/>
         <path value="$(TARGET_ENV)/include/ge"/>
         <path value="$(TARGET_ENV)/pkg_inc"/>
         <path value="$(TARGET_ENV)/include/toolchain"/>
@@ -34,6 +35,8 @@
         <path value="$(TARGET_ENV)/pkg_inc/toolchain"/>
         <path value="$(TARGET_ENV)/pkg_inc/trace"/>
         <path value="$(TARGET_ENV)/pkg_inc/watchdog"/>
+        <path value="$(TARGET_ENV)/pkg_inc/driver"/>
+ 	    <path value="$(TARGET_ENV)/pkg_inc/driver/hal_pkg"/>
         <path value="$(TARGET_ENV)/include/platform"/>
         <path value="$(TARGET_ENV)/include/mmpa"/>
         <path value="$(TARGET_ENV)/include/mmpa/sub_inc"/>
@@ -57,24 +60,53 @@
     </dir_info>
     <file_info copy_type="source" src_path="" dst_path="include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
         <file value="appmon_lib.h" install_mod="440" entity="true"/>
-        <file value="dsmi_common_interface_base.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_dc.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_define.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_error.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_external.h" install_mod="440" entity="true"/>
-        <file value="ascend_hal_adc.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_pkg.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_type.h" install_mod="440" entity="true"/>
         <file value="ascend_hal.h" install_mod="440" entity="true"/>
         <file value="ascend_inpackage_hal.h" install_mod="440" entity="true"/>
-        <file value="debug_drv_user.h" install_mod="440" entity="true"/>
         <file value="dms_device_node_type.h" install_mod="440" entity="true"/>
+        <file value="dsmi_common_interface_base.h" install_mod="440" entity="true"/>
         <file value="dsmi_common_interface.h" install_mod="440" entity="true"/>
-        <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
-        <file value="hwts_task_info.h" install_mod="440" entity="true"/>
-        <file value="nic_uio_interface.h" install_mod="440" entity="true"/>
-        <file value="peripheral_api.h" install_mod="440" entity="true"/>
         <file value="ts_api.h" install_mod="440" entity="true"/>
-        <file value="safety_cfg_inpackage.h" install_mod="440" entity="true"/>
+        <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="include/driver/hal_pkg" install_path="$(TARGET_ENV)/include/driver/hal_pkg" install_type="all">
+        <file value="buff_pkg.h" install_mod="440" entity="true"/>
+        <file value="common_pkg.h" install_mod="440" entity="true"/>
+        <file value="dms_pkg.h" install_mod="440" entity="true"/>
+        <file value="dpa_pkg.h" install_mod="440" entity="true"/>
+        <file value="esched_pkg.h" install_mod="440" entity="true"/>
+        <file value="trs_pkg.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/driver" install_path="$(TARGET_ENV)/pkg_inc/driver" install_type="all">
+        <file value="appmon_lib.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_dc.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_define.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_error.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_external.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_pkg.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal_type.h" install_mod="440" entity="true"/>
+        <file value="ascend_hal.h" install_mod="440" entity="true"/>
+        <file value="ascend_inpackage_hal.h" install_mod="440" entity="true"/>
+        <file value="dms_device_node_type.h" install_mod="440" entity="true"/>
+        <file value="dsmi_common_interface_base.h" install_mod="440" entity="true"/>
+        <file value="dsmi_common_interface.h" install_mod="440" entity="true"/>
+        <file value="ts_api.h" install_mod="440" entity="true"/>
+        <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
+    </file_info>
+    <file_info copy_type="source" src_path="" dst_path="pkg_inc/driver/hal_pkg" install_path="$(TARGET_ENV)/pkg_inc/driver/hal_pkg" install_type="all">
+        <file value="buff_pkg.h" install_mod="440" entity="true"/>
+        <file value="common_pkg.h" install_mod="440" entity="true"/>
+        <file value="dms_pkg.h" install_mod="440" entity="true"/>
+        <file value="dpa_pkg.h" install_mod="440" entity="true"/>
+        <file value="esched_pkg.h" install_mod="440" entity="true"/>
+        <file value="trs_pkg.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="include/external/acl" install_path="$(TARGET_ENV)/include/acl" install_type="all">
         <file value="acl.h" install_mod="440" entity="true"/>

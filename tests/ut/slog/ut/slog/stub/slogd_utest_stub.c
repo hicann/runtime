@@ -10,7 +10,7 @@
 #include "log_config_api.h"
 #include "log_common.h"
 #include "ascend_hal.h"
-#include "appmon_lib.h"
+#include "ascend_hal.h"
 #include "log_session_manage.h"
 #include "log_to_file.h"
 #include "slogd_utest_stub.h"

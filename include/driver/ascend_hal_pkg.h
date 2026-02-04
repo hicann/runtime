@@ -8,7 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef DSMI_COMMON_INTERFACE_BASE_H
-#define DSMI_COMMON_INTERFACE_BASE_H
+#ifndef __ASCEND_HAL_PKG_H__
+#define __ASCEND_HAL_PKG_H__
+#include "ascend_hal_type.h"
+#include "hal_pkg/buff_pkg.h"
+#include "hal_pkg/esched_pkg.h"
+#include "hal_pkg/trs_pkg.h"
+#include "hal_pkg/dpa_pkg.h"
+#include "hal_pkg/dms_pkg.h"
+#include "hal_pkg/common_pkg.h"
 
 #endif

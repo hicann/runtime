@@ -13,7 +13,7 @@
 
 extern "C" {
     #include <stdbool.h>
-    #include "appmon_lib.h"
+    #include "ascend_hal.h"
     #include "log_pm.h"
     #include "log_monitor.h"
     #include "slogd_utest_stub.h"
