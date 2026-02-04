@@ -589,6 +589,8 @@ public:
     virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) = 0;
     virtual rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
                                      int64_t &chipId, int64_t &dieId) = 0;
+    virtual rtError_t GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                                      const int32_t infoType, int64_t * const val) = 0;
     uint32_t vfId_{MAX_UINT32_NUM};
 protected:
     // CallBack

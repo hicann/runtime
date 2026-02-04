@@ -131,6 +131,7 @@ rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &
     const Notify* const notify = notifyRecord->uPtr.notify;
     rtError_t error;
     const uint32_t remoteDevId = notifyRecord->deviceId;
+    const uint32_t remotePhyId = notifyRecord->phyId;
     const uint32_t localDevId = taskInfo->stream->Device_()->Id_();
     int64_t topologyType = 0;
     int64_t localServerId = RT_NOTIFY_INVALID_SRV_ID;
@@ -163,12 +164,11 @@ rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &
             localDevId, remoteServerId, remoteDevId, chipId, dieId, baseAddr);
         return RT_ERROR_NONE;
     }
-    error = curDrv->GetPairDevicesInfo(localDevId, remoteDevId, DEVS_INFO_TYPE_TOPOLOGY, &topologyType);
-    ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u", error, remoteDevId);
+    error = curDrv->GetTopologyType(localDevId, remoteDevId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, &topologyType);
+    ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u, remotePhyId=%u", error, remoteDevId, remotePhyId);
     if ((topologyType == TOPOLOGY_HCCS) || (topologyType == TOPOLOGY_HCCS_SW) ||
         (topologyType == TOPOLOGY_SIO)) {
         notifyRecord->uInfo.singleBitNtfyInfo.isPcie = false;
-        const uint32_t remotePhyId = notifyRecord->phyId;
         const rtError_t err = curDrv->GetChipIdDieId(localDevId, remoteDevId, remotePhyId, chipId, dieId);
         ERROR_RETURN_MSG_INNER(err, "Get chipId and dieId fail, retCode=%#x, deviceId=%u, phyId=%u", err, remoteDevId, remotePhyId);
 
@@ -178,14 +178,14 @@ rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &
 
         baseAddr = RT_STARS_BASE_ADDR + (chipOffset * static_cast<uint64_t>(chipId)) +
             (dieOffset * static_cast<uint64_t>(dieId)) + STARS_NOTIFY_BASE_ADDR + chipAddr;
-        RT_LOG(RT_LOG_INFO, "localDevId=%u, remoteDevId=%u, chipId=%lld, dieId=%lld, hccs addr=%llx, topologyType=%lld",
-            localDevId, remoteDevId, chipId, dieId, baseAddr, topologyType);
+        RT_LOG(RT_LOG_INFO, "localDevId=%u, remoteDevId=%u, remotePhyId=%u, chipId=%lld, dieId=%lld, hccs addr=%llx, topologyType=%lld",
+            localDevId, remoteDevId, remotePhyId, chipId, dieId, baseAddr, topologyType);
         return RT_ERROR_NONE;
-    } else if (topologyType == TOPOLOGY_PIX) {
+    } else if ((topologyType == TOPOLOGY_PIX) || (topologyType == TOPOLOGY_PIB) ||
+        (topologyType == TOPOLOGY_PHB) || (topologyType == TOPOLOGY_SYS)) {
         /* A+X 16P phyid correspond with chipid one by one */
         notifyRecord->uInfo.singleBitNtfyInfo.isPcie = true;
         uint32_t localPhyId = 0U;
-        const uint32_t remotePhyId = notifyRecord->phyId;
         error = NpuDriver::DeviceGetPhyIdByIndex(localDevId, &localPhyId);
         ERROR_RETURN_MSG_INNER(error, "Get localDevId phyId fail, retCode=%#x, deviceId=%u", error, localDevId);
         baseAddr = static_cast<uint64_t>(RT_STARS_PCIE_BASE_ADDR) +

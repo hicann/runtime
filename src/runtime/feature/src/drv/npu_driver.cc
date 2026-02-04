@@ -1564,12 +1564,31 @@ rtError_t NpuDriver::GetChipIdDieId(const uint32_t devId, const uint32_t remoteD
 {
     rtError_t chipIdError = RT_ERROR_NONE;
     rtError_t dieIdError = RT_ERROR_NONE;
-    chipIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
-    dieIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
+    if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
+        chipIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_CHIP_ID, &chipId);
+        dieIdError = GetPhyDevInfo(remotePhyId, MODULE_TYPE_SYSTEM, RT_PHY_INFO_TYPE_PHY_DIE_ID, &dieId);
+    } else {
+        chipIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
+        dieIdError = GetDevInfo(remoteDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
+    }
     ERROR_RETURN_MSG_INNER(chipIdError, "Get chipId fail, retCode=%#x, devId=%u, deviceId=%u, phyId=%u", 
         chipIdError, devId, remoteDevId, remotePhyId);
     ERROR_RETURN_MSG_INNER(dieIdError, "Get dieId fail, retCode=%#x, devId=%u, deviceId=%u, phyId=%u", 
         dieIdError, devId, remoteDevId, remotePhyId);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
+                                     const int32_t infoType, int64_t * const val)
+{
+    rtError_t error = RT_ERROR_NONE;
+    if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
+        error = GetPairDevicesInfo(devId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, val, true);
+    } else {
+        error = GetPairDevicesInfo(devId, remoteDevId, DEVS_INFO_TYPE_TOPOLOGY, val, false);
+    }
+    ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u, remotePhyId=%u",
+        error, remoteDevId, remotePhyId);
     return RT_ERROR_NONE;
 }
 }  // namespace runtime
