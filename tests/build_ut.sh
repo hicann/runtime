@@ -66,7 +66,7 @@ checkopts() {
   fi
 
   # Process the options
-  parsed_args=$(getopt -o j:hvu::ct: -l help,ut::,verbose,target:, -- "$@") || {
+  parsed_args=$(getopt -o j:hvu::ct:f: -l help,ut::,verbose,target:, -- "$@") || {
     usage
     exit 1
   }
@@ -112,6 +112,15 @@ checkopts() {
             shift
         done
         ;;
+      -f)
+        CHANGED_FILES_FILE="$2"
+        if [ ! -f "$CHANGED_FILES_FILE" ]; then
+          echo "Error: File $CHANGED_FILES_FILE not found"
+          exit 1
+        fi
+        CHANGED_FILES=$(cat "$CHANGED_FILES_FILE")
+        shift 2
+        ;;
       --)
         shift
         break
@@ -123,6 +132,56 @@ checkopts() {
         ;;
     esac
   done
+}
+
+# check if changed files only include docs/, example/ or README.md
+# usage: check_changed_files "file1 file2 file3"
+check_changed_files() {
+  local changed_files="$1"
+  local skip_build=true
+
+  # if no changed files provided, return false (don't skip build)
+  if [ -z "$changed_files" ]; then
+    return 1
+  fi
+
+  # check each changed file
+  for file in $changed_files; do
+    # remove leading/trailing spaces and quotes
+    file=$(echo "$file" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
+
+    # check if file is README.md (case insensitive)
+    if echo "$file" | grep -qi "^README\.md$"; then
+      continue
+    fi
+
+    # check if file is CONTRIBUTING.md (case insensitive)
+    if echo "$file" | grep -qi "^CONTRIBUTING\.md$"; then
+      continue
+    fi
+
+    # check if file is in docs/ directory
+    if echo "$file" | grep -q "^docs/"; then
+      continue
+    fi
+
+    # check if file is in example/ directory
+    if echo "$file" | grep -q "^example/"; then
+      continue
+    fi
+
+    # if any file doesn't match the above patterns, don't skip build
+    skip_build=false
+    break
+  done
+
+  if [ "$skip_build" = true ]; then
+    echo "[INFO] Changed files only contain docs/, example/, README.md or CONTRIBUTING.md, skipping test."
+    echo "[INFO] Changed files: $changed_files"
+    return 0
+  fi
+
+  return 1
 }
 
 mk_dir() {
@@ -232,6 +291,12 @@ run_ut() {
 
 main() {
   checkopts "$@"
+  # check if changed files only contain docs/, example/ or README.md
+  if [ -n "$CHANGED_FILES" ]; then
+    if check_changed_files "$CHANGED_FILES"; then
+      exit 200
+    fi
+  fi
 
   # build start
   echo "---------------- build start ----------------"
