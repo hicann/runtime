@@ -443,7 +443,9 @@ int32_t DlogWriteInner(LogMsgArg *msgArg, const char *fmt, va_list v)
     return LOG_SUCCESS;
 
 WRITE_CONSOLE:
+#ifdef CONSOLE_WRITE
     DlogWriteToConsole(&logMsg);
+#endif
     SlogUnlock();
     return LOG_SUCCESS;
 }
