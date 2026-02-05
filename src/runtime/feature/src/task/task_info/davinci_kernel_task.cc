@@ -91,6 +91,7 @@ static void AicTaskInitCommon(TaskInfo *taskInfo, const uint32_t mach, const uin
     aicTaskInfo->inputArgsSize.infoAddr = nullptr;
     aicTaskInfo->inputArgsSize.atomicIndex = 0U;
     aicTaskInfo->oldArgHandle = nullptr;
+
     if (taskInfo->isUpdateSinkSqe == 0U) {
         aicTaskInfo->descBuf = nullptr;
         aicTaskInfo->descAlignBuf = nullptr;
@@ -214,7 +215,7 @@ rtError_t CheckMixKernelValid(const uint8_t mixType, const uint64_t func2)
     return RT_ERROR_NONE;
 }
 
-static uint32_t GetSchemMode(AicTaskInfo* const taskInfo)
+uint32_t GetSchemMode(AicTaskInfo* const taskInfo)
 {
     // cfg配置的优先级最高 其次是meta section段配置 最后是默认的 normal mode
     if (taskInfo->schemMode == static_cast<uint8_t>(RT_SCHEM_MODE_END)) {

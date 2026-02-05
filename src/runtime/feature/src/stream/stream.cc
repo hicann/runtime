@@ -36,8 +36,10 @@
 #include "capture_adapt.hpp"
 #include "memory_task.h"
 #include "sq_addr_memory_pool.hpp"
+#include "davinci_kernel_task.h"
 #include <thread>
 #include "ctrl_sq.hpp"
+#include <cstring>
 
 namespace cce {
 namespace runtime {
@@ -4413,10 +4415,39 @@ std::string Stream::TraceEventToJson(const TraceEvent &record) const
     oss << "\"args\":{";
     oss << "\"Model Id\":" << record.args.modelId << ",";
     oss << "\"Stream Id\":" << record.args.streamId << ",";
-    oss << "\"Task Id\":" << record.args.taskId;
+    oss << "\"Task Id\":" << record.args.taskId << ",";
+    oss << "\"Task Type\":\"" << record.args.taskType << "\"";
+    if (record.args.taskType.rfind("STREAM_ACTIVE", 0) == 0) {
+        oss << ",\"Active Stream Id\":" << record.args.activeStreamId;
+    }
+    if (record.args.numBlocks != -1) {
+        oss << ",\"numBlocks\":" << record.args.numBlocks;
+    }
+    if (record.args.taskType.rfind("KERNEL_MIX", 0) == 0) {
+        oss << ",\"Task Ration\":" << record.args.taskRation;
+    }
+    if (record.args.schemMode != static_cast<int>(RT_SCHEM_MODE_END)) {
+        oss << ",\"schemMode\":" << record.args.schemMode;
+    }
     oss << "}";
     oss << "}";
     return oss.str();
+}
+
+std::string Stream::GetTaskTypeForMixKernel(const uint8_t mixType, const std::string &originTaskType) const
+{
+    switch (mixType) {
+        case MIX_AIC:
+        case MIX_AIC_AIV_MAIN_AIC:
+            return "KERNEL_MIX_AIC";
+            
+        case MIX_AIV:
+        case MIX_AIC_AIV_MAIN_AIV:
+            return "KERNEL_MIX_AIV";
+            
+        default:
+            return originTaskType;
+    }
 }
 
 void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm)
@@ -4438,18 +4469,28 @@ void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t
         }
 
         std::string taskName;
+        std::string taskType = (task->typeName != nullptr) ? task->typeName : "Unknown";
         const Kernel *kernel = nullptr;
         if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
             std::string kernelNameStr = "";
             AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
+            record.args.numBlocks = static_cast<int>(aicTaskInfo->comm.dim);
             kernel = aicTaskInfo->kernel;
+            record.args.taskRation = kernel->GetTaskRation();
+            record.args.schemMode = static_cast<int>(GetSchemMode(aicTaskInfo));
+            taskType = GetTaskTypeForMixKernel(kernel->GetMixType(), taskType);
             kernelNameStr = (kernel != nullptr) ? kernel->Name_() : "AICORE_KERNEL";
             taskName = kernelNameStr;
         } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
             AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
+            record.args.numBlocks = static_cast<int>(aicpuTaskInfo->comm.dim);
             kernel = aicpuTaskInfo->kernel;
             std::string kernelName = (kernel != nullptr) ? kernel->GetCpuOpType() : "AICPU_KERNEL";
             taskName = (!kernelName.empty()) ? kernelName : "AICPU_KERNEL";
+        } else if (task->type == TS_TASK_TYPE_STREAM_ACTIVE) { 
+            StreamActiveTaskInfo *streamActiveTaskInfo = &(task->u.streamactiveTask);
+            record.args.activeStreamId = static_cast<int>(streamActiveTaskInfo->activeStreamId);
+            taskName = task->typeName;
         } else {
             taskName = task->typeName;
         }
@@ -4471,12 +4512,24 @@ void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t
         record.pid = std::to_string(pid) + " aclGraph";
         record.tid = "stream" + std::to_string(streamId_);
         record.ts = taskDur;
-        taskDur += 10;
-        record.dur = 9.5;
+        if (taskType == "NOP") {
+            record.dur = 0.5f;
+            taskDur += 1;
+        } else if (taskType.find("RECORD") != std::string::npos) {
+            record.dur = 4.5f;
+            taskDur += 5;
+        } else if (taskType.find("WAIT") != std::string::npos) {
+            record.dur = 14.5f;
+            taskDur += 15;
+        } else {
+            record.dur = 9.5f;
+            taskDur += 10;
+        }
         record.ph =  "X";	
         record.args.modelId = modelId;
         record.args.streamId = streamId_;
         record.args.taskId = task->id;
+        record.args.taskType = taskType;
         recordArray.emplace_back(record);
     }
 

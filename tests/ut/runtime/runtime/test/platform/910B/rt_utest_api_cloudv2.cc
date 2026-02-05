@@ -1144,3 +1144,98 @@ TEST_F(RtApiTest, pin_memory_attribute)
     error = rtsHostUnregister(ptr.get()); 
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
+
+TEST_F(RtApiTest, model_json_print_record_wait)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtModel_t  model;
+    rtStream_t syncStream;
+    rtEvent_t event;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreateWithFlags(&syncStream, 0, RT_STREAM_FORBIDDEN_DEFAULT);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelBindStream(model, stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtEventCreateWithFlag(&event, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtEventRecord(event, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsEventWait(stream, event, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error=  rtEndGraph(model, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelLoadComplete(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stream_var = static_cast<Stream *>(stream);
+
+    error = rtModelDebugJsonPrint(model, "test.json", 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    // synchronize execute
+    error = rtModelExecute(model, syncStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ((Model *)model)->UnbindStream(stream_var , false);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(syncStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(RtApiTest, model_json_print_stream_active)
+{
+    rtError_t error;
+    rtStream_t dstStream;
+    rtStream_t activeStream;
+    rtModel_t  model;
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreateWithFlags(&dstStream, 0, 0x1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamCreateWithFlags(&activeStream, 0, 0x1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelBindStream(model, dstStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelBindStream(model, activeStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamActive(activeStream, dstStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDebugJsonPrint(model, "test.json", 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(dstStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(activeStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
