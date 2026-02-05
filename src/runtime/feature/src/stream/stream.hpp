@@ -95,6 +95,11 @@ struct TraceArgs {
     int modelId;
     int streamId;
     int taskId;
+    std::string taskType;
+    int numBlocks = -1;
+    int taskRation = 0;
+    int schemMode = static_cast<int>(RT_SCHEM_MODE_END);
+    int activeStreamId = -1;
 };
 
 struct TraceEvent {
@@ -1062,6 +1067,7 @@ public:
     void SingleStreamTerminateCapture();
     virtual void DebugDotPrintForModelStm();
     std::string TraceEventToJson(const TraceEvent &record) const;
+    std::string GetTaskTypeForMixKernel(const uint8_t mixType, const std::string &originTaskType) const;
     virtual void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm);
 
     void MarkOrigCaptureStream(const bool flag)

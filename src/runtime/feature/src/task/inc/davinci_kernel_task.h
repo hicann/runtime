@@ -41,6 +41,7 @@ void ShowDavinciTaskMixDebug(const rtFftsPlusMixAicAivCtx_t * const fftsCtx);
 void GetKernelNameForAiCpu(TaskInfo* taskInfo, std::string &nameInfo);
 void GetSoNameForAiCpu(TaskInfo* taskInfo, std::string &nameInfo);
 void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, std::string &extendInfo);
+uint32_t GetSchemMode(AicTaskInfo* const taskInfo);
 
 bool CheckErrPrint(const uint32_t errorCode);
 }
