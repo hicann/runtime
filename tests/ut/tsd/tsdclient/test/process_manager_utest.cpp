@@ -2854,6 +2854,15 @@ TEST_F(ProcessManagerTest, GetCurHostMutexFile)
     EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "sink_file_mutex_0.cfg");
 }
 
+TEST_F(ProcessManagerTest, GetCurHostMutexFile_drvDeviceGetPhyIdByIndex_failed)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(false), "libqueue_schedule.so");
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    MOCKER(drvDeviceGetPhyIdByIndex).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "libqueue_schedule.so");
+}
+
 TEST_F(ProcessManagerTest, IsSupportCommonSink_No_With_hostSoPathEmpty)
 {
     ProcessModeManager processModeManager(deviceId, 0);

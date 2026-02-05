@@ -2321,15 +2321,22 @@ std::string ProcessModeManager::GetCurHostMutexFile(bool useCannPath) const
         return QUEUE_SCHEDULE_SO;
     } else {
         int64_t masterId = 0;
-        const auto drvRet = halGetDeviceInfo(logicDeviceId_, MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID, &masterId);
+        uint32_t phyId = 0U;
+        auto drvRet = drvDeviceGetPhyIdByIndex(logicDeviceId_, &phyId);
         if (drvRet != DRV_ERROR_NONE) {
-            TSD_RUN_WARN("get halGetDeviceInfo not success, retCode[%d] deviceId[%u]", drvRet, logicDeviceId_);
+            TSD_RUN_WARN("get physical ID not success, retCode[%d] deviceId[%u]", drvRet, logicDeviceId_);
+            return QUEUE_SCHEDULE_SO;
+        }
+        TSD_INFO("deviceId[%u] physical ID[%u]", logicDeviceId_, phyId);
+        drvRet = halGetDeviceInfo(phyId, MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID, &masterId);
+        if (drvRet != DRV_ERROR_NONE) {
+            TSD_RUN_WARN("get halGetDeviceInfo not success, retCode[%d] deviceId[%u] physical ID[%u]", drvRet, logicDeviceId_, phyId);
             return QUEUE_SCHEDULE_SO;
         }
         const int64_t devOsId = masterId % SUPPORT_MAX_DEVICE_PER_HOST;
         std::string mutexFile = MUTEX_FILE_PREFIX + std::to_string(devOsId) + ".cfg";
-        TSD_RUN_INFO("get masterId:%lld, logicDeviceId:%u, devOsId:%lld, mutexFile:%s, maxcount:%lld",
-            masterId, logicDeviceId_, devOsId, mutexFile.c_str(), SUPPORT_MAX_DEVICE_PER_HOST);
+        TSD_RUN_INFO("get masterId:%lld, logicDeviceId:%u, physicalDeviceId[%u],devOsId:%lld, mutexFile:%s, maxcount:%lld",
+            masterId, logicDeviceId_, phyId, devOsId, mutexFile.c_str(), SUPPORT_MAX_DEVICE_PER_HOST);
         return mutexFile;
     }
 }
