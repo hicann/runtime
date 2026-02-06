@@ -46,7 +46,6 @@
   |   ......
   ├── stub                                           # 打桩相关目录
   ├── tests                                          # UT用例
-  ├── third_party                                    # 依赖包相关文件
   ......
   ├── CMakeLists.txt                                 # 构建编译配置文件
   ├── build.sh                                       # 项目工程编译脚本
@@ -73,17 +72,25 @@
     - autoconf
     - gperf
     - libtool
-    - asan （仅执行UT时依赖，请确保已安装与gcc版本对应的asan版本，例如gcc 9.5.0需要安装libasan6版本）
-    - googletest（仅执行UT时依赖，建议版本 release-1.14.0）
+    - asan （仅执行UT时依赖。asan通常不需要单独安装，已集成在gcc中，如需要单独安装asan，请确保与gcc版本兼容，例如gcc 9.5.0匹配libasan6版本。）
 
-    上述依赖包（asan除外）可通过项目根目录下install_deps.sh安装，命令如下，若遇到不支持系统，请参考该文件自行适配：
+    上述依赖包（asan除外）可通过项目根目录下install_deps.sh安装，命令如下。
     ```bash
     bash install_deps.sh
     ```
 
 2. **安装驱动与固件（运行态依赖）**
 
-    运行Runtime时必须安装驱动与固件，安装指导详见《[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/83RC1/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler&Software=cannToolKit)》。
+    若仅编译runtime包，可跳过本操作步骤。运行Runtime时必须安装驱动与固件。
+
+    单击[下载链接](https://www.hiascend.com/hardware/firmware-drivers/community)，根据实际产品型号和环境架构，获取对应的`Ascend-hdk-<chip_type>-npu-driver_<version>_linux-<arch>.run`、`Ascend-hdk-<chip_type>-npu-firmware_<version>.run`包。
+    安装指导详见《[CANN 软件安装指南](https://www.hiascend.com/document/redirect/CannCommunityInstSoftware)》。
+
+    通过如下方式验证驱动安装是否正常
+    ```bash
+    # 运行npu-smi, 若能正常显示设备信息，则驱动正常。
+    npu-smi info
+    ```
 
 #### 环境准备
 
@@ -132,7 +139,7 @@ bash build.sh
 编译完成之后会在`build_out`目录下生成`cann-npu-runtime_<version>_linux-<arch>.run`软件包。
 \<version>表示版本号。
 \<arch>表示操作系统架构，取值包括x86_64与aarch64。
-可执行如下命令安装编译生成的Runtime软件包：
+可执行如下命令安装编译生成的Runtime软件包，非正式发布包无社区签名。因此安装完成后，如果需要验证功能，请务必参考 "关于签名的补充说明" 进行操作。
 
 ```bash
 ./cann-npu-runtime_<version>_linux-<arch>.run --full --install-path=${install_path}
