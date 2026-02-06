@@ -226,10 +226,9 @@ namespace AicpuSchedule {
          * @brief it use to delete so.
          * @param [in] dirName: dir name
          * @param [in] soFullPath: so path
-         * @param [in] realSoName: so name
          * @return AICPU_SCHEDULE_OK: success, other: error code
          */
-        int32_t DeleteSoFile(const std::string &dirName, const std::string &soFullPath, const std::string &realSoName);
+        int32_t DeleteSoFile(const std::string &dirName, const std::string &soFullPath);
 
         /**
          * @ingroup AicpuCustSoManager

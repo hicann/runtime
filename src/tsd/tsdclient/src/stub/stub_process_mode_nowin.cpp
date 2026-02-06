@@ -18,7 +18,6 @@ constexpr uint32_t DEVICE_MAX_NUM = 32U;
 const std::string TSDAEMON_HOST_NAME = "/var/tsdaemon";
 constexpr uint32_t DOMAIN_SOCKET_CLIENT_DEFAULT_SESSIONID = 0U;
 std::mutex g_hostStartFlagMut;
-bool g_isStartHostAicpu = false;
 constexpr uint32_t MAX_QUEUE_ID_NUM = 8192U;
 }  // namespace
 TSD_StatusT ProcessModeManager::ProcessQueueForAdc()

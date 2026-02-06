@@ -83,8 +83,7 @@ EXTERN_C void DestroyResponse(struct EzcomResponse *resp);
 
 // This useful macro defins a scoped EzcomResponse variable.
 // When it reaches its scope, the data buffer pointer will be freed automatically.
-#define DEFINE_EZCOM_RESPONSE(resp) \
-    struct EzcomResponse resp __attribute__((cleanup(DestroyResponse))) = {0};
+#define DEFINE_EZCOM_RESPONSE(resp) struct EzcomResponse resp __attribute__((cleanup(DestroyResponse))) = {0}
 
 #define PROC_NAME_LEN_MAX  101
 #define MAX_PIPE_NUM  64U

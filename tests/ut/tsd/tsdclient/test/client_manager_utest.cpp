@@ -313,21 +313,15 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigFailRealpath)
 
 TEST_F(ClientManagerTest, GetClientRunMode)
 {
-    MOCKER_CPP(&ClientManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(true));
     MOCKER(halGetDeviceInfo).stubs().will(returnValue(0U));
     RunningMode mode = ClientManager::GetClientRunMode(0U);
-    EXPECT_EQ(mode, RunningMode::THREAD_MODE);
+    EXPECT_EQ(mode, RunningMode::PROCESS_MODE);
 }
 
 TEST_F(ClientManagerTest, GetClientRunMode002)
 {
     std::string valueStr("");
     ClientManager::SetRunMode(valueStr);
-    MOCKER_CPP(&ClientManager::IsHostEnvironment)
-        .stubs()
-        .will(returnValue(false));
     MOCKER_CPP(&ClientManager::ResetClientManagerByConfig)
         .stubs()
         .will(returnValue(false));
@@ -422,14 +416,6 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigAicpuThreadMode)
     const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(mode, RunningMode::PROCESS_MODE);
-}
-
-TEST_F(ClientManagerTest, GetClientRunModeFail)
-{
-    MOCKER_CPP(&ClientManager::IsHostEnvironment).stubs().will(returnValue(true));
-    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
-    const auto ret = ClientManager::GetInstance(0)->GetClientRunMode(0);
-    EXPECT_EQ(ret, RunningMode::UNSET_MODE);
 }
 
 TEST_F(ClientManagerTest, GetDriverVersionFail)

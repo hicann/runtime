@@ -450,45 +450,8 @@ bool ClientManager::ResetClientManagerByConfig(RunningMode &runningMode)
 #endif
 }
 
-bool ClientManager::IsHostEnvironment(const uint32_t logicDeviceId)
-{
-    if (GetPlatInfoChipType() != static_cast<uint32_t>(CHIP_ASCEND_910B)) {
-        return false;
-    }
-
-    int64_t aicpuNum = 0;
-    const auto ret = halGetDeviceInfo(logicDeviceId, MODULE_TYPE_HOST_AICPU, INFO_TYPE_CORE_NUM, &aicpuNum);
-    if (ret != DRV_ERROR_NONE) {
-        TSD_INFO("halGetDeviceInfo not success deviceId[%d], ret[%d].", logicDeviceId, ret);
-        return false;
-    }
-    TSD_RUN_INFO("[TsdClient] logicDeviceId[%d], hostaicpunum[%lld]",
-                 logicDeviceId, aicpuNum);
-    if (aicpuNum > 0) {
-        return true;
-    }
-
-    return false;
-}
-
 RunningMode ClientManager::GetClientRunMode(const uint32_t logicDeviceId)
 {
-    if (IsHostEnvironment(logicDeviceId)) {
-        int64_t curMode = 0;
-        const auto ret = halGetDeviceInfo(logicDeviceId, MODULE_TYPE_HOST_AICPU, INFO_TYPE_WORK_MODE, &curMode);
-        if (ret != DRV_ERROR_NONE) {
-            TSD_ERROR("halGetDeviceInfo failed deviceId[%d], ret[%d].", logicDeviceId, ret);
-            return RunningMode::UNSET_MODE;
-        }
-        if (curMode == DSMI_HOST_AICPU_THREAD_MODE) {
-            return RunningMode::THREAD_MODE;
-        } else if (curMode == DSMI_HOST_AICPU_PROCESS_MODE) {
-            return RunningMode::PROCESS_MODE;
-        } else {
-            return RunningMode::UNSET_MODE;
-        }
-    }
-
     if (g_runningMode == RunningMode::UNSET_MODE) {
         RunningMode runningMode = RunningMode::UNSET_MODE;
         if (!ResetClientManagerByConfig(runningMode)) {
