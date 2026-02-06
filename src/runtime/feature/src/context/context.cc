@@ -565,6 +565,9 @@ rtError_t Context::SyncStreamsWithTimeout(const std::list<Stream *> &streams, in
             RT_LOG(RT_LOG_ERROR, "device is abort, device_id=%d.", device_->Id_());
             return RT_ERROR_DEVICE_TASK_ABORT;
         }
+        if (syncStream->IsSyncFinished()) {
+            continue;
+        }
 
         error = syncStream->Synchronize(false, remainTime);
         COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(start, timeout, &remainTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
@@ -699,7 +702,7 @@ rtError_t Context::Synchronize(int32_t timeout)
     std::list<Stream *> syncStreams;
 
     for (const auto &syncStream : streams_) {
-        if (IsStreamNotSync(syncStream->Flags())) {
+        if (IsStreamNotSync(syncStream->Flags()) || syncStream->IsSyncFinished()) {
             continue;
         }
         COND_RETURN_ERROR(syncStream->IsCapturing(),

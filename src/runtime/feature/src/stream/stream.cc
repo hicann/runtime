@@ -2564,6 +2564,16 @@ uint32_t Stream::GetMaxTryCount() const
     return RT_QUERY_TIMES_THRESHOLD;
 }
 
+bool Stream::IsSyncFinished()
+{
+    if (IsSeparateSendAndRecycle()) {
+        return IsTaskExcuted(executeEndTaskid_.Value(), lastTaskId_) &&
+            (latestConcernedTaskId.Value() == MAX_UINT16_NUM);
+    } else {
+        return GetPendingNum() == 0U;
+    }
+}
+
 rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq, int32_t timeout)
 {
     const uint32_t deviceId = device_->Id_();

@@ -222,6 +222,12 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask3)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    Context *ctxPtr = (Context *)ctx;
+    Stream *stmPtr = (Stream *)stream;
+    std::list<Stream *> streamList;
+    streamList.push_back(stmPtr);
+    const mmTimespec startTime = mmGetTickCount();
+    (void *)ctxPtr->SyncStreamsWithTimeout(streamList, -1 , startTime);
 
     ElfProgram program(0);
     program.SetStackSize(KERNEL_STACK_SIZE_16K);
