@@ -66,6 +66,12 @@ namespace cce {
 
         int32_t GetApiGlobal(AicpuKFCOpFuncPtr &opFuncPtr, const char_t *kernelName) const;
 
+        int32_t GetApiWhenSonameNotEmpty(const aicpu::KernelType kernelType, const uint32_t soNameLen,
+            const char_t *kernelSoName, const char_t *kernelName, void* &funcAddr);
+
+        int32_t GetApiBySoname(const aicpu::KernelType kernelType, const char_t *kernelSoName,
+                               AicpuKFCOpFuncPtr &opFuncPtr, const char_t *kernelName);
+
     private:
         static AIKernelsLibAiCpuKFC *instance_;     // SINGLETON object
         // api cacher
