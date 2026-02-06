@@ -55,15 +55,15 @@ detect_os() {
             else
                 PKG_MANAGER="yum"
             fi
-        elif [[ -f /etc/euleros-release ]]; then
-            OS="rhel"
+        elif grep -qE '^NAME="openEuler"$|^NAME="EulerOS"$' /etc/os-release 2>/dev/null; then
+            OS="euler"
             if command -v dnf &> /dev/null; then
                 PKG_MANAGER="dnf"
             else
                 PKG_MANAGER="yum"
             fi
         else
-            echo "自动安装脚本不支持该Linux发行版本，请手动安装依赖"
+            echo "自动安装脚本不支持该Linux发行版本，请查看/etc/os-release的信息，使用匹配的包管理器手动安装依赖"
             exit 1
         fi
     elif [[ "$(uname -s)" == "Darwin" ]]; then
@@ -114,6 +114,9 @@ install_python() {
             echo 'export PATH="/usr/local/opt/python@3.11/bin:$PATH"' >> ~/.zshrc
             run_command source ~/.zshrc
             ;;
+        euler)
+            run_command sudo $PKG_MANAGER install -y python3 python3-pip python3-devel
+            ;;
     esac
 
     if command -v python3 &> /dev/null; then
@@ -137,9 +140,9 @@ install_gcc() {
     local curr_ver=""
 
     if command -v gcc &> /dev/null; then
-        curr_ver=$(gcc --version | awk '/^gcc/ {print $4}')
+        curr_ver=$(gcc --version | awk '/^gcc/ {print $NF}')
     elif command -v g++ &> /dev/null; then
-        curr_ver=$(g++ --version | awk '/^g\+\+/ {print $4}')
+        curr_ver=$(g++ --version | awk '/^g\+\+/ {print $NF}')
     else
         curr_ver="0.0.0"
     fi
@@ -176,10 +179,13 @@ install_gcc() {
             echo 'export CXX=/usr/local/bin/g++-11' >> ~/.zshrc
             run_command source ~/.zshrc
             ;;
+        euler)
+         	  run_command sudo $PKG_MANAGER install -y gcc gcc-c++
+         	  ;;
     esac
 
     if command -v gcc &> /dev/null; then
-        curr_ver=$(gcc --version | awk '/^gcc/ {print $4}')
+        curr_ver=$(gcc --version | awk '/^gcc/ {print $NF}')
         if version_ge "$curr_ver" "$req_ver"; then
             echo "GCC安装成功（$curr_ver）"
         else
@@ -232,6 +238,9 @@ install_cmake() {
         macos)
             run_command brew install cmake
             ;;
+        euler)
+            run_command sudo $PKG_MANAGER install -y cmake make
+            ;;
     esac
 
     if command -v cmake &> /dev/null; then
@@ -262,7 +271,7 @@ install_ccache() {
             run_command sudo $PKG_MANAGER update
             run_command sudo $PKG_MANAGER install -y ccache
             ;;
-        rhel)
+        rhel|euler)
             run_command sudo $PKG_MANAGER install -y ccache
             ;;
         macos)
@@ -292,7 +301,7 @@ install_autoconf() {
             run_command sudo $PKG_MANAGER update
             run_command sudo $PKG_MANAGER install -y autoconf
             ;;
-        rhel)
+        rhel|euler)
             run_command sudo $PKG_MANAGER install -y autoconf
             ;;
         macos)
@@ -322,7 +331,7 @@ install_gperf() {
             run_command sudo $PKG_MANAGER update
             run_command sudo $PKG_MANAGER install -y gperf
             ;;
-        rhel)
+        rhel|euler)
             run_command sudo $PKG_MANAGER install -y gperf
             ;;
         macos)
@@ -361,6 +370,9 @@ install_libtool() {
             run_command brew install libtool
             run_command brew install libtool-bin
             ;;
+        euler)
+            run_command sudo $PKG_MANAGER install -y libtool
+            ;;
     esac
 
     if command -v libtool &> /dev/null; then
@@ -385,7 +397,7 @@ install_pip3() {
             run_command sudo $PKG_MANAGER update
             run_command sudo $PKG_MANAGER install -y python3-pip
             ;;
-        rhel)
+        rhel|euler)
             run_command sudo $PKG_MANAGER install -y python3-pip
             ;;
         macos)

@@ -42,10 +42,7 @@ examples目录下提供了一系列Runtime接口样例，包括Device管理、St
 |profiling|[2_subscribe_model](./profiling/2_subscribe_model)|本样例展示了订阅算子信息, 实现将采集到的Profiling数据解析后写入管道，由用户读入内存，再由用户调用接口获取性能数据。|
 
 ## 环境准备
-编译运行样例前，需获取固件、驱动及CANN软件包安装，详情步骤请参见《[CANN软件安装指南](https://www.hiascend.com/document/redirect/CannCommercialInstSoftware)》。
-
-若对runtime仓src目录下的源码有定制，那么在安装CANN软件之后，还需编译源码并部署到环境上，具体操作请参见runtime仓下的[README](../README.md)。
-
+编译运行样例前，需获取固件、驱动及CANN软件包安装，具体操作请参见runtime仓下的[README](../README.md)。
 有些样例依赖ops算子包，需要根据产品型号和环境架构下载安装对应的软件包。
 
 ## 编译运行
