@@ -1428,7 +1428,7 @@ rtError_t Stream::GetSynchronizeError(rtError_t error)
     if (GetBindFlag() || context_ == nullptr) {
         return RT_ERROR_NONE;
     }
-    if (this == context_->DefaultStream_()) {
+    if (this == context_->GetCtrlSQStream()) {
         return RT_ERROR_NONE;
     }
     if (device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) {

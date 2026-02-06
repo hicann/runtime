@@ -283,7 +283,6 @@ public:
     {
         schGroupId_ = schGrpId;
     }
-    rtError_t LoadCompleteByCallAiCpuIntf();
     rtError_t BindQueue(const uint32_t queueId, const rtModelQueueFlag_t flag);
     void ExecuteComplete(void);
     rtError_t LabelAlloc(Label * const labelIn, uint16_t &labelId);
