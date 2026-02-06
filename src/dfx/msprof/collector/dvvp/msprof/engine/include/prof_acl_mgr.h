@@ -250,7 +250,7 @@ public:
     int32_t PrepareStartAclApi(const MsprofConfig *config);
     int32_t PrepareStartAclApiParam(const MsprofConfig *config);
     int32_t PrepareStopAclApi(const MsprofConfig *config);
-    int32_t CheckConfigConsistency(const MsprofConfig *config);
+    int32_t CheckConfigConsistency(const MsprofConfig *config, const std::string action);
     int32_t PrepareStartAclSubscribe(const MsprofConfig *config);
     int32_t ProfStartAclSubscribe(const MsprofConfig *config);
     int32_t PrepareStopAclSubscribe(const MsprofConfig *config) const;
