@@ -67,7 +67,6 @@ namespace AicpuSchedule {
          */
         int32_t ProcessLoadOpMappingEvent(AicpuSqeAdapter &aicpuSqeAdapter) const;
 
-
         /**
          * @ingroup SendCtrlCpuMsg
          * @brief send ctrl msg.

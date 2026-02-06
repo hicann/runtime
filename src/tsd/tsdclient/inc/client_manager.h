@@ -142,8 +142,6 @@ public:
      */
     virtual TSD_StatusT GetHdcConctStatus(int32_t &hdcSessStat);
 
-    static bool IsHostEnvironment(const uint32_t logicDeviceId);
-
     static RunningMode GetClientRunMode(const uint32_t logicDeviceId);
 
     virtual TSD_StatusT LoadFileToDevice(const char_t *const filePath, const uint64_t pathLen,

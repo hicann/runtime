@@ -273,7 +273,7 @@ TEST_F(AicpuCustSoManagerTEST, DeleteSoFileRemoveFileFail) {
     soManager.runMode_ = aicpu::AicpuRunMode::THREAD_MODE;
 
     MOCKER_CPP(&AicpuCustSoManager::RemoveSoFile).stubs().will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_ERROR_INNER_ERROR)));
-    const int32_t ret = soManager.DeleteSoFile("/home/home/home", "soFullPath", "libtest.so");
+    const int32_t ret = soManager.DeleteSoFile("/home/home/home", "soFullPath");
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
 }
 
@@ -283,7 +283,7 @@ TEST_F(AicpuCustSoManagerTEST, DeleteSoFileCloseFail) {
 
     MOCKER_CPP(&AicpuCustSoManager::RemoveSoFile).stubs().will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_OK)));
     MOCKER(aeCloseSo).stubs().will(returnValue(AE_STATUS_BAD_PARAM));
-    const int32_t ret = soManager.DeleteSoFile("/home/home/home", "soFullPath", "libtest.so");
+    const int32_t ret = soManager.DeleteSoFile("/home/home/home", "soFullPath");
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 

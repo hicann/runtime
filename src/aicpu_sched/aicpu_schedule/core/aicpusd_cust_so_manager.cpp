@@ -186,7 +186,7 @@ namespace AicpuSchedule {
         }
 
         // delete so
-        return DeleteSoFile(custSoDirName_, fileName, realSoName);
+        return DeleteSoFile(custSoDirName_, fileName);
     }
 
     int32_t AicpuCustSoManager::CheckAndDeleteCustSoDir()
@@ -550,9 +550,7 @@ namespace AicpuSchedule {
         return AICPU_SCHEDULE_OK;
     }
 
-    int32_t AicpuCustSoManager::DeleteSoFile(const std::string &dirName,
-                                             const std::string &soFullPath,
-                                             const std::string &realSoName)
+    int32_t AicpuCustSoManager::DeleteSoFile(const std::string &dirName, const std::string &soFullPath)
     {
         const std::lock_guard<std::mutex> soFileLock(soFileMutex_);
         const int32_t ret = RemoveSoFile(dirName, soFullPath);

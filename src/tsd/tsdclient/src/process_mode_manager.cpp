@@ -29,8 +29,6 @@
 #include "inc/package_process_config.h"
 #include "inc/process_util_common.h"
 
-
-
 namespace {
 // 每个OS上的1980芯片数目,每个芯片上每一种类型的进程都要创建一个，所以以芯片数为依据
 constexpr uint32_t PER_OS_CHIP_NUM(4U);
