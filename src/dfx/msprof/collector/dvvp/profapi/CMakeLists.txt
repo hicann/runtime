@@ -42,6 +42,9 @@ set(profApiCpp
     src/prof_acl_plugin.cpp
     src/prof_runtime_plugin.cpp
     src/prof_mstx_plugin.cpp
+    ../common/cmd_log/cmd_log.cpp
+    ../common/utils/utils.cpp
+    ${PROF_BASIC_DIR}/osal/osal.c
 )
 
 ####################### libprofapi static lib for windows  begin ###########################
