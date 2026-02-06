@@ -333,6 +333,24 @@ aicore\_stack\_size参数处设置栈空间大小，单位为字节，取值有�
 }
 ```
 
+## SIMD Printf维测空间大小配置示例
+**SIMD (Single Instruction, Multiple Data) Printf维测空间大小配置**， 用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。仅如下型号支持该配置：
+
+Atlas A3 训练系列产品/Atlas A3 推理系列产品
+
+Atlas A2 训练系列产品/Atlas A2 推理系列产品
+
+`simd_printf_fifo_size_per_core`参数处设置SIMD算子Printf维测空间大小，单位Byte。其取值都必须是8的整数倍，如果传入的不是8的整数倍，则接口内部会自动向上取整，确保其为8的整数倍。
+
+`simd_printf_fifo_size_per_core`配置默认值32KB。最小值是1KB，最大值64MB。
+
+配置文件中的示例内容如下：
+```
+{
+    "simd_printf_fifo_size_per_core": 1048576
+}
+```
+
 ## Event资源调度模式配置示例
 
 Event资源调度模式配置，用于在捕获方式构建模型运行实例场景下控制Event资源的调度方式。仅如下型号支持该配置：
