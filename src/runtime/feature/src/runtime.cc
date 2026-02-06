@@ -795,7 +795,7 @@ rtError_t Runtime::InitSocType()
     chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(hardwareVersion)));
     archType_ = static_cast<rtArchType_t>(PLAT_GET_ARCH(static_cast<uint64_t>(hardwareVersion)));
 
-    error = GetConnectUbFlagFromDrv(connectUbFlag_);
+    error = GetConnectUbFlagFromDrv(workingDev_, connectUbFlag_);
     if (error != RT_ERROR_NONE) {
         return error;
     }

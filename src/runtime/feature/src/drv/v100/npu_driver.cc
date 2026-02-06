@@ -11,8 +11,9 @@
 
 namespace cce {
 namespace runtime {
-rtError_t GetConnectUbFlagFromDrv(bool &connectUbFlag)
+rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool &connectUbFlag)
 {
+    UNUSED(deviceId);
     connectUbFlag = false;
     return RT_ERROR_NONE;
 }

@@ -14,11 +14,11 @@
 
 namespace cce {
 namespace runtime {
-rtError_t GetConnectUbFlagFromDrv(bool &connectUbFlag)
+rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool &connectUbFlag)
 {
     drvError_t drvRet = DRV_ERROR_NONE;
     int64_t hdConnectType = 0;
-    drvRet = halGetDeviceInfo(RT_DEV_ZERO, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &hdConnectType);
+    drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &hdConnectType);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%d, info type=%d.",
             static_cast<uint32_t>(drvRet), static_cast<int32_t>(MODULE_TYPE_SYSTEM),

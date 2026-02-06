@@ -627,7 +627,7 @@ private:
     std::mutex m;
 };
 
-rtError_t GetConnectUbFlagFromDrv(bool &connectUbFlag);
+rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool &connectUbFlag);
 rtError_t InitDrvEventThread(const uint32_t deviceId);
 rtError_t GetDrvSentinelMode(void);
 bool IsOfflineSupportMemType(const rtMemType_t &type);
