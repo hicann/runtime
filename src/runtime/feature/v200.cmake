@@ -419,6 +419,16 @@ set(RUNTIME_INC_DIR_V201
 set(libruntime_v200_dev_info_src_files
     platform/950/dev_info_proc_func.cc
     platform/910_96/dev_info_proc_func.cc
+    platform/610_lite/dev_info_proc_func.cc
+    platform/910_B_93/dev_info_proc_func.cc
+    platform/as31xm1/dev_info_proc_func.cc
+    platform/cloud/dev_info_proc_func.cc
+    platform/dc/dev_info_proc_func.cc
+    platform/adc/dev_info_proc_func.cc
+    platform/mini/dev_info_proc_func.cc
+    platform/mini_v3/dev_info_proc_func.cc
+    platform/tiny/dev_info_proc_func.cc
+    platform/mc62cm12a/dev_info_proc_func.cc
 )
 
 set(libruntime_v201_dev_info_src_files
