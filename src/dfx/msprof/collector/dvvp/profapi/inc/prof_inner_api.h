@@ -144,6 +144,12 @@ MSVP_PROF_API int32_t MsprofSubscribeRawData(MsprofRawDataCallback callback);
 
 MSVP_PROF_API int32_t MsprofUnSubscribeRawData();
 
+MSVP_PROF_API uint64_t ProfStr2Id(const char *hashInfo, size_t length);
+
+MSVP_PROF_API int32_t ProfAclRangePushEx(ACLPROF_EVENT_ATTR_PTR attr);
+
+MSVP_PROF_API int32_t ProfAclRangePop();
+
 #ifdef __cplusplus
 }
 #endif

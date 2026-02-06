@@ -20,6 +20,7 @@
 #include "thread/thread.h"
 #include "prof_biu_perf_job.h"
 #include "file_transport.h"
+#include "prof_inner_api.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;

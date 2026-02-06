@@ -39,6 +39,7 @@
 #include "thread/thread_pool.h"
 #include "config/config_manager.h"
 #include "param_validation.h"
+#include "prof_inner_api.h"
 
 using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::error;

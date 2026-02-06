@@ -168,3 +168,18 @@ aclError aclprofRangeStop(uint32_t rangeId)
 {
     return ProfAclRangeStop(rangeId);
 }
+
+uint64_t aclprofStr2Id(const char *message)
+{
+    return ProfStr2Id(message, strlen(message));
+}
+
+aclError aclprofRangePushEx(ACLPROF_EVENT_ATTR_PTR attr)
+{
+    return ProfAclRangePushEx(attr);
+}
+
+aclError aclprofRangePop()
+{
+    return ProfAclRangePop();
+}

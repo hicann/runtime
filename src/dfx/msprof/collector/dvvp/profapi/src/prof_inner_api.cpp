@@ -216,6 +216,21 @@ MSVP_PROF_API int32_t MsprofUnSubscribeRawData()
     return ret;
 }
 
+MSVP_PROF_API uint64_t ProfStr2Id(const char *hashInfo, size_t length)
+{
+    return MsprofGetHashId(hashInfo, length);
+}
+
+MSVP_PROF_API int32_t ProfAclRangePushEx(ACLPROF_EVENT_ATTR_PTR attr)
+{
+    return ProfAPI::ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(attr);
+}
+
+MSVP_PROF_API int32_t ProfAclRangePop()
+{
+    return ProfAPI::ProfTxPlugin::GetProftxInstance().ProftxRangePop();
+}
+
 #ifdef __cplusplus
 }
 #endif
