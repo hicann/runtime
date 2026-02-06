@@ -903,6 +903,7 @@ public:
     virtual rtError_t GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &finishedId);
     void *GetDvppRRTaskAddr(void);
     uint32_t GetMaxTryCount() const;
+    bool IsSyncFinished();
 
     virtual RtSqAllocType GetTsSqAllocType() const
     {
