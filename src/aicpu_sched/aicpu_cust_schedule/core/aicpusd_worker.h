@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <unordered_set>
 #include <semaphore.h>
 #include <string>
 #include <thread>
@@ -43,11 +44,14 @@ private:
     int32_t SecureCompute(const uint32_t threadIndex);
     int32_t SetAffinityByPm(const size_t threadIndex);
     int32_t SetAffinityBySelf(const size_t threadIndex);
+    void GetExpandedSysCalls(const char_t * const whitelist);
+    void ExpandSysCallList(std::unordered_set<int32_t> &filterSystemCalls);
 
     std::vector<std::thread> workers_;
     std::vector<sem_t> sems_;
     uint32_t semInitedNum_;
     std::vector<ThreadStatus> threadStatus_;
+    std::unordered_set<int32_t> expandedSystemCalls_;
 };
 }  // namespace AicpuSchedule
 #endif  // AICPUSD_WORKER_H

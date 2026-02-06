@@ -25,8 +25,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#include "seccomp.h"
-
 #include "driver/ascend_hal.h"
 #include "ascend_inpackage_hal.h"
 #include "adump/ide_daemon_api.h"
@@ -253,23 +251,6 @@ drvError_t halQueueEnQueue(unsigned int devId, unsigned int qid, void *mbuf)
 int SetQueueWorkMode(unsigned int devid, unsigned int qid, int mode)
 {
     return DRV_ERROR_NONE;
-}
-
-// for sec comp stub
-scmp_filter_ctx seccomp_init(uint32_t def_action)
-{
-    scmp_filter_ctx ctx;
-    return ctx;
-}
-
-int seccomp_rule_add(scmp_filter_ctx ctx, uint32_t action, int syscall, unsigned int arg_cnt, ...)
-{
-    return 0;
-}
-
-int seccomp_load(const scmp_filter_ctx ctx)
-{
-    return 0;
 }
 
 drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
