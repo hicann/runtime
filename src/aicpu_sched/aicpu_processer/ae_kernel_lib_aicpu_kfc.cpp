@@ -80,6 +80,52 @@ namespace cce {
         return AE_STATUS_SUCCESS;
     }
 
+    int32_t AIKernelsLibAiCpuKFC::GetApiWhenSonameNotEmpty(const aicpu::KernelType kernelType, const uint32_t soNameLen,
+        const char_t *kernelSoName, const char_t *kernelName, void* &funcAddr)
+    {
+        if (static_cast<bool>(unlikely(soNameLen > AE_MAX_SO_NAME))) {
+            AE_RUN_WARN_LOG(AE_MODULE_ID, "kernelSoName length is not support, len=%d.", soNameLen);
+            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
+        }
+
+        const auto ret = soMngr_.GetApi(kernelType, kernelSoName, kernelName, &funcAddr);
+        if (static_cast<bool>(unlikely(ret != AE_STATUS_SUCCESS))) {
+            AE_RUN_WARN_LOG(AE_MODULE_ID, "Get %s api from %s unsuccessfully.", kernelName, kernelSoName);
+            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
+        }
+
+        if (static_cast<bool>(unlikely(funcAddr == nullptr))) {
+            AE_RUN_WARN_LOG(AE_MODULE_ID, "Get %s api from %s success, but func is nullptr",
+                            kernelName, kernelSoName);
+            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
+        }
+
+        return AE_STATUS_SUCCESS;
+    }
+
+    int32_t AIKernelsLibAiCpuKFC::GetApiBySoname(const aicpu::KernelType kernelType, const char_t *kernelSoName,
+                                                 AicpuKFCOpFuncPtr &opFuncPtr, const char_t *kernelName)
+    {
+        const uint32_t soNameLen = strnlen(kernelSoName, AE_MAX_SO_NAME + 1);
+        if (soNameLen == 0) {
+            if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
+                return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
+            }
+        } else {
+            void *funcAddr = nullptr;
+            if (GetApiWhenSonameNotEmpty(kernelType, soNameLen, kernelSoName, kernelName, funcAddr) == AE_STATUS_SUCCESS) {
+                opFuncPtr = PtrToFunctionPtr<void, AicpuKFCOpFuncPtr>(funcAddr);
+            } else {
+                if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
+                    return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
+                }
+            }
+        }
+
+        return AE_STATUS_SUCCESS;
+    }
+
+
     // Implement call a aicpu op kernel interface
     int32_t AIKernelsLibAiCpuKFC::CallKernelApi(const aicpu::KernelType kernelType, const void * const kernelBase)
     {
@@ -109,39 +155,9 @@ namespace cce {
                 opFuncPtr = apiIter->second;
             } else {
                 char_t *kernelSoName = PtrToPtr<void, char_t>(ValueToPtr(cceKernelBase->kernelSo));
-                const uint32_t len = strnlen(kernelSoName, AE_MAX_SO_NAME + 1);
-                if (len == 0) {
-                    if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
-                        AE_RW_LOCK_UN_LOCK(&rwLock_);
-                        return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
-                    }
-                } else {
-                    if (static_cast<bool>(unlikely(len > AE_MAX_SO_NAME))) {
-                        AE_RUN_WARN_LOG(AE_MODULE_ID, "kernelSoName length is not support, len=%d.", len);
-                        if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
-                            AE_RW_LOCK_UN_LOCK(&rwLock_);
-                            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
-                        }
-                    }
-
-                    void *funcAddr = nullptr;
-                    ret = soMngr_.GetApi(kernelType, kernelSoName, kernelName, &funcAddr);
-                    if (static_cast<bool>(unlikely(ret != AE_STATUS_SUCCESS))) {
-                        AE_RUN_WARN_LOG(AE_MODULE_ID, "Get %s api from %s unsuccessfully.", kernelName, kernelSoName);
-                        if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
-                            AE_RW_LOCK_UN_LOCK(&rwLock_);
-                            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
-                        }
-                    }
-                    if (static_cast<bool>(unlikely(funcAddr == nullptr))) {
-                        AE_RUN_WARN_LOG(AE_MODULE_ID, "Get %s api from %s success, but func is nullptr",
-                                        kernelName, kernelSoName);
-                        if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
-                            AE_RW_LOCK_UN_LOCK(&rwLock_);
-                            return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
-                        }
-                    }
-                    opFuncPtr = PtrToFunctionPtr<void, AicpuKFCOpFuncPtr>(funcAddr);
+                if (GetApiBySoname(kernelType, kernelSoName, opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {
+                    AE_RW_LOCK_UN_LOCK(&rwLock_);
+                    return static_cast<int32_t>(AE_STATUS_INNER_ERROR);
                 }
                 apiCacher_[kernelName] = opFuncPtr;
             }
