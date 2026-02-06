@@ -5208,7 +5208,8 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     if (isPoolMem) {
         error = prog->BinaryPoolMemCopySync(devMem, size, data, device, readonly);
     } else {
-        error = prog->BinaryMemCopySync(devMem, size, data, device, readonly);
+        uint32_t adviseSize = devSize + INSTR_ALIGN_SIZE;
+        error = prog->BinaryMemCopySync(devMem, adviseSize, size, data, device, readonly);
     }
 
     if (error != RT_ERROR_NONE) {
