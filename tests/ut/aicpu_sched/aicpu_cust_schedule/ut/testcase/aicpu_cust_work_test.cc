@@ -12,11 +12,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <fstream>
 #include <thread>
 #include <vector>
 #include <signal.h>
 #include <iostream>
 #include <seccomp.h>
+#include <stdio.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "tsd.h"
@@ -41,6 +43,20 @@ void WaitAndStopThread(uint32_t time)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(time));
     AicpuEventManager::GetInstance().SetRunningFlag(false);
+}
+
+void CreateSyscallFile(const std::string &fileName)
+{
+    std::ofstream outFile(fileName);
+    if (!outFile) {
+        std::cout << "Can not create file: " << fileName << std::endl;
+        return;
+    }
+
+    outFile << "recv" << std::endl;
+    outFile << "write" << std::endl;
+    outFile << "recvmsg" << std::endl;
+    outFile.close();
 }
 }  // namespace
 
@@ -434,4 +450,40 @@ TEST_F(AICPUCusWorkerTEST, InitDrvMgr_003) {
         .will(returnValue(1));
     auto ret = AicpuDrvManager::GetInstance().InitDrvMgr(48, 0, 0, true);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+}
+
+TEST_F(AICPUCusWorkerTEST, GetExpandedSysCalls_With_InvalidFile) {
+    MOCKER(access).stubs().will(returnValue(-1));
+    std::unordered_set<int32_t> filterSystemCalls;
+
+    ThreadPool tp;
+    tp.GetExpandedSysCalls("white_list");
+    EXPECT_EQ(tp.expandedSystemCalls_.size(), 0U);
+}
+
+TEST_F(AICPUCusWorkerTEST, GetExpandedSysCalls_insert2_from3) {
+    CreateSyscallFile("white_list");
+    std::unordered_set<int32_t> filterSystemCalls = {64};
+    MOCKER(seccomp_syscall_resolve_name)
+        .stubs()
+        .will(returnValue(-110))
+        .then(returnValue(64))
+        .then(returnValue(212))
+        .then(returnValue(-1));
+
+    ThreadPool tp;
+    tp.GetExpandedSysCalls("white_list");
+    EXPECT_EQ(tp.expandedSystemCalls_.size(), 2U);
+    remove("white_list");
+}
+
+TEST_F(AICPUCusWorkerTEST, ExpandSysCallList_insert1_from2) {
+    std::unordered_set<int32_t> filterSystemCalls = {64};
+    ThreadPool tp;
+
+    tp.expandedSystemCalls_.insert(212);
+    tp.expandedSystemCalls_.insert(64);
+
+    tp.ExpandSysCallList(filterSystemCalls);
+    EXPECT_EQ(filterSystemCalls.size(), 2U);
 }

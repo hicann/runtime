@@ -24,3 +24,8 @@ int seccomp_load(const scmp_filter_ctx ctx)
 {
     return 0;
 }
+
+int seccomp_syscall_resolve_name(const char *name)
+{
+    return 0;
+}

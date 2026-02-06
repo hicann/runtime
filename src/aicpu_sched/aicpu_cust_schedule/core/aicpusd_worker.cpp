@@ -11,6 +11,7 @@
 
 #include <csignal>
 #include <cstring>
+#include <fstream>
 
 #include "aicpusd_status.h"
 #include "aicpusd_drv_manager.h"
@@ -34,6 +35,7 @@ namespace {
         (static_cast<uint32_t>(1U) << static_cast<uint32_t>(EVENT_TS_CTRL_MSG)) |
         (static_cast<uint32_t>(1U) << static_cast<uint32_t>(EVENT_SPLIT_KERNEL)) |
         (static_cast<uint32_t>(1U) << static_cast<uint32_t>(EVENT_FFTS_PLUS_MSG));
+    constexpr const char_t *SYSCALL_WHITE_LIST = "/var/aicpu_custom_syscall_whitelist";
 }
 
 namespace AicpuSchedule {
@@ -83,6 +85,7 @@ namespace AicpuSchedule {
             int32_t ret = AICPU_SCHEDULE_OK;
             const sighandler_t oldHandler = signal(SIGCHLD, SIG_DFL);
             aicpusd_info("Set SIGCHLD to %d, old sighandler[%d]", SIG_DFL, oldHandler);
+            GetExpandedSysCalls(SYSCALL_WHITE_LIST);
             for (uint32_t threadIndex = 0U; threadIndex < aicpuNum; ++threadIndex) {
                 ret = CreateOneWorker(threadIndex);
                 if (ret != AICPU_SCHEDULE_OK) {
@@ -136,6 +139,37 @@ namespace AicpuSchedule {
         return AICPU_SCHEDULE_OK;
     }
 
+    void ThreadPool::GetExpandedSysCalls(const char_t * const whitelist)
+    {
+        std::ifstream inFile(whitelist);
+        if ((access(whitelist, R_OK) != 0) || !inFile) {
+            aicpusd_info("syscall file: %s is invalid", whitelist);
+            return;
+        }
+        const ScopeGuard fileGuard([&inFile] () { inFile.close(); });
+
+        std::string syscallStr;
+        while (getline(inFile, syscallStr)) {
+            aicpusd_info("read syscall: %s", syscallStr.c_str());
+            const int32_t syscallNo = seccomp_syscall_resolve_name(syscallStr.c_str());
+            if (syscallNo < 0) {
+                aicpusd_run_warn("Unknown syscall: %s, ret is %d.", syscallStr.c_str(), syscallNo);
+                continue;
+            }
+            aicpusd_info("syscall: %s, syscallNo: %d", syscallStr.c_str(), syscallNo);
+            (void) expandedSystemCalls_.insert(syscallNo);
+        }
+    }
+
+    void ThreadPool::ExpandSysCallList(std::unordered_set<int32_t> &filterSystemCalls) {
+        for (const auto expandedSystemCall : expandedSystemCalls_) {
+            const auto insertRet = filterSystemCalls.insert(expandedSystemCall);
+            if (insertRet.second) {
+                aicpusd_run_info("Expand syscallNo: %d.", expandedSystemCall);
+            }
+        }
+    }
+
     int32_t ThreadPool::SecureCompute(const uint32_t threadIndex)
     {
         if ((FeatureCtrl::IsAosCore() || (!AicpuSchedule::AicpuDrvManager::GetInstance().GetSafeVerifyFlag()))) {
@@ -143,7 +177,7 @@ namespace AicpuSchedule {
             aicpusd_info("Execute seccomp_load success.");
             return AICPU_SCHEDULE_OK;
         }
-        const int32_t filterSystemCall[] = {
+        std::unordered_set<int32_t> filterSystemCalls = {
             SCMP_SYS(open),
             SCMP_SYS(close),
             SCMP_SYS(faccessat),
@@ -174,19 +208,20 @@ namespace AicpuSchedule {
             SCMP_SYS(uname),
             SCMP_SYS(getcpu),
             SCMP_SYS(write),
-            SCMP_SYS(getrandom)};
+            SCMP_SYS(getrandom)
+        };
+        ExpandSysCallList(filterSystemCalls);
 
-        const size_t systemCallSize = sizeof(filterSystemCall)/sizeof(int32_t);
         // filter enable system calls
         const scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_ERRNO(1U));
         int32_t ret = 0;
-        for (size_t i = 0UL; i < systemCallSize; ++i) {
-            ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, filterSystemCall[i], 0U);
+        for (auto filterSystemCall : filterSystemCalls) {
+            ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, filterSystemCall, 0U);
             if (ret != 0) {
                 threadStatus_[static_cast<size_t>(threadIndex)] = ThreadStatus::THREAD_EXIT;
                 aicpusd_err("Add the system call failed, thread threadIndex[%u], ret[%d],"
-                            " filterSystemCall[%zu], syscall number[%d].",
-                            threadIndex, ret, i, filterSystemCall[i]);
+                            " syscall number[%d].",
+                            threadIndex, ret, filterSystemCall);
                 return AICPU_SCHEDULE_ERROR_COMMON_ERROR;
             }
         }

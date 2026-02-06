@@ -122,6 +122,7 @@ add_executable(aicpu_custom_schedule_utest_dc
     ${SRC_PATH}/stub/dc.cpp
     ${SRC_PATH}/stub/adc_prof.cpp
     ${SRC_PATH}/stub/aicpusd_resource_limit.cpp
+    ${SRC_PATH}/../stub/seccomp_stub.cpp
     testcase/aicpu_cust_monitor_dc_test.cc
     testcase/aicpu_cust_adc_prof_test.cc
     main_ut.cc
@@ -146,6 +147,7 @@ target_link_libraries(aicpu_custom_schedule_utest_dc PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     ascend_protobuf
     c_sec_headers
+    seccomp_headers
 )
 
 add_executable(aicpu_custom_schedule_utest_open
@@ -163,5 +165,4 @@ target_include_directories(aicpu_custom_schedule_utest_open PRIVATE
 target_link_libraries(aicpu_custom_schedule_utest_open PRIVATE
     $<BUILD_INTERFACE:intf_aicpu_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
-    seccomp_headers
 )

@@ -14,6 +14,7 @@
 #include "task_queue.h"
 #include "ascend_hal.h"
 #include "aicpusd_resource_limit.h"
+#include "seccomp.h"
 
 class AICPUScheduleDcStubTEST : public testing::Test {
 protected:
@@ -39,4 +40,13 @@ protected:
 TEST_F(AICPUScheduleDcStubTEST, stubTest) {
     DataPreprocess::TaskQueueMgr::GetInstance();
     EXPECT_EQ(aicpu::AddToCgroup(0U, 0U), true);
+}
+
+TEST_F(AICPUScheduleDcStubTEST, stubSecCom) {
+    scmp_filter_ctx ctx = seccomp_init(0U);
+    EXPECT_EQ(ctx, nullptr);
+
+    EXPECT_EQ(seccomp_rule_add(ctx, 1U, 0, 0U), 0);
+    EXPECT_EQ(seccomp_load(ctx), 0);
+    EXPECT_EQ(seccomp_syscall_resolve_name("call"), 0);
 }
