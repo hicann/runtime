@@ -12,8 +12,22 @@
 #include <cstdint>
 #include "prof_load_api.h"
 #include "acl/acl_base.h"
+#include "prof_acl_api.h"
+#include "prof_runtime_plugin.h"
 
 namespace ProfAPI {
+struct CacheOpInfoBasic {
+    uint32_t taskType;
+    uint32_t blockdim;
+    uint64_t nodeId;
+    uint64_t opType;
+    uint64_t attrId{0};
+    uint64_t reserve2{0};
+    uint32_t opFlag{0};
+    uint32_t tensorNum;
+    MsrofTensorData tensorData[0];
+};
+
 using ProftxCreateStampFunc = VOID_PTR(*)(void);
 using ProftxDestroyStampFunc = void (*)(VOID_PTR);
 using ProftxPushFunc = int32_t (*)(VOID_PTR);
@@ -49,7 +63,13 @@ public:
     int32_t ProftxSetCategoryName(uint32_t category, const char *categoryName);
     int32_t ProftxSetStampCategory(VOID_PTR stamp, uint32_t category);
     int32_t ProftxSetStampPayload(VOID_PTR stamp, const int32_t type, VOID_PTR value);
+    int32_t ProftxRangePushEx(ACLPROF_EVENT_ATTR_PTR attr);
+    int32_t ProftxRangePop();
+    int32_t ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo, uint64_t timeStampPush, uint64_t timeStampPop);
+    int32_t ReportCacheOpInfo2RT(const aclprofTensorInfo* tensorInfo);
 private:
+    ACLPROF_EVENT_ATTR_PTR attr_;
+    uint64_t timeStampPush_;
     ProfLoadApi loadApi_;
     ProftxCreateStampFunc proftxCreateStamp_{nullptr};
     ProftxDestroyStampFunc proftxDestroyStamp_{nullptr};

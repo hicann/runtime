@@ -37,6 +37,14 @@ enum ProfAicoreMetrics {
 };
 
 /**
+ * @name  ProfMessageType
+ * @brief message type enum
+ */
+enum ProfMessageType {
+    MESSAGE_TYPE_TENSOR_INFO = 0,
+};
+
+/**
  * @name  ProfConfig
  * @brief struct of aclprofStart/aclprofStop
  */
@@ -68,6 +76,36 @@ struct aclprofSubscribeConfig {
 };
 using ACL_PROF_SUB_CONFIG_PTR = aclprofSubscribeConfig *;
 using ACL_PROF_SUB_CINFIG_CONST_PTR = const aclprofSubscribeConfig *;
+
+struct aclprofTensor {
+    uint32_t type;                                        // tensor类型, 0: input, 1: output
+    uint32_t format;                                      // format类型: aclFormat
+    uint32_t dataType;                                    // dataType类型 aclDataType
+    uint32_t shapeDim;                                    // shape dim <= 8
+    uint32_t shape[MSPROF_GE_TENSOR_DATA_SHAPE_LEN];      // tensor内存大小
+};
+
+struct aclprofTensorInfo {
+    uint64_t opNameId;      // 通过uint64_t aclprofStr2Id(const char *message)
+    uint64_t opTypeId;
+    uint32_t resv;
+    uint32_t tensorNum;
+    uint32_t kernelType;
+    uint32_t blockNums;
+    void *stream;           // stream信息
+    aclprofTensor *tensors;
+};
+
+struct aclprofEventAttributes {
+    uint16_t version;
+    uint16_t size;
+    uint32_t messageType;   // MESSAGE_TYPE_TENSOR_INFO
+    union Message {
+        aclprofTensorInfo *tensorInfo;
+    } message;
+};
+
+using ACLPROF_EVENT_ATTR_PTR = aclprofEventAttributes *;
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
 #define MSVP_PROF_API __declspec(dllexport)

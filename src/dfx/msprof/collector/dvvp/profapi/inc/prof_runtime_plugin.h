@@ -17,10 +17,13 @@
 #include "acl/acl_base.h"
 #include "runtime/base.h"
 #include "runtime/kernel.h"
+#include "runtime/rts/rts_stream.h"
 #include "error_codes/rt_error_codes.h"
 
 namespace ProfAPI {
 using RtProfilerTraceExFunc = rtError_t (*) (uint64_t indexId, uint64_t modelId, uint16_t tagId, rtStream_t stm);
+using RtsStreamGetAttributeFunc = rtError_t (*) (rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue);
+using RtCacheLastTaskOpInfoFunc = rtError_t (*) (const void * const infoPtr, const size_t infoSize);
 
 struct RuntimeApiInfo {
     std::string funcName;
@@ -33,7 +36,8 @@ public:
     int32_t RuntimeApiInit();
     void *GetPluginApiFunc(const std::string funcName);
     int32_t ProfMarkEx(uint64_t indexId, uint64_t modelId, uint16_t tagId, void *stm);
-
+    int32_t ProfRtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue);
+    int32_t ProfRtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize);
 private:
     void LoadRuntimeApi();
 

@@ -84,4 +84,35 @@ int32_t ProfRuntimePlugin::ProfMarkEx(uint64_t indexId, uint64_t modelId, uint16
     }
     return PROFILING_SUCCESS;
 }
+
+int32_t ProfRuntimePlugin::ProfRtsStreamGetAttribute(
+    rtStream_t stm, rtStreamAttr stmAttrId, rtStreamAttrValue_t *attrValue)
+{
+    auto func = GetPluginApiFunc("rtsStreamGetAttribute");
+    if (func == nullptr) {
+        MSPROF_LOGE("Failed to get api stub[rtsStreamGetAttribute] func.");
+        return PROFILING_FAILED;
+    }
+    rtError_t ret = reinterpret_cast<RtsStreamGetAttributeFunc>(func)(stm, stmAttrId, attrValue);
+    if (ret != RT_ERROR_NONE) {
+        MSPROF_LOGE("Failed to call rtsStreamGetAttribute, ret: %d.", ret);
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
+{
+    auto func = GetPluginApiFunc("rtCacheLastTaskOpInfo");
+    if (func == nullptr) {
+        MSPROF_LOGE("Failed to get api stub[rtCacheLastTaskOpInfo] func.");
+        return PROFILING_FAILED;
+    }
+    rtError_t ret = reinterpret_cast<RtCacheLastTaskOpInfoFunc>(func)(infoPtr, infoSize);
+    if (ret != RT_ERROR_NONE) {
+        MSPROF_LOGE("Failed to call rtCacheLastTaskOpInfo, ret: %d.", ret);
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
+}
 }

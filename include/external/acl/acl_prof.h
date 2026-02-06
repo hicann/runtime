@@ -99,6 +99,7 @@ typedef struct aclprofStopConfig aclprofStopConfig;
 typedef struct aclprofAicoreEvents aclprofAicoreEvents;
 typedef struct aclprofSubscribeConfig aclprofSubscribeConfig;
 typedef struct aclprofStepInfo aclprofStepInfo;
+typedef struct aclprofEventAttributes aclprofEventAttributes;
 
 /**
  * @ingroup AscendCL
@@ -530,6 +531,32 @@ MSVP_PROF_API aclError aclprofMark(void *stamp);
 * @retval OtherValues Failure
 */
 MSVP_PROF_API aclError aclprofMarkEx(const char *msg, size_t msgLen, aclrtStream stream);
+
+/**
+* @ingroup AscendCL
+* @brief change op name to id
+* @param [in] message: op name
+* @retval ACL_SUCCESS The function is successfully executed.
+* @retval OtherValues Failure
+*/
+MSVP_PROF_API uint64_t aclprofStr2Id(const char *message);
+
+/**
+* @ingroup AscendCL
+* @brief 
+* @param [in] attr: event attributes, include tensor info
+* @retval ACL_SUCCESS The function is successfully executed.
+* @retval OtherValues Failure
+*/
+MSVP_PROF_API aclError aclprofRangePushEx(aclprofEventAttributes *attr);
+
+/**
+* @ingroup AscendCL
+* @brief 
+* @retval ACL_SUCCESS The function is successfully executed.
+* @retval OtherValues Failure
+*/
+MSVP_PROF_API aclError aclprofRangePop();
 #ifdef __cplusplus
 }
 #endif
