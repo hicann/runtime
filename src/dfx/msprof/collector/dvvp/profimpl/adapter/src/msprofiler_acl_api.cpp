@@ -283,7 +283,7 @@ aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
         devIds.push_back(config->devIdList[i]);
     }
 
-    int32_t ret = ProfAclMgr::instance()->CheckConfigConsistency(static_cast<const MsprofConfig *>(&cfg));
+    int32_t ret = ProfAclMgr::instance()->CheckConfigConsistency(static_cast<const MsprofConfig *>(&cfg), "start");
     if (ret != ACL_SUCCESS) {
         return ret;
     }
