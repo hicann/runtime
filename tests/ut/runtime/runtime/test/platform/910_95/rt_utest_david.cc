@@ -4331,7 +4331,7 @@ TEST_F(DavidTaskTest, get_connect_ub_flag_success)
 {
     Runtime *rtInstance = ((Runtime *)Runtime::Instance());
     bool connectUbFlag = false;
-    rtError_t err = GetConnectUbFlagFromDrv(connectUbFlag);
+    rtError_t err = GetConnectUbFlagFromDrv(0, connectUbFlag);
     EXPECT_EQ(err, RT_ERROR_NONE);
 }
 
@@ -4339,7 +4339,7 @@ TEST_F(DavidTaskErrTest, get_connect_ub_flag_fail)
 {
     Runtime *rtInstance = ((Runtime *)Runtime::Instance());
     bool connectUbFlag = false;
-    rtError_t err = GetConnectUbFlagFromDrv(connectUbFlag);
+    rtError_t err = GetConnectUbFlagFromDrv(0, connectUbFlag);
     EXPECT_EQ(err, RT_ERROR_DRV_INPUT);
 }
 
