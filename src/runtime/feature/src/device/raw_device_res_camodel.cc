@@ -45,16 +45,35 @@
 
 namespace cce {
 namespace runtime {
+static const std::string GetSocVersion()
+{
+    if (halGetSocVersion != nullptr) {
+        char_t socVersion[SOC_VERSION_LEN] = {0};
+        uint32_t deviceCnt = 1U;
+        drvError_t drvRet = drvGetDevNum(&deviceCnt);
+        RT_LOG(RT_LOG_DEBUG, "[drv api] drvGetDevNum=%u ret=%#x", deviceCnt, drvRet);
+        for (uint32_t i = 0U; i < deviceCnt; i++) {
+            drvRet = halGetSocVersion(i, socVersion, SOC_VERSION_LEN);
+            RT_LOG(RT_LOG_DEBUG, "[drv api] halGetSocVersion device_id=%u drv ret=%#x", i, drvRet);
+            std::string socVer(socVersion);
+            if ((drvRet == DRV_ERROR_NONE) && (!socVer.empty())) {
+                return socVer;
+            }
+        }
+    }
+
+    const Runtime * const rtInstance = Runtime::Instance();
+    const rtSocType_t socType = rtInstance->GetSocType();
+    return GetSocVersionStrByType(socType);
+}
 
 static rtError_t GetDeviceResByFe(const uint32_t devId, int32_t moduleType, int64_t &value)
 {
-    Runtime *const rt = Runtime::Instance();
-    const rtSocType_t socType = rt->GetSocType();
-    const std::string socVersion = GetSocVersionStrByType(socType);
+    const std::string socVersion = GetSocVersion();
     uint32_t platformRet = fe::PlatformInfoManager::GeInstance().InitRuntimePlatformInfos(socVersion);
     if (platformRet != 0U) {
         RT_LOG(RT_LOG_ERROR,
-            "drv devId=%u, socType=%d, socVersion=%s, platformRet=%u", devId, socType, socVersion.c_str(), platformRet);
+            "drv devId=%u, socVersion=%s, platformRet=%u", devId, socVersion.c_str(), platformRet);
         return RT_ERROR_INVALID_VALUE;
     }
 
