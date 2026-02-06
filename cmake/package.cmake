@@ -31,7 +31,7 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
     set(SCHED_TARGETS dgw_client tsdclient)
 else()
     set(INSTALL_DIR lib)
-    set(SCHED_TARGETS tsdclient)
+    set(SCHED_TARGETS dgw_client tsdclient)
 endif()
 
 set(script_prefix ${CMAKE_CURRENT_SOURCE_DIR}/scripts/package/runtime/scripts)
