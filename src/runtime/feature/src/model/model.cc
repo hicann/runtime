@@ -641,8 +641,7 @@ rtError_t Model::DelStream(Stream * const streamIn)
 
 rtError_t Model::BindSqPerStream(Stream * const streamIn, const uint32_t flag)
 {
-    Stream * const execStream = context_->DefaultStream_();
-
+    Stream * execStream = context_->GetCtrlSQStream();
     rtError_t error = ModelBindTaskSubmit(execStream, streamIn, flag);
     ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, model_id=%d, stream_id=%d, sq_id=%u.",
         id_, streamIn->Id_(), streamIn->GetSqId());
@@ -669,16 +668,11 @@ rtError_t Model::UnBindSqPerStream(Stream * const streamIn)
 
     const rtError_t syncRet = streamIn->Synchronize();
     COND_RETURN_ERROR_MSG_INNER(syncRet != RT_ERROR_NONE, syncRet, "Synchronize failed.");
-
-    // 这里逻辑跟unbind那边不一样, 需要确认差异原因
-    if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
-        return dev->GetCtrlSQ().SendModelUnbindMsg(this, streamIn, false);
-    }
+    Stream * execStream = context_->GetCtrlSQStream();
     TaskFactory * const devTaskFactory = context_->Device_()->GetTaskFactory();
-    Stream * const defaultStream = context_->DefaultStream_();
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    TaskInfo *maintainceTask = defaultStream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
+    TaskInfo *maintainceTask = execStream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
     NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
 
     (void)ModelMaintainceTaskInit(maintainceTask, MMT_STREAM_DEL, this, streamIn, RT_MODEL_HEAD_STREAM, 0U);
@@ -688,7 +682,7 @@ rtError_t Model::UnBindSqPerStream(Stream * const streamIn)
         "model unbind sq failed, model_id=%d, stream_id=%d, sq_id=%u.",
         id_, streamIn->Id_(), streamIn->GetSqId());
 
-    error = defaultStream->Synchronize();
+    error = execStream->Synchronize();
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "model_id=%d, stream_id=%d, sq_id=%u, retCode=%#x!",
         id_, streamIn->Id_(), streamIn->GetSqId(), static_cast<uint32_t>(error));
 
@@ -1729,76 +1723,6 @@ FAIL_ALLOC:
     (void)deviceDrv->DevMemFree(*ptr, dev->Id_());
     *ptr = nullptr;
     return error;
-}
-
-rtError_t Model::LoadCompleteByCallAiCpuIntf()
-{
-    rtError_t rtError = RT_ERROR_NONE;
-    rtError_t error = PacketAicpuModelInfo();
-    ERROR_RETURN_MSG_INNER(error, "Failed to packet aicpu model task.");
-    if (NeedLoadAicpuModelTask()) {
-        COND_RETURN_ERROR_MSG_INNER(endGraphNum_ != 1U, RT_ERROR_MODEL_ENDGRAPH,
-            "Load complete by call aicpu(tf) failed, endGraphNum(%u) must be equal to 1", endGraphNum_);
-    }
-    Stream * const defaultStream = context_->DefaultStream_();
-    Device * const dev = defaultStream->Device_();
-    TaskFactory * const curTaskFactory = dev->GetTaskFactory();
-
-    /* Mini should notify TS model load success for benchmarks,
-    and decoupling model load with NPU power for lite */
-    TaskInfo *maintainceTask = nullptr;
-    TaskInfo submitTask = {};
-    TaskInfo submitTaskInfo = {};
-    rtError_t errorReason;
-
-    COND_RETURN_ERROR_MSG_INNER(streams_.empty(), RT_ERROR_MODEL_STREAM, "model is empty.");
-    // per sink defaultStream load complete for mini/cloud
-    for (Stream * const sinkStream : streams_) {
-        maintainceTask = sinkStream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
-        NULL_PTR_RETURN_MSG(maintainceTask, errorReason);
-
-        (void)ModelMaintainceTaskInit(maintainceTask, MMT_STREAM_LOAD_COMPLETE, this,
-                                      sinkStream, RT_MODEL_HEAD_STREAM, firstTaskId_);
-
-        error = dev->SubmitTask(maintainceTask);
-        ERROR_GOTO_MSG_INNER(error, ERROR_TASK, "Failed to submit stream load complete task, retCode=%#x!",
-                             static_cast<uint32_t>(error));
-        error = sinkStream->Synchronize();
-        if (unlikely((error != RT_ERROR_NONE) && (rtError == RT_ERROR_NONE))) {
-            rtError = error;
-            RT_LOG(RT_LOG_WARNING, "Synchronize Stream fail, retCode=%#x!", static_cast<uint32_t>(error));
-        }
-    }
-
-    maintainceTask = defaultStream->AllocTask(&submitTaskInfo, TS_TASK_TYPE_MODEL_MAINTAINCE, errorReason);
-    NULL_PTR_RETURN(maintainceTask, errorReason);
-
-    (void)ModelMaintainceTaskInit(maintainceTask, MMT_MODEL_PRE_PROC, this,
-        defaultStream, RT_MODEL_HEAD_STREAM, firstTaskId_);
-
-    error = dev->SubmitTask(maintainceTask);
-    ERROR_GOTO_MSG_INNER(error, ERROR_TASK, "Failed to submit model pre proc task, retCode=%#x!",
-                         static_cast<uint32_t>(error));
-
-    SetNeedSubmitTask(true);
-
-    if (NeedLoadAicpuModelTask()) {
-        error = dev->AicpuModelLoad(aicpuModelInfo_);
-        ERROR_RETURN_MSG_INNER(error, "Failed to load aicpu model task, mode_id=%d, retCode=%#x!", id_,
-                               static_cast<uint32_t>(error));
-    }
-
-    error = defaultStream->Synchronize();
-    if (unlikely((error != RT_ERROR_NONE) && (rtError == RT_ERROR_NONE))) {
-        rtError = error;
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Synchronize defaultStream fail");
-    }
-
-    return rtError;
-
-ERROR_TASK:
-    (void)curTaskFactory->Recycle(maintainceTask);
-    return rtError;
 }
 
 rtError_t Model::LabelAlloc(Label * const labelIn, uint16_t &labelId)
