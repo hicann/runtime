@@ -416,6 +416,7 @@ public:
 
     rtError_t UnifiedKernelRegister();
     void DegenerateMixType(uint8_t &mixType) const;
+    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput);
 
     bool IsMetaFlagSupprotFfts() const
     {
@@ -460,7 +461,6 @@ protected:
     rtError_t ParserBinary() override;
 
 private:
-    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput);
     bool FindAndProcMixKernel(const RtKernel * const kernel, const std::string &kernelName, const uint8_t mixType,
                               const uint32_t mixProcVersion);
     void SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj, const uint32_t kernelType);
