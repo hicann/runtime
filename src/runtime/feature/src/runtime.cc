@@ -1370,6 +1370,8 @@ rtError_t Runtime::MallocProgramAndReg(const rtDevBinary_t * const bin, Program 
         return RT_ERROR_INVALID_VALUE;
     }
 
+    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
+    elfProg->SetElfMagic(bin->magic);
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NEW);
     const rtError_t error = prog->Register(bin->data, bin->length);
     if (error != RT_ERROR_NONE) {
@@ -1676,6 +1678,8 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
 static void SetKernelAttributes(Program * const prog, Kernel *kernel, const RtKernel *rtKernel, const uint32_t kernelType,
     const char_t *kernelInfo)
 {
+    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
+    elfProg->AdaptKernelAttrType(rtKernel, kernel);
     const uint32_t nameOffset = prog->AppendKernelName(rtKernel->name);
     kernel->SetNameOffset(nameOffset);
     kernel->SetKernelType_(kernelType);
@@ -1744,6 +1748,7 @@ rtError_t Runtime::AllocAndAddKernel(Program *prog, Kernel **kernelPtr, const Rt
             const uint8_t type = kernels[idx].funcType == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN ?
                 MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
             (*kernelPtr)->SetMixType(type);
+            (*kernelPtr)->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
             RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
                 (*kernelPtr)->Offset2_(), static_cast<uint32_t>(kernels[idx].length), type, (*kernelPtr)->KernelVfType_(), (*kernelPtr)->ShareMemSize_());
             break;
@@ -1956,6 +1961,7 @@ rtError_t Runtime::AllKernelRegister(Program * const prog, const bool isHostApiR
                 uint32_t shareMemSize = (mixType == MIX_AIV) ? kernels[idx].shareMemSize : kernelPtrTmp->ShareMemSize_();
                 kernelPtrTmp->SetShareMemSize_(shareMemSize);
                 (void)GetPrefetchCnt(prog, kernelPtrTmp);
+                kernelPtrTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
                 if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_INIT_BY_CTRL_CODE)) {
                     continue;
                 }
@@ -2019,6 +2025,8 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     (*kernelPtr)->SetShareMemSize_(kernel->shareMemSize);
     (*kernelPtr)->SetSchedMode(kernel->schedMode);
     (void)GetPrefetchCnt(prog, *kernelPtr);
+    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
+    elfProg->AdaptKernelAttrType(kernel, (*kernelPtr));
     bool isRepeated = false;
     const rtError_t error = prog->AllKernelAdd(*kernelPtr, isRepeated);
     if ((error != RT_ERROR_NONE) || (isRepeated)) {
@@ -2073,6 +2081,7 @@ bool Runtime::IsFoundKernelByTilingKey(Program * const prog, const RtKernel * co
         const uint8_t type = kernel->funcType == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN ?
             MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
         kernelTmp->SetMixType(type);
+        kernelTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
         (void)GetPrefetchCnt(prog, kernelTmp);
         RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
             kernelTmp->Offset2_(), static_cast<uint32_t>(kernel->length), type, kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
@@ -2396,6 +2405,7 @@ rtError_t Runtime::MixKernelRegister(Program * const prog)
                     MIX_AIC_AIV_MAIN_AIC : MIX_AIC_AIV_MAIN_AIV;
                 kernelTmp->SetMixType(type);
                 (void)GetPrefetchCnt(prog, kernelTmp);
+                kernelTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
                 RT_LOG(RT_LOG_DEBUG, "kernel register offset2=%u, length2=%u, mixType=%u, kernelVfType=%u, shareMemSize=%u.",
                     kernelTmp->Offset2_(), static_cast<uint32_t>(kernels[idx].length), type,
                     kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
