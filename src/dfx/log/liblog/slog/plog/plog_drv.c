@@ -198,7 +198,9 @@ static int DrvPackageWrite(HDC_SESSION session, DataSendMsg sendMsg, DataPacket 
                         "add buffer to HDC msg failed, drvErr=%d.", (int32_t)drvErr);
 
         // send hdc message
-        drvErr = LogdrvHdcSend(session, msg, 0, 0);
+        const uint32_t sendTimeout = 150U * 1000U; // 150s
+        const uint64_t sendFlag = 2U; // means HDC_FLAG_WAIT_TIMEOUT
+        drvErr = LogdrvHdcSend(session, msg, sendFlag, sendTimeout);
         ONE_ACT_ERR_LOG(drvErr != DRV_ERROR_NONE, goto WRITE_ERROR,
                         "HDC send failed, drvErr=%d.", (int32_t)drvErr);
 
