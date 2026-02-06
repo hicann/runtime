@@ -161,7 +161,8 @@ rtError_t Module::Load(Program * const prog)
         if (isPoolMem) {
             error = prog->BinaryPoolMemCopySync(baseAddrAlign_, size, data, device_, readonly);
         } else {
-            error = prog->BinaryMemCopySync(baseAddrAlign_, size, data, device_, readonly);
+            uint32_t adviseSize = devSize + INSTR_ALIGN_SIZE;
+            error = prog->BinaryMemCopySync(baseAddrAlign_, adviseSize, size, data, device_, readonly);
         }
 
         ERROR_GOTO_MSG_INNER(error, FAIL_FREE, "Memcpy failed, size=%u(bytes),"

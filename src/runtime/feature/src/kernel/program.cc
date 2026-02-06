@@ -1726,21 +1726,21 @@ static rtError_t BinaryMemAdvise(void * const devMem, const uint32_t devSize, rt
 
 TIMESTAMP_EXTERN(BinaryMemCpy);
 
-rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t size, void * const data,
+rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t adviseSize, const uint32_t size, void * const data,
     const Device * const device, const bool readonly)
 {
     uint32_t devId = device->Id_();
     Driver * const curDrv = device->Driver_();
 
-    RT_LOG(RT_LOG_INFO, "binary memcpy to dev_mem, dev_mem=%p, size=%u, device_id=%u, readonly=%d.",
-        devMem, size, devId, readonly);
+    RT_LOG(RT_LOG_INFO, "binary memcpy to dev_mem, dev_mem=%p, adviseSize=%u, size=%u, device_id=%u, readonly=%d.",
+        devMem, adviseSize, size, devId, readonly);
 
     // in the UB scenario, read-only memory cannot be directly copied from host to device (H2D).
     // the memory needs to be set as readable and writable first.
-    rtError_t error = BinaryMemAdvise(devMem, size, RT_ADVISE_ACCESS_READWRITE, device, readonly);
-    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, size=%u(bytes),"
+    rtError_t error = BinaryMemAdvise(devMem, adviseSize, RT_ADVISE_ACCESS_READWRITE, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, adviseSize=%u(bytes),"
         "type=%d(RT_ADVISE_ACCESS_READWRITE), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
+        adviseSize, static_cast<int32_t>(RT_ADVISE_ACCESS_READWRITE), static_cast<uint32_t>(error), devId);
 
     TIMESTAMP_BEGIN(BinaryMemCpy);
     error = curDrv->MemCopySync(devMem, static_cast<uint64_t>(size), data,
@@ -1751,10 +1751,10 @@ rtError_t Program::BinaryMemCopySync(void * const devMem, const uint32_t size, v
     TIMESTAMP_END(BinaryMemCpy);
 
     // after the host-to-device (H2D) transfer is completed, the memory needs to be set as read-only.
-    error = BinaryMemAdvise(devMem, size, RT_ADVISE_ACCESS_READONLY, device, readonly);
-    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, size=%u(bytes),"
+    error = BinaryMemAdvise(devMem, adviseSize, RT_ADVISE_ACCESS_READONLY, device, readonly);
+    ERROR_RETURN_MSG_INNER(error, "advise dev_mem failed, adviseSize=%u(bytes),"
         "type=%d(RT_ADVISE_ACCESS_READONLY), retCode=%#x, device_id=%u.",
-        size, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
+        adviseSize, static_cast<int32_t>(RT_ADVISE_ACCESS_READONLY), static_cast<uint32_t>(error), devId);
     
     return RT_ERROR_NONE;
 }
