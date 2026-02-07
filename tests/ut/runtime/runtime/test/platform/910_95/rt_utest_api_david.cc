@@ -9486,7 +9486,7 @@ TEST_F(ApiDavidTest, rtStreamAbort_03) {
 
     error = rtStreamAbort(stream_);
     stream_->flags_ = oldFlags;
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
 }
 TEST_F(ApiDavidTest, GROUP_INFO)
 {

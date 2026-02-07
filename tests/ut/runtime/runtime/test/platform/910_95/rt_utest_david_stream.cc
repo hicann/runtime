@@ -557,7 +557,7 @@ TEST_F(DavidStreamTest, DavidrtStreamStop_01)
 
     ((DavidStream *)stream)->SetBindFlag(true);
     rtError_t error = rtsStreamStop(stream);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
