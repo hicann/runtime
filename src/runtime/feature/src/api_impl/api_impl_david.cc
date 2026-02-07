@@ -1313,7 +1313,7 @@ rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * con
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Direct send failed, stream is not in current ctx.");
-    COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID,
         "UbDirectSend not support model stream, stream_id=%d.", curStm->Id_());
     COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
         "the stream_id=%d is capturing, not support UbDirectSend.", curStm->Id_());
@@ -1819,9 +1819,9 @@ rtError_t ApiImplDavid::StreamAbort(Stream * const stm)
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "StreamAbort failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID,
         "StreamAbort not support model stream, stream_id=%d.", curStm->Id_());
-    COND_RETURN_ERROR_MSG_INNER((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_STREAM_INVALID,
         "StreamAbort not support mc2 stream, stream flag=%u.", curStm->Flags());
     return curStm->StreamAbort();
 }
@@ -1832,7 +1832,7 @@ rtError_t ApiImplDavid::StreamStop(Stream * const stm)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "StreamStop failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->GetBindFlag(), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER(stm->GetBindFlag(), RT_ERROR_STREAM_INVALID,
         "StreamStop not support model stream, stream_id=%d.", stm->Id_());
     return stm->StreamStop();
 }
