@@ -978,9 +978,8 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
 
-    if (stm->IsCapturing()) {
-        return RT_ERROR_STREAM_CAPTURED;
-    }
+    COND_RETURN_ERROR_MSG_INNER(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
+        "stream is in capture mode, stream_id=%d.", stm->Id_());
 
     return impl_->StreamDestroy(stm, flag);
 }
@@ -3258,11 +3257,12 @@ rtError_t ApiErrorDecorator::DebugRegisterForStream(Stream * const stm, const ui
 
     const int32_t id = curStm->Id_();
     RT_LOG(RT_LOG_INFO, "stream_id = %d, flag = %u", id, flag);
-    if (curStm->IsCapturing()) {
-        return RT_ERROR_STREAM_CAPTURED;
-    }
+
+    COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
+ 	    "Debug registration for stream tasks cannot be delivered in capture mode.");
+
     const rtError_t error = impl_->DebugRegisterForStream(curStm, flag, addr, streamId, taskId);
-    ERROR_RETURN(error, "Register debug for stream failed, stream_id=%d, flag=%u, "
+    ERROR_RETURN(error, "Debug registration for stream failed, stream_id=%d, flag=%u, "
         "streamId=%u, taskId=%u.", id, flag, *streamId, *taskId);
     return error;
 }
@@ -3273,11 +3273,12 @@ rtError_t ApiErrorDecorator::DebugUnRegisterForStream(Stream * const stm)
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
     const int32_t id = curStm->Id_();
     RT_LOG(RT_LOG_INFO, "stream_id=%d.", id);
-    if (curStm->IsCapturing()) {
-        return RT_ERROR_STREAM_CAPTURED;
-    }
+
+    COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
+ 	    "Debug unregistration for stream tasks cannot be delivered in capture mode.");
+
     const rtError_t error = impl_->DebugUnRegisterForStream(curStm);
-    ERROR_RETURN(error, "Unregister debug for stream failed, stream_id=%u.", id);
+    ERROR_RETURN(error, "Debug unregistration for stream failed, stream_id=%u.", id);
     return error;
 }
 

@@ -197,7 +197,7 @@ rtError_t StreamLaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames,
     SaveTaskCommonInfo(kernelTask, dstStm, pos);
     AicpuTaskInit(kernelTask, static_cast<uint16_t>(coreDim), flag);
     
-    error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+    error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         streamId, useArgPool, static_cast<uint32_t>(error));
 
@@ -320,7 +320,7 @@ rtError_t StreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, const rtAicpuA
         static_cast<uint32_t>(error));
     SaveTaskCommonInfo(kernelTask, dstStm, pos);
     AicpuTaskInit(kernelTask, static_cast<uint16_t>(coreDim), flag);
-    error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+    error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         streamId, useArgPool, static_cast<uint32_t>(error));
     /* 默认使用kernel注册时的devAddr */
