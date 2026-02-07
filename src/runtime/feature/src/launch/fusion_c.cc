@@ -424,7 +424,7 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     ERROR_RETURN_MSG_INNER(error, "Failed to check SimtSmSize, stream_id=%d, retCode=%#x.", stm->Id_(),
                            static_cast<uint32_t>(error));
     if (argsInfo != nullptr) {
-        error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+        error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
         ERROR_RETURN_MSG_INNER(error, "Failed to load args with stm pool, stream_id=%d, useArgPool=%u, retCode=%#x.",
             stm->Id_(), useArgPool, static_cast<uint32_t>(error));
         SetArgsFusionKernel(argsInfo, taskInfo, &result);

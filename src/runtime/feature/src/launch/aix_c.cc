@@ -268,7 +268,7 @@ rtError_t StreamLaunchKernelV1(const void * const stubFunc, const uint32_t coreD
     error = CheckDynSizeValid(kernelTask, registeredKernel);
     ERROR_RETURN_MSG_INNER(error, "Failed to check SimtSmSize, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
-    error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+    error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         stm->Id_(), useArgPool, static_cast<uint32_t>(error));
     SetArgsAix(argsInfo, kernelTask, &result);
@@ -378,7 +378,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     error = CheckDynSizeValid(kernelTask, registeredKernel);
     ERROR_RETURN_MSG_INNER(error, "Failed to check SimtSmSize, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
-    error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+    error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         stm->Id_(), useArgPool, static_cast<uint32_t>(error));
     AicTaskInfo *aicTask = &(kernelTask->u.aicTaskInfo);
@@ -489,7 +489,7 @@ rtError_t StreamLaunchKernelV2(Kernel * const kernel, const uint32_t coreDim, St
     error = CheckDynSizeValid(kernelTask, kernel);
     ERROR_RETURN_MSG_INNER(error, "Failed to SetSimtSmSize, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
-    error = davidStm->LoadArgsInfo(argsInfo, useArgPool, &result);
+    error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         stm->Id_(), useArgPool, static_cast<uint32_t>(error));
     AicTaskInfo *aicTask = &(kernelTask->u.aicTaskInfo);

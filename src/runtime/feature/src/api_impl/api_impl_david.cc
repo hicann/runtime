@@ -1315,8 +1315,8 @@ rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * con
         "Direct send failed, stream is not in current ctx.");
     COND_RETURN_ERROR_MSG_INNER(curStm->GetBindFlag(), RT_ERROR_STREAM_INVALID,
         "UbDirectSend not support model stream, stream_id=%d.", curStm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "the stream_id=%d is capturing, not support UbDirectSend.", curStm->Id_());
+    COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
+ 	    "Ub direct tasks cannot be delivered in capture mode.");
 
     return StreamUbDirectSend(wqeInfo, curStm);
 }
@@ -1651,7 +1651,7 @@ rtError_t ApiImplDavid::StarsTaskLaunch(const void * const sqe, const uint32_t s
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
                                 "Stars task launch failed, stream is not in current ctx");
     COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
- 	         "DVPP tasks cannot be deliverd in capture mode.");
+ 	         "DVPP tasks cannot be delivered in capture mode.");
     return StarsLaunch(sqe, sqeLen, curStm, flag);
 }
 
@@ -1678,7 +1678,7 @@ rtError_t ApiImplDavid::LaunchDvppTask(const void *sqe, uint32_t sqeLen, Stream 
 
     const uint32_t flag = isCmdListNotFree ? RT_KERNEL_CMDLIST_NOT_FREE : RT_KERNEL_DEFAULT;
     COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
- 	        "DVPP tasks cannot be deliverd in capture mode.");
+ 	        "DVPP tasks cannot be delivered in capture mode.");
     error = StarsTaskLaunch(sqe, sqeLen, curStm, flag);
     ERROR_RETURN(error, "Failed to launch Dvpp task");
     return error;
@@ -1728,7 +1728,7 @@ rtError_t ApiImplDavid::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t * cons
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "task info launch failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
     COND_RETURN_WARN(curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
- 	        "DVPP tasks cannot be deliverd in capture mode.");
+ 	        "DVPP tasks cannot be delivered in capture mode.");
     return LaunchMultipleTaskInfo(taskInfo, curStm, flag);
 }
 
