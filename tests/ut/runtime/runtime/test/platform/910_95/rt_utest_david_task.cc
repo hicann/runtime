@@ -502,7 +502,9 @@ TEST_F(TaskTestDavid, read_aicore_mem)
     EXPECT_EQ(curCtx != nullptr, true);
     Device * const dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
-
+    MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport)
+        .stubs()
+        .will(returnValue(true));
     ApiImpl impl;
     ApiDecorator api(&impl);
     EXPECT_EQ(rtDebugSetDumpMode(RT_DEBUG_DUMP_ON_EXCEPTION), ACL_RT_SUCCESS);
@@ -523,6 +525,7 @@ TEST_F(TaskTestDavid, read_aicore_mem)
     param.debugMemType = RT_MEM_TYPE_REGISTER;
     param.elementSize = 8U;
     EXPECT_EQ(apiImpl.DebugReadAICore(&param), ACL_RT_SUCCESS);
+    GlobalMockObject::verify();
 }
 
 static unsigned char g_bin_data[] = {

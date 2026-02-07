@@ -170,7 +170,8 @@ void AicTaskInit(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum,
     // never timeout need ts agent support
     const bool isSupportOpNeverTimeout = (taskInfo->stream != nullptr) &&
         (taskInfo->stream->Device_() != nullptr) &&
-        (taskInfo->stream->Device_()->CheckFeatureSupport(TS_FEATURE_OP_EXEC_TIMEOUT_MS));
+        (taskInfo->stream->Device_()->CheckFeatureSupport(TS_FEATURE_OP_EXEC_TIMEOUT_MS) ||
+         taskInfo->stream->Device_()->CheckFeatureSupport(TS_FEATURE_AICORE_NEVER_TIMEOUT));
     COND_PROC(((aicTaskInfo->timeout == MAX_UINT64_NUM) && (!isSupportOpNeverTimeout)), aicTaskInfo->timeout -= 1UL);
 
     return;

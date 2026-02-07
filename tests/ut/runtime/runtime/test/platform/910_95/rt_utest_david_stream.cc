@@ -740,11 +740,15 @@ TEST_F(DavidStreamTest, TestCreateStreamAndGet)
         .stubs()
         .will(returnValue(0));
     MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::MemCopySync).stubs().will(returnValue(0));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs()
+        .will(returnValue(true));
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_CP_PROCESS_USE);
     EXPECT_EQ(res, RT_ERROR_NONE);
     res = rtStreamDestroy(stream);
     EXPECT_EQ(res, RT_ERROR_NONE);
+    GlobalMockObject::verify();
 }
 
 TEST_F(DavidStreamTest, IsTaskExcuted_Test)

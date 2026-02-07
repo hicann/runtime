@@ -899,7 +899,7 @@ rtError_t ProcRingBufferTaskDavid(const Device *const dev, const void * const de
         static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
-    return RT_ERROR_NONE;
+    return stm->Synchronize();
 }
 
 }  // namespace runtime

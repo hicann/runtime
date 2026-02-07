@@ -5867,6 +5867,7 @@ TEST_F(ApiDavidTest, test_create_ringbuffer_task_on_david)
     uint64_t oldSqAddr = stm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stm->SetSqBaseAddr(newSqAddr);
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     rtError_t error = ProcRingBufferTaskDavid(stream_->Device_(), &val, delFlag, len);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delFlag = true; /* delete */
