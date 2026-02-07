@@ -127,7 +127,8 @@ target_compile_options(profapi_share PRIVATE
     -fvisibility-inlines-hidden
     -fno-common
     -Wall
-    -std=c++11
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>
+    $<$<COMPILE_LANGUAGE:C>:-std=c11>
     -Wextra
     -Wfloat-equal
     $<$<CONFIG:Release>:-D_FORTIFY_SOURCE=2 -Os>
