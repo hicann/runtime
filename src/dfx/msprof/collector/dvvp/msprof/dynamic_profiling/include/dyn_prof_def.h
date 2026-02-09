@@ -16,8 +16,11 @@
 namespace Collector {
 namespace Dvvp {
 namespace DynProf {
-static const std::string DYN_PROF_SOCK_UNIX_DOMAIN = "dyn_prof_sock_";
+static const std::string DYN_PROF_SOCK_UNIX_DOMAIN = "/dyn_prof_sock_";
 constexpr uint32_t DYN_PROF_PARAMS_MAX_LEN = 4096;
+constexpr uint32_t DYN_PROF_MAX_ACCEPT_TIMES = 128;
+constexpr uint32_t DYN_PROF_IDLE_LINK_HOLD_TIME = 1800; // 30 mins
+constexpr uint32_t DYN_PROF_SERVER_PROC_MSG_MAX_NUM = 100;
 constexpr long DYN_PROF_PROC_TIME_OUT = 60;
 
 using ProcFunc = std::function<void()>;
@@ -30,6 +33,7 @@ enum class DynProfMsgType {
     DYN_PROF_STOP_RSQ,
     DYN_PROF_QUIT_REQ,
     DYN_PROF_QUIT_RSQ,
+    DYN_PROF_DISCONNECT_RSQ,
 };
 
 enum class DynProfMsgRsqCode {

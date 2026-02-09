@@ -54,8 +54,6 @@ int32_t DynProfServer::Stop()
     MSPROF_LOGI("Dynamic profiling stop server.");
     if (srvStarted_) {
         srvStarted_ = false;
-        LocalSocket::Close(srvSockFd_);
-        LocalSocket::Close(cliSockFd_);
         return Thread::Stop();
     }
     return PROFILING_SUCCESS;
@@ -71,15 +69,17 @@ void DynProfServer::Run(const struct error_message::Context &errorContext)
 {
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
 
-    while (srvStarted_) {
+    uint32_t acceptTime = 0;
+    while (srvStarted_ && (acceptTime < DYN_PROF_MAX_ACCEPT_TIMES)) {
         cliSockFd_ = LocalSocket::Accept(srvSockFd_);
         if (cliSockFd_ == SOCKET_ERR_EAGAIN) {
             continue;
         }
         if (cliSockFd_ == PROFILING_FAILED) {
-            MSPROF_LOGE("accept client failed.");
+            MSPROF_LOGE("accept client failed, cliSockFd_=%d, errno=%u.", cliSockFd_, errno);
             break;
         }
+        acceptTime++;
         MSPROF_LOGI("accept client fd: %d", cliSockFd_);
         if (LocalSocket::SetRecvTimeOut(cliSockFd_, 1, 0) == PROFILING_FAILED) {
             LocalSocket::Close(cliSockFd_);
@@ -95,6 +95,12 @@ void DynProfServer::Run(const struct error_message::Context &errorContext)
         }
         DynProfSrvProc();
     }
+    if (acceptTime >= DYN_PROF_MAX_ACCEPT_TIMES) {
+        MSPROF_LOGW("accept client reach max times: %u.", acceptTime);
+    }
+    OsalUnlink(socketPath_.c_str());
+    LocalSocket::Close(srvSockFd_);
+    LocalSocket::Close(cliSockFd_);
 }
 
 void DynProfServer::DynProfSrvInitProcFunc()
@@ -108,24 +114,23 @@ int32_t DynProfServer::DynProfSrvCreate()
 {
     std::string appModeKeyPid;
     MSPROF_GET_ENV(MM_ENV_DYNAMIC_PROFILING_KEY_PID, appModeKeyPid);
-    std::string key;
     int32_t value = 0;
     if (!appModeKeyPid.empty() && !Utils::StrToInt32(value, appModeKeyPid)) {
         return PROFILING_FAILED;
     }
     if (!appModeKeyPid.empty() && value > 0) {
         // app mode --application
-        key = DYN_PROF_SOCK_UNIX_DOMAIN + appModeKeyPid;
-        srvSockFd_ = LocalSocket::Create(key);
+        socketPath_ = Utils::IdeGetHomedir() + DYN_PROF_SOCK_UNIX_DOMAIN + appModeKeyPid;
+        srvSockFd_ = LocalSocket::Create(socketPath_);
         if (srvSockFd_ == SOCKET_ERR_EADDRINUSE) {
-            MSPROF_LOGW("socket key %s already in use, try to create with app's pid.", key.c_str());
-            key = DYN_PROF_SOCK_UNIX_DOMAIN + std::to_string(Utils::GetPid());
-            srvSockFd_ = LocalSocket::Create(key);
+            MSPROF_LOGW("socket key %s already in use, try to create with app's pid.", socketPath_.c_str());
+            socketPath_ = Utils::IdeGetHomedir() + DYN_PROF_SOCK_UNIX_DOMAIN + std::to_string(Utils::GetPid());
+            srvSockFd_ = LocalSocket::Create(socketPath_);
         }
     } else {
         // attach mode --pid
-        key = DYN_PROF_SOCK_UNIX_DOMAIN + std::to_string(Utils::GetPid());
-        srvSockFd_ = LocalSocket::Create(key);
+        socketPath_ = Utils::IdeGetHomedir() + DYN_PROF_SOCK_UNIX_DOMAIN + std::to_string(Utils::GetPid());
+        srvSockFd_ = LocalSocket::Create(socketPath_);
     }
     if (srvSockFd_ < 0) {
         MSPROF_LOGE("create server failed.");
@@ -136,7 +141,7 @@ int32_t DynProfServer::DynProfSrvCreate()
         MSPROF_LOGE("set server recv time out failed.");
         return PROFILING_FAILED;
     }
-    MSPROF_LOGI("create server, key:%s, fd: %d.", key.c_str(), srvSockFd_);
+    MSPROF_LOGI("create server, socket:%s, fd:%d.", socketPath_.c_str(), srvSockFd_);
     return PROFILING_SUCCESS;
 }
 
@@ -170,15 +175,32 @@ void DynProfServer::DynProfSrvRsqMsg(DynProfMsgType type, DynProfMsgRsqCode rsqC
     MSPROF_LOGI("server send rsq: %d,%d", type, rsqCode);
 }
 
-void DynProfServer::DynProfSrvProc() const
+bool DynProfServer::IdleConnectOverTime(uint32_t &recvIdleTimes) const
 {
+    if (profStarted_) {
+        return false;
+    }
+    if (++recvIdleTimes <= DYN_PROF_IDLE_LINK_HOLD_TIME) {
+        return false;
+    }
+    return true;
+}
+
+void DynProfServer::DynProfSrvProc()
+{
+    uint32_t recvIdleTimes = 0;
+    uint32_t recvMsgNum = 0;
     while (srvStarted_) {
         DynProfMsg reqMsg;
         const auto recvLen = LocalSocket::Recv(cliSockFd_, &(reqMsg), sizeof(reqMsg), 0);
-        if (recvLen == SOCKET_ERR_EAGAIN) {
+        if (static_cast<size_t>(recvLen) != sizeof(reqMsg) && recvLen == SOCKET_ERR_EAGAIN) {
+            if (IdleConnectOverTime(recvIdleTimes)) {
+                MSPROF_LOGW("server disconnect client, recvIdleTimes=%u.", recvIdleTimes);
+                break;
+            }
             continue;
         }
-        if (recvLen != sizeof(reqMsg)) {
+        if (static_cast<size_t>(recvLen) != sizeof(reqMsg)) {
             MSPROF_LOGE("recv client cmd failed");
             break;
         }
@@ -192,7 +214,12 @@ void DynProfServer::DynProfSrvProc() const
         if (reqMsg.msgType == DynProfMsgType::DYN_PROF_QUIT_REQ) {
             break;
         }
+        if (++recvMsgNum > DYN_PROF_SERVER_PROC_MSG_MAX_NUM) {
+            MSPROF_LOGW("server receive message over %u.", recvMsgNum);
+            break;
+        }
     }
+    NotifyClientDisconnect();
 }
 
 void DynProfServer::DynProfSrvProcStart()
@@ -281,6 +308,12 @@ void DynProfServer::DynProfSrvProcQuit()
     profStarted_ = false;
     DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_QUIT_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_SUCCESS);
     MSPROF_LOGI("Dynamic profiling quit message process success.");
+}
+
+void DynProfServer::NotifyClientDisconnect()
+{
+    DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_DISCONNECT_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_SUCCESS);
+    DynProfSrvProcQuit();
 }
 
 void DynProfServer::SaveDevicesInfo(DynProfDeviceInfo data)

@@ -38,15 +38,18 @@ private:
     int32_t DynProfSrvCreate();
     int32_t DynProfSrvRecvParams();
     void DynProfSrvRsqMsg(DynProfMsgType type, DynProfMsgRsqCode rsqCode) const;
-    void DynProfSrvProc() const;
+    void DynProfSrvProc();
     void DynProfSrvProcStart();
     void DynProfSrvProcStop();
     void DynProfSrvProcQuit();
+    bool IdleConnectOverTime(uint32_t &recvIdleTimes) const;
+    void NotifyClientDisconnect();
 
     int32_t srvSockFd_ { -1 };
     int32_t cliSockFd_ { -1 };
     bool srvStarted_ { false };
     bool profStarted_ { false };
+    std::string socketPath_;
     std::string dynProfParams_;
     std::map<DynProfMsgType, ProcFunc> procFuncMap_;
     std::map<uint32_t, DynProfDeviceInfo> devicesInfo_;

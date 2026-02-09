@@ -62,12 +62,16 @@ TEST_F(LOCAL_SOCKET_STEST, LocalSocket_create)
     ret = localSocket->Create(key, backlog);
     EXPECT_EQ(ret, PROFILING_FAILED);
 
+    MOCKER(mmChmod)
+        .stubs()
+        .will(returnValue(EN_ERROR))
+        .then(returnValue(EN_OK));
     MOCKER(mmListen)
         .stubs()
         .will(returnValue(EN_ERROR))
         .then(returnValue(EN_OK));
-    ret = localSocket->Create(key, backlog);
-    EXPECT_EQ(ret, PROFILING_FAILED);
+    EXPECT_EQ(LocalSocket::Create(key, backlog), PROFILING_FAILED);
+    EXPECT_EQ(LocalSocket::Create(key, backlog), PROFILING_FAILED);
 
     ret = localSocket->Create(key, backlog);
     EXPECT_EQ(ret, EN_OK);

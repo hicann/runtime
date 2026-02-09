@@ -23,7 +23,7 @@ sockaddr_un LocalSocket::GetUnixSockAddr(const std::string &key)
 {
     sockaddr_un sockAddr;
     (void)memset_s(&sockAddr, sizeof(sockAddr), 0, sizeof(sockAddr));
-    auto ret = strcpy_s(sockAddr.sun_path + 1, sizeof(sockAddr.sun_path) - 1, key.c_str());
+    auto ret = strcpy_s(sockAddr.sun_path, sizeof(sockAddr.sun_path), key.c_str());
     if (ret != EOK) {
         MSPROF_LOGE("local socket path copy failed");
     }
@@ -43,6 +43,7 @@ int32_t LocalSocket::Create(const std::string &key, int32_t backlog)
         return PROFILING_FAILED;
     }
 
+    OsalUnlink(key.c_str());
     auto sockAddr = GetUnixSockAddr(key);
     auto ret = OsalBind(fd, reinterpret_cast<OsalSockAddr *>(&sockAddr),
         offsetof(sockaddr_un, sun_path) + 1 + key.size());
@@ -52,6 +53,14 @@ int32_t LocalSocket::Create(const std::string &key, int32_t backlog)
             return SOCKET_ERR_EADDRINUSE;
         }
         MSPROF_LOGE("bind exception info: %s", Utils::GetErrno());
+        OsalUnlink(key.c_str());
+        Close(fd);
+        return PROFILING_FAILED;
+    }
+
+    if (OsalChmod(key.c_str(), S_IRUSR | S_IWUSR) != OSAL_EN_OK) {
+        MSPROF_LOGE("chmod socket file %s failed: %s", key.c_str(), Utils::GetErrno());
+        OsalUnlink(key.c_str());
         Close(fd);
         return PROFILING_FAILED;
     }
@@ -59,6 +68,7 @@ int32_t LocalSocket::Create(const std::string &key, int32_t backlog)
     ret = OsalListen(fd, backlog);
     if (ret != OSAL_EN_OK) {
         MSPROF_LOGE("listen exception info: %s", Utils::GetErrno());
+        OsalUnlink(key.c_str());
         Close(fd);
         return PROFILING_FAILED;
     }
