@@ -1190,6 +1190,8 @@ bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::
         kernelTmp->SetOffset2(static_cast<uint32_t>(kernel->offset));
         kernelTmp->SetKernelLength2(static_cast<uint32_t>(kernel->length));
         kernelTmp->SetMinStackSize2(kernel->minStackSize);
+        kernelTmp->SetKernelVfType_(kernel->kernelVfType);
+        kernelTmp->SetShareMemSize_(kernel->shareMemSize);
     }
     kernelTmp->SetMixMinStackSize();
 
@@ -1202,11 +1204,12 @@ bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::
     }
     kernelTmp->SetMixType(type);
     (void)GetPrefetchCnt(static_cast<Program *>(this), kernelTmp);
-    RT_LOG(RT_LOG_DEBUG, "proc mix kernel register, kernel name=[%s], offset1=%llu, offset2=%llu, mixType1=%hu, "
-        "mixType2=%hu, final mixType=%hu version=%u", kernel->name, kernelTmp->Offset_(), kernelTmp->Offset2_(),
-        kernelTmpMixType, mixType, kernelTmp->GetMixType(), mixProcVersion);
-
     kernelTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+
+    RT_LOG(RT_LOG_INFO, "proc mix kernel register, kernel name=[%s], offset1=%llu, offset2=%llu, mixType1=%hu, "
+        "mixType2=%hu, final mixType=%hu version=%u, kernelVfType=%u, shareMemSize=%u", kernel->name,
+        kernelTmp->Offset_(), kernelTmp->Offset2_(), kernelTmpMixType, 
+        mixType, kernelTmp->GetMixType(), mixProcVersion, kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
     return true;
 }
 
