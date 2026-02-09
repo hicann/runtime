@@ -8,14 +8,20 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
-    message(STATUS "openssl libpath: ${OPEN_SOURCE_DIR}/lib_cache_ge/openssl")
+    message(STATUS "openssl libpath: ${OPEN_SOURCE_DIR}/lib_cache/openssl-3.0.9")
     find_file(CRYPTO_LIB_PATH
         NAMES libcrypto.a
-        PATHS ${OPEN_SOURCE_DIR}/lib_cache_ge/openssl
+        PATHS ${OPEN_SOURCE_DIR}/lib_cache/openssl-3.0.9
         PATH_SUFFIXES lib lib64
         NO_DEFAULT_PATH)
     if (CRYPTO_LIB_PATH)
         message(STATUS "Use local libcrypto: ${CRYPTO_LIB_PATH}")
+        if (EXISTS "${OPEN_SOURCE_DIR}/lib_cache/openssl-3.0.9/include/openssl/sha.h")
+            message(STATUS "local sha.h: ${OPEN_SOURCE_DIR}/lib_cache/openssl-3.0.9/include/openssl/sha.h")
+            set(CRYPTO_INCLUDE_DIR "${OPEN_SOURCE_DIR}/lib_cache/openssl-3.0.9/include")
+        else()
+            set(CRYPTO_INCLUDE_DIR)
+        endif()
     else()
         include(ExternalProject)
 
@@ -103,6 +109,7 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
             )
         endif()
         set(CRYPTO_LIB_PATH "${OPENSSL_INSTALL_LIBDIR}/libcrypto.a")
+        set(CRYPTO_INCLUDE_DIR "${OPENSSL_INSTALL_DIR}/include")
     endif()
 
     message(STATUS "libcrypto: ${CRYPTO_LIB_PATH}")

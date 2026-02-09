@@ -62,6 +62,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/pkg_in/aicpu/queue_schedule
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/src/inc/
+    ${CRYPTO_INCLUDE_DIR}
 )
 
 target_compile_options(tsdclient PRIVATE
@@ -157,6 +158,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/src/dfx/error_manager/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
+    ${CRYPTO_INCLUDE_DIR}
 )
 
 target_compile_options(tsdclient PRIVATE
