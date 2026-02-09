@@ -56,8 +56,8 @@ target_include_directories(ascendcl_c_utest PRIVATE
     ${BASE_DIR}/pkg_inc/profiling # toolchain/prof_api.h
     ${BASE_DIR}/src/acl/aclrt_c
     ${BASE_DIR}/src/acl/aclrt_c/common
-    ${BASE_DIR}/src/inc   # runtime/mem.h，runtime/base.h
-    ${BASE_DIR}/src/inc/runtime # base.h
+    ${BASE_DIR}/pkg_inc/runtime # runtime/mem.h，runtime/base.h
+    ${BASE_DIR}/pkg_inc/runtime/runtime # base.h
     ${BASE_DIR}/src/runtime/c/c_base/inc
     ${BASE_DIR}/src/acl/aclrt_c/common  # ge_executor_rt.h
     ${BASE_DIR}/tests/ut/acl/testcase_c/

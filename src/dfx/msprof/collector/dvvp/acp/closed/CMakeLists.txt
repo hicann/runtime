@@ -210,6 +210,7 @@ target_include_directories(profinj PRIVATE
     ${RUNTIME_DIR}/src/inc/external/
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain/
     ${RUNTIME_DIR}/src/dfx/msprof/inc/
+    ${RUNTIME_DIR}/pkg_inc/runtime/
     ${LIBC_SEC_HEADER}
     ${RUNTIME_DIR}/include/driver/
     ${RUNTIME_DIR}/include/external/

@@ -1003,8 +1003,8 @@ target_link_libraries(runtime_utest_dfx PRIVATE
 target_include_directories(runtime_utest_dfx PRIVATE
     ${TOP_DIR}/src/inc
     ${TOP_DIR}/src/inc/external
-    ${TOP_DIR}/src/inc/runtime
-    ${TOP_DIR}/src/inc/runtime/rts
+    ${TOP_DIR}/pkg_inc/runtime/runtime
+    ${TOP_DIR}/pkg_inc/runtime/runtime/rts
     ${TOP_DIR}/pkg_inc/platform
     ${TOP_DIR}/src/platform
 )
@@ -1136,8 +1136,8 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/inc/external
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/include/external/acl/error_codes
-    ${TOP_DIR}/src/inc/runtime/rts
-    ${TOP_DIR}/src/inc/runtime
+    ${TOP_DIR}/pkg_inc/runtime/runtime
+    ${TOP_DIR}/pkg_inc/runtime/runtime/rts
     ${TOP_DIR}/pkg_inc/platform
     ${TOP_DIR}/src/platform
     ${C_SEC_INCLUDE}

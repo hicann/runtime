@@ -111,6 +111,7 @@ target_include_directories(tsd_client_utest PRIVATE
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/
+    ${RUNTIME_DIR}/pkg_inc/runtime/
     ${RUNTIME_DIR}/pkg_inc/
     ${RUNTIME_DIR}/pkg_inc/profiling
     ../stub/

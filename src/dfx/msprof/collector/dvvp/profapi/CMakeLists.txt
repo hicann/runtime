@@ -11,6 +11,8 @@ set(msProfHeader
     ${RUNTIME_DIR}/src/dfx/error_manager
     ${RUNTIME_DIR}/include/external
     ${RUNTIME_DIR}/include/external/acl
+    ${RUNTIME_DIR}/src/inc
+    ${RUNTIME_DIR}/src/inc/external
     ${RUNTIME_DIR}/pkg_inc/runtime
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime
     ${LIBC_SEC_HEADER}
