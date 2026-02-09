@@ -388,7 +388,7 @@ void EnableMstxFunc(ProfModule module)
 }
 
 // for mstx to init mstx impl functions injection
-MSVP_PROF_API int32_t InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable)
+int32_t InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable)
 {
     if (getFuncTable == nullptr) {
         return MSTX_FAIL;
