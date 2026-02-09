@@ -259,11 +259,11 @@ static rtError_t DevMemSetAsync(Stream * const stm, void * const ptr, const uint
     Driver * const driver = stm->Device_()->Driver_();
     // malloc 64M Host memory and memset with parameter:fillVal
     void *hostPtr = nullptr;
-    error = driver->HostMemAlloc(&hostPtr, (static_cast<size_t>(MEM_BLOCK_SIZE)), stm->Device_()->Id_());
-    ERROR_RETURN(error, "Alloc host mem failed, size=%zu(bytes), device_id=%d, retCode=%#x!",
-        static_cast<size_t>(MEM_BLOCK_SIZE), stm->Device_()->Id_(), static_cast<uint32_t>(error));
-    NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
     const uint64_t setSize = (fillCount < MEM_BLOCK_SIZE) ? fillCount : MEM_BLOCK_SIZE;
+    error = driver->HostMemAlloc(&hostPtr, setSize, stm->Device_()->Id_());
+    ERROR_RETURN(error, "Alloc host mem failed, size=%zu(bytes), device_id=%d, retCode=%#x!",
+        setSize, stm->Device_()->Id_(), static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
     const errno_t ret = memset_s(hostPtr, setSize, static_cast<int32_t>(fillVal), setSize);
     if (ret != EOK) {
         (void)driver->HostMemFree(hostPtr);
