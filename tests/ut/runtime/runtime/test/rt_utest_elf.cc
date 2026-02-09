@@ -1180,10 +1180,10 @@ TEST_F(ELFTest, SymbolAddress)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 87);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 4 * 1024 * 1024);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     error = RefreshSymbolAddress(elfData);
     EXPECT_EQ(error, RT_ERROR_NONE);

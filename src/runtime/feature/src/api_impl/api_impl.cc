@@ -3627,9 +3627,10 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime *rt = Runtime::Instance();
         rt->SetDeviceCustomerStackSize(val);
-    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE){
+    } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE) {
         RT_LOG(RT_LOG_WARNING, "limit type not support, type=%u", static_cast<uint32_t>(type));
-    } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE){
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
         Runtime *rt = Runtime::Instance();
         std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
         ret = rt->SetSimdPrintFifoSize(val);
