@@ -30,6 +30,7 @@ ut_path_map["msprof"]="/tests/ut/msprof"
 ut_path_map["adump"]="/tests/ut/adump"
 ut_path_map["tsd"]="/tests/ut/tsd"
 ut_path_map["error_manager"]="/tests/ut/error_manager"
+ut_path_map["mmpa"]="/tests/ut/mmpa"
 
 # print usage message
 usage() {
@@ -260,7 +261,7 @@ run_ut() {
         RUN_TEST_CASE="$ut_exec --gtest_output=xml:${report_dir}/${filename}.xml" && ${RUN_TEST_CASE}
         echo "Executing: $filename"
         exec_file_cnt=${exec_file_cnt+1}
-    done < <(find "$ut_dir" -type f -executable)
+    done < <(find "$ut_dir" -type f -executable -not -name "*.so")
 
     if [[ $exec_file_cnt -eq 0 ]]; then
       echo "ERROR: No executable UT file found! Please check if the parameters for --ut / --target are correct"
