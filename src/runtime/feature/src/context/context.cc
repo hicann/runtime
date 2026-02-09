@@ -703,7 +703,7 @@ rtError_t Context::Synchronize(int32_t timeout)
     std::list<Stream *> nonFailModeStreams;
 
     for (const auto &syncStream : streams_) {
-        if (IsStreamNotSync(syncStream->Flags())) {
+        if (IsStreamNotSync(syncStream->Flags()) || syncStream->IsSyncFinished()) {
             continue;
         }
         COND_RETURN_ERROR(syncStream->IsCapturing(),
