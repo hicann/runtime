@@ -219,6 +219,7 @@ set(libruntime_cmodel_src_files_optional
 
 set(libruntime_cmodel_api_src_files
     src/api/api_c_standard_soc.cc
+    src/api/api_c_xpu.cc
     src/api/api_preload_task.cc
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
