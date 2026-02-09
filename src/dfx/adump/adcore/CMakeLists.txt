@@ -26,7 +26,6 @@ set(adcoreHeaders
 )
 
 set(adcoreSrcList
-    ${CMAKE_CURRENT_LIST_DIR}/hdc/hdc_api.cpp
     ${CMAKE_CURRENT_LIST_DIR}/adcore_api.cpp
     ${CMAKE_CURRENT_LIST_DIR}/device/adx_dsmi.cpp
     ${CMAKE_CURRENT_LIST_DIR}/device/adx_device.cpp
@@ -47,6 +46,16 @@ set(adcoreSrcList
     ${CMAKE_CURRENT_LIST_DIR}/common/create_func.cpp
     ${CMAKE_CURRENT_LIST_DIR}/component/server_register.cpp
 )
+
+if(PRODUCT STREQUAL "ascend031")
+    list(APPEND adcoreSrcList
+        ${CMAKE_CURRENT_LIST_DIR}/hdc/hdc_api_stub.cpp
+    )
+else()
+    list(APPEND adcoreSrcList
+        ${CMAKE_CURRENT_LIST_DIR}/hdc/hdc_api.cpp
+    )
+endif()
 
 add_library(adcore STATIC
     ${adcoreSrcList}
