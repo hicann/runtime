@@ -10,6 +10,7 @@
 
 #include "runtime.hpp"
 #include <fstream>
+#include <dlfcn.h>
 #include "mmpa/mmpa_api.h"
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
@@ -1130,10 +1131,32 @@ void Runtime::ParseHostCpuModelInfo()
     cpuModelFile.close();
 }
 
-static rtError_t GetDcacheLockMixPath(std::string &binaryPath)
+static rtError_t GetDcacheLockMixPath(std::string& binaryPath, string binaryName)
 {
+    Dl_info info;
+    if (dladdr(reinterpret_cast<void*>(GetDcacheLockMixPath), &info) != 0 && info.dli_fname != nullptr) {
+        std::string soPath = info.dli_fname;
+        auto pos = soPath.find_last_of('/');
+        if (pos != std::string::npos) {
+            binaryPath = soPath.substr(0, pos) + binaryName;
+            std::ifstream file(binaryPath);
+            if (file.good()) {
+                file.close();
+                return RT_ERROR_NONE;
+            }
+            file.close();
+        }
+    }
+    return RT_ERROR_DEVICE_CHIPTYPE;
+}
+
+static rtError_t GetDavidDcacheLockMixPath(std::string& binaryPath)
+{
+    if (GetDcacheLockMixPath(binaryPath, "/dcache_lock_mix_ascend950.o") == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    }
     std::string libPath;
-    const char_t *getPath = nullptr;
+    const char_t* getPath = nullptr;
     MM_SYS_GET_ENV(MM_ENV_LD_LIBRARY_PATH, getPath);
     if (getPath == nullptr) {
         RT_LOG(RT_LOG_ERROR, "getenv fail.");
@@ -1156,32 +1179,35 @@ static rtError_t GetDcacheLockMixPath(std::string &binaryPath)
         diff = find - findr;
     }
     binaryPath = libPath.substr(findr + 1U, diff - 1U);
-    binaryPath = binaryPath + "/ascend950/";
-
-    RT_LOG(RT_LOG_INFO, "path:%s, diff:%u, find:%u, findr:%u, npos:%u.", binaryPath.c_str(), diff, find, findr,
-           libPath.npos);
+    binaryPath = binaryPath + "/ascend910_95/dcache_lock_mix.o";
+    RT_LOG(
+        RT_LOG_INFO, "path:%s, diff:%u, find:%u, findr:%u, npos:%u.", binaryPath.c_str(), diff, find, findr,
+        libPath.npos);
     return RT_ERROR_NONE;
 }
 
-rtError_t Runtime::GetDcacheLockMixOpPath(std::string &dcacheLockMixOpPath) const
+static void GetCloudV2DcacheLockMixPath(std::string& binaryPath)
 {
+    if (GetDcacheLockMixPath(binaryPath, "/dcache_lock_mix.o") == RT_ERROR_NONE) {
+        return;
+    }
     std::string libPath;
+    if (GetDriverPath(libPath)) {
+        binaryPath = libPath + "/driver/lib64/common/dcache_lock_mix.o";
+    } else {
+        binaryPath = "/usr/local/Ascend/driver/lib64/common/dcache_lock_mix.o";
+    }
+}
+
+rtError_t Runtime::GetDcacheLockMixOpPath(std::string& dcacheLockMixOpPath) const
+{
     DevProperties prop;
     rtError_t ret = GET_DEV_PROPERTIES(chipType_, prop);
     COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "GetDevProperties failed.");
-    if (prop.dcacheLockMixPathSourceType == DcacheLockMixPathSourceType::DCACHE_LOCK_MIX_PATH_FROM_LIB) {
-        if (GetDriverPath(libPath)) {
-            dcacheLockMixOpPath = libPath + "/driver/lib64/common/dcache_lock_mix.o";
-        } else {
-            dcacheLockMixOpPath = "/usr/local/Ascend/driver/lib64/common/dcache_lock_mix.o";
-        }
-    } else if (prop.dcacheLockMixPathSourceType == DcacheLockMixPathSourceType::DCACHE_LOCK_MIX_PATH_FROM_ENV) {
-        const rtError_t ret = GetDcacheLockMixPath(libPath);
-        if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_WARNING, "get env fail.");
-            return ret;
-        }
-        dcacheLockMixOpPath = libPath + "dcache_lock_mix.o";
+    if (prop.dcacheLockMixType == DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_910_B_93) {
+        GetCloudV2DcacheLockMixPath(dcacheLockMixOpPath);
+    } else if (prop.dcacheLockMixType == DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_STARS_V2) {
+        GetDavidDcacheLockMixPath(dcacheLockMixOpPath);
     } else {
         return RT_ERROR_DEVICE_CHIPTYPE;
     }
@@ -1229,7 +1255,7 @@ void Runtime::FindDcacheLockOp()
         dcacheLockMixOpData_.clear();
         return;
     }
-
+    
     RT_LOG(RT_LOG_INFO, "read dcache lock op file success");
     return;
 }

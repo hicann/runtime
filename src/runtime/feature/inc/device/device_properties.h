@@ -132,10 +132,10 @@ enum class CheckArchVersionCompatibility : uint8_t {
     Arch_Version_Compat_DEFAULT,
 };
 
-enum class DcacheLockMixPathSourceType : uint8_t {
-    DCACHE_LOCK_MIX_PATH_FROM_DEFAULT,
-    DCACHE_LOCK_MIX_PATH_FROM_LIB,
-    DCACHE_LOCK_MIX_PATH_FROM_ENV,
+enum class DcacheLockMixType : uint8_t {
+    DCACHE_LOCK_MIX_TYPE_FROM_DEFAULT,
+    DCACHE_LOCK_MIX_TYPE_FROM_910_B_93,
+    DCACHE_LOCK_MIX_TYPE_FROM_STARS_V2,
 };
 
 enum class KernelFuncType : uint8_t {
@@ -275,7 +275,7 @@ struct DevProperties final {
     bool opExecuteTimeout; // true for ms, false for s.
     OMArchVersion omArchVersion;
     CheckArchVersionCompatibility checkArchVersionCompatibility;
-    DcacheLockMixPathSourceType dcacheLockMixPathSourceType;
+    DcacheLockMixType dcacheLockMixType;
     KernelFuncType kernelFuncType;
     bool taskPoolSizeFromMacroValue;
     uint16_t taskPoolSize;

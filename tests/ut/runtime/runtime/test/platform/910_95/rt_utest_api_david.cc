@@ -9508,3 +9508,23 @@ TEST_F(ApiDavidTest, GROUP_INFO)
     error = rtGetGroupInfo(-1, groupInfo, count);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
+
+TEST_F(ApiDavidTest, ut_GetDcacheLockMixPath_David_EnvPathValid) {
+    // 设置环境变量
+    const char* original = getenv("LD_LIBRARY_PATH");
+    setenv("LD_LIBRARY_PATH", "/some/path/runtime/lib64:other/path", 1);
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    std::string binaryPath;
+    rtError_t ret = rtInstance->GetDcacheLockMixOpPath(binaryPath);
+
+    // 恢复环境变量
+    if (original) {
+        setenv("LD_LIBRARY_PATH", original, 1);
+    } else {
+        unsetenv("LD_LIBRARY_PATH");
+    }
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(binaryPath.find("ascend910_95/dcache_lock_mix.o"), std::string::npos);
+    EXPECT_NE(binaryPath.find("/some/path/runtime/lib64"), std::string::npos);
+}

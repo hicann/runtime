@@ -45,6 +45,8 @@
         <file value="libhost_aicpu_scheduler.so" file_type="shared"/>
         <file value="libdatatransfer.so" file_type="shared" optional="true"/>
         <file value="libindextransform.so" file_type="shared" optional="true"/>
+        <file value="dcache_lock_mix_ascend950.o" file_type="shared" optional="true"/>
+ 	    <file value="dcache_lock_mix.o" file_type="shared" optional="true"/>
     </file_info>
     <file_info value="runtime_devlib_device" copy_type="delivery" src_path="" dst_path="lib/device" install_path="$(TARGET_ENV)/devlib/device" install_mod="440">
         <file value="libc_sec.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libc_sec.so" optional="true"/>

@@ -22,6 +22,7 @@
 #include "platform/platform_info.h"
 #include "soc_info.h"
 #include "thread_local_container.hpp"
+#include <dlfcn.h>
 
 #undef private
 
@@ -632,4 +633,54 @@ TEST_F(CloudV2RuntimeTest, MacroInitCloudV2)
     GlobalMockObject::reset();
     // Restore to the initial system value
     rtInstance->MacroInit(CHIP_910_B_93);
+}
+
+TEST_F(CloudV2RuntimeTest, ut_GetDcacheLockMixPath_CloudV2_FileExistsInSoDir) {
+    std::string currentExePath;
+    Dl_info info;
+    if (dladdr(reinterpret_cast<void*>(this), &info) && info.dli_fname != nullptr) {
+        currentExePath = info.dli_fname;
+    } else {
+        currentExePath = "/proc/self/exe"; // fallback on Linux
+        char buf[1024];
+        ssize_t len = readlink(currentExePath.c_str(), buf, sizeof(buf)-1);
+        if (len != -1) {
+            buf[len] = '\0';
+            currentExePath = buf;
+        }
+    }
+
+    size_t lastSlash = currentExePath.find_last_of('/');
+    std::string dir = (lastSlash != std::string::npos) ? currentExePath.substr(0, lastSlash + 1) : "./";
+    std::string targetFile = dir + "dcache_lock_mix.o";
+    // 创建文件
+    std::ofstream file(targetFile);
+    file.close();
+
+    // 执行测试
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    std::string binaryPath;
+    rtError_t ret = rtInstance->GetDcacheLockMixOpPath(binaryPath);
+
+    size_t pos;
+    while ((pos = binaryPath.find("//")) != std::string::npos) {
+        binaryPath.replace(pos, 2, "/");
+    }
+
+    // 清理
+    std::remove(targetFile.c_str());
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(binaryPath, targetFile);
+}
+
+TEST_F(CloudV2RuntimeTest, ut_GetDcacheLockMixPath_CloudV2_FileNotExists_UseFallback) {
+    std::string fallbackPath = "/usr/local/Ascend/driver/lib64/common/dcache_lock_mix.o";
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    std::string binaryPath;
+    rtError_t ret = rtInstance->GetDcacheLockMixOpPath(binaryPath);
+
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(binaryPath, fallbackPath);
 }
