@@ -1615,6 +1615,7 @@ static void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitVal
 {
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
     Stream * const stream = taskInfo->stream;
+    const uint32_t rtsqDepth = stream->GetSqDepth();
     const uint32_t taskPosTail = stream->GetBindFlag() ?
         stream->GetCurSqPos() : stream->GetTaskPosTail();
     const uint32_t firstSqePos = taskPosTail;
@@ -1625,7 +1626,7 @@ static void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitVal
     fcPara.maxLoop = 15ULL;  /* the max loop num */
     fcPara.sqId = stream->GetSqId();
     fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
-    fcPara.sqHeadPre = firstSqePos;
+    fcPara.sqHeadPre = (firstSqePos + 1U) % rtsqDepth;
     fcPara.awSize = memWaitValueTask->awSize;
     return;
 }
@@ -1744,9 +1745,9 @@ void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const com
     RtStarsMemWaitValueInstrFcPara fcPara = {};
     InitFuncCallParaForMemWaitTask(taskInfo, fcPara);
 
-    ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
-    ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]), fcPara);
-
+    ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
+    ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]));
+    ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
     return;
 }
 
