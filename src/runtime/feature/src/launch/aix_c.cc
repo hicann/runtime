@@ -42,8 +42,7 @@ rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t 
     /* simt dcu_size should 128 Byte align */
     totalSmSize = simtFlag ? ((totalSmSize + RT_SIMT_SHARE_MEM_ALIGN_LEN - 1)/ RT_SIMT_SHARE_MEM_ALIGN_LEN * RT_SIMT_SHARE_MEM_ALIGN_LEN)
                   : totalSmSize;
-    // aic only operator not check now
-    if (canUseSimt && (totalSmSize > maxSmSize)) {
+    if (totalSmSize > maxSmSize) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The size of the dynamic shared memory is %uB, and the size of the"
                          " shared memory required by the operator kernel is %uB. The sum of these two sizes must be less than %uB.",
                          dynamicShareMemSize, kernel->ShareMemSize_(), maxSmSize);

@@ -994,16 +994,10 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
         return RT_ERROR_NONE;
     }
 
-    if (mapSize > kernelNum) {
-        RT_LOG(RT_LOG_ERROR, "kernel num is not match, kernelNum=%u, mapSize is %u.",
-               kernelNum, mapSize);
-        return RT_ERROR_INVALID_VALUE;
-    }
-    if (mapSize < kernelNum) {
+    if (mapSize != kernelNum) {
         RT_LOG(RT_LOG_INFO, "kernel num is not match, kernelNum=%u, mapSize is %u. change isSupportMix to false",
                kernelNum, mapSize);
         *isSupportMix = false;
-        return RT_ERROR_NONE;
     }
 
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
@@ -1012,8 +1006,8 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
     for (uint32_t index = 0U; index < kernelNum; index++) {
         const auto iter = kernelInfoMap.find(std::string(kernels[index].name));
         if (iter == kernelInfoMap.end()) {
-            RT_LOG(RT_LOG_ERROR, "kernel_name=%s get kernel type failed.", kernels[index].name);
-            return RT_ERROR_INVALID_VALUE;
+            RT_LOG(RT_LOG_WARNING, "kernel_name=%s get kernel type failed.", kernels[index].name);
+            continue;
         }
 
         if ((iter->second->funcType == KERNEL_FUNCTION_TYPE_INVALID) ||
@@ -1047,7 +1041,7 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
         }
     }
 
-    elfData->containsAscendMeta = true;
+    elfData->containsAscendMeta = (*isSupportMix == false) ? false : true;
     return RT_ERROR_NONE;
 }
 

@@ -1099,7 +1099,7 @@ TEST_F(ELFTest, UpdateKernelsInfo)
     kernelInfoMap[kernelName] = kernelInfo;
 
     rtError_t rtn = UpdateKernelsInfo(kernelInfoMap, &newKernels, &elfData, &isSupportMix);
-    EXPECT_EQ(rtn, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(rtn, RT_ERROR_NONE);
     delete [] newKernels.name;
     delete kernelInfo;
     kernelInfo = NULL;
