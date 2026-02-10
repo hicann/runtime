@@ -51,11 +51,13 @@ public:
 protected:
     ProfAtlsPlugin();
 private:
+    void ProfNotifyCacheDevice(MsprofSetDeviceHandle handle);
     int32_t RegisterProfileCallbackC(int32_t callbackType, VOID_PTR callback);
 private:
     MsprofReportHandle reporter_{nullptr};
     MsprofCtrlHandle profCtrl_{nullptr};
     MsprofSetDeviceHandle profSetDevice_{nullptr};
+    MsprofSetDeviceHandle profSetDeviceC_{nullptr};
     ProfReportApiFunc profReportApi_{nullptr};
     ProfReportEventFunc profReportEvent_{nullptr};
     ProfReportCompactInfoFunc profReportCompactInfo_{nullptr};
@@ -72,6 +74,7 @@ private:
     ProfHostFreqIsEnableCFunc profHostFreqIsEnableC_{nullptr};
     std::map<uint32_t, uint32_t> deviceIdMaps_;  // (moduleId, deviceId)
     std::mutex atlasDeviceMapsMutex_;
+    std::map<uint64_t, bool> deviceStateMaps_;
     std::mutex atlasDeviceStateMutex_;
     ProfCommand command_;
 };

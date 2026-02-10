@@ -55,6 +55,19 @@ int32_t ProfAtlsPlugin::ProfRegisterDeviceNotify(MsprofSetDeviceHandle handle)
     return PROFILING_SUCCESS;
 }
 
+void ProfAtlsPlugin::ProfNotifyCacheDevice(MsprofSetDeviceHandle handle)
+{
+    for (const auto&device : deviceStateMaps_) {
+        uint32_t chipId = static_cast<uint32_t>(device.first >> 32);
+        uint32_t deviceId = static_cast<uint32_t>(device.first & 0xFFFFFFFFU);
+        ProfSetDevParaT para;
+        para.chipId = chipId;
+        para.deviceId = deviceId;
+        para.isOpen = device.second;
+        handle(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevParaT));
+    }
+}
+
 int32_t ProfAtlsPlugin::ProfSetProfCommand(VOID_PTR command, uint32_t len)
 {
     (void)len;
@@ -101,6 +114,11 @@ int32_t ProfAtlsPlugin::RegisterProfileCallbackC(int32_t callbackType, VOID_PTR 
             profHostFreqIsEnableC_ = reinterpret_cast<decltype(profHostFreqIsEnableC_)>(callback);
             profHostFreqIsEnable_ = nullptr;
             break;
+        case PROFILE_DEVICE_STATE_C_CALLBACK:
+            profSetDeviceC_ = reinterpret_cast<decltype(profSetDeviceC_)>(callback);
+            profSetDevice_ = nullptr;
+            ProfNotifyCacheDevice(profSetDeviceC_);
+            break;
         default:
             ret = PROFILING_FAILED;
             break;
@@ -122,6 +140,7 @@ int32_t ProfAtlsPlugin::RegisterProfileCallback(int32_t callbackType, VOID_PTR c
             break;
         case PROFILE_DEVICE_STATE_CALLBACK:
             profSetDevice_ = reinterpret_cast<decltype(profSetDevice_)>(callback);
+            profSetDeviceC_ = nullptr;
             break;
         case PROFILE_REPORT_API_CALLBACK:
             profReportApi_ = reinterpret_cast<decltype(profReportApi_)>(callback);
@@ -381,16 +400,24 @@ int32_t ProfAtlsPlugin::ProfGetDeviceIdByGeModelIdx(const uint32_t geModelIdx, u
 
 int32_t ProfAtlsPlugin::ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, bool isOpen)
 {
-    if (profSetDevice_ == nullptr) {
-        MSPROF_LOGI("Calling the setDevice function before registering the function, deviceId is %u", deviceId);
-        return PROFILING_SUCCESS;
+    uint64_t id = deviceId;
+    id |= static_cast<uint64_t>(chipId) << 32;
+    {
+        std::unique_lock<std::mutex> lock(atlasDeviceStateMutex_);
+        deviceStateMaps_[id] = isOpen;
     }
-
     ProfSetDevParaT para;
     para.chipId = chipId;
     para.deviceId = deviceId;
     para.isOpen = isOpen;
-    return profSetDevice_(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevParaT));
+
+    if (profSetDeviceC_ != nullptr) {
+        return profSetDeviceC_(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevParaT));
+    }
+    if (profSetDevice_ != nullptr) {
+        return profSetDevice_(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevParaT));
+    }
+    return PROFILING_SUCCESS;
 }
 
 int32_t ProfAtlsPlugin::ProfFinalize()
