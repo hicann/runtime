@@ -1578,8 +1578,7 @@ rtError_t NpuDriver::GetChipIdDieId(const uint32_t devId, const uint32_t remoteD
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
-                                     const int32_t infoType, int64_t * const val)
+rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t * const val)
 {
     rtError_t error = RT_ERROR_NONE;
     if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {

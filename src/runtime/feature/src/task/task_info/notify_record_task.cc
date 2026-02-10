@@ -164,7 +164,7 @@ rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &
             localDevId, remoteServerId, remoteDevId, chipId, dieId, baseAddr);
         return RT_ERROR_NONE;
     }
-    error = curDrv->GetTopologyType(localDevId, remoteDevId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, &topologyType);
+    error = curDrv->GetTopologyType(localDevId, remoteDevId, remotePhyId, &topologyType);
     ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u, remotePhyId=%u", error, remoteDevId, remotePhyId);
     if ((topologyType == TOPOLOGY_HCCS) || (topologyType == TOPOLOGY_HCCS_SW) ||
         (topologyType == TOPOLOGY_SIO)) {
