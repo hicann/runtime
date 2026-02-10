@@ -323,6 +323,7 @@ typedef enum tagRtDebugMemoryType {
     RT_MEM_TYPE_DCACHE = 10,
     RT_MEM_TYPE_ICACHE = 11,
     RT_MEM_TYPE_REGISTER = 101,
+    RT_MEM_TYPE_REGISTER_DIRECT = 102,
     RT_MEM_TYPE_MAX,
 } rtDebugMemoryType_t;
 
@@ -335,6 +336,7 @@ typedef enum {
     RT_DEBUG_MEM_TYPE_DCACHE = 10,
     RT_DEBUG_MEM_TYPE_ICACHE = 11,
     RT_DEBUG_MEM_TYPE_REGISTER = 101,
+    RT_DEBUG_MEM_TYPE_REGISTER_DIRECT = 102,
     RT_DEBUG_MEM_TYPE_MAX,
 } rtDebugMemoryType;
 

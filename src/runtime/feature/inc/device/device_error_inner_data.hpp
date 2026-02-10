@@ -167,8 +167,8 @@ struct DavidOneCoreErrorInfo {
     uint64_t currentPC;
     uint64_t scErrInfo;
     uint64_t suErrInfo[4];
-    uint64_t mteErrInfo;
-    uint64_t vecErrInfo;
+    uint64_t mteErrInfo[3];
+    uint64_t vecErrInfo[3];
     uint64_t cubeErrInfo;
     uint64_t l1ErrInfo;
     uint64_t aicErrorMask;
@@ -181,7 +181,7 @@ struct DavidOneCoreErrorInfo {
     // aicore error registers, some register has been read in ts_one_core_error_info
     uint64_t scError;
     uint64_t suError;
-    uint64_t mteError;
+    uint64_t mteError[2];
     uint64_t vecError;
     uint64_t cubeError;
     uint64_t l1Error;

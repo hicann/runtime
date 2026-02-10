@@ -15,6 +15,7 @@
 #include "stream.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "profiler_c.hpp"
+#include "acc_error_info.h"
 
 namespace cce {
 namespace runtime {
@@ -365,7 +366,7 @@ static void ProcessDavidStarsCoreErrorMapInfo(const DavidOneCoreErrorInfo * cons
         RINGBUFFER_SC_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->suError, errorString, errorCode,
         static_cast<uint32_t>(RINGBUFFER_SU_ERROR_OFFSET));
-    ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->mteError, errorString, errorCode,
+    ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->mteError[0], errorString, errorCode,
         RINGBUFFER_MTE_ERROR_OFFSET);
     ProcessDavidStarsCoreErrorOneMapInfo(&cnt, info->vecError, errorString, errorCode,
         static_cast<uint32_t>(RINGBUFFER_VEC_ERROR_OFFSET));
@@ -477,11 +478,67 @@ static void ProcessCoreErrorClass(const Device * const dev, const StarsDeviceErr
     SetDeviceFaultTypeByAixErrClass(dev, info, errTaskPtr);
 }
 
+static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, const uint32_t coreIdx,
+    const uint16_t type, const TaskInfo *errTaskPtr)
+{
+    COND_RETURN_NORMAL(type != AICORE_ERROR && type != AIVECTOR_ERROR, "the type[%hu] not match", type);
+    COND_RETURN_VOID(errTaskPtr == nullptr || errTaskPtr->stream == nullptr ||
+        errTaskPtr->stream->Device_() == nullptr, "cannot get the device by errTaskPtr");
+
+    const DavidOneCoreErrorInfo& info = starsInfo->u.davidCoreErrorInfo.info[coreIdx];
+    rtExceptionErrRegInfo_t regInfo = {};
+    regInfo.coreId = static_cast<uint32_t>(info.coreId);
+    regInfo.coreType = static_cast<rtCoreType_t>(type);
+    regInfo.startPC = info.pcStart;
+    regInfo.currentPC = info.currentPC;
+    const uint8_t REG_OFFSET = 32;
+    regInfo.errReg[RT_V200_SU_ERR_INFO_T0_0] = static_cast<uint32_t>(info.suErrInfo[0]);
+    regInfo.errReg[RT_V200_SU_ERR_INFO_T0_1] = static_cast<uint32_t>(info.suErrInfo[0] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_SU_ERR_INFO_T0_2] = static_cast<uint32_t>(info.suErrInfo[1]);
+    regInfo.errReg[RT_V200_SU_ERR_INFO_T0_3] = static_cast<uint32_t>(info.suErrInfo[1] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T0_0] = static_cast<uint32_t>(info.mteErrInfo[0]);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T0_1] = static_cast<uint32_t>(info.mteErrInfo[0] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T0_2] = static_cast<uint32_t>(info.mteErrInfo[1]);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T1_0] = static_cast<uint32_t>(info.mteErrInfo[1] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T1_1] = static_cast<uint32_t>(info.mteErrInfo[2]);
+    regInfo.errReg[RT_V200_MTE_ERR_INFO_T1_2] = static_cast<uint32_t>(info.mteErrInfo[2] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_0] = static_cast<uint32_t>(info.vecErrInfo[0]);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_1] = static_cast<uint32_t>(info.vecErrInfo[0] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_2] = static_cast<uint32_t>(info.vecErrInfo[1]);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_3] = static_cast<uint32_t>(info.vecErrInfo[1] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_4] = static_cast<uint32_t>(info.vecErrInfo[2]);
+    regInfo.errReg[RT_V200_VEC_ERR_INFO_T0_5] = static_cast<uint32_t>(info.vecErrInfo[2] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_CUBE_ERR_INFO_T0_0] = static_cast<uint32_t>(info.cubeErrInfo);
+    regInfo.errReg[RT_V200_CUBE_ERR_INFO_T0_1] = static_cast<uint32_t>(info.cubeErrInfo >> REG_OFFSET);
+    regInfo.errReg[RT_V200_L1_ERR_INFO_T0_0] = static_cast<uint32_t>(info.l1ErrInfo);
+    regInfo.errReg[RT_V200_L1_ERR_INFO_T0_1] = static_cast<uint32_t>(info.l1ErrInfo >> REG_OFFSET);
+    regInfo.errReg[RT_V200_SC_ERROR_T0_0] = static_cast<uint32_t>(info.scError);
+    regInfo.errReg[RT_V200_SU_ERROR_T0_0] = static_cast<uint32_t>(info.suError);
+    regInfo.errReg[RT_V200_MTE_ERROR_T0_0] = static_cast<uint32_t>(info.mteError[0] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_MTE_ERROR_T1_0] = static_cast<uint32_t>(info.mteError[1] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_VEC_ERROR_T0_0] = static_cast<uint32_t>(info.vecError);
+    regInfo.errReg[RT_V200_VEC_ERROR_T0_2] = static_cast<uint32_t>(info.vecError >> REG_OFFSET);
+    regInfo.errReg[RT_V200_CUBE_ERROR_T0_0] = static_cast<uint32_t>(info.cubeError);
+    regInfo.errReg[RT_V200_CUBE_ERROR_T0_1] = static_cast<uint32_t>(info.cubeError >> REG_OFFSET);
+    regInfo.errReg[RT_V200_L1_ERROR_T0_0] = static_cast<uint32_t>(info.l1Error);
+    regInfo.errReg[RT_V200_L1_ERROR_T0_1] = static_cast<uint32_t>(info.l1Error >> REG_OFFSET);
+
+    Device *dev = errTaskPtr->stream->Device_();
+    uint32_t taskSn = errTaskPtr->taskSn;
+    uint32_t streamId = starsInfo->u.davidCoreErrorInfo.comm.streamId;
+    RT_LOG(RT_LOG_ERROR, "add error register: core_id=%u, stream_id=%u, task_sn=%u", regInfo.coreId, streamId, taskSn);
+    std::pair<uint32_t, uint32_t> key = {streamId, taskSn};
+    auto& exceptionRegMap = dev->GetExceptionRegMap();
+    std::lock_guard<std::mutex> lock(dev->GetExceptionRegMutex());
+    exceptionRegMap[key].push_back(regInfo);
+}
+
 rtError_t ProcessDavidStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info,
     const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr)
 {
     UNUSED(insPtr);
     ProcessCoreErrorClass(dev, info);
+    const uint16_t type = info->u.davidCoreErrorInfo.comm.type;
 
     TaskInfo *errTaskPtr = GetTaskInfo(dev, static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.streamId),
         static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.taskId));
@@ -500,7 +557,7 @@ rtError_t ProcessDavidStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info
         std::string errorCode;
         ProcessDavidStarsCoreErrorMapInfo(&(info->u.davidCoreErrorInfo.info[coreIdx]),
             errorString, errorCode);
-
+        AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
         /* logs for aic tools, do not modify the item befor making a new agreement with tools */
         RT_LOG_CALL_MSG(ERR_MODULE_TBE,
             "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
@@ -510,16 +567,17 @@ rtError_t ProcessDavidStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info
             "sc error info: %#" PRIx64 ", su error info: %#" PRIx64 ",%#" PRIx64 ", "
             "mte error info: %#" PRIx64 ", vec error info: %#" PRIx64 ", "
             "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
-            "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ".",
+            "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ".",
             info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
             GetStarsRingBufferHeadMsg(info->u.davidCoreErrorInfo.comm.type).c_str(),
             info->u.davidCoreErrorInfo.info[coreIdx].coreId, errorCode.c_str(),
             info->u.davidCoreErrorInfo.info[coreIdx].pcStart, info->u.davidCoreErrorInfo.info[coreIdx].currentPC,
             info->u.davidCoreErrorInfo.info[coreIdx].scErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[0],
             info->u.davidCoreErrorInfo.info[coreIdx].suErrInfo[1],
-            info->u.davidCoreErrorInfo.info[coreIdx].mteErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].vecErrInfo,
+            info->u.davidCoreErrorInfo.info[coreIdx].mteErrInfo[0], info->u.davidCoreErrorInfo.info[coreIdx].vecErrInfo[0],
             info->u.davidCoreErrorInfo.info[coreIdx].cubeErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo,
-            info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask, info->u.davidCoreErrorInfo.info[coreIdx].paraBase);
+            info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask, info->u.davidCoreErrorInfo.info[coreIdx].paraBase,
+            info->u.davidCoreErrorInfo.info[coreIdx].mteError[0]);
         RT_LOG_CALL_MSG(ERR_MODULE_TBE,
             "The extend info: errcode:(%s) errorStr: %s subErrType: %#x.",
             errorCode.c_str(), errorString.c_str(), info->u.davidCoreErrorInfo.info[coreIdx].subErrType);

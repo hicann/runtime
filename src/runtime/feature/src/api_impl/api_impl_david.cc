@@ -2047,15 +2047,6 @@ rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t *const param)
     return ReadAICoreDebugInfo(param);
 }
 
-rtError_t ApiImplDavid::GetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
-    rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num)
-{
-    UNUSED(exceptionInfo);
-    UNUSED(exceptionErrRegInfo);
-    UNUSED(num);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImplDavid::LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData)
 {
     UNUSED(stm);

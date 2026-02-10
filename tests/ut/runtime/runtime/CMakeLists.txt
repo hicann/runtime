@@ -574,6 +574,7 @@ add_library(runtime_ut_david_static_lib STATIC ${runtimeut_david_src_list})
 
 target_include_directories(
     runtime_ut_david_static_lib PUBLIC 
+    ${RUNTIME_DIR}/src/inc/runtime
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc
@@ -1362,7 +1363,8 @@ add_executable(runtime_utest_task_v201
 )
 
 target_include_directories(
-    runtime_utest_task_v201 PUBLIC 
+    runtime_utest_task_v201 PUBLIC
+    ${RUNTIME_DIR}/src/inc/runtime 
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
     ${TOP_DIR}/abl/slog/inc

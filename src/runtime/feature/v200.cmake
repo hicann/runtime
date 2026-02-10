@@ -383,6 +383,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${RUNTIME_DIR}/src/inc
+    ${RUNTIME_DIR}/src/inc/runtime
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common

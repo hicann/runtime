@@ -156,8 +156,6 @@ public:
     rtError_t GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
         const void **stack, uint32_t *stackSize) override;
     rtError_t DebugReadAICore(rtDebugMemoryParam_t *const param) override;
-    rtError_t GetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
-        rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num) override;
     rtError_t LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData) override;
     rtError_t CpuKernelLaunchExAll(const Kernel * const kernel, const uint32_t coreDim,
         rtCpuKernelArgs_t *argsInfo, Stream * const stm, const TaskCfg * const taskCfg);

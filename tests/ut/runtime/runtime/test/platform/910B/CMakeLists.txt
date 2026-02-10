@@ -374,6 +374,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/src/kernel/arg_loader
     ${TOP_DIR}/src/runtime/feature/src/kernel/args
     ${TOP_DIR}/src
+    ${TOP_DIR}/src/inc/runtime
     ${TOP_DIR}/src/runtime/raw_driver
     ${TOP_DIR}/src/runtime/cmodel_driver
     ${TOP_DIR}/src/runtime/c/feature/inc

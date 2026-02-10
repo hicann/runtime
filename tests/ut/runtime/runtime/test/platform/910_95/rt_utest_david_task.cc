@@ -525,6 +525,14 @@ TEST_F(TaskTestDavid, read_aicore_mem)
     param.debugMemType = RT_MEM_TYPE_REGISTER;
     param.elementSize = 8U;
     EXPECT_EQ(apiImpl.DebugReadAICore(&param), ACL_RT_SUCCESS);
+
+    param.memLen = 0U;
+    param.debugMemType = RT_MEM_TYPE_REGISTER_DIRECT;
+    EXPECT_EQ(apiImpl.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+
+    param.memLen = 8192U;
+    EXPECT_EQ(apiImpl.DebugReadAICore(&param), ACL_RT_SUCCESS);
+    
     GlobalMockObject::verify();
 }
 

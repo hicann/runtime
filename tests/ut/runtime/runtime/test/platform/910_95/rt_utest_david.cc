@@ -1847,7 +1847,7 @@ TEST_F(DavidTaskTest, aic_aiv_aicpu_subtask_dev_error_proc_for_fusion)
     errorInfo.u.fusionKernelErrorInfo.aicInfo.comm.coreNum = 1U;
     errorInfo.u.fusionKernelErrorInfo.aicInfo.info[0].suError = 1U;
     errorInfo.u.fusionKernelErrorInfo.aicInfo.info[0].vecError = 1U;
-    errorInfo.u.fusionKernelErrorInfo.aicInfo.info[0].mteError = 1U;
+    errorInfo.u.fusionKernelErrorInfo.aicInfo.info[0].mteError[0] = 1U;
     errorInfo.u.fusionKernelErrorInfo.aivInfo.comm.coreNum = 1U;
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_FUSION_KERNEL;

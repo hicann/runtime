@@ -595,6 +595,7 @@ target_include_directories(runtime_model_v200 PRIVATE
     ${RUNTIME_CMODEL_INC_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../cmodel_driver
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
+    ${RUNTIME_DIR}/src/inc/runtime
 )
 
 target_compile_definitions(runtime_model_v200 PRIVATE

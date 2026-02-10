@@ -49,6 +49,10 @@ static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t *const param)
         COND_RETURN_ERROR((param->memLen % param->elementSize != 0U), RT_ERROR_INVALID_VALUE,
             "CheckMemoryParam register fail, memLen=%llu, elementSize=%u.", param->memLen, param->elementSize);
     }
+    if (param->debugMemType == RT_MEM_TYPE_REGISTER_DIRECT) {
+        COND_RETURN_ERROR((param->memLen == 0U), RT_ERROR_INVALID_VALUE,
+            "CheckMemoryParam fail, memLen can not be 0, debugMemType=%d, memLen=%llu", param->debugMemType, param->memLen);
+    }
     return RT_ERROR_NONE;
 }
 
@@ -75,6 +79,17 @@ static uint32_t GetDieOffset(const uint32_t coreType, const uint32_t coreId)
     return  (coreType == 0U) ? offsetBase : offsetBase + AIC_NUM_ONE_DIE_V100;
 }
 
+static RtDebugCmdType GetDebugCmdType(rtDebugMemoryType_t debugMemType)
+{
+    if (debugMemType == RT_MEM_TYPE_REGISTER){
+        return READ_REGISTER_BY_CURPROCESS;
+    } else if (debugMemType == RT_MEM_TYPE_REGISTER_DIRECT) {
+        return READ_REGISTER_DIRECT_BY_CURPROCESS;
+    } else {
+        return READ_LOCAL_MEMORY_BY_CURPROCESS;
+    }
+}
+
 static rtError_t ConstructReadAICoreSendInfo(const Context *ctx, const rtDebugMemoryParam_t * const param,
     const void *devMem)
 {
@@ -88,8 +103,7 @@ static rtError_t ConstructReadAICoreSendInfo(const Context *ctx, const rtDebugMe
         RtDebugSendInfo sendInfo = {};
         rtDebugReportInfo_t reportInfo = {};
 
-        sendInfo.reqId = (param->debugMemType == RT_MEM_TYPE_REGISTER) ?
-            READ_REGISTER_BY_CURPROCESS : READ_LOCAL_MEMORY_BY_CURPROCESS;
+        sendInfo.reqId = GetDebugCmdType(param->debugMemType);
         sendInfo.isReturn = true;
         sendInfo.dataLen = static_cast<uint32_t>(sizeof(rtStarsLocalMemoryParam_t));
         rtStarsLocalMemoryParam_t *memoryParam = RtPtrToPtr<rtStarsLocalMemoryParam_t *, uint8_t *>(sendInfo.params);
