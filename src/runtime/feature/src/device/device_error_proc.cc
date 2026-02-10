@@ -21,6 +21,7 @@
 #include "ctrl_stream.hpp"
 #include "stub_task.hpp"
 #include "context_manage.hpp"
+#include "davinci_kernel_task.h"
 
 namespace cce {
 namespace runtime {
@@ -1911,7 +1912,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo(
         dev->Id_(),
         streamId,
         taskId,
-        aicTaskInfo->schemMode,
+        GetSchemMode(aicTaskInfo),
         aicTaskInfo->comm.dim,
         slotInfo.aicOwnBitmap,
         slotInfo.aivOwnBitmap0,
