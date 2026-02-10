@@ -1152,14 +1152,14 @@ bool DavidStream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t
 
     COND_RETURN_DEBUG(taskResMang_ == nullptr, false, "taskResMang_ is null");
     uint16_t taskPoolNum = this->taskResMang_->GetTaskPoolNum();
-    uint16_t distence = (taskPoolNum + taskId - exeTaskId) % taskPoolNum;
+    uint16_t distance = (taskPoolNum + taskId - exeTaskId) % taskPoolNum;
 
-    if (distence >= LARGER_THRESHOLD) { // if more than 10 tasks are not yet executed complete, sleep 50us.
+    if (distance >= LARGER_THRESHOLD) { // if more than 10 tasks are not yet executed complete, sleep 50us.
         std::this_thread::sleep_for(std::chrono::microseconds(LARGER_THRESHOLD * SLEEP_UNIT));
-    } else if (distence >= 1U) {
+    } else if (distance >= 1U) {
         uint32_t count = 0U;
         const uint64_t beginTime = GetWallUs();
-        while (GetWallUs() - beginTime < SLEEP_UNIT) { // whin 10 tasks, yield 5us at most
+        while (GetWallUs() - beginTime < SLEEP_UNIT) { // within 10 tasks, yield 5us at most
             if (IsTaskExcuted(GetExecuteEndTaskId(), taskId) || (sqHead == GetTaskPosTail())) {
                 return true;
             }

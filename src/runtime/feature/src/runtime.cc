@@ -1396,8 +1396,11 @@ rtError_t Runtime::MallocProgramAndReg(const rtDevBinary_t * const bin, Program 
         return RT_ERROR_INVALID_VALUE;
     }
 
-    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
-    elfProg->SetElfMagic(bin->magic);
+    ElfProgram * const elfProg = dynamic_cast<ElfProgram *>(prog);
+    if (elfProg != nullptr) {
+        elfProg->SetElfMagic(bin->magic);
+    }
+
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NEW);
     const rtError_t error = prog->Register(bin->data, bin->length);
     if (error != RT_ERROR_NONE) {
@@ -1408,8 +1411,7 @@ rtError_t Runtime::MallocProgramAndReg(const rtDevBinary_t * const bin, Program 
     }
 
     RT_LOG(RT_LOG_INFO, "isSupportMix=%u, kernelType=%u", prog->GetSupportMix(), prog->Machine());
-    if ((prog->GetSupportMix()) &&
-        (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2))) {
+    if ((prog->GetSupportMix()) && (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2))) {
         prog->SetMachine(Program::MACH_AI_MIX_KERNEL);
     }
 
@@ -1704,8 +1706,7 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
 static void SetKernelAttributes(Program * const prog, Kernel *kernel, const RtKernel *rtKernel, const uint32_t kernelType,
     const char_t *kernelInfo)
 {
-    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
-    elfProg->AdaptKernelAttrType(rtKernel, kernel);
+    prog->AdaptKernelAttrType(rtKernel, kernel);
     const uint32_t nameOffset = prog->AppendKernelName(rtKernel->name);
     kernel->SetNameOffset(nameOffset);
     kernel->SetKernelType_(kernelType);
@@ -2051,8 +2052,7 @@ rtError_t Runtime::AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const 
     (*kernelPtr)->SetShareMemSize_(kernel->shareMemSize);
     (*kernelPtr)->SetSchedMode(kernel->schedMode);
     (void)GetPrefetchCnt(prog, *kernelPtr);
-    ElfProgram *elfProg = RtPtrToPtr<ElfProgram *, Program *>(prog);
-    elfProg->AdaptKernelAttrType(kernel, (*kernelPtr));
+    prog->AdaptKernelAttrType(kernel, (*kernelPtr));
     bool isRepeated = false;
     const rtError_t error = prog->AllKernelAdd(*kernelPtr, isRepeated);
     if ((error != RT_ERROR_NONE) || (isRepeated)) {

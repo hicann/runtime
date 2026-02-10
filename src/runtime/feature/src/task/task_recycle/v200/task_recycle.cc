@@ -285,13 +285,12 @@ rtError_t RecycleTaskBySqHeadForRecyleThread(Stream * const stm)
 
 rtError_t TaskReclaimForSeparatedStm(Stream *const stm)
 {
-    bool isExistCqe = stm->IsExistCqe();
-    bool isNeedRecvCqe = stm->GetNeedRecvCqeFlag();
+    if (stm->Device_()->GetDevStatus() != RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    }
 
-    RT_LOG(RT_LOG_DEBUG, "device_id=%u, stream_id=%d, IsExistCqe=%u, needRecvCqeFlag=%u",
-        stm->Device_()->Id_(), stm->Id_(), isExistCqe, isNeedRecvCqe);
     // 先收一把cqe，再根据drv head回收一把。
-    if ((isExistCqe) || (isNeedRecvCqe)) {
+    if ((stm->GetNeedRecvCqeFlag()) || (stm->IsExistCqe())) {
         ProcLogicCqUntilEmpty(stm);
     }
 
@@ -324,7 +323,7 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo)
         stream.get()->SetThreadProcFlag(false);
         stream.get()->StreamRecycleUnlock();
         stream.reset();
-        COND_LOG_DEBUG((ret != RT_ERROR_NONE), "task reclaim fail ret=%u", ret);
+        COND_PROC((ret != RT_ERROR_NONE), continue;);
     };
 
     if (deviceInfo->GetIsChipSupportEventThread()) {

@@ -1614,7 +1614,6 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.",
                                     static_cast<uint32_t>(error));
         uint32_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
-        RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%u, sqHead=%u.", Id_(), taskId, sqHead);
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
         if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId, sqHead)) {
             return RT_ERROR_NONE;

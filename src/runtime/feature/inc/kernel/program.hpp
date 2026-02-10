@@ -302,6 +302,7 @@ public:
     virtual bool HasMixKernel() = 0;
     virtual rtError_t RefreshSymbolAddr() = 0;
     virtual rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, void *data, const uint32_t length) = 0;
+    virtual void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) = 0;
     virtual rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                           void *data, const uint32_t length) = 0;
 
@@ -395,6 +396,7 @@ public:
     rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, void *data, const uint32_t length) override;
     rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                   void *data, const uint32_t length) override;
+    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
 };
 
 class ElfProgram : public Program {
@@ -416,7 +418,7 @@ public:
 
     rtError_t UnifiedKernelRegister();
     void DegenerateMixType(uint8_t &mixType) const;
-    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput);
+    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
 
     bool IsMetaFlagSupprotFfts() const
     {

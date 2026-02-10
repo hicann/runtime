@@ -821,6 +821,13 @@ rtError_t PlainProgram::RefreshSymbolAddr()
     return RT_ERROR_NONE;
 }
 
+void PlainProgram::AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput)
+{
+    UNUSED(kernelInput);
+    UNUSED(kernelOutput);
+    return;
+}
+
 rtError_t PlainProgram::BinaryGetMetaInfo(const rtBinaryMetaType type, void *data, const uint32_t length)
 {
     UNUSED(type);
