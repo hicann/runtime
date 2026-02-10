@@ -133,6 +133,51 @@ TEST_F(RtMemoryApiTest, testHostNumaAlloc)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(RtMemoryApiTest, testGetAllocationGranularity)
+{
+    rtDrvMemProp_t prop = {};
+    prop.side = 1;
+    prop.pg_type = 0;
+    prop.mem_type = 0;
+
+    MOCKER(halMemGetAllocationGranularity)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+    size_t granularity;
+    rtError_t error = rtMemGetAllocationGranularity(&prop, RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    int32_t deviceId = 0;
+    error = rtSetDevice(deviceId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    prop.side = 4;
+    prop.devid = deviceId;
+    error = rtMemGetAllocationGranularity(&prop, RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtDeviceReset(deviceId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(RtMemoryApiTest, testMemSetAccess)
+{
+    std::vector<rtMemAccessDesc> accessDescs;
+    rtMemAccessDesc desc;
+    int32_t deviceId = 0;
+    void *virptr = (void *)10;
+    size_t size = 2 * 1024 *1024;
+    desc.location.type = static_cast<rtMemLocationType>(4);
+    desc.location.id = deviceId; 
+    desc.flags = RT_MEM_ACCESS_FLAGS_READWRITE;
+    accessDescs.push_back(desc);
+
+    MOCKER(halMemSetAccess)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+
+    rtError_t error = rtMemSetAccess(virptr, size, accessDescs.data(), accessDescs.size());
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(RtMemoryApiTest, rtFreePhysical)
 {
     rtDrvMemHandle handle = nullptr;
