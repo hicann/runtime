@@ -476,11 +476,11 @@ TEST_F(DRIVER_AI_DRV_API_OPEN_TEST, DrvProfFlush) {
 
     MOCKER(halProfDataFlush)
         .stubs()
-        .will(returnValue(PROF_ERROR))
-        .then(returnValue(PROF_STOPPED_ALREADY))
-        .then(returnValue(PROF_OK));
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_NO_DEVICE))
+        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
     unsigned int bufSize = 0;
-    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvProfFlush(
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvProfFlush(
         0, 0, bufSize));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvProfFlush(

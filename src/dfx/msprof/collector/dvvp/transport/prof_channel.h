@@ -69,6 +69,9 @@ public:
     void RegisterBufferThread(SHARED_PTR_ALIA<ChannelBuffer> channelBuffer);
 
 private:
+    bool IsSupportFlushDrvBuff();
+
+private:
     int32_t deviceId_;
     analysis::dvvp::driver::AI_DRV_CHANNEL channelId_;
     std::string relativeFileName_;

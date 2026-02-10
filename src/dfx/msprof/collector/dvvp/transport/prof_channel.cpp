@@ -11,6 +11,7 @@
 #include <functional>
 #include <new>
 #include <string>
+#include <set>
 #include "config/config.h"
 #include "errno/error_code.h"
 #include "msprof_dlog.h"
@@ -31,6 +32,14 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 using namespace Msprofiler::Parser;
+
+namespace {
+const std::set<AI_DRV_CHANNEL> SUPPORT_FLUSH_CHANNEL_SET = {
+    PROF_CHANNEL_AI_CORE, PROF_CHANNEL_HWTS_LOG, PROF_CHANNEL_TS_FW, PROF_CHANNEL_L2_CACHE,
+    PROF_CHANNEL_STARS_SOC_LOG, PROF_CHANNEL_FFTS_PROFILE_TASK, PROF_CHANNEL_NPU_APP_MEM, PROF_CHANNEL_NPU_MEM,
+    PROF_CHANNEL_AISTACK_MEM, PROF_CHANNEL_AICPU, PROF_CHANNEL_CUS_AICPU, PROF_CHANNEL_ADPROF
+};
+}
 
 ChannelReader::ChannelReader(int32_t deviceId, analysis::dvvp::driver::AI_DRV_CHANNEL channelId,
                              const std::string &relativeFileName,
@@ -223,9 +232,14 @@ void ChannelReader::FlushBuffToUpload()
     UploadData();
 }
 
+bool ChannelReader::IsSupportFlushDrvBuff()
+{
+    return SUPPORT_FLUSH_CHANNEL_SET.find(channelId_) != SUPPORT_FLUSH_CHANNEL_SET.end();
+}
+
 void ChannelReader::FlushDrvBuff()
 {
-    if ((channelId_ != PROF_CHANNEL_HWTS_LOG) && (channelId_ != PROF_CHANNEL_TS_FW)) {
+    if (!IsSupportFlushDrvBuff()) {
         return;
     }
     // 1. query flush size
@@ -255,7 +269,7 @@ void ChannelReader::FlushDrvBuff()
 
 void ChannelReader::CheckIfSendFlush(const size_t curLen)
 {
-    if ((channelId_ != PROF_CHANNEL_HWTS_LOG) && (channelId_ != PROF_CHANNEL_TS_FW)) {
+    if (!IsSupportFlushDrvBuff()) {
         return;
     }
     if (needWait_) {

@@ -950,26 +950,20 @@ int32_t DrvProfFlush(uint32_t deviceId, uint32_t channelId, uint32_t &bufSize)
 #if (defined(linux) || defined(__linux__))
     MSPROF_LOGI("Begin to flush drv buff. deviceId=%u, channelId=%u", deviceId, channelId);
     int32_t ret = halProfDataFlush(deviceId, channelId, &bufSize);
-    if (ret == PROF_OK) {
+    // The ret value should be consistent with the interface return of halProfDataFlush.
+    if (ret == DRV_ERROR_NONE) {
         MSPROF_LOGI("End to flush drv buff. deviceId=%u, channelId=%u, bufSize=%ubytes", deviceId, channelId, bufSize);
         return PROFILING_SUCCESS;
-    }
-    if (ret == PROF_STOPPED_ALREADY) {
-        MSPROF_LOGE("Failed to halProfDataFlush, channel already closed.deviceId=%u, channelId=%u", deviceId,
-                    channelId);
-        MSPROF_CALL_ERROR("EK9999", "Failed to halProfDataFlush, channel already closed.deviceId=%u, channelId=%u",
-                          deviceId, channelId);
-        return PROFILING_FAILED;
-    } else {
+    } else if (ret != DRV_ERROR_NOT_SUPPORT) {
         MSPROF_LOGE("Failed to halProfDataFlush.deviceId=%u, channelId=%u, ret=%d", deviceId, channelId, ret);
         MSPROF_CALL_ERROR("EK9999", "Failed to halProfDataFlush.deviceId=%u, channelId=%u, ret=%d", deviceId, channelId,
                           ret);
         return PROFILING_FAILED;
     }
-#else
-    MSPROF_LOGW("Function halProfDataFlush not supported, deviceId=%u, channelId=%u", deviceId, channelId);
-    return PROFILING_FAILED;
 #endif
+    // If ret is DRV_ERROR_NOT_SUPPORT, should record warning logs, return success
+    MSPROF_LOGW("Function halProfDataFlush not supported, deviceId=%u, channelId=%u", deviceId, channelId);
+    return PROFILING_SUCCESS;
 }
 }  // namespace driver
 }  // namespace dvvp
