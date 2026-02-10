@@ -285,12 +285,8 @@ rtError_t RecycleTaskBySqHeadForRecyleThread(Stream * const stm)
 
 rtError_t TaskReclaimForSeparatedStm(Stream *const stm)
 {
-    if (stm->Device_()->GetDevStatus() != RT_ERROR_NONE) {
-        return RT_ERROR_NONE;
-    }
-
     // 先收一把cqe，再根据drv head回收一把。
-    if ((stm->GetNeedRecvCqeFlag()) || (stm->IsExistCqe())) {
+    if ((stm->Device_()->GetDevStatus() == RT_ERROR_NONE) && ((stm->GetNeedRecvCqeFlag()) || (stm->IsExistCqe()))) {
         ProcLogicCqUntilEmpty(stm);
     }
 
