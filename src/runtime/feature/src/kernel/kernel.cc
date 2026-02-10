@@ -168,10 +168,8 @@ rtError_t KernelTable::AllocKernelArr()
 {
     if (kernelArr_ == nullptr) {
         kernelArr_ = new (std::nothrow) rtKernelArr_t[kernelArrAllocTimes_ * KERNEL_ARRAY_SIZE_PER_ALLOC];
-        if (kernelArr_ == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "new KernelTable kernelArr_ failed, Size=%u.",
-                   kernelArrAllocTimes_ * KERNEL_ARRAY_SIZE_PER_ALLOC);
-        }
+        COND_RETURN_ERROR(kernelArr_ == nullptr, RT_ERROR_CALLOC, "new KernelTable kernelArr_ failed, size=%u.",
+            kernelArrAllocTimes_ * KERNEL_ARRAY_SIZE_PER_ALLOC);
         RT_LOG(RT_LOG_DEBUG, "KernelTable AllocKernelArr success.");
     } else if (rtKernelArrPos_ >= kernelArrAllocTimes_ * KERNEL_ARRAY_SIZE_PER_ALLOC) {
         kernelArrAllocTimes_ += 1U;
