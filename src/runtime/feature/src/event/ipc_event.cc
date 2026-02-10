@@ -23,30 +23,32 @@ IpcEvent::~IpcEvent() noexcept
 {
 }
 
-rtError_t IpcEvent::IpcVaAndPaOperation(rtDrvMemProp_t *prop, uint64_t *deviceMemHandle)
+rtError_t IpcEvent::IpcVaAndPaOperation(size_t granularity, rtDrvMemProp_t *prop, uint64_t *deviceMemHandle)
 {
     void *deviceMemVa = nullptr;
     rtDrvMemHandle deviceMemPa = nullptr;
+    // 1.1 size for p2p
+    const size_t p2pSize = GetAlignedSize(IPC_EVENT_P2P_SIZE, granularity);
     // 1.2 halMemAddressReserve get deviceMemVa
-    rtError_t error = NpuDriver::ReserveMemAddress(&deviceMemVa, IPC_EVENT_P2P_SIZE, 0, nullptr, 0);
+    rtError_t error = NpuDriver::ReserveMemAddress(&deviceMemVa, p2pSize, 0, nullptr, 0);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event setup failed, error=%#x.", static_cast<uint32_t>(error));
     currentDeviceMem_ = deviceMemVa;
     currentHostMem_ = deviceMemVa;
 
-    // 1.3 halMemCreate alloc deviceMemPa  8k
+    // 1.3 halMemCreate alloc deviceMemPa
     prop->devid = device_->Id_();
-    error = NpuDriver::MallocPhysical(&deviceMemPa, IPC_EVENT_P2P_SIZE, prop, 0);
+    error = NpuDriver::MallocPhysical(&deviceMemPa, p2pSize, prop, 0);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event setup failed, error=%#x.", static_cast<uint32_t>(error));
     deviceMemPa_ = deviceMemPa;
 
-    // 1.4 halMemMap map va to pa size 8k
-    error = NpuDriver::MapMem(deviceMemVa, IPC_EVENT_P2P_SIZE, 0, deviceMemPa, 0);
+    // 1.4 halMemMap map va to pa size
+    error = NpuDriver::MapMem(deviceMemVa, p2pSize, 0, deviceMemPa, 0);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event setup failed, error=%#x.", static_cast<uint32_t>(error));
     mapFlag_ |= DEV_MEM_MAP_FLAG;;
-    error = device_->Driver_()->MemSetSync(deviceMemVa, IPC_EVENT_P2P_SIZE, 0U, IPC_EVENT_P2P_SIZE);
+    error = device_->Driver_()->MemSetSync(deviceMemVa, p2pSize, 0U, p2pSize);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event MemSetSync failed, error=%#x.", static_cast<uint32_t>(error));
     // 1.5 halMemExportToShareableHandle pa for handle, SetMemShareHandleDisablePidVerify close whitelist
@@ -63,7 +65,7 @@ rtError_t IpcEvent::IpcVaAndPaOperation(rtDrvMemProp_t *prop, uint64_t *deviceMe
     memAccessDesc.location.id = 0U;
     memAccessDesc.location.type = RT_MEMORY_LOC_HOST;
 
-    error = NpuDriver::MemSetAccess(deviceMemVa, IPC_EVENT_P2P_SIZE, &memAccessDesc, MEM_SET_ACCESS_NUM);
+    error = NpuDriver::MemSetAccess(deviceMemVa, p2pSize, &memAccessDesc, MEM_SET_ACCESS_NUM);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event setup failed, error=%#x.", static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "MemSetAccess success.");
@@ -140,7 +142,7 @@ rtError_t IpcEvent::Setup()
     ScopeGuard errRecycle(recycleFunc);
 
     // p2p proc
-    error = IpcVaAndPaOperation(&prop, &deviceMemHandle);
+    error = IpcVaAndPaOperation(granularity, &prop, &deviceMemHandle);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event IpcVaAndPaOperation failed, error=%#x.", static_cast<uint32_t>(error));
 
@@ -206,13 +208,14 @@ rtError_t IpcEvent::EnableP2PForIpc(uint64_t deviceMemHandle) const
     return error;
 }
 
-rtError_t IpcEvent::IpcMemHandleImport(bool hostFlag, uint64_t deviceMemHandle)
+rtError_t IpcEvent::IpcMemHandleImport(size_t granularity, bool hostFlag, uint64_t deviceMemHandle)
 {
     void *MemVa = nullptr;
     rtDrvMemHandle MemPa = nullptr;
     int32_t currentId = (hostFlag == true) ? IMPORT_DEVICE_ID : static_cast<int32_t>(device_->Id_());
     // 2.1 alloc va for p2p open
-    rtError_t error = NpuDriver::ReserveMemAddress(&MemVa, IPC_EVENT_P2P_SIZE, 0, nullptr, 0);
+    const size_t p2pSize = GetAlignedSize(IPC_EVENT_P2P_SIZE, granularity);
+    rtError_t error = NpuDriver::ReserveMemAddress(&MemVa, p2pSize, 0, nullptr, 0);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event open failed, error=%#x.", static_cast<uint32_t>(error));
     if (hostFlag) {
@@ -232,7 +235,7 @@ rtError_t IpcEvent::IpcMemHandleImport(bool hostFlag, uint64_t deviceMemHandle)
     }
 
     // 2.3 map MemVa to MemPa
-    error = NpuDriver::MapMem(MemVa, IPC_EVENT_P2P_SIZE, 0, MemPa, 0);    
+    error = NpuDriver::MapMem(MemVa, p2pSize, 0, MemPa, 0);    
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event open failed, error=%#x.", static_cast<uint32_t>(error));
     if (hostFlag) {
@@ -285,12 +288,12 @@ rtError_t IpcEvent::IpcOpenEventHandle(rtIpcEventHandle_t *ipcEventHandle)
         "ipc event enable p2p failed, error=%#x.", static_cast<uint32_t>(error));
 
     // host import
-    error = IpcMemHandleImport(true, deviceMemHandle);
+    error = IpcMemHandleImport(granularity, true, deviceMemHandle);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event IpcHandleAllocAndImport failed, error=%#x.", static_cast<uint32_t>(error));
 
     // device import
-    error = IpcMemHandleImport(false, deviceMemHandle);
+    error = IpcMemHandleImport(granularity, false, deviceMemHandle);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "ipc event IpcHandleAllocAndImport failed, error=%#x.", static_cast<uint32_t>(error));
     errRecycle.ReleaseGuard();
