@@ -62,23 +62,24 @@ TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
 
     const uint16_t head = taskResAHead_.Value();
     const uint16_t tail = taskResATail_.Value();
+    // In a multi-task scenario, regardless of whether taskId represents a position (pos) or an actual task ID,
+    // the obtained realPos is always the position corresponding to the actual taskInfo.
+    const uint32_t realPos = taskRes_[taskId].taskInfo.id;
+
     if (unlikely(head == tail)) {
         RT_LOG(RT_LOG_WARNING, "head==tail, device_id=%u, stream_id=%d, taskId=%u, head=%hu, tail=%hu, "
             "taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.",
-            deviceId_, streamId_,  taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(),
-            taskRes_[taskId].taskInfo.id);
+            deviceId_, streamId_,  taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(), realPos);
         return nullptr;
     }
 
     RT_LOG(RT_LOG_DEBUG, "device_id=%u, stream_id=%d, taskId=%u, "
         "head=%hu, tail=%hu, taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.",
-        deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(),
-        taskRes_[taskId].taskInfo.id);
-    if (unlikely(taskRes_[taskId].taskInfo.id == 0xFFFFU)) {
+        deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(), realPos);
+    if (unlikely(realPos == 0xFFFFU)) {
         RT_LOG(RT_LOG_WARNING, "taskId is recycled, device_id=%u, stream_id=%d, taskId=%u, "
             "head=%hu, tail=%hu, taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.",
-            deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(),
-            taskRes_[taskId].taskInfo.id);
+            deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(), realPos);
         return nullptr;
     }
     const bool flip = (head < tail) ? false : true;
@@ -87,22 +88,17 @@ TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
     if (flag1 || flag2) {
         RT_LOG(RT_LOG_WARNING, "taskId is invalid, device_id=%u, stream_id=%d, taskId=%u, "
             "head=%hu, tail=%hu, taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.",
-            deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(),
-            taskRes_[taskId].taskInfo.id);
+            deviceId_, streamId_, taskId, head, tail, taskResAHead_.Value(), taskResATail_.Value(), realPos);
         return nullptr;
     }
 
-    // In a multi-task scenario, regardless of whether taskId represents a position (pos) or an actual task ID,
-    // the obtained realPos is always the position corresponding to the actual taskInfo.
-    const uint32_t realPos = taskRes_[taskId].taskInfo.id;
     if (taskId != realPos) {
         flag1 = (!flip) && (!((realPos >= head) && (realPos < tail)));
         flag2 = flip && ((realPos >= tail) && (realPos < head));
         if (flag1 || flag2) {
             RT_LOG(RT_LOG_WARNING, "realPos is invalid, device_id=%u, stream_id=%d, taskId=%u, realPos=%u, "
-                "head=%hu, tail=%hu, taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.",
-                deviceId_, streamId_, taskId, realPos, head, tail, taskResAHead_.Value(), taskResATail_.Value(),
-                taskRes_[taskId].taskInfo.id);
+                "head=%hu, tail=%hu, taskResAHead=%hu, taskResATail=%hu, taskInfo_id=%hu.", deviceId_,
+                streamId_, taskId, realPos, head, tail, taskResAHead_.Value(), taskResATail_.Value(), realPos);
             return nullptr;
         }
     }
