@@ -32,7 +32,7 @@
 |  依赖  | 不涉及  | cmake/third_party/boost.cmake | https://gitcode.com/cann-src-third-party/boost/releases/download/v1.87.0/boost_1_87_0.tar.gz | 从gitcode下载boost源码，作用编译依赖 |
 |  依赖  | 不涉及  | cmake/third_party/acl_compat.cmake | https://mirrors.huaweicloud.com/artifactory/cann-run/8.5.0/inner/${TARGET_ARCH}/acl-compat_8.5.0_linux-${TARGET_ARCH}.tar.gz | 从huaweicloud下载二进制依赖 |
 |  依赖  | 不涉及  | cmake/third_party/csec.cmake | https://gitcode.com/cann-src-third-party/libboundscheck/releases/download/v1.1.16/libboundscheck-v1.1.16.tar.gz | 从gitcode下载libboundscheck源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/eigen.cmake | https://gitcode.com/cann-src-third-party/eigen/releases/download/3.4.0/eigen-3.4.0.tar.gz | 从gitcode下载eigen源码，作用编译依赖 |
+|  依赖  | 不涉及  | cmake/third_party/eigen.cmake | https://gitcode.com/cann-src-third-party/eigen/releases/download/5.0.0/eigen-5.0.0.tar.gz | 从gitcode下载eigen源码，作用编译依赖 |
 |  依赖  | 不涉及  | cmake/third_party/openssl.cmake | https://gitcode.com/cann-src-third-party/openssl/releases/download/openssl-3.0.9/openssl-openssl-3.0.9.tar.gz | 从gitcode下载openssl源码，作用编译依赖 |
 |  依赖  | 不涉及  | cmake/third_party/protobuf.cmake | https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz | 从gitcode下载protobuf源码，作用编译依赖 |
 |  依赖  | 不涉及  | cmake/third_party/seccomp.cmake | https://gitcode.com/cann-src-third-party/libseccomp/releases/download/v2.5.4/libseccomp-2.5.4.tar.gz | 从gitcode下载libseccomp源码，作用编译依赖 |
