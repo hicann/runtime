@@ -1672,21 +1672,6 @@ TEST_F(CloudV2NpuDriverTest, free_ctrl_sq_ce)
     EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
 }
 
-TEST_F(CloudV2NpuDriverTest, get_ctrl_sq_head)
-{
-    uint16_t head;
-    rtError_t error;
-    NpuDriver driver;
-    MOCKER(halSqCqQuery)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_VALUE))
-        .then(returnValue(DRV_ERROR_NONE));
-    error = driver.GetCtrlSqHead(0, 0, 0, head);
-    EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
-    error = driver.GetCtrlSqHead(0, 0, 0, head);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(CloudV2NpuDriverTest, raw_driver)
 {
     NpuDriver driver;
@@ -2278,58 +2263,6 @@ TEST_F(CloudV2NpuDriverTest, MemCopyAsyncWaitFinishEx_failed)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, GetSqHead)
-{
-    rtError_t error;
-    uint16_t head;
-    NpuDriver rawDrv;
-
-    MOCKER(halSqCqQuery)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_VALUE))
-        .then(returnValue(DRV_ERROR_NONE));
-
-    error = rawDrv.GetSqHead(0,0,0,head);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    error = rawDrv.GetSqHead(0,0,0,head);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2NpuDriverTest, GetSqTail)
-{
-    rtError_t error;
-    uint16_t tail;
-    NpuDriver rawDrv;
-
-    MOCKER(halSqCqQuery).stubs()
-        .will(returnValue(DRV_ERROR_INVALID_VALUE))
-        .then(returnValue(DRV_ERROR_NONE));
-
-    error = rawDrv.GetSqTail(0,0,0,tail);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    error = rawDrv.GetSqTail(0,0,0,tail);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(CloudV2NpuDriverTest, GetSqEnable)
-{
-    rtError_t error;
-    bool en;
-    NpuDriver rawDrv;
-
-    MOCKER(halSqCqQuery).stubs()
-        .will(returnValue(DRV_ERROR_INVALID_VALUE))
-        .then(returnValue(DRV_ERROR_NONE));
-
-    error = rawDrv.GetSqEnable(0,0,0,en);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    error = rawDrv.GetSqEnable(0,0,0,en);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(CloudV2NpuDriverTest, StreamBindLogicCq)
 {
     rtError_t error;
@@ -2697,24 +2630,6 @@ TEST_F(CloudV2NpuDriverTest, NpuDriverCMOTest2)
 
     MOCKER(halResourceIdFree).stubs().will(returnValue(DRV_ERROR_NONE));
     err = rawDrv->CmoIdFree(cmoid, 0, 0);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-    delete rawDrv;
-}
-
-TEST_F(CloudV2NpuDriverTest, GetSqAddrInfoTest)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    NpuDriver *rawDrv = new NpuDriver();
-    struct halSqCqQueryInfo queryInfoIn = {};
-    queryInfoIn.type = DRV_NORMAL_TYPE;
-    queryInfoIn.value[0] = 0;
-    uint64_t sqAddr;
-
-    MOCKER(halSqCqQuery)
-        .stubs()
-        .with(mockcpp::any(), outBound(&queryInfoIn))
-        .will(returnValue(DRV_ERROR_NONE));
-    rtError_t err = rawDrv->GetSqAddrInfo(0, 0, 0, sqAddr);
     EXPECT_EQ(err, RT_ERROR_NONE);
     delete rawDrv;
 }

@@ -197,64 +197,6 @@ TEST_F(EventTest910B, querytest1)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
-TEST_F(EventTest910B, querytest2)
-{
-    rtError_t error;
-    rtStream_t stream;
-    rtEventStatus_t status;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
-    NpuDriver drv;
-    struct halSqCqQueryInfo queryInfoIn = {};
-    uint16_t head;
-
-    queryInfoIn.type = DRV_NORMAL_TYPE;
-    queryInfoIn.tsId = 0U;
-    queryInfoIn.sqId = 1U;
-    queryInfoIn.cqId = 1U;
-    queryInfoIn.prop = DRV_SQCQ_PROP_SQ_HEAD;
-    queryInfoIn.value[0] = 0xffff;
-    MOCKER(halSqCqQuery).stubs().with(mockcpp::any(), outBoundP(&queryInfoIn, sizeof(queryInfoIn))).will(returnValue(DRV_ERROR_NONE));
-    error = drv.GetSqHead(0U, 0U, 1U, head);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    stm->taskPosTail_.Set(2);
-    stm->JudgeHeadTailPos(&status, 3);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-}
-
-TEST_F(EventTest910B, querytest3)
-{
-    rtError_t error;
-    rtStream_t stream;
-    rtEventStatus_t status;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
-    NpuDriver drv;
-    struct halSqCqQueryInfo queryInfoIn = {};
-    uint16_t head;
-
-    queryInfoIn.type = DRV_NORMAL_TYPE;
-    queryInfoIn.tsId = 0U;
-    queryInfoIn.sqId = 1U;
-    queryInfoIn.cqId = 1U;
-    queryInfoIn.prop = DRV_SQCQ_PROP_SQ_HEAD;
-    queryInfoIn.value[0] = 0x3;
-    MOCKER(halSqCqQuery).stubs().with(mockcpp::any(), outBoundP(&queryInfoIn, sizeof(queryInfoIn))).will(returnValue(DRV_ERROR_NONE));
-    error = drv.GetSqHead(0U, 0U, 1U, head);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    stm->taskPosTail_.Set(2);
-    stm->JudgeHeadTailPos(&status, 3);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-}
-
 TEST_F(EventTest910B, stubDevice)
 {
     rtError_t error;

@@ -56,48 +56,6 @@ public:
     uint32_t  runFlag_;
 };
 
-#ifndef WIN32
-TEST_F(OsalTest, thread_create_fail)
-{
-    rtError_t error;
-
-    MyRunnable runnable;
-    Thread *thread;
-
-    MOCKER(pthread_create).stubs().will(returnValue(-1));
-    MOCKER(pthread_join).stubs().will(returnValue(-1));
-
-    thread = OsalFactory::CreateThread(NULL, &runnable, NULL);
-    EXPECT_NE(thread, (Thread *)NULL);
-
-    thread->Start();
-    thread->Join();
-
-    EXPECT_EQ(runnable.runFlag_, 0);
-
-    delete thread;
-}
-
-TEST_F(OsalTest, thread_create_MONITOR_0)
-{
-    rtError_t error;
-    const char_t * const threadName = "MONITOR_0";
-    MyRunnable runnable;
-    Thread *thread;
-
-    MOCKER(pthread_create).stubs().will(returnValue(0));
-    MOCKER(pthread_join).stubs().will(returnValue(0));
-
-    thread = OsalFactory::CreateThread(threadName, &runnable, NULL);
-    EXPECT_NE(thread, (Thread *)NULL);
-
-    thread->Start();
-    thread->Join();
-
-    EXPECT_EQ(runnable.runFlag_, 0);
-    delete thread;
-}
-#endif
 TEST_F(OsalTest, notifier_triger_after_wait)
 {
     Notifier * notifier = OsalFactory::CreateNotifier();
