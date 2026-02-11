@@ -7841,14 +7841,11 @@ rtError_t ApiImpl::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptur
     Stream *captureStream = stm->GetCaptureStream();
     const rtStreamCaptureStatus statusTmp = stm->GetCaptureStatus();
     Model *mdlTmp = nullptr;
-    uint32_t modelId = 0xFFFFU;
 
     if ((statusTmp != RT_STREAM_CAPTURE_STATUS_NONE) && (captureStream != nullptr)) {
         mdlTmp = captureStream->Model_();
         if (mdlTmp == nullptr) {
             RT_LOG(RT_LOG_WARNING, "stream is not in capture status, stream_id=%d.", stm->Id_());
-        } else {
-            modelId = mdlTmp->Id_();
         }
     }
 
