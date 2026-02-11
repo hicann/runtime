@@ -7,46 +7,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "file_interface.h"
 
-#include "osal_mem.h"
-#include "securec.h"
-OsalVoidPtr OsalMalloc(size_t size)
+int32_t ProfInitTransport(uint32_t deviceId, const char *flushDir, const char *storageLimit)
 {
-    if (size <= 0) {
-        return NULL;
-    }
-    return malloc(size);
+    return 0;
 }
 
-OsalVoidPtr OsalCalloc(size_t size)
+int32_t ProfSendBuffer(ProfFileChunk* chunk, const char* dir)
 {
-    OsalVoidPtr val = NULL;
-    val = OsalMalloc(size);
-    if (val == NULL) {
-        return NULL;
-    }
-
-    errno_t err = memset_s(val, size, 0, size);
-    if (err != EOK) {
-        OSAL_MEM_FREE(val);
-        return NULL;
-    }
-
-    return val;
-}
-
-VOID OsalFree(OsalVoidPtr ptr)
-{
-    if (ptr != NULL) {
-        free(ptr);
-        ptr = NULL;
-    }
-}
-
-VOID OsalConstFree(const void* ptr)
-{
-    if (ptr != NULL) {
-        free(ptr);
-        ptr = NULL;
-    }
+    return 0;
 }

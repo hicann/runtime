@@ -7,46 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "gtest/gtest.h"
 
-#include "osal_mem.h"
-#include "securec.h"
-OsalVoidPtr OsalMalloc(size_t size)
-{
-    if (size <= 0) {
-        return NULL;
-    }
-    return malloc(size);
-}
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
 
-OsalVoidPtr OsalCalloc(size_t size)
-{
-    OsalVoidPtr val = NULL;
-    val = OsalMalloc(size);
-    if (val == NULL) {
-        return NULL;
-    }
-
-    errno_t err = memset_s(val, size, 0, size);
-    if (err != EOK) {
-        OSAL_MEM_FREE(val);
-        return NULL;
-    }
-
-    return val;
-}
-
-VOID OsalFree(OsalVoidPtr ptr)
-{
-    if (ptr != NULL) {
-        free(ptr);
-        ptr = NULL;
-    }
-}
-
-VOID OsalConstFree(const void* ptr)
-{
-    if (ptr != NULL) {
-        free(ptr);
-        ptr = NULL;
-    }
+    // testing::GTEST_FLAG(filter) = "HalProfUtest.*";
+    // Runs all tests using Google Test.
+    return RUN_ALL_TESTS();
 }

@@ -21,7 +21,9 @@ using namespace analysis::dvvp::common::utils;
 const std::string RUNTIME_LIB_PATH = "libruntime.so";
 
 static std::set<std::string> g_runtimeApiSet = {
-    "rtProfilerTraceEx"
+    "rtProfilerTraceEx",
+    "rtsStreamGetAttribute",
+    "rtCacheLastTaskOpInfo"
 };
 
 ProfRuntimePlugin::~ProfRuntimePlugin()

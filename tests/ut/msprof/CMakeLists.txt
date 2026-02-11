@@ -73,6 +73,7 @@ protobuf_generate(profiler
 
 add_subdirectory(acp)
 add_subdirectory(app)
+add_subdirectory(avp)
 add_subdirectory(common)
 add_subdirectory(device)
 add_subdirectory(driver)

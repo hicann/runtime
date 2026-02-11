@@ -24,18 +24,17 @@ void *MsprofRealloc(void *ptr, size_t oldSize, size_t newSize)
     }
     void *newPtr = OsalMalloc(newSize);
     if (newPtr == NULL) {
-        OsalFree(ptr);
         MSPROF_LOGE("ralloc failed, newSize=%zu.", newSize);
         return NULL;
     }
 
     int32_t ret = memcpy_s(newPtr, newSize, ptr, oldSize);
-    OsalFree(ptr);
     if (ret != EOK) {
         OsalFree(newPtr);
         MSPROF_LOGE("memcpy_s from realloc failed, newSize=%zu.", newSize);
         return NULL;
     }
+    OsalFree(ptr);
 
     return newPtr;
 }
