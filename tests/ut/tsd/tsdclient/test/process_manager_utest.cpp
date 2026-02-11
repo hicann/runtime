@@ -2904,3 +2904,109 @@ TEST_F(ProcessManagerTest, IsSupportCommonSink_Yes_With_hostSoPathEmpty)
 
     EXPECT_TRUE(processModeManager.IsSupportCommonSink());
 }
+
+TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_not_support_load)
+{
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER(drvHdcGetTrustedBasePathV2).stubs().will(returnValue(0));
+    MOCKER(drvHdcSendFileV2).stubs().will(returnValue(0));
+    MOCKER_CPP(&ClientManager::IsAdcEnv)
+        .stubs()
+        .will(returnValue(false));
+    ProcessModeManager processModeManager(deviceId, 0);
+    PackageProcessConfig tempPkgConfig;
+    MOCKER_CPP(&PackageProcessConfig::GetInstance)
+        .stubs()
+        .will(returnValue(&tempPkgConfig));
+    std::string pkgName = "not_support_pkg.tar.gz";
+    PackConfDetail packConfDetail;
+    packConfDetail.hostTruePath = "tmp123";
+    tempPkgConfig.configMap_[pkgName] = packConfDetail;
+    MOCKER_CPP(&ProcessModeManager::SupportLoadPkg)
+        .stubs()
+        .will(returnValue(false));
+    std::string hashcode = "12345666";
+    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+        .stubs()
+        .will(returnValue(hashcode));
+    MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+    auto ret = processModeManager.LoadPackageToDeviceByConfig();
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_hash_code_same)
+{
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER(drvHdcGetTrustedBasePathV2).stubs().will(returnValue(0));
+    MOCKER(drvHdcSendFileV2).stubs().will(returnValue(0));
+    MOCKER_CPP(&ClientManager::IsAdcEnv)
+        .stubs()
+        .will(returnValue(false));
+    PackageProcessConfig tempPkgConfig;
+    MOCKER_CPP(&PackageProcessConfig::GetInstance)
+        .stubs()
+        .will(returnValue(&tempPkgConfig));
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string pkgName = "not_support_pkg.tar.gz";
+    PackConfDetail packConfDetail;
+    packConfDetail.hostTruePath = "tmp123";
+    tempPkgConfig.configMap_[pkgName] = packConfDetail;
+    MOCKER_CPP(&ProcessModeManager::SupportLoadPkg)
+        .stubs()
+        .will(returnValue(true));
+    std::string hashcode = "12345666";
+    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+        .stubs()
+        .will(returnValue(hashcode));
+    MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(true));
+    MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+    auto ret = processModeManager.LoadPackageToDeviceByConfig();
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_load_finish)
+{
+    MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER(drvHdcGetTrustedBasePathV2).stubs().will(returnValue(0));
+    MOCKER(drvHdcSendFileV2).stubs().will(returnValue(0));
+    MOCKER_CPP(&ClientManager::IsAdcEnv)
+        .stubs()
+        .will(returnValue(false));
+    PackageProcessConfig tempPkgConfig;
+    MOCKER_CPP(&PackageProcessConfig::GetInstance)
+        .stubs()
+        .will(returnValue(&tempPkgConfig));
+    ProcessModeManager processModeManager(deviceId, 0);
+    std::string pkgName = "load_finish.tar.gz";
+    PackConfDetail packConfDetail;
+    packConfDetail.hostTruePath = "tmp123";
+    tempPkgConfig.configMap_[pkgName] = packConfDetail;
+    MOCKER_CPP(&ProcessModeManager::SupportLoadPkg)
+        .stubs()
+        .will(returnValue(true));
+    std::string hashcode = "12345666";
+    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+        .stubs()
+        .will(returnValue(hashcode));
+    MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProcessModeManager::CompareAndSendCommonSinkPkg)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+    processModeManager.rspCode_ = ResponseCode::SUCCESS;
+    auto ret = processModeManager.LoadPackageToDeviceByConfig();
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    GlobalMockObject::verify();
+}

@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 #include <regex>
+#include <chrono>
 #include <sys/file.h>
 #include <dlfcn.h>
 #include "driver/ascend_hal.h"
@@ -69,6 +70,7 @@ const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP =
 };
 const int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
 const std::string MUTEX_FILE_PREFIX = "sink_file_mutex_";
+using TimePoint = std::chrono::high_resolution_clock::time_point;
 }  // namespace
 
 namespace tsd {
@@ -90,24 +92,29 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
 {
     TSD_RUN_INFO("[ProcessModeManager] enter into open process deviceId[%u] rankSize[%u]", logicDeviceId_, rankSize);
     TsdStartStatusInfo startInfo = { };
+    const TimePoint beginOpen = std::chrono::high_resolution_clock::now();
     if (!CheckNeedToOpen(rankSize, startInfo)) {
         TSD_INFO("Open has already done before.");
         return TSD_OK;
     }
 
     LoadPackageConfigInfoToDevice();
+    const TimePoint finLoadCfg = std::chrono::high_resolution_clock::now();
 
     TSD_StatusT ret = LoadSysOpKernel();
     TSD_CHECK(ret == TSD_OK, ret, "Send aicpu package to device failed.");
-    
+    const TimePoint finLoadOpKernel = std::chrono::high_resolution_clock::now();
+
     ret = LoadPackageToDeviceByConfig();
     TSD_CHECK(ret == TSD_OK, ret, "load package to device by config failed");
-    
+    const TimePoint finLoadSinkPkg = std::chrono::high_resolution_clock::now();
+
     ret = InitTsdClient();
     TSD_CHECK(ret == TSD_OK, ret, "Init hdc client failed.");
     startInfo.startQs_ = false;
     ret = SendOpenMsg(rankSize, startInfo);
     TSD_CHECK(ret == TSD_OK, ret, "Send open message to device failed.");
+    const TimePoint finSendOpenMsg = std::chrono::high_resolution_clock::now();
 
     TSD_RUN_INFO("[ProcessModeManager] deviceId[%u] sessionId[%u] rankSize[%u], wait subprocess start response", logicDeviceId_, tsdSessionId_, rankSize);
     if (IsAsanMmSysEnv()) {
@@ -115,6 +122,7 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
     } else {
         ret = WaitRsp(0U);
     }
+    const TimePoint finRecvRsp = std::chrono::high_resolution_clock::now();
     if (ret != TSD_OK) {
         REPORT_INPUT_ERROR("E39007", std::vector<std::string>(), std::vector<std::string>());
         TSD_ERROR("Wait open response from device failed.");
@@ -127,8 +135,27 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
         TSD_ERROR("ProcessQueueForAdc error");
         return ret;
     }
+    const TimePoint finOpen = std::chrono::high_resolution_clock::now();
+    TSD_RUN_INFO("[TsdClient][deviceId=%u] [sessionId=%u] start hccp and computer process success,"
+        "whole process spent time as follows:"
+        "phase1:[%zu]ms load sink package config to device,"
+        "phase2:[%zu]ms load opkernel to device,"
+        "phase3:[%zu]ms load sink package to device,"
+        "phase4:[%zu]ms send open message to device,"
+        "phase5:[%zu]ms receive open message to device,"
+        "phase6:[%zu]ms process for adc on host,"
+        "whole duration:[%zu]ms",
+        logicDeviceId_,
+        tsdSessionId_,
+        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadCfg - beginOpen).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadOpKernel - finLoadCfg).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finLoadSinkPkg - finLoadOpKernel).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finSendOpenMsg - finLoadSinkPkg).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finRecvRsp - finSendOpenMsg).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finOpen - finRecvRsp).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(finOpen - beginOpen).count()
+    );
 
-    TSD_RUN_INFO("[TsdClient][deviceId=%u] [sessionId=%u] start hccp and computer process success", logicDeviceId_, tsdSessionId_);
     return TSD_OK;
 }
 
@@ -2186,9 +2213,7 @@ TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
     }
 
     ret = hdcTsdClient_->TsdRecvData(tsdSessionId_);
-    if (ret != TSD_OK) {
-        TSD_RUN_INFO("not receive TSD_CHECK_PACKAGE rsp msg, just send pkg to server");
-    }
+    TSD_RUN_INFO("recive load package config response result:%u", ret);
 
     hasSendConfigFile_ = true;
 
@@ -2277,7 +2302,9 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
         std::string pkgPureName = iter->first;
         std::string orgFile;
         std::string dstFile = dstDirPreFix;
+        TSD_RUN_INFO("begin to load package:%s to device:%u", pkgPureName.c_str(), logicDeviceId_);
         if (!SupportLoadPkg(pkgPureName)) {
+            TSD_RUN_INFO("current package package:%s dose not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
             continue;
         }
         if (pkgConInst->GetPkgHostAndDeviceDstPath(iter->first, orgFile, dstFile, procSign_.tgid) != TSD_OK) {
@@ -2291,7 +2318,7 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
         const std::string hostPkgHash = ProcessUtilCommon::CalFileSha256HashValue(orgFile);
         SetHostCommonSinkPackHashValue(pkgPureName, hostPkgHash);
         if (IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
-            TSD_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
+            TSD_RUN_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
             continue;
         }
         
@@ -2308,6 +2335,7 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
             TSD_ERROR("host and device checkcode compare failed package:%s", pkgPureName.c_str());
             return TSD_INTERNAL_ERROR;
         }
+        TSD_RUN_INFO("load package:%s to device:%u success", pkgPureName.c_str(), logicDeviceId_);
     }
 
     return TSD_OK;
