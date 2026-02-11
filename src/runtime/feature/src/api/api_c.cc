@@ -293,21 +293,24 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, u
         launchArg.argsOffset[0U] = 0U;
     }
 
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
     TIMESTAMP_BEGIN(rtKernelLaunch);
     Stream * const exeStream = static_cast<Stream *>(stm);
     rtArgsEx_t argsInfo = {};
     argsInfo.args = args;
     argsInfo.argsSize = argsSize;
-    Context * const curCtx = rtInstance->CurrentContext();
-    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(curCtx == nullptr, RT_ERROR_CONTEXT_NULL, "current context is nullptr");
 
-    Stream * const curStm = (exeStream == nullptr) ? curCtx->DefaultStream_() : exeStream;
+    Stream *curStm = nullptr;
+    if (exeStream != nullptr) {
+        curStm = exeStream;
+    } else {
+        const Runtime * const rtInstance = Runtime::Instance();
+        NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+        Context * const curCtx = rtInstance->CurrentContext();
+        COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(curCtx == nullptr, RT_ERROR_CONTEXT_NULL, "current context is nullptr");
+        curStm = curCtx->DefaultStream_();
+    }
+
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", curStm->Id_());
 
     // 0 : need h2d copy  1: no need h2d copy
     argsInfo.isNoNeedH2DCopy = (curStm->NonSupportModelCompile()) || (curStm->GetModelNum() == 0U) ? 0U : 1U;

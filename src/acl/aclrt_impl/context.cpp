@@ -82,7 +82,6 @@ aclError aclrtSetCurrentContextImpl(aclrtContext context)
 aclError aclrtGetCurrentContextImpl(aclrtContext *context)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetCurrentContext);
-    ACL_LOG_INFO("start to execute aclrtGetCurrentContext");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(context);
 
     rtContext_t rtCtx = nullptr;
@@ -93,7 +92,6 @@ aclError aclrtGetCurrentContextImpl(aclrtContext *context)
     }
 
     *context = rtCtx;
-    ACL_LOG_INFO("successfully execute aclrtGetCurrentContext");
     return ACL_SUCCESS;
 }
 
@@ -163,7 +161,6 @@ static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
 aclError aclrtCtxGetSysParamOptImpl(aclSysParamOpt opt, int64_t *value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxGetSysParamOpt);
-    ACL_LOG_INFO("start to execute aclrtCtxGetSysParamOpt, opt = %d.", static_cast<int32_t>(opt));
     return GetSysParamOpt(opt, value, true);
 }
 
@@ -177,7 +174,6 @@ aclError aclrtCtxSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 
 aclError aclrtGetSysParamOptImpl(aclSysParamOpt opt, int64_t *value)
 {
-    ACL_LOG_INFO("start to execute aclrtGetSysParamOpt, opt = %d.", static_cast<int32_t>(opt));
     return GetSysParamOpt(opt, value, false);
 }
 
@@ -230,7 +226,6 @@ aclError aclrtCtxGetCurrentDefaultStreamImpl(aclrtStream *stream)
 aclError aclrtCtxGetFloatOverflowAddrImpl(void **overflowAddr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxGetFloatOverflowAddr);
-    ACL_LOG_INFO("start to execute aclrtCtxGetFloatOverflowAddr");
 
     const rtError_t rtErr = rtsCtxGetFloatOverflowAddr(overflowAddr);
     if (rtErr != RT_ERROR_NONE) {
@@ -239,7 +234,6 @@ aclError aclrtCtxGetFloatOverflowAddrImpl(void **overflowAddr)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtCtxGetFloatOverflowAddr");
     return ACL_SUCCESS;
 }
 

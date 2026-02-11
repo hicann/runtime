@@ -127,8 +127,6 @@ rtError_t LoadArgsInfo(TaskInfo *submitTask, Stream *stm, uint16_t taskResId)
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_INFO, "stream_id=%d, task_type=%u.", stm->Id_(),
-        static_cast<uint32_t>(submitTask->type));
     return error;
 }
 
@@ -441,9 +439,6 @@ rtError_t AllocTaskAndSendStars(TaskInfo *submitTask, Stream *stm, uint32_t * co
     taskId = (taskId != MAX_UINT16_NUM) ? ((taskId + 1U) % MAX_UINT16_NUM) : 0U;
     taskResId = taskId % taskPool;
 
-    RT_LOG(RT_LOG_INFO, "alloc taskinfo device_id=%u, stream_id=%d, taskResId=%u, taskResHead_=%u, "
-        "taskResTail_=%u, taskPoolNum_=%u.", stm->taskResMang_->deviceId_, stm->taskResMang_->streamId_, taskResId,
-        stm->taskResMang_->taskResHead_, stm->taskResMang_->taskResTail_, stm->taskResMang_->taskPoolNum_);
     TIMESTAMP_BEGIN(TaskRes_AllocTaskNormal);
     taskInfo = stm->taskResMang_->AllocTaskInfoByTaskResId(stm, taskResId, taskId, submitTask->type);
     TIMESTAMP_END(TaskRes_AllocTaskNormal);

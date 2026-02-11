@@ -233,7 +233,6 @@ rtError_t Module::CalModuleHash(std::size_t &hash) const
 rtError_t Module::GetFunction(const Kernel * const kernelIn, uint64_t * const function) const
 {
     *function = RtPtrToPtr<uintptr_t, void *>(baseAddrAlign_) + kernelIn->Offset_();
-    RT_LOG(RT_LOG_DEBUG, "device kernel func address is %#." PRIx64, *function);
     return RT_ERROR_NONE;
 }
 
@@ -245,9 +244,6 @@ rtError_t Module::GetFunction(const Kernel * const kernelIn, uint64_t * const fu
         *function2 = RtPtrToPtr<uintptr_t, void *>(baseAddrAlign_) + kernelIn->Offset2_();
     }
 
-    RT_LOG(RT_LOG_DEBUG, "device kernel baseAddr is %#" PRIx64", func1 address is %#"
-           PRIx64", func2 address is %#" PRIx64". ",
-           RtPtrToValue(baseAddrAlign_), *function1, *function2);
     return RT_ERROR_NONE;
 }
 

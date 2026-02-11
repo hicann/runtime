@@ -522,7 +522,6 @@ aclError aclrtUnuseStreamResInCurrentThreadImpl(aclrtStream stream)
 aclError aclrtGetResInCurrentThreadImpl(aclrtDevResLimitType type, uint32_t *value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetResInCurrentThread);
-    ACL_LOG_INFO("start to execute aclrtGetResInCurrentThread, type is [%u]", static_cast<uint32_t>(type));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
     const rtError_t rtErr = rtsGetResInCurrentThread(static_cast<rtDevResLimitType_t>(type), value);
     if (rtErr != RT_ERROR_NONE) {
@@ -531,7 +530,6 @@ aclError aclrtGetResInCurrentThreadImpl(aclrtDevResLimitType type, uint32_t *val
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtGetResInCurrentThread, value is [%u]", *value);
     return ACL_SUCCESS;
 }
 

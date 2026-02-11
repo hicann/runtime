@@ -231,8 +231,7 @@ rtError_t ApiImpl::CheckCurCtxValid(const int32_t devId)
 
 Context *ApiImpl::CurrentContext(const bool isNeedSetDevice, int32_t deviceId)
 {
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    static bool setGroupFlag = IS_SUPPORT_CHIP_FEATURE(chipType,
+    static bool setGroupFlag = IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP_DOT_RECORD_GROUPINFO);
 
     Context * const curCtx = InnerThreadLocalContainer::GetCurCtx();
@@ -482,7 +481,6 @@ rtError_t ApiImpl::KernelLaunch(const void * const stubFunc, const uint32_t core
     const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    RT_LOG(RT_LOG_DEBUG, "launch kernel, stubFunc=%p,dim=%u.", stubFunc, coreDim);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -514,7 +512,6 @@ rtError_t ApiImpl::KernelLaunchWithHandle(void * const hdl, const uint64_t tilin
     const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    RT_LOG(RT_LOG_DEBUG, "launch kernel with hdl, dim=%u, tilingKey=%" PRIu64, coreDim, tilingKey);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1227,7 +1224,6 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
 rtError_t ApiImpl::LaunchKernel(Kernel * const kernel, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
     Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo)
 {
-    RT_LOG(RT_LOG_DEBUG, "LaunchKernel blockDim=%u", blockDim);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6876,7 +6872,6 @@ rtError_t ApiImpl::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_
 
 rtError_t ApiImpl::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * const configVal)
 {
-    RT_LOG(RT_LOG_DEBUG, "Start to get sys param opt, opt=%d.", configOpt);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const rtError_t ret = curCtx->CtxGetSysParamOpt(configOpt, configVal);
@@ -6886,7 +6881,6 @@ rtError_t ApiImpl::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t * co
 
 rtError_t ApiImpl::CtxGetOverflowAddr(void ** const overflowAddr)
 {
-    RT_LOG(RT_LOG_DEBUG, "Start to get cur ctx overflow addr.");
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     *overflowAddr = curCtx->CtxGetOverflowAddr();
@@ -7844,12 +7838,29 @@ rtError_t ApiImpl::StreamEndTaskUpdate(Stream * const stm)
 rtError_t ApiImpl::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptureStatus * const status,
                                         Model ** const captureMdl)
 {
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
+    Stream *captureStream = stm->GetCaptureStream();
+    const rtStreamCaptureStatus statusTmp = stm->GetCaptureStatus();
+    Model *mdlTmp = nullptr;
+    uint32_t modelId = 0xFFFFU;
 
-    return curCtx->StreamGetCaptureInfo(stm, status, captureMdl);
+    if ((statusTmp != RT_STREAM_CAPTURE_STATUS_NONE) && (captureStream != nullptr)) {
+        mdlTmp = captureStream->Model_();
+        if (mdlTmp == nullptr) {
+            RT_LOG(RT_LOG_WARNING, "stream is not in capture status, stream_id=%d.", stm->Id_());
+        } else {
+            modelId = mdlTmp->Id_();
+        }
+    }
+
+    if (status != nullptr) {
+        *status = statusTmp;
+    }
+
+    if (captureMdl != nullptr) {
+        *captureMdl = mdlTmp;
+    }
+
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::SetStreamCacheOpInfoSwitch(const Stream * const stm, uint32_t cacheOpInfoSwitch)
@@ -7874,9 +7885,6 @@ rtError_t ApiImpl::GetStreamCacheOpInfoSwitch(const Stream * const stm, uint32_t
     // The ctx is not checked for performance.
     // main stream is not closed & this stream is opened
     *cacheOpInfoSwitch = stm->GetStreamCacheOpInfoSwitch();
-
-    RT_LOG(RT_LOG_DEBUG, "device_id=%u, stream_id=%d, cacheOpInfoSwitch=%u.", stm->Device_()->Id_(), stm->Id_(),
-        *cacheOpInfoSwitch);
 
     return RT_ERROR_NONE;
 }

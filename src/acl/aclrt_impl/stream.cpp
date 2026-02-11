@@ -131,7 +131,6 @@ aclError aclrtDestroyStreamForceImpl(aclrtStream stream)
 aclError aclrtSynchronizeStreamImpl(aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSynchronizeStream);
-    ACL_LOG_INFO("start to execute aclrtSynchronizeStream");
 
     const rtError_t rtErr = rtStreamSynchronize(static_cast<rtStream_t>(stream));
     if (rtErr != RT_ERROR_NONE) {
@@ -145,14 +144,12 @@ aclError aclrtSynchronizeStreamImpl(aclrtStream stream)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("Synchronize stream success");
     return ACL_SUCCESS;
 }
 
 aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSynchronizeStreamWithTimeout);
-    ACL_LOG_INFO("start to execute aclrtSynchronizeStreamWithTimeout, timeout = %dms", timeout);
     constexpr int32_t default_timeout = -1;
     if (timeout < default_timeout) {
         ACL_LOG_CALL_ERROR("the timeout of synchronize stream is invalid");
@@ -175,14 +172,12 @@ aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeo
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("Synchronize stream with timeout success");
     return ACL_SUCCESS;
 }
 
 aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamQuery);
-    ACL_LOG_INFO("start to execute aclrtStreamQuery");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
     const rtError_t rtErr = rtStreamQuery(static_cast<rtStream_t>(stream));
@@ -195,7 +190,6 @@ aclError aclrtStreamQueryImpl(aclrtStream stream, aclrtStreamStatus *status)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtStreamQuery");
     return ACL_SUCCESS;
 }
 
@@ -255,7 +249,6 @@ aclError aclrtStreamGetFlagsImpl(aclrtStream stream, uint32_t *flags)
 aclError aclrtStreamWaitEventImpl(aclrtStream stream, aclrtEvent event)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEvent);
-    ACL_LOG_INFO("start to execute aclrtStreamWaitEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     const rtError_t rtErr = rtStreamWaitEvent(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event));
@@ -264,7 +257,6 @@ aclError aclrtStreamWaitEventImpl(aclrtStream stream, aclrtEvent event)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("stream wait event success");
     return ACL_SUCCESS;
 }
 
@@ -374,7 +366,6 @@ aclError aclrtSetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttr
 aclError aclrtGetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue *value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetStreamAttribute);
-    ACL_LOG_INFO("start to execute aclrtGetStreamAttribute, stmAttrType = [%u]", static_cast<uint32_t>(stmAttrType));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
 
     const rtError_t rtErr = rtsStreamGetAttribute(static_cast<rtStream_t>(stream),
@@ -386,7 +377,6 @@ aclError aclrtGetStreamAttributeImpl(aclrtStream stream, aclrtStreamAttr stmAttr
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtGetStreamAttribute");
     return ACL_SUCCESS;
 }
 

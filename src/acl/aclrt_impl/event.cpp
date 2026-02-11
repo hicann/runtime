@@ -100,7 +100,6 @@ aclError aclrtRecordEventImpl(aclrtEvent event, aclrtStream stream)
 {
      ACL_PROFILING_REG(acl::AclProfType::AclrtRecordEvent);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
-    ACL_LOG_INFO("start to execute aclrtRecordEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     const rtError_t rtErr = rtEventRecord(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream));
@@ -108,7 +107,6 @@ aclError aclrtRecordEventImpl(aclrtEvent event, aclrtStream stream)
         ACL_LOG_CALL_ERROR("record event failed, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("successfully execute aclrtRecordEvent");
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     return ACL_SUCCESS;
 }
@@ -117,7 +115,6 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtResetEvent);
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
-    ACL_LOG_INFO("start to execute aclrtResetEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     const rtError_t rtErr = rtEventReset(static_cast<rtEvent_t>(event), static_cast<rtStream_t>(stream));
@@ -125,7 +122,6 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
         ACL_LOG_CALL_ERROR("reset event failed, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("reset event successfully.");
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_RECORD_RESET_EVENT);
     return ACL_SUCCESS;
 }
@@ -133,7 +129,6 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
 aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEvent);
-    ACL_LOG_INFO("start to execute aclrtQueryEvent");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
@@ -146,14 +141,12 @@ aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
         ACL_LOG_INNER_ERROR("query event status failed, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("successfully execute aclrtQueryEvent");
     return ACL_SUCCESS;
 }
 
 aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus *status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEventStatus);
-    ACL_LOG_INFO("start to execute aclrtQueryEventStatus");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
@@ -169,14 +162,12 @@ aclError aclrtQueryEventStatusImpl(aclrtEvent event, aclrtEventRecordedStatus *s
     } else {
         *status = ACL_EVENT_RECORDED_STATUS_NOT_READY;
     }
-    ACL_LOG_INFO("successfully execute aclrtQueryEventStatus");
     return ACL_SUCCESS;
 }
 
 aclError aclrtQueryEventWaitStatusImpl(aclrtEvent event, aclrtEventWaitStatus *status)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEventWaitStatus);
-    ACL_LOG_INFO("start to execute aclrtQueryEventWaitStatus");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);
 
@@ -192,7 +183,6 @@ aclError aclrtQueryEventWaitStatusImpl(aclrtEvent event, aclrtEventWaitStatus *s
     } else {
         *status = ACL_EVENT_WAIT_STATUS_NOT_READY;
     }
-    ACL_LOG_INFO("successfully execute aclrtQueryEventWaitStatus");
     return ACL_SUCCESS;
 }
 

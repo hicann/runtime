@@ -810,10 +810,10 @@ rtError_t Context::LaunchKernelPrepare(uint32_t &smArgsSize,
 {
     UNUSED(smArgsSize);
     UNUSED(l2ctrl);
-    Runtime * const rt = Runtime::Instance();
     rtError_t error = RT_ERROR_NONE;
 
     if (progHandle == nullptr) {
+        Runtime * const rt = Runtime::Instance();
         TIMESTAMP_BEGIN(rtKernelLaunch_KernelLookup);
         registeredKernel = rt->kernelTable_.Lookup(stubFunc);
         RT_LOG(RT_LOG_DEBUG, "launch kernel, registeredKernel=%s",
@@ -1255,10 +1255,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
             "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.",
             stm->Id_(), kernTask->id, error);
     }
-    RT_LOG(RT_LOG_INFO, "kernel info : stream_id=%d, task_id=%hu, kernelType=%u, "
-           "arg_size=%u, mixType=%u, isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u,",
-           stm->Id_(), kernTask->id, kernelType, argsInfo->argsSize, mixType,
-           argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
+
     if ((mixType != static_cast<uint8_t>(NO_MIX)) && (device_->ArgLoader_()->CheckPcieBar()) &&
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - static_cast<uint32_t>(CONTEXT_ALIGN_LEN))) &&
         !stm->NonSupportModelCompile() && !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
@@ -1271,7 +1268,6 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     } else if (((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
-        RT_LOG(RT_LOG_INFO, "args loader load for no mix");
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoad);
         error = device_->ArgLoader_()->Load(kernelType, argsInfo, l2ctrl, stm, &result);
         TIMESTAMP_END(rtKernelLaunch_ArgLoad);
@@ -1290,7 +1286,6 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
         stm->Id_(), kernTask->id, kernelType, error);
 
     COND_PROC(((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))), isNeedAllocSqeDevBuf = true);
-    RT_LOG(RT_LOG_INFO, "isNeedAllocSqeDevBuf=%u", static_cast<uint32_t>(isNeedAllocSqeDevBuf));
     AicTaskInit(kernTask, kernelType, static_cast<uint16_t>(coreDim), flag, taskcfg, isNeedAllocSqeDevBuf);
 
     aicTask = &kernTask->u.aicTaskInfo;
@@ -1318,12 +1313,14 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     }
 
     RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, "
-        "arg_size=%u, taskRation=%u, funcType=%u, mixType=%hhu, addr1=0x%llx, addr2=0x%llx, "
-        "stubFunc=%p, flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu.",
+        "arg_size=%u, taskRation=%u, funcType=%u, coreDim=%u, mixType=%hhu, addr1=0x%llx, addr2=0x%llx, "
+        "stubFunc=%p, flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
+        "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
         device_->Id_(), stm->Id_(), kernTask->id, kernelType, registeredKernel->Name_().c_str(), argsInfo->argsSize,
-        registeredKernel->GetTaskRation(), registeredKernel->GetFuncType(), mixType, addr1, addr2,
+        registeredKernel->GetTaskRation(), registeredKernel->GetFuncType(), coreDim, mixType, addr1, addr2,
         stubFunc, flag, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
-        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
+        argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
     error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, smArgsSize, prog);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "kernel launch submit failed.");
@@ -1390,11 +1387,6 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
             stm->Id_(), kernTask->id, error);
     }
 
-    RT_LOG(RT_LOG_INFO, "kernel info : stream_id=%d, task_id=%hu, kernelType=%u, "
-           "arg_size=%u, mixType=%u, taskRation=%u, funcType=%u, isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u,",
-           stm->Id_(), kernTask->id, kernelType, argsInfo->argsSize, mixType, taskRation, funcType,
-           argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
-
     if ((mixType != NO_MIX) && (device_->ArgLoader_()->CheckPcieBar()) &&
        (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
        !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
@@ -1458,13 +1450,15 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     }
 
     RT_LOG(RT_LOG_INFO, "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, "
-           "arg_size=%u, mixType=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-           "flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
+           "arg_size=%u, coreDim=%u, mixType=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
+           "flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
+           "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
            device_->Id_(), stm->Id_(), kernTask->id, kernelType,
            (tilingKey == DEFAULT_TILING_KEY) ? "" : registeredKernel->Name_().c_str(),
-           argsInfo->argsSize, mixType, taskRation, funcType, addr1, addr2,
+           argsInfo->argsSize, coreDim, mixType, taskRation, funcType, addr1, addr2,
            flag, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
-           aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
+           aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
+           argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle_SubMit);
     error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, smArgsSize, prog);
@@ -1588,8 +1582,6 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
             stm->Id_(), kernTask->id, error);
     }
 
-    RT_LOG(RT_LOG_DEBUG, "get prefetchCnt1=%u, prefetchCnt1=%u, mixType is %hhu, isNoNeedH2DCopy=%u.",
-        prefetchCnt1, prefetchCnt2, mixType, argsInfo->isNoNeedH2DCopy);
     if ((mixType != NO_MIX) && (device_->ArgLoader_()->CheckPcieBar()) &&
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
         !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
@@ -1602,7 +1594,6 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
     } else if (((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
-        RT_LOG(RT_LOG_INFO, "args loader load for no mix");
         TIMESTAMP_BEGIN(rtLaunchKernel_ArgLoadAll);
         error = device_->ArgLoader_()->Load(kernelType, argsInfo, nullptr, stm, &result);
         TIMESTAMP_END(rtLaunchKernel_ArgLoadAll);
@@ -1642,11 +1633,13 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
 
     RT_LOG(RT_LOG_INFO, "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, arg_size=%u, "
         "coreDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu.",
+        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
+        "prefetchCnt1=%u, prefetchCnt2=%u, isNoNeedH2DCopy=%u.",
         device_->Id_(), stm->Id_(), kernTask->id, kernelType, kernel->Name_().c_str(),
         argsInfo->argsSize, coreDim, kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2,
         mixType, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
-        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
+        prefetchCnt1, prefetchCnt2, argsInfo->isNoNeedH2DCopy);
 
     TIMESTAMP_BEGIN(rtLaunchKernel_SubMit);
     error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, 0, nullptr);

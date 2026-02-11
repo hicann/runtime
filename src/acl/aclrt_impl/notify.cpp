@@ -53,7 +53,6 @@ aclError aclrtDestroyNotifyImpl(aclrtNotify notify)
 aclError aclrtRecordNotifyImpl(aclrtNotify notify, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtRecordNotify);
-    ACL_LOG_INFO("start to execute aclrtRecordNotify");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
 
     const rtError_t rtErr = rtsNotifyRecord(static_cast<rtNotify_t>(notify), static_cast<rtStream_t>(stream));
@@ -62,14 +61,12 @@ aclError aclrtRecordNotifyImpl(aclrtNotify notify, aclrtStream stream)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtRecordNotify");
     return ACL_SUCCESS;
 }
 
 aclError aclrtWaitAndResetNotifyImpl(aclrtNotify notify, aclrtStream stream, uint32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtWaitAndResetNotify);
-    ACL_LOG_INFO("start to execute aclrtWaitAndResetNotify, timeout is [%u]s", timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
 
     const rtError_t rtErr = rtsNotifyWaitAndReset(static_cast<rtNotify_t>(notify),
@@ -79,7 +76,6 @@ aclError aclrtWaitAndResetNotifyImpl(aclrtNotify notify, aclrtStream stream, uin
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
-    ACL_LOG_INFO("successfully execute aclrtWaitAndResetNotify");
     return ACL_SUCCESS;
 }
 

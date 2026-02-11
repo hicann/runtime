@@ -574,8 +574,6 @@ aclError aclrtMemcpyImpl(void *dst,
                          aclrtMemcpyKind kind)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpy);
-    ACL_LOG_INFO("start to execute aclrtMemcpy, destMaxSize = %zu, srcSize = %zu, kind = %d",
-        destMax, count, static_cast<int32_t>(kind));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
 
@@ -618,8 +616,6 @@ aclError aclrtMemcpyAsyncImpl(void *dst,
                               aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyAsync);
-    ACL_LOG_DEBUG("start to execute aclrtMemcpyAsync, destMaxSize = %zu, srcSize = %zu, kind = %d",
-        destMax, count, static_cast<int32_t>(kind));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
     rtMemcpyKind_t rtKindVal = RT_MEMCPY_RESERVED;
@@ -1238,7 +1234,6 @@ aclError aclrtDeviceGetBareTgidImpl(int32_t *pid)
 aclError aclrtCmoAsyncImpl(void *src, size_t size, aclrtCmoType cmoType, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCmoAsync);
-    ACL_LOG_DEBUG("start to execute aclrtCmoAsync");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
     if (size == 0UL) {
         ACL_LOG_ERROR("size must be greater than zero");

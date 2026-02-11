@@ -84,7 +84,6 @@ aclError aclmdlRICaptureGetInfoImpl(aclrtStream stream, aclmdlRICaptureStatus *s
 
     if (status != nullptr) {
         *status = static_cast<aclmdlRICaptureStatus>(static_cast<uint32_t>(rtStatus));
-        ACL_LOG_INFO("capture model status is %u", static_cast<uint32_t>(rtStatus));
     }
 
     if (modelRI != nullptr) {

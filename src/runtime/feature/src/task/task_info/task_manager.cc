@@ -401,8 +401,8 @@ void UpdateFlipNum(TaskInfo *taskInfo, const bool isDisableThread)
     Stream* const stm = taskInfo->stream;
     taskInfo->flipNum = stm->GetTaskIdFlipNum();
 
-    RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, flip_num=%hu.", stm->Id_(), taskInfo->id, taskInfo->flipNum);
     if (taskInfo->id == stm->GetMaxTaskId()) {
+        RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, flip_num=%hu.", stm->Id_(), taskInfo->id, taskInfo->flipNum);
         stm->SetTaskIdFlipNum(stm->GetTaskIdFlipNum() + static_cast<uint16_t>(1));
     }
 }
