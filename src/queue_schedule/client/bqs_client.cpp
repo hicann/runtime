@@ -25,7 +25,7 @@ const int32_t CONNECT_WAIT_TIME_OUT = 10000; // 10s
 const uint32_t MAX_CONNECT_CALL_TIMES = 100U;
 const uint32_t TIMEOUT_CONNECT_CALL_TIMES = 10U;
 const uint32_t CONNECT_CALL_TIME_INTERVAL = 100U; // 100ms
-using MsgHandler = void (*)(int fd, struct EzcomRequest *req);
+using MsgHandler = void (*)(int32_t fd, struct EzcomRequest *req);
 const uint32_t MAX_PAGED_QUEUE_RELATION = 300U;
 const int32_t EZCOMSERVER_NOT_START = -2;
 }

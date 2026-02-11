@@ -218,11 +218,6 @@ namespace AicpuSchedule {
         if (!AicpuUtil::TransStrToUint(para, val)) {
             return false;
         }
-
-        if (val < 0) {
-            return false;
-        }
-
         aicpuProcNum_ = val;
         return true;
     }

@@ -238,7 +238,7 @@ uint32_t EzcomClient::ParseGetBindRespMsg(BQSMsg &bqsRespMsg, std::vector<BQSBin
     bindNum = static_cast<uint32_t>(bqsBindQueueMsgBuff->bind_queue_vec_size());
     BQS_LOG_INFO("Bind relation [get], stage [client], type [response], relation [size:%u]", bindNum);
     for (uint32_t i = 0U; i < bindNum; i++) {
-        const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int>(i));
+        const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int32_t>(i));
         const BQSBindQueueItem bindItem = {
             bqsBindQueueEzMsg.src_queue_id(),
             bqsBindQueueEzMsg.dst_queue_id()
@@ -281,7 +281,7 @@ uint32_t EzcomClient::ParseGetPagedBindRespMsg(BQSMsg &bqsRespMsg, std::vector<B
     bindNum = static_cast<uint32_t>(bqsBindQueueMsgBuff->bind_queue_vec_size());
     BQS_LOG_INFO("Bind relation [get_paged], stage [client], type [response], relation [size:%u]", bindNum);
     for (uint32_t i = 0U; i < bindNum; i++) {
-        const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int>(i));
+        const BQSBindQueueMsg bqsBindQueueEzMsg = bqsBindQueueMsgBuff->bind_queue_vec(static_cast<int32_t>(i));
         const BQSBindQueueItem bindItem = {
             bqsBindQueueEzMsg.src_queue_id(),
             bqsBindQueueEzMsg.dst_queue_id()

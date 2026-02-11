@@ -168,7 +168,7 @@ namespace AicpuSchedule {
         AicpuSchedule::AicpuEventManager::GetInstance().SetRunningFlag(false);
         AicpuSchedule::AicpuCustDumpProcess::GetInstance().UnitDataDumpProcess();
         FeatureCtrl::ClearTsMsgVersionInfo();
-        const uint32_t sleepUsecs = 1000U; // sleep 1ms to avoid SchedWaitEvent error
+        constexpr uint32_t sleepUsecs = 1000U; // sleep 1ms to avoid SchedWaitEvent error
         (void)usleep(sleepUsecs);
         if ((FeatureCtrl::ShouldInitDrvThread()) && (&halDrvEventThreadUninit != nullptr)) {
             const auto unInitRet = halDrvEventThreadUninit(deviceId);
