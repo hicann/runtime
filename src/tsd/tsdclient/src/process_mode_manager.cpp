@@ -39,6 +39,7 @@ const std::string RUNTIME_PKG_NAME = "Ascend-runtime_device-minios.tar.gz";
 const std::string DSHAPE_PKG_NAME = "Ascend-opp_rt-minios.aarch64.tar.gz";
 const std::string UDF_PKG_NAME = "cann-udf-compat.tar.gz";
 const std::string HCCD_PKG_NAME = "cann-hccd-compat.tar.gz";
+const std::string HIXL_PKG_NAME = "cann-hxil-compat.tar.gz";
 constexpr uint32_t COMMON_SUPPORT_TIMEOUT = 10000U;
 constexpr uint32_t OMFILE_LOAD_TIMEOUT = 200000U;
 constexpr uint32_t HELPER_PKG_LOAD_TIMEOUT = 10000U;
@@ -66,7 +67,8 @@ const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP =
     {"cann-hcomm-compat.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
     {HCCD_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
     {"cann-tsch-compat.tar.gz", {tsd::CHIP_ASCEND_910B}},
-    {UDF_PKG_NAME, {tsd::CHIP_ASCEND_910B}}
+    {UDF_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
+    {HIXL_PKG_NAME, {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}}
 };
 const int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
 const std::string MUTEX_FILE_PREFIX = "sink_file_mutex_";
