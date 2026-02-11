@@ -4529,7 +4529,6 @@ rtError_t ApiImpl::SetIpcNotifyPid(const char_t * const name, int32_t pid[], con
     RT_LOG(RT_LOG_DEBUG, "Set ipc notify pid. name=%s.", name);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const Runtime * const rtInstance = Runtime::Instance();
 
     if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
