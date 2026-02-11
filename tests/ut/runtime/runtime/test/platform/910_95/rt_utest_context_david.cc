@@ -111,23 +111,14 @@ TEST_F(DavidContextTest, CopyTilingTabToDevForDavid_ForNewBinaryLoadFlow_Test)
     EXPECT_NE(refObject, nullptr);
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
-
     PlainProgram prog;
     prog.SetIsNewBinaryLoadFlow(true);
     TilingTabl *memoryPtr = new TilingTabl[10];
     uint32_t tilingTabLen = 0U;
-    Module module(device);
     void *devMem = nullptr;
-    MOCKER_CPP(&Context::GetModule)
-        .stubs()
-        .will(returnValue((Module *)nullptr))
-        .then(returnValue(&module));
     auto preType = Runtime::Instance()->chipType_;
     Runtime::Instance()->chipType_ = CHIP_DAVID;
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    error = ctx->CopyTilingTabToDev((Program *)&prog, device, &devMem, &tilingTabLen);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP(&Program::DavidBuildTilingTblForNewFlow)
         .stubs()
         .will(returnValue(1))

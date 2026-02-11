@@ -507,37 +507,41 @@ void Program::DestroyTilingTbl(TilingTabl *tilingTab) const
 
 rtError_t Program::DavidBuildTilingTblForNewFlow(TilingTablForDavid **tilingTab, uint32_t *kernelLen)
 {
-    kernelMapLock_.Lock();
-    const size_t kernelCnt = kernelNameMap_.size();
-    const size_t totalSize = sizeof(TilingTablForDavid) * kernelCnt;
-    TilingTablForDavid *tilingTabInfo = (TilingTablForDavid *)malloc(totalSize);
-    COND_PROC_RETURN_ERROR(tilingTabInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, kernelMapLock_.Unlock(),
-        "Call malloc failed, copy size is %u", totalSize);
+    RT_LOG(RT_LOG_INFO, "kernelPos_ = %u tilingTab size=%u.", kernelPos_, sizeof(TilingTablForDavid));
+    if (kernelPos_ == 0) {
+        RT_LOG(RT_LOG_ERROR, "kernelPos_ == 0.");
+        return RT_ERROR_PROGRAM_SIZE;
+    }
 
+    kernelMapLock_.Lock();
+    const uint32_t size = kernelPos_;
+    TilingTablForDavid* tilingTabInfo = (TilingTablForDavid*)malloc(sizeof(TilingTablForDavid) * size);
+    COND_PROC_RETURN_ERROR(tilingTabInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, kernelMapLock_.Unlock(),	 
+         "Call malloc failed, copy size is %u", (sizeof(TilingTablForDavid) * size));
     uint64_t function1 = 0ULL;
     uint64_t function2 = 0ULL;
-    uint32_t idx = 0U;
     rtError_t err = RT_ERROR_NONE;
-    for (auto iter = kernelNameMap_.begin(); iter != kernelNameMap_.end(); ++iter) {
-        const Kernel * const kernel = iter->second;
-        err = kernel->GetFunctionDevAddr(function1, function2);
+    for (uint32_t i = 0; i < size; i++) {
+        err = KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
         COND_PROC(err != RT_ERROR_NONE, continue);
-        tilingTabInfo[idx].tilingKey = kernel->TilingKey();
-        tilingTabInfo[idx].pcInfo[0] = function1;
-        tilingTabInfo[idx].pcInfo[1] = function2;
-        tilingTabInfo[idx].taskRation = kernel->GetTaskRation();
-        tilingTabInfo[idx].mixType = kernel->GetMixType();
-        tilingTabInfo[idx].u.tilingInfoExt.kernelVfType = kernel->KernelVfType_();
-        tilingTabInfo[idx].u.tilingInfoExt.shareMemSize = kernel->ShareMemSize_();
-        tilingTabInfo[idx].rsv = {0U};
-        idx++;
+        tilingTabInfo[i].tilingKey = KernelTable_[i].TilingKey;
+        tilingTabInfo[i].pcInfo[0] = function1;
+        tilingTabInfo[i].pcInfo[1] = function2;
+        tilingTabInfo[i].taskRation = KernelTable_[i].kernel->GetTaskRation();
+        tilingTabInfo[i].mixType = KernelTable_[i].kernel->GetMixType();
+        tilingTabInfo[i].rsv = {0U};
+        tilingTabInfo[i].u.tilingInfoExt.kernelVfType = KernelTable_[i].kernel->KernelVfType_();
+        tilingTabInfo[i].u.tilingInfoExt.shareMemSize = KernelTable_[i].kernel->ShareMemSize_();
+        RT_LOG(
+            RT_LOG_INFO,
+            "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64 ",taskRation=%u,mixType=%u,i=%u.",
+            tilingTabInfo[i].tilingKey, tilingTabInfo[i].pcInfo[0], tilingTabInfo[i].pcInfo[1],
+            tilingTabInfo[i].taskRation, tilingTabInfo[i].mixType, i);
     }
 
     *tilingTab = tilingTabInfo;
-    *kernelLen = idx;
+    *kernelLen = size;
     kernelMapLock_.Unlock();
-    RT_LOG(RT_LOG_INFO, "kernelCnt=%zu, realCnt=%u, tilingTab size=%u, totalSize=%zu.",
-        kernelCnt, idx, sizeof(TilingTablForDavid), totalSize);
     return RT_ERROR_NONE;
 }
 

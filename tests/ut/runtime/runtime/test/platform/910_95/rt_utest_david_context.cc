@@ -92,12 +92,6 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_ForNewBinaryLoadFlow_Test)
     uint32_t tilingTabLen = 0U;
     Module module(device);
     void *devMem = nullptr;
-    MOCKER_CPP(&Context::GetModule)
-        .stubs()
-        .will(returnValue((Module *)nullptr))
-        .then(returnValue(&module));
-    error = ctx->CopyTilingTabToDev((Program *)&prog, device, &devMem, &tilingTabLen);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Program::DavidBuildTilingTblForNewFlow)
         .stubs()

@@ -790,3 +790,47 @@ TEST_F(ProgramTest, CPU_KERNEL_REG)
 
     delete program;
 }
+
+TEST_F(ProgramTest, Program_build_tiling_tbl_For_David_NewFlow)
+{
+    rtError_t error;
+    Device* device = new RawDevice(0);
+    Program* program = new ElfProgram();
+    program->SetIsNewBinaryLoadFlow(true);
+    program->kernelPos_ = 1;
+    Module* mdl = new Module(device);
+    program->KernelTable_ = new (std::nothrow) rtKernelArray_t[1U];
+    int32_t fun1;
+    Kernel* kernel2 = new Kernel(&fun1, "f1", "", program, 10);
+    program->KernelTable_->kernel = kernel2;
+    program->KernelTable_->TilingKey = 1U;
+
+    TilingTablForDavid* tilingTabForDavid2 = nullptr;
+    uint32_t kernelLen2 = 0U;
+    error = program->BuildTilingTblForDavid(mdl, &tilingTabForDavid2, &kernelLen2);
+    EXPECT_EQ(kernelLen2, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    free(tilingTabForDavid2);
+
+    delete device;
+    delete mdl;
+    delete program;
+}
+
+TEST_F(ProgramTest, Program_build_tiling_tbl_For_David_NewFlow_and_kernelPos_0)
+{
+    rtError_t error;
+    Device* device = new RawDevice(0);
+    Program* program = new ElfProgram();
+    program->SetIsNewBinaryLoadFlow(true);
+    program->kernelPos_ = 0U;
+    Module* mdl = new Module(device);
+    TilingTablForDavid* tilingTabForDavid2 = nullptr;
+    uint32_t kernelLen2 = 0U;
+    error = program->BuildTilingTblForDavid(mdl, &tilingTabForDavid2, &kernelLen2);
+    EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
+    free(tilingTabForDavid2);
+    delete device;
+    delete mdl;
+    delete program;
+}
