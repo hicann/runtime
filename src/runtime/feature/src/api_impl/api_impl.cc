@@ -7331,6 +7331,8 @@ rtError_t ApiImpl::StreamAbort(Stream * const stm)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "StreamAbort failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_ERROR_MSG_INNER((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U,
+        RT_ERROR_STREAM_INVALID,"StreamAbort not support mc2 stream, stream flag=%u.", stm->Flags());
 
     return curCtx->StreamAbort(stm);
 }

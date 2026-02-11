@@ -3920,7 +3920,7 @@ rtError_t Context::StreamClear(const Stream * const stm, rtClearStep_t step) con
     /* check target stream */
     const int32_t streamId = stm->Id_();
 
-    COND_RETURN_ERROR_MSG_INNER((stm->GetBindFlag()), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER((stm->GetBindFlag()), RT_ERROR_STREAM_INVALID,
         "Not support clear model stream");
     COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support clear non-mc2 stream");
@@ -3962,7 +3962,7 @@ rtError_t Context::StreamAbort(Stream * const stm)
     RT_LOG(RT_LOG_INFO, "Enter StreamAbort, stream_id=%d, sq_id=%u, cq_id=%u",
         stm->Id_(), stm->GetSqId(), stm->GetCqId());
     rtError_t ret = RT_ERROR_NONE;
-    COND_RETURN_ERROR_MSG_INNER((stm->GetBindFlag()), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER((stm->GetBindFlag()), RT_ERROR_STREAM_INVALID,
         "model stream abort is not supported");
     //runtime-ts compatibility check;
     const bool isSupported = IsStreamAbortSupported();
