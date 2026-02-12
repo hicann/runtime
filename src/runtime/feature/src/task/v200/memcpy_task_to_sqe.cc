@@ -126,6 +126,26 @@ static void ConstructDavidAsyncUbDbSqe(TaskInfo * const taskInfo, rtDavidSqe_t *
     return;
 }
 
+static void ConstructDavidMemcpySqeForOpCode(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
+    Stream * const stream)
+{
+    MemcpyAsyncTaskInfo * const memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    const uint32_t copyKind = memcpyAsyncTaskInfo->copyKind;
+    const bool isReduce = ((copyKind == RT_MEMCPY_SDMA_AUTOMATIC_ADD) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MAX) ||
+                           (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MIN) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
+
+    RtDavidStarsMemcpySqe *const sqe = &(davidSqe->memcpyAsyncSqe);
+    sqe->opcode = isReduce ? GetOpcodeForReduce(taskInfo) : 0U;
+    RT_LOG(RT_LOG_INFO, "copyKind=%u Opcode=0x%x.", static_cast<uint32_t>(copyKind),
+        static_cast<uint32_t>(sqe->opcode));
+
+    PrintDavidSqe(davidSqe, "sdmaTask");
+    RT_LOG(RT_LOG_INFO, "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=%u, deviceId=%u, streamId=%d,"
+        "taskId=%hu", static_cast<uint32_t>(memcpyAsyncTaskInfo->size), sqe->qos, sqe->mapamPartId, memcpyAsyncTaskInfo->copyType,
+        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id);
+    return;
+}
+
 void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
     uint64_t sqBaseAddr)
 {
@@ -144,9 +164,11 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
             ConstructDavidPcieDmaSqe(taskInfo, davidSqe, sqBaseAddr);
         } else {
             ConstructDavidMemcpySqe(taskInfo, davidSqe, sqBaseAddr);
+            ConstructDavidMemcpySqeForOpCode(taskInfo, davidSqe, stream);
         }
     } else {
         ConstructDavidMemcpySqe(taskInfo, davidSqe, sqBaseAddr);
+        ConstructDavidMemcpySqeForOpCode(taskInfo, davidSqe, stream);
     }
 
     RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask, deviceId=%u, streamId=%d, taskId=%u, copyType=%u",

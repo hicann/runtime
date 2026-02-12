@@ -415,6 +415,7 @@ rtError_t UpdateAddressTaskInit(TaskInfo* taskInfo, uint64_t devAddr, uint64_t l
 uint32_t GetSendSqeNumForDavinciMultipleTask(const TaskInfo * const taskInfo);
 bool IsPcieDma(const uint32_t copyTypeFlag);
 uint8_t GetOpcodeForReduce(TaskInfo * const taskInfo);
+uint8_t ReduceOpcodeLow(TaskInfo * const taskInfo);
 void TaskCommonInfoInit(TaskInfo *taskInfo);
 bool IsSupportType(const uint16_t sqeType);
 uint16_t GetAICpuQos(const TaskInfo * const taskInfo);

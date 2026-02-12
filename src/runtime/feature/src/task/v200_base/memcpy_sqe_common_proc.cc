@@ -158,12 +158,6 @@ void ConstructDavidMemcpySqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davi
     }
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
 
-    const bool isReduce = ((copyKind == RT_MEMCPY_SDMA_AUTOMATIC_ADD) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MAX) ||
-                           (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MIN) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
-
-    sqe->opcode = isReduce ? GetOpcodeForReduce(taskInfo) : 0U;
-    RT_LOG(RT_LOG_INFO, "copyKind=%u Opcode=0x%x.", static_cast<uint32_t>(copyKind),
-        static_cast<uint32_t>(sqe->opcode));
     sqe->srcStreamId = 0x1FU; // get sid and ssid from sq, leave 0 here
     sqe->u.strideMode0.dstStreamId =  0x1FU;
     sqe->srcSubStreamId = 1U;
@@ -212,10 +206,6 @@ void ConstructDavidMemcpySqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davi
         sqe->u.strideMode0.srcOffsetHigh = static_cast<uint16_t>((memcpyAsyncTaskInfo->srcOffset) >> UINT32_BIT_NUM);
         sqe->u.strideMode0.dstOffsetHigh = static_cast<uint16_t>((memcpyAsyncTaskInfo->dstOffset) >> UINT32_BIT_NUM);
     }
-    PrintDavidSqe(davidSqe, "sdmaTask");
-    RT_LOG(RT_LOG_INFO, "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=%u, deviceId=%u, streamId=%d,"
-        "taskId=%hu", static_cast<uint32_t>(memcpyAsyncTaskInfo->size), sqe->qos, sqe->mapamPartId, copyType,
-        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id);
 }
 
 void InitStarsSdmaSqeForDavid(RtDavidStarsMemcpySqe *sdmaSqe, const rtTaskCfgInfo_t * const cfgInfo, const Stream *stm)

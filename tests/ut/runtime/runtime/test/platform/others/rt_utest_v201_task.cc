@@ -713,6 +713,8 @@ TEST_F(TaskTestV201, Test_DqsTask_02)
 
     rtDavidSqe_t davidSqe = {};
     MemcpyAsyncTaskInfo memcpyAsyncTaskInfo = {};
+    memcpyAsyncTaskInfo.copyKind = RT_MEMCPY_SDMA_AUTOMATIC_ADD;
+    memcpyAsyncTaskInfo.copyDataType = RT_DATA_TYPE_UINT32;
     task.u.memcpyAsyncTaskInfo = memcpyAsyncTaskInfo;
     ConstructDavidSqeForMemcpyAsyncTask(&task, &davidSqe, 0);
 

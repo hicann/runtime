@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "driver.hpp"
+#include "npu_driver_base.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
 #include "runtime.hpp"
