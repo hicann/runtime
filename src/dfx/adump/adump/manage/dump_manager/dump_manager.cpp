@@ -96,10 +96,14 @@ DumpManager::DumpManager()
 {
     // enable dump functions with environment variables
     DumpConfig config;
-    // 1. check and enable L1 exception dump with NPU_COLLECT_PATH
-    if (DumpConfigConverter::EnabledExceptionWithEnv(config)) {
-        if (SetDumpConfig(DumpType::EXCEPTION, config) != ADUMP_SUCCESS) {
-            IDE_LOGW("Enable L1 exception dump with env[NPU_COLLECT_PATH] failed!");
+    DumpType dumpType;
+    // 1. enable exception dump with environment variables
+    if (DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType)) {
+        if (SetDumpConfig(dumpType, config) != ADUMP_SUCCESS) {
+            IDE_LOGW("Enable exception dump failed. dumpType: %d", dumpType);
+        }
+        else {
+            isEnvExceptionDump_ = true;
         }
     }
 }
@@ -127,15 +131,12 @@ void DumpManager::KFCResourceInit()
 
 int32_t DumpManager::ExceptionConfig(DumpType dumpType, const DumpConfig &dumpConfig)
 {
-    if ((exceptionDumper_.GetExceptionStatus() || exceptionDumper_.GetArgsExceptionStatus() ||
-            exceptionDumper_.GetCoredumpStatus())) {
-        std::string dumpStatus = dumpConfig.dumpStatus;
-        std::transform(dumpStatus.begin(), dumpStatus.end(), dumpStatus.begin(), ::tolower);
-        if (dumpStatus == "on") {
-            IDE_LOGI("Exception dump is already enable, can't enable dump type[%d] again.", dumpType);
-            return ADUMP_SUCCESS;
-        }
+    if (exceptionDumper_.IsRepeatEnableException(dumpType, dumpConfig)) {
+        IDE_LOGW("Exception dump has been enabled, not support enable exception dump[%s] again",
+            DumpConfigConverter::DumpTypeToStr(dumpType).c_str());
+        return ADUMP_SUCCESS;
     }
+
     if (dumpType == DumpType::AIC_ERR_DETAIL_DUMP && !CheckCoredumpSupportedPlatform()) {
         IDE_LOGE("Current platform is not support coredump mode.");
         return ADUMP_FAILED;
@@ -205,10 +206,18 @@ int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfig
     if (!needDump) {
         return ADUMP_SUCCESS;
     }
+
+    // 已开启exception dump：不支持重复使能，不更新配置缓存，不重复回调注册模块组件
+    if (exceptionDumper_.IsRepeatEnableException(dumpType, dumpConfig)) {
+        IDE_LOGW("Exception dump has been enabled, not support enable exception dump[%s] again",
+            DumpConfigConverter::DumpTypeToStr(dumpType).c_str());
+        return ADUMP_SUCCESS;
+    }
+
     (void)dumpConfigInfo_.assign(dumpConfigData, dumpConfigSize);
     IDE_LOGI("Dump config info set: addr=%p, size=%zu", dumpConfigInfo_.data(), dumpConfigInfo_.size());
     ret = SetDumpConfig(dumpType, dumpConfig);
-    // 同步触发callbcak事件
+    // 同步触发callback事件
     for (auto& item : enableCallbackFunc_) {
         IDE_LOGI("SetDumpConfig HandleDumpEvent start for module [%zu]", item.first);
         HandleDumpEvent(item.first, DumpEnableAction::ENABLE);
@@ -546,6 +555,18 @@ int32_t DumpManager::SaveFile(const char *data, size_t dataLen, const char *file
     return 0;
 }
 
+int32_t DumpManager::CallbackEnvExceptionDumpEvent(AdumpCallback callbackFunc) {
+    if (isEnvExceptionDump_) {
+        IDE_LOGI("Callback module when exception dump enabled with env.");
+        if (exceptionDumper_.GetArgsExceptionStatus() || exceptionDumper_.GetCoredumpStatus()) {
+            return callbackFunc(DUMP_SWITCH_L0_MACK, nullptr, 0);
+        } else if (exceptionDumper_.GetExceptionStatus()) {
+            return callbackFunc(DUMP_SWITCH_L1_MACK, nullptr, 0);
+        }
+    }
+    return ADUMP_SUCCESS;
+}
+
 // DUMP 配置变化时，触发dump事件，同步回调用户接口
 int32_t DumpManager::HandleDumpEvent(uint32_t moduleId, DumpEnableAction action)
 {
@@ -553,8 +574,12 @@ int32_t DumpManager::HandleDumpEvent(uint32_t moduleId, DumpEnableAction action)
     auto callbackFunc = disableCallbackFunc_[moduleId];
     if (action == DumpEnableAction::ENABLE) {
         callbackFunc = enableCallbackFunc_[moduleId];
+        // 回调环境变量开启exception dump
+        (void)CallbackEnvExceptionDumpEvent(callbackFunc);
     }
     if (action == DumpEnableAction::AUTO) {
+        // 回调环境变量开启exception dump
+        (void)CallbackEnvExceptionDumpEvent(enableCallbackFunc_[moduleId]);
         if (dumpConfigInfo_.data() == nullptr || dumpConfigInfo_.size() == 0U) {
             IDE_LOGW("Config data is null or empty. Not trigger HandleDumpEvent.");
             return ADUMP_SUCCESS;
@@ -568,6 +593,7 @@ int32_t DumpManager::HandleDumpEvent(uint32_t moduleId, DumpEnableAction action)
         IDE_LOGE("No registered callback for module %u", moduleId);
         return ADUMP_FAILED;
     }
+
     IDE_LOGI("HandleDumpEvent callbackFunc start for module [%zu]", moduleId);
     IDE_LOGI("HandleDumpEvent callbackFunc switch [%" PRIu64 "]", dumpSwitch);
     IDE_LOGI("HandleDumpEvent callbackFunc Dump config info: addr=%p, size=%zu", dumpConfigInfo_.data(), dumpConfigInfo_.size());

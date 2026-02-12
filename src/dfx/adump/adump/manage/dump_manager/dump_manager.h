@@ -75,6 +75,7 @@ private:
     bool CheckCoredumpSupportedPlatform() const;
     void ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &tensor) const;
     int32_t HandleDumpEvent(uint32_t moduleId, DumpEnableAction action);
+    int32_t CallbackEnvExceptionDumpEvent(AdumpCallback callbackFunc);
     bool registered_ = false;
     bool isKFCInit_ = false;
     ExceptionDumper exceptionDumper_;
@@ -86,6 +87,7 @@ private:
     std::map<uint32_t, AdumpCallback> enableCallbackFunc_;
     std::map<uint32_t, AdumpCallback> disableCallbackFunc_;
     std::string dumpConfigInfo_;
+    bool isEnvExceptionDump_ = false;
 };
 } // namespace Adx
 #endif // DUMP_MANAGER_H

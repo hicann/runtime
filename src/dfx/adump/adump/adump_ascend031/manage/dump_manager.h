@@ -56,11 +56,12 @@ public:
 #endif
 
 private:
-    DumpManager() = default;
+    DumpManager();
     DumpManager(const DumpManager &) = delete;
     DumpManager &operator = (const DumpManager &) = delete;
     int32_t ExceptionConfig(DumpType dumpType, const DumpConfig &dumpConfig);
     void ConvertTensorInfo(const TensorInfo &tensorInfo, TensorInfoV2 &tensor) const;
+    int32_t CallbackEnvExceptionDumpEvent(AdumpCallback callbackFunc);
     std::string GetBinName() const;
     bool CheckBinValidation();
     bool RegsiterExceptionCallback();
@@ -75,6 +76,7 @@ private:
     std::map<uint32_t, AdumpCallback> enableCallbackFunc_;
     std::map<uint32_t, AdumpCallback> disableCallbackFunc_;
     std::string dumpConfigInfo_;
+    bool isEnvExceptionDump_ = false;
 };
 } // namespace Adx
 #endif // DUMP_MANAGER_H

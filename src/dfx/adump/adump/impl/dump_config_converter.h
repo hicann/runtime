@@ -44,6 +44,7 @@ const std::string ADUMP_DUMP_LEVEL_OP = "op";
 const std::string ADUMP_DUMP_LEVEL_KERNEL = "kernel";
 const std::string ADUMP_DUMP_LEVEL_ALL = "all";
 const std::string ADUMP_DUMP_DATA_TENSOR = "tensor";
+const std::string ADUMP_DUMP_DATA_OVERFLOW = "overflow";
 const std::string ADUMP_DUMP_DATA_STATS = "stats";
 const std::string ADUMP_DUMP_LITE_EXCEPTION = "lite_exception";                 // l0 exception dump
 const std::string ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF = "aic_err_brief_dump";    // l0 exception dump
@@ -59,6 +60,14 @@ const std::string ADUMP_DUMP_OPNAME_RANGE_END = "end";
 constexpr int32_t MAX_DUMP_PATH_LENGTH = 512;
 constexpr int32_t MAX_IPV4_ADDRESS_VALUE = 255;
 constexpr int32_t MAX_IPV4_ADDRESS_LENGTH = 4;
+// 使能exception dump
+const std::string ADUMP_ENV_ASCEND_DUMP_SCENE = "ASCEND_DUMP_SCENE";
+// 设置dump路径(使能Kernel内DFX DUMP功能)
+const std::string ADUMP_ENV_ASCEND_DUMP_PATH = "ASCEND_DUMP_PATH";
+// 使能L1 exception dump(优先级低于ASCEND_DUMP_SCENE)
+const std::string ADUMP_ENV_NPU_COLLECT_PATH = "NPU_COLLECT_PATH";
+// 设置dump路径(使能Kernel内DFX DUMP功能，优先级低于ASCEND_DUMP_PATH)
+const std::string ADUMP_ENV_ASCEND_WORK_PATH = "ASCEND_WORK_PATH";
 
 struct RawDumpConfig
 {
@@ -95,16 +104,23 @@ struct AclModelDumpConfig
     std::vector<OpNameRange> dumpOpNameRanges;
 };
 
+struct DumpEnvVariable {
+    std::string ascendDumpScene;
+    std::string ascendDumpPath;
+    std::string npuCollectPath;
+    std::string ascendWorkPath;
+};
+
 class DumpConfigConverter
 {
 public:
-    DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize) 
+    DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize)
     : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize) {};
     ~DumpConfigConverter() = default;
-    int32_t ParseJsonFile() const;
     int32_t Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump);
     bool IsValidDumpConfig() const;
-    static bool EnabledExceptionWithEnv(DumpConfig &dumpConfig);
+    static bool EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, DumpType &dumpType);
+    static std::string DumpTypeToStr(const DumpType dumpType);
 private:
     bool CheckDumpScene(std::string &dumpScene) const;
     bool CheckDumpDebug(std::string &dumpDebug) const;
@@ -132,6 +148,12 @@ private:
                                                const std::string &dumpLevel) const;
     void Split(const std::string &str, const char delim, std::vector<std::string> &elems) const;
     bool IsDigit(const std::string &str) const;
+    static std::string TransOptionsToStr(const std::set<std::string> &options);
+    static bool ConvertDumpScene(const std::string dumpScene, DumpType &dumpType);
+    static bool GetEnvVariable(const std::string &env, std::string &value);
+    static bool CheckDumpPath(const std::string &param, const std::string &dumpPath);
+    static bool GetEnvDumpPath(const std::string &env, std::string &envPath);
+    static void LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable);
     bool CheckDumpStep() const;
     const char *configPath_ = "null";  //后续会下线，默认赋值null，防止日志打印逻辑出现异常
     nlohmann::json dumpJs_;

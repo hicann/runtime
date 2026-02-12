@@ -36,6 +36,7 @@ public:
     int32_t DelDumpOperator(uint32_t deviceId, uint32_t streamId);
     int32_t DumpException(const rtExceptionInfo &exception);
     void ExceptionModeDowngrade();
+    bool IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig);
 
 #ifdef __ADUMP_LLT
     void Reset();

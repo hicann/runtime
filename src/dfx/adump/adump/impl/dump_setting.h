@@ -24,6 +24,8 @@ constexpr char DUMP_TENSOR_DATA[] = "tensor";
 constexpr char DUMP_STATS_DATA[] = "stats";
 constexpr uint64_t DUMP_SWITCH_MASK = 0x00000000FFFFFFFF;
 constexpr uint64_t DUMP_EXTERN_SWITCH_MASK = 0xFFFFFFFF00000000;
+constexpr uint64_t DUMP_SWITCH_L0_MACK = 1U << 2;
+constexpr uint64_t DUMP_SWITCH_L1_MACK = 1U << 3;
 
 class DumpSetting {
 public:

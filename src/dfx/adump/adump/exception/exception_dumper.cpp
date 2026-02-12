@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <set>
+#include <cctype>
+#include <algorithm>
 #include "log/adx_log.h"
 #include "path.h"
 #include "dump_manager.h"
@@ -58,6 +60,20 @@ bool ExceptionDumper::InitArgsExceptionMemory() const
         }
     }
     return true;
+}
+
+bool ExceptionDumper::IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig)
+{
+    if (type == DumpType::ARGS_EXCEPTION || type == DumpType:: EXCEPTION ||
+        type == DumpType::AIC_ERR_DETAIL_DUMP) {
+        std::string dumpStatus = dumpConfig.dumpStatus;
+        std::transform(dumpStatus.begin(), dumpStatus.end(), dumpStatus.begin(), ::tolower);
+        if (dumpStatus != "on") {
+            return false;
+        }
+        return GetCoredumpStatus() || GetExceptionStatus() || GetArgsExceptionStatus();
+    }
+    return false;
 }
 
 int32_t ExceptionDumper::ExceptionDumperInit(DumpType dumpType, const DumpConfig &dumpConfig)

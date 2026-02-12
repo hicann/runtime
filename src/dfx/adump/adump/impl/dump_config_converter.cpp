@@ -22,6 +22,7 @@
 #include "adump_error_manager.h"
 #include "dump_config_converter.h"
 #include "common/json_parser.h"
+#include "common/path.h"
 
 namespace Adx {
 constexpr int32_t DECIMAL = 10;
@@ -36,6 +37,12 @@ const std::map<std::string, std::set<std::string>> dumpValidOptions = {
                         ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM,
                         ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL,
                         ADUMP_DUMP_WATCHER}},
+};
+
+const std::set<std::string> envDumpScenes = {
+    ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF,
+    ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM,
+    ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL
 };
 
 static void from_json(const nlohmann::json &js, RawDumpConfig &config)
@@ -573,14 +580,21 @@ bool DumpConfigConverter::IsValueValid(const std::string key, const std::string 
     if (dumpValidOptions.at(key).find(value) != dumpValidOptions.at(key).end()) {
         return true;
     }
-    std::string validOptionStr;
-    for (auto validOption : dumpValidOptions.at(key)) {
-        validOptionStr += validOption + "/";
-    }
-    validOptionStr.pop_back();
+
+    std::string validOptionStr = TransOptionsToStr(dumpValidOptions.at(key));
     ReportInvalidArgumentError(key, value,
         StrUtils::Format(FIELD_INVALID_VALUE, value.c_str(), key.c_str(), configPath_, validOptionStr.c_str()));
     return false;
+}
+
+std::string DumpConfigConverter::TransOptionsToStr(const std::set<std::string> &options)
+{
+    std::string optionStr;
+    for (auto option : options) {
+        optionStr += option + "/";
+    }
+    optionStr.pop_back();
+    return optionStr;
 }
 
 bool DumpConfigConverter::ConflictWith(const std::string key, const std::string value) const
@@ -638,10 +652,13 @@ DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig &rawDumpCo
     dumpConfig.dumpPath = rawDumpConfig.dumpPath;
     dumpConfig.dumpData = rawDumpConfig.dumpData;
     if (!rawDumpConfig.dumpScene.empty()) {
-        const char *ascendWorkPath = nullptr;
-        MM_SYS_GET_ENV(MM_ENV_ASCEND_WORK_PATH, ascendWorkPath);
-        if (ascendWorkPath != nullptr) {
-            dumpConfig.dumpPath = ascendWorkPath;
+        // 优先级：ASCEND_DUMP_PATH > ASCEND_WORK_PATH > 配置文件 > "./"
+        std::string envDumpPath;
+        if (GetEnvDumpPath(ADUMP_ENV_ASCEND_WORK_PATH, envDumpPath)) {
+            dumpConfig.dumpPath = envDumpPath;
+        }
+        if (GetEnvDumpPath(ADUMP_ENV_ASCEND_DUMP_PATH, envDumpPath)) {
+            dumpConfig.dumpPath = envDumpPath;
         }
     }
     if (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) {
@@ -662,20 +679,45 @@ DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig &rawDumpCo
 
 DumpType DumpConfigConverter::ConvertDumpType(const RawDumpConfig &rawDumpConfig) const
 {
-    if (rawDumpConfig.dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF ||
-        rawDumpConfig.dumpScene == ADUMP_DUMP_LITE_EXCEPTION) {
-        return DumpType::ARGS_EXCEPTION;
-    }
-    if (rawDumpConfig.dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM) {
-        return DumpType::EXCEPTION;
-    }
-    if (rawDumpConfig.dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL) {
-        return DumpType::AIC_ERR_DETAIL_DUMP;
-    }
-    if (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) {
+    DumpType dumpType;
+    if (ConvertDumpScene(rawDumpConfig.dumpScene, dumpType)) {
+        return dumpType;
+    } else if (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) {
         return DumpType::OP_OVERFLOW;
+    } else{
+        return DumpType::OPERATOR;
     }
-    return DumpType::OPERATOR;
+}
+
+bool DumpConfigConverter::ConvertDumpScene(const std::string dumpScene, DumpType &dumpType)
+{
+    if (dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF || dumpScene == ADUMP_DUMP_LITE_EXCEPTION) {
+        dumpType = DumpType::ARGS_EXCEPTION;
+    } else if (dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM) {
+        dumpType = DumpType::EXCEPTION;
+    } else if (dumpScene == ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL) {
+        dumpType = DumpType::AIC_ERR_DETAIL_DUMP;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+std::string DumpConfigConverter::DumpTypeToStr(const DumpType dumpType)
+{
+    if (dumpType == DumpType::ARGS_EXCEPTION) {
+        return ADUMP_DUMP_EXCEPTION_AIC_ERR_BRIEF;
+    } else if (dumpType == DumpType::EXCEPTION) {
+        return ADUMP_DUMP_EXCEPTION_AIC_ERR_NORM;
+    } else if (dumpType == DumpType::AIC_ERR_DETAIL_DUMP) {
+        return ADUMP_DUMP_EXCEPTION_AIC_ERR_DETAIL;
+    } else if (dumpType == DumpType::OP_OVERFLOW) {
+        return ADUMP_DUMP_DATA_OVERFLOW;
+    } else if (dumpType == DumpType::OPERATOR) {
+        return ADUMP_DUMP_DATA_TENSOR;
+    } else {
+        return "unknown";
+    }
 }
 
 bool DumpConfigConverter::NeedDump(const RawDumpConfig &rawDumpConfig) const
@@ -684,7 +726,7 @@ bool DumpConfigConverter::NeedDump(const RawDumpConfig &rawDumpConfig) const
     {
         IDE_LOGI("Dump list size: %zu", dumpJs_["dump_list"].size());
         return true;
-    }  
+    }
     IDE_LOGI("Dump list is not an array or does not exist.");
     if ((rawDumpConfig.dumpOpSwitch == ADUMP_DUMP_STATUS_SWITCH_ON) ||
         (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) ||
@@ -733,21 +775,96 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
     return ADUMP_SUCCESS;
 }
 
-bool DumpConfigConverter::EnabledExceptionWithEnv(DumpConfig &dumpConfig)
+bool DumpConfigConverter::GetEnvVariable(const std::string &env, std::string &value)
 {
-    // Enable L1 exception dump with Env[NPU_COLLECT_PATH/NPU_COLLECT_PATH_EXE]
-    const char *npuCollectPath = nullptr;
-    MM_SYS_GET_ENV(MM_ENV_NPU_COLLECT_PATH, npuCollectPath);
-    if (npuCollectPath == nullptr) {
-        MM_SYS_GET_ENV(MM_ENV_NPU_COLLECT_PATH_EXE, npuCollectPath);
+    if (env.empty()) {
+        return false;
     }
-    if (npuCollectPath != nullptr && npuCollectPath[0] != '\0') {
-        dumpConfig.dumpPath = npuCollectPath;
-        dumpConfig.dumpStatus = "on";
-        IDE_LOGI("Get NPU_COLLECT_PATH: %s.", dumpConfig.dumpPath.c_str());
+    const char* val = std::getenv(env.c_str());
+    if (val != nullptr && val[0] != '\0') {
+        value = val;
+        IDE_LOGI("Get Env[%s] is [%s]", env.c_str(), val);
         return true;
     }
     return false;
 }
 
+bool DumpConfigConverter::CheckDumpPath(const std::string &param, const std::string &dumpPath)
+{
+    Path path(dumpPath);
+    if (!path.CreateDirectory(true)) {
+        IDE_LOGW("Failed to create dump path [%s] for Env[%s]", dumpPath.c_str(), param.c_str());
+        return false;
+    }
+    if (!path.RealPath()) {
+        IDE_LOGW("The dump path [%s] for Env[%s] is not a real path", path.GetCString(), param.c_str());
+        return false;
+    }
+
+    if (!path.IsDirectory()) {
+        IDE_LOGW("The dump path [%s] for Env[%s] is not a directory path", path.GetCString(), param.c_str());
+        return false;
+    }
+
+    constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
+    if (!path.Asccess(accessMode)) {
+        IDE_LOGW("The path [%s] for Env[%s] does not have read and write permission",
+            path.GetCString(), param.c_str());
+        return false;
+    }
+
+    IDE_LOGI("The real dump path [%s]", path.GetCString());
+    return true;
+}
+
+bool DumpConfigConverter::GetEnvDumpPath(const std::string &env, std::string &envPath)
+{
+    std::string tmpPath;
+    if (GetEnvVariable(env, tmpPath)) {
+        if (CheckDumpPath(env, tmpPath)) {
+            envPath = tmpPath;
+            return true;
+        }
+    }
+    return false;
+}
+
+void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
+{
+    std::string envAscendDumpScene;
+    if (GetEnvVariable(ADUMP_ENV_ASCEND_DUMP_SCENE, envAscendDumpScene)) {
+        if (envDumpScenes.find(envAscendDumpScene) != envDumpScenes.end()) {
+            dumpEnvVariable.ascendDumpScene = envAscendDumpScene;
+        } else {
+            std::string optionStr = TransOptionsToStr(envDumpScenes);
+            IDE_LOGW("Value[%s] of Env[ASCEND_DUMP_SCENE] is invalid, it must be %s",
+                envAscendDumpScene.c_str(), optionStr.c_str());
+        }
+    }
+
+    (void)GetEnvDumpPath(ADUMP_ENV_ASCEND_DUMP_PATH, dumpEnvVariable.ascendDumpPath);
+    (void)GetEnvDumpPath(ADUMP_ENV_NPU_COLLECT_PATH, dumpEnvVariable.npuCollectPath);
+    (void)GetEnvDumpPath(ADUMP_ENV_ASCEND_WORK_PATH, dumpEnvVariable.ascendWorkPath);
+}
+
+bool DumpConfigConverter::EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, DumpType &dumpType)
+{
+    DumpEnvVariable dumpEnvVariable;
+    LoadDumpEnvVariables(dumpEnvVariable);
+    if (ConvertDumpScene(dumpEnvVariable.ascendDumpScene, dumpType)) {
+        dumpConfig.dumpPath = !dumpEnvVariable.ascendDumpPath.empty()
+            ? dumpEnvVariable.ascendDumpPath
+            : (dumpEnvVariable.ascendWorkPath.empty() ? "./": dumpEnvVariable.ascendWorkPath);
+        dumpConfig.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_ON;
+        return true;
+    } else if (!dumpEnvVariable.npuCollectPath.empty()) {
+        dumpType = DumpType::EXCEPTION;
+        dumpConfig.dumpPath = dumpEnvVariable.npuCollectPath;
+        dumpConfig.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_ON;
+        return true;
+    } else {
+        IDE_LOGI("No Env enable exception dump");
+        return false;
+    }
+}
 }  // namespace Adx
