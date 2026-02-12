@@ -569,6 +569,7 @@ target_link_libraries(runtime_model PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:tsch_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     $<BUILD_INTERFACE:atrace_headers>
     $<BUILD_INTERFACE:platform_headers>
     $<BUILD_INTERFACE:awatchdog_headers>
@@ -621,6 +622,7 @@ target_link_libraries(runtime_model_v200 PRIVATE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:tsch_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     $<BUILD_INTERFACE:awatchdog_headers>
     $<BUILD_INTERFACE:platform_headers>
     $<BUILD_INTERFACE:atrace_headers>

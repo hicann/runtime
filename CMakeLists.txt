@@ -53,6 +53,8 @@ set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Project top directory"
 set(RUNTIME_PYTHON "python3" CACHE PATH "Python Path")
 set(TARGET_SYSTEM_NAME Linux)
 
+include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)
+
 # third_party
 include(cmake/func.cmake)
 include(cmake/third_party/protobuf.cmake)

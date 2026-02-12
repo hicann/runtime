@@ -788,12 +788,12 @@ rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t ty
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                            const void **stack, uint32_t *stackSize)
 {
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
+    const rtError_t error = apiInstance->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -920,14 +920,6 @@ VISIBILITY_DEFAULT
 rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void **bin, uint32_t *binSize)
 {
     return rtGetBinBuffer(binHandle, RT_BIN_DEVICE_ADDR, bin, binSize);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetStackBuffer(const rtBinHandle binHandle, const rtCoreType_t coreType, const uint16_t coreId,
-    const void **stack, uint32_t *stackSize)
-{
-    return rtGetStackBuffer(
-        binHandle, static_cast<uint32_t>(coreType), static_cast<uint32_t>(coreId), stack, stackSize);
 }
 
 VISIBILITY_DEFAULT

@@ -5048,13 +5048,13 @@ rtError_t ApiErrorDecorator::GetBinBuffer(const rtBinHandle binHandle, const rtB
     return impl_->GetBinBuffer(binHandle, type, bin, binSize);
 }
 
-rtError_t ApiErrorDecorator::GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType,
+rtError_t ApiErrorDecorator::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
     const uint32_t coreId, const void **stack, uint32_t *stackSize)
 {
     NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(stack, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(stackSize, RT_ERROR_INVALID_VALUE);
-    return impl_->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
+    return impl_->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
 rtError_t ApiErrorDecorator::FreeKernelBin(char_t * const buffer)

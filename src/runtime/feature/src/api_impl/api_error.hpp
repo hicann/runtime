@@ -103,7 +103,7 @@ public:
     rtError_t GetKernelBin(const char_t *const binFileName, char_t **const buffer, uint32_t *length) override;
     rtError_t GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin,
                            uint32_t *binSize) override;
-    rtError_t GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+    rtError_t GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                              const void **stack, uint32_t *stackSize) override;
     rtError_t FreeKernelBin(char_t * const buffer) override;
     rtError_t FusionLaunch(void * const fusionInfo, Stream * const stm, rtFusionArgsEx_t *argsInfo) override;

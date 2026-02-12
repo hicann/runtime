@@ -202,7 +202,7 @@ public:
     virtual rtError_t GetKernelBin(const char_t *const binFileName, char_t **const buffer, uint32_t *length) = 0;
     virtual rtError_t GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin,
                                    uint32_t *binSize) = 0;
-    virtual rtError_t GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+    virtual rtError_t GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                                      const void **stack, uint32_t *stackSize) = 0;
     virtual rtError_t FreeKernelBin(char_t * const buffer) = 0;
     virtual rtError_t FusionLaunch(void * const fusionInfo, Stream * const stm, rtFusionArgsEx_t *argsInfo) = 0;

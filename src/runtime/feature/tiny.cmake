@@ -444,6 +444,7 @@ macro(add_runtime_common_library target_name)
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
+            $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:platform_headers>
             $<BUILD_INTERFACE:atrace_headers>
@@ -549,6 +550,7 @@ macro(add_runtime_api_library target_name)
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
+            $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:atrace_headers>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>
@@ -638,6 +640,7 @@ macro(add_runtime_v100_library target_name)
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
+            $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:atrace_headers>
             $<BUILD_INTERFACE:awatchdog_headers>
             $<BUILD_INTERFACE:platform_headers>
@@ -766,6 +769,7 @@ target_link_libraries(static_runtime
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:tsch_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         $<BUILD_INTERFACE:atrace_headers>
         $<BUILD_INTERFACE:awatchdog_headers>
         $<BUILD_INTERFACE:platform_headers>

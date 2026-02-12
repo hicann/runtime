@@ -19,6 +19,7 @@
 #include "register_config.h"
 #include "adump_platform_api.h"
 #include "kernel_info_collector.h"
+#include "inner_kernel.h"
 
 namespace Adx {
 constexpr uint16_t CORE_ID_BIT_MAP_SIZE = 64;

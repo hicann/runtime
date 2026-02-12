@@ -395,6 +395,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/queue_schedule/dgwclient/inc
     ${TOP_DIR}/src/dfx/msprof/include/external/runtime/rts
     ${TOP_DIR}/src/inc/external
+    ${TOP_DIR}/src/inc/runtime
     ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/include/external/acl/error_codes
     ${TOP_DIR}/pkg_inc/runtime/runtime

@@ -1268,20 +1268,6 @@ RTS_API rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferT
 
 /**
  * @ingroup rt_kernel
- * @brief Get Stack Buffer
- * @param [in] binHandle    bin handle
- * @param [in] coreType     core type
- * @param [in] coreId       core id
- * @param [out] stack       stack buffer
- * @param [out] stackSize   stack size
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
-                                   const void **stack, uint32_t *stackSize);
-
-/**
- * @ingroup rt_kernel
  * @brief Free Kernel Bin
  * @param [in] buffer  bin buffer
  * @return RT_ERROR_NONE for ok

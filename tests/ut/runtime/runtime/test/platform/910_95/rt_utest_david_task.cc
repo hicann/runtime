@@ -63,6 +63,7 @@
 #include "fusion_c.hpp"
 #include "aix_c.hpp"
 #include "memory_task.h"
+#include "inner_kernel.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1037,9 +1038,50 @@ TEST_F(TaskTestDavid, get_stack_buffer)
     ApiImplDavid apiImpl;
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, get_stack_buffer_customer)
+{
+    unsigned char *bin_data = g_bin_data;
+    size_t bin_len = sizeof(g_bin_data) / sizeof(g_bin_data[0]);
+    rtBinHandle bin_handle = nullptr;
+    rtDevBinary_t bin;
+    bin.magic = RT_DEV_BINARY_MAGIC_ELF_AICUBE;
+    bin.version = 2;
+    bin.data = bin_data;
+    bin.length = bin_len;
+    EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+
+    ApiImplDavid apiImpl;
+    const void *stack = nullptr;
+    uint32_t stackSize = 0U;
+    MOCKER_CPP(&Program::GetMaxMinStackSize)
+        .stubs()
+        .will(returnValue(KERNEL_STACK_SIZE_32K * 2U));
+    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, get_stack_buffer_simt)
+{
+    unsigned char *bin_data = g_bin_data;
+    size_t bin_len = sizeof(g_bin_data) / sizeof(g_bin_data[0]);
+    rtBinHandle bin_handle = nullptr;
+    rtDevBinary_t bin;
+    bin.magic = RT_DEV_BINARY_MAGIC_ELF_AICUBE;
+    bin.version = 2;
+    bin.data = bin_data;
+    bin.length = bin_len;
+    EXPECT_EQ(rtBinaryLoad(&bin, &bin_handle), RT_ERROR_NONE);
+
+    ApiImplDavid apiImpl;
+    const void *stack = nullptr;
+    uint32_t stackSize = 0U;
+    EXPECT_EQ(apiImpl.GetStackBuffer(bin_handle, 0, 1, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 

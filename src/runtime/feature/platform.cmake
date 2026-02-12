@@ -104,6 +104,7 @@ macro(runtime_platform_910B_obj target_name)
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         $<BUILD_INTERFACE:atrace_headers>
     )
 endmacro()
@@ -135,6 +136,7 @@ macro(runtime_platform_kirin_obj target_name)
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         $<BUILD_INTERFACE:atrace_headers>
     )
 endmacro()
@@ -178,6 +180,7 @@ macro(runtime_platform_others_obj target_name)
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         $<BUILD_INTERFACE:atrace_headers>
     )
 endmacro()
@@ -208,6 +211,7 @@ target_link_libraries(runtime_platform_tiny PRIVATE
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     $<BUILD_INTERFACE:atrace_headers>
 )
 endmacro()

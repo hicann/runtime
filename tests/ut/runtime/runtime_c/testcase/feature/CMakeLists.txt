@@ -96,6 +96,7 @@ target_link_libraries(c_feature_linux_utest
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:c_sec_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         c_sec
         -lgcov
     PUBLIC
@@ -148,6 +149,7 @@ target_link_libraries(c_feature_liteos_utest
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:c_sec_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         c_sec
         -lgcov
     PUBLIC

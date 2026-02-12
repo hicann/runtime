@@ -12,6 +12,7 @@
 #include "error_message_manage.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
+#include "inner_kernel.h"
 
 namespace cce {
 namespace runtime {
@@ -25,6 +26,7 @@ constexpr uint32_t AIC_NUM_ONE_DIE_V100 = 18U;
 constexpr uint32_t AIV_NUM_ONE_DIE_V100 = AIC_NUM_ONE_DIE_V100 * 2U;
 constexpr uint32_t AIC_NUM_V100 = DIE_NUM * AIC_NUM_ONE_DIE_V100;
 constexpr uint32_t AIV_NUM_V100 = DIE_NUM * AIV_NUM_ONE_DIE_V100;
+constexpr uint32_t MAX_WARP_NUM_PER_VECTOR = 64U;
 
 static const std::map<rtDebugMemoryType_t, uint64_t> debugMemSizeMap = {
     {RT_MEM_TYPE_L0A, L0A_L0B_SIZE_V100},
@@ -56,8 +58,12 @@ static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t *const param)
     return RT_ERROR_NONE;
 }
 
-static rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
+static rtError_t CheckCoreParam(const uint32_t stackType, const uint32_t coreType, const uint32_t coreId)
 {
+    COND_RETURN_ERROR(((coreType == RT_CORE_TYPE_AIC && stackType == RT_STACK_TYPE_SIMT)),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "aic does not support SIMT stack type");
+    COND_RETURN_ERROR(((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE,
+        "stackType=%u is invalid, valid range is [0, %d]", stackType, RT_STACK_TYPE_SIMT);
     COND_RETURN_ERROR(((coreType > RT_CORE_TYPE_AIV)), RT_ERROR_INVALID_VALUE,
         "coreType=%u is invalid, valid range is [0, %d]", coreType, RT_CORE_TYPE_AIV);
 
@@ -181,26 +187,35 @@ rtError_t ReadAICoreDebugInfo(const rtDebugMemoryParam_t * const param)
     return DebugReleaseDevMem(curCtx);
 }
 
-rtError_t GetStackBufferInfo(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t GetStackBufferInfo(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
     const void **stack, uint32_t *stackSize)
 {
+    UNUSED(deviceId);
     const Runtime *const rt = Runtime::Instance();
     Context *curCtx = rt->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device *device = curCtx->Device_();
     NULL_PTR_RETURN(device, RT_ERROR_DEVICE_NULL);
-    const auto ret = CheckCoreParam(coreType, coreId);
+    const auto ret = CheckCoreParam(stackType, coreType, coreId);
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
     Program * const programHdl = RtPtrToPtr<Program *>(binHandle);
-    *stackSize = KERNEL_STACK_SIZE_32K;
-    const void *stackPhyBase = device->GetStackPhyBase32k();
-    const uint32_t maxMinStackSize = programHdl->GetMaxMinStackSize();
-    const uint32_t deviceCustomerStackSize = device->GetDeviceAllocStackSize();
-    if ((deviceCustomerStackSize != 0U) && (maxMinStackSize > KERNEL_STACK_SIZE_32K)) {
-        *stackSize = deviceCustomerStackSize;
-        stackPhyBase = device->GetCustomerStackPhyBase();
+    if (stackType == RT_STACK_TYPE_SIMT) {
+        const uint32_t simtWarpStkSize = device->GetSimtWarpStkSize();
+        const uint32_t simtDvgWarpStkSize = device->GetSimtDvgWarpStkSize();
+        *stackSize = MAX_WARP_NUM_PER_VECTOR * (simtWarpStkSize + simtDvgWarpStkSize);
+        const void *stackPhyBase = device->GetSimtStackPhyBase();
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * coreId);
+    } else {
+        *stackSize = KERNEL_STACK_SIZE_32K;
+        const void *stackPhyBase = device->GetStackPhyBase32k();
+        const uint32_t maxMinStackSize = programHdl->GetMaxMinStackSize();
+        const uint32_t deviceCustomerStackSize = device->GetDeviceAllocStackSize();
+        if ((deviceCustomerStackSize != 0U) && (maxMinStackSize > KERNEL_STACK_SIZE_32K)) {
+            *stackSize = deviceCustomerStackSize;
+            stackPhyBase = device->GetCustomerStackPhyBase();
+        }
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * GetDieOffset(coreType, coreId));
     }
-    *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * GetDieOffset(coreType, coreId));
     RT_LOG(RT_LOG_DEBUG, "coreType=%u, coreId=%u, stackSize=%u", coreType, coreId, *stackSize);
     return RT_ERROR_NONE;
 }

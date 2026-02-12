@@ -60,6 +60,7 @@ target_link_libraries(adx_utestonetrack_pub INTERFACE
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     -Wl,--as-needed
     -lpthread
 )

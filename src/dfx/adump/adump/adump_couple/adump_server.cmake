@@ -61,6 +61,7 @@ target_link_libraries(adump_server
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:adcore_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         $<BUILD_INTERFACE:adcore>
         -Wl,--no-as-needed
         runtime

@@ -428,7 +428,7 @@ void DumpCore::DumpCoreStack(const rtBinHandle &binHandle, uint8_t coreType, uin
 {
     const void *stackAddr = nullptr;
     uint32_t stackSize = 0;
-    rtError_t rtRet = rtGetStackBuffer(binHandle, coreType, coreId, &stackAddr, &stackSize);
+    rtError_t rtRet = rtGetStackBuffer(binHandle, 0U, RT_STACK_TYPE_SCALAR, coreType, coreId, &stackAddr, &stackSize);
     if ((rtRet != RT_ERROR_NONE) || (stackAddr == nullptr)) {
         IDE_LOGE("Call rtGetStackBuffer to get stack data failed, coreType: %hhu coreId: %hu, ret: %d",
             coreType, coreId, static_cast<int32_t>(rtRet));

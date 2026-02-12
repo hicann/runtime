@@ -72,6 +72,7 @@ target_link_libraries(adump_server
         $<BUILD_INTERFACE:adcore_headers>
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:npu_runtime_headers>
+        $<BUILD_INTERFACE:npu_runtime_inner_headers>
         -Wl,--no-as-needed
         $<BUILD_INTERFACE:adcore>
         runtime

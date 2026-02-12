@@ -2035,11 +2035,11 @@ rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo *
     return error;
 }
 
-rtError_t ApiImplDavid::GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t ApiImplDavid::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
         const void **stack, uint32_t *stackSize)
 {
-    RT_LOG(RT_LOG_DEBUG, "Get stack buffer, bin handle %p, coreType %u, coreId %u", binHandle, coreType, coreId);
-    return GetStackBufferInfo(binHandle, coreType, coreId, stack, stackSize);
+    RT_LOG(RT_LOG_DEBUG, "Get stack buffer, bin handle %p, stackType %u, coreType %u, coreId %u", binHandle, stackType, coreType, coreId);
+    return GetStackBufferInfo(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
 rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t *const param)

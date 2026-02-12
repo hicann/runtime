@@ -112,6 +112,7 @@ target_link_libraries(ascend_dump PRIVATE
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:adcore_headers>
@@ -176,6 +177,7 @@ target_link_libraries(ascend_dump_static PRIVATE
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:npu_runtime_headers>
+    $<BUILD_INTERFACE:npu_runtime_inner_headers>
     $<BUILD_INTERFACE:msprof_headers>
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:adcore_headers>

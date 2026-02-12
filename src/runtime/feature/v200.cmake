@@ -500,6 +500,7 @@ macro(add_runtime_v200_library target_name)
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
+            $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:atrace_headers>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>
@@ -607,6 +608,7 @@ macro(add_runtime_v201_library target_name)
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:npu_runtime_headers>
+            $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:atrace_headers>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:dl>
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:rt>

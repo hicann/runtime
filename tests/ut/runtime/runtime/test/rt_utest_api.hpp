@@ -60,6 +60,7 @@
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
 #include "platform/platform_info.h"
+#include "inner_kernel.h"
 #undef protected
 #undef private
 

@@ -7033,9 +7033,9 @@ TEST_F(ApiTest, get_bin_and_stack_buffer)
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(rtGetStackBuffer(bin_handle, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 0, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 
@@ -7094,9 +7094,9 @@ TEST_F(ApiTest, rts_get_bin_and_stack_buffer)
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtsGetStackBuffer(bin_handle, RT_CORE_TYPE_AIC, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(rtsGetStackBuffer(bin_handle, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
-    EXPECT_EQ(api.GetStackBuffer(bin_handle, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIC, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(api.GetStackBuffer(bin_handle, 0, 0, RT_CORE_TYPE_AIV, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
 }
 

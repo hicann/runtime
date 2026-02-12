@@ -153,7 +153,7 @@ public:
     rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) override;
     rtError_t GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorInfo) override;
     rtError_t RepairError(const uint32_t deviceId, const rtErrorInfo * const errorInfo) override;
-    rtError_t GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+    rtError_t GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
         const void **stack, uint32_t *stackSize) override;
     rtError_t DebugReadAICore(rtDebugMemoryParam_t *const param) override;
     rtError_t LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData) override;

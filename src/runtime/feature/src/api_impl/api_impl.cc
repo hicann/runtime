@@ -51,6 +51,7 @@
 #include "register_memory.hpp"
 #include "global_state_manager.hpp"
 #include "mem_type.hpp"
+#include "inner_kernel.h"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -7338,12 +7339,15 @@ rtError_t ApiImpl::StreamAbort(Stream * const stm)
     return curCtx->StreamAbort(stm);
 }
 
-rtError_t ApiImpl::GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t ApiImpl::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                                   const void **stack, uint32_t *stackSize)
 {
+    UNUSED(deviceId);
     RT_LOG(RT_LOG_INFO, "Get stack buffer, bin handle %p, coreType %u, coreId %u", binHandle, coreType, coreId);
     Context *const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_ERROR(((stackType > RT_STACK_TYPE_SCALAR)), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "only support scalar stack type");
     return curCtx->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
 }
 

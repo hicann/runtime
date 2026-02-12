@@ -32,6 +32,7 @@
 #include "profiler.hpp"
 #include "rdma_task.h"
 #include "thread_local_container.hpp"
+#include "inner_kernel.h"
 #undef private
 #undef protected
 
@@ -94,7 +95,7 @@ TEST_F(CloudV2CustomerStackSize, getStackBufferMinSize32K)
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(stackSize, KERNEL_STACK_SIZE_32K);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -115,7 +116,7 @@ TEST_F(CloudV2CustomerStackSize, getStackBufferMinSize64K)
 
     const void *stack = nullptr;
     uint32_t stackSize = 0U;
-    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
+    EXPECT_EQ(rtGetStackBuffer(&program, 0, 0, 0, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(stackSize, 114688);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

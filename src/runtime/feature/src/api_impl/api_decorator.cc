@@ -1826,10 +1826,10 @@ rtError_t ApiDecorator::GetBinBuffer(const rtBinHandle binHandle, const rtBinBuf
     return impl_->GetBinBuffer(binHandle, type, bin, binSize);
 }
 
-rtError_t ApiDecorator::GetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t ApiDecorator::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                                        const void **stack, uint32_t *stackSize)
 {
-    return impl_->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
+    return impl_->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
 rtError_t ApiDecorator::FreeKernelBin(char_t * const buffer)

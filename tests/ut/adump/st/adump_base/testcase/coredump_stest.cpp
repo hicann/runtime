@@ -367,19 +367,19 @@ TEST_F(CoredumpStest, Test_Dump_Core_With_Dfx_Static) {
     // stack
     const void *stackAddr = nullptr;
     uint32_t stackSize = 0;
-    rtGetStackBuffer(nullptr, 0, 1, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 0, 1, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData1MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 11, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {1}}};
     globalMemInfoList.emplace_back(stackData1MemInfo);
-    rtGetStackBuffer(nullptr, 1, 2, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 2, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData2MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 12, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {2+25}}};
     globalMemInfoList.emplace_back(stackData2MemInfo);
-    rtGetStackBuffer(nullptr, 1, 66, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 66, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData3MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 13, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {66+25}}};
     globalMemInfoList.emplace_back(stackData3MemInfo);
-    rtGetStackBuffer(nullptr, 1, 67, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 67, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData4MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 14, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {67+25}}};
     globalMemInfoList.emplace_back(stackData4MemInfo);
@@ -439,7 +439,7 @@ TEST_F(CoredumpStest, Test_Dump_Core_With_Dfx_Static) {
     localMemInfoList.emplace_back(localMemInfo);
 
     // dcache stack
-    rtGetStackBuffer(nullptr, 0, 1, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 0, 1, &stackAddr, &stackSize);
     localMemData.emplace_back((const char*)stackAddr);
     localMemInfo.size = stackSize;
     localMemInfo.type = RT_MEM_TYPE_DCACHE;
@@ -461,7 +461,7 @@ TEST_F(CoredumpStest, Test_Dump_Core_With_Dfx_Static) {
     localMemInfoList.emplace_back(localMemInfo);
 
     // dcache stack
-    rtGetStackBuffer(nullptr, 1, 2, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 2, &stackAddr, &stackSize);
     localMemData.emplace_back((const char*)stackAddr);
     localMemInfo.size = stackSize;
     localMemInfo.type = RT_MEM_TYPE_DCACHE;
@@ -1088,19 +1088,19 @@ TEST_F(CoredumpStest, Test_Dump_Core_David) {
     // stack
     const void *stackAddr = nullptr;
     uint32_t stackSize = 0;
-    rtGetStackBuffer(nullptr, 0, 1, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 0, 1, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData1MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 11, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {1}}};
     globalMemInfoList.emplace_back(stackData1MemInfo);
-    rtGetStackBuffer(nullptr, 1, 2, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 2, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData2MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 12, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {2+36}}};
     globalMemInfoList.emplace_back(stackData2MemInfo);
-    rtGetStackBuffer(nullptr, 1, 66, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 66, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData3MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 13, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {66+36}}};
     globalMemInfoList.emplace_back(stackData3MemInfo);
-    rtGetStackBuffer(nullptr, 1, 67, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 67, &stackAddr, &stackSize);
     globalMem.emplace_back((const char*)stackAddr);
     GlobalMemInfo stackData4MemInfo = {reinterpret_cast<uint64_t>(stackAddr), stackSize, 14, DfxTensorType::STACK, .reserve = 0, .extraInfo = {.coreInfo = {67+36}}};
     globalMemInfoList.emplace_back(stackData4MemInfo);
@@ -1160,7 +1160,7 @@ TEST_F(CoredumpStest, Test_Dump_Core_David) {
     localMemInfoList.emplace_back(localMemInfo);
 
     // dcache stack
-    rtGetStackBuffer(nullptr, 0, 1, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 0, 1, &stackAddr, &stackSize);
     localMemData.emplace_back((const char*)stackAddr);
     localMemInfo.size = stackSize;
     localMemInfo.type = RT_MEM_TYPE_DCACHE;
@@ -1182,7 +1182,7 @@ TEST_F(CoredumpStest, Test_Dump_Core_David) {
     localMemInfoList.emplace_back(localMemInfo);
 
     // dcache stack
-    rtGetStackBuffer(nullptr, 1, 2, &stackAddr, &stackSize);
+    rtGetStackBuffer(nullptr, 0, 0, 1, 2, &stackAddr, &stackSize);
     localMemData.emplace_back((const char*)stackAddr);
     localMemInfo.size = stackSize;
     localMemInfo.type = RT_MEM_TYPE_DCACHE;

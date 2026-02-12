@@ -442,9 +442,11 @@ rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t ty
 
 std::map<uint32_t, std::string> g_stackData;
 
-rtError_t rtGetStackBuffer(const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId,
+rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                            const void **stack, uint32_t *stackSize)
 {
+    UNUSED(stackType);
+    UNUSED(deviceId);
     if (coreType == 0) { // aic
         if (g_stackData.find(coreId) != g_stackData.end()) {
             *stack = (void*)g_stackData[coreId].data();

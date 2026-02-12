@@ -561,21 +561,6 @@ RTS_API rtError_t rtsLaunchHostFunc(rtStream_t stm, const rtCallback_t callBackF
  */
 RTS_API rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void **bin, uint32_t *binSize);
 
-
-/**
- * @ingroup rt_kernel
- * @brief Get Stack Buffer
- * @param [in] binHandle    bin handle
- * @param [in] coreType     core type
- * @param [in] coreId       core id
- * @param [out] stack       stack buffer
- * @param [out] stackSize   stack size
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtsGetStackBuffer(const rtBinHandle binHandle, const rtCoreType_t coreType, const uint16_t coreId,
-                                   const void **stack, uint32_t *stackSize);
-
 #if defined(__cplusplus)
 }
 #endif
