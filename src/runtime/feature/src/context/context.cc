@@ -3922,7 +3922,7 @@ rtError_t Context::StreamClear(const Stream * const stm, rtClearStep_t step) con
 
     COND_RETURN_ERROR_MSG_INNER((stm->GetBindFlag()), RT_ERROR_STREAM_INVALID,
         "Not support clear model stream");
-    COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
+    COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U), RT_ERROR_STREAM_INVALID,
         "Not support clear non-mc2 stream");
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         return device_->GetCtrlSQ().SendStreamClearMsg(stm, step, taskGenCallback_);
