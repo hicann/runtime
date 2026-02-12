@@ -27,6 +27,7 @@ target_include_directories(acl_tdt_queue PRIVATE
     ${RUNTIME_DIR}/include/external
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime
  	${RUNTIME_DIR}/src/inc
+    ${RUNTIME_DIR}/src/inc/tdt
 )
 
 target_compile_options(acl_tdt_queue PRIVATE

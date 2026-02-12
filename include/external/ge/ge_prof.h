@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace ge {
  using Status = uint32_t;

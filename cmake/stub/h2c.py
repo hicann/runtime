@@ -141,8 +141,6 @@ def generate_function(header_files):
         print("include concent build success")
         content.append('\n')
         # generate implement
-        if header_file.find("git") >= 0:
-            continue
         if not header_file.endswith('.h'):
             continue
         content.append("// stub for " + os.path.basename(header_file) + "\n")

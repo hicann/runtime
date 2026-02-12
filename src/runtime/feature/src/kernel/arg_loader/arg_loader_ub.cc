@@ -146,7 +146,7 @@ rtError_t UbArgLoader::AllocDynamic(const uint32_t size, UbHandle * const argHan
     error = device_->Driver_()->HostMemAlloc(&tsegInfoAddr, sizeof(struct memTsegInfo), device_->Id_());
     ERROR_PROC_RETURN_MSG_INNER(error, (void)device_->Driver_()->HostMemFree(hostAddr);
                                        (void)device_->Driver_()->DevMemFree(devAddr, device_->Id_());,
-                                       "Alloc mem for tseg info failed, retCode=%#x, size=%u, device_id=%u.",
+                                       "Alloc mem for tseg info failed, retCode=%#x, size=%zu, device_id=%u.",
                                        error, sizeof(struct memTsegInfo), device_->Id_());
     
     argHandle->memTsegInfo = (struct memTsegInfo *)tsegInfoAddr;
