@@ -237,6 +237,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
+    ${TOP_DIR}/src/runtime/feature/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/v100/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/feature/src/utils/capability.cc
@@ -400,6 +401,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/pkg_inc/runtime/runtime/rts
     ${TOP_DIR}/pkg_inc/platform
     ${TOP_DIR}/src/platform
+    ${TOP_DIR}/src/runtime/feature/src/memory/
     ${C_SEC_INCLUDE}
 )
 
@@ -497,6 +499,7 @@ add_executable(runtime_utest_task_910B
     rt_utest_api_test6.cc
     rt_utest_api_device.cc
     rt_utest_api_kernel.cc
+    rt_utest_memory_type.cc
     rt_api_test.cc
     rt_utest_api_memory.cc
     rt_utest_api_mbuf_queue.cc

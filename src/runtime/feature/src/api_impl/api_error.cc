@@ -23,6 +23,8 @@
 #include "global_state_manager.hpp"
 #include "register_memory.hpp"
 #include "starsv2_base.hpp"
+#include "mem_type.hpp"
+
 namespace cce {
 namespace runtime {
 constexpr int16_t MODEL_SCH_GROUP_ID_MIN = 0;
@@ -2073,8 +2075,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(const rtMemLocationType srcLo
     if (it == MemcpyKindReviseMap.end()) {
         // Uncovered combinations: return success, kind unchanged.
         RT_LOG(RT_LOG_INFO,
-               "MemcpyKindAutoCorrect: undefined memory combination src=%d, dst=%d, kind=%d.",
-               srcLocationType, dstLocationType, *kind);
+               "MemcpyKindAutoCorrect: undefined memory combination src=%d(%s), dst=%d(%s), kind=%d.",
+               srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType, MemLocationTypeToStr(dstLocationType),
+               *kind);
         return RT_ERROR_NONE;
     }
     const MemcpyKindReviseRule &rule = it->second;
@@ -2082,8 +2085,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(const rtMemLocationType srcLo
     if (rule.expectKind != RT_MEMCPY_RESERVED) {
         if (*kind != rule.expectKind) {
             RT_LOG(RT_LOG_INFO,
-                   "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d,dst=%d.",
-                   *kind, rule.expectKind, srcLocationType, dstLocationType);
+                   "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d(%s), dst=%d(%s).",
+                   *kind, rule.expectKind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
+                   MemLocationTypeToStr(dstLocationType));
             *kind = rule.expectKind;
         }
         return RT_ERROR_NONE;
@@ -2091,8 +2095,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(const rtMemLocationType srcLo
     // 2) If incoming is DEFAULT -> replace with defaultKind
     if (*kind == RT_MEMCPY_DEFAULT) {
         RT_LOG(RT_LOG_INFO,
-               "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d,dst=%d (default case).",
-               *kind, rule.defaultKind, srcLocationType, dstLocationType);
+               "MemcpyKindAutoCorrect: kind changed from %d to %d for src=%d(%s), dst=%d(%s) (default case).",
+               *kind, rule.defaultKind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType,
+               MemLocationTypeToStr(dstLocationType));
         *kind = rule.defaultKind;
         return RT_ERROR_NONE;
     }
@@ -2103,8 +2108,9 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(const rtMemLocationType srcLo
     // 4) Otherwise illegal -> log expected set and return error
     std::string expected = allowed_list_to_string(rule.allowedKinds);
     RT_LOG(RT_LOG_ERROR,
-           "MemcpyKindAutoCorrect: invalid kind=%d for src=%d,dst=%d; expected one of [%s], actual=%d.",
-           *kind, srcLocationType, dstLocationType, expected.c_str(), *kind);
+           "MemcpyKindAutoCorrect: invalid kind=%d for src=%d(%s), dst=%d(%s); expected one of [%s], actual=%d.",
+           *kind, srcLocationType, MemLocationTypeToStr(srcLocationType), dstLocationType, MemLocationTypeToStr(dstLocationType),
+           expected.c_str(), *kind);
     return RT_ERROR_INVALID_VALUE;
 }
 
@@ -2171,10 +2177,11 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(bool checkKind, rtMemcpyKi
     /* 3) check whether involve pageable host memory */
     isD2HorH2DInvolvePageableMemory = JudgeIsInvolvePageableMemory(checkKind, copyKind, srcLocationType, dstLocationType);
 
-    RT_LOG(RT_LOG_INFO, "kind=%d, checkKind= %d, copyKind=%d, srcLocType=%d, srcRealLocType=%d, dstLocType=%d, "
-        "dstRealLocType=%d, isSupportUserMem=%d, isD2HorH2DInvolvePageableMemory=%d.", kind, checkKind, copyKind,
-        srcLocationType, srcRealLocation, dstLocationType, dstRealLocation, isSupportUserMem,
-        isD2HorH2DInvolvePageableMemory);
+    RT_LOG(RT_LOG_INFO, "kind=%d, checkKind= %d, copyKind=%d, srcLocType=%d(%s), srcRealLocType=%d(%s), dstLocType=%d(%s), "
+        "dstRealLocType=%d(%s), isSupportUserMem=%d, isD2HorH2DInvolvePageableMemory=%d.", kind, checkKind, copyKind,
+        srcLocationType, MemLocationTypeToStr(srcLocationType), srcRealLocation, MemLocationTypeToStr(srcRealLocation),
+        dstLocationType, MemLocationTypeToStr(dstLocationType), dstRealLocation, MemLocationTypeToStr(dstRealLocation),
+        isSupportUserMem, isD2HorH2DInvolvePageableMemory);
 
     return error;
 }
@@ -2315,8 +2322,10 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(void * const dst, const uint64_t dstP
     error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
     COND_RETURN_OUT_ERROR_MSG_CALL((error != RT_ERROR_NONE) || ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) &&
         (copyKind != RT_MEMCPY_DEVICE_TO_HOST)), RT_ERROR_INVALID_VALUE,
-        "Memcpy2d sync only support h2d or d2h, srcLocType=%d, srcLocType=%d, dstLocType=%d, dstRealLocType=%d, copyKind=%d, "
-        "is invalid in default kind!", srcLocationType, srcRealLocation, dstLocationType, dstRealLocation, copyKind);
+        "Memcpy2d sync only support h2d or d2h, srcLocType=%d(%s), srcLocType=%d(%s), dstLocType=%d(%s), "
+        "dstRealLocType=%d(%s), copyKind=%d, is invalid in default kind!", srcLocationType,
+        MemLocationTypeToStr(srcLocationType), srcRealLocation, MemLocationTypeToStr(srcRealLocation), dstLocationType,
+        MemLocationTypeToStr(dstLocationType), dstRealLocation, MemLocationTypeToStr(dstRealLocation), copyKind);
     error = impl_->MemCopy2DSync(dst, dstPitch, src, srcPitch, width, height, copyKind);
     ERROR_RETURN(error, "Memcpy2d sync failed, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
                  ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%d", dstPitch, srcPitch, width, height, copyKind);

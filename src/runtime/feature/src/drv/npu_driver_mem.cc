@@ -19,6 +19,7 @@
 #include "error_message_manage.hpp"
 #include "npu_driver_record.hpp"
 #include "register_memory.hpp"
+#include "mem_type.hpp"
 
 namespace cce {
 namespace runtime {
@@ -2074,7 +2075,8 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         return RT_ERROR_INVALID_VALUE;
     }
 
-    RT_LOG(RT_LOG_DEBUG, "PtrGetRealLocation memType=%u, devId=%u, realLoc=%d", dvAttributes.memType, dvAttributes.devId, realLocation);
+    RT_LOG(RT_LOG_DEBUG, "PtrGetRealLocation memType=%u, devId=%u, realLoc=%d(%s)", dvAttributes.memType,
+        dvAttributes.devId, realLocation, MemLocationTypeToStr(realLocation));
 
     return RT_ERROR_NONE;
 }

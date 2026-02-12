@@ -234,6 +234,7 @@ set(libruntime_common_src_files
     src/task/host_task.cc
     src/task/stars_cond_isa_helper.cc
     src/task/v100/stub_task.cc
+    src/memory/mem_type.cc
     ${libruntime_v100_task_src_files}
     ${libruntime_api_src_files}
     ${libruntime_context_src_files}
@@ -326,6 +327,7 @@ set(libruntime_v100_src_files
     src/task/stars_cond_isa_helper.cc
     src/task/task_fail_callback_manager.cc
     src/task/v100/stub_task.cc
+    src/memory/mem_type.cc
     ${libruntime_v100_task_src_files}
     ${libruntime_context_src_files}
     ${libruntime_stream_src_files}
@@ -383,6 +385,7 @@ set(RUNTIME_INC_DIR_TINY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs

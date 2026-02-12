@@ -388,6 +388,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
+    ${TOP_DIR}/src/runtime/feature/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/v100/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/feature/src/utils/capability.cc
@@ -521,6 +522,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
+    ${TOP_DIR}/src/runtime/feature/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/v200/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/feature/src/utils/capability.cc
@@ -1023,6 +1025,7 @@ set(runtimeut_src_tiny_list_all
     ${TOP_DIR}/src/runtime/feature/src/drv/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
+    ${TOP_DIR}/src/runtime/feature/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/feature/src/task/v100/stub_task.cc
 )
 
@@ -1116,6 +1119,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/src/kernel/arg_loader
     ${TOP_DIR}/src/runtime/feature/src/kernel/args
     ${TOP_DIR}/src/runtime/feature/src/task/
+    ${TOP_DIR}/src/runtime/feature/src/memory/
     ${TOP_DIR}/src
     ${TOP_DIR}/src/runtime/raw_driver
     ${TOP_DIR}/src/runtime/cmodel_driver
@@ -1309,6 +1313,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/logger.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime.cc
+    ${TOP_DIR}/src/runtime/feature/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/runtime_keeper.cc
     ${TOP_DIR}/src/runtime/feature/src/plugin_manage/v200/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/feature/src/utils/capability.cc

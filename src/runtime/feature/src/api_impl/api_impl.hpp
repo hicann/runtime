@@ -20,7 +20,7 @@ enum SplitMode {
     RT_NO_SPLIT_MODE = 0,
     RT_SPLIT_MODE = 1,
 };
- 
+
 // drv split mode
 enum VmngSplitMode {
     RT_VMNG_NORMAL_NONE_SPLIT_MODE = 0,    // 物理机模式

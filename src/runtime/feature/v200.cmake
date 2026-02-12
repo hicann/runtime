@@ -281,6 +281,7 @@ set(libruntime_v200_v201_common_src_files
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc
+    src/memory/mem_type.cc
 )
 
 #------------------------- runtime v200 -------------------------
@@ -382,6 +383,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/src/inc/runtime
     ${RUNTIME_DIR}/pkg_inc/tsd/

@@ -312,6 +312,7 @@ set(libruntime_cmodel_src_files
     src/task/host_task.cc
     src/task/stars_cond_isa_helper.cc
     src/task/v100/stub_task.cc
+    src/memory/mem_type.cc
     ${libruntime_cmodel_v100_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
@@ -426,6 +427,7 @@ set(libruntime_cmodel_v200_src_files
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc
+    src/memory/mem_type.cc
     ${libruntime_cmodel_v200_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
@@ -486,6 +488,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/

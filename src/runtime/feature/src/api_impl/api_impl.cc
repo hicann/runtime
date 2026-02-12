@@ -50,6 +50,7 @@
 #include "task_execute_time.h"
 #include "register_memory.hpp"
 #include "global_state_manager.hpp"
+#include "mem_type.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -2394,8 +2395,8 @@ rtError_t ApiImpl::DevDvppFree(void * const devPtr)
     const rtMemLocationType locationType = attributes.location.type;
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         "Get devPtr pointer attributes failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_ERROR_MSG_INNER(locationType != RT_MEMORY_LOC_DEVICE && locationType != RT_MEMORY_LOC_MANAGED, RT_ERROR_INVALID_VALUE,
-        "Invalid location!, location = %d.", locationType);
+    COND_RETURN_ERROR_MSG_INNER(locationType != RT_MEMORY_LOC_DEVICE && locationType != RT_MEMORY_LOC_MANAGED,
+        RT_ERROR_INVALID_VALUE, "Invalid location!, location = %d(%s).", locationType, MemLocationTypeToStr(locationType));
 #endif
 
     return curDrv->DevMemFree(devPtr, id);
@@ -2501,8 +2502,8 @@ rtError_t ApiImpl::HostFree(void * const hostPtr)
     const rtMemLocationType locationType = attributes.location.type;
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
         "Get hostPtr pointer attributes failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_ERROR_MSG_INNER(locationType != RT_MEMORY_LOC_HOST && locationType != RT_MEMORY_LOC_UNREGISTERED, RT_ERROR_INVALID_VALUE,
-        "location=%d is not host memory.", locationType);
+    COND_RETURN_ERROR_MSG_INNER(locationType != RT_MEMORY_LOC_HOST && locationType != RT_MEMORY_LOC_UNREGISTERED,
+        RT_ERROR_INVALID_VALUE, "location=%d(%s) is not host memory.", locationType, MemLocationTypeToStr(locationType));
 #endif
 
     return curDrv->HostMemFree(hostPtr);
@@ -8507,7 +8508,8 @@ rtError_t ApiImpl::MemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t c
         COND_PROC_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, *failIdx = i,
             "Failed to verify the %zuth memory pair attributes. retCode=%#x", i, static_cast<uint32_t>(error));
         COND_PROC_RETURN_OUT_ERROR_MSG_CALL((realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, *failIdx = i,
-            "Only H2D and D2H copy directions are supported. dstLoc type=%d, srcLoc type=%d.", realDstLoc, realSrcLoc);
+            "Only H2D and D2H copy directions are supported. dstLoc type=%d(%s), srcLoc type=%d(%s).", realDstLoc,
+            MemLocationTypeToStr(realDstLoc), realSrcLoc, MemLocationTypeToStr(realSrcLoc));
     }
     return NpuDriver::MemcpyBatch(reinterpret_cast<uint64_t *>(dsts), reinterpret_cast<uint64_t *>(srcs), sizes, count);
 }
@@ -8522,8 +8524,10 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtMemLocationType inputDstType = (memAttr.dstLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputDstType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
-        "The real memory type of dst is %d, but the input type is %d. Or the real device ID is %d, but the input ID is %d.",
-        memType, memAttr.dstLoc.type, dstAttr.location.id, memAttr.dstLoc.id);
+        "The real memory type of dst is %d(%s), and the input type is %d(%s), dst ptr is 0x%llx. "
+        "Or the real device ID is %d, but the input ID is %d.", dstAttr.location.type,
+        MemLocationTypeToStr(dstAttr.location.type), memAttr.dstLoc.type, MemLocationTypeToStr(memAttr.dstLoc.type),
+        RtPtrToValue(dst), dstAttr.location.id, memAttr.dstLoc.id);
 
     error = PtrGetAttributes(src, &srcAttr);
     ERROR_RETURN(error, "get src attribute failed, error=%#x.", error);
@@ -8531,8 +8535,10 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtMemLocationType inputSrcType = (memAttr.srcLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputSrcType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
-        "The real memory type of src is %d, but the input type is %d. Or the real device ID is %d, but the input ID is %d.",
-        memType, memAttr.srcLoc.type, srcAttr.location.id, memAttr.srcLoc.id);
+        "The real memory type of src is %d(%s), and the input type is %d(%s), src ptr is 0x%llx. "
+        "Or the real device ID is %d, but the input ID is %d.", srcAttr.location.type,
+        MemLocationTypeToStr(srcAttr.location.type), memAttr.srcLoc.type, MemLocationTypeToStr(memAttr.srcLoc.type),
+        RtPtrToValue(src), srcAttr.location.id, memAttr.srcLoc.id);
 
     return RT_ERROR_NONE;
 }
@@ -8572,12 +8578,14 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
         COND_PROC_RETURN_ERROR_MSG_INNER(
             error != RT_ERROR_NONE, error, *failIdx = i,
             "check attributes[%zu] failed, attributes of srcs[%zu] locationType=%d, dsts[%zu] locationType=%d, "
-            "actually srcs[%zu] locationType=%d, dsts[%zu] locationType=%d.",
-            i, i, memAttr.srcLoc.type, i, memAttr.dstLoc.type, i, realSrcLoc, i, realDstLoc);
+            "actually srcs[%zu] locationType=%d(%s), dsts[%zu] locationType=%d(%s).",
+            i, i, memAttr.srcLoc.type, i, memAttr.dstLoc.type, i, realDstLoc, MemLocationTypeToStr(realDstLoc), i,
+            realSrcLoc, MemLocationTypeToStr(realSrcLoc));
 
         COND_PROC_RETURN_ERROR_MSG_INNER((realDstLoc == realSrcLoc),
-            RT_ERROR_INVALID_VALUE, *failIdx = i, "Only H2D and D2H copy directions are supported, dstLoc type=%d, srcLoc type=%d.",
-            realDstLoc, realSrcLoc);
+            RT_ERROR_INVALID_VALUE, *failIdx = i, "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
+            "srcLoc type=%d(%s).", realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
+            MemLocationTypeToStr(realSrcLoc));
 
         if (dstAttr.location.type == RT_MEMORY_LOC_DEVICE) {
             kind = RT_MEMCPY_HOST_TO_DEVICE;
