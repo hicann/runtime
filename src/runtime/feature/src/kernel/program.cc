@@ -88,6 +88,7 @@ Program::~Program()
 
     if ((!isUserData_) && (binary_ != nullptr)) {
         char_t *buff = static_cast<char_t *>(binary_);
+        binary_ = nullptr;
         DELETE_A(buff);
     }
 
