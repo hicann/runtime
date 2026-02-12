@@ -66,7 +66,7 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     exceptionInfo.retcode = 100;
     exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test_mix_aic";
 
     rtFuncHandle func;
     error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func);
@@ -75,7 +75,7 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
     exceptionInfo.expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU;
     exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.bin = RtPtrToPtr<rtBinHandle>(&bin_handle);
-    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test";
+    exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.exceptionKernelInfo.kernelName = "test_mix_aiv";
 
     rtFuncHandle func1;
     error = rtGetFuncHandleFromExceptionInfo(&exceptionInfo, &func1);

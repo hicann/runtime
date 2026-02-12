@@ -8892,6 +8892,26 @@ rtError_t ApiImpl::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info,
     }
 
     error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kernelTmp);
+    // mix kernel retry, remove mix_aic or mix_aiv from kernel name
+    if (error == RT_ERROR_KERNEL_NULL) {
+        std::string originalName(kernelName);
+        std::string adjustedName(kernelName);
+        const std::string mixAicName = "_mix_aic";
+        const std::string mixAivName = "_mix_aiv";
+        const auto aicPos = adjustedName.rfind(mixAicName);
+        if (aicPos != std::string::npos) {
+            adjustedName.erase(aicPos, mixAicName.length());
+        }
+        const auto aivPos = adjustedName.rfind(mixAivName);
+        if (aivPos != std::string::npos) {
+            adjustedName.erase(aivPos, mixAivName.length());
+        }
+
+        if (adjustedName.compare(originalName) != 0) {
+            error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, adjustedName.c_str(), &kernelTmp);
+        }
+    }
+
     ERROR_RETURN(error, "Get func handle from exception info failed, ret=%#x", error);
     RT_LOG(RT_LOG_INFO, "Get func handle from exception info success, binHandle=%p, binHandle_id=%u, kernelName=%p",
         binHandle, binHandle->Id_(), kernelName);
