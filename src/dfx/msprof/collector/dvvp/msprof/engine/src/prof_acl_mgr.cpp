@@ -54,6 +54,9 @@ using namespace Analysis::Dvvp::JobWrapper;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 using namespace Analysis::Dvvp::ProfilerCommon;
 using namespace Collector::Dvvp::Mstx;
+using ProfSignalHandler = void (*)(int);
+
+static ProfSignalHandler oldSigHandler = nullptr;
 
 namespace Msprofiler {
 namespace Api {
@@ -271,12 +274,30 @@ bool ProfAclMgr::IsPureCpuMode()
     return false;
 }
 
+static ProfAclMgr* profAclMgrObjPtr = NULL;
+
+static void newSigHandler(int signum) {
+    if (profAclMgrObjPtr != NULL) {
+        profAclMgrObjPtr->MsprofFinalizeHandle();
+    }
+    if(oldSigHandler && oldSigHandler != SIG_IGN && oldSigHandler != newSigHandler) {
+        oldSigHandler(signum);
+    }
+}
+
+static void RegisterSiganlHandler(ProfAclMgr* ptr) {
+    oldSigHandler = signal(SIGINT, newSigHandler);
+    profAclMgrObjPtr = ptr;
+    MSPROF_LOGI("RegisterSiganlHandler done");
+}
+
 /**
  * Init resources for acl api call
  */
 int32_t ProfAclMgr::Init()
 {
     MSPROF_LOGI("ProfAclMgr Init");
+    RegisterSiganlHandler(this);
     if (isReady_) {
         return PROFILING_SUCCESS;
     }
