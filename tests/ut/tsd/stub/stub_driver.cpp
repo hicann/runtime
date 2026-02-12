@@ -20,7 +20,7 @@
 extern "C" int tsDevSendMsgAsync (unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen, unsigned int handleId);
 static struct event_info g_event = {
     .comm = {
-        .event_id = 1,
+        .event_id = EVENT_DVPP_MSG,
         .subevent_id = 2,
         .pid = 3,
         .host_pid = 4,
@@ -230,9 +230,9 @@ drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *
     (void)vfid;
     (void)cp_type;
     if (pid == 123) {
-        return 0;
+        return DRV_ERROR_NONE;
     } else if (pid == 456) {
-        return 1;
+        return DRV_ERROR_NO_DEVICE;
     } else {
         *host_pid = 456;
     }

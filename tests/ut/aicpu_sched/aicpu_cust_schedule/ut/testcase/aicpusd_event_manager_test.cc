@@ -111,7 +111,6 @@ TEST_F(AicpuEventProcessManagerTest, ProcessEventTest_HWTS_001) {
     char invalidKernelName[] = "";
     char invalidKernelSo[] = "";
     char kernelName[] = "CastV2";
-    char kernelSo[] = "libcust_castv2.so";
     eventMsg->kernel_info.kernel_type = KERNEL_TYPE_AICPU_CUSTOM;
 
     // invalid kernelName addr
@@ -293,10 +292,6 @@ TEST_F(AicpuEventProcessManagerTest, ProcessEventTest_FFTSEvent) {
     struct hwts_ts_task *eventMsg = reinterpret_cast<hwts_ts_task *>(eventInfo.priv.msg);
     eventMsg->mailbox_id = 1;
     eventMsg->serial_no = 9527;
-    char invalidKernelName[] = "";
-    char invalidKernelSo[] = "";
-    char kernelName[] = "CastV2";
-    char kernelSo[] = "libcust_castv2.so";
     eventMsg->kernel_info.kernel_type = KERNEL_TYPE_AICPU_CUSTOM;
 
     // invalid kernelName addr

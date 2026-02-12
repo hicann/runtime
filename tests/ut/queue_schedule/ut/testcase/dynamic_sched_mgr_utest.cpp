@@ -24,15 +24,9 @@ namespace dgw {
 namespace {
     constexpr int32_t kRequestCacheNum = 3;
     void *halMbufGetBuffAddrFakeAddr = nullptr;
-    uint64_t halMbufGetBuffSizeFakeSize = 0U;
     int32_t halMbufGetBuffAddrFake(Mbuf *mbuf, void **buf)
     {
         *buf = halMbufGetBuffAddrFakeAddr;
-        return DRV_ERROR_NONE;
-    }
-    int32_t halMbufGetBuffSizeFake(Mbuf *mbuf, uint64_t *totalSize)
-    {
-        *totalSize = halMbufGetBuffSizeFakeSize;
         return DRV_ERROR_NONE;
     }
 }

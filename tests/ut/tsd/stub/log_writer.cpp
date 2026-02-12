@@ -48,7 +48,7 @@ void LogWriter::Init(const char *szPath, const char *szPrefix)
     snprintf(m_FilePath, PATH_MAX, "%s", szPath);
     snprintf(m_FilePrev, PATH_MAX, "%s", szPrefix);
 
-    snprintf(m_FileName, PATH_MAX, "%s/%s_%u_%.2u.log", m_FilePath, m_FilePrev, m_Pid, m_FileIndex);
+    snprintf(m_FileName, PATH_MAX, "%s/%s_%u_%.2u.log", szPath, szPrefix, m_Pid, m_FileIndex);
 }
 
 void LogWriter::Lock()
@@ -140,7 +140,8 @@ void LogWriter::WriteToFile(const char *szBuf, size_t uiLen)
 
         // 删除备份文件.
         char szBackFile[PATH_MAX] = {0};
-        snprintf(szBackFile, PATH_MAX, "%s/.%s_%u_%.2u.log", m_FilePath, m_FilePrev, m_Pid, m_FileIndex);
+        std::string backFile = std::string(m_FilePath) + "/." + std::string(m_FilePrev);
+        snprintf(szBackFile, PATH_MAX, "%s_%u_%.2u.log", backFile.c_str(), m_Pid, m_FileIndex);
         remove(szBackFile);
 
         // 备份当前文件.
@@ -151,7 +152,8 @@ void LogWriter::WriteToFile(const char *szBuf, size_t uiLen)
         {
             m_FileIndex = 0;
         }
-        snprintf(m_FileName, PATH_MAX, "%s/%s_%u_%.2u.log", m_FilePath, m_FilePrev, m_Pid, m_FileIndex);
+        std::string fileName = std::string(m_FilePath) + "/" + std::string(m_FilePrev);
+        snprintf(m_FileName, PATH_MAX, "%s_%u_%.2u.log", fileName.c_str(), m_Pid, m_FileIndex);
 
         // 开始写新文件.
         m_FileHandle = open(m_FileName, O_TRUNC | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);

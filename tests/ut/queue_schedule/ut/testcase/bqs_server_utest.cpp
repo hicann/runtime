@@ -122,14 +122,6 @@ int EzcomRegisterServiceHandlerFake(int fd, void (*handler)(int, struct EzcomReq
     return 0;
 }
 
-int EzcomCfgInitServerFake(EzcomPipeServerAttr *attr)
-{
-    std::cout << "default EzcomCfgInitServer stub" << std::endl;
-    EzcomCallBack fun = attr->callback;
-    fun(0, "testClent", 9);
-    return 0;
-}
-
 int EzcomCreateServerFake(const struct EzcomServerAttr *attr)
 {
     std::cout << "default EzcomCreateServer stub" << std::endl;
@@ -154,21 +146,6 @@ void BqsCheckAssign32UAddStubOverFlow(const uint32_t para1,
 {
     onceOverFlow = true;
     return;
-}
-
-bool HandleRelationEventFake()
-{
-    std::cout << "HandleRelationEvent stub begin" << std::endl;
-    std::unique_lock<std::mutex> lock(g_mutex);
-
-    while (!g_enqueue) {
-        std::cout << "HandleRelationEvent wait enqueue" << std::endl;
-        g_cv.wait(lock);
-    }
-
-    bqs::BqsServer::GetInstance().BindMsgProc();
-    std::cout << "HandleRelationEvent stub end" << std::endl;
-    return true;
 }
 
 }  // namespace
@@ -288,7 +265,7 @@ TEST_F(BQS_SERVER_UTest, HandleBqsMsgUnsupportFailed)
     EXPECT_EQ(ret, bqs::BQS_STATUS_OK);
 
     bqs::BQSMsg bqsMsg;
-    bqsMsg.set_msg_type(5);
+    bqsMsg.set_msg_type(bqs::BQSMsg::UNUSE);
     EzcomRequest req;
     NewRequest(bqsMsg, req);
     g_msgProc(0, &req);
@@ -313,61 +290,6 @@ TEST_F(BQS_SERVER_UTest, HandleBqsMsgCheckSizeFailed)
     g_msgProc(0, &req);
     DelRequest(req);
 }
-
-/*
-TEST_F(BQS_SERVER_UTest, WaitUnbindMsgProcSuccess)
-{
-    MOCKER(EzcomRegisterServiceHandler).stubs().will(invoke(EzcomRegisterServiceHandlerFake));
-
-    //MOCKER_CPP(&bqs::BqsServer::SendRspMsg).stubs().will(ignoreReturnValue());
-
-    MOCKER_CPP(&bqs::QueueManager::EnqueueRelationEvent).stubs().will(invoke(EnqueueRelationEventFake));
-
-    MOCKER_CPP(&bqs::QueueManager::HandleRelationEvent).stubs().will(invoke(HandleRelationEventFake));
-
-    bqs::BqsStatus ret = bqs::BqsServer::GetInstance().InitBqsServer("DEFAULT", 0);
-    EXPECT_EQ(ret, bqs::BQS_STATUS_OK);
-
-    bqs::BQSMsg bqsReqMsg;
-    bqsReqMsg.set_msg_type(bqs::BQSMsg::UNBIND);
-
-    g_enqueue = false;
-    std::thread handle([] { bqs::QueueManager::GetInstance().HandleRelationEvent(); });
-
-    EzcomRequest req;
-    NewRequest(bqsReqMsg, req);
-    g_msgProc(0, &req);
-    DelRequest(req);
-    handle.join();
-}
-
-
-TEST_F(BQS_SERVER_UTest, WaitBindMsgProcSuccess)
-{
-    MOCKER(EzcomRegisterServiceHandler).stubs().will(invoke(EzcomRegisterServiceHandlerFake));
-
-    //MOCKER_CPP(&bqs::BqsServer::SendRspMsg).stubs().will(ignoreReturnValue());
-
-    MOCKER_CPP(&bqs::QueueManager::EnqueueRelationEvent).stubs().will(invoke(EnqueueRelationEventFake));
-
-    MOCKER_CPP(&bqs::QueueManager::HandleRelationEvent).stubs().will(invoke(HandleRelationEventFake));
-
-    bqs::BqsStatus ret = bqs::BqsServer::GetInstance().InitBqsServer("DEFAULT", 0);
-    EXPECT_EQ(ret, bqs::BQS_STATUS_OK);
-
-    bqs::BQSMsg bqsReqMsg;
-    bqsReqMsg.set_msg_type(bqs::BQSMsg::BIND);
-
-    g_enqueue = false;
-    std::thread handle([] { bqs::QueueManager::GetInstance().HandleRelationEvent(); });
-
-    EzcomRequest req;
-    NewRequest(bqsReqMsg, req);
-    g_msgProc(0, &req);
-    DelRequest(req);
-    handle.join();
-}
-*/
 
 TEST_F(BQS_SERVER_UTest, ParseGetBindMsgBySrcSuccess)
 {
@@ -762,7 +684,7 @@ TEST_F(BQS_SERVER_UTest, ParseUnbindMsgByUnsupportedFailed)
         bqs::BQSQueryMsg* bqsQueryMsg = bqsQueryMsgs->add_query_msg_vec();
         EXPECT_NE(bqsQueryMsg, nullptr);
 
-        bqsQueryMsg->set_key_type(5);
+        bqsQueryMsg->set_key_type(bqs::BQSQueryMsg::BQS_QUERY_TYPE_SRC_OR_DST);
         bqs::BQSBindQueueMsg* bqsBindQueueMsg = bqsQueryMsg->mutable_bind_queue_item();
         EXPECT_NE(bqsBindQueueMsg, nullptr);
 

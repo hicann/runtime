@@ -171,10 +171,10 @@ namespace aicpu {
             SingleSoManager singleSoManager;
             string guardDirName = "guardDirName";
             string soFile = "soFile";
-            char_t *path = "test";
+            char_t path[] = "test";
             MOCKER(realpath)
                 .stubs()
-                .will(returnValue(path));
+                .will(returnValue(&path[0U]));
             auto ret = singleSoManager.CheckSoFile(guardDirName, soFile);
             EXPECT_EQ(AE_STATUS_OPEN_SO_FAILED, ret);
         }
@@ -200,10 +200,10 @@ namespace aicpu {
             MOCKER(dlopen)
                 .stubs()
                 .will(invoke(dlopenStub));
-            char_t *path = "test";
+            char_t path[] = "test";
             MOCKER(realpath)
                 .stubs()
-                .will(returnValue(path));
+                .will(returnValue(&path[0U]));
             void *retHandle  = nullptr;
             auto ret = singleSoManager.OpenSo("test", &retHandle);
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
@@ -215,10 +215,10 @@ namespace aicpu {
             MOCKER(dlopen)
                 .stubs()
                 .will(invoke(dlopenStub));
-            char_t *path = "test";
+            char_t path[] = "test";
             MOCKER(realpath)
                 .stubs()
-                .will(returnValue(path));
+                .will(returnValue(&path[0U]));
             MOCKER(memset_s).stubs().will(returnValue(-1));
             void *retHandle  = nullptr;
             auto ret = singleSoManager.OpenSo("test", &retHandle);
@@ -230,7 +230,6 @@ namespace aicpu {
             SingleSoManager singleSoManager;
             singleSoManager.apiCacher_["test"] = nullptr;
             singleSoManager.soHandle_ = &addr;
-            void *retHandle  = nullptr;
             char_t * const soNamePtr = nullptr;
             void *funcAddrPtr = nullptr;
             auto ret = singleSoManager.GetApi(soNamePtr, "test", &funcAddrPtr);
@@ -275,7 +274,7 @@ namespace aicpu {
         {
             SingleSoManager singleSoManager;
             singleSoManager.soHandle_ = nullptr;
-            char_t * const soNamePtr = "test";
+            const char_t * const soNamePtr = "test";
             void *funcAddrPtr = nullptr;
             void *retHandle = nullptr;
             MOCKER(SingleSoManager::OpenSo)
@@ -434,10 +433,10 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModePCIE));
-            char_t *dirName = "/usr/local/Ascend";
+            char_t dirName[] = "/usr/local/Ascend";
             MOCKER(getenv)
                 .stubs()
-                .will(returnValue(dirName));
+                .will(returnValue(&dirName[0U]));
             auto ret = multiSoManager.GetInnerSoPath(soName, soPath);
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
         }
@@ -577,10 +576,10 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModeStub));
-            char_t *dirName = "";
+            char_t dirName[] = "";
             MOCKER(getenv)
                 .stubs()
-                .will(returnValue(dirName));
+                .will(returnValue(&dirName[0U]));
             auto ret = multiSoManager.GetCustSoPath(soPath);
             EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
         }
@@ -595,10 +594,10 @@ namespace aicpu {
             MOCKER(aicpu::GetAicpuRunMode)
                 .stubs()
                 .will(invoke(GetAicpuRunModeSOCKET));
-            char_t *dirName = "/";
+            char_t dirName[] = "/";
             MOCKER(getenv)
                 .stubs()
-                .will(returnValue(dirName));
+                .will(returnValue(&dirName[0U]));
             auto ret = multiSoManager.GetCustSoPath(soPath);
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
         }

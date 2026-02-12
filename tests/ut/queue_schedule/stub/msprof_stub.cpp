@@ -59,7 +59,7 @@ int32_t MsprofReportApi(uint32_t agingFlag, const MsprofApi *api)
 {
     BQS_LOG_INFO("In %s, agingFlag=%u", __func__, agingFlag);
 
-    BQS_LOG_INFO("level=%u, type=%u, threadId=%u, beginTime=%u, endTime=%lu, itemId=%u",
+    BQS_LOG_INFO("level=%u, type=%u, threadId=%u, beginTime=%lu, endTime=%lu, itemId=%lu",
                  api->level, api->type, api->threadId, api->beginTime, api->endTime, api->itemId);
 
     return 0;
@@ -69,7 +69,7 @@ int32_t MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event)
 {
     BQS_LOG_INFO("In %s, agingFlag=%u", __func__, agingFlag);
 
-    BQS_LOG_INFO("level=%u, type=%u, threadId=%u, requestId=%u, timeStamp=%lu, itemId=%u",
+    BQS_LOG_INFO("level=%u, type=%u, threadId=%u, requestId=%u, timeStamp=%lu, itemId=%lu",
                  event->level, event->type, event->threadId, event->requestId, event->timeStamp, event->itemId);
     return 0;
 }

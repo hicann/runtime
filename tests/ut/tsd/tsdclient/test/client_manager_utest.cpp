@@ -155,8 +155,8 @@ TEST_F(ClientManagerTest, CheckPackageExistsMatch)
 
 TEST_F(ClientManagerTest, GetPackagePathSucc)
 {
-    char *envpath = "/home";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(envpath));
+    char envpath[] = "/home";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&envpath[0U]));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     std::string env = "";
     ClientManager::GetInstance(0)->GetPackagePath(env, 0U);
@@ -264,9 +264,9 @@ TEST_F(ClientManagerTest, GetHdcConctStatusProcessMode)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigToThreadMode)
 {
-    char_t *env = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
-    MOCKER(realpath).stubs().will(returnValue(env));
+    char_t env[] = "./tsd";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
 
     int32_t val = 2;
     MOCKER(GetConfigIniValueInt32).stubs().with(mockcpp::any(), mockcpp::any(), outBound(val))
@@ -277,9 +277,9 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigToThreadMode)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigFailWithoutRunMode)
 {
-    char_t *env = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
-    MOCKER(realpath).stubs().will(returnValue(env));
+    char_t env[] = "./tsd";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
 
     int32_t val = 4;
     MOCKER(GetConfigIniValueInt32).stubs().with(mockcpp::any(), mockcpp::any(), outBound(val))
@@ -290,8 +290,8 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigFailWithoutRunMode)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigFailMemset)
 {
-    char_t *env = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "./tsd";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(memset_s).stubs().will(returnValue(-1));
     RunningMode runningMode = RunningMode::UNSET_MODE;
     EXPECT_FALSE(ClientManager::ResetClientManagerByConfig(runningMode));
@@ -299,8 +299,8 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigFailMemset)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigFailRealpath)
 {
-    char_t *env = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "./tsd";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(memset_s).stubs().will(returnValue(EOK));
     char *a = nullptr;
     MOCKER(realpath)
@@ -385,9 +385,9 @@ TEST_F(ClientManagerTest, GetPackageTitleForCloud)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigGetValFail)
 {
-    char_t *env = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
-    MOCKER(realpath).stubs().will(returnValue(env));
+    char_t env[] = "./tsd_testa";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
     MOCKER_CPP(GetConfigIniValueInt32).stubs().will(returnValue(false));
     RunningMode mode;
     const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
@@ -396,9 +396,9 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigGetValFail)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigProcessMode)
 {
-    char_t *env = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
-    MOCKER(realpath).stubs().will(returnValue(env));
+    char_t env[] = "./tsd_testa";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
     MOCKER_CPP(GetConfigIniValueInt32).stubs().will(invoke(GetConfigIniValueInt32RetProcessMode));
     RunningMode mode;
     const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
@@ -408,9 +408,9 @@ TEST_F(ClientManagerTest, ResetClientManagerByConfigProcessMode)
 
 TEST_F(ClientManagerTest, ResetClientManagerByConfigAicpuThreadMode)
 {
-    char_t *env = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
-    MOCKER(realpath).stubs().will(returnValue(env));
+    char_t env[] = "./tsd_testa";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
     MOCKER_CPP(GetConfigIniValueInt32).stubs().will(invoke(GetConfigIniValueInt32RetAicpuThreadMode));
     RunningMode mode;
     const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
@@ -442,8 +442,8 @@ TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess002)
 TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess001)
 {
     MOCKER_CPP(&ClientManager::IsSupportSetVisibleDevices).stubs().will(returnValue(true));
-    char_t *env = "7,6,5,4";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "7,6,5,4";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     uint32_t userDevId = 1;
     uint32_t logicDevId;
@@ -457,8 +457,8 @@ TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess001)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices01)
 {
-    char_t *env = "";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, false);
@@ -475,8 +475,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices02)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices03)
 {
-    char_t *env = "4,5a,&6,7!";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5a,&6,7!";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -484,8 +484,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices03)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices04)
 {
-    char_t *env = ",4,5a,&6,7!";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = ",4,5a,&6,7!";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -493,8 +493,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices04)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices05)
 {
-    char_t *env = "4,5,";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -502,8 +502,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices05)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices06)
 {
-    char_t *env = "4,5,5,7";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,5,7";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -511,8 +511,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices06)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices07)
 {
-    char_t *env = "4,5,6,7,8";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,6,7,8";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -520,8 +520,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices07)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices08)
 {
-    char_t *env = "4,5,6,7";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,6,7";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -529,8 +529,8 @@ TEST_F(ClientManagerTest, TestGetVisibleDevices08)
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices09)
 {
-    char_t *env = "4,5,2147483648,7";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,2147483648,7";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = ClientManager::GetVisibleDevices();
     EXPECT_EQ(ret, true);

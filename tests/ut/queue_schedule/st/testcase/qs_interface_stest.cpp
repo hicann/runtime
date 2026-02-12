@@ -367,7 +367,6 @@ TEST_F(QsInterfaceStest, ParseArgs_resIds_succ) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0";
     char paraDevIdsOk[] = "--devIds=0,1";
@@ -395,7 +394,6 @@ TEST_F(QsInterfaceStest, ParseArgs_resIds_deviceIds_succ) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0,1";
     char paraDevIdsOk[] = "--devIds=0,2,3";
@@ -423,7 +421,6 @@ TEST_F(QsInterfaceStest, ParseArgs_resIds_deviceIds_failed) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0,1";
     char paraDevIdsOk[] = "--devIds=0,11111111111111111111111111111111";

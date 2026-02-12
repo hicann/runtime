@@ -125,13 +125,9 @@ namespace {
     MBuffList1 mbuffList1 = { 0 };
     MBuffList2 mbuffList2 = { 0 };
     MBuffList3 mbuffList3 = { 0 };
-    // MBuffList4 mbuffList4 = { 0 };
-    queueInfoBuff queueInfo = { 0 };
      // 0:bind mbuffList3 1:unbind mbuffList3 2:querybysrc mbuffList2
      // 3:querybydst mbuffList1 4:querybySrc&dst mbuffList1 5 querybysrc|dst mbuffList1
     uint8_t g_getBuffChoice = 0;
-
-    bool gQueueAuthErrorFlag = true;
 
     bool gCreateQFailFlag = false;
     drvError_t halQueueCreateFake(unsigned int devid, const QueueAttr *queAttr, unsigned int *qid)
@@ -193,7 +189,7 @@ namespace {
                 g_routeHead3.subEventId = ACL_BIND_QUEUE;
                 g_routeHead3.userData = 2000;
                 mbuffList3.qsHead = g_routeHead3;
-                for (int i = 0; i < queueNum; ++i) {
+                for (uint32_t i = 0; i < queueNum; ++i) {
                     mbuffList3.queueRouterList[i] = g_queueRoute[i];
                 }
                 *(MBuffList3**)buf = &(mbuffList3);
@@ -208,7 +204,7 @@ namespace {
                 g_QsQuery.srcId = 100;
                 g_QsQuery.srcType = static_cast<uint16_t>(dgw::EntityType::ENTITY_QUEUE);
                 mbuffList2.qsQuery = g_QsQuery;
-                for (int i = 0; i < bindQueueNumBySrc; ++i) {
+                for (uint32_t i = 0; i < bindQueueNumBySrc; ++i) {
                     mbuffList2.queueRouterList[i] = g_queueQuerySrc[i];
                 }
                 *(MBuffList2**)buf = &(mbuffList2);
@@ -223,7 +219,7 @@ namespace {
                 g_QsQuery.dstType = static_cast<uint16_t>(dgw::EntityType::ENTITY_QUEUE);
                 mbuffList1.qsQuery = g_QsQuery;
                 mbuffList1.qsHead = g_routeHead1;
-                for (int i = 0; i < bindQueueNumByDst; ++i) {
+                for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
                     mbuffList1.queueRouterList[i] = g_queueQueryDst[i];
                 }
                 *(MBuffList1**)buf = &(mbuffList1);
@@ -239,7 +235,7 @@ namespace {
                 g_QsQuery.srcId = 100;
                 g_QsQuery.srcType = static_cast<uint16_t>(dgw::EntityType::ENTITY_QUEUE);
                 mbuffList1.qsQuery = g_QsQuery;
-                for (int i = 0; i < bindQueueNumByDst; ++i) {
+                for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
                     mbuffList1.queueRouterList[i] = g_queueQueryDst[i];
                 }
                 *(MBuffList1**)buf = &(mbuffList1);
@@ -255,7 +251,7 @@ namespace {
                 g_QsQuery.dstId = 103;
                 g_QsQuery.dstType = static_cast<uint16_t>(dgw::EntityType::ENTITY_QUEUE);
                 mbuffList1.qsQuery = g_QsQuery;
-                for (int i = 0; i < bindQueueNumByDst; ++i) {
+                for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
                     mbuffList1.queueRouterList[i] = g_queueQueryDst[i];
                 }
                 *(MBuffList1**)buf = &(mbuffList1);
@@ -265,7 +261,7 @@ namespace {
                 g_routeHead3.subEventId = AICPU_UNBIND_QUEUE;
                 g_routeHead3.userData = 3000;
                 mbuffList3.qsHead = g_routeHead3;
-                for (int i = 0; i < queueNum; ++i) {
+                for (uint32_t i = 0; i < queueNum; ++i) {
                     mbuffList3.queueRouterList[i] = g_queueRouteUnbind[i];
                 }
                 *(MBuffList3**)buf = &(mbuffList3);
@@ -291,48 +287,6 @@ namespace {
         groupQueryOutput->grpQueryGroupsOfProcInfo[0].attr.alloc = 1;
         *outLen = sizeof(groupQueryOutput->grpQueryGroupsOfProcInfo[0]);
         return 0;
-    }
-
-    drvError_t halQueueQueryAllQueue(unsigned int devId, QueueQueryCmdType cmd,
-                             QueueQueryInputPara *inPut, QueueQueryOutputPara *outPut)
-    {
-        if (gQueueAuthErrorFlag) {
-            QueueQueryOutput *queueInfoList = reinterpret_cast<QueueQueryOutput *>(outPut->outBuff);
-            outPut->outLen = totalQueueNum * sizeof(queueInfoList->queQueryQuesOfProcInfo[0]);
-            for (auto i = 0; i < queueNum; ++i) {
-                queueInfoList->queQueryQuesOfProcInfo[i].qid = g_queueRoute[i].srcId;
-                queueInfoList->queQueryQuesOfProcInfo[i].attr.read = 1;
-                queueInfoList->queQueryQuesOfProcInfo[i + queueNum].qid = g_queueRoute[i].dstId;
-                queueInfoList->queQueryQuesOfProcInfo[i + queueNum].attr.write = 0;
-            }
-            return DRV_ERROR_NONE;
-        }
-        QueueQueryOutput *queueInfoList = reinterpret_cast<QueueQueryOutput *>(outPut->outBuff);
-        outPut->outLen = totalQueueNum * sizeof(queueInfoList->queQueryQuesOfProcInfo[0]);
-        for (auto i = 0; i < queueNum; ++i) {
-            queueInfoList->queQueryQuesOfProcInfo[i].qid = g_queueRoute[i].srcId;
-            queueInfoList->queQueryQuesOfProcInfo[i].attr.read = 1;
-            queueInfoList->queQueryQuesOfProcInfo[i + queueNum].qid = g_queueRoute[i].dstId;
-            queueInfoList->queQueryQuesOfProcInfo[i + queueNum].attr.write = 1;
-        }
-        return DRV_ERROR_NONE;
-    }
-    drvError_t halQueueQueryEmpty(unsigned int devId, QueueQueryCmdType cmd,
-                             QueueQueryInputPara *inPut, QueueQueryOutputPara *outPut)
-    {
-        return DRV_ERROR_NONE;
-    }
-
-    drvError_t halQueueQueryFake(unsigned int devId, QueueQueryCmdType cmd,
-                                     QueueQueryInputPara *inPut, QueueQueryOutputPara *outPut)
-    {
-        queueInfoBuff *queueInfoList = reinterpret_cast<queueInfoBuff *>(outPut->outBuff);
-        outPut->outLen = sizeof(queueInfoBuff);
-        queueInfoList->qInfo[0].qid = 10;
-        queueInfoList->qInfo[0].attr =  {0, 1, 0, 0};
-        queueInfoList->qInfo[1].qid = 11;
-        queueInfoList->qInfo[1].attr =  {0, 0, 1, 0};
-        return DRV_ERROR_NONE;
     }
 
     int32_t addr = 1234;
@@ -479,10 +433,10 @@ TEST_F(RouterServerUtest, ManageQsEventSucc04)
 
 TEST_F(RouterServerUtest, WaitSyncMsgProcSucc00)
 {
-    MOCKER_CPP(&QueueManager::GetInstance().EnqueueRelationEvent)
+    MOCKER_CPP(&QueueManager::EnqueueRelationEvent)
     .stubs()
     .will(returnValue(BQS_STATUS_OK));
-    MOCKER_CPP(&QueueManager::GetInstance().EnqueueRelationEventExtra)
+    MOCKER_CPP(&QueueManager::EnqueueRelationEventExtra)
     .stubs()
     .will(returnValue(BQS_STATUS_PARAM_INVALID));
     RouterServer::GetInstance().numaFlag_ = true;
@@ -493,10 +447,10 @@ TEST_F(RouterServerUtest, WaitSyncMsgProcSucc00)
 
 TEST_F(RouterServerUtest, WaitSyncMsgProcSucc01)
 {
-    MOCKER_CPP(&QueueManager::GetInstance().EnqueueRelationEvent)
+    MOCKER_CPP(&QueueManager::EnqueueRelationEvent)
     .stubs()
     .will(returnValue(BQS_STATUS_OK));
-    MOCKER_CPP(&QueueManager::GetInstance().EnqueueRelationEventExtra)
+    MOCKER_CPP(&QueueManager::EnqueueRelationEventExtra)
     .stubs()
     .will(returnValue(BQS_STATUS_OK));
     RouterServer::GetInstance().numaFlag_ = true;
@@ -511,7 +465,7 @@ TEST_F(RouterServerUtest, WaitSyncMsgProcSucc01)
 
 TEST_F(RouterServerUtest, WaitSyncMsgProcFail00)
 {
-    MOCKER_CPP(&QueueManager::GetInstance().EnqueueRelationEvent)
+    MOCKER_CPP(&QueueManager::EnqueueRelationEvent)
     .stubs()
     .will(returnValue(BQS_STATUS_PARAM_INVALID));
     auto ret = RouterServer::GetInstance().WaitSyncMsgProc();
@@ -716,7 +670,7 @@ TEST_F(RouterServerUtest, HandleQueryBySrcSucc01)
         .will(returnValue(1));
     RouterServer::GetInstance().HandleBqsMsg(event);
 
-    for (int i = 0; i < bindQueueNumBySrc; ++i) {
+    for (uint32_t i = 0; i < bindQueueNumBySrc; ++i) {
         EXPECT_EQ(mbuffList2.queueRouterList[i].srcId, 100);
         EXPECT_NE(mbuffList2.queueRouterList[i].dstId, -1);
         EXPECT_EQ(mbuffList2.queueRouterList[i].status, 1U);
@@ -745,7 +699,7 @@ TEST_F(RouterServerUtest, HandleQueryByDstSucc01)
     RouterServer::GetInstance().HandleBqsMsg(event);
     event.comm.subevent_id = bqs::AICPU_QUEUE_RELATION_PROCESS;
     RouterServer::GetInstance().HandleBqsMsg(event);
-    for (int i = 0; i < bindQueueNumByDst; ++i) {
+    for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
         EXPECT_EQ(mbuffList1.queueRouterList[i].srcId, 100);
         EXPECT_EQ(mbuffList1.queueRouterList[i].dstId, 101);
         EXPECT_EQ(mbuffList1.queueRouterList[i].status, 1U);
@@ -774,7 +728,7 @@ TEST_F(RouterServerUtest, HandleQueryBySrcAndDstSucc01)
     RouterServer::GetInstance().HandleBqsMsg(event);
     event.comm.subevent_id = bqs::AICPU_QUEUE_RELATION_PROCESS;
     RouterServer::GetInstance().HandleBqsMsg(event);
-    for (int i = 0; i < bindQueueNumByDst; ++i) {
+    for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
         EXPECT_EQ(mbuffList1.queueRouterList[i].srcId, 100);
         EXPECT_EQ(mbuffList1.queueRouterList[i].dstId, 101);
         EXPECT_EQ(mbuffList1.queueRouterList[i].status, 1U);
@@ -803,7 +757,7 @@ TEST_F(RouterServerUtest, HandleQueryBySrcOrDstSucc01)
     RouterServer::GetInstance().HandleBqsMsg(event);
     event.comm.subevent_id = bqs::AICPU_QUEUE_RELATION_PROCESS;
     RouterServer::GetInstance().HandleBqsMsg(event);
-    for (int i = 0; i < bindQueueNumByDst; ++i) {
+    for (uint32_t i = 0; i < bindQueueNumByDst; ++i) {
         EXPECT_EQ(mbuffList1.queueRouterList[i].srcId, 100);
         EXPECT_EQ(mbuffList1.queueRouterList[i].dstId, 103);
         EXPECT_EQ(mbuffList1.queueRouterList[i].status, 1U);
@@ -852,16 +806,6 @@ TEST_F(RouterServerUtest, HandleProcessUnBindSucc01)
         g_queueRoute[i].status = -1;
     }
 }
-
-// TEST_F(RouterServerUtest, GetAndCheckAuthSucc)
-// {
-//     MOCKER(halQueueQuery)
-//     .stubs()
-//     .will(invoke(halQueueQueryFake));
-//     EntityInfo srcQ(10);
-//     EntityInfo dstQ(11);
-//     RouterServer::GetInstance().AttachAndCheckQueue(srcQ, dstQ);
-// }
 
 TEST_F(RouterServerUtest, PreProcessEventFail)
 {
@@ -1123,7 +1067,7 @@ TEST_F(RouterServerUtest, CreateHcomHandleUT_Fail_CfgLenOverflow)
     HcomHandleInfo cusValue;
     HcomHandleInfo * info = &cusValue;
     info->rankTableLen = UINT_MAX;
-    uintptr_t mbufData = &cusValue;
+    uintptr_t mbufData = reinterpret_cast<uintptr_t>(&cusValue);
     uint64_t dataLen = 1U;
     EXPECT_EQ(cfgInfoOperator_->CreateHcomHandle(mbufData, dataLen), BQS_STATUS_PARAM_INVALID);
 }
@@ -1138,7 +1082,8 @@ TEST_F(RouterServerUtest, DestroyHcomHandle_Fail_Overflow)
     uint64_t dataLen = sizeof(HcomHandleInfo) + sizeof(CfgRetInfo);
     std::cout << "dataLen is " << dataLen << std::endl;
 
-    EXPECT_EQ(cfgInfoOperator_->DestroyHcomHandle(&info, dataLen), BQS_STATUS_PARAM_INVALID);
+    EXPECT_EQ(
+        cfgInfoOperator_->DestroyHcomHandle(reinterpret_cast<uintptr_t>(&info), dataLen), BQS_STATUS_PARAM_INVALID);
 }
 
 TEST_F(RouterServerUtest, ParseConfigEvent_Fail01)
@@ -1148,10 +1093,10 @@ TEST_F(RouterServerUtest, ParseConfigEvent_Fail01)
         .will(returnValue(1));
     std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_;
     cfgInfoOperator_.reset(new (std::nothrow) ConfigInfoOperator(1));
-    uint32_t subEventId;
-    uint32_t queueId;
+    uint32_t subEventId = 0U;
+    uint32_t queueId = 0U;
     void *mbuf = nullptr;
-    uint16_t clientVersion;
+    uint16_t clientVersion = 0U;
     EXPECT_EQ(cfgInfoOperator_->ParseConfigEvent(subEventId, queueId, mbuf, clientVersion), BQS_STATUS_DRIVER_ERROR);
 }
 
@@ -1166,10 +1111,10 @@ TEST_F(RouterServerUtest, ParseConfigEvent_Fail02)
     g_getBuffChoice = 1;
     std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_;
     cfgInfoOperator_.reset(new (std::nothrow) ConfigInfoOperator(1));
-    uint32_t subEventId;
-    uint32_t queueId;
+    uint32_t subEventId = 0U;
+    uint32_t queueId = 0U;
     void *mbuf = nullptr;
-    uint16_t clientVersion;
+    uint16_t clientVersion = 0U;
     EXPECT_EQ(cfgInfoOperator_->ParseConfigEvent(subEventId, queueId, mbuf, clientVersion), BQS_STATUS_DRIVER_ERROR);
 }
 
@@ -1182,9 +1127,9 @@ TEST_F(RouterServerUtest, ParseConfigEvent_default)
     std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_;
     cfgInfoOperator_.reset(new (std::nothrow) ConfigInfoOperator(1));
     uint32_t subEventId = 100;
-    uint32_t queueId;
+    uint32_t queueId = 0U;
     void *mbuf = nullptr;
-    uint16_t clientVersion;
+    uint16_t clientVersion = 0U;
     EXPECT_EQ(cfgInfoOperator_->ParseConfigEvent(subEventId, queueId, mbuf, clientVersion), BQS_STATUS_PARAM_INVALID);
 }
 
@@ -1192,7 +1137,7 @@ TEST_F(RouterServerUtest,QueryGroup_fail)
 {
     std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_;
     cfgInfoOperator_.reset(new (std::nothrow) ConfigInfoOperator(1));
-    uintptr_t mbufData;
+    uintptr_t mbufData = 0U;
     uint64_t datalen = sizeof(ConfigQuery) - 1;
     bool onlyQryNum = false;
     EXPECT_EQ(cfgInfoOperator_->QueryGroup(mbufData, datalen, onlyQryNum), BQS_STATUS_PARAM_INVALID);
@@ -1320,9 +1265,9 @@ TEST_F(RouterServerUtest,AttachQueueInGroup_error)
 
 TEST_F(RouterServerUtest,CheckAndRecordUpdateCfgInfo_error)
 {
-    std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_;
+    std::unique_ptr<ConfigInfoOperator> cfgInfoOperator_ = nullptr;
     cfgInfoOperator_.reset(new (std::nothrow) ConfigInfoOperator(1));
-    const uintptr_t mbufData;
+    const uintptr_t mbufData = 0U;
     EXPECT_EQ(cfgInfoOperator_->CheckAndRecordUpdateCfgInfo(mbufData, 0), BQS_STATUS_PARAM_INVALID);
 }
 

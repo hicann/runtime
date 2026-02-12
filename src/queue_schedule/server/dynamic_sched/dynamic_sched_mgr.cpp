@@ -339,7 +339,7 @@ void DynamicSchedMgr::GetResponseFromCacheResult(std::vector<ResponseInfo> &resp
             responses.emplace_back(std::move(response));
             DGW_LOG_INFO("get response from cache result, root_model_id=%u, src queue_id=%u, " \
                 "logic_id=%u, logic_group_id=%u, result_index=%u.",
-                cacheInfo.first.srcQueueInfo, cacheInfo.first.srcQueueInfo.queueId,
+                cacheInfo.first.srcQueueInfo.rootModelId, cacheInfo.first.srcQueueInfo.queueId,
                 cacheInfo.first.srcQueueInfo.queueLogicId,
                 cacheInfo.second.result.logicGroupId, cacheInfo.second.result.index);
         }
@@ -364,7 +364,7 @@ void DynamicSchedMgr::DynamicSchedDurationPrint()
 {
     BQS_LOG_RUN_INFO("DynamicSched, flowgw data: Total(us)=%lu, Cnt=%lu, Per duration(ns)=%lu, Max duration(ns)=%lu,"
         " Greater 2ms cnt=%lu", durationTotal_ / kMicrosecondToNanosecond, cntTotal_,
-        (durationTotal_ / (cntTotal_ != 0ULL ? cntTotal_ : 1ULL)), durationMax_, durationSize_);
+        (durationTotal_ / (cntTotal_ != 0ULL ? cntTotal_ : 1UL)), durationMax_, durationSize_);
     durationTotal_ = 0ULL;
     cntTotal_ = 0ULL;
     durationMax_ = 0ULL;

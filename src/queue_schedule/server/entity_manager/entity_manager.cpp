@@ -291,7 +291,7 @@ FsmStatus EntityManager::ProbeSrcCommChannel(
     bool emptySched = true;
     (void)pthread_rwlock_rdlock(&srcCommChannels_.lock);
     auto &entities = srcCommChannels_.entities;
-    DGW_LOG_INFO("EntityManager[%u] srcCommChannels_'s size is %u", resIndex_, entities.size());
+    DGW_LOG_INFO("EntityManager[%u] srcCommChannels_'s size is %zu", resIndex_, entities.size());
     for (auto iter = entities.begin(); iter != entities.end(); ++iter) {
         uint32_t probeCount = 0U;
         (void)procFunc(*iter, probeCount);

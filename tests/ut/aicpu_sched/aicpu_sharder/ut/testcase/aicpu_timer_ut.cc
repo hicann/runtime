@@ -227,3 +227,20 @@ TEST_F(AicpuOpTimeoutTest, AicpuStartOpTimerTest)
     aicpu::StopTimer(0);
     EXPECT_EQ(ret, true);
 }
+
+TEST_F(AicpuOpTimeoutTest, RegistTimeoutCallback)
+{
+    const std::function<void ()> timeoutCallback = [this]() {
+        return;
+    };
+
+    TimerHandle timerId = 0;
+    AicpuTimer timer;
+    EXPECT_EQ(timer.RegistTimeoutCallback(timerId, timeoutCallback), TimerStatus::AICPU_TIMER_SUCCESS);
+    // Fail for repeated adding
+    EXPECT_EQ(timer.RegistTimeoutCallback(timerId, timeoutCallback), TimerStatus::AICPU_TIMER_FAILED);
+
+    EXPECT_EQ(timer.UnregistTimeoutCallback(timerId), TimerStatus::AICPU_TIMER_FAILED);
+    // Fail for repeated erasing
+    EXPECT_EQ(timer.UnregistTimeoutCallback(timerId), TimerStatus::AICPU_TIMER_FAILED);
+}

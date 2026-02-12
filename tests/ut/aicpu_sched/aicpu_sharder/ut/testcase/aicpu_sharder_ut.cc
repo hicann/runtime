@@ -30,13 +30,13 @@ uint32_t data_[dataLen_] = {};
 const uint32_t coreNum_ = 2U;
 std::queue<aicpu::Closure> taskQueue_;
 
-const RandomKernelScheduler randomKernelScheduler = [&taskQueue_] (const aicpu::Closure &task)
+const RandomKernelScheduler randomKernelScheduler = [] (const aicpu::Closure &task)
 {
     task();
     return 0U;
 };
 
-const SplitKernelScheduler splitKernelScheduler = [&taskQueue_] (const uint32_t parallelId,
+const SplitKernelScheduler splitKernelScheduler = [] (const uint32_t parallelId,
                                                                  const int64_t shardNum,
                                                                  const std::queue<Closure> &queue)
 {
@@ -44,7 +44,7 @@ const SplitKernelScheduler splitKernelScheduler = [&taskQueue_] (const uint32_t 
     return 0U;
 };
 
-const SplitKernelGetProcesser splitKernelGetProcesser = [&taskQueue_] ()
+const SplitKernelGetProcesser splitKernelGetProcesser = [] ()
 {
     const auto work = taskQueue_.front();
     taskQueue_.pop();
@@ -121,7 +121,7 @@ TEST_F(AiCPUSharderUt, ParallelForTaskException)
 
 TEST_F(AiCPUSharderUt, ParallelForSplitSchedulerFail)
 {
-    const SplitKernelScheduler splitKernelScheduler = [&taskQueue_] (const uint32_t parallelId,
+    const SplitKernelScheduler splitKernelScheduler = [] (const uint32_t parallelId,
                                                                  const int64_t shardNum,
                                                                  const std::queue<Closure> &queue)
     {
@@ -173,7 +173,7 @@ TEST_F(AiCPUSharderUt, ParallelForSemDestroyFail)
 TEST_F(AiCPUSharderUt, ParallelForGetTaskThousands)
 {
     uint32_t count = 0U;
-    const auto splitKernelGetProcesserThousands = [&taskQueue_, &count] ()
+    const auto splitKernelGetProcesserThousands = [&count] ()
     {
         if (count <= 1001) {
             ++count;
@@ -231,7 +231,7 @@ TEST_F(AiCPUSharderUt, ScheduleNullptrSuccess)
 
 TEST_F(AiCPUSharderUt, ScheduleFail)
 {
-    const RandomKernelScheduler randomKernelSchedulerFail = [&taskQueue_] (const aicpu::Closure &task)
+    const RandomKernelScheduler randomKernelSchedulerFail = [] (const aicpu::Closure &task)
     {
         return 1U;
     };
@@ -346,7 +346,7 @@ TEST_F(AiCPUSharderUt, ParallelForHashNullptr)
 
 TEST_F(AiCPUSharderUt, ParallelForHashSplitSchedulerFail)
 {
-    const SplitKernelScheduler splitKernelScheduler = [&taskQueue_] (const uint32_t parallelId,
+    const SplitKernelScheduler splitKernelScheduler = [] (const uint32_t parallelId,
                                                                      const int64_t shardNum,
                                                                      const std::queue<Closure> &queue)
     {

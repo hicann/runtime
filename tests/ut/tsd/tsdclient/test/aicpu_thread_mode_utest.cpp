@@ -223,7 +223,6 @@ TEST_F(AicpuThreadModeManagerTest, ProcessOpenSubProc)
     openArg.procType = TSD_SUB_PROC_COMPUTE;
     AicpuThreadModeManager aicpuThreadModeManager(0, 0);
     aicpuThreadModeManager.hdcTsdClient_ = nullptr;
-    int32_t hdcSessStat = 0;
     EXPECT_EQ(aicpuThreadModeManager.ProcessOpenSubProc(&openArg), tsd::TSD_INTERNAL_ERROR);
     GlobalMockObject::verify();
 }

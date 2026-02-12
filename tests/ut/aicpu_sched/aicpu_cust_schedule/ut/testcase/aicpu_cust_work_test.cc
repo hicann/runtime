@@ -34,6 +34,7 @@
 #include "core/aicpusd_drv_manager.h"
 #include "core/aicpusd_worker.h"
 #include "aicpusd_monitor.h"
+#include "aicpusd_util.h"
 #undef private
 
 using namespace AicpuSchedule;
@@ -346,7 +347,7 @@ TEST_F(AICPUCusWorkerTEST, SetAffinityBySelfTestVf)
 TEST_F(AICPUCusWorkerTEST, WriteTidForAffinity)
 {
     MOCKER(access).stubs().will(returnValue(0));
-    MOCKER(waitpid).stubs().will(returnValue(-1));
+    MOCKER_CPP(&AicpuUtil::ExecuteCmd).stubs().will(returnValue(-1));
     ThreadPool tp;
     tp.threadStatus_ = std::move(std::vector<ThreadStatus>(1, ThreadStatus::THREAD_INIT));
     auto ret = tp.WriteTidForAffinity(0);

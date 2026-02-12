@@ -30,7 +30,7 @@ protected:
 
 TEST_F(RuntimePackageWorkerTest, LoadAndUnloadPackageSuccess)
 {
-    const RuntimePackageWorker inst({0U, 0U});
+    RuntimePackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "tsd_test.tar.gz";
     MOCKER_CPP(&RuntimePackageWorker::GetOriginPackageSize).stubs().will(returnValue(1));
@@ -46,7 +46,7 @@ TEST_F(RuntimePackageWorkerTest, LoadAndUnloadPackageSuccess)
 
 TEST_F(RuntimePackageWorkerTest, LoadPackageNoNeedLoad)
 {
-    const RuntimePackageWorker inst({0U, 0U});
+    RuntimePackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "tsd_test.tar.gz";
     MOCKER_CPP_VIRTUAL(inst, &RuntimePackageWorker::IsNeedLoadPackage).stubs().will(returnValue(false));
@@ -59,7 +59,7 @@ TEST_F(RuntimePackageWorkerTest, LoadPackageNoNeedLoad)
 
 TEST_F(RuntimePackageWorkerTest, LoadPackageVerifyFail)
 {
-    const RuntimePackageWorker inst({0U, 0U});
+    RuntimePackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "tsd_test.tar.gz";
     MOCKER_CPP_VIRTUAL(inst, &RuntimePackageWorker::IsNeedLoadPackage).stubs().will(returnValue(true));
@@ -73,7 +73,7 @@ TEST_F(RuntimePackageWorkerTest, LoadPackageVerifyFail)
 
 TEST_F(RuntimePackageWorkerTest, UnloadPackageSuccess)
 {
-    const RuntimePackageWorker inst({0U, 0U});
+    RuntimePackageWorker inst({0U, 0U});
     MOCKER_CPP_VIRTUAL(inst, &RuntimePackageWorker::IsNeedUnloadPackage).stubs().will(returnValue(true));
     MOCKER(PackSystem).stubs().will(returnValue(0));
     const auto ret = inst.UnloadPackage();
@@ -82,7 +82,7 @@ TEST_F(RuntimePackageWorkerTest, UnloadPackageSuccess)
 
 TEST_F(RuntimePackageWorkerTest, UnloadPackageSystemFail)
 {
-    const RuntimePackageWorker inst({0U, 0U});
+    RuntimePackageWorker inst({0U, 0U});
     MOCKER_CPP_VIRTUAL(inst, &RuntimePackageWorker::IsNeedUnloadPackage).stubs().will(returnValue(true));
     MOCKER(PackSystem).stubs().will(returnValue(-1));
     const auto ret = inst.UnloadPackage();

@@ -34,8 +34,8 @@ std::condition_variable             g_drvHdcCond;           // 等待连接请�
 DVresult drvMemInitSvmDevice(pid_t hostpid)
 {
     if((pid_t)0 == hostpid)
-        return 0;
-    return 1;
+        return DRV_ERROR_NONE;
+    return DRV_ERROR_NO_DEVICE;
 }
 
 
@@ -76,7 +76,7 @@ hdcError_t drvHdcSessionAccept(HDC_SERVER server, HDC_SESSION *session)
 
 hdcError_t drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **msg, int count)
 {
-    *msg = malloc(10);
+    *msg = reinterpret_cast<drvHdcMsg*>(malloc(10));
     return DRV_ERROR_NONE;
 }
 

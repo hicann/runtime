@@ -62,12 +62,12 @@ set(LOCAL_SRC_FILES
     ../stub/driver_stub.cpp
     ../stub/event_sched_api.cpp
     ../stub/drv_buf_api.cpp
-    ../stub/profile_stub.cpp
     ../stub/marker_stub.cpp
     ../stub/profile_common_stub.cpp
     ../stub/profiling_stub.cpp
     ../stub/msprof_stub.cpp
     ../stub/slog_stub.cpp
+    ../stub/queue_schedule_stub.cpp
     ${SRC_PATH}/client/bqs_client.cpp
     ${SRC_PATH}/client/ezcom_client.cpp
     ${SRC_PATH}/server/bqs_server.cpp

@@ -43,14 +43,14 @@ protected:
                           workDir + "aaa && touch " + workDir + "inntertsd/bbb";
         const int32_t ret = PackSystem(cmd.c_str());
 
-        std::cout << "PackageWorkerUtilsTest setup cmd=" << cmd << std::endl;
+        std::cout << "PackageWorkerUtilsTest setup cmd=" << cmd << ", ret=" << ret << std::endl;
     }
 
     static void TearDownTestCase() {
         const std::string workDir = GetWorkDir();
         const std::string cmd = "rm -rf " + workDir;
         const int32_t ret = PackSystem(cmd.c_str());
-        std::cout << "PackageWorkerUtilsTest teardown" << std::endl;
+        std::cout << "PackageWorkerUtilsTest teardown, ret is " << ret << std::endl;
     }
 
     virtual void SetUp() {}

@@ -72,25 +72,6 @@ namespace {
     };
 }
 
-namespace {
-    INT32 mmStatGet_Invoker(const CHAR *path, mmStat_t *buffer)
-    {
-        if (buffer != nullptr) {
-            const uint32_t maxByte = 10 * 1024 * 1024;
-            buffer->st_size = maxByte + 1;
-            buffer->st_mode = 0100777;
-        }
-        return EN_OK;
-    }
-    INT32 mmStatGet_InvokerRemoveCommon(const CHAR *path, mmStat_t *buffer)
-    {
-        if (buffer != nullptr) {
-            buffer->st_mode = 0000327;
-        }
-        return EN_OK;
-    }
-}
-
 TEST_F(InternalAPITest, Trim)
 {
     std::string soName = " libtsdclient.so ";

@@ -83,7 +83,7 @@ TEST_F(AiCPUContextUt, EventCallback004)
 // SetProfContext and GetProfContext
 TEST_F(AiCPUContextUt, SetAndGetProfContext)
 {
-    aicpu::aicpuProfContext_t ctx;
+    aicpu::aicpuProfContext_t ctx = {};
     EXPECT_EQ(aicpu::aicpuSetProfContext(ctx), 0);
     aicpu::aicpuGetProfContext();
 }
@@ -218,7 +218,6 @@ TEST_F(AiCPUContextUt, StreamDvppBuffTest)
 {
     MOCKER_CPP(&aicpu::GetTaskAndStreamId).stubs().will(returnValue(AICPU_ERROR_FAILED));
     SetStreamDvppBuffBychlType(AICPU_DVPP_CHL_VPC, 10, (uint8_t *)nullptr); 
-    uint8_t buff;
     uint64_t buffLen = 1;
     GetDvppBufAndLenBychlType(AICPU_DVPP_CHL_VPC, (uint8_t **)0, &buffLen);
     bool result = IsCustAicpuSd();
@@ -228,8 +227,6 @@ TEST_F(AiCPUContextUt, StreamDvppBuffTest)
 TEST_F(AiCPUContextUt, StreamDvppBuffTest2)
 {
     EXPECT_EQ(GetStreamDvppChannelId(10, AICPU_DVPP_CHL_BUTT), -1);
-    uint8_t buff;
-    uint64_t buffLen = 1;
     EXPECT_EQ(GetCurTaskDvppChannelId(AICPU_DVPP_CHL_BUTT), -1);
     EXPECT_EQ(UnInitStreamDvppChannel(0, AICPU_DVPP_CHL_BUTT), -1);
 }

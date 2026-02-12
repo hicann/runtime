@@ -132,7 +132,7 @@ ProfStatus BqsMsprofManager::RegProfType() const
             name_pair.first.c_str());
         if (ret != ProfStatus::PROF_SUCCESS) {
             DGW_LOG_ERROR("[Prof]Regist profiling type failed, ret=%d, typeId=%d, typeName=%s.",
-                          static_cast<int32_t>(ret), name_pair.second, name_pair.first.c_str());
+                          static_cast<int32_t>(ret), static_cast<int32_t>(name_pair.second), name_pair.first.c_str());
             return ProfStatus::PROF_FAIL;
         }
     }

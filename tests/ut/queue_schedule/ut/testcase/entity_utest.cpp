@@ -32,13 +32,6 @@
  
 using namespace std;
 using namespace dgw;
-namespace {
-    drvError_t halQueuePeekFake(unsigned int devId, unsigned int qid, uint64_t *buf_len, int timeout)
-    {
-        *buf_len = 256U;
-        return DRV_ERROR_NONE;
-    }
-}
 class EntityUTest : public testing::Test {
 protected:
     static void SetUpTestCase()
@@ -174,7 +167,7 @@ TEST_F(EntityUTest, SdmaCopy_Fail)
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
         .then(returnValue((int)DRV_ERROR_NONE));
 
-    void *srcDataBuf = 1;
+    void *srcDataBuf = reinterpret_cast<void*>(1);
     MOCKER(halMbufGetBuffAddr)
         .stubs().with(mockcpp::any(), outBoundP(&srcDataBuf))
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
@@ -191,7 +184,7 @@ TEST_F(EntityUTest, SdmaCopy_Fail)
         .then(returnValue((int)DRV_ERROR_NO_DEVICE))
         .then(returnValue((int)DRV_ERROR_NONE));
 
-    Mbuf *mbufPtr = 1;
+    Mbuf *mbufPtr = reinterpret_cast<Mbuf*>(1);
     MOCKER(halMbufAllocEx)
         .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&mbufPtr))
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
@@ -292,7 +285,7 @@ TEST_F(EntityUTest, ClientEntity_DoDequeueMbuf)
         .will(returnValue(DRV_ERROR_NOT_EXIST))
         .then(returnValue(DRV_ERROR_NONE));
 
-    Mbuf *stubMbuf = 1;
+    Mbuf *stubMbuf = reinterpret_cast<Mbuf*>(1);
     MOCKER(halMbufAlloc)
         .stubs().with(mockcpp::any(), outBoundP(&stubMbuf))
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
@@ -309,7 +302,7 @@ TEST_F(EntityUTest, ClientEntity_DoDequeueMbuf)
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
         .then(returnValue((int)DRV_ERROR_NONE));
 
-    void *dataPtr = 1;
+    void *dataPtr = reinterpret_cast<void*>(1);
     MOCKER(halMbufGetBuffAddr)
         .stubs().with(mockcpp::any(), outBoundP(&dataPtr))
         .will(returnValue((int)DRV_ERROR_NO_DEVICE))
@@ -556,7 +549,7 @@ TEST_F(EntityUTest, GroupEntity_SelectSrcEntity_success)
     group.groupInfo_.lastTransId = 1U;
     FsmStatus status = FsmStatus::FSM_FAILED;
     EXPECT_EQ(group.SelectSrcEntity(status), nullptr);
-    Mbuf *stubMbuf = 1;
+    Mbuf *stubMbuf = reinterpret_cast<Mbuf*>(1);
 
     material.eType = dgw::EntityType::ENTITY_QUEUE;
     material.id = 0U;
@@ -891,7 +884,7 @@ TEST_F(EntityUTest, ChannelEntity_ProcessSendCompletion_Error)
     void *ptr = reinterpret_cast<void*>(&typeInfo);
     MOCKER(halBuffGetInfo)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(ptr), mockcpp::any())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(ptr, sizeof(MbufTypeInfo)), mockcpp::any())
         .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
     MOCKER(halMbufUnBuild).stubs().will(returnValue((int)DRV_ERROR_NO_DEVICE));
     EXPECT_EQ(entity.ProcessSendCompletion(nullptr), FsmStatus::FSM_SUCCESS);
@@ -1046,7 +1039,8 @@ TEST_F(EntityUTest, GroupEntity_SelectSrcEntity_Fail)
     int32_t srcStatus = 1;
     MOCKER(halQueueGetStatus)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP((void*)&srcStatus))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+              outBoundP((void*)&srcStatus, sizeof(int32_t)))
         .will(returnValue(DRV_ERROR_NONE));
     group.groupInfo_.timeout = 1;
     EXPECT_NE(group.SelectSrcEntity(status), nullptr);

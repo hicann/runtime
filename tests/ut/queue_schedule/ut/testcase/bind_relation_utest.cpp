@@ -341,7 +341,7 @@ namespace bqs {
         material.id = 10U;
         auto entityPtr = std::make_shared<dgw::ClientEntity>(material, 0U);
         entityPtr->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_DATA_SENT;
-        auto ret = entityPtr->DoSendData(2);
+        auto ret = entityPtr->DoSendData(nullptr);
         EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     }
 

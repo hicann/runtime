@@ -202,7 +202,7 @@ TEST_F(BQS_QUEUE_MANAGER_UTest, UnsubscribeQueueFailed)
 {
     MOCKER(halQueueUnsubEvent).stubs().will(returnValue(DRV_ERROR_QUEUE_INNER_ERROR));
     MOCKER(halQueueUnsubscribe).stubs().will(returnValue(DRV_ERROR_QUEUE_INNER_ERROR));
-    const QUEUE_EVENT_TYPE eventType;
+    const QUEUE_EVENT_TYPE eventType = QUEUE_ENQUE_EVENT;
     bqs::BqsStatus ret = instance.UnsubscribeQueue(0, eventType);
     EXPECT_EQ(ret, bqs::BQS_STATUS_DRIVER_ERROR);
 }

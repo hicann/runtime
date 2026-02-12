@@ -78,7 +78,7 @@ void DynamicScheduleByResponse(const uint32_t key, const uint32_t index,
             const std::vector<dgw::EntityPtr> &entitiesInGroup =
                 dgw::EntityManager::Instance(index).GetEntitiesInGroup(dynamicDstGrpEnity->GetId());
             if (entitiesInGroup.size() <= groupResult.index) {
-                BQS_LOG_ERROR("Dynamic response's index[%u] is larger than group size[%u]",
+                BQS_LOG_ERROR("Dynamic response's index[%u] is larger than group size[%zu]",
                     groupResult.index, entitiesInGroup.size());
                 continue;
             }
@@ -148,7 +148,7 @@ BqsStatus QueueSchedule::StartQueueSchedule()
         hasAICPU_ = false;
         threadNum = 1U;
     }
-    BQS_LOG_INFO("StartQueueSchedule schedPolicy:[%u].", initQsParams_.schedPolicy);
+    BQS_LOG_INFO("StartQueueSchedule schedPolicy:[%lu].", initQsParams_.schedPolicy);
     if (hasAICPU_ && (bqs::RunContext::HOST != bqs::GetRunContext())) {
         uint32_t aicpuNum = QueueScheduleInterface::GetInstance().GetAiCpuNum();
         BQS_LOG_RUN_INFO("the number of AICPU cores: %d", aicpuNum);
@@ -607,11 +607,11 @@ void QueueSchedule::DaemonThreadTask(const uint32_t index)
                 ret = halQueueCtrlEvent(&subscriber, QUE_RESUME_EVENT);
                 if (ret != DRV_ERROR_NONE) {
                     BQS_LOG_ERROR(
-                        "halQueueCtrlEvent QUE_RESUME_EVENT failed, deviceId_[%u] enqueGroupId_[%lu] ret[%d].",
+                        "halQueueCtrlEvent QUE_RESUME_EVENT failed, deviceId_[%u] enqueGroupId_[%u] ret[%d].",
                         deviceId, enqueGroupId, ret);
                 }
             } else {
-                BQS_LOG_RUN_WARN("halQueueCtrlEvent QUE_PAUSE_EVENT failed, deviceId_[%u] enqueGroupId_[%lu] ret[%d].",
+                BQS_LOG_RUN_WARN("halQueueCtrlEvent QUE_PAUSE_EVENT failed, deviceId_[%u] enqueGroupId_[%u] ret[%d].",
                     deviceId, enqueGroupId, ret);
             }
         } else {

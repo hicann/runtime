@@ -259,7 +259,7 @@ void BqsServer::SendRspMsg(const int32_t fd, const uint32_t msgId) const
     bool isOverflow = false;
     BqsCheckAssign32UAdd(msgLen, BQS_MSG_HEAD_SIZE, *(reinterpret_cast<uint32_t *>(respData)), isOverflow);
     if (isOverflow) {
-        BQS_LOG_ERROR("respData[%u] is invalid.", respData);
+        BQS_LOG_ERROR("msgLen[%u] is too big.", msgLen);
         delete[] respData;
         return;
     }
@@ -600,7 +600,7 @@ void BqsServer::RelationsCopy(std::vector<std::tuple<uint32_t, uint32_t>> &relat
     if (oldSize != 0U) {
         relations.reserve(static_cast<std::vector<std::tuple<uint32_t, uint32_t>>::size_type>(oldSize));
     }
-    for (const auto iter : srcMap) {
+    for (const auto &iter : srcMap) {
         (void) std::transform(iter.second.begin(), iter.second.end(), std::back_inserter(relations),
                               [&](const EntityInfo entityInfo) {
                                   return std::make_pair(iter.first.GetId(), entityInfo.GetId());
@@ -615,7 +615,7 @@ void BqsServer::RelationsCopy(std::vector<std::tuple<uint32_t, uint32_t>> &relat
 void BqsServer::AppendRelations(std::vector<std::tuple<uint32_t, uint32_t>> &relations,
     const std::unordered_map<EntityInfo, std::unordered_set<EntityInfo, EntityInfoHash>, EntityInfoHash> &srcMap) const
 {
-    for (const auto iter : srcMap) {
+    for (const auto &iter : srcMap) {
         (void) std::transform(iter.second.begin(), iter.second.end(), std::back_inserter(relations),
                               [&](const EntityInfo entityInfo) {
                                   return std::make_pair(iter.first.GetId(), entityInfo.GetId());

@@ -98,7 +98,6 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
         return BQS_STATUS_INNER_ERROR;
     }
 
-    uint8_t * const msgDesc = nullptr;
     EzcomRequest req = {.id = 0U, .data = reinterpret_cast<uint8_t *>(reqData.get()), .size = reqLength};
     struct EzcomResponse resp = { 0U };
     // Send msg and get response

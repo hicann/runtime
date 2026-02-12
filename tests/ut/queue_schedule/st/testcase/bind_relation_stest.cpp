@@ -206,7 +206,8 @@ namespace bqs {
         int32_t srcStatus = 1;
         MOCKER(halQueueGetStatus)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP((void*)&srcStatus))
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+                  outBoundP((void*)&srcStatus, sizeof(int32_t)))
             .will(returnValue(DRV_ERROR_NO_DEVICE))
             .then(returnValue(DRV_ERROR_NONE));
 

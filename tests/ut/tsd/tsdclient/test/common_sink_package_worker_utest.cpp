@@ -88,9 +88,12 @@ TEST_F(CommonSinkPackageWorkerTest, PackageNameNoPass_01)
         auto ret = inst.LoadPackage(packagePath, packageName);
         remove(configFile.c_str());
         EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
+
         packageName = "123_Ascend-aicpu_legacy.tar.gz";
         ret = inst.LoadPackage(packagePath, packageName);
         EXPECT_EQ(ret, TSD_OK);
+
+        MOCKER(PackSystem).stubs().will(returnValue(0));
         (void)inst.GetMovePackageToDecompressDirCmd();
         (void)inst.GetDecompressPackageCmd();
         (void)inst.UnloadPackage();

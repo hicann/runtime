@@ -60,7 +60,7 @@ drvError_t halQueueUnsubF2NFEvent(unsigned int devid, unsigned int qid)
 { return DRV_ERROR_NONE; }
 
 drvError_t halQueueGetQidbyName(unsigned int devid, const char *name, unsigned int *qid)
-{ return 200; }
+{ return DRV_ERROR_NO_DEVICE; }
 
 drvError_t halQueueCtrlEvent (struct QueueSubscriber *subscriber, QUE_EVENT_CMD cmdType)
 { return DRV_ERROR_NONE; }

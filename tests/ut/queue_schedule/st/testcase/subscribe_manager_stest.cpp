@@ -193,7 +193,7 @@ TEST_F(SUBSCRIBE_MANAGER_ST, DefalutSubscribe_Fail)
 {
     bqs::SubscribeManager instanceCross;
     instanceCross.InitSubscribeManager(0, 0, 0, 1);
-    EXPECT_EQ(instanceCross.DefalutSubscribe(0, 0), DRV_ERROR_NOT_SUPPORT);
+    EXPECT_EQ(instanceCross.DefalutSubscribe(0, QUEUE_ENQUE_EVENT), DRV_ERROR_NOT_SUPPORT);
 
     instanceCross.InitSubscribeManager(0, 0, 0, 0);
     EXPECT_EQ(instanceCross.DefalutSubscribe(0, QUEUE_EVENT_TYPE_MAX), DRV_ERROR_INVALID_VALUE);

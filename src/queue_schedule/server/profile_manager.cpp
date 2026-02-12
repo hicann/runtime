@@ -561,7 +561,7 @@ BqsStatus ProfileManager::UpdateProfilingMode(const ProfilingMode mode)
     if (profMode_ == bqs::ProfilingMode::PROFILING_OPEN) {
         ResetProfiling();
     }
-    BQS_LOG_RUN_INFO("Success to update profiling mode:[%u].", mode);
+    BQS_LOG_RUN_INFO("Success to update profiling mode:[%u].", static_cast<uint32_t>(mode));
     return BqsStatus::BQS_STATUS_OK;
 }
 

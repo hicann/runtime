@@ -781,7 +781,7 @@ BqsStatus RouterServer::ParseRelationInfo(Mbuf **mbufPtr)
     }
     // aicpuRspHead_ is valid only in aicpu event senario, will be 0 in acl event senario
     subEventId_ = qsRouterHeadPtr_->subEventId;
-    BQS_LOG_INFO("[RouterServer]Parse head[%u] subEvnetId[%u] from mbuff success.", aicpuRspHead_, subEventId_);
+    BQS_LOG_INFO("[RouterServer]Parse head[%lu] subEvnetId[%u] from mbuff success.", aicpuRspHead_, subEventId_);
 
     // query message need to get query info
     if ((subEventId_ == static_cast<uint32_t>(AICPU_QUERY_QUEUE)) ||
@@ -821,8 +821,9 @@ BqsStatus RouterServer::ParseBindUnbindMsg() const
                                                      static_cast<dgw::EntityType>(queueRouteList->srcType));
         EntityInfo dstEntity = CreateBasicEntityInfo(queueRouteList->dstId,
                                                      static_cast<dgw::EntityType>(queueRouteList->dstType));
-        BQS_LOG_INFO("[RouterServer]Src[id:%u type:%d] Dst[id:%u type:%d]", srcEntity.GetId(), srcEntity.GetType(),
-            dstEntity.GetId(), dstEntity.GetType());
+        BQS_LOG_INFO("[RouterServer]Src[id:%u type:%d] Dst[id:%u type:%d]",
+                     srcEntity.GetId(), static_cast<int32_t>(srcEntity.GetType()),
+                     dstEntity.GetId(), static_cast<int32_t>(dstEntity.GetType()));
         if ((srcEntity.GetId() >= MAX_QUEUE_ID_NUM) || (dstEntity.GetId() >= MAX_QUEUE_ID_NUM)) {
             BQS_LOG_ERROR("[RouterServer]Src[%s] or Dst[%s] is invalid in this "
                 "bind/unbind relation", srcEntity.ToString().c_str(), dstEntity.ToString().c_str());
@@ -890,7 +891,7 @@ void RouterServer::SearchRelation(const MapEnitityInfoToInfoSet &relationMap, co
 void RouterServer::GetBindRspBySingle(const EntityInfo& entityInfo, const uint32_t &queryType)
 {
     BQS_LOG_INFO("[RouterServer]RouterServer serialize get bind rsponse by entityId[%u], entityType[%d], Type[%d].",
-        entityInfo.GetId(), entityInfo.GetType(), queryType);
+        entityInfo.GetId(), static_cast<int32_t>(entityInfo.GetType()), queryType);
     auto &relationInstance = BindRelation::GetInstance();
     queueRouteQueryList_.clear();
     if ((queryType != static_cast<uint32_t>(BQS_QUERY_TYPE_SRC)) &&
@@ -948,9 +949,9 @@ void RouterServer::TransRouteWithEntityInfo(const EntityInfo& srcInfo, const Ent
  */
 void RouterServer::GetBindRspByDouble(const EntityInfo& src, const EntityInfo& dst, const uint32_t &queryType)
 {
-    BQS_LOG_INFO("[RouterServer]RouterServer serialize get bind rsponse by srcId[%d], srcType[%d], dstId[%d], "
-        "dstType[%d], Type[%d]",
-        src.GetId(), src.GetType(), dst.GetId(), dst.GetType(), queryType);
+    BQS_LOG_INFO("[RouterServer]RouterServer serialize get bind rsponse by srcId[%u], srcType[%d], dstId[%u], "
+        "dstType[%d], Type[%u]",
+        src.GetId(), static_cast<int32_t>(src.GetType()), dst.GetId(), static_cast<int32_t>(dst.GetType()), queryType);
     queueRouteQueryList_.clear();
     if (queryType == static_cast<uint32_t>(BQS_QUERY_TYPE_SRC_OR_DST)) {
         GetBindRspBySingle(src, static_cast<uint32_t>(BQS_QUERY_TYPE_SRC));

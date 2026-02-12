@@ -33,7 +33,7 @@ protected:
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadAndUnloadPackageSuccess)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -50,7 +50,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadAndUnloadPackageSuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackagePostProcessFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -66,7 +66,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackagePostProcessFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadAndUnloadExtendPackageESuccess)
 {
-    const ExtendProcessPackageWorker inst({0U, 0U});
+    ExtendProcessPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&ExtendProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -83,7 +83,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadAndUnloadExtendPackageESuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfSuccess)
 {
-    const AicpuProcessPackageWorker inst({0U, 1U});
+    AicpuProcessPackageWorker inst({0U, 1U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -101,7 +101,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfSuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfRestoreMemFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 1U});
+    AicpuProcessPackageWorker inst({0U, 1U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -120,7 +120,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfRestoreMemFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 1U});
+    AicpuProcessPackageWorker inst({0U, 1U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -136,7 +136,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVfFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackageNoNeedLoad)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     inst.SetCheckCode(1);
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
@@ -153,7 +153,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackageNoNeedLoad)
 
 TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVerifyFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuProcessPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1));
@@ -166,7 +166,7 @@ TEST_F(AicpuProcessPackageWorkerTest, LoadPackageVerifyFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, UnloadPackageSuccess)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(PackSystem).stubs().will(returnValue(0));
     const auto ret = inst.UnloadPackage();
     EXPECT_EQ(ret, TSD_OK);
@@ -174,7 +174,6 @@ TEST_F(AicpuProcessPackageWorkerTest, UnloadPackageSuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, CgroupMemMode)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER_CPP(&ProcessUtilCommon::ReadCurMemCtrolType).stubs().will(returnValue(TSD_OK));
     const auto ret = PackageWorkerUtils::IsCgroupMemMode(0, 0);
@@ -183,7 +182,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CgroupMemMode)
 
 TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail1)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1));
     MOCKER_CPP(&ProcessUtilCommon::ReadCurMemCtrolType).stubs().will(returnValue(TSD_OK));
     const auto ret = PackageWorkerUtils::IsCgroupMemMode(0, 0);
@@ -192,7 +190,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail1)
 
 TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail2)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1)).then(returnValue(0));
     MOCKER_CPP(&ProcessUtilCommon::ReadCurMemCtrolType).stubs().will(returnValue(TSD_OK));
     const auto ret = PackageWorkerUtils::IsCgroupMemMode(0, 0);
@@ -201,7 +198,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail2)
 
 TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail3)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER_CPP(&ProcessUtilCommon::ReadCurMemCtrolType).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
@@ -211,7 +207,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CgroupMemModeFail3)
 
 TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageAccessFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     std::string soInstallRootPath;
@@ -224,7 +219,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageAccessFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageGetUserMemoryFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1));
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryUsed).stubs()
@@ -239,7 +233,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageGetUserMemoryFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageCheckFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1));
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryUsed).stubs().will(returnValue(TSD_OK));
@@ -253,7 +246,6 @@ TEST_F(AicpuProcessPackageWorkerTest, CheckMemoryUsageCheckFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, GetUserMemoryUsedSuccess)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::ReadMemControlValue).stubs().will(returnValue(TSD_OK));
     uint64_t userMemoryUsed = 0UL;
     std::string memoryUsedFilePath;
@@ -263,7 +255,6 @@ TEST_F(AicpuProcessPackageWorkerTest, GetUserMemoryUsedSuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, GetUserMemoryUsedFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::ReadMemControlValue).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
     uint64_t userMemoryUsed = 0UL;
@@ -274,7 +265,6 @@ TEST_F(AicpuProcessPackageWorkerTest, GetUserMemoryUsedFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageSuccess)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::SetMemoryControlValue).stubs().will(returnValue(TSD_OK));
     std::string memoryLimitFilePath;
@@ -284,7 +274,6 @@ TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageSuccess)
 
 TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageGetLimitFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
     std::string memoryLimitFilePath;
@@ -294,7 +283,6 @@ TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageGetLimitFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageOverflow)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::SetMemoryControlValue).stubs().will(returnValue(TSD_OK));
     std::string memoryLimitFilePath;
@@ -304,7 +292,6 @@ TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageOverflow)
 
 TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageOom)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::SetMemoryControlValue).stubs().will(returnValue(TSD_OK));
     std::string memoryLimitFilePath;
@@ -314,7 +301,6 @@ TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageOom)
 
 TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageSetFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&PackageWorkerUtils::GetUserMemoryLimit).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&PackageWorkerUtils::SetMemoryControlValue).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
@@ -325,7 +311,6 @@ TEST_F(AicpuProcessPackageWorkerTest, RestoreMemUsageSetFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess0)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER(PackSystem).stubs().will(returnValue(0));
     const auto ret = PackageWorkerUtils::SetMemoryControlValue(1, 0, 0);
@@ -334,7 +319,6 @@ TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess0)
 
 TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess1)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1)).then(returnValue(0));
     MOCKER(PackSystem).stubs().will(returnValue(0));
      const auto ret = PackageWorkerUtils::SetMemoryControlValue(1, 0, 0);
@@ -343,7 +327,6 @@ TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess1)
 
 TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess2)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(1));
     MOCKER(PackSystem).stubs().will(returnValue(0));
      const auto ret = PackageWorkerUtils::SetMemoryControlValue(1, 0, 0);
@@ -352,7 +335,6 @@ TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess2)
 
 TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess3)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER(access).stubs().will(returnValue(0));
     MOCKER(PackSystem).stubs().will(returnValue(1));
     MOCKER(mmSleep).stubs().will(returnValue(0));
@@ -362,7 +344,7 @@ TEST_F(AicpuProcessPackageWorkerTest, SetMemoryControlValueSuccess3)
 
 TEST_F(AicpuProcessPackageWorkerTest, PostProcessPackageMoveSoFail)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     MOCKER_CPP(&AicpuPackageProcess::CheckPackageName).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&AicpuPackageProcess::MoveSoToSandBox).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));
@@ -372,7 +354,7 @@ TEST_F(AicpuProcessPackageWorkerTest, PostProcessPackageMoveSoFail)
 
 TEST_F(AicpuProcessPackageWorkerTest, GetPackageCheckCodeSoNotExist)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     inst.SetCheckCode(123);
     MOCKER_CPP(&AicpuPackageProcess::IsSoExist).stubs().will(returnValue(false));
     const auto ret = inst.GetPackageCheckCode();
@@ -382,7 +364,7 @@ TEST_F(AicpuProcessPackageWorkerTest, GetPackageCheckCodeSoNotExist)
 
 TEST_F(AicpuProcessPackageWorkerTest, GetPackageCheckCodeSoExist)
 {
-    const AicpuProcessPackageWorker inst({0U, 0U});
+    AicpuProcessPackageWorker inst({0U, 0U});
     inst.SetCheckCode(123UL);
     MOCKER_CPP(&AicpuPackageProcess::IsSoExist).stubs().will(returnValue(true));
     const auto ret = inst.GetPackageCheckCode();
@@ -437,7 +419,7 @@ TEST_F(AscendcppProcessPackageWorkerTest, GetDecompressPackageCmd)
 
 TEST_F(AscendcppProcessPackageWorkerTest, PostProcessPackage001)
 {
-    const AscendcppProcessPackageWorker inst({0U, 0U});
+    AscendcppProcessPackageWorker inst({0U, 0U});
     MOCKER(PackSystem).stubs().will(returnValue(0));
     auto ret = inst.PostProcessPackage();
     EXPECT_EQ(ret, TSD_OK);
@@ -445,7 +427,7 @@ TEST_F(AscendcppProcessPackageWorkerTest, PostProcessPackage001)
 
 TEST_F(AscendcppProcessPackageWorkerTest, PostProcessPackage002)
 {
-    const AscendcppProcessPackageWorker inst({0U, 0U});
+    AscendcppProcessPackageWorker inst({0U, 0U});
     MOCKER(PackSystem).stubs().will(returnValue(1));
     auto ret = inst.PostProcessPackage();
     EXPECT_EQ(ret, TSD_INTERNAL_ERROR);

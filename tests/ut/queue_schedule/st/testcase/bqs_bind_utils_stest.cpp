@@ -292,6 +292,7 @@ TEST_F(BQS_BIND_UTILS_STest, GetDevCpuInfo_004)
 
 TEST_F(BQS_BIND_UTILS_STest, WriteTidToCpuSet)
 {
+    MOCKER(system).stubs().will(returnValue(-1));
     auto ret = BindCpuUtils::WriteTidToCpuSet();
     EXPECT_EQ(ret, BQS_STATUS_INNER_ERROR);
 }

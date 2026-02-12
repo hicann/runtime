@@ -66,7 +66,7 @@ namespace bqs {
             return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         }
         BQS_LOG_INFO("Prepare bind process with host process, deviceId[%u], RunContext is [%u]",
-                     params.deviceId, bqs::GetRunContext());
+                     params.deviceId, static_cast<uint32_t>(bqs::GetRunContext()));
         // bind process with hostpid in process mode
         if ((bqs::GetRunContext() != bqs::RunContext::HOST) &&
             (params.starter != bqs::QsStartType::START_BY_DEPLOYER) &&

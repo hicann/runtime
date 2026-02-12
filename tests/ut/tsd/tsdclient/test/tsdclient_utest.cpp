@@ -210,7 +210,6 @@ TEST_F(TsdClientTest, TsdCloseNoNeed1)
 TEST_F(TsdClientTest, TsdCloseExNotSetQuickTsdCloseFlagSucc) 
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    const uint32_t deviceIdChipMode = 3;
     MOCKER_CPP(&HdcClient::Init)
         .stubs()
         .will(returnValue(tsd::TSD_OK));
@@ -246,7 +245,6 @@ TEST_F(TsdClientTest, TsdCloseExNotSetQuickTsdCloseFlagSucc)
 TEST_F(TsdClientTest, TsdCloseExSetQuickTsdCloseFlagsucc) 
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    const uint32_t deviceIdChipMode = 3;
     MOCKER_CPP(&HdcClient::Init)
         .stubs()
         .will(returnValue(tsd::TSD_OK));
@@ -291,7 +289,6 @@ TEST_F(TsdClientTest, TsdCloseExCheckDestructFlag)
 TEST_F(TsdClientTest, TsdCloseExClientManagerCloseFail) 
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    const uint32_t deviceIdChipMode = 3;
     MOCKER_CPP(&HdcClient::Init)
         .stubs()
         .will(returnValue(tsd::TSD_OK));
@@ -608,7 +605,7 @@ int32_t FakeStartStub(const char *appName, const size_t nameLen, const int32_t t
 }
 void *dlsymFakeStub(void *handle, const char *symbol)
 {
-    return FakeStartStub;
+    return reinterpret_cast<void*>(FakeStartStub);
 }
 
 TEST_F(TsdClientTest, NotifyPmToStartTsdaemon) {
@@ -616,6 +613,7 @@ TEST_F(TsdClientTest, NotifyPmToStartTsdaemon) {
     MOCKER_CPP(&dlclose).stubs().will(invoke(dlcloseFakeStub));
     MOCKER_CPP(&dlsym).stubs().will(invoke(dlsymFakeStub));
     tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
+    EXPECT_EQ(ret, tsd::TSD_OK);
     MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
     auto result = NotifyPmToStartTsdaemon(0U);
 

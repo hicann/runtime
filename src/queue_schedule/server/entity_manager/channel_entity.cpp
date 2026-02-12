@@ -600,7 +600,7 @@ FsmStatus ChannelEntity::SendMbufHead(Mbuf * const mbuf)
         return sendRet;
     }
 
-    DGW_LOG_INFO("Success to call HcclIsend to send head for mbuf, entity:[%s], len:[%lu].",
+    DGW_LOG_INFO("Success to call HcclIsend to send head for mbuf, entity:[%s], len:[%u].",
         entityDesc_.c_str(), headSize);
     return FsmStatus::FSM_SUCCESS;
 }
@@ -913,7 +913,8 @@ void ChannelEntity::Dump() const
         statInfo_.hcclIsendSuccTimes, statInfo_.hcclIsendFullTimes,
         statInfo_.hcclIsendFailTimes, statInfo_.freeMbufTimes,
         statInfo_.hcclEnqueueSuccTimes, statInfo_.hcclEnqueueFailTimes,
-        statInfo_.dequeueSuccTimes, statInfo_.dequeueFailTimes, cachedEnvelopeQueue_.Size(), linkStatus_);
+        statInfo_.dequeueSuccTimes, statInfo_.dequeueFailTimes, cachedEnvelopeQueue_.Size(),
+        static_cast<int32_t>(linkStatus_));
 }
 
 FsmStatus ChannelEntity::MakeSureOutputCompletion()

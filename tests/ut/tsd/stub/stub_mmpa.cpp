@@ -22,13 +22,13 @@ INT32 mmGetTid()
     return (INT32)1;
 }
 
-INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+INT32 mmRealPath(const CHAR *path, CHAR *exactPath, INT32 realPathLen)
 {
-    if(path == nullptr||realpath == nullptr)
+    if(path == nullptr||exactPath == nullptr)
     {
         return EN_INVALID_PARAM;
     }
-    if (nullptr == realpath(path,realPath))
+    if (nullptr == realpath(path, exactPath))
     {
         return EN_ERROR;
     }

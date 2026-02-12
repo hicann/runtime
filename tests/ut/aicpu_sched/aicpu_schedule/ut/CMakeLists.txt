@@ -71,7 +71,7 @@ set(COMMON_C_LINK
     c_sec
     -lrt
     -ldl
-    ascend_protobuf
+    ascend_protobuf_static
     Eigen3::Eigen
     $<BUILD_INTERFACE:intf_aicpu_llt_pub>
     $<BUILD_INTERFACE:slog_headers>

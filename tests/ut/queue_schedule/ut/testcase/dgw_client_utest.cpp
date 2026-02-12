@@ -294,7 +294,6 @@ TEST_F(DgwClientUtest, QueryConfigFailForUninited)
 TEST_F(DgwClientUtest, QueryConfigNumFailForUninited)
 {
     ConfigQuery query;
-    ConfigInfo cfgInfo;
     std::shared_ptr<DgwClient> uninitedDgwClient = DgwClient::GetInstance(1U);
     EXPECT_EQ(static_cast<int32_t>(BQS_STATUS_NOT_INIT), uninitedDgwClient->QueryConfigNum(query));
 }
@@ -310,7 +309,7 @@ TEST_F(DgwClientUtest, GetQryConfigNumRetWhenCmdRetError)
 
 TEST_F(DgwClientUtest, GetOperateHcomHandleRetWhenCmdRetError)
 {
-    QueueSubEventType eventType;
+    QueueSubEventType eventType = CREATE_QUEUE;
     HcomHandleInfo info;
     uintptr_t mbufData = 0UL;
     int32_t cmdRet = static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR);
@@ -529,8 +528,6 @@ TEST_F(DgwClientUtest, CalcConfigInfoLenMemQueueSucc003)
     const uint32_t localTagDepth = 128U;
     const uint32_t peerTagDepth = 128U;
     const uint32_t groupTagId1 = 1U;
-    const uint32_t groupTagId2 = 2U;
-    const uint32_t tagId3 = 3U;
     // create group
     bqs::Endpoint endpoints[2UL] = {};
     endpoints[0].type = bqs::EndpointType::COMM_CHANNEL;
@@ -916,7 +913,6 @@ TEST_F(DgwClientUtest, OperateToServerOnOtherSide_Fail)
             .then(returnValue((int)BQS_STATUS_OK))
             .then(returnValue((int)BQS_STATUS_OK))
             .then(returnValue((int)BQS_STATUS_OK));
-    Mbuf *pmbuf = (Mbuf *)&buffer_;
     MOCKER(halQueueEnQueueBuff)
         .stubs()
         .will(returnValue(300))
@@ -929,8 +925,6 @@ TEST_F(DgwClientUtest, OperateToServerOnOtherSide_Fail)
         .will(returnValue(static_cast<int32_t>(bqs::BQS_STATUS_PARAM_INVALID)))
         .then(returnValue(static_cast<int32_t>(bqs::BQS_STATUS_OK)))
         .then(returnValue(static_cast<int32_t>(bqs::BQS_STATUS_OK)));
-    int32_t buf = 1;
-    int32_t *pmbuf1 = &buf;
     MOCKER(halQueuePeek)
         .stubs()
         .will(returnValue(static_cast<int>(DRV_ERROR_RESERVED)));
@@ -999,8 +993,8 @@ TEST_F(DgwClientUtest, GetQryRouteRet_Fail)
 
 TEST_F(DgwClientUtest, TestChangeUserDeviceIdToLogicDeviceIdSuccess001)
 {
-    char_t *env = "7,6,5,4";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "7,6,5,4";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     uint32_t userDevId = 1;
     uint32_t logicDevId;
@@ -1014,8 +1008,8 @@ TEST_F(DgwClientUtest, TestChangeUserDeviceIdToLogicDeviceIdSuccess001)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices01)
 {
-    char_t *env = "";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, false);
@@ -1032,8 +1026,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices02)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices03)
 {
-    char_t *env = "4,5a,&6,7!";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5a,&6,7!";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1041,8 +1035,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices03)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices04)
 {
-    char_t *env = ",4,5a,&6,7!";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = ",4,5a,&6,7!";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1050,8 +1044,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices04)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices05)
 {
-    char_t *env = "4,5,";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1059,8 +1053,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices05)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices06)
 {
-    char_t *env = "4,5,5,7";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,5,7";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1068,8 +1062,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices06)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices07)
 {
-    char_t *env = "4,5,6,7,8";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,6,7,8";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1077,8 +1071,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices07)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices08)
 {
-    char_t *env = "4,5,6,7";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,6,7";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1086,8 +1080,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices08)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices09)
 {
-    char_t *env = "4,5,2147483648,7";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,2147483648,7";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);
@@ -1095,8 +1089,8 @@ TEST_F(DgwClientUtest, TestGetVisibleDevices09)
 
 TEST_F(DgwClientUtest, TestGetVisibleDevices10)
 {
-    char_t *env = "4,5,6,7";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "4,5,6,7";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(returnValue(1));
     auto ret = DgwClient::GetVisibleDevices();
     EXPECT_EQ(ret, true);

@@ -61,27 +61,29 @@ int32_t *testAdprofStop()
 }
 VOID *mmDlsymFakeAdprofStart(VOID *handle, const CHAR *funcName)
 {
-    return testAdprofStart;
+    return reinterpret_cast<void*>(testAdprofStart);
 }
 VOID *mmDlsymFakeAdprofStop(VOID *handle, const CHAR *funcName)
 {
-    return testAdprofStop;
+    return reinterpret_cast<void*>(testAdprofStop);
 }
 int32_t *testAdprofStart1(int32_t argc, const char *argv)
 {
-    return 1;
+    int32_t *ret = reinterpret_cast<int32_t*>(1);
+    return ret;
 }
 int32_t *testAdprofStop1()
 {
-    return 1;
+    int32_t *ret = reinterpret_cast<int32_t*>(1);
+    return ret;
 }
 VOID *mmDlsymFakeAdprofStart1(VOID *handle, const CHAR *funcName)
 {
-    return testAdprofStart1;
+    return reinterpret_cast<void*>(testAdprofStart1);
 }
 VOID *mmDlsymFakeAdprofStop1(VOID *handle, const CHAR *funcName)
 {
-    return testAdprofStop1;
+    return reinterpret_cast<void*>(testAdprofStop1);
 }
 TEST_F(ThreadManagerTest, UpdateProfilFailed)
 {
@@ -134,7 +136,6 @@ TEST_F(ThreadManagerTest, LoadSysOpKernelFailed3)
 TEST_F(ThreadManagerTest, InitQsFail)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t rankSize = 1;
     std::shared_ptr<ClientManager> threadModeManager = ClientManager::GetInstance(deviceId);
     MOCKER(mmDlopen).stubs().will(returnValue((void*)0));
     InitFlowGwInfo info = {"test", 0U};
@@ -145,7 +146,6 @@ TEST_F(ThreadManagerTest, InitQsFail)
 TEST_F(ThreadManagerTest, InitQsFail2)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t rankSize = 1;
     std::shared_ptr<ClientManager> threadModeManager = ClientManager::GetInstance(deviceId);
     MOCKER(mmDlsym).stubs().will(returnValue((void*)0));
     InitFlowGwInfo info = {"test", 0U};
@@ -297,7 +297,6 @@ TEST_F(ThreadManagerTest, GetSubProcListStatus)
 TEST_F(ThreadManagerTest, HelperTest)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint64_t ptr = 1UL;
     std::shared_ptr<ClientManager> threadModeManager = ClientManager::GetInstance(deviceId);
     ret = threadModeManager->LoadFileToDevice(nullptr, 0, nullptr, 0);
     EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
@@ -544,7 +543,6 @@ TEST_F(ThreadManagerTest, ProcessOpenTfSoSuccess)
 TEST_F(ThreadManagerTest, LoadSysOpKernel_Extend)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t vfId = 1;
     ThreadModeManager ThreadModeManager(deviceId);
     MOCKER_CPP(&ClientManager::CheckPackageExists).stubs().will(returnValue(true));
     MOCKER_CPP(&ThreadModeManager::HandleAICPUPackage).stubs().will(returnValue(TSD_OK));
@@ -556,7 +554,6 @@ TEST_F(ThreadManagerTest, LoadSysOpKernel_Extend)
 TEST_F(ThreadManagerTest, LoadSysOpKernel_Extend_01)
 {
     tsd::TSD_StatusT ret = tsd::TSD_OK;
-    uint32_t vfId = 1;
     ThreadModeManager ThreadModeManager(deviceId);
     MOCKER_CPP(&ClientManager::CheckPackageExists).stubs().will(returnValue(true));
     MOCKER_CPP(&ThreadModeManager::HandleAICPUPackage).stubs().will(returnValue(1U));

@@ -64,7 +64,7 @@ protected:
     static void SetUpTestCase() {
         const std::string workDir = GetWorkDir();
         const std::string cmd = "mkdir -p " + workDir;
-        const int32_t ret = system(cmd.c_str());
+        (void) system(cmd.c_str());
 
         std::cout << "QsSubModuleInterfaceUtest setup cmd=" << cmd << std::endl;
     }
@@ -72,7 +72,7 @@ protected:
     static void TearDownTestCase() {
         const std::string workDir = GetWorkDir();
         const std::string cmd = "rm -rf " + workDir;
-        const int32_t ret = system(cmd.c_str());
+        (void) system(cmd.c_str());
         std::cout << "QsSubModuleInterfaceUtest teardown" << std::endl;
     }
 };
@@ -86,7 +86,6 @@ TEST_F(QsSubModuleInterfaceUtest, StartQueueScheduleModule_001)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     setenv("REGISTER_TO_ASCENDMONITOR", "0", 1);
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(true));
     MOCKER_CPP(&SubModuleInterface::QsSubModuleAttachGroup).stubs().will(returnValue(true));
@@ -109,7 +108,6 @@ TEST_F(QsSubModuleInterfaceUtest, StartQueueScheduleModule_002)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(false));
     int32_t ret = StartQueueScheduleModule(&eventInfo);
     EXPECT_EQ(ret, -1);
@@ -125,7 +123,6 @@ TEST_F(QsSubModuleInterfaceUtest, StartQueueScheduleModule_003)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(true));
     MOCKER_CPP(&SubModuleInterface::QsSubModuleAttachGroup).stubs().will(returnValue(false));
     int32_t ret = StartQueueScheduleModule(&eventInfo);
@@ -142,7 +139,6 @@ TEST_F(QsSubModuleInterfaceUtest, StartQueueScheduleModule_004)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(true));
     MOCKER_CPP(&SubModuleInterface::QsSubModuleAttachGroup).stubs().will(returnValue(true));
     MOCKER_CPP(&QueueScheduleInterface::InitQueueScheduler).stubs().will(returnValue(1));
@@ -160,7 +156,6 @@ TEST_F(QsSubModuleInterfaceUtest, StartQueueScheduleModule_005)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(true));
     MOCKER_CPP(&SubModuleInterface::QsSubModuleAttachGroup).stubs().will(returnValue(true));
     MOCKER_CPP(&QueueScheduleInterface::InitQueueScheduler).stubs().will(returnValue(0));
@@ -179,7 +174,6 @@ TEST_F(QsSubModuleInterfaceUtest, StopQueueScheduleModule_001)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::SendSubModuleRsponse).stubs().will(returnValue(0));
     auto ret = StopQueueScheduleModule(&eventInfo);
     EXPECT_EQ(ret, 0);
@@ -195,7 +189,6 @@ TEST_F(QsSubModuleInterfaceUtest, StopQueueScheduleModule_002)
     eventInfo.procType = 1;
     eventInfo.srcPid = 789;
     eventInfo.startProcPid = 4568;
-    uint32_t curPid = static_cast<uint32_t>(getpid());
     MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).stubs().will(returnValue(true));
     MOCKER_CPP(&SubModuleInterface::QsSubModuleAttachGroup).stubs().will(returnValue(true));
     MOCKER_CPP(&QueueScheduleInterface::InitQueueScheduler).stubs().will(returnValue(0));

@@ -31,7 +31,7 @@ protected:
 
 TEST_F(DshapePackageWorkerTest, LoadAndUnloadPackageSuccess)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   const std::string path = "/home/test";
   const std::string name = "tsd_test.tar.gz";
   MOCKER_CPP(&DshapePackageWorker::GetOriginPackageSize)
@@ -57,7 +57,7 @@ TEST_F(DshapePackageWorkerTest, LoadAndUnloadPackageSuccess)
 
 TEST_F(DshapePackageWorkerTest, LoadPackageNoNeedLoad)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   const std::string path = "/home/test";
   const std::string name = "tsd_test.tar.gz";
   MOCKER_CPP_VIRTUAL(inst, &DshapePackageWorker::IsNeedLoadPackage)
@@ -78,7 +78,7 @@ TEST_F(DshapePackageWorkerTest, LoadPackageNoNeedLoad)
 
 TEST_F(DshapePackageWorkerTest, LoadPackageVerifyFail)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   const std::string path = "/home/test";
   const std::string name = "tsd_test.tar.gz";
   MOCKER_CPP_VIRTUAL(inst, &DshapePackageWorker::IsNeedLoadPackage)
@@ -99,7 +99,7 @@ TEST_F(DshapePackageWorkerTest, LoadPackageVerifyFail)
 
 TEST_F(DshapePackageWorkerTest, UnLoadPackageSuccess)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   MOCKER_CPP_VIRTUAL(inst, &DshapePackageWorker::IsNeedUnloadPackage)
   .stubs()
   .will(returnValue(true));
@@ -112,7 +112,7 @@ TEST_F(DshapePackageWorkerTest, UnLoadPackageSuccess)
 
 TEST_F(DshapePackageWorkerTest, UnLoadPackageFail)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   MOCKER_CPP_VIRTUAL(inst, &DshapePackageWorker::IsNeedUnloadPackage)
   .stubs()
   .will(returnValue(true));
@@ -125,7 +125,7 @@ TEST_F(DshapePackageWorkerTest, UnLoadPackageFail)
 
 TEST_F(DshapePackageWorkerTest, MoveToOriginPackageFail)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   const std::string path = "/home/test";
   const std::string name = "tsd_test.tar.gz";
   MOCKER_CPP(&DshapePackageWorker::GetOriginPackageSize)
@@ -149,7 +149,7 @@ TEST_F(DshapePackageWorkerTest, MoveToOriginPackageFail)
 
 TEST_F(DshapePackageWorkerTest, NoNeedUnloadPackage)
 {
-  const DshapePackageWorker inst({0U, 0U});
+  DshapePackageWorker inst({0U, 0U});
   const std::string path = "/home/test";
   const std::string name = "tsd_test.tar.gz";
   MOCKER_CPP(&DshapePackageWorker::GetOriginPackageSize)

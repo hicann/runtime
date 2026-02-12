@@ -39,8 +39,8 @@ extern "C" void func_main(void *param_base, long long l2_addr_base, long long l2
 {
   printf("device call @func_main\n");
   printf("device param_base: %p \n", param_base);
-  printf("device l2_addr_base: %p \n", l2_addr_base);
-  printf("device l2_in_main: %p \n", l2_in_main);
+  printf("device l2_addr_base: %lld \n", l2_addr_base);
+  printf("device l2_in_main: %lld \n", l2_in_main);
   printf("device block_id: %d \n", block_id);
   printf("device block_num: %d \n", block_num);
 

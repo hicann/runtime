@@ -171,11 +171,10 @@ namespace aicpu {
         }
         TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_RunAicpuFunc1)
         {
-            AicpuKFCOpFuncPtr opFuncPtr = &HcclKernelSuccessStub;
             aicpu::HwtsCceKernel kernelBase;
             char str[100] = "HcclKernelSuccessStub";
             kernelBase.kernelName = (uint64_t)str;
-            char * kernelName = "HcclKernelSuccessStub";
+            std::string kernelName = "HcclKernelSuccessStub";
             cce::AIKernelsLibAiCpuKFC::GetInstance()->apiCacher_[kernelName] = &HcclKernelSuccessStub;
              MOCKER_CPP(&cce::MultiSoManager::GetApi,
                        aeStatus_t(cce::MultiSoManager::*)(aicpu::KernelType kernelType, const char *, const char *,
@@ -188,7 +187,7 @@ namespace aicpu {
 
         TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_BatchLoadClose)
         {
-            char_t *soName = "test.so";
+            const char_t *soName = "test.so";
             std::vector<std::string> aicpuSoVec;
             aeStatus_t ret = cce::AIKernelsLibAiCpuKFC::GetInstance()->BatchLoadKernelSo(aicpu::KERNEL_TYPE_AICPU_CUSTOM, aicpuSoVec);
             EXPECT_EQ(0, ret);
@@ -198,7 +197,7 @@ namespace aicpu {
 
         TEST_F(AIKernelsLibAiCpuKFCUTest, TransformKernelErrorCodeTaskAbort)
         {
-            char_t *kernelName = "RunCclKernel";
+            const char_t *kernelName = "RunCclKernel";
             int32_t ret = cce::AIKernelsLibAiCpuKFC::GetInstance()->TransformKernelErrorCode(
                 static_cast<uint32_t>(cce::AicpuOpErrorCode::AICPU_TASK_ABORT), kernelName);
             EXPECT_EQ(AE_STATUS_TASK_ABORT, ret);
@@ -206,14 +205,14 @@ namespace aicpu {
 
         TEST_F(AIKernelsLibAiCpuKFCUTest, TransformKernelErrorCodeTaskFail)
         {
-            char_t *kernelName = "RunCclKernel";
+            const char_t *kernelName = "RunCclKernel";
             int32_t ret = cce::AIKernelsLibAiCpuKFC::GetInstance()->TransformKernelErrorCode(22U, kernelName);
             EXPECT_EQ(AE_STATUS_TASK_FAIL, ret);
         }
 
         TEST_F(AIKernelsLibAiCpuKFCUTest, TransformKernelErrorCodePassthrough)
         {
-            char_t *kernelName = "RunCclKernel";
+            const char_t *kernelName = "RunCclKernel";
             const uint32_t errCode = 1021U;
             int32_t ret = cce::AIKernelsLibAiCpuKFC::GetInstance()->TransformKernelErrorCode(errCode, kernelName);
             EXPECT_EQ(errCode, ret);

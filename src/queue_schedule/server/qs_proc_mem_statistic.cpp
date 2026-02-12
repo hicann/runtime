@@ -64,7 +64,7 @@ namespace bqs {
         const int32_t ret = sscanf_s(svmStrInfo.c_str(), "peak_page_cnt=%llu; peak_hpage_cnt=%llu",
                                      &normalPkgCnt, &hugePkgCnt);
         if (ret < SVM_VALUE_CNT) {
-            BQS_LOG_WARN("get svmStrInfo:%s failed, ret:%d, peakHPgCnt:%llu, peakHPgCnt:%llu", svmStrInfo.c_str(),
+            BQS_LOG_WARN("get svmStrInfo:%s failed, ret:%d, peakHPgCnt:%lu, peakHPgCnt:%lu", svmStrInfo.c_str(),
                          ret, normalPkgCnt, hugePkgCnt);
             return false;
         }
@@ -120,7 +120,7 @@ namespace bqs {
         uint64_t realSize = 0;
         const int32_t ret = sscanf_s(summaryStr.c_str(), "summary: %llu %llu", &allocSize, &realSize);
         if (ret < XSMEM_VALUE_CNT) {
-            BQS_LOG_WARN("read summaryStr:%s failed, ret:%d, allocsize:%llu, real size:%llu", summaryStr.c_str(), ret,
+            BQS_LOG_WARN("read summaryStr:%s failed, ret:%d, allocsize:%lu, real size:%lu", summaryStr.c_str(), ret,
                          allocSize, realSize);
             return false;
         }
@@ -185,7 +185,7 @@ namespace bqs {
             BQS_LOG_INFO("get vmHwmError:%s nok", vmRssStr.c_str());
             return false;
         }
-        BQS_LOG_INFO("vmRss:%llu KB, vmHwm:%llu KB.", rssValue, hwmValue);
+        BQS_LOG_INFO("vmRss:%lu KB, vmHwm:%lu KB.", rssValue, hwmValue);
         return true;
     }
 
@@ -246,23 +246,23 @@ namespace bqs {
         if (rssMem_.statCnt > 0) {
             rssavg = rssMem_.memTotal / rssMem_.statCnt;
         }
-        BQS_LOG_INFO("rssavg:%llu KB, rsstotal:%llu KB, rsscnt:%llu", rssavg, rssMem_.memTotal, rssMem_.statCnt);
+        BQS_LOG_INFO("rssavg:%lu KB, rsstotal:%lu KB, rsscnt:%lu", rssavg, rssMem_.memTotal, rssMem_.statCnt);
         uint64_t xsmAvg = 0UL;
         if (xsMem_.statCnt > 0) {
             xsmAvg = xsMem_.memTotal / xsMem_.statCnt;
         }
-        BQS_LOG_INFO("xsmAvg:%llu B, xsmtotal:%llu B, xsmcnt:%llu", xsmAvg, xsMem_.memTotal, xsMem_.statCnt);
+        BQS_LOG_INFO("xsmAvg:%lu B, xsmtotal:%lu B, xsmcnt:%lu", xsmAvg, xsMem_.memTotal, xsMem_.statCnt);
         if (runDevice_) {
             uint64_t svmAvg = 0UL;
             if (svmMem_.statCnt > 0) {
                 svmAvg = svmMem_.memTotal / svmMem_.statCnt;
             }
-            BQS_LOG_INFO("svmAvg:%llu B, svmtotal:%llu B, svmcnt:%llu", svmAvg, svmMem_.memTotal, svmMem_.statCnt);
-            BQS_LOG_RUN_INFO("proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%llu B, xsmemavg=%llu B, xsmemhwm=%lu B, "
-                             "svmmemavg=%llu B, svmmemhwm=%lu B", hostPid, rssavg * BYTE_TO_KBYTE,
+            BQS_LOG_INFO("svmAvg:%lu B, svmtotal:%lu B, svmcnt:%lu", svmAvg, svmMem_.memTotal, svmMem_.statCnt);
+            BQS_LOG_RUN_INFO("proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%lu B, xsmemavg=%lu B, xsmemhwm=%lu B, "
+                             "svmmemavg=%lu B, svmmemhwm=%lu B", hostPid, rssavg * BYTE_TO_KBYTE,
                              rssMem_.memHwm * BYTE_TO_KBYTE, xsmAvg, xsMem_.memHwm, svmAvg, svmMem_.memHwm);
         } else {
-            BQS_LOG_RUN_INFO("proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%llu B, xsmemavg=%llu B, xsmemhwm=%lu B",
+            BQS_LOG_RUN_INFO("proc_metrics:pid=%u, rssavg=%lu B, rsshwm=%lu B, xsmemavg=%lu B, xsmemhwm=%lu B",
                              hostPid, rssavg * BYTE_TO_KBYTE, rssMem_.memHwm * BYTE_TO_KBYTE, xsmAvg, xsMem_.memHwm);
         }
     }

@@ -318,7 +318,7 @@ BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint3
             ret = halGetDeviceInfo(deviceId, MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM, &aicpuNumTmp) +
                   halGetDeviceInfo(deviceId, MODULE_TYPE_AICPU, INFO_TYPE_OCCUPY, &aicpuBitMap);
         }
-        BQS_LOG_INFO("get device[%u] aicpu cpu info success, aicpuBitMap[%lld], aicpuNum[%u]",
+        BQS_LOG_INFO("get device[%u] aicpu cpu info success, aicpuBitMap[%ld], aicpuNum[%ld]",
                      deviceId, aicpuBitMap, aicpuNumTmp);
         aicpuNum = aicpuNumTmp;
         aiCpuIds.clear();
@@ -332,7 +332,7 @@ BqsStatus BindCpuUtils::GetDevCpuInfo(const uint32_t deviceId, std::vector<uint3
         }
     }
 
-    BQS_LOG_INFO("get device[%u] ctrl cpu info success, ccpuNum[%d], ccpuOsSched[%d]",
+    BQS_LOG_INFO("get device[%u] ctrl cpu info success, ccpuNum[%ld], ccpuOsSched[%ld]",
                  deviceId, cpuInfo.ccpuNum, cpuInfo.ccpuOsSched);
     if (cpuInfo.ccpuOsSched > 0L && !FeatureCtrl::IsVfModeDie1(deviceId)) {
         for (auto i = 0L; i < cpuInfo.ccpuNum; i++) {

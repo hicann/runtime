@@ -67,7 +67,7 @@ TEST_F(AICPUCustScheduleStubAdcProfTEST, CustSetMsprofReporterCallback) {
     ReleaseProfiling();
     SetProfilingFlagForKFC(1);
     LoadProfilingLib();
-    MsprofReporterCallback reportCallback;
+    MsprofReporterCallback reportCallback = nullptr;
     auto ret = SetMsprofReporterCallback(reportCallback);
     EXPECT_EQ(ret, static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS));
 }

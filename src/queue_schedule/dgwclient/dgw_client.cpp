@@ -360,7 +360,8 @@ int32_t DgwClient::UpdateConfig(ConfigInfo &cfgInfo, std::vector<int32_t> &cfgRe
         .totalLen = cfgLen + retLen,
     };
     ret = OperateConfigToServer(QueueSubEventType::UPDATE_CONFIG, cfgParams, dataList, cfgRets, timeout);
-    BQS_LOG_INFO("[DgwClient] Finish to update config, cmd is %d, ret is [%d].", cfgInfo.cmd, ret);
+    BQS_LOG_INFO("[DgwClient] Finish to update config, cmd is %d, ret is [%d].",
+                 static_cast<int32_t>(cfgInfo.cmd), ret);
     return ret;
 }
 
@@ -644,14 +645,14 @@ int32_t DgwClient::OperateToServerOnOtherSide(const QueueSubEventType subEventId
         uint64_t respLen = 0U;
         drvRet = halQueuePeek(deviceId_, piplineQueueId_, &respLen, timeout);
         if ((drvRet != DRV_ERROR_NONE) || (respLen == 0U)) {
-            BQS_LOG_ERROR("halQueuePeek from queue[%u] in device[%u] failed, ret[%d], respLen[%u]",
+            BQS_LOG_ERROR("halQueuePeek from queue[%u] in device[%u] failed, ret[%d], respLen[%lu]",
                 piplineQueueId_, deviceId_, static_cast<int32_t>(drvRet), respLen);
             return static_cast<int32_t>(BQS_STATUS_DRIVER_ERROR);
         }
 
         std::unique_ptr<char_t[]> respBody(new (std::nothrow) char_t[respLen], std::default_delete<char_t[]>());
         if (respBody == nullptr) {
-            BQS_LOG_ERROR("[DgwClient] failed to alloc memory for response data, size[%u].", respLen);
+            BQS_LOG_ERROR("[DgwClient] failed to alloc memory for response data, size[%lu].", respLen);
             return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         }
         buffIovec->context_base = nullptr;

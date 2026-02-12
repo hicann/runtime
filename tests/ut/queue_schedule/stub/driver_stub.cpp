@@ -15,7 +15,7 @@
 
 drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
 {
-    DEV_MODULE_TYPE mtype = moduleType;
+    DEV_MODULE_TYPE mtype = static_cast<DEV_MODULE_TYPE>(moduleType);
 	*value = 1;
 	if ((mtype == MODULE_TYPE_DCPU) || (mtype == MODULE_TYPE_TSCPU)) {
 		*value = 0;
@@ -78,12 +78,12 @@ int halGrpAddProc(const char *name, int pid, GroupShareAttr attr)
 
 drvError_t halQueueQuery(unsigned int devId, QueueQueryCmdType cmd, QueueQueryInputPara *inPut, QueueQueryOutputPara *outPut)
 {
-    return 0;
+    return DRV_ERROR_NONE;
 }
 
 drvError_t halQueueGrant(unsigned int devId, int qid, int pid, QueueShareAttr attr)
 {
-    return 0;
+    return DRV_ERROR_NONE;
 }
 
 int halGrpAttach(const char *name, int timeout)
@@ -93,7 +93,7 @@ int halGrpAttach(const char *name, int timeout)
 
 drvError_t halQueueAttach(unsigned int devId, unsigned int qid, int timeOut)
 {
-    return 0;
+    return DRV_ERROR_NONE;
 }
 int halBuffInit(BuffCfg *cfg)
 {

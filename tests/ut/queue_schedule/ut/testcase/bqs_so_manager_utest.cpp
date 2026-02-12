@@ -84,7 +84,7 @@ TEST_F(BqsSoManagerUTest, DlsymFail)
     MOCKER(dlsym).stubs().will(returnValue(static_cast<void *>(nullptr)));
     MOCKER(dlclose).stubs().will(returnValue(0));
     SoManager manager(SoFileName);
-    manager.soHandle_ = 0x1;
+    manager.soHandle_ = reinterpret_cast<void*>(0x1);
     const auto ret = manager.GetFuncHandle("Foo1");
     EXPECT_EQ(ret, nullptr);
     manager.soHandle_ = nullptr;

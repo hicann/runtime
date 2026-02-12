@@ -52,8 +52,6 @@
 
 namespace bqs {
     namespace {
-        uint64_t g_buffer[1025] = { 0 };
-        uint32_t g_tagMbuf = 256U;
         // hccl handle
         uint64_t hcclHandle = 100UL;
         HcclComm hcclComm = &hcclHandle;
@@ -113,7 +111,6 @@ namespace bqs {
             return HCCL_E_IN_STATUS;
         }
 
-        int32_t eSchedWaitTimes = 0;
         HcclResult g_hcclIsendRet = HCCL_SUCCESS;
         struct TestStatus {
             TestStatus(){
@@ -129,52 +126,10 @@ namespace bqs {
         };
         TestStatus testStatus;
 
-        drvError_t halEschedWaitEventFake(unsigned int devId, unsigned int grpId,
-            unsigned int threadId, int timeout, struct event_info *event)
-        {
-            if (eSchedWaitTimes == 0 && event != nullptr) {
-                event->comm.event_id = EVENT_AICPU_MSG;
-            } else if (event != nullptr) {
-                event->comm.event_id = EVENT_QUEUE_ENQUEUE;
-            }
-            eSchedWaitTimes++;
-            if (eSchedWaitTimes > 1) {
-                eSchedWaitTimes = 0;
-            }
-
-            sleep(1);
-            return DRV_ERROR_NONE;
-        }
-
         drvError_t halQueuePeekFake(unsigned int devId, unsigned int qid, uint64_t *buf_len, int timeout)
         {
             *buf_len = 256U;
             return DRV_ERROR_NONE;
-        }
-
-        drvError_t MbufAllocFake(unsigned int size, Mbuf **mbuf)
-        {
-            *(uint32_t **) mbuf = &g_tagMbuf;
-            return DRV_ERROR_NONE;
-        }
-
-        drvError_t halQueueCtrlEventDoWork (struct QueueSubscriber *subscriber, QUE_EVENT_CMD cmdType)
-        {
-            testStatus.isDaemonThreadWork = true;
-            return DRV_ERROR_NONE;
-        }
-
-        drvError_t halEschedWaitEventSleep(unsigned int devId, unsigned int grpId,
-            unsigned int threadId, int timeout, struct event_info *event)
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-            return DRV_ERROR_NONE;
-        }
-
-        bool HandleFullToNotFullEventSleep()
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(40));
-            return true;
         }
 
         int gethostnamefake(char *name, size_t len)
@@ -362,7 +317,6 @@ namespace bqs {
 
     TEST_F(QueueScheduleSTest, StartWithZeroAicpuCore_SUCCESS)
     {
-        uint32_t aicpuNumZero = 0U;
         MOCKER(BindCpuUtils::BindAicpu)
                 .stubs()
                 .will(returnValue(BQS_STATUS_OK));
@@ -403,9 +357,9 @@ namespace bqs {
 
     TEST_F(QueueScheduleSTest, StartWithAos_SUCCESS)
     {
-        char *hostNameAos = "AOS_SD";
+        char hostNameAos[] = "AOS_SD";
         MOCKER(gethostname)
-            .stubs().with(outBoundP(hostNameAos, strlen(hostNameAos) + 1))
+            .stubs().with(outBoundP(&hostNameAos[0U], strlen(hostNameAos) + 1))
             .will(returnValue(0));
         MOCKER(bqs::GetRunContext).stubs().will(returnValue(bqs::RunContext::DEVICE));
         MOCKER(&QueueScheduleInterface::GetAicpuPhysIndex).stubs().will(returnValue(1));
@@ -421,7 +375,7 @@ namespace bqs {
         MOCKER(BindCpuUtils::BindAicpu).stubs().will(returnValue(BQS_STATUS_INNER_ERROR));
         MOCKER(&QueueScheduleInterface::GetAiCpuNum).stubs().will(returnValue(1));
         MOCKER(&QueueScheduleInterface::GetAicpuPhysIndex).stubs().will(returnValue(1));
-        int32_t ret = queueSchedule.StartQueueSchedule();
+        (void) queueSchedule.StartQueueSchedule();
         sleep(1);
         EXPECT_EQ(queueSchedule.running_, false);
 
@@ -566,11 +520,6 @@ namespace bqs {
         GlobalCfg::GetInstance().deviceIdToResIndex_.clear();
     }
 
-    static void ScheduleDataBuffAllStub(QueueSchedule* qs, bool dataEnqueue)
-    {
-        qs->running_ = false;
-    };
-
     TEST_F(QueueScheduleSTest, EnqueueEvent_FAILED01)
     {
         struct event_info event = {};
@@ -680,7 +629,7 @@ namespace bqs {
         auto entity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_QUEUE, 21,
             dgw::EntityDirection::DIRECTION_SEND);
         EXPECT_EQ(true, entity != nullptr);
-        Mbuf *mbuf = 1;
+        Mbuf *mbuf = reinterpret_cast<Mbuf*>(1);
         auto dataObj = dgw::DataObjManager::Instance().CreateDataObj(entity.get(), mbuf);
         entity->AddDataObjToRecvList(dataObj);
         EXPECT_EQ(dgw::FsmStatus::FSM_ERROR, entity->ChangeState(dgw::FsmState::FSM_ERROR_STATE));
@@ -740,7 +689,6 @@ namespace bqs {
         EXPECT_EQ(BQS_STATUS_OK, bindRelation.Bind(src, dest));
         bindRelation.Order();
 
-        int status = QUEUE_EMPTY;
         MOCKER(halQueueGetStatus)
                 .stubs()
                 .will(returnValue((int)DRV_ERROR_NONE));
@@ -779,9 +727,6 @@ namespace bqs {
                     .stubs().with(mockcpp::any(), mockcpp::any(), outBoundP((void **)&mbuf))
                     .will(returnValue((int)DRV_ERROR_NONE))
                     .then(returnValue((int)DRV_ERROR_QUEUE_EMPTY));
-        uint64_t count = 0;
-        void *headBuf = nullptr;
-        HcclDataType dataType;
 
         auto entity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_QUEUE, 24,
             dgw::EntityDirection::DIRECTION_SEND);
@@ -1149,7 +1094,7 @@ namespace bqs {
             dgw::EntityDirection::DIRECTION_RECV);
         EXPECT_EQ(true, recvEntity != nullptr);
 
-        Mbuf *mbuf = 1;
+        Mbuf *mbuf = reinterpret_cast<Mbuf*>(1);
         auto dataObj = dgw::DataObjManager::Instance().CreateDataObj(src.GetEntity().get(), mbuf);
 
         recvEntity->AddDataObjToRecvList(dataObj);
@@ -1245,12 +1190,12 @@ namespace bqs {
         queueSchedule.queueEventAtomicFlag_.clear();
 
         // process hccl congestion relief msg
-        event.comm.event_id = dgw::EVENT_CONGESTION_RELIEF_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_CONGESTION_RELIEF_MSG);
         ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
 
         // process unsupported msg
-        event.comm.event_id = 1;
+        event.comm.event_id = EVENT_DVPP_MSG;
         ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_INNER_ERROR);
 
@@ -1293,7 +1238,7 @@ namespace bqs {
         g_totalEnvelopeCount = 4U;
         g_link = true;
         event_info event;
-        event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
         auto ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
 
@@ -1306,14 +1251,14 @@ namespace bqs {
         EXPECT_EQ(channelEntity->cachedReqCount_, 2U);
 
         // hccl recv completion
-        event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
         ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
 
         // clear cachedReqCount, then process cached envelope
         channelEntity->cachedReqCount_ = 0U;
-        event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
         ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 2U);
@@ -1365,7 +1310,7 @@ namespace bqs {
         g_totalEnvelopeCount = 4U;
         g_link = true;
         event_info event;;
-        event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
         auto ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
 
@@ -1390,9 +1335,9 @@ namespace bqs {
         EXPECT_EQ(channelEntity->cachedEnvelopeQueue_.Size(), 0U);
         EXPECT_EQ(channelEntity->cachedReqCount_, 2U);
 
-        event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
         EXPECT_EQ(queueSchedule.ProcessEvent(0U, event, 0U), bqs::BqsStatus::BQS_STATUS_OK);
-        event.comm.event_id = dgw::EVENT_SEND_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_SEND_COMPLETION_MSG);
         EXPECT_EQ(queueSchedule.ProcessEvent(0U, event, 0U), bqs::BqsStatus::BQS_STATUS_OK);
         // unbind
         ClearEntity(src);
@@ -1443,7 +1388,7 @@ namespace bqs {
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 3U);
 
         event_info event;
-        event.comm.event_id = dgw::EVENT_SEND_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_SEND_COMPLETION_MSG);
         auto ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -1493,7 +1438,7 @@ namespace bqs {
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 3U);
 
         event_info event;
-        event.comm.event_id = dgw::EVENT_SEND_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_SEND_COMPLETION_MSG);
         auto ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -1549,7 +1494,7 @@ namespace bqs {
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 3U);
 
         event_info event;
-        event.comm.event_id = dgw::EVENT_SEND_COMPLETION_MSG;
+        event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_SEND_COMPLETION_MSG);
         auto ret = queueSchedule.ProcessEvent(0U, event, 0U);
         EXPECT_EQ(ret, bqs::BqsStatus::BQS_STATUS_OK);
         EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 3U);
@@ -1583,7 +1528,8 @@ namespace bqs {
 
         int status = QUEUE_EMPTY;
         MOCKER(halQueueGetStatus)
-                .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP((void *)&status))
+                .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+                              outBoundP((void *)&status, sizeof(int)))
                 .will(returnValue((int)DRV_ERROR_NONE));
 
         auto entity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_GROUP, groupId,
@@ -2310,7 +2256,7 @@ namespace bqs {
 
         auto srcEntity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_QUEUE, 4001,
             dgw::EntityDirection::DIRECTION_SEND);
-        auto dataObj = dgw::DataObjManager::Instance().CreateDataObj(srcEntity.get(), 1);
+        auto dataObj = dgw::DataObjManager::Instance().CreateDataObj(srcEntity.get(), reinterpret_cast<Mbuf*>(1));
         auto destEntity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_GROUP, groupId,
             dgw::EntityDirection::DIRECTION_RECV);
         dataObj->AddRecvEntity(destEntity.get());
@@ -2414,8 +2360,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(returnValue((int)BQS_STATUS_PARAM_INVALID));
@@ -2454,8 +2398,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2499,8 +2441,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2550,8 +2490,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2601,8 +2539,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2655,8 +2591,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2709,8 +2643,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_ENTITY_DONE;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2767,8 +2699,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_DATA_INIT;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2825,8 +2755,6 @@ namespace bqs {
         clientEntity->asyncDataState_ = dgw::AsyncDataState::FSM_ASYNC_DATA_INIT;
 
         bool dataEnqueue = true;
-        int32_t buf = 1;
-        int32_t *pmbuf = &buf;
         MOCKER(halQueuePeek)
             .stubs()
             .will(invoke(halQueuePeekFake));
@@ -2848,7 +2776,7 @@ namespace bqs {
         MOCKER(halQueueDeQueueBuff)
             .stubs()
             .will(returnValue((int)DRV_ERROR_NONE));
-        MOCKER(&bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent)
+        MOCKER(&bqs::QueueManager::EnqueueAsynMemBuffEvent)
             .stubs()
             .will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
         queueSchedule.ScheduleDataBuffAll(dataEnqueue);
@@ -3219,7 +3147,7 @@ namespace bqs {
         MOCKER(halQueueEnQueueBuff)
             .stubs()
             .will(returnValue((int)DRV_ERROR_NONE));
-        MOCKER(&bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent)
+        MOCKER(&bqs::QueueManager::EnqueueAsynMemBuffEvent)
             .stubs()
             .will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
         queueSchedule.ScheduleDataBuffAll(dataEnqueue);
@@ -3356,7 +3284,7 @@ namespace bqs {
     TEST_F(QueueScheduleSTest, ProcessMessage_Success)
     {
         GlobalMockObject::verify();
-        MOCKER_CPP(&dgw::StateManager::Instance().GetState)
+        MOCKER_CPP(&dgw::StateManager::GetState)
                 .stubs()
                 .will(returnValue((dgw::StateBase *)nullptr));
         const dgw::InnerMessage msg;
@@ -3377,7 +3305,7 @@ namespace bqs {
         material.queueType = 1;
         dgw::EntityPtr entity = std::make_shared<dgw::SimpleEntity>(material, 0U);
         EXPECT_EQ(true, entity != nullptr);
-        Mbuf *mbuf = 1;
+        Mbuf *mbuf = reinterpret_cast<Mbuf*>(1);
         auto dataObj = dgw::DataObjManager::Instance().CreateDataObj(entity.get(), mbuf);
         EXPECT_EQ(entity->AddDataObjToRecvList(dataObj), dgw::FsmStatus::FSM_SUCCESS);
         EXPECT_EQ(entity->AddDataObjToRecvList(dataObj), dgw::FsmStatus::FSM_SUCCESS);
@@ -3386,7 +3314,7 @@ namespace bqs {
     TEST_F(QueueScheduleSTest, PauseSubscribe_Failed)
     {
         GlobalMockObject::verify();
-        MOCKER_CPP(&bqs::Subscribers::GetInstance().GetSubscribeManager)
+        MOCKER_CPP(&bqs::Subscribers::GetSubscribeManager)
                 .stubs()
                 .will(returnValue((bqs::SubscribeManager *)nullptr));
         dgw::EntityMaterial material = {};

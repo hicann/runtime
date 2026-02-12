@@ -72,7 +72,7 @@ protected:
 
 TEST_F(AicpuThreadPackageWorkerTest, LoadAndUnloadPackageSuccess)
 {
-    const AicpuThreadPackageWorker inst({0U, 0U});
+    AicpuThreadPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&AicpuThreadPackageWorker::GetOriginPackageSize).stubs().will(returnValue(1U));
@@ -89,7 +89,7 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadAndUnloadPackageSuccess)
 
 TEST_F(AicpuThreadPackageWorkerTest, LoadAndUnloadExtendPackageESuccess)
 {
-    const ExtendThreadPackageWorker inst({0U, 0U});
+    ExtendThreadPackageWorker inst({0U, 0U});
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
     MOCKER_CPP(&ExtendThreadPackageWorker::GetOriginPackageSize).stubs().will(returnValue(3U));
@@ -130,14 +130,16 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadPackageFail)
     MOCKER_CPP_VIRTUAL(inst, &AicpuThreadPackageWorker::IsNeedLoadPackage).stubs().will(returnValue(true));
     auto ret = inst.LoadPackage(path, name);
     EXPECT_EQ(ret, TSD_VERIFY_OPP_FAIL);
+
     MOCKER_CPP(&PackageWorkerUtils::VerifyPackage).stubs().will(returnValue(TSD_OK));
+    MOCKER(PackSystem).stubs().will(returnValue(0));
     ret = inst.LoadPackage(path, name);
     EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
 }
 
 TEST_F(AicpuThreadPackageWorkerTest, LoadPackage)
 {
-    const AicpuThreadPackageWorker inst({0U, 0U});
+    AicpuThreadPackageWorker inst({0U, 0U});
     inst.SetCheckCode(1);
     inst.SetOriginPackageSize(2);
     const std::string path = "/home/test";
@@ -150,7 +152,7 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadPackage)
 
 TEST_F(AicpuThreadPackageWorkerTest, LoadPackageNoNeedLoad)
 {
-    const AicpuThreadPackageWorker inst({0U, 0U});
+    AicpuThreadPackageWorker inst({0U, 0U});
     inst.SetCheckCode(1);
     const std::string path = "/home/test";
     const std::string name = "Ascend-aicpu_syskernels.tar.gz";
@@ -167,7 +169,7 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadPackageNoNeedLoad)
 
 TEST_F(AicpuThreadPackageWorkerTest, UnloadPackageSuccess)
 {
-    const AicpuThreadPackageWorker inst({0U, 0U});
+    AicpuThreadPackageWorker inst({0U, 0U});
     MOCKER(PackSystem).stubs().will(returnValue(0));
     const auto ret = inst.UnloadPackage();
     EXPECT_EQ(ret, TSD_OK);
@@ -175,7 +177,7 @@ TEST_F(AicpuThreadPackageWorkerTest, UnloadPackageSuccess)
 
 TEST_F(AicpuThreadPackageWorkerTest, PostProcessPackageMoveSoFail)
 {
-    const AicpuThreadPackageWorker inst({0U, 0U});
+    AicpuThreadPackageWorker inst({0U, 0U});
     MOCKER_CPP(&AicpuPackageProcess::CheckPackageName).stubs().will(returnValue(TSD_OK));
     MOCKER_CPP(&AicpuPackageProcess::MoveSoToSandBox).stubs()
         .will(returnValue(static_cast<uint32_t>(TSD_INTERNAL_ERROR)));

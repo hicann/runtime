@@ -185,22 +185,7 @@ protected:
     virtual void TearDown()
     {
         cout << "After bqs_relation_stest" << endl;
-
-        std::unique_lock<std::mutex> idLock(g_qidToValueMutex);
-        std::unique_lock<std::mutex> nameLock(g_qnameToQidMutex);
-        std::unique_lock<std::mutex> dataLock(g_dataSubscribeVecMutex);
-        std::unique_lock<std::mutex> f2NFLock(g_f2NFSubcribeVecMutex);
-
-        g_qidToValue.clear();
-        g_qidToValueWithTransId.clear();
-        g_qidToIndex.clear();
-        g_qidToDepth.clear();
-        g_qnameToQid.clear();
-        g_dataSubscribeVec.clear();
-        g_f2NFSubcribeVec.clear();
-        // std::queue<uint32_t> tmp;
-        // g_f2NFDataQueue.swap(tmp);
-        g_f2NFQid = 0;
+        ClearStock();
         GlobalMockObject::verify();
     }
 
@@ -382,20 +367,6 @@ public:
             EXPECT_EQ(val.count(*realVal), 1);
         }
         return;
-    }
-
-    bool VerifyQueueSize(uint32_t qid, int32_t size)
-    {
-        std::unique_lock<std::mutex> lock(g_qidToValueMutex);
-        auto iter1 = g_qidToValue.find(qid);
-        if (iter1 != g_qidToValue.end()) {
-            return ((iter1->second.size() - g_qidToIndex[qid]) == size);
-        }
-        auto iter2 = g_qidToValueWithTransId.find(qid);
-        if (iter2 != g_qidToValueWithTransId.end()) {
-            return ((iter2->second.size() - g_qidToIndex[qid]) == size);
-        }
-        return false;
     }
 
     void CheckQueueSize(uint32_t qid, int32_t size)
@@ -687,7 +658,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_Q2T_Success)
         .will(returnValue(BqsStatus::BQS_STATUS_OK));
     dgw::HcclProcess hcclProcess;
     event_info event;
-    event.comm.event_id = dgw::EVENT_SEND_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_SEND_COMPLETION_MSG);
     auto ret = hcclProcess.ProcessSendCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -711,7 +682,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_Success)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf[256];
@@ -724,7 +695,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_Success)
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 4U;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -737,7 +708,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_Success)
     EXPECT_EQ(channelEntity->cachedReqCount_, 2U);
 
     // hccl recv completion
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -748,13 +719,13 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_Success)
 
     // check result
     CheckQueueSize(72, 1);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     // process cached envelope
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -764,7 +735,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_Success)
     std::this_thread::sleep_for(std::chrono::seconds(1));
     // check result
     CheckQueueSize(72, 1);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     QueueScheduleDestroy();
 }
@@ -786,7 +757,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_OneTrackEvent_Success)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf[256];
@@ -802,7 +773,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_OneTrackEvent_Success)
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 4U;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     auto ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -826,12 +797,12 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_OneTrackEvent_Success)
 
     // check result
     CheckQueueSize(72, 1);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     // process cached envelope
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -841,7 +812,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_OneTrackEvent_Success)
     std::this_thread::sleep_for(std::chrono::seconds(1));
     // check result
     CheckQueueSize(72, 1);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     QueueScheduleDestroy();
     // unsetenv("TMP_ENV_COMM_OPT_ENABLE");
@@ -1253,7 +1224,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to3_QueueTo1GroupAnd1TagAnd1QueueSuc
     EntityInfoPtr entity1 = std::make_shared<EntityInfo>(4002U, 0U);
     EntityInfoPtr entity2 = std::make_shared<EntityInfo>(4003U, 0U);
     EntityInfoPtr entity3 = std::make_shared<EntityInfo>(4004U, 0U);
-    dgw::CommChannel channel1(hcclHandle, 1U, 1U, 0U, 0U, 128U, 128U);
+    dgw::CommChannel channel1(reinterpret_cast<void*>(hcclHandle), 1U, 1U, 0U, 0U, 128U, 128U);
     bqs::OptionalArg args = {};
     args.eType = dgw::EntityType::ENTITY_TAG;
     args.channelPtr = &channel1;
@@ -1273,7 +1244,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to3_QueueTo1GroupAnd1TagAnd1QueueSuc
     EntityInfo dst(groupId, 0U, &args);
     AddBindRelation(src, dst);
     // bind relation2
-    dgw::CommChannel channel2(hcclHandle, 2U, 2U, 0U, 0U, 128U, 128U);
+    dgw::CommChannel channel2(reinterpret_cast<void*>(hcclHandle), 2U, 2U, 0U, 0U, 128U, 128U);
     args.eType = dgw::EntityType::ENTITY_TAG;
     args.channelPtr = &channel2;
     EntityInfo dst2(8U, 0U, &args);
@@ -1599,7 +1570,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_QueueToGroup_Full_Success)
     EntityInfo dst(groupId, 0U, &args);
     AddBindRelation(src, dst);
     // include 4 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     auto groupEntityMap = dgw::EntityManager::Instance().groupEntityMap_;
     auto idToEntity = dgw::EntityManager::Instance().idToEntity_;
@@ -1624,7 +1595,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_QueueToGroup_Full_Success)
                     std::vector<int32_t>{2, 4, 6});
     CheckAndDeQueue(7003, std::vector<int32_t>{90001, 90003, 90005},
                     std::vector<int32_t>{1, 3, 5});
-    EXPECT_EQ(g_dataSubscribeVec.size(), 4UL);
+    EXPECT_EQ(GetSubscribedData().size(), 4UL);
 
     // waiting for work schedule
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -1634,7 +1605,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_QueueToGroup_Full_Success)
     CheckQueueSize(7002, 1);
     CheckQueueSize(7003, 1);
     // include 2 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     CheckAndDeQueue(7002, std::vector<int32_t>{90008}, std::vector<int32_t>{8});
     CheckAndDeQueue(7003, std::vector<int32_t>{90007}, std::vector<int32_t>{7});
@@ -1668,7 +1639,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_QueueToGroup_Error)
     EntityInfo dst(groupId, 0U, &args);
     AddBindRelation(src, dst);
     // include 2 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     auto groupEntityMap = dgw::EntityManager::Instance().groupEntityMap_;
     auto idToEntity = dgw::EntityManager::Instance().idToEntity_;
@@ -1687,7 +1658,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_QueueToGroup_Error)
 
     // waiting for work schedule
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    EXPECT_EQ(g_dataSubscribeVec.size(), 4UL);
+    EXPECT_EQ(GetSubscribedData().size(), 4UL);
 
     // check result
     // first dequeue, fail to enque entity1 for queue not exist
@@ -1741,7 +1712,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_Group2Group_Full_Success)
     AddBindRelation(src, dst);
     
     // include 2 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 7UL);
+    EXPECT_EQ(GetSubscribedData().size(), 7UL);
 
     auto groupEntityMap = dgw::EntityManager::Instance().groupEntityMap_;
     auto idToEntity = dgw::EntityManager::Instance().idToEntity_;
@@ -1767,7 +1738,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_Group2Group_Full_Success)
     // waiting for work schedule
     std::this_thread::sleep_for(std::chrono::seconds(1));
     // include 7 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 7UL);
+    EXPECT_EQ(GetSubscribedData().size(), 7UL);
 
     // check result
     CheckQueueSize(8001, 0);
@@ -1799,7 +1770,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_FULL_Success)
     AddBindRelation(src, dst);
 
     // include 2 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf[256];
@@ -1812,7 +1783,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_FULL_Success)
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 4U;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -1825,7 +1796,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_FULL_Success)
     EXPECT_EQ(channelEntity->cachedReqCount_, 2U);
 
     // hccl recv completion
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -1838,10 +1809,10 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_FULL_Success)
     CheckQueueSize(72, 1);
 
     // process cached envelope
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -1854,19 +1825,19 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_1to1_T2Q_FULL_Success)
     dgw::EntityPtr queueEntity = dgw::EntityManager::Instance().GetEntityById(bqs::LOCAL_Q, 0, dgw::EntityType::ENTITY_QUEUE, 72,
         dgw::EntityDirection::DIRECTION_RECV);
     EXPECT_NE(queueEntity, nullptr);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     // include 4 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 4UL);
+    EXPECT_EQ(GetSubscribedData().size(), 4UL);
 
     // waiting for work schedule
     std::this_thread::sleep_for(std::chrono::seconds(1));
     // check result
     CheckQueueSize(72, 1);
-    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf});
+    CheckAndDeQueue(72, std::vector<int32_t>{g_tagMbuf_int});
 
     // include 2 inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     QueueScheduleDestroy();
 }
@@ -1888,7 +1859,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf[256];
@@ -1902,7 +1873,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -1913,7 +1884,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link)
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 1U);
 
     // hccl recv completion
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 0U);
@@ -1937,7 +1908,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail1)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf11[256];
@@ -1951,7 +1922,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail1)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -1994,14 +1965,14 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail2)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     dgw::HcclProcess hcclProcess;
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2048,14 +2019,14 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail3)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     dgw::HcclProcess hcclProcess;
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2108,7 +2079,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail4)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     MOCKER(halMbufAlloc).stubs().will(returnValue(0));
 
@@ -2137,7 +2108,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_AllocMbuf_fail4)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2172,7 +2143,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_ReceiveMbufData_fail1)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf11[256];
@@ -2186,7 +2157,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_ReceiveMbufData_fail1)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2229,7 +2200,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_ReceiveMbufData_fail2)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf11[256];
@@ -2243,7 +2214,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_ReceiveMbufData_fail2)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2287,7 +2258,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_SendMbufData_fail1)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf11[256];
@@ -2301,7 +2272,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_SendMbufData_fail1)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2342,14 +2313,14 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, HcclProcess_SendMbufHead_fail1)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     dgw::HcclProcess hcclProcess;
     // hccl recv request: 4 envelope, process 2, cache 2
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2396,7 +2367,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link_with_HcclTestSome_Fail)
     AddBindRelation(src, dest);
 
     // include four inner queue
-    EXPECT_EQ(g_dataSubscribeVec.size(), 5UL);
+    EXPECT_EQ(GetSubscribedData().size(), 5UL);
 
     uint32_t headBufSize = 256U;
     char headBuf[256];
@@ -2410,7 +2381,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link_with_HcclTestSome_Fail)
     g_totalEnvelopeCount = 1U;
     g_link = true;
     event_info event;
-    event.comm.event_id = dgw::EVENT_RECV_REQUEST_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_REQUEST_MSG);
     auto ret = hcclProcess.ProcessRecvRequestEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
 
@@ -2421,7 +2392,7 @@ TEST_F(BQS_QUEUE_SCHEDULE_STTest, Schedule_build_link_with_HcclTestSome_Fail)
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 1U);
 
     // hccl recv completion
-    event.comm.event_id = dgw::EVENT_RECV_COMPLETION_MSG;
+    event.comm.event_id = static_cast<EVENT_ID>(dgw::EVENT_RECV_COMPLETION_MSG);
     ret = hcclProcess.ProcessRecvCompletionEvent(event, 0U, 0U);
     EXPECT_EQ(ret, dgw::FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(channelEntity->uncompReqQueue_.Size(), 1U);
@@ -2510,9 +2481,9 @@ TEST_F(QUEUE_SCHEDULE_STest, LoopProcessEnqueueEvent_with_halEschedWaitEventFail
 
 TEST_F(QUEUE_SCHEDULE_STest, StartWithAos_SUCCESS)
 {
-    char *hostNameAos = "AOS_SD";
+    char hostNameAos[] = "AOS_SD";
     MOCKER(gethostname)
-        .stubs().with(outBoundP(hostNameAos, strlen(hostNameAos) + 1))
+        .stubs().with(outBoundP(&hostNameAos[0U], strlen(hostNameAos) + 1))
         .will(returnValue(0));
     MOCKER(bqs::GetRunContext).stubs().will(returnValue(bqs::RunContext::DEVICE));
     MOCKER(&QueueScheduleInterface::GetAicpuPhysIndex).stubs().will(returnValue(1));
@@ -2530,7 +2501,7 @@ TEST_F(QUEUE_SCHEDULE_STest, StartWithDeviceBindAicpu_FAILED)
     MOCKER(&QueueScheduleInterface::GetAiCpuNum).stubs().will(returnValue(1));
     MOCKER(&QueueScheduleInterface::GetAicpuPhysIndex).stubs().will(returnValue(1));
     bqs::QueueSchedule queueSchedule{{0, 0, 1}};
-    int32_t ret = queueSchedule.StartQueueSchedule();
+    (void) queueSchedule.StartQueueSchedule();
     EXPECT_EQ(queueSchedule.running_, false);
 
     QueueScheduleDestroy(queueSchedule);
@@ -2549,7 +2520,8 @@ TEST_F(QUEUE_SCHEDULE_STest, ChannelEntity_ProcessSendCompleteion_success)
     MbufTypeInfo typeInfo = {};
     typeInfo.type = static_cast<uint32_t>(MBUF_CREATE_BY_BUILD);
     MOCKER(halBuffGetInfo)
-        .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP((void*)(&typeInfo)), mockcpp::any())
+        .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),
+                      outBoundP((void*)(&typeInfo), sizeof(MbufTypeInfo)), mockcpp::any())
         .will(returnValue(0));
 
     auto ret = channelEntity->ProcessSendCompletion(nullptr);

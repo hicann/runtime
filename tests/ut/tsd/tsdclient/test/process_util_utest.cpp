@@ -31,7 +31,7 @@ class ProcessUtilTest : public testing::Test {
 protected:
     virtual void SetUp()
     {
-        setenv("RUN_MODE", "1", "1");
+        setenv("RUN_MODE", "1", 1);
         cout << "Before TsdEzcomTest()" << endl;
     }
 

@@ -43,13 +43,10 @@ namespace {
     QsProcMsgRsp retRsp;
     // hccl handle
     uint64_t hcclHandle = 100UL;
-    HcclComm hcclComm = &hcclHandle;
 
     drvError_t halEschedSubmitEventSyncFake(unsigned int devId, struct event_summary *event,
                                             int timeout, struct event_reply *reply)
     {
-        ConfigInfo *config = reinterpret_cast<ConfigInfo *>(&g_buffer[1]);
-
         struct event_info eventInfo;
         eventInfo.comm.event_id = EVENT_QS_MSG;
         eventInfo.comm.subevent_id = event->subevent_id;
@@ -1479,8 +1476,8 @@ TEST_F(DgwClientConfigStest, UpdateConfig_Failed00)
 
 TEST_F(DgwClientConfigStest, InitDynamicSched03)
 {
-    char_t *env = "7,6,5,4";
-    MOCKER(getenv).stubs().will(returnValue(env));
+    char_t env[] = "7,6,5,4";
+    MOCKER(getenv).stubs().will(returnValue(&env[0U]));
     MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
     MOCKER_CPP(&QSFeatureCtrl::IsSupportSetVisibleDevices).stubs().will(returnValue(true));
     bqs::GlobalCfg::GetInstance().SetNumaFlag(true);

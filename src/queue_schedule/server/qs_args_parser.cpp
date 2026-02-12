@@ -259,7 +259,8 @@ namespace bqs {
         if ((val < static_cast<int32_t>(bqs::QueueSchedulerRunMode::SINGLE_PROCESS)) ||
             (val > static_cast<int32_t>(bqs::QueueSchedulerRunMode::MULTI_THREAD))) {
             BQS_LOG_ERROR("deploy mode param[%s] invalided, value is not in [%u, %u]", para.c_str(),
-                          QueueSchedulerRunMode::SINGLE_PROCESS, QueueSchedulerRunMode::MULTI_THREAD);
+                          static_cast<uint32_t>(QueueSchedulerRunMode::SINGLE_PROCESS),
+                          static_cast<uint32_t>(QueueSchedulerRunMode::MULTI_THREAD));
              return false;
         }
 
@@ -302,7 +303,7 @@ namespace bqs {
             return false;
         }
 
-        BQS_LOG_INFO("SchedPolicy is [0x%llx].", val);
+        BQS_LOG_INFO("SchedPolicy is [0x%lx].", val);
         schedPolicy_ = val;
         return true;
     }

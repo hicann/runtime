@@ -76,7 +76,7 @@ set(TSD_UT_TEST_SRC_FILE
     ../stub/stub_appmon.cpp
     ../stub/stub_hdc.cpp
     ../stub/stub_driver.cpp
-    ../stub/stub_openssl.cpp
+    # ../stub/stub_openssl.cpp
     ../stub/stub_log.cpp
     ../stub/log_writer.cpp
     ../stub/stub_devdrv_runtime.cpp
@@ -129,7 +129,7 @@ target_compile_definitions(tsd_client_utest PRIVATE
 target_link_libraries(tsd_client_utest PRIVATE
     $<BUILD_INTERFACE:intf_tsd_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
-    ascend_protobuf
+    ascend_protobuf_static
     c_sec
     dl
     pthread

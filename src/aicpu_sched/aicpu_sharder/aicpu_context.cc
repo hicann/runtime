@@ -363,7 +363,7 @@ void SetStreamDvppBuffBychlType(const AicpuDvppChlType chlType, const uint64_t b
     if (iter != g_streamAndChannelMap[chlType].end()) {
         iter->second.dvppBuff = buff;
         iter->second.dvppBuffLen = buffLen;
-        AICPUE_LOGI("Set dvpp len [%d], stream [%d].", buffLen, streamId);
+        AICPUE_LOGI("Set dvpp len [%lu], stream [%u].", buffLen, streamId);
     }
     (void)pthread_rwlock_unlock(&g_streamAndChannelMapLock[chlType]);
     return;
@@ -382,7 +382,7 @@ void SetStreamDvppBuffByStreamId(const AicpuDvppChlType chlType, const uint32_t 
     if (iter != g_streamAndChannelMap[chlType].end()) {
         iter->second.dvppBuff = buff;
         iter->second.dvppBuffLen = buffLen;
-        AICPUE_LOGI("Set dvpp len [%d], stream [%d].", buffLen, streamId);
+        AICPUE_LOGI("Set dvpp len [%lu], stream [%u].", buffLen, streamId);
     }
     (void)pthread_rwlock_unlock(&g_streamAndChannelMapLock[chlType]);
     return;
@@ -407,7 +407,7 @@ void GetDvppBufAndLenBychlType(const AicpuDvppChlType chlType, uint8_t **buff, u
     if (iter != g_streamAndChannelMap[chlType].end()) {
         *buff = iter->second.dvppBuff;
         *buffLen = iter->second.dvppBuffLen;
-        AICPUE_LOGI("Get dvpp len [%d], stream [%d].", *buffLen, streamId);
+        AICPUE_LOGI("Get dvpp len [%lu], stream [%u].", *buffLen, streamId);
     }
     (void)pthread_rwlock_unlock(&g_streamAndChannelMapLock[chlType]);
     return;

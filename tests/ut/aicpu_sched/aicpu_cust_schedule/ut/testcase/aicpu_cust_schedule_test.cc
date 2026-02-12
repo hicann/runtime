@@ -93,18 +93,6 @@ namespace {
         return DRV_ERROR_NONE;
     }
 
-    drvError_t halGetDeviceInfoFake2(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
-    {
-        if (moduleType == 1 && infoType == 3) {
-            *value = 8;
-        }
-        if (moduleType == 1 && infoType == 8) {
-            *value = 1020;
-        }
-
-        return DRV_ERROR_NONE;
-    }
-
     hdcError_t drvHdcGetCapacityPCIE(struct drvHdcCapacity *capacity)
     {
         capacity->chanType = HDC_CHAN_TYPE_PCIE;
@@ -123,16 +111,6 @@ namespace {
         return DRV_ERROR_QUEUE_EMPTY;
     }
 
-    drvError_t halEschedSubmitEventBatchPart(unsigned int devId, SUBMIT_FLAG flag,
-        struct event_summary *events, unsigned int event_num, unsigned int *succ_event_num)
-    {
-        if (event_num >= 1) {
-            *succ_event_num = event_num - 1;
-        } else {
-            *succ_event_num = event_num;
-        }
-        return DRV_ERROR_NONE;
-    }
     drvError_t drvQueryProcessHostPidFake1(int pid, unsigned int *chip_id, unsigned int *vfid,
                                            unsigned int *host_pid, unsigned int *cp_type)
     {
@@ -159,26 +137,12 @@ namespace {
         return DRV_ERROR_INNER_ERR;
     }
 
-    drvError_t drvQueryProcessHostPidFake4(int pid, unsigned int *chip_id, unsigned int *vfid,
-                                       unsigned int *host_pid, unsigned int *cp_type)
-    {
-        static uint32_t cnt = 0U;
-        if (cnt == 0) {
-            ++cnt;
-            *host_pid = 1;
-            *cp_type = DEVDRV_PROCESS_CP1;
-            return DRV_ERROR_NONE;
-        }
-        *host_pid = 2;
-        *cp_type = DEVDRV_PROCESS_CP1;
-        return DRV_ERROR_NONE;
-    }
-
     drvError_t drvQueryProcessHostPidFake5(int pid, unsigned int *chip_id, unsigned int *vfid,
                                            unsigned int *host_pid, unsigned int *cp_type)
     {
         return DRV_ERROR_NO_PROCESS;
     }
+    auto mockerOpen = reinterpret_cast<int(*)(const char*, int)>(open);
 }
 
 extern int32_t SecureCompute();
@@ -222,7 +186,6 @@ TEST_F(AICPUCustScheduleTEST, MainTestErr) {
     char paramDeviceIdErr1[] = "--deviceId=20";
     char paramDeviceIdErr2[] = "--deviceId=0A";
     char paramAicpuPidOk[] = "--aicpuPid=1000";
-    char paramAicpuPidErr[] = "--aicpuPid=-1000";
     char paramPidOk[] = "--pid=2";
     char paramPidErr[] = "--pid=-100";
     char paramPidSignOk[] = "--pidSign=12345A";
@@ -431,7 +394,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartSuccNoEvent) {
         .will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     MOCKER(halEschedGetEvent).stubs().will(returnValue(DRV_ERROR_NO_EVENT));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_SUCCESS));
 }
@@ -445,7 +407,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartDealError) {
         .will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     MOCKER(halEschedGetEvent).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_SUCCESS));
 }
@@ -458,7 +419,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartSucc) {
         .stubs()
         .will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_SUCCESS));
 }
@@ -471,7 +431,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartCreateWorkerFail) {
         .stubs()
         .will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_ERROR_COMMON_ERROR)));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR));
 }
@@ -495,7 +454,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStart_MemorySvmDevice) {
     MOCKER_CPP(&ThreadPool::CreateWorker)
         .stubs()
         .will(returnValue(0));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_PCIE_MODE);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
@@ -507,7 +465,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStart_InitTaskMonitorContext_ERR) {
     MOCKER(InitTaskMonitorContext)
         .stubs()
         .will(returnValue(1));
-    char ch[] = "1234";
     AicpuSchedule::AicpuDrvManager::GetInstance().aicpuNum_ = 1U;
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 0, 0, aicpu::AicpuRunMode::PROCESS_PCIE_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR));
@@ -522,7 +479,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartBindSinlingFail) {
         .will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     MOCKER(halMemBindSibling).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_PCIE_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR));
 }
@@ -537,7 +493,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartBindSinling_Fail_SVM_MEM_BIND_S
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     MOCKER(halMemBindSibling).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
     AicpuSchedule::AicpuDrvManager::GetInstance().needSafeVerify_ = true;
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_PCIE_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR));
 }
@@ -552,7 +507,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartBindSinling_Fail_SVM_MEM_BIND_S
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
     MOCKER(halMemBindSibling).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
     AicpuSchedule::AicpuDrvManager::GetInstance().needSafeVerify_ = false;
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, PROFILING_OPEN, 100, 0, aicpu::AicpuRunMode::PROCESS_PCIE_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_COMMON_ERROR));
 }
@@ -880,7 +834,6 @@ TEST_F(AICPUCustScheduleTEST, DumpDataFailTEST) {
     std::string opMappingInfoStr;
     opMappingInfo.SerializeToString(&opMappingInfoStr);
 
-    int32_t ret = 0;
     // load op mapping info
     OpDumpTaskManager &opDumpTaskMgr = OpDumpTaskManager::GetInstance();
     opDumpTaskMgr.LoadOpMappingInfo(opMappingInfoStr.c_str(), opMappingInfoStr.length());
@@ -1000,7 +953,6 @@ TEST_F(AICPUCustScheduleTEST, SingleOpOrUnknownShapeOpDumpTest) {
     const aicpu::HwtsTsKernel &tsKernelInfo = kernelInfo;
     const aicpu::HwtsCceKernel &kernel = tsKernelInfo.kernelBase.cceKernel;
     // dump op has two param, one is protobuf addr
-    const size_t len =  sizeof(aicpu::AicpuParamHead) + (singleOpDumpParamNum * sizeof(uint64_t));
     const auto ioAddrBase = reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(kernel.paramBase +
                                                                                 sizeof(aicpu::AicpuParamHead)));
     const uint64_t opMappingInfoAddr = ioAddrBase[0];
@@ -1182,14 +1134,13 @@ TEST_F(AICPUCustScheduleTEST, ProcessHWTSKernelEventTest_failed) {
         .stubs()
         .will(returnValue(0));
     MOCKER(AicpuUtil::ResetFpsr).stubs().will(invoke(AicpuSchedule::ResetFpsrStub));
-    (reinterpret_cast<TsAicpuSqe *>(eventInfo.priv.msg))->cmd_type = 65535;
+    (reinterpret_cast<TsAicpuSqe *>(eventInfo.priv.msg))->cmd_type = 255U;
     const int32_t ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_NOT_FOUND_EVENT);
 }
 
 TEST_F(AICPUCustScheduleTEST, ProcessCtrlEventTestMsg) {
     event_info eventInfo;
-    TsAicpuSqe sqe;
     eventInfo.comm.event_id = EVENT_TS_CTRL_MSG;
     eventInfo.priv.msg_len = sizeof(TsAicpuSqe);
     TsAicpuSqe *sqePtr = reinterpret_cast<TsAicpuSqe *>(eventInfo.priv.msg);
@@ -1228,7 +1179,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCtrlEventTestMsg) {
 
 TEST_F(AICPUCustScheduleTEST, ProcessDataDumpInfoLoad_succ) {
     event_info eventInfo;
-    TsAicpuMsgInfo msgInfo;
     eventInfo.comm.event_id = EVENT_TS_CTRL_MSG;
     TsAicpuMsgInfo *msgInfoPtr = reinterpret_cast<TsAicpuMsgInfo *>(eventInfo.priv.msg);
     msgInfoPtr->cmd_type = AICPU_DATADUMP_LOADINFO;
@@ -1248,7 +1198,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessDataDumpInfoLoad_succ) {
 
 TEST_F(AICPUCustScheduleTEST, ProcessCmdType_fail) {
     event_info eventInfo;
-    TsAicpuMsgInfo msgInfo;
     eventInfo.comm.event_id = EVENT_TS_CTRL_MSG;
     TsAicpuMsgInfo *msgInfoPtr = reinterpret_cast<TsAicpuMsgInfo *>(eventInfo.priv.msg);
     msgInfoPtr->cmd_type = TS_INVALID_AICPU_CMD;
@@ -1265,7 +1214,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCmdType_fail) {
 
 TEST_F(AICPUCustScheduleTEST, ProcessDataDumpInfoLoadNoVersion_fail) {
     event_info eventInfo;
-    TsAicpuMsgInfo msgInfo;
     eventInfo.comm.event_id = EVENT_TS_CTRL_MSG;
     TsAicpuMsgInfo *msgInfoPtr = reinterpret_cast<TsAicpuMsgInfo *>(eventInfo.priv.msg);
     msgInfoPtr->cmd_type = AICPU_DATADUMP_LOADINFO;
@@ -1298,7 +1246,7 @@ TEST_F(AICPUCustScheduleTEST, adapterTest) {
     uint32_t ret = ada.ResponseToTs(info, handle, devid, tsId);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
     hwts_response_t rep{};
-    EVENT_ID eventid = 0;
+    EVENT_ID eventid = EVENT_RANDOM_KERNEL;
     uint32_t subid = 0;
     MOCKER_CPP(halEschedAckEvent)
         .stubs()
@@ -1328,7 +1276,7 @@ TEST_F(AICPUCustScheduleTEST, ProcessHWTSKernelEventTest_failedResetFpsr) {
     MOCKER_CPP(&AicpuEventProcess::ExecuteTsKernelTask)
         .stubs()
         .will(returnValue(0));
-    (reinterpret_cast<TsAicpuSqe *>(eventInfo.priv.msg))->cmd_type = 65535;
+    (reinterpret_cast<TsAicpuSqe *>(eventInfo.priv.msg))->cmd_type = 255U;
     const int32_t ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_NOT_FOUND_EVENT);
 }
@@ -1383,7 +1331,6 @@ TEST_F(AICPUCustScheduleTEST, DumpDataLoadOpMappingInfo) {
     output1->set_data_type(dataType);
     output1->set_format(1);
     int32_t data2[4] = {1, 2, 3, 4};
-    int *p2 = &data2[0];
     aicpu::dump::Shape *shape1 = output1->mutable_shape();
     shape1->add_dim(-1);
     shape1->add_dim(2);
@@ -1399,7 +1346,6 @@ TEST_F(AICPUCustScheduleTEST, DumpDataLoadOpMappingInfo) {
     input->set_data_type(dataType);
     input->set_format(1);
     int32_t inData[4] = {10, 20, 30, 40};
-    int32_t *q = &inData[0];
     aicpu::dump::Shape *inShape = input->mutable_shape();
     inShape->add_dim(-1);
     inShape->add_dim(2);
@@ -1454,7 +1400,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpFailTes) {
     int32_t data[8] = {1, 2, 3, 4, 5, 6, 7 ,8};
     uint64_t data_size = sizeof(data);
     OpDumpTask task(0, 0);
-    uint64_t data_addr = data;
     ::toolkit::dumpdata::Workspace *workSpace = task.baseDumpData_.add_space();
     if (workSpace != nullptr) {
         workSpace->set_size(data_size);
@@ -1466,7 +1411,7 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpFailTes) {
 
         workSpace->set_size(0);
         task.buffSize_ = data_size;
-        task.opWorkspaceAddr_[0] = data;
+        task.opWorkspaceAddr_[0] = reinterpret_cast<uint64_t>(&data[0U]);
         // 预期打印 [ERROR] data size is zero
         EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
     }
@@ -1483,7 +1428,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpSuccessTest) {
     int32_t data[8] = {1, 2, 3, 4, 5, 6, 7 ,8};
     uint64_t data_size = sizeof(data);
     OpDumpTask task(0, 0);
-    uint64_t data_addr = data;
     ::toolkit::dumpdata::Workspace *workSpace = task.baseDumpData_.add_space();
     if (workSpace != nullptr) {
         workSpace->set_size(data_size);
@@ -1502,10 +1446,8 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpSuccessTest_bigsize) {
         .stubs()
         .will(returnValue((void *)111));
     MOCKER(memcpy_s).stubs().will(returnValue(EOK));
-    int32_t data[8] = {1, 2, 3, 4, 5, 6, 7 ,8};
     uint64_t data_size = 100000;
     OpDumpTask task(0, 0);
-    uint64_t data_addr = data;
     ::toolkit::dumpdata::Workspace *workSpace = task.baseDumpData_.add_space();
     if (workSpace != nullptr) {
         workSpace->set_size(data_size);
@@ -1527,7 +1469,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpSuccessTest_memcpy_s_Fai
     int32_t data[8] = {1, 2, 3, 4, 5, 6, 7 ,8};
     uint64_t data_size = sizeof(data);
     OpDumpTask task(0, 0);
-    uint64_t data_addr = data;
     ::toolkit::dumpdata::Workspace *workSpace = task.baseDumpData_.add_space();
     if (workSpace != nullptr) {
         workSpace->set_size(data_size);
@@ -1549,7 +1490,6 @@ TEST_F(AICPUCustScheduleTEST, ProcessCustOpWorkspaceDumpSuccessTest_dump_Fail2) 
     int32_t data[8] = {1, 2, 3, 4, 5, 6, 7 ,8};
     uint64_t data_size = sizeof(data);
     OpDumpTask task(0, 0);
-    uint64_t data_addr = data;
     ::toolkit::dumpdata::Workspace *workSpace = task.baseDumpData_.add_space();
     if (workSpace != nullptr) {
         workSpace->set_size(data_size);
@@ -1581,8 +1521,6 @@ TEST_F(AICPUCustScheduleTEST, PreProcessWorkspaceSuccessTest) {
         const int32_t dataType = 7; // int32
         opMappingInfo.set_dump_path("dump_path");
         opMappingInfo.set_model_name("model_n a.m\\ /e");
-        uint64_t stepId = 1;
-        uint64_t iterationsPerLoop = 1;
         opMappingInfo.set_flag(0x01);
         aicpu::dump::Task *task = opMappingInfo.add_task();
         {
@@ -1604,7 +1542,7 @@ TEST_F(AICPUCustScheduleTEST, PreProcessWorkspaceSuccessTest) {
                     inputOriginShape->add_dim(2);
                     inputOriginShape->add_dim(2);
                 }
-                input->set_addr_type(0);
+                input->set_addr_type(aicpu::dump::AddressType::TRADITIONAL_ADDR);
                 input->set_size(inputSize);
                 input->set_offset(inputoffset);
             }
@@ -1643,7 +1581,7 @@ TEST_F(AICPUCustScheduleTEST, MainTestWithVf) {
     MOCKER(system)
         .stubs()
         .will(returnValue(0));
-    MOCKER(open, int(const char*, int)).stubs().will(returnValue(0));
+    MOCKER(mockerOpen).stubs().will(returnValue(0));
     char* argv[] = { processName, paramDeviceIdOk, paramPidOk, paramPidSignOk,
                      paramModeOk, paramCustSoPath, paramAicpuPid, paramLogLevelOk,
                      paramVfId, paramGrpNameOk, paramGrpNumOk };
@@ -1670,7 +1608,7 @@ TEST_F(AICPUCustScheduleTEST, custMainTestWithVf_openFail) {
     MOCKER(system)
         .stubs()
         .will(returnValue(0));
-        MOCKER(open, int(const char*, int)).stubs().will(returnValue(-1));
+    MOCKER(mockerOpen).stubs().will(returnValue(-1));
     char* argv[] = { processName, paramDeviceIdOk, paramPidOk, paramPidSignOk,
                      paramModeOk, paramCustSoPath, paramAicpuPid, paramLogLevelOk,
                      paramVfId, paramGrpNameOk, paramGrpNumOk };
@@ -1703,7 +1641,6 @@ TEST_F(AICPUCustScheduleTEST, ComputeProcessStartWithProfilingSucc) {
         .stubs()
         .will(returnValue(0));
     MOCKER(halEschedSubmitEvent).stubs().will(returnValue(0));
-    char ch[] = "000000000000000000000000000000000000000000000000";
     int ret = ComputeProcess::GetInstance().Start(0, 100, 7, 100, 0, aicpu::AicpuRunMode::PROCESS_SOCKET_MODE);
     EXPECT_EQ(ret, static_cast<int32_t>(ComputProcessRetCode::CP_RET_SUCCESS));
 }
@@ -1750,7 +1687,7 @@ TEST_F(AICPUCustScheduleTEST, SendCtrlCpuMsgSubmitFail) {
 TEST_F(AICPUCustScheduleTEST, AddToCgroup_failed)
 {
     MOCKER(access).stubs().will(returnValue(0));
-    MOCKER(waitpid).stubs().will(returnValue(-1));
+    MOCKER_CPP(&AicpuUtil::ExecuteCmd).stubs().will(returnValue(-1));
     auto ret = aicpu::AddToCgroup(0,0);
     EXPECT_EQ(ret, true);
 }
@@ -1767,7 +1704,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSo_failed)
 {
     event_info_priv privMsg;
     privMsg.msg_len = 17;
-    int retMem = memcpy_s(privMsg.msg, 17, "libcpu_kernels.so", 17);
+    (void) memcpy_s(privMsg.msg, 17, "libcpu_kernels.so", 17);
     MOCKER(aeBatchLoadKernelSo)
         .stubs()
         .will(returnValue(1));;
@@ -1779,7 +1716,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSoByAicpuEvent_failed0)
 {
     struct TsdSubEventInfo msg;
     const int msgLen = 17;
-    int retMem = memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
+    (void) memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
     int ret = CustomOpExecutor::GetInstance().OpenKernelSoByAicpuEvent(nullptr);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
 }
@@ -1789,6 +1726,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSoByAicpuEvent_failed1)
     struct TsdSubEventInfo msg;
     const int msgLen = 17;
     int retMem = memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
+    EXPECT_EQ(retMem, 0);
     MOCKER(aeBatchLoadKernelSo)
         .stubs()
         .will(returnValue(1));
@@ -1800,7 +1738,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSoByAicpuEvent_failed2)
 {
     struct TsdSubEventInfo msg;
     const int msgLen = 17;
-    int retMem = memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
+    (void) memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
     MOCKER(strnlen)
         .stubs()
         .will(returnValue(static_cast<uint32_t>(0)));
@@ -1812,7 +1750,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSoByAicpuEvent_failed3)
 {
     struct TsdSubEventInfo msg;
     const int msgLen = 17;
-    int retMem = memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
+    (void) memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
     MOCKER(strcpy_s)
         .stubs()
         .will(returnValue(ERANGE));
@@ -1931,10 +1869,10 @@ TEST_F(AICPUCustScheduleTEST, MainTestGetenvFailed) {
     char* argv[] = {processName, paramDeviceIdOk, paramPidOk, paramPidSignOk, paramModeOk, paramCustSoPath,
                     paramAicpuPid, paramLogLevelOk, groupNameListOk, groupNameNumOk};
     int32_t argc = 10;
-    char_t *dirName = "";
+    char_t dirName[] = "";
     MOCKER(getenv)
         .stubs()
-        .will(returnValue(dirName));
+        .will(returnValue(&dirName[0U]));
     MOCKER_CPP(&AicpuScheduleInterface::InitAICPUScheduler)
         .stubs()
         .will(returnValue(0));
@@ -2172,8 +2110,9 @@ TEST_F(AICPUCustScheduleTEST, DoSubmitEventSync) {
     int32_t ret = 0;
     int len = 128;
     struct event_proc_result rsp = {};
-    char msg[128];
-    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(msg, len, rsp);
+    char msg[128] = {};
+    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(
+        reinterpret_cast<uint8_t*>(msg), len, rsp);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
@@ -2181,8 +2120,9 @@ TEST_F(AICPUCustScheduleTEST, DoSubmitEventSync_failed1) {
     int32_t ret = 0;
     int len = 0;
     struct event_proc_result rsp = {};
-    char msg[128];
-    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(msg, len, rsp);
+    char msg[128] = {};
+    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(
+        reinterpret_cast<uint8_t*>(msg), len, rsp);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
 
@@ -2191,8 +2131,9 @@ TEST_F(AICPUCustScheduleTEST, DoSubmitEventSync_failed2) {
     int32_t ret = 0;
     int len = 128;
     struct event_proc_result rsp = {};
-    char msg[128];
-    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(msg, len, rsp);
+    char msg[128] = {};
+    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(
+        reinterpret_cast<uint8_t*>(msg), len, rsp);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
 
@@ -2201,8 +2142,9 @@ TEST_F(AICPUCustScheduleTEST, DoSubmitEventSync_failed3) {
     int32_t ret = 0;
     int len = 128;
     struct event_proc_result rsp = {};
-    char msg[128];
-    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(msg, len, rsp);
+    char msg[128] = {};
+    ret = AicpuCustomSdLoadPlatformInfoProcess::GetInstance().DoSubmitEventSync(
+        reinterpret_cast<uint8_t*>(msg), len, rsp);
     EXPECT_EQ(ret, 1);
 }
 
@@ -2561,7 +2503,10 @@ aicpu::status_t GetAicpuRunModeSOCKET1(aicpu::AicpuRunMode &runMode)
 {
     static uint32_t ret = 0;
     runMode = aicpu::AicpuRunMode::PROCESS_SOCKET_MODE;
-    return ret++;
+    if (ret++ == 0) {
+        return AICPU_ERROR_NONE;
+    }
+    return AICPU_ERROR_FAILED;
 }
 void SendMc2CreateThreadMsgToMain_stub()
 {
@@ -2698,9 +2643,8 @@ TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_AICPU_SCHEDULE_THREAD_AL
 }
 aicpu::status_t GetAicpuRunModeSOCKET2(aicpu::AicpuRunMode &runMode)
 {
-    static uint32_t ret = 0;
     runMode = aicpu::AicpuRunMode::PROCESS_SOCKET_MODE;
-    return ret;
+    return AICPU_ERROR_NONE;
 }
 TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_AICPU_SCHEDULE_NOT_SUPPORT_St) {
     MOCKER(sem_init) .stubs().will(returnValue(0));

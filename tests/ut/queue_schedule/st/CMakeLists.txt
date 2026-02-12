@@ -110,11 +110,11 @@ set(LOCAL_SRC_FILES
     ../stub/drv_buf_api.cpp
     ../stub/event_sched_api.cpp
     ../stub/driver_stub.cpp
-    ../stub/profile_stub.cpp
     ../stub/marker_stub.cpp
     ../stub/profile_common_stub.cpp
     ../stub/msprof_stub.cpp
     ../stub/slog_stub.cpp
+    ../stub/queue_schedule_stub.cpp
     ${PROTO_SRCS}
 )
 

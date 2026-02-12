@@ -117,7 +117,7 @@ TimerStatus AicpuTimer::RegistTimeoutCallback(const TimerHandle timerHandle, con
         const std::lock_guard<std::mutex> lk(timeoutCbkMapMutex_);
         const auto ret = timeoutCbkMap_.emplace(timerHandle, callback);
         if (!ret.second) {
-            AICPUE_LOGE("Register timeout callback func in map failed, TimerHandle=%u.", timerHandle);
+            AICPUE_LOGE("Register timeout callback func in map failed, TimerHandle=%lu.", timerHandle);
             return TimerStatus::AICPU_TIMER_FAILED;
         }
     }
@@ -131,7 +131,7 @@ TimerStatus AicpuTimer::UnregistTimeoutCallback(const TimerHandle timerHandle)
         const std::lock_guard<std::mutex> lk(timeoutCbkMapMutex_);
         const auto eraseNum = timeoutCbkMap_.erase(timerHandle);
         if (eraseNum <= 0) {
-            AICPUE_LOGE("Erase op callback in map failed, TimerHandle=%u.", timerHandle);
+            AICPUE_LOGE("Erase op callback in map failed, TimerHandle=%lu.", timerHandle);
             return TimerStatus::AICPU_TIMER_FAILED;
         }
     }

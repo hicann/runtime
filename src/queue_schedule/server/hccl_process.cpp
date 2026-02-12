@@ -381,13 +381,13 @@ FsmStatus HcclProcess::PreProcessSetUplinkReq(const RequestInfo * const hcclReq)
     if (curTick >= hcclReq->startTick) {
         const auto timeCost = bqs::ProfileManager::GetInstance().GetTimeCost(curTick - hcclReq->startTick);
         if (timeCost >= LINK_SET_UP_TIMEOUE) {
-            DGW_LOG_ERROR("curtick:%llu, setuptick:%llu, threshold:%.2fus, linkSetUp timeout:%.2fus.", curTick,
+            DGW_LOG_ERROR("curtick:%lu, setuptick:%lu, threshold:%.2fus, linkSetUp timeout:%.2fus.", curTick,
                           hcclReq->startTick, LINK_SET_UP_TIMEOUE, timeCost);
             return FsmStatus::FSM_FAILED;
         }
         return FsmStatus::FSM_SUCCESS;
     }
-    DGW_LOG_ERROR("cur tick:%llu is smaller than SetUpTick:%llu.", curTick, hcclReq->startTick);
+    DGW_LOG_ERROR("cur tick:%lu is smaller than SetUpTick:%lu.", curTick, hcclReq->startTick);
     return FsmStatus::FSM_FAILED;
 }
 }  // namespace dgw

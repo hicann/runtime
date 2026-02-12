@@ -9,7 +9,6 @@
  */
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 #include "mockcpp/mockcpp.hpp"
 #define private public
 #include "aicpusd_task_queue.h"

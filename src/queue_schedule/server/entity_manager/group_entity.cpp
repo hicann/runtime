@@ -132,7 +132,7 @@ bool GroupEntity::Match(const Entity &entity, const uint64_t waitTransId, bool e
     if ((entity.GetRouteLabel() != 0U) || (groupInfo_.groupPolicy == bqs::GroupPolicy::DYNAMIC)) {
         return true;
     }
-    DGW_LOG_INFO("entity transid[%u] vs waitTransId[%u]", entity.GetTransId(), waitTransId);
+    DGW_LOG_INFO("entity transid[%lu] vs waitTransId[%lu]", entity.GetTransId(), waitTransId);
     return exactlyMatch ? (entity.GetTransId() == waitTransId) : (entity.GetTransId() >= waitTransId);
 }
 

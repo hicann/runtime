@@ -91,7 +91,7 @@ FsmStatus ClientEntity::DoDequeueMbuf(void **mbufPtr) const
     uint64_t deqLen = 0U;
     ret = halQueuePeek(deviceId, queueId, &deqLen, -1);
     if ((ret != DRV_ERROR_NONE) || (deqLen == 0U)) {
-        DGW_LOG_ERROR("halQueuePeek from queue[%u] in device[%u] failed, ret[%d], deqLen[%u]",
+        DGW_LOG_ERROR("halQueuePeek from queue[%u] in device[%u] failed, ret[%d], deqLen[%lu]",
             queueId, deviceId, static_cast<int32_t>(ret), deqLen);
         return (ret == DRV_ERROR_NOT_EXIST) ? FsmStatus::FSM_ERROR_PENDING : FsmStatus::FSM_FAILED;
     }
@@ -254,7 +254,7 @@ FsmStatus ClientEntity::DoEnqueueMbuf(Mbuf *const mbuf) const
     uint64_t dataLen = 0UL;
     auto retCode = halMbufGetDataLen(mbuf, &dataLen);
     if ((retCode != static_cast<int32_t>(DRV_ERROR_NONE)) || (dataLen == 0)) {
-        DGW_LOG_ERROR("Fail to get buff size for mbuf, ret=[%d], dataLen[%u]", retCode, dataLen);
+        DGW_LOG_ERROR("Fail to get buff size for mbuf, ret=[%d], dataLen[%lu]", retCode, dataLen);
         return FsmStatus::FSM_FAILED;
     }
 

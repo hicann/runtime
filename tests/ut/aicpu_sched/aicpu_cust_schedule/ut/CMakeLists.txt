@@ -103,7 +103,7 @@ target_link_libraries(aicpu_custom_schedule_utest PRIVATE
     -ldl
     $<BUILD_INTERFACE:intf_aicpu_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
-    ascend_protobuf
+    ascend_protobuf_static
     pthread
     seccomp_headers
     seccomp_stub
@@ -145,7 +145,7 @@ target_link_libraries(aicpu_custom_schedule_utest_dc PRIVATE
     -ldl
     $<BUILD_INTERFACE:intf_aicpu_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
-    ascend_protobuf
+    ascend_protobuf_static
     c_sec_headers
     seccomp_headers
 )

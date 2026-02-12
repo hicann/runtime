@@ -438,7 +438,7 @@ void StatisticManager::DumpChannelStatistic()
     if (numaFlag_) {
         // dump src entity statistic info
         dgw::CommChannels &srcChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(true);
-        BQS_LOG_INFO("EntityManager[1]'s srcChannelsExtra size is %u", srcChannelsExtra.entities.size());
+        BQS_LOG_INFO("EntityManager[1]'s srcChannelsExtra size is %zu", srcChannelsExtra.entities.size());
         (void)pthread_rwlock_rdlock(&srcChannelsExtra.lock);
         for (auto &entity : srcChannelsExtra.entities) {
             entity->Dump();
@@ -447,7 +447,7 @@ void StatisticManager::DumpChannelStatistic()
 
         // dump dst entity statistic info
         dgw::CommChannels &dstChannelsExtra = dgw::EntityManager::Instance(1U).GetCommChannels(false);
-        BQS_LOG_INFO("EntityManager[1]'s dstChannelsExtra size is %u", dstChannelsExtra.entities.size());
+        BQS_LOG_INFO("EntityManager[1]'s dstChannelsExtra size is %zu", dstChannelsExtra.entities.size());
         (void)pthread_rwlock_rdlock(&dstChannelsExtra.lock);
         for (auto &entity : dstChannelsExtra.entities) {
             entity->Dump();

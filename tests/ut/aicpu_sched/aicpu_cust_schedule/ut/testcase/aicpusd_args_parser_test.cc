@@ -161,17 +161,6 @@ TEST_F(AicpuSdArgsParserTest, ParseArgsSuccess3)
 
 TEST_F(AicpuSdArgsParserTest, ParseArgsFail1)
 {
-    // has illegal input para
-    const pid_t hostPid = 15600;
-    const pid_t aicpuPid = 456;
-    const uint32_t vfId = 9999U;
-    const std::string pidSign = "00000000";
-    const uint32_t expectedLogLevel = 2U;
-    const uint32_t expectedEventLevel = 3U;
-    const uint32_t expectedGrpNum = 3U;
-    const std::string expectedSoPath = "/home/CustAicpu";
-    const std::vector<std::string> expectedGrpName = {"GrpA", "GrpB", "Grp3"};
-
     const int32_t argc = 10;
     const char *argv[] = {
         "--deviceId=1",
@@ -193,16 +182,6 @@ TEST_F(AicpuSdArgsParserTest, ParseArgsFail1)
 
 TEST_F(AicpuSdArgsParserTest, ParseArgsFail2)
 {
-    // missed required para
-    const pid_t hostPid = 15600;
-    const uint32_t vfId = 5U;
-    const std::string pidSign = "00000000";
-    const uint32_t expectedLogLevel = 2U;
-    const uint32_t expectedEventLevel = 3U;
-    const std::string hostProcName = "runtime_test1";
-    const uint32_t expectedGrpNum = 3U;
-    const std::vector<std::string> expectedGrpName = {"GrpA", "GrpB", "Grp3"};
-
     const int32_t argc = 8;
     const char *argv[] = {
         "--deviceId=1",

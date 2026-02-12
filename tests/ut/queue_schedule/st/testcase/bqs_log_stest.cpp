@@ -64,8 +64,8 @@ TEST_F(QsLogStest, OpenLogSo005)
     MOCKER_CPP(&bqs::FeatureCtrl::IsHostQs).stubs().will(returnValue(true));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     MOCKER(memset_s).stubs().will(returnValue(EOK));
-    char_t *path = "test";
-    MOCKER(realpath).stubs().will(returnValue(path));
+    char_t path[] = "test";
+    MOCKER(realpath).stubs().will(returnValue(&path[0U]));
     bqs::HostQsLog::GetInstance().OpenLogSo();
     EXPECT_NE(&(bqs::HostQsLog::GetInstance()), nullptr);
 }
@@ -76,8 +76,8 @@ TEST_F(QsLogStest, OpenLogSo006)
     MOCKER_CPP(&bqs::FeatureCtrl::IsHostQs).stubs().will(returnValue(true));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     MOCKER(memset_s).stubs().will(returnValue(EOK)).then(returnValue(EINVAL));
-    char_t *path = "test";
-    MOCKER(realpath).stubs().will(returnValue(path));
+    char_t path[] = "test";
+    MOCKER(realpath).stubs().will(returnValue(&path[0U]));
     uint64_t rest = 0;
     MOCKER(dlopen).stubs().will(returnValue((void*)(&rest)));
     MOCKER(dlsym).stubs().will(returnValue(static_cast<void *>(nullptr)));
@@ -90,9 +90,9 @@ TEST_F(QsLogStest, OpenLogSo007)
     MOCKER_CPP(&bqs::FeatureCtrl::IsHostQs).stubs().will(returnValue(true));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     MOCKER(memset_s).stubs().will(returnValue(EOK)).then(returnValue(EOK));
-    char_t *path = "test";
+    char_t path[] = "test";
     char *a = nullptr;
-    MOCKER(realpath).stubs().will(returnValue(path)).then(returnValue(a));
+    MOCKER(realpath).stubs().will(returnValue(&path[0U])).then(returnValue(a));
     uint64_t rest = 0;
     MOCKER(dlopen).stubs().will(returnValue((void*)(&rest)));
     MOCKER(dlsym).stubs().will(returnValue(static_cast<void *>(nullptr)));
@@ -105,9 +105,8 @@ TEST_F(QsLogStest, OpenLogSo008)
     MOCKER_CPP(&bqs::FeatureCtrl::IsHostQs).stubs().will(returnValue(true));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     MOCKER(memset_s).stubs().will(returnValue(EOK)).then(returnValue(EOK));
-    char_t *path = "test";
-    char *a = nullptr;
-    MOCKER(realpath).stubs().will(returnValue(path)).then(returnValue(path));
+    char_t path[] = "test";
+    MOCKER(realpath).stubs().will(returnValue(&path[0U]));
     uint64_t rest = 0;
     MOCKER(dlopen).stubs().will(returnValue((void*)(&rest))).then(returnValue((void*)1));
     MOCKER(dlsym).stubs().will(returnValue(static_cast<void *>(nullptr)));
@@ -148,9 +147,9 @@ TEST_F(QsLogStest, CheckLogLevel003)
     MOCKER_CPP(&bqs::FeatureCtrl::IsHostQs).stubs().will(returnValue(true));
     setenv("ASCEND_AICPU_PATH", "/home", 1);
     MOCKER(memset_s).stubs().will(returnValue(EOK)).then(returnValue(EOK));
-    char_t *path = "test";
+    char_t path[] = "test";
     void *a = dlsym(RTLD_DEFAULT, "CheckLogLevel");
-    MOCKER(realpath).stubs().will(returnValue(path)).then(returnValue(path));
+    MOCKER(realpath).stubs().will(returnValue(&path[0U]));
     uint64_t rest = 0;
     MOCKER(dlopen).stubs().will(returnValue((void*)(&rest))).then(returnValue((void*)1));
     MOCKER(dlsym).stubs().will(returnValue(a));

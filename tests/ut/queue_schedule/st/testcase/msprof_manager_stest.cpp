@@ -309,7 +309,8 @@ TEST_F(BqsMsprofManagerSTest, MsprofRegisterCallbackNullptr)
 {
     GlobalMockObject::verify();
     BqsMsprofApiAdapter apiAdapter("libaaaaa.so");
-    EXPECT_EQ(apiAdapter.MsprofRegisterCallback(0, 123), ProfStatus::PROF_MSPROF_API_NULLPTR);
+    EXPECT_EQ(apiAdapter.MsprofRegisterCallback(0, reinterpret_cast<ProfCommandHandle>(123)),
+              ProfStatus::PROF_MSPROF_API_NULLPTR);
 }
 
 TEST_F(BqsMsprofManagerSTest, MsprofReportApiNullptr)

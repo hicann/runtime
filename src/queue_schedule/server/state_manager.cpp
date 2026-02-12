@@ -32,7 +32,7 @@ StateBase *StateManager::GetState(const FsmState id, const EntityType eType) con
 {
     auto state = state_[static_cast<size_t>(eType)][static_cast<size_t>(id)];
     if (state == nullptr) {
-        DGW_LOG_ERROR("[FSM] Failed id:%d eType:%d.", id, eType);
+        DGW_LOG_ERROR("[FSM] Failed id:%d eType:%d.", static_cast<int32_t>(id), static_cast<int32_t>(eType));
     }
     return state;
 }

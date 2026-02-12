@@ -306,7 +306,7 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
 
     // check dataLen
     if (dataLen < cfgLen) {
-        BQS_LOG_ERROR("dataLen[%lu] is invalid, cfgLen is [%zu].", dataLen, cfgLen);
+        BQS_LOG_ERROR("dataLen[%lu] is invalid, cfgLen is [%u].", dataLen, cfgLen);
         return BQS_STATUS_PARAM_INVALID;
     }
 
@@ -437,7 +437,7 @@ BqsStatus ConfigInfoOperator::QueryGroup(const uintptr_t mbufData, const uint64_
     CfgRetInfo * const retInfo = PtrToPtr<void, CfgRetInfo>(ValueToPtr(results));
     if (endpointNum != entitiesInGroup.size()) {
         retInfo->retCode = static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
-        BQS_LOG_ERROR("endpoint num in group[%u] info is [%u], but searched endpoint num is [%zu].",
+        BQS_LOG_ERROR("endpoint num in group[%u] info is [%zu], but searched endpoint num is [%zu].",
             groupId, endpointNum, entitiesInGroup.size());
         return BQS_STATUS_PARAM_INVALID;
     }
@@ -527,7 +527,8 @@ void ConfigInfoOperator::QueryRoutesBySrcFromRelation(const EntityInfo &src,
 {
     const auto iter = srcToDstRelation.find(src);
     if (iter == srcToDstRelation.end()) {
-        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(), src.GetType());
+        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
+                     static_cast<int32_t>(src.GetType()));
     } else {
         // generate route list
         const auto &dstSet = iter->second;
@@ -556,7 +557,8 @@ void ConfigInfoOperator::QueryRoutesByDstFromRelation(const EntityInfo &dst,
 {
     const auto iter = dstToSrcRelation.find(dst);
     if (iter == dstToSrcRelation.end()) {
-        BQS_LOG_WARN("Record does not exist according to dst Id:[%u] type:[%d]", dst.GetId(), dst.GetType());
+        BQS_LOG_WARN("Record does not exist according to dst Id:[%u] type:[%d]", dst.GetId(),
+                     static_cast<int32_t>(dst.GetType()));
     } else {
         const auto &srcSet = iter->second;
         // generate route list
@@ -589,7 +591,8 @@ BqsStatus ConfigInfoOperator::QueryRoutesBySrcAndDst(const uintptr_t mbufData, c
     if (searchedRouteNum != 0U) {
         routeList.emplace_back(std::make_pair(&src, &dst));
     } else {
-        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(), src.GetType());
+        BQS_LOG_WARN("Record does not exist according to src Id:[%u] type:[%d]", src.GetId(),
+                     static_cast<int32_t>(src.GetType()));
     }
     return SaveQueryResult(routeList, mbufData, onlyQryNum);
 }
@@ -1052,8 +1055,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordRouteInfo() const
     const size_t routeNum = static_cast<size_t>(cfgInfo->cfg.routesCfg.routeNum);
     // check route num
     if ((routeNum == 0UL) || (routeNum > MAX_ROUTES_NUM)) {
-        BQS_LOG_ERROR("Route num[%u] is invalid, max allowed value is [%u].",
-            routeNum, MAX_ROUTES_NUM);
+        BQS_LOG_ERROR("Route num[%zu] is invalid, max allowed value is [%zu].", routeNum, MAX_ROUTES_NUM);
         return BQS_STATUS_PARAM_INVALID;
     }
     // calculate and check totalLen
@@ -1095,7 +1097,7 @@ BqsStatus ConfigInfoOperator::CheckAndRecordAddGrpInfo() const
     const size_t endpointNum = static_cast<size_t>(cfgInfo->cfg.groupCfg.endpointNum);
     // check endpoint num
     if ((endpointNum == 0UL) || (endpointNum > MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP)) {
-        BQS_LOG_ERROR("Group num[%u] is invalid, max allowed value is [%u].",
+        BQS_LOG_ERROR("Group num[%zu] is invalid, max allowed value is [%u].",
             endpointNum, MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP);
         return BQS_STATUS_PARAM_INVALID;
     }
@@ -1267,7 +1269,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateProfiling() const
     // set result
     resultVec[0UL]->retCode = static_cast<int32_t>(retCode);
     BQS_LOG_RUN_INFO("Update profiling operate, cmd[%d], stage[server:process], profiling mode[%u], result:[%d]",
-        static_cast<int32_t>(cfgInfo->cmd), mode, static_cast<int32_t>(retCode));
+        static_cast<int32_t>(cfgInfo->cmd), static_cast<uint32_t>(mode), static_cast<int32_t>(retCode));
     return retCode;
 }
 
@@ -1285,7 +1287,7 @@ BqsStatus ConfigInfoOperator::ProcessUpdateHcclProtocol() const
     } else if (protocol == HcclProtocolType::TCP) {
         strProtocol = "TCP";
     } else {
-        BQS_LOG_ERROR("Invalid protocol type[%d]", protocol);
+        BQS_LOG_ERROR("Invalid protocol type[%d]", static_cast<int32_t>(protocol));
         retCode = BQS_STATUS_PARAM_INVALID;
     }
 

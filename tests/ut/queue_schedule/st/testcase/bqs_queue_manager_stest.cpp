@@ -99,12 +99,6 @@ int32_t halMbufGetBuffAddrFake(Mbuf *mbuf, void **buf)
     std::cout << "queue_schedule_stub halMbufGetBuffAddr stub end" << std::endl;
     return DRV_ERROR_NONE;
 }
-
-int halMbufGetBuffAddrFake2(Mbuf *mbuf, void **buf)
-{
-    *(char **)buf = allocFakeMBuf;
-    return DRV_ERROR_NONE;
-}
 }  // namespace
 
 TEST_F(BQS_QUEUE_MANAGER_STest, InitSuccess1)

@@ -123,7 +123,7 @@ TEST_F(EZCOM_CLIENT_UTest, SerializeUnbindMsgSuccess1)
     bqs::BQSQueryMsgs* bqsQueryMsgs = bqsReqMsg.mutable_query_msgs();
     EXPECT_NE(bqsQueryMsgs, nullptr);
 
-    for (uint32_t i = 0; i < bqsQueryMsgs->query_msg_vec_size(); i++) {
+    for (int i = 0; i < bqsQueryMsgs->query_msg_vec_size(); i++) {
         bqs::BQSQueryMsg bqsQueryMsg = bqsQueryMsgs->query_msg_vec(i);
         bqs::BQSQueryMsg::QsQueryType keyType = bqsQueryMsg.key_type();
         bqs::BQSBindQueueMsg* bqsBindQueueMsg = bqsQueryMsg.mutable_bind_queue_item();
@@ -133,8 +133,8 @@ TEST_F(EZCOM_CLIENT_UTest, SerializeUnbindMsgSuccess1)
         uint32_t dst = bqsBindQueueMsg->dst_queue_id();
 
         EXPECT_EQ(keyType, bqs::BQSQueryMsg::BQS_QUERY_TYPE_SRC);
-        EXPECT_EQ(src, i);
-        EXPECT_EQ(dst, i + 1);
+        EXPECT_EQ(static_cast<size_t>(src), i);
+        EXPECT_EQ(static_cast<size_t>(dst), i + 1);
     }
 }
 

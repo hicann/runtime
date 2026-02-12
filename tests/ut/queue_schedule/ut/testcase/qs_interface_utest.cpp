@@ -402,7 +402,6 @@ TEST_F(QsInterfaceUtest, ParseArgs_resIds_succ) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0";
     char paraDevIdsOk[] = "--devIds=0,1";
@@ -430,7 +429,6 @@ TEST_F(QsInterfaceUtest, ParseArgs_resIds_fail) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0,1";
     char paraDevIdsOk[] = "--devIds=0,11111111111111111111111111111111";
@@ -458,7 +456,6 @@ TEST_F(QsInterfaceUtest, ParseArgs_resIds_deviceIds_succ) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraResIdsOk[] = "--resIds=0,1";
     char paraDevIdsOk[] = "--devIds=0,2,3";
@@ -486,7 +483,6 @@ TEST_F(QsInterfaceUtest, MainTestSuccess01) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
 
     MOCKER(system)
@@ -512,7 +508,6 @@ TEST_F(QsInterfaceUtest, MainTestSuccessWithProf01) {
     char paramPidSignOk[] = "--pidSign=12345A";
     char paramReschedOk[] = "--reschedInterval=100";
     char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
     char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
     char paraProfFlagOk[] = "--profFlag=1";
     char paraProfCfgDataOk[] = "--profCfgData={}";

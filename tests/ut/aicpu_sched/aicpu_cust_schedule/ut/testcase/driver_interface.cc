@@ -133,7 +133,7 @@ int32_t SetProfHandle(std::shared_ptr<aicpu::ProfMessage> prof)
 }
 status_t aicpuSetProfContext(const aicpuProfContext_t &ctx)
 {
-    return 0;
+    return AICPU_ERROR_NONE;
 }
 ProfMessage::ProfMessage(const char* tag) : tag_(tag)
 {
