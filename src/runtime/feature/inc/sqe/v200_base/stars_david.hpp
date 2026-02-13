@@ -32,6 +32,7 @@ using namespace std;
 
 namespace cce {
 namespace runtime {
+constexpr uint32_t RT_AICPU_ERROR_CODE_BIT_MOVE = 16U;  /* 32bit swStatus=[16bit:aicpu error code | 16bit:aicpu exe status] */
 constexpr uint32_t SHIFT_SIX_SIZE = 6U;
 constexpr uint64_t RUNTIME_DAVINCI_MAX_TIMEOUT = 1091000000UL; // 1091s
 // hcom_cpu:0, aicpu:1, aic:2, ccu die0:3, ccu die1:4

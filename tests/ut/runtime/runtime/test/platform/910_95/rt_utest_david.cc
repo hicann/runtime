@@ -3873,6 +3873,22 @@ TEST_F(DavidTaskTest2, set_stars_result_for_fusion_kernel_task)
     EXPECT_EQ(kernTask.u.fusionKernelTask.args, nullptr);
 }
 
+TEST_F(DavidTaskTest2, set_stars_result_for_aicpu_task_on_end_of_seq)
+{
+    rtError_t error;
+    rtDavidSqe_t sqe[5];
+    TaskInfo kernTask = {};
+    InitByStream(&kernTask, stream_);
+    AicpuTaskInit(&kernTask, 1U, 0U);
+
+    rtLogicCqReport_t cqe = {};
+    cqe.errorType = 1U;
+    cqe.errorCode = 0x60004U;
+    SetStarsResult(&kernTask, cqe);
+    EXPECT_EQ(kernTask.errorCode, TS_ERROR_END_OF_SEQUENCE);
+    TaskUnInitProc(&kernTask);
+}
+
 TEST_F(DavidTaskTest1, construct_davidsqe_for_stream_active)
 {
     TaskInfo streamActiveTask = {};

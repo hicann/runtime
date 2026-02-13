@@ -88,6 +88,9 @@ void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &l
         if (logicCq.errorCode == AICPU_HCCL_OP_UB_DDRC_FAILED || logicCq.errorCode == AICPU_HCCL_OP_UB_POISON_FAILED) {
             MapAicpuErrorCodeForFastRecovery(taskInfo, logicCq);
             return;
+        } else if ((logicCq.errorCode >> RT_AICPU_ERROR_CODE_BIT_MOVE) == AE_END_OF_SEQUENCE) {
+            taskInfo->errorCode = TS_ERROR_END_OF_SEQUENCE;
+            return;
         }
     }
     

@@ -803,9 +803,9 @@ TEST_F(DavidTaskRecycleTest, ProcCqReportException)
     report.errorCode = 0x40000000;
     ProcCqReportException(device, report, &reportTask, 0U);
     EXPECT_EQ(reportTask.type, 0);
-    report.sqeType = RT_STARS_SQE_TYPE_EVENT_WAIT;
+    report.sqeType = RT_DAVID_SQE_TYPE_AICPU_D;
     report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
-    report.errorCode = TS_ERROR_END_OF_SEQUENCE;
+    report.errorCode = 0x60004;
     ProcCqReportException(device, report, &reportTask, 0U);
     EXPECT_EQ(reportTask.type, 0);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
@@ -831,7 +831,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_01)
     rtLogicCqReport_t report = {0};
     reportTask.type = TS_TASK_TYPE_FUSION_KERNEL;
     reportTask.stream = stream;
-    report.sqeType = RT_STARS_SQE_TYPE_EVENT_WAIT;
+    report.sqeType = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;
     report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     ret = StarsResumeRtsq(&report, &reportTask);
@@ -862,7 +862,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_02)
     rtLogicCqReport_t report = {0};
     reportTask.type = TS_TASK_TYPE_FUSION_KERNEL;
     reportTask.stream = stream;
-    report.sqeType = RT_STARS_SQE_TYPE_EVENT_WAIT;
+    report.sqeType = RT_DAVID_SQE_TYPE_NOTIFY_WAIT;
     report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     ret = StarsResumeRtsq(&report, &reportTask);
