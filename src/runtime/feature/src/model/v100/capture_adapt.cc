@@ -46,8 +46,7 @@ rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, u
         COND_RETURN_ERROR((task == nullptr),
             RT_ERROR_TASK_NULL,
             "Get task failed, stream_id=%u, task_id=%u.", streamId, pos);
-        COND_RETURN_ERROR(!((task->type == TS_TASK_TYPE_EVENT_RECORD) || ((task->type == TS_TASK_TYPE_CAPTURE_RECORD)
-            && (strncmp(task->typeName, "EVENT_RECORD", strlen("EVENT_RECORD") + 1) == 0))),
+        COND_RETURN_ERROR(!((task->type == TS_TASK_TYPE_EVENT_RECORD) || (task->type == TS_TASK_TYPE_CAPTURE_RECORD)),
             RT_ERROR_STREAM_UNJOINED,
             "The last task type is not event record, stream_id=%u, task_id=%u, task_type=%d (%s)",
             streamId, pos, static_cast<int32_t>(task->type), task->typeName);
@@ -56,21 +55,9 @@ rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, u
         } else {
             eventPtr = task->u.memWriteValueTask.event;
         }
-
         return RT_ERROR_NONE;
     }
     return RT_ERROR_DEVICE_NULL;
-}
-
-bool IsCaptureEventWaitNonOp(const Stream * const stm, Event * const evt)
-{
-    Event * const captureEvt = evt->GetCaptureEvent();
-    bool isNonOp = (captureEvt == nullptr) ? true : false;
-    if (isNonOp) {
-        RT_LOG(RT_LOG_INFO, "No-op wait, stream_id=%d, event_id=%d.",
-            stm->Id_(), ((captureEvt != nullptr) ? captureEvt->EventId_() : evt->EventId_()));
-    }
-    return isNonOp;
 }
 
 rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream * const stm)
@@ -86,13 +73,6 @@ rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream
             stm->Id_(), error);
     }
     return RT_ERROR_NONE;
-}
-
-bool IsCaptureWaitExist(const Event * const evt, CaptureCntNotify cntInfo)
-{
-    UNUSED(cntInfo);
-
-    return evt->IsCaptureStreamWaited();
 }
 
 TaskInfo* GetStreamTaskInfo(const Device * const dev, uint16_t streamId, uint16_t pos)

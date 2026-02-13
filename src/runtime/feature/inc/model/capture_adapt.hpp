@@ -24,12 +24,11 @@ struct CaptureCntNotify {
 bool StreamFlagIsSupportCapture(uint32_t flag);
 uint32_t GetCaptureStreamFlag();
 rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, uint32_t pos, Event *&eventPtr, CaptureCntNotify &cntInfo);
-bool IsCaptureEventWaitNonOp(const Stream * const stm, Event * const evt);
 rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream * const stm);
-bool IsCaptureWaitExist(const Event * const evt, CaptureCntNotify cntInfo);
 TaskInfo* GetStreamTaskInfo(const Device * const dev, uint16_t streamId, uint16_t pos);
 rtError_t SendNopTask(const Context * const curCtx, Stream * const stm);
 bool TaskTypeIsSupportTaskGroup(const TaskInfo * const task);
+
 }  // namespace runtime
 }  // namespace cce
 #endif

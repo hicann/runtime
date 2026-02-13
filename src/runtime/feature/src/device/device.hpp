@@ -253,8 +253,7 @@ public:
     virtual rtError_t FreeEventIdFromDrv(const int32_t eventId, const uint32_t eventFlag = 0, bool freeSyncFlag = false) = 0;
     virtual rtError_t FreePoolEvent(const int32_t eventId) = 0;
     virtual rtError_t AllocExpandingPoolEvent(void ** const eventAddr, int32_t *eventId) = 0;
-    virtual rtError_t FindExpandingEventAddrById(void ** const eventAddr, int32_t eventId) =0;
-    virtual void FreeExpandingPoolEvent(void * const eventAddr, const int32_t eventId) = 0;
+    virtual void FreeExpandingPoolEvent(const int32_t eventId) = 0;
     virtual rtChipType_t GetChipType() const = 0;
     virtual rtPlatformType_t GetPlatformType() const = 0;
     virtual void SetPlatformType(rtPlatformType_t platformType) = 0;

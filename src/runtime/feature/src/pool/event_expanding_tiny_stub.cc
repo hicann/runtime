@@ -28,16 +28,8 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void ** const eventAddr, int32
     return RT_ERROR_NONE;
 }
 
-rtError_t EventExpandingPool::FindEventAddrById(void ** const eventAddr, int32_t eventId)
+void EventExpandingPool::FreeEventId(int32_t eventId)
 {
-    UNUSED(eventAddr);
-    UNUSED(eventId);
-    return RT_ERROR_NONE;
-}
-
-void EventExpandingPool::FreeEventAddr(void * const eventAddr, int32_t eventId)
-{
-    UNUSED(eventAddr);
     UNUSED(eventId);
 }
 }

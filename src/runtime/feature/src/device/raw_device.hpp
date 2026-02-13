@@ -257,14 +257,9 @@ public:
         return eventExpandingPool_->AllocAndInsertEvent(eventAddr, eventId);
     }
 
-    rtError_t FindExpandingEventAddrById(void ** const eventAddr, int32_t eventId) override
-    {
-        return eventExpandingPool_->FindEventAddrById(eventAddr, eventId);
-    }
-
-    void FreeExpandingPoolEvent(void * const eventAddr, const int32_t eventId) override
-    {
-        return eventExpandingPool_->FreeEventAddr(eventAddr, eventId);
+    void FreeExpandingPoolEvent(const int32_t eventId) override
+ 	{
+ 	    return eventExpandingPool_->FreeEventId(eventId);
     }
     bool IsSPM(const void *dptr) override
     {

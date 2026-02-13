@@ -32,8 +32,6 @@ EventExpandingPool::~EventExpandingPool()
     for (int i = 0; i < MAX_POOL_CNT; ++i) {
         DELETE_O(eventAllocator_[i]);
     }
-
-    eventIdMap_.clear();
 }
 
 void *EventExpandingPool::MallocBufferForEvent(const size_t size, void * const para)
@@ -42,6 +40,10 @@ void *EventExpandingPool::MallocBufferForEvent(const size_t size, void * const p
     Device * const dev = static_cast<Device *>(para);
     rtError_t error = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_WARN(error != RT_ERROR_NONE, nullptr, "device mem alloc pool mem failed, "
+        "size=%u(bytes), kind=%d, device_id=%u, retCode=0x%#x",
+        size, RT_MEMORY_DDR, dev->Id_(), static_cast<uint32_t>(error));
+    error = dev->Driver_()->MemSetSync(addr, static_cast<uint64_t>(size), 0, static_cast<uint64_t>(size));
+    COND_RETURN_WARN(error != RT_ERROR_NONE, nullptr, "device memset sync failed, "
         "size=%u(bytes), kind=%d, device_id=%u, retCode=0x%#x",
         size, RT_MEMORY_DDR, dev->Id_(), static_cast<uint32_t>(error));
     return addr;
@@ -60,59 +62,41 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void ** const eventAddr, int32
     const std::unique_lock<std::mutex> taskLock(EventMapLock_);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, eventIdCount_ == INT32_MAX, RT_ERROR_DRV_NO_EVENT_RESOURCES,
         "event count is reaching the maximum.");
-    if (eventAllocator_[poolIndex_] == nullptr) {
-        eventAllocator_[poolIndex_] = new (std::nothrow) BufferAllocator(sizeof(uint64_t), EVENT_INIT_CNT, PER_POOL_CNT, BufferAllocator::LINEAR, 
-                                                            &MallocBufferForEvent, &FreeBufferForEvent, device_);
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, eventAllocator_[poolIndex_] == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-            "Init EventExpandingPool failed.");
-        RT_LOG(RT_LOG_INFO, "Init EventExpandingPool success.");
-    }
-    // Alloc 
-    int32_t currentEventId;
-    void *devAddr = eventAllocator_[poolIndex_]->AllocItemForEventPool(&currentEventId, false);
-    if (devAddr == nullptr) {
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, (poolIndex_ + 1U) >= MAX_POOL_CNT, RT_ERROR_DRV_NO_EVENT_RESOURCES,
-            "event count is reaching the maximum.");
-        ++poolIndex_;
-        eventAllocator_[poolIndex_] = new (std::nothrow) BufferAllocator(sizeof(uint64_t), EVENT_INIT_CNT, PER_POOL_CNT, BufferAllocator::LINEAR, 
-                                                            &MallocBufferForEvent, &FreeBufferForEvent, device_);
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, eventAllocator_[poolIndex_] == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-                    "Init EventExpandingPool failed.");
-        RT_LOG(RT_LOG_INFO, "Init EventExpandingPool success.");
-        devAddr = eventAllocator_[poolIndex_]->AllocItemForEventPool(&currentEventId, false);
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, devAddr == nullptr, RT_ERROR_DRV_NO_EVENT_RESOURCES,
-                     "devAddr is nullptr! Alloc addr for event failed.");
-    }
-    lastEventId_ = EVENT_INIT_VALUE + currentEventId + PER_POOL_CNT * (poolIndex_); // init 65536 + cur + PER_POOL_CNT * index
-    *eventAddr = devAddr;
+    int32_t currentEventId = -1;
+ 	uint16_t oriPoolIndex = poolIndex_;
+ 	do {
+ 	    if (eventAllocator_[poolIndex_] == nullptr) {
+ 	        eventAllocator_[poolIndex_] = new (std::nothrow) BufferAllocator(sizeof(uint8_t), EVENT_INIT_CNT, PER_POOL_CNT,
+ 	            BufferAllocator::LINEAR, &MallocBufferForEvent, &FreeBufferForEvent, device_);
+ 	        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, eventAllocator_[poolIndex_] == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+ 	            "Init EventExpandingPool failed.");
+ 	        RT_LOG(RT_LOG_INFO, "Init EventExpandingPool success, poolIndex=%hu.", poolIndex_);
+ 	    }
+ 	 
+ 	    currentEventId = eventAllocator_[poolIndex_]->AllocIdWithoutRetry(false);
+ 	    if (currentEventId >= 0) {
+ 	        break; // alloc success
+ 	    }
+ 	    poolIndex_ = (poolIndex_ + 1U) % MAX_POOL_CNT;
+ 	} while (oriPoolIndex != poolIndex_); // only one loop
+ 	COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, currentEventId < 0, RT_ERROR_DRV_NO_EVENT_RESOURCES,
+ 	    "Alloc event_id form event pool failed.");
+ 	lastEventId_ = EVENT_INIT_VALUE + (PER_POOL_CNT * poolIndex_) + currentEventId; // (init:65536) + (PER_POOL_CNT * index)  + cur
+ 	*eventAddr = eventAllocator_[poolIndex_]->GetItemById(currentEventId, false);
     *eventId = lastEventId_;
-    (void)eventIdMap_.insert(std::make_pair(lastEventId_, *eventAddr));
     eventIdCount_++;
-    RT_LOG(RT_LOG_INFO, "get event id, eventid=%d, lastEventId=%d, poolIndex=%d,currentEventId=%d.",
+    RT_LOG(RT_LOG_INFO, "get event id, event_id=%d, lastEventId=%d, poolIndex=%d,currentEventId=%d.",
         *eventId, lastEventId_, poolIndex_, currentEventId);
     return RT_ERROR_NONE;
 }
 
-rtError_t EventExpandingPool::FindEventAddrById(void ** const eventAddr, int32_t eventId)
+void EventExpandingPool::FreeEventId(int32_t eventId)
 {
     const std::unique_lock<std::mutex> taskLock(EventMapLock_);
-    const auto iter = eventIdMap_.find(eventId);
-    if (iter != eventIdMap_.end()) {
-        *eventAddr = iter->second;
-        return RT_ERROR_NONE;
-    }
-
-    RT_LOG(RT_LOG_ERROR, "can not get addr by id, event_id=%d.", eventId);
-    return RT_ERROR_EVENT_NULL;
-}
-
-void EventExpandingPool::FreeEventAddr(void * const eventAddr, int32_t eventId)
-{
-    const std::unique_lock<std::mutex> taskLock(EventMapLock_);
-    uint16_t index = (eventId - (EVENT_INIT_VALUE)) / (256 * 1024);
-    COND_RETURN_VOID(index > (MAX_POOL_CNT - 1), "can not get addr by id, event_id=%d, index=%u.", eventId, index);
-    eventAllocator_[index]->FreeByItem(eventAddr);
-    eventIdMap_.erase(eventId);
+    uint16_t poolIndex = (eventId - EVENT_INIT_VALUE) / PER_POOL_CNT;
+ 	int32_t id = (eventId - EVENT_INIT_VALUE) % PER_POOL_CNT;
+ 	COND_RETURN_VOID(poolIndex >= MAX_POOL_CNT, "Free event id failed, event_id=%d, poolIndex=%u.", eventId, poolIndex);
+ 	eventAllocator_[poolIndex]->FreeById(id);
     eventIdCount_--;
 }
 }

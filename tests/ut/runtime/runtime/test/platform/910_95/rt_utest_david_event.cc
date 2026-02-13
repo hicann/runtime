@@ -746,3 +746,376 @@ TEST_F(EventTestDavid, TestDavidUpdateAndTryToDestroyEvent1)
     evt->SetIsNeedDestroy(true);
     DavidUpdateAndTryToDestroyEvent(&task, &evtTmp, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
 }
+
+TEST_F(EventTestDavid, event_recordnull)
+{
+    rtError_t error;
+    error = EvtRecordSoftwareMode(NULL, NULL);
+    EXPECT_NE(error,RT_ERROR_NONE);
+}
+
+TEST_F(EventTestDavid, event_waitnull)
+{
+    rtError_t error;
+    error = EvtWaitSoftwareMode(NULL, NULL);
+    EXPECT_NE(error,RT_ERROR_NONE);
+}
+
+TEST_F(EventTestDavid, event_resetnull)
+{
+    rtError_t error;
+    error = EvtResetSoftwareMode(NULL, NULL);
+    EXPECT_NE(error,RT_ERROR_NONE);
+}
+
+TEST_F(EventTestDavid, GetCaptureEvent1)
+{
+    MOCKER(GlobalContainer::IsEventHardMode)
+        .stubs()
+        .will(returnValue(false));
+
+    rtEvent_t event;
+    rtStream_t stream;
+    ApiImplDavid apiImpl;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    Event *curEvent = evt->GetCaptureEvent();
+
+    rtError_t error = apiImpl.GetCaptureEvent(stm, evt, &curEvent);
+    EXPECT_NE(error,RT_ERROR_NONE);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+    delete curEvent;
+}
+
+TEST_F(EventTestDavid, GetCaptureEvent2)
+{
+    MOCKER(GlobalContainer::IsEventHardMode)
+        .stubs()
+        .will(returnValue(true));
+
+    rtEvent_t event;
+    rtStream_t stream;
+    ApiImplDavid apiImpl;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    Event *curEvent = evt->GetCaptureEvent();
+
+    rtError_t error = apiImpl.GetCaptureEvent(stm, evt, &curEvent);
+    EXPECT_NE(error,RT_ERROR_NONE);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+    delete curEvent;
+}
+
+TEST_F(EventTestDavid, CaptureResetEvent1)
+{
+    MOCKER(GlobalContainer::IsEventHardMode)
+        .stubs()
+        .will(returnValue(false));
+
+    rtEvent_t event;
+    rtStream_t stream;
+    ApiImplDavid apiImpl;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+
+    rtError_t error = apiImpl.CaptureResetEvent(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, CaptureResetEvent2)
+{
+    MOCKER(GlobalContainer::IsEventHardMode)
+        .stubs()
+        .will(returnValue(true));
+
+    rtEvent_t event;
+    rtStream_t stream;
+    ApiImplDavid apiImpl;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+
+    rtError_t error = apiImpl.CaptureResetEvent(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtRecordSoftwareMode1)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    TaskInfo* fakeTask = new TaskInfo();
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    rtError_t error = EvtRecordSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+    delete fakeTask;
+}
+
+TEST_F(EventTestDavid, EvtRecordSoftwareMode2)
+{
+    rtError_t error;
+    rtEvent_t event;
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    
+    error = EvtRecordSoftwareMode(evt, nullptr);
+    EXPECT_NE(error,RT_ERROR_NONE);
+    
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode1)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    TaskInfo task1 = {};
+    TaskInfo *tmpTask = &task1;
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_EQ(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode2)
+{
+    rtEvent_t event;
+    rtStream_t stream = nullptr;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    
+    error = EvtWaitSoftwareMode(evt, (Stream*)stream);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode3)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode4)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    evt->SetEventAddr(nullptr);
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode5)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    MOCKER(AllocTaskInfoForCapture).stubs().will(returnValue(ACL_ERROR_RT_RESOURCE_ALLOC_FAIL));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode6)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    TaskInfo task1 = {};
+    TaskInfo *tmpTask = &task1;
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode7)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    TaskInfo task1 = {};
+    TaskInfo *tmpTask = &task1;
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+
+TEST_F(EventTestDavid, EvtWaitSoftwareMode8)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    TaskInfo task1 = {};
+    TaskInfo *tmpTask = &task1;
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    error = EvtWaitSoftwareMode(evt, stm);
+    EXPECT_NE(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+
+TEST_F(EventTestDavid, EvtResetSoftwareMode1)
+{
+    rtEvent_t event;
+    rtStream_t stream;
+    rtError_t error;
+
+    rtEventCreate(&event);
+    DavidEvent *evt = (DavidEvent *)event;
+    rtStreamCreate(&stream, 0);
+    Stream* stm = (Stream *)stream;
+    
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    void *eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    evt->SetEventAddr(eventAddr);
+
+    TaskInfo task1 = {};
+    TaskInfo *tmpTask = &task1;
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = EvtResetSoftwareMode(evt, stm);
+    EXPECT_EQ(error,RT_ERROR_NONE);
+
+    free(eventAddr);
+    rtEventDestroy(event);
+    rtStreamDestroy(stream);
+}
+

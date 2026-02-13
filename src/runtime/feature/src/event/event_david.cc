@@ -387,23 +387,5 @@ rtError_t DavidEvent::ClearRecordStatus()
     return RT_ERROR_NONE;
 }
 
-bool DavidEvent::IsEventIdAndCntValueExist(int32_t eventId, uint32_t cntValue)
-{
-    auto id_iter = eventIdAndCntValueMap_.find(eventId);
-    if (id_iter == eventIdAndCntValueMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "event id is not found in the event wait map, event_id=%d, cnt_value=%u.",
-            eventId, cntValue);
-        return false;
-    }
-
-    const auto& value = id_iter->second;
-    if (value.find(cntValue) == value.end()) {
-        RT_LOG(RT_LOG_ERROR, "cnt value is not found in the event wait map, event_id=%d, cnt_value=%u.",
-            eventId, cntValue);
-        return false;
-    }
-
-    return true;
-}
 }
 }

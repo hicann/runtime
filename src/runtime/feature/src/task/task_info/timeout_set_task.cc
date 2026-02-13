@@ -57,16 +57,6 @@ void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, co
            taskInfo->stream->Id_(), timeout, type);
 }
 
-void ToCommandBodyForTimeoutSetTask(TaskInfo* taskInfo, rtCommand_t *const command)
-{
-    TimeoutSetTaskInfo * const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
-    command->u.timeoutSetTask.opWaitTimeoutEn = timeoutSetTask->opWaitTimeoutEn;
-    command->u.timeoutSetTask.opExecuteTimeoutEn = timeoutSetTask->opExecuteTimeoutEn;
-
-    command->u.timeoutSetTask.opWaitTimeout = timeoutSetTask->opWaitTimeout;
-    command->u.timeoutSetTask.opExecuteTimeout = timeoutSetTask->opExecuteTimeout;
-}
-
 void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     TimeoutSetTaskInfo * const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
@@ -117,6 +107,16 @@ void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const comma
     PrintSqe(command, "TaskTimeoutSetTask");
     RT_LOG(RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish,topic_type=%u,cmd_type=%u",
            static_cast<uint32_t>(sqe->topic_type), sqe->usr_data.cmd_type);
+}
+
+void ToCommandBodyForTimeoutSetTask(TaskInfo* taskInfo, rtCommand_t *const command)
+{
+    TimeoutSetTaskInfo * const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
+    command->u.timeoutSetTask.opWaitTimeoutEn = timeoutSetTask->opWaitTimeoutEn;
+    command->u.timeoutSetTask.opExecuteTimeoutEn = timeoutSetTask->opExecuteTimeoutEn;
+
+    command->u.timeoutSetTask.opWaitTimeout = timeoutSetTask->opWaitTimeout;
+    command->u.timeoutSetTask.opExecuteTimeout = timeoutSetTask->opExecuteTimeout;
 }
 
 #endif

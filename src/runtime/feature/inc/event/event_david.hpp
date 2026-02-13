@@ -49,7 +49,6 @@ public:
     void UpdateLatestRecord(const DavidRecordTaskInfo &recordInfo, const DavidEventState_t latestStatus,
         const uint64_t timeStamp);
     rtError_t GenEventId() override;
-    bool IsEventIdAndCntValueExist(int32_t eventId, uint32_t cntValue);
     bool IsEventWithoutWaitTask() const override {
         return (((eventFlag_ & (RT_EVENT_DDSYNC | RT_EVENT_DDSYNC_NS | RT_EVENT_MC2 | RT_EVENT_EXTERNAL)) == 0U));
     }
@@ -82,24 +81,12 @@ public:
     {
         return latestRecordTask_;
     }
-    void RecordEventWaitInfo(const Stream * const stm, Stream * const dstStm, int32_t eventId, uint32_t cntValue)
-    {
-        if (stm->GetCaptureStatus() == RT_STREAM_CAPTURE_STATUS_NONE) {
-            return;
-        }
-        const std::lock_guard<std::mutex> lock(GetWaitStmLock());
-        (void)GetWaitStreamList().insert(dstStm);
-        if (GetEventFlag() == RT_EVENT_DEFAULT) {
-            (void)eventIdAndCntValueMap_[eventId].insert(cntValue);
-        }
-    }
 
 private:
     bool              isCntNotify_{false};
     uint32_t          cntValue_{0U};
     DavidEventState_t status_;
     DavidRecordTaskInfo latestRecordTask_{0, 0U};
-    std::unordered_map<int32_t, std::unordered_set<uint32_t>> eventIdAndCntValueMap_;  // 仅基于capture event的wait任务使用
 };
 }
 }

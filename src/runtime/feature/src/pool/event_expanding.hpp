@@ -16,24 +16,22 @@
 #include "buffer_allocator.hpp"
 namespace cce {
 namespace runtime {
-constexpr uint32_t EVENT_INIT_CNT    (2 * 1024 * 1024 / sizeof(uint64_t));
-constexpr uint32_t PER_POOL_CNT      (256 * 1024);
-constexpr uint16_t MAX_POOL_CNT      (8 * 1024);
-constexpr int32_t  EVENT_INIT_VALUE  (UINT16_MAX + 1);
+constexpr uint32_t EVENT_INIT_CNT   = (2U * 1024U * 1024U);
+constexpr uint32_t PER_POOL_CNT     = EVENT_INIT_CNT;
+constexpr uint16_t MAX_POOL_CNT     = 1024U; // total count: PER_POOL_CNT * MAX_POOL_CNT = 2G
+constexpr int32_t  EVENT_INIT_VALUE = UINT16_MAX + 1;
 class Device;
 class EventExpandingPool : public NoCopy {
 public:
     explicit EventExpandingPool(Device * const dev);
     ~EventExpandingPool() override;
     rtError_t AllocAndInsertEvent(void ** const eventAddr, int32_t *eventId);
-    rtError_t FindEventAddrById(void ** const eventAddr, int32_t eventId);
-    void FreeEventAddr(void * const eventAddr, int32_t eventId);
+    void FreeEventId(int32_t eventId);
 protected:
     Device* device_;
 
 private:
     BufferAllocator* eventAllocator_[MAX_POOL_CNT];
-    std::unordered_map<int32_t, void *> eventIdMap_;
     std::mutex EventMapLock_;
     int32_t eventIdCount_;
     int32_t lastEventId_;

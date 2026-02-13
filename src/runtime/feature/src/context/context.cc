@@ -4899,10 +4899,10 @@ rtError_t Context::CheckCaptureModelValidity(Model * const captureMdl) const
             RT_ERROR_STREAM_UNJOINED,
             "The event flag is external, stream_id=%d, task_id=%u, event_id=%d.",
             streamId, taskId, event->EventId_());
-        COND_RETURN_ERROR((IsCaptureWaitExist(event, cntInfo) == false),
+        COND_RETURN_ERROR((event->IsCaptureStreamWaited() == false),
             RT_ERROR_STREAM_UNJOINED,
             "A free-state event record task was discovered, stream_id=%d, task_id=%u, event_id=%d.",
-            streamId, taskId, (event->GetEventFlag() == RT_EVENT_DEFAULT) ? cntInfo.eventId : event->EventId_());
+            streamId, taskId, event->EventId_());
         if (event->IsRecordOrigCaptureStream(*it)) {
             hasRecordOrigStream = true;
         }

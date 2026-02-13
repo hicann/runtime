@@ -125,6 +125,15 @@ public:
     void SetEventId(int32_t newEventId) {
         eventId_ = newEventId;
     }
+
+    void SetEventAddr(void *eventAddr) {
+ 	    eventAddr_ = eventAddr;
+ 	}
+
+    void *GetEventAddr() const {
+ 	    return eventAddr_;
+ 	}
+
     RecordTaskInfo GetLatestRecord() {
         const std::lock_guard<std::mutex> latestStateLock(recordStateMutex_);
         return latestRecord_;
@@ -185,11 +194,6 @@ public:
         recordPos_ = pos;
     }
 
-    std::mutex &GetWaitStmLock()
-    {
-        return waitStmMutex_;
-    }
-
     void EventIdCountSub(const int32_t id, bool isFreeId = false);
     virtual void TryFreeLastEventId();
     virtual bool TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestroy);
@@ -241,11 +245,6 @@ public:
         waitTskStreamList_.insert(stm);
     }
 
-    std::set<Stream *> &GetWaitStreamList()
-    {
-        return waitTskStreamList_;
-    }
-
     CaptureModel *GetCaptureModel(void) const;
     bool IsCapturing() const;
     bool IsRecordOrigCaptureStream(const Stream * const stm) const;
@@ -284,6 +283,7 @@ private:
     Event            *captureEvent_{nullptr};   // only for single-operator event
     Stream           *captureStream_{nullptr};  // only for capture event
     std::set<Stream *> waitTskStreamList_;      // only for capture event
+    void *eventAddr_{nullptr}; // only for capture event in software mode
     std::mutex captureMutex_;
     std::mutex waitStmMutex_;
     std::unordered_map<int32_t, uint32_t> idMap_;

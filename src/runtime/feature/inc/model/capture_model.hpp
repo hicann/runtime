@@ -199,10 +199,6 @@ public:
         // 目前只有模型执行完后的notify wait的后处理才会调用这个函数，所以不需要加锁
         return rdmaPiValueModifyTaskInfoMap_;
     }
-    std::set<int32_t> &GetCaptureEventIndex()
-    {
-        return captureEventIndex_;   
-    }
 
     bool IsSoftwareSqEnable(void) const
     {
@@ -266,7 +262,6 @@ private:
     std::vector<Notify *> executeNotifyList_;
     std::mutex notifyMutex_;
     std::set<uint16_t> taskGroupStmIds_;
-    std::set<int32_t> captureEventIndex_;             // only for capture event
     std::vector<std::unique_ptr<TaskGroup>> taskGroupList_;
     rtError_t taskGroupErrCode_{RT_ERROR_NONE};
     std::unordered_map<int32_t, std::unordered_set<uint16_t>> rdmaPiValueModifyTaskInfoMap_;

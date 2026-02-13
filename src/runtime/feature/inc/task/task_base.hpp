@@ -209,7 +209,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_DQS_ADSPC = 124, /* dqs adspc task */
     TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION = 125, /* send tsfw-aicpu msg version to aicpu */
     TS_TASK_TYPE_CAPTURE_RECORD = 126,  /* mem write value task */
-    TS_TASK_TYPE_CAPTURE_WAIT  = 127,  /* mem wait value task */
+    TS_TASK_TYPE_CAPTURE_WAIT = 127,  /* mem wait value task */
     TS_TASK_TYPE_DQS_BATCH_DEQUEUE = 128, /* dqs batch dequeue*/
     TS_TASK_TYPE_IPC_RECORD = 129,  /* ipc record task */
     TS_TASK_TYPE_IPC_WAIT  = 130,  /* ipc wait task */

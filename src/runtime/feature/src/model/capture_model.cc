@@ -50,19 +50,6 @@ CaptureModel::~CaptureModel() noexcept
     ClearStreamActiveTask();
     DELETE_A(switchInfo_);
     isSqeSendFinish_ = false;
-
-    if (!GlobalContainer::IsEventHardMode()) {
-        std::set<int32_t> & captureAddrInder = GetCaptureEventIndex();
-        for (auto it = captureAddrInder.begin(); it != captureAddrInder.end() && !captureAddrInder.empty(); ++it) {
-            void *eventAddr = nullptr; 
-            (void)Context_()->Device_()->FindExpandingEventAddrById(&eventAddr, *it);
-            if (eventAddr != nullptr) {
-                (void)Context_()->Device_()->FreeExpandingPoolEvent(eventAddr, *it);
-            }
-            RT_LOG(RT_LOG_INFO, "erase, event_id=%d.", *it);
-        }
-        captureAddrInder.clear();
-    }
     
     const std::list<Stream *> streamsCpy(StreamList_());
     // all stream need unbind first

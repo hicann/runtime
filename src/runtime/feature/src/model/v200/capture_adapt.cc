@@ -15,6 +15,7 @@
 #include "model_c.hpp"
 #include "event_david.hpp"
 #include "stream_c.hpp"
+#include "thread_local_container.hpp"
 
 namespace cce {
 namespace runtime {
@@ -37,93 +38,46 @@ uint32_t GetCaptureStreamFlag()
 
 rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, uint32_t pos, Event *&eventPtr, CaptureCntNotify &cntInfo)
 {
+    UNUSED(cntInfo);
     if (dev != nullptr) {
         TaskInfo *taskInfo = GetTaskInfo(dev, streamId, pos);
         COND_RETURN_ERROR((taskInfo == nullptr),
             RT_ERROR_TASK_NULL,
             "Get task failed, stream_id=%u, task_id=%u.", streamId, pos);
-        COND_RETURN_ERROR((taskInfo->type != TS_TASK_TYPE_DAVID_EVENT_RECORD),
+        COND_RETURN_ERROR(!((taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) || (taskInfo->type ==TS_TASK_TYPE_CAPTURE_RECORD)),
             RT_ERROR_STREAM_UNJOINED,
             "The last task type is not event record, stream_id=%u, task_id=%u.",
             streamId, pos);
-        eventPtr = taskInfo->u.davidEventRecordTaskInfo.event;
-        cntInfo.cntValue = taskInfo->u.davidEventRecordTaskInfo.countValue;
-        cntInfo.eventId = taskInfo->u.davidEventRecordTaskInfo.eventId;
+        if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
+            eventPtr = taskInfo->u.davidEventRecordTaskInfo.event;
+        } else {
+            eventPtr = taskInfo->u.memWriteValueTask.event;
+        }
         return RT_ERROR_NONE;
     }
     return RT_ERROR_DEVICE_NULL;
 }
 
-bool IsCaptureEventWaitNonOp(const Stream * const stm, Event * const evt)
-{
-    bool isNonOp = false;
-    int32_t eventId = INVALID_EVENT_ID;
-    Event * const captureEvt = evt->GetCaptureEvent();
-
-    if (captureEvt == nullptr) {
-        isNonOp = (!(evt->WaitSendCheck(stm, eventId)));
-    } else {  // 如果event是newmode的话，先下wait返回成功
-        isNonOp = ((evt->IsNewMode()) && ((!captureEvt->HasRecord()) || (captureEvt->EventId_() == INVALID_EVENT_ID)));
-    }
-
-    if (isNonOp) {
-        RT_LOG(RT_LOG_INFO, "No-op wait, stream_id=%d, event_id=%d.",
-            stm->Id_(), ((captureEvt != nullptr) ? captureEvt->EventId_() : evt->EventId_()));
-    }
-    return isNonOp;
-}
-
 rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream * const stm)
 {
     rtError_t error;
-    Event *event = nullptr;
-    bool flag = false;
     for (Event * const evt : captureModel->GetCaptureEvent()) {
         COND_RETURN_ERROR((!(evt->HasRecord())),
             RT_ERROR_CAPTURE_DEPENDENCY,
             "the capture event has not been recorded, stream_id=%d, event_id=%d.",
             stm->Id_(), evt->EventId_());
 
-        /* capture event的flag为RT_EVENT_WITH_FLAG或RT_EVENT_DEFAULT */
-        if (evt->GetEventFlag() == RT_EVENT_DEFAULT) {
-            event = evt;
-            flag = true;
-            continue;
+        if (GlobalContainer::IsEventHardMode()) {
+ 	        error = EvtReset(evt, stm);
+ 	    } else {
+ 	        error = EvtResetSoftwareMode(evt, stm);
         }
 
-        error = EvtReset(evt, stm);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Capture stream reset event failed, stream_id=%d, error=%d.",
             stm->Id_(), error);
     }
 
-    if (flag) {
-        int32_t eventId = MAX_INT32_NUM;
-        for (Stream * const stream : captureModel->StreamList_()) {
-            stream->GetCntNotifyId(eventId);
-            if (eventId != MAX_INT32_NUM) {
-                event->SetEventId(eventId);
-                error = EvtReset(event, stm);
-                COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
-                "Capture stream reset event failed, capture_stream_id=%d, error=%d.", stream->Id_(), error);
-            }
-        }
-    }
-
     return RT_ERROR_NONE;
-}
-
-bool IsCaptureWaitExist(const Event * const evt, CaptureCntNotify cntInfo)
-{
-    if (!evt->IsCaptureStreamWaited()) {
-        return false;
-    }
-    /* capture event flag为RT_EVENT_DEFAULT或是RT_EVENT_DDSYNC_NS，仅RT_EVENT_DEFAULT场景需要判断 */
-    if (evt->GetEventFlag() != RT_EVENT_DEFAULT) {
-        return true;
-    }
-
-    DavidEvent *event = RtPtrToPtr<DavidEvent *>(RtPtrToUnConstPtr<Event *>(evt));
-    return event->IsEventIdAndCntValueExist(cntInfo.eventId, cntInfo.cntValue);
 }
 
 TaskInfo* GetStreamTaskInfo(const Device * const dev, uint16_t streamId, uint16_t pos)

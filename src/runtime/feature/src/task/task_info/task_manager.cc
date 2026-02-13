@@ -175,7 +175,9 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, "DQS_INTER_CHIP_PREPROC"},
     {TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, "DQS_INTER_CHIP_POSTPROC"},
     {TS_TASK_TYPE_DQS_ADSPC, "DQS_ADSPC"},
-    {TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, "TSFW_AICPU_MSG_VERSION"}
+    {TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, "TSFW_AICPU_MSG_VERSION"},
+    {TS_TASK_TYPE_CAPTURE_RECORD, "CAPTURE_RECORD"},
+    {TS_TASK_TYPE_CAPTURE_WAIT, "CAPTURE_WAIT"}
 };
 
 #if F_DESC("pkgStat")
@@ -851,84 +853,80 @@ bool IsNeedFreeStreamRes(const TaskInfo *task)
 #endif
 
 #if F_DESC("钩子注册框架")
-static void RegTaskToSqefunc(void)
+void RegTaskToCommandFunc(void)
 {
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ConstructAICpuSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ConstructAicAivSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ConstructAicAivSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &ConstructSqeForDavinciMultipleTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructSqeForMemcpyAsyncTask;
-    g_toSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_EVENT_RECORD] = &ConstructSqeForEventRecordTask;
-    g_toSqeFunc[TS_TASK_TYPE_EVENT_RESET] = &ConstructSqeForEventResetTask;
-    g_toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
-    g_toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
-    g_toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
-    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &ConstructSqeRdmaPiValueModifyTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ConstructSqeForDebugUnRegisterForStreamTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
-    g_toSqeFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ConstructSqeForCallbackLaunchTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ConstructSqeForStreamLabelSwitchByIndexTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STARS_COMMON] = &ConstructSqeForStarsCommonTask;
-    g_toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
-    g_toSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructSqeForNpuGetFloatStaTask;
-    g_toSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructSqeForNpuClrFloatStaTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &ConstructSqeForOverflowSwitchSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &ConstructSqeForStreamTagSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
-    g_toSqeFunc[TS_TASK_TYPE_WRITE_VALUE] = &ConstructSqeForWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CMO] = &ConstructSqeForCmoTask;
-    g_toSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructSqeForBarrierTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructSqeForRdmaDbSendTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructSqeForNotifyRecordTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructSqeForNotifyWaitTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ConstructSqeForStreamSwitchTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ConstructSqeForStreamActiveTask;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_SET] = &ConstructSqeForLabelSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_GOTO] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
-    g_toSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ConstructSqeForDataDumpLoadInfoTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ConstructSqeForDebugRegisterTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ConstructSqeForDebugUnRegisterTask;
-    g_toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructSqeForGetDevMsgTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructSqeForDebugRegisterForStreamTask;
-    g_toSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructSqeForAllocDsaAddrTask;
-    g_toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
-    g_toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
-    g_toSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructSqeForUpdateAddressTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
-    g_toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
-    g_toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructSqeForMemWaitValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructSqeForMemWaitValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructSqeForMemWaitValueTask;
+    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ToCommandBodyForAicpuTask;
+    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ToCommandBodyForAicAivTask;
+    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ToCommandBodyForAicAivTask;
+    g_toCommandFunc[TS_TASK_TYPE_MULTIPLE_TASK] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_MEMCPY] = &ToCommandBodyForMemcpyAsyncTask;
+    g_toCommandFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ToCommandBodyForReduceAsyncV2Task;
+    g_toCommandFunc[TS_TASK_TYPE_EVENT_RECORD] = &ToCommandBodyForEventRecordTask;
+    g_toCommandFunc[TS_TASK_TYPE_EVENT_RESET] = &ToCommandBodyForEventResetTask;
+    g_toCommandFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = ToCommandBodyForRemoteEventWaitTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ToCommandBodyForEventWaitTask;
+    g_toCommandFunc[TS_TASK_TYPE_MAINTENANCE] = &ToCommandBodyForMaintenanceTask;
+    g_toCommandFunc[TS_TASK_TYPE_CREATE_STREAM] = &ToCommandBodyForCreateStreamTask;
+    g_toCommandFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ToCommandBodyForCreateL2AddrTask;
+    g_toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &ToCommandBodyForDynamicProfilingEnableTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &ToCommandBodyForDynamicProfilingDisableTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ToCommandBodyForProfilingEnableTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ToCommandBodyForProfilingDisableTask;
+    g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ToCommandBodyForOnlineProfEnableTask;
+    g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ToCommandBodyForOnlineProfDisableTask;
+    g_toCommandFunc[TS_TASK_TYPE_ADCPROF] = &ToCommandBodyForAdcProfTask;
+    g_toCommandFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ToCommandBodyForPCTraceTask;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ToCommandBodyForModelMaintainceTask;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ToCommandBodyForModelExecuteTask;
+    g_toCommandFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ToCmdBodyForDebugUnRegisterForStreamTask;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ToCmdBodyForAddEndGraphTask;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ToCmdBodyForAddModelExitTask;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ToCmdBodyForModelToAicpuTask;
+    g_toCommandFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ToCmdBodyForActiveAicpuStreamTask;
+    g_toCommandFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ToCmdBodyForCallbackLaunchTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ToCmdBodyForStreamLabelSwitchByIndexTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ToCmdBodyForStreamLabelGotoTask;
+    g_toCommandFunc[TS_TASK_TYPE_STARS_COMMON] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_FFTS_PLUS] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ToCmdBodyForRingBufferMaintainTask;
+    g_toCommandFunc[TS_TASK_TYPE_WRITE_VALUE] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_CMO] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_BARRIER] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ToCmdBodyForSetStreamModeTask;
+    g_toCommandFunc[TS_TASK_TYPE_RDMA_SEND] = &ToCommandBodyForRdmaSendTask;
+    g_toCommandFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ToCommandBodyForRdmaDbSendTask;
+    g_toCommandFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ToCommandBodyForNotifyRecordTask;
+    g_toCommandFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ToCommandBodyForNotifyWaitTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ToCommandBodyForStreamSwitchTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ToCommandBodyForStreamSwitchNTask;
+    g_toCommandFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ToCommandBodyForStreamActiveTask;
+    g_toCommandFunc[TS_TASK_TYPE_LABEL_SET] = &ToCommandBodyForLabelSetTask;
+    g_toCommandFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ToCommandBodyForLabelSwitchTask;
+    g_toCommandFunc[TS_TASK_TYPE_LABEL_GOTO] = &ToCommandBodyForLabelGotoTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ToCommandBodyForProfilerTraceTask;
+    g_toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ToCommandBodyForProfilerTraceExTask;
+    g_toCommandFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ToCommandBodyForFusionDumpAddrSetTask;
+    g_toCommandFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ToCommandBodyForDataDumpLoadInfoTask;
+    g_toCommandFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ToCommandBodyForDebugRegisterTask;
+    g_toCommandFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ToCommandBodyForDebugUnRegisterTask;
+    g_toCommandFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ToCommandBodyForTimeoutSetTask;
+    g_toCommandFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ToCommandBodyForGetDevMsgTask;
+    g_toCommandFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ToCommandBodyForDebugRegisterForStreamTask;
+    g_toCommandFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_FLIP] = &ToCmdBodyForFlipTask;
+    g_toCommandFunc[TS_TASK_TYPE_GET_STARS_VERSION] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
+    g_toCommandFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ToCommandBodyForAicpuInfoLoadTask;
+    g_toCommandFunc[TS_TASK_TYPE_NOP] = &ToCommandForNopTask;
+    g_toCommandFunc[TS_TASK_TYPE_COMMON_CMD] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = nullptr;
 }
 
 static void RegTaskUnInitFunc(void)
@@ -958,29 +956,6 @@ static void RegTaskUnInitFunc(void)
     g_taskUnInitFunc[TS_TASK_TYPE_IPC_WAIT] = &MemWaitTaskUnInit;
 }
 
-static void RegPrintErrorInfoFunc(void)
-{
-    for (auto &item : g_printErrorInfoFunc) {
-        item = &PrintErrorInfoCommon;
-    }
-    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AICPU] = &PrintErrorInfoForDavinciTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &PrintErrorInfoForDavinciTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AICORE] = &PrintErrorInfoForDavinciTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_MEMCPY] = &PrintErrorInfoForMemcpyAsyncTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &PrintErrorInfoForReduceAsyncV2Task;
-    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &PrintErrorInfoForRDMAPiValueModifyTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &PrintErrorInfoForStreamLabelSwitchByIndexTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_STARS_COMMON] = &PrintErrorInfoForStarsCommonTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &PrintErrorInfoForNotifyWaitTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_SWITCH] = &PrintErrorInfoForStreamSwitchTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &PrintErrorInfoForStreamActiveTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &PrintErrorInfoForEventWaitTask;
-    g_printErrorInfoFunc[TS_TASK_TYPE_CMO] = &PrintErrorInfoForCmoTask;
-}
 
 static void RegWaitAsyncCpCompleteFunc(void)
 {
@@ -1005,6 +980,30 @@ static void RegSetResultFunc(void)
     g_setResultFunc[TS_TASK_TYPE_CREATE_STREAM] = &SetResultForCreateStreamTask;
     g_setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetResultForModelExecuteTask;
     g_setResultFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &SetResultForNotifyRecordTask;
+}
+
+static void RegPrintErrorInfoFunc(void)
+{
+    for (auto &item : g_printErrorInfoFunc) {
+        item = &PrintErrorInfoCommon;
+    }
+    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AICPU] = &PrintErrorInfoForDavinciTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &PrintErrorInfoForDavinciTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_KERNEL_AICORE] = &PrintErrorInfoForDavinciTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_MEMCPY] = &PrintErrorInfoForMemcpyAsyncTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &PrintErrorInfoForReduceAsyncV2Task;
+    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &PrintErrorInfoForRDMAPiValueModifyTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &PrintErrorInfoForStreamLabelSwitchByIndexTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_STARS_COMMON] = &PrintErrorInfoForStarsCommonTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &PrintErrorInfoForNotifyWaitTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_SWITCH] = &PrintErrorInfoForStreamSwitchTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &PrintErrorInfoForStreamActiveTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &PrintErrorInfoForEventWaitTask;
+    g_printErrorInfoFunc[TS_TASK_TYPE_CMO] = &PrintErrorInfoForCmoTask;
 }
 
 static void RegSetStarsResultFunc(void)
@@ -1110,80 +1109,84 @@ static void RegDoCompleteSuccFunc(void)
     g_doCompleteSuccFunc[TS_TASK_TYPE_IPC_WAIT] = &DoCompleteSuccessForIpcWaitTask;
 }
 
-void RegTaskToCommandFunc(void)
+static void RegTaskToSqefunc(void)
 {
-    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ToCommandBodyForAicpuTask;
-    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ToCommandBodyForAicAivTask;
-    g_toCommandFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ToCommandBodyForAicAivTask;
-    g_toCommandFunc[TS_TASK_TYPE_MULTIPLE_TASK] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_MEMCPY] = &ToCommandBodyForMemcpyAsyncTask;
-    g_toCommandFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ToCommandBodyForReduceAsyncV2Task;
-    g_toCommandFunc[TS_TASK_TYPE_EVENT_RECORD] = &ToCommandBodyForEventRecordTask;
-    g_toCommandFunc[TS_TASK_TYPE_EVENT_RESET] = &ToCommandBodyForEventResetTask;
-    g_toCommandFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = ToCommandBodyForRemoteEventWaitTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ToCommandBodyForEventWaitTask;
-    g_toCommandFunc[TS_TASK_TYPE_MAINTENANCE] = &ToCommandBodyForMaintenanceTask;
-    g_toCommandFunc[TS_TASK_TYPE_CREATE_STREAM] = &ToCommandBodyForCreateStreamTask;
-    g_toCommandFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ToCommandBodyForCreateL2AddrTask;
-    g_toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &ToCommandBodyForDynamicProfilingEnableTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &ToCommandBodyForDynamicProfilingDisableTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ToCommandBodyForProfilingEnableTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ToCommandBodyForProfilingDisableTask;
-    g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ToCommandBodyForOnlineProfEnableTask;
-    g_toCommandFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ToCommandBodyForOnlineProfDisableTask;
-    g_toCommandFunc[TS_TASK_TYPE_ADCPROF] = &ToCommandBodyForAdcProfTask;
-    g_toCommandFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ToCommandBodyForPCTraceTask;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ToCommandBodyForModelMaintainceTask;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ToCommandBodyForModelExecuteTask;
-    g_toCommandFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ToCmdBodyForDebugUnRegisterForStreamTask;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ToCmdBodyForAddEndGraphTask;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ToCmdBodyForAddModelExitTask;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ToCmdBodyForModelToAicpuTask;
-    g_toCommandFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ToCmdBodyForActiveAicpuStreamTask;
-    g_toCommandFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ToCmdBodyForCallbackLaunchTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ToCmdBodyForStreamLabelSwitchByIndexTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ToCmdBodyForStreamLabelGotoTask;
-    g_toCommandFunc[TS_TASK_TYPE_STARS_COMMON] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_FFTS_PLUS] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ToCmdBodyForRingBufferMaintainTask;
-    g_toCommandFunc[TS_TASK_TYPE_WRITE_VALUE] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_CMO] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_BARRIER] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ToCmdBodyForSetStreamModeTask;
-    g_toCommandFunc[TS_TASK_TYPE_RDMA_SEND] = &ToCommandBodyForRdmaSendTask;
-    g_toCommandFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ToCommandBodyForRdmaDbSendTask;
-    g_toCommandFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ToCommandBodyForNotifyRecordTask;
-    g_toCommandFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ToCommandBodyForNotifyWaitTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ToCommandBodyForStreamSwitchTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ToCommandBodyForStreamSwitchNTask;
-    g_toCommandFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ToCommandBodyForStreamActiveTask;
-    g_toCommandFunc[TS_TASK_TYPE_LABEL_SET] = &ToCommandBodyForLabelSetTask;
-    g_toCommandFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ToCommandBodyForLabelSwitchTask;
-    g_toCommandFunc[TS_TASK_TYPE_LABEL_GOTO] = &ToCommandBodyForLabelGotoTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ToCommandBodyForProfilerTraceTask;
-    g_toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ToCommandBodyForProfilerTraceExTask;
-    g_toCommandFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ToCommandBodyForFusionDumpAddrSetTask;
-    g_toCommandFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ToCommandBodyForDataDumpLoadInfoTask;
-    g_toCommandFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ToCommandBodyForDebugRegisterTask;
-    g_toCommandFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ToCommandBodyForDebugUnRegisterTask;
-    g_toCommandFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ToCommandBodyForTimeoutSetTask;
-    g_toCommandFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ToCommandBodyForGetDevMsgTask;
-    g_toCommandFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ToCommandBodyForDebugRegisterForStreamTask;
-    g_toCommandFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_FLIP] = &ToCmdBodyForFlipTask;
-    g_toCommandFunc[TS_TASK_TYPE_GET_STARS_VERSION] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
-    g_toCommandFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ToCommandBodyForAicpuInfoLoadTask;
-    g_toCommandFunc[TS_TASK_TYPE_NOP] = &ToCommandForNopTask;
-    g_toCommandFunc[TS_TASK_TYPE_COMMON_CMD] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = nullptr;
-    g_toCommandFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = nullptr;
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ConstructAICpuSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ConstructAicAivSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ConstructAicAivSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &ConstructSqeForDavinciMultipleTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructSqeForMemcpyAsyncTask;
+    g_toSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_EVENT_RECORD] = &ConstructSqeForEventRecordTask;
+    g_toSqeFunc[TS_TASK_TYPE_EVENT_RESET] = &ConstructSqeForEventResetTask;
+    g_toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
+    g_toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
+    g_toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
+    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &ConstructSqeRdmaPiValueModifyTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ConstructSqeForDebugUnRegisterForStreamTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
+    g_toSqeFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ConstructSqeForCallbackLaunchTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ConstructSqeForStreamLabelSwitchByIndexTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STARS_COMMON] = &ConstructSqeForStarsCommonTask;
+    g_toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
+    g_toSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructSqeForNpuGetFloatStaTask;
+    g_toSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructSqeForNpuClrFloatStaTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &ConstructSqeForOverflowSwitchSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &ConstructSqeForStreamTagSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
+    g_toSqeFunc[TS_TASK_TYPE_WRITE_VALUE] = &ConstructSqeForWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CMO] = &ConstructSqeForCmoTask;
+    g_toSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructSqeForBarrierTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructSqeForRdmaDbSendTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructSqeForNotifyRecordTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructSqeForNotifyWaitTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ConstructSqeForStreamSwitchTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ConstructSqeForStreamActiveTask;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_SET] = &ConstructSqeForLabelSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_GOTO] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
+    g_toSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ConstructSqeForDataDumpLoadInfoTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ConstructSqeForDebugRegisterTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ConstructSqeForDebugUnRegisterTask;
+    g_toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructSqeForGetDevMsgTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructSqeForDebugRegisterForStreamTask;
+    g_toSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructSqeForAllocDsaAddrTask;
+    g_toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
+    g_toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
+    g_toSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructSqeForUpdateAddressTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
+    g_toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
+    g_toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructSqeForMemWaitValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructSqeForMemWaitValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructSqeForMemWaitValueTask;
 }
 
 void TaskFuncReg(void)

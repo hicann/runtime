@@ -64,6 +64,7 @@
 #include "memory_task.h"
 #include "stream_sqcq_manage.hpp"
 #include "stars_cond_isa_helper.hpp"
+#include "capture_model_utils.hpp"
 #undef protected
 #undef private
 
@@ -7851,6 +7852,7 @@ TEST_F(ApiDavidTest, modelDebugDotPrintApi)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
+
 TEST_F(ApiDavidTest, captureStreamCascade)
 {
     uint32_t rtsqDepth = Runtime::macroValue_.rtsqDepth;
@@ -9432,7 +9434,6 @@ TEST_F(ApiDavidTest, rtsValueWait_failed)
     error = rtFree(devPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
-
 
 TEST_F(ApiDavidTest, rtStreamAbort_01) {
     rtError_t error = RT_ERROR_NONE;

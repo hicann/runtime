@@ -1490,10 +1490,6 @@ rtError_t ApiImpl::GetCaptureEvent(const Stream * const stm, Event * const evt, 
 rtError_t ApiImpl::CaptureEventWait(Context * const ctx, Stream * const stm, Event * const evt,
     const uint32_t timeout)
 {
-    if (IsCaptureEventWaitNonOp(stm, evt)) {
-        return RT_ERROR_NONE;
-    }
-
     Stream *captureStm = nullptr;
     rtError_t error = GetCaptureStream(ctx, stm, evt, &captureStm);
     ERROR_RETURN_MSG_INNER(error, "Create capture stream failed, stream_id=%d, event_id=%d, error=%d.",

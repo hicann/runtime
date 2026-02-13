@@ -53,6 +53,10 @@ Event::~Event() noexcept
     if (eventId_ != INVALID_EVENT_ID && isIdAllocFromDrv_) {
         device_->FreeEventIdFromDrv(eventId_, eventFlag_, GetDestroySync());
     }
+    if (eventAddr_ != nullptr) { // capture with software mode
+        device_->FreeExpandingPoolEvent(eventId_);
+ 	    eventAddr_ = nullptr;
+ 	}
     if (!IsEventTaskEmpty()) {
 #ifndef CFG_DEV_PLATFORM_PC
         RT_LOG(RT_LOG_ERROR, "device_id=%u, Event task not empty, recordSize=%d, waitSize=%d, idSize=%d",
@@ -404,29 +408,21 @@ rtError_t Event::CaptureEventProcess(Stream * const stm)
     TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_EVENT_RECORD, errorReason);
     COND_RETURN_ERROR_MSG_INNER((tsk == nullptr), errorReason,
                                 "Failed to alloc task when event record, stream_id=%d.", stm->Id_());
-    CaptureModel * const mdl = dynamic_cast<CaptureModel *>(captureStream_->Model_());
     std::function<void()> const errRecycle = [&dev, &tsk, &eventAddr, &newEventId]() {
-        if (newEventId != INVALID_EVENT_ID) {
-            dev->FindExpandingEventAddrById(&eventAddr, newEventId);
-        }
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);
     error = dev->AllocExpandingPoolEvent(&eventAddr, &newEventId);
     ERROR_RETURN_MSG_INNER(error, "capture addr error, deviceId=%u, tsId=%u, retCode=%#x!",
                             device_->Id_(), device_->DevGetTsId(), error);
-    {
-        const std::lock_guard<std::mutex> lock(eventLock_);
-        mdl->GetCaptureEventIndex().insert(newEventId);
-        eventId_ = newEventId;
-        RT_LOG(RT_LOG_INFO, "insert event id in capture model, event_id=%d.", eventId_);
-    }
+    eventAddr_ = eventAddr;
+    eventId_ = newEventId;
     (void)MemWriteValueTaskInit(tsk, eventAddr, static_cast<uint64_t>(1U));
     tsk->typeName = "EVENT_RECORD";
     tsk->type = TS_TASK_TYPE_CAPTURE_RECORD;
     MemWriteValueTaskInfo *memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = this;
-    memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
+    memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit capture task, retCode=%#x.",
                          static_cast<uint32_t>(error));
@@ -551,7 +547,6 @@ bool Event::WaitSendCheck(const Stream * const stm, int32_t &eventId)
 rtError_t Event::CaptureWaitProcess(Stream * const stm)
 {
     rtError_t error = RT_ERROR_NONE;
-    void *eventAddr = nullptr;
     Device * const dev = stm->Device_();
     TaskInfo *tsk = nullptr;
     TaskInfo submitTask = {};
@@ -563,9 +558,9 @@ rtError_t Event::CaptureWaitProcess(Stream * const stm)
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);
-    error = device_->FindExpandingEventAddrById(&eventAddr, eventId_);
-    ERROR_RETURN_MSG_INNER(error, "Failed to find event addr, event_id=%d, retCode=%#x.",
-                         eventId_, static_cast<uint32_t>(error));
+    void *eventAddr = this->GetEventAddr();
+ 	COND_RETURN_ERROR_MSG_INNER(eventAddr == nullptr, RT_ERROR_EVENT_RECORDER_NULL,
+        "eventAddr is null, event_id=%d.", EventId_());
 
     tsk->typeName = "EVENT_WAIT";
     tsk->type = TS_TASK_TYPE_CAPTURE_WAIT;
@@ -573,7 +568,7 @@ rtError_t Event::CaptureWaitProcess(Stream * const stm)
     ERROR_RETURN_MSG_INNER(error, "mem wait value init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
         stm->Id_(), tsk->id, static_cast<uint32_t>(error));
     MemWaitValueTaskInfo *memWaitValueTask = &tsk->u.memWaitValueTask;
-    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
+    memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit wait task, retCode=%#x.",
                          static_cast<uint32_t>(error));
@@ -637,8 +632,9 @@ ERROR_RECYCLE:
 
 rtError_t Event::CaptureResetProcess(Stream * const stm)
 {
-    void *eventAddr = nullptr;
-    rtError_t error = RT_ERROR_NONE;
+    void *eventAddr = this->GetEventAddr();
+ 	COND_RETURN_ERROR_MSG_INNER(eventAddr == nullptr, RT_ERROR_EVENT_RECORDER_NULL, 
+        "eventAddr is null, event_id=%d.", EventId_());
     rtError_t errorReason;
     Device * const dev = stm->Device_();
     TaskInfo submitTask = {};
@@ -650,13 +646,13 @@ rtError_t Event::CaptureResetProcess(Stream * const stm)
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);
-    error = device_->FindExpandingEventAddrById(&eventAddr, eventId_);
-    ERROR_RETURN_MSG_INNER(error, "Failed to find event addr, event_id=%d, retCode=%#x.",
-                         eventId_, static_cast<uint32_t>(error));
+    
     (void)MemWriteValueTaskInit(tsk, eventAddr, static_cast<uint64_t>(0));
     tsk->typeName = "EVENT_RESET";
     tsk->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
-    error = dev->SubmitTask(tsk);
+    MemWriteValueTaskInfo *memWriteValueTask = &tsk->u.memWriteValueTask;
+ 	memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+ 	const rtError_t error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit reset task, retCode=%#x.",
                          static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_INFO, "reset task submit, device_id=%u, stream_id=%d, task_id=%d, event_id=%d", device_->Id_(), stm->Id_(), tsk->id, eventId_);

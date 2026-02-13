@@ -36,11 +36,8 @@ public:
     {
         return static_cast<void *>(GetItemById(AllocId(isLogError), isLogError));
     }
-    int32_t AllocIdForEventPool(int32_t *currentId, const bool isLogError = true);
-    void *AllocItemForEventPool(int32_t *currentId, const bool isLogError = true)
-    {
-        return static_cast<void *>(GetItemById(AllocIdForEventPool(currentId, isLogError), isLogError));
-    }
+    int32_t AllocIdWithoutRetry(const bool isLogError = true);
+    
     void *GetItemById(const int32_t id, const bool isLogError = true) const;
     int32_t GetIdByItem(const void * const item) const;
     void FreeById(int32_t id)

@@ -90,34 +90,7 @@ BufferAllocator::~BufferAllocator()
 
 int32_t BufferAllocator::AllocId(const bool isLogError)
 {
-    if (pool_ == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "pool array is null");
-        return -1;
-    }
-
-    uint32_t curCount = currentCount_;
-    int32_t id = AllocBitMap(curCount);
-    while (unlikely((id < 0) && (curCount < maxCount_))) {  // No enough ID
-        uint32_t newCount = GetIncreasedCount(curCount);
-        newCount = (newCount > maxCount_) ? maxCount_ : newCount;
-        if (CompareAndExchange(&currentCount_, curCount, newCount)) {
-            const size_t newPoolSize = (static_cast<size_t>(newCount) - static_cast<size_t>(curCount))
-                * static_cast<size_t>(itemSize_);
-            const uint32_t poolIdx = GetPoolIndex(newCount - 1U);
-            const auto ptr = allocFunc_(newPoolSize, para_);
-            if (ptr == nullptr) {
-                allocFuncState_ = false;  // allocFunc fail
-                RtLogErrorLevelControl(isLogError, "allocFunc failed, new size count=%u, pool index=%u",
-                    newPoolSize, poolIdx);
-                return -1;
-            }
-            pool_[poolIdx] = static_cast<uint8_t *>(ptr);
-        }
-        // Anyway, currentCount_ is increased
-        id = AllocBitMap(currentCount_);
-        curCount = currentCount_;
-    }
-
+    int32_t id = AllocIdWithoutRetry(isLogError);
     if (id < 0) {
         int32_t loopCount = 0;
         RT_LOG(RT_LOG_EVENT, "repeat alloc id, currentCount=%u.", currentCount_);
@@ -145,7 +118,7 @@ int32_t BufferAllocator::AllocBitMap(uint32_t curCount)
     return id;
 }
 
-int32_t BufferAllocator::AllocIdForEventPool(int32_t *currentId, const bool isLogError)
+int32_t BufferAllocator::AllocIdWithoutRetry(const bool isLogError)
 {
     COND_RETURN_ERROR(pool_ == nullptr, -1, "pool array is null");
     uint32_t curCount = currentCount_;
@@ -154,7 +127,7 @@ int32_t BufferAllocator::AllocIdForEventPool(int32_t *currentId, const bool isLo
         uint32_t newCount = GetIncreasedCount(curCount);
         newCount = (newCount > maxCount_) ? maxCount_ : newCount;
         if (CompareAndExchange(&currentCount_, curCount, newCount)) {
-            const uint32_t newPoolSize = (newCount - curCount) * itemSize_;
+            const size_t newPoolSize = (static_cast<size_t>(newCount) - static_cast<size_t>(curCount)) * static_cast<size_t>(itemSize_);
             const uint32_t poolIdx = GetPoolIndex(newCount - 1U);
             const auto ptr = allocFunc_(newPoolSize, para_);
             if (ptr == nullptr) {
@@ -169,7 +142,6 @@ int32_t BufferAllocator::AllocIdForEventPool(int32_t *currentId, const bool isLo
         id = AllocBitMap(currentCount_);
         curCount = currentCount_;
     }
-    *currentId = (id < 0) ? -1 : id;
     return id;
 }
 
