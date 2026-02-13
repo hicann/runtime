@@ -92,7 +92,6 @@ typedef enum tagRtCondition {
 typedef enum schemModeType {
     RT_SCHEM_MODE_NORMAL = 0,
     RT_SCHEM_MODE_BATCH,
-    RT_SCHEM_MODE_SYNC,
     RT_SCHEM_MODE_END
 } rtschemModeType_t;
 
