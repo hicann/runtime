@@ -9,19 +9,14 @@
  */
 
 #include "aicpusd_event_process.h"
-#include <sys/time.h>
 #include <iomanip>
-#include <vector>
 #include <securec.h>
 #include <memory>
-#include <new>
-#include <dlfcn.h>
 #include "aicpu_event_struct.h"
 #include "ascend_hal.h"
 #include "aicpusd_threads_process.h"
 #include "dump_task.h"
 #include "tsd.h"
-#include "ts_api.h"
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "aicpusd_resource_manager.h"
 #include "aicpusd_drv_manager.h"

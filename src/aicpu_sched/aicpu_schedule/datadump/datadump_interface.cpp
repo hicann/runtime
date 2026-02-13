@@ -23,7 +23,6 @@
 #include "common/aicpusd_context.h"
 #include "dump_task.h"
 #include "aicpu_engine.h"
-#include "type_def.h"
 #include "tsd.h"
 
 extern "C" {

@@ -10,14 +10,12 @@
 #include "aicpusd_event_manager.h"
 #include <cstdint>
 #include <securec.h>
-#include <unistd.h>
 #include <sstream>
 #include "ascend_hal.h"
 #include "aicpusd_interface_process.h"
 #include "aicpusd_event_process.h"
 #include "aicpusd_threads_process.h"
 #include "dump_task.h"
-#include "ts_api.h"
 #include "aicpu_context.h"
 #include "aicpu_async_event.h"
 #include "aicpu_sched/common/aicpu_task_struct.h"

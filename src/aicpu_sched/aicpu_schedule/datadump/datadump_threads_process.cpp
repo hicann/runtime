@@ -11,7 +11,6 @@
 #include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/syscall.h>
 #include "ascend_hal.h"
 #include "tdt_server.h"
 #include "task_queue.h"
@@ -56,13 +55,13 @@ ComputeProcess& ComputeProcess::GetInstance()
 int32_t ComputeProcess::Start(const std::vector<uint32_t> &deviceVec,
                               const pid_t hostPid,
                               const std::string &pidSign,
-                              const uint32_t profilingMode,
+                              const uint32_t profilMode,
                               const uint32_t vfId,
                               const aicpu::AicpuRunMode runMode,
                               const AicpuSchedMode schedMode)
 {
     aicpusd_info("Aicpu scheduler start, hostpid[%d], profilingMode[%u], runMode[%u], vfId[%u].",
-                 hostPid, profilingMode, runMode, vfId);
+                 hostPid, profilMode, runMode, vfId);
     if (deviceVec.empty()) {
         aicpusd_err("device vector is empty.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
@@ -75,7 +74,7 @@ int32_t ComputeProcess::Start(const std::vector<uint32_t> &deviceVec,
     runMode_ = runMode;
     vfId_ = vfId;
 
-    aicpusd_info("ComputeProcess::Start: profilingMode[%u]", profilingMode);
+    aicpusd_info("ComputeProcess::Start: profilingMode[%u]", profilMode);
 
     auto ret = AicpuSchedule::ThreadPool::Instance().CreateWorker(schedMode);
     if (ret != AICPU_SCHEDULE_OK) {
@@ -83,7 +82,7 @@ int32_t ComputeProcess::Start(const std::vector<uint32_t> &deviceVec,
         return ret;
     }
     aicpusd_info("Aicpu scheduler start successfully, deviceId[%u], hostpid[%d], profilingMode[%u], runMode[%u].",
-                 deviceVec_[FIRST_INDEX], hostPid, profilingMode, runMode_);
+                 deviceVec_[FIRST_INDEX], hostPid, profilMode, runMode_);
     return AICPU_SCHEDULE_OK;
 }
 

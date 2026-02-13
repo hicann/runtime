@@ -91,14 +91,14 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
         return BQS_STATUS_INNER_ERROR;
     }
     // Add msg length to check
-    *(reinterpret_cast<uint32_t *>(reqData.get())) = bqsMsgLen + BQS_MSG_HEAD_SIZE;
+    *(PtrToPtr<char_t, uint32_t>(reqData.get())) = bqsMsgLen + BQS_MSG_HEAD_SIZE;
 
     if (!bqsReqMsg.SerializePartialToArray(reqData.get() + BQS_MSG_HEAD_SIZE, static_cast<int32_t>(bqsMsgLen))) {
         BQS_LOG_ERROR("serialize bqsReqMsg fail.");
         return BQS_STATUS_INNER_ERROR;
     }
 
-    EzcomRequest req = {.id = 0U, .data = reinterpret_cast<uint8_t *>(reqData.get()), .size = reqLength};
+    EzcomRequest req = {.id = 0U, .data = PtrToPtr<char_t, uint8_t>(reqData.get()), .size = reqLength};
     struct EzcomResponse resp = { 0U };
     // Send msg and get response
     BQS_LOG_INFO("EzcomRPCSync begin, fd:%d, msg size:%u", clientFd_, reqLength);
@@ -130,14 +130,14 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg &bqsReqMsg, BQSMsg &bqsRespMsg) c
     BQS_LOG_INFO("EzcomRPCSync end, response id:%u, response length:%u", resp.id, resp.size);
 
     // Check response msg
-    const uint32_t currMsgSize = *(reinterpret_cast<uint32_t *>(resp.data));
+    const uint32_t currMsgSize = *(PtrToPtr<uint8_t, uint32_t>(resp.data));
     if (currMsgSize != resp.size) {
         BQS_LOG_ERROR("message error, head msg content:%u, response size:%u", currMsgSize, resp.size);
         return BQS_STATUS_EASY_COMM_ERROR;
     }
 
     // Parse response msg to BQSMsg
-    char_t * const respData = reinterpret_cast<char_t *>(resp.data);
+    char_t * const respData = PtrToPtr<uint8_t, char_t>(resp.data);
     const uint32_t parseLength = currMsgSize - BQS_MSG_HEAD_SIZE;
     if (!bqsRespMsg.ParseFromArray(respData + BQS_MSG_HEAD_SIZE, static_cast<int32_t>(parseLength))) {
         BQS_LOG_ERROR("parse bqsRespMsg fail.");

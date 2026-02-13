@@ -16,7 +16,6 @@
 #include "aicpusd_util.h"
 #include "aicpusd_meminfo_process.h"
 #include "aicpusd_drv_manager.h"
-#include <stdio.h>
 
 namespace AicpuSchedule {
     AicpuMonitor::AicpuMonitor() {}

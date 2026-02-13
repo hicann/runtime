@@ -17,7 +17,6 @@
 #include "aicpusd_event_process.h"
 #include "aicpusd_threads_process.h"
 #include "dump_task.h"
-#include "ts_api.h"
 #include "aicpu_context.h"
 #include "aicpusd_common.h"
 #include "aicpusd_context.h"
