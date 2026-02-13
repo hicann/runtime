@@ -80,7 +80,7 @@ int32_t FILETransport::SendBuffer(
         if (fileChunkReq->fileName.find("adprof.data") != std::string::npos) {
             return ParseTlvChunk(fileChunkReq);
         }
-        if (stopped_ && fileChunkReq->fileName.find("aicpu.data") != std::string::npos) {
+        if (fileChunkReq->fileName.find("aicpu.data") != std::string::npos) {
             if (ParseStr2IdChunk(fileChunkReq) == PROFILING_SUCCESS) {
                 return PROFILING_SUCCESS;
             }

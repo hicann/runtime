@@ -995,6 +995,34 @@ ProfTlv GenerateProfTlvData(bool isLastChunk, int32_t chunkModule, size_t offset
     return tlv;
 }
 
+uint64_t HashDataGenHashIdWrapper(const std::string &str) {
+    return str.length();
+}
+
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
+    GlobalMockObject::verify();
+
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
+    trans->perfCount_ = perfCount;
+    trans->Init();
+
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> fileChunkReq = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    fileChunkReq->fileName = "aicpu.data";
+    fileChunkReq->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
+    std::string content = "###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
+    fileChunkReq->extraInfo = "null.0";
+
+    fileChunkReq->chunk = "";
+    fileChunkReq->chunkSize = 0;
+    EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
+
+    trans->RegisterHashDataGenIdFuncPtr(HashDataGenHashIdWrapper);
+    fileChunkReq->chunk = content;
+    fileChunkReq->chunkSize = content.length();
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(fileChunkReq));
+}
+
 TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseTlvChunk) {
     GlobalMockObject::verify();
 
