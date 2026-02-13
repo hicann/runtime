@@ -3235,11 +3235,13 @@ rtError_t ApiErrorDecorator::DebugRegister(Model * const mdl, const uint32_t fla
     NULL_PTR_RETURN_MSG_OUTER(addr, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(streamId, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(taskId, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_WARN((mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Capture model does not support debug registration.");
 
     const rtError_t error = impl_->DebugRegister(mdl, flag, addr, streamId, taskId);
     const uint32_t modelId = mdl->Id_();
-    RT_LOG(RT_LOG_INFO, "model_id = %u, flag = %u, streamId = %u, taskId = %u", modelId, flag, *streamId, *taskId);
-    ERROR_RETURN(error, "Debug register failed, model_id=%u, flag=%u, streamId=%u, taskId=%u.",
+    RT_LOG(RT_LOG_INFO, "model_id=%u, flag=%u, streamId=%u, taskId=%u", modelId, flag, *streamId, *taskId);
+    ERROR_RETURN(error, "Debug registration failed, model_id=%u, flag=%u, streamId=%u, taskId=%u.",
         modelId, flag, *streamId, *taskId);
     return error;
 }
@@ -3249,9 +3251,11 @@ rtError_t ApiErrorDecorator::DebugUnRegister(Model * const mdl)
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     const uint32_t modelId = mdl->Id_();
     RT_LOG(RT_LOG_INFO, "model_id=%u.", modelId);
+    COND_RETURN_WARN((mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Capture model does not support debug unregistration.");
 
     const rtError_t error = impl_->DebugUnRegister(mdl);
-    ERROR_RETURN(error, "Unregister debug failed, model_id=%u.", modelId);
+    ERROR_RETURN(error, "Debug unregistration failed, model_id=%u.", modelId);
     return error;
 }
 
@@ -4076,6 +4080,8 @@ rtError_t ApiErrorDecorator::NpuGetFloatStatus(void * const outputAddrPtr, const
     NULL_PTR_RETURN_MSG_OUTER(outputAddrPtr, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
+    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
+        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
 
     return impl_->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm);
 }
@@ -4084,6 +4090,8 @@ rtError_t ApiErrorDecorator::NpuClearFloatStatus(const uint32_t checkMode, Strea
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
+        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
     return impl_->NpuClearFloatStatus(checkMode, curStm);
 }
 
@@ -4096,6 +4104,8 @@ rtError_t ApiErrorDecorator::NpuGetFloatDebugStatus(void * const outputAddrPtr, 
 
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
+    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
+        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
 
     return impl_->NpuGetFloatDebugStatus(outputAddrPtr, outputSize, checkMode, curStm);
 }
@@ -4104,6 +4114,8 @@ rtError_t ApiErrorDecorator::NpuClearFloatDebugStatus(const uint32_t checkMode, 
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
+        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
     return impl_->NpuClearFloatDebugStatus(checkMode, curStm);
 }
 
@@ -4880,7 +4892,9 @@ rtError_t ApiErrorDecorator::SetStreamOverflowSwitch(Stream * const stm, const u
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(flags >= static_cast<uint32_t>(RT_OVERFLOW_MODE_UNDEF), 
         RT_ERROR_INVALID_VALUE, flags, 
-        "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");    
+        "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
+    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
+ 	  	RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());   
     return impl_->SetStreamOverflowSwitch(stm, flags);
 }
 rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags)
@@ -4929,6 +4943,8 @@ rtError_t ApiErrorDecorator::DvppWaitGroupReport(DvppGrp * const grp, const  rtD
 
 rtError_t ApiErrorDecorator::SetStreamTag(Stream * const stm, const uint32_t geOpTag)
 {
+    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
+ 	  	RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
     const rtError_t error = impl_->SetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "set stream geOpTag failed.");
     return error;
@@ -4993,11 +5009,15 @@ rtError_t ApiErrorDecorator::GetDeviceSatStatus(void * const outputAddrPtr, cons
     COND_RETURN_ERROR(outputSize != OVERFLOW_OUTPUT_SIZE,
         RT_ERROR_INVALID_VALUE, "output size %lu is invalid, only support %lu bytes",
         outputSize, OVERFLOW_OUTPUT_SIZE);
+    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
+ 	    RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
     return impl_->GetDeviceSatStatus(outputAddrPtr, outputSize, stm);
 }
 
 rtError_t ApiErrorDecorator::CleanDeviceSatStatus(Stream * const stm)
 {
+    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
+ 	    RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
     return impl_->CleanDeviceSatStatus(stm);
 }
 
