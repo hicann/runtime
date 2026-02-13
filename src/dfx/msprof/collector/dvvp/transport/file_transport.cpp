@@ -80,7 +80,7 @@ int32_t FILETransport::SendBuffer(
         if (fileChunkReq->fileName.find("adprof.data") != std::string::npos) {
             return ParseTlvChunk(fileChunkReq);
         }
-        if (fileChunkReq->fileName.find("aicpu.data") != std::string::npos) {
+        if (stopped_ && fileChunkReq->fileName.find("aicpu.data") != std::string::npos) {
             if (ParseStr2IdChunk(fileChunkReq) == PROFILING_SUCCESS) {
                 return PROFILING_SUCCESS;
             }
@@ -220,14 +220,16 @@ void FILETransport::AddHashData(const std::string& input) const{
  * @param [in] data string
  * @return true: header mark matched, false: not matched
  */
-bool removeStr2IdHeaderMark(std::string& str) {
+bool removeStr2IdHeaderMark(std::string& str, std::string& after) {
     // keep mark the same as ReportStr2IdInfoToHost in devprof_drv_aicpu
     const std::string mark = "###drv_hashdata###";
-    if (str.compare(0, mark.length(), mark) == 0) {
-        str.erase(0, mark.length());
-        return true;
+    const size_t pos = str.find(mark);
+    if (str.find(mark) == std::string::npos) {
+        return false;
     }
-    return false;
+    after = str.substr(pos + mark.size());
+    str = str.substr(0, pos);
+    return true;
 }
 
 /**
@@ -236,6 +238,7 @@ bool removeStr2IdHeaderMark(std::string& str) {
  * @return 0:SUCCESS, !0:FAILED
  */
 int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) {
+    std::string after;
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
         return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
@@ -248,11 +251,11 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
         MSPROF_LOGD("parse str2id fileChunk data size:%u", fileChunkReq->chunk.length());
         AddHashData(fileChunkReq->chunk);
         return PROFILING_SUCCESS;
-    } else if (removeStr2IdHeaderMark(fileChunkReq->chunk)) {
+    } else if (removeStr2IdHeaderMark(fileChunkReq->chunk, after)) {
         MSPROF_LOGI("start parse drv str2id info");
         parseStr2IdStart_ = true;
-        AddHashData(fileChunkReq->chunk);
-        return PROFILING_SUCCESS;
+        AddHashData(after);
+        return (fileChunkReq->chunk.length() == 0 ? PROFILING_SUCCESS : PROFILING_FAILED);
     }
     return PROFILING_FAILED;
 }
