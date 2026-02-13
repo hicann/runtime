@@ -14,7 +14,7 @@ namespace cce {
 namespace runtime {
 
 // memory type to string
-char_t* MemLocationTypeToStr(const rtMemLocationType type)
+const char_t* MemLocationTypeToStr(const rtMemLocationType type)
 {
     switch (type) {
         case RT_MEMORY_LOC_HOST:

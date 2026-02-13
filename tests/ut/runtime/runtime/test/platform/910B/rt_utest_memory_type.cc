@@ -41,22 +41,17 @@ protected:
 TEST_F(MemoryTypeManagerTest, memory_type_test)
 {
     rtMemLocationType type = RT_MEMORY_LOC_HOST;
-    char_t* convertedType = MemLocationTypeToStr(type);
-    EXPECT_STREQ(convertedType, "RT_MEMORY_LOCATION_HOST");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_HOST");
 
     type = RT_MEMORY_LOC_DEVICE;
-    convertedType = MemLocationTypeToStr(type);
-    EXPECT_STREQ(convertedType, "RT_MEMORY_LOCATION_DEVICE");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_DEVICE");
 
     type = RT_MEMORY_LOC_UNREGISTERED;
-    convertedType = MemLocationTypeToStr(type);
-    EXPECT_STREQ(convertedType, "RT_MEMORY_LOCATION_UNREGISTERED");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_UNREGISTERED");
 
     type = RT_MEMORY_LOC_MANAGED;
-    convertedType = MemLocationTypeToStr(type);
-    EXPECT_STREQ(convertedType, "RT_MEMORY_LOCATION_MANAGED");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MANAGED");
 
     type = RT_MEMORY_LOC_MAX;
-    convertedType = MemLocationTypeToStr(type);
-    EXPECT_STREQ(convertedType, "RT_MEMORY_LOCATION_MAX");
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MAX");
 }

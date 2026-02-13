@@ -8528,7 +8528,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtMemLocationType inputDstType = (memAttr.dstLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputDstType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
-        "The real memory type of dst is %d(%s), and the input type is %d(%s), dst ptr is 0x%llx. "
+        "The real memory type of dst is %d(%s), and the input type is %d(%s), dst ptr is %#" PRIx64 ". "
         "Or the real device ID is %d, but the input ID is %d.", dstAttr.location.type,
         MemLocationTypeToStr(dstAttr.location.type), memAttr.dstLoc.type, MemLocationTypeToStr(memAttr.dstLoc.type),
         RtPtrToValue(dst), dstAttr.location.id, memAttr.dstLoc.id);
@@ -8539,7 +8539,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtMemLocationType inputSrcType = (memAttr.srcLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputSrcType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
-        "The real memory type of src is %d(%s), and the input type is %d(%s), src ptr is 0x%llx. "
+        "The real memory type of src is %d(%s), and the input type is %d(%s), src ptr is %#" PRIx64 ". "
         "Or the real device ID is %d, but the input ID is %d.", srcAttr.location.type,
         MemLocationTypeToStr(srcAttr.location.type), memAttr.srcLoc.type, MemLocationTypeToStr(memAttr.srcLoc.type),
         RtPtrToValue(src), srcAttr.location.id, memAttr.srcLoc.id);
