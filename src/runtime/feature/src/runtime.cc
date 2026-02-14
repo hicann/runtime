@@ -1823,8 +1823,9 @@ rtError_t Runtime::KernelRegisterV2(Program *prog, const void *stubFunc, const c
 {
     const Kernel *kernelTmp = kernelTable_.Lookup(stubFunc);
     if (kernelTmp != nullptr) {
-        PutProgram(prog);
-        RT_LOG(RT_LOG_WARNING, "kernel had registered stubFunc=%p, stubName=%s.", stubFunc, stubName);
+        PutProgram(kernelTmp->Program_());
+        RT_LOG(RT_LOG_WARNING, "kernel had registered stubFunc=%p, stubName=%s, prog=%p, found prog=%p.",
+            stubFunc, stubName, prog, kernelTmp->Program_());
         return RT_ERROR_KERNEL_DUPLICATE;
     }
 
