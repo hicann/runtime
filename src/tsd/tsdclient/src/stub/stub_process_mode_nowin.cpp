@@ -13,11 +13,6 @@
 #include "common/type_def.h"
 namespace tsd {
 namespace {
-// 每个OS上的1980芯片数目,每个芯片上每一种类型的进程都要创建一个，所以以芯片数为依据
-constexpr uint32_t DEVICE_MAX_NUM = 32U;
-const std::string TSDAEMON_HOST_NAME = "/var/tsdaemon";
-constexpr uint32_t DOMAIN_SOCKET_CLIENT_DEFAULT_SESSIONID = 0U;
-std::mutex g_hostStartFlagMut;
 constexpr uint32_t MAX_QUEUE_ID_NUM = 8192U;
 }  // namespace
 TSD_StatusT ProcessModeManager::ProcessQueueForAdc()

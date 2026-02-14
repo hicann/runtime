@@ -10,6 +10,8 @@
  
 #ifndef AICPU_MC2_MAINTENANCE_THREAD_H
 #define AICPU_MC2_MAINTENANCE_THREAD_H
+
+#include <cstdint>
 // error code for mc2
 constexpr int32_t AICPU_SCHEDULE_PARAMETER_IS_NULL = 21600;
 constexpr int32_t AICPU_SCHEDULE_THREAD_ALREADY_EXISTS = 21601;

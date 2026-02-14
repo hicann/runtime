@@ -452,6 +452,7 @@ bool ClientManager::ResetClientManagerByConfig(RunningMode &runningMode)
 
 RunningMode ClientManager::GetClientRunMode(const uint32_t logicDeviceId)
 {
+    (void)logicDeviceId;
     if (g_runningMode == RunningMode::UNSET_MODE) {
         RunningMode runningMode = RunningMode::UNSET_MODE;
         if (!ResetClientManagerByConfig(runningMode)) {

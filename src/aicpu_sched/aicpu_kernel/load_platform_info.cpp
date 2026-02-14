@@ -11,6 +11,7 @@
 #include "load_platform_info.h"
 #include "utils/log.h"
 #include "utils/status.h"
+#include "type_def.h"
 
 namespace {
 struct LoadPlatformInfosArgs {
@@ -22,7 +23,7 @@ struct LoadPlatformInfosArgs {
 extern "C" {
 __attribute__((visibility("default"))) uint32_t LoadCustPlatform(void *args) {
   KERNEL_LOG_INFO("Begin loading the custom platform");
-  auto load_args = reinterpret_cast<LoadPlatformInfosArgs*>(args);
+  auto load_args = PtrToPtr<void, LoadPlatformInfosArgs>(args);
   const uint64_t input_info = load_args->args;
   const uint32_t info_len = static_cast<uint32_t>(load_args->args_size);
   return aicpu::PlatformRebuild::GetInstance().ProcessPlatformInfoMsg(input_info, info_len);
@@ -48,8 +49,7 @@ int32_t PlatformRebuild::ProcessPlatformInfoMsg(const uint64_t info_args,
                      sizeof(PlatformInfoArgs));
     return KERNEL_STATUS_PARAM_INVALID;
   }
-  const PlatformInfoArgs *const platform_args =
-      reinterpret_cast<PlatformInfoArgs *>(static_cast<uintptr_t>(info_args));
+  const PlatformInfoArgs *const platform_args = PtrToPtr<void, PlatformInfoArgs>(ValueToPtr(info_args));
   KERNEL_CHECK_NULLPTR(platform_args, KERNEL_STATUS_PARAM_INVALID, "info args nullptr");
   if ((platform_args->input_data_info == 0UL) || (platform_args->input_data_len == 0UL) ||
       (platform_args->platform_instance == 0UL)) {
@@ -62,10 +62,9 @@ int32_t PlatformRebuild::ProcessPlatformInfoMsg(const uint64_t info_args,
   KERNEL_LOG_INFO("input param: input_data_info:0x%x, input_data_len:%llu, platform_instance:0x%x",
                   platform_args->input_data_info, platform_args->input_data_len,
                   platform_args->platform_instance);
-  fe::PlatFormInfos *platform_infos =
-    reinterpret_cast<fe::PlatFormInfos *>(static_cast<uintptr_t>(platform_args->platform_instance));
+  fe::PlatFormInfos *platform_infos = PtrToPtr<void, fe::PlatFormInfos>(ValueToPtr(platform_args->platform_instance));
   KERNEL_CHECK_NULLPTR(platform_infos, KERNEL_STATUS_PARAM_INVALID, "platform instance nullptr");
-  char *input_data_info = reinterpret_cast<char *>(static_cast<uintptr_t>(platform_args->input_data_info));
+  char *input_data_info = PtrToPtr<void, char>(ValueToPtr(platform_args->input_data_info));
   KERNEL_CHECK_FALSE(platform_infos->Init(), KERNEL_STATUS_INNER_ERROR, "Fe platformInfo init failed");
   if (!(platform_infos->LoadFromBuffer(input_data_info, platform_args->input_data_len))) {
     KERNEL_LOG_ERROR("Deserialization failed");

@@ -12,20 +12,27 @@
 int seccomp_rule_add(scmp_filter_ctx ctx,
 		     uint32_t action, int syscall, unsigned int arg_cnt, ...)
 {
+    (void) ctx;
+    (void) action;
+    (void) syscall;
+    (void) arg_cnt;
     return 0;
 }
 
 scmp_filter_ctx seccomp_init(uint32_t def_action)
 {
+    (void) def_action;
     return nullptr;
 }
 
 int seccomp_load(const scmp_filter_ctx ctx)
 {
+    (void) ctx;
     return 0;
 }
 
 int seccomp_syscall_resolve_name(const char *name)
 {
+    (void) name;
     return 0;
 }

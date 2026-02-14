@@ -14,6 +14,7 @@ add_executable(aicpu_kernel_utest
 target_include_directories (aicpu_kernel_utest PRIVATE
     ${RUNTIME_DIR}/src/aicpu_sched/aicpu_kernel/
     ${RUNTIME_DIR}/pkg_inc/base
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
     ${RUNTIME_DIR}/src/dfx/log/inc/toolchain
     ${CMAKE_CURRENT_SOURCE_DIR}/../stub/
 )
