@@ -257,6 +257,8 @@ set(libruntime_v100_src_files
     src/api_impl/api_decorator.cc
     src/api_impl/api_impl.cc
     src/api_impl/api_error.cc
+    src/api_impl/api_impl_creator.cc
+    src/api_impl/api_impl_mbuf.cc
 
     # for V100
     src/api_impl/v100/api_impl_creator_c.cc
@@ -423,8 +425,7 @@ macro(add_runtime_common_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        $<$<CONFIG:Debug>:-O0>
-        $<$<NOT:$<CONFIG:Debug>>:-O3>
+        -O3
         -fno-common
         -fno-strict-aliasing
         -Werror
@@ -526,8 +527,7 @@ macro(add_runtime_api_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        $<$<CONFIG:Debug>:-O0>
-        $<$<NOT:$<CONFIG:Debug>>:-O3>
+        -O3
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
@@ -618,8 +618,7 @@ macro(add_runtime_v100_library target_name)
     )
 
     target_compile_options(${target_name} PRIVATE
-        $<$<CONFIG:Debug>:-O0>
-        $<$<NOT:$<CONFIG:Debug>>:-O3>
+        -O3
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
@@ -728,8 +727,7 @@ set_target_properties(static_runtime
 )
 
 target_compile_options(static_runtime PRIVATE
-    $<$<CONFIG:Debug>:-O0>
-    $<$<NOT:$<CONFIG:Debug>>:-O3>
+    -O3
     -fvisibility=hidden
     -fno-common
     -fno-strict-aliasing
@@ -740,7 +738,7 @@ target_compile_options(static_runtime PRIVATE
 )
 
 target_include_directories(static_runtime PRIVATE
-    ${RUNTIME_INC_DIR}
+    ${RUNTIME_INC_DIR_TINY}
     ${RUNTIME_DIR}/include
 )
 

@@ -163,7 +163,7 @@
     _(aclError, aclrtGetMemcpyDescSize, (aclrtMemcpyKind kind, size_t * descSize), (kind, descSize)) \
     _(aclError, aclrtSetMemcpyDesc, (void * desc, aclrtMemcpyKind kind, void * srcAddr, void * dstAddr, size_t count, void * config), (desc, kind, srcAddr, dstAddr, count, config)) \
     _(aclError, aclrtMemcpyAsyncWithDesc, (void * desc, aclrtMemcpyKind kind, aclrtStream stream), (desc, kind, stream)) \
-    _(aclError, aclrtMemcpyAsyncWithOffset, (void ** dst, size_t destMax, uint64_t dstDataOffset, const void ** src, size_t count, size_t srcDataOffset, aclrtMemcpyKind kind, aclrtStream stream), (dst, destMax, dstDataOffset, src, count, srcDataOffset, kind, stream)) \
+    _(aclError, aclrtMemcpyAsyncWithOffset, (void ** dst, size_t destMax, size_t dstDataOffset, const void ** src, size_t count, size_t srcDataOffset, aclrtMemcpyKind kind, aclrtStream stream), (dst, destMax, dstDataOffset, src, count, srcDataOffset, kind, stream)) \
     _(aclError, aclrtKernelArgsGetHandleMemSize, (aclrtFuncHandle funcHandle, size_t * memSize), (funcHandle, memSize)) \
     _(aclError, aclrtKernelArgsGetMemSize, (aclrtFuncHandle funcHandle, size_t userArgsSize, size_t * actualArgsSize), (funcHandle, userArgsSize, actualArgsSize)) \
     _(aclError, aclrtKernelArgsInit, (aclrtFuncHandle funcHandle, aclrtArgsHandle * argsHandle), (funcHandle, argsHandle)) \

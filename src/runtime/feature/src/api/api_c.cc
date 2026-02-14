@@ -70,8 +70,6 @@ TIMESTAMP_EXTERN(rtStarsTaskLaunch);
 TIMESTAMP_EXTERN(rtStarsTaskLaunchWithFlag);
 TIMESTAMP_EXTERN(rtKernelLaunchWithHandle);
 TIMESTAMP_EXTERN(rtKernelLaunchWithHandleV2);
-TIMESTAMP_EXTERN(rtNpuGetFloatStatus);
-TIMESTAMP_EXTERN(rtNpuClearFloatStatus);
 TIMESTAMP_EXTERN(rtNpuGetFloatDebugStatus);
 TIMESTAMP_EXTERN(rtNpuClearFloatDebugStatus);
 TIMESTAMP_EXTERN(rtDvppGroupCreate);
@@ -942,23 +940,6 @@ rtError_t rtMemFreeManaged(void *ptr)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtMemAdvise(void* devPtr, uint64_t count, uint32_t advise)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Runtime *rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MEM_L2_CACHE_PERSISTANT)) {
-        RT_LOG(RT_LOG_INFO, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return ACL_RT_SUCCESS;
-    }
-    Api *apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->MemAdvise(devPtr, count, advise);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64_t cnt)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -1278,38 +1259,6 @@ rtError_t rtMemcpyAsyncPtrV2(void *memcpyAddrInfo, uint64_t destMax, uint64_t co
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtMemcpyD2DAddrAsync(void *dst, uint64_t dstMax, uint64_t dstOffset, const void *src,
-    uint64_t cnt, uint64_t srcOffset, rtStream_t stm)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Stream * const exeStream = static_cast<Stream *>(stm);
-    TIMESTAMP_NAME(__func__);
-
-    rtD2DAddrCfgInfo_t addrCfgInfo = {};
-    addrCfgInfo.dstOffset = dstOffset;
-    addrCfgInfo.srcOffset = srcOffset;
-    const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
-    (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t error = apiInstance->MemcpyAsync(dst, dstMax, src, cnt, RT_MEMCPY_ADDR_DEVICE_TO_DEVICE,
-        exeStream, nullptr, &addrCfgInfo);
-    (void)AwdStopThreadWatchdog(watchDogHandle);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtMemcpy2d(void *dst, uint64_t dstPitch, const void *src, uint64_t srcPitch, uint64_t width, uint64_t height,
                      rtMemcpyKind_t kind)
 {
@@ -1546,76 +1495,6 @@ rtError_t rtGetOnlineProfData(rtStream_t stm, rtProfDataInfo_t *pProfData, uint3
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
     const rtError_t error = apiInstance->GetOnlineProfData(static_cast<Stream *>(stm), pProfData, profDataNum);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtStartADCProfiler(void **addr, uint32_t length)
-{
-    rtError_t error;
-    constexpr uint32_t minimum = 1024U * 256U;  // 256K
-    constexpr uint32_t maximum = 1024U * 1024U; // 1M
-
-    Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_PROFILING_ADC)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    // minium 256k
-    if ((length < minimum) || (length > maximum)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Invalid length=%u, valid range=[%u, %u]", length, minimum, maximum);
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-
-    const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, static_cast<uint64_t>(length));
-    error = rtMalloc(addr, static_cast<uint64_t>(length), memType, DEFAULT_MODULEID);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Malloc memory failed, error=%d, length=%u", error, length);
-        ERROR_RETURN_WITH_EXT_ERRCODE(error);
-        return ACL_RT_SUCCESS;
-    }
-
-    error = apiInstance->AdcProfiler(RtPtrToValue(*addr), length);
-    if (error != RT_ERROR_NONE) {
-        (void)rtFree(*addr);
-        *addr = nullptr;
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "AdcProfiler failed, error=%d, length=%u", error, length);
-        ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    }
-
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtStopADCProfiler(void *addr)
-{
-    rtError_t error;
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_PROFILING_ADC)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    if (addr == nullptr) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_INVALID_VALUE);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    error = apiInstance->AdcProfiler(RtPtrToValue(addr), 0U);
-    if (error == RT_ERROR_NONE) {
-        error = rtFree(addr);
-    }
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -2173,31 +2052,6 @@ rtError_t rtGetNotifyID(rtNotify_t notify, uint32_t *notifyId)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *tsId)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING)) {
-        PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(phyDevId, RT_ERROR_INVALID_VALUE);
-        PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(tsId, RT_ERROR_INVALID_VALUE);
-        Notify * const notifyPtr = static_cast<Notify *>(notify);
-        rtNotifyPhyInfo notifyInfo;
-        const rtError_t error = apiInstance->GetNotifyPhyInfo(notifyPtr, &notifyInfo);
-        ERROR_RETURN_WITH_EXT_ERRCODE(error);
-        *phyDevId = notifyInfo.phyId;
-        *tsId = notifyInfo.tsId;
-    } else {
-        RT_LOG(RT_LOG_INFO, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    return ACL_RT_SUCCESS;
-}
-VISIBILITY_DEFAULT
 rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
 {
     Api * const apiInstance = Api::Instance();
@@ -2280,33 +2134,6 @@ rtError_t rtLabelGoto(rtLabel_t lbl, rtStream_t stm)
     }
     REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
     return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtSetIpcNotifyPid(const char_t *name, int32_t pid[], int32_t num)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetIpcNotifyPid(name, pid, num);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtSetIpcMemPid(const char_t *name, int32_t pid[], int32_t num)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetIpcMemPid(name, pid, num);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
@@ -2647,44 +2474,6 @@ rtError_t rtMemUceRepair(const uint32_t deviceId, rtMemUceInfo *memUceInfo)
     const rtError_t error = apiInstance->MemUceRepair(deviceId, memUceInfo);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-rtError_t rtNpuGetFloatStatus(void * outputAddrPtr, uint64_t outputSize, uint32_t checkMode, rtStream_t stm)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_FLOAT_STATUS)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    TIMESTAMP_BEGIN(rtNpuGetFloatStatus);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
-    const rtError_t ret = apiInstance->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, streamPtr);
-    TIMESTAMP_END(rtNpuGetFloatStatus);
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    return ACL_RT_SUCCESS;
-}
-
-rtError_t rtNpuClearFloatStatus(uint32_t checkMode, rtStream_t stm)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_FLOAT_STATUS)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    TIMESTAMP_BEGIN(rtNpuClearFloatStatus);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
-    const rtError_t ret = apiInstance->NpuClearFloatStatus(checkMode, streamPtr);
-    TIMESTAMP_END(rtNpuClearFloatStatus);
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
 
@@ -3931,24 +3720,6 @@ RTS_API rtError_t rtCheckArchCompatibility(const char_t *omSocVersion, int32_t *
 }
 
 VISIBILITY_DEFAULT
-RTS_API rtError_t rtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **devArgsAddr, void **argsHandle)
-{
-    Runtime *rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
-        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Api *apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetDevArgsAddr(static_cast<Stream *>(stm), argsInfo, devArgsAddr, argsHandle);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetExceptionExtInfo(const rtArgsSizeInfo_t * const sizeInfo)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(sizeInfo, RT_ERROR_INVALID_VALUE);
@@ -4111,23 +3882,6 @@ rtError_t rtQueryProcessHostPid(int32_t pid, uint32_t *chipId, uint32_t *vfId, u
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->QueryProcessHostPid(pid, chipId, vfId, hostPid, cpType);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int32_t pid)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY)) {
-        REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-    Api *apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ShrIdSetPodPid(name, sdid, pid);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

@@ -10,7 +10,7 @@
 
 ##################################################################################################################
 add_custom_target(
-    stub_src ALL
+    runtime_stub_src ALL
     DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/acl_stub.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/tdt_channel_stub.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/tdt_queue_stub.cpp
@@ -131,3 +131,7 @@ target_link_libraries(stub_acl_prof PRIVATE
     -ldl
 )
 ##################################################################################################################
+add_dependencies(stub_acl_rt runtime_stub_src)
+add_dependencies(stub_acl_tdt_channel runtime_stub_src)
+add_dependencies(stub_acl_tdt_queue runtime_stub_src)
+add_dependencies(stub_acl_prof runtime_stub_src)

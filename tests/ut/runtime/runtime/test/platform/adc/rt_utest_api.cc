@@ -94,3 +94,17 @@ TEST_F(ApiTest, ADCProfiler_test_failed)
     error = rtStartADCProfiler(&addr, length);
     EXPECT_NE(error, ACL_RT_SUCCESS);
 }
+
+TEST_F(ApiTest, StopADCProfiler_test_failed)
+{
+    rtError_t error = rtStopADCProfiler(nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiTest, ipc_test_unsupport)
+{
+    int32_t pid[]={1};
+    int num = 1;
+    rtError_t error = rtSetIpcNotifyPid("test", pid, num);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}

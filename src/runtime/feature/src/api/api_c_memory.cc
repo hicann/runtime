@@ -251,7 +251,7 @@ rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostM
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtHostRegisterV2(void *ptr, size_t size, uint32_t flag)
+rtError_t rtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();

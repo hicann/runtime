@@ -31,12 +31,234 @@ rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_t * cons
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtsPersistentTaskClean(rtStream_t stm)
+{
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemcpyAsyncWithOffset(void **dst, uint64_t dstMax, uint64_t dstDataOffset, const void **src,
+    uint64_t cnt, uint64_t srcDataOffset, rtMemcpyKind kind, rtStream_t stm)
+{
+    (void)dst;
+    (void)dstMax;
+    (void)dstDataOffset;
+    (void)src;
+    (void)cnt;
+    (void)srcDataOffset;
+    (void)kind;
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemAdvise(void* devPtr, uint64_t count, uint32_t advise)
+{
+    (void)devPtr;
+    (void)count;
+    (void)advise;
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyRecordInfo_t *info)
+{
+    (void)cntNotify;
+    (void)stm;
+    (void)info;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *tsId)
+{
+    (void)notify;
+    (void)phyDevId;
+    (void)tsId;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSetIpcNotifyPid(const char_t *name, int32_t pid[], int32_t num)
+{
+    (void)name;
+    (void)pid;
+    (void)num;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSetIpcMemPid(const char_t *name, int32_t pid[], int32_t num)
+{
+    (void)name;
+    (void)pid;
+    (void)num;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t rtNpuGetFloatStatus(void * outputAddrPtr, uint64_t outputSize, uint32_t checkMode, rtStream_t stm)
+{
+    (void)outputAddrPtr;
+    (void)outputSize;
+    (void)checkMode;
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+RTS_API rtError_t rtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **devArgsAddr, void **argsHandle)
+{
+    (void)stm;
+    (void)argsInfo;
+    (void)devArgsAddr;
+    (void)argsHandle;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSetIpcNotifySuperPodPid(const char *name, uint32_t sdid, int32_t pid)
+{
+    (void)name;
+    (void)sdid;
+    (void)pid;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag)
+{
+    (void)stm;
+    (void)geOpTag;
+    return ACL_RT_SUCCESS;
+}
+
+rtError_t rtNpuClearFloatStatus(uint32_t checkMode, rtStream_t stm)
+{
+    (void)checkMode;
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle)
+{
+    (void)stm;
+    (void)handle;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsStreamBeginTaskGrp(rtStream_t stm)
+{
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtThreadExchangeCaptureMode(rtStreamCaptureMode *mode)
+{
+    (void)mode;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemcpyD2DAddrAsync(void *dst, uint64_t dstMax, uint64_t dstOffset, const void *src,
+    uint64_t cnt, uint64_t srcOffset, rtStream_t stm)
+{
+    (void)dst;
+    (void)dstMax;
+    (void)dstOffset;
+    (void)src;
+    (void)cnt;
+    (void)srcOffset;
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStartADCProfiler(void **addr, uint32_t length)
+{
+    (void)addr;
+    (void)length;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStopADCProfiler(void *addr)
+{
+    (void)addr;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyWaitInfo_t *info)
+{
+    (void)cntNotify;
+    (void)stm;
+    (void)info;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm)
+{
+    (void)cntNotify;
+    (void)stm;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtIpcMemImportPidInterServer(const char *key, const rtServerPid *serverPids, size_t num)
+{
+    (void)key;
+    (void)serverPids;
+    (void)num;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen)
+{
+    (void)label;
+    (void)key;
+    (void)val;
+    (void)maxLen;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *serverPids, size_t num)
+{
+    (void)notify;
+    (void)serverPids;
+    (void)num;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flags)
+{
+    (void)cntNotify;
+    (void)flags;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t const stm,
                             const rtCntNtyRecordInfo_t * const info)
 {
     (void)inCntNotify;
     (void)stm;
     (void)info;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId)
+{
+    (void)cntNotify;
+    (void)notifyId;
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 

@@ -832,7 +832,6 @@ rtError_t Model::LoadCompleteByStream(void)
     TaskInfo submitTask = {};
     TaskInfo submitTaskInfo = {};
     TaskInfo *maintainceTask = nullptr;
-    const bool isContextContainAicpuModel = this->Context_()->GetAicpuExecuteModel();
 
     const bool isNeedLoadAicpuModel = NeedLoadAicpuModelTask();
     Device * const dev = stream->Device_();

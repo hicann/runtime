@@ -542,25 +542,6 @@ RTS_API rtError_t rtStreamCreateByGrp(rtStream_t *stm, int32_t priority, uint32_
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_TAG)) {
-        RT_LOG(RT_LOG_DEBUG, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
-        return ACL_RT_SUCCESS;
-    }
-
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
-    const rtError_t error = apiInstance->SetStreamTag(streamPtr, geOpTag);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtGetStreamTag(rtStream_t stm, uint32_t *geOpTag)
 {
     const Runtime * const rtInstance = Runtime::Instance();
@@ -597,25 +578,6 @@ rtError_t rtSetStreamSqUnlock(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->SetStreamSqLockUnlock(static_cast<Stream *>(stm), false);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtThreadExchangeCaptureMode(rtStreamCaptureMode *mode)
-{
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
-            static_cast<int32_t>(chipType));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ThreadExchangeCaptureMode(mode);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -687,48 +649,6 @@ VISIBILITY_DEFAULT
 rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId)
 {
     return rtGetStreamId(stm, streamId);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsStreamBeginTaskGrp(rtStream_t stm)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support, return.",
-            static_cast<int32_t>(chipType));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamBeginTaskGrp(static_cast<Stream *>(stm));
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    const Runtime * const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support, return.",
-            static_cast<int32_t>(chipType));
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
-    TaskGroup * const taskGrpHandle = static_cast<TaskGroup *>(handle);
-    const rtError_t error = apiInstance->StreamBeginTaskUpdate(exeStream, taskGrpHandle);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
