@@ -80,6 +80,7 @@ typedef enum {
     MM_ENV_CAMODEL_LOG_PATH                = 3001,
     // ATRACE
     MM_ENV_ASCEND_COREDUMP_SIGNAL          = 4000,
+    MM_ENV_ASCEND_TRACE_RECORD_NUM         = 4001,
     // ADUMP
     MM_ENV_ASCEND_CACHE_PATH               = 5000,
     MM_ENV_ASCEND_OPP_PATH                 = 5001,

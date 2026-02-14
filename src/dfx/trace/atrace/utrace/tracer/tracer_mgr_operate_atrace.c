@@ -23,7 +23,7 @@
 void TracerScheduleSaveObjData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName)
 {
     TraceFileInfo fileInfo = { TRACER_SCHEDULE_NAME, objName, TRACE_FILE_TXT_SUFFIX };
-    TraceDirInfo dirInfo = { eventName, TraceGetPid(), timeStr };
+    TraceDirInfo dirInfo = { eventName, TraceGetPid(), timeStr, false };
     int32_t fd = -1;
     char *txt = NULL;
     char timestamp[TIMESTAMP_MAX_LENGTH] = {0};
@@ -167,7 +167,7 @@ STATIC TraStatus TracerScheduleSaveStruct(const struct RbLog *newRb, int32_t fd,
 void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, const char *eventName, const char *objName)
 {
     TraceFileInfo fileInfo = { TRACER_SCHEDULE_NAME, objName, TRACE_FILE_BIN_SUFFIX };
-    TraceDirInfo dirInfo = { eventName, TraceGetPid(), timeStr };
+    TraceDirInfo dirInfo = { eventName, TraceGetPid(), timeStr, false };
     int32_t fd = -1;
 
     char *txt = NULL;
@@ -203,7 +203,7 @@ void TracerScheduleSaveObjBinData(struct RbLog *newRb, const char *timeStr, cons
  */
 STATIC void TracerScheduleSaveObjDataSafe(struct RbLog *newRb, const char *timeStr, const char *objName)
 {
-    TraceDirInfo dirInfo = {  TRACER_STACKCORE_NAME, TraceGetPid(), timeStr};
+    TraceDirInfo dirInfo = {  TRACER_STACKCORE_NAME, TraceGetPid(), timeStr, false };
     TraceFileInfo fileInfo = { TRACER_SCHEDULE_NAME, objName, TRACE_FILE_TXT_SUFFIX };
     int32_t fd = -1;
     char *txt = NULL;
@@ -335,7 +335,7 @@ STATIC TraStatus TracerScheduleSaveStructSafe(const struct RbLog *newRb, int32_t
  */
 STATIC void TracerScheduleSaveObjBinDataSafe(struct RbLog *newRb, const char *timeStr, const char *objName)
 {
-    TraceDirInfo dirInfo = {  TRACER_STACKCORE_NAME, TraceGetPid(), timeStr};
+    TraceDirInfo dirInfo = {  TRACER_STACKCORE_NAME, TraceGetPid(), timeStr, false};
     TraceFileInfo fileInfo = { TRACER_SCHEDULE_NAME, objName, TRACE_FILE_BIN_SUFFIX };
     int32_t fd = -1;
     char *txt = NULL;

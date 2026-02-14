@@ -138,7 +138,7 @@ TraStatus TraceSafeGetFd(const TraceStackRecorderInfo *info, const char *suffix,
 
     g_stackBuff.head.magic = STACK_HEAD_MAGIC;
     g_stackBuff.head.version = STACK_HEAD_VERSION;
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString };
+    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
     TraceFileInfo fileInfo = { TRACER_STACKCORE_NAME, objName, suffix };
     return TraceRecorderSafeGetFd(&dirInfo, &fileInfo, fd);
 }
@@ -540,7 +540,7 @@ TraStatus TraceSafeMkdirPath(const TraceStackRecorderInfo *info)
         return ret;
     }
 
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString };
+    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
     return TraceRecorderSafeMkdirPath(&dirInfo);
 }
 
@@ -558,7 +558,7 @@ TraStatus TraceSafeGetDirPath(const TraceStackRecorderInfo *info, char *path, si
         return ret;
     }
 
-    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString };
+    TraceDirInfo dirInfo = { TRACER_STACKCORE_NAME, info->pid, timeString, false };
     return TraceRecorderSafeGetDirPath(&dirInfo, path, len);
 }
 

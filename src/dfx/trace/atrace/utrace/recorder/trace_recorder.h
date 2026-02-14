@@ -42,25 +42,36 @@ typedef struct {
     const char *eventName;
     int32_t pid;
     const char *dirTime;
+    bool isDevice; // ture: device dir; false: host
 } TraceDirInfo;
 
-typedef struct {
-    char dirPath[MAX_FILEPATH_LEN + 1U]; // {$rootpath}/trace_{pgid}_{attr_pid}_{attr_time}/{event_name}_event_{pid}
-} TraceDirPath;
+typedef struct TraceDirNode{
+    char dirPath[MAX_FILEPATH_LEN + 1U]; // {$rootpath}/trace_{pgid}_{attr_pid}_{attr_time}/{event_name}_event_{pid}_time
+    struct TraceDirNode *prev;
+    struct TraceDirNode *next;
+} TraceDirNode;
+
+typedef struct TraceDirList{
+    struct TraceDirNode *head;
+    struct TraceDirNode *tail;
+    int32_t count;
+    AdiagLock lock;
+} TraceDirList;
 
 typedef struct {
-    uint32_t currIndex; // newest dir
+    int32_t maxDirNum; // default is 10, controlled by environment variable ASCEND_TRACE_RECORD_NUM, range [10, 1000]
     AdiagLock lock;
     char rootPath[MAX_FILEDIR_LEN + 1U];    // ~/ascend/atrace
-    TraceDirPath *dirList[MAX_DIR_NUM];
-    TraceDirPath *exitDir;
+    TraceDirList hostDirList;
+    TraceDirList deviceDirList;
+    TraceDirNode *exitDir;
     char corePath[MAX_FULLPATH_LEN + 1U];
 } TraceRecorderMgr;
 
 TraStatus TraceRecorderInit(void);
 void TraceRecorderExit(void);
 
-const TraceDirPath *TraceRecorderGetDirPath(const TraceDirInfo *dirInfo);
+const TraceDirNode *TraceRecorderGetDirPath(const TraceDirInfo *dirInfo);
 TraStatus TraceRecorderGetFd(const TraceDirInfo *dirInfo, const TraceFileInfo *fileInfo, int32_t *fd);
 TraStatus TraceRecorderWrite(int32_t fd, const char *msg, uint32_t len);
 

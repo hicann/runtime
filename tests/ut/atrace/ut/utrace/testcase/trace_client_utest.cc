@@ -25,7 +25,7 @@ protected:
     virtual void SetUp()
     {
         MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_SUCCESS));
-        MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirPath *)1));
+        MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)1));
         MOCKER(TraceRecorderWrite).stubs().will(returnValue(TRACE_SUCCESS));
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
@@ -115,7 +115,7 @@ TEST_F(TraceClientUtest, TraceClient_RecvEeventMsg)
 TEST_F(TraceClientUtest, TraceClient_GetDirFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirPath *)0));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)0));
     int32_t devId = 0;
     auto ret = AtraceClientStart(devId);
     EXPECT_EQ(TRACE_SUCCESS, ret);
@@ -137,7 +137,7 @@ TEST_F(TraceClientUtest, TraceClient_SendMsgFailed)
 TEST_F(TraceClientUtest, TraceClient_GetFdFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirPath *)1));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)1));
     MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_FAILURE));
     int32_t devId = 0;
     auto ret = AtraceClientStart(devId);
@@ -149,7 +149,7 @@ TEST_F(TraceClientUtest, TraceClient_GetFdFailed)
 TEST_F(TraceClientUtest, TraceClient_WriteFailed)
 {
     GlobalMockObject::verify();
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirPath *)0));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)0));
     MOCKER(TraceRecorderGetFd).stubs().will(returnValue(TRACE_SUCCESS));
     MOCKER(TraceRecorderWrite).stubs().will(returnValue(TRACE_FAILURE));
     int32_t devId = 0;

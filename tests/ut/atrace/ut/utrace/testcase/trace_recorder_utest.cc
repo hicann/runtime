@@ -202,8 +202,8 @@ TEST_F(TraceRecorderUtest, TestGetDirMkdirFailed)
         MOCKER(chown).stubs().will(returnValue(0));
         MOCKER(chmod).stubs().will(returnValue(0));
         TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, getpid(), timeStr };
-        const TraceDirPath *dir = TraceRecorderGetDirPath(&dirInfo);
-        EXPECT_EQ((const TraceDirPath *)0, dir);
+        const TraceDirNode *dir = TraceRecorderGetDirPath(&dirInfo);
+        EXPECT_EQ((const TraceDirNode *)0, dir);
         GlobalMockObject::verify();
     }
 }
@@ -271,7 +271,7 @@ TEST_F(TraceRecorderUtest, TraceRecorderGetFd_Failed)
     TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, getpid(), timeStr };
     TraceFileInfo info = { TRACER_SCHEDULE_NAME,  "ts_0", ".txt" };
     int32_t fd = -1;
-    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirPath *)0));
+    MOCKER(TraceRecorderGetDirPath).stubs().will(returnValue((const TraceDirNode *)0));
     ret = TraceRecorderGetFd(&dirInfo, &info, &fd);
     EXPECT_EQ(TRACE_FAILURE, ret);
 }

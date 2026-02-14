@@ -28,7 +28,7 @@ STATIC void AtraceClientWriteEventLog(char *data, uint32_t len)
     TraceMsgInfo info = { 0 };
     (void)AtraceClientParseEventMsg(data, len, &info);
     // write to file
-    TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, TraceGetPid(), info.eventTime };
+    TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, TraceGetPid(), info.eventTime, true };
     TraceFileInfo fileInfo = { 0 };
     fileInfo.tracerName = TRACER_SCHEDULE_NAME;
     fileInfo.objName = info.eventName;
