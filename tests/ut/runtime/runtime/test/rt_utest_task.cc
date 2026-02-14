@@ -2994,3 +2994,28 @@ TEST_F(TaskTest, SetStarsResultForDavinciTask)
     SetStarsResultForDavinciTask(&task, logicCq);
     EXPECT_EQ(task.errorCode, TS_ERROR_AICORE_EXCEPTION);
 }
+
+TEST_F(TaskTest, ConstructUpdateTaskTest)
+{
+    rtError_t error;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.u.aicTaskInfo.funcAddr = 0x123U;
+    task.u.aicTaskInfo.comm.args = reinterpret_cast<void*>(0x123);
+    task.u.aicTaskInfo.comm.dim = 0x1U;
+    task.u.aicTaskInfo.blockDimOffset = 0x123U;
+    task.u.aicTaskInfo.infMode = 0x1U;
+    task.u.aicTaskInfo.schemMode = 0x1U;
+    task.id = 0x1U;
+ 
+    rtCommand_t command;
+    TaskInfo updateTask = {};
+    InitByStream(&updateTask, stream_);
+    SqeUpdateTaskInit(&updateTask, &task);
+    EXPECT_EQ(updateTask.type, TS_TASK_TYPE_TASK_SQE_UPDATE);
+    EXPECT_EQ(updateTask.u.sqeUpdateTask.desTaskId, 0x1U);
+    EXPECT_EQ(updateTask.u.sqeUpdateTask.desStreamId, stream_->Id_());
+    ToCommand(&updateTask, &command);
+    TaskUnInitProc(&task);
+    TaskUnInitProc(&updateTask);
+}

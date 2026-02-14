@@ -614,6 +614,23 @@ struct TsModelUpdateTask {
     uint16_t exeStreamId;
     uint8_t  reserved[8];
 };
+
+ /**
+* @ingroup
+* @brief the struct define of update task
+*/
+struct TsSqeUpdateTask {
+    uint64_t funcPtr;
+    uint64_t funcDesc;
+    uint64_t literalSrcAddr;
+    uint32_t literalSize;
+    uint16_t blockDim;
+    uint16_t desStreamId;
+    uint16_t desTaskId;
+    uint8_t schemMode;
+    uint8_t reserved[13];
+};
+
 /**
  * @ingroup
  * @brief the struct define of task
@@ -681,6 +698,7 @@ typedef struct tagTsCommand {
         TsFlipTask flipTask;
         TsModelUpdateTask modelUpdateTask;
         TsAicpuInfoLoadTask aicpuInfoLoadTask;
+        TsSqeUpdateTask sqeUpdateTask;
     } u;
 } rtCommand_t;
 

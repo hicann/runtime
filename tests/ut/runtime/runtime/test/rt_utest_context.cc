@@ -4770,6 +4770,7 @@ TEST_F(ContextTest, MixKernelUpdate_test_2)
     updateTask3.u.aicTaskInfo.kernel->mixType_ = NO_MIX;
 
     MOCKER(UpdateD2HTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(SqeUpdateTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     error = ctx->LaunchUpdateKernelSubmit(&updateTask3, updateStream, nullptr, result, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -4818,6 +4819,7 @@ TEST_F(ContextTest, MixKernelUpdate_test_3)
     Device* deviceStub = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER(MixKernelUpdatePrepare).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     MOCKER(NormalKernelUpdatePrepare).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP(&Context::UpdateNormalKernelTaskByTS).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
@@ -4898,6 +4900,7 @@ TEST_F(ContextTest, MixKernelUpdate_test_4)
     Device* deviceStub = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER(SqeUpdateH2DTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     MOCKER(UpdateD2HTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(SqeUpdateTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";

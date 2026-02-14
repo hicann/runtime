@@ -229,6 +229,9 @@ void CaptureModel::ExitCaptureNotify()
         }
     }
 
+    for (Stream * const streamObj : StreamList_()) {
+        (void)streamObj->ResetTaskGroup();
+    }
     for (Event * const evt : singleOperEvents_) {
         evt->SetCaptureEvent(nullptr);
     }

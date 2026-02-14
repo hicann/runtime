@@ -565,6 +565,7 @@ public:
     rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
     rtError_t UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm) const;
     rtError_t UpdateNormalKernelTaskD2HSubmit(TaskInfo * const updateTask, Stream * const stm) const;
+    rtError_t UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm) const;
     rtError_t UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe) const;
     rtError_t UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm) const;
     rtError_t UpdateEndGraphTask(Stream * const origCaptureStream, Stream * const exeStream, Notify *ntf);

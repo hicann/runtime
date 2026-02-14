@@ -479,6 +479,17 @@ struct MemWriteValueTaskInfo {
     uint16_t awSize;
 };
 
+struct SqeUpdateTaskInfo {
+    uint64_t funcPtr;
+    uint64_t funcDesc;
+    uint64_t literalSrcAddr;
+    uint32_t literalSize;
+    uint16_t blockDim;
+    uint16_t desStreamId;
+    uint16_t desTaskId;
+    uint8_t schemMode;
+};
+
 }
 }
 #endif  // CCE_RUNTIME_TASK_INFO_STRUCT_HPP

@@ -119,6 +119,7 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {TS_TASK_TYPE_CAPTURE_WAIT, "CAPTURE_WAIT"},
         {TS_TASK_TYPE_IPC_RECORD, "IPC_EVENT_RECORD"},
         {TS_TASK_TYPE_IPC_WAIT, "IPC_EVENT_WAIT"},
+        {TS_TASK_TYPE_TASK_SQE_UPDATE, "TASK_SQE_UPDATE"},
         // memcpy info
         {RT_PROFILE_TYPE_MEMCPY_INFO, "memcpy_info"},
 

@@ -90,7 +90,9 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_DC_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_PROFILING_TS_DYNAMIC,
     RtOptionalFeatureType::RT_FEATURE_TASK_DAVINCI_WITH_ARGS_SIZE,
     RtOptionalFeatureType::RT_FEATURE_TASK_NUM_DOT_EXPAND,
-    RtOptionalFeatureType::RT_FEATURE_MEM_DESTROY_ADDR_BATCH
+    RtOptionalFeatureType::RT_FEATURE_MEM_DESTROY_ADDR_BATCH,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_JSON_PRINT
 };
 
 REGISTER_CHIP_FEATURE_SET(CHIP_DC, CHIP_DC_FEATURE);

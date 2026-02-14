@@ -879,6 +879,38 @@ void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command)
     return;
 }
 
+rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask)
+{
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_TASK_SQE_UPDATE;
+    taskInfo->typeName = "TASK_SQE_UPDATE";
+    AicTaskInfo *aicTaskInfo = &(updateTask->u.aicTaskInfo);
+    taskInfo->u.sqeUpdateTask.funcPtr = aicTaskInfo->funcAddr;
+    taskInfo->u.sqeUpdateTask.funcDesc = RtPtrToValue(aicTaskInfo->comm.args);
+    taskInfo->u.sqeUpdateTask.literalSrcAddr = static_cast<uint64_t>(aicTaskInfo->blockDimOffset);
+    taskInfo->u.sqeUpdateTask.literalSize = 0;
+    taskInfo->u.sqeUpdateTask.literalSize |= static_cast<uint32_t>(aicTaskInfo->infMode);
+    taskInfo->u.sqeUpdateTask.blockDim = aicTaskInfo->comm.dim;
+    taskInfo->u.sqeUpdateTask.desStreamId = updateTask->stream->Id_();
+    taskInfo->u.sqeUpdateTask.desTaskId = updateTask->id;
+    taskInfo->u.sqeUpdateTask.schemMode = aicTaskInfo->schemMode;
+    return RT_ERROR_NONE;
+}
+
+void ToCommandBodyForSqeUpdateTask(TaskInfo* taskInfo, rtCommand_t *const command)
+{
+    SqeUpdateTaskInfo *sqeUpdateTaskInfo = &(taskInfo->u.sqeUpdateTask);
+    command->u.sqeUpdateTask.funcPtr = sqeUpdateTaskInfo->funcPtr;
+    command->u.sqeUpdateTask.funcDesc = sqeUpdateTaskInfo->funcDesc;
+    command->u.sqeUpdateTask.literalSrcAddr = sqeUpdateTaskInfo->literalSrcAddr;
+    command->u.sqeUpdateTask.literalSize = sqeUpdateTaskInfo->literalSize;
+    command->u.sqeUpdateTask.blockDim = sqeUpdateTaskInfo->blockDim;
+    command->u.sqeUpdateTask.desStreamId = sqeUpdateTaskInfo->desStreamId;
+    command->u.sqeUpdateTask.desTaskId = sqeUpdateTaskInfo->desTaskId;
+    command->u.sqeUpdateTask.schemMode = sqeUpdateTaskInfo->schemMode;
+    return;
+}
+
 void ToCommandBodyForModelUpdateTask(TaskInfo* taskInfo, rtCommand_t *const command)
 {
     MdlUpdateTaskInfo *mdlUpdateTaskInfo = &(taskInfo->u.mdlUpdateTask);

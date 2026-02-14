@@ -1083,9 +1083,40 @@ rtError_t Context::UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTa
     return UpdateNormalKernelTaskH2DSubmitComm(updateTask, stm, targetAddrOfUpdatedSqe);
 }
 
+rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm) const
+{
+    rtError_t errorReason;
+    TaskInfo submitTask = {};
+    TaskInfo *kernTask = nullptr;
+    kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_TASK_SQE_UPDATE, errorReason, 1U, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
+    COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
+        " retCode=%#x.", stm->Id_(), errorReason);
+    std::function<void()> const kernTaskRecycle = [&, kernTask]() {
+        (void)device_->GetTaskFactory()->Recycle(kernTask);
+    };
+    ScopeGuard taskGuarder(kernTaskRecycle);
+
+    errorReason = SqeUpdateTaskInit(kernTask, updateTask);
+    COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
+    errorReason = device_->SubmitTask(kernTask, taskGenCallback_);
+    COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
+
+    GET_THREAD_TASKID_AND_STREAMID(kernTask, stm->AllocTaskStreamId());
+    taskGuarder.ReleaseGuard();
+    return RT_ERROR_NONE;
+}
+
 rtError_t Context::UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm) const
 {
     rtError_t error = RT_ERROR_NONE;
+    if (!Runtime::Instance()->ChipIsHaveStars()) {
+        error = UpdateNormalKernelTaskByTS(updateTask, stm);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "submit SqeUpdate task failed, device_id=%u, stream_id=%d, retCode=%#x.",
+                device_->Id_(), stm->Id_(), error);
+        }
+        return error;
+    }
     if (updateTask->stream->IsSoftwareSqEnable()) {
         error = UpdateNormalKernelTaskForSoftwareSq(updateTask, stm);
         if (error != RT_ERROR_NONE) {

@@ -1941,6 +1941,11 @@ rtError_t Stream::AddTaskToStream(const TaskInfo * const tsk)
         COND_RETURN_WARN(taskPersistentHead_.Value() == ((taskPersistentTail_.Value() + 1U) % STREAM_TASK_BUFF_SIZE),
             RT_ERROR_STREAM_FULL, "task persistent buff full, stream_id=%d, task_id=%hu, tail=%u",
             streamId_, tsk->id, taskPersistentTail_.Value());
+
+        const rtError_t ret = PackingTaskGroup(tsk, static_cast<uint16_t>(streamId_));
+        COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, SetTaskGroupErrCode(ret),
+            "pack task group failed, stream_id=%d, task_id=%hu.", streamId_, tsk->id);
+
         taskPersistentBuff_[taskPersistentTail_.Value() % STREAM_TASK_BUFF_SIZE] = tsk->id;
         taskPersistentTail_.Set((taskPersistentTail_.Value() + 1U) % STREAM_TASK_BUFF_SIZE);
         delayRecycleTaskid_.push_back(tsk->id);
@@ -2402,7 +2407,7 @@ rtError_t Stream::ProcRecordTask(TaskInfo *&tsk)
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(lastHalfRecord_), "Gen event id failed");
     }
 
-    TaskInfo *eventRecordTsk = AllocTask(tsk, TS_TASK_TYPE_EVENT_RECORD, errorReason);
+    TaskInfo *eventRecordTsk = AllocTask(tsk, TS_TASK_TYPE_EVENT_RECORD, errorReason, 1U, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
     COND_PROC_RETURN_ERROR(eventRecordTsk == nullptr, errorReason, DELETE_O(lastHalfRecord_),
                            "Task new failed");
     tsk = eventRecordTsk;

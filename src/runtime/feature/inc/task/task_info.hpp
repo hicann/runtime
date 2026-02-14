@@ -153,6 +153,7 @@ typedef struct tagTaskInfoStru {
         DqsInterChipProcTaskInfo dqsInterChipPreProcTask;
         DqsInterChipProcTaskInfo dqsInterChipPostProcTask;
         DqsAdspcTaskInfo dqsAdspcTaskInfo;
+        SqeUpdateTaskInfo sqeUpdateTask;
     } u;
 
     rtPkgDesc pkgStat[RT_PACKAGE_TYPE_BUTT];
@@ -412,6 +413,7 @@ rtError_t DestroyEventSync(Event *evt);
 rtError_t SqLockUnlockTaskInit(TaskInfo* taskInfo, const bool isLock);
 rtError_t NopTaskInit(TaskInfo* taskInfo);
 rtError_t UpdateAddressTaskInit(TaskInfo* taskInfo, uint64_t devAddr, uint64_t len);
+rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask);
 uint32_t GetSendSqeNumForDavinciMultipleTask(const TaskInfo * const taskInfo);
 bool IsPcieDma(const uint32_t copyTypeFlag);
 uint8_t GetOpcodeForReduce(TaskInfo * const taskInfo);

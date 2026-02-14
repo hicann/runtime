@@ -1273,6 +1273,9 @@ rtError_t Runtime::Init()
     if (IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE)) {
         SetSatMode(RT_OVERFLOW_MODE_INFNAN);
     }
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
+        GlobalContainer::SetEventWorkMode(static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE));
+    }
 
     error = InitApiImplies();
     Api *api = nullptr;

@@ -176,6 +176,7 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, "DQS_INTER_CHIP_POSTPROC"},
     {TS_TASK_TYPE_DQS_ADSPC, "DQS_ADSPC"},
     {TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, "TSFW_AICPU_MSG_VERSION"},
+    {TS_TASK_TYPE_TASK_SQE_UPDATE, "SQE_UPDATE_TASK"},
     {TS_TASK_TYPE_CAPTURE_RECORD, "CAPTURE_RECORD"},
     {TS_TASK_TYPE_CAPTURE_WAIT, "CAPTURE_WAIT"}
 };
@@ -927,6 +928,7 @@ void RegTaskToCommandFunc(void)
     g_toCommandFunc[TS_TASK_TYPE_COMMON_CMD] = nullptr;
     g_toCommandFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = nullptr;
     g_toCommandFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = nullptr;
+    g_toCommandFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &ToCommandBodyForSqeUpdateTask;
 }
 
 static void RegTaskUnInitFunc(void)
@@ -1107,6 +1109,7 @@ static void RegDoCompleteSuccFunc(void)
     g_doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &DoCompleteSuccess;
     g_doCompleteSuccFunc[TS_TASK_TYPE_IPC_RECORD] = &DoCompleteSuccessForIpcRecordTask;
     g_doCompleteSuccFunc[TS_TASK_TYPE_IPC_WAIT] = &DoCompleteSuccessForIpcWaitTask;
+    g_doCompleteSuccFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &DoCompleteSuccess;
 }
 
 static void RegTaskToSqefunc(void)

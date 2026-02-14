@@ -6651,12 +6651,12 @@ rtError_t ApiImpl::MemcpyHostTask(void * const dst, const uint64_t destMax, cons
     RT_LOG(RT_LOG_INFO, "memCopy for host task, kind=%d.", kind);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_ERROR(!(curCtx->IsCaptureModeSupport()), RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT,
+        "The current capture mode:threadCaptureMode=%d, exchangCaptureMode=%d, contextCaptureMode=%d",
+        InnerThreadLocalContainer::GetThreadCaptureMode(),
+        InnerThreadLocalContainer::GetThreadExchangeCaptureMode(), curCtx->GetContextCaptureMode());
 
     if (Runtime::Instance()->ChipIsHaveStars()) {
-        COND_RETURN_ERROR(!(curCtx->IsCaptureModeSupport()), RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT,
-            "The current capture mode:threadCaptureMode=%d, exchangCaptureMode=%d, contextCaptureMode=%d",
-            InnerThreadLocalContainer::GetThreadCaptureMode(),
-            InnerThreadLocalContainer::GetThreadExchangeCaptureMode(), curCtx->GetContextCaptureMode());
         return curCtx->Device_()->Driver_()->MemCopySync(dst, destMax, src, cnt, kind);
     }
     Stream *curStm = stm;
