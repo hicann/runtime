@@ -2441,12 +2441,7 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
     AddModelLoadConf(profSwitch);
     AddRuntimeTraceConf(profSwitch);
     AddOpDetailConf(profSwitch);
-    std::vector<uint32_t> devIds;
-    GetRunningDevices(devIds);
-    uint32_t devIdList[devIds.size()] = {0};
-    std::copy(devIds.begin(), devIds.end(), devIdList);
-    MSPROF_LOGI("[ProfStopCommon] get running device task success, devTask size: %zu", devIds.size());
-    int32_t ret = CommandHandleProfStop(devIdList, devIds.size(), profSwitch, profSwitchHi);
+    int32_t ret = CommandHandleProfStop(config->devIdList, config->devNums, profSwitch, profSwitchHi);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to execute CommandHandleProfStop.");
         return ret;
@@ -2454,8 +2449,8 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
     MSPROF_EVENT("Received ProfAclStop request from acl");
     UploaderMgr::instance()->SetAllUploaderTransportStopped();
     std::lock_guard<std::mutex> lk(mtx_);
-    for (auto i = 0; i < devIds.size(); i++) {
-        uint32_t devId = devIds[i];
+    for (uint32_t i = 0; i < config->devNums; i++) {
+        uint32_t devId = config->devIdList[i];
         auto iter = devTasks_.find(devId);
         if (iter != devTasks_.end()) {
             MSPROF_LOGI("Processing ProfAclStop of device %u", devId);
