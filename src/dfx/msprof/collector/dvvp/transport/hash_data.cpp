@@ -176,7 +176,6 @@ void HashData::SaveHashData(int32_t devId)
 {
     if ((devId != MSVP_MAX_DEV_NUM)) {
         MSPROF_LOGI("HashData devId %d is invalid", devId);
-        return;
     }
 
     if (!inited_) {

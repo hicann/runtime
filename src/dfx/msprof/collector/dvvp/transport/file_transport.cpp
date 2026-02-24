@@ -210,6 +210,10 @@ void FILETransport::AddHashData(const std::string& input) const{
     std::stringstream ss(input);
     std::string item;
     while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
+        size_t pos = item.find_last_not_of('\0');
+        if (pos != std::string::npos) {
+            item.erase(pos + 1);
+        }
         uint64_t uid = hashDataGenIdFuncPtr_(item);
         MSPROF_LOGD("add str2id:%s uid:%u from adprof into hash data ", item.c_str(), uid);
     }
@@ -255,7 +259,7 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
         MSPROF_LOGI("start parse drv str2id info");
         parseStr2IdStart_ = true;
         AddHashData(after);
-        return (fileChunkReq->chunk.length() == 0 ? PROFILING_SUCCESS : PROFILING_FAILED);
+        return PROFILING_SUCCESS;
     }
     return PROFILING_FAILED;
 }

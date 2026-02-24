@@ -1010,7 +1010,7 @@ TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
     fileChunkReq->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
     fileChunkReq->extraInfo = "null.0";
     std::string content = "###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
-    std::string content2 = "xxxxxxx###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
+    std::string content2 = "xxxxxxx###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH\0\0\0";
     std::string content3 = "drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
     fileChunkReq->chunk = "";
     fileChunkReq->chunkSize = 0;
@@ -1022,7 +1022,7 @@ TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
     trans->parseStr2IdStart_ = false;
     fileChunkReq->chunk = content2;
     fileChunkReq->chunkSize = content2.length();
-    EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(fileChunkReq));
     trans->parseStr2IdStart_ = false;
     fileChunkReq->chunk = content3;
     fileChunkReq->chunkSize = content3.length();
