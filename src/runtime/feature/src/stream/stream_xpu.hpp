@@ -51,7 +51,7 @@ public:
     void ArgReleaseStmPool(TaskInfo * const taskInfo) const;
     void ArgReleaseSingleTask(TaskInfo * const taskInfo, bool freeStmPool) const;
     template<typename T>
-    rtError_t LoadArgsInfo(const T *argsInfo, const bool useArgPool, DavidArgLoaderResult * const result)
+    rtError_t LoadArgsInfo(const T *argsInfo, const bool useArgPool, DavidArgLoaderResult * const result) const
     {
         if (argManage_ != nullptr) {
             return argManage_->LoadArgs(argsInfo, useArgPool, result);

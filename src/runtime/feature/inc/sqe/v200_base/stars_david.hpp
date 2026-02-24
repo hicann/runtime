@@ -16,6 +16,7 @@
 #include "aicpu_sqe.h"
 #include "memcpy_sqe.h"
 #include "ccu_sqe.h"
+#include "kernel.h"
 
 using namespace std;
 
