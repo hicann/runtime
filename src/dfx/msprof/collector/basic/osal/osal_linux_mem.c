@@ -39,7 +39,6 @@ VOID OsalFree(OsalVoidPtr ptr)
 {
     if (ptr != NULL) {
         free(ptr);
-        ptr = NULL;
     }
 }
 
@@ -47,6 +46,5 @@ VOID OsalConstFree(const void* ptr)
 {
     if (ptr != NULL) {
         free(ptr);
-        ptr = NULL;
     }
 }

@@ -168,6 +168,7 @@ int32_t ProfTxPlugin::ProftxSetStampPayload(VOID_PTR stamp, const int32_t type, 
 
 int32_t ProfTxPlugin::ProftxRangePushEx(ACLPROF_EVENT_ATTR_PTR attr)
 {
+    MSPROF_LOGI("Start to execute ProftxRangePushEx.");
     if (attr == nullptr) {
         MSPROF_LOGE("Param attr is nullptr");
         return ACL_ERROR_INVALID_PARAM;
@@ -189,6 +190,7 @@ int32_t ProfTxPlugin::ProftxRangePop()
     }
     uint64_t timeStampPop = MsprofSysCycleTime();
     uint64_t timeStampPush = timeStampPush_;
+    MSPROF_LOGI("Start to execute ProftxRangePop, timeStampPush is %llu, timeStampPop is %llu", timeStampPush, timeStampPop);
     rtStreamAttr stmAttrId = RT_STREAM_ATTR_CACHE_OP_INFO;
     rtStreamAttrValue_t value;
     const aclprofTensorInfo* tensorInfo = attr_->message.tensorInfo;
@@ -230,7 +232,7 @@ int32_t ProfTxPlugin::ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo,
         return PROFILING_FAILED;
     }
     destOffset += sizeof(tensorInfo->tensorNum);
-    for (uint32_t i = 0; i < tensorInfo->tensorNum && i <= 5; ++i) {
+    for (uint32_t i = 0; i < tensorInfo->tensorNum && i < 5; ++i) {
         aclprofTensor& tensor = tensorInfo->tensors[i];
         err = memcpy_s(dest + destOffset, sizeof(aclprofTensor), &tensor, sizeof(aclprofTensor));
         if (err != EOK) {
@@ -239,6 +241,7 @@ int32_t ProfTxPlugin::ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo,
         }
         destOffset += sizeof(aclprofTensor);
     }
+    MSPROF_LOGI("Execute ReportAdditionalInfo successfully, report data to msprof.");
     return MsprofReportAdditionalInfo(0, (void *)(&addInfo), sizeof(MsprofAdditionalInfo));
 }
 

@@ -1479,7 +1479,6 @@ int32_t ProfAclMgr::MsprofAclJsonParamConstruct(NanoJson::Json &acljsonCfg)
     params_->geApi = GetJsonStringParam(acljsonCfg, "ge_api", MSVP_PROF_OFF);
     params_->acl = GetJsonStringParam(acljsonCfg, "ascendcl", MSVP_PROF_ON);
     params_->runtimeApi = GetJsonStringParam(acljsonCfg, "runtime_api", MSVP_PROF_ON);
-    params_->taskTrace = GetJsonStringParam(acljsonCfg, "task_trace", MSVP_PROF_ON);
     params_->taskTrace = GetJsonStringParam(acljsonCfg, "task_time", MSVP_PROF_ON);
     params_->prof_level = params_->taskTrace;
     if (GetJsonStringParam(acljsonCfg, "task_block", MSVP_PROF_OFF).compare(MSVP_PROF_ALL) == 0) {
@@ -1567,9 +1566,6 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json &acljsonCfg) 
         if (iter->first == "hccl") {
             MSPROF_LOGW("[Note] [hccl] This option will be discarded in later versions.");
         }
-        if (iter->first == "task_trace") {
-            MSPROF_LOGW("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
-        }
         if (iter->first == "switch" && iter->second.GetValue<std::string>() == "on") {
             aclJsonSwitch = true;
         }
@@ -1639,7 +1635,6 @@ void ProfAclMgr::MsprofInitGeOptionsParamAdaper(SHARED_PTR_ALIA<analysis::dvvp::
     params->taskMemory = GetJsonStringParam(geoptionCfg, "task_memory", MSVP_PROF_OFF);
     params->geApi = GetJsonStringParam(geoptionCfg, "ge_api", MSVP_PROF_OFF);
     params->runtimeApi = GetJsonStringParam(geoptionCfg, "runtime_api", MSVP_PROF_OFF);
-    params->taskTrace = GetJsonStringParam(geoptionCfg, "task_trace", MSVP_PROF_ON);
     params->taskTrace = GetJsonStringParam(geoptionCfg, "task_time", MSVP_PROF_ON);
     params->prof_level = params->taskTrace;
     if (GetJsonStringParam(geoptionCfg, "task_block", MSVP_PROF_OFF).compare(MSVP_PROF_ALL) == 0) {
@@ -1816,9 +1811,6 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json &geoptionCfg
         }
         if (iter->first == "hccl") {
             MSPROF_LOGW("[Note] [hccl] This option will be discarded in later versions.");
-        }
-        if (iter->first == "task_trace") {
-            MSPROF_LOGW("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
         }
         if (iter->first == "output" || iter->first == "storage_limit" ||
             iter->first == "fp_point" || iter->first == "bp_point" ||

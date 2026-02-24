@@ -127,7 +127,7 @@ bool ProfParamsAdapter::CheckJsonConfig(const std::string &switchName, const Nan
 {
     if (switchName == "aic_metrics") {
         return ParamValidation::instance()->CheckAicoreMetricsIsValid(val.GetValue<std::string>());
-    } else if (switchName == "ge_api" || switchName == "task_trace") {
+    } else if (switchName == "ge_api" || switchName == "task_time") {
         return ParamValidation::instance()->CheckParamL0L1Invalid(switchName, val.GetValue<std::string>());
     } else if (switchName == "sys_hardware_mem_freq" ||
                switchName == "sys_io_sampling_freq" ||

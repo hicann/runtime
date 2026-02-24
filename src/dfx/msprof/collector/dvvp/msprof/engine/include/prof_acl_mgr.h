@@ -63,7 +63,6 @@ const std::vector<std::string> ACLJSON_CONFIG_VECTOR = {
     "instr_profiling_freq",
     "task_tsfw",
     "ascendcl",
-    "task_trace",
     "task_time",
     "runtime_api",
     "ge_api",
@@ -86,7 +85,6 @@ const std::vector<std::string> ACLJSON_CONFIG_VECTOR = {
 const std::vector<std::string> GEOPTION_CONFIG_VECTOR = {
     "output",
     "training_trace",
-    "task_trace",
     "task_time",
     "aicpu",
     "fp_point",

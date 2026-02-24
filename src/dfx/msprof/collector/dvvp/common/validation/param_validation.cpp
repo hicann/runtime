@@ -543,7 +543,7 @@ bool ParamValidation::CheckParamL0L1Invalid(const std::string &switchName, const
             switchStr.compare(MSVP_PROF_OFF) == 0) {
             return true;
         }
-    } else if (switchName.compare("task_trace") == 0 || switchName.compare("task_time")) {
+    } else if (switchName.compare("task_time") == 0) {
         if (switchStr.compare(MSVP_PROF_L0) == 0 || switchStr.compare(MSVP_PROF_L1) == 0 ||
             switchStr.compare(MSVP_PROF_L2) == 0 || switchStr.compare(MSVP_PROF_L3) == 0 ||
             IsValidSwitch(switchStr)) {
