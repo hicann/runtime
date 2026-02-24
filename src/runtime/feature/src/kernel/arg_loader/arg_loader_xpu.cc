@@ -56,7 +56,7 @@ rtError_t XpuArgLoader::Init()
     return RT_ERROR_NONE;
 }
 
-rtError_t XpuArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result)
+rtError_t XpuArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) const
 {
     XpuHandle *argHandle = nullptr;
     result->handle = handleAllocator_->AllocItem();

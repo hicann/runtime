@@ -31,7 +31,7 @@ public:
     ~XpuArgLoader() final;
     rtError_t Init();
     rtError_t Release(void * const argHandle) const;
-    rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result);
+    rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) const;
 protected:
     XpuDevice *device_;
 

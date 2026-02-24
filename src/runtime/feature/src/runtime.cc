@@ -5431,7 +5431,7 @@ rtError_t Runtime::BinaryUnLoad(const Device *const device, Program * const prog
     ERROR_RETURN(ret, "Fail to FreeKernelLiteralNameDevMem, retCode=%#x, dev_id=%u.", ret, device->Id_());
 
     // 此处考虑prog的释放，做log记录，不return
-    ret = prog->ProcCpuKernelH2DMem(false, const_cast<Device *const>(device));
+    ret = prog->ProcCpuKernelH2DMem(false, RtPtrToUnConstPtr<Device *const>(device));
     COND_PROC((ret != RT_ERROR_NONE),
         RT_LOG(RT_LOG_ERROR, "fail to free cpu so dev mem, retCode=%#x", ret));
 

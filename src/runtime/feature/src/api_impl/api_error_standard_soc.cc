@@ -15,7 +15,6 @@
 #include "elf.hpp"
 #include "runtime/kernel.h"
 #include "error_message_manage.hpp"
-#include "runtime/mem.h"
 #include "capture_model_utils.hpp"
 #include "npu_driver.hpp"
 

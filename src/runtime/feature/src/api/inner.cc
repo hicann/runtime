@@ -13,7 +13,6 @@
 #include "runtime/mem.h"
 #include "runtime/rt_ffts_plus.h"
 #include "runtime/kernel.h"
-#include "rt_stars.h"
 #include "api_c.h"
 #include "global_state_manager.hpp"
 
