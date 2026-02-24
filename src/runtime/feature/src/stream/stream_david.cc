@@ -16,7 +16,6 @@
 #include "npu_driver.hpp"
 #include "task.hpp"
 #include "error_message_manage.hpp"
-#include "mmpa/mmpa_api.h"
 #include "dvpp_grp.hpp"
 #include "thread_local_container.hpp"
 #include "task_res_da.hpp"
