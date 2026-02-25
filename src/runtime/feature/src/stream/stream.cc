@@ -1433,6 +1433,8 @@ rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespe
     rtError_t error = RT_ERROR_NONE;
     const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
     int32_t reportTime = REPORT_TIME_UINT;
+    const int32_t FAST_SYNC_TIMES = 20;
+    int32_t syncTimes = 0;
     while (true) {
         COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT,
                           "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms.",
@@ -1458,9 +1460,10 @@ rtError_t Stream::SynchronizeExecutedTask(const uint16_t taskId, const mmTimespe
                                     static_cast<uint32_t>(error));
         uint16_t finishedId = static_cast<uint16_t>(MAX_UINT16_NUM);
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
-        if (SynchronizeDelayTime(finishedId, taskId, sqHead)) {
+        if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId, sqHead)) {
             return RT_ERROR_NONE;
         }
+        syncTimes = syncTimes > FAST_SYNC_TIMES ? syncTimes : syncTimes + 1;
         COND_PROC((error != RT_ERROR_NONE || finishedId == static_cast<uint16_t>(MAX_UINT16_NUM)), continue);
         if (TASK_ID_GEQ(finishedId, taskId)) {
             return RT_ERROR_NONE;
