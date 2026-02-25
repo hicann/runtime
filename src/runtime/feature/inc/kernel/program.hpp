@@ -291,6 +291,7 @@ public:
     virtual bool HasMixKernel() = 0;
     virtual rtError_t RefreshSymbolAddr() = 0;
     virtual rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, void *data, const uint32_t length) = 0;
+    virtual void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) = 0;
     virtual rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                           void *data, const uint32_t length) = 0;
 
@@ -376,6 +377,7 @@ public:
     rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, void *data, const uint32_t length) override;
     rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                   void *data, const uint32_t length) override;
+    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
 };
 
 class ElfProgram : public Program {
@@ -397,6 +399,7 @@ public:
 
     rtError_t UnifiedKernelRegister();
     void DegenerateMixType(uint8_t &mixType) const;
+    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
 
     bool IsMetaFlagSupprotFfts() const
     {
@@ -441,7 +444,6 @@ protected:
     rtError_t ParserBinary() override;
 
 private:
-    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput);
     bool FindAndProcMixKernel(const RtKernel * const kernel, const std::string &kernelName, const uint8_t mixType,
                               const uint32_t mixProcVersion);
     void SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj, const uint32_t kernelType);
