@@ -47,6 +47,8 @@ constexpr uint8_t ENABLED_TS_NUM_1 = 1U;
 constexpr uint8_t ENABLED_TS_NUM_2 = 2U;
 constexpr size_t MEMCPY_DESC_SIZE_V1 = 32U;
 constexpr int32_t TIMELINE_EVENT_ID_DEFAULT = 1023;
+constexpr uint8_t OVERFLOW_MODE_SATURATION = 0x1U;
+constexpr uint8_t OVERFLOW_MODE_INFNAN = 0x2U;
 
 enum class EventWaitTimeoutType : uint8_t {
     SET_OP_WAIT_TIMEOUT_NOT_SUPPORT,
@@ -213,7 +215,7 @@ struct DevProperties final {
     uint64_t sqTailOffset;
     int32_t maxGroupId;
     ReduceOverflowType reduceOverflow;
-    bool isSupportSetDeviceSatMode;
+    uint8_t supportOverflowMode;
     uint32_t sdmaReduceKind; // bit supoort
     StarsResourceAddrCalculateMethod starsResourceAddrCalculateMethod;
     uint64_t eventBase;

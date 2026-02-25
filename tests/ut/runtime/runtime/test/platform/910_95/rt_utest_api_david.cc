@@ -5531,12 +5531,12 @@ TEST_F(ApiDavidTest, test_overflow_switch_task_on_david)
     EXPECT_EQ(flags, 0U);
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSetStreamOverflowSwitch(stream_, 1U);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtGetStreamOverflowSwitch(stream_, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    EXPECT_EQ(flags, 1U);
+    EXPECT_EQ(flags, 0U);
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     sqe = nullptr;

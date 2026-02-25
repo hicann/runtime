@@ -4870,7 +4870,7 @@ rtError_t ApiErrorDecorator::SetDeviceSatMode(const rtFloatOverflowMode_t floatO
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (floatOverflowMode >= RT_OVERFLOW_MODE_UNDEF) || (floatOverflowMode < RT_OVERFLOW_MODE_SATURATION),
-        RT_ERROR_INVALID_VALUE, floatOverflowMode, 
+        RT_ERROR_INVALID_VALUE, floatOverflowMode,
         "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
     return impl_->SetDeviceSatMode(floatOverflowMode);
 }

@@ -3209,23 +3209,33 @@ rtError_t rtProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
 VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetDeviceSatMode(rtFloatOverflowMode_t floatOverflowMode)
 {
-    const Runtime * const rtInstance = Runtime::Instance();
+    const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     DevProperties prop;
     rtError_t error = GET_DEV_PROPERTIES(rtInstance->GetChipType(), prop);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    if (!prop.isSupportSetDeviceSatMode) {
-        if (floatOverflowMode == RT_OVERFLOW_MODE_SATURATION) {
-            RT_LOG(RT_LOG_INFO, "Set mode saturation, chip type(%d) does not support, return success.",
-                   static_cast<int32_t>(rtInstance->GetChipType()));
+
+    if ((floatOverflowMode >= RT_OVERFLOW_MODE_SATURATION) && 
+        (floatOverflowMode < RT_OVERFLOW_MODE_UNDEF)) {
+        uint32_t mode = 1 << floatOverflowMode;
+        const char* errorMsg = (floatOverflowMode == RT_OVERFLOW_MODE_INFNAN) ?
+                                "the Inf/NaN mode; only the saturation mode can be set" :
+                                "the saturation mode; only the Inf/NaN mode can be set";
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+            ((mode & prop.supportOverflowMode) == 0), 
+            RT_ERROR_FEATURE_NOT_SUPPORT, 
+            ErrorCode::EE1005, 
+            errorMsg);
+
+        if ((mode == OVERFLOW_MODE_SATURATION) && 
+            (prop.supportOverflowMode == OVERFLOW_MODE_SATURATION)) {
+            RT_LOG(RT_LOG_INFO, "Chip type(%d) supports only saturation mode.",
+                static_cast<int32_t>(rtInstance->GetChipType()));
             return ACL_RT_SUCCESS;
-        } else {
-            RT_LOG(RT_LOG_WARNING, "Set mode inf/nan, chip type(%d) does not support, return error.",
-                   static_cast<int32_t>(rtInstance->GetChipType()));
-            return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
         }
     }
-    Api * const apiInstance = Api::Instance();
+
+    Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->SetDeviceSatMode(floatOverflowMode);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

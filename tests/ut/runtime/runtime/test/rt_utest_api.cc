@@ -6761,7 +6761,7 @@ TEST_F(ApiTest, rtSetMsprofReporterCallback)
 TEST_F(ApiTest, rtSetDeviceSatMode)
 {
     rtError_t ret;
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtInstance->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
 
@@ -6770,6 +6770,20 @@ TEST_F(ApiTest, rtSetDeviceSatMode)
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    rtInstance->SetChipType(CHIP_910_B_93);
+    GlobalContainer::SetRtChipType(CHIP_910_B_93);
+    ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+
+    rtInstance->SetChipType(CHIP_DAVID);
+    GlobalContainer::SetRtChipType(CHIP_DAVID);
+    ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
 }
 
 TEST_F(ApiTest, rtMultipleTaskInfoLaunchCtrl_aicpuTask)
