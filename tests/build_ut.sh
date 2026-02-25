@@ -32,7 +32,7 @@ usage() {
   echo "Usage:"
   echo "  sh build_ut.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
   echo "                 [-t | --target <target1> <target2> ...]"
-  echo "                 [-u | --ut] [-c | --cov]"
+  echo "                 [-u | --ut] [-c | --cov] [--cann_3rd_lib_path=<PATH>]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"
@@ -42,6 +42,8 @@ usage() {
   echo "                   Build and execute ut, if specific_ut is provided, run only the specified unit test"
   echo "    -c, --cov      Build ut with coverage tag"
   echo "    -t, --target   Build only the selected target and run"
+  echo "    --cann_3rd_lib_path=<PATH>"
+  echo "                   Set ascend third_party package install path, default ./output/third_party"
   echo ""
 }
 
@@ -66,7 +68,7 @@ checkopts() {
   fi
 
   # Process the options
-  parsed_args=$(getopt -o j:hvu::ct:f: -l help,ut::,verbose,target:, -- "$@") || {
+  parsed_args=$(getopt -o j:hvu::ct:f: -l help,cann_3rd_lib_path:,ut::,verbose,target:, -- "$@") || {
     usage
     exit 1
   }
@@ -119,6 +121,10 @@ checkopts() {
           exit 1
         fi
         CHANGED_FILES=$(cat "$CHANGED_FILES_FILE")
+        shift 2
+        ;;
+      --cann_3rd_lib_path)
+        ASCEND_3RD_LIB_PATH="$2"
         shift 2
         ;;
       --)

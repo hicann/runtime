@@ -38,7 +38,7 @@ endif()
 # --- 3. 添加 SONAME 到链接命令 ---
 # 找到包含 "-shared -o lib/\$@" 的行，并在其 -shared 后插入 soname
 set(LINK_PATTERN "\\$\\(CC\\)[ \t]+-shared")
-set(LINK_REPLACEMENT "\$(CC) -shared -Wl,-soname,libc_sec.so")
+set(LINK_REPLACEMENT "\$(CC) -shared \$(LDFLAGS) -Wl,-soname,libc_sec.so")
 
 if(MAKEFILE_CONTENT MATCHES "-Wl,-soname,libc_sec\\.so")
     message(STATUS "SONAME already present, skip patching linker command.")

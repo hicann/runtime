@@ -16,6 +16,8 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
     set(STATIC_NEW_NAME libc_sec.a)
     set(CSEC_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/libc_sec)
     set(CSEC_SOURCE_DIR ${CMAKE_BINARY_DIR}/libc_sec/source)
+    set(CSEC_EXTRA_CFLAGS "-fstack-protector-strong")
+    set(CSEC_EXTRA_LDFLAGS "-Wl,-z,now -s")
     if(EXISTS "${LOCAL_SRC_DIR}" AND IS_DIRECTORY "${LOCAL_SRC_DIR}")
         message(STATUS "Using local csec source: ${LOCAL_SRC_DIR}")
         if(NOT EXISTS "${CSEC_SOURCE_DIR}/Makefile")
@@ -33,6 +35,8 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
                 CC=${CMAKE_C_COMPILER}
                 AR=${CMAKE_AR}
                 LINK=${CMAKE_C_COMPILER}
+                CFLAGS="${CSEC_EXTRA_CFLAGS}" 
+                LDFLAGS="${CSEC_EXTRA_LDFLAGS}"
             INSTALL_COMMAND ""
             # 禁用更新和下载
             UPDATE_DISCONNECTED 1
@@ -55,6 +59,8 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
                 CC=${CMAKE_C_COMPILER}
                 AR=${CMAKE_AR}
                 LINK=${CMAKE_C_COMPILER}
+                CFLAGS="${CSEC_EXTRA_CFLAGS}" 
+                LDFLAGS="${CSEC_EXTRA_LDFLAGS}"
             INSTALL_COMMAND ""
         )
     endif()
@@ -88,8 +94,3 @@ if (BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG)
 else()
     message("not download csec source code")
 endif()
-
-
-
-
-
