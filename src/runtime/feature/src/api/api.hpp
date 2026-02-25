@@ -16,10 +16,8 @@
 #include "model.hpp"
 #include "runtime/event.h"
 #include "runtime/base.h"
-#include "runtime/mem.h"
 #include "runtime/rt_mem_queue.h"
 #include "runtime/rt_preload_task.h"
-#include "runtime/elf_base.h"
 #include "runtime/rt_inner_dfx.h"
 #include "dqs/task_dqs.hpp"
 

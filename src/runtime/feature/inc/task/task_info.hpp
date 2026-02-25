@@ -13,7 +13,6 @@
 #include "rt_model.h"
 #include "task_info_struct.hpp"
 #include "task_info_struct_cond.hpp"
-#include "event.h"
 
 namespace cce {
 namespace runtime {

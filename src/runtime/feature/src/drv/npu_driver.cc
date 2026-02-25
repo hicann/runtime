@@ -1554,7 +1554,7 @@ rtError_t NpuDriver::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
         DRV_ERROR_PROCESS(drvRet, "[drv api] halMemGetAddressRange failed: ptr=%p, drvRetCode=%d", ptr, static_cast<int32_t>(drvRet));
     }
     if (pbase != nullptr) {
-        *pbase = (void*)drv_base;
+        *pbase = reinterpret_cast<void*>(drv_base);
     }
     return RT_GET_DRV_ERRCODE(drvRet);
 }

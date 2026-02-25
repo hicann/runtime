@@ -10,7 +10,6 @@
 
 #ifndef __CCE_RUNTIME_CAPTURE_ADAPT_HPP__
 #define __CCE_RUNTIME_CAPTURE_ADAPT_HPP__
-#include "runtime/base.h"
 #include "device.hpp"
 #include "event.hpp"
 #include "stream.hpp"
