@@ -716,6 +716,9 @@ rtError_t Context::Synchronize(int32_t timeout)
     // TaskReclaim
     (void)TaskReclaimforSyncDevice(startTime, timeout);
 
+    const rtError_t error = CheckStatus();
+    ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
