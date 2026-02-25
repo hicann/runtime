@@ -612,8 +612,9 @@ rtError_t CaptureModel::BindSqCq(void)
         switchInfo_[index].stream_id = static_cast<uint32_t>(stm->Id_());
         switchInfo_[index].sq_id = stm->GetSqId();
         switchInfo_[index].sq_depth = stm->GetSqDepth();
+        uint64_t sqIdTmp = stm->GetSqId();
         error = dev->Driver_()->MemCopySync(RtValueToPtr<void *>(stm->GetSqIdMemAddr()),
-            sizeof(uint64_t), RtPtrToPtr<void *>(&(switchInfo_[index].sq_id)),
+            sizeof(uint64_t), RtPtrToPtr<void *>(&(sqIdTmp)),
             sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "stream set sq id failed, device_id=%u, model_id=%u, stream_id=%u, sqId=%u, retCode=%#x.",
