@@ -44,7 +44,12 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo *const taskInfo, rtDavidSqe_t 
     Stream * const stream = taskInfo->stream;
     ConstructDavidMemcpySqe(taskInfo, davidSqe, sqBaseAddr);
 
+    const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
     const uint32_t copyKind = memcpyAsyncTaskInfo->copyKind;
+    if (unlikely((copyType == RT_MEMCPY_ADDR_D2D_SDMA) && (copyKind == RT_MEMCPY_RESERVED))) {
+        return;
+    }
+
     const bool isReduce = ((copyKind == RT_MEMCPY_SDMA_AUTOMATIC_ADD) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MAX) ||
                            (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_MIN) || (copyKind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
 
