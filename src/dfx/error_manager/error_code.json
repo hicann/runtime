@@ -737,6 +737,83 @@
       }
     },
     {
+      "errClass": "DVPP Errors",
+      "errTitle": "Resource_Error_Insufficient_Host_Memory",
+      "ErrCode": "EN0010",
+      "ErrMessage": "Failed to allocate %s host memory for DVPP.",
+      "Arglist": "buf_size",
+      "suggestion": {
+        "Possible Cause": "Allocation failed due to insufficient host memory.",
+        "Solution": "Stop unnecessary processes and ensure that the required memory is avaliable."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Resource_Error_Insufficient_Host_Memory",
+      "ErrCode": "EN0016",
+      "ErrMessage": "Failed to allocate host memory by make shared.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Allocation failed due to insufficient host memory.",
+        "Solution": "Stop unnecessary processes and ensure that the required memory is avaliable."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Resource_Error_Insufficient_Device_Memory",
+      "ErrCode": "EN0011",
+      "ErrMessage": "Failed to allocate %s device memory for DVPP.",
+      "Arglist": "buf_size",
+      "suggestion": {
+        "Possible Cause": "Allocation failed due to insufficient NPU memory.",
+        "Solution": "Stop unnecessary processes and ensure that the required memory is avaliable."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Channel_Resource_Busy",
+      "ErrCode": "EN0012",
+      "ErrMessage": "The resources are busy.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1. The resource have been occupied. 2. Software is not ready.",
+        "Solution": "1. Close applications not in use 2. Wait for a while and try again."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Insufficient_Channel_Resources",
+      "ErrCode": "EN0013",
+      "ErrMessage": "The Channel resources are insufficient.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "File_Operation_Error_Open",
+      "ErrCode": "EN0014",
+      "ErrMessage": "Failed to open file %s.",
+      "Arglist": "file_name",
+      "suggestion": {
+        "Possible Cause": "1. The file does not exist. 2. Insufficient file permissions. 3. Package installation error.",
+        "Solution": "1. Configure the file path correctly. 2. Configure the file permissions correctly. 3. Reinstall the package."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Not_Permit",
+      "ErrCode": "EN0015",
+      "ErrMessage": "The operation is not permitted. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "Incorrect usage of API interface.",
+        "Solution": "Refer to the API manual and use the API interface correctly."
+      }
+    },
+    {
       "errClass": "ACL Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EH0001",
