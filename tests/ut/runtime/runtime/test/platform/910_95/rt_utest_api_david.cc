@@ -9529,3 +9529,30 @@ TEST_F(ApiDavidTest, ut_GetDcacheLockMixPath_David_EnvPathValid) {
     EXPECT_NE(binaryPath.find("ascend910_95/dcache_lock_mix.o"), std::string::npos);
     EXPECT_NE(binaryPath.find("/some/path/runtime/lib64"), std::string::npos);
 }
+
+TEST_F(ApiDavidTest, memcpy2d_async_success_d2d)
+{
+    void *destPtr;
+    void *srcPtr;
+    rtError_t error = RT_ERROR_NONE; 
+    ApiImplDavid impl;
+
+    rtStream_t stm;
+    error = rtStreamCreateWithFlags(&stm, 0, RT_STREAM_PERSISTENT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream * const exeStream = static_cast<Stream *>(stm);
+
+    uint64_t size = 10;
+    uint64_t* realSize = &size;
+    MOCKER(Memcpy2DAsync)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(),
+         mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), 
+         outBoundP(realSize), mockcpp::any(), mockcpp::any())
+         .will(returnValue(RT_ERROR_NONE));
+    error = impl.MemCopy2DAsync(destPtr, 150, srcPtr, 150, 10, 2, exeStream, RT_MEMCPY_DEVICE_TO_DEVICE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

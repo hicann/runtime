@@ -524,20 +524,15 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
     memcpyAsyncTaskInfo->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(stream->Device_()->Id_());
     const uint32_t copyType = memcpyAsyncTaskInfo->copyType;
     // d2d copy data convert
-    if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) || 
-        (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
-        if (stream->Device_()->IsDavidPlatform()) {
-            return RT_ERROR_FEATURE_NOT_SUPPORT;
-        } else {
-            memcpyAsyncTaskInfo->src = const_cast<void *>(srcAddr);
-            memcpyAsyncTaskInfo->destPtr = dst;
-            RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
-            ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
-            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
-            // copy one line data once time
-            memcpyAsyncTaskInfo->size = width;
-            return RT_ERROR_NONE;
-        }
+    if ((copyType == RT_MEMCPY_DIR_D2D_SDMA) || (copyType == RT_MEMCPY_DIR_D2D_HCCs) || (copyType == RT_MEMCPY_DIR_D2D_PCIe)) {
+        memcpyAsyncTaskInfo->src = const_cast<void *>(srcAddr);
+        memcpyAsyncTaskInfo->destPtr = dst;
+        RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
+        ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u.",
+        dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
+        // copy one line data once time
+        memcpyAsyncTaskInfo->size = width;
+        return RT_ERROR_NONE;
     } else {
         // d2h or h2d data convert
         error = driver->MemCopy2D(dst, dstPitch, srcAddr, srcPitch, width, height, kind,
