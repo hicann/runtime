@@ -138,8 +138,8 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg &taskCfg, const rtKernelLaunchCfg_t*
             case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:
                 taskCfg.base.schemMode = cfg->attrs[idx].value.schemMode;
                 break;
-            case RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE:
-                taskCfg.base.dynUBufSize = cfg->attrs[idx].value.dynUBufSize;
+            case RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE:
+                taskCfg.base.localMemorySize = cfg->attrs[idx].value.localMemorySize;
                 break;
             case RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE:
                 taskCfg.extend.engineType = cfg->attrs[idx].value.engineType;

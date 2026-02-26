@@ -165,7 +165,7 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsDeviceGetInfo)
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_UBUF_PER_VECTOR_CORE, &val);
+    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE, &val);

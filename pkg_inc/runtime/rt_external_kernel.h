@@ -284,7 +284,7 @@ typedef enum {
  */
 typedef enum {
     RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
-    RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE,
+    RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE,
     // vector core使能使用
     RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE,
     // vector core使能使用
@@ -302,7 +302,7 @@ typedef enum {
  */
 typedef union {
     uint8_t schemMode;
-    uint32_t dynUBufSize;
+    uint32_t localMemorySize;
     rtEngineType engineType;
     uint32_t blockDimOffset;
     uint8_t isBlockTaskPrefetch;  // 任务下发时判断是否sqe后续需要刷新标记（tiling key依赖下沉场景）0:disable 1:enable

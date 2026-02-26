@@ -22,8 +22,8 @@ rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* la
         case RT_LAUNCH_ATTRIBUTE_BLOCKDIM:
             launchTaskCfg->blockDim = attr->value.blockDim;
             break;
-        case RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE:
-            launchTaskCfg->dynamicShareMemSize = attr->value.dynUBufSize;
+        case RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE:
+            launchTaskCfg->dynamicShareMemSize = attr->value.dynamicShareMemSize;
             break;
         case RT_LAUNCH_ATTRIBUTE_GROUP:
             launchTaskCfg->Group.groupDim = attr->value.Group.groupDim;

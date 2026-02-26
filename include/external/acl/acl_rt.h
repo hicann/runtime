@@ -444,7 +444,7 @@ typedef enum {
 
 typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
-    ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE = 2,
+    ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE = 2,
     ACL_RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE = 3,
     ACL_RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET = 4,
     ACL_RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH = 5,
@@ -465,7 +465,7 @@ typedef struct {
 
 typedef union aclrtLaunchKernelAttrValue {
     uint8_t schemMode;
-    uint32_t dynUBufSize;
+    uint32_t localMemorySize;
     aclrtEngineType engineType;
     uint32_t blockDimOffset;
     uint8_t isBlockTaskPrefetch;
@@ -509,7 +509,7 @@ typedef enum {
     ACL_DEV_ATTR_VECTOR_CORE_NUM = 201,  // number of Vector Cores
     ACL_DEV_ATTR_WARP_SIZE       = 202,  // number of threads in a Warp
     ACL_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE = 203,    // maximum number of concurrent threads per Vector Core
-    ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE  = 204,    // maximum available local memory per Vector Core, in Bytes
+    ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE  = 204,    // maximum available local memory per Vector Core, in Bytes
 
     ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE = 301,    // total available global memory on the Device, in Bytes
     ACL_DEV_ATTR_L2_CACHE_SIZE         = 302,    // L2 Cache size, in Bytes
