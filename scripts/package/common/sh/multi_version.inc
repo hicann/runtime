@@ -125,7 +125,7 @@ notify_latest_manager() {
         return 1
     fi
 
-    if [ "${USE_SHARE_INFO}" == "y" ]; then
+    if [ "${USE_SHARE_INFO}" = "y" ]; then
         ext_params="$ext_params --use-share-info"
     fi
 
