@@ -22,7 +22,7 @@ uint32_t TprtDeviceOpen(const uint32_t devId, const TprtCfgInfo_t *cfg)
         TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id[%u] input is null.", devId);
         return TPRT_INPUT_NULL;
     }
-    if ((cfg->sqcqMaxDepth == 0U) || (cfg->sqcqMaxDepth > 1024U) || (cfg->sqcqMaxNum == 0U)) {
+    if ((cfg->sqcqMaxDepth == 0U) || (cfg->sqcqMaxDepth > SQCQ_MAX_DEPTH) || (cfg->sqcqMaxNum == 0U)) {
         TPRT_LOG(TPRT_LOG_ERROR,
             "[tprt]device_id[%u] sqcqMaxDepth[%u], sqcqMaxNum[%u].",
             devId,

@@ -77,7 +77,7 @@ private:
     std::atomic<uint16_t> sqHead_{0U};
     std::atomic<uint16_t> sqTail_{0U};
     std::mutex sqQueueLock_;
-    std::array<TprtSqe_t, 1024> sqQueue_;
+    std::array<TprtSqe_t, SQCQ_MAX_DEPTH> sqQueue_;
 };
 }
 }

@@ -641,7 +641,7 @@ rtError_t Model::DelStream(Stream * const streamIn)
 
 rtError_t Model::BindSqPerStream(Stream * const streamIn, const uint32_t flag)
 {
-    Stream * execStream = context_->GetCtrlSQStream();
+    Stream *execStream = context_->GetCtrlSQStream();
     rtError_t error = ModelBindTaskSubmit(execStream, streamIn, flag);
     ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, model_id=%d, stream_id=%d, sq_id=%u.",
         id_, streamIn->Id_(), streamIn->GetSqId());
@@ -668,7 +668,7 @@ rtError_t Model::UnBindSqPerStream(Stream * const streamIn)
 
     const rtError_t syncRet = streamIn->Synchronize();
     COND_RETURN_ERROR_MSG_INNER(syncRet != RT_ERROR_NONE, syncRet, "Synchronize failed.");
-    Stream * execStream = context_->GetCtrlSQStream();
+    Stream *execStream = context_->GetCtrlSQStream();
     TaskFactory * const devTaskFactory = context_->Device_()->GetTaskFactory();
     TaskInfo submitTask = {};
     rtError_t errorReason;

@@ -20,7 +20,7 @@ extern "C" {
 typedef void *TprtResHandle_t;
 #define SQCQ_INFO_LENGTH 8
 #define SQCQ_RESV_LENGTH 8
-
+#define SQCQ_MAX_DEPTH 1024U
 typedef enum tagTprtSqCqPropType {
     TPRT_SQCQ_PROP_SQ_STATUS = 0x0, // quit, running, error
     TPRT_SQCQ_PROP_SQ_HEAD,

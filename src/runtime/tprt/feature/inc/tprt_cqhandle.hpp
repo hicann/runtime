@@ -29,7 +29,7 @@ private:
     uint32_t cqId_{0xFFFFFFFFU};
     std::atomic<uint16_t> cqHead_{0U};
     std::atomic<uint16_t> cqTail_{0U};
-    std::array<TprtCqeReport_t, 1024> cqQueue_;
+    std::array<TprtCqeReport_t, SQCQ_MAX_DEPTH> cqQueue_;
     std::mutex cqQueueLock_;
 };
 }
