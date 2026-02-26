@@ -117,7 +117,7 @@ typedef struct tagRtTaskCfgInfo {
     uint8_t dumpflag; // dumpflag 0:fault 2:RT_KERNEL_DUMPFLAG 4:RT_FUSION_KERNEL_DUMPFLAG
     uint8_t neverTimeout; // 1: never timeout, 0: will timeout
     uint8_t rev[2];
-    uint32_t localMemorySize;  // for simt ub_size
+    uint32_t dynUBufSize;  // for simt ub_size
 } rtTaskCfgInfo_t;
 
 typedef struct tagRtLaunchTaskCfgInfo {

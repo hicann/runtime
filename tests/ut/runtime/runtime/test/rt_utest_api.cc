@@ -7746,8 +7746,8 @@ TEST_F(ApiTest, create_args_test_01)
     rtLaunchKernelAttr_t attrs[7];
     attrs[0].id = RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE;
     attrs[0].value.schemMode = 0;
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE;
-    attrs[1].value.localMemorySize = 100;
+    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 100;
     attrs[2].id = RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE;
     attrs[2].value.engineType = RT_ENGINE_TYPE_AIV;
     attrs[3].id = RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET;
@@ -7796,8 +7796,8 @@ TEST_F(ApiTest, create_args_test_03)
     rtLaunchKernelAttr_t attrs[5];
     attrs[0].id = RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE;
     attrs[0].value.schemMode = 0;
-    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE;
-    attrs[1].value.localMemorySize = 100;
+    attrs[1].id = RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 100;
     attrs[2].id = RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE;
     attrs[2].value.engineType = RT_ENGINE_TYPE_AIV;
     attrs[3].id = RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET;

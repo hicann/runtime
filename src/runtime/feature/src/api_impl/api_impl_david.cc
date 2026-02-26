@@ -2091,14 +2091,14 @@ rtError_t ApiImplDavid::GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int
         case RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE:
             *val = RT_MAX_THREAD_PER_VECTOR_CORE;
             break;
-        case RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE:
+        case RT_DEV_ATTR_UBUF_PER_VECTOR_CORE:
             *val = RT_SIMT_AVAILBALE_UB_SIZE;
             break;
         default:
             RT_LOG_OUTER_MSG_INVALID_PARAM(attr,
                std::to_string(RT_DEV_ATTR_WARP_SIZE) + " or " +
                std::to_string(RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE) +
-               " or " + std::to_string(RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE));
+               " or " + std::to_string(RT_DEV_ATTR_UBUF_PER_VECTOR_CORE));
             error = RT_ERROR_INVALID_VALUE;
             break;
     }

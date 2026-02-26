@@ -6674,8 +6674,8 @@ TEST_F(ApiDavidTest, rtLaunchKernelExByFuncHandleForADC)
     attrs[0].id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
     attrs[0].value.blockDim = 1;
 
-    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE;
-    attrs[1].value.dynamicShareMemSize = 12U * 1024U;
+    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 12U * 1024U;
 
     attrs[2].id = RT_LAUNCH_ATTRIBUTE_GROUP;
     attrs[2].value.Group.groupDim = 2U;
@@ -7994,7 +7994,7 @@ TEST_F(ApiDavidTest, TestRtsDeviceGetInfoSimt)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(2048, val);
 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE, &val);
+    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_UBUF_PER_VECTOR_CORE, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(221184, val);
 

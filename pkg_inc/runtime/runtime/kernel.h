@@ -286,7 +286,7 @@ typedef enum tagRtBinBufferType {
 
 typedef union rtLaunchAttributeValue_union {
     uint32_t blockDim;
-    uint32_t dynamicShareMemSize;
+    uint32_t dynUBufSize;
     struct {
         uint32_t groupDim;
         uint32_t groupBlockDim;
@@ -300,7 +300,7 @@ typedef union rtLaunchAttributeValue_union {
 
 typedef enum rtLaunchAttributeId {
     RT_LAUNCH_ATTRIBUTE_BLOCKDIM = 0,
-    RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE = 1,
+    RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE = 1,
     RT_LAUNCH_ATTRIBUTE_GROUP = 2,
     RT_LAUNCH_ATTRIBUTE_QOS = 3,
     RT_LAUNCH_ATTRIBUTE_PARTID = 4,

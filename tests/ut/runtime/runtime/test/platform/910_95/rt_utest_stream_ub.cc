@@ -4751,8 +4751,8 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     attrs[0].id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
     attrs[0].value.blockDim = 1;
 
-    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE;
-    attrs[1].value.dynamicShareMemSize = 12U * 1024U;
+    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 12U * 1024U;
 
     rtLaunchConfig_t launchConfig = {};
     launchConfig.numAttrs = 2;
@@ -9881,8 +9881,8 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     attrs[0].id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
     attrs[0].value.blockDim = 1;
 
-    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE;
-    attrs[1].value.dynamicShareMemSize = 12U * 1024U;
+    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 12U * 1024U;
 
     attrs[2].id = RT_LAUNCH_ATTRIBUTE_GROUP;
     attrs[2].value.Group.groupDim = 2U;
@@ -9915,8 +9915,8 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     error = rtLaunchKernelExByFuncHandle(func_handle, &launchConfig, argsHandle, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE;
-    attrs[1].value.dynamicShareMemSize = 256U * 1024U;
+    attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE;
+    attrs[1].value.dynUBufSize = 256U * 1024U;
     error = rtLaunchKernelExByFuncHandle(func_handle, &launchConfig, argsHandle, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);

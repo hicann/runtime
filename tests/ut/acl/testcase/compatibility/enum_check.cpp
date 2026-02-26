@@ -699,6 +699,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtLaunchKernelAttrId)
     id = (aclrtLaunchKernelAttrId)1;
     EXPECT_EQ(id, ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE);
 
+    id = (aclrtLaunchKernelAttrId)2;
+ 	EXPECT_EQ(id, ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE);
+
     id = (aclrtLaunchKernelAttrId)3;
     EXPECT_EQ(id, ACL_RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE);
 
@@ -732,7 +735,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtBinaryLoadOptionValue)
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtLaunchKernelAttrValue)
 {
     EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::schemMode), sizeof(uint8_t));
-    EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::localMemorySize), sizeof(uint32_t));
+    EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::dynUBufSize), sizeof(uint32_t));
     EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::engineType), sizeof(aclrtEngineType));
     EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::blockDimOffset), sizeof(uint32_t));
     EXPECT_EQ(sizeof(aclrtLaunchKernelAttrValue::isBlockTaskPrefetch), sizeof(uint8_t));
@@ -807,7 +810,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
   EXPECT_EQ(value, ACL_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE);
 
   value = (aclrtDevAttr)204U;
-  EXPECT_EQ(value, ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE);
+  EXPECT_EQ(value, ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE);
 
   value = (aclrtDevAttr)301U;
   EXPECT_EQ(value, ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE);

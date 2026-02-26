@@ -319,7 +319,7 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
             [[fallthrough]];
         case RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE:
             [[fallthrough]];
-        case RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE:
+        case RT_DEV_ATTR_UBUF_PER_VECTOR_CORE:
             error = GetDeviceSimtInfo(deviceId, attr, val);
             break;
         case RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE:

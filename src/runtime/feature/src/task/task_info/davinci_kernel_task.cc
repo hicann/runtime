@@ -150,7 +150,7 @@ void AicTaskInit(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum,
         aicTaskInfo->partId = taskcfg->base.partId;
         aicTaskInfo->schemMode = taskcfg->base.schemMode;
         aicTaskInfo->blockDimOffset = taskcfg->base.blockDimOffset;
-        aicTaskInfo->dynamicShareMemSize = taskcfg->base.localMemorySize;
+        aicTaskInfo->dynamicShareMemSize = taskcfg->base.dynUBufSize;
 
         if ((taskcfg->base.dumpflag == RT_KERNEL_DUMPFLAG) || (taskcfg->base.dumpflag == RT_FUSION_KERNEL_DUMPFLAG)) {
             aicTaskInfo->comm.kernelFlag = static_cast<uint8_t>(taskcfg->base.dumpflag & 0xFFU);
