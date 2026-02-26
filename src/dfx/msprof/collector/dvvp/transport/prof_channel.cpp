@@ -87,7 +87,6 @@ int32_t ChannelReader::Init()
     MSVP_MAKE_SHARED1(overallReadSpeedPerfCount_, PerfCount, SPEEDALL_PERFCOUNT_MODULE_NAME, return PROFILING_FAILED);
     lastEndRawTime_ = 0;
     isInited_ = true;
-    std::lock_guard<std::mutex> lk(mtx_);
     drvChannelReadCont_ = 0;
     return PROFILING_SUCCESS;
 }
@@ -142,7 +141,6 @@ int32_t ChannelReader::Execute()
 {
     int32_t totalLen = 0;
     int32_t currLen = 0;
-    std::lock_guard<std::mutex> lk(mtx_);
     readExecCnt_++;
     std::unique_lock<std::mutex> guard(flushMutex_, std::defer_lock);
     do {
@@ -194,6 +192,7 @@ size_t ChannelReader::HashId()
 
 void ChannelReader::UploadData()
 {
+    std::lock_guard<std::mutex> lk(mtx_);
     const uint64_t uploadStartTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
     if (dataSize_ == 0) {
         return;
@@ -228,7 +227,6 @@ void ChannelReader::UploadData()
 
 void ChannelReader::FlushBuffToUpload()
 {
-    std::lock_guard<std::mutex> lk(mtx_);
     UploadData();
 }
 
