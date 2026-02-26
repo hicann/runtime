@@ -9556,3 +9556,90 @@ TEST_F(ApiDavidTest, memcpy2d_async_success_d2d)
     error = rtStreamDestroy(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TaskInfo* CreateTask(TaskResManageDavid *taskResMng, uint32_t& pos, tsTaskType_t type, const char* typeName, uint32_t sqeNum = 1)
+{
+    TaskInfo *task = nullptr;
+    pos = UINT32_MAX;
+    rtError_t error = taskResMng->AllocTaskInfoAndPos(1U, pos, &task);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    task->type = type;
+    task->typeName = typeName;
+    task->id = pos;
+    task->sqeNum = sqeNum;
+    return task;
+}
+
+TEST_F(ApiDavidTest, modelDebugJsonPrintApi)
+{
+    // 获取当前上下文
+    rtContext_t current = NULL;
+    EXPECT_EQ(rtCtxGetCurrent(&current), RT_ERROR_NONE);
+    Context *ctx = static_cast<Context *>(current);
+
+    // 创建模型
+    Model *model = NULL;
+    EXPECT_EQ(ctx->ModelCreate(&model, RT_MODEL_NORMAL), RT_ERROR_NONE);
+
+    // 创建流
+    rtStream_t stream;
+    EXPECT_EQ(rtStreamCreate(&stream, 0), ACL_RT_SUCCESS);
+    model->ModelPushFrontStream((Stream *)stream);
+
+    // 创建事件
+    rtEvent_t event;
+    EXPECT_EQ(rtEventCreateWithFlag(&event, RT_EVENT_WITH_FLAG), ACL_RT_SUCCESS);
+
+    // 初始化任务管理器
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    TaskResManageDavid *taskResMng = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    uint32_t pos = UINT32_MAX;
+
+    // 创建事件记录任务
+    TaskInfo *task = CreateTask(taskResMng, pos, TS_TASK_TYPE_DAVID_EVENT_RECORD, "EVENT_RECORD");
+    task->u.davidEventRecordTaskInfo.isCountNotify = 1;
+    Event *getEvent = nullptr;
+    CaptureCntNotify cntInfo = {0, 0U};
+    EXPECT_EQ(GetCaptureEventFromTask(ctx->device_, ((Stream *)stream)->Id_(), pos, getEvent, cntInfo), RT_ERROR_NONE);
+
+    // 创建事件等待任务
+    TaskInfo *task1 = CreateTask(taskResMng, pos, TS_TASK_TYPE_DAVID_EVENT_WAIT, "EVENT_WAIT");
+    task1->u.davidEventWaitTaskInfo.isCountNotify = 1;
+    uint32_t num = 0;
+    EXPECT_EQ(rtModelGetNodes(model, &num), RT_ERROR_NONE);
+    EXPECT_EQ(num, 2);
+    EXPECT_EQ(GetCaptureEventFromTask(ctx->device_, ((Stream *)stream)->Id_(), pos, getEvent, cntInfo), RT_ERROR_STREAM_UNJOINED);
+
+    // 创建其他类型任务
+    CreateTask(taskResMng, pos, TS_TASK_TYPE_DAVID_EVENT_RESET, "EVENT_RESET");
+    CreateTask(taskResMng, pos, TS_TASK_TYPE_NOTIFY_WAIT, "NOTIFY_WAIT");
+    CreateTask(taskResMng, pos, TS_TASK_TYPE_NOTIFY_RECORD, "NOTIFY_RECORD");
+    CreateTask(taskResMng, pos, TS_TASK_TYPE_KERNEL_AICORE, "KERNEL_AICORE");
+    EXPECT_EQ(GetCaptureEventFromTask(ctx->device_, ((Stream *)stream)->Id_(), pos+1, getEvent, cntInfo), RT_ERROR_TASK_NULL);
+    CreateTask(taskResMng, pos, TS_TASK_TYPE_KERNEL_AICPU, "KERNEL_AICPU");
+    
+    TaskInfo *fusionTask1 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
+    fusionTask1->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_AICPU) | (1U << RT_FUSION_AICORE);
+    fusionTask1->u.fusionKernelTask.aicPart.kernel = nullptr;
+
+    TaskInfo *fusionTask2 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
+    fusionTask2->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_HCOM_CPU) | (1U << RT_FUSION_AICORE);
+    fusionTask2->u.fusionKernelTask.aicPart.kernel = nullptr;
+
+    TaskInfo *fusionTask3 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
+    fusionTask3->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_CCU);
+
+    // 测试JSON打印
+    EXPECT_EQ(ctx->ModelDebugJsonPrint(model, "./test.json", 0), RT_ERROR_NONE);
+    ((Stream *)stream)->SetBindFlag(true);
+    EXPECT_EQ(ctx->ModelDebugJsonPrint(model, "./test.json", 0), RT_ERROR_NONE);
+
+    // 清理资源
+    taskResMng->ResetTaskRes();
+    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
+    ((Stream *)stream)->SetBindFlag(false);
+    model->ModelRemoveStream((Stream *)stream);
+    EXPECT_EQ(ctx->ModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(ctx->StreamDestroy((Stream *)stream), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventDestroy(event), ACL_RT_SUCCESS);
+}

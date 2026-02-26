@@ -43,6 +43,7 @@ public:
     rtError_t ResClear(uint64_t timeout = 0) override;
     uint32_t StarsGetMaxTryCount() const override;
     void DebugDotPrintForModelStm() override;
+    void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm) override;
     uint32_t GetDelayRecycleTaskSqeNum(void) const override;
     rtError_t QueryWaitTask(bool &isWaitFlag, const uint32_t taskId) override;
     rtError_t JudgeTaskFinish(uint16_t taskPos, bool &isFinished) override;

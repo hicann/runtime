@@ -280,6 +280,147 @@ void DavidStream::DebugDotPrintForModelStm()
     }
 }
 
+static std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo)
+{
+    std::string taskName = "FUSION_KERNEL";
+    uint8_t sqeSubType = fusionTaskInfo->sqeSubType;
+
+    std::vector<std::string> subTaskNames;
+    if ((sqeSubType & (1U << RT_FUSION_AICPU)) != 0U) {
+        subTaskNames.push_back("AICPU");
+    }
+    if ((sqeSubType & (1U << RT_FUSION_HCOM_CPU)) != 0U) {
+        subTaskNames.push_back("HCOM_CPU");
+    }
+    if ((sqeSubType & (3U << RT_FUSION_CCU)) != 0U) {
+        subTaskNames.push_back("CCU");
+    }
+    if ((sqeSubType & (1U << RT_FUSION_AICORE)) != 0U) {
+        FusionTaskInfoAicPart* aicPart = &(fusionTaskInfo->aicPart);
+        const Kernel *kernel = aicPart->kernel;
+        std::string aicName = (kernel != nullptr) ? kernel->Name_() : "AICORE";
+        subTaskNames.push_back(aicName);
+    }
+
+    if (!subTaskNames.empty()) {
+        for (size_t i = 0; i < subTaskNames.size(); ++i) {
+            taskName += "_" + subTaskNames[i];
+        }
+    }
+
+    return taskName;
+}
+
+static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& taskDur, const uint32_t modelId, const int32_t streamId)
+{
+    std::string taskName;
+    const Kernel *kernel = nullptr;
+    
+    // 获取任务名称
+    if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
+        AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
+        kernel = aicTaskInfo->kernel;
+        std::string kernelNameStr = (kernel != nullptr) ? kernel->Name_() : "AICORE_KERNEL";
+        taskName = kernelNameStr;
+    } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
+        kernel = aicpuTaskInfo->kernel;
+        std::string kernelName = (kernel != nullptr) ? kernel->GetCpuOpType() : "AICPU_KERNEL";
+        taskName = (!kernelName.empty()) ? kernelName : "AICPU_KERNEL";
+    }  else if (task->type == TS_TASK_TYPE_FUSION_KERNEL) {
+        FusionTaskInfo* fusionTaskInfo = &(task->u.fusionKernelTask);
+        taskName = BuildFusionKernelTaskName(fusionTaskInfo);
+    } else {
+        taskName = task->typeName;
+    }
+
+    // 获取事件ID和通知ID
+    int32_t eventId = INVALID_EVENT_ID;
+    uint32_t notifyId = MAX_UINT32_NUM;
+    uint32_t countValue = MAX_UINT32_NUM;
+    uint32_t isCountNotify = 0U;
+    GetEventIdOrNotifyId(task, eventId, isCountNotify, countValue, notifyId);
+    
+    // 构建完整的任务名称
+    if (eventId != INVALID_EVENT_ID) {
+        if (isCountNotify == 1U) {
+            taskName += "_" + std::to_string(eventId) + "_" + std::to_string(countValue);
+        } else {
+            taskName += "_" + std::to_string(eventId);
+        }
+    } else if (notifyId != MAX_UINT32_NUM) {
+        taskName += "_" + std::to_string(notifyId);
+    } else  {
+        // no op
+    }
+
+    // 构建TraceEvent记录
+    TraceEvent record;
+    record.name = taskName;
+    record.pid = std::to_string(pid) + " aclGraph";
+    record.tid = "stream" + std::to_string(streamId);
+    record.ts = taskDur;
+    taskDur += 10;
+    record.dur = 9.5;
+    record.ph = "X";
+    record.args.modelId = modelId;
+    record.args.streamId = streamId;
+    record.args.taskId = task->id;
+    
+    return record;
+}
+
+void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm)
+{
+    if (!GetBindFlag() || (taskResMang_ == nullptr)) {
+        RT_LOG(RT_LOG_DEBUG, "Model debug json print unmatch, bindFlag=%d, device_id=%u, stream_id=%d.", 
+            GetBindFlag(), device_->Id_(), Id_());
+        return;
+    }
+    
+    // 获取任务队列的头尾指针
+    uint16_t head = 0U;
+    uint16_t tail = 0U;
+    TaskResManageDavid *taskResMangDavid = dynamic_cast<TaskResManageDavid *>(taskResMang_);
+    if (taskResMangDavid == nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "TaskResManageDavid is nullptr, device_id=%u, stream_id=%d.", device_->Id_(), Id_());
+        return;
+    }
+    taskResMangDavid->GetHeadTail(head, tail);
+    RT_LOG(RT_LOG_DEBUG, "Model debug json print, device_id=%u, stream_id=%d, head=%hu, tail=%hu.", 
+        device_->Id_(), Id_(), head, tail);
+    
+    // 构建TraceEvent记录数组
+    std::vector<TraceEvent> recordArray;
+    pid_t pid = getpid();
+    uint32_t taskDur = 0;
+    
+    for (uint32_t i = head; i < tail;) {
+        TaskInfo* nextTask = taskResMangDavid->GetTaskInfo(i);
+        if (unlikely(nextTask == nullptr)) {
+            i++;
+            continue;
+        }
+        i = static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum;
+        
+        // 构建并添加TraceEvent记录
+        TraceEvent record = BuildTraceEventForTask(nextTask, pid, taskDur, modelId, streamId_);
+        recordArray.emplace_back(record);
+    }
+
+    // 转换为JSON并写入文件
+    std::ostringstream json_array;
+    for (size_t i = 0; i < recordArray.size(); ++i) {
+        json_array << TraceEventToJson(recordArray[i]);
+        if ((i < recordArray.size() - 1) || (isLastStm == false)) {
+            json_array << ",";
+        }
+        json_array << "\n";
+    }
+
+    outputFile << json_array.str();
+}
+
 rtError_t DavidStream::TearDown(const bool terminal, bool flag)
 {
     (void)terminal;

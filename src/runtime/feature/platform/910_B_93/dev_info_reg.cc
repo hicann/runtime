@@ -127,7 +127,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_DEAMON_OPEN_EX,
     RtOptionalFeatureType::RT_FEATURE_TASK_DSA_UPDATE,
-    RtOptionalFeatureType::RT_FEATURE_MODEL_JSON_PRINT,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_OVERFLOW_CHECK,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG,
