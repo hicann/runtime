@@ -61,6 +61,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/pkg_in/aicpu/queue_schedule
     ${RUNTIME_DIR}/pkg_inc/profiling
+    ${RUNTIME_DIR}/pkg_inc/platform
     ${RUNTIME_DIR}/src/inc/
     ${CRYPTO_INCLUDE_DIR}
 )
@@ -101,12 +102,15 @@ target_link_libraries(tsdclient PRIVATE
     error_manager
     crypto
     $<BUILD_INTERFACE:c_sec_headers>
+    platform
 )
 
 set_target_properties(tsdclient
     PROPERTIES
     OUTPUT_NAME libtsdclient
 )
+
+add_dependencies(tsdclient platform)
 
 #---------------------------------------------------------------------------------------------------linux
 else()
@@ -156,6 +160,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/
     ${RUNTIME_DIR}/pkg_inc/profiling
+    ${RUNTIME_DIR}/pkg_inc/platform
     ${RUNTIME_DIR}/src/dfx/error_manager/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
     ${CRYPTO_INCLUDE_DIR}
@@ -206,6 +211,9 @@ target_link_libraries(tsdclient PRIVATE
     error_manager
     crypto_static
     $<BUILD_INTERFACE:c_sec_headers>
+    platform
 )
+
+add_dependencies(tsdclient platform)
 
 endif()

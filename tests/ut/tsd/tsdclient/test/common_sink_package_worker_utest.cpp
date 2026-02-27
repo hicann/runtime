@@ -41,26 +41,27 @@ protected:
 
 bool WriteConfigFile(const std::string fileName)
 {
-    std::ofstream outFile(fileName);
-    if(!outFile) {
+    std::ofstream outFile0(fileName);
+    if(!outFile0) {
         std::cout<<"Can not creat file."<<std::endl;
         return false;
     }
-    outFile << "name:Ascend-aicpu_legacy.tar.gz"<<std::endl;
-    outFile << "install_path:2"<<std::endl;
-    outFile << "optional:true"<<std::endl;
-    outFile << "package_path:opp"<<std::endl;
-    outFile.close();
-    std::ifstream inFile(fileName);
-    if(!inFile) {
+    outFile0 << "name:Ascend-aicpu_legacy.tar.gz"<<std::endl;
+    outFile0 << "install_path:2"<<std::endl;
+    outFile0 << "optional:true"<<std::endl;
+    outFile0 << "package_path:opp"<<std::endl;
+    outFile0 << "load_as_per_soc:false"<<std::endl;
+    outFile0.close();
+    std::ifstream inFile0(fileName);
+    if(!inFile0) {
         std::cout<<"Can not read file."<<std::endl;
         return false;
     }
     std::string line;
-    while (getline(inFile, line)) {
+    while (getline(inFile0, line)) {
         std::cout<<line<<std::endl;
     }
-    inFile.close();
+    inFile0.close();
     return true;
 }
 

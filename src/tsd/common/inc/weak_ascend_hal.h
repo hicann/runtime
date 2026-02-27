@@ -41,5 +41,6 @@ DLLEXPORT __attribute__((weak)) drvError_t drvHdcSendFileV2(int peer_node, int p
 DLLEXPORT __attribute__((weak)) drvError_t drvHdcGetTrustedBasePathV2(int peer_node, int peer_devid, char *base_path,
     unsigned int path_len);
 int __attribute__((weak)) halTsPkgLoad(unsigned int dev_id, TSFW_LOAD_TYPE load_type, unsigned int ex_type);
+drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char *socVersion, uint32_t len);
 }
 #endif  // TSD_WEAK_ASCEND_HAL_H

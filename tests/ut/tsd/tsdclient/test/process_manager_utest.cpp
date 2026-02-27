@@ -18,6 +18,7 @@
 #include "inc/client_manager.h"
 #include "inc/process_mode_manager.h"
 #include "inc/hdc_client.h"
+#include "inc/weak_ascend_hal.h"
 #include "src/env_internal_api.h"
 #undef private
 #undef protected
@@ -84,6 +85,14 @@ int dladdrFake2 (const void *__address, Dl_info *__info)
 {
     __info->dli_fname = "/home/test";
     return 1;
+}
+
+drvError_t halGetSocVersionStub(uint32_t devId, char *socVersion, uint32_t len) 
+{
+    const char* version = "Ascend910B1"; 
+    size_t required_len = strlen(version) + 1; 
+    strncpy_s(socVersion, len, version, required_len); 
+    return DRV_ERROR_NONE; 
 }
 }
 namespace {
@@ -185,6 +194,9 @@ TEST_F(ProcessManagerTest, OpenProcessFailed)
     MOCKER_CPP(&ProcessModeManager::CheckNeedToOpen)
         .stubs()
         .will(returnValue(true));
+    MOCKER_CPP(&ProcessModeManager::LoadPackageConfigInfoToDevice)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&ProcessModeManager::LoadSysOpKernel)
         .stubs()
         .will(returnValue(tsd::TSD_OK));
@@ -1107,6 +1119,7 @@ TEST_F(ProcessManagerTest, LoadCannHsPkgToDeviceSuccess)
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
+    MOCKER_CPP(&ProcessModeManager::LoadPackageConfigInfoToDevice).stubs().will(returnValue(tsd::TSD_OK));
     processModeManager.hdcTsdClient_ = HdcClient::GetInstance(deviceId, HDCServiceType::TSD);
     processModeManager.rspCode_ = ResponseCode::SUCCESS;
 
@@ -2982,3 +2995,22 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_load_finish)
     EXPECT_EQ(ret, tsd::TSD_OK);
     GlobalMockObject::verify();
 }
+
+ TEST_F(ProcessManagerTest, GetShortSocVersion_Success) 
+ { 
+     MOCKER(halGetSocVersion).stubs().will(invoke(halGetSocVersionStub)); 
+     ProcessModeManager processModeManager(deviceId, 0); 
+     std::string shortSocVersion;
+     const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
+     EXPECT_EQ(shortSocVersion, "Ascend910B"); 
+     EXPECT_EQ(ret, true); 
+ }
+
+TEST_F(ProcessManagerTest, GetShortSocVersion_halGetSocVersionFailed_Failed) 
+ { 
+     MOCKER(halGetSocVersion).stubs().will(returnValue(1)); 
+     ProcessModeManager processModeManager(deviceId, 0); 
+     std::string shortSocVersion;
+     const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
+     EXPECT_EQ(ret, false); 
+ }

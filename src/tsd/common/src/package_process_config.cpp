@@ -11,22 +11,27 @@
 #include "inc/package_process_config.h"
 
 #include <fstream>
+#include <array>
+#include <vector>
+#include <unordered_set>
 #include "inc/process_util_common.h"
 #include "inc/package_worker.h"
+#include "inc/internal_api.h"
 
 namespace tsd {
     namespace {
         const std::string PACKAGE_CONFIG_NAME = "name:";
-        constexpr const char *PACKAGE_INSTALL_PATH = "install_path:";
-        constexpr const char *PACKAGE_OPTIONAL = "optional:";
-        constexpr const char *PACKAGE_FIND_PATH = "package_path:";
-        const uint32_t PACKAGE_CONFIG_ITEM_CNT = 3U;
         const std::string COMMON_SINK_PKG_CONFIG_NAME = "ascend_package_load.ini";
         const std::string COMMON_SINK_PKG_CONFIG_DIR = "/conf/";
         const size_t MAX_CONFIG_NUM = 100UL;
     }
 
-    PackageProcessConfig::PackageProcessConfig() {}
+    PackageProcessConfig::PackageProcessConfig() : 
+        configParaParseFuncMap_({
+        {"install_path", &PackageProcessConfig::ParseInstallPath},
+        {"optional", &PackageProcessConfig::ParseOptionalFlag},
+        {"package_path", &PackageProcessConfig::ParsePackagePath},
+        {"load_as_per_soc", &PackageProcessConfig::ParseLoadAsPerSocFlag}}) {}
 
     PackageProcessConfig* PackageProcessConfig::GetInstance()
     {
@@ -127,111 +132,142 @@ namespace tsd {
 
         std::ifstream inFile(conFile);
         if (!inFile) {
-            TSD_RUN_WARN("open file:%s nok, errno=%d, strerror=%s", conFile.c_str(), errno, strerror(errno));
+            TSD_ERROR("open file:%s nok, errno=%d, strerror=%s", conFile.c_str(), errno, strerror(errno));
             return TSD_START_FAIL;
         }
         const ScopeGuard fileGuard([&inFile] () { inFile.close(); });
-       
+        
         std::string inputLine;
-        while (getline(inFile, inputLine)) {
+        size_t itCnt = 0;
+        while (getline(inFile, inputLine) && itCnt < MAX_CONFIG_NUM) {
             TSD_INFO("read config data current line:%s", inputLine.c_str());
             std::string packageName;
             const size_t pos = inputLine.find(PACKAGE_CONFIG_NAME);
             if (pos != std::string::npos) {
-                packageName = inputLine.substr(PACKAGE_CONFIG_NAME.size());
+                packageName = inputLine.substr(pos + PACKAGE_CONFIG_NAME.size());
+                Trim(packageName);
                 if (packageName.empty()) {
-                    TSD_RUN_WARN("valid package name is empty read line:%s", inputLine.c_str());
+                    TSD_ERROR("valid package name is empty read line:%s", inputLine.c_str());
                     configMap_.clear();
                     return TSD_START_FAIL;
                 }
                 if (configMap_.find(packageName) == configMap_.end()) { 
                     if (!SetConfigDataOnHost(inFile, packageName, pkgTitle)) {
-                        TSD_RUN_WARN("package:%s config read but not store, clear all config", packageName.c_str());
+                        TSD_ERROR("package:%s config read but not store, clear all config", packageName.c_str());
                         configMap_.clear();
                         return TSD_START_FAIL;
                     }
                 }
+                itCnt++;
             }
         }
         finishParse_ = true;
         return TSD_OK;
     }
 
-    bool PackageProcessConfig::FillDetailNode(const std::string &decDstDir, const std::string &optionalFlag,
-         const std::string &findPath, PackConfDetail &tempNode) const
+    bool PackageProcessConfig::ParseSinglePara(std::string &inputLine, PackConfDetail &tempNode,
+                                               std::unordered_set<std::string> &finishedParseItemSet) const
     {
-        if (!findPath.empty()) {
-            tempNode.findPath = findPath;
-        } else {
+        const std::size_t pos = inputLine.find(":");
+        if (pos == std::string::npos) {
+            TSD_ERROR("invalid config line:%s", inputLine.c_str());
             return false;
         }
-        if ((decDstDir == "0") || (decDstDir == "1") || (decDstDir == "2") || (decDstDir == "3")) {
+        std::string key = inputLine.substr(0, pos);
+        Trim(key);
+        std::string value = inputLine.substr(pos + 1);
+        Trim(value);
+        const auto iter = configParaParseFuncMap_.find(key);
+        if (iter == configParaParseFuncMap_.end()) {
+            TSD_ERROR("invalid config item:%s, line:%s", key.c_str(), inputLine.c_str());
+            return false;
+        }
+        if ((this->*(iter->second))(value, tempNode)) {
+            finishedParseItemSet.insert(key);
+            return true;
+        }
+        return false;
+    }
+
+    bool PackageProcessConfig::ParseInstallPath(const std::string &para, PackConfDetail &tempNode) const
+    {
+        if ((para == "0") || (para == "1") || (para == "2") || (para == "3")) {
             int32_t result = 0;
-           (void)TransStrToInt(decDstDir, result);
+           (void)TransStrToInt(para, result);
            tempNode.decDstDir = static_cast<DeviceInstallPath>(result);
         } else {
-            TSD_RUN_WARN("invalid decDstDir:%s", decDstDir.c_str());
+            TSD_ERROR("invalid installPath:%s", para.c_str());
             return false;
         }
+        return true;
+    }
 
-        if ((optionalFlag == "true") || (optionalFlag == "false")) {
-            tempNode.optionalFlag = optionalFlag == "true" ? true : false;
+    bool PackageProcessConfig::ParseOptionalFlag(const std::string &para, PackConfDetail &tempNode) const
+    {
+        if ((para == "true") || (para == "false")) {
+            tempNode.optionalFlag = para == "true" ? true : false;
         } else {
-            TSD_RUN_WARN("invalid optionalFlag:%s", optionalFlag.c_str());
+            TSD_ERROR("invalid optionalFlag:%s", para.c_str());
             return false;
         }
+        return true;
+    }
 
+    bool PackageProcessConfig::ParsePackagePath(const std::string &para, PackConfDetail &tempNode) const
+    {
+        if (!para.empty()) {
+            tempNode.findPath = para;
+        } else {
+            TSD_ERROR("invalid packagePath:%s", para.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    bool PackageProcessConfig::ParseLoadAsPerSocFlag(const std::string &para, PackConfDetail &tempNode) const
+    {
+        if ((para == "true") || (para == "false")) {
+            tempNode.loadAsPerSocFlag = para == "true" ? true : false;
+        } else {
+            TSD_ERROR("invalid loadAsPerSocFlag:%s", para.c_str());
+            return false;
+        }
         return true;
     }
 
     bool PackageProcessConfig::SetConfigDataOnHost(std::ifstream &inFile, const std::string &fileName,
-        const std::string &pkgTitle)
+                                                   const std::string &pkgTitle)
     {
         std::string inputLine;
         uint32_t itCnt = 0U;
-        bool readFin = false;
-        std::string decDstDir;
-        std::string optionalFlag;
-        std::string findPath;
-        while ((getline(inFile, inputLine)) && (itCnt < PACKAGE_CONFIG_ITEM_CNT)) {
-            if (inputLine.compare(0, strlen(PACKAGE_INSTALL_PATH), PACKAGE_INSTALL_PATH) == 0) {
-                decDstDir = inputLine.substr(strlen(PACKAGE_INSTALL_PATH));
-                TSD_INFO("get decDstDir:%s", decDstDir.c_str());
-            } else if (inputLine.compare(0, strlen(PACKAGE_OPTIONAL), PACKAGE_OPTIONAL) == 0) {
-                optionalFlag = inputLine.substr(strlen(PACKAGE_OPTIONAL));
-                TSD_INFO("get optionalFlag:%s", optionalFlag.c_str());
-            } else if (inputLine.compare(0, strlen(PACKAGE_FIND_PATH), PACKAGE_FIND_PATH) == 0) {
-                findPath = inputLine.substr(strlen(PACKAGE_FIND_PATH));
-                TSD_INFO("get find path:%s", findPath.c_str());
-            } else {
-                TSD_RUN_WARN("invalid input line:%s", inputLine.c_str());
+        const uint32_t configItemNum = static_cast<uint32_t>(configParaParseFuncMap_.size());
+        PackConfDetail tempNode = {};
+        std::unordered_set<std::string> finishedParseItemSet;
+        while ((itCnt < configItemNum) && (getline(inFile, inputLine))) {
+            if (!ParseSinglePara(inputLine, tempNode, finishedParseItemSet)) {
+                TSD_ERROR("parse config line failed:%s", inputLine.c_str());
                 return false;
-            }
-            if ((!decDstDir.empty()) && (!optionalFlag.empty()) && (!findPath.empty())) {
-                readFin = true;
-                break;
             }
             itCnt++;
         }
-        if (readFin) {
-            PackConfDetail tempNode = {};
-            if (!FillDetailNode(decDstDir, optionalFlag, findPath, tempNode)) {
-                TSD_RUN_WARN("fill detail node not pass");
-                return false;
-            }
-            tempNode.validFlag = true;
-            try {
-                SetPkgHostTruePath(tempNode, fileName, pkgTitle);
-                configMap_[fileName] = tempNode;
-                tempNode.PrintfInfo(fileName);
-                TSD_RUN_INFO("insert package:%s config", fileName.c_str());
-            } catch (...) {
-                TSD_ERROR("insert package:%s config failed", fileName.c_str());
-                return false;
-            }
-            return true;
+        if (finishedParseItemSet.size() != configItemNum) {
+            TSD_ERROR("not all config items parsed");
+            return false;
         }
-        return false;
+        tempNode.validFlag = true;
+        try {
+            if(!SetPkgHostTruePath(tempNode, fileName, pkgTitle)) {
+                TSD_ERROR("set package:%s host true path failed", fileName.c_str());
+                return false;
+            }
+            configMap_[fileName] = tempNode;
+            tempNode.PrintfInfo(fileName);
+            TSD_RUN_INFO("insert package:%s config", fileName.c_str());
+        } catch (...) {
+            TSD_ERROR("insert package:%s config failed", fileName.c_str());
+            return false;
+        }
+        return true;
     }
 
     void PackageProcessConfig::ConstructPkgConfigMsg(HDCMessage &hdcMsg) const
@@ -302,16 +338,35 @@ namespace tsd {
         return TSD_OK;
     }
 
-    void PackageProcessConfig::SetPkgHostTruePath(PackConfDetail &tempNode, const std::string &pkgName,
+    bool PackageProcessConfig::SetPkgHostTruePath(PackConfDetail &tempNode, const std::string &pkgName,
         const std::string &pkgTitle) const
     {
+        const auto pos = pkgTitle.find(';');
+        std::string packageTitle;
+        std::string shortSocVersion;
+        if (pos == std::string::npos) {
+            packageTitle = pkgTitle;
+        } else {
+            packageTitle = pkgTitle.substr(0, pos);
+            shortSocVersion = pkgTitle.substr(pos + 1);
+        }
         std::string fileDirWholePath;
         if (pkgName.find("-aicpu_legacy.tar.gz") != std::string::npos) {
-            fileDirWholePath = tempNode.findPath + "/" + pkgTitle + "/aicpu/";
+            fileDirWholePath = tempNode.findPath + "/" + packageTitle + "/aicpu/";
         } else {
             fileDirWholePath = tempNode.findPath + "/";
         }
+        if (tempNode.loadAsPerSocFlag) {
+            if (shortSocVersion.empty()) {
+                TSD_ERROR("short_soc_version is empty, package:%s", pkgName.c_str());
+                return false;
+            } else {
+                fileDirWholePath = fileDirWholePath + shortSocVersion + "/";
+            }
+        }
         tempNode.hostTruePath = GetHostFilePath(fileDirWholePath, pkgName);
+        TSD_INFO("get package:%s host real path:%s", pkgName.c_str(), tempNode.hostTruePath.c_str());
+        return true;
     }
 
     std::string PackageProcessConfig::GetPackageHostTruePath(const std::string &pkgName)

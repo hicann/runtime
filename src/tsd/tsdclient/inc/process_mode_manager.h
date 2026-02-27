@@ -476,6 +476,7 @@ private:
                                    const int32_t peerNode, const std::string &orgFile, const std::string &dstFile);
     TSD_StatusT GetCannHsPkgCheckCode(const std::string &pkgPureName, const std::string &hostPkgHash);
     bool IsSupportCommonSink();
+    bool GetShortSocVersion(std::string &shortSocVersion) const;
 
     std::string logLevel_;
     uint32_t tsdSessionId_;

@@ -32,13 +32,16 @@ struct PackConfDetail {
     std::string hostTruePath = "";
     bool optionalFlag = false;
     bool validFlag = false;
+    bool loadAsPerSocFlag = false;
     PackConfDetail() : decDstDir(DeviceInstallPath::MAX_PATH), findPath(""),
-        hostTruePath(""), optionalFlag(false), validFlag(false) {
+        hostTruePath(""), optionalFlag(false), validFlag(false), loadAsPerSocFlag(false) {
     }
     void PrintfInfo(const std::string &pkgName) {
-        TSD_INFO("package:%s, decDstDir:%u, findPath:%s, hostTruePath:%s, optionalFlag:%u, validFlag:%u",
-            pkgName.c_str(), static_cast<uint32_t>(decDstDir), findPath.c_str(), hostTruePath.c_str(),
-            static_cast<uint32_t>(optionalFlag), static_cast<uint32_t>(validFlag));
+        TSD_INFO("package:%s, decDstDir:%u, findPath:%s, hostTruePath:%s, "
+                 "optionalFlag:%u, validFlag:%u, loadAsPerSocFlag:%u",
+                 pkgName.c_str(), static_cast<uint32_t>(decDstDir), findPath.c_str(), hostTruePath.c_str(),
+                 static_cast<uint32_t>(optionalFlag), static_cast<uint32_t>(validFlag),
+                 static_cast<uint32_t>(loadAsPerSocFlag));
     }
 };
 
@@ -63,15 +66,22 @@ private:
     bool SetConfigDataOnServer(const SinkPackageConfig &hdcConfig);
     bool SetConfigDataOnHost(std::ifstream &inFile, const std::string &fileName, const std::string &pkgTitle);
     std::string GetHostFilePath(const std::string &fileDir, const std::string &fileName) const;
-    bool FillDetailNode(const std::string &decDstDir, const std::string &optionalFlag, const std::string &findPath,
-        PackConfDetail &tempNode) const;
-    void SetPkgHostTruePath(PackConfDetail &tempNode, const std::string &pkgName, const std::string &pkgTitle) const;
+    bool SetPkgHostTruePath(PackConfDetail &tempNode, const std::string &pkgName, const std::string &pkgTitle) const;
     PackageProcessConfig();
     ~PackageProcessConfig() = default;
+    bool ParseSinglePara(std::string &inputLine, PackConfDetail &tempNode,
+                         std::unordered_set<std::string> &finishedParseItemSet) const;
+    bool ParseInstallPath(const std::string &para, PackConfDetail &tempNode) const;
+    bool ParseOptionalFlag(const std::string &para, PackConfDetail &tempNode) const;
+    bool ParsePackagePath(const std::string &para, PackConfDetail &tempNode) const;
+    bool ParseLoadAsPerSocFlag(const std::string &para, PackConfDetail &tempNode) const;
+private:
     std::map<std::string, PackConfDetail> configMap_;
     std::mutex configMut_;
     bool finishParse_ = false;
     std::string hashCode_;
+    using SingleParaParseFunc = bool (PackageProcessConfig::*)(const std::string &, PackConfDetail &) const;
+    const std::map<std::string, SingleParaParseFunc> configParaParseFuncMap_;
 };
 }
 #endif // TSD_PACKAGE_PROCESS_CONFIG_H

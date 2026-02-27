@@ -114,6 +114,7 @@ target_include_directories(tsd_client_utest PRIVATE
     ${RUNTIME_DIR}/pkg_inc/runtime/
     ${RUNTIME_DIR}/pkg_inc/
     ${RUNTIME_DIR}/pkg_inc/profiling
+    ${RUNTIME_DIR}/pkg_inc/platform
     ../stub/
     ../stub/local_stub/
     ${RUNTIME_DIR}/src/dfx/error_manager/
@@ -134,4 +135,7 @@ target_link_libraries(tsd_client_utest PRIVATE
     dl
     pthread
     c_sec_headers
+    platform
 )
+
+add_dependencies(tsd_client_utest platform)

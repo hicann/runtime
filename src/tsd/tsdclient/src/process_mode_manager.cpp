@@ -29,6 +29,8 @@
 #include "env_internal_api.h"
 #include "inc/package_process_config.h"
 #include "inc/process_util_common.h"
+#include "platform_info.h"
+
 
 namespace {
 // 每个OS上的1980芯片数目,每个芯片上每一种类型的进程都要创建一个，所以以芯片数为依据
@@ -61,6 +63,7 @@ constexpr uint32_t DRIVER_EXTEND_MAX_PROCESS_TIME = 140U;
 const std::string QUEUE_SCHEDULE_SO = "libqueue_schedule.so";
 constexpr uint32_t INVALID_NUMBER = 0xffffffffU;
 constexpr uint32_t DEFUALT_NET_SERVICE = 2U;
+constexpr uint32_t SOC_VERSION_LEN = 50U;
 const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP = {
     {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
     {"aicpu_hcomm.tar.gz", {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
@@ -100,15 +103,16 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
         return TSD_OK;
     }
 
-    LoadPackageConfigInfoToDevice();
+    TSD_StatusT ret = LoadPackageConfigInfoToDevice();
+    TSD_CHECK(ret == TSD_OK, ret, "Load package config info to device failed.");
     const TimePoint finLoadCfg = std::chrono::high_resolution_clock::now();
 
-    TSD_StatusT ret = LoadSysOpKernel();
+    ret = LoadSysOpKernel();
     TSD_CHECK(ret == TSD_OK, ret, "Send aicpu package to device failed.");
     const TimePoint finLoadOpKernel = std::chrono::high_resolution_clock::now();
 
     ret = LoadPackageToDeviceByConfig();
-    TSD_CHECK(ret == TSD_OK, ret, "load package to device by config failed");
+    TSD_CHECK(ret == TSD_OK, ret, "Load package to device by config failed");
     const TimePoint finLoadSinkPkg = std::chrono::high_resolution_clock::now();
 
     ret = InitTsdClient();
@@ -2177,7 +2181,8 @@ TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
     if ((IsSupportCommonSink() == false) ||
         (&drvHdcSendFileV2 == nullptr) ||
         (&drvHdcGetTrustedBasePathV2 == nullptr) ||
-        IsAdcEnv()) {
+        IsAdcEnv() ||
+        (&halGetSocVersion == nullptr)) {
         TSD_RUN_INFO("device does not support common sink package config info");
         return TSD_OK;
     }
@@ -2196,10 +2201,13 @@ TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
     TSD_CHECK_NULLPTR(hdcTsdClient_, TSD_INSTANCE_NOT_FOUND, "hdcTsdClient is null");
     std::string packageTitle;
     (void)GetPackageTitle(packageTitle);
+    std::string shortSocVersion;
+    (void)GetShortSocVersion(shortSocVersion);
+    packageTitle = packageTitle + ";" + shortSocVersion;
     PackageProcessConfig *pkgConInst = PackageProcessConfig::GetInstance();
     ret = pkgConInst->ParseConfigDataFromFile(packageTitle);
     if (ret != TSD_OK) {
-        TSD_RUN_INFO("parse config data not success");
+        TSD_ERROR("Parse config data not success");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -2215,7 +2223,7 @@ TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
     }
 
     ret = hdcTsdClient_->TsdRecvData(tsdSessionId_);
-    TSD_RUN_INFO("recive load package config response result:%u", ret);
+    TSD_RUN_INFO("Receive load package config response result:%u", ret);
 
     hasSendConfigFile_ = true;
 
@@ -2305,7 +2313,7 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
         std::string orgFile;
         std::string dstFile = dstDirPreFix;
         TSD_RUN_INFO("begin to load package:%s to device:%u", pkgPureName.c_str(), logicDeviceId_);
-        if (!SupportLoadPkg(pkgPureName)) {
+        if ((!iter->second.loadAsPerSocFlag) && (!SupportLoadPkg(pkgPureName))) {
             TSD_RUN_INFO("current package package:%s dose not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
             continue;
         }
@@ -2367,5 +2375,23 @@ std::string ProcessModeManager::GetCurHostMutexFile(bool useCannPath) const
             masterId, logicDeviceId_, phyId, devOsId, mutexFile.c_str(), SUPPORT_MAX_DEVICE_PER_HOST);
         return mutexFile;
     }
+}
+
+bool ProcessModeManager::GetShortSocVersion(std::string &shortSocVersion) const
+{
+    char_t socVersion[SOC_VERSION_LEN] = {};
+    const auto drvRet = halGetSocVersion(logicDeviceId_, &socVersion[0U], SOC_VERSION_LEN);
+    if (drvRet != DRV_ERROR_NONE) {
+        TSD_RUN_WARN("get soc_version by halGetSocVersion failed");
+        return false;
+    }
+    TSD_INFO("get soc_version:%s", socVersion);
+    fe::PlatformInfoManager::Instance().InitializePlatformInfo();
+    fe::OptionalInfos optionalInfos;
+    fe::PlatFormInfos platformInfos;
+    fe::PlatformInfoManager::Instance().GetPlatformInfos(socVersion, platformInfos, optionalInfos);
+    auto ret = platformInfos.GetPlatformRes("version", "Short_SoC_version", shortSocVersion);
+    TSD_RUN_INFO("get short_soc_version:%s", shortSocVersion.c_str());
+    return ret;
 }
 }  // namespace tsd

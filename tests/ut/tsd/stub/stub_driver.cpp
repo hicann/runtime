@@ -268,3 +268,8 @@ drvError_t drvHdcSendFileV2(int peer_node, int peer_devid, const char *file, con
 {
     return DRV_ERROR_NONE;
 }
+
+drvError_t halGetSocVersion(uint32_t devId, char *socVersion, uint32_t len)
+{
+    return DRV_ERROR_NONE;
+}
