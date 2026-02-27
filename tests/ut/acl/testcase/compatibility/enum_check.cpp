@@ -202,6 +202,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclDataType)
 
     dataType = (aclDataType)41;
     EXPECT_EQ(dataType, ACL_FLOAT4_E1M2);
+
+    dataType = (aclDataType)42;
+    EXPECT_EQ(dataType, ACL_HIFLOAT4);
 }
 
 TEST_F(UTEST_ACL_compatibility_enum_check, aclFormat)
@@ -424,6 +427,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclSysParamOpt)
 
     sysParamOpt = (aclSysParamOpt)2;
     EXPECT_EQ(sysParamOpt, ACL_OPT_STRONG_CONSISTENCY);
+
+    sysParamOpt = (aclSysParamOpt)3;
+ 	EXPECT_EQ(sysParamOpt, ACL_OPT_EARLY_START);
 }
 
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtMemMallocPolicy)
@@ -1010,16 +1016,16 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtHacType)
     aclrtHacType value;
     value = (aclrtHacType)0;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_STARS);
-    
+
     value = (aclrtHacType)1;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_AICPU);
 
     value = (aclrtHacType)2;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIC);
-    
+
     value = (aclrtHacType)3;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_AIV);
-    
+
     value = (aclrtHacType)4;
     EXPECT_EQ(value, ACL_RT_HAC_TYPE_PCIEDMA);
 

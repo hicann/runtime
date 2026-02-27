@@ -251,7 +251,7 @@ TEST_F(UTEST_ACL_Common, SetFifoSizeTest)
 
     ret = aclInit(ACL_BASE_DIR "/tests/ut/acl/json/testFifoSize/testFifoSize_03.json");
     EXPECT_EQ(ret, ACL_SUCCESS);
-    
+
     resetAclJsonHash();
     ret = aclFinalize();
     EXPECT_EQ(ret, ACL_SUCCESS);
@@ -2323,11 +2323,19 @@ TEST_F(UTEST_ACL_Common, AclrtCtxSetSysParamOpt)
 {
     aclError ret = aclrtCtxSetSysParamOpt(static_cast<aclSysParamOpt>(99), 1);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
-    ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
-    EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxSetSysParamOpt(_, _))
+        .WillOnce(Return(ACL_SUCCESS))
         .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
     ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_DETERMINISTIC, 1);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxSetSysParamOpt(_, _))
+        .WillOnce(Return(ACL_SUCCESS))
+        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_EARLY_START, 0);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    ret = aclrtCtxSetSysParamOpt(ACL_OPT_EARLY_START, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
 }
 
@@ -2338,17 +2346,28 @@ TEST_F(UTEST_ACL_Common, AclrtCtxGetSysParamOptTest)
     int64_t val = 0;
     ret = aclrtCtxGetSysParamOpt(static_cast<aclSysParamOpt>(99), &val);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxGetSysParamOpt(_, _))
+        .WillOnce(Return(ACL_SUCCESS))
+        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR))
+        .WillOnce(Return(ACL_ERROR_RT_SYSPARAMOPT_NOT_SET));
     ret = aclrtCtxGetSysParamOpt(ACL_OPT_DETERMINISTIC, &val);
     EXPECT_EQ(ret, ACL_SUCCESS);
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxGetSysParamOpt(_, _))
-        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR));
     ret = aclrtCtxGetSysParamOpt(ACL_OPT_DETERMINISTIC, &val);
     EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
 
     // not set
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxGetSysParamOpt(_, _))
-        .WillOnce(Return(ACL_ERROR_RT_SYSPARAMOPT_NOT_SET));
     ret = aclrtCtxGetSysParamOpt(ACL_OPT_DETERMINISTIC, &val);
+    EXPECT_EQ(ret, ACL_ERROR_RT_SYSPARAMOPT_NOT_SET);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCtxGetSysParamOpt(_, _))
+        .WillOnce(Return(ACL_SUCCESS))
+        .WillOnce(Return(ACL_ERROR_RT_INTERNAL_ERROR))
+        .WillOnce(Return(ACL_ERROR_RT_SYSPARAMOPT_NOT_SET));
+    ret = aclrtCtxGetSysParamOpt(ACL_OPT_EARLY_START, &val);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    ret = aclrtCtxGetSysParamOpt(ACL_OPT_EARLY_START, &val);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INTERNAL_ERROR);
+    ret = aclrtCtxGetSysParamOpt(ACL_OPT_EARLY_START, &val);
     EXPECT_EQ(ret, ACL_ERROR_RT_SYSPARAMOPT_NOT_SET);
 }
 

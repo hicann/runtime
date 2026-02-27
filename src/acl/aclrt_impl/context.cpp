@@ -98,14 +98,15 @@ aclError aclrtGetCurrentContextImpl(aclrtContext *context)
 static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
-    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY) {
-        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d",
+    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY && opt != ACL_OPT_EARLY_START) {
+        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d or %d",
                             static_cast<int32_t>(opt), static_cast<int32_t>(ACL_OPT_DETERMINISTIC),
-                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL), 
-                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY));
+                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL),
+                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY),
+                            static_cast<int32_t>(ACL_OPT_EARLY_START));
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
             std::vector<const char *>({"param", "value", "reason"}),
-            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "must be 0 or 1 or 2"}));
+            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "must be 0 or 1 or 2 or 3"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtError_t rtErr = RT_ERROR_NONE;
@@ -132,14 +133,15 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 
 static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
 {
-    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY) {
-        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d",
+    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY && opt != ACL_OPT_EARLY_START) {
+        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d or %d",
                             static_cast<int32_t>(opt), static_cast<int32_t>(ACL_OPT_DETERMINISTIC),
-                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL), 
-                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY));
+                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL),
+                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY),
+                            static_cast<int32_t>(ACL_OPT_EARLY_START));
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
             std::vector<const char *>({"param", "value", "reason"}),
-            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "should be 0 or 1 or 2"}));
+            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "should be 0 or 1 or 2 or 3"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtError_t rtErr = RT_ERROR_NONE;
