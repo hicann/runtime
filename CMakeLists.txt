@@ -108,27 +108,18 @@ add_subdirectory(src/acl/acl_tdt_queue)
 add_subdirectory(src/acl/acl_tdt_channel)
 add_subdirectory(stub)
 
-set(RUNTIME_VERSION_FILE ${CMAKE_CURRENT_BINARY_DIR}/version/version.info)
-add_custom_command(
-    OUTPUT ${RUNTIME_VERSION_FILE}
-    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_version_info/update_version_info.sh
-            ${CMAKE_CURRENT_SOURCE_DIR}/version.info
-            ${RUNTIME_VERSION_FILE}
-    DEPENDS 
-        ${CMAKE_CURRENT_SOURCE_DIR}/version.info
-    VERBATIM
-)
- 
-add_custom_target(generate_runtime_version_file
-    DEPENDS ${RUNTIME_VERSION_FILE}
-)
+include(version.cmake)
+if(ENABLE_OPEN_SRC)
+    check_pkg_build_deps("npu-runtime")
+endif()
+add_version_info_targets()
 
 set(NPU_DEPENDENCIES platform runtime_v100 runtime runtime_common acl_rt_impl acl_rt 
         acl_tdt_queue acl_tdt_channel stub_acl_rt stub_acl_tdt_channel
         stub_acl_tdt_queue stub_acl_prof adump_server ascend_dump_static
         mmpa static_mmpa error_manager stub_error_manager runtime_platform_others 
         xpu_tprt runtime_v200 runtime_model runtime_platform_910B
-        runtime_v201 runtime_model_v200 copy_acl_headers_and_libs generate_runtime_version_file
+        runtime_v201 runtime_model_v200 copy_acl_headers_and_libs version_npu-runtime_info
 )
 
 if (NOT ENABLE_COV AND NOT ENABLE_UT)

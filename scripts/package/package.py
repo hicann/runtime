@@ -669,11 +669,13 @@ def main(pkg_name='', xml_file='', main_args=None):
         update_version_info(main_args.version_dir)
 
     try:
-        xml_config = parse_xml_config(
+        ret, xml_config = parse_xml_config(
             pkg_xml_file, delivery_dir, parse_option, main_args
         )
     except ContainAsteriskError as ex:
         CommLog.cilog_error(f"Value contain '*' in {config_relative_path}. value is '{ex.value}'.")
+        return FAIL
+    if not ret:
         return FAIL
 
     # 生成filelist.csv安装列表文件

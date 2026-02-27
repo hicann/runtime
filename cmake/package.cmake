@@ -83,8 +83,9 @@ set(CONF_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/scripts/package/common/cfg/RuntimeConfig.ini
 )
 
-install(FILES ${RUNTIME_VERSION_FILE}
+install(FILES ${CMAKE_BINARY_DIR}/version.npu-runtime.info
     DESTINATION share/info/runtime
+    RENAME version.info
     OPTIONAL
 )
 
