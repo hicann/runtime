@@ -703,12 +703,13 @@ rtError_t Context::Synchronize(int32_t timeout)
     std::list<Stream *> nonFailModeStreams;
 
     for (const auto &syncStream : streams_) {
-        if (IsStreamNotSync(syncStream->Flags()) || syncStream->IsSyncFinished()) {
+        if (IsStreamNotSync(syncStream->Flags())) {
             continue;
         }
         COND_RETURN_ERROR(syncStream->IsCapturing(),
             RT_ERROR_STREAM_CAPTURED, "Not allow to synchronize captured-stream, device_id=%u, stream_id=%d.",
             device_->Id_(), syncStream->Id_());
+        COND_PROC(syncStream->IsSyncFinished(), continue;);
         // not set fail mode
         if (syncStream->GetFailureMode() == CONTINUE_ON_FAILURE) {
             nonFailModeStreams.push_back(syncStream);

@@ -2404,6 +2404,9 @@ uint32_t Stream::GetMaxTryCount() const
 }
 bool Stream::IsSyncFinished()
 {
+    if (unlikely(GetBindFlag() || !Runtime::Instance()->GetDisableThread())) {
+        return false;
+    }
     if (IsSeparateSendAndRecycle()) {
         return TASK_ID_GEQ(executeEndTaskid_.Value(), lastTaskId_) &&
             (latestConcernedTaskId.Value() == MAX_UINT16_NUM);
