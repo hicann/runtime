@@ -64,14 +64,14 @@ if (${TARGET_SYSTEM_NAME} STREQUAL "Linux")
 
     target_link_libraries(${ASCENDCL_C_COMPILE_TARGET} PRIVATE
         $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
+        c_base_headers
         c_sec_headers
         -Wl,--no-as-needed
         ge_executor_c_static
         -Wl,--as-needed
         slog_headers
         -s
-        c_base_headers
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
         c_mmpa_headers
     )
 
@@ -127,14 +127,14 @@ elseif (${TARGET_SYSTEM_NAME} STREQUAL "LiteOS")
 
     target_link_libraries(${ASCENDCL_C_COMPILE_TARGET} PRIVATE
         $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
+        c_base_headers
         c_sec_headers
         -Wl,--no-as-needed
         ge_executor_c_static
         -Wl,--as-needed
         slog_headers
         -s
-        c_base_headers
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
         c_mmpa_headers
     )
 
