@@ -12,6 +12,7 @@
 #include <queue>
 #include <thread>
 #include "securec.h"
+#include "memcpy_c.hpp"
 #include "runtime.hpp"
 #include "coprocessor_stream.hpp"
 #include "event.hpp"
@@ -1162,8 +1163,9 @@ rtError_t Context::UpdateEndGraphTask(Stream * const origCaptureStream, Stream *
     void *targetAddrOfUpdatedSqe = RtValueToPtr<void *>(origCaptureStream->GetSqBaseAddr() +
         (rtNotifyRecord->pos * sizeof(rtStarsSqe_t)));
     uint64_t realSize = 0U;
-    auto error = MemcpyAsync(targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), &sqeMem, sizeof(sqeMem),
-        RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream, &realSize);
+    auto error = MemcopyAsync(
+        targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), &sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
+        &realSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update task fail error=0x%x", error);
     RT_LOG(RT_LOG_WARNING, "exec stream_id=%d target stream_id=%u pos=%u",
         exeStream->Id_(), origCaptureStream->Id_(), rtNotifyRecord->pos);
@@ -2214,43 +2216,7 @@ ERROR_RECYCLE:
     return RT_ERROR_DEBUG_UNREGISTER_FAILED;
 }
 
-rtError_t Context::MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cpySize,
-    const rtMemcpyKind_t kind, Stream * const stm, uint64_t * const realSize,
-    const std::shared_ptr<void> &guardMem, const rtTaskCfgInfo_t * const cfgInfo,
-    const rtD2DAddrCfgInfo_t * const addrCfg)
-{
-    UNUSED(destMax);
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
 
-    if (stm == nullptr) {
-        return RT_ERROR_STREAM_NULL;
-    }
-
-    TaskInfo *rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
-    NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);
-
-    rtError_t error = MemcpyAsyncTaskInitV3(rtMemcpyAsyncTask, kind, src, dst, cpySize, cfgInfo, addrCfg);
-    if (error != RT_ERROR_NONE) {
-        goto ERROR_RECYCLE;
-    }
-    *realSize = rtMemcpyAsyncTask->u.memcpyAsyncTaskInfo.size;
-    if (guardMem != nullptr) {
-        rtMemcpyAsyncTask->u.memcpyAsyncTaskInfo.guardMemVec->emplace_back(guardMem);
-    }
-
-    error = device_->SubmitTask(rtMemcpyAsyncTask, taskGenCallback_);
-    if (error != RT_ERROR_NONE) {
-        goto ERROR_RECYCLE;
-    }
-
-    GET_THREAD_TASKID_AND_STREAMID(rtMemcpyAsyncTask, stm->AllocTaskStreamId());
-    return RT_ERROR_NONE;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtMemcpyAsyncTask);
-    return error;
-}
 
 rtError_t Context::GetDevArgsAddr(Stream * const stm, const rtArgsEx_t * const argsInfo, void ** const devArgsAddr,
     void ** const argsHandle) const
@@ -2650,9 +2616,11 @@ rtError_t Context::MemsetAsync(void * const ptr, const uint64_t destMax, const u
         uint64_t doneSize = 0UL;
         // memcpyaync this Host memory to ptr
         while (remainSize > 0ULL) {
-            error = MemcpyAsync((RtPtrToPtr<char_t *, void *>(ptr)) + doneSize, destMax - doneSize,
-                RtPtrToPtr<char_t *, void *>(hostPtr) + doneSize,
-                remainSize, RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize, hostPtrGuard);
+            error = MemcopyAsync(
+                (RtPtrToPtr<char_t*, void*>(ptr)) + doneSize, destMax - doneSize,
+                RtPtrToPtr<char_t*, void*>(hostPtr) + doneSize, remainSize, RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize,
+                hostPtrGuard);
+
             ERROR_RETURN_MSG_INNER(error, "Memcpy async step1 failed, retCode=%#x,"
                 " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
                 error, destMax - doneSize, remainSize, RT_MEMCPY_HOST_TO_DEVICE);
@@ -2664,9 +2632,9 @@ rtError_t Context::MemsetAsync(void * const ptr, const uint64_t destMax, const u
             const uint64_t memBlockNum = fillCount / MEM_BLOCK_SIZE;
             uint64_t idx = 1UL;
             for (; idx < memBlockNum; idx++) {
-                error = MemcpyAsync(RtPtrToPtr<char_t *, void *>(ptr) + (idx * MEM_BLOCK_SIZE),
-                    destMax - (idx * MEM_BLOCK_SIZE), RtPtrToPtr<char_t *, void *>(ptr), MEM_BLOCK_SIZE,
-                    RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
+                error = MemcopyAsync(
+                    RtPtrToPtr<char_t*, void*>(ptr) + (idx * MEM_BLOCK_SIZE), destMax - (idx * MEM_BLOCK_SIZE),
+                    RtPtrToPtr<char_t*, void*>(ptr), MEM_BLOCK_SIZE, RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
                 ERROR_RETURN_MSG_INNER(error, "Memcpy async step2 failed,"
                     " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
                     destMax - (idx * MEM_BLOCK_SIZE), MEM_BLOCK_SIZE, RT_MEMCPY_DEVICE_TO_DEVICE);
@@ -2675,8 +2643,9 @@ rtError_t Context::MemsetAsync(void * const ptr, const uint64_t destMax, const u
             const uint64_t memRemain = fillCount % MEM_BLOCK_SIZE;
             if (memRemain > 0ULL) {
                 char_t * const dstAddr = (RtPtrToPtr<char_t *, void *>(ptr)) + (memBlockNum * MEM_BLOCK_SIZE);
-                error = MemcpyAsync(dstAddr, destMax - (memBlockNum * MEM_BLOCK_SIZE), static_cast<char_t *>(ptr),
-                    memRemain, RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
+                error = MemcopyAsync(
+                    dstAddr, destMax - (memBlockNum * MEM_BLOCK_SIZE), static_cast<char_t*>(ptr), memRemain,
+                    RT_MEMCPY_DEVICE_TO_DEVICE, stm, &realSize);
                 ERROR_RETURN_MSG_INNER(error, "Memcpy async step3 failed,"
                     " max size=%" PRIu64 "(bytes), src size=%" PRIu64 "(bytes), type=%d.",
                     destMax - (memBlockNum * MEM_BLOCK_SIZE), memRemain, RT_MEMCPY_DEVICE_TO_DEVICE);
@@ -3198,148 +3167,9 @@ rtError_t Context::ModelBindQueue(Model * const mdl, const uint32_t queueId, con
     return error;
 }
 
-rtError_t Context::StreamSwitchEx(const void * const ptr, const rtCondition_t condition, const void * const valuePtr,
-    const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType)
-{
-    rtError_t error;
-    const int32_t streamId = stm->Id_();
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo *rtStreamSwitchTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_STREAM_SWITCH, errorReason);
-    NULL_PTR_RETURN_MSG(rtStreamSwitchTask, errorReason);
-
-    error = StreamSwitchTaskInitV2(rtStreamSwitchTask, ptr, condition, trueStream, valuePtr, dataType);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Stream switch task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-        streamId, rtStreamSwitchTask->id, error);
-
-    error = device_->SubmitTask(rtStreamSwitchTask, taskGenCallback_);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Stream switch task submit failed, retCode=%#x", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtStreamSwitchTask, streamId);
-
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtStreamSwitchTask);
-    return error;
-}
 
 
-rtError_t Context::StreamSwitchN(const void * const ptr, const uint32_t size, const void * const valuePtr,
-    Stream ** const trueStreamPtr, const uint32_t elementSize, Stream * const stm, const rtSwitchDataType_t dataType)
-{
-    NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr, RT_ERROR_STREAM_NULL);
 
-    rtError_t error;
-    StreamSwitchNLoadResult result;
-    ArgLoader * const devArgLdr = device_->ArgLoader_();
-    const int32_t streamId = stm->Id_();
-
-    TaskInfo submitTask = {};
-    rtError_t errorReason;
-    TaskInfo *rtStreamSwitchNTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_STREAM_SWITCH_N, errorReason);
-    NULL_PTR_RETURN_MSG(rtStreamSwitchNTask, errorReason);
-
-    error = devArgLdr->LoadStreamSwitchNArgs(stm, valuePtr, size * elementSize, trueStreamPtr,
-        elementSize, dataType, &result);
-
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Stream switchN args load failed, retCode=%#x", error);
-
-    error = StreamSwitchNTaskInit(rtStreamSwitchNTask, ptr, size, result.valuePtr, result.trueStreamPtr,
-        elementSize, dataType);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Stream switchN task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-        streamId, rtStreamSwitchNTask->id, error);
-
-    error = device_->SubmitTask(rtStreamSwitchNTask, taskGenCallback_);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Stream switchN task submit failed, retCode=%#x", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtStreamSwitchNTask, streamId);
-
-    return error;
-
-    ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtStreamSwitchNTask);
-    return error;
-}
-
-rtError_t Context::StreamActive(const Stream * const activeStream, Stream * const stm)
-{
-    rtError_t error;
-    TaskInfo *tsk = nullptr;
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    const uint32_t activeStreamId = static_cast<uint32_t>(activeStream->Id_());
-    const uint32_t activeStrFlag = activeStream->Flags();
-    const uint32_t strFlag = stm->Flags();
-    const int32_t streamId = stm->Id_();
-
-    RT_LOG(RT_LOG_INFO, "active_stream flags=%u, active_stream_id=%u, stream flags=%u, stream_id=%d.",
-        activeStrFlag, activeStreamId, strFlag, streamId);
-    if ((((strFlag & RT_STREAM_AICPU) == 0U) && ((activeStrFlag & RT_STREAM_AICPU) != 0U)) ||
-        ((strFlag & RT_STREAM_AICPU) != 0U)) {
-        Model *mdl = stm->Model_();
-        NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODEL_NULL);
-        const void * const funcName = mdl->GetDevString(RT_DEV_STRING_ACTIVE_STREAM);
-        void *args = nullptr;
-
-        tsk = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, errorReason);
-        NULL_PTR_RETURN_MSG(tsk, errorReason);
-
-        error = mdl->MallocDevValue(&activeStreamId, static_cast<uint32_t>(sizeof(int32_t)), &args);
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Active task malloc device value failed, retCode=%#x.", error);
-
-        (void)ActiveAicpuStreamTaskInit(tsk, RtPtrToValue<void *>(args),
-            static_cast<uint32_t>(sizeof(int32_t)), RtPtrToValue<const void *>(funcName), TS_AICPU_KERNEL_CCE);
-
-        mdl->PushbackArgActiveStream(args);
-    } else {
-        tsk = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_STREAM_ACTIVE, errorReason);
-        NULL_PTR_RETURN_MSG(tsk, errorReason);
-
-        error = StreamActiveTaskInit(tsk, activeStream);
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Active task init failed, stream_id=%d, task_id=%hu, retCode=%#x",
-            streamId, tsk->id, error);
-    }
-
-    error = device_->SubmitTask(tsk, taskGenCallback_);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Active task submit ActiveAicpuStreamTask or StreamActiveTask failed, retCode=%#x.", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(tsk, streamId);
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(tsk);
-    return error;
-}
-
-rtError_t Context::LabelCreate(Label ** const result, Model * const mdl)
-{
-    rtError_t error = RT_ERROR_NONE;
-    Label *newLabel = new (std::nothrow) Label(mdl);
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_INNER(newLabel == nullptr, ERROR_RETURN, error, RT_ERROR_LABEL_NEW,
-        "Label create failed, failed to alloc label.");
-
-    error = newLabel->Setup(this);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Setup label failed, retCode=%#x.", error);
-
-    *result = newLabel;
-    return RT_ERROR_NONE;
-
-ERROR_RECYCLE:
-    DELETE_O(newLabel);
-ERROR_RETURN:
-    *result = nullptr;
-    return error;
-}
-
-rtError_t Context::LabelDestroy(const Label *delLabel) const
-{
-    DELETE_O(delLabel);
-    return RT_ERROR_NONE;
-}
 
 rtError_t Context::ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream * const stm)
 {
@@ -3546,93 +3376,7 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t Context::LabelSwitchByIndex(void * const ptr, const uint32_t maxIndex, void * const labelInfoPtr,
-                                      Stream * const stm)
-{
-    const int32_t streamId = stm->Id_();
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo *rtStreamLabelSwitchIndexTask =
-        stm->AllocTask(&taskSubmit, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, errorReason);
-    NULL_PTR_RETURN_MSG(rtStreamLabelSwitchIndexTask, errorReason);
 
-    rtError_t error = StreamLabelSwitchByIndexTaskInit(rtStreamLabelSwitchIndexTask, ptr, maxIndex, labelInfoPtr);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Stream label switch by index task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-        streamId, rtStreamLabelSwitchIndexTask->id, error);
-
-    error = device_->SubmitTask(rtStreamLabelSwitchIndexTask, taskGenCallback_);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Stream label switch by index task submit failed, retCode=%#x", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtStreamLabelSwitchIndexTask, streamId);
-    return error;
-
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtStreamLabelSwitchIndexTask);
-    return error;
-}
-
-rtError_t Context::LabelListCpy(Label ** const labelList, const uint32_t labelNumber, void * const dst,
-    const uint32_t dstMax)
-{
-    UNUSED(dstMax);
-    rtError_t error = RT_ERROR_NONE;
-    rtLabelDevInfo tempLabelInfo;
-    uint32_t labelStep;
-    void *devAddr = dst;
-    const Stream *labelStream = nullptr;
-    Model *labelModel = nullptr;
-
-    if (device_->IsStarsPlatform()) {
-        labelStep = RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE;
-    } else if (Device_()->GetTschVersion() >= TS_VERSION_MORE_LABEL) {
-        labelStep = sizeof(rtLabelDevInfo);
-    } else {
-        labelStep = sizeof(rtLabelDevInfoOld);
-    }
-
-    for (uint32_t idx = 0U; idx < labelNumber; idx++) {
-        labelStream = labelList[idx]->Stream_();
-        labelModel = labelStream->Model_();
-        NULL_PTR_RETURN_MSG(labelModel, RT_ERROR_MODEL_NULL);
-        tempLabelInfo.modelId = static_cast<uint16_t>(labelModel->Id_());
-        tempLabelInfo.labelId = labelList[idx]->Id_();
-        tempLabelInfo.streamId = static_cast<uint16_t>(labelStream->Id_());
-
-        RT_LOG(RT_LOG_DEBUG, "copy label to device, label_id=%hu, model_id=%hu, stream_id=%hu, label_step=%u.",
-               tempLabelInfo.labelId, tempLabelInfo.modelId, tempLabelInfo.streamId,
-               labelStep);
-        if ((Device_()->GetTschVersion() >= TS_VERSION_MORE_LABEL) || (device_->IsDavidPlatform())) {
-            error = labelList[idx]->SetLabelDevAddr(devAddr);
-            ERROR_RETURN_MSG_INNER(error,
-                "Label list copy failed, have same labels in label list, label_id=%hu,"
-                " model_id=%hu, label_step=%u, retCode=%#x",
-                tempLabelInfo.labelId, tempLabelInfo.modelId, labelStep, error);
-        } else {
-            if (device_->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE) {
-                error = device_->Driver_()->MemCopySync(devAddr, static_cast<uint64_t>(labelStep),
-                    static_cast<void *>(&tempLabelInfo), static_cast<uint64_t>(labelStep), RT_MEMCPY_HOST_TO_DEVICE);
-                ERROR_RETURN_MSG_INNER(error,
-                    "Label list copy failed, mem copy stream label info failed, label_id=%hu,"
-                    " model_id=%hu, label_step=%u, retCode=%#x",
-                    tempLabelInfo.labelId, tempLabelInfo.modelId, labelStep, error);
-                (void)device_->Driver_()->DevMemFlushCache(RtPtrToValue<void *>(devAddr),
-                    static_cast<size_t>(labelStep));
-            } else {
-                error = device_->Driver_()->MemCopySync(devAddr, static_cast<uint64_t>(labelStep),
-                    static_cast<void *>(&tempLabelInfo), static_cast<uint64_t>(labelStep), RT_MEMCPY_DEVICE_TO_DEVICE);
-                ERROR_RETURN_MSG_INNER(error,
-                    "Label list copy failed, mem copy stream label info failed, label_id=%u,"
-                    " model_id=%u, label_step=%u, retCode=%#x",
-                    tempLabelInfo.labelId, tempLabelInfo.modelId, labelStep, error);
-            }
-        }
-        devAddr = RtPtrToPtr<void *,uintptr_t>(RtPtrToPtr<uintptr_t, void *>(devAddr) + labelStep);
-    }
-
-    return error;
-}
 
 rtError_t Context::LabelSwitchListCreate(Label ** const labels, const size_t num, void ** const labelList) const
 {
@@ -4667,8 +4411,9 @@ rtError_t Context::GetSatStatusForStars(const uint64_t outputSize, Stream * cons
         curStm->SetMemContainOverflowAddr(memAddr);
     }
 
-    error = MemcpyAsync(curStm->GetMemContainOverflowAddr(), sizeof(uint64_t), hostPtr, sizeof(uint64_t),
-        RT_MEMCPY_HOST_TO_DEVICE_EX, curStm, &realSize, hostPtrGuard);
+    error = MemcopyAsync(
+        curStm->GetMemContainOverflowAddr(), sizeof(uint64_t), hostPtr, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE_EX,
+        curStm, &realSize, hostPtrGuard);
     ERROR_RETURN(error, "MemcpyAsync failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = NpuGetFloatStatus(curStm->GetMemContainOverflowAddr(), outputSize, 0U, curStm);

@@ -45,6 +45,7 @@ set(libruntime_cmodel_v100_task_src_files
     src/task/v100/task_proc_func_register.cc
     src/task/v100/task_checker.cc
     src/task/v100/memory_task.cc
+    src/launch/memcpy_stars.cc
 )
 
 set(david_series_common_task_src_file_cmodel
@@ -139,6 +140,7 @@ set(common_src_files_cmodel
     src/common/dev_info_manage.cc
     src/common/global_state_manager.cc
     src/common/register_memory.cc
+    src/launch/label_common.cc
 )
 
 set(libruntime_cmodel_context_src_files
@@ -312,6 +314,8 @@ set(libruntime_cmodel_src_files
     src/task/host_task.cc
     src/task/stars_cond_isa_helper.cc
     src/task/v100/stub_task.cc
+    src/launch/cond_stars.cc
+    src/launch/label_stars.cc
     src/memory/mem_type.cc
     ${libruntime_cmodel_v100_task_src_files}
     ${libruntime_cmodel_api_src_files}
@@ -419,10 +423,11 @@ set(libruntime_cmodel_v200_src_files
     src/launch/aicpu_c.cc
     src/launch/fusion_c.cc
     src/launch/dvpp_c.cc
-    src/launch/cond_c.cc
+    src/launch/cond_david.cc
+    src/launch/label_david.cc
     src/device/v200_base/device_error_proc_c.cc
     src/event/event_c.cc
-    src/launch/memcpy_c.cc
+    src/launch/memcpy_david.cc
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc

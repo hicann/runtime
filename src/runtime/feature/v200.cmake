@@ -273,10 +273,12 @@ set(libruntime_v200_v201_common_src_files
     src/launch/aicpu_c.cc
     src/launch/fusion_c.cc
     src/launch/dvpp_c.cc
-    src/launch/cond_c.cc
+    src/launch/cond_david.cc
+    src/launch/label_common.cc
+    src/launch/label_david.cc
     src/device/v200_base/device_error_proc_c.cc
     src/event/event_c.cc
-    src/launch/memcpy_c.cc
+    src/launch/memcpy_david.cc
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc
@@ -337,6 +339,7 @@ set(XPU_TPRT_INC_DIR
 )
 
 set(RUNTIME_INC_DIR_COMMON_V200
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/args

@@ -46,6 +46,7 @@
 #include "../../rt_utest_api.hpp"
 #include "cond_op_task.h"
 #include "stream_task.h"
+#include "memcpy_c.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -805,9 +806,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     MOCKER_CPP_VIRTUAL(rawDevice->Engine_(), &Engine::SyncTask).stubs().will(returnValue(RT_ERROR_NONE));
     rtModelBindStream(model, sinkStm, 0);
 
-    MOCKER_CPP(&Context::MemcpyAsync)
-            .stubs()
-            .will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemcopyAsync).stubs().will(returnValue(RT_ERROR_NONE));
 
     uint64_t* args = new uint64_t[20];
     // aicpu

@@ -41,6 +41,9 @@
 #undef protected
 #undef private
 #include "ffts_task.h"
+#include "memcpy_c.hpp"
+#include "cond_c.hpp"
+#include "label_c.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -94,8 +97,7 @@ TEST_F(CloudV2ContextTest, memcpy_invalid_stream)
     refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
     ctx = refObject->GetVal();
 
-
-    error = ctx->MemcpyAsync(NULL, 100, NULL, 100, RT_MEMCPY_DEVICE_TO_HOST, NULL, &realSize, 0);
+    error = MemcopyAsync(NULL, 100, NULL, 100, RT_MEMCPY_DEVICE_TO_HOST, NULL, &realSize, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2362,10 +2364,10 @@ TEST_F(CloudV2ContextTest, context_labelCreate)
 
     ctx = (Context *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
 
-    error = ctx->LabelCreate((Label **)&label, NULL);
+    error = CondLabelCreate((Label**)&label, NULL, ctx);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = ctx->LabelDestroy((Label *)label);
+    error = CondLabelDestroy((Label*)label);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2767,7 +2769,7 @@ TEST_F(CloudV2ContextTest, GetSatStatusForStars_test)
     rtStream_t stm;
     EXPECT_EQ(rtStreamCreate(&stm, 0), RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::MemcpyAsync).stubs().will(returnValue(1));
+    MOCKER(MemcopyAsync).stubs().will(returnValue(1));
     error = ctx->GetSatStatusForStars(0, (Stream *)stm);
     EXPECT_EQ(error, 1);
 
@@ -3507,11 +3509,11 @@ TEST_F(CloudV2ContextTest, StreamSwitchN_test)
 
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_->ArgLoader_(), &ArgLoader::LoadStreamSwitchNArgs).stubs().will(returnValue(1));
-    error = ctx->StreamSwitchN(nullptr, 0, nullptr, &stream, 0, stream, RT_SWITCH_INT32);
+    error = CondStreamSwitchN(nullptr, 0, nullptr, &stream, 0, stream, RT_SWITCH_INT32, ctx);
     EXPECT_EQ(error, 1);
 
     MOCKER(StreamSwitchTaskInitV2).stubs().will(returnValue(1));
-    error = ctx->StreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32);
+    error = CondStreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32, ctx);
     EXPECT_EQ(error, 1);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);

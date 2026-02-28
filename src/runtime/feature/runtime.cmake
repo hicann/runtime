@@ -211,7 +211,11 @@ set(libruntime_v100_src_files
     src/kernel/module.cc
     src/kernel/program.cc
     src/kernel/program_common.cc
+    src/launch/memcpy_stars.cc
     src/launch/label.cc
+    src/launch/cond_stars.cc
+    src/launch/label_common.cc
+    src/launch/label_stars.cc
     src/event/event.cc
     src/notify/notify.cc
     src/engine/logger.cc
@@ -265,6 +269,7 @@ set(libruntime_v100_src_files
 
 set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/args
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/common

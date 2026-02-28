@@ -42,8 +42,9 @@ static rtError_t CondStreamActiveForAicpuStream(const Stream * const activeStrea
     return RT_ERROR_NONE;
 }
 
-rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm)
+rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm, Context * const ctx)
 {
+    UNUSED(ctx);
     const uint32_t activeStreamId = static_cast<uint32_t>(activeStream->Id_());
     const uint32_t activeStrFlag = activeStream->Flags();
     const uint32_t strFlag = stm->Flags();
@@ -88,43 +89,11 @@ rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm
     return error;
 }
 
-rtError_t CondLabelSwitchByIndex(void * const ptr, const uint32_t maxIndex, void * const labelInfoPtr,
-   Stream * const stm)
-{
-    const int32_t streamId = stm->Id_();
-    TaskInfo *rtStreamLabelSwitchIndexTask =nullptr;
-    uint32_t pos = 0xFFFFU;
-    rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    std::function<void()> const errRecycle = [&rtStreamLabelSwitchIndexTask, &stm, &pos]() {
-        TaskUnInitProc(rtStreamLabelSwitchIndexTask);
-        TaskRollBack(stm, pos);
-        stm->StreamUnLock();
-    };
-    stm->StreamLock();
-    error = AllocTaskInfo(&rtStreamLabelSwitchIndexTask, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtStreamLabelSwitchIndexTask, stm, pos);
-    ScopeGuard tskErrRecycle(errRecycle);
-    error = StreamLabelSwitchByIndexTaskInit(rtStreamLabelSwitchIndexTask, RtPtrToUnConstPtr<void * const>(ptr), maxIndex, labelInfoPtr);
-    ERROR_RETURN_MSG_INNER(error, "Stream label switch by index task init failed, stream_id=%d, task_id=%u, retCode=%#x.",
-        streamId, pos, static_cast<uint32_t>(error));
-
-    error = DavidSendTask(rtStreamLabelSwitchIndexTask, stm);
-    ERROR_RETURN_MSG_INNER(error, "Stream label switch submit failed, stream_id=%d, pos=%u, retCode=%#x.",
-        stm->Id_(), pos, static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-
-    stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(streamId, rtStreamLabelSwitchIndexTask->taskSn);
-    return error;
-}
-
 rtError_t CondStreamSwitchEx(const void * const ptr, const rtCondition_t condition, const void * const valuePtr,
-    const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType)
+    const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType,
+    Context * const ctx)
 {
+    UNUSED(ctx);
     const int32_t streamId = stm->Id_();
     TaskInfo *rtStreamSwitchTask = nullptr;
     uint32_t pos = 0xFFFFU;
@@ -153,43 +122,18 @@ rtError_t CondStreamSwitchEx(const void * const ptr, const rtCondition_t conditi
     return error;
 }
 
-rtError_t CondLabelSet(Label * const lbl, Stream * const stm)
+rtError_t CondStreamSwitchN(const void * const ptr, const uint32_t size,
+    const void * const valuePtr, Stream ** const trueStreamPtr, const uint32_t elementSize,
+    Stream * const stm, const rtSwitchDataType_t dataType, Context * const ctx)
 {
-    NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
-    COND_RETURN_ERROR_MSG_INNER((lbl->MgrType_() == Label::LABEL_MGR_TYPE_MODEL) && (stm->Model_() != lbl->Model_()),
-        RT_ERROR_LABEL_MODEL, "Set label failed, stream don't bind to label mdl!");
-    COND_RETURN_ERROR_MSG_INNER((lbl->Stream_() != nullptr) && (lbl->Stream_() != stm), RT_ERROR_LABEL_STREAM,
-        "Set label failed, label stream not same with create stream!");
-    COND_RETURN_ERROR_MSG_INNER(lbl->SetFlag_(), RT_ERROR_LABEL_SET,
-        "Set label failed, label already set!");
-    COND_RETURN_ERROR_MSG_INNER((lbl->DevDstAddr_() == nullptr),
-        RT_ERROR_LABEL_PHY_ADDR_NULL, "Need call rtLabelListCpy api before set label task.");
-
-    TaskInfo *labelTask = nullptr;
-    uint32_t pos = 0xFFFFU;
-    const int32_t streamId = stm->Id_();
-    rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    stm->StreamLock();
-    error = AllocTaskInfo(&labelTask, stm, pos);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(labelTask, stm, pos);
-    (void)LabelSetTaskInit(labelTask, lbl->Id_(), lbl->DevDstAddr_());
-    SetSqPos(labelTask, pos);
-    error = DavidSendTask(labelTask, stm);
-    ERROR_PROC_RETURN_MSG_INNER(error,
-                                TaskUnInitProc(labelTask);
-                                TaskRollBack(stm, pos);
-                                stm->StreamUnLock();,
-                                "label task submit failed, stream_id=%d, pos=%u, retCode=%#x.",
-                                stm->Id_(), pos, static_cast<uint32_t>(error));
-
-    stm->StreamUnLock();
-    lbl->SetSetFlag(true);
-    lbl->ForceSetStream(stm);
-    stm->InsertLabelList(lbl);
+    UNUSED(ptr);
+    UNUSED(size);
+    UNUSED(valuePtr);
+    UNUSED(trueStreamPtr);
+    UNUSED(elementSize);
+    UNUSED(stm);
+    UNUSED(dataType);
+    UNUSED(ctx);
     return RT_ERROR_NONE;
 }
 

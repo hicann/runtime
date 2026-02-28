@@ -162,6 +162,9 @@ set(libruntime_common_src_files
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
     src/api_impl/api_impl_mbuf.cc
+    src/launch/cond_stars.cc
+    src/launch/label_common.cc
+    src/launch/label_stars.cc
 
     # for V100
     src/api_impl/api_impl_creator.cc
@@ -294,7 +297,11 @@ set(libruntime_v100_src_files
     src/kernel/module.cc
     src/kernel/program.cc
     src/kernel/program_common.cc
+    src/launch/memcpy_stars.cc
     src/launch/label.cc
+    src/launch/cond_stars.cc
+    src/launch/label_common.cc
+    src/launch/label_stars.cc
     src/event/event.cc
     src/notify/notify.cc
     src/engine/logger.cc
@@ -387,6 +394,7 @@ set(RUNTIME_INC_DIR_TINY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open

@@ -20,6 +20,8 @@
 #define protected public
 #include "runtime.hpp"
 #include "context.hpp"
+#include "cond_c.hpp"
+#include "label_c.hpp"
 #include "context_protect.hpp"
 #include "raw_device.hpp"
 #include "kernel.hpp"
@@ -41,7 +43,10 @@
 #undef protected
 #undef private
 #include "ffts_task.h"
+#undef private
+#include "ffts_task.h"
 #include "debug_task.h"
+#include "memcpy_c.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -95,8 +100,7 @@ TEST_F(ContextTest, memcpy_invalid_stream)
     refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
     ctx = refObject->GetVal();
 
-
-    error = ctx->MemcpyAsync(NULL, 100, NULL, 100, RT_MEMCPY_DEVICE_TO_HOST, NULL, &realSize, 0);
+    error = cce::runtime::MemcopyAsync(NULL, 100, NULL, 100, RT_MEMCPY_DEVICE_TO_HOST, NULL, &realSize, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3034,7 +3038,7 @@ TEST_F(ContextTest, context_streamswitch)
     error = rtModelBindStream(model, streamB, RT_INVALID_FLAG);//1
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->StreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target, (Stream*)streamB,  (Stream*)streamA, RT_SWITCH_INT64);
+    error = CondStreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target, (Stream*)streamB,  (Stream*)streamA, RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -3098,7 +3102,7 @@ TEST_F(ContextTest, context_streamactive)
     error = rtModelBindStream(model, streamB, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->StreamActive( (Stream*)streamB,  (Stream*)streamA);
+    error = CondStreamActive((Stream*)streamB,  (Stream*)streamA);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -3136,10 +3140,10 @@ TEST_F(ContextTest, context_labelCreate)
 
     ctx = (Context *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
 
-    error = ctx->LabelCreate((Label **)&label, NULL);
+    error = CondLabelCreate((Label**)&label, NULL, ctx);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = ctx->LabelDestroy((Label *)label);
+    error = CondLabelDestroy((Label*)label);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3541,7 +3545,7 @@ TEST_F(ContextTest, GetSatStatusForStars_test)
     rtStream_t stm;
     EXPECT_EQ(rtStreamCreate(&stm, 0), RT_ERROR_NONE);
 
-    MOCKER_CPP(&Context::MemcpyAsync).stubs().will(returnValue(1));
+    MOCKER(cce::runtime::MemcopyAsync).stubs().will(returnValue(1));
     error = ctx->GetSatStatusForStars(0, (Stream *)stm);
     EXPECT_EQ(error, 1);
 
@@ -4475,12 +4479,12 @@ TEST_F(ContextTest, StreamSwitchN_test)
 
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(ctx->device_->ArgLoader_(), &ArgLoader::LoadStreamSwitchNArgs).stubs().will(returnValue(1));
-    error = ctx->StreamSwitchN(nullptr, 0, nullptr, &stream, 0, stream, RT_SWITCH_INT32);
+    error = CondStreamSwitchN(nullptr, 0, nullptr, (Stream**)&stream, 0, stream, RT_SWITCH_INT32, ctx);
     EXPECT_EQ(error, 1);
 
     MOCKER(StreamSwitchTaskInitV2).stubs().will(returnValue(1));
-    error = ctx->StreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32);
-    EXPECT_EQ(error, 1);
+    error = CondStreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;

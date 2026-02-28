@@ -22,6 +22,7 @@
 #include "event_david.hpp"
 #include "model_c.hpp"
 #include "cond_c.hpp"
+#include "label_c.hpp"
 #include "profiler_c.hpp"
 #include "coredump_c.hpp"
 #include "thread_local_container.hpp"
@@ -39,6 +40,7 @@
 #include "para_convertor.hpp"
 #include "runtime/kernel.h"
 #include "starsv2_base.hpp"
+
 namespace cce {
 namespace runtime {
 
@@ -924,29 +926,6 @@ rtError_t ApiImplDavid::ModelExit(Model * const mdl, Stream * const stm)
     return RT_ERROR_NONE;  
 }
 
-rtError_t ApiImplDavid::StreamSwitchN(void * const ptr, const uint32_t size, void * const valuePtr,
-    Stream ** const trueStreamPtr, const uint32_t elementSize, Stream * const stm, const rtSwitchDataType_t dataType)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(valuePtr);
-    UNUSED(dataType);
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    for (uint32_t i = 0U; i < elementSize; i++) {
-        NULL_PTR_RETURN_MSG_OUTER(trueStreamPtr[i], RT_ERROR_STREAM_NULL);
-        COND_RETURN_AND_MSG_OUTER(trueStreamPtr[i]->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, 
-            __func__, 0, "trueStreamPtr[" + std::to_string(i) + "]->modelNum", "The stream is not bound to a model");
-    }
-
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-                                "Stream switchN failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "stm->modelNum", "The stream is not bound to a model");
-    return RT_ERROR_NONE;  
-}
-
 rtError_t ApiImplDavid::MemsetAsync(void * const ptr, const uint64_t destMax, const uint32_t val, const uint64_t cnt,
     Stream * const stm)
 {
@@ -1488,31 +1467,6 @@ rtError_t ApiImplDavid::ModelTaskUpdate(Stream *desStm, uint32_t desTaskId, Stre
     return MdlTaskUpdate(desStm, desTaskId, sinkStm, para);
 }
 
-rtError_t ApiImplDavid::LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, void * const labelInfoPtr,
-    Stream * const stm)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "Label switch by index failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-            0, "stm->modelNum", "The stream is not bound to a model");
-    return CondLabelSwitchByIndex(ptr, maxVal, labelInfoPtr, stm);
-}
-
-rtError_t ApiImplDavid::StreamActive(Stream * const activeStream, Stream * const stm)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "stm->modelNum", "The stream is not bound to a model");
-    COND_RETURN_AND_MSG_OUTER(activeStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
-        0, "activeStream->modelNum", "The stream is not bound to a model");
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "Stream active failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-    return CondStreamActive(activeStream, stm);
-}
-
 rtError_t ApiImplDavid::CallbackLaunch(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm,
     const bool isBlock)
 {
@@ -1579,7 +1533,7 @@ rtError_t ApiImplDavid::StreamSwitchEx(void * const ptr, const rtCondition_t con
         0, "stm->modelNum", "The stream is not bound to a model");
     COND_RETURN_AND_MSG_OUTER(trueStream->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
         0, "trueStream->modelNum", "The stream is not bound to a model");
-    return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType);
+    return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType, curCtx);
 }
 
 rtError_t ApiImplDavid::LabelSet(Label * const lbl, Stream * const stm)

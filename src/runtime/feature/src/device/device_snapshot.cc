@@ -16,6 +16,7 @@
 #include "inner_thread_local.hpp"
 #include "error_message_manage.hpp"
 #include "uma_arg_loader.hpp"
+#include "memcpy_c.hpp"
 
 namespace cce {
 namespace runtime {
@@ -202,8 +203,8 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
         void* addr = it->first;
         const size_t size = it->second;
         uint64_t realSize = 0U;
-        const rtError_t error = curCtx->MemcpyAsync(addr, size, hostAddr + offset, size,
-            RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize);
+        const rtError_t error =
+            MemcopyAsync(addr, size, hostAddr + offset, size, RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize);
 
         ERROR_RETURN(error, "memcpy async failed, retCode=%#x.", error);
         RT_LOG(RT_LOG_DEBUG, "hostAddr=%p, devAddr=%p, size=%zu, offset=%zu.",
@@ -264,4 +265,4 @@ rtError_t DeviceSnapshot::ArgsPoolRestore(void) const
     return ret;
 }
 }
-}
+} // namespace cce

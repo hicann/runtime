@@ -114,14 +114,8 @@ public:
     rtError_t SubscribeReport(const uint64_t threadId, Stream * const stm) override;
     rtError_t ModelTaskUpdate(Stream *desStm, uint32_t desTaskId, Stream *sinkStm,
         rtMdlTaskUpdateInfo_t *para) override;
-    rtError_t LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, void * const labelInfoPtr,
-        Stream * const stm) override;
     rtError_t CallbackLaunch(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm,
         const bool isBlock) override;
-    rtError_t StreamActive(Stream * const activeStream, Stream * const stm) override;
-    rtError_t StreamSwitchN(void * const ptr, const uint32_t size, void * const valuePtr,
-        Stream ** const trueStreamPtr, const uint32_t elementSize, Stream * const stm,
-        const rtSwitchDataType_t dataType) override;
     rtError_t ModelAbort(Model * const mdl) override;
     rtError_t ModelEndGraph(Model * const mdl, Stream * const stm, const uint32_t flags) override;
     rtError_t ModelExit(Model * const mdl, Stream * const stm) override;

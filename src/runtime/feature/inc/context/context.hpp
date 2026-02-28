@@ -144,10 +144,6 @@ public:
 
     rtError_t DebugUnRegisterForStream(Stream * const debugStream);
 
-    rtError_t MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cpySize,
-        const rtMemcpyKind_t kind, Stream * const stm, uint64_t * const realSize,
-        const std::shared_ptr<void> &guardMem = nullptr, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
-        const rtD2DAddrCfgInfo_t * const addrCfg = nullptr);
     rtError_t MemcpyAsyncPtr(rtMemcpyAddrInfo * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count,
         Stream *stm, const std::shared_ptr<void> &guardMem = nullptr, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
         const bool isMemcpyDesc = false) const;
@@ -261,19 +257,6 @@ public:
 
     rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream * const stm);
 
-    rtError_t StreamSwitchEx(const void * const ptr, const rtCondition_t condition, const void * const valuePtr,
-                             const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType);
-
-    rtError_t StreamSwitchN(const void * const ptr, const uint32_t size, const void * const valuePtr,
-        Stream ** const trueStreamPtr, const uint32_t elementSize, Stream * const stm,
-        const rtSwitchDataType_t dataType);
-
-    rtError_t StreamActive(const Stream * const activeStream, Stream * const stm);
-
-    rtError_t LabelCreate(Label ** const result, Model * const mdl);
-
-    rtError_t LabelDestroy(const Label *delLabel) const;
-
     rtError_t ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream * const stm);
 
     rtError_t ProfilerTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t tagId, Stream *stm);
@@ -366,10 +349,6 @@ public:
                                 const uint32_t profDataNum) const;
 
     rtError_t AdcProfiler(Stream * const stm, const uint64_t addr, const uint32_t length);
-    rtError_t LabelSwitchByIndex(void * const ptr, const uint32_t maxIndex, void * const labelInfoPtr,
-                                 Stream * const stm);
-    rtError_t LabelListCpy(Label ** const labelList, const uint32_t labelNumber, void * const dst,
-        const uint32_t dstMax);
     rtError_t LabelSwitchListCreate(Label ** const labels, const size_t num, void ** const labelList) const;
 
     rtError_t StarsLaunchDvppRRProcess(Stream * const stm);

@@ -120,9 +120,11 @@ set(runtimeut_src_david_series_common_c_list
     ${TOP_DIR}/src/runtime/feature/src/stream/stream_c.cc
     ${TOP_DIR}/src/runtime/feature/src/dfx/coredump_c.cc
     ${TOP_DIR}/src/runtime/feature/src/dfx/fast_recover.cc
-    ${TOP_DIR}/src/runtime/feature/src/launch/memcpy_c.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/memcpy_david.cc
     ${TOP_DIR}/src/runtime/feature/src/device/v200_base/device_error_proc_c.cc
-    ${TOP_DIR}/src/runtime/feature/src/launch/cond_c.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/cond_david.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_david.cc
     ${TOP_DIR}/src/runtime/feature/src/notify/notify_c.cc
     ${TOP_DIR}/src/runtime/feature/src/event/event_c.cc
     ${TOP_DIR}/src/runtime/feature/src/model/model_c.cc
@@ -384,6 +386,10 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/label.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/cond_stars.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_stars.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/memcpy_stars.cc
     ${TOP_DIR}/src/runtime/feature/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/feature/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/feature/src/event/event.cc
@@ -615,6 +621,7 @@ target_link_libraries(runtimeut_src_static_lib PRIVATE $<BUILD_INTERFACE:runtime
 set(stub_src_list
     stub/atrace_stub.cc
     stub/awatch_dog_stub.cc
+    stub/cond_launch_stub.cc
     stub/error_manager_stub.cc
     stub/log_stub.cc
     stub/prof_stub.cc

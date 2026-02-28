@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "cond_c.hpp"
+#include "label_c.hpp"
 #include "api_impl.hpp"
 #include "base.hpp"
 #include "stream.hpp"
@@ -41,6 +43,7 @@
 #include "capture_model_utils.hpp"
 #include "capture_adapt.hpp"
 #include "stars_engine.hpp"
+#include "memcpy_c.hpp"
 #include "binary_loader.hpp"
 #include "args_handle_allocator.hpp"
 #include "para_convertor.hpp"
@@ -2798,9 +2801,9 @@ rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const v
     while (remainSize > 0U) {
         const uint64_t doingSize = (remainSize >= sqSize) ? sqSize : remainSize;
         realSize = doingSize;
-        error = curCtx->MemcpyAsync((static_cast<char_t *>(dst)) + doneSize,
-            destMax - doneSize, (static_cast<const char_t *>(src)) + doneSize, doingSize,
-            kind, curStm, &realSize, nullptr, cfgInfo, addrCfg);
+        error = MemcopyAsync(
+            (static_cast<char_t*>(dst)) + doneSize, destMax - doneSize, (static_cast<const char_t*>(src)) + doneSize,
+            doingSize, kind, curStm, &realSize, nullptr, cfgInfo, addrCfg);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "cnt=%lld, doingSize=%lld, realSize=%lld.", cnt, doingSize, realSize);
             return error;
@@ -4882,7 +4885,7 @@ rtError_t ApiImpl::StreamSwitchEx(void * const ptr, const rtCondition_t conditio
         RT_ERROR_STREAM_CONTEXT,
         "Stream switch(extend) failed, stream is not in current ctx, stream_id=%d.",
         stm->Id_());
-    return curCtx->StreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType);
+    return CondStreamSwitchEx(ptr, condition, valuePtr, trueStream, stm, dataType, curCtx);
 }
 
 rtError_t ApiImpl::StreamSwitchN(void * const ptr, const uint32_t size, void * const valuePtr,
@@ -4902,7 +4905,7 @@ rtError_t ApiImpl::StreamSwitchN(void * const ptr, const uint32_t size, void * c
                                 "Stream switchN failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
             0, "stm->modelNum", "The stream is not bound to a model");
-    return curCtx->StreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, stm, dataType);
+    return CondStreamSwitchN(ptr, size, valuePtr, trueStreamPtr, elementSize, stm, dataType, curCtx);
 }
 
 
@@ -4917,7 +4920,7 @@ rtError_t ApiImpl::StreamActive(Stream * const activeStream, Stream * const stm)
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
                                 "Stream active failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
 
-    return curCtx->StreamActive(activeStream, stm);
+    return CondStreamActive(activeStream, stm, curCtx);
 }
 
 rtError_t ApiImpl::LabelCreate(Label ** const lbl, Model * const mdl)
@@ -4928,7 +4931,7 @@ rtError_t ApiImpl::LabelCreate(Label ** const lbl, Model * const mdl)
     COND_RETURN_ERROR_MSG_INNER((mdl != nullptr) && (mdl->Context_() != curCtx), RT_ERROR_MODEL_CONTEXT,
                                 "Label create failed, stream is not in current ctx.");
 
-    return curCtx->LabelCreate(lbl, mdl);
+    return CondLabelCreate(lbl, mdl, curCtx);
 }
 
 rtError_t ApiImpl::LabelDestroy(Label * const lbl)
@@ -4939,7 +4942,7 @@ rtError_t ApiImpl::LabelDestroy(Label * const lbl)
 
     COND_RETURN_ERROR_MSG_INNER(lbl->Context_() != curCtx, RT_ERROR_LABEL_CONTEXT,
                                 "Label is not in current ctx");
-    return curCtx->LabelDestroy(lbl);
+    return CondLabelDestroy(lbl);
 }
 
 rtError_t ApiImpl::LabelSet(Label * const lbl, Stream * const stm)
@@ -5306,7 +5309,7 @@ rtError_t ApiImpl::LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, v
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
             0, "stm->modelNum", "The stream is not bound to a model");
 
-    return curCtx->LabelSwitchByIndex(ptr, maxVal, labelInfoPtr, stm);
+    return CondLabelSwitchByIndex(ptr, maxVal, labelInfoPtr, stm);
 }
 
 rtError_t ApiImpl::LabelGotoEx(Label * const lbl, Stream * const stm)
@@ -5356,7 +5359,7 @@ rtError_t ApiImpl::LabelListCpy(Label ** const lbl, const uint32_t labelNumber, 
                                     lbIdx, modelId, mdl->Id_());
     }
 
-    return curCtx->LabelListCpy(lbl, labelNumber, dst, dstMax);
+    return CondLabelListCpy(lbl, labelNumber, dst, dstMax, curCtx->Device_());
 }
 
 rtError_t ApiImpl::LabelCreateEx(Label ** const lbl, Model * const mdl, Stream * const stm)
@@ -5368,7 +5371,7 @@ rtError_t ApiImpl::LabelCreateEx(Label ** const lbl, Model * const mdl, Stream *
     COND_RETURN_ERROR_MSG_INNER((mdl != nullptr) && (mdl->Context_() != curCtx), RT_ERROR_MODEL_CONTEXT,
                                 "Model is not in current ctx");
 
-    const rtError_t error = curCtx->LabelCreate(lbl, mdl);
+    const rtError_t error = CondLabelCreate(lbl, mdl, curCtx);
     ERROR_RETURN_MSG_INNER(error, "Create label failed, retCode=%#x", static_cast<uint32_t>(error));
     NULL_PTR_RETURN_MSG(*lbl, error);
     return (*lbl)->SetStream(stm);
@@ -6905,8 +6908,9 @@ rtError_t ApiImpl::GetDeviceSatStatus(void * const outputAddrPtr, const uint64_t
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     }
 
-    error = curCtx->MemcpyAsync(outputAddrPtr, outputSize, curCtx->CtxGetOverflowAddr(),
-        outputSize, RT_MEMCPY_DEVICE_TO_DEVICE, curStm, &realSize, nullptr, nullptr);
+    error = MemcopyAsync(
+        outputAddrPtr, outputSize, curCtx->CtxGetOverflowAddr(), outputSize, RT_MEMCPY_DEVICE_TO_DEVICE, curStm,
+        &realSize, nullptr, nullptr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "MemcpyAsync failed destMax=%llu.", outputSize);
     }

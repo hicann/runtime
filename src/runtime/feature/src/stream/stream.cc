@@ -9,6 +9,7 @@
  */
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "cond_c.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "group_device.hpp"
@@ -4116,7 +4117,7 @@ rtError_t Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskI
         }
         rtError_t error = AllocCascadeCaptureStream(newCaptureStream, curCaptureStream);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        error = ctx->StreamActive(newCaptureStream, curCaptureStream);
+        error = CondStreamActive(newCaptureStream, curCaptureStream);
         if (error != RT_ERROR_NONE) {
             ctx->FreeCascadeCaptureStream(newCaptureStream);
             SingleStreamTerminateCapture();

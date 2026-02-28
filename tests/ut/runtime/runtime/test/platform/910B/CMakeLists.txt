@@ -233,6 +233,10 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/label.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/cond_stars.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/label_stars.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/memcpy_stars.cc
     ${TOP_DIR}/src/runtime/feature/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/feature/src/notify/notify.cc
     ${TOP_DIR}/src/runtime/feature/src/event/event.cc
@@ -302,6 +306,7 @@ target_link_libraries(runtime_ut_910b_static_lib PRIVATE $<BUILD_INTERFACE:runti
 set(runtimeut_910b_stub_list
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/atrace_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/awatch_dog_stub.cc
+    ${TOP_DIR}/tests/ut/runtime/runtime/stub/cond_launch_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/error_manager_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/log_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/prof_stub.cc
@@ -351,6 +356,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/inc/stars
     ${TOP_DIR}/src/runtime/feature/inc/stream
     ${TOP_DIR}/src/runtime/feature/inc/launch
+    ${TOP_DIR}/src/runtime/feature/inc_c
     ${TOP_DIR}/src/runtime/feature/inc/model
     ${TOP_DIR}/src/runtime/feature/inc/event
     ${TOP_DIR}/src/runtime/feature/inc/arg_loader

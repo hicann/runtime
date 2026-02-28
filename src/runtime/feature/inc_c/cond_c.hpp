@@ -12,18 +12,22 @@
 
 #include "stream.hpp"
 #include "label.hpp"
+#include "context.hpp"
 
 namespace cce {
 namespace runtime {
 
-    rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm);
-    rtError_t CondLabelSwitchByIndex(void * const ptr, const uint32_t maxIndex, void * const labelInfoPtr,
-        Stream * const stm);
+    rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm,
+        Context * const ctx = nullptr);
     rtError_t CondStreamSwitchEx(const void * const ptr, const rtCondition_t condition, const void * const valuePtr,
-        const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType);
-    rtError_t CondLabelSet(Label * const lbl, Stream * const stm);
+        const Stream * const trueStream, Stream * const stm, const rtSwitchDataType_t dataType,
+        Context * const ctx = nullptr);
+    rtError_t CondStreamSwitchN(const void * const ptr, const uint32_t size,
+        const void * const valuePtr, Stream ** const trueStreamPtr, const uint32_t elementSize,
+        Stream * const stm, const rtSwitchDataType_t dataType, Context * const ctx = nullptr);
     rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
         const uint32_t flag, Stream * const stm);
+
 }  // namespace runtime
 }  // namespace cce
 

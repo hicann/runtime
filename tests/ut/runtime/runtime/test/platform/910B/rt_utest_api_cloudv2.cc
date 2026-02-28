@@ -55,6 +55,7 @@
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
 #include "../../rt_utest_api.hpp"
+#include "cond_c.hpp"
 #undef protected
 #undef private
 
@@ -275,9 +276,7 @@ TEST_F(RtApiTest, capture_api_09)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP(&Context::StreamActive)
-                .stubs()
-                .will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CondStreamActive).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     uint32_t rtsqDepth = Runtime::macroValue_.rtsqDepth;
     Runtime::macroValue_.rtsqDepth = 32;
