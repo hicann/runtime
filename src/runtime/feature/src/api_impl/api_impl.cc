@@ -61,7 +61,6 @@ namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
 constexpr uint32_t MEM_TYPE_MASK = 0xFF00U;
 constexpr int32_t MEMCPY_BATCH_ASYNC_FEATURE = 3;
-constexpr uint32_t NUMA_TYPE = 4U;
 
 }
 
@@ -8521,7 +8520,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     rtError_t error = PtrGetAttributes(dst, &dstAttr);
     ERROR_RETURN(error, "get dst attribute failed, error=%#x", error);
     memType = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
-    rtMemLocationType inputDstType = (memAttr.dstLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
+    rtMemLocationType inputDstType = (memAttr.dstLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.dstLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputDstType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (dstAttr.location.id != memAttr.dstLoc.id))), RT_ERROR_INVALID_VALUE,
         "The real memory type of dst is %d(%s), and the input type is %d(%s), dst ptr is %#" PRIx64 ". "
@@ -8532,7 +8531,7 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     error = PtrGetAttributes(src, &srcAttr);
     ERROR_RETURN(error, "get src attribute failed, error=%#x.", error);
     memType = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
-    rtMemLocationType inputSrcType = (memAttr.srcLoc.type == NUMA_TYPE) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
+    rtMemLocationType inputSrcType = (memAttr.srcLoc.type == RT_MEMORY_LOC_HOST_NUMA) ? RT_MEMORY_LOC_HOST : memAttr.srcLoc.type;
     COND_RETURN_OUT_ERROR_MSG_CALL(((memType != inputSrcType) ||
         ((memType == RT_MEMORY_LOC_DEVICE) && (srcAttr.location.id != memAttr.srcLoc.id))), RT_ERROR_INVALID_VALUE,
         "The real memory type of src is %d(%s), and the input type is %d(%s), src ptr is %#" PRIx64 ". "

@@ -7305,3 +7305,23 @@ TEST_F(ApiTest, rtSetOpExecuteTimeOutV2)
     GlobalContainer::SetRtChipType(oriChipType);
     rtInstance->SetSocType(socType);
 }
+
+TEST_F(ApiTest, CheckMemCpyAttr_NumaCoverage) 
+{
+    ApiImpl api;  
+    char d_obj = 0;
+    char s_obj = 0;
+    void* dst_ptr = &d_obj;
+    void* src_ptr = &s_obj;
+    rtMemcpyBatchAttr memAttr{}; 
+    rtPtrAttributes_t dstAttr_actual{};
+    rtPtrAttributes_t srcAttr_actual{};
+    memAttr.dstLoc.type = RT_MEMORY_LOC_HOST_NUMA;
+    memAttr.dstLoc.id = 1;
+    memAttr.srcLoc.type = RT_MEMORY_LOC_HOST_NUMA;
+    memAttr.srcLoc.id =1;
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
+    rtError_t error = api.CheckMemCpyAttr(dst_ptr, src_ptr, memAttr, dstAttr_actual, srcAttr_actual);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
