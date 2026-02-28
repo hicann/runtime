@@ -336,6 +336,17 @@ RTS_API rtError_t rtGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int3
  */
 RTS_API rtError_t rtGetServerIDBySDID(uint32_t sdid, uint32_t *srvId);
 
+/**
+ * @ingroup dvrt_base
+ * @brief register callback for xpu task fail
+ * @param [in] devType Currently, only the DPU type is supported. 
+ * @param [in] moduleName unique register name, can't be null
+ * @param [in] callback fail task callback function
+ * @param [out] NA
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtXpuSetTaskFailCallback(rtXpuDevType devType, const char_t *moduleName, rtTaskFailCallback callback);
+
 #if defined(__cplusplus)
 }
 #endif

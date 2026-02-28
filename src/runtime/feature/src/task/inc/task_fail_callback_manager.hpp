@@ -13,6 +13,8 @@
 #include "base.hpp"
 #include "runtime.hpp"
 #include "task_fail_callback_data_manager.h"
+#include "xpu_task_fail_callback_data_manager.h"
+
 
 namespace cce {
 namespace runtime {
@@ -23,6 +25,8 @@ rtError_t TaskFailCallBackReg(const char_t *regName, void *callback, void *args,
 
 void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo);
 rtError_t OpTaskFailCallbackReg(Program *binHandle, void *callback, void *userData);
+
+rtError_t XpuTaskFailCallbackReg(const char_t *regName, void *callback);
 
 }
 }

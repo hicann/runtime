@@ -148,6 +148,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/feature/src/common/soc_info.cc
     ${TOP_DIR}/src/runtime/feature/src/common/context_data_manage.cc
     ${TOP_DIR}/src/runtime/feature/src/common/task_fail_callback_data_manager.cc
+    ${TOP_DIR}/src/runtime/feature/src/common/xpu_task_fail_callback_data_manager.cc
     ${TOP_DIR}/src/runtime/feature/src/common/performance_record.cc
     ${TOP_DIR}/src/runtime/feature/src/common/profiling_agent.cc
     ${TOP_DIR}/src/runtime/feature/src/common/errcode_manage.cc

@@ -18,6 +18,7 @@
 #include "context.hpp"
 #include "stream_c.hpp"
 #include "xpu_aicpu_c.hpp"
+#include "task_fail_callback_manager.hpp"
 
 namespace cce {
 namespace runtime {
@@ -108,6 +109,12 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
     }
 
     return LaunchKernelByArgsWithType(kernel, blockDim, curStm, argsWithType, taskCfg);
+}
+
+rtError_t ApiImplDavid::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+{
+    UNUSED(devType);
+    return XpuTaskFailCallbackReg(regName, callback);
 }
 
 }

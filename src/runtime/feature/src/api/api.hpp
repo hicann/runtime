@@ -531,6 +531,9 @@ public:
         TaskFailCallbackType type) = 0;
     virtual rtError_t RegStreamStateCallback(const char_t *regName, void *callback, void *args,
         StreamStateCallback type) = 0;
+    virtual rtError_t XpuSetTaskFailCallback(
+        const rtXpuDevType devType, const char_t *regName, void *callback) = 0;
+
     // IPC API
     virtual rtError_t IpcSetMemoryName(const void * const ptr, const uint64_t byteCount, char_t * const name,
         const uint32_t len, const uint64_t flags = 0UL) = 0;

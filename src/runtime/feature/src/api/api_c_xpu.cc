@@ -44,6 +44,16 @@ rtError_t rtResetXpuDevice(rtXpuDevType devType, const uint32_t devId)
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtXpuSetTaskFailCallback(rtXpuDevType devType, const char_t *moduleName, rtTaskFailCallback callback)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->XpuSetTaskFailCallback(devType, moduleName, RtPtrToPtr<void *>(callback));
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

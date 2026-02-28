@@ -25,5 +25,10 @@ rtError_t ApiDecorator::GetXpuDevCount(const rtXpuDevType devType, uint32_t *dev
 {
     return impl_->GetXpuDevCount(devType, devCount);
 }
+
+rtError_t ApiDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+{
+    return impl_->XpuSetTaskFailCallback(devType, regName, callback);
+}
 }  // namespace runtime
 }  // namespace cce

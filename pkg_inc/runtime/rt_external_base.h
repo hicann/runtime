@@ -244,6 +244,11 @@ typedef enum rtUbExType {
     RT_UB_TYPE_DIRECT_WQE
 } rtUbExType_t;
 
+typedef enum tagRtXpuDevType {
+    RT_DEV_TYPE_DPU = 0,
+    RT_DEV_TYPE_REV
+} rtXpuDevType;
+
 typedef struct rtUbExDetailInfo {
     rtUbExType_t ubType;
     uint8_t ubNum;

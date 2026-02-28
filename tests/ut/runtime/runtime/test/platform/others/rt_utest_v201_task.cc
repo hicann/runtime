@@ -1482,6 +1482,13 @@ TEST_F(TaskTestV201, TestResetXpuDevice)
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(TaskTestV201, TestXpuSetTaskFailCallback)
+{
+    ApiImplDavid apiImpl;
+    rtError_t error = apiImpl.XpuSetTaskFailCallback(RT_DEV_TYPE_DPU, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TaskTestV201, LaunchKernelV2_AICPU)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);

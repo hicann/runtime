@@ -490,6 +490,7 @@ public:
     rtError_t RegProfCtrlCallback(const uint32_t moduleId, const rtProfCtrlHandle callback) override;
     rtError_t RegStreamStateCallback(const char_t *regName, void *callback, void *args,
         StreamStateCallback type) override;
+    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback) override;
 
     // callback api
     rtError_t SubscribeReport(const uint64_t threadId, Stream * const stm) override;

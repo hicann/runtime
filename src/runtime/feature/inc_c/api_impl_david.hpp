@@ -170,6 +170,7 @@ public:
     rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) override;
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback) override;
 protected:
     rtError_t GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val) override;
     rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback) override;

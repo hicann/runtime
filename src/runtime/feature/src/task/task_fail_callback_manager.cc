@@ -38,6 +38,11 @@ rtError_t TaskFailCallBackReg(const char_t *regName, void *callback, void *args,
     return TaskFailCallBackManager::Instance().RegTaskFailCallback(regName, callback, args, type);
 }
 
+rtError_t XpuTaskFailCallbackReg(const char_t *regName, void *callback)
+{
+    return XpuTaskFailCallBackManager::Instance().RegXpuTaskFailCallback(regName, callback);
+}
+
 void OpTaskFailCallbackNotify(rtExceptionInfo_t *const exceptionInfo)
 {
     rtBinHandle binHandle;

@@ -15,6 +15,7 @@
 #include "error_manager.h"
 #endif
 #include "context_data_manage.h"
+#include "xpu_task_fail_callback_data_manager.h"
 #include "task_fail_callback_data_manager.h"
 #include "prof_ctrl_callback_manager.hpp"
 #include "thread_local_container.hpp"
@@ -210,6 +211,7 @@ RuntimeKeeper::RuntimeKeeper() : NoCopy(), runtime_(nullptr)
 #endif
     (void)ProfCtrlCallbackManager::Instance();
     (void)TaskFailCallBackManager::Instance();
+    (void)XpuTaskFailCallBackManager::Instance();
     (void)ContextDataManage::Instance();
     (void)DevInfoManage::Instance();
 }

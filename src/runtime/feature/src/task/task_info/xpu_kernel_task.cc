@@ -12,6 +12,7 @@
 #include "stream_xpu.hpp"
 #include "kernel.hpp"
 #include "task_manager.h"
+#include "xpu_task_fail_callback_data_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -63,10 +64,27 @@ void ConstructTprtAICpuSqeForDavinciTask(TaskInfo *taskInfo, TprtSqe_t * const c
     return;
 }
 
+void XpuNotifyCallback(TaskInfo *taskInfo, const uint32_t devId)
+{
+    rtExceptionInfo_t exception = {};
+    exception.expandInfo.type = RT_EXCEPTION_INVALID;
+    // drvErr is auto-increment task id
+    exception.taskid  = taskInfo->drvErr;
+    exception.tid = taskInfo->tid;
+    exception.deviceid = devId;
+    exception.streamid = static_cast<uint32_t>(taskInfo->stream->Id_());
+    exception.retcode = taskInfo->errorCode;
+    RT_LOG(RT_LOG_DEBUG,
+            "XpuNotifyCallback, notify auto-increment task_id=%u, stream_id=%u, retcode=%u, tid=%u, device_id=%u, ",
+            exception.taskid, exception.streamid, exception.retcode, exception.tid, exception.deviceid);
+    XpuTaskFailCallBackManager::Instance().XpuNotify(&exception);
+}
+
 void DoCompleteSuccessForXpuDavinciTask(TaskInfo *taskInfo, const uint32_t devId)
 {
     XpuPrintAICpuErrorInfoForDavinciTask(taskInfo, devId);
     taskInfo->stream->SetErrCode(taskInfo->errorCode);
+    XpuNotifyCallback(taskInfo,devId);
 }
 
 void XpuPrintAICpuErrorInfoForDavinciTask(TaskInfo *taskInfo, const uint32_t devId)

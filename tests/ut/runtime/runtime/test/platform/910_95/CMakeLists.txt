@@ -99,12 +99,14 @@ add_executable(runtime_utest_xpu
     xpu/rt_utest_xpu_stream_synchronize.cc
     xpu/rt_utest_xpu_device.cc
     xpu/rt_utest_xpu_runtime.cc
+    xpu/rt_utest_xpu_callback.cc
 )
 
 target_include_directories(
     runtime_utest_xpu PUBLIC 
     ${TOP_DIR}/src/runtime/tprt/inc/external
     ${TOP_DIR}/src/runtime/tprt/feature/inc
+    ${TOP_DIR}/pkg_inc/runtime
     ${TOP_DIR}/abl/slog/inc
     ${TOP_DIR}/abl/mmpa/inc
     ${TOP_DIR}/abl/libc_sec/include

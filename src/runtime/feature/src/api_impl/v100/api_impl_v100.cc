@@ -37,5 +37,14 @@ rtError_t ApiImpl::ResetXpuDevice(const rtXpuDevType devType, const uint32_t dev
     UNUSED(devId);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ApiImpl::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+{
+    UNUSED(devType);
+    UNUSED(regName);
+    UNUSED(callback);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }

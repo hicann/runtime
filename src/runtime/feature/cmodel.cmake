@@ -132,6 +132,7 @@ set(common_src_files_cmodel
     src/common/errcode_manage.cc
     src/common/error_message_manage.cc
     src/common/task_fail_callback_data_manager.cc
+    src/common/xpu_task_fail_callback_data_manager.cc
     src/common/performance_record.cc
     src/common/prof_ctrl_callback_manager.cc
     src/common/rt_log.cc

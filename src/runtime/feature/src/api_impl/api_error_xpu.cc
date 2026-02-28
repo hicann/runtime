@@ -66,5 +66,13 @@ rtError_t ApiErrorDecorator::GetXpuDevCount(const rtXpuDevType devType, uint32_t
     return impl_->GetXpuDevCount(devType, devCount);
 }
 
+rtError_t ApiErrorDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+{
+    COND_RETURN_ERROR_MSG_INNER(devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE,
+        "devType=%d is invalid, retCode=%#x", devType, static_cast<uint32_t>(RT_ERROR_INVALID_VALUE));
+    NULL_PTR_RETURN_MSG_OUTER(regName, RT_ERROR_INVALID_VALUE);
+    return impl_->XpuSetTaskFailCallback(devType, regName, callback);
+}
+
 }
 }
