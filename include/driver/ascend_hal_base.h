@@ -2832,6 +2832,36 @@ DLLEXPORT drvError_t halMemGetAllocationGranularity(
 */
 DLLEXPORT drvError_t halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr *pbase, size_t *psize);
 
+/**
+* @ingroup driver
+* @brief This command is used to register a memory range as a UB segment.
+* @attention 
+* 1. Only support ONLINE scene.
+* 2. devid indicates the device where the input address belongs.
+* 3. Only addresses allocated by halMemAlloc or locally mapped by halMemMap are supported.
+* 4. Repeated registration of the same address is not supported.
+* 5. Token_value is not enabled when registering this segment.
+* @param [in] devid: requested input device id where the address belongs.
+* @param [in] va: requested start virtual address to be registered.
+* @param [in] size: requested byte size.
+* @return DRV_ERROR_NONE : success
+* @return DV_ERROR_XXX : register fail
+*/
+DLLEXPORT drvError_t halMemRegUbSegment(uint32_t devid, uint64_t va, uint64_t size);
+
+/**
+* @ingroup driver
+* @brief This command is used to unregister a registered UB segment.
+* @attention
+* 1. devid and va must be consistent with the corresponding halMemRegUbSegment call.
+* @param [in] devid: requested input device id.
+* @param [in] va: requested start virtual address to be unregistered.
+* @param [in] size: requested byte size.
+* @return DRV_ERROR_NONE : success
+* @return DV_ERROR_XXX : unregister fail
+*/
+DLLEXPORT drvError_t halMemUnRegUbSegment(uint32_t devid, uint64_t va, uint64_t size);
+
 struct MemPhyInfo {
 #ifndef __linux
     unsigned long long total;
