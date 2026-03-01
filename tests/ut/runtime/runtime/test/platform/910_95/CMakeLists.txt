@@ -99,6 +99,7 @@ add_executable(runtime_utest_xpu
     xpu/rt_utest_xpu_stream_synchronize.cc
     xpu/rt_utest_xpu_device.cc
     xpu/rt_utest_xpu_runtime.cc
+    xpu/rt_utest_xpu_profiling.cc
     xpu/rt_utest_xpu_callback.cc
 )
 

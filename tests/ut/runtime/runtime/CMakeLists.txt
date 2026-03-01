@@ -468,6 +468,7 @@ set(runtime_xpu_src
     ${TOP_DIR}/src/runtime/feature/src/kernel/arg_loader/arg_loader_xpu.cc
     ${TOP_DIR}/src/runtime/feature/src/stream/stream_xpu_c.cc
     ${TOP_DIR}/src/runtime/feature/src/task/task_info/xpu_kernel_task.cc
+    ${TOP_DIR}/src/runtime/tprt/feature/src/tprt_profiling.cc
 )
 
 set(runtimeut_david_src_list

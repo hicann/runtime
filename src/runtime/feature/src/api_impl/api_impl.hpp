@@ -531,7 +531,7 @@ public:
     rtError_t LabelCreateEx(Label ** const lbl, Model * const mdl, Stream * const stm) override;
     rtError_t LabelSwitchListCreate(Label ** const labels, const size_t num, void ** const labelList) override;
     rtError_t GetAicpuDeploy(rtAicpuDeployType_t * const deployType) override;
-
+    rtError_t XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len) override;
     // group info
     rtError_t SetGroup(const int32_t groupId) override;
     rtError_t GetGroupCount(uint32_t * const cnt) override;

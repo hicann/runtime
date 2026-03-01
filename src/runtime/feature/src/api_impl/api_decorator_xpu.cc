@@ -30,5 +30,10 @@ rtError_t ApiDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, const
 {
     return impl_->XpuSetTaskFailCallback(devType, regName, callback);
 }
+
+rtError_t ApiDecorator::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
+{
+    return impl_->XpuProfilingCommandHandle(type, data, len);
+}
 }  // namespace runtime
 }  // namespace cce

@@ -22,6 +22,7 @@ uint32_t TprtSqPushTask(const uint32_t devId, const TprtTaskSendInfo_t *sendInfo
 uint32_t TprtOpSqCqInfo(uint32_t devId, TprtSqCqOpInfo_t *opInfo);
 uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo);
 uint32_t TprtGetSqState(uint32_t devId, TprtReportCqeInfo_t *cqeInfo);
+uint32_t TprtProfilingEnable(bool isEnable);
 #ifdef __cplusplus
 }
 #endif

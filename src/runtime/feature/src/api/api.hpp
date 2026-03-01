@@ -608,6 +608,7 @@ public:
     virtual rtError_t UnSubscribeReport(const uint64_t threadId, Stream * const stm) = 0;
     virtual rtError_t GetRunMode(rtRunMode * const runMode) = 0;
     virtual rtError_t GetAicpuDeploy(rtAicpuDeployType_t * const deployType) = 0;
+    virtual rtError_t XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len) = 0;
 
     // stream label func
     virtual ::rtError_t LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, void * const labelInfoPtr,

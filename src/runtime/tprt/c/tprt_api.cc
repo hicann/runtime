@@ -197,6 +197,13 @@ uint32_t TprtCqReportRecv(uint32_t devId, TprtReportCqeInfo_t *cqeInfo)
     return TPRT_SUCCESS;
 }
 
+uint32_t TprtProfilingEnable(bool isEnable)
+{
+    cce::tprt::TprtManage *manage = cce::tprt::TprtManage::Instance();
+    manage->setTprtTaskReportEnable(isEnable);
+    return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif

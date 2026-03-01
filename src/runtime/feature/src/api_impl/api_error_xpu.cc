@@ -74,5 +74,10 @@ rtError_t ApiErrorDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, 
     return impl_->XpuSetTaskFailCallback(devType, regName, callback);
 }
 
+rtError_t ApiErrorDecorator::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
+{
+    return impl_->XpuProfilingCommandHandle(type, data, len);
+}
+
 }
 }

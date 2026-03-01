@@ -11,6 +11,10 @@
 #include "tprt_cqhandle.hpp"
 #include "tprt_sqhandle.hpp"
 #include "tprt_type.h"
+#include "tprt.hpp"
+#include "aprof_pub.h"
+#include "prof_api.h"
+#include "tprt_profiling.hpp"
 
 namespace cce {
 namespace tprt {
@@ -48,14 +52,17 @@ void TprtWorker::TprtWorkerScheduleSq()
 {
     uint32_t sqId = sqHandle_->SqGetSqId();
     workerName_ = std::to_string(sqId) + "_" + std::to_string(devId_) + "_" + std::to_string(mmGetTid());
+    cce::tprt::TprtProfiling profiler;
     while(workerRunningFlag_) {
         (void)mmSemWait(&workerThreadSem_);
         TprtSqHandle *sqHandle = GetSqHandle();
         if (sqHandle != nullptr) {
             while (sqHandle->SqGetSqState() == TPRT_SQ_STATE_IS_RUNNING) {
                 TprtSqe_t headTask = {};
+                uint64_t startTime;
                 uint32_t ret = sqHandle->SqPeekTask(&headTask);
                 if (ret == TPRT_SUCCESS) {
+                    startTime = MsprofSysCycleTime();
                     uint32_t result = sqHandle->SqExeTask(&headTask);
                     if (result == TPRT_SUCCESS) {
                         sqHandle->SqUpdateHead(headTask.commonSqe.sqeHeader.sqeLength);
@@ -68,6 +75,8 @@ void TprtWorker::TprtWorkerScheduleSq()
                 } else {
                     break;
                 }
+                uint64_t endTime = MsprofSysCycleTime();
+                profiler.TprtReportTask(startTime, endTime, devId_, headTask);
             }
             if (sqHandle->SqGetSqState() == TPRT_SQ_STATE_IS_QUITTED) {
                 sqHandle->SqSetSqTailToHead();

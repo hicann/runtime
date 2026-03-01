@@ -44,6 +44,14 @@ public:
         return defaultExeTimeout_;
     }
     bool IsQueueFull(const uint16_t head, const uint16_t tail, const uint32_t allocNum) const;
+    bool getTprtTaskReportEnable()
+    {
+        return TprtTaskReportEnable_;
+    }
+    void setTprtTaskReportEnable(bool enable)
+    {
+        TprtTaskReportEnable_ = enable;
+    }
     static TprtManage *tprt_;
 
 private:
@@ -53,6 +61,7 @@ private:
     uint32_t defaultExeTimeout_{0U};  // unit:ms
     std::mutex deviceIdToDeviceMapLock_;
     std::unordered_map<uint32_t, TprtDevice *> deviceMap_;      // key is deviceId, value is device
+    bool TprtTaskReportEnable_ = true;
 
 };
 }

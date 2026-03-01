@@ -71,11 +71,26 @@ public:
     {
         return configInfo_.maxStreamNum;
     }
+    bool GetXpuTaskReportEnable() const
+    {
+        return xpuTaskReportEnable_;
+    }
+    void SetXpuTaskReportEnable(bool isEnable)
+    {
+        xpuTaskReportEnable_ = isEnable;
+    }
+
     rtError_t CreateRecycleThread();
     void RecycleThreadRun();
     void RecycleThreadDo() const;
 	void WakeUpRecycleThread(void) override;
     rtChipType_t GetChipType() const override;
+    uint32_t AllocXpuTaskSn()
+    {
+        uint32_t taskXpuSn = taskXpuSn_.FetchAndAdd(1U);
+        taskXpuSn = taskXpuSn & 0x7FFFFFFFU;
+        return taskXpuSn;
+    }
 private:
     XpuArgLoader *xpuArgLoader_;
     uint32_t deviceId_;
@@ -85,6 +100,8 @@ private:
     XpuConfigInfo configInfo_;
 	bool recycleThreadRunFlag_ = false;
     mmSem_t recycleThreadSem_;
+    Atomic<uint32_t> taskXpuSn_{0U};
+    bool xpuTaskReportEnable_ = false;
     Thread *recycleThread_{nullptr};
 };
 }

@@ -275,5 +275,14 @@ rtError_t ApiErrorDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, 
     UNUSED(callback);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t ApiErrorDecorator::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
+{
+    UNUSED(type);
+    UNUSED(data);
+    UNUSED(len);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }

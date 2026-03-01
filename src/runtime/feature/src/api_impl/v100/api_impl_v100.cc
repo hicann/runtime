@@ -46,5 +46,13 @@ rtError_t ApiImpl::XpuSetTaskFailCallback(const rtXpuDevType devType, const char
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
+{
+    UNUSED(type);
+    UNUSED(data);
+    UNUSED(len);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }

@@ -385,6 +385,8 @@ TEST_F(TinyStubTest, api_profile_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.XpuSetTaskFailCallback(RT_DEV_TYPE_DPU, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ret = api.XpuProfilingCommandHandle(0, nullptr, 0);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, api_profile_log_stub)

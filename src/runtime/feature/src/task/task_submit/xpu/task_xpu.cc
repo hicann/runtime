@@ -16,6 +16,7 @@
 #include "tprt_error_code.h"
 #include "xpu_context.hpp"
 #include "task_manager_xpu.hpp"
+#include "xpu_device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -51,6 +52,9 @@ rtError_t XpuAllocTaskInfo(TaskInfo **taskInfo, Stream * const stm, uint32_t &po
         stm->StreamLock();
         error = taskResMang->AllocTaskInfoAndPos(sqeNum, pos, taskInfo, false);
     }
+    if (error == RT_ERROR_NONE) {
+        (*taskInfo)->drvErr = static_cast<XpuDevice *>(stm->Device_())->AllocXpuTaskSn();
+    }
     return error;
 }
 
@@ -76,6 +80,25 @@ rtError_t XpuSendTask(TaskInfo *taskInfo, Stream * const stm)
     const Device *dev = stm->Device_();
     const uint32_t devId = dev->Id_();
     const uint32_t sqId = stm->GetSqId();
+    if (static_cast<XpuDevice *>(stm->Device_())->GetXpuTaskReportEnable()) {
+        MsprofCompactInfo compactInfo{};
+        compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
+        compactInfo.type = RT_PROFILE_TYPE_TASK_TRACK;
+        compactInfo.timeStamp = MsprofSysCycleTime();
+        compactInfo.threadId = GetCurrentTid();
+        compactInfo.dataLen = static_cast<uint32_t>(sizeof(MsprofRuntimeTrack));
+        compactInfo.data.runtimeTrack.deviceId = static_cast<uint16_t>(devId);
+        compactInfo.data.runtimeTrack.streamId =
+            (stm == nullptr) ? RT_MAX_STREAM_ID : static_cast<uint16_t>(stm->Id_());
+        compactInfo.data.runtimeTrack.taskId = taskInfo->drvErr;
+        compactInfo.data.runtimeTrack.taskType = TS_TASK_TYPE_KERNEL_AICPU;
+        
+        const int32_t ret = MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
+        if (ret != MSPROF_ERROR_NONE) {
+            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Profiling reporter report task_track failed, ret=%d.", ret);
+            return ret;
+        }
+    }
     ToConstructXpuSqe(taskInfo, sqeAddr);
     // update the host-side head and tail
     const rtError_t error = stm->StarsAddTaskToStream(taskInfo, taskInfo->sqeNum);

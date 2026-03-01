@@ -501,6 +501,7 @@ public:
     rtError_t GetRunMode(rtRunMode * const runMode) override;
     rtError_t GetAicpuDeploy(rtAicpuDeployType_t * const deployType) override;
     rtError_t LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData) override;
+    rtError_t XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len) override;
     // stream label func
     rtError_t LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, void * const labelInfoPtr,
         Stream * const stm) override;

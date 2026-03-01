@@ -68,7 +68,7 @@ static rtError_t XpuStreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, cons
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d submit task failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), kernelTask->taskSn);
+    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), kernelTask->drvErr);
     return RT_ERROR_NONE;
 }
 

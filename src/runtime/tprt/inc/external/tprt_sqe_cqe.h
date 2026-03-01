@@ -45,7 +45,7 @@ struct TprtStarsSqeHeader_t {
     uint8_t wrCqe : 2;
     uint8_t sqeLength : 6; // 0: 64B, N:(N+1) * 64B
     uint16_t sqId;
-
+    uint16_t dfxId;
     uint32_t taskSn;
 };
 struct TprtStarsAicpuSqe {

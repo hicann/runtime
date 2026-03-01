@@ -15,6 +15,7 @@ set(tprt_source
     feature/src/tprt_log.cc
     feature/src/tprt_sqhandle.cc
     feature/src/tprt_worker.cc
+    feature/src/tprt_profiling.cc
     feature/src/tprt.cc
     feature/src/tprt_timer.cc
 )
@@ -47,6 +48,7 @@ target_link_libraries(xpu_tprt PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:msprof_headers>
     -Wl,--no-as-needed
     c_sec
     -Wl,--as-needed

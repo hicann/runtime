@@ -37,6 +37,7 @@ void ConstructTprtSqeForHeadCommon(const TaskInfo *taskInfo, TprtSqe_t * const s
     (void)memset_s(sqe, sizeof(TprtSqe_t), 0, sizeof(TprtSqe_t));
     sqe->commonSqe.sqeHeader.sqId = stream->GetSqId();
     sqe->commonSqe.sqeHeader.taskSn = taskInfo->taskSn;
+    sqe->commonSqe.sqeHeader.dfxId = taskInfo->drvErr;
 }
 
 

@@ -18,10 +18,54 @@
 #include "context.hpp"
 #include "stream_c.hpp"
 #include "xpu_aicpu_c.hpp"
+#include "xpu_device.hpp"
+#include "tprt_api.h"
+#include "tprt.hpp"
 #include "task_fail_callback_manager.hpp"
 
 namespace cce {
 namespace runtime {
+
+rtError_t ApiImplDavid::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
+{
+    if (type != PROF_CTRL_SWITCH) {
+        RT_LOG(RT_LOG_WARNING, "dose not support the type: %u", type);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    RT_LOG(RT_LOG_DEBUG, "len:%u.", len);
+    NULL_PTR_RETURN_MSG(data, RT_ERROR_INVALID_VALUE);
+ 
+    if (len != sizeof(rtProfCommandHandle_t)) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(len, sizeof(rtProfCommandHandle_t));
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    rtProfCommandHandle_t * const profilerConfig = static_cast<rtProfCommandHandle_t *>(data);
+    if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
+        Context * const curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
+        xpuDevice->SetXpuTaskReportEnable(true);
+        TprtProfilingEnable(true);
+        return RT_ERROR_NONE;
+    } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
+        Context * const curCtx = CurrentContext();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
+        xpuDevice->SetXpuTaskReportEnable(false);
+        TprtProfilingEnable(false);
+        return RT_ERROR_NONE;
+    } else {
+        RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig->type);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t XpuProfilingHandle(uint32_t type, void *data, uint32_t len)
+{
+    Api * const apiInstance = Runtime::Instance()->ApiImpl_();
+    return apiInstance->XpuProfilingCommandHandle(type, data, len);
+}
 
 rtError_t ApiImplDavid::SetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
@@ -38,9 +82,11 @@ rtError_t ApiImplDavid::SetXpuDevice(const rtXpuDevType devType, const uint32_t 
             NULL_PTR_RETURN_MSG(context, RT_ERROR_CONTEXT_NULL);
         }
     }
+    MsprofRegisterCallback(RUNTIME, &XpuProfilingHandle);
 
     InnerThreadLocalContainer::SetCurRef(nullptr);
     InnerThreadLocalContainer::SetCurCtx(context);
+    MsprofNotifySetDevice(0, devId, true);
     RT_LOG(RT_LOG_INFO, "Set current context success, device_id=%u, curCtx=%p.", devId, context);
     return RT_ERROR_NONE;
 }
