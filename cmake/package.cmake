@@ -213,6 +213,7 @@ install(FILES
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime/rts/rts_stars.h
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime/rts/rts_stream.h
     ${RUNTIME_DIR}/pkg_inc/runtime/runtime/rts/rts.h
+    ${RUNTIME_DIR}/pkg_inc/runtime/runtime/rts/rts_snapshot.h
     DESTINATION runtime/pkg_inc/runtime/runtime/rts
     OPTIONAL
 )

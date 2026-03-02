@@ -192,6 +192,7 @@
         <file value="rts_stars.h" install_mod="440" entity="true"/>
         <file value="rts_stream.h" install_mod="440" entity="true"/>
         <file value="rts.h" install_mod="440" entity="true"/>
+        <file value="rts_snapshot.h" install_mod="440" entity="true"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
         <file value="aprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/aprof_pub.h" entity="true"/>
