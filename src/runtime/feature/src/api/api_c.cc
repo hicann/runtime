@@ -3724,10 +3724,7 @@ RTS_API rtError_t rtCheckArchCompatibility(const char_t *omSocVersion, int32_t *
 {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    char_t socVersion[SOC_VERSION_LEN] = {0};
-    const rtError_t rtRet = rtGetSocVersion(socVersion, SOC_VERSION_LEN);
-    ERROR_RETURN_WITH_EXT_ERRCODE(rtRet);
-    const rtError_t error = apiInstance->CheckArchCompatibility(socVersion, omSocVersion, canCompatible);
+    const rtError_t error = apiInstance->CheckArchCompatibility(omSocVersion, canCompatible);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

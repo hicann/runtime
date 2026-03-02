@@ -5969,30 +5969,29 @@ rtError_t ApiImpl::GetOpExecuteTimeoutV2(uint32_t *const timeout)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible)
+rtError_t ApiImpl::CheckArchCompatibility(const char_t *omSocVersion, int32_t *canCompatible)
 {
-    // Get the NpuArch to the omSocVersion
-    int32_t inputNpuArch;
-    rtError_t ret = GetNpuArchByName(omSocVersion, &inputNpuArch);
+    Runtime *const rtInstance = Runtime::Instance();
+    NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
+    const rtArchType_t hardwareArchType = rtInstance->GetArchType();
+
+    // Get the archType corresponding to the omSocVersion
+    rtSocInfo_t socInfo = {SOC_END, CHIP_END, ARCH_END, nullptr};
+    const rtError_t ret = GetSocInfoByName(omSocVersion, socInfo);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version [%s] is invalid", omSocVersion);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "SoC version [%s] is invalid", omSocVersion);
         return RT_ERROR_INVALID_VALUE;
     }
+    const rtArchType_t inputArchType = socInfo.archType;
 
-    // Get the NpuArch to the hardwareSocVersion
-    int32_t hardwareNpuArch;
-    ret = GetNpuArchByName(socVersion, &hardwareNpuArch);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version [%s] is invalid", socVersion);
-        return RT_ERROR_INVALID_VALUE;
-    }
-
-    if (inputNpuArch != hardwareNpuArch) {
-        constexpr int32_t archVerInCompatible = 0U;
-        *canCompatible = archVerInCompatible;
-    } else {
+    // Verify that the hardware ArchType is consistent with the input ArchType
+    const rtError_t error = rtInstance->CheckArchVersionIsCompatibility(inputArchType, hardwareArchType);
+    if (error == RT_ERROR_NONE) {
         constexpr int32_t archVerCompatible = 1U;
         *canCompatible = archVerCompatible;
+    } else {
+        constexpr int32_t archVerIncompatible = 0U;
+        *canCompatible = archVerIncompatible;
     }
     RT_LOG(RT_LOG_INFO,
         "Arch compatibility check result: canCompatible=%d, socVersion = %s.",

@@ -628,7 +628,7 @@ public:
     virtual rtError_t SetOpExecuteTimeOut(const uint32_t timeout, const RtTaskTimeUnitType timeUnitType) = 0;
     virtual rtError_t GetOpExecuteTimeOut(uint32_t * const timeout) = 0;
     virtual rtError_t GetOpExecuteTimeoutV2(uint32_t *const timeout) = 0;
-    virtual rtError_t CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible) = 0;
+    virtual rtError_t CheckArchCompatibility(const char_t *omSocVersion, int32_t *canCompatible) = 0;
     virtual rtError_t GetOpTimeOutInterval(uint64_t *interval) = 0;
     virtual rtError_t SetOpExecuteTimeOutV2(uint64_t timeout, uint64_t *actualTimeout) = 0;
 
