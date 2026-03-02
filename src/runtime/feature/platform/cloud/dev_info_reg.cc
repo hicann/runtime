@@ -89,7 +89,7 @@ static constexpr uint32_t CQE_DEPTH = 1024U;
 static constexpr uint32_t DEFAULT_CQE_SIZE = 12U;
 static constexpr uint32_t RT_HWTS_910A_MAX_BLOCK_DIM_UINT32 = 32U; // 910A BLOCK_DIM = 32.
 static constexpr uint32_t RT_HWTS_910A_DEFAULT_BLOCK_DIM_UINT32 = 1U; // The default timeout duration for the 1980's AIC operator is related to the blocdim. This returns the ​​tick​​ of the timeout.
-static constexpr double RT_HWTS_910A_TASK_KERNEL_CREDIT_SCALE_US = 68719476.736F; // 2^36 / 1000M *1000*1000(us)
+static constexpr double RT_HWTS_910A_TASK_KERNEL_CREDIT_SCALE_US = 68719476.736; // 2^36 / 1000M *1000*1000(us)
 
 static const DevProperties CHIP_CLOUD_PROPERTIES = {
     .engineType = "HWTS",

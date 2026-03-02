@@ -78,7 +78,7 @@ static constexpr uint32_t CQE_DEPTH = 2048U;
 constexpr static uint32_t SQE_DEPTH = 2048U;
 static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 = 254U; // The STARS reference time is 1090921693.184 us.
-static constexpr double RT_STARS_TASK_KERNEL_CREDIT_SCALE_US = 4294967.296F; // 2^32 / 1000M *1000*1000(us)
+static constexpr double RT_STARS_TASK_KERNEL_CREDIT_SCALE_US = 4294967.296; // 2^32 / 1000M *1000*1000(us)
 static constexpr uint32_t KERNEL_CUSTOM_STACK_SIZE_MAX = 7864320U; // 7680KB
 
 static const DevProperties CHIP_MINI_V3_PROPERTIES = {

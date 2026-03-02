@@ -101,7 +101,7 @@ static constexpr uint32_t DEFAULT_CQE_SIZE = 12U;
 constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_DC_PROP = 25;
 static constexpr uint32_t RT_HWTS_MAX_KERNEL_CREDIT_UINT32 = 255U; // HWTS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_HWTS_310P_DEFAULT_KERNEL_CREDIT_UINT32 = 255U; // The TS 310P reference time is 547608330.240 us.
-static constexpr double RT_HWTS_310P_TASK_KERNEL_CREDIT_SCALE_US = 2147483.648F; // 2^31 / 1000M *1000*1000(us)
+static constexpr double RT_HWTS_310P_TASK_KERNEL_CREDIT_SCALE_US = 2147483.648; // 2^31 / 1000M *1000*1000(us)
 
 static const DevProperties CHIP_DC_PROPERTIES = {
     .engineType = "HWTS",

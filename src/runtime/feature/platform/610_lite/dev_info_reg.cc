@@ -66,7 +66,7 @@ static constexpr uint32_t CQE_DEPTH = 4096U;
 static constexpr uint32_t DEFAULT_CQE_SIZE = 12U;
 static constexpr uint32_t RT_HWTS_MAX_KERNEL_CREDIT_UINT32 = 255U; // HWTS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_HWTS_610LITE_DEFAULT_KERNEL_CREDIT_UINT32 = 143U; // The TS 610LITE reference time is 1332856.668 us.
-static constexpr double RT_HWTS_610LITE_TASK_KERNEL_CREDIT_SCALE_US = 9320.676F; // 2^23 / 900M *1000*1000(us)
+static constexpr double RT_HWTS_610LITE_TASK_KERNEL_CREDIT_SCALE_US = 9320.676; // 2^23 / 900M *1000*1000(us)
 static constexpr int32_t TIMELINE_EVENT_ID = 511;
 static constexpr uint64_t ENGINE_WAIT_COMPLETION_TIMEOUT = 2000UL; //2000ms
 

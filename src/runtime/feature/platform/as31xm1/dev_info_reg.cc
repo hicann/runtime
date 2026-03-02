@@ -72,7 +72,7 @@ static constexpr uint32_t CQE_DEPTH = 4096U;
 static constexpr uint32_t SQE_DEPTH = 4096U;
 static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_STARS_AS31XM1X_DEFAULT_KERNEL_CREDIT_UINT32 = 3U; // The STARS AS31XM1X reference time is 100663.296 us.
-static constexpr double RT_STARS_AS31XM1X_TASK_KERNEL_CREDIT_SCALE_US = 33554.432F; // 2^24 / 500M *1000*1000(us)
+static constexpr double RT_STARS_AS31XM1X_TASK_KERNEL_CREDIT_SCALE_US = 33554.432; // 2^24 / 500M *1000*1000(us)
 static constexpr uint32_t AS31XM1X_MULTI_GRAPH_ARG_ENTRY_SIZE = 1024U;
 static constexpr uint32_t AS31XM1X_DEFAULT_INIT_CNT = 128U;
 static constexpr uint32_t DEVICE_RINGBUFFER_SIZE_MDC = 512U * 1024U;

@@ -68,7 +68,7 @@ static constexpr uint32_t CQE_DEPTH = 4096U;
 static constexpr uint32_t DEFAULT_CQE_SIZE = 12U;
 static constexpr uint32_t RT_HWTS_MAX_KERNEL_CREDIT_UINT32 = 255U; // HWTS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_HWTS_610_DEFAULT_KERNEL_CREDIT_UINT32 = 72U; // The TS 610 reference time is 2415919.104 us.
-static constexpr double RT_HWTS_610_TASK_KERNEL_CREDIT_SCALE_US = 33554.432F; // 2^25 / 1000M *1000*1000(us)
+static constexpr double RT_HWTS_610_TASK_KERNEL_CREDIT_SCALE_US = 33554.432; // 2^25 / 1000M *1000*1000(us)
 static constexpr uint64_t ENGINE_WAIT_COMPLETION_TIMEOUT = 2000UL; //2000ms
 
 static const DevProperties CHIP_ADC_PROPERTIES = {
