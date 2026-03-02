@@ -17,11 +17,27 @@
 extern "C" {
 #endif
 
-
 #define RTS_WEAK __attribute__((weak))
 
 #define RT_DQS_MAX_INPUT_QUEUE_NUM      10U
 #define RT_DQS_MAX_OUTPUT_QUEUE_NUM     10U
+
+typedef enum {
+    RT_DQS_SCHED_TYPE_NN = 1,    // NN+Q硬化调度
+    RT_DQS_SCHED_TYPE_VPC = 2,   // VPC/NSC+Q硬化调度
+    RT_DQS_SCHED_TYPE_DSS = 3,   // DSS+Q硬化调度
+} rtDqsSchedType;
+
+typedef enum {
+    RT_DQS_FRAME_MAIN_CHANNEL_ALIGN,  // 主通路对齐
+    RT_DQS_FRAME_ALL_CHANNEL_ALIGN    // 全通路对齐
+} rtDqsFrameAlignMode;
+
+typedef enum {
+    RT_DQS_DROP_FRAME,          // 当前帧不处理，继续等待下一帧，直到所有输入都满足对齐时间阈值
+    RT_DQS_USE_DEFAULT_FRAME,   // 使用默认帧
+    RT_DQS_USE_HISTORY_FRAME    // 使用历史帧
+} rtDqsFrameAlignTimeoutMode;
 
 typedef enum {
     RT_DQS_ZERO_COPY_INPUT,     // 输入数据零拷贝
@@ -42,6 +58,8 @@ typedef struct {
     uint16_t outputQueueIds[RT_DQS_MAX_OUTPUT_QUEUE_NUM];     // 输出队列id列表
 } rtDqsSchedCfg_t;
 
+typedef rtDqsSchedCfg_t rtDqsSchedConfig_t;
+
 // 用于归一接口
 typedef struct {
     rtDqsZeroCopyType copyType;
@@ -52,6 +70,14 @@ typedef struct {
     uint64_t *dest;                           // 目标地址的指针数组
     uint64_t *offset;                         // offset数组
 } rtDqsZeroCopyCfg_t;
+
+typedef struct {
+    uint64_t *condition;         // 存放condition条件的标志
+    void *dst;                   // 目的地址
+    uint64_t destMax;            // 目的地的最大长度
+    void *src;                   // 源地址
+    uint64_t cnt;                // 拷贝的字节数
+} rtDqsConditionCopyCfg_t;
 
 typedef struct {
     uint32_t mbufHandle;        // ADSPC 数据存放mbuf handle，block_id:pool_id
@@ -69,6 +95,7 @@ typedef enum {
     RT_DQS_TASK_NOTIFY_WAIT,
     RT_DQS_TASK_DEQUEUE,
     RT_DQS_TASK_ZERO_COPY,
+    RT_DQS_TASK_CONDITION_COPY,
     RT_DQS_TASK_PREPARE_OUT,
     RT_DQS_TASK_ENQUEUE,
     RT_DQS_TASK_FREE,
