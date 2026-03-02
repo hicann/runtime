@@ -57,6 +57,12 @@ const std::string ADUMP_DUMP_BLACKLIST_NAME = "name";
 const std::string ADUMP_DUMP_BLACKLIST_POS = "pos";
 const std::string ADUMP_DUMP_OPNAME_RANGE_BEGIN = "begin";
 const std::string ADUMP_DUMP_OPNAME_RANGE_END = "end";
+const std::string ADUMP_DUMP_KERNEL_DATA = "dump_kernel_data";
+const std::string ADUMP_DUMP_KERNEL_DATA_ALL = "all";
+const std::string ADUMP_DUMP_KERNEL_DATA_PRINTF = "printf";
+const std::string ADUMP_DUMP_KERNEL_DATA_TENSOR = "tensor";
+const std::string ADUMP_DUMP_KERNEL_DATA_ASSERT = "assert";
+const std::string ADUMP_DUMP_KERNEL_DATA_TIMESTAMP = "timestamp";
 constexpr int32_t MAX_DUMP_PATH_LENGTH = 512;
 constexpr int32_t MAX_IPV4_ADDRESS_VALUE = 255;
 constexpr int32_t MAX_IPV4_ADDRESS_LENGTH = 4;
@@ -74,6 +80,7 @@ struct RawDumpConfig
     std::string dumpPath;
     std::string dumpMode;
     std::string dumpData;
+    std::string dumpKernelData;
     std::vector<std::string> dumpStats;
     std::string dumpOpSwitch;
     std::string dumpLevel;
@@ -111,21 +118,29 @@ struct DumpEnvVariable {
     std::string ascendWorkPath;
 };
 
+struct DumpDfxConfig {
+    std::string dumpPath;
+    std::vector<std::string> dfxTypes;
+};
+
 class DumpConfigConverter
 {
 public:
     DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize)
     : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize) {};
     ~DumpConfigConverter() = default;
-    int32_t Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump);
+    int32_t Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump, DumpDfxConfig &dumpDfxConfig);
     bool IsValidDumpConfig() const;
     static bool EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, DumpType &dumpType);
+    static bool EnableKernelDfxDumpWithEnv(DumpDfxConfig &config);
     static std::string DumpTypeToStr(const DumpType dumpType);
 private:
     bool CheckDumpScene(std::string &dumpScene) const;
     bool CheckDumpDebug(std::string &dumpDebug) const;
     bool CheckDumpPath() const;
     bool CheckDumpStats() const;
+    bool CheckDumpKernelData() const;
+    bool ParseDumpKernelData(std::vector<std::string> &dfxTypes) const;
     bool CheckValueValidIfContain(const std::string key) const;
     bool IsValueValid(const std::string key, const std::string value) const;
     bool ConflictWith(const std::string key, const std::string value) const;

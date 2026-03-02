@@ -29,6 +29,9 @@ constexpr int32_t DECIMAL = 10;
 const std::map<std::string, std::set<std::string>> dumpValidOptions = {
     {ADUMP_DUMP_MODE, {ADUMP_DUMP_MODE_INPUT, ADUMP_DUMP_MODE_OUTPUT, ADUMP_DUMP_MODE_ALL}},
     {ADUMP_DUMP_DATA, {ADUMP_DUMP_DATA_TENSOR, ADUMP_DUMP_DATA_STATS}},
+    {ADUMP_DUMP_KERNEL_DATA, {ADUMP_DUMP_KERNEL_DATA_ALL, ADUMP_DUMP_KERNEL_DATA_PRINTF,
+                              ADUMP_DUMP_KERNEL_DATA_TENSOR, ADUMP_DUMP_KERNEL_DATA_ASSERT,
+                              ADUMP_DUMP_KERNEL_DATA_TIMESTAMP}},
     {ADUMP_DUMP_OP_SWITCH, {ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_STATUS_SWITCH_OFF}},
     {ADUMP_DUMP_LEVEL, {ADUMP_DUMP_LEVEL_OP, ADUMP_DUMP_LEVEL_KERNEL, ADUMP_DUMP_LEVEL_ALL}},
     {ADUMP_DUMP_DEBUG, {ADUMP_DUMP_STATUS_SWITCH_ON, ADUMP_DUMP_STATUS_SWITCH_OFF}},
@@ -70,6 +73,10 @@ static void from_json(const nlohmann::json &js, RawDumpConfig &config)
     }
     if (JsonParser::ContainKey(js, ADUMP_DUMP_DATA)) {
         config.dumpData = JsonParser::GetCfgStrByKey(js, ADUMP_DUMP_DATA);
+    }
+    config.dumpKernelData = ADUMP_DUMP_KERNEL_DATA_ALL;
+    if (JsonParser::ContainKey(js, ADUMP_DUMP_KERNEL_DATA)) {
+        config.dumpKernelData = JsonParser::GetCfgStrByKey(js, ADUMP_DUMP_KERNEL_DATA);
     }
     if (JsonParser::ContainKey(js, ADUMP_DUMP_LEVEL)) {
         config.dumpLevel = JsonParser::GetCfgStrByKey(js, ADUMP_DUMP_LEVEL);
@@ -137,7 +144,7 @@ bool DumpConfigConverter::IsValidDumpConfig() const
     if (!CheckDumpMode(dumpMode)) {
         return false;
     }
-    
+
     if ((dumpMode != ADUMP_DUMP_MODE_OUTPUT) && (dumpScene == ADUMP_DUMP_WATCHER)) {
         IDE_LOGE("dump_mode only supports output when dump_scene is %s.", dumpScene.c_str());
         return false;
@@ -162,6 +169,11 @@ bool DumpConfigConverter::IsValidDumpConfig() const
 
     // data dump, check if dump_data is valid
     if (!CheckValueValidIfContain(ADUMP_DUMP_DATA)) {
+        return false;
+    }
+
+    // dump kernel dfx data, check if dump_kernel_data is valid
+    if (!CheckDumpKernelData()) {
         return false;
     }
     // options of data dump
@@ -254,6 +266,27 @@ bool DumpConfigConverter::CheckDumpDebug(std::string &dumpDebug) const
         IDE_LOGE("dump_op_switch is %s when dump_debug is on is unsupported.",
                  ADUMP_DUMP_STATUS_SWITCH_ON.c_str());
         return false;
+    }
+    return true;
+}
+
+bool DumpConfigConverter::CheckDumpKernelData() const
+{
+    std::vector<std::string> dfxTypes;
+    return ParseDumpKernelData(dfxTypes);
+}
+
+bool DumpConfigConverter::ParseDumpKernelData(std::vector<std::string> &dfxTypes) const
+{
+    if (!JsonParser::ContainKey(dumpJs_, ADUMP_DUMP_KERNEL_DATA)) {
+        return true;
+    }
+    std::string kernelDumpData = JsonParser::GetCfgStrByKey(dumpJs_, ADUMP_DUMP_KERNEL_DATA);
+    Split(kernelDumpData, ',', dfxTypes);
+    for (const auto &dfxType : dfxTypes) {
+        if (!IsValueValid(ADUMP_DUMP_KERNEL_DATA, dfxType)) {
+            return false;
+        }
     }
     return true;
 }
@@ -737,7 +770,8 @@ bool DumpConfigConverter::NeedDump(const RawDumpConfig &rawDumpConfig) const
     return false;
 }
 
-int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump)
+int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump,
+    DumpDfxConfig &dumpDfxConfig)
 {
     nlohmann::json js;
     int32_t ret = JsonParser::ParseJsonFromMemory(dumpConfigData_, dumpConfigSize_, js);
@@ -755,6 +789,11 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
             return ADUMP_FAILED;
         }
         RawDumpConfig rawDumpConfig = js.at(ADUMP_DUMP);
+
+        // KernelDataDump: 解析dump_kernel_data字段的使能类型。
+        dumpDfxConfig.dumpPath = rawDumpConfig.dumpPath;
+        ParseDumpKernelData(dumpDfxConfig.dfxTypes);
+
         if (!NeedDump(rawDumpConfig)) {
             needDump = false;
             IDE_LOGI("No need to dump anything after check dump config.");
@@ -762,6 +801,11 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
         }
         dumpConfig = ConvertDumpConfig(rawDumpConfig);
         dumpType = ConvertDumpType(rawDumpConfig);
+
+        // KernelDataDump: 如果开启算子DataDump，但未配置dump_kernel_data字段，默认开启all类型。
+        if (dumpType == DumpType::OPERATOR && dumpDfxConfig.dfxTypes.empty()) {
+            dumpDfxConfig.dfxTypes.push_back(ADUMP_DUMP_KERNEL_DATA_ALL);
+        }
         needDump = true;
         IDE_LOGI("Success to convert dumpType[%d], dumpPath[%s], dumpMode[%s], dumpStatus[%s], dumpData[%s], dumpSwitch[%ld]",
             dumpType, dumpConfig.dumpPath.c_str(), dumpConfig.dumpMode.c_str(), dumpConfig.dumpStatus.c_str(), dumpConfig.dumpData.c_str(),
@@ -866,5 +910,21 @@ bool DumpConfigConverter::EnableExceptionDumpWithEnv(DumpConfig &dumpConfig, Dum
         IDE_LOGI("No Env enable exception dump");
         return false;
     }
+}
+
+bool DumpConfigConverter::EnableKernelDfxDumpWithEnv(DumpDfxConfig &config)
+{
+    DumpEnvVariable dumpEnvVariable;
+    LoadDumpEnvVariables(dumpEnvVariable);
+    if (!dumpEnvVariable.ascendDumpPath.empty() || !dumpEnvVariable.ascendWorkPath.empty()) {
+        // enable all(default, RT_KERNEL_DFX_INFO_DEFAULT) with env variable
+        config.dfxTypes.push_back(ADUMP_DUMP_KERNEL_DATA_ALL);
+        std::string dumpPath = dumpEnvVariable.ascendDumpPath.empty()
+            ? dumpEnvVariable.ascendWorkPath : dumpEnvVariable.ascendDumpPath;
+        Path path = Path(dumpPath).Append("data-dump");
+        config.dumpPath = path.GetString();
+        return true;
+    }
+    return false;
 }
 }  // namespace Adx

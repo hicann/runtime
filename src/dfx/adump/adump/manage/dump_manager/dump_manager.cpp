@@ -25,6 +25,7 @@
 #include "dump_config_converter.h"
 #include "adump_api.h"
 #include "operator_dumper.h"
+#include "kernel_dfx_dumper.h"
 #include "adx_dump_record.h"
 #include "common/file.h"
 
@@ -106,6 +107,8 @@ DumpManager::DumpManager()
             isEnvExceptionDump_ = true;
         }
     }
+    // 2. 通过环境变量使能Kernel Dfx Dump
+    KernelDfxDumper::Instance();
 }
 
 void DumpManager::KFCResourceInit()
@@ -195,14 +198,20 @@ int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfig
         return ADUMP_FAILED;
     }
     DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool needDump = true;
     DumpConfigConverter converter{dumpConfigData, dumpConfigSize};
-    int32_t ret = converter.Convert(dumpType, dumpConfig, needDump);
+    int32_t ret = converter.Convert(dumpType, dumpConfig, needDump, dumpDfxConfig);
     if (ret != ADUMP_SUCCESS) {
         IDE_LOGE("Parse dump config from memory[%s] failed.", dumpConfigData);
         return ADUMP_INPUT_FAILED;
     }
+
+    // 开启KernelDataDump
+    ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ret, "Enable kernel dfx dump failed.");
+
     if (!needDump) {
         return ADUMP_SUCCESS;
     }

@@ -276,3 +276,19 @@ INT32 mmStatGet(const CHAR *path, mmStat_t *buffer)
     }
     return EN_OK;
 }
+
+INT32 mmJoinTask( mmThread *pstThreadHandle)
+{
+    return 0;
+}
+
+INT32 mmSetCurrentThreadName(const CHAR* name)
+{
+    return EN_OK;
+}
+
+INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *funcBlock, const mmThreadAttr *threadAttr)
+{
+    funcBlock->procFunc(funcBlock->pulArg);
+    return 0;
+}

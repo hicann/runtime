@@ -31,101 +31,102 @@ protected:
 TEST_F(DumpConfigConverterUtest, TestConvertCommon)
 {
     DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool IsNeedDump = false;
     std::string configData = ReadFileToString(JSON_BASE "common/bad_path.json");
     DumpConfigConverter converter{configData.c_str(), configData.size()};
-    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/empty_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "common/empty.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "common/invalid_ip_path_gt255.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/json_bad_obj.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/invalid_ip_path_no_ip.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/invalid_ip_path_invalid_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/invalid_ip_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/invalid_json.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/json_too_deep.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/json_too_many_array.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/only_dump_key.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/only_ip_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "common/only_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "common/path_too_long.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "common/watcher_input.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "common/watcher_output.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
     EXPECT_FALSE(IsNeedDump);
 
     converter = DumpConfigConverter(nullptr, static_cast<size_t>(-1));
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     MOCKER(&mmRealPath)
@@ -133,7 +134,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
         .will(returnValue(-1));
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
@@ -142,7 +143,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
         .will(returnValue(-1));
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
@@ -151,7 +152,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
         .will(returnValue(false));
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     GlobalMockObject::reset();
@@ -161,7 +162,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
         .then(returnValue(false));
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     GlobalMockObject::reset();
@@ -172,7 +173,7 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
         .then(returnValue(false));
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
 }
@@ -180,188 +181,191 @@ TEST_F(DumpConfigConverterUtest, TestConvertCommon)
 TEST_F(DumpConfigConverterUtest, TestConvertException)
 {
     DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool IsNeedDump = false;
     std::string configData = ReadFileToString(JSON_BASE "exception/aic_err_brief_dump.json");
     DumpConfigConverter converter{configData.c_str(), configData.size()};
-    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::ARGS_EXCEPTION);
 
     configData = ReadFileToString(JSON_BASE "exception/lite_exception.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::ARGS_EXCEPTION);
 
     configData = ReadFileToString(JSON_BASE "exception/aic_err_norm_dump.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::EXCEPTION);
 
     configData = ReadFileToString(JSON_BASE "exception/aic_err_detail_dump.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::AIC_ERR_DETAIL_DUMP);
 
     configData = ReadFileToString(JSON_BASE "exception/invalid_dump_scene.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "exception/dump_scene_conflict_dump_debug.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "exception/dump_scene_conflict_dump_op_switch.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 }
 
 TEST_F(DumpConfigConverterUtest, TestConvertOverflow)
 {
     DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool IsNeedDump = false;
     std::string configData = ReadFileToString(JSON_BASE "overflow/dump_debug_off.json");
     DumpConfigConverter converter{configData.c_str(), configData.size()};
-    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "overflow/dump_debug_on.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OP_OVERFLOW);
 
     configData = ReadFileToString(JSON_BASE "overflow/invalid_dump_debug.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "overflow/overflow_conflict_op_switch.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "overflow/overflow_ip_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OP_OVERFLOW);
 
     configData = ReadFileToString(JSON_BASE "overflow/overflow_no_path.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "overflow/overflow_path_empty.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 }
 
 TEST_F(DumpConfigConverterUtest, TestConvertDataDump)
 {
     DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool IsNeedDump = false;
     std::string configData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
     DumpConfigConverter converter{configData.c_str(), configData.size()};
-    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor_conflict_stats.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_level_kernel.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_level_op.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_mode_input.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_mode_output.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_op_switch_off.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_FALSE(IsNeedDump);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_stats_empty_list.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_stats_no_stats.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/dump_stats_not_empty.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
     EXPECT_TRUE(IsNeedDump);
     EXPECT_EQ(dumpType, DumpType::OPERATOR);
 
     configData = ReadFileToString(JSON_BASE "datadump/invalid_dump_data.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "datadump/invalid_dump_level.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
     configData = ReadFileToString(JSON_BASE "datadump/invalid_dump_mode.json");
     converter = DumpConfigConverter(configData.c_str(), configData.size());
-    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump);
+    ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_FAILED);
 }
 
@@ -404,7 +408,6 @@ TEST_F(DumpConfigConverterUtest, TestNpuCollectPathEnableExceptionDump)
     EXPECT_EQ(dumpType, DumpType::EXCEPTION);
     EXPECT_EQ(config.dumpPath, "./TestNpuCollectPathEnableExceptionDump/npuCollectPath");
 
-    (void)unsetenv("ASCEND_WORK_PATH");
     (void)unsetenv("ASCEND_WORK_PATH");
     (void)unsetenv("NPU_COLLECT_PATH");
     (void)unsetenv("ASCEND_DUMP_SCENE");
@@ -473,7 +476,7 @@ TEST_F(DumpConfigConverterUtest, TestAscendDumpSceneEnableExceptionDump)
     EXPECT_EQ(config.dumpPath, "./TestAscendDumpSceneEnableExceptionDump/ascendDumpPath");
     (void)system("rm -rf ./TestAscendDumpSceneEnableExceptionDump");
     (void)unsetenv("ASCEND_WORK_PATH");
-    (void)unsetenv("ASCEND_WORK_PATH");
+    (void)unsetenv("ASCEND_DUMP_PATH");
     (void)unsetenv("NPU_COLLECT_PATH");
     (void)unsetenv("ASCEND_DUMP_SCENE");
 }

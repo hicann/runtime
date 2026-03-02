@@ -48,6 +48,7 @@ set(ascendDumpSrcList
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/dump_manager.cpp
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/close/dump_manager_platform.cpp
     ${ADUMP_ADUMP_DIR}/operator/operator_dumper.cpp
+    ${ADUMP_ADUMP_DIR}/operator/kernel_dfx_dumper.cpp
     ${ADUMP_ADUMP_DIR}/operator/operator_preliminary/operator_preliminary_device.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/dump_printf.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/close/dump_printf_platform.cpp

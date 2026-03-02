@@ -14,6 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "dump_manager.h"
 #include "utils.h"
+#include "common/thread.h"
 
 using namespace Adx;
 #define JSON_BASE ADUMP_BASE_DIR "stub/data/json/"
@@ -29,6 +30,7 @@ protected:
 
 TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 {
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     int32_t ret = DumpManager::Instance().SetDumpConfig(nullptr, 0);
     EXPECT_EQ(ret, ADUMP_FAILED);
 

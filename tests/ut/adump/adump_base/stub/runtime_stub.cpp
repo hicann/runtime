@@ -13,12 +13,15 @@
 #include "securec.h"
 #include <map>
 #include <vector>
+#include "log/adx_log.h"
 #include "dump_common.h"
 #include "runtime/rt.h"
 #include "runtime/mem.h"
 #include "rts/rts_device.h"
 #include "rts/rts_stream.h"
 #include "rts/rts_kernel.h"
+#include "rt_inner_dfx.h"
+#include "inner_kernel.h"
 
 static constexpr rtError_t RT_ERROR_STUB_FAILURE = -1;
 static constexpr uint32_t LOCAL_DEV_NUM = 8;
@@ -486,8 +489,8 @@ rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t ty
 
 std::map<uint32_t, std::string> g_stackData;
 
-rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
-                           const void **stack, uint32_t *stackSize)
+rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const uint16_t coreId, const void **stack, uint32_t *stackSize)
 {
     UNUSED(deviceId);
     UNUSED(stackType);
@@ -536,5 +539,10 @@ rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout)
 rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout)
 {
     *timeout = g_opTimeout;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
+{
     return RT_ERROR_NONE;
 }
