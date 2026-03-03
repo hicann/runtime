@@ -128,6 +128,20 @@ PlatformManagerV2 &PlatformManagerV2::Instance() {
 int32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version, const std::string &label,
     const std::string &key, std::string &value)
 {
+  if (soc_version == "Ascend910B1" && label == "version" && key == "NpuArch") {
+    value = "2201";
+    return 0U;
+  } else if (soc_version == "Ascend950PR_9599" && label == "version" && key == "NpuArch") {
+    value = "3510";
+    return 0U;
+  } else if (soc_version == "Ascend310P5" && label == "version" && key == "NpuArch") {
+    value = "2002";
+    return 0U;
+  } else if (soc_version == "Ascend910A" && label == "version" && key == "NpuArch") {
+    value = "1001";
+    return 0U;
+  } else {
     value = "test";
     return 0U;
+  }
 }

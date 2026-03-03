@@ -3775,60 +3775,6 @@ TEST_F(ApiTest, rtGetOpTimeOutV2_set)
     rtInstance->timeoutConfig_.opExcTaskTimeout = oriopExcTaskTimeout;
 }
 
- TEST_F(ApiTest, rtCheckArchCompatibility_socVersion) 
- { 
-     rtError_t error; 
-     char version[50] = {0}; 
-     int32_t canCompatible = 0; 
-     Runtime *rtInstance = (Runtime *)Runtime::Instance(); 
-     rtChipType_t oriChipType = rtInstance->GetChipType(); 
-     rtArchType_t oriArchType = rtInstance->GetArchType(); 
-     rtSocType_t socBak = rtInstance->GetSocType(); 
- 
- 
-     // change ArchType 
-     rtInstance->SetArchType(ARCH_M300); 
-     rtInstance->SetChipType(CHIP_AS31XM1); 
-     GlobalContainer::SetRtChipType(CHIP_AS31XM1); 
-     rtInstance->SetSocType(SOC_AS31XM1X); 
-     error = rtCheckArchCompatibility("AS31XM1X", &canCompatible); 
-     EXPECT_EQ(canCompatible, 1); 
-     EXPECT_EQ(error, ACL_RT_SUCCESS); 
- 
- 
-     rtInstance->SetArchType(ARCH_C100); 
-     rtInstance->SetChipType(CHIP_CLOUD); 
-     GlobalContainer::SetRtChipType(CHIP_CLOUD); 
-     rtInstance->SetSocType(SOC_ASCEND910A); 
-     error = rtCheckArchCompatibility("Ascend910A", &canCompatible); 
-     EXPECT_EQ(canCompatible, 1); 
-     EXPECT_EQ(error, ACL_RT_SUCCESS); 
- 
- 
-     rtInstance->SetArchType(ARCH_M201); 
-     rtInstance->SetChipType(CHIP_ADC); 
-     GlobalContainer::SetRtChipType(CHIP_ADC); 
-     rtInstance->SetSocType(SOC_BS9SX1AA); 
-     error = rtCheckArchCompatibility("BS9SX1AA", &canCompatible); 
-     EXPECT_EQ(canCompatible, 1); 
-     EXPECT_EQ(error, ACL_RT_SUCCESS); 
- 
- 
-     rtInstance->SetArchType(ARCH_V100); 
-     rtInstance->SetChipType(CHIP_CLOUD); 
-     GlobalContainer::SetRtChipType(CHIP_CLOUD); 
-     rtInstance->SetSocType(SOC_ASCEND910A); 
-     error = rtCheckArchCompatibility("Ascend910A", &canCompatible); 
-     EXPECT_EQ(error, ACL_RT_SUCCESS); 
- 
- 
-     // restore all type 
-     rtInstance->SetChipType(oriChipType); 
-     GlobalContainer::SetRtChipType(oriChipType); 
-     rtInstance->SetArchType(oriArchType); 
-     rtInstance->SetSocType(socBak); 
- }
-
 TEST_F(ApiTest, rtGetPriCtxByDeviceId)
 {
     rtContext_t ctx;

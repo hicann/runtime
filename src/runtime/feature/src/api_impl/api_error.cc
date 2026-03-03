@@ -4001,7 +4001,7 @@ rtError_t ApiErrorDecorator::GetOpExecuteTimeoutV2(uint32_t *const timeout)
     return error;
 }
 
-rtError_t ApiErrorDecorator::CheckArchCompatibility(const char_t *omSocVersion, int32_t *canCompatible)
+rtError_t ApiErrorDecorator::CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible)
 {
     NULL_PTR_RETURN_MSG_OUTER(omSocVersion, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(canCompatible, RT_ERROR_INVALID_VALUE);
@@ -4009,7 +4009,7 @@ rtError_t ApiErrorDecorator::CheckArchCompatibility(const char_t *omSocVersion, 
         RT_LOG(RT_LOG_ERROR, "Input omSocVersion is null, please check.");
         return RT_ERROR_INVALID_VALUE;
     }
-    const rtError_t error = impl_->CheckArchCompatibility(omSocVersion, canCompatible);
+    const rtError_t error = impl_->CheckArchCompatibility(socVersion, omSocVersion, canCompatible);
     ERROR_RETURN(error, "Check ArchType Compatibility failed, omSocVersion=%s.", omSocVersion);
     return error;
 }

@@ -315,7 +315,7 @@ public:
     rtError_t GetDeviceCapability(const int32_t deviceId, const int32_t moduleType, const int32_t featureType,
         int32_t * const val) override;
     rtError_t ModelCheckArchVersion(const char_t *omArchVersion, const rtArchType_t archType) override;
-    rtError_t CheckArchCompatibility(const char_t *omSocVersion, int32_t *canCompatible) override;
+    rtError_t CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible) override;
     rtError_t DeviceStatusQuery(const uint32_t devId, rtDeviceStatus *deviceStatus) override;
     rtError_t GetFaultEvent(const int32_t deviceId, rtDmsEventFilter *filter, rtDmsFaultEvent *dmsEvent,
         uint32_t len, uint32_t *eventCount) override;

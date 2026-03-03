@@ -1373,9 +1373,9 @@ rtError_t ApiDecorator::GetOpExecuteTimeoutV2(uint32_t *const timeout)
     return impl_->GetOpExecuteTimeoutV2(timeout);
 }
 
-rtError_t ApiDecorator::CheckArchCompatibility(const char_t *omSocVersion, int32_t *canCompatible)
+rtError_t ApiDecorator::CheckArchCompatibility(const char_t *socVersion, const char_t *omSocVersion, int32_t *canCompatible)
 {
-    return impl_->CheckArchCompatibility(omSocVersion, canCompatible);
+    return impl_->CheckArchCompatibility(socVersion, omSocVersion, canCompatible);
 }
 
 rtError_t ApiDecorator::GetOpTimeOutInterval(uint64_t *interval)

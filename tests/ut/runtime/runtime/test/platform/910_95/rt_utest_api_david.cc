@@ -9643,3 +9643,22 @@ TEST_F(ApiDavidTest, modelDebugJsonPrintApi)
     EXPECT_EQ(ctx->StreamDestroy((Stream *)stream), RT_ERROR_NONE);
     EXPECT_EQ(rtEventDestroy(event), ACL_RT_SUCCESS);
 }
+
+TEST_F(ApiDavidTest, rtCheckArchCompatibility_socVersion)
+{
+    rtError_t error;
+    char version[50] = {0};
+    int32_t canCompatible = 0;
+   
+    error = rtCheckArchCompatibility("Ascend950PR_9599", &canCompatible);
+    EXPECT_EQ(canCompatible, 1);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtCheckArchCompatibility("Ascend910A", &canCompatible);
+    EXPECT_EQ(canCompatible, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
+    EXPECT_EQ(canCompatible, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}

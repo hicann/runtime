@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "platform_manager_v2.h"
 
 class NewCloudV2ApiTest : public testing::Test
 {
@@ -2034,10 +2035,7 @@ TEST_F(NewCloudV2ApiTest, rtCheckArchCompatibility_socVersion)
     char version[50] = {0};
     int32_t canCompatible = 0;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtArchType_t oriArchType = rtInstance->GetArchType();
     rtSocType_t socBak = rtInstance->GetSocType();
-
-    rtInstance->SetArchType(ARCH_C220);
     rtInstance->SetSocType(SOC_ASCEND910B1);
 
     // OmSocVersion is null
@@ -2051,25 +2049,34 @@ TEST_F(NewCloudV2ApiTest, rtCheckArchCompatibility_socVersion)
     error = rtCheckArchCompatibility("", &canCompatible);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    // OmSocVersion is not same as archType
-    error = rtCheckArchCompatibility("Ascend310", &canCompatible);
+    // OmSocVersion is same as hardwareSocVersion
+    error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
+    EXPECT_EQ(canCompatible, 1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    // OmSocVersion is different from hardwareSocVersion
+    error = rtCheckArchCompatibility("Ascend950PR_9599", &canCompatible);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    int32_t rtn = RT_ERROR_NOT_FOUND;
+
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec)
+        .stubs()
+        .will(returnValue(rtn));
 
     // OmSocVersion is not find
     error = rtCheckArchCompatibility("Ascend000", &canCompatible);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    // OmSocVersion is same as archType
+    // hardwareSocVersion is error
+    rtn = ACL_ERROR_RT_PARAM_INVALID;
+    MOCKER_CPP(&rtGetSocVersion)
+        .stubs()
+        .will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
     error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    rtInstance->SetArchType(ARCH_V100);
-    rtInstance->SetSocType(SOC_ASCEND910B1);
-    error = rtCheckArchCompatibility("Ascend910B1", &canCompatible);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     // restore all type
-    rtInstance->SetArchType(oriArchType);
     rtInstance->SetSocType(socBak);
 }
 

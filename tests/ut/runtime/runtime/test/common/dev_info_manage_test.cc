@@ -11,6 +11,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "dev_info_manage.h"
 #include "soc_info.h"
+#include "platform_manager_v2.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -113,6 +114,19 @@ TEST_F(DevInfoManageTest, GetSocInfo)
     rtSocInfo_t s = {SOC_ASCEND910B1, CHIP_910_B_93, ARCH_C220, "Ascend910_9391"};
     rtError_t result = GetSocInfoByName("Ascend910_9372", s);
     EXPECT_EQ(result, RT_ERROR_NONE);
+}
+
+TEST_F(DevInfoManageTest, GetNpuArchByName)
+{
+    const char_t *const socName_910B1 = "Ascend910B1"; 
+    int32_t hardwareNpuArch; 
+    rtError_t result = GetNpuArchByName(socName_910B1, &hardwareNpuArch); 
+    EXPECT_EQ(result, RT_ERROR_NONE); 
+    EXPECT_EQ(hardwareNpuArch, 2201); 
+    
+    const char_t *const socName_err = "Ascend"; 
+    result = GetNpuArchByName(socName_err, &hardwareNpuArch); 
+    EXPECT_EQ(result, RT_ERROR_INVALID_VALUE);
 }
 
 void test_soc_info_by_soc_type_and_name(const rtSocType_t socType, const char_t *const socName)
