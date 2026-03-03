@@ -540,7 +540,7 @@ static hdcError_t HdcWritePackage(HDC_SESSION session, DataSendMsg dataSendMsg,
 
         // send hdc message
         hdcError = halHdcSend(session, pmsg, flag, timeout);
-        IDE_CTRL_VALUE_FAILED(hdcError == DRV_ERROR_NONE, return hdcError, "Hdc Send, error: %d, session: %zu",
+        IDE_CTRL_VALUE_WARN(hdcError == DRV_ERROR_NONE, return hdcError, "Hdc Send, error: %d, session: %zu",
             hdcError, reinterpret_cast<uintptr_t>(session));
 
         // reuse hdc message
@@ -602,7 +602,8 @@ int32_t HdcSessionWrite(HDC_SESSION session, IdeSendBuffT buf, int32_t len, int3
     IDE_CTRL_VALUE_FAILED(ret == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "Hdc Free Msg, error: %d", ret);
     pmsg = nullptr;
 
-    return hdcError != DRV_ERROR_NONE ? IDE_DAEMON_ERROR : IDE_DAEMON_OK;
+    return hdcError == DRV_ERROR_NONE ? IDE_DAEMON_OK : (hdcError == DRV_ERROR_SOCKET_CLOSE ?
+        IDE_DAEMON_SOCK_CLOSE : IDE_DAEMON_ERROR);
 }
 
 /**

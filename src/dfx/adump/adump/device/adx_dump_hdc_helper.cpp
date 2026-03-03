@@ -139,11 +139,14 @@ IdeErrorT AdxDumpHdcHelper::DataProcess(const IDE_SESSION &session, const IdeDum
     handle.type = client_.type;
     handle.session = reinterpret_cast<OptHandle>(session);
     IdeErrorT code = SessionIsConnected(handle);
-    IDE_CTRL_VALUE_FAILED(code == IDE_DAEMON_NONE_ERROR,
+    IDE_CTRL_VALUE_WARN(code == IDE_DAEMON_NONE_ERROR,
         return code, "check session status failed, err=%d", static_cast<int32_t>(code));
     uint32_t ret = AdxCommOptManager::Instance().Write(handle, sendDataMsgPtr.get(),
         sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
-    IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_WRITE_ERROR, "write dump file error");
+    IDE_CTRL_VALUE_WARN(ret != IDE_DAEMON_SOCK_CLOSE, return IDE_DAEMON_CHANNEL_ERROR,
+        "write dump data error, session[%zu] has been closed, ret: %d", handle.session, ret);
+    IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK, return IDE_DAEMON_WRITE_ERROR,
+        "write dump data error, session: %zu, ret: %d", handle.session, ret);
     code = AdxMsgProto::RecvResponse(handle);
     IDE_CTRL_VALUE_FAILED((code == IDE_DAEMON_NONE_ERROR) || (code == IDE_DAEMON_DUMP_QUEUE_FULL),
         return code, "send file shake response failed, ret=%d", static_cast<int32_t>(code));
@@ -156,8 +159,8 @@ IdeErrorT AdxDumpHdcHelper::SessionIsConnected(const CommHandle handle) const
     int32_t status = 0;
     int32_t ret = AdxGetAttrByCommHandle(&handle, HDC_SESSION_ATTR_STATUS, &status);
     if (ret != IDE_DAEMON_OK || status != HDC_SESSION_STATUS_CONNECT) {
-        IDE_LOGE("session is not connected, ret: %d, status: %d", ret, status);
-        return IDE_DAEMON_HDC_CHANNEL_ERROR;
+        IDE_LOGW("session[%zu] is not connected, ret: %d, status: %d", handle.session, ret, status);
+        return IDE_DAEMON_CHANNEL_ERROR;
     }
     return IDE_DAEMON_NONE_ERROR;
 }
@@ -167,8 +170,7 @@ IdeErrorT AdxDumpHdcHelper::Finish(IDE_SESSION &session)
     CommHandle handle;
     handle.type = client_.type;
     handle.session = reinterpret_cast<OptHandle>(session);
-    IdeErrorT err = AdxMsgProto::SendResponse(handle, IDE_DUMP_REQ, 0, MsgStatus::MSG_STATUS_DATA_END);
-    IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_NONE_ERROR, return err, "dump data hand shake failed");
+    (void)AdxMsgProto::SendResponse(handle, IDE_DUMP_REQ, 0, MsgStatus::MSG_STATUS_DATA_END);
     AdxCommOptManager::Instance().Close(handle);
     session = nullptr;
     return IDE_DAEMON_NONE_ERROR;

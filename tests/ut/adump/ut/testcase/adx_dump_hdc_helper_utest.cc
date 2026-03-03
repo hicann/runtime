@@ -98,5 +98,5 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_SessionError)
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     int ret = IdeDumpData(session, &constDumpChunk);
-    EXPECT_EQ(IDE_DAEMON_HDC_CHANNEL_ERROR, ret);
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, ret);
 }

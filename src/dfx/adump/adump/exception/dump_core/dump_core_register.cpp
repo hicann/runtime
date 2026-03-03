@@ -99,7 +99,7 @@ void DumpCore::DumpV2DebugRegister(uint8_t coreType, uint16_t coreId, const std:
             dataPtr += table.byteWith;
         }
     }
-    IDE_LOGI("%s", ss.str().c_str());
+    IDE_LOGW("%s", ss.str().c_str());
 }
 
 void DumpCore::DumpV2ErrorRegister(uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable> &tables,
@@ -129,6 +129,6 @@ void DumpCore::DumpV2ErrorRegister(uint8_t coreType, uint16_t coreId, const std:
             regData.emplace_back(regInfo);
         }
     }
-    IDE_LOGI("%s", ss.str().c_str());
+    IDE_LOGW("%s", ss.str().c_str());
 }
 }  // namespace Adx
