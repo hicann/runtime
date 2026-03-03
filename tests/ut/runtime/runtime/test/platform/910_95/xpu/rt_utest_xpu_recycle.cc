@@ -30,6 +30,7 @@
 #include "tprt.hpp"
 #include "inner_thread_local.hpp"
 #include "task_xpu_recycle.hpp"
+#include "rt_inner_xpu.h"
 
 using namespace testing;
 using namespace cce::runtime;
