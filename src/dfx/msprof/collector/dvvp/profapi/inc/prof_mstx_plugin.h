@@ -60,7 +60,7 @@ MSVP_PROF_API void ProfRegisterMstxFunc(MstxInitInjectionFunc mstxInitFunc, Prof
 MSVP_PROF_API void ProfEnableMstxFunc(ProfModule module);
 
 // for mstx to init mstx impl functions injection
-int InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable);
+MSVP_PROF_API int InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable);
 
 #ifdef __cplusplus
 }
