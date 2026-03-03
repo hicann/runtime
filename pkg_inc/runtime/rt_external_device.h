@@ -337,33 +337,6 @@ RTS_API rtError_t rtGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int3
 RTS_API rtError_t rtGetServerIDBySDID(uint32_t sdid, uint32_t *srvId);
 
 /**
- * @ingroup xpu dev
- * @brief get xpu device count
- * @param [in] devType Currently, only the DPU type is supported. 
- * @param [out] count Currently count=1
- * @return RT_ERROR_NONE for ok
- */
-RTS_API rtError_t rtGetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount);
-
-/**
- * @ingroup xpu dev
- * @brief set xpu device
- * @param [in] devType Currently, only the DPU type is supported. 
- * @param [in] devId Currently devId=0 is supported
- * @return RT_ERROR_NONE for ok
- */
-RTS_API rtError_t rtSetXpuDevice(rtXpuDevType devType, const uint32_t devId);
-
-/**
- * @ingroup xpu dev
- * @brief reset xpu device
- * @param [in] devType Currently, only the DPU type is supported. 
- * @param [in] devId Currently devId=0 is supported
- * @return RT_ERROR_NONE for ok
- */
-RTS_API rtError_t rtResetXpuDevice(rtXpuDevType devType, const uint32_t devId);
-
-/**
  * @ingroup dvrt_base
  * @brief register callback for xpu task fail
  * @param [in] devType Currently, only the DPU type is supported. 

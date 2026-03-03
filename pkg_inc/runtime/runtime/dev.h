@@ -49,6 +49,11 @@ typedef enum tagRtRunMode {
     RT_RUN_MODE_RESERVED
 } rtRunMode;
 
+typedef enum tagRtXpuDevType {
+    RT_DEV_TYPE_DPU = 0,
+    RT_DEV_TYPE_REV
+} rtXpuDevType;
+
 typedef enum tagRtAicpuDeployType {
     AICPU_DEPLOY_CROSS_OS = 0x0,
     AICPU_DEPLOY_CROSS_PROCESS,

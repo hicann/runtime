@@ -19,8 +19,6 @@
 #include "runtime/rt_preload_task.h"
 #include "runtime/rt_inner_dfx.h"
 #include "dqs/task_dqs.hpp"
-#include "runtime/rt_inner_xpu.h"
-
 
 namespace cce {
 namespace runtime {

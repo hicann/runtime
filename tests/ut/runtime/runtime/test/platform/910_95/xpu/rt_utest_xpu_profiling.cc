@@ -32,7 +32,6 @@
 #include "raw_device.hpp"
 #include "xpu_stub.h"
 #include "tprt.hpp"
-#include "rt_inner_xpu.h"
 
 
 using namespace cce::runtime;
