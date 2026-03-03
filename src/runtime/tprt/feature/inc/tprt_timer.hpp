@@ -10,6 +10,7 @@
 #ifndef __CCE_TPRT_TIMER_HPP__
 #define __CCE_TPRT_TIMER_HPP__
 #include <thread>
+#include <string>
 #include <chrono>
 #include <functional>
 

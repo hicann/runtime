@@ -10,6 +10,7 @@
 #ifndef __CCE_TPRT_WORKER_HPP__
 #define __CCE_TPRT_WORKER_HPP__
 #include <thread>
+#include <string>
 #include "tprt_cqhandle.hpp"
 
 enum TprtWorkerState : uint32_t {
