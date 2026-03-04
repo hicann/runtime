@@ -847,7 +847,7 @@ int32_t AicpuSqeAdapter::AicpuTimeOutConfigResponseToTsV0(const int32_t ret)
 
 int32_t AicpuSqeAdapter::AicpuTimeOutConfigResponseToTsV1(const int32_t ret)
 {
-    TsAicpuMsgInfo msgInfo;
+    TsAicpuMsgInfo msgInfo{};
     msgInfo.pid = static_cast<uint32_t>(AicpuDrvManager::GetInstance().GetHostPid());
     msgInfo.cmd_type = cmd_type_;
     msgInfo.vf_id = static_cast<uint8_t>(AicpuDrvManager::GetInstance().GetVfId());

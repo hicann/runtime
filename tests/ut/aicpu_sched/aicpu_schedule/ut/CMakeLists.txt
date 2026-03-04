@@ -277,6 +277,8 @@ set(LOCAL_SRC_FILES
 
     testcase/aicpu_context.cc
     testcase/aicpu_schedule_test.cc
+    testcase/ts_to_aicpu_message_adapter/msg_info_adapter_test.cc
+    testcase/ts_to_aicpu_message_adapter/sqe_message_adapter_test.cc
     testcase/aicpusd_args_parser_test.cc
     testcase/aicpusd_queue_event_process_test.cc
     testcase/aicpusd_drv_manager_test.cc
