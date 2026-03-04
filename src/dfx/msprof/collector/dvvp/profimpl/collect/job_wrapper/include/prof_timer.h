@@ -329,10 +329,14 @@ struct dcmi_network_pkt_stats_info {
 #endif
 
 using DcmiInitFunc = int (*)();
+using DcmiV2InitFunc = int (*)();
 using DcmiGetCardListFunc = int (*)(int *cardNum, int *cardList, int listLen);
 using DcmiGetDeviceNumInCardFunc_ = int (*)(int cardId, int *deviceNum);
 using DcmiGetNetdevPktStatsInfoFunc = int (*)(int cardId, int deviceId, int portId,
     struct dcmi_network_pkt_stats_info *statsInfo);
+using DcmiV2GetNetdevPktStatsInfoFunc = int (*)(int deviceId, int portId,
+    struct dcmi_network_pkt_stats_info *statsInfo);
+using DcmiV2GetDcmiVersionFunc = int (*)(char *dcmi_ver, unsigned int len);
 
 class NetDevStatsHandler : public TimerHandler {
 public:
@@ -354,11 +358,15 @@ private:
     std::unordered_map<uint32_t, std::pair<int, int>> GetCurDcmiCardDevIdMap();
 
     int32_t LoadDcmiApi();
+    int32_t LoadDcmiV2Api();
+    int32_t LoadDcmiV1Api();
+    void HandleDcmiV2SupFlag();
 
 private:
     volatile bool isInited_;
     unsigned long long prevTimeStamp_;
     unsigned long long  sampleIntervalNs_;
+    bool isDcmiV2Supported_;
     size_t bufSize_;
     std::string retFileName_;
     std::string jobId_;
@@ -370,9 +378,11 @@ private:
 
     VOID_PTR dcmiLibHandle_ = nullptr;
     DcmiInitFunc dcmiInit_ = nullptr;
+    DcmiV2InitFunc dcmiV2Init_ = nullptr;
     DcmiGetCardListFunc dcmiGetCardList_ = nullptr;
     DcmiGetDeviceNumInCardFunc_ dcmiGetDeviceNumInCard_ = nullptr;
     DcmiGetNetdevPktStatsInfoFunc dcmiGetNetdevPktStatsInfo_ = nullptr;
+    DcmiV2GetNetdevPktStatsInfoFunc dcmiV2GetNetdevPktStatsInfo_ = nullptr;
 };
 
 struct TimerParam {

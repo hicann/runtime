@@ -882,10 +882,18 @@ int32_t NetDevStatsHandler::Init()
     } else if (ret == PROFILING_NOTSUPPORT) {
         return PROFILING_NOTSUPPORT;
     }
-    if (dcmiInit_() != PROFILING_SUCCESS) {
-        MSPROF_LOGE("NetDevStatsHandler dcmi init failed");
-        MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler dcmi init failed");
-        return PROFILING_FAILED;
+    if (isDcmiV2Supported_) {
+        if (dcmiV2Init_() != PROFILING_SUCCESS) {
+            MSPROF_LOGE("NetDevStatsHandler dcmi init failed");
+            MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler dcmi init failed");
+            return PROFILING_FAILED;
+        }
+    } else {
+        if (dcmiInit_() != PROFILING_SUCCESS) {
+            MSPROF_LOGE("NetDevStatsHandler dcmi init failed");
+            MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler dcmi init failed");
+            return PROFILING_FAILED;
+        }
     }
     prevTimeStamp_ = 0;
     isInited_ = true;
@@ -922,12 +930,22 @@ int32_t NetDevStatsHandler::Execute()
         auto devId = iter.first;
         auto dcmiCardId = iter.second.first;
         auto dcmiDeviceId = iter.second.second;
-        if (dcmiGetNetdevPktStatsInfo_(dcmiCardId, dcmiDeviceId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo) !=
-            PROFILING_SUCCESS) {
-            MSPROF_LOGE("NetDevStatsHandler get netdev pkt stats info failed devId %u", devId);
-            MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler get netdev pkt stats info failed");
-            break;
+        if (isDcmiV2Supported_) {
+           if (dcmiV2GetNetdevPktStatsInfo_(devId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo) !=
+               PROFILING_SUCCESS) {
+               MSPROF_LOGE("NetDevStatsHandler get netdev pkt stats info failed devId %u", devId);
+               MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler get netdev pkt stats info failed");
+               break;
+           }
+        } else {
+           if (dcmiGetNetdevPktStatsInfo_(dcmiCardId, dcmiDeviceId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo) !=
+               PROFILING_SUCCESS) {
+               MSPROF_LOGE("NetDevStatsHandler get netdev pkt stats info failed devId %u", devId);
+               MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler get netdev pkt stats info failed");
+               break;
+           }
         }
+
         auto packedData = ConstructNetDevStatsData(curTimeStamp, statsInfo);
         StoreData(devId, std::move(packedData));
     }
@@ -1053,9 +1071,14 @@ int32_t NetDevStatsHandler::RegisterDevTask(uint32_t devId)
         }
         int dcmiCardId = 0;
         int dcmiDevId = 0;
-        if (!GetDcmiCardDevId(devId, dcmiCardId, dcmiDevId)) {
-            MSPROF_LOGE("NetDevStatsHandler get dcmi card dev id failed for devId %u", devId);
-            return PROFILING_FAILED;
+        if (isDcmiV2Supported_) {
+            dcmiCardId = static_cast<int>(devId);
+            dcmiDevId = static_cast<int>(devId);
+        } else {
+            if (!GetDcmiCardDevId(devId, dcmiCardId, dcmiDevId)) {
+                MSPROF_LOGE("NetDevStatsHandler get dcmi card dev id failed for devId %u", devId);
+                return PROFILING_FAILED;
+            }
         }
         devTaskBufs_.emplace(devId, std::move(buf));
         dcmiCardDevIdMap_.emplace(devId, std::make_pair(dcmiCardId, dcmiDevId));
@@ -1108,6 +1131,50 @@ int32_t NetDevStatsHandler::LoadDcmiApi()
         MSPROF_LOGW("Unable to load dcmi library");
         return PROFILING_NOTSUPPORT;
     }
+    HandleDcmiV2SupFlag();
+    if (isDcmiV2Supported_) {
+        return LoadDcmiV2Api();
+    } else {
+        return LoadDcmiV1Api();
+    }
+
+    return PROFILING_SUCCESS;
+}
+
+void NetDevStatsHandler::HandleDcmiV2SupFlag()
+{
+    DcmiV2GetDcmiVersionFunc dcmiV2GetDcmiVersion = nullptr;
+    dcmiV2GetDcmiVersion = reinterpret_cast<DcmiV2GetDcmiVersionFunc>(
+        OsalDlsym(dcmiLibHandle_, "dcmiv2_get_dcmi_version"));
+    if (dcmiV2GetDcmiVersion == nullptr) {
+        isDcmiV2Supported_ = false;
+        return;
+    } else {
+        isDcmiV2Supported_ = true;
+        return;
+    }
+}
+
+int32_t NetDevStatsHandler::LoadDcmiV2Api()
+{
+    dcmiV2Init_ = reinterpret_cast<DcmiV2InitFunc>(OsalDlsym(dcmiLibHandle_, "dcmiv2_init"));
+    if (dcmiV2Init_ == nullptr) {
+        MSPROF_LOGE("Failed to dlsym dcmiv2_init");
+        return PROFILING_FAILED;
+    }
+
+    dcmiV2GetNetdevPktStatsInfo_ = reinterpret_cast<DcmiV2GetNetdevPktStatsInfoFunc>(
+        OsalDlsym(dcmiLibHandle_, "dcmiv2_get_netdev_pkt_stats_info"));
+    if (dcmiV2GetNetdevPktStatsInfo_ == nullptr) {
+        MSPROF_LOGE("Failed to dlsym dcmiv2_get_netdev_pkt_stats_info");
+        return PROFILING_FAILED;
+    }
+
+    return PROFILING_SUCCESS;
+}
+
+int32_t NetDevStatsHandler::LoadDcmiV1Api()
+{
     dcmiInit_ = reinterpret_cast<DcmiInitFunc>(OsalDlsym(dcmiLibHandle_, "dcmi_init"));
     if (dcmiInit_ == nullptr) {
         MSPROF_LOGE("Failed to dlsym dcmi_init");
