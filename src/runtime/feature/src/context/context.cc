@@ -709,7 +709,8 @@ rtError_t Context::Synchronize(int32_t timeout)
         COND_RETURN_ERROR(syncStream->IsCapturing(),
             RT_ERROR_STREAM_CAPTURED, "Not allow to synchronize captured-stream, device_id=%u, stream_id=%d.",
             device_->Id_(), syncStream->Id_());
-        COND_PROC(syncStream->IsSyncFinished(), continue;);
+        // CONTINUE_ON_FAILURE need sync to get error code.
+        COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
         // not set fail mode
         if (syncStream->GetFailureMode() == CONTINUE_ON_FAILURE) {
             nonFailModeStreams.push_back(syncStream);
@@ -726,7 +727,9 @@ rtError_t Context::Synchronize(int32_t timeout)
 
     // TaskReclaim
     (void)TaskReclaimforSyncDevice(startTime, timeout);
-
+    error = CheckStatus();
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, PopContextErrMsg();,
+        "context is abort, status=%#x.", static_cast<uint32_t>(error));
     while (!failModeStreams.empty()) {
         Stream * const streamMode = failModeStreams.front();
         // in order to poll every stream, set stream sync timeout 6000ms
