@@ -559,7 +559,7 @@ rtError_t Context::SyncStreamsWithTimeout(const std::list<Stream *> &streams, in
     rtError_t firstError = RT_ERROR_NONE;
     int32_t remainTime = timeout;
     for (const auto &syncStream : streams) {
-        COND_PROC(syncStream->IsSyncFinished(), continue;);
+        COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
         error = syncStream->Synchronize(false, remainTime);
         COND_RETURN_ERROR_MSG_INNER(IsProcessTimeout(start, timeout, &remainTime), RT_ERROR_STREAM_SYNC_TIMEOUT,
             "Sync stream timeout, stream_id=%d.", syncStream->Id_());
@@ -696,13 +696,15 @@ rtError_t Context::Synchronize(int32_t timeout)
         COND_RETURN_ERROR(syncStream->IsCapturing(),
             RT_ERROR_STREAM_CAPTURED, "Not allow to synchronize captured-stream, device_id=%u, stream_id=%d.",
             device_->Id_(), syncStream->Id_());
-        COND_PROC(syncStream->IsSyncFinished(), continue;);
+        // CONTINUE_ON_FAILURE need sync to get error code.
+        COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
         syncStreams.push_back(syncStream);
     }
     // TaskReclaim
     (void)TaskReclaimforSyncDevice(startTime, timeout);
     const rtError_t error = CheckStatus();
-    ERROR_RETURN(error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, PopContextErrMsg();,
+        "context is abort, status=%#x.", static_cast<uint32_t>(error));
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
