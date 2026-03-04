@@ -212,6 +212,7 @@ set(libruntime_v100_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/memory/soma.cc
+    src/memory/stream_mem_pool.cc
     src/launch/memcpy_stars.cc
     src/launch/cmo_barrier_common.cc
     src/launch/cmo_barrier_stars.cc
