@@ -168,43 +168,6 @@ static void InitStarsCmoSqeForDavid(RtDavidStarsMemcpySqe *sdmaSqe, const Stream
     sdmaSqe->srcSubStreamId = static_cast<uint16_t>(stm->Device_()->GetSSID_());
 }
 
-rtError_t CmoTaskLaunchForDavid(const rtCmoTaskInfo_t * const taskInfo, Stream * const stm, const uint32_t flag)
-{
-    const int32_t streamId = stm->Id_();
-    TaskInfo *rtCmoTask = nullptr;
-    uint32_t pos = 0xFFFFU;
-    rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    Stream *dstStm = stm;
-    std::function<void()> const errRecycle = [&rtCmoTask, &stm, &pos, &dstStm]() {
-        TaskUnInitProc(rtCmoTask);
-        TaskRollBack(dstStm, pos);
-        stm->StreamUnLock();
-    };
-    stm->StreamLock();
-    error = AllocTaskInfoForCapture(&rtCmoTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();,
-        "stream_id=%d alloc cmo task failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtCmoTask, dstStm, pos);
-    ScopeGuard tskErrRecycle(errRecycle);
-    // must be original stream
-    error = CmoTaskInit(rtCmoTask, taskInfo, stm, flag);
-    ERROR_RETURN_MSG_INNER(error, "CMO task init failed, stream_id=%d, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    rtCmoTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
-    error = DavidSendTask(rtCmoTask, dstStm);
-    ERROR_RETURN_MSG_INNER(error, "CMO task submit failed, stream_id=%d, retCode=%#x.",
-        streamId, static_cast<uint32_t>(error));
-    tskErrRecycle.ReleaseGuard();
-    stm->StreamUnLock();
-    SET_THREAD_TASKID_AND_STREAMID(dstStm->Id_(), rtCmoTask->taskSn);
-    error = SubmitTaskPostProc(dstStm, pos);
-    ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.",
-        stm->Id_(), static_cast<uint32_t>(error));
-    return RT_ERROR_NONE;
-}
-
 rtError_t CmoAddrTaskLaunchForDavid(rtDavidCmoAddrInfo * const cmoAddrInfo, const rtCmoOpCode_t cmoOpCode,
                                  Stream * const stm)
 {

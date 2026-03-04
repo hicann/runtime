@@ -232,6 +232,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/module.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/cmo_barrier_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/launch/cmo_barrier_stars.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/label.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/cond_stars.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/label_common.cc
@@ -342,6 +344,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/src/runtime/feature/inc
+    ${TOP_DIR}/src/runtime/feature/inc_c
     ${TOP_DIR}/src/runtime/feature/inc/context
     ${TOP_DIR}/src/runtime/feature/inc/spec
     ${TOP_DIR}/src/runtime/feature/inc/common

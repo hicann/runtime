@@ -11,6 +11,7 @@
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
 #include "stars_common_task.h"
+#include "cmo_barrier_c.hpp"
 #include "api_impl.hpp"
 #include "base.hpp"
 #include "stream.hpp"
@@ -6705,7 +6706,7 @@ rtError_t ApiImpl::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInfo, Stream 
     }
     COND_RETURN_ERROR(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
 
-    return curCtx->CmoTaskLaunch(taskInfo, curStm, flag);
+    return cce::runtime::CmoTaskLaunch(taskInfo, curStm, flag);
 }
 
 rtError_t ApiImpl::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t destMax,
@@ -6738,7 +6739,7 @@ rtError_t ApiImpl::BarrierTaskLaunch(const rtBarrierTaskInfo_t * const taskInfo,
     }
     COND_RETURN_ERROR(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
 
-    return curCtx->BarrierTaskLaunch(taskInfo, curStm, flag);
+    return cce::runtime::BarrierTaskLaunch(taskInfo, curStm, flag);
 }
 
 rtError_t ApiImpl::SetDeviceSatMode(const rtFloatOverflowMode_t floatOverflowMode)

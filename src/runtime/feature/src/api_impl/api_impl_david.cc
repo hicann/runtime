@@ -23,6 +23,8 @@
 #include "model_c.hpp"
 #include "cond_c.hpp"
 #include "label_c.hpp"
+#include "label.hpp"
+#include "cmo_barrier_c.hpp"
 #include "profiler_c.hpp"
 #include "coredump_c.hpp"
 #include "thread_local_container.hpp"
@@ -380,10 +382,7 @@ rtError_t ApiImplDavid::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInfo, St
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
     COND_RETURN_ERROR(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
-    
-    COND_RETURN_WARN((curStm->Model_() != nullptr), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "CMO task stream does not support in model.");
-    return CmoTaskLaunchForDavid(taskInfo, curStm, flag);
+    return cce::runtime::CmoTaskLaunch(taskInfo, curStm, flag);
 }
 
 rtError_t ApiImplDavid::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t destMax,

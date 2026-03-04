@@ -27,9 +27,7 @@ rtError_t MemcopyAsync(
     TaskInfo submitTask = {};
     rtError_t errorReason;
 
-    if (stm == nullptr) {
-        return RT_ERROR_STREAM_NULL;
-    }
+    NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
 
     TaskInfo* rtMemcpyAsyncTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_MEMCPY, errorReason);
     NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);

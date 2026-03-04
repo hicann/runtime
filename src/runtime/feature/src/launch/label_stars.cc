@@ -23,9 +23,8 @@ rtError_t CondLabelSwitchByIndex(void* const ptr, const uint32_t maxIndex, void*
 {
     const int32_t streamId = stm->Id_();
     Context* ctx = stm->Context_();
-    if (ctx == nullptr) {
-        return RT_ERROR_STREAM_CONTEXT;
-    }
+    COND_RETURN_ERROR_MSG_INNER(ctx == nullptr, RT_ERROR_STREAM_CONTEXT, "Get stream context failed, stream_id=%d.",
+        streamId);
 
     TaskInfo taskSubmit = {};
     rtError_t errorReason;

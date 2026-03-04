@@ -165,6 +165,8 @@ set(libruntime_common_src_files
     src/launch/cond_stars.cc
     src/launch/label_common.cc
     src/launch/label_stars.cc
+    src/launch/cmo_barrier_common.cc
+    src/launch/cmo_barrier_stars.cc
 
     # for V100
     src/api_impl/api_impl_creator.cc
@@ -298,6 +300,8 @@ set(libruntime_v100_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/launch/memcpy_stars.cc
+    src/launch/cmo_barrier_common.cc
+    src/launch/cmo_barrier_stars.cc
     src/launch/label.cc
     src/launch/cond_stars.cc
     src/launch/label_common.cc

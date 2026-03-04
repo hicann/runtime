@@ -142,6 +142,7 @@ set(common_src_files_cmodel
     src/common/global_state_manager.cc
     src/common/register_memory.cc
     src/launch/label_common.cc
+    src/launch/cmo_barrier_common.cc
 )
 
 set(libruntime_cmodel_context_src_files
@@ -318,6 +319,7 @@ set(libruntime_cmodel_src_files
     src/task/v100/stub_task.cc
     src/launch/cond_stars.cc
     src/launch/label_stars.cc
+    src/launch/cmo_barrier_stars.cc
     src/memory/mem_type.cc
     ${libruntime_cmodel_v100_task_src_files}
     ${libruntime_cmodel_api_src_files}
@@ -425,11 +427,12 @@ set(libruntime_cmodel_v200_src_files
     src/launch/aicpu_starsv2.cc
     src/launch/fusion_c.cc
     src/launch/dvpp_starsv2.cc
-    src/launch/cond_david.cc
-    src/launch/label_david.cc
+    src/launch/cond_starsv2.cc
+    src/launch/label_starsv2.cc
+    src/launch/cmo_barrier_starsv2.cc
     src/device/v200_base/device_error_proc_c.cc
     src/event/event_c.cc
-    src/launch/memcpy_david.cc
+    src/launch/memcpy_starsv2.cc
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc

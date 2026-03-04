@@ -45,6 +45,8 @@
 #include "cond_c.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
+#include "cmo_barrier_c.hpp"
+
 using namespace testing;
 using namespace cce::runtime;
 
@@ -2689,10 +2691,10 @@ TEST_F(CloudV2ContextTest, BarrierTaskLaunch_test)
     stream->taskResMang_ = (TaskResManage*)&tempMemory;
     rtBarrierTaskInfo_t task = {};
     MOCKER(BarrierTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->BarrierTaskLaunch(&task, stream, 0);
+    error = BarrierTaskLaunch(&task, stream, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->BarrierTaskLaunch(&task, stream, 0);
+    error = BarrierTaskLaunch(&task, stream, 0);
     stream->taskResMang_ = preVal;
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);

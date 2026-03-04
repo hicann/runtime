@@ -338,12 +338,8 @@ public:
 
     rtError_t FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * const fftsPlusTaskInfo, Stream * const stm,
                                  const uint32_t flag);
-    rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInfo, Stream * const stm,
-        const uint32_t flag);
     rtError_t CmoAddrTaskLaunch(rtCmoAddrInfo * const cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode,
         Stream * const stm, const uint32_t flag);
-    rtError_t BarrierTaskLaunch(const rtBarrierTaskInfo_t * const taskInfo, Stream * const stm,
-        const uint32_t flag);
     rtError_t NpuGetFloatStatus(void * const outputAddrPtr, const uint64_t outputSize, const uint32_t checkMode,
         Stream * const stm, bool isDebug = false);
     rtError_t NpuClearFloatStatus(const uint32_t checkMode, Stream * const stm, bool isDebug = false);

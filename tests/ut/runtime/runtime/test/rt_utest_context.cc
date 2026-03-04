@@ -23,6 +23,7 @@
 #include "cond_c.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
+#include "cmo_barrier_c.hpp"
 #include "context_protect.hpp"
 #include "raw_device.hpp"
 #include "kernel.hpp"
@@ -3450,10 +3451,10 @@ TEST_F(ContextTest, BarrierTaskLaunch_test)
     stream->taskResMang_ = (TaskResManage*)&tempMemory;
     rtBarrierTaskInfo_t task = {};
     MOCKER(BarrierTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->BarrierTaskLaunch(&task, stream, 0);
+    error = BarrierTaskLaunch(&task, stream, 0);
     EXPECT_NE(error, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->BarrierTaskLaunch(&task, stream, 0);
+    error = BarrierTaskLaunch(&task, stream, 0);
     stream->taskResMang_ = preVal;
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4300,8 +4301,8 @@ TEST_F(ContextTest, StreamSwitchN_test)
     EXPECT_EQ(error, 1);
 
     MOCKER(StreamSwitchTaskInitV2).stubs().will(returnValue(1));
-    error = CondStreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = CondStreamSwitchEx(nullptr, RT_EQUAL, nullptr, stream, stream, RT_SWITCH_INT32, ctx);
+    EXPECT_EQ(error, 1);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;

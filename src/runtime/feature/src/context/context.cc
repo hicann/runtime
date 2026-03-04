@@ -3748,29 +3748,6 @@ rtError_t Context::GetExceptionRegInfo(const rtExceptionInfo_t * const exception
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInfo, Stream * const stm, const uint32_t flag)
-{
-    const int32_t streamId = stm->Id_();
-
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo *rtCmoTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_CMO, errorReason);
-    NULL_PTR_RETURN(rtCmoTask, errorReason);
-
-    rtError_t error = CmoTaskInit(rtCmoTask, taskInfo, stm, flag);
-    ERROR_GOTO(error, ERROR_RECYCLE, "CMO task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-        streamId, rtCmoTask->id, error);
-
-    error = device_->SubmitTask(rtCmoTask, taskGenCallback_);
-    ERROR_GOTO(error, ERROR_RECYCLE, "CMO task submit failed, retCode=%#x", error);
-
-    GET_THREAD_TASKID_AND_STREAMID(rtCmoTask, streamId);
-    return error;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtCmoTask);
-    return error;
-}
-
 static void InitStarsSdmaCmoSqe(rtStarsSdmaSqe_t *sdmaCmoSqe, const Stream * const stm, const rtCmoOpCode_t cmoOpCode)
 {
     sdmaCmoSqe->opcode = static_cast<uint8_t>(cmoOpCode);
@@ -3946,29 +3923,6 @@ rtError_t Context::SetStreamTag(Stream * const stm, const uint32_t geOpTag) cons
 
 ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(tsk);
-    return error;
-}
-
-rtError_t Context::BarrierTaskLaunch(const rtBarrierTaskInfo_t * const taskInfo, Stream * const stm,
-    const uint32_t flag)
-{
-    const int32_t streamId = stm->Id_();
-
-    TaskInfo taskSubmit = {};
-    rtError_t errorReason;
-    TaskInfo *rtBarrierTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_BARRIER, errorReason);
-    NULL_PTR_RETURN(rtBarrierTask, errorReason);
-
-    rtError_t error = BarrierTaskInit(rtBarrierTask, taskInfo, stm, flag);
-    ERROR_GOTO(error, ERROR_RECYCLE, "Barrier task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
-        streamId, rtBarrierTask->id, error);
-
-    error = device_->SubmitTask(rtBarrierTask, taskGenCallback_);
-    ERROR_GOTO(error, ERROR_RECYCLE, "Barrier task submit failed, retCode=%#x", error);
-    GET_THREAD_TASKID_AND_STREAMID(rtBarrierTask, streamId);
-    return error;
-ERROR_RECYCLE:
-    (void)device_->GetTaskFactory()->Recycle(rtBarrierTask);
     return error;
 }
 

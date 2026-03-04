@@ -273,12 +273,14 @@ set(libruntime_v200_v201_common_src_files
     src/launch/aicpu_starsv2.cc
     src/launch/fusion_c.cc
     src/launch/dvpp_starsv2.cc
-    src/launch/cond_david.cc
+    src/launch/cond_starsv2.cc
     src/launch/label_common.cc
-    src/launch/label_david.cc
+    src/launch/label_starsv2.cc
+    src/launch/cmo_barrier_common.cc
+    src/launch/cmo_barrier_starsv2.cc
     src/device/v200_base/device_error_proc_c.cc
     src/event/event_c.cc
-    src/launch/memcpy_david.cc
+    src/launch/memcpy_starsv2.cc
     src/model/model_c.cc
     src/notify/notify_c.cc
     src/profiler/profiler_c.cc

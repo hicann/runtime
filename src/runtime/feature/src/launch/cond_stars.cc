@@ -24,10 +24,11 @@ rtError_t CondStreamSwitchEx(
     const void* const ptr, const rtCondition_t condition, const void* const valuePtr, const Stream* const trueStream,
     Stream* const stm, const rtSwitchDataType_t dataType, Context* const ctx)
 {
-    if (ctx == nullptr) {
-        return RT_ERROR_NONE;
-    }
     Context* curCtx = ctx;
+    if (curCtx == nullptr) {
+        curCtx = stm->Context_();
+    }
+    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_STREAM_CONTEXT);
 
     rtError_t error;
     const int32_t streamId = stm->Id_();

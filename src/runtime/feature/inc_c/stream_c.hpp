@@ -23,7 +23,6 @@ namespace runtime {
 
     rtError_t StreamCCULaunch(Stream *stm, rtCcuTaskInfo_t *taskInfo);
 
-    rtError_t CmoTaskLaunchForDavid(const rtCmoTaskInfo_t * const taskInfo, Stream * const stm, const uint32_t flag);
     rtError_t CmoAddrTaskLaunchForDavid(rtDavidCmoAddrInfo * const cmoAddrInfo, const rtCmoOpCode_t cmoOpCode,
                                      Stream * const stm);
     rtError_t CallbackLaunchForDavidWithBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm);
