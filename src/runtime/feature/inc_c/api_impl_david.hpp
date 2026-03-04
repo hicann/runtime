@@ -151,6 +151,8 @@ public:
     rtError_t GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
         const void **stack, uint32_t *stackSize) override;
     rtError_t DebugReadAICore(rtDebugMemoryParam_t *const param) override;
+    rtError_t StarsLaunchSubscribeProc(Stream * const stm, const rtCallback_t callBackFunc,
+        void * const fnData, const bool needSubscribe, const uint64_t threadId);
     rtError_t LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData) override;
     rtError_t CpuKernelLaunchExAll(const Kernel * const kernel, const uint32_t coreDim,
         rtCpuKernelArgs_t *argsInfo, Stream * const stm, const TaskCfg * const taskCfg);

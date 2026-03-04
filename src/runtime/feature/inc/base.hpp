@@ -391,6 +391,16 @@ void ErrorCodeProcess(ErrorCode errorCode, const char *file,
         goto LABEL;                                                        \
     }
 
+// Checks a condition and returns an error code with an optional warning log
+#define COND_RETURN_WARN_WITH_NOLOG_SWITCH(COND, NO_LOG, ERRCODE, format, ...) \
+    do {                                                                       \
+        if (NO_LOG) {                                                          \
+            COND_RETURN_WITH_NOLOG(COND, ERRCODE);                             \
+        } else {                                                               \
+            COND_RETURN_WARN(COND, ERRCODE, format, ##__VA_ARGS__);            \
+        }                                                                      \
+    } while (false)
+
 // delete an object
 #define DELETE_O(p)  \
     if ((p) != nullptr) { \

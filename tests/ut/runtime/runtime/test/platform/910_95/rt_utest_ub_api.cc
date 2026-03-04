@@ -1397,7 +1397,7 @@ TEST_F(ApiTestUb1, PROCESS_REPORT_DAVID)
 {
     ApiImpl apiImpl;
     rtError_t error;
-    error = apiImpl.ProcessReport(0);
+    error = apiImpl.ProcessReport(0, true);
 
     uint32_t groupId = 0;
     uint32_t deviceId = 0;
@@ -1422,6 +1422,35 @@ TEST_F(ApiTestUb1, PROCESS_REPORT_DAVID)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiTestUb1, callbackLaunch_noblock)
+{
+    ApiImpl apiImpl;
+    rtError_t error;
+    error = apiImpl.ProcessReport(0, true);
+
+    uint32_t groupId = 0;
+    uint32_t deviceId = 0;
+    uint32_t tsId = 0;
+    uint64_t threadId = 123;
+
+    rtSubscribeReport(123, stream_);
+    MOCKER_CPP(&Stream::IsHostFuncCbReg).stubs().will(returnValue(true));
+    stream_->IsHostFuncCbReg();
+    rtCallback_t stub_func = (rtCallback_t)0x12345;
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
+    stream_->SetSqBaseAddr(newSqAddr);
+    error = rtCallbackLaunch(stub_func, nullptr, stream_, false);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
+    taskResMang->ResetTaskRes();
+    error = rtUnSubscribeReport(123, stream_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ApiTestUb1, api_rts_rtsCallbackLaunch_david)
 {
     rtError_t error = rtsLaunchHostFunc(NULL, NULL, NULL);
@@ -1433,8 +1462,24 @@ TEST_F(ApiTestUb1, api_rts_rtsCallbackLaunch_david2)
     rtStream_t stream;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP(&Runtime::SubscribeCallback)
+        .stubs()
+        .will(returnValue(1));
+    
+    MOCKER(cce::runtime::CallbackLaunchForDavidWithBlock)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
     error = rtsLaunchHostFunc(stream, ApiTest_Stream_Cb, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsLaunchHostFunc(NULL, ApiTest_Stream_Cb, NULL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamSynchronize(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

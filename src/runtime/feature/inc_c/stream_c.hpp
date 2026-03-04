@@ -25,8 +25,8 @@ namespace runtime {
 
     rtError_t CmoAddrTaskLaunchForDavid(rtDavidCmoAddrInfo * const cmoAddrInfo, const rtCmoOpCode_t cmoOpCode,
                                      Stream * const stm);
-    rtError_t CallbackLaunchForDavidWithBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm);
-    rtError_t CallbackLaunchForDavidNoBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm);
+    rtError_t CallbackLaunchForDavidWithBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm, const uint64_t threadId);
+    rtError_t CallbackLaunchForDavidNoBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm, const uint64_t threadId);
     rtError_t StreamDatadumpInfoLoad(const void * const dumpInfo, const uint32_t length, Stream * const dftStm);
     rtError_t StreamDebugRegister(Stream * const debugStream, const uint32_t flag, const void * const addr,
         uint32_t * const streamId, uint32_t * const taskId);

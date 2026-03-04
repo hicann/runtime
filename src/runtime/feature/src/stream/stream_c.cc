@@ -730,7 +730,7 @@ static rtError_t GetNotifyInfoForCallbackLaunchWithBlock(const Stream * const st
     return RT_ERROR_NONE;
 }
 
-static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const bool isBlock)
+static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const bool isBlock, const uint64_t threadId)
 {
     Stream *captureStm = stm->GetCaptureStream();
     Runtime * const rtInstance = Runtime::Instance();
@@ -740,11 +740,6 @@ static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const boo
     // prepare capture stream SubscribeReport
     if (stm->IsCapturing() && (captureStm != nullptr)) {
         if (captureStm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_NONE) {
-            uint64_t threadId = 0UL;
-            ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadId);
-            COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret,
-                "Get threadId by streamId failed, drv devId=%u, original stream_id=%d, "
-                "capture stream_id=%d, retCode=%#x.", dev->Id_(), stm->Id_(), captureStm->Id_(), ret);
             Notify *curNotify = nullptr;
             if (isBlock) {
                 ret = apiObj->NotifyCreate(static_cast<int32_t>(dev->Id_()), &curNotify);
@@ -752,7 +747,16 @@ static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const boo
                     "Create callback notify failed, drv devId=%u, original stream_id=%d, capture stream_id=%d, retCode=%#x.",
                     dev->Id_(), stm->Id_(), captureStm->Id_(), ret);
             }
-            ret = rtInstance->SubscribeReport(threadId, captureStm, static_cast<void *>(curNotify));
+            if (threadId != MAX_UINT64_NUM) {
+                ret = rtInstance->SubscribeCallback(threadId, captureStm, curNotify);
+            } else {
+                uint64_t threadId = 0UL;
+                ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadId);
+                COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret,
+                    "Get threadId by streamId failed, drv devId=%u, original stream_id=%d, "
+                    "capture stream_id=%d, retCode=%#x.", dev->Id_(), stm->Id_(), captureStm->Id_(), ret);
+                ret = rtInstance->SubscribeReport(threadId, captureStm, static_cast<void *>(curNotify));
+            }
             if (ret != RT_ERROR_NONE) {
                 if (curNotify != nullptr) {
                     (void)apiObj->NotifyDestroy(curNotify);
@@ -765,7 +769,7 @@ static rtError_t ProcCaptureStmSubscribeInfo(const Stream * const stm, const boo
 }
 
 static rtError_t CallbackLaunchForDavid(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm,
-    const bool isBlock, Notify *&notify)
+    const bool isBlock, Notify *&notify, const uint64_t threadId)
 {
     const int32_t streamId = stm->Id_();
     TaskInfo* rtCbLaunchTask = nullptr;
@@ -785,7 +789,7 @@ static rtError_t CallbackLaunchForDavid(const rtCallback_t callBackFunc, void * 
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     ScopeGuard tskErrRecycle(errRecycle);
-    error = ProcCaptureStmSubscribeInfo(stm, isBlock);
+    error = ProcCaptureStmSubscribeInfo(stm, isBlock, threadId);
     ERROR_RETURN_MSG_INNER(error, "Failed to proc capture stream subscribe info, stream_id=%d, capture stream_id=%d, error=%#x.",
                            streamId, dstStm->Id_(), static_cast<uint32_t>(error));
     if (isBlock) {
@@ -808,17 +812,17 @@ static rtError_t CallbackLaunchForDavid(const rtCallback_t callBackFunc, void * 
     return RT_ERROR_NONE;
 }
 
-rtError_t CallbackLaunchForDavidNoBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm)
+rtError_t CallbackLaunchForDavidNoBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm, const uint64_t threadId)
 {
     Notify *curNotify = nullptr;
-    return CallbackLaunchForDavid(callBackFunc, fnData, stm, false, curNotify);
+    return CallbackLaunchForDavid(callBackFunc, fnData, stm, false, curNotify, threadId);
 }
 
-rtError_t CallbackLaunchForDavidWithBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm)
+rtError_t CallbackLaunchForDavidWithBlock(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm, const uint64_t threadId)
 {
     rtError_t ret = RT_ERROR_NONE;
     Notify *curNotify = nullptr;
-    ret = CallbackLaunchForDavid(callBackFunc, fnData, stm, true, curNotify);
+    ret = CallbackLaunchForDavid(callBackFunc, fnData, stm, true, curNotify, threadId);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Call CallbackLaunch failed for block callback, ret=%#x.", ret);
     ret = NtyWait(curNotify, stm, 0U);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Call NotifyWait failed for block callback, ret=%#x.", ret);

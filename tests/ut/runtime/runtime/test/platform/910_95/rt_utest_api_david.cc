@@ -6151,7 +6151,7 @@ TEST_F(ApiDavidTest, test_process_report_task_fail1)
     ApiImplDavid apiImpl;
     rtError_t error;
     MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_SUBSCRIBE_THREAD));
-    error = apiImpl.ProcessReport(0);
+    error = apiImpl.ProcessReport(0, true);
     EXPECT_EQ(error, RT_ERROR_SUBSCRIBE_THREAD);
 }
 
@@ -6166,8 +6166,34 @@ TEST_F(ApiDavidTest, test_process_report_task_fail2)
         .stubs()
         .will(invoke(CurrentContextStub));
 
+    error = apiImpl.ProcessReport(0, true);
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiDavidTest, test_process_report_task_fail3)
+{
+    ApiImplDavid apiImpl;
+    rtError_t error;
+    Runtime *rt = (Runtime *)Runtime::Instance();
+    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rt, &Runtime::GetPriCtxByDeviceId).stubs().will(returnValue((Context *)NULL));
+    MOCKER_CPP(&ApiImpl::CurrentContext)
+        .stubs()
+        .will(invoke(CurrentContextStub));
+
     error = apiImpl.ProcessReport(0);
     EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiDavidTest, test_process_report_task_success)
+{
+    ApiImplDavid apiImpl;
+    rtError_t error;
+    Runtime *rt = (Runtime *)Runtime::Instance();
+    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
+
+    error = apiImpl.ProcessReport(0, true);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 void GetErrorMessage(const char *msg, uint32_t len) {

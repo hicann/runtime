@@ -3707,7 +3707,8 @@ rtError_t ApiErrorDecorator::RegTaskFailCallbackByModule(const char_t *regName, 
 rtError_t ApiErrorDecorator::SubscribeReport(const uint64_t threadId, Stream * const stm)
 {
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME), RT_ERROR_SUBSCRIBE_STREAM,
-        "The stream is in the host callback process and cannot call rtSubscribeReport. flag=SUBSCRIBE_RUNTIME, stream_id=%d", stm->Id_());
+        "The stream is in the host callback process and cannot call rtSubscribeReport. flag=SUBSCRIBE_RUNTIME, stream_id=%d, device_id=%d",
+        stm->Id_(), stm->Device_()->Id_());
     return impl_->SubscribeReport(threadId, stm);
 }
 
@@ -3716,7 +3717,8 @@ rtError_t ApiErrorDecorator::CallbackLaunch(const rtCallback_t callBackFunc, voi
 {
     NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME), RT_ERROR_SUBSCRIBE_STREAM,
-        "The stream is in the host callback process and cannot call rtCallbackLaunch, flag=SUBSCRIBE_RUNTIME, stream_id=%d", stm->Id_());
+        "The stream is in the host callback process and cannot call rtCallbackLaunch, flag=SUBSCRIBE_RUNTIME, stream_id=%d, device_id=%d",
+        stm->Id_(), stm->Device_()->Id_());
     return impl_->CallbackLaunch(callBackFunc, fnData, stm, isBlock);
 }
 
@@ -3731,7 +3733,8 @@ rtError_t ApiErrorDecorator::ProcessReport(const int32_t timeout, const bool noL
 rtError_t ApiErrorDecorator::UnSubscribeReport(const uint64_t threadId, Stream * const stm)
 {
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME), RT_ERROR_SUBSCRIBE_STREAM,
-        "The stream is in the host callback process and cannot call rtUnSubscribeReport, flag=SUBSCRIBE_RUNTIME, stream_id=%d", stm->Id_());
+        "The stream is in the host callback process and cannot call rtUnSubscribeReport, flag=SUBSCRIBE_RUNTIME, stream_id=%d, device_id=%d",
+        stm->Id_(), stm->Device_()->Id_());
     return impl_->UnSubscribeReport(threadId, stm);
 }
 
@@ -6221,7 +6224,8 @@ rtError_t ApiErrorDecorator::LaunchHostFunc(Stream * const stm, const rtCallback
 {
     NULL_PTR_RETURN_MSG_OUTER(callBackFunc, RT_ERROR_INVALID_VALUE);
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_USER), RT_ERROR_SUBSCRIBE_STREAM,
-        "The stream is in the subscribe callback process and cannot call rtsLaunchHostFunc, flag=SUBSCRIBE_USER, stream_id=%d", stm->Id_());
+        "The stream is in the subscribe callback process and cannot call rtsLaunchHostFunc, flag=SUBSCRIBE_USER, stream_id=%d, device_id=%d",
+        stm->Id_(), stm->Device_()->Id_());
     return impl_->LaunchHostFunc(stm, callBackFunc, fnData);
 }
 

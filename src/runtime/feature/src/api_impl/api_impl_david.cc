@@ -1389,7 +1389,6 @@ static rtError_t ProcessReportForBlockCqe(Device * const dev, rtHostFuncCqReport
 
 rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
 {
-    UNUSED(noLog);
     uint64_t cqidBit[HOST_CALLBACK_SQCQ_BIT / 64U] = {0ULL};
     uint32_t deviceId = 0U;
     uint32_t tsId = 0U;
@@ -1399,9 +1398,9 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
     Runtime * const rt = Runtime::Instance();
 
     const uint64_t threadId = PidTidFetcher::GetCurrentUserTid();
-    rtError_t ret = rt->GetGroupIdByThreadId(threadId, &deviceId, &tsId, &groupId);
-    COND_RETURN_WARN(ret != RT_ERROR_NONE, ret, "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x",
-                     threadId, ret);
+    rtError_t ret = rt->GetGroupIdByThreadId(threadId, &deviceId, &tsId, &groupId, noLog);
+    COND_RETURN_WARN_WITH_NOLOG_SWITCH(ret != RT_ERROR_NONE, noLog, ret, 
+        "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x", threadId, ret);
     rt->LockGroupId(groupId);
     std::function<void()> const func = [=]() { rt->UnlockGroupId(groupId); };
     const ScopeGuard groupIdGuarder(func);
@@ -1410,14 +1409,19 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
     if (priCtx == nullptr) {
         priCtx = CurrentContext();
     }
-    CHECK_CONTEXT_VALID_WITH_RETURN(priCtx, RT_ERROR_CONTEXT_NULL);
+
+    if (noLog) {
+        CHECK_CONTEXT_VALID_WITH_PROC_RETURN(priCtx, RT_ERROR_CONTEXT_NULL,);
+    } else {
+        CHECK_CONTEXT_VALID_WITH_RETURN(priCtx, RT_ERROR_CONTEXT_NULL);
+    }
 
     Device * const dev = priCtx->Device_();
     Driver * const curDrv = dev->Driver_();
 
     ret = curDrv->CqReportIrqWait(deviceId, tsId, groupId, timeout, &cqidBit[0], HOST_CALLBACK_SQCQ_BIT / 64U);
-    COND_RETURN_WARN(ret != RT_ERROR_NONE, ret, "CqReportIrqWait, retCode=%#x", ret);
-
+    COND_RETURN_WARN_WITH_NOLOG_SWITCH(ret != RT_ERROR_NONE, noLog, ret, 
+        "CqReportIrqWait, retCode=%#x", ret);
     RT_LOG(RT_LOG_DEBUG, "IrqWait groupId=%u, threadIdentifier=%" PRIu64, groupId, threadId);
 
     // per uint64_t num has 64 bit
@@ -1436,7 +1440,9 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
                 continue;
             }
             RT_LOG(RT_LOG_DEBUG, "get report info num=%u from cqid = %u.", cnt, cqidValue);
-            COND_RETURN_WARN(ret != RT_ERROR_NONE, ret, "CqReportGet failed, retCode=%#x", ret);
+
+            COND_RETURN_WARN_WITH_NOLOG_SWITCH(ret != RT_ERROR_NONE, noLog, ret, 
+                "CqReportGet failed, retCode=%#x", ret);
             for (uint32_t idx = 0U; idx < cnt; idx++) {
                 const rtCallback_t hostFunc =
                     RtValueToPtr<rtCallback_t>(report[idx].hostFuncCbPtr);
@@ -1448,7 +1454,7 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
                 (hostFunc)(RtValueToPtr<void *>(report[idx].fnDataPtr));
                 ret = ProcessReportForBlockCqe(dev, &report[idx], deviceId, tsId);
                 ERROR_RETURN(ret, "process block cqe fail, ret=%#x.", ret);
-                ret = curDrv->CqReportRelease(&report[idx], deviceId, cqidValue, tsId);
+                ret = curDrv->CqReportRelease(&report[idx], deviceId, cqidValue, tsId, noLog);
             }
         }
     }
@@ -1483,11 +1489,11 @@ rtError_t ApiImplDavid::CallbackLaunch(const rtCallback_t callBackFunc, void * c
         "The stream used by this user's callback function is not registered to any thread, retCode=%#x",
         static_cast<uint32_t>(RT_ERROR_STREAM_NO_CB_REG));
     if (isBlock) {
-        const rtError_t ret = CallbackLaunchForDavidWithBlock(callBackFunc, fnData, curStm);
+        const rtError_t ret = CallbackLaunchForDavidWithBlock(callBackFunc, fnData, curStm, MAX_UINT64_NUM);
         ERROR_RETURN(ret, "Call CallbackLaunch failed for block callback, ret=%#x.", ret);
         return ret;
     }
-    return CallbackLaunchForDavidNoBlock(callBackFunc, fnData, curStm);
+    return CallbackLaunchForDavidNoBlock(callBackFunc, fnData, curStm, MAX_UINT64_NUM);
 }
 
 rtError_t ApiImplDavid::ModelAbort(Model * const mdl)
@@ -2021,13 +2027,50 @@ rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t *const param)
     return ReadAICoreDebugInfo(param);
 }
 
+rtError_t ApiImplDavid::StarsLaunchSubscribeProc(Stream * const stm, const rtCallback_t callBackFunc,
+    void * const fnData, const bool needSubscribe, const uint64_t threadId)
+{
+    rtError_t ret = RT_ERROR_NONE;
+    Runtime * const rtInstance = Runtime::Instance();
+    if (needSubscribe && !(stm->IsCapturing())) {
+        Notify *curNotify = nullptr;
+        ret = NotifyCreate(static_cast<int32_t>(stm->Device_()->Id_()), &curNotify, RT_NOTIFY_DEFAULT);
+        ERROR_RETURN(ret, "Call NotifyCreate failed for callback, ret=%#x.", ret);
+        ret = rtInstance->SubscribeCallback(threadId, stm, static_cast<void *>(curNotify));
+        if (ret != RT_ERROR_NONE) {
+            (void)NotifyDestroy(curNotify);
+        }
+    }
+
+    return CallbackLaunchForDavidWithBlock(callBackFunc, fnData, stm, threadId);
+}
+
 rtError_t ApiImplDavid::LaunchHostFunc(Stream * const stm, const rtCallback_t callBackFunc, void * const fnData)
 {
-    UNUSED(stm);
-    UNUSED(callBackFunc);
-    UNUSED(fnData);;
-    RT_LOG(RT_LOG_WARNING, "ascend950 does not support rtsLaunchHostFunc.");
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        "Callback launch failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    Runtime * const rtInstance = Runtime::Instance();
+    Device * const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG_OUTER(dev, RT_ERROR_INVALID_VALUE);
+    // lock first Check whether the thread exists. If the thread does not exist, create a thread in context level.
+    curCtx->callbackTheadMutex_.lock();
+    if (!curCtx->GetCallBackThreadExistFlag()) {
+        COND_PROC_RETURN_OUT_ERROR_MSG_CALL((curCtx->CreateContextCallBackThread() != RT_ERROR_NONE),
+            RT_ERROR_MEMORY_ALLOCATION, curCtx->callbackTheadMutex_.unlock(), "create callback thread failed.");
+        curCtx->SetCallBackThreadExistFlag();
+    }
+    curCtx->callbackTheadMutex_.unlock();
+    // if new stream should subscribe in map first; else launchcallback Directly
+    const bool isNeedSubscribe = rtInstance->JudgeNeedSubscribe(curCtx->GetCallBackThreadId(), curStm, dev->Id_());
+    
+    return StarsLaunchSubscribeProc(curStm, callBackFunc, fnData, isNeedSubscribe, curCtx->GetCallBackThreadId());
 }
 
 rtError_t ApiImplDavid::GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val)
