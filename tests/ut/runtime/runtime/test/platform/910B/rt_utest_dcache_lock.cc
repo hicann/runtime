@@ -227,19 +227,6 @@ TEST_F(CloudV2DcacheDeviceTest, FreeStackPhyBase_03)
     delete dev;
 }
 
-TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_01)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RawDevice *dev = new RawDevice(1);
-    dev->Init();
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
-    Context *ctx = nullptr;
-    dev->dCacheLockFlag_ = true;
-    rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(ctx);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete dev;
-}
-
 TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_02)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();

@@ -471,7 +471,6 @@ macro(add_runtime_v200_library target_name)
 
     target_compile_definitions(${target_name} PRIVATE
         LOG_CPP
-        CANN_RUNTIME
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -580,7 +579,6 @@ macro(add_runtime_v201_library target_name)
 
     target_compile_definitions(${target_name} PRIVATE
         LOG_CPP
-        CANN_RUNTIME
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )

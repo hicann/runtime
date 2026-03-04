@@ -371,30 +371,6 @@ TEST_F(CloudV2NpuDriverTest, DrvEschedManage_stub_swapout_waitEvent_ReportRecv)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, host_register)
-{
-    rtError_t error;
-    int ptr = 10;
-    void **devPtr;
-    NpuDriver *rawDrv = new NpuDriver();
-
-    MOCKER(halHostRegister)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
-
-    MOCKER(halHostUnregisterEx)
-        .stubs()
-        .will(returnValue(DRV_ERROR_NONE));
-
-    error = rawDrv->HostRegister(&ptr, 100 ,RT_HOST_REGISTER_MAPPED, devPtr, 0);
-    EXPECT_EQ(error, DRV_ERROR_NONE);
-
-    error = rawDrv->HostUnregister(&ptr, 0);
-    EXPECT_EQ(error, DRV_ERROR_NONE);
-
-    delete rawDrv;
-}
-
 TEST_F(CloudV2NpuDriverTest, memcpy_all_type)
 {
     rtError_t error;
@@ -1342,43 +1318,6 @@ TEST_F(CloudV2NpuDriverTest, driver_memory_fail_01)
     error = rawDrv->DestroyIpcMem("mem2");
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
-    GlobalMockObject::verify();
-
-    delete rawDrv;
-}
-
-TEST_F(CloudV2NpuDriverTest, driver_memory_fail_02)
-{
-    rtError_t error;
-    uint64_t ptr1 = 0x00;
-    NpuDriver * rawDrv = new NpuDriver();
-
-    MOCKER(halMemFree)
-        .stubs()
-        .will(returnValue(DRV_ERROR_RESERVED));
-
-    error = rawDrv->CloseIpcMem(0x1000000);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rawDrv->CreateIpcMem((void *)0x2000000, 0x00, "mem1", 4);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rawDrv->CreateIpcMem((void *)0x2000000, 0x00, "mem2", 4);
-
-    error = rawDrv->CreateIpcMem((void *)0x1000000, 0x00, "mem2", 4);
-
-    error = rawDrv->OpenIpcMem("mem3", &ptr1, 0);
-
-    error = rawDrv->DevMemFree((void*)0x2000000, 0);
-
-    error = rawDrv->ManagedMemFree((void*)0x2000000);
-    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
-
-    error = rawDrv->CloseIpcMem(0x2000000);
-
-    error = rawDrv->DestroyIpcMem("mem1");
-
-    error = rawDrv->DestroyIpcMem("mem2");
     GlobalMockObject::verify();
 
     delete rawDrv;

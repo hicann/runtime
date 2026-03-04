@@ -187,8 +187,8 @@ TEST_F(CloudV2ApiKernelTest, TestRtsLaunchKernelWithDevArgs)
 
 TEST_F(CloudV2ApiKernelTest, TestRtsFuncGetByName)
 {
-    rtFuncHandle funcHandle;
-    rtBinHandle binHandle;
+    rtFuncHandle funcHandle = nullptr;
+    rtBinHandle binHandle = nullptr;
     char_t name[128]="testName";
 
     rtError_t error = rtsFuncGetByName(binHandle, name, &funcHandle);

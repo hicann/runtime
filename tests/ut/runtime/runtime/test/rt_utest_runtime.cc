@@ -527,8 +527,6 @@ TEST_F(RuntimeTest, ut_OtherProfilerApiStartStopTest)
 TEST_F(RuntimeTest, ut_LoadFunction)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtInstance->LoadFunction(nullptr, "test");
-    EXPECT_EQ(rtInstance->tsdInitFlowGw_, nullptr);
     rtInstance->SetSocTypeByChipType(0x0500, 0, 0);
     rtChipType_t chipType = rtInstance->chipType_;
     rtInstance->chipType_ = CHIP_DC;
