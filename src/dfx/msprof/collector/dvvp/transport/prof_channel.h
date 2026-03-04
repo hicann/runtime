@@ -89,6 +89,7 @@ private:
     SHARED_PTR_ALIA<PerfCount> overallReadSpeedPerfCount_;
     uint64_t lastEndRawTime_;
     uint64_t drvChannelReadCont_;
+    std::mutex uploadMtx_;
     std::mutex mtx_;
     std::atomic<uint32_t> schedulingTime_;
     uint32_t totalSchedulingInCnt_;
