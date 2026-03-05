@@ -69,12 +69,14 @@ int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo &dfxInfo)
 void KernelDfxDumper::RecordDfxInfo()
 {
     IDE_LOGI("The dump dfx info task is started.");
+    taskRunning_ = true;
     while (taskInit_ || !dumpDfxInfoQueue_.IsEmpty()) {
         DumpDfxInfo dfxInfo{"", nullptr, 0UL};
         if (dumpDfxInfoQueue_.Pop(dfxInfo)) {
             RecordDfxInfoToDisk(dfxInfo);
         }
     }
+    taskRunning_ = false;
     IDE_LOGI("The dump dfx info task is exit.");
 }
 
@@ -133,6 +135,10 @@ int32_t KernelDfxDumper::UnInitTask()
         mmSleep(WAIT_TASK_INTERVAL_TIME);
     }
     dumpDfxInfoQueue_.Quit();
+    // 等待线程结束
+    while (taskRunning_) {
+        mmSleep(WAIT_TASK_INTERVAL_TIME);
+    }
     return IDE_DAEMON_OK;
 }
 
@@ -168,10 +174,6 @@ bool KernelDfxDumper::InitDumpPath(const std::string &dumpPath)
     IDE_CTRL_VALUE_WARN(dumpPath_.empty(), return true,
         "The dfx info dump path has been set with [%s]", dumpPath_.c_str());
     Path path = Path(dumpPath).Append(SysUtils::GetCurrentTime());
-    IDE_CTRL_VALUE_FAILED(path.CreateDirectory(true), return false,
-        "Cannot create the dfx info dump path[%s]", path.GetCString());
-    IDE_CTRL_VALUE_FAILED(path.RealPath(), return false,
-        "Cannot get the dfx info dump real path[%s]", path.GetCString());
     dumpPath_ = path.GetString();
     IDE_LOGI("Set the dfx info dump path with [%s]", dumpPath_.c_str());
     return true;

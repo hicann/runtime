@@ -59,6 +59,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT), true);
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF), false);
     EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("ascendDumpPath") != std::string::npos, true);
+    EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("printf") != std::string::npos, true);
 
     KernelDfxDumper::Instance().UnInit();
     // 环境变量ASCEND_DUMP_PATH无效路径/ASCEND_WORK_PATH有效路径，使能KernelDataDump(ASCEND_WORK_PATH)
@@ -68,6 +69,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT), true);
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF), false);
     EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("ascendWorkPath") != std::string::npos, true);
+    EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("printf") != std::string::npos, true);
 
     // 已通过环境变量ASCEND_WORK_PATH使能KernelDataDump，再通过环境变量ASCEND_DUMP_PATH使能，不覆盖路径
     (void)setenv("ASCEND_DUMP_PATH", "./Test_DfxDumper_EnableWithEnv/ascendDumpPath", 1);
@@ -76,6 +78,7 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT), true);
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF), false);
     EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("ascendWorkPath") != std::string::npos, true);
+    EXPECT_EQ(KernelDfxDumper::Instance().dumpPath_.find("printf") != std::string::npos, true);
 
     // 覆盖异常分支
     MOCKER_CPP(&KernelDfxDumper::InitTask).stubs().will(returnValue(-1));
@@ -99,15 +102,8 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithConfig)
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), false);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    // 配置无效路径，不使能KernelDataDump
-    dumpDfxConfig.dfxTypes.push_back("all");
-    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableWithConfig/NoPermission/ascendDumpPath";
-    ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
-    // 不清理注册标记
-    EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT), true);
-    EXPECT_EQ(ret, ADUMP_FAILED);
-
     // 配置有效路径，使能KernelDataDump
+    dumpDfxConfig.dfxTypes.push_back("all");
     dumpDfxConfig.dfxTypes.push_back("printf");
     dumpDfxConfig.dfxTypes.push_back("tensor");
     dumpDfxConfig.dfxTypes.push_back("assert");

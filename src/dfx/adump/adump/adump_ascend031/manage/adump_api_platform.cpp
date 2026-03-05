@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <atomic>
+#include "acl_dump.h"
+#include "log/adx_log.h"
 #include "adump_api.h"
 #include "dump_manager.h"
 
@@ -34,3 +36,16 @@ int32_t AdumpRegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, Adump
     return DumpManager::Instance().RegisterCallback(moduleId, enableFunc, disableFunc);
 }
 }  // namespace Adx
+
+/**
+ * @ingroup AscendCL
+ * @brief Get Exception Dump path.
+ *
+ * @retval path for success
+ * @retval NULL for failed
+ */
+const char* acldumpGetPath(acldumpType dumpType)
+{
+    UNUSED(dumpType);
+    return nullptr;
+}

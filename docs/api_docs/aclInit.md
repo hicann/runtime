@@ -245,6 +245,34 @@ aclError aclInit(const char *configPath)
 
 -   通过dump\_mode参数控制导出watcher\_nodes中所配置算子的哪部分数据，当前仅支持配置为output。
 
+## 算子Kernel调测数据Dump配置
+
+**算子Kernel调测数据Dump配置**，用于导出Ascend C算子Kernel的调测信息，便于算子问题定位。**默认不启用该Dump配置。**
+
+配置dump\_kernel\_data参数值开启算子Kernel数据Dump功能，配置文件中的示例如下：
+
+```
+{
+    "dump":{
+        "dump_kernel_data":"printf,assert",
+        "dump_path":"/home/"
+    }
+}
+```
+
+详细配置说明及约束如下：
+
+-   dump_kernel_data：指定导出数据的类型，支持配置多个类型，用英文逗号隔开。如果未配置该字段，但启用了模型Dump配置、单算子Dump配置，则默认按all导出调测信息。
+    -    all：导出以下所有类型调测的输出数据。
+    -    printf：导出通过AscendC::printf调测的输出数据。
+    -    tensor：导出通过AscendC::DumpTensor调测的输出数据。
+    -    assert：导出通过assert/ascendc_assert调测的输出数据。
+    -    timestamp：导出通过AscendC::PrintTimeStamp调测的输出数据。
+
+-   dump_path：启用算子Kernel数据Dump功能时，dump\_path必须配置，表示导出Dump文件的存储路径，支持配置绝对路径或相对路径。
+    Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见《环境变量参考》。
+    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show_kernel_debug_data工具将调测信息解析为可读格式，工具使用指导请参见《Ascend C算子开发指南》中的“编程指南 > 附录 > show_kernel_debug_data工具”。
+
 ## Profiling采集信息配置
 
 **Profiling采集信息配置**，配置示例、说明及约束请参见《性能调优工具用户指南》。**默认不启用Profiling采集信息配置。**

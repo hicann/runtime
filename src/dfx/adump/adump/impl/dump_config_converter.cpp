@@ -921,7 +921,7 @@ bool DumpConfigConverter::EnableKernelDfxDumpWithEnv(DumpDfxConfig &config)
         config.dfxTypes.push_back(ADUMP_DUMP_KERNEL_DATA_ALL);
         std::string dumpPath = dumpEnvVariable.ascendDumpPath.empty()
             ? dumpEnvVariable.ascendWorkPath : dumpEnvVariable.ascendDumpPath;
-        Path path = Path(dumpPath).Append("data-dump");
+        Path path = Path(dumpPath).Append("printf");
         config.dumpPath = path.GetString();
         return true;
     }

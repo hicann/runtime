@@ -52,6 +52,7 @@ private:
     std::set<rtKernelDfxInfoType> enabledDfxTypes_;
     std::string dumpPath_;
     bool taskInit_ = false;
+    bool taskRunning_ = false;
     BoundQueueMemory<DumpDfxInfo> dumpDfxInfoQueue_;
 };
 } // namespace Adx
