@@ -13,7 +13,6 @@
 #include "prof_api.h"
 #include "prof_acl_plugin.h"
 #include "prof_cann_plugin.h"
-#include "prof_atls_plugin.h"
 #include "prof_tx_plugin.h"
 #include "prof_plugin_manager.h"
 #include "prof_mstx_plugin.h"
@@ -21,43 +20,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
 // API for atls using
-MSVP_PROF_API int32_t profRegReporterCallback(MsprofReportHandle reporter)
-{
-    return ProfAPI::ProfAtlsPlugin::instance()->ProfRegisterReporter(reporter);
-}
-
-MSVP_PROF_API int32_t profRegCtrlCallback(MsprofCtrlHandle handle)
-{
-    ProfAPI::ProfPluginManager::instance()->SetProfPlugin(ProfAPI::ProfAtlsPlugin::instance());
-    return ProfAPI::ProfAtlsPlugin::instance()->ProfRegisterCtrl(handle);
-}
-
-MSVP_PROF_API int32_t profRegDeviceStateCallback(MsprofSetDeviceHandle handle)
-{
-    return ProfAPI::ProfAtlsPlugin::instance()->ProfRegisterDeviceNotify(handle);
-}
-
-MSVP_PROF_API int32_t profGetDeviceIdByGeModelIdx(const uint32_t modelIdx, uint32_t *deviceId)
-{
-    return ProfAPI::ProfAtlsPlugin::instance()->ProfGetDeviceIdByGeModelIdx(modelIdx, deviceId);
-}
-
 MSVP_PROF_API int32_t profSetProfCommand(VOID_PTR command, uint32_t len)
 {
-    return ProfAPI::ProfAtlsPlugin::instance()->ProfSetProfCommand(command, len);
+    return ProfAPI::ProfCannPlugin::instance()->ProfSetProfCommand(command, len);
 }
 
 MSVP_PROF_API int32_t MsprofRegisterProfileCallback(int32_t callbackType, VOID_PTR callback, uint32_t len)
 {
-    return ProfAPI::ProfAtlsPlugin::instance()->RegisterProfileCallback(callbackType, callback, len);
+    return ProfAPI::ProfCannPlugin::instance()->RegisterProfileCallback(callbackType, callback, len);
 }
 
-// API for cann & atlas using
+// API for cann using
 MSVP_PROF_API int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream)
 {
-    ProfAPI::ProfPlugin *plugin = ProfAPI::ProfPluginManager::instance()->GetProfPlugin();
-    return plugin->ProfSetStepInfo(indexId, tagId, stream);
+    return ProfAPI::ProfCannPlugin::instance()->ProfSetStepInfo(indexId, tagId, stream);
 }
 
 // prof acl api

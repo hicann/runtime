@@ -55,6 +55,8 @@ using ProfUnSubscribeRawDataFunc = int32_t (*) ();
 using ProfVarAddBlockBufPopFunc = void* (*) (const ProfVarAddBlockBufPopCallback func);
 using ProfVarAddBufIndexShiftFunc = void* (*) (const ProfVarAddBufIndexShiftCallBack func);
 
+using ProfSetCommandFunc = int32_t (*) (VOID_PTR command, uint32_t len);
+
 class ProfCannPlugin : public ProfPlugin, public analysis::dvvp::common::singleton::Singleton<ProfCannPlugin> {
 public:
     void ProfApiInit();
@@ -103,6 +105,9 @@ public:
     int32_t ProfAdprofCheckFeatureIsOn(uint64_t feature) const;
     int32_t ProfSubscribeRawData(MsprofRawDataCallback callback) const;
     int32_t ProfUnSubscribeRawData() const;
+
+    int32_t ProfSetProfCommand(VOID_PTR command, uint32_t len);
+    int32_t RegisterProfileCallback(int32_t callbackType, VOID_PTR callback, uint32_t len);
     ~ProfCannPlugin() override;
 
 private:
@@ -112,10 +117,15 @@ private:
     std::map<uint32_t, uint32_t> deviceIdMaps_;  // (moduleId, deviceId)
     std::mutex deviceMapsMutex_;
     std::map<uint64_t, bool> deviceStates_; // id is deviceid << 32 | chipid;
+    std::map<uint64_t, bool> cachedDeviceStates_; // id is deviceid << 32 | chipid;
     std::mutex deviceStateMutex_;
+    std::mutex cachedDeviceStateMutex_;
     std::mutex envMutex_;
 
     void LoadProfApi();
+
+    int32_t RegisterProfileCallbackForAtls(int32_t callbackType, VOID_PTR callback);
+    void ProfNotifyCachedDevice();
 
     PTHREAD_ONCE_T profApiLoadFlag_;
     ProfInitFunc profInit_{nullptr};
@@ -154,6 +164,18 @@ private:
     VariableBlockBuffer variableAdditionalBuffer_{};
     ProfVarAddBlockBufPopFunc profVarAddBlockBufPop_{nullptr};
     ProfVarAddBufIndexShiftFunc profVarAddBlockBufIndexShift_{nullptr};
+
+    ProfSetCommandFunc profSetProfCommand_{nullptr};
+
+    // for atls tools callback
+    MsprofSetDeviceHandle atlsSetDevice_{nullptr};
+    AtlsReportApiFunc atlsReportApi_{nullptr};
+    AtlsReportEventFunc atlsReportEvent_{nullptr};
+    AtlsReportCompactInfoFunc atlsReportCompactInfo_{nullptr};
+    AtlsReportAdditionalInfoFunc atlsReportAdditionalInfo_{nullptr};
+    AtlsReportRegTypeInfoFunc atlsReportRegTypeInfo_{nullptr};
+    AtlsReportGetHashIdFunc atlsReportGetHashId_{nullptr};
+    AtlsHostFreqIsEnableFunc atlsHostFreqIsEnable_{nullptr};
 };
 
 bool TryPopApiBuf(uint32_t &aging, MsprofApi& data);

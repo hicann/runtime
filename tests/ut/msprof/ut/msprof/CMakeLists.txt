@@ -407,7 +407,6 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/report/prof_reporter_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/aicpu/prof_hal_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin_manager.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_atls_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/stub/prof_tx_plugin_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp

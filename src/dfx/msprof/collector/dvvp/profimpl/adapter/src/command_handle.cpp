@@ -67,6 +67,11 @@ void CommandHandleFinalizeGuard()
     ProfModuleReprotMgr::GetInstance().ProfSetFinalizeGuard();
 }
 
+int32_t ProfSetProfCommand(ProfCommand &command)
+{
+    return ProfModuleReprotMgr::GetInstance().ProfSetProCommand(command);
+}
+
 void ProfModuleReprotMgr::ProfSetFinalizeGuard()
 {
     finalizeGuard_ = true;

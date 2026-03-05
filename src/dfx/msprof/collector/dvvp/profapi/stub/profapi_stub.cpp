@@ -11,31 +11,6 @@
 #ifndef PROF_API_STUB
 #include "prof_api.h"
 
-int32_t profRegReporterCallback(MsprofReportHandle reporter)
-{
-    (void)reporter;
-    return 0;
-}
-
-int32_t profRegCtrlCallback(MsprofCtrlHandle handle)
-{
-    (void)handle;
-    return 0;
-}
-
-int32_t profRegDeviceStateCallback(MsprofSetDeviceHandle handle)
-{
-    (void)handle;
-    return 0;
-}
-
-int32_t profGetDeviceIdByGeModelIdx(const uint32_t modelIdx, uint32_t *deviceId)
-{
-    (void)modelIdx;
-    (void)deviceId;
-    return 0;
-}
-
 int32_t profSetProfCommand(VOID_PTR command, uint32_t len)
 {
     (void)command;

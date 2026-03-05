@@ -32,43 +32,6 @@ extern "C" {
 
 /*
  * @ingroup libprofapi
- * @name  profRegReporterCallback
- * @brief register report callback interface for atlas
- * @param [in] reporter: reporter callback handle
- * @return 0:SUCCESS, !0:FAILED
- */
-MSVP_PROF_API int32_t profRegReporterCallback(MsprofReportHandle reporter);
-
-/*
- * @ingroup libprofapi
- * @name  profRegCtrlCallback
- * @brief register control callback, interface for atlas
- * @param [in] handle: control callback handle
- * @return 0:SUCCESS, !0:FAILED
- */
-MSVP_PROF_API int32_t profRegCtrlCallback(MsprofCtrlHandle handle);
-
-/*
- * @ingroup libprofapi
- * @name  profRegDeviceStateCallback
- * @brief register device state notify callback, interface for atlas
- * @param [in] handle: handle of ProfNotifySetDevice
- * @return 0:SUCCESS, !0:FAILED
- */
-MSVP_PROF_API int32_t profRegDeviceStateCallback(MsprofSetDeviceHandle handle);
-
-/*
- * @ingroup libprofapi
- * @name  profGetDeviceIdByGeModelIdx
- * @brief get device id by model id, interface for atlas
- * @param [in] modelIdx: ge model id
- * @param [out] deviceId: device id
- * @return 0:SUCCESS, !0:FAILED
- */
-MSVP_PROF_API int32_t profGetDeviceIdByGeModelIdx(const uint32_t modelIdx, uint32_t *deviceId);
-
-/*
- * @ingroup libprofapi
  * @name  profSetProfCommand
  * @brief register set profiling command, interface for atlas
  * @param [in] command: 0 isn't aging, !0 is aging

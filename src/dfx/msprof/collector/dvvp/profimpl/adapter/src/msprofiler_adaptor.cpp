@@ -24,6 +24,7 @@ using namespace Msprof::Engine::Intf;
 using namespace Collector::Dvvp::DynProf;
 using namespace analysis::dvvp::common::utils;
 using namespace analysis::dvvp::common::error;
+using namespace Analysis::Dvvp::ProfilerCommon;
 
 extern "C" MSVP_PROF_API int32_t MsprofSetConfig(uint32_t configType, const char *config, size_t configLength)
 {
@@ -290,4 +291,13 @@ extern "C" MSVP_PROF_API void ProfImplSetVarAddBlockBufBatchPop(const ProfVarAdd
 extern "C" MSVP_PROF_API void ProfImplSetVarAddBlockBufIndexShift(const ProfVarAddBufIndexShiftCallBack func)
 {
     Msprof::Engine::ReceiveData::varAdditionalBufferIndexShift_ = func;
+}
+
+extern "C" MSVP_PROF_API int32_t ProfImplSetProfCommand(VOID_PTR command, uint32_t len)
+{
+    if (static_cast<size_t>(len) != sizeof(ProfCommand) || command == nullptr) {
+        MSPROF_LOGE("Invalid command to set");
+        return PROFILING_FAILED;
+    }
+    return ProfSetProfCommand(*reinterpret_cast<ProfCommand*>(command));
 }

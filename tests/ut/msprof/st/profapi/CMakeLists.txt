@@ -18,7 +18,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_acl_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_tx_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_plugin.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_atls_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_cann_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_runtime_plugin.cpp 
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_inner_api.cpp

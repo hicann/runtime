@@ -12,7 +12,6 @@
 #include "msprof_dlog.h"
 #include "prof_acl_plugin.h"
 #include "prof_plugin.h"
-#include "prof_atls_plugin.h"
 #include "prof_api.h"
 #include "acl/acl_prof.h"
 #include "prof_inner_api.h"
@@ -128,12 +127,6 @@ TEST_F(PROF_API_UTTEST, PROF_SET_DEVICEID)
   EXPECT_EQ(0, MsprofSetDeviceIdByGeModelIdx(0, 0));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_GET_DEVICEID)
-{
-  uint32_t deviceId;
-  EXPECT_EQ(PROFILING_FAILED, profGetDeviceIdByGeModelIdx(0, &deviceId));
-}
-
 TEST_F(PROF_API_UTTEST, PROF_UNSET_DEVICEID)
 {
   EXPECT_EQ(0, MsprofUnsetDeviceIdByGeModelIdx (0, 0));
@@ -148,14 +141,6 @@ TEST_F(PROF_API_UTTEST, PROF_START_STOP)
 {
     EXPECT_EQ(0, MsprofStart(0, nullptr, 0));
     EXPECT_EQ(0, MsprofStop(0, nullptr, 0));
-}
-
-TEST_F(PROF_API_UTTEST, PROF_ACLINIT)
-{
-  MOCKER(dlopen).stubs().will(invoke(mmDlopen));
-  VOID_PTR profImplHandle = dlopen("libprofimpl.so", RTLD_LAZY);
-  ProfAPI::ProfAclPlugin::instance()->ProfAclApiInit(profImplHandle);
-  EXPECT_EQ(0, ProfAclInit(0, nullptr, 0));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_ACLSTART)
@@ -294,25 +279,9 @@ TEST_F(PROF_API_UTTEST, PROF_PROFACLSETSTAMPPAYLOAD)
   EXPECT_EQ(PROFILING_FAILED, ProfAclSetStampPayload(nullptr, 0, nullptr));
 }
 
-TEST_F(PROF_API_UTTEST, PROF_PROFREGREPORTERCALLBACK)
-{
-  EXPECT_EQ(PROFILING_SUCCESS, profRegReporterCallback(nullptr));
-}
-
-TEST_F(PROF_API_UTTEST, PROF_PROFREGCTRLCALLBACK)
-{
-  EXPECT_EQ(PROFILING_SUCCESS, profRegCtrlCallback(nullptr));
-}
-
 int32_t profHandleStub(void *data, uint32_t len)
 {
   return 0;
-}
-
-TEST_F(PROF_API_UTTEST, PROF_PROFREGDEVICESTATECALLBACK)
-{
-  EXPECT_EQ(PROFILING_FAILED, profRegDeviceStateCallback(nullptr));
-  EXPECT_EQ(PROFILING_SUCCESS, profRegDeviceStateCallback(&profHandleStub));
 }
 
 TEST_F(PROF_API_UTTEST, PROF_PROFSETPROFCOMMAND)
@@ -320,23 +289,5 @@ TEST_F(PROF_API_UTTEST, PROF_PROFSETPROFCOMMAND)
   MsprofCommandHandle command;
   command.type = PROF_COMMANDHANDLE_TYPE_MAX;
   auto data = reinterpret_cast<void *>(&command);
-  EXPECT_EQ(PROFILING_SUCCESS, profSetProfCommand(data, 0));
-}
-
-int32_t profCommandStub(uint32_t type, void *data, uint32_t len)
-{
-return 0;
-}
-TEST_F(PROF_API_UTTEST, PROF_ATLS_TEST)
-{
-  EXPECT_EQ(PROFILING_FAILED, MsprofRegisterCallback(0, nullptr));
-  EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(0, &profCommandStub));
-  EXPECT_EQ(PROFILING_FAILED, profSetStepInfo(0, 0, nullptr));
-  EXPECT_EQ(PROFILING_FAILED, MsprofInit(0, nullptr, 0));
-  EXPECT_EQ(PROFILING_FAILED, MsprofReportData(0, 0, nullptr, 0));
-  EXPECT_EQ(PROFILING_SUCCESS, MsprofSetDeviceIdByGeModelIdx(0, 0));
-  EXPECT_EQ(PROFILING_SUCCESS, MsprofUnsetDeviceIdByGeModelIdx(0, 0));
-  EXPECT_EQ(PROFILING_SUCCESS, MsprofNotifySetDevice(0, 0, 0));
-  EXPECT_EQ(PROFILING_FAILED, MsprofFinalize());
-  EXPECT_NE(0, MsprofSysCycleTime());
+  EXPECT_EQ(PROFILING_FAILED, profSetProfCommand(data, 0));
 }

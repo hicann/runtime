@@ -38,7 +38,6 @@ set(profApiCpp
     src/prof_impl_inner_api.cpp
     src/prof_plugin_manager.cpp
     src/prof_cann_plugin.cpp
-    src/prof_atls_plugin.cpp
     src/prof_plugin.cpp
     src/prof_tx_plugin.cpp
     src/prof_acl_plugin.cpp

@@ -28,6 +28,12 @@ const std::string MSPROFILER_LIB_PATH = "libprofimpl.so";
 #endif
 const std::string PROFILER_SAMPLE_CONFIG_ENV = "PROFILER_SAMPLECONFIG";
 
+struct ProfSetDevPara {
+    uint32_t chipId;
+    uint32_t deviceId;
+    bool isOpen;
+};
+
 #define LOAD_MSPROF_API(api, hanle, func, name)             \
     do {                                                    \
         api = reinterpret_cast<func>(dlsym(hanle, name)); \
@@ -96,6 +102,7 @@ void ProfCannPlugin::LoadProfApi()
 
     LOAD_MSPROF_API(profVarAddBlockBufPop_, msProfLibHandle_, ProfVarAddBlockBufPopFunc, "ProfImplSetVarAddBlockBufBatchPop");
     LOAD_MSPROF_API(profVarAddBlockBufIndexShift_, msProfLibHandle_, ProfVarAddBufIndexShiftFunc, "ProfImplSetVarAddBlockBufIndexShift");
+    LOAD_MSPROF_API(profSetProfCommand_, msProfLibHandle_, ProfSetCommandFunc, "ProfImplSetProfCommand");
     LoadProfInfo();
     LoadProftxApiInit(msProfLibHandle_);
     ProfAclPlugin::instance()->ProfAclApiInit(msProfLibHandle_);
@@ -123,6 +130,97 @@ void ProfCannPlugin::LoadProfInfo()
         }
     }
 }
+
+int32_t ProfCannPlugin::ProfSetProfCommand(VOID_PTR command, uint32_t len)
+{
+    if (profSetProfCommand_ != nullptr) {
+        return profSetProfCommand_(command, len);
+    } else {
+        MSPROF_LOGW("MSPROF API Has Not Been Load!");
+    }
+    return PROFILING_FAILED;
+}
+
+void ProfCannPlugin::ProfNotifyCachedDevice()
+{
+    if (atlsSetDevice_ == nullptr) {
+        return;
+    }
+    std::map<uint64_t, bool> deviceStatesCopy;
+    {
+        const std::lock_guard<std::mutex> lock(cachedDeviceStateMutex_);
+        deviceStatesCopy = cachedDeviceStates_;
+    }
+    for (const auto&device : deviceStatesCopy) {
+        ProfSetDevPara para;
+        para.chipId = static_cast<uint32_t>(device.first & 0xFFFFFFFFU);
+        para.deviceId = static_cast<uint32_t>(device.first >> 32);
+        para.isOpen = device.second;
+        atlsSetDevice_(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevPara));
+    }
+}
+
+int32_t ProfCannPlugin::RegisterProfileCallbackForAtls(int32_t callbackType, VOID_PTR callback)
+{
+    auto ret = PROFILING_SUCCESS;
+    switch (callbackType) {
+        case PROFILE_REPORT_API_C_CALLBACK:
+            atlsReportApi_ = reinterpret_cast<decltype(atlsReportApi_)>(callback);
+            break;
+        case PROFILE_REPORT_EVENT_C_CALLBACK:
+            atlsReportEvent_ = reinterpret_cast<decltype(atlsReportEvent_)>(callback);
+            break;
+        case PROFILE_REPORT_REG_TYPE_INFO_C_CALLBACK:
+            atlsReportRegTypeInfo_ = reinterpret_cast<decltype(atlsReportRegTypeInfo_)>(callback);
+            break;
+        case PROFILE_REPORT_REG_DATA_FORMAT_C_CALLBACK:
+            break;
+        case PROFILE_REPORT_GET_HASH_ID_C_CALLBACK:
+            atlsReportGetHashId_ = reinterpret_cast<decltype(atlsReportGetHashId_)>(callback);
+            break;
+        case PROFILE_HOST_FREQ_IS_ENABLE_C_CALLBACK:
+            atlsHostFreqIsEnable_ = reinterpret_cast<decltype(atlsHostFreqIsEnable_)>(callback);
+            break;
+        case PROFILE_DEVICE_STATE_C_CALLBACK:
+            atlsSetDevice_ = reinterpret_cast<decltype(atlsSetDevice_)>(callback);
+            ProfNotifyCachedDevice();
+            break;
+        default:
+            ret = PROFILING_FAILED;
+            break;
+    }
+    return ret;
+}
+
+int32_t ProfCannPlugin::RegisterProfileCallback(int32_t callbackType, VOID_PTR callback, uint32_t /* len */)
+{
+    MSPROF_LOGE("RegisterProfileCallback, callback type is %d", callbackType);
+    auto ret = PROFILING_SUCCESS;
+    switch (callbackType) {
+        case PROFILE_CTRL_CALLBACK:
+        case PROFILE_DEVICE_STATE_CALLBACK:
+        case PROFILE_REPORT_API_CALLBACK:
+        case PROFILE_REPORT_EVENT_CALLBACK:
+        case PROFILE_REPORT_REG_TYPE_INFO_CALLBACK:
+        case PROFILE_REPORT_REG_DATA_FORMAT_CALLBACK:
+        case PROFILE_REPORT_GET_HASH_ID_CALLBACK:
+        case PROFILE_HOST_FREQ_IS_ENABLE_CALLBACK:
+            MSPROF_LOGI("Register type %d for atls msprof just return success", callbackType);
+            break;
+        case PROFILE_REPORT_COMPACT_CALLBACK:
+            atlsReportCompactInfo_ = reinterpret_cast<decltype(atlsReportCompactInfo_)>(callback);
+            break;
+        case PROFILE_REPORT_ADDITIONAL_CALLBACK:
+            atlsReportAdditionalInfo_ = reinterpret_cast<decltype(atlsReportAdditionalInfo_)>(callback);
+            break;
+        default:
+            ret = RegisterProfileCallbackForAtls(callbackType, callback);
+            break;
+    }
+
+    return ret;
+}
+
 
 /**
  * @name  ProfInitReportBufSize
@@ -316,6 +414,9 @@ int32_t ProfCannPlugin::ProfReportData(uint32_t moduleId, uint32_t type, void *d
  */
 int32_t ProfCannPlugin::ProfReportApi(uint32_t agingFlag, const MsprofApi* api)
 {
+    if (atlsReportApi_ != nullptr) {
+        return atlsReportApi_(agingFlag, api);
+    }
     return apiBuffer_.TryPush(agingFlag, *api);
 }
 
@@ -329,6 +430,9 @@ int32_t ProfCannPlugin::ProfReportApi(uint32_t agingFlag, const MsprofApi* api)
  */
 int32_t ProfCannPlugin::ProfReportEvent(uint32_t agingFlag, const MsprofEvent* event)
 {
+    if (atlsReportEvent_ != nullptr) {
+        return atlsReportEvent_(agingFlag, event);
+    }
     return apiBuffer_.TryPush(agingFlag, *reinterpret_cast<const MsprofApi *>(event));
 }
 
@@ -340,8 +444,11 @@ int32_t ProfCannPlugin::ProfReportEvent(uint32_t agingFlag, const MsprofEvent* e
  * @return MSPROF_ERROR_UNINITIALIZE
            MSPROF_ERROR_NONE
  */
-int32_t ProfCannPlugin::ProfReportCompactInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t /* len */)
+int32_t ProfCannPlugin::ProfReportCompactInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t len)
 {
+    if (atlsReportCompactInfo_ != nullptr) {
+        return atlsReportCompactInfo_(agingFlag, data, len);
+    }
     return compactBuffer_.TryPush(agingFlag, *reinterpret_cast<const MsprofCompactInfo *>(data));
 }
 
@@ -355,6 +462,9 @@ int32_t ProfCannPlugin::ProfReportCompactInfo(uint32_t agingFlag, const VOID_PTR
  */
 int32_t ProfCannPlugin::ProfReportAdditionalInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
 {
+    if (atlsReportAdditionalInfo_ != nullptr) {
+        return atlsReportAdditionalInfo_(agingFlag, data, length);
+    }
     if (length > MAX_VARIABLE_DATA_LENGTH) {
         MSPROF_LOGE("Additional info length exceeds the maximum");
         return PROFILING_FAILED;
@@ -509,8 +619,11 @@ void ProfCannPlugin::ProfRegisterFunc(uint32_t type, VOID_PTR func)
 
 int32_t ProfCannPlugin::ProfReportRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName, size_t len)
 {
+    if (atlsReportRegTypeInfo_ != nullptr) {
+        (void)atlsReportRegTypeInfo_(level, typeId, typeName, len);
+    }
     if (profReportRegTypeInfo_ != nullptr) {
-        return profReportRegTypeInfo_(level, typeId, std::string(typeName, len));
+        (void)profReportRegTypeInfo_(level, typeId, std::string(typeName, len));
     }
     return 0;
 }
@@ -525,10 +638,14 @@ int32_t ProfCannPlugin::ProfReportRegDataFormat(uint16_t level, uint32_t typeId,
 
 uint64_t ProfCannPlugin::ProfReportGetHashId(const char* info, size_t len)
 {
-    if (profReportGetHashId_ != nullptr) {
-        return profReportGetHashId_(std::string(info, len));
+    uint64_t hashId = 0;
+    if (atlsReportGetHashId_ != nullptr) {
+        hashId = atlsReportGetHashId_(info, len);
     }
-    return 0;
+    if (profReportGetHashId_ != nullptr) {
+        hashId = profReportGetHashId_(std::string(info, len));
+    }
+    return hashId;
 }
 
 int32_t ProfCannPlugin::ProfSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId)
@@ -578,19 +695,31 @@ bool ProfCannPlugin::ProfCheckCommandLine()
 
 int32_t ProfCannPlugin::ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, bool isOpen)
 {
+    {
+        const std::unique_lock<std::mutex> lock(cachedDeviceStateMutex_);
+        uint64_t id = (deviceId << 32ULL) | chipId;
+        cachedDeviceStates_[id] = isOpen;
+    }
+    if (atlsSetDevice_ != nullptr) {
+        ProfSetDevPara para;
+        para.chipId = chipId;
+        para.deviceId = deviceId;
+        para.isOpen = isOpen;
+        atlsSetDevice_(reinterpret_cast<VOID_PTR>(&para), sizeof(ProfSetDevPara));
+    }
+
     if (profNotifySetDevice_ != nullptr) {
         return profNotifySetDevice_(chipId, deviceId, isOpen);
     } else if (isOpen && ProfCheckCommandLine()) {
         if (profNotifySetDevice_ != nullptr) {
             return profNotifySetDevice_(chipId, deviceId, isOpen);
         }
-    } else {
+    } else { 
         uint64_t id = deviceId;
         id = (id << 32ULL) | chipId;
         const std::unique_lock<std::mutex> lock(deviceStateMutex_);
         deviceStates_[id] = isOpen;
     }
-
     return 0;
 }
 
@@ -646,6 +775,9 @@ int32_t ProfCannPlugin::ProfFinalize()
 
 bool ProfCannPlugin::ProfHostFreqIsEnable()
 {
+    if (atlsHostFreqIsEnable_ != nullptr) {
+        return atlsHostFreqIsEnable_() != 0;
+    }
     if (profHostFreqIsEnable_ != nullptr) {
         return profHostFreqIsEnable_();
     }

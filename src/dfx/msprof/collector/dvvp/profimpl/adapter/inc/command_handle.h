@@ -31,6 +31,7 @@ int32_t CommandHandleProfFinalize();
 int32_t CommandHandleProfUnSubscribe(uint32_t modelId);
 void CommandHandleFinalizeGuard();
 int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
+int32_t ProfSetProfCommand(ProfCommand &command);
 
 class ProfModuleReprotMgr {
 public:

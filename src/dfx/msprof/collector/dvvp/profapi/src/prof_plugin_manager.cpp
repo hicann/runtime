@@ -10,7 +10,6 @@
 #include "prof_plugin_manager.h"
 #include "errno/error_code.h"
 #include "prof_cann_plugin.h"
-#include "prof_atls_plugin.h"
 using namespace analysis::dvvp::common::error;
 namespace ProfAPI {
 PROF_PLUGIN_PTR ProfPluginManager::GetProfPlugin(void)

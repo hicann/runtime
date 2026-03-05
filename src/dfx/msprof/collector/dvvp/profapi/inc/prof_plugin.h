@@ -25,12 +25,13 @@ using ProfReportRegDataFormatFunc = int32_t (*) (uint16_t level, uint32_t typeId
 using ProfReportGetHashIdFunc = uint64_t (*) (const std::string &info);
 using ProfHostFreqIsEnableFunc = bool (*) ();
 
-using ProfReportApiCFunc = int32_t (*) (uint32_t agingFlag, const MsprofApi* api);
-using ProfReportEventCFunc = int32_t (*) (uint32_t agingFlag, const MsprofEvent* event);
-using ProfReportRegTypeInfoCFunc = int32_t (*) (uint16_t level, uint32_t typeId, const char* typeName, size_t len);
-using ProfReportRegDataFormatCFunc = int32_t (*) (uint16_t level, uint32_t typeId, const char* dataFormat, size_t len);
-using ProfReportGetHashIdCFunc = uint64_t (*) (const char* info, size_t len);
-using ProfHostFreqIsEnableCFunc = int8_t (*) ();
+using AtlsReportApiFunc = int32_t (*) (uint32_t agingFlag, const MsprofApi* api);
+using AtlsReportEventFunc = int32_t (*) (uint32_t agingFlag, const MsprofEvent* event);
+using AtlsReportCompactInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using AtlsReportAdditionalInfoFunc = int32_t (*) (uint32_t agingFlag, const VOID_PTR data, uint32_t len);
+using AtlsReportRegTypeInfoFunc = int32_t (*) (uint16_t level, uint32_t typeId, const char* typeName, size_t len);
+using AtlsReportGetHashIdFunc = uint64_t (*) (const char* info, size_t len);
+using AtlsHostFreqIsEnableFunc = int8_t (*) ();
 
 class ProfPlugin { // : public analysis::dvvp::common::singleton::Singleton<ProfPlugin> {
 public:

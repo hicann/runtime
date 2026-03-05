@@ -25,8 +25,6 @@ extern "C" {
 #define MSPROF_DATA_HEAD_MAGIC_NUM  0x5A5AU
 #define MSPROF_TASK_TIME_L0 0x00000800ULL  // mean PROF_TASK_TIME
 typedef const void* ConstVoidPtr;
-typedef int32_t (*MsprofReportHandle)(uint32_t moduleId, uint32_t type, VOID_PTR data, uint32_t len);
-typedef int32_t (*MsprofCtrlHandle)(uint32_t type, VOID_PTR data, uint32_t len);
 typedef int32_t (*MsprofSetDeviceHandle)(VOID_PTR data, uint32_t len);
 typedef int32_t (*MsprofCtrlCallback)(uint32_t type, void *data, uint32_t len);
 typedef int32_t (*MsprofReporterCallback)(uint32_t moduleId, uint32_t type, void *data, uint32_t len);
