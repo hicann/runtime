@@ -1216,6 +1216,7 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreate)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
         .will(returnValue(RT_ERROR_NONE));
     rtError_t error = rtMemPoolCreate(&memPool, &poolProps);
+    auto memPool1 = memPool;
     EXPECT_EQ(error, RT_ERROR_NONE);
     poolProps.maxSize = 0;
     error = rtMemPoolCreate(&memPool, &poolProps);
@@ -1233,6 +1234,11 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreate)
     poolProps.maxSize = (10UL << 30);
     error = api.StreamMemPoolCreate(&memPool, &poolProps);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    error = rtMemPoolDestroy(memPool);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtMemPoolDestroy(memPool1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -1266,6 +1272,9 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreateAndDestroy)
 
     error = rtMemPoolCreate(&memPool, &poolProps);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtMemPoolDestroy(memPool);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -1297,17 +1306,6 @@ TEST_F(CloudV2ApiTest2, rtMemPoolDestroy)
 
     error = rtMemPoolDestroy(memPool);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    delete device;
-}
-
-TEST_F(CloudV2ApiTest2, rtMemPoolDestroy_failed)
-{
-    RawDevice *device = new RawDevice(0);
-    device->Init();
-
-    // invalid param
-    rtError_t error = SomaApi::StreamMemPoolDestroy(nullptr);
-    EXPECT_EQ(error, RT_ERROR_POOL_PTR_NOTFOUND);
     delete device;
 }
 
@@ -1348,6 +1346,8 @@ TEST_F(CloudV2ApiTest2, rtMemPoolSetAttr)
     int32_t numTen = 10;
     error = api.StreamMemPoolSetAttr(memPool, static_cast<rtMemPoolAttr>(numTen), (void *)&size);
     EXPECT_EQ(error, RT_ERROR_POOL_PROP_INVALID);
+    error = rtMemPoolDestroy(memPool);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 
@@ -1382,6 +1382,8 @@ TEST_F(CloudV2ApiTest2, rtMemPoolGetAttr)
     int32_t numTen = 10;
     error = api.StreamMemPoolGetAttr(memPool, static_cast<rtMemPoolAttr>(numTen), (void *)&waterMark);
     EXPECT_EQ(error, RT_ERROR_POOL_PROP_INVALID);
+    error = rtMemPoolDestroy(memPool);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
 }
 

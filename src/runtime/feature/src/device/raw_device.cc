@@ -148,7 +148,6 @@ RawDevice::~RawDevice() noexcept
     dCacheLockFlag_ = false;
     exceptionRegMap_.clear();
     captureModelExeInfoMap_.clear();
-    PoolRegistry::Instance().CleanupDevice(deviceId_);
 }
 
 rtError_t RawDevice::SetCurGroupInfo(void)

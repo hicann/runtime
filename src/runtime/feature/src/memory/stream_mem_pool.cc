@@ -354,6 +354,8 @@ rtError_t PoolRegistry::Init()
 
     void *ptr = nullptr;
     rtError_t error = NpuDriver::ReserveMemAddress(&ptr, DEVICE_POOL_VADDR_SIZE, 0U, nullptr, 1U);
+    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_NONE,
+        "SOMA is not supported.");
     COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_MEMORY_ALLOCATION,
         "Reserve mem address failed, size=%zu, alignment=%zu, flags=%" PRIx64 ", reCode=%#x", DEVICE_POOL_VADDR_SIZE, 0U, 1U, error);
     
