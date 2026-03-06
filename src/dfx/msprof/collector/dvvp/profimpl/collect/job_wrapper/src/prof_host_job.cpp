@@ -592,6 +592,11 @@ int32_t ProfHostService::Uninit()
             MSPROF_INNER_ERROR("EK9999", "Failed to open %s", fileName.c_str());
             return PROFILING_FAILED;
         }
+        if (OsalChmod(fileName.c_str(), 0640) != OSAL_EN_OK) {
+            in.close();
+            MSPROF_LOGE("Failed to change file mode for %s", fileName.c_str());
+            return PROFILING_FAILED;
+        }
         in << diskIoStartTime;
         in.close();
     }
