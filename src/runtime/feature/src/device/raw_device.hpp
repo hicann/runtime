@@ -198,11 +198,6 @@ public:
         return l2buffer_;
     }
 
-    DevType GetType_() const override
-    {
-        return RAW_DEVICE;
-    }
-
     const void *GetStackPhyBase32k() const override
     {
         return stackPhyBase32kAlign_;

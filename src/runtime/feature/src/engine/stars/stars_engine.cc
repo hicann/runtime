@@ -236,7 +236,7 @@ void StarsEngine::StarsCqeReceive(const rtLogicCqReport_t &logicCq, TaskInfo * c
 {
     runTask->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage++;
     SetStarsResult(runTask, logicCq);
-    ShowTaskResult(runTask, GetDevice()->Id_());
+    DoTaskComplete(runTask, GetDevice()->Id_());
 
     if (runTask->isCqeNeedConcern != 0U) {
         runTask->isCqeNeedConcern = false;

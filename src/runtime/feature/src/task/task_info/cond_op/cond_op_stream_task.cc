@@ -411,14 +411,6 @@ rtError_t StreamSwitchNTaskInit(TaskInfo *taskInfo, const void *const ptrAddr, c
     streamSwitchNTask->elementSize = eleSize;
     streamSwitchNTask->dataType = taskDataType;
 
-    if ((taskInfo->stream->Device_())->GetType_() == Device::STUB_DEVICE) {
-        streamSwitchNTask->phyPtr = streamSwitchNTask->ptr;
-        streamSwitchNTask->phyValuePtr = streamSwitchNTask->valuePtr;
-        streamSwitchNTask->phyTrueStreamPtr = streamSwitchNTask->trueStreamPtr;
-        streamSwitchNTask->isTransAddr = false;
-        return RT_ERROR_NONE;
-    }
-
     uint64_t pptr = 0UL;
     const int32_t devId = static_cast<int32_t>(stream->Device_()->Id_());
     Driver * const driver = taskInfo->stream->Device_()->Driver_();

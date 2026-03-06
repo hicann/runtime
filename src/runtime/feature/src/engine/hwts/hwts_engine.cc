@@ -96,7 +96,7 @@ void HwtsEngine::ReportReceive(const rtTaskReport_t * const report, TaskInfo * c
         if (likely(report->packageType == static_cast<uint16_t>(RT_PACKAGE_TYPE_TASK_REPORT))) {
             SetResult(reportTask, RtPtrToPtr<const uint8_t *>(package),
                       reportTask->pkgStat[report->packageType].packageReportNum);
-            ShowTaskResult(reportTask, device_->Id_());
+            DoTaskComplete(reportTask, device_->Id_());
             const uint32_t errInfo = (*(RtPtrToPtr<uint32_t *>(package))) & RT_GET_ERR_CODE;
             ReportExceptProc(reportTask, errInfo, *(RtPtrToPtr<uint32_t *>(package)));
         }

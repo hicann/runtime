@@ -182,7 +182,7 @@ rtError_t WaitAsyncCopyComplete(TaskInfo* taskInfo);
 
 void UpdateFlipNum(TaskInfo *taskInfo, const bool isDisableThread);
 void InitByStream(TaskInfo *const taskInfo, Stream *stream);
-void ShowTaskResult(TaskInfo* taskInfo, const uint32_t devId);
+void DoTaskComplete(TaskInfo* taskInfo, const uint32_t devId);
 
 void SetPcTrace(TaskInfo *taskInfo, std::shared_ptr<PCTrace> pcTracePtr);
 inline void SetAicoreArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize,

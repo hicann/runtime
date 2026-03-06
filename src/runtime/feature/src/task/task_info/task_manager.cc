@@ -504,7 +504,7 @@ void SetResult(TaskInfo* taskInfo, const void *const data, const uint32_t dataSi
     }
 }
 
-void ShowTaskResult(TaskInfo* taskInfo, const uint32_t devId)
+void DoTaskComplete(TaskInfo* taskInfo, const uint32_t devId)
 {
     Stream *stm = taskInfo->stream;
 

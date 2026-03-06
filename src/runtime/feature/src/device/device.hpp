@@ -182,11 +182,6 @@ class CtrlSQ;
 // Management of a Davinci device.
 class Device : public NoCopy { // Interface
 public:
-    enum DevType {
-        RAW_DEVICE,
-        STUB_DEVICE
-    };
-
     ~Device() noexcept override
     {
         RT_LOG(RT_LOG_INFO, "device destructor.");
@@ -245,7 +240,6 @@ public:
     virtual uint64_t GetTCR_() const = 0;
     virtual void *GetL2Buffer_() const = 0;
     virtual void *GetSqVirtualArrBaseAddr_() const = 0;
-    virtual DevType GetType_() const = 0;
     virtual rtError_t AllocSPM(void **dptr, uint64_t size) = 0;
     virtual rtError_t FreeSPM(const void * const dptr) = 0;
     virtual bool IsSPM(const void *dptr) = 0;

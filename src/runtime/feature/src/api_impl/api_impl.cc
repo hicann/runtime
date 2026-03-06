@@ -1384,8 +1384,7 @@ rtError_t ApiImpl::KernelTransArgSet(const void * const ptr, const uint64_t size
     const auto dev = curCtx->Device_();
     Driver * const curDrv = dev->Driver_();
     (*setupArg) = const_cast<void *>(ptr);
-    if ((dev->GetType_() == Device::STUB_DEVICE) ||
-        (curDrv->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE))) {
+    if ((curDrv->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE))) {
         // stub device and online does not support
         return RT_ERROR_NONE;
     }

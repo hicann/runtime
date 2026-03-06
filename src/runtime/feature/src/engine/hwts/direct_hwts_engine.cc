@@ -1093,7 +1093,7 @@ void DirectHwtsEngine::ReportLastError(const uint32_t streamId, const uint32_t t
     faultStreamIdEx = faultStreamId >> static_cast<uint32_t>(RT_STREAM_ID_OFFSET);
     reportTask->error = 0U;
     SetResult(reportTask, package, static_cast<uint32_t>(M_PROF_PACKAGE_LEN));
-    ShowTaskResult(reportTask, device_->Id_());
+    DoTaskComplete(reportTask, device_->Id_());
 
     ReportExceptProc(reportTask, errorCode & RT_GET_ERR_CODE, errorDesc);
 }

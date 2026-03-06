@@ -161,7 +161,7 @@ rtError_t Model::Setup(Context * const contextIn)
     NULL_PTR_RETURN_MSG(notifier_, RT_ERROR_NOTIFY_NULL);
 
     const uint32_t tsVersion = dev->GetTschVersion();
-    if ((tsVersion >= static_cast<uint32_t>(TS_VERSION_MORE_LABEL)) || (dev->GetType_() == Device::STUB_DEVICE)) {
+    if ((tsVersion >= static_cast<uint32_t>(TS_VERSION_MORE_LABEL))) {
         labelAllocator_ = new (std::nothrow) LabelAllocator(MAX_UINT16_NUM);
     } else {
         labelAllocator_ = new (std::nothrow) LabelAllocator(static_cast<uint16_t>(RT_MAX_LABEL_NUM));

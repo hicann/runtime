@@ -537,7 +537,7 @@ rtError_t Context::TearDownStream(Stream *stm, bool flag) const
         }
     }
     isDelSelfStream = stm->NeedDelSelfStream();
-    if ((device_->GetType_() == Device::STUB_DEVICE) || isDelSelfStream) {
+    if (isDelSelfStream) {
         DeleteStream(stm);
         return RT_ERROR_NONE;
     }
