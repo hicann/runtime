@@ -78,7 +78,6 @@ target_compile_definitions(ascendcl_c_utest PRIVATE
     google=ascend_private
     ENABLE_DVPP_INTERFACE
     RUN_TEST
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},LiteOS>,NANO_OS_TYPE=1,NANO_OS_TYPE=0>
 )
 
