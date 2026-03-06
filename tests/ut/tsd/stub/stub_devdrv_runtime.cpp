@@ -14,6 +14,8 @@
 #include "driver/ascend_hal.h"
 #include "runtime/dev.h"
 
+static const int32_t PHYSICAL_ID = 15;
+
 pid_t drvDeviceGetBareTgid(void)
 {
     return getpid();
@@ -27,7 +29,7 @@ drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
 
 drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
 {
-    *phyId = devIndex;
+    *phyId = PHYSICAL_ID;
     return DRV_ERROR_NONE;
 }
 

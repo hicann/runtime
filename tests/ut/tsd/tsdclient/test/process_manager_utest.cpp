@@ -2848,6 +2848,13 @@ TEST_F(ProcessManagerTest, GetCurHostMutexFile_drvDeviceGetPhyIdByIndex_failed)
     EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "libqueue_schedule.so");
 }
 
+TEST_F(ProcessManagerTest, GetCurHostMutexFile_success)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(false), "libqueue_schedule.so");
+    EXPECT_EQ(processModeManager.GetCurHostMutexFile(true), "sink_file_mutex_0.cfg");
+}
+
 TEST_F(ProcessManagerTest, IsSupportCommonSink_No_With_hostSoPathEmpty)
 {
     ProcessModeManager processModeManager(deviceId, 0);

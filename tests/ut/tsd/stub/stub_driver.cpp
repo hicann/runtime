@@ -17,6 +17,8 @@
 #include "driver/ascend_inpackage_hal.h"
 #include "inc/weak_ascend_hal.h"
 
+static const int32_t PHYSICAL_ID = 15;
+
 extern "C" int tsDevSendMsgAsync (unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen, unsigned int handleId);
 static struct event_info g_event = {
     .comm = {
@@ -86,6 +88,18 @@ drvError_t drvHdcSendFile(int peer_node, int peer_devid, const char *file, const
 
 drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
 {
+    if (value == nullptr) {
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    if (infoType == INFO_TYPE_MASTERID) {
+        if (devId == PHYSICAL_ID) {
+            *value = 0;
+            // When parameter infoType is set to INFO_TYPE_MASTERID, need to use physical device ID.
+            // Need to call drvDeviceGetPhyIdByIndex to perform conversion
+            return DRV_ERROR_NONE;
+        }
+        return DRV_ERROR_INVALID_VALUE;
+    }
     return DRV_ERROR_NONE;
 }
 
