@@ -1971,3 +1971,22 @@ TEST_F(CloudV2ApiImplTest, OpenEventHandle_Test)
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiDecorator_;
 }
+
+static void rtModelDestroyCallBackUt(void *args)
+{
+    std::cout << "model destory call back" << std::endl;
+}
+
+TEST_F(CloudV2ApiImplTest, ModelDestroyRegisterCallbackApiDecorator)
+{
+    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
+    ApiDecorator apiDecorator(oldApi_);
+    rtModel_t model;
+    rtModelCreate(&model, 0);
+
+    rtError_t error = apiDecorator.ModelDestroyRegisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = apiDecorator.ModelDestroyUnregisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

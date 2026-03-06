@@ -7139,5 +7139,24 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemP2PMap)
         .WillOnce(Return((ACL_ERROR_RT_PARAM_INVALID)))
         .WillRepeatedly(Return(RT_ERROR_NONE));
     ret = aclrtMemP2PMap(devPtr, size, dstDevId, flags);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclmdlRIDestroyRegisterCallback)
+{
+    aclmdlRI modelRI = (aclmdlRI)0x01;
+    auto ret = aclmdlRIDestroyRegisterCallback(&modelRI, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclmdlRIDestroyUnregisterCallback(&modelRI, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelDestroyRegisterCallback(_, _, _))
+                .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclmdlRIDestroyRegisterCallback(&modelRI, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelDestroyUnregisterCallback(_, _))
+                .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclmdlRIDestroyUnregisterCallback(&modelRI, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }

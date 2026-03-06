@@ -5799,6 +5799,20 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream * const stm, Model * const 
     return impl_->StreamAddToModel(stm, captureMdl);
 }
 
+rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr)
+{
+    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
+}
+
+rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+{
+    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    return impl_->ModelDestroyUnregisterCallback(mdl, fn);
+}
+
 rtError_t ApiErrorDecorator::ThreadExchangeCaptureMode(rtStreamCaptureMode * const mode)
 {
     NULL_PTR_RETURN_MSG_OUTER(mode, RT_ERROR_INVALID_VALUE);

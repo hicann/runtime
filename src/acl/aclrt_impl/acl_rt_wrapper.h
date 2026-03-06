@@ -341,6 +341,8 @@
     _(aclError, aclmdlRIGetName, (aclmdlRI modelRI, uint32_t maxLen, char * name), (modelRI, maxLen, name)) \
     _(aclError, aclmdlRIAbort, (aclmdlRI modelRI), (modelRI)) \
     _(aclError, aclmdlRIGetStreams, (aclmdlRI modelRI, aclrtStream *streams, uint32_t *numStreams), (modelRI, streams, numStreams)) \
+    _(aclError, aclmdlRIDestroyRegisterCallback, (aclmdlRI modelRI, aclrtCallback func, void *userData), (modelRI, func, userData)) \
+    _(aclError, aclmdlRIDestroyUnregisterCallback, (aclmdlRI modelRI, aclrtCallback func), (modelRI, func)) \
     
 // aclmdl interface map list
 #define ACL_MDL_FUNC_MAP(_)  \

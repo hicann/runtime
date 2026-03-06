@@ -285,6 +285,8 @@ namespace acl {
         AclmdlRIGetStreams,
         AclrtStreamGetTasks,
         AclrtTaskGetType,
+        AclmdlRIDestroyRegisterCallback,
+        AclmdlRIDestroyUnregisterCallback,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

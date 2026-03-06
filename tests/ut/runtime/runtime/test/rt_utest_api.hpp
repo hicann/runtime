@@ -61,6 +61,7 @@
 #include "api_c.h"
 #include "platform/platform_info.h"
 #include "inner_kernel.h"
+#include "rt_inner_model.h"
 #include "soma.hpp"
 #undef protected
 #undef private

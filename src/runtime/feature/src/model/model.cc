@@ -243,7 +243,7 @@ rtError_t Model::TearDown()
         }
         labelMap_.clear();
     }
-    return RT_ERROR_NONE;
+    return ModelDestroyCallback();
 }
 
 void Model::ReplaceArgHandle(const uint16_t streamId, const uint16_t taskId, void *argHandle)
@@ -2006,5 +2006,46 @@ rtError_t Model::ModelGetStreams(Stream **streams, uint32_t *numStreams) const
     return RT_ERROR_NONE;
 }
 
+rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, void *ptr)
+{
+    const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
+    MdlDestroyCallbackInfo info{fn, ptr};
+    const auto callBackIter = mdlDestroyCallbackSet_.find(info);
+    if (callBackIter != mdlDestroyCallbackSet_.end()) {
+        RT_LOG(RT_LOG_ERROR,
+            "this callback function already registered , callback=%p.",
+            fn);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    (void)mdlDestroyCallbackSet_.insert(info);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::ModelDestroyUnregisterCallback(const rtCallback_t fn)
+{
+    const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
+    MdlDestroyCallbackInfo info{fn, nullptr};
+    const auto callBackIter = mdlDestroyCallbackSet_.find(info);
+    if (callBackIter == mdlDestroyCallbackSet_.end()) {
+        RT_LOG(RT_LOG_ERROR,
+            "this callback function was not registered , callback=%p.",
+            fn);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    (void)mdlDestroyCallbackSet_.erase(callBackIter);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::ModelDestroyCallback()
+{
+    const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
+    for (const auto& CallBackInfo : mdlDestroyCallbackSet_) {
+        if (CallBackInfo.callback != nullptr) {
+            RT_LOG(RT_LOG_DEBUG, "func [%p] mdlDestroy callback start.", CallBackInfo.callback);
+            CallBackInfo.callback(CallBackInfo.ptr);
+        }
+    }
+    return RT_ERROR_NONE;
+}
 }
 }

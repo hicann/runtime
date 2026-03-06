@@ -2229,6 +2229,16 @@ rtError_t ApiDecorator::StreamAddToModel(Stream * const stm, Model * const captu
     return impl_->StreamAddToModel(stm, captureMdl);
 }
 
+rtError_t ApiDecorator::ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr)
+{
+    return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
+}
+
+rtError_t ApiDecorator::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+{
+    return impl_->ModelDestroyUnregisterCallback(mdl, fn);
+}
+
 rtError_t ApiDecorator::ThreadExchangeCaptureMode(rtStreamCaptureMode * const mode)
 {
     return impl_->ThreadExchangeCaptureMode(mode);

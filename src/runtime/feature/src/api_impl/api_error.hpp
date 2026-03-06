@@ -437,6 +437,8 @@ public:
     rtError_t ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams) override;
     rtError_t StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks) override;
     rtError_t TaskGetType(const TaskInfo * const task, rtTaskType *type) override;
+    rtError_t ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr) override;
+    rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) override;
 
     // Notify api
     rtError_t NotifyCreate(const int32_t deviceId, Notify ** const retNotify,

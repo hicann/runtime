@@ -1144,6 +1144,47 @@ TEST_F(RtApiTest, pin_memory_attribute)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
+bool g_modelDestroyCallBack = false;
+static void rtModelDestroyCallBackUt(void *args)
+{
+    std::cout << "model destory call back" << std::endl;
+    g_modelDestroyCallBack = true;
+}
+
+TEST_F(RtApiTest, ModelDestroyRegisterCallback_test)
+{
+    rtModel_t model;
+    rtModelCreate(&model, 0);
+    char args[] = "0x100";
+    rtError_t ret = rtModelDestroyRegisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt, args);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtModelDestroyUnregisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtModelDestroyRegisterCallback(static_cast<Model*>(model), nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = rtModelDestroyRegisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt, args);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtModelDestroyRegisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt, args);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_modelDestroyCallBack, true);
+    g_modelDestroyCallBack =false;
+
+    rtModelCreate(&model, 0);
+    ret = rtModelDestroyUnregisterCallback(static_cast<Model*>(model), rtModelDestroyCallBackUt);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = rtModelDestroyUnregisterCallback(static_cast<Model*>(model), nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_modelDestroyCallBack, false);
+}
+
 TEST_F(RtApiTest, model_json_print_record_wait)
 {
     rtError_t error;

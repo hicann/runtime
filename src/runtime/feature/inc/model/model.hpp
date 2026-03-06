@@ -48,6 +48,15 @@ struct UbAsyncJettyInfo {
     uint32_t sqId;
 };
 
+struct MdlDestroyCallbackInfo {
+    rtCallback_t callback;
+    void *ptr;
+    bool operator<(const MdlDestroyCallbackInfo& other) const {
+        return reinterpret_cast<uintptr_t>(callback) < 
+               reinterpret_cast<uintptr_t>(other.callback);
+    }
+};
+
 constexpr int32_t MODEL_ID_INVALID = -1;
 constexpr size_t MALLOC_DEV_NAME_STRING_MAX = 128U;
 
@@ -186,6 +195,8 @@ public:
     rtError_t BindSqPerStream(Stream * const streamIn, const uint32_t flag);
     rtError_t UnBindSqPerStream(Stream * const streamIn);
     rtError_t ModelGetStreams(Stream **streams, uint32_t *numStreams) const;
+    rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, void *ptr);
+    rtError_t ModelDestroyUnregisterCallback(const rtCallback_t fn);
 
     void SetModelExecutorType(uint32_t executorFlag)
     {
@@ -475,6 +486,7 @@ private:
     rtError_t CheckRestoredSqStatus(void);
     void SyncExeStream(void) const;
     rtError_t SendAicpuModelLoadMsg(Stream *stream) const;
+    rtError_t ModelDestroyCallback();
 
 private:
     int32_t id_ = MODEL_ID_INVALID;
@@ -536,6 +548,8 @@ private:
     bool isHasD2d_ = false;
     bool isHasH2d_ = false;
     bool isHaveProcJettyInfo_ = false;
+    std::set<MdlDestroyCallbackInfo> mdlDestroyCallbackSet_;
+    std::mutex mdlDestroyCallbackMutex_;
 };
 }
 }

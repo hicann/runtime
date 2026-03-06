@@ -425,12 +425,6 @@ typedef rtError_t (*rtKernelReportCallback)(rtStream_t stm, rtKernelInfo_t kerne
 
 /**
  * @ingroup rt_kernel
- * @brief stream report callback
- */
-typedef void (*rtCallback_t)(void *fnData);
-
-/**
- * @ingroup rt_kernel
  * @brief magic number of plain binary for aicore
  */
 #define RT_DEV_BINARY_MAGIC_PLAIN 0xabceed50U

@@ -33,6 +33,7 @@
 #include "runtime/rt_preload_task.h"
 #include "runtime/rt_stars.h"
 #include "runtime/rt_model.h"
+#include "runtime/rt_inner_model.h"
 #include "runtime/rts/rts_model.h"
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
@@ -320,6 +321,8 @@ public:
     virtual rtError_t rtThreadExchangeCaptureMode(rtStreamCaptureMode *mode);
     virtual rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag);
     virtual rtError_t rtModelDestroy(rtModel_t mdl);
+    virtual rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr);
+    virtual rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn);
     virtual rtError_t rtsStreamBeginTaskGrp(rtStream_t stm);
     virtual rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
     virtual rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);
@@ -776,6 +779,8 @@ public:
     MOCK_METHOD1(rtThreadExchangeCaptureMode, rtError_t(rtStreamCaptureMode *mode));
     MOCK_METHOD3(rtModelExecute, rtError_t(rtModel_t mdl, rtStream_t stm, uint32_t flag));
     MOCK_METHOD1(rtModelDestroy, rtError_t(rtModel_t mdl));
+    MOCK_METHOD3(rtModelDestroyRegisterCallback, rtError_t(rtModel_t mdl, rtCallback_t fn, void *ptr));
+    MOCK_METHOD2(rtModelDestroyUnregisterCallback, rtError_t(rtModel_t mdl, rtCallback_t fn));
     MOCK_METHOD1(rtsStreamBeginTaskGrp, rtError_t(rtStream_t stm));
     MOCK_METHOD2(rtsStreamEndTaskGrp, rtError_t(rtStream_t stm, rtTaskGrp_t *handle));
     MOCK_METHOD2(rtsStreamBeginTaskUpdate, rtError_t(rtStream_t stm, rtTaskGrp_t handle));

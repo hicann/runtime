@@ -281,6 +281,8 @@ namespace acl {
         {AclProfType::AclmdlRIGetStreams,                       "aclmdlRIGetStreams"},
         {AclProfType::AclrtStreamGetTasks,                      "aclrtStreamGetTasks"},
         {AclProfType::AclrtTaskGetType,                         "aclrtTaskGetType"},
+        {AclProfType::AclmdlRIDestroyRegisterCallback,          "aclmdlRIDestroyRegisterCallback"},
+        {AclProfType::AclmdlRIDestroyUnregisterCallback,        "aclmdlRIDestroyUnregisterCallback"},
 };
 
 aclError RegisterType(const uint32_t index) {

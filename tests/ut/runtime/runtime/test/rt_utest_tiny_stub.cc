@@ -38,6 +38,7 @@
 #include "event_pool.hpp"
 #include "stub_task.hpp"
 #include "task_manager_david.h"
+#include "rt_inner_model.h"
 #undef protected
 #undef private
 
@@ -627,6 +628,14 @@ TEST_F(TinyStubTest, easy_model_stub)
 
     rtTaskCfgInfo_t *cfgInfo = nullptr;
     ret = rtReduceAsyncWithCfgV2(dst, destMax, src, cnt, kind, dataType, stream, cfgInfo);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    rtModelCreate(&model, 0);
+    rtCallback_t stub_func = (rtCallback_t)0x12345;
+    ret = rtModelDestroyRegisterCallback(static_cast<Model*>(model), stub_func, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    ret = rtModelDestroyUnregisterCallback(static_cast<Model*>(model), stub_func);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 

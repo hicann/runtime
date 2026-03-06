@@ -679,6 +679,23 @@ rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char* path, uint32_t flags)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+{
+    (void)mdl;
+    (void)fn;
+    (void)ptr;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+{
+    (void)mdl;
+    (void)fn;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtStreamAddToModel(rtStream_t stm, rtModel_t captureMdl)
 {
     (void)stm;

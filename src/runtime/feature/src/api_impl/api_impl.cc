@@ -7949,6 +7949,16 @@ rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl
     return curCtx->StreamAddToModel(stm, captureMdl);
 }
 
+rtError_t ApiImpl::ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr)
+{
+    return mdl->ModelDestroyRegisterCallback(fn, ptr);
+}
+
+rtError_t ApiImpl::ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn)
+{
+    return mdl->ModelDestroyUnregisterCallback(fn);
+}
+
 rtError_t ApiImpl::ThreadExchangeCaptureMode(rtStreamCaptureMode * const mode)
 {
     Context * const curCtx = CurrentContext();

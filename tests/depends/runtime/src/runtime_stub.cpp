@@ -18,6 +18,7 @@
 #include "runtime/base.h"
 #include "runtime/rt_mem_queue.h"
 #include "runtime/rt_model.h"
+#include "runtime/rt_inner_model.h"
 #include "runtime/rts/rts.h"
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
@@ -1267,6 +1268,21 @@ rtError_t aclStub::rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag)
 rtError_t aclStub::rtModelDestroy(rtModel_t mdl)
 {
     (void)mdl;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+{
+    (void)mdl;
+    (void)fn;
+    (void)ptr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+{
+    (void)mdl;
+    (void)fn;
     return RT_ERROR_NONE;
 }
 
@@ -3510,6 +3526,16 @@ rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag)
 rtError_t rtModelDestroy(rtModel_t mdl)
 {
     return MockFunctionTest::aclStubInstance().rtModelDestroy(mdl);
+}
+
+rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+{
+    return MockFunctionTest::aclStubInstance().rtModelDestroyRegisterCallback(mdl, fn, ptr);
+}
+
+rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+{
+    return MockFunctionTest::aclStubInstance().rtModelDestroyUnregisterCallback(mdl, fn);
 }
 
 rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcpyConfig_t *config, rtStream_t stream)

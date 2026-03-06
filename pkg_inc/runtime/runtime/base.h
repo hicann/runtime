@@ -370,6 +370,8 @@ typedef void (*rtStreamStateCallback)(rtStream_t stm, const bool isCreate);
 
 typedef void (*rtOpExceptionCallback)(rtExceptionInfo_t *exceptionInfo, void *userData);
 
+typedef void (*rtCallback_t)(void *fnData);
+
 /**
  * @ingroup profiling_base
  * @brief dataType: rtProfCtrlType_t

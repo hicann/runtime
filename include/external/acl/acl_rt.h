@@ -4225,6 +4225,27 @@ ACL_FUNC_VISIBILITY aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, 
 
 /**
  * @ingroup AscendCL
+ * @brief register callback func for model destroy
+ * @param [in] modelRI  model to execute
+ * @param [in] func     callback func
+ * @param [in] ptr      User data to be passed to the callback function
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIDestroyRegisterCallback(aclmdlRI modelRI, aclrtCallback func, void *userData);
+
+/**
+ * @ingroup AscendCL
+ * @brief unregister callback func for model destroy
+ * @param [in] modelRI  model to execute
+ * @param [in] func       callback func
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIDestroyUnregisterCallback(aclmdlRI modelRI, aclrtCallback func);
+
+/**
+ * @ingroup AscendCL
  * @brief init dump
  *
  * @retval ACL_SUCCESS The function is successfully executed.
