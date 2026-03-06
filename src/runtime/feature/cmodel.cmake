@@ -106,6 +106,7 @@ set(libruntime_cmodel_v200_task_src_files
     src/task/v200_base/task_proc_func_register.cc
     src/task/v200/memcpy_task_to_sqe.cc
     src/task/v200/task_checker.cc
+    src/task/v200/aicpu_task_to_sqe.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel
@@ -328,7 +329,7 @@ set(libruntime_cmodel_src_files
     ${libruntime_cmodel_v100_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
-    ${libruntime_cmodel_stream_src_files_cmodel}
+    ${libruntime_cmodel_stream_src_files}
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
@@ -447,7 +448,7 @@ set(libruntime_cmodel_v200_src_files
     ${libruntime_cmodel_v200_task_src_files}
     ${libruntime_cmodel_api_src_files}
     ${libruntime_cmodel_context_src_files}
-    ${libruntime_cmodel_v200_stream_src_files_cmodel}
+    ${libruntime_cmodel_v200_stream_src_files}
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
@@ -457,7 +458,7 @@ set(libruntime_cmodel_v200_src_files
     src/api_impl/v201/api_impl_v200_adapt.cc
     ${xpu_tprt_api_file}
     ${libruntime_cmodel_src_files_optional}
- 	${libruntime_cmodel_api_src_files}
+ 	${libruntime_cmodel_api_src_files_cmodel}
 )
 
 set(RUNTIME_CMODEL_INC_DIR_COMMON
