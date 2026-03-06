@@ -301,6 +301,8 @@
     _(aclError, aclrtMemPoolDestroy, (const aclrtMemPool memPool), (memPool)) \
     _(aclError, aclrtMemPoolSetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
     _(aclError, aclrtMemPoolGetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
+    _(aclError, aclrtStreamGetTasks, (aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks), (stream, tasks, numTasks)) \
+    _(aclError, aclrtTaskGetType, (aclrtTask task, aclrtTaskType *type), (task, type)) \
 
 // aclrtAllocator interface map list
 #define ACL_RT_ALLOCATOR_FUNC_MAP(_)  \
@@ -338,6 +340,7 @@
     _(aclError, aclmdlRISetName, (aclmdlRI modelRI, const char * name), (modelRI, name)) \
     _(aclError, aclmdlRIGetName, (aclmdlRI modelRI, uint32_t maxLen, char * name), (modelRI, maxLen, name)) \
     _(aclError, aclmdlRIAbort, (aclmdlRI modelRI), (modelRI)) \
+    _(aclError, aclmdlRIGetStreams, (aclmdlRI modelRI, aclrtStream *streams, uint32_t *numStreams), (modelRI, streams, numStreams)) \
     
 // aclmdl interface map list
 #define ACL_MDL_FUNC_MAP(_)  \

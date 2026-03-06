@@ -1466,6 +1466,49 @@ rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
     return ACL_RT_SUCCESS;
 }
 
+VISIBILITY_DEFAULT
+rtError_t rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams)
+{
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    
+    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+        RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
+    if (!isSupportAclGraph) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
+            static_cast<int32_t>(rtInstance->GetChipType()));
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+    
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->ModelGetStreams(static_cast<Model *>(mdl), RtPtrToPtr<Stream **>(streams), numStreams);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamGetTasks(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks)
+{
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    
+    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+        RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
+    if (!isSupportAclGraph) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
+            static_cast<int32_t>(rtInstance->GetChipType()));
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+    
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->StreamGetTasks(static_cast<Stream *>(stm), static_cast<void **>(tasks),
+                                                        numTasks);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

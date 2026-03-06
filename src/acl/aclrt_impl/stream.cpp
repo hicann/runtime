@@ -13,6 +13,7 @@
 
 #include "runtime/stream.h"
 #include "runtime/rts/rts_stream.h"
+#include "runtime/rt_inner_stream.h"
 
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
@@ -449,5 +450,18 @@ aclError aclrtPersistentTaskCleanImpl(aclrtStream stream)
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclrtPersistentTaskClean");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtStreamGetTasksImpl(aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetTasks);
+
+    const rtError_t rtErr = rtStreamGetTasks(static_cast<rtStream_t>(stream), static_cast<rtTask_t *>(tasks), numTasks);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call rtStreamGetTasks failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
     return ACL_SUCCESS;
 }

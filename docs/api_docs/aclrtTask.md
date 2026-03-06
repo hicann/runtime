@@ -1,0 +1,6 @@
+# aclrtTask
+
+```
+typedef void *aclrtTask;
+```
+

@@ -278,6 +278,9 @@ namespace acl {
         {AclProfType::AclrtMemPoolDestroy,                      "aclrtMemPoolDestroy"},
         {AclProfType::AclrtMemPoolSetAttr,                      "aclrtMemPoolSetAttr"},
         {AclProfType::AclrtMemPoolGetAttr,                      "aclrtMemPoolGetAttr"},
+        {AclProfType::AclmdlRIGetStreams,                       "aclmdlRIGetStreams"},
+        {AclProfType::AclrtStreamGetTasks,                      "aclrtStreamGetTasks"},
+        {AclProfType::AclrtTaskGetType,                         "aclrtTaskGetType"},
 };
 
 aclError RegisterType(const uint32_t index) {

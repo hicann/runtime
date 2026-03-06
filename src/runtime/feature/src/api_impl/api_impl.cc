@@ -57,6 +57,9 @@
 #include "global_state_manager.hpp"
 #include "mem_type.hpp"
 #include "inner_kernel.h"
+#include "rt_inner_model.h"
+#include "rt_inner_stream.h"
+#include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
 
@@ -8944,5 +8947,62 @@ rtError_t ApiImpl::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDf
     }
     return RT_ERROR_NONE;
 }
+
+rtError_t ApiImpl::ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams)
+{
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_ERROR_MSG_INNER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
+        "model context is not current ctx, model_id=%u.", mdl->Id_());
+
+    std::unique_lock<std::mutex> taskLock(curCtx->streamLock_);
+    return mdl->ModelGetStreams(streams, numStreams);
+}
+
+rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
+{
+    COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() == 0, RT_ERROR_INVALID_VALUE,
+        "The stream is not bound to a model.");
+    return stm->StreamGetTasks(tasks, numTasks);
+}
+
+rtError_t ApiImpl::TaskGetType(const TaskInfo * const task, rtTaskType *type)
+{
+    if (!task->stream) {
+        RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    rtTaskType taskType = rtTaskType::RT_TASK_DEFAULT;
+    switch(task->type) {
+        case TS_TASK_TYPE_KERNEL_AICORE: 
+        case TS_TASK_TYPE_KERNEL_AIVEC:
+            taskType = RT_TASK_KERNEL;
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT:
+        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
+            taskType = RT_TASK_EVENT_WAIT;
+            break;
+        case TS_TASK_TYPE_MEM_WAIT_VALUE: 
+            taskType = RT_TASK_VALUE_WAIT;
+            break;
+        case TS_TASK_TYPE_EVENT_RECORD:
+        case TS_TASK_TYPE_CAPTURE_RECORD:
+            taskType = RT_TASK_EVENT_RECORD;
+            break;
+        case TS_TASK_TYPE_EVENT_RESET:
+            taskType = RT_TASK_EVENT_RESET;
+            break;
+        case TS_TASK_TYPE_MEM_WRITE_VALUE:
+            taskType = strcmp(task->typeName, "EVENT_RESET") != 0 ? RT_TASK_VALUE_WRITE : RT_TASK_EVENT_RESET;
+            break;
+        default:
+            break;
+    }
+    *type = taskType;
+    RT_LOG(RT_LOG_INFO, "end to get task type, streamId=%d, taskId=%u, taskType=%d, taskName=%s, rtTaskType=%d.",
+        task->stream->Id_(), task->id, task->type, task->typeName, taskType);
+    return RT_ERROR_NONE;
+}
+
 }  // namespace runtime
 }  // namespace cce

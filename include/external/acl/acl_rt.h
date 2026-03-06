@@ -505,6 +505,16 @@ typedef union {
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 
+typedef enum aclrtTaskType {
+    ACL_RT_TASK_DEFAULT,
+    ACL_RT_TASK_KERNEL,
+    ACL_RT_TASK_EVENT_RECORD,
+    ACL_RT_TASK_EVENT_WAIT,
+    ACL_RT_TASK_EVENT_RESET,
+    ACL_RT_TASK_VALUE_WRITE,
+    ACL_RT_TASK_VALUE_WAIT,
+} aclrtTaskType;
+
 typedef enum {
     ACL_DEV_ATTR_AICPU_CORE_NUM  = 1,    // number of AI CPUs
 
@@ -4241,6 +4251,40 @@ ACL_FUNC_VISIBILITY aclError aclmdlSetDump(const char *dumpCfgPath);
  * @retval OtherValues Failure
 */
 ACL_FUNC_VISIBILITY aclError aclmdlFinalizeDump();
+
+/**
+ * @ingroup AscendCL
+ * @brief get streams from the model
+ * @param [in] modelRI: model handle
+ * @param [in, out] streams: array to store the retrieved streams
+ * @param [in] numStreams: size of streams array
+ * @param [out] numStreams: actual number of streams retrieved
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *streams, uint32_t *numStreams);
+
+/**
+ * @ingroup AscendCL
+ * @brief get tasks from the model stream
+ * @param [in] stream: model stream handle
+ * @param [in, out] tasks: array to store the retrieved task
+ * @param [in] numTasks: size of tasks array
+ * @param [out] numTasks: actual number of tasks retrieved
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtStreamGetTasks(aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks);
+
+/**
+ * @ingroup AscendCL
+ * @brief get the type of the task
+ * @param [in] task: task handle
+ * @param [in, out] type: variable to store the task type
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtTaskGetType(aclrtTask task, aclrtTaskType *type);
 
 /**
  * @ingroup AscendCL

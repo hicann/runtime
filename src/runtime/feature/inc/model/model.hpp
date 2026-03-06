@@ -185,6 +185,7 @@ public:
     rtError_t DelStream(Stream * const streamIn);
     rtError_t BindSqPerStream(Stream * const streamIn, const uint32_t flag);
     rtError_t UnBindSqPerStream(Stream * const streamIn);
+    rtError_t ModelGetStreams(Stream **streams, uint32_t *numStreams) const;
 
     void SetModelExecutorType(uint32_t executorFlag)
     {

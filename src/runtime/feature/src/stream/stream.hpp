@@ -1351,6 +1351,7 @@ public:
     {
         return argsHandle_;
     }
+    virtual rtError_t StreamGetTasks(void **tasks, uint32_t* numTasks);
 private:
     // submit create stream task
     rtError_t SubmitCreateStreamTask();

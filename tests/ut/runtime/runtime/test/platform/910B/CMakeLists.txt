@@ -66,6 +66,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_memory.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_stream.cc
+    ${TOP_DIR}/src/runtime/feature/src/api/api_c_task.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_event.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_mbuf.cc

@@ -2292,6 +2292,29 @@ rtError_t aclStub::rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *inf
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams)
+{
+    (void)mdl;
+    (void)streams;
+    (void)numStreams;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtStreamGetTasks(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks)
+{
+    (void)stm;
+    (void)tasks;
+    (void)numTasks;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtTaskGetType(rtTask_t task, rtTaskType *type)
+{
+    (void)task;
+    (void)type;
+    return RT_ERROR_NONE;
+}
+
 MockFunctionTest& MockFunctionTest::aclStubInstance()
 {
     static MockFunctionTest stub;
@@ -4150,4 +4173,19 @@ rtError_t rtBinarySetExceptionCallback(rtBinHandle binHandle, rtOpExceptionCallb
 rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFuncHandle *func)
 {
     return MockFunctionTest::aclStubInstance().rtGetFuncHandleFromExceptionInfo(info, func);
+}
+
+rtError_t rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams)
+{
+    return MockFunctionTest::aclStubInstance().rtModelGetStreams(mdl, streams, numStreams);
+}
+
+rtError_t rtStreamGetTasks(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamGetTasks(stm, tasks, numTasks);
+}
+
+rtError_t rtTaskGetType(rtTask_t task, rtTaskType *type)
+{
+    return MockFunctionTest::aclStubInstance().rtTaskGetType(task, type);
 }

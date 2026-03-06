@@ -16,6 +16,7 @@
 #include "runtime/rt.h"
 #include "runtime/rts/rts.h"
 #include "runtime/rt_ras.h"
+#include "runtime/rt_inner_task.h"
 #undef private
 #endif
 
@@ -840,4 +841,17 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostMemMapCapability)
 
    EXPECT_EQ(sizeof(aclrtHostMemMapCapability), sizeof(rtHostMemMapCapability));
 
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclrtTaskType)
+{
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_DEFAULT, (uint64_t)RT_TASK_DEFAULT);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_KERNEL, (uint64_t)RT_TASK_KERNEL);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_EVENT_RECORD, (uint64_t)RT_TASK_EVENT_RECORD);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_EVENT_WAIT, (uint64_t)RT_TASK_EVENT_WAIT);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_EVENT_RESET, (uint64_t)RT_TASK_EVENT_RESET);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_VALUE_WRITE, (uint64_t)RT_TASK_VALUE_WRITE);
+    EXPECT_EQ((uint64_t)ACL_RT_TASK_VALUE_WAIT, (uint64_t)RT_TASK_VALUE_WAIT);
+
+    EXPECT_EQ(sizeof(aclrtTaskType), sizeof(rtTaskType));
 }

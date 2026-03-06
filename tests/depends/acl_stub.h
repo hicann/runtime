@@ -23,6 +23,9 @@
 #include "runtime/mem.h"
 #include "runtime/rt_inner_mem.h"
 #include "runtime/rts/rts_mem.h"
+#include "runtime/rt_inner_model.h"
+#include "runtime/rt_inner_stream.h"
+#include "runtime/rt_inner_task.h"
 #include "runtime/kernel.h"
 #include "runtime/base.h"
 #include "runtime/config.h"
@@ -321,6 +324,10 @@ public:
     virtual rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
     virtual rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);
     virtual rtError_t rtsStreamEndTaskUpdate(rtStream_t stm);
+    
+    virtual rtError_t rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams);
+    virtual rtError_t rtStreamGetTasks(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks);
+    virtual rtError_t rtTaskGetType(rtTask_t task, rtTaskType *type);
 
     virtual rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcpyConfig_t *config, rtStream_t stream);
     virtual rtError_t rtMemcpyAsyncWithOffset(void **dst, uint64_t dstMax, uint64_t dstDataOffset, const void **src,
@@ -773,6 +780,9 @@ public:
     MOCK_METHOD2(rtsStreamEndTaskGrp, rtError_t(rtStream_t stm, rtTaskGrp_t *handle));
     MOCK_METHOD2(rtsStreamBeginTaskUpdate, rtError_t(rtStream_t stm, rtTaskGrp_t handle));
     MOCK_METHOD1(rtsStreamEndTaskUpdate, rtError_t(rtStream_t stm));
+    MOCK_METHOD3(rtModelGetStreams, rtError_t(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams));
+    MOCK_METHOD3(rtStreamGetTasks, rtError_t(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks));
+    MOCK_METHOD2(rtTaskGetType, rtError_t(rtTask_t task, rtTaskType *type));
 
     MOCK_METHOD4(rtsMemcpyAsyncWithDesc, rtError_t(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcpyConfig_t *config,
                                                    rtStream_t stream));

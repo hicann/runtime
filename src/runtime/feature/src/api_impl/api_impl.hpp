@@ -429,6 +429,9 @@ public:
     rtError_t ModelDebugDotPrint(const Model * const mdl) override;
     rtError_t ModelDebugJsonPrint(const Model * const mdl, const char* path, const uint32_t flags) override;
     rtError_t StreamAddToModel(Stream * const stm, Model * const captureMdl) override;
+    rtError_t ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams) override;
+    rtError_t StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks) override;
+    rtError_t TaskGetType(const TaskInfo * const task, rtTaskType *type) override;
 
     /* hardware Info */
     rtError_t GetAiCoreCount(uint32_t * const aiCoreCnt) override;

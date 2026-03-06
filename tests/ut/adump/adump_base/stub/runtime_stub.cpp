@@ -22,6 +22,9 @@
 #include "rts/rts_kernel.h"
 #include "rt_inner_dfx.h"
 #include "inner_kernel.h"
+#include "rt_inner_model.h"
+#include "rt_inner_stream.h"
+#include "rt_inner_task.h"
 
 static constexpr rtError_t RT_ERROR_STUB_FAILURE = -1;
 static constexpr uint32_t LOCAL_DEV_NUM = 8;
