@@ -59,7 +59,7 @@ TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
         static_cast<uint32_t>(RT_TSC_ID), false);
     if (dev != nullptr) {
         Stream *stm = nullptr;
-        const rtError_t error = dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
+        (void)dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
         NULL_PTR_RETURN_MSG(stm, nullptr);
 
         if (stm->IsSoftwareSqEnable()) {
