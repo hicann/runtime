@@ -103,7 +103,6 @@ namespace AicpuSchedule {
             return AICPU_SCHEDULE_OK;
         }
 
-        aicpu::InitAicpuErrorLog();
         noThreadFlag_ = false;
         if (AicpuDrvManager::GetInstance().InitDrvMgr(deviceId, hostPid, vfId, true) != AICPU_SCHEDULE_OK) {
             aicpusd_err("Failed to init aicpu drv manager");

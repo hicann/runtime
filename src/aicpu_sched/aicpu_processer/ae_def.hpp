@@ -15,7 +15,6 @@
 #include <sys/syscall.h>
 #include "aicpu_engine.h"
 #include "aicpu_engine_struct.h"
-#include "aicpu_error_log_api.h"
 #ifdef RUN_ON_AICPU
 #include "aicpuprocess_weak_log.h"
 #else
@@ -67,7 +66,6 @@ inline long GetTid()
 
 #define AE_ERR_LOG(id, fmt, args...)                                                                                \
     do {                                                                                                            \
-        aicpu::RestoreErrorLog(&__FUNCTION__[0], __FILE__, __LINE__, cce::GetTid(), (fmt), ##args);                 \
         if (&DlogRecord != nullptr) {                                                                               \
             dlog_error(static_cast<int32_t>(AE_MODULE_ID), "[%s][tid:%ld][AICPU_PROCESSER] " fmt,                   \
                        &__FUNCTION__[0], cce::GetTid(), ##args);                                                    \
@@ -109,7 +107,6 @@ inline long GetTid()
 
 #define AE_RUN_WARN_LOG(id, fmt, args...)                                                                           \
     do {                                                                                                            \
-        aicpu::RestoreErrorLog(&__FUNCTION__[0], __FILE__, __LINE__, cce::GetTid(), (fmt), ##args);                 \
         if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                              \
             dlog_warn(static_cast<int32_t>(static_cast<uint32_t>(AE_MODULE_ID) |                                    \
                       static_cast<uint32_t>(RUN_LOG_MASK)), "[%s][tid:%ld][AICPU_PROCESSER] " fmt,                  \

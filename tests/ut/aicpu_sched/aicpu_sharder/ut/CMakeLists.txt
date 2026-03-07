@@ -18,13 +18,11 @@ set(LOCAL_SRC_FILES
     ${SRC_PATH}/aicpu_context.cc
     ${SRC_PATH}/aicpu_async_event.cc
     ${SRC_PATH}/aicpu_timer.cpp
-    ${SRC_PATH}/aicpu_error_log.cpp
     testcase/aicpu_context_ut.cc
     testcase/aicpu_sharder_ut.cc
     testcase/aicpu_pulse_ut.cc
     testcase/aicpu_async_event_ut.cc
     testcase/aicpu_timer_ut.cc
-    testcase/aicpu_error_log_ut.cc
     main_ut.cc
 )
 

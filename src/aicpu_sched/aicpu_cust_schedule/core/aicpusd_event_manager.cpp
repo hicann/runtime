@@ -371,7 +371,6 @@ namespace AicpuSchedule {
                 "stream id[%u], task id[%lu], result[%d], originResult[%d], status[%d], error[%d].",
                 subeventId, mailboxId, serialNo, streamId, taskId, hwtsResponse.result,
                 ret, hwtsResponse.status, drvRet);
-            AicpuMonitor::GetInstance().SendAbnormalMsgToMain();
         }
         aicpusd_info("End send ack to Ts, subevent_id[%u], mailboxId[%u], serialNo[%lu], result[%d], " \
                      "originResult[%d], status[%d].",
@@ -490,7 +489,6 @@ namespace AicpuSchedule {
         if (ret != AICPU_SCHEDULE_OK) {
             aicpusd_err("Process event failed. eventId=%d, threadIdx=%u, ret=%d",
                         static_cast<int32_t>(eventInfo.comm.event_id), threadIndex, ret);
-            AicpuMonitor::GetInstance().SendAbnormalMsgToMain();
         }
 
         return ret;
@@ -521,7 +519,6 @@ namespace AicpuSchedule {
             // record a error code
             aicpusd_err("Failed to get event, error code[%d], deviceId[%u], groupId[%u], threadIndex[%u]",
                         retVal, deviceId, groupId, threadIndex);
-            AicpuMonitor::GetInstance().SendAbnormalMsgToMain();
         }
     }
 

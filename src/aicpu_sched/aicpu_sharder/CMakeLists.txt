@@ -22,7 +22,6 @@ add_library(aicpu_sharder SHARED
     aicpu_sharder.cc
     aicpu_async_event.cc
     aicpu_timer.cpp
-    aicpu_error_log.cpp
 )
 
 target_link_libraries(aicpu_sharder PRIVATE

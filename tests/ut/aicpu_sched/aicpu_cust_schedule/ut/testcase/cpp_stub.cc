@@ -18,11 +18,6 @@ std::map<std::string, std::string> g_ctx;
 }
 
 namespace aicpu {
-bool HasErrorLog()
-{
-    return false;
-}
-
 status_t SetOpname(const std::string &opname)
 {
     return AICPU_ERROR_NONE;
@@ -64,17 +59,6 @@ const std::map<std::string, std::string> &GetAllThreadCtxInfo(aicpu::CtxType typ
 }
 
 void UpdateModelMode(const bool mode) {}
-
-void InitAicpuErrorLog()
-{
-    return;
-}
-
-void RestoreErrorLog(const char_t * const funcName, const char_t * const filePath, const int32_t lineNumber,
-                     const uint64_t tid, const char_t * const format, ...)
-{
-    return;
-}
 
 class ProfModelMessage {
 public:

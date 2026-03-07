@@ -120,7 +120,6 @@ namespace AicpuSchedule {
             (void)aicpu::GetOpname(threadIndex, opName);
             aicpusd_err("Execute aicpu custom kernel failed, result[%d], opName[%s], streamId[%llu], taskId[%llu].",
                 retAicpu, opName.c_str(), streamId, taskId);
-            AicpuMonitor::GetInstance().SendAbnormalMsgToMain();
         }
 
         (void)aicpu::SetOpname("null");

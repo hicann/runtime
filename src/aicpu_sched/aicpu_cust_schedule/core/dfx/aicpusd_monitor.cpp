@@ -24,15 +24,12 @@
 #include "aicpu_pulse.h"
 #include "aicpusd_info.h"
 #include "status.h"
-#include "aicpu_error_log_api.h"
 #include "feature_ctrl.h"
 
 namespace {
     // aicpu task timeout
     const uint64_t AICPU_TASK_TIMEOUT = 28LU;
     const uint64_t AICPU_TASK_TIMEOUT_LONG = 60UL;
-    // keep same with DEFAULT_GROUP_ID defined in tsd_event_interface.h
-    const uint32_t DEFAULT_GROUP_ID_TO_TSD_CLIENT = 30U;
 }
 
 namespace AicpuSchedule {
@@ -114,7 +111,6 @@ namespace AicpuSchedule {
 
     void AicpuMonitor::SendKillMsgToTsd() const
     {
-        SendAbnormalMsgToMain();
         aicpusd_run_info("dev[%u] send msg to tsdaemon, tsdaemon will kill aicpu-custom-sd process[%u]",
                          deviceId_, static_cast<uint32_t>(getpid()));
         const int32_t ret = TsdDestroy(deviceId_, TSD_CUSTOM_COMPUTE,
@@ -247,27 +243,5 @@ namespace AicpuSchedule {
                 break;
             }
         }
-    }
-
-    void AicpuMonitor::SendAbnormalMsgToMain() const
-    {
-        if ((aicpu::HasErrorLog != nullptr) && (!aicpu::HasErrorLog())) {
-            return;
-        }
-
-        event_summary eventInfo = {};
-        eventInfo.pid = static_cast<pid_t>(getpid());
-        eventInfo.grp_id = DEFAULT_GROUP_ID_TO_TSD_CLIENT;
-        eventInfo.dst_engine = CCPU_DEVICE;
-        eventInfo.event_id = EVENT_CCPU_CTRL_MSG;
-        eventInfo.subevent_id = AICPU_SUB_EVENT_ABNORMAL_LOG;
-        eventInfo.msg_len = 0U;
-
-        const drvError_t ret = halEschedSubmitEvent(deviceId_, &eventInfo);
-        if (ret != DRV_ERROR_NONE) {
-            aicpusd_err("Failed to submit, eventId: [%d], ret: [%d].", AICPU_SUB_EVENT_ABNORMAL_LOG, ret);
-        }
-
-        return;
     }
 }  // namespace AicpuSchedule

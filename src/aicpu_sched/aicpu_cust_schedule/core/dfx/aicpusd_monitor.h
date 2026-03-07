@@ -85,8 +85,6 @@ namespace AicpuSchedule {
 
         void Stop();
 
-        void SendAbnormalMsgToMain() const;
-
         ~AicpuMonitor();
     private:
         AicpuMonitor();

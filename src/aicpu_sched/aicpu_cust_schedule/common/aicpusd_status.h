@@ -16,7 +16,6 @@
 #include <sys/syscall.h>
 #include "aicpucust_weak_log.h"
 #include "type_def.h"
-#include "aicpu_error_log_api.h"
 
 namespace AicpuSchedule {
 constexpr const char_t *AICPUSD_MODULE = "AICPU_SCHEDULE";
@@ -65,7 +64,6 @@ constexpr int32_t  AICPU_SCHEDULE_ERROR_FROM_DRV = 21206;
 
 #define aicpusd_err(fmt, ...)                                                                                        \
     do {                                                                                                             \
-        aicpu::RestoreErrorLog(&__FUNCTION__[0], __FILE__, __LINE__, AicpuSchedule::GetTid(), (fmt), ##__VA_ARGS__); \
         if (&DlogRecord != nullptr) {                                                                                \
             dlog_error(static_cast<int32_t>(CCECPU), "[%s][tid:%lu][%s] " fmt, &__func__[0],                         \
                        AicpuSchedule::GetTid(), AicpuSchedule::AICPUSD_MODULE, ##__VA_ARGS__);                       \

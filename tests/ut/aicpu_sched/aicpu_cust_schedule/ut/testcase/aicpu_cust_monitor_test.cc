@@ -160,24 +160,6 @@ TEST_F(AICPUCustMonitorTEST, SetTaskEndTimeSucc) {
     moniter.SetTaskEndTime(0);
 }
 
-
-TEST_F(AICPUCustMonitorTEST, SendAbnormalMsgToMainSucc) {
-    AicpuMonitor moniter;
-    MOCKER(aicpu::HasErrorLog).stubs().will(returnValue(true));
-    moniter.SendAbnormalMsgToMain();
-    int32_t ret = moniter.SetTaskTimeoutFlag();
-    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
-}
-
-TEST_F(AICPUCustMonitorTEST, SendAbnormalMsgToMainEventFail) {
-    AicpuMonitor moniter;
-    MOCKER(aicpu::HasErrorLog).stubs().will(returnValue(true));
-    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
-    moniter.SendAbnormalMsgToMain();
-    int32_t ret = moniter.SetTaskTimeoutFlag();
-    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
-}
-
 TEST_F(AICPUCustMonitorTEST, MonitorRunSemInitFail) {
     AicpuMonitor monitor;
     MOCKER(aicpu::GetSystemTickFreq).stubs().will(returnValue(1));
@@ -194,11 +176,4 @@ TEST_F(AICPUCustMonitorTEST, MonitorRunSemInitFail) {
     monitor.Stop();
     // wait for thread run end
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-}
-
-TEST_F(AICPUCustMonitorTEST, SendAbnormalMsgToMainNotHasLog) {
-    AicpuMonitor monitor;
-    monitor.SendAbnormalMsgToMain();
-    int32_t ret = monitor.SetTaskTimeoutFlag();
-    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
