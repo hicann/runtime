@@ -228,7 +228,7 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(const AicpuSqeAdapter::AicpuTaskRep
     reportInfo.taskId   = info.task_id;
     reportInfo.modelId  = static_cast<uint32_t>(info.model_id);
     reportInfo.tsId = tsId;
-    if (ReportErrLog(reportInfo, &aicpuSqeAdapter) != AICPU_SCHEDULE_OK) {
+    if (ReportErrLog(reportInfo, aicpuSqeAdapter) != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to report AicoreErrLog, offset[%u].", offset);
         SetUnitLogEmpy(tsId, offset);
     }
@@ -296,18 +296,21 @@ void AicpuModelErrProc::RecordAicpuOpErrLog(const RunContext &taskContext, const
     return;
 }
 
-uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo &reportInfo, AicpuSqeAdapter *aicpuSqeAdapterPtr) const
+uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo &reportInfo, AicpuSqeAdapter &aicpuSqeAdapterPtr) const
 {
     aicpusd_info("Begin to report log, tsId[%u], modelId[%u], streamId[%u], taskId[%u], offset[%u].",
                  reportInfo.tsId, reportInfo.modelId, reportInfo.streamId, reportInfo.taskId, reportInfo.offset);
     AicpuSqeAdapter::ErrMsgRspInfo errMsgRspInfo(reportInfo.offset, reportInfo.errCode, reportInfo.streamId, 
                                                  reportInfo.taskId, reportInfo.modelId, reportInfo.tsId);
     AicpuSqeAdapter aicpuSqeAdapter(FeatureCtrl::GetTsMsgVersion());
-    if (aicpuSqeAdapterPtr == nullptr) {
-        aicpuSqeAdapterPtr = &aicpuSqeAdapter;
-    }
-    const int32_t ret = aicpuSqeAdapterPtr->ErrorMsgResponseToTs(errMsgRspInfo);
+    const int32_t ret = aicpuSqeAdapterPtr.ErrorMsgResponseToTs(errMsgRspInfo);
     aicpusd_info("Finished to send logmsg report information, ret[%d].", ret);
     return ret;
+}
+
+uint32_t AicpuModelErrProc::ReportErrLog(const ErrLogRptInfo &reportInfo) const
+{
+    AicpuSqeAdapter aicpuSqeAdapter(FeatureCtrl::GetTsMsgVersion());
+    return ReportErrLog(reportInfo, aicpuSqeAdapter);
 }
 } // namespace AicpuSchedule

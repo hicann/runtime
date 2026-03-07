@@ -966,7 +966,7 @@ TEST_F(AICPUScheduleTEST, ProcessHWTSControlEventV1ReportErrLogTest) {
     info.cmd_type = TS_AICPU_TASK_REPORT;
     AicpuSqeAdapter adapter(info, 1U);
     MOCKER(tsDevSendMsgAsync).stubs().will(invoke(tsDevSendMsgAsyncreporterrlogV1Success));
-    const auto ret = AicpuModelErrProc::GetInstance().ReportErrLog(reportInfo, &adapter);
+    const auto ret = AicpuModelErrProc::GetInstance().ReportErrLog(reportInfo, adapter);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
@@ -975,7 +975,7 @@ TEST_F(AICPUScheduleTEST, ProcessHWTSControlEventV0ReportErrLogTest) {
     ErrLogRptInfo reportInfo = {};
     AicpuSqeAdapter adapter(info, 0U);
     MOCKER(tsDevSendMsgAsync).stubs().will(invoke(tsDevSendMsgAsyncModelreporterrlogV0Success));
-    const auto ret = AicpuModelErrProc::GetInstance().ReportErrLog(reportInfo, &adapter);
+    const auto ret = AicpuModelErrProc::GetInstance().ReportErrLog(reportInfo, adapter);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 

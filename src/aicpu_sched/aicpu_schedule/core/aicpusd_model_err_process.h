@@ -141,10 +141,18 @@ namespace AicpuSchedule {
         /**
         * @ingroup ReportErrLog
         * @brief report an ERR log to TS.
+        * @param [in] reportInfo : the error info report to TS. AicpuSqeAdapter: aicpu sqe adapter.
+        * @return AICPU_SCHEDULE_OK: success, other: error code
+        */
+        uint32_t ReportErrLog(const ErrLogRptInfo &reportInfo, AicpuSqeAdapter &aicpuSqeAdapterPtr) const;
+
+        /**
+        * @ingroup ReportErrLog
+        * @brief report an ERR log to TS.
         * @param [in] reportInfo : the error info report to TS.
         * @return AICPU_SCHEDULE_OK: success, other: error code
         */
-        uint32_t ReportErrLog(const ErrLogRptInfo &reportInfo, AicpuSqeAdapter *aicpuSqeAdapterPtr = nullptr) const;
+        uint32_t ReportErrLog(const ErrLogRptInfo &reportInfo) const;
     private:
         SpinLock lockBuff_;       // SpinLock of operate buffBaseAddr_
         uint64_t buffBaseAddr_[ERRLOG_TS_MAXNUM];   // log addr
