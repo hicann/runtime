@@ -138,6 +138,8 @@ TraStatus ScExecStart(void *stack, ThreadArgument *args, int32_t *pid)
         STACKTRACE_LOG_ERR("set ptracer failed, child=%d, errno=%d", child, errno);
     } else {
         LOGI("set ptracer successfully, child=%d", child);
+    }
+    if ((err == 0) || (args->signo == SIG_ATRACE)) {
         TraceStackRecorderInfo recordInfo = {args->crashTime, args->signo, args->pid, args->tid};
         TraStatus ret = TraceSafeMkdirPath(&recordInfo);
         if (ret != TRACE_SUCCESS) {
