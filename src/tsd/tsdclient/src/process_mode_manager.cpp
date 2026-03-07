@@ -451,7 +451,6 @@ TSD_StatusT ProcessModeManager::SendHostPackageComplex(const int32_t peerNode, c
     * concurrent execution.
     */
     const ScopeGuard fileDataGuard([&fileData]() { (void)close(fileData); });
-    const uint64_t beginTime = GetCurrentTime();
     const int32_t flockRet = flock(fileData, LOCK_EX);
     if (flockRet == -1) {
         TSD_RUN_WARN("File lock is not success, ret[%d], errno[%d], strerror[%s] ",
@@ -460,11 +459,6 @@ TSD_StatusT ProcessModeManager::SendHostPackageComplex(const int32_t peerNode, c
 
     // guard file lock
     const ScopeGuard fileLockGuard([&fileData]() { (void)flock(fileData, LOCK_UN); });
-    const uint64_t endTime = GetCurrentTime();
-    if ((endTime - beginTime) >= (HDC_CLIENT_WAIT_TIMEOUT_MS + OPEN_PKT_DEL_WAIT_TIMEOUT_MS) * MS_TO_NS) {
-        TSD_RUN_INFO("Other process has sent aicpu package to device, skip");
-        return TSD_OK;
-    }
     return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
 }
 
