@@ -514,8 +514,6 @@ namespace AicpuSchedule {
 
         int32_t ret = AICPU_SCHEDULE_OK;
         bool validDumpParam = false;
-        uint32_t ackStreamId = info.i.stream_id;
-        uint32_t ackTaskId = info.i.task_id;
         if ((info.i.task_id != INVALID_VAL) && (info.i.stream_id != INVALID_VAL)) {
             validDumpParam = true;
             const bool isFftsPlusOverflow = (info.i.task_id1 != INVALID_VAL) && (info.i.stream_id1 != INVALID_VAL);
@@ -534,8 +532,6 @@ namespace AicpuSchedule {
         }
         if ((info.i.task_id1 != INVALID_VAL) && (info.i.stream_id1 != INVALID_VAL)) {
             validDumpParam = true;
-            ackStreamId = info.i.stream_id1;
-            ackTaskId = info.i.task_id1;
             TaskInfoExt dumpTaskInfo(static_cast<volatile uint32_t>(info.i.stream_id1),
                                            static_cast<volatile uint32_t>(info.i.task_id1),
                                            static_cast<volatile uint32_t>(info.i.context_id),

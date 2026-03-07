@@ -25,8 +25,8 @@ namespace {
     // aicpu kernels tar uncompress path
     constexpr const char *AICPU_SO_UNCOMPRESS_PATH = "aicpu_kernels_device";
     constexpr const uint32_t MAX_SO_PATH = 4096U;
-    constexpr const char_t *THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
-    constexpr const char_t *HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/aicpu_kernels/";
+    const std::string THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
+    const std::string HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/aicpu_kernels/";
 }
 
 namespace cce {

@@ -25,9 +25,9 @@
 namespace cce {
     namespace {
         // aicpu so root dir, must be absolute path
-        constexpr const char_t *AICPU_SO_ROOT_DIR = "/usr/lib64/aicpu_kernels/";
+        const std::string AICPU_SO_ROOT_DIR = "/usr/lib64/aicpu_kernels/";
         // aicpu so root dir, old path only for hccl
-        constexpr const char_t *AICPU_SO_ROOT_DIR_OLD_PATH = "/usr/lib64/";
+        const std::string AICPU_SO_ROOT_DIR_OLD_PATH = "/usr/lib64/";
         // cust so path for cust_aicpu_sd: CustAiCpuUser
         constexpr const char_t *CUST_USER_SO_PATH = "/home/CustAiCpuUser";
         // prefix of cust so dir name

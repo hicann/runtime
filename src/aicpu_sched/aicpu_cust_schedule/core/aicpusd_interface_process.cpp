@@ -33,7 +33,7 @@ namespace AicpuSchedule {
             SubProcEventCallBackInfo openCustSoInfo = {};
             openCustSoInfo.callBackFunc = CustomOpExecutor::OpenKernelSoByAicpuEvent;
             openCustSoInfo.eventType = AICPU_SUB_EVENT_OPEN_CUSTOM_SO;
-            int32_t ret = RegEventMsgCallBackFunc(&openCustSoInfo);
+            const int32_t ret = RegEventMsgCallBackFunc(&openCustSoInfo);
             if (ret != 0) {
                 aicpusd_run_warn("Aicpu-sd-cust main thread reg open custom so callback function failed. eventid[%d]",
                                  static_cast<int32_t>(openCustSoInfo.eventType));
