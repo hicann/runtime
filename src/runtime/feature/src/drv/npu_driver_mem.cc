@@ -1999,7 +1999,6 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
-    attributes->location.id = dvAttributes.devId; // devId is valid only for the device side memory
     attributes->pageSize = dvAttributes.pageSize;
     attributes->location.type = RT_MEMORY_LOC_HOST;
 
@@ -2021,6 +2020,8 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
         RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
     }
+    // devId is valid only for the device side memory
+    attributes->location.id = (attributes->location.type == RT_MEMORY_LOC_HOST) ? 0U : dvAttributes.devId;
 
     RT_LOG(RT_LOG_DEBUG, "drvMemGetAttribute memType=%u, devId=%u", dvAttributes.memType, dvAttributes.devId);
 

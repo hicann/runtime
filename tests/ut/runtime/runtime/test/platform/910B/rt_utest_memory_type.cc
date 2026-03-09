@@ -52,6 +52,9 @@ TEST_F(MemoryTypeManagerTest, memory_type_test)
     type = RT_MEMORY_LOC_MANAGED;
     EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MANAGED");
 
+    type = RT_MEMORY_LOC_HOST_NUMA;
+    EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOC_HOST_NUMA");
+
     type = RT_MEMORY_LOC_MAX;
     EXPECT_STREQ(MemLocationTypeToStr(type), "RT_MEMORY_LOCATION_MAX");
 }

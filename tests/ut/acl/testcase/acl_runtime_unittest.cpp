@@ -3487,9 +3487,13 @@ TEST_F(UTEST_ACL_Runtime, mem_set_access_failed)
     void *virPtr = nullptr;
 
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemSetAccess(_,_,_,_))
-                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+                    .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
     auto ret = aclrtMemSetAccess(virPtr, 0, nullptr, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    ret = aclrtMemSetAccess(virPtr, 0, nullptr, 0);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(UTEST_ACL_Runtime, mem_get_access_failed)

@@ -11,7 +11,7 @@ typedef struct aclrtPtrAttributes {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| location | 内存所在位置。 |
+| location | 内存所在位置。当type为ACL_MEM_LOCATION_TYPE_HOST时，id无效。 |
 | pageSize | 页表大小，单位Byte。 |
 | rsv | 预留参数。当前固定配置为0。 |
 

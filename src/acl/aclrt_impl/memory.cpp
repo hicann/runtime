@@ -984,7 +984,6 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
         it->second(rtProp, isHostAlloc, isDeviceAlloc);
     } else {
         ACL_LOG_ERROR("memAttr [%d] not support. "
-                      "Note that ACL_HBM_MEM_HUGE1G is only supported on certain products. "
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         return ACL_ERROR_INVALID_PARAM;
@@ -1220,7 +1219,6 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
         it->second(rtProp1, isHostAlloc, isDeviceAlloc);
     } else {
         ACL_LOG_ERROR("memAttr [%d] not support. "
-                      "Note that ACL_HBM_MEM_HUGE1G is only supported on certain products. "
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         return ACL_ERROR_INVALID_PARAM;
@@ -1812,7 +1810,11 @@ aclError aclrtMemSetAccessImpl(void *virPtr, size_t size, aclrtMemAccessDesc *de
     
     const rtError_t rtErr = rtMemSetAccess(virPtr, size, reinterpret_cast<rtMemAccessDesc*>(desc), count);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclrtMemSetAccess failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("call aclrtMemSetAccess failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call aclrtMemSetAccess failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        }   
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclrtMemSetAccess");

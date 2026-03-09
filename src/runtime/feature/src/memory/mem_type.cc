@@ -25,6 +25,8 @@ const char_t* MemLocationTypeToStr(const rtMemLocationType type)
             return "RT_MEMORY_LOCATION_UNREGISTERED";
         case RT_MEMORY_LOC_MANAGED:
             return "RT_MEMORY_LOCATION_MANAGED";
+        case RT_MEMORY_LOC_HOST_NUMA:
+            return "RT_MEMORY_LOC_HOST_NUMA";
         default:
             return "RT_MEMORY_LOCATION_MAX";
     }
