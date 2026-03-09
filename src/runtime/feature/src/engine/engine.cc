@@ -752,7 +752,7 @@ void Engine::ReportSocketCloseProcV2()
 void Engine::ReportStatusOomProc(const rtError_t error, const uint32_t deviceId) const
 {
     TrySaveAtraceLogs(device_->GetAtraceEventHandle());
-    RT_LOG(RT_LOG_ERROR, "Device Aicpu oom, ret=%#x device_id=%u, start exception CallBack.", error, deviceId);
+    RT_LOG(RT_LOG_ERROR, "Device oom, ret=%#x device_id=%u, start exception CallBack.", error, deviceId);
     rtExceptionInfo_t exceptionInfo;
     exceptionInfo.retcode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(error));
     exceptionInfo.deviceid = deviceId;
