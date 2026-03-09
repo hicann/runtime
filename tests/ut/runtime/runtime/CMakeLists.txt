@@ -1191,7 +1191,7 @@ target_compile_options(runtime_utest_intf_pub INTERFACE
     -fno-access-control
     -fno-devirtualize
     -fno-inline-small-functions
-    $<$<STREQUAL: ${CMAKE_SYSTEM_PROCESS}, aarch64>:-falign-functions=32>
+    $<$<STREQUAL: ${CMAKE_SYSTEM_PROCESSOR}, aarch64>:-falign-functions=32>
 )
 
 target_link_libraries(runtime_utest_intf_pub INTERFACE

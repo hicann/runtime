@@ -56,7 +56,7 @@ if (NOT EXISTS "${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a" OR TRUE)
         set(PATCH_FILE ${OPEN_SOURCE_DIR}/mockcpp-2.7/mockcpp-2.7_py3test.patch)
         message(STATUS "mockcpp patch not use cache.")
         file(DOWNLOAD
-            "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h2/mockcpp-2.7_py3.patch"
+            "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7_aarch64.patch"
             ${PATCH_FILE}
             TIMEOUT 60
         )
@@ -68,7 +68,7 @@ if (NOT EXISTS "${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a" OR TRUE)
             set(URL_FILE "${OPEN_SOURCE_DIR}/mockcpp-2.7.tar.gz")
             message("mockcpp use local tar.gz: ${URL_FILE}")
         else()
-            set(URL_FILE "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h2/mockcpp-2.7.tar.gz")
+            set(URL_FILE "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7.tar.gz")
             message("mockcpp not use cache, new url file: ${URL_FILE}")
         endif()
     endif()

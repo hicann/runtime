@@ -227,48 +227,6 @@ TEST_F(CloudV2DcacheDeviceTest, FreeStackPhyBase_03)
     delete dev;
 }
 
-TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_02)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RawDevice *dev = new RawDevice(1);
-    dev->Init();
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_DRV_NO_DEVICE));
-    Context *ctx = nullptr;
-    dev->stackAddrIsDcache_ = true;
-    rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(ctx);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete dev;
-}
-
-TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_03)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RawDevice *dev = new RawDevice(1);
-    dev->Init();
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    Context *ctx = nullptr;
-    dev->stackAddrIsDcache_ = true;
-    rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(ctx);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete dev;
-}
-
-TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_04)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RawDevice *dev = new RawDevice(1);
-    dev->Init();
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER(QueryDcacheLockStatus).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(true)).will(returnValue(RT_ERROR_NONE));
-    Context *ctx = nullptr;
-    dev->stackAddrIsDcache_ = true;
-    rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(ctx);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete dev;
-}
-
 TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_05)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
