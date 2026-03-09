@@ -1050,6 +1050,8 @@ TEST_F(JOB_WRAPPER_STARS_SOC_PROFILE_JOB_TEST, Init) {
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->hostProfiling = false;
+    EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
+    params->sysLp = "off";
     EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
  
     params->interconnection_profiling = "on";

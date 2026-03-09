@@ -618,7 +618,7 @@ void ArgsManager::AddLowPowerArgs()
     if (!Platform::instance()->CheckIfSupport(PLATFORM_SYS_DEVICE_LOW_POWER)) {
         return;
     }
-    Args sysLpArgs = {"sys-lp", "Open low power profiling data config, the default value is off."};
+    Args sysLpArgs = {"sys-lp", "Open low power profiling data config, the default value is on.", ON};
     Args sysLpFreqArgs = {"sys-lp-freq", "Config low power frequency, the default value is 100Hz, "
         "the range is 1 to 100Hz."};
     argsList_.push_back(sysLpArgs);

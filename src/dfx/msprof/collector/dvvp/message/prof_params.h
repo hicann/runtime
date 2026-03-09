@@ -217,7 +217,7 @@ struct ProfileParams : public BaseInfo {
         : msprofBinPid(MSVP_PROCESS), isCancel(false), profiling_period(-1),
           profiling_options(""), profMode(""),
           aicore_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS), ai_core_lpm("off"),
-          aiv_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS), npuEvents(""), taskTsfw("off"), sysLp("off"),
+          aiv_sampling_interval(DEFAULT_PROFILING_INTERVAL_10MS), npuEvents(""), taskTsfw("off"), sysLp("on"),
           sysLpFreq(DEFAULT_PROFILING_INTERVAL_10000US), aicScale("all"), ccuInstr("off"), cpu_profiling("off"),
           cpu_sampling_interval(DEFAULT_PROFILING_INTERVAL_20MS),
           hscb("off"), aiCtrlCpuProfiling("off"), tsCpuProfiling("off"),
