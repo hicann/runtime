@@ -242,6 +242,7 @@ set(xpu_tprt_api_file
 set(libruntime_cmodel_src_files
     src/common/inner_thread_local.cpp
     src/api/api.cc
+    src/api/api_global_err.cc
     src/api_impl/api_decorator.cc
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
