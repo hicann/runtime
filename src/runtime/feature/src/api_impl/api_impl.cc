@@ -3328,7 +3328,7 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
     TIMESTAMP_NAME(__func__);
 
     Runtime * const rt = Runtime::Instance();
-    rtError_t ret = GetDrvSentinelMode();
+    const rtError_t ret = GetDrvSentinelMode();
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "GetDrvSentinelMode failed");
     RefObject<Context *> *context = nullptr;
     context = rt->PrimaryContextRetain(static_cast<uint32_t>(devId));
@@ -3838,6 +3838,13 @@ rtError_t ApiImpl::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotC
 rtError_t ApiImpl::DeviceSetTsId(const uint32_t tsId)
 {
     RT_LOG(RT_LOG_INFO, "Set TS Id, tsId=%u.", tsId);
+    const rtError_t ret = GetDrvSentinelMode();
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "GetDrvSentinelMode failed");
+    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    if (sentinelMode) {
+        COND_RETURN_ERROR(tsId == RT_TSC_ID, RT_ERROR_INVALID_VALUE, "sentinelMode or single f not support set tsid=0");
+    }
+
     if ((InnerThreadLocalContainer::GetCurCtx() == nullptr) && (InnerThreadLocalContainer::GetCurRef() != nullptr)) {
         Runtime * const rt = Runtime::Instance();
         InnerThreadLocalContainer::SetCurRef(rt->GetRefPriCtx(0U, tsId));

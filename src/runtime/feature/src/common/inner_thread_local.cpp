@@ -73,7 +73,7 @@ RefObject<Context *>* InnerThreadLocalContainer::GetCurRef(void)
 void InnerThreadLocalContainer::SetCurRef(RefObject<Context *> * const inCurRef)
 {
     curRef_ = inCurRef;
-    if (inCurRef != nullptr)
+    if ((inCurRef != nullptr) && (inCurRef->GetVal() != nullptr))
     {
         device_ = inCurRef->GetVal()->Device_();
     }    

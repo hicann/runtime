@@ -3139,7 +3139,12 @@ RefObject<Context *> *Runtime::PrimaryContextRetain(const uint32_t devId)
 
     COND_RETURN_ERROR_MSG_INNER((tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), nullptr,
         "Primary context retain failed, tsNum=%u, valid range is [1,%u]", tsNum_, RT_MAX_TS_NUM);
-    bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    if (sentinelMode) {
+        RT_LOG(RT_LOG_EVENT, "sentinel mode or single f, set ts id[1]");
+        InnerThreadLocalContainer::SetTsId(RT_TSV_ID);
+    }
+
     for (uint32_t i = 0U; i < tsNum_; i++) {
         if((sentinelMode) && (i == RT_TSC_ID)) {
  	            continue;
@@ -3259,7 +3264,7 @@ rtError_t Runtime::PrimaryContextRelease(const uint32_t devId, const bool isForc
     if (dev != nullptr) {
         dev->WaitForParsePrintf();
     }
-    bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
     for (uint32_t i = tsNum_; i > 0U; i--) {
         const uint32_t ts_id = i - 1U;
         bool reset = false;  // must be false.

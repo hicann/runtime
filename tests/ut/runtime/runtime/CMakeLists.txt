@@ -1394,6 +1394,7 @@ add_executable(runtime_utest_task_v201
     ${TOP_DIR}/src/runtime/feature/src/drv/npu_driver_standard_soc.cc
     stub/hal_stub.cc
     test/main.cc
+    test/platform/others/rt_utest_v201_task_singlef.cc
     test/platform/others/rt_utest_v201_task.cc
 )
 

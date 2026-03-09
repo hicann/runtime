@@ -82,21 +82,6 @@ static drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32
     return DRV_ERROR_NONE;
 }
 
-static drvError_t halGetDeviceInfoStubF(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
-{
-    if (value) {
-        if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_MC62CM12A;
-        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) { // tsnum
-            *value = 2;
-        } else if (moduleType == MODULE_TYPE_AICORE && infoType == INFO_TYPE_DIE_NUM) {  // dienum
-            *value = 0;
-        } else {
-        }
-    }
-    return DRV_ERROR_NONE;
-}
-
 rtError_t TmpCloseFd()
 {
     throw std::runtime_error("close exception");
@@ -243,109 +228,6 @@ protected:
         ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
         rtDeviceReset(0);
         GlobalMockObject::verify();
-    }
-
-public:
-    Device *device_ = nullptr;
-    Stream *stream_ = nullptr;
-    Engine *engine_ = nullptr;
-    rtStream_t streamHandle_ = 0;
-};
-
-class TaskTestV201F : public testing::Test {
-protected:
-    static void SetUpTestCase()
-    {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStubF));
-        MOCKER_CPP(&IoctlUtil::CloseFd).stubs().will(invoke(TmpCloseFd));
-        char *socVer = "MC62CM12AA";
-        MOCKER(halGetSocVersion)
-            .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("MC62CM12AA")))
-            .will(returnValue(DRV_ERROR_NONE));
-        MOCKER(halSqTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
-        std::cout << "TaskTestV201 SetUP" << std::endl;
-        Runtime *rtInstance = (Runtime *)Runtime::Instance();
-        rtInstance->SetDisableThread(true);
-        g_chipType = rtInstance->GetChipType();
-        rtInstance->SetChipType(CHIP_MC62CM12A);
-        GlobalContainer::SetRtChipType(CHIP_MC62CM12A);
-        rtInstance->SetConnectUbFlag(false);
-        std::cout << "TaskTestDavid start" << std::endl;
-    }
-
-    static void TearDownTestCase()
-    {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
-        Runtime *rtInstance = (Runtime *)Runtime::Instance();
-        rtInstance->SetChipType(g_chipType);
-        GlobalContainer::SetRtChipType(g_chipType);
-        rtInstance->SetDisableThread(false);
-        rtInstance->SetConnectUbFlag(false);
-        std::cout << "UbStreamTest end" << std::endl;
-        GlobalMockObject::verify();
-    }
-
-    virtual void SetUp()
-    {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
-        MOCKER_CPP(&IoctlUtil::CloseFd).stubs().will(invoke(TmpCloseFd));
-        Driver *drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
-        MOCKER(halSqTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
-        char *socVer = "MC62CM12AA";
-        MOCKER(halGetSocVersion)
-            .stubs()
-            .with(mockcpp::any(), outBoundP(socVer, strlen("MC62CM12AA")))
-            .will(returnValue(DRV_ERROR_NONE));
-        MOCKER_CPP_VIRTUAL(drv, &Driver::StreamBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
-        MOCKER_CPP_VIRTUAL(drv, &Driver::StreamUnBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
-
-        bool enable = false;
-        MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqEnable)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(enable))
-            .will(returnValue(RT_ERROR_NONE));
-
-        MOCKER_CPP_VIRTUAL(drv, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
-        MOCKER_CPP_VIRTUAL(drv, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
-        rtSetTSDevice(1);
-        rtSetDevice(0);
-
-        (void)rtSetSocVersion("MC62CM12AA");
-
-        device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-        device_->SetPlatformType(PLATFORM_MC62CM12A);
-        engine_ = ((RawDevice *)device_)->engine_;
-
-        MOCKER_CPP(&IoctlUtil::IoctlByCmd).defaults().will(invoke(IoctlByCmdMockRes));
-        rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, RT_STREAM_DQS_CTRL);
-        EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
-
-        stream_->SetSqMemAttr(false);
-        TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
-        MOCKER_CPP_VIRTUAL(drv, &Driver::GetSqHead)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
-            .will(returnValue(RT_ERROR_NONE));
-    }
-
-    virtual void TearDown()
-    {
-        MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
-        MOCKER_CPP(&IoctlUtil::CloseFd).stubs().will(invoke(TmpCloseFd));
-        while (stream_->GetPendingNum() > 0) {
-            stream_->pendingNum_.Sub(1U);
-        }
-        while (engine_->GetPendingNum() > 0) {
-            engine_->pendingNum_.Set(0U);
-        }
-        rtStreamDestroy(streamHandle_);
-        stream_ = nullptr;
-        engine_ = nullptr;
-        ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
-        rtDeviceReset(0);
-        GlobalMockObject::reset();
     }
 
 public:
@@ -1645,20 +1527,6 @@ TEST_F(TaskTestV201, LaunchKernelV2_RT_ARGS_MAX)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
-}
-
-TEST_F(TaskTestV201F, TestCpuKernelLaunch)
-{
-    rtError_t error;
-    ApiImplDavid apiImpl;
-    void *args[] = {&error, NULL};
-    rtAicpuArgsEx_t argsInfo = {};
-    argsInfo.args = args;
-    argsInfo.argsSize = sizeof(args);
-    char_t* opName = "testOp";
-    MOCKER(StreamLaunchCpuKernelExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiImpl.CpuKernelLaunchExWithArgs(opName, 1, &argsInfo, NULL, 2, 2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(TaskTestV201, Test_Construct_Simt_Sqe)

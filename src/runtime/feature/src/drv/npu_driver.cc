@@ -412,7 +412,7 @@ rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, ui
 {
     TIMESTAMP_NAME(__func__);
 
-    bool sentinelMode = Runtime::Instance()->GetSentinelMode();
+    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
     if (tsId == static_cast<uint32_t>(RT_TSV_ID)) {
         RT_LOG(RT_LOG_INFO, "Open device success, device_id=%u, tsId=%u.", deviceId, tsId);
         isTsvOpen_ = true;
