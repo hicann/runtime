@@ -7373,9 +7373,11 @@ rtError_t ApiImpl::GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId
     RT_LOG(RT_LOG_INFO, "Get stack buffer, bin handle %p, coreType %u, coreId %u", binHandle, coreType, coreId);
     Context *const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_OUTER(((stackType > RT_STACK_TYPE_SCALAR)),
+    COND_RETURN_AND_MSG_OUTER(((stackType == RT_STACK_TYPE_SIMT)),
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__,
         "stackType=" + std::to_string(stackType));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE,
+        stackType, "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
     return curCtx->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
 }
 
