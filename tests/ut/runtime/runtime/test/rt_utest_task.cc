@@ -527,7 +527,7 @@ TEST_F(TaskTest, davinci_kernel_task_print2)
     *infoLen = opName.length();
     uintptr_t msgInfoAddr = extendInfoAddr + sizeof(int32_t) + sizeof(uint32_t);
     memcpy(reinterpret_cast<void *>(msgInfoAddr), opName.c_str(), opName.length());
-    SetArgs(&task, args, argsSize, NULL, NULL, NULL);
+    SetArgs(&task, args, argsSize, NULL);
 
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
@@ -578,7 +578,7 @@ TEST_F(TaskTest, davinci_kernel_task_print4)
     uintptr_t argsAddr = reinterpret_cast<uintptr_t>(args);
     uint32_t *fwkKernelType = reinterpret_cast<uint32_t *>(argsAddr);
     *fwkKernelType = 0;
-    SetArgs(&task, args, argsSize, NULL, NULL, NULL);
+    SetArgs(&task, args, argsSize, NULL);
 
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetRunMode).stubs().will(returnValue((uint32_t)1));
@@ -607,7 +607,7 @@ TEST_F(TaskTest, davinci_kernel_task_print5)
 
     const uint32_t argsSize = sizeof(uint32_t) + sizeof(uint64_t);
     char args[argsSize] = {};
-    SetArgs(&task, args, argsSize, NULL, NULL, NULL);
+    SetArgs(&task, args, argsSize, NULL);
 
     uint32_t errorcode[3] = {10, 1, 0};
     SetResult(&task, (const uint32_t *)errorcode, 1);
@@ -647,7 +647,7 @@ TEST_F(TaskTest, davinci_kernel_task_print6)
     *infoLen = sizeof(int32_t);
     uintptr_t msgInfoAddr = extendInfoAddr + sizeof(int32_t) + sizeof(uint32_t);
     memcpy(reinterpret_cast<void *>(msgInfoAddr), &shapeType, sizeof(int32_t));
-    SetArgs(&task, args, argsSize, NULL, NULL, NULL);
+    SetArgs(&task, args, argsSize, NULL);
 
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
@@ -1399,7 +1399,7 @@ TEST_F(TaskTest, kernel_task_async_copy_wait)
         H2DCopyMgr(device, 10, 1024U, 1024U, BufferAllocator::LINEAR, COPY_POLICY_DEFAULT);
     hdl.kerArgs = argAllocator->AllocDevMem();
     hdl.argsAlloc = argAllocator;
-    SetArgs(&task, nullptr, 0, nullptr, 0, &hdl);
+    SetArgs(&task, nullptr, 0, &hdl);
     WaitAsyncCopyComplete(&task);
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopyAsyncWaitFinish).stubs().will(returnValue(RT_ERROR_NONE));
     WaitAsyncCopyComplete(&task);
@@ -1407,7 +1407,7 @@ TEST_F(TaskTest, kernel_task_async_copy_wait)
     WaitAsyncCopyComplete(&task);
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopyAsyncWaitFinishEx).stubs().will(returnValue(RT_ERROR_DRV_MEMORY));
     WaitAsyncCopyComplete(&task);
-    SetArgs(&task, nullptr, 0, nullptr, 0, nullptr);
+    SetArgs(&task, nullptr, 0, nullptr);
 
     delete argAllocator;
     delete device;
@@ -2328,18 +2328,14 @@ TEST_F(TaskTest, FftsPlusTaskForDevAddr)
 
     struct Handle {
         void *kerArgs;
-        void *smArgs;
         bool freeArgs;
-        bool freeL2Desc;
         void *argsAlloc;
     };
 
     struct Handle hand;
     void *phand;
     hand.kerArgs = descBuf;
-    hand.smArgs = descBuf;
     hand.freeArgs = true;
-    hand.freeL2Desc = false;
     hand.kerArgs = nullptr;
     phand = (void *)&hand;
 

@@ -56,7 +56,7 @@ TEST_F(XpuArgLoaderTest, xpu_arg_loader_test_01)
     XpuDevice *device;
     device = static_cast<XpuDevice*>(((Runtime *)Runtime::Instance())->XpuDeviceRetain(0));
     const uint32_t size = 100;
-    ArgLoaderResult result = {nullptr, nullptr, nullptr};
+    ArgLoaderResult result = {nullptr, nullptr};
     result.kerArgs = nullptr;
     result.handle = nullptr;
     rtError_t error = device->xpuArgLoader_->AllocCopyPtr(size, &result);
@@ -76,7 +76,7 @@ TEST_F(XpuArgLoaderTest, xpu_arg_loader_test_fail_01)
     XpuDevice *device;
     device = static_cast<XpuDevice*>(((Runtime *)Runtime::Instance())->XpuDeviceRetain(0));
     const uint32_t size = 5000;
-    ArgLoaderResult result = {nullptr, nullptr, nullptr};
+    ArgLoaderResult result = {nullptr, nullptr};
     result.kerArgs = nullptr;
     result.handle = nullptr;
     MOCKER(malloc).stubs().will(returnValue((void *)NULL));

@@ -185,11 +185,11 @@ TEST_F(CloudV2ApiTest910b, testRtDevBinaryRegisterAllApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.KernelLaunchWithHandle(NULL, 1, 1, NULL, NULL, NULL, NULL, false);
+    error = apiDec.KernelLaunchWithHandle(NULL, 1, 1, NULL, NULL, NULL, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CpuKernelLaunchExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.CpuKernelLaunchExWithArgs(NULL, 1, NULL, NULL, NULL, 1, 1);
+    error = apiDec.CpuKernelLaunchExWithArgs(NULL, 1, NULL, NULL, 1, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MultipleTaskInfoLaunch).stubs().will(returnValue(RT_ERROR_NONE));

@@ -134,7 +134,6 @@ TEST_F(ChipArgLoaderTest, uma_arg_loader_rollback)
     rtError_t error;
     Device *device;
     void * args[] = {NULL, NULL, NULL, NULL};
-    rtSmDesc_t smDesc;
     ArgLoaderResult result;
     uint32_t info = RT_RUN_MODE_ONLINE;
     NpuDriver * rawDrv = new NpuDriver();
@@ -169,7 +168,7 @@ TEST_F(ChipArgLoaderTest, uma_arg_loader_rollback)
 
     MOCKER_CPP(&H2DCopyMgr::AllocDevMem, void* (H2DCopyMgr::*)(const bool)).stubs().will(returnValue((void *)NULL));
 
-    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, &smDesc, stream, &result);
+    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, stream, &result);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     rtInstance->SetChipType(oriChipType);

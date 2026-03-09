@@ -185,16 +185,13 @@ void InitByStream(TaskInfo *const taskInfo, Stream *stream);
 void DoTaskComplete(TaskInfo* taskInfo, const uint32_t devId);
 
 void SetPcTrace(TaskInfo *taskInfo, std::shared_ptr<PCTrace> pcTracePtr);
-inline void SetAicoreArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize,
-    const void * const descData, const uint32_t memorySize, void *const dataArgHandle)
+inline void SetAicoreArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize, void *const dataArgHandle)
 {
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
 
     aicTaskInfo->comm.args = const_cast<void*>(dataArgs);
     aicTaskInfo->comm.argsSize = dataArgsSize;
     aicTaskInfo->comm.argHandle = dataArgHandle;
-    aicTaskInfo->smDescData = RtPtrToValue(descData);
-    aicTaskInfo->smSize = memorySize;
 }
 
 inline void SetAicpuArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize,
@@ -207,12 +204,11 @@ inline void SetAicpuArgs(TaskInfo *taskInfo, const void * const dataArgs, const 
     aicpuTaskInfo->comm.argHandle = dataArgHandle;
 }
 
-inline void SetArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize,
-             const void * const descData, const uint32_t memorySize, void *const dataArgHandle)
+inline void SetArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize, void *const dataArgHandle)
 {
     const tsTaskType_t tskType = taskInfo->type;
     if ((tskType == TS_TASK_TYPE_KERNEL_AICORE) || (tskType == TS_TASK_TYPE_KERNEL_AIVEC)) {
-        SetAicoreArgs(taskInfo, dataArgs, dataArgsSize, descData, memorySize, dataArgHandle);
+        SetAicoreArgs(taskInfo, dataArgs, dataArgsSize, dataArgHandle);
     } else if (tskType == TS_TASK_TYPE_KERNEL_AICPU) {
         SetAicpuArgs(taskInfo, dataArgs, dataArgsSize, dataArgHandle);
     } else {

@@ -87,13 +87,13 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_mix_illegal_size)
     argsInfo.args = &args;
     argsInfo.argsSize = 40900U;
     bool mixOpt = false;
-    error = loader->LoadForMix(NULL, &argsInfo, NULL, (Stream *)device->PrimaryStream_(), &results, mixOpt);
+    error = loader->LoadForMix(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     MOCKER_CPP(&H2DCopyMgr::AllocDevMem, void* (H2DCopyMgr::*)(const bool)).stubs().will(returnValue((void *)NULL));
 
     argsInfo.argsSize = 128U;
-    error = loader->LoadForMix(NULL, &argsInfo, NULL, (Stream *)device->PrimaryStream_(), &results, mixOpt);
+    error = loader->LoadForMix(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     delete loader;
@@ -126,7 +126,6 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm)
     rtError_t error;
     Device *device;
     void * args[] = {NULL, NULL, NULL, NULL};
-    rtSmDesc_t smDesc;
     ArgLoaderResult result;
     ArgLoaderResult result2;
 
@@ -141,10 +140,10 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(NULL, &argsInfo, &smDesc, (Stream *)device->PrimaryStream_(), &result);
+    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = loader->Load(NULL, &argsInfo, &smDesc, (Stream *)device->PrimaryStream_(), &result2);
+    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = loader->Release(result.handle);
@@ -163,7 +162,6 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm_fail)
     rtError_t error;
     Device *device;
     void * args[] = {NULL, NULL, NULL, NULL};
-    rtSmDesc_t smDesc;
     ArgLoaderResult result;
     uint32_t info = RT_RUN_MODE_ONLINE;
 
@@ -179,7 +177,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_sm_fail)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(NULL, &argsInfo, &smDesc, (Stream *)device->PrimaryStream_(), &result);
+    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result);
     EXPECT_EQ(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
 
@@ -224,7 +222,6 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_memcpy_fail)
     rtError_t error;
     Device *device;
     void * args[] = {NULL, NULL, NULL, NULL};
-    rtSmDesc_t smDesc;
     ArgLoaderResult result;
     uint32_t info = RT_RUN_MODE_ONLINE;
 
@@ -241,7 +238,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_with_memcpy_fail)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, &smDesc, stream, &result);
+    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, stream, &result);
     EXPECT_NE(error, RT_ERROR_SEC_HANDLE);
 
     delete loader;
@@ -402,7 +399,6 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_rollback)
     rtError_t error;
     Device *device;
     void * args[] = {NULL, NULL, NULL, NULL};
-    rtSmDesc_t smDesc;
     ArgLoaderResult result;
     uint32_t info = RT_RUN_MODE_ONLINE;
     NpuDriver * rawDrv = new NpuDriver();
@@ -434,7 +430,7 @@ TEST_F(CloudV2ArgLoaderTest, uma_arg_loader_rollback)
 
     MOCKER_CPP(&H2DCopyMgr::AllocDevMem, void* (H2DCopyMgr::*)(const bool)).stubs().will(returnValue((void *)NULL));
 
-    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, &smDesc, stream, &result);
+    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, stream, &result);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     delete loader;

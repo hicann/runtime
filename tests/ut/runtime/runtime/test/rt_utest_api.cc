@@ -1691,7 +1691,7 @@ TEST_F(ApiTest, CPU_KERNEL_LAUNCH_TEST1)
     rtKernelLaunchNames_t name = {reinterpret_cast<const char *>(soName.c_str()),
                                  reinterpret_cast<const char *>(kernelName.c_str()),
                                  ""};
-    error = api.CpuKernelLaunch(&name, 1, &argsInfo, NULL, NULL,0);
+    error = api.CpuKernelLaunch(&name, 1, &argsInfo, NULL,0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1712,7 +1712,7 @@ TEST_F(ApiTest, CPU_KERNEL_LAUNCH_TEST2)
                                  reinterpret_cast<const char *>(kernelName.c_str()),
                                  ""};
     uint32_t flag = 0x20;
-    error = api.CpuKernelLaunch(&name, 1, &argsInfo, NULL, NULL,flag);
+    error = api.CpuKernelLaunch(&name, 1, &argsInfo, NULL,flag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -5765,7 +5765,7 @@ TEST_F(ApiTest, api_register_all_kernel)
 
     Stream *stream = static_cast<Stream *>(stream_);
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.KernelLaunchWithHandle((void*)reg_unreg_prog, 333, 1, NULL, NULL, stream, "info");
+    error = api.KernelLaunchWithHandle((void*)reg_unreg_prog, 333, 1, NULL, stream, "info");
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     void *addr;

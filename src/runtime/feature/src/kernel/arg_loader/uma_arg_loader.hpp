@@ -21,11 +21,11 @@ public:
 
     rtError_t Init() override;
     rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) override;
-    rtError_t Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo, rtSmDesc_t * const smDesc,
+    rtError_t Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
                    Stream * const stm, ArgLoaderResult * const result) override;
     rtError_t PureLoad(const uint32_t size, const void * const args, ArgLoaderResult * const result) override;
     rtError_t LoadForMix(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
-                         rtSmDesc_t * const smDesc, Stream * const stm, ArgLoaderResult * const result, bool &mixOpt) override;
+                         Stream * const stm, ArgLoaderResult * const result, bool &mixOpt) override;
     rtError_t Release(void * const argHandle) override;
     rtError_t LoadCpuKernelArgs(const rtArgsEx_t * const argsInfo, Stream * const stm,
                                 ArgLoaderResult * const result) override;
@@ -73,7 +73,6 @@ private:
     static void FreeBuffer(void * const addr, void * const para);
     rtError_t FindOrInsertDevAddr(const char_t * const name, std::unordered_map<std::string, void *> &nameMap,
                                   void ** const addr) const;
-    rtError_t LoadSmDescArgs(const rtSmDesc_t * const smDesc, void ** const smArgs, bool &copyL2Desc, bool &freeL2Desc) const;
     rtError_t LoadInputOutputArgsHuge(const Stream * const stm, void *&kerArgs, H2DCopyMgr * const umaArgAllocator,
                                             bool &copyArgs, const uint32_t size,
                                             const void * const args, const rtArgsEx_t * const argsInfo) const;

@@ -119,17 +119,17 @@ rtError_t ApiDecorator::QueryFunctionRegistered(const char_t * const stubName)
 }
 
 rtError_t ApiDecorator::KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    return impl_->KernelLaunch(stubFunc, coreDim, argsInfo, l2ctrl, stm, flag, cfgInfo, isLaunchVec);
+    return impl_->KernelLaunch(stubFunc, coreDim, argsInfo, stm, flag, cfgInfo, isLaunchVec);
 }
 
 rtError_t ApiDecorator::KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey,
-    const uint32_t coreDim, const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+    const uint32_t coreDim, const rtArgsEx_t * const argsInfo, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    return impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, l2ctrl, stm, cfgInfo, isLaunchVec);
+    return impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, stm, cfgInfo, isLaunchVec);
 }
 
 rtError_t ApiDecorator::KernelLaunchEx(const char_t * const opName, const void * const args, const uint32_t argsSize,
@@ -139,9 +139,9 @@ rtError_t ApiDecorator::KernelLaunchEx(const char_t * const opName, const void *
 }
 
 rtError_t ApiDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag)
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
-    return impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, l2ctrl, stm, flag);
+    return impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, stm, flag);
 }
 
 rtError_t ApiDecorator::CalcLaunchArgsSize(size_t const argsSize, size_t const hostInfoTotalSize,
@@ -178,10 +178,10 @@ rtError_t ApiDecorator::AppendLaunchHostInfo(rtLaunchArgs_t* const hdl, size_t c
 }
 
 rtError_t ApiDecorator::CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
-    const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtAicpuArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const uint32_t kernelType)
 {
-    return impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, l2ctrl, stm, flag, kernelType);
+    return impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
 }
 
 rtError_t ApiDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t * const taskInfo, Stream * const stm,

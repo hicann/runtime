@@ -8440,7 +8440,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
 
     ApiImplDavid impl;
-    error = impl.KernelLaunch(&function_, 1 /* coredim */, &wwargsInfo, nullptr /* l2ctrl */, stream, 0, nullptr, 0);
+    error = impl.KernelLaunch(&function_, 1 /* coredim */, &wwargsInfo, stream, 0, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete stream;
@@ -8565,11 +8565,11 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
 
     ApiImplDavid impl;
 
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     stream->SetModel(mdl);
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_STREAM_MODEL);
 
     TaskUnInitProc(&memcpyTask);
@@ -8672,7 +8672,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_KERNEL_TYPE);
 
     TaskUnInitProc(&memcpyTask);
@@ -8768,7 +8768,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
 
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
@@ -8893,7 +8893,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
     MOCKER_CPP_VIRTUAL(stream->ArgManagePtr(), &DavidArgManage::RecycleDevLoader).stubs().will(ignoreReturnValue());
 
     ApiImplDavid impl;
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     TaskUnInitProc(&memcpyTask);
@@ -9019,7 +9019,7 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
 
     ApiImplDavid impl;
 
-    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, nullptr /*l2ctrl*/, stream);
+    error = impl.KernelLaunchWithHandle(m_handle, tilingKey, 1, &wwargsInfo, stream);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
     TaskUnInitProc(&memcpyTask);
 

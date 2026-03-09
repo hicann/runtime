@@ -80,7 +80,7 @@ rtError_t DcacheLockSendTask(Context *ctx, const uint32_t blockDim, const void *
     TaskCfg taskCfg = {};
     taskCfg.isBaseValid = 1U;
     taskCfg.base.schemMode = 1U;
-    rtError_t error = ctx->LaunchKernel(funcAddr, blockDim, &argsInfo, nullptr, stream, 0U, &taskCfg, false);
+    rtError_t error = ctx->LaunchKernel(funcAddr, blockDim, &argsInfo, stream, 0U, &taskCfg, false);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "launch kernel failed, reCode=%#x", error);
         return error;

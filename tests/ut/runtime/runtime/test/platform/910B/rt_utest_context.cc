@@ -584,13 +584,13 @@ public:
         return RT_ERROR_NONE;
     }
 
-    rtError_t Load(uint32_t kernelType, const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, Stream *stream,
+    rtError_t Load(uint32_t kernelType, const rtArgsEx_t *argsInfo, Stream *stream,
         ArgLoaderResult *result) override
     {
         return RT_ERROR_INVALID_VALUE;
     }
 
-    rtError_t LoadForMix(uint32_t kernelType, const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, Stream *stream,
+    rtError_t LoadForMix(uint32_t kernelType, const rtArgsEx_t *argsInfo, Stream *stream,
         ArgLoaderResult *result, bool &mixOpt) override
     {
         return RT_ERROR_INVALID_VALUE;
@@ -717,7 +717,7 @@ TEST_F(CloudV2ContextTest, LAUNCH_KERNEL_WITH_HANDLE)
     argsInfo.args = &arg;
     argsInfo.argsSize = 4100;
     Stream *stream = (Stream *)ctx->DefaultStream_();
-    error = ctx->LaunchKernelWithHandle(m_handle, 355, 1, &argsInfo, NULL, stream, 0, NULL);
+    error = ctx->LaunchKernelWithHandle(m_handle, 355, 1, &argsInfo, stream, 0, NULL);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1095,7 +1095,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     Stream *stream = (Stream *)ctx->DefaultStream_();
      uint32_t oldPlatform = ((RawDevice *)(ctx->Device_()))->platformConfig_;
     ((RawDevice *)(ctx->Device_()))->platformConfig_ = 0x400;
-    error = ctx->LaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, NULL, stream, 0, NULL);
+    error = ctx->LaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, stream, 0, NULL);
     ((RawDevice *)(ctx->Device_()))->platformConfig_ = oldPlatform;
 
     error = rtDevBinaryUnRegister(m_handle);
@@ -1852,7 +1852,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
     argsInfo.args = &arg;
     argsInfo.argsSize = 4100;
     Stream *stream = (Stream *)ctx->DefaultStream_();
-    error = ctx->LaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, NULL, stream, 0, NULL);
+    error = ctx->LaunchKernelWithHandle(m_handle, 1, 1, &argsInfo, stream, 0, NULL);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3518,7 +3518,7 @@ TEST_F(CloudV2ContextTest, MixKernelUpdate_test_3)
     updateTask.u.aicTaskInfo.kernel = kernel;
     updateTask.u.aicTaskInfo.kernel->mixType_ = MIX_AIC;
 
-    error = ctx->LaunchUpdateKernelSubmit(&updateTask, updateStream, nullptr, result, 0);
+    error = ctx->LaunchUpdateKernelSubmit(&updateTask, updateStream, nullptr, result);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
     TaskInfo updateTask2 = {};
@@ -3528,7 +3528,7 @@ TEST_F(CloudV2ContextTest, MixKernelUpdate_test_3)
     updateTask2.u.aicTaskInfo.kernel = kernel;
     updateTask2.u.aicTaskInfo.kernel->mixType_ = NO_MIX;
 
-    error = ctx->LaunchUpdateKernelSubmit(&updateTask2, updateStream, nullptr, result, 0);
+    error = ctx->LaunchUpdateKernelSubmit(&updateTask2, updateStream, nullptr, result);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
     rtStreamlist_t stmList = {};

@@ -280,6 +280,7 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, u
                          rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
@@ -314,7 +315,7 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, u
     argsInfo.isNoNeedH2DCopy = (curStm->NonSupportModelCompile()) || (curStm->GetModelNum() == 0U) ? 0U : 1U;
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->KernelLaunch(stubFunc, numBlocks, &argsInfo, smDesc, exeStream, 0U, nullptr);
+    const rtError_t ret = apiInstance->KernelLaunch(stubFunc, numBlocks, &argsInfo,exeStream, 0U, nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;
@@ -327,6 +328,7 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
     rtSmDesc_t *smDesc, rtStream_t stm, const void* kernelInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     UNUSED(kernelInfo);
     Api * const apiInstance = Api::Instance();
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
@@ -343,7 +345,7 @@ rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), nullptr);
+        hdl, tilingKey, numBlocks, argsInfo, static_cast<Stream *>(stm), nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -355,6 +357,7 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
     rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Api * const apiInstance = Api::Instance();
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
@@ -370,7 +373,7 @@ rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo);
+        hdl, tilingKey, numBlocks, argsInfo, static_cast<Stream *>(stm), cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandleV2);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -382,6 +385,7 @@ rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t numBlocks, rtArg
                                  rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -396,7 +400,7 @@ rtError_t rtKernelLaunchWithFlag(const void *stubFunc, uint32_t numBlocks, rtArg
     Stream * const exeStream = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, smDesc, exeStream, flags, nullptr);
+    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, exeStream, flags, nullptr);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;
@@ -409,6 +413,7 @@ rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t numBlocks, rtA
                                    rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -423,7 +428,7 @@ rtError_t rtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t numBlocks, rtA
     Stream * const exeStream = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, smDesc, exeStream, flags, cfgInfo);
+    const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks, argsInfo, exeStream, flags, cfgInfo);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithFlagV2);
     launchArg.argCount = 0U;
@@ -458,6 +463,7 @@ rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, 
                                     rtStream_t stm, uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Stream * const exeStream = static_cast<Stream *>(stm);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -465,7 +471,7 @@ rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, 
         static_cast<const char_t *>(kernelName), ""};
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunch(&launchName, numBlocks, argsInfo, smDesc, exeStream, flags);
+    const rtError_t ret = apiInstance->CpuKernelLaunch(&launchName, numBlocks, argsInfo, exeStream, flags);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -476,12 +482,13 @@ rtError_t rtAicpuKernelLaunchWithFlag(const rtKernelLaunchNames_t *launchNames, 
     const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Stream * const exeStream = static_cast<Stream *>(stm);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunch(launchNames, numBlocks, argsInfo, smDesc, exeStream, flags);
+    const rtError_t ret = apiInstance->CpuKernelLaunch(launchNames, numBlocks, argsInfo, exeStream, flags);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -493,6 +500,7 @@ rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t 
     const rtStream_t stm, const uint32_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     RT_LOG(RT_LOG_INFO, "kernel_type=%u, flags=%u", kernelType, flags);
     if ((kernelType != KERNEL_TYPE_FWK) &&
         (kernelType != KERNEL_TYPE_AICPU) &&
@@ -507,7 +515,7 @@ rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t ret = apiInstance->CpuKernelLaunchExWithArgs(opName, numBlocks, argsInfo, smDesc,
+    const rtError_t ret = apiInstance->CpuKernelLaunchExWithArgs(opName, numBlocks, argsInfo,
                                                                  exeStream, flags, kernelType);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -3958,6 +3966,7 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
     rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Api * const apiInstance = Api::Instance();
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
@@ -3974,7 +3983,7 @@ rtError_t rtVectorCoreKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->KernelLaunchWithHandle(
-        hdl, tilingKey, numBlocks, argsInfo, smDesc, static_cast<Stream *>(stm), cfgInfo, true);
+        hdl, tilingKey, numBlocks, argsInfo, static_cast<Stream *>(stm), cfgInfo, true);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunchWithHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -3986,6 +3995,7 @@ rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t numBlocks, rtA
     rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
+    UNUSED(smDesc);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
@@ -4000,7 +4010,7 @@ rtError_t rtVectorCoreKernelLaunch(const void *stubFunc, uint32_t numBlocks, rtA
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t err = apiInstance->KernelLaunch(stubFunc, numBlocks,
-        argsInfo, smDesc, exeStream, flags, cfgInfo, true);
+        argsInfo, exeStream, flags, cfgInfo, true);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtKernelLaunch);
     launchArg.argCount = 0U;

@@ -58,7 +58,7 @@ rtError_t PcieArgManage::AllocCopyPtr(const uint32_t size, const bool useArgPool
         return error;
     }
 
-    ArgLoaderResult res = {nullptr, nullptr, nullptr};
+    ArgLoaderResult res = {nullptr, nullptr};
     res.kerArgs = nullptr;
     res.handle = nullptr;
     error = stream_->Device_()->ArgLoader_()->AllocCopyPtr(size, &res);

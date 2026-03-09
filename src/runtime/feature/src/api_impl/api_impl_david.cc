@@ -47,10 +47,9 @@ namespace cce {
 namespace runtime {
 
 rtError_t ApiImplDavid::KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    UNUSED(l2ctrl);
     COND_RETURN_WARN(isLaunchVec, RT_ERROR_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.",
         static_cast<int32_t>(Runtime::Instance()->GetChipType()));
     RT_LOG(RT_LOG_DEBUG, "Launch kernel, stubFunc=%p, blockDim=%u.", stubFunc, coreDim);
@@ -69,10 +68,9 @@ rtError_t ApiImplDavid::KernelLaunch(const void * const stubFunc, const uint32_t
 }
 
 rtError_t ApiImplDavid::KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+    const rtArgsEx_t * const argsInfo, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
-    UNUSED(l2ctrl);
     COND_RETURN_WARN(isLaunchVec, RT_ERROR_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.",
         static_cast<int32_t>(Runtime::Instance()->GetChipType()));
     RT_LOG(RT_LOG_DEBUG, "Launch kernel with hdl, blockDim=%u, tilingKey=%" PRIu64, coreDim, tilingKey);
@@ -250,9 +248,8 @@ rtError_t ApiImplDavid::KernelLaunchEx(const char_t * const opName, const void *
 }
 
 rtError_t ApiImplDavid::CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag)
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
-    UNUSED(l2ctrl);
     RT_LOG(RT_LOG_DEBUG, "Launch cpu kernel, soName=%s, kernelName=%s, opName=%s, blockDim=%u, argsSize=%u, "
         "hostInputInfoNum=%hu, flag=%u.", launchNames->soName, launchNames->kernelName, launchNames->opName, coreDim,
         argsInfo->argsSize, argsInfo->hostInputInfoNum, flag);
@@ -276,10 +273,9 @@ rtError_t ApiImplDavid::CpuKernelLaunch(const rtKernelLaunchNames_t * const laun
 }
 
 rtError_t ApiImplDavid::CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
-    const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtAicpuArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const uint32_t kernelType)
 {
-    UNUSED(l2ctrl);
     RT_LOG(RT_LOG_DEBUG, "Launch cpu kernel ex, opName=%s, blockDim=%u, argsSize=%u, hostInputInfoNum=%hu, "
         "flag=%u, kernelType=%u, isNoNeedH2DCopy=%u.", opName, coreDim, argsInfo->argsSize, argsInfo->hostInputInfoNum,
         flag, kernelType, argsInfo->isNoNeedH2DCopy);

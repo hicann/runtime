@@ -70,7 +70,7 @@ rtError_t XpuArgManage::AllocCopyPtr(const uint32_t size, const bool useArgPool,
     if (useArgPool && AllocStmPool(size, result)) {
         return error;
     }
-    ArgLoaderResult res = {nullptr, nullptr, nullptr};
+    ArgLoaderResult res = {nullptr, nullptr};
     res.kerArgs = nullptr;
     res.handle = nullptr;
     error = static_cast<XpuDevice *>(stream_->Device_())->XpuArgLoader_()->AllocCopyPtr(size, &res);

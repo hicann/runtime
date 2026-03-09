@@ -1458,7 +1458,7 @@ TEST_F(TaskTestV201, TestCpuKernelLaunch)
     argsInfo.argsSize = sizeof(args);
     char_t* opName = "testOp";
     MOCKER(StreamLaunchCpuKernelExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiImpl.CpuKernelLaunchExWithArgs(opName, 1, &argsInfo, NULL, NULL,2,2);
+    error = apiImpl.CpuKernelLaunchExWithArgs(opName, 1, &argsInfo, NULL,2,2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1657,7 +1657,7 @@ TEST_F(TaskTestV201F, TestCpuKernelLaunch)
     argsInfo.argsSize = sizeof(args);
     char_t* opName = "testOp";
     MOCKER(StreamLaunchCpuKernelExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiImpl.CpuKernelLaunchExWithArgs(opName, 1, &argsInfo, NULL, NULL,2,2);
+    error = apiImpl.CpuKernelLaunchExWithArgs(opName, 1, &argsInfo, NULL, 2, 2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

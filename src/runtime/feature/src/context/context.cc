@@ -710,21 +710,6 @@ rtError_t Context::Synchronize(int32_t timeout)
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
-rtError_t Context::KernelTaskConfig(TaskInfo * const configTask, const void * const kernSoName,
-    const void * const kernelName, ArgLoaderResult * const result,
-    const uint32_t smArgsSize, const uint32_t argsSize)
-{
-    SetArgs(configTask, result->kerArgs, argsSize, result->smArgs, smArgsSize, result->handle);
-
-    // AICPU branch, modify for KernelLaunch performance optimization
-    if (configTask->type == TS_TASK_TYPE_KERNEL_AICPU) {
-        SetNameArgs(configTask, kernSoName, kernelName);
-    }
-    // handle is owned by task.
-    result->handle = nullptr;
-    return RT_ERROR_NONE;
-}
-
 rtError_t Context::ConfigPCTraceTask(const Kernel * const registeredKernel, std::shared_ptr<PCTrace> &rtPCTrace,
     const uint32_t coreDim, Stream * const stm, const uint16_t taskId, Module * const mdl)
 {
@@ -794,13 +779,11 @@ TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 TIMESTAMP_EXTERN(rtKernelLaunch_CpuArgLoad);
 
-rtError_t Context::LaunchKernelPrepare(uint32_t &smArgsSize,
+rtError_t Context::LaunchKernelPrepare(
     Kernel *&registeredKernel, Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
-    rtL2Ctrl_t *&l2ctrl, uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
+    uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
     uint32_t &prefetchCnt1, uint32_t &prefetchCnt2)
 {
-    UNUSED(smArgsSize);
-    UNUSED(l2ctrl);
     rtError_t error = RT_ERROR_NONE;
 
     if (progHandle == nullptr) {
@@ -1160,7 +1143,7 @@ rtError_t Context::UpdateEndGraphTask(Stream * const origCaptureStream, Stream *
 }
 
 rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream * const stm, const rtArgsEx_t * const argsInfo,
-                                            ArgLoaderResult &result, const uint32_t smArgsSize)
+                                            ArgLoaderResult &result)
 {
     Runtime * const rt = Runtime::Instance();
     const Program * const programPtr = updateTask->u.aicTaskInfo.kernel->Program_();
@@ -1174,7 +1157,7 @@ rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream 
         updateTask->u.aicTaskInfo.oldArgHandle = oldArgHandle;
 
         /* update argHandle */
-        SetArgs(updateTask, result.kerArgs, argsInfo->argsSize, result.smArgs, smArgsSize, nullptr);
+        SetArgs(updateTask, result.kerArgs, argsInfo->argsSize, nullptr);
         model->ReplaceArgHandle(static_cast<uint32_t>(updateTask->stream->Id_()), updateTask->id, result.handle);
         result.handle = nullptr;
     }
@@ -1202,10 +1185,10 @@ rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream 
 }
 
 rtError_t Context::LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const rtArgsEx_t *&argsInfo,
-    ArgLoaderResult &result, const uint32_t smArgsSize, const Program * const programPtr)
+    ArgLoaderResult &result, const Program * const programPtr)
 {
     if (submitTask->isUpdateSinkSqe == 1U) {
-        return LaunchUpdateKernelSubmit(submitTask, stm, argsInfo, result, smArgsSize);
+        return LaunchUpdateKernelSubmit(submitTask, stm, argsInfo, result);
     }
 
     Runtime * const rt = Runtime::Instance();
@@ -1213,7 +1196,7 @@ rtError_t Context::LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const
 
     // Function always return RT_ERROR_NONE, modify for KernelLaunch performance optimization
     if (result.handle != nullptr) {
-        SetAicoreArgs(submitTask, result.kerArgs, realArgsSize, result.smArgs, smArgsSize, result.handle);
+        SetAicoreArgs(submitTask, result.kerArgs, realArgsSize, result.handle);
         result.handle = nullptr;
     }
 
@@ -1231,8 +1214,7 @@ rtError_t Context::LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const
 }
 
 rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t coreDim, const rtArgsEx_t *argsInfo,
-    rtL2Ctrl_t *l2ctrl, Stream *stm, const uint32_t flag, const TaskCfg * const taskcfg,
-    const bool isLaunchVec)
+    Stream *stm, const uint32_t flag, const TaskCfg * const taskcfg, const bool isLaunchVec)
 {
     rtError_t error;
     uint32_t kernelType = 0U;
@@ -1241,7 +1223,6 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
 
     uint64_t addr1 = 0ULL;
     uint64_t addr2 = 0ULL;
-    uint32_t smArgsSize = 0U;
     uint8_t mixType = NO_MIX;
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
@@ -1262,8 +1243,8 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, stubFunc,
-        l2ctrl, addr1, addr2, nullptr, 0, prefetchCnt1, prefetchCnt2);
+    error = LaunchKernelPrepare(registeredKernel, prog, kernelType, launchMdl, stubFunc,
+        addr1, addr2, nullptr, 0, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "launch kernel prepare failed.");
@@ -1284,18 +1265,18 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - static_cast<uint32_t>(CONTEXT_ALIGN_LEN))) &&
         !stm->NonSupportModelCompile() && !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, l2ctrl, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadForMix);
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Mix Failed to load args and l2ctrl, stream_id=%d,"
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Mix Failed to load args , stream_id=%d,"
                              " retCode=%#x.", stm->Id_(), error);
         copyFlag = false;
     } else if (((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoad);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, l2ctrl, stm, &result);
+        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
         TIMESTAMP_END(rtKernelLaunch_ArgLoad);
-        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to load args and l2ctrl, stream_id=%d,"
+        ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to load args, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), error);
         copyFlag = false;
     } else {
@@ -1346,7 +1327,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
         aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
         argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
-    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, smArgsSize, prog);
+    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, prog);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "kernel launch submit failed.");
     return RT_ERROR_NONE;
 
@@ -1356,7 +1337,7 @@ ERROR_RECYCLE:
 }
 
 rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_t tilingKey,
-    const uint32_t coreDim, const rtArgsEx_t *argsInfo, rtL2Ctrl_t *l2ctrl, Stream *stm, const uint32_t flag,
+    const uint32_t coreDim, const rtArgsEx_t *argsInfo, Stream *stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     rtError_t error;
@@ -1368,7 +1349,6 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
 
     uint64_t addr1 = 0ULL;
     uint64_t addr2 = 0ULL;
-    uint32_t smArgsSize = 0U;
     TaskInfo submitTask = {};
     TaskInfo *kernTask = nullptr;
     AicTaskInfo *aicTask = nullptr;
@@ -1391,8 +1371,8 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d."
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(smArgsSize, registeredKernel, prog, kernelType, launchMdl, nullptr,
-        l2ctrl, addr1, addr2, progHandle, tilingKey, prefetchCnt1, prefetchCnt2);
+    error = LaunchKernelPrepare(registeredKernel, prog, kernelType, launchMdl, nullptr,
+        addr1, addr2, progHandle, tilingKey, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_PROGRAM_BASE) || (error == RT_ERROR_PROGRAM_NULL), error,
@@ -1415,9 +1395,9 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
        (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
        !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAllForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, l2ctrl, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAllForMix);
-        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args and l2ctrl, stream_id=%d,"
+        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args, stream_id=%d,"
                              " retCode=%#x.", stm->Id_(), error);
         copyFlag = false;
     } else if (((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
@@ -1425,9 +1405,9 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
                (kernTask->isUpdateSinkSqe == 1U)) {
         // 只要不预留pcie,都走公共load流程
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAll);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, l2ctrl, stm, &result);
+        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAll);
-        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to load args and l2ctrl, stream_id=%d,"
+        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to load args, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), error);
         copyFlag = false;
     } else {
@@ -1485,7 +1465,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
            argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle_SubMit);
-    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, smArgsSize, prog);
+    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, prog);
     TIMESTAMP_END(rtKernelLaunchWithHandle_SubMit);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "kernel launch submit failed.");
@@ -1610,16 +1590,16 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
         !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAllForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, nullptr, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAllForMix);
-        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args and l2ctrl, stream_id=%d,"
+        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args, stream_id=%d,"
                               " retCode=%#x.", stm->Id_(), error);
         copyFlag = false;
     } else if (((argsInfo->argsSize > RTS_LITE_PCIE_BAR_COPY_SIZE) ||
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
         TIMESTAMP_BEGIN(rtLaunchKernel_ArgLoadAll);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, nullptr, stm, &result);
+        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
         TIMESTAMP_END(rtLaunchKernel_ArgLoadAll);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to load args, stream_id=%d, retCode=%#x.",
                              stm->Id_(), error);
@@ -1666,7 +1646,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
         prefetchCnt1, prefetchCnt2, argsInfo->isNoNeedH2DCopy);
 
     TIMESTAMP_BEGIN(rtLaunchKernel_SubMit);
-    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, 0, nullptr);
+    error = LaunchKernelSubmit(kernTask, stm, argsInfo, result, nullptr);
     TIMESTAMP_END(rtLaunchKernel_SubMit);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "kernel launch submit failed.");
@@ -1950,8 +1930,8 @@ rtError_t Context::GetDevArgsAddr(Stream * const stm, const rtArgsEx_t * const a
     void ** const argsHandle) const
 {
     ArgLoaderResult result = {};
-    const rtError_t error = stm->Device_()->ArgLoader_()->Load(0U, argsInfo, nullptr, stm, &result);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Failed to load args and l2ctrl, stream_id=%d,"
+    const rtError_t error = stm->Device_()->ArgLoader_()->Load(0U, argsInfo, stm, &result);
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Failed to load args, stream_id=%d,"
     " retCode=%#x.", stm->Id_(), error);
 
     *devArgsAddr = result.kerArgs;

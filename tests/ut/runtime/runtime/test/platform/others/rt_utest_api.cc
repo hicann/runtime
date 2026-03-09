@@ -116,11 +116,11 @@ TEST_F(ApiTest, testRtDevBinaryRegisterAllApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.KernelLaunchWithHandle(NULL, 1, 1, NULL, NULL, NULL, NULL, false);
+    error = apiDec.KernelLaunchWithHandle(NULL, 1, 1, NULL, NULL, NULL, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CpuKernelLaunchExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.CpuKernelLaunchExWithArgs(NULL, 1, NULL, NULL, NULL, 1, 1);
+    error = apiDec.CpuKernelLaunchExWithArgs(NULL, 1, NULL, NULL, 1, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MultipleTaskInfoLaunch).stubs().will(returnValue(RT_ERROR_NONE));
@@ -3314,7 +3314,6 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_1)
     void *args[] = {&error, NULL};
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP(&Context::KernelTaskConfig).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);

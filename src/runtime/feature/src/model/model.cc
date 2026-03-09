@@ -1853,7 +1853,7 @@ rtError_t Model::SendTaskToAicpu(const rtKernelLaunchNames_t * const launchNames
     rtError_t retErr = devArgLdr->LoadCpuKernelArgs(&argsInfo, stm, &result);
     ERROR_RETURN(retErr, "Failed to load cpu Kernel args , retCode=%d.", retErr);
 
-    SetArgs(kernTask, result.kerArgs, argsSize, nullptr, 0U, result.handle);
+    SetArgs(kernTask, result.kerArgs, argsSize, result.handle);
     result.handle = nullptr;
 
     retErr = FillKernelLaunchPara(launchNames, kernTask, dev->ArgLoader_());

@@ -102,12 +102,11 @@ public:
 
     // Launch a kernel function to run on device cores.
     rtError_t LaunchKernel(const void * const stubFunc, const uint32_t coreDim, const rtArgsEx_t *argsInfo,
-        rtL2Ctrl_t *l2ctrl, Stream *stm, const uint32_t flag, const TaskCfg * const taskcfg = nullptr,
-        const bool isLaunchVec = false);
+        Stream *stm, const uint32_t flag, const TaskCfg * const taskcfg = nullptr, const bool isLaunchVec = false);
 
     rtError_t LaunchKernelWithHandle(void * const progHandle, const uint64_t tilingKey, const uint32_t coreDim,
-        const rtArgsEx_t *argsInfo, rtL2Ctrl_t *l2ctrl, Stream *stm,
-        const uint32_t flag, const rtTaskCfgInfo_t * const cfgInfo = nullptr, const bool isLaunchVec = false);
+        const rtArgsEx_t *argsInfo, Stream *stm, const uint32_t flag, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
+        const bool isLaunchVec = false);
 
     rtError_t LaunchKernel(Kernel * const kernel, const uint32_t coreDim, const rtArgsEx_t *argsInfo, Stream *stm,
         const TaskCfg * const taskcfg = nullptr, const bool isLaunchVec = false);
@@ -434,12 +433,12 @@ public:
         return streams_;
     }
 
-    rtError_t LaunchKernelPrepare(uint32_t &smArgsSize, Kernel *&registeredKernel,
-        Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc, rtL2Ctrl_t *&l2ctrl,
+    rtError_t LaunchKernelPrepare(Kernel *&registeredKernel,
+        Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
         uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey, uint32_t &prefetchCnt1,
         uint32_t &prefetchCnt2);
     rtError_t LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const rtArgsEx_t *&argsInfo,
-                                 ArgLoaderResult &result, const uint32_t smArgsSize, const Program * const programPtr);
+                                 ArgLoaderResult &result, const Program * const programPtr);
     rtError_t SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const;
     void LaunchKernelRecycle(ArgLoaderResult &result, TaskInfo *&recycleTask, const Program * const prog) const;
     void GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList);
@@ -515,7 +514,7 @@ public:
     }
 
     rtError_t LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream * const stm, const rtArgsEx_t * const argsInfo,
-                                       ArgLoaderResult &result, const uint32_t smArgsSize);
+                                       ArgLoaderResult &result);
     rtError_t UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel, const uint32_t kernelType,
                                 const Stream * const stm) const;
     rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
@@ -557,9 +556,6 @@ public:
 private:
     rtError_t Init();
     rtError_t OnlineStreamInit(const rtChipType_t chipType);
-    rtError_t KernelTaskConfig(TaskInfo * const configTask, const void * const kernSoName,
-        const void * const kernelName, ArgLoaderResult * const result,
-        const uint32_t smArgsSize, const uint32_t argsSize);
 
     rtError_t ConfigPCTraceTask(const Kernel * const registeredKernel, std::shared_ptr<PCTrace> &rtPCTrace,
         const uint32_t coreDim, Stream * const stm, const uint16_t taskId, Module * const mdl);

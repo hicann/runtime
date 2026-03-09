@@ -718,7 +718,7 @@ rtError_t ApiErrorDecorator::LaunchKernelV3(Kernel * const kernel, const rtArgsE
 }
 
 rtError_t ApiErrorDecorator::KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     NULL_PTR_RETURN_MSG_OUTER(stubFunc, RT_ERROR_INVALID_VALUE);
@@ -730,13 +730,13 @@ rtError_t ApiErrorDecorator::KernelLaunch(const void * const stubFunc, const uin
     ERROR_RETURN(error, "check argsInfo failed, retCode=%#x.", error);
     error = CheckCfg(cfgInfo);
     ERROR_RETURN(error, "check cfgInfo failed, retCode=%#x.", error);
-    error = impl_->KernelLaunch(stubFunc, coreDim, argsInfo, l2ctrl, stm, flag, cfgInfo, isLaunchVec);
+    error = impl_->KernelLaunch(stubFunc, coreDim, argsInfo, stm, flag, cfgInfo, isLaunchVec);
     ERROR_RETURN(error, "Launch kernel failed, dim=%u.", coreDim);
     return error;
 }
 
 rtError_t ApiErrorDecorator::KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey,
-    const uint32_t coreDim, const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl,
+    const uint32_t coreDim, const rtArgsEx_t * const argsInfo,
     Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     ZERO_RETURN_AND_MSG_OUTER(coreDim);
@@ -744,7 +744,7 @@ rtError_t ApiErrorDecorator::KernelLaunchWithHandle(void * const hdl, const uint
     ERROR_RETURN(error, "check argsInfo failed, retCode=%#x.", error);
     error = CheckCfg(cfgInfo);
     ERROR_RETURN(error, "check cfgInfo failed, retCode=%#x.", error);
-    error = impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, l2ctrl, stm, cfgInfo, isLaunchVec);
+    error = impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, stm, cfgInfo, isLaunchVec);
     ERROR_RETURN(error, "Launch kernel with hdl failed, dim=%u.", coreDim);
     return error;
 }
@@ -763,7 +763,7 @@ rtError_t ApiErrorDecorator::KernelLaunchEx(const char_t * const opName, const v
 }
 
 rtError_t ApiErrorDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag)
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
     // So name of control task is null. No need to check.
     NULL_PTR_RETURN_MSG_OUTER(launchNames, RT_ERROR_INVALID_VALUE);
@@ -775,7 +775,7 @@ rtError_t ApiErrorDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const
     rtError_t error = CheckArgs(argsInfo);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_GE, error, "check argsInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, l2ctrl, stm, flag);
+    error = impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, stm, flag);
     const char_t *soName = (launchNames->soName == nullptr) ? "" : launchNames->soName;
     ERROR_RETURN(error, "Launch cpu kernel failed, soName=%s, kernel_name=%s, opName=%s, coreDim=%u,"
         " argsSize=%u(bytes), hostInputLen=%hu, flag=%u.", soName, launchNames->kernelName,
@@ -841,7 +841,7 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(const rtMultipleTaskInfo_t *
 }
 
 rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
-    const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtAicpuArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const uint32_t kernelType)
 {
     // So name of control task is null. No need to check.
@@ -858,7 +858,7 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opNa
     NULL_PTR_RETURN_MSG_OUTER(argsInfo->args, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(argsInfo->argsSize);
 
-    const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, l2ctrl, stm, flag, kernelType);
+    const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
     ERROR_RETURN(error, "Launch cpu kernel ex failed, coreDim=%u,"
         " argsSize=%u(bytes), hostInputLen=%hu, flag=%u, kernelType=%u.",  coreDim, argsInfo->argsSize,
         argsInfo->hostInputInfoNum, flag, kernelType);

@@ -185,7 +185,7 @@ rtError_t ApiProfileDecorator::BuffGetInfo(const rtBuffGetCmdType type, const vo
 }
 
 rtError_t ApiProfileDecorator::KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     const uint32_t argSize = argsInfo->argsSize;
@@ -205,13 +205,13 @@ rtError_t ApiProfileDecorator::KernelLaunch(const void * const stubFunc, const u
         CallApiBegin(RT_PROF_API_KERNEL_LAUNCH_FLOW_CTRL);
     }
 
-    const rtError_t error = impl_->KernelLaunch(stubFunc, coreDim, argsInfo, l2ctrl, stm, flag, cfgInfo, isLaunchVec);
+    const rtError_t error = impl_->KernelLaunch(stubFunc, coreDim, argsInfo, stm, flag, cfgInfo, isLaunchVec);
     CallApiEnd(error);
     return error;
 }
 
 rtError_t ApiProfileDecorator::KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey,
-    const uint32_t coreDim, const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+    const uint32_t coreDim, const rtArgsEx_t * const argsInfo, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     const uint32_t argSize = argsInfo->argsSize;
@@ -232,7 +232,7 @@ rtError_t ApiProfileDecorator::KernelLaunchWithHandle(void * const hdl, const ui
     }
 
     const rtError_t error =
-        impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, l2ctrl, stm, cfgInfo, isLaunchVec);
+        impl_->KernelLaunchWithHandle(hdl, tilingKey, coreDim, argsInfo, stm, cfgInfo, isLaunchVec);
     CallApiEnd(error);
     return error;
 }
@@ -255,16 +255,16 @@ rtError_t ApiProfileDecorator::GetServerIDBySDID(uint32_t sdid, uint32_t *srvId)
 }
 
 rtError_t ApiProfileDecorator::CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag)
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_CpuKernelLaunch);
-    const rtError_t error = impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, l2ctrl, stm, flag);
+    const rtError_t error = impl_->CpuKernelLaunch(launchNames, coreDim, argsInfo, stm, flag);
     CallApiEnd(error);
     return error;
 }
 
 rtError_t ApiProfileDecorator::CpuKernelLaunchExWithArgs(const char_t * const opName,
-    const uint32_t coreDim, const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+    const uint32_t coreDim, const rtAicpuArgsEx_t * const argsInfo, Stream * const stm,
     const uint32_t flag, const uint32_t kernelType)
 {
     const uint32_t argSize = argsInfo->argsSize;
@@ -278,7 +278,7 @@ rtError_t ApiProfileDecorator::CpuKernelLaunchExWithArgs(const char_t * const op
         CallApiBegin(RT_PROF_API_CpuKernelLaunch_EX_WITH_ARG);
     }
 
-    const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, l2ctrl, stm, flag, kernelType);
+    const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
     CallApiEnd(error);
     return error;
 }

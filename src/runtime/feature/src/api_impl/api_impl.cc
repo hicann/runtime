@@ -490,7 +490,7 @@ rtError_t ApiImpl::QueryFunctionRegistered(const char_t * const stubName)
 }
 
 rtError_t ApiImpl::KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     Context * const curCtx = CurrentContext();
@@ -517,11 +517,11 @@ rtError_t ApiImpl::KernelLaunch(const void * const stubFunc, const uint32_t core
         taskCfg.base = *cfgInfo;
     }
 
-    return curCtx->LaunchKernel(stubFunc, coreDim, argsInfo, l2ctrl, curStm, flag, &taskCfg, isLaunchVec);
+    return curCtx->LaunchKernel(stubFunc, coreDim, argsInfo, curStm, flag, &taskCfg, isLaunchVec);
 }
 
 rtError_t ApiImpl::KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+    const rtArgsEx_t * const argsInfo, Stream * const stm,
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     Context * const curCtx = CurrentContext();
@@ -541,8 +541,7 @@ rtError_t ApiImpl::KernelLaunchWithHandle(void * const hdl, const uint64_t tilin
         flag = static_cast<uint32_t>(cfgInfo->dumpflag);
         RT_LOG(RT_LOG_WARNING, "dumpflag set %u.", flag);
     }
-    return curCtx->LaunchKernelWithHandle(hdl, tilingKey, coreDim, argsInfo, l2ctrl,
-        curStm, flag, cfgInfo, isLaunchVec);
+    return curCtx->LaunchKernelWithHandle(hdl, tilingKey, coreDim, argsInfo, curStm, flag, cfgInfo, isLaunchVec);
 }
 
 rtError_t ApiImpl::KernelLaunchEx(const char_t * const opName, const void * const args, const uint32_t argsSize,
@@ -573,13 +572,12 @@ rtError_t ApiImpl::KernelLaunchEx(const char_t * const opName, const void * cons
 }
 
 rtError_t ApiImpl::CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-    const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag)
+    const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag)
 {
     RT_LOG(RT_LOG_DEBUG,
            "launch cpu kernel, soName=%s, kernel_name=%s, opName=%s, coreDim=%u, argsSize=%u, hostInputLen=%hu,"
            " flag=%u.", launchNames->soName, launchNames->kernelName, launchNames->opName, coreDim,
            argsInfo->argsSize, argsInfo->hostInputInfoNum, flag);
-    UNUSED(l2ctrl);
     const rtError_t error = AiCpuTaskSupportCheck();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     Context * const curCtx = CurrentContext();
@@ -631,7 +629,7 @@ rtError_t ApiImpl::CpuKernelLaunchEx(const Kernel * const kernel, const uint32_t
 }
 
 rtError_t ApiImpl::CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
-    const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+    const rtAicpuArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
     const uint32_t kernelType)
 {
     RT_LOG(RT_LOG_DEBUG,
@@ -639,7 +637,6 @@ rtError_t ApiImpl::CpuKernelLaunchExWithArgs(const char_t * const opName, const 
            " flag=%u, kernelType=%u.", opName, coreDim,
            argsInfo->argsSize, argsInfo->hostInputInfoNum, flag, kernelType);
     UNUSED(opName);
-    UNUSED(l2ctrl);
     const rtError_t error = AiCpuTaskSupportCheck();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     Context * const curCtx = CurrentContext();

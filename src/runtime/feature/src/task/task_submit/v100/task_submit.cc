@@ -68,8 +68,7 @@ rtError_t LoadArgsInfoForAicoreKernelTask(TaskInfo *submitTask, Stream *stm, uin
         error = stm->taskResMang_->Load(argsInfo, static_cast<uint32_t>(taskResId), stm, &result);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Failed to load args, stream_id=%d,"
             " retCode=%#x.", stm->Id_(), error);
-        SetAicoreArgs(submitTask, result.kerArgs, argsInfo->argsSize, result.smArgs,
-            submitTask->u.aicTaskInfo.smSize, result.handle);
+        SetAicoreArgs(submitTask, result.kerArgs, argsInfo->argsSize, result.handle);
     }
     return error;
 }

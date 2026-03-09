@@ -81,7 +81,6 @@ void TaskResManage::SetResult(void * const kerArgs, struct ArgLoaderResult * con
 {
     result->handle = nullptr;
     result->kerArgs = kerArgs;
-    result->smArgs = nullptr;
 }
 
 TaskResManage::TaskResManage()

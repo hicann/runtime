@@ -513,9 +513,9 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo,  nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
 }
@@ -532,7 +532,7 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_40k)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
 }
@@ -549,9 +549,9 @@ TEST_F(ProfilerTest, KernelLaunch)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo,  nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete api;
 }
@@ -568,7 +568,7 @@ TEST_F(ProfilerTest, KernelLaunch_40k)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete api;
 }
@@ -585,9 +585,9 @@ TEST_F(ProfilerTest, KernelLaunch_log_false)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(false);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete api;
 }
@@ -604,9 +604,9 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_1)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo,  nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo,  nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
 }
@@ -623,9 +623,9 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_log_false)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(false);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
 }
@@ -642,9 +642,9 @@ TEST_F(ProfilerTest, KernelLaunch_1)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo,nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo,nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete api;
 }
@@ -661,9 +661,9 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_2)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr, nullptr);
+    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
 }
@@ -680,9 +680,9 @@ TEST_F(ProfilerTest, KernelLaunch_2)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo,nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, nullptr, 0);
+    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo,nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete api;
 }
@@ -703,10 +703,10 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_FlowCtrl)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, stream, nullptr);
+    rtError_t error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, nullptr, stream, nullptr);
+    error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -729,9 +729,9 @@ TEST_F(ProfilerTest, KernelLaunch_FlowCtrl)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, stream, 0);
+    rtError_t error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo, nullptr, stream, 0);
+    error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo,stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete api;
@@ -2897,10 +2897,10 @@ TEST_F(ProfilerTest, ProfileDecoratorKernelApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->KernelFusionEnd(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, nullptr, 0);
+    error = profiler->apiProfileDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtAicpuArgsEx_t aicpuArgs = {0};
-    error = profiler->apiProfileDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, &aicpuArgs, nullptr, nullptr, 0, 0);
+    error = profiler->apiProfileDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, &aicpuArgs, nullptr, 0, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->MultipleTaskInfoLaunch(nullptr, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3043,9 +3043,9 @@ TEST_F(ProfilerTest, ProfileLogDecoratorKernelApiTest)
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::AicpuInfoLoad).stubs().will(returnValue(RT_ERROR_NONE));
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileLogDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, nullptr, 0);
+    auto error = profiler->apiProfileLogDecorator_->CpuKernelLaunch(nullptr, 0, nullptr, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, nullptr, nullptr, nullptr, 0, 0);
+    error = profiler->apiProfileLogDecorator_->CpuKernelLaunchExWithArgs(nullptr, 0, nullptr, nullptr, 0, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileLogDecorator_->LaunchKernel(nullptr, 0, nullptr, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);

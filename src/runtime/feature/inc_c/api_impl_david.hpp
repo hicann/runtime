@@ -19,10 +19,10 @@ namespace runtime {
 class ApiImplDavid : public ApiImpl {
 public:
     rtError_t KernelLaunch(const void * const stubFunc, const uint32_t coreDim,
-        const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+        const rtArgsEx_t * const argsInfo, Stream * const stm,
         const uint32_t flag, const rtTaskCfgInfo_t * const cfgInfo = nullptr, const bool isLaunchVec = false) override;
     rtError_t KernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey, const uint32_t coreDim,
-        const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
+        const rtArgsEx_t * const argsInfo, Stream * const stm,
         const rtTaskCfgInfo_t * const cfgInfo = nullptr, const bool isLaunchVec = false) override;
     rtError_t LaunchKernel(Kernel * const kernel, uint32_t blockDim, const rtArgsEx_t * const argsInfo,
         Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo = nullptr) override;
@@ -32,10 +32,9 @@ public:
     rtError_t KernelLaunchEx(const char_t * const opName, const void * const args, const uint32_t argsSize,
         const uint32_t flags, Stream * const stm) override;
     rtError_t CpuKernelLaunch(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
-        const rtArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm,
-        const uint32_t flag) override;
+        const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag) override;
     rtError_t CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
-        const rtAicpuArgsEx_t * const argsInfo, rtL2Ctrl_t * const l2ctrl, Stream * const stm, const uint32_t flag,
+        const rtAicpuArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag,
         const uint32_t kernelType) override;
 
     rtError_t FusionLaunch(void * const fusionInfo, Stream * const stm, rtFusionArgsEx_t *argsInfo) override;

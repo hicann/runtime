@@ -132,33 +132,6 @@ void UmaArgLoader::FreeBuffer(void * const addr, void * const para)
     (void)dev->Driver_()->DevMemFree(addr, dev->Id_());
 }
 
-rtError_t UmaArgLoader::LoadSmDescArgs(const rtSmDesc_t * const smDesc, void ** const smArgs,
-                                       bool &copyL2Desc, bool &freeL2Desc) const
-{
-    rtError_t error = RT_ERROR_NONE;
-
-    // copy l2ctrl when not SPM
-    if ((smDesc != nullptr) &&
-        (!device_->IsSPM(static_cast<const void *>(const_cast<const rtSmDesc_t *>(smDesc))))) {
-        error = device_->AllocSPM(smArgs, sizeof(rtSmDesc_t));
-        ERROR_RETURN(error, "Alloc spm failed, retCode=%#x.", static_cast<uint32_t>(error));
-
-        copyL2Desc = true;
-        if ((drv_->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) ||
-            (drv_->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_AICPU_SCHED))) {
-            freeL2Desc = true;
-            error = drv_->MemCopySync(*smArgs, sizeof(rtSmDesc_t), smDesc, sizeof(rtSmDesc_t),
-                                      RT_MEMCPY_DEVICE_TO_DEVICE);
-        } else {
-            freeL2Desc = true;
-            error = drv_->MemCopySync(*smArgs, sizeof(rtSmDesc_t), smDesc, sizeof(rtSmDesc_t),
-                                      RT_MEMCPY_HOST_TO_DEVICE);
-        }
-        ERROR_RETURN(error, "Memcpy L2 description failed, retCode=%#x.", static_cast<uint32_t>(error));
-    }
-    return error;
-}
-
 void UmaArgLoader::UpdateAddrField(const void* const kerArgs,
                                    void* const argsHostAddr,
                                    const uint16_t hostInputInfoNum,
@@ -304,14 +277,11 @@ rtError_t UmaArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * cons
 }
 
 rtError_t UmaArgLoader::LoadForMix(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
-                                   rtSmDesc_t * const smDesc, Stream * const stm, ArgLoaderResult * const result, bool &mixOpt)
+                                   Stream * const stm, ArgLoaderResult * const result, bool &mixOpt)
 {
     Handle *argHandle = nullptr;
     rtError_t error;
     void *kerArgs = argsInfo->args;
-    void *smArgs = smDesc;
-    bool copyL2Desc = false;
-    bool freeL2Desc = false;
     bool copyArgs = false;
     const uint32_t size = argsInfo->argsSize;
     void * const args = argsInfo->args;
@@ -335,26 +305,19 @@ rtError_t UmaArgLoader::LoadForMix(const uint32_t kernelType, const rtArgsEx_t *
         ERROR_GOTO_MSG_INNER(error, RECYCLE, "load args(size=%u) failed, retCode=%#x.", size, static_cast<uint32_t>(error));
     }
 
-    error = LoadSmDescArgs(smDesc, &smArgs, copyL2Desc, freeL2Desc);
     ERROR_GOTO(error, RECYCLE, "load L2 description failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     argHandle->kerArgs = umaArgAllocator->GetDevAddr(kerArgs);
-    argHandle->smArgs = smArgs;
-    argHandle->freeL2Desc = freeL2Desc;
     argHandle->freeArgs = true;
     argHandle->argsAlloc = umaArgAllocator;
     result->kerArgs = copyArgs ?
         static_cast<void *>(RtPtrToPtr<char_t *, void *>(umaArgAllocator->GetDevAddr(kerArgs)) + CONTEXT_ALIGN_LEN) :
         argsInfo->args;
-    result->smArgs = smArgs;
     result->handle = static_cast<void *>(argHandle);
     mixOpt = (stm->GetModelNum() == 0) ? true : false;
     return RT_ERROR_NONE;
 
 RECYCLE:
-    if (copyL2Desc) {
-        (void)device_->FreeSPM(smArgs);
-    }
 
     umaArgAllocator->FreeDevMem(kerArgs);
     handleAllocator_->FreeByItem(argHandle);
@@ -362,14 +325,11 @@ RECYCLE:
 }
 TIMESTAMP_EXTERN(LoadInputOutputArgsHuge);
 rtError_t UmaArgLoader::Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
-                             rtSmDesc_t * const smDesc, Stream * const stm, ArgLoaderResult * const result)
+                             Stream * const stm, ArgLoaderResult * const result)
 {
     Handle *argHandle = nullptr;
     rtError_t error;
     void *kerArgs = argsInfo->args;
-    void *smArgs = smDesc;
-    bool copyL2Desc = false;
-    bool freeL2Desc = false;
     bool copyArgs = false;
     const uint32_t size = argsInfo->argsSize;
     void * const args = argsInfo->args;
@@ -403,23 +363,14 @@ rtError_t UmaArgLoader::Load(const uint32_t kernelType, const rtArgsEx_t * const
             static_cast<uint32_t>(error));
     }
 
-    error = LoadSmDescArgs(smDesc, &smArgs, copyL2Desc, freeL2Desc);
-    ERROR_GOTO(error, RECYCLE, "load L2 description failed, retCode=%#x.", static_cast<uint32_t>(error));
-
     argHandle->kerArgs = kerArgs;
-    argHandle->smArgs = smArgs;
-    argHandle->freeL2Desc = freeL2Desc;
     argHandle->freeArgs = copyArgs;
     argHandle->argsAlloc = umaArgAllocator;
     result->kerArgs = copyArgs ? umaArgAllocator->GetDevAddr(kerArgs) : kerArgs;
-    result->smArgs = smArgs;
     result->handle = static_cast<void *>(argHandle);
     return RT_ERROR_NONE;
 
 RECYCLE:
-    if (copyL2Desc) {
-        (void)device_->FreeSPM(smArgs);
-    }
     if (copyArgs) {
         umaArgAllocator->FreeDevMem(kerArgs);
     }
@@ -509,15 +460,12 @@ rtError_t UmaArgLoader::LoadCpuKernelArgs(const rtArgsEx_t * const argsInfo, Str
 
     result->kerArgs = (copyArgs ? umaArgAllocator->GetDevAddr(kerArgs) : argsInfo->args);
     result->handle = handleAllocator_->AllocItem();
-    result->smArgs = nullptr;
     NULL_PTR_GOTO_MSG_INNER(result->handle, RECYCLE, error, RT_ERROR_MEMORY_ALLOCATION);
 
     argHandle = static_cast<Handle *>(result->handle);
     argHandle->freeArgs = copyArgs;
     argHandle->kerArgs = kerArgs;
     argHandle->argsAlloc = umaArgAllocator;
-    argHandle->freeL2Desc = false;
-    argHandle->smArgs = nullptr;
     return RT_ERROR_NONE;
 
 RECYCLE:
@@ -586,7 +534,6 @@ rtError_t UmaArgLoader::LoadCpuKernelArgsEx(const rtAicpuArgsEx_t * const argsIn
 
     result->kerArgs = (copyArgs ? umaArgAllocator->GetDevAddr(kerArgs) : argsInfo->args);
     result->handle = handleAllocator_->AllocItem();
-    result->smArgs = nullptr;
     COND_PROC_GOTO_MSG_CALL(ERR_MODULE_DRV, result->handle == nullptr, RECYCLE,
         error = RT_ERROR_MEMORY_ALLOCATION, "handle alloc failed");
 
@@ -594,8 +541,6 @@ rtError_t UmaArgLoader::LoadCpuKernelArgsEx(const rtAicpuArgsEx_t * const argsIn
     handle->kerArgs = kerArgs;
     handle->freeArgs = copyArgs;
     handle->argsAlloc = umaArgAllocator;
-    handle->freeL2Desc = false;
-    handle->smArgs = nullptr;
     return RT_ERROR_NONE;
 RECYCLE:
     if (copyArgs) {
@@ -821,9 +766,6 @@ rtError_t UmaArgLoader::Release(void * const argHandle)
     if (hdl->freeArgs) {
         hdl->argsAlloc->FreeDevMem(hdl->kerArgs);
         RT_LOG(RT_LOG_DEBUG, "Release arg memory!");
-    }
-    if (hdl->freeL2Desc) {
-        (void)device_->FreeSPM(hdl->smArgs);
     }
 
     handleAllocator_->FreeByItem(argHandle);
