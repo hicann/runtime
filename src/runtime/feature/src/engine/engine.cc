@@ -19,7 +19,6 @@
 #include "error_message_manage.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "errcode_manage.hpp"
-#include "runtime/config.h"
 #include "npu_driver.hpp"
 #include "notify.hpp"
 #include "count_notify.hpp"

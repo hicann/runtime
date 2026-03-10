@@ -630,7 +630,7 @@ rtError_t ProcessStarsSdmaErrorInfo(const StarsDeviceErrorInfo * const info,
 }
 
 static void CheckAixErrorClassInFusionKernel(const StarsDeviceErrorInfo *errInfo, const StarsDeviceErrorInfo * const info,
-    Device * const dev, TaskInfo *errTaskPtr)
+    const Device * const dev, TaskInfo *errTaskPtr)
 {
     if ((info == nullptr) || (errInfo == nullptr)) {
         return;
@@ -717,7 +717,7 @@ static void GetExceptionArgsForFusionKernelTask(const TaskInfo * const taskInfo,
     return;
 }
 
-static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, RtDavidStarsCcuSqe * const ccuSqe,
+static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, const RtDavidStarsCcuSqe * const ccuSqe,
     uint32_t inputIdx, uint32_t outputIdx)
 {
     uint64_t* args = sqeInfo[outputIdx].args;
@@ -727,7 +727,7 @@ static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, RtD
     /* word6-15 memcpy, 5*8=40B */
     constexpr size_t firstCpySize = sizeof(uint64_t) * 5U;
     (void)memcpy_s(args, firstCpySize,
-        RtPtrToPtr<uint8_t *, RtDavidStarsCcuSqe *>(&ccuSqe[inputIdx]) + sizeof(rtDavidSqe_t) - firstCpySize, firstCpySize);
+        RtPtrToPtr<const uint8_t *, const RtDavidStarsCcuSqe *>(&ccuSqe[inputIdx]) + sizeof(rtDavidSqe_t) - firstCpySize, firstCpySize);
 
     /* second ccu sqe part: 64 Byte(1 sqe size) */
     (void)memcpy_s(RtPtrToPtr<uint8_t *, uint64_t *>(args) + firstCpySize, sizeof(rtDavidSqe_t), &ccuSqe[inputIdx + 1U],
@@ -766,14 +766,14 @@ static void ParseCcuDfxInfo(rtMultiCCUExDetailInfo_t * const multiCcuInfo, const
 }
 
 static void HandleFusionKernelCcuException(rtExceptionExpandInfo_t * const expandInfo, const TaskInfo * const taskInfo,
- 	const StarsDeviceErrorInfo * const info, rtDavidSqe_t *sqe)
+ 	const StarsDeviceErrorInfo * const info, const rtDavidSqe_t *sqe)
 {
  	rtFusionExDetailInfo_t* fusionDetail = &(expandInfo->u.fusionInfo);
  	fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.ccuMissionNum = taskInfo->u.fusionKernelTask.ccuSqeNum;
  	if (taskInfo->u.fusionKernelTask.ccuArgSize == RT_CCU_SQE32B_ARGS_SIZE) {
  	    COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > FUSION_SUB_TASK_MAX_CCU_NUM,
  	        "32B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
- 	    RtDavidStarsCcuSqe32B *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe32B *, rtDavidSqe_t *>(sqe);
+ 	    const RtDavidStarsCcuSqe32B *ccuSqe = RtPtrToPtr<const RtDavidStarsCcuSqe32B *, const rtDavidSqe_t *>(sqe);
  	    for (uint8_t idx = 0U; idx < taskInfo->u.fusionKernelTask.ccuSqeNum; idx++) {
  	        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].dieId = ccuSqe[idx].resv.ccuResvDesc1.dieId;
  	        fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo[idx].instrId = ccuSqe[idx].instStartId;
@@ -790,7 +790,7 @@ static void HandleFusionKernelCcuException(rtExceptionExpandInfo_t * const expan
  	} else {
  	    COND_RETURN_VOID(info->u.ccuErrorInfo.comm.coreNum > 2U,
  	        "128B ccu sub task num is invalid, coreNum=%hu.", info->u.ccuErrorInfo.comm.coreNum);
- 	    RtDavidStarsCcuSqe *ccuSqe = RtPtrToPtr<RtDavidStarsCcuSqe *, rtDavidSqe_t *>(sqe);
+ 	    const RtDavidStarsCcuSqe *ccuSqe = RtPtrToPtr<const RtDavidStarsCcuSqe *, const rtDavidSqe_t *>(sqe);
  	    uint8_t idx = 0U;
  	    for (uint8_t num = 0U; num < taskInfo->u.fusionKernelTask.ccuSqeNum; num++) {
  	        SetCcuExceptionSqeInfo(fusionDetail->u.aicoreCcuInfo.ccuDetailMsg.missionInfo, ccuSqe, static_cast<uint32_t>(idx), 

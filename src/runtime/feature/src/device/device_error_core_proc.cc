@@ -467,7 +467,7 @@ bool IsFaultEventOccur(const uint32_t faultEventId, const rtDmsFaultEvent * cons
     return false;
 }
 
-rtError_t GetDeviceFaultEvents(const uint32_t deviceId, rtDmsFaultEvent *faultEventInfo,
+rtError_t GetDeviceFaultEvents(const uint32_t deviceId, rtDmsFaultEvent* const faultEventInfo,
     uint32_t &eventCount, const uint32_t maxFaultNum)
 {
     rtError_t error = RT_ERROR_NONE;

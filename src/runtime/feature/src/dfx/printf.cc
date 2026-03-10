@@ -889,12 +889,12 @@ rtError_t ExecuteKernelDfxInfoFunc(const uint8_t *blockAddr, const uint8_t *dump
     return RT_ERROR_NONE;
 }
 
-rtError_t GetReadLenAndAddr(uint8_t *blockAddr, const size_t blockSize, uint64_t &totalReadBufLen,
+rtError_t GetReadLenAndAddr(const uint8_t *blockAddr, const size_t blockSize, uint64_t &totalReadBufLen,
                             const uint8_t *&dumpReadStartAddr, std::vector<uint8_t> &dumpInfoVec) {
     const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockAddr);
-    BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
+    const BlockReadInfo *readInfo = RtPtrToPtr<const BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
     const BlockWriteInfo *writeInfo =
-    RtPtrToPtr<const BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+        RtPtrToPtr<const BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
     const uint8_t *dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
 
     const uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
