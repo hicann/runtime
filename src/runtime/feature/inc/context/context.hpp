@@ -33,6 +33,7 @@
 #include "context_manage.hpp"
 #include "context_protect.hpp"
 #include "rts/rts.h"
+#include "mmpa_linux.h"
 
 
 #define CHECK_CONTEXT_VALID_WITH_RETURN(tmpCtx, ERRCODE) \
