@@ -13,6 +13,8 @@ set(ascendDumpSrcList
     ${adumpServerSrcList}
     ${adumpBaseProtoSrcs}
     ${adumpHostProtoSrcs}
+    ${ADUMP_ADUMP_DIR}/adx_dump_process.cpp
+    ${ADUMP_ADUMP_DIR}/adx_dump_record.cpp
     ${ADUMP_ADUMP_DIR}/common/adump_dsmi.cpp
     ${ADUMP_ADUMP_DIR}/common/adump_platform_api/close/adump_platform_api.cpp
     ${ADUMP_ADUMP_DIR}/common/file.cpp
@@ -45,6 +47,7 @@ set(ascendDumpSrcList
     ${ADUMP_ADUMP_DIR}/manage/adump_api.cpp
     ${ADUMP_ADUMP_DIR}/manage/adump_api_platform.cpp
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/dump_manager.cpp
+    ${ADUMP_ADUMP_DIR}/manage/dump_manager/dump_stream_info.cpp
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/close/dump_manager_platform.cpp
     ${ADUMP_ADUMP_DIR}/operator/operator_dumper.cpp
     ${ADUMP_ADUMP_DIR}/operator/kernel_dfx_dumper.cpp

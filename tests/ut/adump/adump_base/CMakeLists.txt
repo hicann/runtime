@@ -44,6 +44,7 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/manage/adump_api_platform.cpp
     ${SRC_CODE_ROOT_PATH}/adump/manage/dump_manager/dump_manager.cpp
     ${SRC_CODE_ROOT_PATH}/adump/manage/dump_manager/dump_manager_platform.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/manage/dump_manager/dump_stream_info.cpp
     ${SRC_CODE_ROOT_PATH}/adump/impl/dump_datatype.cpp
     ${SRC_CODE_ROOT_PATH}/adump/impl/dump_memory.cpp
     ${SRC_CODE_ROOT_PATH}/adump/impl/dump_setting.cpp
@@ -75,6 +76,8 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/printf/hifloat.cpp
     ${SRC_CODE_ROOT_PATH}/adump/adx_dump_record.cpp
     ${SRC_CODE_ROOT_PATH}/adump/adx_dump_process.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/protocol/adx_msg_proto.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/adx_comm_opt_manager.cpp
 
     ${adumpBaseProtoSrc}
 )
@@ -84,6 +87,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_file_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_sys_utils_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_manager_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/adump_api_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_datatype_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_memory_utest.cpp
@@ -119,6 +123,7 @@ set(adumpBaseHeaders
     ${SRC_CODE_ROOT_PATH}/adcore/
     ${SRC_CODE_ROOT_PATH}/adcore/common/
     ${SRC_CODE_ROOT_PATH}/adcore/protocol/
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/
     ${SRC_CODE_ROOT_PATH}/adcore/log/
     ${SRC_CODE_ROOT_PATH}/adcore/common/
     ${SRC_CODE_ROOT_PATH}/adump/

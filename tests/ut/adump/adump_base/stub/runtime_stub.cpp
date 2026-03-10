@@ -25,13 +25,22 @@
 #include "rt_inner_model.h"
 #include "rt_inner_stream.h"
 #include "rt_inner_task.h"
+#include "acl/acl.h"
+
+#ifndef UNUSED
+#define UNUSED(x)  \
+    do {           \
+        (void)(x); \
+    } while (0)
+#endif
 
 static constexpr rtError_t RT_ERROR_STUB_FAILURE = -1;
+static constexpr rtError_t RT_ERROR_INVALID_VALUE = 1;
 static constexpr uint32_t LOCAL_DEV_NUM = 8;
 static std::vector<rtDeviceStateCallback> g_deviceCallBackList;
-std::vector<void *> g_exceptionRegInfoList;
+std::vector<void*> g_exceptionRegInfoList;
 
-rtError_t rtGetDevice(int32_t *devId)
+rtError_t rtGetDevice(int32_t* devId)
 {
     if (devId == nullptr) {
         return RT_ERROR_STUB_FAILURE;
@@ -40,7 +49,7 @@ rtError_t rtGetDevice(int32_t *devId)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId)
+rtError_t rtGetTaskIdAndStreamID(uint32_t* taskId, uint32_t* streamId)
 {
     if (taskId == nullptr || streamId == nullptr) {
         return RT_ERROR_STUB_FAILURE;
@@ -50,19 +59,20 @@ rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
+rtError_t rtMalloc(void** devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId)
 {
-    (void) type;
-    (void) moduleId;
+    (void)type;
+    (void)moduleId;
     if (devPtr == nullptr || size == 0) {
         return RT_ERROR_STUB_FAILURE;
     }
 
     *devPtr = malloc(size);
-    return *devPtr != nullptr ? RT_ERROR_NONE : RT_ERROR_STUB_FAILURE;;
+    return *devPtr != nullptr ? RT_ERROR_NONE : RT_ERROR_STUB_FAILURE;
+    ;
 }
 
-rtError_t rtFree(void *devPtr)
+rtError_t rtFree(void* devPtr)
 {
     if (devPtr == nullptr) {
         return RT_ERROR_NONE;
@@ -71,9 +81,9 @@ rtError_t rtFree(void *devPtr)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMallocHost(void **hostPtr, uint64_t size, const uint16_t moduleId)
+rtError_t rtMallocHost(void** hostPtr, uint64_t size, const uint16_t moduleId)
 {
-    (void) moduleId;
+    (void)moduleId;
     if (hostPtr == nullptr || size == 0) {
         return RT_ERROR_STUB_FAILURE;
     }
@@ -82,7 +92,7 @@ rtError_t rtMallocHost(void **hostPtr, uint64_t size, const uint16_t moduleId)
     return *hostPtr != nullptr ? RT_ERROR_NONE : RT_ERROR_STUB_FAILURE;
 }
 
-rtError_t rtFreeHost(void *hostPtr)
+rtError_t rtFreeHost(void* hostPtr)
 {
     if (hostPtr == nullptr) {
         return RT_ERROR_NONE;
@@ -91,10 +101,10 @@ rtError_t rtFreeHost(void *hostPtr)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
+rtError_t rtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtMemcpyKind_t kind)
 {
-    (void) destMax;
-    (void) kind;
+    (void)destMax;
+    (void)kind;
     if (dst == nullptr || src == nullptr) {
         return RT_ERROR_STUB_FAILURE;
     }
@@ -102,10 +112,10 @@ rtError_t rtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t cnt, r
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
+rtError_t rtMemcpyEx(void* dst, uint64_t destMax, const void* src, uint64_t cnt, rtMemcpyKind_t kind)
 {
-    (void) destMax;
-    (void) kind;
+    (void)destMax;
+    (void)kind;
     if (dst == nullptr || src == nullptr) {
         return RT_ERROR_STUB_FAILURE;
     }
@@ -116,8 +126,8 @@ rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt,
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
-    rtExceptionErrRegInfo_t **exceptionErrRegInfo, uint32_t *num)
+rtError_t rtGetExceptionRegInfo(
+    const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** exceptionErrRegInfo, uint32_t* num)
 {
     if (exceptionErrRegInfo == nullptr || num == nullptr) {
         return RT_ERROR_STUB_FAILURE;
@@ -125,9 +135,9 @@ rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
     if (*exceptionErrRegInfo != nullptr) {
         return RT_ERROR_NONE;
     }
-    rtExceptionErrRegInfo_t *regInfo = nullptr;
+    rtExceptionErrRegInfo_t* regInfo = nullptr;
     size_t size = sizeof(rtExceptionErrRegInfo_t);
-    regInfo = (rtExceptionErrRegInfo_t *)malloc(size);
+    regInfo = (rtExceptionErrRegInfo_t*)malloc(size);
     if (regInfo == nullptr) {
         return RT_ERROR_STUB_FAILURE;
     }
@@ -162,8 +172,9 @@ rtError_t rtGetExceptionRegInfo(const rtExceptionInfo_t * const exceptionInfo,
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, uint32_t blockDim,
-                                    const rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc, rtStream_t stm, uint32_t flags)
+rtError_t rtCpuKernelLaunchWithFlag(
+    const void* soName, const void* kernelName, uint32_t blockDim, const rtArgsEx_t* argsInfo, rtSmDesc_t* smDesc,
+    rtStream_t stm, uint32_t flags)
 {
     (void)soName;
     (void)kernelName;
@@ -177,24 +188,24 @@ rtError_t rtCpuKernelLaunchWithFlag(const void *soName, const void *kernelName, 
 
 rtError_t rtStreamSynchronize(rtStream_t stm)
 {
-    (void) stm;
+    (void)stm;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtRegTaskFailCallbackByModule(const char_t *moduleName, rtTaskFailCallback callback)
+rtError_t rtRegTaskFailCallbackByModule(const char_t* moduleName, rtTaskFailCallback callback)
 {
-    (void) moduleName;
-    (void) callback;
+    (void)moduleName;
+    (void)callback;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCtxGetCurrent(rtContext_t *context)
+rtError_t rtCtxGetCurrent(rtContext_t* context)
 {
     (void)context;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCtxCreate(rtContext_t *context, uint32_t flags, int32_t devId)
+rtError_t rtCtxCreate(rtContext_t* context, uint32_t flags, int32_t devId)
 {
     *context = (rtContext_t)0x5f;
     (void)flags;
@@ -218,11 +229,11 @@ rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stm, int32_t timeout)
     if (stm == (rtStream_t)0x5F) {
         return RT_ERROR_STUB_FAILURE;
     }
-    return RT_ERROR_NONE; 
+    return RT_ERROR_NONE;
 }
 
-rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallback callback,
-    const rtDevCallBackDir_t notifyPos)
+rtError_t rtRegDeviceStateCallbackEx(
+    const char_t* regName, rtDeviceStateCallback callback, const rtDevCallBackDir_t notifyPos)
 {
     (void)regName;
     (void)notifyPos;
@@ -230,7 +241,7 @@ rtError_t rtRegDeviceStateCallbackEx(const char_t *regName, rtDeviceStateCallbac
     return RT_ERROR_NONE;
 }
 
-rtError_t rtStreamCreateWithFlags(rtStream_t *stm, int32_t priority, uint32_t flags)
+rtError_t rtStreamCreateWithFlags(rtStream_t* stm, int32_t priority, uint32_t flags)
 {
     *stm = (rtStream_t)0x5f;
     (void)priority;
@@ -238,9 +249,9 @@ rtError_t rtStreamCreateWithFlags(rtStream_t *stm, int32_t priority, uint32_t fl
     return RT_ERROR_NONE;
 }
 
-rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t * const opName,
-    const uint32_t blockDim, const rtAicpuArgsEx_t *argsInfo, rtSmDesc_t * const smDesc,
-    const rtStream_t stm, const uint32_t flags)
+rtError_t rtAicpuKernelLaunchExWithArgs(
+    const uint32_t kernelType, const char_t* const opName, const uint32_t blockDim, const rtAicpuArgsEx_t* argsInfo,
+    rtSmDesc_t* const smDesc, const rtStream_t stm, const uint32_t flags)
 {
     (void)kernelType;
     (void)opName;
@@ -252,14 +263,14 @@ rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const char_t 
     return RT_ERROR_NONE;
 }
 
-rtError_t rtStreamGetSqid(const rtStream_t stream, uint32_t *sqId)
+rtError_t rtStreamGetSqid(const rtStream_t stream, uint32_t* sqId)
 {
     (void)stream;
     *sqId = 100;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicCqId)
+rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t* cqId, uint32_t* logicCqId)
 {
     (void)stm;
     *cqId = 100;
@@ -267,7 +278,7 @@ rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicC
     return RT_ERROR_NONE;
 }
 
-rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, rtBinHandle *binHandle)
+rtError_t rtDevBinaryRegister(const rtDevBinary_t* bin, rtBinHandle* binHandle)
 {
     (void)bin;
     *binHandle = (rtBinHandle)0x5f;
@@ -276,7 +287,7 @@ rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, rtBinHandle *binHandle)
 
 rtError_t rtSetDevice(int32_t device)
 {
-    for (const auto &callback : g_deviceCallBackList) {
+    for (const auto& callback : g_deviceCallBackList) {
         callback(device, true);
     }
     return RT_ERROR_NONE;
@@ -284,21 +295,21 @@ rtError_t rtSetDevice(int32_t device)
 
 rtError_t rtDeviceReset(int32_t device)
 {
-    for (const auto &callback : g_deviceCallBackList) {
+    for (const auto& callback : g_deviceCallBackList) {
         callback(device, false);
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetAddrByFun(const void *stubFunc, void **addr)
+rtError_t rtGetAddrByFun(const void* stubFunc, void** addr)
 {
     (void)stubFunc;
     *addr = (void*)0x5f;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc, const char_t *stubName, const void *kernelInfoExt,
-    uint32_t funcMode)
+rtError_t rtFunctionRegister(
+    void* binHandle, const void* stubFunc, const char_t* stubName, const void* kernelInfoExt, uint32_t funcMode)
 {
     (void)binHandle;
     (void)stubFunc;
@@ -316,29 +327,29 @@ rtError_t rtStreamDestroy(rtStream_t stream)
 
 rtError_t rtBinaryUnLoad(rtBinHandle binHandle)
 {
-  (void)binHandle;
-  return RT_ERROR_NONE;
+    (void)binHandle;
+    return RT_ERROR_NONE;
 }
 
-rtError_t rtGetSocVersion(char *version, const uint32_t maxLen)
+rtError_t rtGetSocVersion(char* version, const uint32_t maxLen)
 {
     const char* lltSocVersion = std::getenv("ADX_LLT_SOC_VERSION");
     if (lltSocVersion != nullptr && strlen(lltSocVersion) > 0) {
         memcpy(version, lltSocVersion, strlen(lltSocVersion) + 1);
     } else {
-        const char *socVersion = "Ascend910B1";
+        const char* socVersion = "Ascend910B1";
         memcpy(version, socVersion, strlen(socVersion) + 1);
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetStreamId(rtStream_t stream, int32_t *streamId)
+rtError_t rtGetStreamId(rtStream_t stream, int32_t* streamId)
 {
     *streamId = 10;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtMemGetInfoByType(const int32_t devId, const rtMemType_t type, rtMemInfo_t * const info)
+rtError_t rtMemGetInfoByType(const int32_t devId, const rtMemType_t type, rtMemInfo_t* const info)
 {
     if (devId == (LOCAL_DEV_NUM - 1)) {
         return RT_ERROR_STUB_FAILURE;
@@ -348,23 +359,23 @@ rtError_t rtMemGetInfoByType(const int32_t devId, const rtMemType_t type, rtMemI
         info->addrInfo.flag = true;
     }
 
-    return RT_ERROR_NONE ;
+    return RT_ERROR_NONE;
 }
 
-rtError_t rtGetMaxStreamAndTask(uint32_t streamType, uint32_t *maxStrCount, uint32_t *maxTaskCount)
+rtError_t rtGetMaxStreamAndTask(uint32_t streamType, uint32_t* maxStrCount, uint32_t* maxTaskCount)
 {
     *maxStrCount = 100;
     *maxTaskCount = 100;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceCount(int32_t *cnt)
+rtError_t rtGetDeviceCount(int32_t* cnt)
 {
     *cnt = LOCAL_DEV_NUM;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceIDs(uint32_t *devices, uint32_t len)
+rtError_t rtGetDeviceIDs(uint32_t* devices, uint32_t len)
 {
     for (size_t i = 0; i < len; ++i) {
         devices[i] = i;
@@ -373,19 +384,19 @@ rtError_t rtGetDeviceIDs(uint32_t *devices, uint32_t len)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t * const status)
+rtError_t rtGetDeviceStatus(const int32_t devId, rtDevStatus_t* const status)
 {
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t *val)
+rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t* val)
 {
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetRunMode(rtRunMode *runMode)
+rtError_t rtGetRunMode(rtRunMode* runMode)
 {
-	*runMode = RT_RUN_MODE_OFFLINE;
+    *runMode = RT_RUN_MODE_OFFLINE;
     return RT_ERROR_NONE;
 }
 
@@ -394,22 +405,22 @@ rtError_t rtDebugSetDumpMode(const uint64_t mode)
     if (mode == RT_DEBUG_DUMP_ON_EXCEPTION) {
         return RT_ERROR_NONE;
     }
-    
+
     return RT_ERROR_STUB_FAILURE;
 }
 
-rtError_t rtDebugGetStalledCore(rtDbgCoreInfo_t *const coreInfo)
+rtError_t rtDebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo)
 {
-    coreInfo->aicBitmap0 = 2;       // 1
+    coreInfo->aicBitmap0 = 2; // 1
     coreInfo->aicBitmap1 = 8;
-    coreInfo->aivBitmap0 = 4;       // 25+2
-    coreInfo->aivBitmap1 = 12;      // 25+64+2 25+64+3
+    coreInfo->aivBitmap0 = 4;  // 25+2
+    coreInfo->aivBitmap1 = 12; // 25+64+2 25+64+3
     return RT_ERROR_NONE;
 }
 
-void MockerRegister(const rtDebugMemoryParam_t *const param)
+void MockerRegister(const rtDebugMemoryParam_t* const param)
 {
-    char *dstAddr = reinterpret_cast<char *>(param->dstAddr);
+    char* dstAddr = reinterpret_cast<char*>(param->dstAddr);
     uint64_t regAddr = 0;
     uint32_t regNum = param->memLen / param->elementSize;
     for (uint32_t i = 0; i < regNum; ++i) {
@@ -418,10 +429,10 @@ void MockerRegister(const rtDebugMemoryParam_t *const param)
     }
 }
 
-rtError_t rtDebugReadAICore(rtDebugMemoryParam_t *const param)
+rtError_t rtDebugReadAICore(rtDebugMemoryParam_t* const param)
 {
-    char *dstAddr = reinterpret_cast<char *>(param->dstAddr);
-    void *srcAddr = reinterpret_cast<char *>(param->srcAddr);
+    char* dstAddr = reinterpret_cast<char*>(param->dstAddr);
+    void* srcAddr = reinterpret_cast<char*>(param->srcAddr);
     if (param->coreType == Adx::CORE_TYPE_AIC) {
         switch (param->debugMemType) {
             case RT_MEM_TYPE_L0A:
@@ -474,16 +485,16 @@ rtError_t rtDebugReadAICore(rtDebugMemoryParam_t *const param)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin, uint32_t *binSize)
+rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void** bin, uint32_t* binSize)
 {
     if (type == RT_BIN_HOST_ADDR || type == RT_BIN_DEVICE_ADDR) {
         if (binHandle == nullptr) {
             static std::string b = "bin stub";
-            *bin = (void *)b.c_str();
+            *bin = (void*)b.c_str();
             *binSize = b.size();
             return RT_ERROR_NONE;
         }
-        *bin = (void *)binHandle;
+        *bin = (void*)binHandle;
         *binSize = strlen((const char*)binHandle);
         return RT_ERROR_NONE;
     }
@@ -492,18 +503,21 @@ rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t ty
 
 std::map<uint32_t, std::string> g_stackData;
 
-rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
-    const uint16_t coreId, const void **stack, uint32_t *stackSize)
+extern "C" rtError_t rtGetStackBuffer(
+    rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint16_t coreId,
+    const void** stack, uint32_t* stackSize)
 {
     UNUSED(deviceId);
     UNUSED(stackType);
     if (coreType == 0) { // aic
-        g_stackData[coreId] = std::string("core type ") + std::to_string(coreType) + std::string(" core id ") + std::to_string(coreId) + " stack data";
+        g_stackData[coreId] = std::string("core type ") + std::to_string(coreType) + std::string(" core id ") +
+                              std::to_string(coreId) + " stack data";
         *stack = (void*)g_stackData[coreId].data();
         *stackSize = g_stackData[coreId].size();
         return RT_ERROR_NONE;
     } else if (coreType == 1) { // aiv
-        g_stackData[coreId + 25] = std::string("core type ") + std::to_string(coreType) + std::string(" core id ") + std::to_string(coreId) + " stack data";
+        g_stackData[coreId + 25] = std::string("core type ") + std::to_string(coreType) + std::string(" core id ") +
+                                   std::to_string(coreId) + " stack data";
         *stack = (void*)g_stackData[coreId + 25].data();
         *stackSize = g_stackData[coreId + 25].size();
         return RT_ERROR_NONE;
@@ -511,27 +525,27 @@ rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const
     return RT_ERROR_STUB_FAILURE;
 }
 
-rtError_t rtsGetThreadLastTaskId(uint32_t *taskId)
+rtError_t rtsGetThreadLastTaskId(uint32_t* taskId)
 {
     *taskId = 12345;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsStreamGetId(rtStream_t stm, int32_t *streamId)
+rtError_t rtsStreamGetId(rtStream_t stm, int32_t* streamId)
 {
     *streamId = 54321;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32_t *val)
+rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32_t* val)
 {
     if (devFeatureType == RT_FEATURE_SYSTEM_TASKID_BIT_WIDTH) {
-        *val = 16;  // OBP:16, David:32
+        *val = 16; // OBP:16, David:32
     }
     return RT_ERROR_NONE;
 }
 
-uint32_t g_opTimeout = 18 * 60 * 1000;  // default 18 minute
+uint32_t g_opTimeout = 18 * 60 * 1000; // default 18 minute
 
 rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout)
 {
@@ -539,7 +553,7 @@ rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout)
     return RT_ERROR_NONE;
 }
 
-rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout)
+rtError_t rtGetOpExecuteTimeoutV2(uint32_t* const timeout)
 {
     *timeout = g_opTimeout;
     return RT_ERROR_NONE;
@@ -547,5 +561,189 @@ rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout)
 
 rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
 {
+    return RT_ERROR_NONE;
+}
+// Stream capture info
+rtError_t rtStreamGetCaptureInfo(rtStream_t stream, rtStreamCaptureStatus* const status, rtModel_t* captureMdl)
+{
+    if (status == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *status = RT_STREAM_CAPTURE_STATUS_ACTIVE;
+    if (captureMdl != nullptr) {
+        *captureMdl = nullptr;
+    }
+    return RT_ERROR_NONE;
+}
+
+// ACL Stream operations (mapping to rt functions)
+aclError aclrtStreamGetId(rtStream_t stream, int32_t* streamId)
+{
+    if (streamId == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *streamId = 1;
+    return ACL_SUCCESS;
+}
+
+aclError aclrtGetThreadLastTaskId(uint32_t* taskId)
+{
+    if (taskId == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *taskId = 1;
+    return ACL_SUCCESS;
+}
+
+aclError aclrtGetDevice(int32_t* deviceId)
+{
+    if (deviceId == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *deviceId = 0;
+    return ACL_SUCCESS;
+}
+
+// ACL Event operations
+aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)
+{
+    if (event == nullptr || stream == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return ACL_SUCCESS;
+}
+
+aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
+{
+    if (stream == nullptr || event == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return ACL_SUCCESS;
+}
+
+// ACL Host function launch
+aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void* args)
+{
+    if (stream == nullptr || fn == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    // Execute the host function synchronously for testing
+    fn(args);
+    return ACL_SUCCESS;
+}
+
+// ACL Event create/destroy
+aclError aclrtCreateEventExWithFlag(aclrtEvent* event, uint32_t flag)
+{
+    if (event == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *event = reinterpret_cast<aclrtEvent>(0x1);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDestroyEvent(aclrtEvent event)
+{
+    if (event == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return ACL_SUCCESS;
+}
+
+// ACL Stream create/destroy
+aclError aclrtCreateStream(rtStream_t* stream)
+{
+    if (stream == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *stream = reinterpret_cast<rtStream_t>(0x1);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDestroyStream(rtStream_t stream)
+{
+    if (stream == nullptr) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return ACL_SUCCESS;
+}
+
+// RT Stream operations stubs
+rtError_t rtsStreamGetId(rtStream_t stm, int32_t* streamId)
+{
+    if (streamId == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *streamId = 1;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtsGetThreadLastTaskId(uint32_t* taskId)
+{
+    if (taskId == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *taskId = 1;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtEventCreateExWithFlag(rtEvent_t* evt, uint32_t flag)
+{
+    (void)flag;
+    if (evt == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *evt = reinterpret_cast<rtEvent_t>(0x1);
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtStreamCreate(rtStream_t* stm, int32_t priority)
+{
+    (void)priority;
+    if (stm == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *stm = reinterpret_cast<rtStream_t>(0x1);
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtEventRecord(rtEvent_t evt, rtStream_t stm)
+{
+    if (evt == nullptr || stm == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtStreamWaitEvent(rtStream_t stm, rtEvent_t evt)
+{
+    if (stm == nullptr || evt == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtsLaunchHostFunc(rtStream_t stm, const rtCallback_t callBackFunc, void* const fnData)
+{
+    if (stm == nullptr || callBackFunc == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    callBackFunc(fnData);
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtEventDestroy(rtEvent_t evt)
+{
+    if (evt == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtStreamDestroy(rtStream_t stm)
+{
+    if (stm == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
     return RT_ERROR_NONE;
 }

@@ -79,7 +79,7 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerUnInit)
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInit)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInitFailed)
 {
     MOCKER_CPP(&Adx::AdxDumpRecord::Init)
         .stubs()
@@ -87,15 +87,50 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInit)
 
     std::string hostPID = "456";
     int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInitRepeat)
+{
+    MOCKER_CPP(&Adx::AdxDumpRecord::GetDumpInitNum)
+        .stubs()
+        .will(returnValue(1));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInit)
+{
+    std::string hostPID = "456";
+    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
     ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInitFailed)
+{
+    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_ERROR));
+    std::string hostPID = "456";
+    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
+    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInitDumpStillRun)
+{
+    MOCKER_CPP(&Adx::AdxDumpRecord::GetDumpInitNum)
+        .stubs()
+        .will(returnValue(1));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
 }
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInit)
 {
     MOCKER_CPP(&Adx::AdxServerManager::Exit)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_ERROR));
+        .stubs()
+        .will(returnValue(IDE_DAEMON_ERROR));
     std::string hostPID = "456";
     int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());

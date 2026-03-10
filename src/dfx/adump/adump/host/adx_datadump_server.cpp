@@ -63,12 +63,6 @@ static bool IsOnDeviceSide()
 
 int32_t AdxDataDumpServerInit()
 {
-    std::string hostPid;
-    ADX_GET_ENV(MM_ENV_ASCEND_HOSTPID, hostPid);
-    if (IsOnDeviceSide() && !hostPid.empty()) {
-        IDE_LOGI("dump server not start on helper device");
-        return IDE_DAEMON_OK;
-    }
     int32_t dumpNum = AdxDumpRecord::Instance().GetDumpInitNum();
     if (dumpNum > 0) {
         AdxDumpRecord::Instance().UpdateDumpInitNum(true);
@@ -78,8 +72,6 @@ int32_t AdxDataDumpServerInit()
     IDE_LOGI("start to do dump init");
     AdxDumpRecord::Instance().UpdateDumpInitNum(true);
     mmUserBlock_t funcBlock;
-    funcBlock.procFunc = AdxDataDumpServerProcess;
-    funcBlock.pulArg = nullptr;
     mmThread tid = 0;
     // non-soc case, no need to pass host pid
     int32_t ret = AdxDumpRecord::Instance().Init("");
@@ -87,11 +79,20 @@ int32_t AdxDataDumpServerInit()
         IDE_LOGE("AdxDumpRecord init failed.");
         return IDE_DAEMON_ERROR;
     }
+    funcBlock.procFunc = AdxDumpRecordProcess;
+    funcBlock.pulArg = nullptr;
     ret = Thread::CreateDetachTaskWithDefaultAttr(tid, funcBlock);
     if (ret != EN_OK) {
         return IDE_DAEMON_ERROR;
     }
-    funcBlock.procFunc = AdxDumpRecordProcess;
+
+    std::string hostPid;
+    ADX_GET_ENV(MM_ENV_ASCEND_HOSTPID, hostPid);
+    if (IsOnDeviceSide() && !hostPid.empty()) {
+        IDE_LOGI("dump server not start on helper device");
+        return IDE_DAEMON_OK;
+    }
+    funcBlock.procFunc = AdxDataDumpServerProcess;
     funcBlock.pulArg = nullptr;
     ret = Thread::CreateDetachTaskWithDefaultAttr(tid, funcBlock);
     (void)g_manager.WaitServerInitted();
@@ -100,22 +101,28 @@ int32_t AdxDataDumpServerInit()
 
 int32_t AdxDataDumpServerUnInit()
 {
-    std::string hostPid;
-    ADX_GET_ENV(MM_ENV_ASCEND_HOSTPID, hostPid);
-    if (IsOnDeviceSide() && !hostPid.empty()) {
-        IDE_LOGI("dump server not start on helper device");
-        return IDE_DAEMON_OK;
-    }
     AdxDumpRecord::Instance().UpdateDumpInitNum(false);
     int32_t dumpNum = AdxDumpRecord::Instance().GetDumpInitNum();
     if (dumpNum > 0) {
         IDE_LOGI("still have %d dump init times, return", dumpNum);
         return IDE_DAEMON_OK;
     }
+
     IDE_LOGI("start to do dump uninit");
+    if (AdxDumpRecord::Instance().UnInit() != IDE_DAEMON_OK) {
+        IDE_LOGE("dump record uninit failed");
+        return IDE_DAEMON_ERROR;
+    }
+
+    std::string hostPid;
+    ADX_GET_ENV(MM_ENV_ASCEND_HOSTPID, hostPid);
+    if (IsOnDeviceSide() && !hostPid.empty()) {
+        IDE_LOGI("dump server not start on helper device");
+        return IDE_DAEMON_OK;
+    }
     if (g_manager.Exit() != IDE_DAEMON_OK) {
         IDE_LOGE("AdxServerManager Exit failed");
         return IDE_DAEMON_ERROR;
     }
-    return AdxDumpRecord::Instance().UnInit();
+    return IDE_DAEMON_OK;
 }
