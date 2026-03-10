@@ -7,7 +7,10 @@
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+- 环境安装详情请见example目录下的[README](../../README.md)。
+- 本样例用于展示跨服务器共享内存功能，需在两台已完成环境配置且网络互通的服务器上分别运行脚本：
+    - 在服务端服务器执行：bash run_server.sh，按提示输入监听端口号。
+    - 在客户端服务器执行：bash run_client.sh，按提示输入服务端地址与端口号。
 
 ## CANN RUNTIME API
 在该Sample中，涉及的关键功能点及其关键接口，如下所示：
