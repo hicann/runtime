@@ -72,6 +72,7 @@
     - autoconf
     - gperf
     - libtool
+    - make
     - asan （仅执行UT时依赖。asan通常不需要单独安装，已集成在gcc中，如需要单独安装asan，请确保与gcc版本兼容，例如gcc 9.5.0匹配libasan6版本。）
 
     上述依赖包（asan除外）可通过项目根目录下install_deps.sh安装，命令如下。

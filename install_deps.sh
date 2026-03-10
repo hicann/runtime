@@ -417,6 +417,36 @@ install_pip3() {
     fi
 }
 
+install_make() {
+    echo -e "\n==== 检查make ===="
+
+    if command -v make &> /dev/null; then
+        echo "make已安装"
+        return
+    fi
+
+    echo "安装make..."
+    case "$OS" in
+        debian)
+            run_command sudo $PKG_MANAGER update
+            run_command sudo $PKG_MANAGER install -y make
+            ;;
+        rhel|euler)
+            run_command sudo $PKG_MANAGER install -y make
+            ;;
+        macos)
+            run_command brew install make
+            ;;
+    esac
+
+    if command -v make &> /dev/null; then
+        echo "make安装成功"
+    else
+        echo "make安装失败"
+        exit 1
+    fi
+}
+
 main() {
     echo "===================================================="
     echo "开始安装项目依赖"
@@ -431,6 +461,7 @@ main() {
     install_autoconf
     install_gperf
     install_libtool
+    install_make
 
     echo -e "===================================================="
     echo "所有依赖安装完成！"
