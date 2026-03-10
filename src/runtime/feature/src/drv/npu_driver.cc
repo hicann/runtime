@@ -1582,12 +1582,18 @@ rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remote
 {
     rtError_t error = RT_ERROR_NONE;
     if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
-        error = GetPairDevicesInfo(devId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, val, true);
+        uint32_t phyDevId;
+        error = GetDevicePhyIdByIndex(devId, &phyDevId);
+        ERROR_RETURN_MSG_INNER(error, "GetDevicePhyIdByIndex failed, retCode=%#x, devId=%u",
+            error, devId);
+        error = GetPairDevicesInfo(phyDevId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, val, true);
+        ERROR_RETURN_MSG_INNER(error, "Get topology type failed, retCode=%#x, phyDevId=%u, remotePhyId=%u",
+ 	        error, phyDevId, remotePhyId);
     } else {
         error = GetPairDevicesInfo(devId, remoteDevId, DEVS_INFO_TYPE_TOPOLOGY, val, false);
+        ERROR_RETURN_MSG_INNER(error, "Get topology type failed, retCode=%#x, devId=%u, remoteDevId=%u",
+ 	        error, devId, remoteDevId);
     }
-    ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u, remotePhyId=%u",
-        error, remoteDevId, remotePhyId);
     return RT_ERROR_NONE;
 }
 }  // namespace runtime
