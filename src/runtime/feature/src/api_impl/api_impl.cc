@@ -62,7 +62,7 @@
 #include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
-#include "kernel_ratio_utils.hpp"
+#include "kernel_utils.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -9014,40 +9014,7 @@ rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *nu
 
 rtError_t ApiImpl::TaskGetType(const TaskInfo * const task, rtTaskType *type)
 {
-    if (!task->stream) {
-        RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);
-        return RT_ERROR_INVALID_VALUE;
-    }
-    rtTaskType taskType = rtTaskType::RT_TASK_DEFAULT;
-    switch(task->type) {
-        case TS_TASK_TYPE_KERNEL_AICORE: 
-        case TS_TASK_TYPE_KERNEL_AIVEC:
-            taskType = RT_TASK_KERNEL;
-            break;
-        case TS_TASK_TYPE_CAPTURE_WAIT:
-        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
-            taskType = RT_TASK_EVENT_WAIT;
-            break;
-        case TS_TASK_TYPE_MEM_WAIT_VALUE: 
-            taskType = RT_TASK_VALUE_WAIT;
-            break;
-        case TS_TASK_TYPE_EVENT_RECORD:
-        case TS_TASK_TYPE_CAPTURE_RECORD:
-            taskType = RT_TASK_EVENT_RECORD;
-            break;
-        case TS_TASK_TYPE_EVENT_RESET:
-            taskType = RT_TASK_EVENT_RESET;
-            break;
-        case TS_TASK_TYPE_MEM_WRITE_VALUE:
-            taskType = strcmp(task->typeName, "EVENT_RESET") != 0 ? RT_TASK_VALUE_WRITE : RT_TASK_EVENT_RESET;
-            break;
-        default:
-            break;
-    }
-    *type = taskType;
-    RT_LOG(RT_LOG_INFO, "end to get task type, streamId=%d, taskId=%u, taskType=%d, taskName=%s, rtTaskType=%d.",
-        task->stream->Id_(), task->id, task->type, task->typeName, taskType);
-    return RT_ERROR_NONE;
+    return GetTaskType(task, type);
 }
 
 }  // namespace runtime

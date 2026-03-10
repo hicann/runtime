@@ -206,7 +206,7 @@ aclError aclrtGetFunctionSizeImpl(aclrtFuncHandle funcHandle, size_t *aicSize, s
 {
     const auto rtErr = rtFuncGetSize(funcHandle, aicSize, aivSize);
     if (rtErr != RT_ERROR_NONE) {
-       ACL_LOG_CALL_ERROR("Get function size Failed, runtime result = %d", rtErr);
+       ACL_LOG_CALL_ERROR("Get function size failed, runtime result = %d", rtErr);
        return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;

@@ -7,14 +7,16 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef __CCE_RUNTIME_KERNEL_RATIO_UTILS_HPP__
-#define __CCE_RUNTIME_KERNEL_RATIO_UTILS_HPP__
+#ifndef __CCE_RUNTIME_KERNEL_UTILS_HPP__
+#define __CCE_RUNTIME_KERNEL_UTILS_HPP__
 #include <string>
 #include "runtime.hpp"
+#include "rt_inner_task.h"
 
 namespace cce {
 namespace runtime {
     void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio);
+    rtError_t GetTaskType(const TaskInfo * const task, rtTaskType *type);
 }  // namespace runtime
 }  // namespace cce
-#endif  // __CCE_RUNTIME_KERNEL_RATIO_UTILS_HPP__
+#endif  // __CCE_RUNTIME_KERNEL_UTILS_HPP__

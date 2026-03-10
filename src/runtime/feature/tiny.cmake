@@ -204,7 +204,7 @@ set(libruntime_common_src_files
     src/kernel/module.cc
     src/kernel/program.cc
     src/kernel/program_common.cc
-    src/kernel/kernel_ratio_utils.cc
+    src/kernel/kernel_utils.cc
     src/kernel/v100/program_plat.cc
     src/launch/label.cc
     src/event/event.cc
@@ -303,7 +303,7 @@ set(libruntime_v100_src_files
     src/kernel/module.cc
     src/kernel/program.cc
     src/kernel/program_common.cc
-    src/kernel/kernel_ratio_utils.cc
+    src/kernel/kernel_utils.cc
     src/launch/memcpy_stars.cc
     src/kernel/v100/program_plat.cc
     src/launch/cmo_barrier_common.cc

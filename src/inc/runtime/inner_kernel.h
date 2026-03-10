@@ -39,7 +39,7 @@ RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceI
                                    const uint16_t coreId, const void **stack, uint32_t *stackSize);
 
 /**
- * @ingroup rts_kernel
+ * @ingroup rt_kernel
  * @brief get kernel size, if kernel is mix, the output param aicSize and aivSize are both valid,
  * otherwise, there will be only one valid size.
  * @param funcHandle the kernel
