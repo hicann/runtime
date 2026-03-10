@@ -1,34 +1,34 @@
 json:
-   version: 3.11.3
-   type: build
+    version: 3.11.3
+    type: run
 makeself:
-   version: release-2.5.0-patch1
-   type: build
+    version: release-2.5.0-patch1
+    type: build
 libboundscheck:
-   version: 1.1.16
-   type: build
+    version: 1.1.16
+    type: run
 eigen:
-   version: 5.0.0
-   type: build
+    version: 5.0.0
+    type: run
 openssl:
-   version: 3.0.9
-   type: build
+    version: 3.0.9
+    type: run
 protobuf:
-   version: 25.1
-   type: build
+    version: 25.1
+    type: run
 abseil-cpp:
-   version: 20230802.1
-   type: build
+    version: 20230802.1
+    type: run
 libseccomp:
-   version: 2.5.4
-   type: build
+    version: 2.5.4
+    type: run
 boost:
-   version: 1.87.0
-   type: test
+    version: 1.87.0
+    type: test
 googletest:
-   version: 1.14.0
-   type: test
+    version: 1.14.0
+    type: test
 mockcpp:
-   version: 2.7
-   type: test
+    version: 2.7
+    type: test
    
