@@ -971,6 +971,15 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
+{
+    UNUSED(funcHandle);
+    UNUSED(aicSize);
+    UNUSED(aivSize);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtLaunchDqsTask(const rtStream_t stm, const rtDqsTaskCfg_t* const taskCfg)
 {
     UNUSED(stm);

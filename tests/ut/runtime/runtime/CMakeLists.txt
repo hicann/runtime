@@ -318,6 +318,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/src/engine/engine_factory_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/binary_loader_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/kernel_ratio_utils.cc
     ${TOP_DIR}/src/runtime/feature/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/src/profiler/api_profile_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/src/task/tiny/rdma_task_tiny_stub.cc
@@ -388,6 +389,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/kernel_ratio_utils.cc
     ${TOP_DIR}/src/runtime/feature/src/memory/soma.cc
     ${TOP_DIR}/src/runtime/feature/src/memory/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/cmo_barrier_common.cc
@@ -589,6 +591,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/xpu/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/kernel_ratio_utils.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/json_parse.cc
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
@@ -1322,6 +1325,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/v200_base/kernel.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/binary_loader.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
+    ${TOP_DIR}/src/runtime/feature/src/kernel/kernel_ratio_utils.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/json_parse.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/elf.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/module.cc

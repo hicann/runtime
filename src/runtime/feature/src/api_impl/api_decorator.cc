@@ -263,6 +263,11 @@ rtError_t ApiDecorator::FuncGetAddr(const Kernel * const funcHandle, void ** con
     return impl_->FuncGetAddr(funcHandle, aicAddr, aivAddr);
 }
 
+rtError_t ApiDecorator::FuncGetSize(const Kernel *const funcHandle, size_t *const aicSize, size_t *const aivSize)
+{
+    return impl_->FuncGetSize(funcHandle, aicSize, aivSize);
+}
+
 rtError_t ApiDecorator::LaunchKernel(Kernel * const kernel, const uint32_t blockDim, const rtArgsEx_t * const argsInfo,
     Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo)
 {

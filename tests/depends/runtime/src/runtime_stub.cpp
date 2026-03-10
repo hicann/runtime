@@ -15,6 +15,7 @@
 #include "runtime/mem.h"
 #include "runtime/config.h"
 #include "runtime/kernel.h"
+#include "runtime/inner_kernel.h"
 #include "runtime/base.h"
 #include "runtime/rt_mem_queue.h"
 #include "runtime/rt_model.h"
@@ -1335,6 +1336,11 @@ rtError_t aclStub::rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t
 }
 
 rtError_t aclStub::rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
+{
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
 {
     return RT_ERROR_NONE;
 }
@@ -3577,6 +3583,11 @@ rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntr
 rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
 {
     return MockFunctionTest::aclStubInstance().rtsFuncGetAddr(funcHandle, aicAddr, aivAddr);
+}
+
+rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
+{
+    return MockFunctionTest::aclStubInstance().rtFuncGetSize(funcHandle, aicSize, aivSize);
 }
 
 rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,

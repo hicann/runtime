@@ -13,6 +13,7 @@
 #include "config.h"
 #include "runtime.hpp"
 #include "kernel.h"
+#include "inner_kernel.h"
 #include "rt_error_codes.h"
 #include "api_impl.hpp"
 #include "api_decorator.hpp"
@@ -117,6 +118,18 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAddr)
     void* func1;
     void* func2;
     rtError_t error = rtsFuncGetAddr(&kernel, &func1, &func2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSize)
+{
+    ElfProgram program(Program::MACH_AI_VECTOR);
+    uint64_t tilingKey = 0;
+    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+
+    size_t aicSize = 0;
+    size_t aivSize = 0;
+    rtError_t error = rtFuncGetSize(&kernel, &aicSize, &aivSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -359,7 +372,7 @@ TEST_F(CloudV2ApiKernelTest, MemcpyBatchAsync)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
 {
-    ElfProgram program;
+    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
     uint64_t tilingKey = 0;
     Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
 
@@ -370,11 +383,98 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
     error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
+    error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
     ApiImpl apiImpl;
     error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ApiDecorator apiDecorator(&apiImpl);
     error = apiDecorator.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
+{
+    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    uint64_t tilingKey = 0;
+    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    kernel.SetMixType(NO_MIX);
+    kernel.SetTaskRation(0);
+
+    int64_t attrValue = 0;
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetMixType(MIX_AIC);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetMixType(MIX_AIV);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetMixType(MIX_AIC_AIV_MAIN_AIC);
+    kernel.SetTaskRation(1);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetTaskRation(2);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetMixType(MIX_AIC_AIV_MAIN_AIV);
+    kernel.SetTaskRation(1);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    kernel.SetTaskRation(2);
+    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
+{
+    ElfProgram program(Program::MACH_AI_VECTOR);
+    Kernel kernelAicObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
+    kernelAicObj.SetKernelLength1(10);
+
+    size_t aicSize = 0;
+    size_t aivSize = 0;
+    rtFuncGetSize(&kernelAicObj, &aicSize, &aivSize);
+    EXPECT_EQ(aicSize, 0);
+    EXPECT_EQ(aivSize, 10);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAivWithKernelType)
+{
+    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    Kernel kernelObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
+    kernelObj.SetKernelType_(Program::MACH_AI_VECTOR);
+    kernelObj.SetKernelLength1(10);
+
+    size_t aicSize = 0;
+    size_t aivSize = 0;
+    rtFuncGetSize(&kernelObj, &aicSize, &aivSize);
+    EXPECT_EQ(aicSize, 0);
+    EXPECT_EQ(aivSize, 10);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithMixOnlyAiv)
+{
+    ElfProgram program(Program::MACH_AI_CORE);
+    Kernel kernelObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
+    kernelObj.SetMixType(MIX_AIV);
+    kernelObj.SetKernelLength1(10);
+
+    size_t aicSize = 0;
+    size_t aivSize = 0;
+    rtFuncGetSize(&kernelObj, &aicSize, &aivSize);
+    EXPECT_EQ(aicSize, 0);
+    EXPECT_EQ(aivSize, 10);
 }

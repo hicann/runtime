@@ -406,7 +406,8 @@ typedef struct tagRtFunsionTaskInfo {
 
 typedef enum {
     RT_FUNCTION_ATTR_KERNEL_TYPE = 1,
-    RT_FUNCTION_ATTR_MAX = 2,
+    RT_FUNCTION_ATTR_KERNEL_RATIO,
+    RT_FUNCTION_ATTR_MAX,
 } rtFuncAttribute;
 
 typedef enum {

@@ -728,6 +728,7 @@ typedef int32_t (*aclrtDeviceTaskAbortCallback)(int32_t deviceId, aclrtDeviceTas
 
 typedef enum {
     ACL_FUNC_ATTR_KERNEL_TYPE = 1,
+    ACL_FUNC_ATTR_KERNEL_RATIO = 2,
 } aclrtFuncAttribute;
 
 typedef enum {
@@ -3064,6 +3065,17 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHan
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr);
+
+/**
+ * @ingroup AscendCL
+ * @brief Get kernel size
+ * @param [in] funcHandle function handle
+ * @param [out] aicSize size of AI Cube kernel
+ * @param [out] aivSize size of AI Vector kernel
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize);
 
 /**
  * @ingroup AscendCL

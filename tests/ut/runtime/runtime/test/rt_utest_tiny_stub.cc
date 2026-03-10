@@ -39,6 +39,7 @@
 #include "stub_task.hpp"
 #include "task_manager_david.h"
 #include "rt_inner_model.h"
+#include "inner_kernel.h"
 #undef protected
 #undef private
 
@@ -178,6 +179,8 @@ TEST_F(TinyStubTest, api_c_stub)
     ret = rtCacheLastTaskOpInfo(nullptr, 0U);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtFunctionGetAttribute(nullptr, RT_FUNCTION_ATTR_MAX, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtFuncGetSize(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtLaunchDqsTask(nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

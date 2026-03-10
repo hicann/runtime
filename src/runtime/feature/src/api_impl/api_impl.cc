@@ -62,6 +62,7 @@
 #include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
+#include "kernel_ratio_utils.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -1104,6 +1105,22 @@ rtError_t ApiImpl::FuncGetAddr(const Kernel * const funcHandle, void ** const ai
     } else {
         *aicAddr = reinterpret_cast<void *>(static_cast<uintptr_t>(funcAddr1));
         *aivAddr = reinterpret_cast<void *>(static_cast<uintptr_t>(funcAddr2));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::FuncGetSize(const Kernel *const funcHandle, size_t *const aicSize, size_t *const aivSize)
+{
+    uint32_t funcSize1 = 0U;
+    uint32_t funcSize2 = 0U;
+    funcHandle->GetKernelLength(funcSize1, funcSize2);
+    if ((funcSize1 != 0U) && (funcSize2 == 0U) && (CheckVectorKernel(funcHandle))) {
+        // there is only one size, and the kernel is for vector core
+        *aivSize = (size_t)funcSize1;
+        *aicSize = (size_t)funcSize2;
+    } else {
+        *aicSize = (size_t)funcSize1;
+        *aivSize = (size_t)funcSize2;
     }
     return RT_ERROR_NONE;
 }
@@ -8855,17 +8872,28 @@ rtError_t ApiImpl::CacheLastTaskOpInfo(const void * const infoPtr, const size_t 
 rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
     const Kernel *const kernel = RtPtrToPtr<Kernel *>(funcHandle);
-
     switch (attrType) {
-        case RT_FUNCTION_ATTR_KERNEL_TYPE:
+        case RT_FUNCTION_ATTR_KERNEL_TYPE: {
             *attrValue = static_cast<int64_t>(kernel->GetKernelAttrType());
             COND_RETURN_ERROR_MSG_INNER(*attrValue == static_cast<rtKernelAttrType>(0x7FFFFFFF), RT_ERROR_INVALID_VALUE, "Invalid kernel type.");
             break;
-        default:
+        }
+        case RT_FUNCTION_ATTR_KERNEL_RATIO: {
+            uint32_t taskRatio = kernel->GetTaskRation();
+            uint32_t mixType = kernel->GetMixType();
+            uint16_t ratio[2];
+            ComputeRatio(ratio, mixType, taskRatio);
+            uint16_t* ratioArr = reinterpret_cast<uint16_t*>(attrValue);
+            ratioArr[1] = ratio[0]; //aicratio
+            ratioArr[0] = ratio[1]; //aivratio
+            RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);
+            break;
+        }
+        default: {
             RT_LOG(RT_LOG_WARNING, "Invalid attrType attrType=%d", attrType);
             break;
+        }
     }
-
     return RT_ERROR_NONE;
 }
 
