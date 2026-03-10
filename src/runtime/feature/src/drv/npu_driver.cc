@@ -1581,21 +1581,19 @@ rtError_t NpuDriver::GetChipIdDieId(const uint32_t devId, const uint32_t remoteD
 rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t * const val)
 {
     rtError_t error = RT_ERROR_NONE;
-    uint32_t phyDevId;
-    const drvError_t drvRet = drvDeviceGetPhyIdByIndex(devId, &phyDevId);
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet,
-            "[drv api] drvDeviceGetPhyIdByIndex failed: devId=%u, drvRetCode=%d!",
-            devId, static_cast<int32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
     if (CheckIsSupportFeature(devId, FEATURE_DMS_QUERY_CHIP_DIE_ID)) {
+        uint32_t phyDevId;
+        error = GetDevicePhyIdByIndex(devId, &phyDevId);
+        ERROR_RETURN_MSG_INNER(error, "GetDevicePhyIdByIndex failed, retCode=%#x, devId=%u",
+            error, devId);
         error = GetPairDevicesInfo(phyDevId, remotePhyId, DEVS_INFO_TYPE_TOPOLOGY, val, true);
+        ERROR_RETURN_MSG_INNER(error, "Get topology type failed, retCode=%#x, phyDevId=%u, remotePhyId=%u",
+            error, phyDevId, remotePhyId);
     } else {
         error = GetPairDevicesInfo(devId, remoteDevId, DEVS_INFO_TYPE_TOPOLOGY, val, false);
+        ERROR_RETURN_MSG_INNER(error, "Get topology type failed, retCode=%#x, devId=%u, remoteDevId=%u",
+            error, devId, remoteDevId);
     }
-    ERROR_RETURN_MSG_INNER(error, "Get topology type fail, retCode=%#x, remoteDevId=%u, remotePhyId=%u",
-        error, remoteDevId, remotePhyId);
     return RT_ERROR_NONE;
 }
 }  // namespace runtime

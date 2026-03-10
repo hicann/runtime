@@ -2910,3 +2910,17 @@ TEST_F(CloudV2NpuDriverTest, CheckIsSupportFeature_invalid)
     EXPECT_FALSE(ret);
     delete rawDrv;
 }
+
+TEST_F(CloudV2NpuDriverTest, get_topology_type_device_id)
+{
+    rtError_t error;
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature)
+        .stubs()
+        .will(returnValue(false));
+
+    int64_t val;
+    NpuDriver * rawDrv = new NpuDriver();
+    error = rawDrv->GetTopologyType(0, 0, 0, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete rawDrv;
+}
