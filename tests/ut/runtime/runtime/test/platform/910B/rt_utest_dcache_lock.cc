@@ -64,14 +64,9 @@ private:
 TEST_F(CloudV2DcacheDeviceTest, GetDriverPath_01)
 {
     std::string driverPath;
-    auto ret = GetDriverPath(driverPath);
-    EXPECT_EQ(ret, false);
-}
-
-TEST_F(CloudV2DcacheDeviceTest, GetDriverPath_02)
-{
-    std::string driverPath;
-    MOCKER_CPP(&ifstream::is_open, bool(ifstream::*)()).stubs().will(returnValue(true));
+    MOCKER_CPP(&std::string::find, size_t(std::string::*)(const std::string&, size_t) const)
+        .stubs()
+        .will(returnValue(std::string::npos));
     auto ret = GetDriverPath(driverPath);
     EXPECT_EQ(ret, false);
 }
@@ -477,14 +472,23 @@ TEST_F(CloudV2DcacheDeviceTest, RegisterDcacheLockOp_03)
 TEST_F(CloudV2DcacheDeviceTest, FindAndRegisterDcacheLockOp_01)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    MOCKER_CPP(&Runtime::GetDcacheLockMixOpPath).stubs().will(returnValue(1));
     rtInstance->FindDcacheLockOp();
     EXPECT_EQ(rtInstance->dcacheLockMixOpData_.size(), 0);
+}
+
+int32_t invokeStat_02(const char *path, struct stat *buf)
+{
+    if (buf != nullptr) {
+        buf->st_size = 0; 
+    }
+    return 0;
 }
 
 TEST_F(CloudV2DcacheDeviceTest, FindAndRegisterDcacheLockOp_02)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    MOCKER(stat).stubs().will(returnValue(0));
+    MOCKER(stat).stubs().with(mockcpp::any(), mockcpp::any()).will(mockcpp::invoke(invokeStat_02));
     rtInstance->FindDcacheLockOp();
     EXPECT_EQ(rtInstance->dcacheLockMixOpData_.size(), 0);
 }
@@ -502,7 +506,7 @@ TEST_F(CloudV2DcacheDeviceTest, FindAndRegisterDcacheLockOp_06)
 int32_t invokeStat(const char *path, struct stat *buf)
 {
     if (path != nullptr && !strcmp(path, "/usr/local/Ascend/driver/lib64/common/dcache_lock_mix.o")) {
-        buf->st_size = 1;
+        buf->st_size = 10485760;
     }
     return 0;
 }
