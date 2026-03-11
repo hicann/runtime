@@ -674,9 +674,9 @@ aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttr
     return ACL_SUCCESS;
 }
 
-aclError aclrtTaskGetTypeImpl(aclrtTask task, aclrtTaskType *type)
+aclError aclmdlRITaskGetTypeImpl(aclmdlRITask task, aclmdlRITaskType *type)
 {
-    ACL_PROFILING_REG(acl::AclProfType::AclrtTaskGetType);
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetType);
     
     const rtError_t rtErr = rtTaskGetType(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskType *>(type));
     if (rtErr != RT_ERROR_NONE) {

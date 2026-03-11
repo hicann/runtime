@@ -453,9 +453,9 @@ aclError aclrtPersistentTaskCleanImpl(aclrtStream stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtStreamGetTasksImpl(aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks)
+aclError aclmdlRIGetTasksByStreamImpl(aclrtStream stream, aclmdlRITask *tasks, uint32_t *numTasks)
 {
-    ACL_PROFILING_REG(acl::AclProfType::AclrtStreamGetTasks);
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetTasksByStream);
 
     const rtError_t rtErr = rtStreamGetTasks(static_cast<rtStream_t>(stream), static_cast<rtTask_t *>(tasks), numTasks);
     if (rtErr != RT_ERROR_NONE) {

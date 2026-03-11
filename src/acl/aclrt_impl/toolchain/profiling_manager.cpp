@@ -279,8 +279,8 @@ namespace acl {
         {AclProfType::AclrtMemPoolSetAttr,                      "aclrtMemPoolSetAttr"},
         {AclProfType::AclrtMemPoolGetAttr,                      "aclrtMemPoolGetAttr"},
         {AclProfType::AclmdlRIGetStreams,                       "aclmdlRIGetStreams"},
-        {AclProfType::AclrtStreamGetTasks,                      "aclrtStreamGetTasks"},
-        {AclProfType::AclrtTaskGetType,                         "aclrtTaskGetType"},
+        {AclProfType::AclmdlRIGetTasksByStream,                 "aclmdlRIGetTasksByStream"},
+        {AclProfType::AclmdlRITaskGetType,                      "aclmdlRITaskGetType"},
         {AclProfType::AclmdlRIDestroyRegisterCallback,          "aclmdlRIDestroyRegisterCallback"},
         {AclProfType::AclmdlRIDestroyUnregisterCallback,        "aclmdlRIDestroyUnregisterCallback"},
 };

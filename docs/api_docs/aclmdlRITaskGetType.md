@@ -1,4 +1,4 @@
-# aclrtTaskGetType
+# aclmdlRITaskGetType
 
 **须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
 
@@ -14,12 +14,12 @@
 
 获取任务类型。
 
-调用本接口之前，先调用[aclrtStreamGetTasks](aclrtStreamGetTasks.md)接口获取指定Stream中的所有任务，再根据指定任务获取其类型。
+调用本接口之前，先调用[aclmdlRIGetTasksByStream](aclmdlRIGetTasksByStream.md)接口获取指定Stream中的所有任务，再根据指定任务获取其类型。
 
 ## 函数原型
 
 ```
-aclError aclrtTaskGetType(aclrtTask task, aclrtTaskType *type)
+aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 ```
 
 ## 参数说明

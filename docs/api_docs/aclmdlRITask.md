@@ -1,0 +1,6 @@
+# aclmdlRITask
+
+```
+typedef void *aclmdlRITask;
+```
+

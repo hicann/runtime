@@ -1123,27 +1123,27 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtFuncAttribute)
   EXPECT_EQ(sizeof(aclrtFuncAttribute), 4);
 }
 
-TEST_F(UTEST_ACL_compatibility_enum_check, aclrtTaskType)
+TEST_F(UTEST_ACL_compatibility_enum_check, aclmdlRITaskType)
 {
-    aclrtTaskType value;
-    value = (aclrtTaskType)0;
-    EXPECT_EQ(value, ACL_RT_TASK_DEFAULT);
+    aclmdlRITaskType value;
+    value = (aclmdlRITaskType)0;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_DEFAULT);
 
-    value = (aclrtTaskType)1;
-    EXPECT_EQ(value, ACL_RT_TASK_KERNEL);
+    value = (aclmdlRITaskType)1;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_KERNEL);
 
-    value = (aclrtTaskType)2;
-    EXPECT_EQ(value, ACL_RT_TASK_EVENT_RECORD);
+    value = (aclmdlRITaskType)2;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_EVENT_RECORD);
 
-    value = (aclrtTaskType)3;
-    EXPECT_EQ(value, ACL_RT_TASK_EVENT_WAIT);
+    value = (aclmdlRITaskType)3;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_EVENT_WAIT);
 
-    value = (aclrtTaskType)4;
-    EXPECT_EQ(value, ACL_RT_TASK_EVENT_RESET);
+    value = (aclmdlRITaskType)4;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_EVENT_RESET);
 
-    value = (aclrtTaskType)5;
-    EXPECT_EQ(value, ACL_RT_TASK_VALUE_WRITE);
+    value = (aclmdlRITaskType)5;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_VALUE_WRITE);
 
-    value = (aclrtTaskType)6;
-    EXPECT_EQ(value, ACL_RT_TASK_VALUE_WAIT);
+    value = (aclmdlRITaskType)6;
+    EXPECT_EQ(value, ACL_MODEL_RI_TASK_VALUE_WAIT);
 }

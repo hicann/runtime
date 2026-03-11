@@ -1,6 +1,0 @@
-# aclrtTask
-
-```
-typedef void *aclrtTask;
-```
-

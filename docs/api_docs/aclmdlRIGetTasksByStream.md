@@ -1,4 +1,4 @@
-# aclrtStreamGetTasks
+# aclmdlRIGetTasksByStream
 
 **须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
 
@@ -18,13 +18,13 @@
 
 通过两次调用本接口可以获取指定Stream中的所有任务：
 
-1.  第一次调用aclrtStreamGetTasks接口：tasks参数处传入空指针，numTasks传入任意非负整数，调用aclrtStreamGetTasks接口获取指定Stream中所有任务数量numTasks。
-2.  第二次调用aclrtStreamGetTasks接口：为tasks申请数组空间，大小为前一步中获取的numTasks，再将tasks、numTasks作为输入传入aclrtStreamGetTasks接口，获取指定Stream中的所有任务。
+1.  第一次调用aclmdlRIGetTasksByStream接口：tasks参数处传入空指针，numTasks传入任意非负整数，调用aclmdlRIGetTasksByStream接口获取指定Stream中所有任务数量numTasks。
+2.  第二次调用aclmdlRIGetTasksByStream接口：为tasks申请数组空间，大小为前一步中获取的numTasks，再将tasks、numTasks作为输入传入aclmdlRIGetTasksByStream接口，获取指定Stream中的所有任务。
 
 ## 函数原型
 
 ```
-aclError aclrtStreamGetTasks(aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks)
+aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint32_t *numTasks)
 ```
 
 ## 参数说明

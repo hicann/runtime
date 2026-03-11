@@ -505,15 +505,15 @@ typedef union {
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 
-typedef enum aclrtTaskType {
-    ACL_RT_TASK_DEFAULT,
-    ACL_RT_TASK_KERNEL,
-    ACL_RT_TASK_EVENT_RECORD,
-    ACL_RT_TASK_EVENT_WAIT,
-    ACL_RT_TASK_EVENT_RESET,
-    ACL_RT_TASK_VALUE_WRITE,
-    ACL_RT_TASK_VALUE_WAIT,
-} aclrtTaskType;
+typedef enum aclmdlRITaskType {
+    ACL_MODEL_RI_TASK_DEFAULT,
+    ACL_MODEL_RI_TASK_KERNEL,
+    ACL_MODEL_RI_TASK_EVENT_RECORD,
+    ACL_MODEL_RI_TASK_EVENT_WAIT,
+    ACL_MODEL_RI_TASK_EVENT_RESET,
+    ACL_MODEL_RI_TASK_VALUE_WRITE,
+    ACL_MODEL_RI_TASK_VALUE_WAIT,
+} aclmdlRITaskType;
 
 typedef enum {
     ACL_DEV_ATTR_AICPU_CORE_NUM  = 1,    // number of AI CPUs
@@ -4307,7 +4307,7 @@ ACL_FUNC_VISIBILITY aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *s
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtStreamGetTasks(aclrtStream stream, aclrtTask *tasks, uint32_t *numTasks);
+ACL_FUNC_VISIBILITY aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint32_t *numTasks);
 
 /**
  * @ingroup AscendCL
@@ -4317,7 +4317,7 @@ ACL_FUNC_VISIBILITY aclError aclrtStreamGetTasks(aclrtStream stream, aclrtTask *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtTaskGetType(aclrtTask task, aclrtTaskType *type);
+ACL_FUNC_VISIBILITY aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type);
 
 /**
  * @ingroup AscendCL
