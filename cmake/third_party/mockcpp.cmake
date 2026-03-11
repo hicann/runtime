@@ -44,51 +44,48 @@ endif()
 set(mockcpp_SRC_DIR ${OPEN_SOURCE_DIR}/mockcpp_src)
 set(DOWNLOAD_FILE_DIR ${OPEN_SOURCE_DIR}/mockcpp-2.7)
 set(URL_FILE ${DOWNLOAD_FILE_DIR}/mockcpp-2.7.tar.gz)
-#set(PATCH_FILE ${DOWNLOAD_FILE_DIR}/mockcpp-2.7_py3.patch)
 set(BOOST_INCLUDE_DIRS ${OPEN_SOURCE_DIR}/boost-1.87.0)
 
 message(STATUS "mock cmake install prefix ${CMAKE_INSTALL_PREFIX}")
-if (NOT EXISTS "${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a" OR TRUE)
-    if (EXISTS "${OPEN_SOURCE_DIR}/mockcpp-2.7_py3.patch")
-        set(PATCH_FILE "${OPEN_SOURCE_DIR}/mockcpp-2.7_py3.patch")
-        message(STATUS "mockcpp patch use cache: ${PATCH_FILE}")
-    else()
-        set(PATCH_FILE ${OPEN_SOURCE_DIR}/mockcpp-2.7/mockcpp-2.7_py3test.patch)
-        message(STATUS "mockcpp patch not use cache.")
-        file(DOWNLOAD
-            "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h2/mockcpp-2.7_py3.patch"
-            ${PATCH_FILE}
-            TIMEOUT 60
-        )
-    endif()
-    include(ExternalProject)
-    message(STATUS, "CMAKE_COMMAND is ${CMAKE_COMMAND}")
-    if (NOT EXISTS "${URL_FILE}")
-        if(EXISTS "${OPEN_SOURCE_DIR}/mockcpp-2.7.tar.gz")
-            set(URL_FILE "${OPEN_SOURCE_DIR}/mockcpp-2.7.tar.gz")
-            message("mockcpp use local tar.gz: ${URL_FILE}")
-        else()
-            set(URL_FILE "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h2/mockcpp-2.7.tar.gz")
-            message("mockcpp not use cache, new url file: ${URL_FILE}")
-        endif()
-    endif()
-    ExternalProject_Add(mockcpp
-        URL ${URL_FILE}
-        DOWNLOAD_DIR ${DOWNLOAD_FILE_DIR}
-        SOURCE_DIR ${mockcpp_SRC_DIR}
-        TLS_VERIFY OFF
-        PATCH_COMMAND git init && git apply ${PATCH_FILE}
-
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} -G ${CMAKE_GENERATOR}
-            -DCMAKE_CXX_FLAGS=${mockcpp_CXXFLAGS}
-            -DCMAKE_C_FLAGS=${mockcpp_FLAGS}
-            -DBOOST_INCLUDE_DIRS=${BOOST_INCLUDE_DIRS}
-            -DCMAKE_SHARED_LINKER_FLAGS=${mockcpp_LINKER_FLAGS}
-            -DCMAKE_EXE_LINKER_FLAGS=${mockcpp_LINKER_FLAGS}
-            -DBUILD_32_BIT_TARGET_BY_64_BIT_COMPILER=OFF
-            -DCMAKE_INSTALL_PREFIX=${OPEN_SOURCE_DIR}/mockcpp
-            <SOURCE_DIR>
-        BUILD_COMMAND ${${BUILD_TYPE}} $<$<BOOL:${IS_MAKE}>:$(MAKE)>
+if (EXISTS "${OPEN_SOURCE_DIR}/mockcpp-2.7-h5.patch")
+    set(PATCH_FILE "${OPEN_SOURCE_DIR}/mockcpp-2.7-h5.patch")
+    message(STATUS "mockcpp patch use cache: ${PATCH_FILE}")
+else()
+    set(PATCH_FILE ${OPEN_SOURCE_DIR}/mockcpp-2.7/mockcpp-2.7-h5.patch)
+    message(STATUS "mockcpp patch not use cache.")
+    file(DOWNLOAD
+        "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch"
+        ${PATCH_FILE}
+        TIMEOUT 60
     )
-    message(STATUS, "get mockcpp")
 endif()
+include(ExternalProject)
+message(STATUS, "CMAKE_COMMAND is ${CMAKE_COMMAND}")
+if (NOT EXISTS "${URL_FILE}")
+    if(EXISTS "${OPEN_SOURCE_DIR}/mockcpp-2.7.tar.gz")
+        set(URL_FILE "${OPEN_SOURCE_DIR}/mockcpp-2.7.tar.gz")
+        message("mockcpp use local tar.gz: ${URL_FILE}")
+    else()
+        set(URL_FILE "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7.tar.gz")
+        message("mockcpp not use cache, new url file: ${URL_FILE}")
+    endif()
+endif()
+ExternalProject_Add(mockcpp
+    URL ${URL_FILE}
+    DOWNLOAD_DIR ${DOWNLOAD_FILE_DIR}
+    SOURCE_DIR ${mockcpp_SRC_DIR}
+    TLS_VERIFY OFF
+    PATCH_COMMAND git init && git apply ${PATCH_FILE}
+
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -G ${CMAKE_GENERATOR}
+        -DCMAKE_CXX_FLAGS=${mockcpp_CXXFLAGS}
+        -DCMAKE_C_FLAGS=${mockcpp_FLAGS}
+        -DBOOST_INCLUDE_DIRS=${BOOST_INCLUDE_DIRS}
+        -DCMAKE_SHARED_LINKER_FLAGS=${mockcpp_LINKER_FLAGS}
+        -DCMAKE_EXE_LINKER_FLAGS=${mockcpp_LINKER_FLAGS}
+        -DBUILD_32_BIT_TARGET_BY_64_BIT_COMPILER=OFF
+        -DCMAKE_INSTALL_PREFIX=${OPEN_SOURCE_DIR}/mockcpp
+        <SOURCE_DIR>
+    BUILD_COMMAND ${${BUILD_TYPE}} $<$<BOOL:${IS_MAKE}>:$(MAKE)>
+)
+message(STATUS, "get mockcpp")
