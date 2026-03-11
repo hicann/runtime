@@ -11,34 +11,29 @@
 cmake_minimum_required(VERSION 3.14)
 project (device_rts)
 
-set(PRODUCT_SIDE device)
-include(../func.cmake)
-include(../intf_pub_linux.cmake)
-
-set(CMAKE_CXX_STANDARD 17)
-
 set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../" CACHE PATH "Project top directory")
-set(TARGET_SYSTEM_NAME Linux)
+set(PRODUCT_SIDE device)
 
-if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    set(CMAKE_CXX_COMPILE_OBJECT
-        "<CMAKE_CXX_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
-    )
-    set(CMAKE_C_COMPILE_OBJECT
-        "<CMAKE_C_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
-    )
-endif()
+include(${RUNTIME_DIR}/cmake/func.cmake)
 
+set_common_params("${RUNTIME_DIR}")
+set_runtime_params()
+
+# third_party
 include(${RUNTIME_DIR}/cmake/third_party/protobuf.cmake)
 include(${RUNTIME_DIR}/cmake/third_party/csec.cmake)
 include(${RUNTIME_DIR}/cmake/third_party/json.cmake)
-add_subdirectory(${RUNTIME_DIR}/src/mmpa ${CMAKE_BINARY_DIR}/src/mmpa)
-add_subdirectory(${RUNTIME_DIR}/src/dfx/log/liblog ${CMAKE_BINARY_DIR}/liblog)
-add_subdirectory(${RUNTIME_DIR}/src/platform ${CMAKE_BINARY_DIR}/platform)
-add_subdirectory(${RUNTIME_DIR}/src/aicpu_sched/aicpu_kernel ${CMAKE_BINARY_DIR}/aicpu_kernel)
-add_subdirectory(${RUNTIME_DIR}/src/queue_schedule ${CMAKE_BINARY_DIR}/queue_schedule)
-add_subdirectory(${RUNTIME_DIR}/src/aicpu_sched ${CMAKE_BINARY_DIR}/aicpu_sched)
-add_subdirectory(${RUNTIME_DIR}/cmake/stub ${CMAKE_BINARY_DIR}/stub)
+
+add_subdirectories_relative(${RUNTIME_DIR}
+    ${RUNTIME_DIR}/src/mmpa
+    ${RUNTIME_DIR}/src/dfx/log/liblog
+    ${RUNTIME_DIR}/src/platform
+    ${RUNTIME_DIR}/src/aicpu_sched/aicpu_kernel
+    ${RUNTIME_DIR}/src/queue_schedule
+    ${RUNTIME_DIR}/src/aicpu_sched
+    ${RUNTIME_DIR}/cmake/stub
+)
+
 add_dependencies(mmpa c_sec)
 add_dependencies(static_mmpa c_sec)
 add_dependencies(platform c_sec)

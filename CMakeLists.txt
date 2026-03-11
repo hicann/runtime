@@ -11,17 +11,9 @@
 cmake_minimum_required(VERSION 3.14)
 project (rts)
 
-set(CMAKE_CXX_STANDARD 17)
+set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Project top directory")
+set(PRODUCT_SIDE host)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-set(INSTALL_RUNTIME_DIR bin)
-set(INSTALL_INCLUDE_DIR include)
-set(INSTALL_CONFIG_DIR cmake)
-
-message(STATUS "start build npu_runtime")
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     message(STATUS "Build with dependency cann pkgs installed")
     option(BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG "Build with dependency cann pkgs installed" TRUE)
@@ -30,37 +22,24 @@ else()
     option(BUILD_WITH_INSTALLED_DEPENDENCY_CANN_PKG "Build with no dependency cann pkgs installed" FALSE)
 endif()
 
-if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    set(CMAKE_CXX_COMPILE_OBJECT
-        "<CMAKE_CXX_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
-    )
-    set(CMAKE_C_COMPILE_OBJECT
-        "<CMAKE_C_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
-    )
-endif()
+set(INSTALL_BASE_DIR "")
+set(INSTALL_LIBRARY_DIR lib)
+set(INSTALL_RUNTIME_DIR bin)
+set(INSTALL_INCLUDE_DIR include)
+set(INSTALL_CONFIG_DIR cmake)
 
-find_program(CCACHE_PROGRAM ccache)
-if (CCACHE_PROGRAM)
-    message(STATUS "current support ccache")
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-endif()
-set(BASE_DIR ${CMAKE_CURRENT_LIST_DIR})
-set(PRODUCT_SIDE host)
-include(cmake/intf_pub_linux.cmake)
+include(${RUNTIME_DIR}/cmake/func.cmake)
 
-set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Project top directory")
-set(RUNTIME_PYTHON "python3" CACHE PATH "Python Path")
-set(TARGET_SYSTEM_NAME Linux)
-
-include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)
+set_common_params("${RUNTIME_DIR}")
+set_runtime_params()
 
 # third_party
-include(cmake/func.cmake)
-include(cmake/third_party/protobuf.cmake)
-include(cmake/third_party/json.cmake)
-include(cmake/third_party/acl_compat.cmake)
-include(cmake/third_party/csec.cmake)
+include(${RUNTIME_DIR}/cmake/third_party/protobuf.cmake)
+include(${RUNTIME_DIR}/cmake/third_party/json.cmake)
+include(${RUNTIME_DIR}/cmake/third_party/acl_compat.cmake)
+include(${RUNTIME_DIR}/cmake/third_party/csec.cmake)
+
+include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)
 
 if (ENABLE_COV OR ENABLE_UT)
     set(DEFAULT_BUILD_TYPE "Debug")
@@ -108,7 +87,7 @@ add_subdirectory(src/acl/acl_tdt_queue)
 add_subdirectory(src/acl/acl_tdt_channel)
 add_subdirectory(stub)
 
-include(version.cmake)
+include(${RUNTIME_DIR}/version.cmake)
 if(ENABLE_OPEN_SRC)
     check_pkg_build_deps("npu-runtime")
 endif()

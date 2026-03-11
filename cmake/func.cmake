@@ -457,3 +457,42 @@ function(add_version_info_targets)
         add_custom_target(version_${pkg_name}_info ALL DEPENDS ${CMAKE_BINARY_DIR}/version.${pkg_name}.info)
     endforeach()
 endfunction()
+
+# 设置公共参数
+macro(set_common_params base_dir)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    set(CMAKE_CXX_STANDARD 17)
+
+    if(CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+        set(CMAKE_CXX_COMPILE_OBJECT
+            "<CMAKE_CXX_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
+        )
+        set(CMAKE_C_COMPILE_OBJECT
+            "<CMAKE_C_COMPILER> <DEFINES> -D__FILE__='\"$(notdir $(abspath <SOURCE>))\"' -Wno-builtin-macro-redefined <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
+        )
+    endif()
+    set(TARGET_SYSTEM_NAME Linux)
+
+    find_program(CCACHE_PROGRAM ccache)
+    if (CCACHE_PROGRAM)
+        message(STATUS "Enable ccache.")
+        set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    endif()
+
+    include(${base_dir}/cmake/intf_pub_linux.cmake)
+endmacro()
+
+# 设置rts参数
+macro(set_runtime_params)
+    set(BASE_DIR ${RUNTIME_DIR})
+    set(RUNTIME_PYTHON "python3" CACHE PATH "Python Path")
+endmacro()
+
+# 通过相对父目录方式添加子目录
+function(add_subdirectories_relative base_dir)
+    foreach(source_dir ${ARGN})
+        file(RELATIVE_PATH relative_dir "${base_dir}" "${source_dir}")
+        add_subdirectory("${source_dir}" "${relative_dir}")
+    endforeach()
+endfunction()
