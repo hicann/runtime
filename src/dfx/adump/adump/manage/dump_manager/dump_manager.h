@@ -60,6 +60,8 @@ public:
     std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo>& tensorInfos) const;
     const char* GetExceptionDumpPath();
     const char* GetDataDumpPath();
+    bool StartDataDumpServer();
+    bool StopDataDumpServer();
 
 public:
     static std::vector<std::shared_ptr<OperatorPreliminary>> operatorMap_;
@@ -82,6 +84,9 @@ private:
     void ConvertTensorInfo(const TensorInfo& tensorInfo, TensorInfoV2& tensor) const;
     int32_t HandleDumpEvent(uint32_t moduleId, DumpEnableAction action);
     int32_t CallbackEnvExceptionDumpEvent(AdumpCallback callbackFunc);
+    void RegisterSnapShotCallback();
+    void EnableExceptionDumpWithEnv();
+    bool snapCbkRegistered_ = false;
     bool registered_ = false;
     bool isKFCInit_ = false;
     ExceptionDumper exceptionDumper_;

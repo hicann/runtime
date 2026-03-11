@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <thread>
+#include <functional>
+#include <iostream>
 
 INT32 mmGetCwd(CHAR *buffer, INT32 maxLen)
 {
@@ -291,4 +294,39 @@ INT32 mmCreateTaskWithThreadAttr(mmThread *threadHandle, const mmUserBlock_t *fu
 {
     funcBlock->procFunc(funcBlock->pulArg);
     return 0;
+}
+
+mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol)
+{
+    return 1;
+}
+
+INT32 mmBind(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen)
+{
+    return 0;
+}
+
+INT32 mmListen(mmSockHandle sockfd, INT32 backlog)
+{
+    return 0;
+}
+
+mmSockHandle mmAccept (mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t* addrlen)
+{
+    return 1;
+}
+
+INT32 mmConnect(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen)
+{
+    return 0;
+}
+
+mmSsize_t mmSocketSend(mmSockHandle sockfd, VOID* pstSendBuf, INT32 sendLen, INT32 sendFlag)
+{
+    return 0;
+}
+
+mmSsize_t mmSocketRecv(mmSockHandle sockfd, VOID* pstRecvBuf, INT32 recvLen, INT32 recvFlag)
+{
+    return 1;
 }

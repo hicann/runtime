@@ -20,16 +20,17 @@
 #include "file_utils.h"
 #include "log/adx_log.h"
 #include "runtime/context.h"
+#include "rts/rts_snapshot.h"
 #include "adump_dsmi.h"
 #include "common_utils.h"
 #include "exception_info_common.h"
-
 #include "dump_config_converter.h"
 #include "adump_api.h"
 #include "operator_dumper.h"
 #include "kernel_dfx_dumper.h"
 #include "adx_dump_record.h"
 #include "common/file.h"
+#include "adx_datadump_server.h"
 
 namespace Adx {
 constexpr char EXCEPTION_CB_MODULE[] = "AdumpException";
@@ -89,18 +90,67 @@ static void NotifyCoredumpCallback(uint32_t devId, bool isOpen)
     setDeviceRecord[devId] = 1;
 }
 
+static uint32_t DumpSnapShotLockPreCallback(int32_t deviceId, void* args)
+{
+    UNUSED(deviceId);
+    UNUSED(args);
+    return DumpManager::Instance().StopDataDumpServer() ? 0U : 1U;
+}
+
 DumpManager& DumpManager::Instance()
 {
     static DumpManager instance;
     return instance;
 }
 
+
 DumpManager::DumpManager()
 {
-    // enable dump functions with environment variables
+    try {
+        // 1. 通过环境变量使能Exception Dump
+        EnableExceptionDumpWithEnv();
+        // 2. 通过环境变量使能Kernel Dfx Dump
+        KernelDfxDumper::Instance();
+        // 3. 注册快照回调：快照备份前关闭Data Dump Server
+        RegisterSnapShotCallback();
+    } catch (...) {
+        IDE_LOGW("Enable dump function with env variable failed!");
+    }
+}
+
+bool DumpManager::StartDataDumpServer()
+{
+    return AdxDataDumpServerInit() == ADUMP_SUCCESS;
+}
+
+bool DumpManager::StopDataDumpServer()
+{
+#if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
+    int32_t dumpNum = AdxDumpRecord::Instance().GetDumpInitNum();
+    while (dumpNum > 0) {
+        IDE_CTRL_VALUE_FAILED(AdxDataDumpServerUnInit() == ADUMP_SUCCESS, return false,
+            "Stop data dump server failed!");
+        dumpNum = AdxDumpRecord::Instance().GetDumpInitNum();
+    }
+#endif
+    return true;
+}
+
+void DumpManager::RegisterSnapShotCallback()
+{
+    if (!snapCbkRegistered_) {
+        aclError ret = rtSnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, DumpSnapShotLockPreCallback, nullptr);
+        IDE_CTRL_VALUE_FAILED(ret == ACL_SUCCESS, return,
+            "Register DumpSnapShotLockPreCallback to RTS failed. ret=%d", ret);
+        snapCbkRegistered_ = true;
+        IDE_LOGI("Register DumpSnapShotLockPreCallback success.");
+    }
+}
+
+void DumpManager::EnableExceptionDumpWithEnv()
+{
     DumpConfig config;
     DumpType dumpType;
-    // 1. enable exception dump with environment variables
     if (DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType)) {
         if (SetDumpConfig(dumpType, config) != ADUMP_SUCCESS) {
             IDE_LOGW("Enable exception dump failed. dumpType: %d", dumpType);
@@ -108,8 +158,6 @@ DumpManager::DumpManager()
             isEnvExceptionDump_ = true;
         }
     }
-    // 2. 通过环境变量使能Kernel Dfx Dump
-    KernelDfxDumper::Instance();
 }
 
 void DumpManager::KFCResourceInit()
@@ -148,9 +196,9 @@ int32_t DumpManager::ExceptionConfig(DumpType dumpType, const DumpConfig& dumpCo
         return ADUMP_FAILED;
     }
 
-    IDE_RUN_LOGI(
-        "Set %d dump setting, status: %s, dump switch: %llu", dumpType, dumpConfig.dumpStatus.c_str(),
-        dumpConfig.dumpSwitch);
+    IDE_RUN_LOGI("Set %s[%d] dump setting, status: %s, dump switch: %llu",
+        DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType,
+        dumpConfig.dumpStatus.c_str(), dumpConfig.dumpSwitch);
     if (exceptionDumper_.ExceptionDumperInit(dumpType, dumpConfig) != ADUMP_SUCCESS) {
         IDE_LOGW("Failed to initialize the exception dump.");
         return ADUMP_SUCCESS;
@@ -179,19 +227,24 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConf
         return ret;
     }
 
+    // 启动data dump server
+    IDE_CTRL_VALUE_FAILED(StartDataDumpServer(), return ADUMP_FAILED,
+        "Start data dump server failed! dumpType=%s[%d]",
+        DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType);
+
     if (CheckBinValidation() && (isKFCInit_ == false)) {
         auto kfcBind = std::bind(&DumpManager::KFCResourceInit, this);
         std::thread kfcThread(kfcBind);
         kfcThread.join();
         if (!isKFCInit_) {
-            IDE_LOGE("SetDumpConfig failed due to fkc resource initialization error.");
+            IDE_LOGE("SetDumpConfig failed due to kfc resource initialization error.");
             DumpManager::operatorMap_.clear();
             return ADUMP_FAILED;
         }
     }
-    IDE_RUN_LOGI(
-        "Set %d dump setting, status: %s, mode: %s, data: %s, dump switch: %llu, path:%s, dump stats:%s.", dumpType,
-        dumpConfig.dumpStatus.c_str(), dumpConfig.dumpMode.c_str(), dumpConfig.dumpData.c_str(), dumpConfig.dumpSwitch,
+    IDE_RUN_LOGI("Set %s[%d] dump setting, status: %s, mode: %s, data: %s, dump switch: %llu, path:%s, dump stats:%s.",
+        DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType, dumpConfig.dumpStatus.c_str(),
+        dumpConfig.dumpMode.c_str(), dumpConfig.dumpData.c_str(), dumpConfig.dumpSwitch,
         dumpConfig.dumpPath.c_str(), StrUtils::ToString(dumpConfig.dumpStatsItem).c_str());
     return ADUMP_SUCCESS;
 }
@@ -252,23 +305,24 @@ int32_t DumpManager::UnSetDumpConfig()
     for (const auto dumpType : openedDump_) {
         if (IsEnableDump(dumpType)) {
             const auto ret = SetDumpConfig(dumpType, config);
-            if (ret != ADUMP_SUCCESS) {
-                IDE_LOGE(
-                    "[Set][Dump]set dump off failed, dumpType:[%d], errorCode = %d", static_cast<int32_t>(dumpType),
-                    ret);
-                return ADUMP_FAILED;
-            }
-            IDE_LOGI("set dump off successfully, dumpType:[%d].", static_cast<int32_t>(dumpType));
+            IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+                "[Set][Dump]Set dump off failed! dumpType=%s[%d], ret=%d",
+                DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType, ret);
+            IDE_LOGI("[Set][Dump]Set dump off successfully, dumpType=%s[%d]",
+                DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType);
         }
     }
     openedDump_.clear();
-    // 同步触发callbcak事件
+    // 同步触发callback事件
     for (auto& item : disableCallbackFunc_) {
         IDE_LOGI("UnSetDumpConfig start for module [%zu]", item.first);
         HandleDumpEvent(item.first, DumpEnableAction::DISABLE);
     }
     dumpConfigInfo_.clear();
     IDE_LOGI("Dump config info cleared.");
+
+    // 停止data dump server
+    IDE_CTRL_VALUE_FAILED(StopDataDumpServer(), return ADUMP_FAILED, "Stop data dump server failed!");
 
     // 等待所有 dump 操作完成并清理资源
     DumpResourceSafeMap::Instance().waitAndClear();

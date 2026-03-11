@@ -54,6 +54,7 @@ TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 
 TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
 {
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
     int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);

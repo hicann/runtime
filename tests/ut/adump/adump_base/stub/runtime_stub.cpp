@@ -20,6 +20,7 @@
 #include "rts/rts_device.h"
 #include "rts/rts_stream.h"
 #include "rts/rts_kernel.h"
+#include "rts/rts_snapshot.h"
 #include "rt_inner_dfx.h"
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
@@ -745,5 +746,10 @@ rtError_t rtStreamDestroy(rtStream_t stm)
     if (stm == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
+{
     return RT_ERROR_NONE;
 }
