@@ -285,36 +285,28 @@ rtError_t ApiImpl::LaunchDqsTask(Stream * const stm, const rtDqsTaskCfg_t * cons
 
 rtError_t ApiImpl::MemGetInfoByDeviceId(uint32_t deviceId, bool isHugeOnly, size_t* const freeSize, size_t* const totalSize)
 {
-    uint32_t realDeviceId;
     Runtime * const rt = Runtime::Instance();
-    rtError_t error = rt->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    ERROR_RETURN(error, "ChgUserDevIdToDeviceId error:userDeviceId:%u is err:%#x", deviceId, static_cast<uint32_t>(error));
-    
-    int32_t cnt = 1;
     const auto npuDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
-    error = npuDrv->GetDeviceCount(&cnt);
-    ERROR_RETURN(error, "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_ERROR(realDeviceId >= static_cast<uint32_t>(cnt),
-        RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u , valid device range is [0, %d)",
-        realDeviceId, cnt);
-
-    return npuDrv->MemGetInfo(realDeviceId, isHugeOnly, freeSize, totalSize);
+    return npuDrv->MemGetInfo(deviceId, isHugeOnly, freeSize, totalSize);
 }
 
 rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val)
 {
-    rtError_t error = RT_ERROR_NONE;
     size_t freeSize = 0UL;
     size_t totalSize = 0UL;
 
     RT_LOG(RT_LOG_INFO, "get device info by attr misc, deviceId=%u attr=%d", deviceId, attr);
 
+    uint32_t userDeviceId = 0U;
+    rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(static_cast<uint32_t>(deviceId), &userDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "Get userDeviceId failed, error=%#x, drv devId=%u",
+        static_cast<uint32_t>(error), deviceId);
+
     /* 当attr无法转化为(moduleType, infoType)时，在此增加case */
     switch(attr) {
         case RT_DEV_ATTR_CUBE_CORE_NUM:
-            error = GetDeviceInfoFromPlatformInfo(deviceId, "SoCInfo", "cube_core_cnt", val);
+            error = GetDeviceInfoFromPlatformInfo(userDeviceId, "SoCInfo", "cube_core_cnt", val);
             break;
         case RT_DEV_ATTR_WARP_SIZE:
             [[fallthrough]];
@@ -328,7 +320,7 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
             *val = static_cast<int64_t>(totalSize);
             break;
         case RT_DEV_ATTR_L2_CACHE_SIZE:
-            error = GetDeviceInfoFromPlatformInfo(deviceId, "SoCInfo", "l2_size", val);
+            error = GetDeviceInfoFromPlatformInfo(userDeviceId, "SoCInfo", "l2_size", val);
             break;
         case RT_DEV_ATTR_IS_VIRTUAL:
             unsigned int split_mode;

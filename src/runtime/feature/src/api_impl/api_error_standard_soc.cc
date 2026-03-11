@@ -402,9 +402,24 @@ rtError_t ApiErrorDecorator::MemGetInfoByDeviceId(
     NULL_PTR_RETURN_MSG_OUTER(freeSize, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(totalSize, RT_ERROR_INVALID_VALUE);
 
-    const rtError_t error = impl_->MemGetInfoByDeviceId(deviceId, isHugeOnly, freeSize, totalSize);
+    uint32_t realDeviceId;
+    Runtime * const rt = Runtime::Instance();
+    rtError_t error = rt->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
+    ERROR_RETURN(error, "ChgUserDevIdToDeviceId error:userDeviceId:%u is err:%#x", deviceId, static_cast<uint32_t>(error));
+    
+    int32_t cnt = 1;
+    const auto npuDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
+    error = npuDrv->GetDeviceCount(&cnt);
+    ERROR_RETURN(error, "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(realDeviceId >= static_cast<uint32_t>(cnt),
+        RT_ERROR_INVALID_VALUE,
+        "Invalid drv devId, current drv devId=%u , valid device range is [0, %d)",
+        realDeviceId, cnt);
+
+    error = impl_->MemGetInfoByDeviceId(realDeviceId, isHugeOnly, freeSize, totalSize);
     ERROR_RETURN(error, "Get memory info failed, deviceId=%u, isHugeOnly=%d, err=%#x.", 
-        deviceId, isHugeOnly, static_cast<uint32_t>(error));
+        realDeviceId, isHugeOnly, static_cast<uint32_t>(error));
     return error;
 }
 
