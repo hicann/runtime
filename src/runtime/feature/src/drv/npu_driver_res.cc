@@ -1450,7 +1450,8 @@ rtError_t NpuDriver::SqCqFree(const uint32_t sqId, const uint32_t cqId, const ui
 rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t tsId, const uint32_t drvFlag,
                                         uint32_t * const sqId, uint32_t * const cqId,
                                         uint32_t * const info, const uint32_t len,
-                                        uint32_t * const msg, const uint32_t msgLen)
+                                        uint32_t * const msg, const uint32_t msgLen,
+                                        const int32_t retryCount)
 {
     struct halSqCqInputInfo normalSqCqAllocInputInfo = {};
     struct halSqCqOutputInfo normalSqCqAllocOutputInfo;
@@ -1514,10 +1515,10 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
 
     drvError_t drvRet = halSqCqAllocate(deviceId, &normalSqCqAllocInputInfo, &normalSqCqAllocOutputInfo);
     if (g_isAddrFlatDevice) {
-        int32_t tryCount = 0;
-        while ((drvRet != DRV_ERROR_NONE) && (tryCount < 10)) { // try count 10
+        int32_t retryCountTemp = retryCount;
+        while ((drvRet != DRV_ERROR_NONE) && (retryCountTemp > 0)) { // try count 10
             (void)mmSleep(300U); // retry every 300ms
-            tryCount++;
+            retryCountTemp--;
             drvRet = halSqCqAllocate(deviceId, &normalSqCqAllocInputInfo, &normalSqCqAllocOutputInfo);
         }
     }

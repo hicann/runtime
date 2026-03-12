@@ -13,6 +13,7 @@
 #include <list>
 #include <mutex>
 #include "base.hpp"
+#include "driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -40,8 +41,9 @@ public:
     // Release sqcq in batches, release them from the pool, and simultaneously call the driver interface to release them.
     rtError_t FreeSqCqImmediately(const rtDeviceSqCqInfo_t * const sqCqList, const uint32_t freeNum);
 
-    rtError_t AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, const uint32_t drvFlag) const;
-    rtError_t BatchAllocSqCq(const uint32_t allcocNum);
+    rtError_t AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, const uint32_t drvFlag, 
+        const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT) const;
+    rtError_t BatchAllocSqCq(const uint32_t allcocNum, const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT);
     rtError_t FreeSqCqToDrv(const uint32_t sqId, const uint32_t cqId) const;
     rtError_t SetSqRegVirtualAddrToDevice(const uint32_t sqId, const uint64_t sqRegVirtualAddr) const;
     rtError_t AllocSqRegVirtualAddr(const uint32_t sqId, uint64_t &sqRegVirtualAddr) const;

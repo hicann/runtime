@@ -43,7 +43,7 @@ rtError_t DeviceSqCqPool::Init(void) const
     return RT_ERROR_NONE;
 }
 
-rtError_t DeviceSqCqPool::AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, const uint32_t drvFlag) const
+rtError_t DeviceSqCqPool::AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, const uint32_t drvFlag, const int32_t retryCount) const
 {
     rtStreamAllocInfo_t info = {};
     constexpr uint32_t streamId = UINT32_MAX;
@@ -62,7 +62,8 @@ rtError_t DeviceSqCqPool::AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, 
     const rtError_t error = device_->Driver_()->NormalSqCqAllocate(device_->Id_(),
         device_->DevGetTsId(), drvFlag, &sqCqInfo->sqId, &sqCqInfo->cqId,
         RtPtrToPtr<uint32_t *, rtStreamAllocInfo_t *>(&info), static_cast<uint32_t>(sizeof(info)),
-        RtPtrToPtr<uint32_t *, rtStreamInfoExMsg_t *>(&infoEx), static_cast<uint32_t>(sizeof(infoEx)));
+        RtPtrToPtr<uint32_t *, rtStreamInfoExMsg_t *>(&infoEx), static_cast<uint32_t>(sizeof(infoEx)),
+        retryCount);
     COND_RETURN_INFO(error == RT_ERROR_DRV_NO_RESOURCES, RT_ERROR_DRV_NO_RESOURCES, "no resource");
     if (unlikely(error != RT_ERROR_NONE)) {
         ERROR_RETURN(error, "[DeviceSqCqPool]Failed to alloc sq cq, retCode=0x%#x.", static_cast<uint32_t>(error));
@@ -101,7 +102,7 @@ rtError_t DeviceSqCqPool::AllocSqRegVirtualAddr(const uint32_t sqId, uint64_t &s
     return RT_ERROR_NONE;
 }
 
-rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum)
+rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum, const int32_t retryCount)
 {
     COND_RETURN_INFO((deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size() + allcocNum) > RT_DEVICE_SQCQ_RES_MAX_NUM,
         RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL,
@@ -111,7 +112,7 @@ rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum)
     rtDeviceSqCqInfo_t sqCqInfo = {};
     for (uint32_t loop = 0U; loop < allcocNum; loop++) {
         (void)memset_s(&sqCqInfo, sizeof(sqCqInfo), 0x0, sizeof(sqCqInfo));
-        rtError_t error = AllocSqCqFromDrv(&sqCqInfo, TSDRV_FLAG_NO_SQ_MEM);
+        rtError_t error = AllocSqCqFromDrv(&sqCqInfo, TSDRV_FLAG_NO_SQ_MEM, retryCount);
         COND_RETURN_INFO((error != RT_ERROR_NONE), error, "alloc sq cq, loop=%u, retCode=0x%#x.",
             loop, static_cast<uint32_t>(error));
 
@@ -134,7 +135,7 @@ void DeviceSqCqPool::PreAllocSqCq(void)
     RT_LOG(RT_LOG_DEBUG, "PreAllocSqCq once");
 
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
-    const rtError_t error = BatchAllocSqCq(1U); // alloc sq cq only once
+    const rtError_t error = BatchAllocSqCq(1U, 0); // alloc sq cq only once
     COND_RETURN_VOID_WARN(error != RT_ERROR_NONE, "alloc sq cq from hal, retCode=0x%#x.",
         static_cast<uint32_t>(error));
 

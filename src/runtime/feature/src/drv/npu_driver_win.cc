@@ -1028,7 +1028,8 @@ rtError_t NpuDriver::SqCqFree(const uint32_t sqId, const uint32_t cqId, const ui
 rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t tsId, const uint32_t drvFlag,
                                         uint32_t * const sqId, uint32_t * const cqId,
                                         uint32_t * const info, const uint32_t len,
-                                        uint32_t * const msg, const uint32_t msgLen)
+                                        uint32_t * const msg, const uint32_t msgLen
+                                        const int32_t retryCount)
 {
     UNUSED(deviceId);
     UNUSED(tsId);
@@ -1039,6 +1040,7 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
     UNUSED(len);
     UNUSED(msg);
     UNUSED(msgLen);
+    UNUSED(retryCount);
     return RT_ERROR_NONE;
 }
 
