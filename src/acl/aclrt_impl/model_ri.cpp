@@ -415,7 +415,8 @@ aclError aclmdlRIGetStreamsImpl(aclmdlRI modelRI, aclrtStream *streams, uint32_t
 
 aclError aclmdlRIDestroyRegisterCallbackImpl(aclmdlRI modelRI, aclrtCallback func, void *userData) {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIDestroyRegisterCallback);
-    const rtError_t rtErr = rtModelDestroyRegisterCallback(static_cast<rtModel_t>(modelRI), (rtCallback_t)(func), userData);
+    const rtError_t rtErr = rtModelDestroyRegisterCallback(static_cast<rtModel_t>(modelRI),
+        reinterpret_cast<rtCallback_t>(func), userData);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("call rtModelDestroyRegisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
@@ -426,7 +427,8 @@ aclError aclmdlRIDestroyRegisterCallbackImpl(aclmdlRI modelRI, aclrtCallback fun
 
 aclError aclmdlRIDestroyUnregisterCallbackImpl(aclmdlRI modelRI, aclrtCallback func) {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIDestroyUnregisterCallback);
-    const rtError_t rtErr = rtModelDestroyUnregisterCallback(static_cast<rtModel_t>(modelRI), (rtCallback_t)(func));
+    const rtError_t rtErr = rtModelDestroyUnregisterCallback(static_cast<rtModel_t>(modelRI),
+        reinterpret_cast<rtCallback_t>(func));
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("call rtModelDestroyUnregisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
