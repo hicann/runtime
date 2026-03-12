@@ -44,6 +44,9 @@ int32_t main(int32_t argc, char *argv[])
     // Set the device resource limits for the current process
     GetReslimit(deviceId, stream);
 
+    // Wait for all tasks on the stream to complete
+    CHECK_ERROR(aclrtSynchronizeStream(stream));
+
     // Release runtime resources
     CHECK_ERROR(aclrtDestroyStreamForce(stream));
     CHECK_ERROR(aclrtResetDeviceForce(deviceId));
