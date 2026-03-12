@@ -54,43 +54,5 @@ void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio)
     }
 }
 
-rtError_t GetTaskType(const TaskInfo * const task, rtTaskType *type)
-{
-    if (task->stream == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);
-        return RT_ERROR_INVALID_VALUE;
-    }
-    rtTaskType taskType = rtTaskType::RT_TASK_DEFAULT;
-    switch(task->type) {
-        case TS_TASK_TYPE_KERNEL_AICORE: 
-        case TS_TASK_TYPE_KERNEL_AIVEC:
-            taskType = RT_TASK_KERNEL;
-            break;
-        case TS_TASK_TYPE_CAPTURE_WAIT:
-        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
-            taskType = RT_TASK_EVENT_WAIT;
-            break;
-        case TS_TASK_TYPE_MEM_WAIT_VALUE: 
-            taskType = RT_TASK_VALUE_WAIT;
-            break;
-        case TS_TASK_TYPE_EVENT_RECORD:
-        case TS_TASK_TYPE_CAPTURE_RECORD:
-            taskType = RT_TASK_EVENT_RECORD;
-            break;
-        case TS_TASK_TYPE_EVENT_RESET:
-            taskType = RT_TASK_EVENT_RESET;
-            break;
-        case TS_TASK_TYPE_MEM_WRITE_VALUE:
-            taskType = strcmp(task->typeName, "EVENT_RESET") != 0 ? RT_TASK_VALUE_WRITE : RT_TASK_EVENT_RESET;
-            break;
-        default:
-            break;
-    }
-    *type = taskType;
-    RT_LOG(RT_LOG_INFO, "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, convert to rtTaskType=%d.",
-        task->stream->Id_(), task->id, task->type, task->typeName, taskType);
-    return RT_ERROR_NONE;
-}
-
 }
 }

@@ -4786,47 +4786,6 @@ rtError_t Stream::SubmitMemCpyAsyncTask(TaskInfo * const updateTask)
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::StreamGetTasks(void **tasks, uint32_t *numTasks)
-{
-    RT_LOG(RT_LOG_INFO, "start to get all tasks in streams, streamId=%d, deviceId=%u, input numTasks=%u.",
-        streamId_, device_->Id_(), *numTasks);
-    std::vector<uint16_t> taskIdList;
-    {
-        const std::lock_guard<std::mutex> stmLock(streamMutex_);
-        taskIdList = delayRecycleTaskid_;
-    }
-    const uint32_t taskNum = static_cast<uint32_t>(taskIdList.size());
-    if (tasks == nullptr) {
-        *numTasks = taskNum;
-        RT_LOG(RT_LOG_INFO, "tasks is nullptr, the number of all tasks in the stream is %u, deviceId=%u, streamId=%d.",
-            *numTasks, device_->Id_(), streamId_);
-        return RT_ERROR_NONE;
-    }
-    const uint32_t retTaskNum = std::min(*numTasks, taskNum);
-    TaskFactory *taskFactory = device_->GetTaskFactory();
-    for (uint32_t i = 0U; i < retTaskNum; i++) {
-        const uint16_t taskId = taskIdList[i];
-        TaskInfo *task = taskFactory->GetTask(streamId_, taskId);
-        if (task == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "task is nullptr, deviceId=%u, streamId=%d.", device_->Id_(), streamId_);
-            return RT_ERROR_INVALID_VALUE;
-        }
-        tasks[i] = reinterpret_cast<void *>(task);
-    }
-    // 如果numTasks大于实际task数量，剩余空间填充null
-    for (uint32_t i = retTaskNum; i < *numTasks; i++) {
-        tasks[i] = nullptr;
-    }
-    *numTasks = retTaskNum;
-    COND_RETURN_AND_MSG_OUTER(*numTasks < taskNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, __func__,
-        *numTasks, "numTasks",
-        "The array space is insufficient. The array size is less than the total number of tasks in model streams " +
-        std::to_string(taskNum));
-    RT_LOG(RT_LOG_INFO, "end to get all tasks in streams, streamId=%d, deviceId=%u, output numTasks=%u, streamNumTasks=%u.",
-        streamId_, device_->Id_(), *numTasks, taskNum);
-    return RT_ERROR_NONE;
-}
-
 void Stream::ExpandStreamRecycleModelBindStreamAllTask()
 {
     return;

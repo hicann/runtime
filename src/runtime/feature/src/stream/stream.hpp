@@ -1351,7 +1351,6 @@ public:
     {
         return argsHandle_;
     }
-    rtError_t StreamGetTasks(void **tasks, uint32_t* numTasks);
     rtError_t RestoreForSoftwareSq();
 private:
     // submit create stream task

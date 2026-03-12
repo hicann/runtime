@@ -1029,32 +1029,6 @@ rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 
-VISIBILITY_DEFAULT
-rtError_t rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams)
-{
-    UNUSED(mdl);
-    UNUSED(streams);
-    UNUSED(numStreams);
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtStreamGetTasks(rtStream_t stm, rtTask_t *tasks, uint32_t *numTasks)
-{
-    UNUSED(stm);
-    UNUSED(tasks);
-    UNUSED(numTasks);
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtTaskGetType(rtTask_t task, rtTaskType *type)
-{
-    UNUSED(task);
-    UNUSED(type);
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
 #ifdef __cplusplus
 }
 #endif // __cplusplus

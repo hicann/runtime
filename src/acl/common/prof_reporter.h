@@ -282,9 +282,6 @@ namespace acl {
         AclrtMemPoolDestroy,
         AclrtMemPoolSetAttr,
         AclrtMemPoolGetAttr,
-        AclmdlRIGetStreams,
-        AclrtStreamGetTasks,
-        AclrtTaskGetType,
         AclmdlRIDestroyRegisterCallback,
         AclmdlRIDestroyUnregisterCallback,
         // this is the end, can not add after AclRtProfTypeEnd

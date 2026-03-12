@@ -6331,26 +6331,5 @@ rtError_t ApiErrorDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, 
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
-rtError_t ApiErrorDecorator::ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams)
-{
-    NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(numStreams, RT_ERROR_INVALID_VALUE);
-    return impl_->ModelGetStreams(mdl, streams, numStreams);
-}
-
-rtError_t ApiErrorDecorator::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
-{
-    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(numTasks, RT_ERROR_INVALID_VALUE);
-    return impl_->StreamGetTasks(stm, tasks, numTasks);
-}
-
-rtError_t ApiErrorDecorator::TaskGetType(const TaskInfo * const task, rtTaskType *type)
-{
-    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(type, RT_ERROR_INVALID_VALUE);
-    return impl_->TaskGetType(task, type);
-}
-
 }  // namespace runtime
 }  // namespace cce

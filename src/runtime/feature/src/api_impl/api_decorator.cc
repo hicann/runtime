@@ -2557,20 +2557,5 @@ rtError_t ApiDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKer
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
-rtError_t ApiDecorator::ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams)
-{
-    return impl_->ModelGetStreams(mdl, streams, numStreams);
-}
-
-rtError_t ApiDecorator::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
-{
-    return impl_->StreamGetTasks(stm, tasks, numTasks);
-}
-
-rtError_t ApiDecorator::TaskGetType(const TaskInfo * const task, rtTaskType *type)
-{
-    return impl_->TaskGetType(task, type);
-}
-
 }  // namespace runtime
 }  // namespace cce

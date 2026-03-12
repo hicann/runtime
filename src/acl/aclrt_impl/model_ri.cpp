@@ -10,11 +10,10 @@
 
 #include "acl_rt_impl.h"
 #include "runtime/rt_model.h"
-#include "runtime/rt_inner_model.h"
 #include "runtime/stream.h"
 #include "runtime/rts/rts_model.h"
-#include "runtime/rt_inner_model.h"
 #include "runtime/rts/rts_stream.h"
+#include "runtime/rt_inner_model.h"
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
@@ -398,18 +397,6 @@ aclError aclmdlRIAbortImpl(aclmdlRI modelRI)
     }
 
     ACL_LOG_INFO("successfully execute aclmdlRIAbort");
-    return ACL_SUCCESS;
-}
-
-aclError aclmdlRIGetStreamsImpl(aclmdlRI modelRI, aclrtStream *streams, uint32_t *numStreams)
-{
-    ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetStreams);
-
-    const rtError_t rtErr = rtModelGetStreams(static_cast<rtModel_t>(modelRI),  static_cast<rtStream_t *>(streams), numStreams);
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtModelGetStreams failed, runtime result = %d", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
     return ACL_SUCCESS;
 }
 

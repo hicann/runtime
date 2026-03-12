@@ -19,19 +19,6 @@ extern "C" {
 
 /**
  * @ingroup rt_model
- * @brief get streams from the model
- * @param [in] mdl: model handle
- * @param [in, out] streams: array to store the retrieved streams
- * @param [in] numStreams: size of streams array
- * @param [out] numStreams: actual number of streams retrieved
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- * @return RT_ERROR_INSUFFICIENT_INPUT_ARRAY for insufficient tasks array size to hold all streams
- */
-RTS_API rtError_t rtModelGetStreams(rtModel_t mdl, rtStream_t *streams, uint32_t *numStreams);
-
-/**
- * @ingroup rt_model
  * @brief register callback func for model destroy
  * @param [in] mdl
  * @param [in] fn

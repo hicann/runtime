@@ -44,7 +44,6 @@ extern "C" {
 #endif
 
 typedef void *aclrtStream;
-typedef void *aclrtTask;
 typedef void *aclrtEvent;
 typedef void *aclrtContext;
 typedef void *aclrtNotify;

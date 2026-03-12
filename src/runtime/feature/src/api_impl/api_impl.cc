@@ -58,8 +58,6 @@
 #include "mem_type.hpp"
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
-#include "rt_inner_stream.h"
-#include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
 #include "kernel_utils.hpp"
@@ -8982,29 +8980,6 @@ rtError_t ApiImpl::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDf
         return error;
     }
     return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams)
-{
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
-        "model context is not current ctx, model_id=%u.", mdl->Id_());
-
-    std::unique_lock<std::mutex> taskLock(curCtx->streamLock_);
-    return mdl->ModelGetStreams(streams, numStreams);
-}
-
-rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks)
-{
-    COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() == 0, RT_ERROR_INVALID_VALUE,
-        "The stream is not bound to a model.");
-    return stm->StreamGetTasks(tasks, numTasks);
-}
-
-rtError_t ApiImpl::TaskGetType(const TaskInfo * const task, rtTaskType *type)
-{
-    return GetTaskType(task, type);
 }
 
 }  // namespace runtime

@@ -1970,42 +1970,6 @@ rtError_t Model::MemWaitDevAlloc(void **devMem, const Device * const dev)
     return RT_ERROR_NONE;
 }
 
-rtError_t Model::ModelGetStreams(Stream **streams, uint32_t *numStreams) const
-{
-    RT_LOG(RT_LOG_INFO, "start to get all streams in the model, modelId=%u, deviceId=%u, input numStreams=%u.",
-        id_, context_->Device_()->Id_(), *numStreams);
-    if (!isModelComplete_) {
-        RT_LOG(RT_LOG_WARNING, "model is not load complete, modelId=%u.", id_);
-    }
-    const uint32_t mdlStreamNum = static_cast<uint32_t>(streams_.size());
-    if (streams == nullptr) {
-        *numStreams = mdlStreamNum;
-        RT_LOG(RT_LOG_INFO, "streams is nullptr, the number of all streams in the model is %u, deviceId=%u, modelId=%u.",
-            *numStreams, context_->Device_()->Id_(), id_);
-        return RT_ERROR_NONE;
-    }
-    const uint32_t retStreamNum = std::min(*numStreams, mdlStreamNum);
-    uint32_t count = 0U;
-    for (Stream * const stm : streams_) {
-        if (count >= retStreamNum) {
-            break;
-        }
-        streams[count++] = stm;
-    }
-    // 如果numStreams大于实际stm数量，剩余空间填充null
-    for (uint32_t i = retStreamNum; i < *numStreams; i++) {
-        streams[i] = nullptr;
-    }
-    *numStreams = retStreamNum;
-    COND_RETURN_AND_MSG_OUTER(*numStreams < mdlStreamNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011, __func__,
-        *numStreams, "numStreams",
-        "The array space is insufficient. The array size is less than the total number of model streams " +
-        std::to_string(mdlStreamNum));
-    RT_LOG(RT_LOG_INFO, "end to get all streams in the model, modelId=%u, deviceId=%u, output numStreams=%u, mdlNumStreams=%u.",
-        id_, context_->Device_()->Id_(), *numStreams, mdlStreamNum);
-    return RT_ERROR_NONE;
-}
-
 rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, void *ptr)
 {
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);

@@ -59,7 +59,6 @@ set(libruntime_api_src_files
     src/api/api_c_kernel.cc
     src/api/api_c_memory.cc
     src/api/api_c_stream.cc
-    src/api/api_c_task.cc
     src/api/api_c_model.cc
     src/api/api_c_event.cc
     src/api/api_c_mbuf.cc

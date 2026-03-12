@@ -344,12 +344,6 @@ typedef void *rtStream_t;
 
 /**
  * @ingroup dvrt_base
- * @brief task handle.
- */
-typedef void *rtTask_t;
-
-/**
- * @ingroup dvrt_base
  * @brief stream list
  */
 #define RT_MAX_STREAM_NUM (2048U)

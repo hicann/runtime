@@ -20,8 +20,6 @@
 #include "runtime/rt_inner_dfx.h"
 #include "runtime/rt_inner_mem.h"
 #include "runtime/rt_inner_model.h"
-#include "runtime/rt_inner_stream.h"
-#include "runtime/rt_inner_task.h"
 #include "dqs/task_dqs.hpp"
 
 namespace cce {
@@ -519,9 +517,6 @@ public:
     virtual rtError_t ModelDebugDotPrint(const Model * const mdl) = 0;
     virtual rtError_t ModelDebugJsonPrint(const Model * const mdl, const char* path, const uint32_t flags) = 0;
     virtual rtError_t StreamAddToModel(Stream * const stm, Model * const captureMdl) = 0;
-    virtual rtError_t ModelGetStreams(const Model * const mdl, Stream **streams, uint32_t *numStreams) = 0;
-    virtual rtError_t StreamGetTasks(Stream * const stm, void **tasks, uint32_t *numTasks) = 0;
-    virtual rtError_t TaskGetType(const TaskInfo * const task, rtTaskType *type) = 0;
     virtual rtError_t ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr) = 0;
     virtual rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) = 0;
 

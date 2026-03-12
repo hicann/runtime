@@ -305,7 +305,6 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_MEMORY_FREE] = {ACL_ERROR_RT_MEMORY_FREE, "free memory error"};
     rtErrMap_[RT_ERROR_INVALID_MEMORY_TYPE] = {ACL_ERROR_RT_INVALID_MEMORY_TYPE, "invalid memory type"};
     rtErrMap_[RT_ERROR_NOT_SET_SYSPARAMOPT] = {ACL_ERROR_RT_SYSPARAMOPT_NOT_SET, "not set sysparamopt"};
-    rtErrMap_[RT_ERROR_INSUFFICIENT_INPUT_ARRAY] = {ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY, "The array space is insufficient."};
 
     // debug error
     rtErrMap_[RT_ERROR_DEBUG_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "debug base error"};

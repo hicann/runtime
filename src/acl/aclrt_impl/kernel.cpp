@@ -16,7 +16,6 @@
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
 #include "runtime/rts/rts_model.h"
-#include "runtime/rt_inner_task.h"
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
@@ -671,18 +670,5 @@ aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttr
     }
 
     ACL_LOG_INFO("successfully execute aclrtGetFunctionAttribute");
-    return ACL_SUCCESS;
-}
-
-aclError aclrtTaskGetTypeImpl(aclrtTask task, aclrtTaskType *type)
-{
-    ACL_PROFILING_REG(acl::AclProfType::AclrtTaskGetType);
-    
-    const rtError_t rtErr = rtTaskGetType(static_cast<rtTask_t>(task), reinterpret_cast<rtTaskType *>(type));
-    if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtTaskGetType failed, runtime result = %d.", static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
-
     return ACL_SUCCESS;
 }
