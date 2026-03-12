@@ -226,3 +226,21 @@ TEST_F(DumpManagerUtest, Test_DumpOperatorV2_WithCapture_EmptyTensors)
     ret = DumpManager::Instance().DumpOperatorV2("Add", "add_op", tensors, stream);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 }
+
+TEST_F(DumpManagerUtest, Test_RegisterSnapShotCallback_OK)
+{
+    DumpManager::Instance().snapCbkRegistered_ = false;
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, true)
+}
+
+TEST_F(DumpManagerUtest, Test_RegisterSnapShotCallback_Failture)
+{
+    MOCKER(rtSnapShotCallbackRegister).stubs().will(returnValue(1)).then(returnValue(207000));
+    DumpManager::Instance().snapCbkRegistered_ = false;
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, false);
+
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, false);
+}

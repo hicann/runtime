@@ -35,6 +35,7 @@
 namespace Adx {
 constexpr char EXCEPTION_CB_MODULE[] = "AdumpException";
 constexpr char COREDUMP_CB_MODULE[] = "AdumpCoredump";
+static const int32_t ADUMP_ACL_ERROR_RT_FEATURE_NOT_SUPPORT = 207000; // feature not support
 static const uint32_t ADUMP_ACL_ERROR_RT_AICORE_OVER_FLOW = 207003; // aicore over flow
 static const uint32_t ADUMP_ACL_ERROR_RT_AIVEC_OVER_FLOW = 207016;  // aivec over flow
 
@@ -139,8 +140,12 @@ bool DumpManager::StopDataDumpServer()
 void DumpManager::RegisterSnapShotCallback()
 {
     if (!snapCbkRegistered_) {
-        aclError ret = rtSnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, DumpSnapShotLockPreCallback, nullptr);
-        IDE_CTRL_VALUE_FAILED(ret == ACL_SUCCESS, return,
+        rtError_t ret = rtSnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, DumpSnapShotLockPreCallback, nullptr);
+        if (ret == ADUMP_ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            IDE_LOGI("RTS does not support snapshot feature. ret=%d", ret);
+            return;
+        }
+        IDE_CTRL_VALUE_WARN(ret == ACL_SUCCESS, return,
             "Register DumpSnapShotLockPreCallback to RTS failed. ret=%d", ret);
         snapCbkRegistered_ = true;
         IDE_LOGI("Register DumpSnapShotLockPreCallback success.");
