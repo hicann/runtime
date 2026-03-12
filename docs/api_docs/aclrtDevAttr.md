@@ -15,7 +15,7 @@ typedef enum {
     ACL_DEV_ATTR_L2_CACHE_SIZE,
     ACL_DEV_ATTR_SMP_ID = 401U,
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,
-    ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID = 403U,
+    ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,
     ACL_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,
     ACL_DEV_ATTR_SUPER_POD_ID = 405U, 
     ACL_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,
@@ -40,7 +40,7 @@ typedef enum {
 | ACL_DEV_ATTR_L2_CACHE_SIZE | L2 Cache（二级缓存）大小，单位Byte。 |
 | ACL_DEV_ATTR_SMP_ID | SMP（Symmetric Multiprocessing） ID，用于标识设备是否运行在同一操作系统上。 |
 | ACL_DEV_ATTR_PHY_CHIP_ID | 芯片物理ID。 |
-| ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID | SuperPOD Device ID表示超节点产品中的Device标识。 |
+| ACL_DEV_ATTR_SUPER_POD_DEVICE_ID | SuperPOD Device ID表示超节点产品中的Device标识。 |
 | ACL_DEV_ATTR_SUPER_POD_SERVER_ID | SuperPOD Server ID表示超节点产品中的服务器标识。 |
 | ACL_DEV_ATTR_SUPER_POD_ID | SuperPOD ID表示集群中的超节点ID。 |
 | ACL_DEV_ATTR_CUST_OP_PRIVILEGE | 表示查询自定义算是否可以执行更多的系统调用权限。<br>取值如下：<br><br>  - 0：自定义算子执行系统调用权限受控（例如不能执行Write操作）。<br>  - 1：自定义算子可以执行更多的系统调用权限。 |
