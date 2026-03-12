@@ -285,7 +285,6 @@ rtError_t ApiImpl::LaunchDqsTask(Stream * const stm, const rtDqsTaskCfg_t * cons
 
 rtError_t ApiImpl::MemGetInfoByDeviceId(uint32_t deviceId, bool isHugeOnly, size_t* const freeSize, size_t* const totalSize)
 {
-
     Runtime * const rt = Runtime::Instance();
     const auto npuDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
     return npuDrv->MemGetInfo(deviceId, isHugeOnly, freeSize, totalSize);
