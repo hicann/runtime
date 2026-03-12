@@ -14,7 +14,6 @@
 #include <map>
 #include <vector>
 #include "base.hpp"
-#include "runtime/rt_ffts.h"
 
 namespace cce {
 namespace runtime {

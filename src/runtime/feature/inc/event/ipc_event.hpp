@@ -90,7 +90,7 @@ public :
     {
         return ipcHandleVa_;
     }
-    uint8_t* GetCurrentHostMem()
+    uint8_t* GetCurrentHostMem() const
     {
         return RtPtrToPtr<uint8_t*>(currentHostMem_);
     }

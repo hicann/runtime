@@ -10,7 +10,6 @@
 #ifndef CCE_RUNTIME_TASK_INFO_STRUCT_COND_HPP
 #define CCE_RUNTIME_TASK_INFO_STRUCT_COND_HPP
  
-#include "dev.h"
 #include "task_info_base.hpp"
  
 #define THREAD_FOR_PRE_LOAD (30U)
