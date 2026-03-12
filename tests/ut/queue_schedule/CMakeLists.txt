@@ -9,5 +9,30 @@
 # -----------------------------------------------------------------------------------------------------------
 
 include_directories(${OPEN_SOURCE_DIR}/boost-1.87.0)
+add_library(intf_qs_llt_pub INTERFACE)
+target_include_directories(intf_qs_llt_pub INTERFACE
+  ${OPEN_SOURCE_DIR}/mockcpp_src/include
+  ${OPEN_SOURCE_DIR}/boost-1.87.0
+)
+target_compile_definitions(intf_qs_llt_pub INTERFACE
+  _GLIBCXX_USE_CXX11_ABI=0
+)
+target_compile_options(intf_qs_llt_pub INTERFACE
+  $<$<COMPILE_LANGUAGE:CXX>:-std=c++17>
+  -fpermissive
+  -Wall
+  $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fno-omit-frame-pointer -static-libasan -fsanitize=undefined -static-libubsan -fsanitize=leak -static-libtsan>
+
+)
+target_link_options(intf_qs_llt_pub INTERFACE
+  $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -static-libasan -fsanitize=undefined  -static-libubsan -fsanitize=leak -static-libtsan>
+
+)
+target_link_libraries(intf_qs_llt_pub INTERFACE
+    GTest::gtest
+    ${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a
+)
 add_subdirectory(ut)
 add_subdirectory(st)

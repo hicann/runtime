@@ -23,12 +23,14 @@ target_compile_options(intf_tsd_llt_pub INTERFACE
   $<$<COMPILE_LANGUAGE:CXX>:-std=c++17>
   -fpermissive
   -Wall
-  -fsanitize=undefined
-  -static-libubsan
-  -fno-sanitize=alignment
+  $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fno-omit-frame-pointer -static-libasan -fsanitize=undefined -static-libubsan -fsanitize=leak -static-libtsan>
+
 )
 target_link_options(intf_tsd_llt_pub INTERFACE
-  -fsanitize=undefined
+  $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
+  $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -static-libasan -fsanitize=undefined  -static-libubsan -fsanitize=leak -static-libtsan>
+
 )
 target_link_libraries(intf_tsd_llt_pub INTERFACE
     GTest::gtest

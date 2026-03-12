@@ -20,14 +20,6 @@ protobuf_generate(aicpu PROTO_SRCS PROTO_HDRS ${proto_src_files})
 
 set(common_compile_options
     -rdynamic
-    -fpermissive
-)
-
-list(APPEND common_compile_options
-    -fsanitize=undefined
-    -static-libubsan
-    -fno-sanitize=alignment
-    -Wall
 )
 
 set(LOCAL_SRC_FILES
@@ -148,7 +140,7 @@ target_include_directories(queue_schedule_st PRIVATE
 )
 
 target_link_libraries(queue_schedule_st PRIVATE
-    $<BUILD_INTERFACE:intf_pub_cxx17>
+    $<BUILD_INTERFACE:intf_qs_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
     ascend_protobuf
     c_sec
@@ -156,9 +148,6 @@ target_link_libraries(queue_schedule_st PRIVATE
     -lpthread
     -lrt
     -ldl
-    GTest::gtest
-    ${OPEN_SOURCE_DIR}/mockcpp/lib/libmockcpp.a
-    -fsanitize=undefined
     c_sec_headers
 )
 
