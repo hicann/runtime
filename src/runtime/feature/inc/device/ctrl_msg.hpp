@@ -113,11 +113,11 @@ struct RtCtrlMsg {
     uint8_t version;
 };
 
-rtError_t CtrlMsgStreamClearInit(TaskInfo *taskInfo, const RtCtrlMsgParam &param);
+rtError_t CtrlMsgStreamClearInit(TaskInfo *const taskInfo, const RtCtrlMsgParam &param);
 
 rtError_t CtrlMsgStreamRecycleInit(TaskInfo *taskInfo, const RtCtrlMsgParam &param);
 
-rtError_t CtrlMsgNotifyResetInit(TaskInfo *taskInfo, const RtCtrlMsgParam &param);
+rtError_t CtrlMsgNotifyResetInit(TaskInfo *const taskInfo, const RtCtrlMsgParam &param);
 
 rtError_t CtrlMsgModelTaskInit(TaskInfo * const taskInfo, const RtCtrlMsgParam &param);
 

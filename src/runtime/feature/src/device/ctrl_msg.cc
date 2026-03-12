@@ -20,7 +20,7 @@
 namespace cce {
 namespace runtime {
 
-rtError_t CtrlMsgStreamClearInit(TaskInfo * taskInfo, const RtCtrlMsgParam &param)
+rtError_t CtrlMsgStreamClearInit(TaskInfo *const taskInfo, const RtCtrlMsgParam &param)
 {
     RtCommonCmdParam taskParam = param.commonCmdParam;
     CommonCmdTaskInfo cmdInfo;
@@ -42,7 +42,7 @@ rtError_t CtrlMsgStreamRecycleInit(TaskInfo * taskInfo, const RtCtrlMsgParam &pa
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlMsgNotifyResetInit(TaskInfo * taskInfo, const RtCtrlMsgParam &param)
+rtError_t CtrlMsgNotifyResetInit(TaskInfo *const taskInfo, const RtCtrlMsgParam &param)
 {
     RtCommonCmdParam taskParam = param.commonCmdParam;
     CommonCmdTaskInfo cmdInfo;

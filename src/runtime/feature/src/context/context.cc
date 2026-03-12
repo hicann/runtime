@@ -34,7 +34,6 @@
 #include "task_info.hpp"
 #include "task_submit.hpp"
 #include "task_to_sqe.hpp"
-#include "config.h"
 #include "stream_state_callback_manager.hpp"
 #if (!defined(CFG_VECTOR_CAST))
 #include <algorithm>
@@ -1066,7 +1065,7 @@ rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Strea
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_TASK_SQE_UPDATE, errorReason, 1U, UpdateTaskFlag::NOT_SUPPORT_AND_SKIP);
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), errorReason);
-    std::function<void()> const kernTaskRecycle = [&, kernTask]() {
+    std::function<void()> const kernTaskRecycle = [this, kernTask]() {
         (void)device_->GetTaskFactory()->Recycle(kernTask);
     };
     ScopeGuard taskGuarder(kernTaskRecycle);
