@@ -5006,9 +5006,8 @@ rtError_t ApiImpl::LabelGoto(Label * const lbl, Stream * const stm)
 
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
                                 "Label goto failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
-
-    const uint32_t ver = curCtx->Device_()->GetTschVersion();
 #ifndef CFG_DEV_PLATFORM_PC
+    const uint32_t ver = curCtx->Device_()->GetTschVersion();
     COND_RETURN_ERROR_MSG_INNER(ver >= TS_VERSION_MORE_LABEL, RT_ERROR_FEATURE_NOT_SUPPORT,
                                 "Can not support old label goto for 64k label.");
 #endif
@@ -5358,9 +5357,8 @@ rtError_t ApiImpl::LabelGotoEx(Label * const lbl, Stream * const stm)
         "Label goto(extend) failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
     COND_RETURN_ERROR_MSG_INNER(lbl->Context_() != curCtx, RT_ERROR_LABEL_CONTEXT,
                                 "Label is not in current ctx");
-
-    const uint32_t ver = curCtx->Device_()->GetTschVersion();
 #ifndef CFG_DEV_PLATFORM_PC
+    const uint32_t ver = curCtx->Device_()->GetTschVersion();
     COND_RETURN_ERROR_MSG_INNER(ver >= TS_VERSION_MORE_LABEL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Can not support old label goto for 64k label.");
 #endif
