@@ -263,7 +263,7 @@ uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo)
     return error;
 }
 
-static TimeoutStatus_t waitSqIsTimeout(TprtSqHandle* sqHandle, TprtSqe_t* headTask)
+static TimeoutStatus_t waitSqIsTimeout(const TprtSqHandle* sqHandle, const TprtSqe_t* headTask)
 {
     uint16_t curSqHead = sqHandle->SqGetSqHead();
     uint32_t curTaskSn = headTask->commonSqe.sqeHeader.taskSn;

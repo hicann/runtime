@@ -11,7 +11,6 @@
 #include <chrono>
 #include "tprt_timer.hpp"
 #include "tprt_base.hpp"
-#include "tprt_error_code.h"
 #include "tprt_device.hpp"
 
 namespace cce {

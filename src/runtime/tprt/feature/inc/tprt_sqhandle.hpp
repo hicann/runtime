@@ -86,7 +86,7 @@ public:
         return waitInfo_; 
     }
     void SetTimeoutWaitInfo();
-    uint32_t GetTaskTimeout(TprtSqe_t* headTask);
+    uint32_t GetTaskTimeout(const TprtSqe_t* headTask) const;
     std::shared_ptr<TprtSqHandle> GetSharedPtr() {
         if (myself == nullptr) {
             myself.reset(this);

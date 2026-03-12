@@ -25,7 +25,7 @@ TprtProfiling::~TprtProfiling()
 
 }
 
-uint32_t TprtProfiling::TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask)
+uint32_t TprtProfiling::TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask) const
 {
     if (TprtManage::Instance()->getTprtTaskReportEnable()) {
         MsprofCompactInfo compactInfo{};

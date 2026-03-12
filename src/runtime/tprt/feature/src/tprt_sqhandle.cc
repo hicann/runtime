@@ -128,7 +128,7 @@ uint32_t TprtSqHandle::SqExeTask(const TprtSqe_t *sqe)
     return result;
 }
 
-uint32_t TprtSqHandle::GetTaskTimeout(TprtSqe_t* headTask)
+uint32_t TprtSqHandle::GetTaskTimeout(const TprtSqe_t* headTask) const
 {
     constexpr uint32_t MICROSECONDS_PER_SECOND = 1000000U;
     constexpr uint32_t MILLISECONDS_PER_SECOND = 1000U;
