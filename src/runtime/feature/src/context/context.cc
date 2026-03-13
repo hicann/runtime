@@ -3148,7 +3148,9 @@ rtError_t Context::LaunchRandomNumTask(const rtRandomNumTaskInfo_t *taskInfo, St
         "dsa task submit failed, streamId=%d, taskId=%hu, retCode=%#x",
         streamId, rtStarsCommonTask->id, error);
 
-    SET_THREAD_TASKID_AND_STREAMID(streamId, taskId);
+    if (rtStarsCommonTask->stream != nullptr) {
+        SET_THREAD_TASKID_AND_STREAMID(rtStarsCommonTask->stream->Id_(), taskId);
+    }
 
     return RT_ERROR_NONE;
 ERROR_RECYCLE:
