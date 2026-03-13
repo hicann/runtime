@@ -217,6 +217,7 @@ void HashData::SaveHashData(int32_t devId)
 
 void HashData::SaveNewHashData(bool isLastChunk)
 {
+    MSPROF_LOGD("SaveNewHashData");
     if (!inited_) {
         MSPROF_LOGW("HashData not inited");
         return;
@@ -224,6 +225,7 @@ void HashData::SaveNewHashData(bool isLastChunk)
     std::unique_lock<std::mutex> lock(hashMutex_);
     // check whether the last save is stopped.
     if (!readStatus_) {
+        MSPROF_LOGD("readStatus_ is false");
         readStatus_ = true;
         return;
     }
@@ -232,6 +234,7 @@ void HashData::SaveNewHashData(bool isLastChunk)
     SHARED_PTR_ALIA<Uploader> uploader = nullptr;
     UploaderMgr::instance()->GetUploader(std::to_string(DEFAULT_HOST_ID), uploader);
     if (uploader == nullptr || readIndex_ == hashVector_.size()) {
+        MSPROF_LOGD("uploader is nullptr");
         return;
     }
     // combined hash map data

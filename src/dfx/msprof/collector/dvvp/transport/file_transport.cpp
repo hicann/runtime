@@ -14,6 +14,7 @@
 #include "osal.h"
 #include "msprof_dlog.h"
 #include "securec.h"
+#include "aprof_pub.h"
 
 namespace analysis {
 namespace dvvp {
@@ -215,7 +216,7 @@ void FILETransport::AddHashData(const std::string& input) const{
             item.erase(pos + 1);
         }
         uint64_t uid = hashDataGenIdFuncPtr_(item);
-        MSPROF_LOGD("add str2id:%s uid:%u from adprof into hash data ", item.c_str(), uid);
+        MSPROF_LOGD("add str2id:%s uid:%llu from adprof into hash data ", item.c_str(), uid);
     }
 }
 
@@ -231,8 +232,11 @@ bool removeStr2IdHeaderMark(std::string& str, std::string& after) {
     if (str.find(mark) == std::string::npos) {
         return false;
     }
+    int totalSize = str.length();
     after = str.substr(pos + mark.size());
     str = str.substr(0, pos);
+    MSPROF_LOGD("filechunk total size:%d aicpu data:%d hash data:%d",
+        totalSize, str.length(), after.length());
     return true;
 }
 
@@ -243,6 +247,7 @@ bool removeStr2IdHeaderMark(std::string& str, std::string& after) {
  */
 int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) {
     std::string after;
+    const int headerSize = sizeof(MsprofAdditionalInfo) - MSPROF_ADDTIONAL_INFO_DATA_LENGTH;
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
         return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
@@ -259,7 +264,13 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
         MSPROF_LOGI("start parse drv str2id info");
         parseStr2IdStart_ = true;
         AddHashData(after);
-        return PROFILING_SUCCESS;
+        if (fileChunkReq->chunk.length() > 0) {
+            fileChunkReq->chunkSize = fileChunkReq->chunk.size() - headerSize;
+            MSPROF_LOGD("store aicpu data in file chunk, size:%d", fileChunkReq->chunkSize);
+            return PROFILING_FAILED;
+        } else {
+            return PROFILING_SUCCESS;
+        }
     }
     return PROFILING_FAILED;
 }

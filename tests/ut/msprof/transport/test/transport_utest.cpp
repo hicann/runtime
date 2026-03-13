@@ -1022,7 +1022,7 @@ TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
     trans->parseStr2IdStart_ = false;
     fileChunkReq->chunk = content2;
     fileChunkReq->chunkSize = content2.length();
-    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(fileChunkReq));
+    EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
     trans->parseStr2IdStart_ = false;
     fileChunkReq->chunk = content3;
     fileChunkReq->chunkSize = content3.length();

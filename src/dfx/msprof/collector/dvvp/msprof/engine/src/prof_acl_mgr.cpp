@@ -2455,7 +2455,7 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
         auto iter = devTasks_.find(devId);
         if (iter != devTasks_.end()) {
             MSPROF_LOGI("Processing ProfAclStop of device %u", devId);
-            HashData::instance()->SaveHashData(devId);
+            HashData::instance()->SaveNewHashData(true);
             iter->second.params->isCancel = true;
             if (ProfManager::instance()->IdeCloudProfileProcess(iter->second.params) != PROFILING_SUCCESS) {
                 MSPROF_LOGE("Failed to stop profiling on device %u", devId);
