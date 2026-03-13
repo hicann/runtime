@@ -831,7 +831,7 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
   EXPECT_EQ(value, ACL_DEV_ATTR_PHY_CHIP_ID);
 
   value = (aclrtDevAttr)403U;
-  EXPECT_EQ(value, ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID);
+  EXPECT_EQ(value, ACL_DEV_ATTR_SUPER_POD_DEVICE_ID);
 
   value = (aclrtDevAttr)404U;
   EXPECT_EQ(value, ACL_DEV_ATTR_SUPER_POD_SERVER_ID);

@@ -522,7 +522,8 @@ typedef enum {
 
     ACL_DEV_ATTR_SMP_ID = 401U,                 // indicates whether devices are on the same OS
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,            // physical chip id
-    ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID = 403U,    // super pod device id
+    ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID = 403U,    // DEPRECATED: Use ACL_DEV_ATTR_SUPER_POD_DEVICE_ID
+    ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,    // super pod device id
     ACL_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,    // super pod server id
     ACL_DEV_ATTR_SUPER_POD_ID = 405U,           // super pod id
     ACL_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,      // indicates whether the custom operator privilege is enabled
