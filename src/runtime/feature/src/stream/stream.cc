@@ -18,7 +18,6 @@
 #include "npu_driver.hpp"
 #include "task.hpp"
 #include "error_message_manage.hpp"
-#include "mmpa/mmpa_api.h"
 #ifndef CFG_DEV_PLATFORM_PC
 #include "error_manager.h"
 #endif
@@ -3708,7 +3707,7 @@ void Stream::EnterFailureAbort()
         eventTaskList.clear();
     }
 }
-bool Stream::IsSeparateSendAndRecycle()
+bool Stream::IsSeparateSendAndRecycle() const
 {
     return device_->IsStarsPlatform() && device_->GetIsChipSupportRecycleThread() &&
          !IsBindDvppGrp() && !IsSoftwareSqEnable() && ((Flags() & (RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE)) == 0U);
