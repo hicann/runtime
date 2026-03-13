@@ -26,7 +26,7 @@ extern "C" {
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr);
+RTS_API rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr);
 
 /**
  * @ingroup rt_model
@@ -36,7 +36,7 @@ RTS_API rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn,
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn);
+RTS_API rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn);
 
 #if defined(__cplusplus)
 }

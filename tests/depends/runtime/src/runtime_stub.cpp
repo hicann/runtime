@@ -1271,7 +1271,7 @@ rtError_t aclStub::rtModelDestroy(rtModel_t mdl)
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+rtError_t aclStub::rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr)
 {
     (void)mdl;
     (void)fn;
@@ -1279,7 +1279,7 @@ rtError_t aclStub::rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+rtError_t aclStub::rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn)
 {
     (void)mdl;
     (void)fn;
@@ -3505,12 +3505,12 @@ rtError_t rtModelDestroy(rtModel_t mdl)
     return MockFunctionTest::aclStubInstance().rtModelDestroy(mdl);
 }
 
-rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr)
 {
     return MockFunctionTest::aclStubInstance().rtModelDestroyRegisterCallback(mdl, fn, ptr);
 }
 
-rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn)
 {
     return MockFunctionTest::aclStubInstance().rtModelDestroyUnregisterCallback(mdl, fn);
 }

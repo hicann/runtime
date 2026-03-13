@@ -1392,7 +1392,7 @@ rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoPr
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr) {
+rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr) {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->ModelDestroyRegisterCallback(RtPtrToPtr<Model *>(mdl), fn, ptr);
@@ -1401,7 +1401,7 @@ rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *p
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn) {
+rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn) {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->ModelDestroyUnregisterCallback(RtPtrToPtr<Model *>(mdl), fn);

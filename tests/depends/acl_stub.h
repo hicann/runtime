@@ -319,8 +319,8 @@ public:
     virtual rtError_t rtThreadExchangeCaptureMode(rtStreamCaptureMode *mode);
     virtual rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag);
     virtual rtError_t rtModelDestroy(rtModel_t mdl);
-    virtual rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr);
-    virtual rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn);
+    virtual rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr);
+    virtual rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn);
     virtual rtError_t rtsStreamBeginTaskGrp(rtStream_t stm);
     virtual rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle);
     virtual rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle);

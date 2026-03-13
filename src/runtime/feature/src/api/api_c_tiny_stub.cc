@@ -679,7 +679,7 @@ rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char* path, uint32_t flags)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *ptr)
+rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, void *ptr)
 {
     (void)mdl;
     (void)fn;
@@ -688,7 +688,7 @@ rtError_t rtModelDestroyRegisterCallback(rtModel_t mdl, rtCallback_t fn, void *p
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtModelDestroyUnregisterCallback(rtModel_t mdl, rtCallback_t fn)
+rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn)
 {
     (void)mdl;
     (void)fn;
