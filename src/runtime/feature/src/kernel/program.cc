@@ -1688,7 +1688,7 @@ void Program::SetProgramInvalidToDevice(const uint32_t deviceId)
             devValidMutex_[deviceId].unlock();
             break;
         }
-        Device * dev =  devicePtr_[deviceId];
+        Device *dev =  devicePtr_[deviceId];
         if (dev->ProgramSetMutexTryLock()) {
             dev->UnRegisterProgram(this);
             devicePtr_[deviceId] = nullptr;

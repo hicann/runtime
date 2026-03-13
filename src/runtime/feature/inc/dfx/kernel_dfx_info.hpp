@@ -22,7 +22,7 @@ public:
     KernelDfxInfo(const KernelDfxInfo&) = delete;
     KernelDfxInfo& operator=(const KernelDfxInfo&) = delete;
 
-    static KernelDfxInfo * Instance()
+    static KernelDfxInfo* Instance()
     {
         static KernelDfxInfo instance;
         return &instance;

@@ -496,7 +496,6 @@ rtError_t NpuDriver::GetAvailEventNum(const uint32_t deviceId, const uint32_t ts
     const drvError_t drvRet = halResourceInfoQuery(deviceId, tsId,
         IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_NOTIFY_ONLY) ? DRV_RESOURCE_NOTIFY_ID : DRV_RESOURCE_EVENT_ID,
         &queryInfoInput);
-
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[driver interface] halResourceInfoQuery sq failed: device_id=%u, "
             "ts_id=%u, drvRetCode=%d!", deviceId, tsId, static_cast<int32_t>(drvRet));

@@ -102,6 +102,7 @@ void TprtWorker::WorkerWakeUp()
 {
     int val = 0;
     sem_getvalue(&workerThreadSem_, &val);
+    // < 2的作用是以安全的方式唤醒回收线程，确保信号量值不超过1，避免重复唤醒或计数溢出
     if (val < 2) {
         (void)mmSemPost(&workerThreadSem_);
     }

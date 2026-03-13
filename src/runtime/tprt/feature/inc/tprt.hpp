@@ -62,7 +62,6 @@ private:
     std::mutex deviceIdToDeviceMapLock_;
     std::unordered_map<uint32_t, TprtDevice *> deviceMap_;      // key is deviceId, value is device
     bool TprtTaskReportEnable_ = true;
-
 };
 }
 }

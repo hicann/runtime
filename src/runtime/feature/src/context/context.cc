@@ -653,7 +653,6 @@ rtError_t Context::TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t 
                 "Sync stream timeout=%dms, device_id=%d.", timeout, device_->Id_());
             (void)sched_yield();
         }
-
     }
     return firstError;
 }
@@ -1942,8 +1941,6 @@ ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(rtDbgUnregStreamTask);
     return RT_ERROR_DEBUG_UNREGISTER_FAILED;
 }
-
-
 
 rtError_t Context::GetDevArgsAddr(Stream * const stm, const rtArgsEx_t * const argsInfo, void ** const devArgsAddr,
     void ** const argsHandle) const

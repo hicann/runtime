@@ -864,7 +864,7 @@ rtError_t ExecuteKernelDfxInfoFunc(const uint8_t *blockAddr, const uint8_t *dump
                                    uint32_t coreType, uint32_t coreId)
 {
     rtKernelDfxInfoType type = RT_KERNEL_DFX_INFO_INVALID;
-    KernelDfxInfo * kernelDfxInfoInstance = KernelDfxInfo::Instance();
+    KernelDfxInfo *kernelDfxInfoInstance = KernelDfxInfo::Instance();
     NULL_PTR_RETURN(kernelDfxInfoInstance, RT_ERROR_INSTANCE_NULL);
 
     DumpBlockInfo(kernelDfxInfoInstance, blockAddr, coreType, coreId);

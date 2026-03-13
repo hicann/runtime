@@ -748,7 +748,7 @@ static void ParseCcuDfxInfo(rtMultiCCUExDetailInfo_t * const multiCcuInfo, const
  	for (uint8_t idx = 0U; idx < multiCcuInfo->ccuMissionNum; idx++) {
  	    uint8_t dieId = multiCcuInfo->missionInfo[idx].dieId;
  	    uint8_t missionId = multiCcuInfo->missionInfo[idx].missionId;
- 	    uint32_t key = dieId << DIE_ID_SHIFT_BITS | missionId;
+ 	    uint32_t key = ((dieId << DIE_ID_SHIFT_BITS) | missionId);
  	    auto it = dfxInfoMap.find(key);
  	    if (it != dfxInfoMap.end()) {
  	        const StarsCcuDfxInfo *dfxInfo = it->second;

@@ -147,7 +147,6 @@ void DeviceSnapshot::RecordFuncCallAddrAndSize(TaskInfo *const task)
 {
     static const auto& handlerMap = GetHandlerMap();
     auto it = handlerMap.find(task->type);
-    
     if (it != handlerMap.end()) {
         it->second(task, this);
     }
