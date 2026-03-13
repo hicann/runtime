@@ -30,6 +30,7 @@
 #undef protected
 #include "raw_device.hpp"
 #include "xpu_stub.h"
+#include "rt_inner_xpu.h"
 
 using namespace testing;
 using namespace cce::runtime;

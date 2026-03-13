@@ -19,6 +19,8 @@
 #undef protected
 #undef private
 #include "xpu_stub.h"
+#include "rt_inner_xpu.h"
+
 
 using namespace cce::runtime;
 
