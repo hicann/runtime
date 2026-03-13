@@ -26,6 +26,7 @@
 #include "device_sq_cq_pool.hpp"
 #include "sq_addr_memory_pool.hpp"
 #include "task_info.hpp"
+#include "event.h"
 
 constexpr size_t PTE_LENGTH = 16U;
 
@@ -202,7 +203,7 @@ public:
     virtual rtError_t TearDown(const bool terminal = false, bool flag = true);
 
     virtual void EnterFailureAbort();
-    bool IsSeparateSendAndRecycle();
+    bool IsSeparateSendAndRecycle() const;
     // use ctrlsq to recycle task in stream
     rtError_t RecycleTaskWithCtrlsq(Device * const dev, const uint32_t logicCqId, const uint32_t recycleCnt);
 
@@ -847,7 +848,7 @@ public:
         isForceRecycle_ = flag;
     }
 
-    bool GetIsForceRecycle()
+    bool GetIsForceRecycle() const
     {
         return isForceRecycle_;
     }
