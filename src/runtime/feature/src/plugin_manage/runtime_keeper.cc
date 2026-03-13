@@ -93,9 +93,9 @@ static Runtime *CreateRuntimeImpl(void **soHandle)
 {
     UNUSED(soHandle);
     cce::runtime::Runtime* rt = new (std::nothrow) cce::runtime::Runtime();
-    #ifdef XPU_UT
-        cce::tprt::TprtManage::tprt_ = new (std::nothrow) cce::tprt::TprtManage();
-    #endif
+#ifdef XPU_UT
+    cce::tprt::TprtManage::tprt_ = new (std::nothrow) cce::tprt::TprtManage();
+#endif
     return rt;
 }
 
@@ -103,10 +103,10 @@ static void DestroyRuntimeImpl(Runtime *rt, const void *soHandle)
 {
     UNUSED(soHandle);
     DELETE_O(rt);
-    #ifdef XPU_UT
-        DELETE_O(cce::tprt::TprtManage::tprt_);
-        cce::tprt::TprtManage::tprt_ = nullptr;
-    #endif
+#ifdef XPU_UT
+    DELETE_O(cce::tprt::TprtManage::tprt_);
+    cce::tprt::TprtManage::tprt_ = nullptr;
+#endif
 }
 
 static void DestroyPoolRegistryImpl(void *soHandle)
