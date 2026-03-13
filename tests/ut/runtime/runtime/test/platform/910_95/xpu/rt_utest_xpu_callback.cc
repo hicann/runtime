@@ -9,7 +9,7 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "rt_inner_xpu.h"
+#include "rt_external.h"
 #include "error_codes/rt_error_codes.h"
 
 

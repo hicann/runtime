@@ -23,8 +23,6 @@
 #include "runtime/rt_inner_stream.h"
 #include "runtime/rt_inner_task.h"
 #include "dqs/task_dqs.hpp"
-#include "runtime/rt_inner_xpu.h"
-
 
 namespace cce {
 namespace runtime {
