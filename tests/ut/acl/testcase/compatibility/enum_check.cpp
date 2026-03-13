@@ -1117,8 +1117,5 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtFuncAttribute)
   value = (aclrtFuncAttribute)1U;
   EXPECT_EQ(value, ACL_FUNC_ATTR_KERNEL_TYPE);
 
-  value = (aclrtFuncAttribute)2U;
-  EXPECT_EQ(value, ACL_FUNC_ATTR_KERNEL_RATIO);
-
   EXPECT_EQ(sizeof(aclrtFuncAttribute), 4);
 }

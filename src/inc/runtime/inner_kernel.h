@@ -38,17 +38,6 @@ typedef enum tagRtStackType {
 RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, 
                                    const uint16_t coreId, const void **stack, uint32_t *stackSize);
 
-/**
- * @ingroup rt_kernel
- * @brief get kernel size, if kernel is mix, the output param aicSize and aivSize are both valid,
- * otherwise, there will be only one valid size.
- * @param funcHandle the kernel
- * @param aicSize output param: kernel size of aicore
- * @param aivSize output param: kernel size of aivector
- * @return RT_ERROR_NONE for ok
- */
-RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize);
-
 #if defined(__cplusplus)
 }
 #endif

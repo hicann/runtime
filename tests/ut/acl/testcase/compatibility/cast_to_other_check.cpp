@@ -815,7 +815,6 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtKernelType)
 TEST_F(UTEST_ACL_compatibility_cast_check, aclrtFuncAttribute)
 {
     EXPECT_EQ((uint64_t)ACL_FUNC_ATTR_KERNEL_TYPE, (uint64_t)RT_FUNCTION_ATTR_KERNEL_TYPE);
-    EXPECT_EQ((uint64_t)ACL_FUNC_ATTR_KERNEL_RATIO, (uint64_t)RT_FUNCTION_ATTR_KERNEL_RATIO);
 
     EXPECT_EQ(sizeof(aclrtFuncAttribute), sizeof(rtFuncAttribute));
 }

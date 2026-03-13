@@ -298,7 +298,6 @@ set(runtimeut_910b_src_list
  	${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/json_parse.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program_common.cc
-    ${TOP_DIR}/src/runtime/feature/src/kernel/kernel_utils.cc
     ${TOP_DIR}/src/runtime/feature/src/runtime_v100/runtime_adapt.cc
 )
 ###################################################################################################

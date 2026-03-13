@@ -12,7 +12,6 @@
 #include <map>
 #include "runtime/kernel.h"
 #include "runtime/rts/rts_kernel.h"
-#include "runtime/inner_kernel.h"
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
 #include "runtime/rts/rts_model.h"
@@ -196,16 +195,6 @@ aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void **aicAddr, vo
     const auto rtErr = rtsFuncGetAddr(funcHandle, aicAddr, aivAddr);
     if (rtErr != RT_ERROR_NONE) {
        ACL_LOG_CALL_ERROR("Get function addr Failed, runtime result = %d", rtErr);
-       return ACL_GET_ERRCODE_RTS(rtErr);
-    }
-    return ACL_SUCCESS;
-}
-
-aclError aclrtGetFunctionSizeImpl(aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
-{
-    const auto rtErr = rtFuncGetSize(funcHandle, aicSize, aivSize);
-    if (rtErr != RT_ERROR_NONE) {
-       ACL_LOG_CALL_ERROR("Get function size failed, runtime result = %d", rtErr);
        return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;

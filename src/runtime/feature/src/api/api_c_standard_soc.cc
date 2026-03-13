@@ -1350,23 +1350,6 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
-{
-    const Runtime *const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    COND_RETURN_WARN(
-        !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH),
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support rtFuncGetSize api, return.", 
-        static_cast<int32_t>(chipType));
-    Api *const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->FuncGetSize(RtPtrToPtr<Kernel *>(funcHandle), aicSize, aivSize);
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint32_t maxLen)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(label, RT_ERROR_INVALID_VALUE);

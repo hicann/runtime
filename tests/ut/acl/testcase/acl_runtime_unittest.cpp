@@ -3639,29 +3639,6 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAddr_success)
     funcHandle = nullptr;
 }
 
-TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionSize_failed_with_invalid_args)
-{
-    size_t aicSize = 0;
-    size_t aivSize = 0;
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtFuncGetSize(_,_,_))
-                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
-
-    auto funcHandle = reinterpret_cast<aclrtFuncHandle>(0x1000U);
-    const auto ret = aclrtGetFunctionSize(funcHandle, &aicSize, &aivSize);
-    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
-    funcHandle = nullptr;
-}
-
-TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionSize_success)
-{
-    auto funcHandle = reinterpret_cast<aclrtFuncHandle>(0x1000U);
-    size_t aicSize = 0;
-    size_t aivSize = 0;
-    const auto ret = aclrtGetFunctionSize(funcHandle, &aicSize, &aivSize);
-    EXPECT_EQ(ret, ACL_SUCCESS);
-    funcHandle = nullptr;
-}
-
 TEST_F(UTEST_ACL_Runtime, aclrtLaunchKernelWithConfig_failed_with_invalid_args)
 {
     auto ret = aclrtLaunchKernelWithConfig(nullptr, 0U, nullptr, nullptr, nullptr, nullptr);

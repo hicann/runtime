@@ -264,7 +264,6 @@ Runtime API参考的目录如下：
     -   [aclrtGetArgsFromExceptionInfo](api_docs/aclrtGetArgsFromExceptionInfo.md)
     -   [aclrtGetFuncHandleFromExceptionInfo](api_docs/aclrtGetFuncHandleFromExceptionInfo)
     -   [aclrtGetFunctionAddr](api_docs/aclrtGetFunctionAddr.md)
-    -   [aclrtGetFunctionSize](api_docs/aclrtGetFunctionSize.md)
     -   [aclrtGetFunctionName](api_docs/aclrtGetFunctionName.md)
     -   [aclrtGetFunctionAttribute](api_docs/aclrtGetFunctionAttribute.md)
     -   [aclrtGetHardwareSyncAddr](api_docs/aclrtGetHardwareSyncAddr.md)

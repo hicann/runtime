@@ -212,7 +212,6 @@ set(libruntime_v100_src_files
     src/kernel/module.cc
     src/kernel/program.cc
     src/kernel/program_common.cc
-    src/kernel/kernel_utils.cc
     src/memory/soma.cc
     src/memory/stream_mem_pool.cc
     src/launch/memcpy_stars.cc

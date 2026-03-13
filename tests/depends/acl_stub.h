@@ -335,7 +335,6 @@ public:
     virtual rtError_t rtsBinaryGetDevAddress(const rtBinHandle binHandle, void **bin, uint32_t *binSize);
     virtual rtError_t rtsFuncGetByEntry(const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle *funcHandle);
     virtual rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr);
-    virtual rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize);
 
     virtual rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle, void* reserve);
     virtual rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle *handle);
@@ -794,7 +793,6 @@ public:
     MOCK_METHOD3(rtsFuncGetByEntry, rtError_t(const rtBinHandle binHandle, const uint64_t funcEntry,
                                               rtFuncHandle *funcHandle));
     MOCK_METHOD3(rtsFuncGetAddr, rtError_t(const rtFuncHandle funcHandle, void **aicAddr, void **aivAddr));
-    MOCK_METHOD3(rtFuncGetSize, rtError_t(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize));
     MOCK_METHOD6(rtsLaunchKernelWithConfig, rtError_t(rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
                                                       rtKernelLaunchCfg_t *cfg, rtArgsHandle argsHandle,
                                                       void* reserve));

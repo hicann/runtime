@@ -161,7 +161,6 @@
     _(aclError, aclrtBinaryGetDevAddress, (const aclrtBinHandle binHandle, void ** binAddr, size_t * binSize), (binHandle, binAddr, binSize)) \
     _(aclError, aclrtBinaryGetFunctionByEntry, (aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle * funcHandle), (binHandle, funcEntry, funcHandle)) \
     _(aclError, aclrtGetFunctionAddr, (aclrtFuncHandle funcHandle, void ** aicAddr, void ** aivAddr), (funcHandle, aicAddr, aivAddr)) \
-    _(aclError, aclrtGetFunctionSize, (aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize), (funcHandle, aicSize, aivSize)) \
     _(aclError, aclrtGetMemcpyDescSize, (aclrtMemcpyKind kind, size_t * descSize), (kind, descSize)) \
     _(aclError, aclrtSetMemcpyDesc, (void * desc, aclrtMemcpyKind kind, void * srcAddr, void * dstAddr, size_t count, void * config), (desc, kind, srcAddr, dstAddr, count, config)) \
     _(aclError, aclrtMemcpyAsyncWithDesc, (void * desc, aclrtMemcpyKind kind, aclrtStream stream), (desc, kind, stream)) \
