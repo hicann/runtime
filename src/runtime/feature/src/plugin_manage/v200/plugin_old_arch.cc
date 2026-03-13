@@ -22,7 +22,7 @@ VISIBILITY_DEFAULT cce::runtime::Runtime* ConstructRuntimeImpl()
     }
     RT_LOG(RT_LOG_INFO, "RuntimeImpl construct success, runtime = %p", rt);
     cce::runtime::Runtime::runtime_ = rt;
-    #ifndef CFG_DEV_PLATFORM_PC
+#ifndef CFG_DEV_PLATFORM_PC
     cce::tprt::TprtManage::tprt_ = new (std::nothrow) cce::tprt::TprtManage();
     if (cce::tprt::TprtManage::tprt_ == nullptr) {
         delete rt;
@@ -30,7 +30,7 @@ VISIBILITY_DEFAULT cce::runtime::Runtime* ConstructRuntimeImpl()
         RT_LOG(RT_LOG_ERROR, "new TprtManage failed");
         return nullptr;
     }
-    #endif
+#endif
     return rt;
 }
 
