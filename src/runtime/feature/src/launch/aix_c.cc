@@ -100,8 +100,18 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo * const updateTask, void ** c
     error = driver->MemCopySync(*hostAddr, allocSize, static_cast<const void *>(sqe),
                                 allocSize, RT_MEMCPY_HOST_TO_HOST);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
-        (void)driver->HostMemFree(*hostAddr),
+        (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;,
         "MemCopySync failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    if (dstStream->IsSoftwareSqEnable()) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(dstStream->Model_());
+        if ((captureModel != nullptr) && (!captureModel->IsSendSqe())) {
+            error = memcpy_s(RtPtrToPtr<void *>(RtPtrToValue(dstStream->GetSqeBuffer()) + sizeof(rtDavidSqe_t) * updateTask->pos),
+                       allocSize, *hostAddr, allocSize);
+            COND_PROC_RETURN_ERROR(error != EOK, RT_ERROR_SEC_HANDLE, (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;,
+                "memcpy_s failed, retCode=%#x.", static_cast<uint32_t>(error));
+        }
+    }
 
     return RT_ERROR_NONE;
 }
@@ -115,19 +125,36 @@ void FreeTempHostAddr(const Stream * const stm, void * const hostAddr)
     stm->Device_()->Driver_()->HostMemFree(hostAddr);
 }
 
+static rtError_t ConvertAsyncDmaForSoftWareSq(MemcpyAsyncTaskInfo * const cpyAsyncTask, TaskInfo * const updateTask)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Stream *updateStm = updateTask->stream;
+    Driver * const curDrv = updateStm->Device_()->Driver_();
+    if (updateStm->GetSqBaseAddr() == 0ULL) {
+        error = updateStm->AllocSoftwareSqAddr(CAPTURE_TASK_RESERVED_NUM + Runtime::macroValue_.expandStreamRsvTaskNum);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "AllocSoftwareSqAddr failed, device_id=%d, stream_id=%d, retCode=%#x.",
+            updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(error));
+    }
+    void *sqeDeviceAddr = RtValueToPtr<void *>(updateStm->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
+    error = curDrv->MemConvertAddr(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(cpyAsyncTask->src)),
+           static_cast<uint64_t>(reinterpret_cast<uintptr_t>(sqeDeviceAddr)), cpyAsyncTask->size, &(cpyAsyncTask->dmaAddr));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "MemConvertAddr failed, device_id=%d, stream_id=%d, retCode=%#x.",
+            updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(error));
+    cpyAsyncTask->destPtr = sqeDeviceAddr;
+    cpyAsyncTask->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(updateStm->Device_()->Id_());
+    cpyAsyncTask->size = cpyAsyncTask->dmaAddr.fixed_size;
+    return RT_ERROR_NONE;
+}
+
 rtError_t UpdateDavidKernelTaskSubmit(TaskInfo * const updateTask, Stream * const stm, uint32_t sqeLen)
 {
-    Driver * const curDrv = stm->Device_()->Driver_();
     void *srcHostAddr = nullptr;
     uint64_t allocSize = sizeof(rtDavidSqe_t) * sqeLen;
 
     // 将updateTask转成sqe，并拷贝放到host svm内存中
     rtError_t error = UpdateDavidKernelPrepare(updateTask, &srcHostAddr, allocSize);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "prepare failed, device_id=%u, stream_id=%d, allocSize=%llu, retCode=%#x.",
-            stm->Device_()->Id_(), stm->Id_(), allocSize, static_cast<uint32_t>(error));
-        return error;
-    }
+    ERROR_RETURN(error, "prepare failed, device_id=%u, stream_id=%d, allocSize=%llu, retCode=%#x.",
+        stm->Device_()->Id_(), stm->Id_(), allocSize, static_cast<uint32_t>(error));
 
     TaskInfo *rtMemcpyAsyncTask = nullptr;
     uint32_t pos = 0xFFFFU;
@@ -140,7 +167,7 @@ rtError_t UpdateDavidKernelTaskSubmit(TaskInfo * const updateTask, Stream * cons
     // 申请memcpyAsync task
     const uint32_t sqeNum = GetSqeNumForMemcopyAsync(RT_MEMCPY_HOST_TO_DEVICE);
     error = AllocTaskInfo(&rtMemcpyAsyncTask, stm, pos, sqeNum);
-    ERROR_PROC_RETURN_MSG_INNER(error, (void)curDrv->HostMemFree(srcHostAddr);,
+    ERROR_PROC_RETURN_MSG_INNER(error, (void)stm->Device_()->Driver_()->HostMemFree(srcHostAddr);,
                                 "Failed to alloc task, stream_id=%d, retCode=%#x.",
                                 stm->Id_(), static_cast<uint32_t>(error));
 
@@ -156,12 +183,16 @@ rtError_t UpdateDavidKernelTaskSubmit(TaskInfo * const updateTask, Stream * cons
     memcpyAsyncTaskInfo->src = srcHostAddr;
     memcpyAsyncTaskInfo->isSqeUpdateH2D = true;
     memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
-
-    // PCIE场景下通过驱动将目标更新的sqe addr转成dmaAddr，UB场景下通过驱动获取DWQE
-    error = ConvertAsyncDma(rtMemcpyAsyncTask, updateTask, true);
-    ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDma failed, retCode=%#x.", static_cast<uint32_t>(error));
+    if ((updateTask->stream->IsSoftwareSqEnable()) && (!Runtime::Instance()->GetConnectUbFlag())) {
+        // 扩流场景下，拿不到sqid，需要通过目的地址转换描述符。
+        error = ConvertAsyncDmaForSoftWareSq(memcpyAsyncTaskInfo, updateTask);
+        ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDmaForSoftWareSq failed, retCode=%#x.", static_cast<uint32_t>(error));
+    } else {
+        // PCIE场景下通过驱动将目标更新的sqe addr转成dmaAddr，UB场景下通过驱动获取DWQE
+        error = ConvertAsyncDma(rtMemcpyAsyncTask, updateTask, true);
+        ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDma failed, retCode=%#x.", static_cast<uint32_t>(error));
+    }
     rtMemcpyAsyncTask->needPostProc = true;
-
     if (updateTask->type == TS_TASK_TYPE_FUSION_KERNEL) {
         memcpyAsyncTaskInfo->releaseArgHandle = updateTask->u.fusionKernelTask.oldArgHandle;
         updateTask->u.fusionKernelTask.oldArgHandle = nullptr;
