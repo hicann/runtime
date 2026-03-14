@@ -35,7 +35,7 @@ drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
 
 drvError_t drvGetProcessSign(struct process_sign *sign)
 {
-    sign->tgid = 1000;
+    sign->tgid = getpid();
     sign->sign[0] = 'a';
     sign->sign[1] = '\0';
     sign->resv[0] = '\0';

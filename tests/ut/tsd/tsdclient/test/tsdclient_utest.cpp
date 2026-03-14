@@ -19,6 +19,11 @@
 #undef private
 #undef protected
 #include "stub_log.h"
+#include "stub_server_reply.h"
+#include "stub_server_msg_proc_def.h"
+#include "common_util_func.h"
+#include "stub_common_sys_call.h"
+
 using namespace tsd;
 using namespace std;
 
@@ -27,486 +32,271 @@ protected:
     virtual void SetUp()
     {
         cout << "Before TsdClientTest." << endl;
+        setenv("RUN_MODE", "PROCESS", 1);
     }
 
     virtual void TearDown()
     {
         cout << "After TsdClientTest." << endl;
-        GlobalMockObject::verify();
         GlobalMockObject::reset();
+        StubServerReply::GetInstance()->ResetServerReply();
     }
-public:
-static const uint32_t deviceId = 0;
 };
 
-TEST_F(TsdClientTest, TsdOpen)
+TEST_F(TsdClientTest, TsdOpen_TsdClose_RankSize_0_Success)
 {
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    const uint32_t deviceIdChipMode = 3;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    setenv("AICPU_PROFILING_MODE", "true", 1);
-
-    ret = TsdOpen(deviceId, 0);
-    ret = TsdOpenEx(deviceIdChipMode, 0, 1);
-    ret = UpdateProfilingMode(deviceId, 0);
-    ret = TsdInitQs(deviceId);
-    ret = TsdClose(deviceId);
-
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(true));
-
-    ret = TsdOpen(deviceId, 0);
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
-
-    ret = TsdOpenEx(deviceIdChipMode, 0, 1);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-
-    ret = TsdOpenAicpuSd(deviceId);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-
-    ret = TsdInitQs(deviceId);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdOpenChipModeFailed01)
+TEST_F(TsdClientTest, TsdOpen_TsdClose_RankSize_2_Success)
 {
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    const uint32_t deviceIdChipMode = 4;
-    MOCKER(halGetDeviceCountFromChip)
-        .stubs()
-        .will(returnValue(5));
-    ret = TsdOpenEx(deviceIdChipMode, 0, 1);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdOpenChipModeFailed02)
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs().will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs().will(returnValue(tsd::TSD_OK));;
-
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER(mmDlopen)
-        .stubs().will(returnValue(static_cast<void*>(nullptr)));
-    const uint32_t deviceIdChipMode = 5;
-    ret = TsdOpenEx(deviceIdChipMode, 0, 1);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdOpenFailed1)
-{
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    tsd::TSD_StatusT ret = TsdOpen(deviceId, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdInitQsFailed1)
-{
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-        const char *groupName = "TestName";
-    tsd::TSD_StatusT ret = TsdInitQs(deviceId, groupName);;
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdOpenFailed2)
-{
-    tsd::TSD_StatusT ret = TsdOpen(deviceId, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdOpenMdc001)
-{
-    MOCKER_CPP(&ClientManager::IsAdcEnv)
-        .stubs()
-        .will(returnValue(true));
-    tsd::TSD_StatusT ret = TsdOpen(deviceId, 0);
-    EXPECT_EQ(ret, tsd::TSD_OPEN_NOT_SUPPORT_FOR_ADC);
-}
-
-TEST_F(TsdClientTest, TsdOpenAicpuSd001)
-{
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    tsd::TSD_StatusT ret = TsdOpenAicpuSd(deviceId);
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpen(0U, 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdOpenAicpuSd002)
+TEST_F(TsdClientTest, TsdOpenEx_TsdClose_RankSize_0_DieMode_Success)
 {
-    tsd::TSD_StatusT ret = TsdOpenAicpuSd(2U);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdInitQsFailed2)
-{
-    tsd::TSD_StatusT ret = TsdInitQs(deviceId, nullptr);
-    EXPECT_NE(ret, tsd::TSD_OK);
-}
-
-TEST_F(TsdClientTest, TsdCloseNoNeed1)
-{
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    tsd::TSD_StatusT ret = TsdClose(deviceId);
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpenEx(0U, 0U, static_cast<uint32_t>(tsd::DeviceRunMode::DIE_MODE));
     EXPECT_EQ(ret, tsd::TSD_OK);
-
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(true));
-    ret = TsdClose(deviceId);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdCloseExNotSetQuickTsdCloseFlagSucc) 
+TEST_F(TsdClientTest, TsdOpenEx_TsdClose_RankSize_2_DieMode_Success)
 {
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));;
-    
-    MOCKER_CPP(&ProcessModeManager::WaitRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    setenv("AICPU_PROFILING_MODE", "true", 1);;
- 
-    ret = TsdOpen(deviceId, 0);
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    ret = TsdCloseEx(deviceId, 0);
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpenEx(0U, 2U, static_cast<uint32_t>(tsd::DeviceRunMode::DIE_MODE));
     EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdClose(deviceId);
-}
- 
-TEST_F(TsdClientTest, TsdCloseExSetQuickTsdCloseFlagsucc) 
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    
-    MOCKER_CPP(&ProcessModeManager::WaitRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    setenv("AICPU_PROFILING_MODE", "true", 1);
- 
-    ret = TsdOpen(deviceId, 0);
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    ret = TsdCloseEx(deviceId, 1);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdClose(deviceId);
-}
- 
-TEST_F(TsdClientTest, TsdCloseExCheckDestructFlag) 
-{
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(true));
-    tsd::TSD_StatusT ret = TsdCloseEx(deviceId, 1);
-    EXPECT_EQ(ret, tsd::TSD_OK);
- 
-}
- 
-TEST_F(TsdClientTest, TsdCloseExClientManagerCloseFail) 
-{
-    tsd::TSD_StatusT ret = tsd::TSD_OK;
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
- 
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&ProcessModeManager::WaitRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::Destroy)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t,
-            const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    
-
-    setenv("AICPU_PROFILING_MODE", "true", 1);
-    ret = TsdOpen(deviceId, 0);
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    // const std::shared_ptr<tsd::ClientManager> clientManager = tsd::ClientManager::GetInstance(0);
-    MOCKER_CPP(&ProcessModeManager::SendCloseMsg)
-        .stubs()
-        .will(returnValue(1));
-    ret = TsdCloseEx(deviceId, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
- 
-}
-
-TEST_F(TsdClientTest, UpdateProfilingMode_SUCCESS)
-{
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(false));
-    tsd::TSD_StatusT ret = UpdateProfilingMode(deviceId, 1);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-
-    MOCKER(&ClientManager::CheckDestructFlag)
-        .stubs()
-        .will(returnValue(true));
-    ret = UpdateProfilingMode(deviceId, 1);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdSetMsprofReporterCallback)
+TEST_F(TsdClientTest, TsdOpenEx_TsdClose_RankSize_0_ChipMode_Success)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    // TsdOpenEx使用CHIP_MODE的接口已经不建议使用，在日落计划中。
+    tsd::TSD_StatusT ret = TsdOpenEx(0U, 0U, static_cast<uint32_t>(tsd::DeviceRunMode::CHIP_MODE));
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdOpenEx_TsdClose_RankSize_2_ChipMode_Success)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    // TsdOpenEx使用CHIP_MODE的接口已经不建议使用，在日落计划中。
+    tsd::TSD_StatusT ret = TsdOpenEx(0U, 2U, static_cast<uint32_t>(tsd::DeviceRunMode::CHIP_MODE));
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdOpenAicpuSd_TsdClose_Success)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpenAicpuSd(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, UpdateProfilingMode_TsdClose_Success)
+{
+    StubServerMsgProcDef::RegisterUpdateProfilingModeMsgDefaultCallBack();
+    // 使用updateprofilingmode 接口需要先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = UpdateProfilingMode(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdSetMsprofReporterCallback_Success)
 {
     tsd::TSD_StatusT ret = TsdSetMsprofReporterCallback(nullptr);
     EXPECT_EQ(ret, tsd::TSD_OK);
+    TsdSetMsprofReporterCallback(&StubServerMsgImpl::StubMsProfReportCallBack);
+    EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdSetAttr)
+TEST_F(TsdClientTest, TsdInitQs_Success)
 {
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
+    StubServerMsgProcDef::RegisterTsdInitQsMsgDefaultCallBack();
+    const std::string dfGrp = "default_group";
+    tsd::TSD_StatusT ret = TsdInitQs(0U, dfGrp.c_str());
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdInitFlowGw_Success)
+{
+    StubServerMsgProcDef::RegisterTsdInitQsMsgDefaultCallBack();
+    const std::string argGrp = "args_group";
+    InitFlowGwInfo startArgs;
+    startArgs.groupName = argGrp.c_str();
+    startArgs.schedPolicy = 0UL;
+    startArgs.reschedInterval = 0UL;
+    tsd::TSD_StatusT ret = TsdInitFlowGw(0U, &startArgs);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, GetHdcConctStatus_Success)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    // GetHdcConctStatus 接口需要先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    int32_t curStat = 0;
+    ret = GetHdcConctStatus(0U, &curStat);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdSetAttr_Success)
+{
+    // TsdSetAttr 接口已经在日落计划中，已经不建议外部使用
+    tsd::TSD_StatusT ret = TsdSetAttr("SetTest", "PROCESS_MODE");
     EXPECT_EQ(ret, tsd::TSD_OK);
 
     ret = TsdSetAttr("test", "PROCESS_MODE");
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdSetAttr1)
+TEST_F(TsdClientTest, SetAicpuSchedMode_Success)
 {
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "THREAD_MODE");
+    // SetAicpuSchedMode 接口已经在日落计划中，已经不建议外部使用
+    const tsd::TSD_StatusT ret = SetAicpuSchedMode(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdSetAtt2)
+TEST_F(TsdClientTest, TsdCapabilityGet_PidQos_Success)
 {
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "OTHER_MODE");
+    // TsdCapabilityGet 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterGetPidQosMsgDefaultCallBack();
+    // 使用TsdCapabilityGet 接口获取PidQos需要先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    uint8_t pidQos = 0;
+    uint64_t pidQosPtrValue = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&pidQos));
+    ret = TsdCapabilityGet(0U, TSD_CAPABILITY_PIDQOS, pidQosPtrValue);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    EXPECT_EQ(pidQos, 1);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdSetAtt3)
+TEST_F(TsdClientTest, TsdCapabilityGet_Support_OM_Inner_Dec_Success)
 {
-    tsd::TSD_StatusT ret = TsdSetAttr(nullptr, "");
-    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
-}
-
-TEST_F(TsdClientTest, TsdSetAtt4)
-{
-    tsd::TSD_StatusT ret = TsdSetAttr("Misc", nullptr);
-    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
-}
-
-TEST_F(TsdClientTest, TsdSetAttAicpuInterruptMode)
-{
-    const uint32_t ret = SetAicpuSchedMode(AICPU_SCHED_MODE_INTERRUPT);
-    EXPECT_EQ(ret, 0);
-}
-
-TEST_F(TsdClientTest, TsdSetAttAicpuMsgqMode)
-{
-    const uint32_t ret = SetAicpuSchedMode(AICPU_SCHED_MODE_MSGQ);
-    EXPECT_EQ(ret, 0);
-}
-
-TEST_F(TsdClientTest, TsdSetAttAicpuUnknownMode)
-{
-    const uint32_t ret = SetAicpuSchedMode(AICPU_SCHED_MODE_INVALID);
-    EXPECT_EQ(ret, 0);
-}
-
-TEST_F(TsdClientTest, TsdCapabilityGet_SUCCESS)
-{
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    uint64_t ptr = 0;
-    tsd::TSD_StatusT ret = TsdCapabilityGet(deviceId, TSD_CAPABILITY_PIDQOS, ptr);
+    // TsdCapabilityGet 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterGetOmInnerDecMsgDefaultCallBack();
+    // 使用TsdCapabilityGet 接口获取Support OM inner先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
-
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    ret = TsdCapabilityGet(deviceId, TSD_CAPABILITY_PIDQOS, ptr);
+    uint64_t supportOmInner = 0UL;
+    uint64_t omInnerPtrValue = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&supportOmInner));
+    ret = TsdCapabilityGet(0U, TSD_CAPABILITY_OM_INNER_DEC, omInnerPtrValue);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    EXPECT_EQ(supportOmInner, 1UL);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, GetHdcConctStatus)
+TEST_F(TsdClientTest, TsdCapabilityGet_Support_BuiltIn_Udf_Success)
 {
-    int32_t hdcSessStat;
-    tsd::TSD_StatusT ret = GetHdcConctStatus(0, &hdcSessStat);
-
-    ret = GetHdcConctStatus(0, nullptr);
+    // TsdCapabilityGet 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterGetCapabilityLevelMsgDefaultCallBack();
+    // 使用TsdCapabilityGet 接口获取Support built in udf先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
-    
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    ret = GetHdcConctStatus(0, &hdcSessStat);
+    uint64_t supportBuiltInUdf = 0UL;
+    uint64_t builtinUdfPtrValue = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&supportBuiltInUdf));
+    ret = TsdCapabilityGet(0U, TSD_CAPABILITY_BUILTIN_UDF, builtinUdfPtrValue);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    EXPECT_EQ(supportBuiltInUdf, 1UL);
+    ret = TsdClose(0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, CapabilityGetFailTest_InputIsNull) {
-    MOCKER_CPP(&HdcClient::Init)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::CreateHdcSession)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp)
-        .stubs()
-        .will(returnValue(tsd::TSD_OK));
-
-    setenv("AICPU_PROFILING_MODE", "true", 1);
-    TsdOpen(deviceId, 0);
-    const std::shared_ptr<tsd::ClientManager> clientManager = tsd::ClientManager::GetInstance(0);
-    uint64_t ptr = 0;
-    const tsd::TSD_StatusT ret = clientManager->CapabilityGet(TSD_CAPABILITY_PIDQOS, ptr);
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(TsdClientTest, TsdCapabilityGetIsFailTest_InputIsNull) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    uint64_t ptr = 0;
-    tsd::TSD_StatusT ret = TsdCapabilityGet(deviceId, TSD_CAPABILITY_BUT + 1, ptr);
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-TEST_F(TsdClientTest, TsdCapabilityGetFailTest_TypeisnotPIDQOS) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    uint64_t ptr = 0;
-    tsd::TSD_StatusT ret = TsdCapabilityGet(deviceId, TSD_CAPABILITY_BUT + 1, ptr);
-    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
-}
-
-const std::string RUNTIME_PKG_NAME_UT = "Ascend-runtime_device-minios.tar.gz";
-const std::string DSHAPE_PKG_NAME_UT = "Ascend-opp_rt-minios.aarch64.tar.gz";
-TEST_F(TsdClientTest, TsdFileLoadTest_TsdFileLoadSucc) {
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    MOCKER(&drvHdcGetTrustedBasePath).stubs().will(returnValue(DRV_ERROR_NONE));
-    MOCKER(&drvGetProcessSign).stubs().will(returnValue(DRV_ERROR_NONE));
-    MOCKER(&drvHdcSendFile).stubs().will(returnValue(DRV_ERROR_NONE));
-    MOCKER_CPP(&HdcClient::Init).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::CreateHdcSession).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::IsSupportHeterogeneousInterface).stubs().will(returnValue(true));
-    std::string filepath = "/home";
-    std::string filename = "tmp.txt";
-    ret = TsdFileLoad(deviceId, filepath.c_str(), filepath.size(), filename.c_str(), filename.size());
+TEST_F(TsdClientTest, TsdCapabilityGet_Support_Mutiple_Hccp_Success)
+{
+    // TsdCapabilityGet 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterGetCapabilityLevelMsgDefaultCallBack();
+    // 使用TsdCapabilityGet 接口获取Support mutiple hccp先调用TsdOpen设置运行上下文
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
     EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdFileUnLoad(deviceId, filepath.c_str(), filepath.size());
-    MOCKER_CPP(&ProcessModeManager::LoadRuntimePkgToDevice).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::LoadDShapePkgToDevice).stubs().will(returnValue(tsd::TSD_OK));
-    ret = TsdFileLoad(deviceId, nullptr, 0UL, RUNTIME_PKG_NAME_UT.c_str(), RUNTIME_PKG_NAME_UT.size());
-    ret = TsdFileLoad(deviceId, nullptr, 0UL, DSHAPE_PKG_NAME_UT.c_str(), DSHAPE_PKG_NAME_UT.size());
-    GlobalMockObject::verify();
+    uint64_t supportMulHccp = 0UL;
+    uint64_t mulHccpPtrValue = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&supportMulHccp));
+    ret = TsdCapabilityGet(0U, TSD_CAPABILITY_MUTIPLE_HCCP, mulHccpPtrValue);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    EXPECT_EQ(supportMulHccp, 1UL);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, TsdProcessOpenTest_TsdProcessOpenSucc) {
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    MOCKER_CPP(&HdcClient::Init).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::CreateHdcSession).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::IsSupportHeterogeneousInterface).stubs().will(returnValue(true));
+TEST_F(TsdClientTest, TsdFileLoad_TsdFileUnLoad_Runtime_Pkg_Success) {
+    // TsdFileLoad 及 TsdFileUnLoad 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterTsdFileLoadAndUnLoadMsgDefaultCallBack();
+    const std::string runtimePkgName = "Ascend-runtime_device-minios.tar.gz";
+    std::string filepath = "/tmp";
+    std::string pathPreFix = std::to_string(getpid());
+    if (CommonUtilFunc::WriteTmpFile(pathPreFix, runtimePkgName)) {
+        tsd::TSD_StatusT ret = TsdFileLoad(0U, filepath.c_str(), filepath.size(), runtimePkgName.c_str(),
+            runtimePkgName.size());
+        const std::string dstFile = filepath + "/" + runtimePkgName;
+        remove(dstFile.c_str());
+        const std::string fileDir = filepath + "/" + pathPreFix;
+        remove(fileDir.c_str());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+        ret = TsdFileUnLoad(0U, filepath.c_str(), filepath.size());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+    }
+}
+
+TEST_F(TsdClientTest, TsdFileLoad_TsdFileUnLoad_Dshape_Pkg_Success) {
+    // TsdFileLoad 及 TsdFileUnLoad 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterTsdFileLoadAndUnLoadMsgDefaultCallBack();
+    const std::string dShapePkgName = "Ascend-opp_rt-minios.aarch64.tar.gz";
+    std::string filepath = "/tmp";
+    std::string pathPreFix = std::to_string(getpid());
+    if (CommonUtilFunc::WriteTmpFile(pathPreFix, dShapePkgName)) {
+        tsd::TSD_StatusT ret = TsdFileLoad(0U, filepath.c_str(), filepath.size(), dShapePkgName.c_str(),
+            dShapePkgName.size());
+        const std::string dstFile = filepath + "/" + dShapePkgName;
+        remove(dstFile.c_str());
+        const std::string fileDir = filepath + "/" + pathPreFix;
+        remove(fileDir.c_str());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+        ret = TsdFileUnLoad(0U, filepath.c_str(), filepath.size());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+    }
+}
+
+TEST_F(TsdClientTest, TsdProcessOpen_GetStatus_Close_Success) {
+    // TsdProcessOpen TsdGetProcStatus TsdProcessClose接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterTsdProcessOpenQueryCloseMsgDefaultCallBack();
     ProcOpenArgs openArgs;
-    std::string env1("UDP_PATH");
-    std::string ev1value("/home/HwHiAiUser");
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
     ProcEnvParam envParam;
-    envParam.envName = env1.c_str();
-    envParam.nameLen = env1.size();
-    envParam.envValue = ev1value.c_str();
-    envParam.valueLen = ev1value.size();
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
     openArgs.envParaList = &envParam;
-    openArgs.envCnt = 1;
-    openArgs.filePath = nullptr;
-    openArgs.pathLen = 0;
+    openArgs.envCnt = 1UL;
     std::string extPam("levevl=5");
     ProcExtParam extmm;
     extmm.paramInfo = extPam.c_str();
@@ -515,155 +305,92 @@ TEST_F(TsdClientTest, TsdProcessOpenTest_TsdProcessOpenSucc) {
     openArgs.extParamCnt = 1;
     pid_t subpid = 0;
     openArgs.subPid = &subpid;
-    openArgs.procType = TSD_SUB_PROC_NPU;
+    openArgs.procType = TSD_SUB_PROC_UDF;
     std::string filepathprefix = "/home";
     openArgs.filePath = filepathprefix.c_str();
     openArgs.pathLen = filepathprefix.length();
-    ret = TsdProcessOpen(deviceId, &openArgs);
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgs);
     EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdProcessOpen(deviceId, nullptr);
-    EXPECT_NE(ret, tsd::TSD_OK);
-    openArgs.subPid = nullptr;
-    ret = TsdProcessOpen(deviceId, &openArgs);
-    EXPECT_NE(ret, tsd::TSD_OK);
-    ret = TsdProcessClose(deviceId, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-    ret = TsdProcessClose(deviceId, 123456U);
-    ProcStatusInfo pidArry;
-    ret = TsdGetProcStatus(deviceId, &pidArry, 1);
+    ProcStatusInfo curStat;
+    ret = TsdGetProcStatus(0U, &curStat, 1U);
     EXPECT_EQ(ret, tsd::TSD_OK);
-    GlobalMockObject::verify();
-}
-
-
-TEST_F(TsdClientTest, HelperTest_checkdestruct) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    auto ret = TsdFileLoad(0, 0, 0, 0, 0);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdProcessOpen(0, 0);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdProcessClose(0, 0);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdFileUnLoad(0, 0, 0);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    ret = TsdGetProcStatus(0, 0, 0);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-    GlobalMockObject::verify();
-}
-
-TEST_F(TsdClientTest, HelperTest_CheckProcessSuccess) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    tsd::TSD_StatusT ret = ProcessCloseSubProcList(0U, nullptr, 0U);
-    EXPECT_EQ(ret, tsd::TSD_OK);
-
-    ret = TsdGetProcListStatus(0U, nullptr, 0U);
+    ret = TsdProcessClose(0U, subpid);
     EXPECT_EQ(ret, tsd::TSD_OK);
 }
 
-TEST_F(TsdClientTest, HelperTest_checkprocessfail) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
-
-    ret = TsdFileLoad(0, 0, 0, 0, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = TsdProcessOpen(0, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = TsdProcessClose(0, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = TsdFileUnLoad(0, 0, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = TsdGetProcStatus(0, 0, 0);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = NotifyPmToStartTsdaemon(0U);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = ProcessCloseSubProcList(0U, nullptr, 0U);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    ret = TsdGetProcListStatus(0U, nullptr, 0U);
-    EXPECT_NE(ret, tsd::TSD_OK);
-
-    GlobalMockObject::verify();
-}
-int32_t g_addr = 0;
-void *dlopenFakeStub(const char *filename, int flags)
-{
-    return &g_addr;
-}
-int dlcloseFakeStub(void *handle)
-{
-    return 0;
-}
-int32_t FakeStartStub(const char *appName, const size_t nameLen, const int32_t timeout)
-{
-    return 0;
-}
-void *dlsymFakeStub(void *handle, const char *symbol)
-{
-    return reinterpret_cast<void*>(FakeStartStub);
-}
-
-TEST_F(TsdClientTest, NotifyPmToStartTsdaemon) {
-    MOCKER_CPP(&dlopen).stubs().will(invoke(dlopenFakeStub));
-    MOCKER_CPP(&dlclose).stubs().will(invoke(dlcloseFakeStub));
-    MOCKER_CPP(&dlsym).stubs().will(invoke(dlsymFakeStub));
-    tsd::TSD_StatusT ret = TsdSetAttr("RunMode", "PROCESS_MODE");
+TEST_F(TsdClientTest, TsdProcessOpen_GetProcListStatus_CloseProcList_Success) {
+    // TsdProcessOpen TsdGetProcListsStatus ProcessCloseSubProcList 接口已经在日落计划中，已经不建议外部使用
+    StubServerMsgProcDef::RegisterTsdProcessListOpenQueryCloseMsgDefaultCallBack();
+    ProcOpenArgs openArgsUdf;
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
+    ProcEnvParam envParam;
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
+    openArgsUdf.envParaList = &envParam;
+    openArgsUdf.envCnt = 1UL;
+    std::string extPamUdf("levevl=Udf");
+    ProcExtParam extmmUdf;
+    extmmUdf.paramInfo = extPamUdf.c_str();
+    extmmUdf.paramLen = extPamUdf.size();
+    openArgsUdf.extParamList = &extmmUdf;
+    openArgsUdf.extParamCnt = 1;
+    pid_t subPidUdf = 0;
+    openArgsUdf.subPid = &subPidUdf;
+    openArgsUdf.procType = TSD_SUB_PROC_UDF;
+    std::string filepathprefix= "/home";
+    openArgsUdf.filePath = filepathprefix.c_str();
+    openArgsUdf.pathLen = filepathprefix.length();
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgsUdf);
     EXPECT_EQ(ret, tsd::TSD_OK);
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
+
+    ProcOpenArgs openArgsNpu;
+    openArgsNpu.envParaList = &envParam;
+    openArgsNpu.envCnt = 1UL;
+    std::string extPamNpu("levevl=Npu");
+    ProcExtParam extmmNpu;
+    extmmNpu.paramInfo = extPamNpu.c_str();
+    extmmNpu.paramLen = extPamNpu.size();
+    openArgsNpu.extParamList = &extmmNpu;
+    openArgsNpu.extParamCnt = 1;
+    pid_t subPidNpu = 0;
+    openArgsNpu.subPid = &subPidNpu;
+    openArgsNpu.procType = TSD_SUB_PROC_NPU;
+    openArgsNpu.filePath = filepathprefix.c_str();
+    openArgsNpu.pathLen = filepathprefix.length();
+    ret = TsdProcessOpen(0U, &openArgsNpu);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+
+    ProcStatusParam curStatArray[2U];
+    curStatArray[0U].pid = subPidUdf;
+    curStatArray[1U].pid = subPidNpu;
+    ret = TsdGetProcListStatus(0U, &(curStatArray[0]), 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = ProcessCloseSubProcList(0U, &(curStatArray[0]), 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdOpen_Close_NetService_Success) {
+    StubServerMsgProcDef::RegisterTsdProcessOpenQueryCloseMsgDefaultCallBack();
+    NetServiceOpenArgs args;
+    ProcExtParam extParamList;
+    args.extParamCnt = 1U;
+    std::string extPam("levevl=5");
+    extParamList.paramInfo = extPam.c_str();
+    extParamList.paramLen = extPam.size();
+    args.extParamList = &extParamList;
+    const tsd::TSD_StatusT result = TsdOpenNetService(0U, &args);
+    EXPECT_EQ(result, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, NotifyPmToStartTsdaemon_Success) {
+    // NotifyPmToStartTsdaemon 接口已经在日落计划中，已经不建议外部使用
+    // 次用例需要模拟 打开真实环境上的so提取符号调用对应的函数，ut工程采用打桩模拟
+    MOCKER_CPP(&dlopen).stubs().will(invoke(stub_dlopen_success));
+    MOCKER_CPP(&dlclose).stubs().will(invoke(stub_dlclose_success));
+    MOCKER_CPP(&dlsym).stubs().will(invoke(stub_dlsym_start_app_success));
     auto result = NotifyPmToStartTsdaemon(0U);
-
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    result = NotifyPmToStartTsdaemon(0U);
     EXPECT_EQ(result, tsd::TSD_OK);
-    GlobalMockObject::verify();
-}
-
-TEST_F(TsdClientTest, TsdOpenNetService_01) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    MOCKER_CPP(&HdcClient::Init).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::CreateHdcSession).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
-    NetServiceOpenArgs args;
-    ProcExtParam extParamList;
-    args.extParamCnt = 1U;
-    std::string extPam("levevl=5");
-    extParamList.paramInfo = extPam.c_str();
-    extParamList.paramLen = extPam.size();
-    args.extParamList = &extParamList;
-    auto result = TsdOpenNetService(0U, &args);
-    EXPECT_EQ(result, tsd::TSD_OK);
-    GlobalMockObject::verify();
-}
-
-TEST_F(TsdClientTest, TsdOpenNetService_02) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(true));
-    NetServiceOpenArgs args;
-    args.extParamCnt = 1U;
-    ProcExtParam extParamList;
-    std::string extPam("levevl=5");
-    extParamList.paramLen = extPam.size();
-    extParamList.paramInfo = extPam.c_str();
-    args.extParamList = &extParamList;
-    auto result = TsdOpenNetService(0U, &args);
-    EXPECT_EQ(result, tsd::TSD_OK);
-    GlobalMockObject::verify();
-}
-
-TEST_F(TsdClientTest, TsdCloseNetService_01) {
-    MOCKER_CPP(&tsd::ClientManager::CheckDestructFlag).stubs().will(returnValue(false));
-    MOCKER_CPP(&HdcClient::Init).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::CreateHdcSession).stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
-        .stubs().will(returnValue(tsd::TSD_OK));
-    MOCKER_CPP(&ProcessModeManager::WaitRsp).stubs().will(returnValue(tsd::TSD_OK));
-    auto result = TsdCloseNetService(0U);
-    EXPECT_EQ(result, tsd::TSD_OK);
-    GlobalMockObject::verify();
 }

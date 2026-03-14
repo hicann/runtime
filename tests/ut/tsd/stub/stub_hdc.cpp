@@ -17,6 +17,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include "stub_server_reply.h"
 
 
 extern "C" DVresult drvMemInitSvmDevice(pid_t hostpid);
@@ -76,7 +77,7 @@ hdcError_t drvHdcSessionAccept(HDC_SERVER server, HDC_SESSION *session)
 
 hdcError_t drvHdcAllocMsg(HDC_SESSION session, struct drvHdcMsg **msg, int count)
 {
-    *msg = reinterpret_cast<drvHdcMsg*>(malloc(10));
+    *msg = reinterpret_cast<drvHdcMsg*>(malloc(sizeof(drvHdcMsg) + sizeof(uint64_t) + sizeof(int)));
     return DRV_ERROR_NONE;
 }
 
@@ -86,29 +87,33 @@ hdcError_t drvHdcFreeMsg(struct drvHdcMsg *msg)
     return DRV_ERROR_NONE;
 }
 
-hdcError_t drvHdcReuseMsg(struct drvHdcMsg *msg)
-{
-    return DRV_ERROR_NONE;
-}
-
 hdcError_t drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
 {
+    msg->bufList[0].pBuf = pBuf;
+    msg->bufList[0].len = len;
     return DRV_ERROR_NONE;
 }
 
 hdcError_t drvHdcGetMsgBuffer(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen)
 {
+    *pBuf = msg->bufList[0].pBuf;
+    *pLen = msg->bufList[0].len;
     return DRV_ERROR_NONE;
 }
 
 hdcError_t halHdcRecv(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen, UINT64 flag, int *recvBufCount,
     UINT32 timeout)
 {
-    return DRV_ERROR_NONE;
+    if (tsd::StubServerReply::GetInstance()->ReplyToHost(msg)) {
+        return DRV_ERROR_NONE;
+    } else {
+        return DRV_ERROR_INNER_ERR;
+    }
 }
 
 hdcError_t halHdcSend(HDC_SESSION session, struct drvHdcMsg *msg, UINT64 flag, UINT32 timeout)
 {
+    tsd::StubServerReply::GetInstance()->SetCurMsgType(msg);
     return DRV_ERROR_NONE;
 }
 

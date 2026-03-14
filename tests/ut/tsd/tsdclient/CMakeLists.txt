@@ -41,6 +41,7 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/version_verify.cpp
 )
 set(TSD_UT_TEST_SRC_FILE
+    test/tsdclient_utest.cpp
     test/aicpu_package_process_utest.cpp
     test/aicpu_thread_mode_utest.cpp
     test/aicpu_thread_package_worker_utest.cpp
@@ -51,13 +52,17 @@ set(TSD_UT_TEST_SRC_FILE
     test/package_verify_utest.cpp
     test/package_worker_factory_utest.cpp
     test/package_worker_utest.cpp
-    test/tsdclient_utest.cpp
     test/version_verify_utest.cpp
     test/package_worker_utils_utest.cpp
     test/path_mgr_utest.cpp
     test/log_utest.cpp
     test/internal_api_utest.cpp
     test/main.cpp
+    test/common_util_func.cpp
+    ../stub/stub_server_reply.cpp
+    ../stub/stub_server_msg_impl.cpp
+    ../stub/stub_server_msg_proc_def.cpp
+    ../stub/stub_common_sys_call.cpp
     ../stub/stub_mmpa.cpp
     ../stub/stub_appmon.cpp
     ../stub/stub_hdc.cpp
