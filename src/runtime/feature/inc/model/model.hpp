@@ -14,7 +14,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "runtime/rt.h"
 #include "base.hpp"
 #include "driver.hpp"
 #include "device.hpp"

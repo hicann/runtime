@@ -11,6 +11,9 @@
 #ifndef RUNTIME_THREAD_LOCAL_CONTAINER_HPP
 #define RUNTIME_THREAD_LOCAL_CONTAINER_HPP
 
+#include <string>
+#include <mutex>
+#include <unordered_map>
 #include "base.hpp"
 #include "osal.hpp"
 #include "api.hpp"
