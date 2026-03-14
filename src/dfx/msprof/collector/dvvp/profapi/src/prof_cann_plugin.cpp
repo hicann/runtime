@@ -133,6 +133,7 @@ void ProfCannPlugin::LoadProfInfo()
 
 int32_t ProfCannPlugin::ProfSetProfCommand(VOID_PTR command, uint32_t len)
 {
+    ProfApiInit();
     if (profSetProfCommand_ != nullptr) {
         return profSetProfCommand_(command, len);
     } else {
@@ -321,7 +322,6 @@ void ProfCannPlugin::ProfTxInit()
     if (profImplInitMstxInjection_ != nullptr) {
         profImplInitMstxInjection_(ProfRegisterMstxFunc);
     }
-    ProfEnableMstxFunc(PROF_MODULE_MSPROF);
 }
 
 int32_t ProfCannPlugin::ProfInit(uint32_t type, void *data, uint32_t dataLen)
@@ -697,7 +697,8 @@ int32_t ProfCannPlugin::ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, 
 {
     {
         const std::unique_lock<std::mutex> lock(cachedDeviceStateMutex_);
-        uint64_t id = (deviceId << 32ULL) | chipId;
+        uint64_t id = chipId;
+        id |= (static_cast<uint64_t>(deviceId) << 32ULL);
         cachedDeviceStates_[id] = isOpen;
     }
     if (atlsSetDevice_ != nullptr) {
@@ -715,8 +716,8 @@ int32_t ProfCannPlugin::ProfNotifySetDevice(uint32_t chipId, uint32_t deviceId, 
             return profNotifySetDevice_(chipId, deviceId, isOpen);
         }
     } else { 
-        uint64_t id = deviceId;
-        id = (id << 32ULL) | chipId;
+        uint64_t id = chipId;
+        id |= (static_cast<uint64_t>(deviceId) << 32ULL);
         const std::unique_lock<std::mutex> lock(deviceStateMutex_);
         deviceStates_[id] = isOpen;
     }
