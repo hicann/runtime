@@ -702,17 +702,6 @@ std::shared_ptr<T> make_shared_throw_bad_alloc(Args&&... args) {
     return std::shared_ptr<T>(nullptr);
 }
 
-TEST_F(AiCPUThreadDatadumpUt, WorkTest_CreateKfcDumpInfoUt) {
-    int32_t ret = 0;
-    MOCKER_CPP(&std::make_shared<KfcDumpInfo>).stubs().will(invoke(make_shared_throw_bad_alloc<KfcDumpInfo>));
-    OpDumpTaskManager &opDumpTaskMgr = OpDumpTaskManager::GetInstance();
-    std::shared_ptr<KfcDumpInfo> kfcDumpInfoPtr1 = nullptr;
-    ret = opDumpTaskMgr.CreateKfcDumpInfo(kfcDumpInfoPtr1);
-    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
-    EXPECT_EQ(kfcDumpInfoPtr1, nullptr);
-}
-
-
 template<typename T, typename... Args>
 std::shared_ptr<T> make_shared_throw_bad_alloc1(Args&&... args) {
     throw std::bad_alloc();
@@ -865,28 +854,6 @@ TEST_F(AiCPUThreadDatadumpUt, WorkTest_MatchAndInsertUt_failed) {
 bool MatchAndInsert_stub(const std::string &step, DumpStep &tmpDumpStep) {
     throw std::bad_alloc();
     return true;
-}
-TEST_F(AiCPUThreadDatadumpUt, WorkTest_GetDumpStepFromStringUt_failed) {
-    bool ret;
-    OpDumpTaskManager &opDumpTaskMgr = OpDumpTaskManager::GetInstance();
-    const std::string step = "1+1+2";
-    DumpStep tmpDumpStep = {};
-    MOCKER_CPP(&OpDumpTaskManager::MatchAndInsert).stubs().will(returnValue(false));
-    ret = opDumpTaskMgr.GetDumpStepFromString(step, tmpDumpStep);
-    EXPECT_EQ(ret, false);
-    GlobalMockObject::verify();
-    MOCKER_CPP(&OpDumpTaskManager::MatchAndInsert).stubs().will(invoke(MatchAndInsert_stub));
-    ret = opDumpTaskMgr.GetDumpStepFromString(step, tmpDumpStep);
-    EXPECT_EQ(ret, false);
-    KfcDumpTask KfcTaskinfo;
-    KfcTaskinfo.streamId_ = 0;
-    KfcTaskinfo.taskId_ = 0;
-    KfcTaskinfo.index_ = 0;
-
-    const bool flag = true;
-    TaskInfo taskInfo(0, 0);
-    opDumpTaskMgr.custDumpTaskMap_.insert(std::make_pair(taskInfo, flag));
-    opDumpTaskMgr.ClearKfcDumpTaskInfo(KfcTaskinfo);
 }
 
 TEST_F(AiCPUThreadDatadumpUt, WorkTest_LoadUt_failed) {

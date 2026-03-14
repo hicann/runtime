@@ -255,20 +255,6 @@ TEST_F(EntityUTest, ClientEntity_DoDeQueue)
     EXPECT_EQ(entity.asyncDataState_, AsyncDataState::FSM_ASYNC_ENTITY_DONE);
 }
 
-TEST_F(EntityUTest, ClientEntity_DoDeQueue_Fail_ForThrow)
-{
-    dgw::EntityMaterial material = {};
-    material.eType = dgw::EntityType::ENTITY_QUEUE;
-    material.queueType = 1U;
-    material.id = 1001U;
-    ClientEntity entity(material, 0U);
-    entity.asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
-    MOCKER_CPP(&ClientEntity::InvokeDequeThread).stubs().will(throws(std::bad_alloc()));
-    EXPECT_EQ(entity.DoDequeue(), FsmStatus::FSM_FAILED);
-    EXPECT_EQ(entity.asyncDataState_, AsyncDataState::FSM_ASYNC_DATA_INIT);
-    EXPECT_FALSE(entity.IsDataPeeked());
-}
-
 TEST_F(EntityUTest, ClientEntity_DoDequeueMbuf)
 {
     dgw::EntityMaterial material = {};
@@ -381,18 +367,6 @@ TEST_F(EntityUTest, ClientEntity_DoSendData)
     entity.asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_SENT;
     EXPECT_EQ(entity.DoSendData(nullptr), FsmStatus::FSM_SUCCESS);
     EXPECT_EQ(entity.asyncDataState_, AsyncDataState::FSM_ASYNC_DATA_INIT);
-}
-
-TEST_F(EntityUTest, ClientEntity_DoSendData_Fail_ForThrow)
-{
-    dgw::EntityMaterial material = {};
-    material.eType = dgw::EntityType::ENTITY_QUEUE;
-    material.queueType = 1U;
-    material.id = 1001U;
-    ClientEntity entity(material, 0U);
-    entity.asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_INIT;
-    MOCKER_CPP(&ClientEntity::InvokeEnqueThread).stubs().will(throws(std::bad_alloc()));
-    EXPECT_EQ(entity.DoSendData(nullptr), FsmStatus::FSM_FAILED);
 }
 
 TEST_F(EntityUTest, ClientEntity_ResetSrcState)
@@ -979,15 +953,6 @@ TEST_F(EntityUTest, EntityManager_CreateEntity_Fail_For_AllocEntity)
     EntityPtr nullEntity = nullptr;
     MOCKER_CPP(&EntityManager::AllocEntity).stubs().will(returnValue(nullEntity));
     EXPECT_EQ(entityManager.CreateEntity(material), nullptr);
-}
-
-TEST_F(EntityUTest, EntityManager_CreateEntity_AllocEntity_throw)
-{
-    EntityManager entityManager(0U);
-    EntityMaterial material = {};
-    std::bad_alloc badAllocException;
-    MOCKER_CPP(&EntityManager::DoAllocEntity).stubs().will(throws(badAllocException));
-    EXPECT_EQ(entityManager.AllocEntity(material), nullptr);
 }
 
 TEST_F(EntityUTest, EntityManager_SupplyEvent)

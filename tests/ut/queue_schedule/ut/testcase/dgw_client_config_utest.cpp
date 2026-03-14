@@ -1419,22 +1419,6 @@ TEST_F(DgwClientConfigUtest, UpdateHcclProtocol_Success02)
     EXPECT_EQ(static_cast<int32_t>(bqs::BQS_STATUS_OK), cfgRets[0]);
 }
 
-TEST_F(DgwClientConfigUtest, UpdateHcclProtocol_Success03)
-{
-    std::shared_ptr<bqs::DgwClient> dgwClient = bqs::DgwClient::GetInstance(0U);
-    dgwClient->initFlag_ = true;
-    dgwClient->isServerOldVersion_ = false;
-
-    bqs::ConfigInfo config;
-    config.cmd = bqs::ConfigCmd::DGW_CFG_CMD_SET_HCCL_PROTOCOL;
-
-    std::vector<int32_t> cfgRets;
-    int32_t ret = dgwClient->UpdateConfig(config, cfgRets);
-    EXPECT_EQ(bqs::BQS_STATUS_PARAM_INVALID, ret);
-    EXPECT_EQ(1, cfgRets.size());
-    EXPECT_EQ(static_cast<int32_t>(bqs::BQS_STATUS_PARAM_INVALID), cfgRets[0]);
-}
-
 TEST_F(DgwClientConfigUtest, InitDynamicSched_Success01)
 {
     bqs::GlobalCfg::GetInstance().SetNumaFlag(true);

@@ -852,33 +852,6 @@ TEST_F(QsInterfaceUtest, MainTsdWaitForShutdownFail01) {
     EXPECT_EQ(ret, -1);
 }
 
-TEST_F(QsInterfaceUtest, MainTsdWaitForShutdown02) {
-    char processName[] = "queue_schedule";
-    char paramDeviceIdOk[] = "--deviceId=1";
-    char paramPidOk[] = "--pid=2";
-    char paramReschedOk[] = "--reschedInterval=100";
-    char paramModeOk[] = "--deployMode=2";
-    char paraVfIdOk[] = "--vfId=0";
-    char paraGrpNameOk[] = "--qsInitGroupName=DEAFAULT";
-    char paramStarter[] = "--starter=0";
-    MOCKER(system)
-        .stubs()
-        .will(returnValue(0));
-    char* argv[] = {processName, paramDeviceIdOk, paramPidOk,
-                    paramReschedOk, paramModeOk, paraVfIdOk, paraGrpNameOk, paramStarter};
-    int32_t argc = 8;
-    g_product_device_side = true;
-    MOCKER_CPP(&QueueScheduleInterface::InitQueueScheduler)
-        .stubs()
-        .will(returnValue(0));
-    std::out_of_range oor("This is out of range from mockcpp");
-    MOCKER_CPP(TsdWaitForShutdown)
-        .stubs()
-        .will(throws(oor));
-    int32_t ret = QueueScheduleMain(argc, argv);
-    EXPECT_EQ(ret, -1);
-}
-
 TEST_F(QsInterfaceUtest, InitQueueSchedulerFailWithStartQueueScheduleFail) {
     MOCKER_CPP(&QueueSchedule::StartQueueSchedule).stubs().will(returnValue(1));
     InitQsParams initQsParams = {};

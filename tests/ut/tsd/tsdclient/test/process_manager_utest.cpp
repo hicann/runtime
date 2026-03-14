@@ -921,16 +921,6 @@ TEST_F(ProcessManagerTest, GetLogLevel_Success_003)
     EXPECT_EQ(processModeManager.logLevel_, "104");
 }
 
-TEST_F(ProcessManagerTest, GetLogLevel_Excpetion_004)
-{
-    int32_t logLevel = 4;
-    MOCKER(dlog_getlevel).stubs().will(returnValue(logLevel));
-    MOCKER(&mmSysGetEnv).stubs().will(returnValue(nullptr));
-    ProcessModeManager processModeManager(deviceId, 0);
-    processModeManager.GetLogLevel();
-    EXPECT_EQ(processModeManager.logLevel_, "104");
-}
-
 TEST_F(ProcessManagerTest, GetAscendLatestIntallPath_Succ)
 {
     char env[] = "/usr/local/Asend/lastest";

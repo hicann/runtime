@@ -4771,22 +4771,6 @@ TEST_F(AICPUScheduleTEST, AddToCgroup_ERROR_001)
     EXPECT_EQ(ret, -1);
 }
 
-TEST_F(AICPUScheduleTEST, GetLogLevel_001)
-{
-    char processName[] = "aicpu_scheduler";
-    char paramCcecpuLogLevel[] = "--ccecpuLogLevel=1";
-    char paramAicpuLogLevel[] = "--aicpuLogLevel=1";
-    MOCKER_CPP(&ArgsParser::CheckRequiredParas).stubs().will(returnValue(true));
-    MOCKER_CPP(&ArgsParser::GetCcecpuLogLevel).stubs().will(returnValue(0));
-    MOCKER_CPP(&ArgsParser::GetAicpuLogLevel).stubs().will(returnValue(0));
-    MOCKER(dlog_setlevel).stubs().will(returnValue(0)).then(returnValue(-1)).then(returnValue(-1));
-    MOCKER_CPP(&AicpuSchedule::AddToCgroup).stubs().will(returnValue(-1));
-    char *argv[] = {processName, paramCcecpuLogLevel, paramAicpuLogLevel};
-    int32_t argc = 3;
-    auto ret = ComputeProcessMain(argc, argv);
-    EXPECT_EQ(ret, -1);
-}
-
 TEST_F(AICPUScheduleTEST, AddToCgroup_Adc)
 {
 

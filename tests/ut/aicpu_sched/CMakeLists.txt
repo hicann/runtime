@@ -26,7 +26,8 @@ target_compile_options(intf_aicpu_llt_pub INTERFACE
   -Wall
   $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
   $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fno-omit-frame-pointer -static-libasan -fsanitize=undefined -static-libubsan -fsanitize=leak -static-libtsan>
-
+  $<$<STREQUAL: ${CMAKE_SYSTEM_PROCESSOR}, aarch64>:-falign-functions=32>
+  -fno-inline
 )
 target_link_options(intf_aicpu_llt_pub INTERFACE
   $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
