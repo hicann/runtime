@@ -668,6 +668,7 @@ bool Context::IsStreamNotSync(const uint32_t flags) const
     }
     return isNotSync;
 }
+
 rtError_t Context::SyncAllStreamToGetError()
 {
     rtError_t error = RT_ERROR_NONE;
@@ -2654,7 +2655,6 @@ rtError_t Context::ModelDestroy(Model *mdl)
     return RT_ERROR_NONE;
 }
 
-
 rtError_t Context::ModelUnbindStream(Model * const mdl, Stream * const stm)
 {
     std::unique_lock<std::mutex> taskLock(streamLock_);
@@ -2833,7 +2833,6 @@ rtError_t Context::ModelAbort(Model * const mdl) const
     return error;
 }
 
-
 rtError_t Context::ModelExit(Model * const mdl, Stream * const stm)
 {
     rtError_t error;
@@ -2864,7 +2863,6 @@ ERROR_RECYCLE:
     return error;
 }
 
-
 rtError_t Context::ModelBindQueue(Model * const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag) const
 {
     rtError_t error;
@@ -2874,10 +2872,6 @@ rtError_t Context::ModelBindQueue(Model * const mdl, const uint32_t queueId, con
 
     return error;
 }
-
-
-
-
 
 rtError_t Context::ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t flags, Stream * const stm)
 {
@@ -3083,8 +3077,6 @@ ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(rtMdcProfTask);
     return error;
 }
-
-
 
 rtError_t Context::LabelSwitchListCreate(Label ** const labels, const size_t num, void ** const labelList) const
 {
@@ -3351,6 +3343,7 @@ ERROR_RECYCLE:
     (void)device_->GetTaskFactory()->Recycle(rtCommonCmdTask);
     return error;
 }
+
 bool Context::IsStreamAbortSupported()
 {
     return device_->CheckFeatureSupport(TS_FEATURE_STREAM_ABORT);
@@ -4813,6 +4806,7 @@ void Context::DestroyContextCallBackThread(void)
         hostFuncCallBackThread_.reset(nullptr);
     }
 }
+
 void Context::PushContextErrMsg()
 {
 #ifndef CFG_DEV_PLATFORM_PC
@@ -4823,6 +4817,7 @@ void Context::PushContextErrMsg()
     RT_LOG(RT_LOG_INFO, "Push error msg");
 #endif
 }
+
 void Context::PopContextErrMsg()
 {
 #ifndef CFG_DEV_PLATFORM_PC

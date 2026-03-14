@@ -211,6 +211,7 @@ void XpuDevice::WakeUpRecycleThread(void)
 {
     int val = 0;
     sem_getvalue(&recycleThreadSem_, &val);
+    // < 2的作用是以安全的方式唤醒回收线程，确保信号量值不超过1，避免重复唤醒或计数溢出
     if (val < 2) {
         (void)mmSemPost(&recycleThreadSem_);
     }

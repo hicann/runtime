@@ -1966,7 +1966,6 @@ rtError_t ApiImplDavid::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * c
         default:
             UnknowErrorProc(curCtx, errorInfo);
             break;
-
     }
     return error;
 }
