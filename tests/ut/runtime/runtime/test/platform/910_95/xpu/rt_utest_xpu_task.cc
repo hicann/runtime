@@ -257,7 +257,6 @@ TEST_F(XpuTaskTest, xpu_task_test_07)
 
 TEST_F(XpuTaskTest, xpu_task_test_08)
 {
-    Runtime *rt = Runtime::Instance();
     rtError_t ret = RT_ERROR_NONE;
     TaskInfo task = {};
     TaskInfo *taskInfo = &task;
@@ -268,7 +267,6 @@ TEST_F(XpuTaskTest, xpu_task_test_08)
 
 TEST_F(XpuTaskTest, xpu_task_test_09)
 {
-    Runtime *rt = Runtime::Instance();
     rtError_t ret = RT_ERROR_NONE;
     TaskInfo task = {};
     TaskInfo *taskInfo = &task;

@@ -54,19 +54,22 @@ TEST_F(XpuArgLoaderTest, xpu_arg_loader_test_01)
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
     MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
     XpuDevice *device;
-    device = static_cast<XpuDevice*>(((Runtime *)Runtime::Instance())->XpuDeviceRetain(0));
+    rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    Runtime *rt = (Runtime *)Runtime::Instance();
+    device = static_cast<XpuDevice*>(rt->GetXpuDevice());
     const uint32_t size = 100;
     ArgLoaderResult result = {nullptr, nullptr};
     result.kerArgs = nullptr;
     result.handle = nullptr;
-    rtError_t error = device->xpuArgLoader_->AllocCopyPtr(size, &result);
+    error = device->xpuArgLoader_->AllocCopyPtr(size, &result);
     EXPECT_EQ(error, RT_ERROR_NONE);
     void *argHandle1 = nullptr;
     error = device->xpuArgLoader_->Release(argHandle1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = device->xpuArgLoader_->Release(result.handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime::Instance()->XpuDeviceRelease(device);
+    rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
 }
 
 TEST_F(XpuArgLoaderTest, xpu_arg_loader_test_fail_01)
@@ -74,18 +77,21 @@ TEST_F(XpuArgLoaderTest, xpu_arg_loader_test_fail_01)
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
     MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
     XpuDevice *device;
-    device = static_cast<XpuDevice*>(((Runtime *)Runtime::Instance())->XpuDeviceRetain(0));
+    rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    Runtime *rt = (Runtime *)Runtime::Instance();
+    device = static_cast<XpuDevice*>(rt->GetXpuDevice());
     const uint32_t size = 5000;
     ArgLoaderResult result = {nullptr, nullptr};
     result.kerArgs = nullptr;
     result.handle = nullptr;
     MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-    rtError_t error = device->xpuArgLoader_->AllocCopyPtr(size, &result);
+    error = device->xpuArgLoader_->AllocCopyPtr(size, &result);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
     void *argHandle1 = nullptr;
     error = device->xpuArgLoader_->Release(argHandle1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = device->xpuArgLoader_->Release(result.handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Runtime::Instance()->XpuDeviceRelease(device);
+    rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
 }

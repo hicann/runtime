@@ -13,6 +13,7 @@
 #include "tprt_device.hpp"
 #include "tprt_sqhandle.hpp"
 #include "tprt_cqhandle.hpp"
+#include "tprt.hpp"
 
 #undef private
 
@@ -189,17 +190,18 @@ TEST_F(TprtDeviceTest, RunCheckTaskTimeout_WithSqHandles)
 {
     uint32_t devId = 0;
     TprtDevice* tprtDev = new TprtDevice(devId);
-
+    cce::tprt::TprtManage::tprt_ = new (std::nothrow) cce::tprt::TprtManage();
+    TprtManage *manage = TprtManage::Instance();
     uint32_t sqId = 1;
     TprtSqHandle* sqHandle = new TprtSqHandle(devId, sqId);
     sqHandle->SqSetSqState(TPRT_SQ_STATE_IS_RUNNING);
     sqHandle->sqHead_ = 0U;
     sqHandle->sqTail_ = 1U;
     tprtDev->sqHandleMap_[sqId] = sqHandle;
-
     tprtDev->RunCheckTaskTimeout();
 
     sqHandle->Destructor();
+    DELETE_O(cce::tprt::TprtManage::tprt_);
     DELETE_O(tprtDev);
 }
 
