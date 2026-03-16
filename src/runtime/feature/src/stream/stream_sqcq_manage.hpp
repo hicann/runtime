@@ -39,7 +39,8 @@ typedef struct {
     uint32_t satMode : 1;
     uint32_t tsSqType : 1;
     uint32_t swsqFlag : 1;
-    uint32_t rsv : 28;
+    uint32_t groupId : 16;
+    uint32_t rsv : 12;
     uint32_t threadDisableFlag;
     uint32_t shareSqId;
 } rtStreamAllocInfo_t;

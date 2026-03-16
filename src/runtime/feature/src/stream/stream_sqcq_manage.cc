@@ -122,6 +122,7 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(const Stream * const newStm, co
     (void)memset_s(&infoEx, sizeof(rtStreamInfoExMsg_t), 0, sizeof(rtStreamInfoExMsg_t));
     infoPtr->streamId = streamId;
     infoPtr->priority = priority;
+    infoPtr->groupId = newStm->GetGroupId();
     infoPtr->satMode = (device_->GetSatMode() == RT_OVERFLOW_MODE_INFNAN) ? 1U : 0U;
     infoPtr->overflowEn = newStm->IsOverflowEnable();
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
