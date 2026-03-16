@@ -781,7 +781,8 @@ void PrintTensorWithoutShape(const DumpTensorInfo *const tensorHead, const size_
     }
 }
 
-void PrintDumpTensor(const DumpInfoHead *dumpHead, std::vector<size_t> &shape)
+void PrintDumpTensor(const DumpInfoHead *dumpHead, const uint32_t blockId, const uint32_t aicNum,
+    std::vector<size_t> &shape)
 {
     RT_LOG(RT_LOG_INFO, "Dump tensor length %u bytes.", dumpHead->infoLen);
     if (static_cast<size_t>(dumpHead->infoLen) < sizeof(DumpTensorInfo)) {
@@ -807,10 +808,13 @@ void PrintDumpTensor(const DumpInfoHead *dumpHead, std::vector<size_t> &shape)
     const size_t actualDataNum = (dumpDataSize == 0U)
                                      ? (static_cast<size_t>(dumpHead->infoLen) - sizeof(DumpTensorInfo)) / dataTypeSize
                                      : static_cast<size_t>(dumpDataSize) / dataTypeSize;
-    std::cout << "DumpTensor: desc=" << std::dec << tensorHead->desc << ", addr=0x" << addrToHex;
+    std::string blockInfo = "[";
+    blockInfo += (blockId < aicNum) ? "AIC " : "AIV ";
+    blockInfo += "Block " + std::to_string(tensorHead->blockIdx) + "]";
+    std::cout << blockInfo.c_str() << " DumpTensor: desc=" << std::dec << tensorHead->desc << ", addr=0x" << addrToHex;
     std::cout << ", data_type=" << dtype << ", position=" << position << ", dump_size=" << actualDataNum << std::endl;
-    RT_LOG(RT_LOG_INFO, "DumpTensor: desc=%u, addr=0x%s, data_type=%s, position=%s, dump_size=%zu.",
-        tensorHead->desc, addrToHex.c_str(), dtype.c_str(), position.c_str(), actualDataNum);
+    RT_LOG(RT_LOG_INFO, "%s DumpTensor: desc=%u, addr=0x%s, data_type=%s, position=%s, dump_size=%zu.",
+        blockInfo.c_str(), tensorHead->desc, addrToHex.c_str(), dtype.c_str(), position.c_str(), actualDataNum);
 
     if (!shape.empty()) {
         PrintTensorWithShape(shape, actualDataNum, tensorHead);
@@ -924,8 +928,8 @@ rtError_t GetReadLenAndAddr(const uint8_t *blockAddr, const size_t blockSize, ui
     return RT_ERROR_NONE;
 }
 
-void PrintDumpInfo(const DumpInfoHead *dumpHead, const uint32_t blockId, std::vector<size_t> &shapeInfo,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void PrintDumpInfo(const DumpInfoHead *dumpHead, const uint32_t blockId, const uint32_t aicNum,
+    std::vector<size_t> &shapeInfo, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
 {
     switch (dumpHead->type) {
         case DumpType::DUMP_SCALAR:
@@ -936,7 +940,7 @@ void PrintDumpInfo(const DumpInfoHead *dumpHead, const uint32_t blockId, std::ve
             GetDumpShape(dumpHead, shapeInfo);
             break;
         case DumpType::DUMP_TENSOR:
-            PrintDumpTensor(dumpHead, shapeInfo);
+            PrintDumpTensor(dumpHead, blockId, aicNum, shapeInfo);
             break;
         case DumpType::DUMP_TIMESTAMP:
             PrintDumpTimestamp(dumpHead, blockId, timeStampInfo);
@@ -974,8 +978,8 @@ void PrintSimtDumpInfo(const DumpInfoHead *dumpHead)
 // | blockInfo | readInfo | ... | tlv1 | tlv2  tlv3 | ... | writeInfo |
 //                              |                   |                         
 //                           readIdx             writeIdx   
-void PrintBlockInfo(const uint8_t *blockData, const uint32_t blockId, uint64_t readIdx, const uint64_t writeIdx,
-    std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
+void PrintBlockInfo(const uint8_t *blockData, const uint32_t blockId, const uint32_t aicNum, uint64_t readIdx,
+    const uint64_t writeIdx, std::vector<MsprofAicTimeStampInfo> &timeStampInfo)
 {
     std::vector<size_t> shape;
     const BlockInfo *blockInfo = RtPtrToPtr<const BlockInfo *>(blockData);
@@ -990,7 +994,7 @@ void PrintBlockInfo(const uint8_t *blockData, const uint32_t blockId, uint64_t r
     uint64_t dataLen = 0U;
     while (dataLen < totalLen) {
         const DumpInfoHead *dumpHead = RtPtrToPtr<const DumpInfoHead *>(addrAddr + readIdx);
-        PrintDumpInfo(dumpHead, blockId, shape, timeStampInfo);
+        PrintDumpInfo(dumpHead, blockId, aicNum, shape, timeStampInfo);
 
         readIdx += sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen); // 不可能出现溢出的情况
         dataLen += sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
@@ -1022,12 +1026,12 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
 
         BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
         readInfo->dumpType = DumpType::DUMP_BUFO;
-        readInfo->length = 16; // readIdx 和 resv 的大小相加
+        readInfo->length = sizeof(uint64_t) + sizeof(uint64_t); // readIdx 和 resv 的大小相加
         readInfo->readIdx = 0U;
 
         BlockWriteInfo *writeInfo = RtPtrToPtr<BlockWriteInfo *>(blockAddr + blockSize - sizeof(BlockWriteInfo));
         writeInfo->dumpType = DumpType::DUMP_BUFI;
-        writeInfo->length = 16; // writeIdx 和 packIdx 的大小相加
+        writeInfo->length = sizeof(uint64_t) + sizeof(uint64_t); // writeIdx 和 packIdx 的大小相加
         writeInfo->writeIdx = readInfo->readIdx; // 初始化和readIdx一致
     }
 
@@ -1109,7 +1113,7 @@ rtError_t ParsePrintf(void *addr, const size_t blockSize, Driver *curDrv)
             deviceAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE, false);
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u", ret);
 
-        PrintBlockInfo(blockAddr, static_cast<uint32_t>(i), readIdx, writeInfo->writeIdx, timeStampInfo);
+        PrintBlockInfo(blockAddr, static_cast<uint32_t>(i), props.aicNum, readIdx, writeInfo->writeIdx, timeStampInfo);
         const uint32_t coreType = blockInfo->flag;
         ret = ExecuteKernelDfxInfoFunc(blockAddr, dumpReadStartAddr, totalReadBufLen, coreType, blockInfo->coreId);
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Execute kernel dfx info func failed, ret=%u", ret);
