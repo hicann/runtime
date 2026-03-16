@@ -281,8 +281,9 @@ void DeviceSqCqPool::FreeOccupyList(void)
 }
 
 void DeviceSqCqPool::FreeReallocatedSqCqToDrv(
-    const std::list<rtDeviceSqCqInfo_t>::iterator begin, const std::list<rtDeviceSqCqInfo_t>::iterator end) {
-    for (auto it = begin; it != end; it++) {
+    const std::list<rtDeviceSqCqInfo_t>::iterator begin,
+    const std::list<rtDeviceSqCqInfo_t>::iterator end) const {
+    for (auto it = begin; it != end; ++it) {
         (void)FreeSqCqToDrv(it->sqId, it->cqId);
     }
 }

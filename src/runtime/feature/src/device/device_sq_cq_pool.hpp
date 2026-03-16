@@ -52,7 +52,8 @@ public:
     rtError_t TryFreeSqCqToDrv(void);
     rtError_t ReAllocSqCqForFreeList(void);
     void FreeOccupyList(void);
-    void FreeReallocatedSqCqToDrv(const std::list<rtDeviceSqCqInfo_t>::iterator begin, const std::list<rtDeviceSqCqInfo_t>::iterator end);
+    void FreeReallocatedSqCqToDrv(const std::list<rtDeviceSqCqInfo_t>::iterator begin,
+        const std::list<rtDeviceSqCqInfo_t>::iterator end) const;
 
 private:
     Device *device_;
