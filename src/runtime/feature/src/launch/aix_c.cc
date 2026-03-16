@@ -135,13 +135,13 @@ static rtError_t ConvertAsyncDmaForSoftWareSq(MemcpyAsyncTaskInfo * const cpyAsy
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "AllocSoftwareSqAddr failed, device_id=%d, stream_id=%d, retCode=%#x.",
             updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(error));
     }
+    cpyAsyncTask->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(updateStm->Device_()->Id_());
     void *sqeDeviceAddr = RtValueToPtr<void *>(updateStm->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
     error = curDrv->MemConvertAddr(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(cpyAsyncTask->src)),
            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(sqeDeviceAddr)), cpyAsyncTask->size, &(cpyAsyncTask->dmaAddr));
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "MemConvertAddr failed, device_id=%d, stream_id=%d, retCode=%#x.",
             updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(error));
     cpyAsyncTask->destPtr = sqeDeviceAddr;
-    cpyAsyncTask->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(updateStm->Device_()->Id_());
     cpyAsyncTask->size = cpyAsyncTask->dmaAddr.fixed_size;
     return RT_ERROR_NONE;
 }
