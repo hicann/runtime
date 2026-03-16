@@ -1041,7 +1041,7 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
         }
     }
 
-    elfData->containsAscendMeta = (*isSupportMix == false) ? false : true;
+    elfData->containsAscendMeta = (mapSize != kernelNum) ? false : true;
     return RT_ERROR_NONE;
 }
 
