@@ -45,6 +45,7 @@ rtError_t NtyWait(Notify * const inNotify, Stream * const streamIn, const uint32
     waitTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     waitTask->u.notifywaitTask.isEndGraphNotify = isEndGraphNotify;
     waitTask->u.notifywaitTask.captureModel = captureModel;
+    waitTask->needPostProc = isEndGraphNotify;
 
     error = DavidSendTask(waitTask, dstStm);
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d NotifyWaitTask submit failed, retCode=%#x",

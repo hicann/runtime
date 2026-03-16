@@ -663,8 +663,7 @@ rtError_t MdlAddEndGraph(Model * const mdl, Stream * const stm, const uint32_t f
                 "Add end graph of model failed, new notify failed.");
 
             error = notify->Setup();
-            ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(notify);,
-                                        "Notify setup failed, retCode=%#x.", static_cast<uint32_t>(error));
+            COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
         }
 
         error = NtyRecord(notify, stm);

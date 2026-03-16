@@ -2777,8 +2777,7 @@ rtError_t Context::ModelAddEndGraph(Model * const mdl, Stream * const stm, const
             COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, notify == nullptr, RT_ERROR_NOTIFY_NEW,
                 "Add end graph of model failed, new notify failed.");
             error = notify->Setup();
-            COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error,
-                DELETE_O(notify), "Notify setup failed, retCode=%#x", error);
+            COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
         }
 
         error = notify->Record(stm);

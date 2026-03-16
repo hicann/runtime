@@ -175,6 +175,10 @@ void TryReclaimToTask(TaskInfo *workTask)
             break;
         }
 
+        if ((delWorkTask->type == TS_TASK_TYPE_NOTIFY_WAIT) && (delWorkTask->u.notifywaitTask.isEndGraphNotify)) {
+            Complete(delWorkTask, stm->Device_()->Id_());
+        }
+
         if (stm->GetArgHandle() != nullptr) {
             static_cast<DavidStream *>(stm)->ArgManagePtr()->RecycleDevLoader(stm->GetArgHandle());
             stm->SetArgHandle(nullptr);
