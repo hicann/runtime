@@ -663,9 +663,9 @@ public:
     static rtError_t SqRestore(const uint32_t deviceId, uint32_t *sqIdGroup, const size_t sqIdCnt);
 
     rtError_t GetCentreNotify(int32_t index, int32_t *value) override;
-    virtual rtError_t GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
+    rtError_t GetTsegInfoByVa(uint32_t devid, uint64_t va, uint64_t size, uint32_t flag,
         struct halTsegInfo *tsegInfo) override;
-    virtual rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) override;
+    rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo *tsegInfo) override;
 
     // soma
     rtError_t StreamMemPoolCreate(const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size, bool isGraphPool) override;

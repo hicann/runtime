@@ -21,7 +21,7 @@ class TprtProfiling {
 public:
     explicit TprtProfiling();
     ~TprtProfiling();
-    uint32_t TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask);
+    uint32_t TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask) const;
 };
 }
 }
