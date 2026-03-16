@@ -24,14 +24,14 @@ union DqsTaskConfig {
     rtDqsConditionCopyCfg_t *condCopyCfg;
 };
 
-constexpr uint32_t DQS_INTER_CHIP_GROUP_MAX = 255U;
 constexpr uint64_t DQS_CONDITION_COPY_SIZE_MAX = 512ULL;
 
 enum class DqsInterChipTaskType : int32_t {
     DQS_INTER_CHIP_TASK_PREPROC = 0,
     DQS_INTER_CHIP_TASK_MEMCPY_MBUF_HEAD,
     DQS_INTER_CHIP_TASK_MEMCPY_MBUF_DATA,
-    DQS_INTER_CHIP_TASK_POSTPROC
+    DQS_INTER_CHIP_TASK_POSTPROC,
+    DQS_INTER_CHIP_TASK_NOP
 };
 
 }  // namespace runtime

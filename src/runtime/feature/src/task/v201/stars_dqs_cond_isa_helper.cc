@@ -29,6 +29,7 @@ constexpr uint64_t OW_NOT_ENABLE_ERR_CODE = 0x6B6BULL;
 constexpr uint64_t INVALID_CONDITION_ERR_CODE = 0x7A7BULL;
 // GQM CMD
 constexpr uint32_t RT_STARS_COND_GQM_COMMAND_POP = 0B000101;
+constexpr uint64_t RT_DQS_MBUF_INVALID = 0x20000ULL; // max + 1: 0x1FFFF + 1
 
 static void ConstructGqmPopInstr(RtStarsCondGqmOp &opGqmPop)
 {
@@ -63,6 +64,70 @@ static void ConstructOpAnd(const rtStarsCondIsaRegister_t rs1Reg, const rtStarsC
     ConstructOpOp(rs1Reg, rs2Reg, dstReg, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, opOp);
 }
 
+static void ConstructMbufFreeDssDelayPart(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPara &funcCallPara)
+{
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+    constexpr rtStarsCondIsaRegister_t r6 = RT_STARS_COND_ISA_REGISTER_R6;
+    constexpr rtStarsCondIsaRegister_t r7 = RT_STARS_COND_ISA_REGISTER_R7;
+    constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
+    constexpr rtStarsCondIsaRegister_t r10 = RT_STARS_COND_ISA_REGISTER_R10;
+
+    // 获取当前任务type
+    ConstructLLWI(r9, static_cast<uint64_t>(funcCallPara.schedType), fc.llwi4);
+    ConstructLHWI(r9, static_cast<uint64_t>(funcCallPara.schedType), fc.lhwi4);
+    ConstructLLWI(r10, static_cast<uint64_t>(RT_DQS_SCHED_TYPE_DSS), fc.llwi5);
+    ConstructLHWI(r10, static_cast<uint64_t>(RT_DQS_SCHED_TYPE_DSS), fc.lhwi5);
+
+    uint64_t offset = offsetof(RtStarsDqsMbufFreeFc, ldr3);
+    offset = offset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpPc1);
+    // 如果不是DSS则直接跳到mbuf free
+    ConstructBranch(r9, r10, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, offset, fc.bne);
+
+    // r5 = invalid mbuf handle
+    ConstructLLWI(r5, RT_DQS_MBUF_INVALID, fc.llwiMaxMbuf);
+    ConstructLHWI(r5, RT_DQS_MBUF_INVALID, fc.lhwiMaxMbuf);
+
+    // 如果当前路没有新数据到达，跳转到下个input队列
+    offset = offsetof(RtStarsDqsMbufFreeFc, addi2);
+    offset = offset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpPc2);
+    ConstructBranch(r4, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, offset, fc.bgeu1);
+
+    ConstructLLWI(r9, funcCallPara.lastMbufHandleAddr, fc.llwi6);
+    ConstructLHWI(r9, funcCallPara.lastMbufHandleAddr, fc.lhwi6);
+
+    ConstructLLWI(r10, static_cast<uint64_t>(funcCallPara.sizeofHandleCache), fc.llwi7);
+    ConstructLHWI(r10, static_cast<uint64_t>(funcCallPara.sizeofHandleCache), fc.lhwi7);
+
+    ConstructOpMul(r10, r6, r10, fc.mult);
+    // r10 = last_used_handle 在CtrlSpace中的地址
+    ConstructOpAdd(r9, r10, r10, fc.add);
+
+    // r9 = last_used_handle
+    ConstructLoad(r10, 0U, r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr2);
+    // trim high 32 bit
+    ConstructOpImmSlli(r9, r9, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli2);
+    ConstructOpImmSlli(r9, r9, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli2);
+
+    // 将当前的handle存入last_used_handle，只存32bit
+    ConstructStore(r10, r4, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw1);
+
+    // 将当前mbuf handle地址中的内容置为无效值，表示已使用
+    ConstructStore(r2, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw2);
+
+    // 将last_used_handle挪到r4，供后续释放
+    ConstructOpImmAndi(r9, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
+
+    offset = offsetof(RtStarsDqsMbufFreeFc, addi2);
+    offset = offset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpPc3);
+    // 如果last_used_handle大于mbuf handle最大值，代表是第一次执行mbuf free，需要跳过
+    ConstructBranch(r9, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, offset, fc.bgeu2);
+}
+
 void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPara &funcCallPara)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
@@ -74,10 +139,13 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     constexpr rtStarsCondIsaRegister_t r6 = RT_STARS_COND_ISA_REGISTER_R6;
     constexpr rtStarsCondIsaRegister_t r7 = RT_STARS_COND_ISA_REGISTER_R7;
     constexpr rtStarsCondIsaRegister_t r8 = RT_STARS_COND_ISA_REGISTER_R8;
-    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+    constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
+    constexpr rtStarsCondIsaRegister_t r10 = RT_STARS_COND_ISA_REGISTER_R10;
+    constexpr uint64_t axiUserVaCfgMask = 0x900000009ULL;
 
-    // read immd reg va cfg mask
+    // r8 = read immd reg va cfg mask
     ConstructLLWI(r8, axiUserVaCfgMask, fc.llwi);
+    ConstructLHWI(r8, axiUserVaCfgMask, fc.lhwi);
     // r6 作为inpu queue num 的下标，从0开始
     ConstructOpImmAndi(r0, r6, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.andi);
 
@@ -95,32 +163,37 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
 
     // 根据mbufHandleAddr的地址 r2 读mbuf handle 到 r4 寄存器中, LOAD 64bit数据，而mbuf handle是32bit的, 存在读越界风险(数组多开4Byte)
     ConstructLoad(r2, 0U, r4, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr1);
+    // trim high 32 bit
+    ConstructOpImmSlli(r4, r4, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli1);
+    ConstructOpImmSlli(r4, r4, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli1);
 
-    // 根据mbufFreeAddr的地址 r1 读mbuf pool 到 r5 寄存器中
-    ConstructLoad(r1, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr2);
+    ConstructMbufFreeDssDelayPart(fc, funcCallPara);
+
+    // r5 = mbuf_free_op_addr，根据mbufFreeAddr的地址 r1 读mbuf pool 到 r5 寄存器中
+    ConstructLoad(r1, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr3);
 
     // cfg use PA
     ConstructSystemCsr(r8, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc);
 
     // 将mbuf handle r4 写入 mbuf pool寄存器 r5中 SW R4, R5, 0
-    ConstructStore(r5, r4, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw);
+    ConstructStore(r5, r4, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw3);
 
     // restore to use VA
     ConstructSystemCsr(r8, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs);
 
     // r2 mbufHandleAddr + 4， 下一个mbuf handle 的地址
-    ConstructOpImmAndi(r2, r2, 4, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
+    ConstructOpImmAndi(r2, r2, 4, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
 
     // r1 mbufFreeAddr + 8，下一个mbuf pool的寄存器地址
-    ConstructOpImmAndi(r1, r1, 8, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
+    ConstructOpImmAndi(r1, r1, 8, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi3);
 
     // r6自增1, index ++
-    ConstructOpImmAndi(r6, r6, 1, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi3);
+    ConstructOpImmAndi(r6, r6, 1, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi4);
 
     // Jump pc 在 Func call 中，跳转指令大于15时，需要借助 CSR寄存器(JUMP_PC)完成跳转
     uint64_t offset = offsetof(RtStarsDqsMbufFreeFc, ldr1);
     offset = offset / sizeof(uint32_t);
-    ConstructSetJumpPcFc(r7, offset, fc.jumpPc1);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpPc4);
 
     // 构造 branch 指令，  index(r6) < mbufPoolIndexMax(r3)  时，跳转到LOAD1
     ConstructBranch(r6, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, offset, fc.blt1);
@@ -209,7 +282,7 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc &fc, const RtStarsDqsFcPara &func
     ConstructLHWI(r8, dqsPoolIdBlkIdMask, fc.lhwi8);
     ConstructOpAnd(r5, r8, r8, fc.and1);
 
-    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+    constexpr uint64_t axiUserVaCfgMask = 0x900000009ULL;
     // read immd reg va cfg mask
     ConstructLLWI(r5, axiUserVaCfgMask, fc.llwi);
     ConstructLHWI(r5, axiUserVaCfgMask, fc.lhwi);
@@ -392,7 +465,7 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc &fc, const RtStarsDqsBa
     // 循环开始，后续流程R2\3\4\7寄存器都不可写，因为存储了临时变量作为索引
 
     /* pa和va的相关配置 */
-    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+    constexpr uint64_t axiUserVaCfgMask = 0x900000009ULL;
     ConstructLLWI(r1, axiUserVaCfgMask, fc.llwiAddrMask);
     ConstructLHWI(r1, axiUserVaCfgMask, fc.lhwiAddrMask);
 

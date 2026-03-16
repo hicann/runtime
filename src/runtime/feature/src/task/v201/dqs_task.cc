@@ -457,6 +457,10 @@ static rtError_t InitFuncCallParaForDqsMbufFreeTask(TaskInfo* const taskInfo, Rt
     fcPara.mbufHandleAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
 
     fcPara.mbufPoolIndexMax = ctrlSpacePtr->input_queue_num;
+
+    fcPara.schedType = ctrlSpacePtr->type;
+    fcPara.lastMbufHandleAddr = RtPtrToValue(&ctrlSpacePtr->input_mbuf_cache_list[0].last_used_handle);
+    fcPara.sizeofHandleCache = static_cast<uint8_t>(sizeof(input_mbuf_cache_t));
     return RT_ERROR_NONE;
 }
 
@@ -872,6 +876,15 @@ void PrintErrorInfoForDqsInterChipPostProcTask(TaskInfo* taskInfo, const uint32_
     stars_dqs_inter_chip_space_t *interChipSpace = streamWithDqs->GetDqsInterChipSpace();
     COND_RETURN_VOID(interChipSpace == nullptr,
         "dqs inter-chip space is nullptr, stream_id=%d, deviceId=%u", streamWithDqs->Id_(), devId);
+}
+
+rtError_t DqsInterChipNopTaskInit(TaskInfo *taskInfo, const uint32_t groupIdx, const DqsInterChipTaskType type)
+{
+    UNUSED(groupIdx);
+    UNUSED(type);
+    taskInfo->type = TS_TASK_TYPE_NOP;
+    taskInfo->typeName = "NOP";
+    return RT_ERROR_NONE;
 }
 
 void ConstructSqeForDqsMbufFreeTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)

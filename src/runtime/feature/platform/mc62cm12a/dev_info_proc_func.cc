@@ -19,11 +19,12 @@ namespace runtime {
 static void MacroInitMC62CM12A(rtSocType_t socType, RtMacroValue &value)
 {
     UNUSED(socType);
-    value.rtsqDepth = 1024U;
+    value.rtsqDepth = 4089U;
+    value.rtcqDepth = 1024U;
     value.stubEventCount = 512U;
     value.maxAllocStreamNum = 159U;  // one is reserved for SDMA safety processing
     value.maxPersistTaskNum = 32760U;
-    value.maxTaskNumPerStream = 4090U;
+    value.maxTaskNumPerStream = value.rtsqDepth - 35U;
     value.maxSinkTaskNum = 1000000U;
     value.maxSupportTaskNum = 2000000U;
     value.pctraceFileHead = 32U;

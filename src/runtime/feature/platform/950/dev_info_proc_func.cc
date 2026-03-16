@@ -34,6 +34,7 @@ static void MacroInitDavid(rtSocType_t socType, RtMacroValue &value)
     value.maxAllocHugeStreamNum = 0U;
     value.maxModelNum = 2048U;
     value.rtsqDepth = rtsqDepth;
+    value.rtcqDepth = rtsqDepth;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
     value.expandStreamRsvTaskNum = 8U;
     value.expandStreamSqDepthAdapt = 7U;

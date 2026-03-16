@@ -33,6 +33,7 @@ static void MacroInitSolomon(rtSocType_t socType, RtMacroValue &value)
     value.maxAllocHugeStreamNum = 0U;
     value.maxModelNum = 2048U;
     value.rtsqDepth = rtsqDepth;
+    value.rtcqDepth = rtsqDepth;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
 }
 

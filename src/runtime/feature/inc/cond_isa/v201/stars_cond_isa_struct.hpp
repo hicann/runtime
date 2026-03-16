@@ -68,28 +68,6 @@ struct RtStarsGqmInitFc {
     RtStarsCondOpNop               end;
 };
 
-struct RtStarsDqsMbufFreeFc {
-    RtStarsCondOpLLWI              llwi;
-    RtStarsCondOpImm               andi;
-    RtStarsCondOpLLWI              llwi1;
-    RtStarsCondOpLHWI              lhwi1;
-    RtStarsCondOpLLWI              llwi2;
-    RtStarsCondOpLHWI              lhwi2;
-    RtStarsCondOpLLWI              llwi3;
-    RtStarsCondOpLHWI              lhwi3;
-    RtStarsCondOpLoad              ldr1; // 读mbuf handle 32bit
-    RtStarsCondOpLoad              ldr2;
-    RtStarsCondOpSystemCsr         csrrc; // use PA
-    RtStarsCondOpStore             sw;    // use PA
-    RtStarsCondOpSystemCsr         csrrs; // restore use VA
-    RtStarsCondOpImm               addi1;
-    RtStarsCondOpImm               addi2;
-    RtStarsCondOpImm              addi3;
-    RtStarsSetCsrJumpPc            jumpPc1;
-    RtStarsCondOpBranch            blt1;
-    RtStarsCondOpNop               end;  // end of func, mast be the last instruction
-};
-
 struct RtStarsDqsEnqueueFc {
     RtStarsCondOpImm               andi1;
     RtStarsCondOpLLWI              llwi1;
@@ -182,7 +160,7 @@ struct RtStarsDqsDequeueFc {
     RtStarsCondOpLLWI              llwi6;
     RtStarsCondOpSystemCsr         dfxFsm2;
     RtStarsCondOpErrorInstr        err2;
-    RtStarsCondOpNop               end;                // end of func, mast be the last instruction
+    RtStarsCondOpNop               end;                // end of func, must be the last instruction
 };
 
 struct RtStarsDqsPrepareOutFc {

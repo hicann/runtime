@@ -1037,7 +1037,8 @@ TEST_F(TaskTestV201, Test_MacroInit)
     EXPECT_NE(rtInstance, nullptr);
 
     rtInstance->MacroInit(CHIP_MC62CM12A);
-    EXPECT_EQ(Runtime::macroValue_.rtsqDepth, 1024U);
+    EXPECT_EQ(Runtime::macroValue_.rtsqDepth, 4089);
+    EXPECT_EQ(Runtime::macroValue_.rtcqDepth, 1024);
 }
 
 TEST_F(TaskTestV201, Test_SetSocTypeByChipType)

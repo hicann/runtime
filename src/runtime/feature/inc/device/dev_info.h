@@ -28,6 +28,7 @@ struct RtMacroValue {
     uint32_t maxAllocHugeStreamNum;
     uint32_t maxModelNum;
     uint32_t rtsqDepth;
+    uint32_t rtcqDepth;
     uint32_t baseAicpuStreamId;
     uint32_t expandStreamRsvTaskNum;
     uint32_t expandStreamSqDepthAdapt;

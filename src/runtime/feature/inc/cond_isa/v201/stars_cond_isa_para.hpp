@@ -19,7 +19,10 @@ struct RtDqsMbufFreeFcPara {
     uint64_t ctrlSpaceAddr; // ctrlSpace的地址
     uint64_t mbufFreeAddr; // 存放mbuf pool寄存器的地址
     uint64_t mbufHandleAddr; // 存放mbufHandle的
+    uint64_t lastMbufHandleAddr; // 存放上一帧mbufHandle
     uint16_t mbufPoolIndexMax; // pool的下标 和 mbufHandle的下标一致
+    uint8_t schedType;
+    uint8_t sizeofHandleCache;
 };
 
 struct RtStarsDqsFcPara {

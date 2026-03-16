@@ -1493,7 +1493,7 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_SQCQ_ALLOC_EX)) {
         normalSqCqAllocInputInfo.cqeSize = RT_DAVID_VIRTUAL_CQE_SIZE;
         normalSqCqAllocInputInfo.sqeDepth = Runtime::macroValue_.rtsqDepth;
-        normalSqCqAllocInputInfo.cqeDepth = Runtime::macroValue_.rtsqDepth;
+        normalSqCqAllocInputInfo.cqeDepth = Runtime::macroValue_.rtcqDepth;
     }
 
     normalSqCqAllocInputInfo.cqeDepth =

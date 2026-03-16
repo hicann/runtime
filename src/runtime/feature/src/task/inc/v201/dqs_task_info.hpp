@@ -30,6 +30,7 @@ rtError_t DqsPrepareTaskInit(TaskInfo *taskInfo, const Stream * const stream,  c
 rtError_t DqsInterChipPreProcTaskInit(TaskInfo *taskInfo, const uint32_t groupIdx, const DqsInterChipTaskType type);
 rtError_t DqsInterChipPostProcTaskInit(TaskInfo *taskInfo, const uint32_t groupIdx, const DqsInterChipTaskType type);
 rtError_t DqsInterChipMemcpyTaskInit(TaskInfo *taskInfo, const uint32_t groupIdx, const DqsInterChipTaskType type);
+rtError_t DqsInterChipNopTaskInit(TaskInfo *taskInfo, const uint32_t groupIdx, const DqsInterChipTaskType type);
 rtError_t DqsAdspcTaskInit(TaskInfo *taskInfo, const Stream * const stream, const DqsTaskConfig *const cfg);
 
 // DQS Sqe Construct

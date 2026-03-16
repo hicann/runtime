@@ -173,6 +173,55 @@ struct RtStarsDqsFrameAlignFc {
     RtStarsCondOpNop            end;
 };
 
+struct RtStarsDqsMbufFreeFc {
+    RtStarsCondOpLLWI              llwi;
+    RtStarsCondOpLHWI              lhwi;
+    RtStarsCondOpImm               andi;
+    RtStarsCondOpLLWI              llwi1;
+    RtStarsCondOpLHWI              lhwi1;
+    RtStarsCondOpLLWI              llwi2;
+    RtStarsCondOpLHWI              lhwi2;
+    RtStarsCondOpLLWI              llwi3;
+    RtStarsCondOpLHWI              lhwi3;
+    RtStarsCondOpLoad              ldr1; // 读mbuf handle 32bit
+    RtStarsCondOpImmSLLI           slli1;
+    RtStarsCondOpImmSLLI           srli1;
+    RtStarsCondOpLLWI              llwi4;
+    RtStarsCondOpLHWI              lhwi4;
+    RtStarsCondOpLLWI              llwi5;
+    RtStarsCondOpLHWI              lhwi5;
+    RtStarsSetCsrJumpPc            jumpPc1;
+    RtStarsCondOpBranch            bne;
+    RtStarsCondOpLLWI              llwiMaxMbuf;
+    RtStarsCondOpLHWI              lhwiMaxMbuf;
+    RtStarsSetCsrJumpPc            jumpPc2;
+    RtStarsCondOpBranch            bgeu1;
+    RtStarsCondOpLLWI              llwi6;
+    RtStarsCondOpLHWI              lhwi6;
+    RtStarsCondOpLLWI              llwi7;
+    RtStarsCondOpLHWI              lhwi7;
+    RtStarsCondOpOp                mult;
+    RtStarsCondOpOp                add;
+    RtStarsCondOpLoad              ldr2;
+    RtStarsCondOpImmSLLI           slli2;
+    RtStarsCondOpImmSLLI           srli2;
+    RtStarsCondOpStore             sw1;
+    RtStarsCondOpStore             sw2;
+    RtStarsCondOpImm               addi1;
+    RtStarsSetCsrJumpPc            jumpPc3;
+    RtStarsCondOpBranch            bgeu2;
+    RtStarsCondOpLoad              ldr3;
+    RtStarsCondOpSystemCsr         csrrc; // use PA
+    RtStarsCondOpStore             sw3;
+    RtStarsCondOpSystemCsr         csrrs; // restore to VA
+    RtStarsCondOpImm               addi2;
+    RtStarsCondOpImm               addi3;
+    RtStarsCondOpImm               addi4;
+    RtStarsSetCsrJumpPc            jumpPc4;
+    RtStarsCondOpBranch            blt1;
+    RtStarsCondOpNop               end;  // end of func, must be the last instruction
+};
+
 #pragma pack(pop)
 }
 }

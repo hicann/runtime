@@ -59,6 +59,8 @@ static std::map<DqsInterChipTaskType, DqsInterChipTaskInitInfo> DQS_INTER_CHIP_T
         {"dqs inter-chip memcpy mbuf data task", &DqsInterChipMemcpyTaskInit}},
     {DqsInterChipTaskType::DQS_INTER_CHIP_TASK_POSTPROC,
         {"dqs inter-chip post-proc task", &DqsInterChipPostProcTaskInit}},
+    {DqsInterChipTaskType::DQS_INTER_CHIP_TASK_NOP,
+        {"dqs inter-chip nop task", &DqsInterChipNopTaskInit}},
 };
 
 static inline rtError_t GetDqsTaskInitInfo(const rtDqsTaskType type, DqsTaskInitInfo **taskInitInfo)
@@ -291,9 +293,11 @@ static rtError_t LaunchDqsInterChipTaskByType(Stream *const stm, const uint32_t 
 static rtError_t InterChipDqsTaskInit(Stream* const stream)
 {
     rtError_t result = RT_ERROR_NONE;
-    RT_LOG(RT_LOG_INFO, "Init inter-chip dqs tasks for streamId: %d", stream->Id_());
+    // 8: inter chip rtsq drops 8 tasks to sink all needed task. 4: 4 task in one group
+    const uint32_t grpCnt = ((Runtime::macroValue_.rtsqDepth - 8U) / 4U);
+    RT_LOG(RT_LOG_INFO, "Init inter-chip dqs tasks for streamId: %d, grpCnt=%u", stream->Id_(), grpCnt);
 
-    for (uint32_t groupIdx = 0U; groupIdx < DQS_INTER_CHIP_GROUP_MAX; groupIdx++) {
+    for (uint32_t groupIdx = 0U; groupIdx < grpCnt; groupIdx++) {
         result = LaunchDqsInterChipTaskByType(stream, groupIdx, DqsInterChipTaskType::DQS_INTER_CHIP_TASK_PREPROC);
         ERROR_RETURN(result, "Init pre-proc task failed for groupIdx=%u, ret=%#x",
             groupIdx, static_cast<uint32_t>(result));
@@ -311,7 +315,11 @@ static rtError_t InterChipDqsTaskInit(Stream* const stream)
             groupIdx, static_cast<uint32_t>(result));
     }
 
-    RT_LOG(RT_LOG_INFO, "Init inter-chip dqs tasks successfully for streamId: %d", stream->Id_());
+    // add nop task
+    result = LaunchDqsInterChipTaskByType(stream, 0U, DqsInterChipTaskType::DQS_INTER_CHIP_TASK_NOP);
+    ERROR_RETURN(result, "Init nop task task failed, ret=%#x", static_cast<uint32_t>(result));
+
+    RT_LOG(RT_LOG_INFO, "Init inter-chip dqs tasks successfully for streamId: %d, grpCnt=%u", stream->Id_(), grpCnt);
     return RT_ERROR_NONE;
 }
 

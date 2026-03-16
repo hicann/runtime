@@ -72,6 +72,7 @@ private:
     rtError_t SetCtrlSpaceInputQueInfo(const rtDqsSchedCfg_t * const dqsSchedCfg);
     rtError_t SetCtrlSpaceOutputQueInfo(const rtDqsSchedCfg_t * const dqsSchedCfg);
     rtError_t InitDqsInterChipSpace(void);
+    void InitCtrlSpaceMbufHandleInfo(void) const;
 
     void SetDqsCtrlSpace(stars_dqs_ctrl_space_t *ctrlSpace)
     {

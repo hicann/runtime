@@ -277,9 +277,20 @@ rtError_t StreamWithDqs::SetCtrlSpaceOutputQueInfo(const rtDqsSchedCfg_t * const
     return RT_ERROR_NONE;
 }
 
+void StreamWithDqs::InitCtrlSpaceMbufHandleInfo(void) const
+{
+    if (dqsCtrlSpace_->type != static_cast<uint8_t>(RT_DQS_SCHED_TYPE_DSS)) {
+        return;
+    }
+    for (uint32_t i = 0U; i < dqsCtrlSpace_->input_queue_num; i++) {
+        dqsCtrlSpace_->input_mbuf_cache_list[i].last_used_handle = UINT32_MAX;
+    }
+}
+
 rtError_t StreamWithDqs::SetStreamCtrlSpaceInfo(const rtDqsSchedCfg_t * const dqsSchedCfg)
 {
     NULL_PTR_RETURN(dqsCtrlSpace_, RT_ERROR_INVALID_VALUE);
+    dqsCtrlSpace_->type = static_cast<uint8_t>(dqsSchedCfg->type);
 
     rtError_t error = SetCtrlSpaceInputQueInfo(dqsSchedCfg);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
@@ -287,6 +298,7 @@ rtError_t StreamWithDqs::SetStreamCtrlSpaceInfo(const rtDqsSchedCfg_t * const dq
     error = SetCtrlSpaceOutputQueInfo(dqsSchedCfg);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
+    InitCtrlSpaceMbufHandleInfo();
     return RT_ERROR_NONE;
 }
 

@@ -243,6 +243,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t handle_array[MAX_CACHE_SIZE];
+    uint32_t last_used_handle; // 当前仅用于DSS场景，用于保存延迟释放的handle信息
     uint16_t cnt; // 已经缓存的handle个数。
     uint16_t reverse;
     uint64_t syscnt; // 入队时间戳
@@ -253,6 +254,8 @@ typedef struct {
     uint16_t stream_id;                                                         // stream id
     uint8_t input_queue_num;                                                    // 输入队列数量
     uint8_t output_queue_num;                                                   // 输出队列数量
+    uint8_t type;                                                               // 1:NN. 2:VPC, 3:DSS
+    uint8_t rsv[3];
 
     uint16_t input_queue_ids[STARS_DQS_MAX_INPUT_QUEUE_NUM];                    // 输入队列id列表
     uint32_t input_mbuf_list[STARS_DQS_MAX_INPUT_QUEUE_NUM];                    // 输入mbuf handle列表
