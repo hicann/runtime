@@ -104,7 +104,7 @@ target_link_libraries(adcore PRIVATE
     c_sec
     mmpa
     -Wl,--as-needed
-    ascend_hal
+    ascend_hal_stub
 )
 else()
 target_link_libraries(adcore PRIVATE
@@ -117,8 +117,7 @@ target_link_libraries(adcore PRIVATE
     c_sec
     mmpa
     -Wl,--as-needed
-    $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
-    $<$<STREQUAL:${PRODUCT_SIDE},device>:ascend_hal>
+    ascend_hal_stub
     $<$<STREQUAL:${PRODUCT_SIDE},device>:unified_dlog>
     $<$<AND:$<NOT:$<BOOL:${PRODUCT}>>,$<STREQUAL:${PRODUCT_SIDE},host>>:unified_dlog>
 )

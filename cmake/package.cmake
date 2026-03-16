@@ -391,11 +391,6 @@ install(TARGETS queue_schedule
     OPTIONAL
 )
 
-install(TARGETS host_aicpu_scheduler_so
-    LIBRARY DESTINATION ${INSTALL_DIR} OPTIONAL
-    ARCHIVE DESTINATION ${INSTALL_DIR} OPTIONAL
-)
-
 if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
     install(FILES
         ${CMAKE_BINARY_DIR}/device_build/device-npu-runtime.tar.gz

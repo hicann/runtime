@@ -361,6 +361,16 @@ if(${PRODUCT_SIDE} STREQUAL host)
         OUTPUT_NAME host_aicpu_scheduler
     )
 
+    if(ENABLE_OPEN_SRC)
+        install(TARGETS host_aicpu_scheduler_so
+            DESTINATION runtime/lib
+        )
+    else()
+        install(TARGETS host_aicpu_scheduler_so
+            DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
+        )
+    endif()
+
 else()
     # PRODUCT_SIDE: device
     add_library(dp_stub SHARED ${CMAKE_CURRENT_SOURCE_DIR}/stub/stub_dp.cpp)

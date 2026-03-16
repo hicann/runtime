@@ -147,8 +147,7 @@ target_link_libraries(atrace_share
         $<BUILD_INTERFACE:slog_headers>
         $<BUILD_INTERFACE:mmpa_headers>
         # $<BUILD_INTERFACE:adcore_headers>
-        # $<$<STREQUAL:${PRODUCT_SIDE},host>:ascend_hal_stub>
-        $<$<STREQUAL:${PRODUCT_SIDE},device>:ascend_hal>
+        $<$<STREQUAL:${PRODUCT_SIDE},device>:ascend_hal_stub>
         adcore
         mmpa
         unified_dlog
