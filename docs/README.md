@@ -313,6 +313,7 @@ Runtime API参考的目录如下：
     -   [aclmdlRIAbort](api_docs/aclmdlRIAbort.md)
     -   [aclmdlRIGetStreams](api_docs/aclmdlRIGetStreams.md)
     -   [aclmdlRIGetTasksByStream](api_docs/aclmdlRIGetTasksByStream.md)
+    -   [aclmdlRITaskGetSeqId](api_docs/aclmdlRITaskGetSeqId.md)
     -   [aclmdlRITaskGetType](api_docs/aclmdlRITaskGetType.md)
     -   [aclmdlRIDestroyRegisterCallback](api_docs/aclmdlRIDestroyRegisterCallback.md)
     -   [aclmdlRIDestroyUnregisterCallback](api_docs/aclmdlRIDestroyUnregisterCallback.md)
