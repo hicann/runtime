@@ -241,6 +241,7 @@ set(xpu_tprt_api_file
 set(libruntime_cmodel_src_files
     src/common/inner_thread_local.cpp
     src/api/api.cc
+    src/api/api_global_err.cc
     src/api_impl/api_decorator.cc
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
@@ -334,7 +335,7 @@ set(libruntime_cmodel_src_files
     ${libruntime_cmodel_callback_files}
     ${common_src_files_cmodel}
     ${libruntime_cmodel_src_files_optional}
-    ${libruntime_cmodel_api_src_files}
+    ${libruntime_cmodel_api_src_files_cmodel}
     ${xpu_tprt_api_file}
 )
 
