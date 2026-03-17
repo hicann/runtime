@@ -30,7 +30,7 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 | rightValue | 输入 | 右值数据的Device内存地址。 |
 | dataType | 输入 | 左值数据、右值数据的数据类型。 |
 | trueStream | 输入 | 根据cond处指定的条件，条件成立时，则执行trueStream上的任务。 |
-| falseStream | 输入 | 根据cond处指定的条件，条件不成立时，则执行falseStream上的任务。 |
+| falseStream | 输入 | 根据cond处指定的条件，条件不成立时，则执行falseStream上的任务。当前为预留参数，只能传NULL。 |
 | stream | 输入 | 执行跳转任务的Stream。 |
 
 ## 返回值说明
