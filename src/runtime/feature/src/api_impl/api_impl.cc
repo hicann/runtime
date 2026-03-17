@@ -3847,7 +3847,8 @@ rtError_t ApiImpl::NewContext(const uint32_t deviceId, const uint32_t tsId, Cont
             "Failed to new context, device_id=%u.", deviceId);
     RT_LOG(RT_LOG_INFO, "curCtx=%p, device_id=%d, ts_id=%u, Runtime_alloc_size %zu", curCtx, deviceId, tsId, sizeof(Context));
     rtError_t error = curCtx->Setup();
-    ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(curCtx);, "Failed to setup context, retCode=%#x", static_cast<uint32_t>(error));
+    ERROR_PROC_RETURN_MSG_INNER(error, curCtx->TearDown(); DELETE_O(curCtx);, "Failed to setup context, retCode=%#x",
+        static_cast<uint32_t>(error));
 
     *ctx = curCtx;
     return error;

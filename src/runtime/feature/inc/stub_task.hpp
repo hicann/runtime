@@ -25,7 +25,7 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo);
 
 TaskInfo* GetTaskInfo(const Device * const dev, uint32_t streamId, uint32_t id);
 
-rtError_t TaskReclaimByStream(Stream * const stm, const bool limited, const bool needLog = true);
+rtError_t TaskReclaimByStream(const Stream * const stm, const bool limited, const bool needLog = true);
 
 rtError_t StreamLaunchCpuKernel(const rtKernelLaunchNames_t * const launchNames, const uint32_t coreDim,
         const rtArgsEx_t * const argsInfo, Stream * const stm, const uint32_t flag);

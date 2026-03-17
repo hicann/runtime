@@ -3224,7 +3224,7 @@ RTS_API rtError_t rtSetDeviceSatMode(rtFloatOverflowMode_t floatOverflowMode)
 
     if ((floatOverflowMode >= RT_OVERFLOW_MODE_SATURATION) && 
         (floatOverflowMode < RT_OVERFLOW_MODE_UNDEF)) {
-        uint32_t mode = 1 << floatOverflowMode;
+        const uint32_t mode = 1U << floatOverflowMode;
         const char* errorMsg = (floatOverflowMode == RT_OVERFLOW_MODE_INFNAN) ?
                                 "the Inf/NaN mode; only the saturation mode can be set" :
                                 "the saturation mode; only the Inf/NaN mode can be set";

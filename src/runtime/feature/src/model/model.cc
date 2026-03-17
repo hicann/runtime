@@ -2006,10 +2006,10 @@ rtError_t Model::ModelGetStreams(Stream **streams, uint32_t *numStreams) const
     return RT_ERROR_NONE;
 }
 
-rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, void *ptr)
+rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, const void *ptr)
 {
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
-    MdlDestroyCallbackInfo info{fn, ptr};
+    MdlDestroyCallbackInfo info{fn, RtPtrToUnConstPtr<void *>(ptr)};
     const auto callBackIter = mdlDestroyCallbackSet_.find(info);
     if (callBackIter != mdlDestroyCallbackSet_.end()) {
         RT_LOG(RT_LOG_ERROR,

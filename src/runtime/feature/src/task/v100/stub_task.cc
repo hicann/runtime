@@ -22,7 +22,7 @@ TaskInfo* GetTaskInfo(const Device * const dev, uint32_t streamId, uint32_t id)
     return dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), static_cast<uint16_t>(id));
 }
 
-rtError_t TaskReclaimByStream(Stream *const stm, const bool limited, const bool needLog)
+rtError_t TaskReclaimByStream(const Stream *const stm, const bool limited, const bool needLog)
 {
     UNUSED(stm);
     UNUSED(limited);

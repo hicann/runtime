@@ -157,7 +157,7 @@ rtError_t TryRecycleTask(Stream * const stm)
     return RT_ERROR_NONE;
 }
 
-rtError_t TaskReclaimByStream(Stream *const stm, const bool limited, const bool needLog)
+rtError_t TaskReclaimByStream(const Stream *const stm, const bool limited, const bool needLog)
 {
     if ((stm->Flags() & RT_STREAM_PERSISTENT) != 0U) {
         RT_LOG(RT_LOG_ERROR, "persistent stream can not call this func!");

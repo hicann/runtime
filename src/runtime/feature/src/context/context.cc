@@ -477,8 +477,7 @@ rtError_t Context::Setup()
     const bool syncFlag = ((defaultStream_->Flags() & RT_STREAM_PRIMARY_FIRST_DEFAULT) != 0U) && (!(device_->IsStarsPlatform()));
     if (syncFlag) {
         error = defaultStream_->Synchronize(true);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "Set up failed, failed to synchronize primaryStream.");
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Set up failed, failed to synchronize primaryStream.");
     }
 
     return OnlineStreamInit(chipType);

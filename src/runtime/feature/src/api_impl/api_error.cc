@@ -1932,7 +1932,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, co
 {
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
         if (stm != nullptr) {
-            COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() != 0, RT_ERROR_INVALID_VALUE,
+            COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() != 0U, RT_ERROR_INVALID_VALUE,
                 "If stm is a model stream, parameter kind cannot be equal to %d for function MemcpyAsyncCheckParam.", kind);
         }
     }
