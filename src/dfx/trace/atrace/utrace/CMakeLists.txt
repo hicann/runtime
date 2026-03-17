@@ -141,8 +141,6 @@ target_link_options(atrace_share
         -Wl,--gc-sections
 )
 
-message(STATUS "Atrace PRODUCT_SIDE = ${PRODUCT_SIDE}")
-message(STATUS "Atrace PRODUCT = ${PRODUCT}")
 target_link_libraries(atrace_share
     PRIVATE
         $<BUILD_INTERFACE:intf_pub>
@@ -150,7 +148,6 @@ target_link_libraries(atrace_share
         $<BUILD_INTERFACE:mmpa_headers>
         # $<BUILD_INTERFACE:adcore_headers>
         $<$<STREQUAL:${PRODUCT_SIDE},device>:ascend_hal_stub>
-        $<$<AND:$<STREQUAL:${PRODUCT},ascend950>,$<STREQUAL:${PRODUCT_SIDE},host>>:urma-udma>
         adcore
         mmpa
         unified_dlog
