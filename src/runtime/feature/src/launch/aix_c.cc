@@ -137,8 +137,8 @@ static rtError_t ConvertAsyncDmaForSoftWareSq(MemcpyAsyncTaskInfo * const cpyAsy
     }
     cpyAsyncTask->dmaAddr.offsetAddr.devid = static_cast<uint32_t>(updateStm->Device_()->Id_());
     void *sqeDeviceAddr = RtValueToPtr<void *>(updateStm->GetSqBaseAddr() + (updateTask->pos) * sizeof(rtDavidSqe_t));
-    error = curDrv->MemConvertAddr(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(cpyAsyncTask->src)),
-           static_cast<uint64_t>(reinterpret_cast<uintptr_t>(sqeDeviceAddr)), cpyAsyncTask->size, &(cpyAsyncTask->dmaAddr));
+    error = curDrv->MemConvertAddr(RtPtrToValue(cpyAsyncTask->src), RtPtrToValue(sqeDeviceAddr),
+        cpyAsyncTask->size, &(cpyAsyncTask->dmaAddr));
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "MemConvertAddr failed, device_id=%d, stream_id=%d, retCode=%#x.",
             updateStm->Device_()->Id_(), updateStm->Id_(), static_cast<uint32_t>(error));
     cpyAsyncTask->destPtr = sqeDeviceAddr;

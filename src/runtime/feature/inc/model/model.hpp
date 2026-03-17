@@ -193,7 +193,7 @@ public:
     rtError_t DelStream(Stream * const streamIn);
     rtError_t BindSqPerStream(Stream * const streamIn, const uint32_t flag);
     rtError_t UnBindSqPerStream(Stream * const streamIn);
-    rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, void *ptr);
+    rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, const void *ptr);
     rtError_t ModelDestroyUnregisterCallback(const rtCallback_t fn);
 
     void SetModelExecutorType(uint32_t executorFlag)

@@ -42,7 +42,7 @@ void RecycleModelBindStreamAllTask(Stream * const stm, const bool cleanFlag);
 // 上层使用时，一定要加流同步锁StreamSyncLock
 rtError_t SyncTask(Stream * const stm, const uint32_t taskResPos, int32_t timeout);
 rtError_t SyncTaskForSeparateSendAndRecycle(Stream * const stm, const uint32_t taskResPos, int32_t timeout);
-rtError_t TaskReclaimByStream(Stream * const stm, const bool limited, const bool needLog = true);
+rtError_t TaskReclaimByStream(const Stream * const stm, const bool limited, const bool needLog = true);
 
 // device stop时，全量回收。异常析构流程可能进，因此跟老形态保持一致，不能加锁，加锁可能会出现递归锁
 rtError_t TaskReclaimAllStream(const Device * const dev);
