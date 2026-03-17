@@ -66,4 +66,17 @@ TEST_F(PlatformManagerV2UTest, platform_instance_Trim) {
   EXPECT_EQ(strNg, "");
 }
 
+TEST_F(PlatformManagerV2UTest, platform_instance_RealPath1) {
+  std::string path = "";
+  string res = "";
+  res = fe::RealSoFilePath(path);
+  EXPECT_EQ(res, "");
+}
+
+TEST_F(PlatformManagerV2UTest, platform_instance_RealPath2) {
+  std::string path = "test1";
+  string res = "";
+  res = fe::RealSoFilePath(path);
+  EXPECT_EQ(res, "");
+}
 }

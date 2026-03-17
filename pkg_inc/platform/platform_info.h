@@ -73,10 +73,6 @@ class PlatformInfoManager {
 
   uint32_t LoadConfigFile(std::string real_path);
 
-  std::string RealPath(const std::string &path);
-
-  std::string GetSoFilePath();
-
   void ParseVersion(std::map<std::string, std::string> &version_map,
                     std::string &soc_version,
                     PlatformInfo &platform_info_temp);

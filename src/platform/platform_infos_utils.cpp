@@ -65,4 +65,26 @@ void PlatformInfosUtils::Split(const std::string &str, char pattern, std::vector
   }
   return;
 }
+
+std::string RealSoFilePath(const std::string &path) {
+  if (path.empty()) {
+    PF_LOGE("Path string is NULL.");
+    return "";
+  }
+
+  if (path.size() >= PATH_MAX) {
+    PF_LOGE("File path '%s' is too long!", path.c_str());
+    return "";
+  }
+
+  char resoved_path[PATH_MAX] = {0};
+  std::string res = "";
+
+  if (realpath(path.c_str(), resoved_path) != nullptr) {
+    res = resoved_path;
+  } else {
+    PF_LOGE("Path '%s' does not exist.", path.c_str());
+  }
+  return res;
+}
 }  // namespace fe

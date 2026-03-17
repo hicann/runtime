@@ -44,9 +44,6 @@ class PlatformManagerV2 {
                         fe::PlatFormInfos &platform_info_temp);
   uint32_t ParsePlatformInfo(std::map<std::string, std::map<std::string, std::string>> &content_info_map,
                             fe::PlatFormInfos &platform_info_temp);
-  std::string RealPath(const std::string &path);
-  std::string GetSoFilePath();
-  std::string GetConfigFilePath();
   uint32_t InitPlatformInfos(const std::string &soc_version);
   int32_t GetPlatformInfos(const std::string &soc_version, fe::PlatFormInfos &platform_info);
 

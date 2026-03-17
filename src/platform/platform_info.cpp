@@ -10,21 +10,17 @@
 
 #include "platform/platform_info.h"
 #include <dirent.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <unordered_set>
 #include <algorithm>
-#include <climits>
 #include <fstream>
 #include <mutex>
-#include "platform_log.h"
 #include "platform/platform_info_def.h"
 #include "platform_infos_utils.h"
 
 namespace fe {
 namespace {
 const std::string FIXPIPE_CONFIG_KEY = "Intrinsic_fix_pipe_";
-const std::string PLATFORM_RELATIVE_PATH = "../data/platform_config";
 const std::string INI_FILE_SUFFIX = "ini";
 const std::string STR_SOC_VERSION = "SoC_version";
 const std::string STR_AIC_VERSION = "AIC_version";
@@ -930,55 +926,13 @@ uint32_t PlatformInfoManager::ParsePlatformInfo(std::map<std::string, std::map<s
   return PLATFORM_SUCCESS;
 }
 
-std::string PlatformInfoManager::RealPath(const std::string &path) {
-  if (path.empty()) {
-    PF_LOGE("Path string is NULL.");
-    return "";
-  }
-
-  if (path.size() >= PATH_MAX) {
-    PF_LOGE("File path '%s' is too long!", path.c_str());
-    return "";
-  }
-
-  char resoved_path[PATH_MAX] = {0};
-  std::string res = "";
-
-  if (realpath(path.c_str(), resoved_path) != nullptr) {
-    res = resoved_path;
-  } else {
-    PF_LOGE("Path '%s' does not exist.", path.c_str());
-  }
-  return res;
-}
-
-std::string PlatformInfoManager::GetSoFilePath() {
-  Dl_info dl_info;
-  std::string real_file_path = "";
-  PlatformInfoManager &(*instance_ptr)() = &PlatformInfoManager::Instance;
-  if (dladdr(reinterpret_cast<void *>(instance_ptr), &dl_info) == 0) {
-    PF_LOGE("Failed to read the so file path.");
-    return real_file_path;
-  } else {
-    std::string so_path = dl_info.dli_fname;
-    if (so_path.empty()) {
-      PF_LOGE("The so file path is empty.");
-      return real_file_path;
-    }
-    real_file_path = RealPath(so_path);
-    size_t pos = real_file_path.rfind('/');
-    real_file_path = real_file_path.substr(0, pos + 1);
-  }
-  return real_file_path;
-}
-
 __attribute__((visibility("default"))) uint32_t PlatformInfoManager::InitializePlatformInfo() {
   // add lock
   std::lock_guard<std::mutex> lock_guard(pc_lock_);
   if (init_flag_) {
     return PLATFORM_SUCCESS;
   }
-  std::string cfg_file_real_path = RealPath(GetSoFilePath() + PLATFORM_RELATIVE_PATH);
+  std::string cfg_file_real_path = fe::GetConfigFilePath<PlatformInfoManager>();
   if (cfg_file_real_path.empty()) {
     PF_LOGE("File path[%s] is not valid.", cfg_file_real_path.c_str());
     return PLATFORM_FAILED;
@@ -1199,7 +1153,7 @@ uint32_t PlatformInfoManager::InitRuntimePlatformInfos(const std::string &SoCVer
     return PLATFORM_SUCCESS;
   }
 
-  std::string cfg_file_real_path = RealPath(GetSoFilePath() + PLATFORM_RELATIVE_PATH);
+  std::string cfg_file_real_path = fe::GetConfigFilePath<PlatformInfoManager>();
   if (cfg_file_real_path.empty()) {
     PF_LOGE("File path[%s] is not valid.", cfg_file_real_path.c_str());
     return PLATFORM_FAILED;

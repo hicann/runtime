@@ -10,12 +10,9 @@
 
 #include "platform_manager_v2.h"
 #include <dirent.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <algorithm>
-#include <climits>
 #include <fstream>
-#include "platform_log.h"
 #include "platform_infos_utils.h"
 #include "platform_error_define.h"
 
@@ -24,7 +21,6 @@ extern "C" {
 #endif // __cplusplus
 
 const std::string FIXPIPE_CONFIG_KEY = "Intrinsic_fix_pipe_";
-const std::string PLATFORM_RELATIVE_PATH = "data/platform_config";
 const std::string INI_FILE_SUFFIX = ".ini";
 
 const std::string STR_AI_CORE_INTRINSIC_DTYPE_MAP = "AICoreintrinsicDtypeMap";
@@ -213,65 +209,8 @@ uint32_t PlatformManagerV2::ParsePlatformInfo(std::map<std::string, std::map<std
   return PLATFORM_SUCCESS;
 }
 
-std::string PlatformManagerV2::RealPath(const std::string &path) {
-  if (path.empty()) {
-    PF_LOGE("Path string is NULL.");
-    return "";
-  }
-
-  if (path.size() >= PATH_MAX) {
-    PF_LOGE("File path '%s' is too long!", path.c_str());
-    return "";
-  }
-
-  char resoved_path[PATH_MAX] = {0};
-  std::string res = "";
-
-  if (realpath(path.c_str(), resoved_path) != nullptr) {
-    res = resoved_path;
-  } else {
-    PF_LOGE("Path '%s' does not exist.", path.c_str());
-  }
-  return res;
-}
-
-std::string PlatformManagerV2::GetSoFilePath() {
-  Dl_info dl_info;
-  std::string real_file_path = "";
-  PlatformManagerV2 &(*instance_ptr)() = &PlatformManagerV2::Instance;
-  if (dladdr(reinterpret_cast<void *>(instance_ptr), &dl_info) == 0) {
-    PF_LOGE("Failed to read the so file path.");
-    return real_file_path;
-  } else {
-    std::string so_path = dl_info.dli_fname;
-    if (so_path.empty()) {
-      PF_LOGE("The so file path is empty.");
-      return real_file_path;
-    }
-    real_file_path = RealPath(so_path);
-    size_t pos = real_file_path.rfind('/');
-    real_file_path = real_file_path.substr(0, pos + 1);
-  }
-  return real_file_path;
-}
-
-std::string PlatformManagerV2::GetConfigFilePath() {
-  std::string so_file_path = GetSoFilePath();
-  while (!so_file_path.empty() && so_file_path.back() == '/') {
-    so_file_path.pop_back();
-  }
-  size_t pos = so_file_path.find_last_of("/\\");
-  if (pos == std::string::npos) {
-    return "";
-  }
-  so_file_path = so_file_path.substr(0, pos + 1);
-  PF_LOGI("Current so file path is [%s].", so_file_path.c_str());
-
-  return RealPath(so_file_path + PLATFORM_RELATIVE_PATH);
-}
-
 uint32_t PlatformManagerV2::InitPlatformInfos(const std::string &soc_version) {
-  std::string cfg_file_real_path = GetConfigFilePath();
+  std::string cfg_file_real_path = fe::GetConfigFilePath<PlatformManagerV2>();
   if (cfg_file_real_path.empty()) {
     PF_LOGE("File path[%s] is not valid.", cfg_file_real_path.c_str());
     return PLATFORM_FAILED;

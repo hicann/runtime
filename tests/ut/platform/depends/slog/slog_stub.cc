@@ -140,7 +140,7 @@ std::string GetLogLevelStr(int level)
 
 int CheckLogLevel(int moduleId, int level)
 {
-    return level < 2;
+    return level >= DLOG_ERROR;
 }
 
 void DlogRecord(int module_id, int level, const char *fmt, ...)
