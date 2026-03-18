@@ -36,11 +36,11 @@
 aclError aclrtReduceAsync(
     void* dst,                    // 输出地址
     const void* src,              // 输入地址
-    size_t size,                  // 数据大小（字节）
-    aclrtMemcpyKind reduceKind,  // 归约类型
-    aclDataType dataType,          // 数据类型
-    aclrtStream stream,            // Stream
-    void* workspace               // 工作空间（可选）
+    uint64_t count,               // 数据大小（字节）
+    aclrtReduceKind kind,         // 归约类型
+    aclDataType type,             // 数据类型
+    aclrtStream stream,           // Stream
+    void* reserve                 // 预留参数
 );
 ```
 ### 归约类型

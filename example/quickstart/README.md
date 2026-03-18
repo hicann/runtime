@@ -70,7 +70,7 @@ aclError aclnnAddGetWorkspaceSize(
     const aclTensor* self,   // 第一个输入张量
     const aclTensor* other,  // 第二个输入张量
     const aclScalar* alpha,  // 缩放因子
-    const aclTensor* out,    // 输出张量
+    aclTensor* out,          // 输出张量
     uint64_t* workspaceSize, // [输出] workspace 大小
     aclOpExecutor** executor // [输出] 算子执行器
 );
