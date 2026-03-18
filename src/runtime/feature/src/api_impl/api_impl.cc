@@ -5074,7 +5074,7 @@ rtError_t ApiImpl::CallbackLaunchWithEvent(const rtCallback_t callBackFunc, void
             /* get thread id */
             uint64_t threadId = 0UL;
             ret = rtInstance->GetThreadIdByStreamId(dev->Id_(), stm->Id_(), &threadId);
-            ERROR_RETURN(ret,
+            COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, (void)EventDestroy(curEvent),
                 "Get threadId by streamId failed, drv devId=%u, original stream_id=%d, "
                 "capture stream_id=%d, retCode=%#x.", dev->Id_(), stm->Id_(), launchStm->Id_(), ret);
             ret = rtInstance->SubscribeReport(threadId, launchStm, curEvent);
