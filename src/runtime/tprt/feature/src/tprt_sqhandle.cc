@@ -76,7 +76,7 @@ uint32_t TprtSqHandle::SqPushTask(const uint8_t *sqeAddr, const uint32_t sqeNum)
     uint16_t sqTail = sqTail_.load();
     bool queueFull = TprtManage::Instance()->IsQueueFull(sqHead, sqTail, sqeNum);
     if (queueFull) {
-        TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id[%u] sq_id[%u] queue is full, before:sqHead[%u], sqTail[%u], after:sqHead[%u]"
+        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] queue is full, before:sqHead[%u], sqTail[%u], after:sqHead[%u]"
                  ", sqTail[%u].", devId_, sqId_, sqHead, sqTail, sqHead_.load(), sqTail_.load());
         return TPRT_SQ_QUEUE_FULL;
     }
@@ -88,7 +88,7 @@ uint32_t TprtSqHandle::SqPushTask(const uint8_t *sqeAddr, const uint32_t sqeNum)
         sqTail = (sqTail + 1U) % depth;
     }
     sqTail_.store(sqTail);
-    TPRT_LOG(TPRT_LOG_INFO,"[tprt]device_id[%u] sq_id[%u] copy sqe to queue, sqeNum=%u, sqtail=%u.",
+    TPRT_LOG(TPRT_LOG_INFO,"device_id[%u] sq_id[%u] copy sqe to queue, sqeNum=%u, sqtail=%u.",
              devId_, sqId_, sqeNum, sqTail_.load());
     return TPRT_SUCCESS;
 }
@@ -118,7 +118,7 @@ uint32_t TprtSqHandle::SqExeTask(const TprtSqe_t *sqe)
         auto func = it->second;
         result = func(sqe);
         if (result != TPRT_SUCCESS) {
-            TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id=%u, sq_id=%u, sqHead=%u, sqTail=%u, errorCode=%u sqe exe fail.",
+            TPRT_LOG(TPRT_LOG_ERROR, "device_id=%u sq_id=%u sqHead=%u sqTail=%u errorCode=%u sqe exe fail.",
                      devId_, sqId_, sqHead_.load(), sqTail_.load(), result);
         }
     } else {

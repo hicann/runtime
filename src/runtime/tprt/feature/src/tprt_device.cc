@@ -20,7 +20,7 @@ static uint32_t TprtProcSqQueryInfo(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
 {
     TprtSqHandle *sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
     if (sqHandle == nullptr) {
-        TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
+        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
         return TPRT_SQ_HANDLE_INVALID;
     }
 
@@ -39,7 +39,7 @@ static uint32_t TprtProcSqQueryInfo(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
         default:
             error = TPRT_INPUT_OP_TYPE_INVALID;
             TPRT_LOG(TPRT_LOG_ERROR,
-                "[tprt]device_id[%u] sq_id[%u] op=%u is invalid.",
+                "device_id[%u] sq_id[%u] op=%u is invalid.",
                 dev->TprtDevGetDevId_(),
                 opInfo->reqId,
                 opInfo->prop);
@@ -52,7 +52,7 @@ static uint32_t TprtProcConfigSq(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
 {
     TprtSqHandle *sqHandle = dev->TprtGetSqHandleBySqId(opInfo->reqId);
     if (sqHandle == nullptr) {
-        TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
+        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] is invalid.", dev->TprtDevGetDevId_(), opInfo->reqId);
         return TPRT_SQ_HANDLE_INVALID;
     }
     uint32_t error = TPRT_SUCCESS;
@@ -63,7 +63,7 @@ static uint32_t TprtProcConfigSq(TprtDevice *dev, TprtSqCqOpInfo_t *opInfo)
         default:
             error = TPRT_INPUT_OP_TYPE_INVALID;
             TPRT_LOG(TPRT_LOG_ERROR,
-                "[tprt]device_id[%u] sq_id[%u] prop[%u].",
+                "device_id[%u] sq_id[%u] prop[%u].",
                 dev->TprtDevGetDevId_(),
                 opInfo->reqId,
                 opInfo->prop);
@@ -79,7 +79,7 @@ TprtDevice::TprtDevice(uint32_t devId, uint32_t timeoutMonitorUint) : devId_(dev
         timer_->SetDevice(this); 
         timer_->Start(timeoutMonitorUint);    // 定时器启动
     } else {
-        TPRT_LOG(TPRT_LOG_ERROR, "[tprt] Failed to create timer for device_id[%u].", devId_);
+        TPRT_LOG(TPRT_LOG_ERROR, "Failed to create timer for device_id[%u].", devId_);
     }
 }
 
@@ -235,7 +235,7 @@ TprtWorker *TprtDevice::TprtGetWorkHandleBySqHandle(TprtSqHandle *handle)
 uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo)
 {
     TPRT_LOG(TPRT_LOG_DEBUG,
-        "[tprt]device_id[%u] process op type[%d] reqId[%u] prop[%u].",
+        "device_id[%u] process op type[%d] reqId[%u] prop[%u].",
         devId_,
         opInfo->type,
         opInfo->reqId,
@@ -253,7 +253,7 @@ uint32_t TprtDevice::TprtDevOpSqCqInfo(TprtSqCqOpInfo_t *opInfo)
     }
     if (error != TPRT_SUCCESS) {
             TPRT_LOG(TPRT_LOG_ERROR,
-                "[tprt]device_id[%u] process op type[%d] reqId[%u] prop[%u] failed, error=%u.",
+                "device_id[%u] process op type[%d] reqId[%u] prop[%u] failed, error=%u.",
                 devId_,
                 opInfo->type,
                 opInfo->reqId,
@@ -276,7 +276,7 @@ static TimeoutStatus_t waitSqIsTimeout(const TprtSqHandle* sqHandle, const TprtS
     auto elapsed = curTime - sqHandle->GetTimeoutWaitInfo().timeStamp;
     auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
     TPRT_LOG(TPRT_LOG_DEBUG, 
-        "[tprt]waitSqIsTimeout: curTime since epoch: %ld ms, startTime since epoch: %ld ms, elapsed: %ld ms, elapsedSeconds: %ld, timeout setting: %d seconds",
+        "waitSqIsTimeout: curTime since epoch: %ld ms, startTime since epoch: %ld ms, elapsed: %ld ms, elapsedSeconds: %ld, timeout setting: %d seconds",
         std::chrono::duration_cast<std::chrono::milliseconds>(curTime.time_since_epoch()).count(),
         std::chrono::duration_cast<std::chrono::milliseconds>(sqHandle->GetTimeoutWaitInfo().timeStamp.time_since_epoch()).count(),
         std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),

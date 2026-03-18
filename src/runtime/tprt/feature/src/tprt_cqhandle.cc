@@ -40,7 +40,7 @@ uint32_t TprtCqHandle::TprtCqWriteCqe(const uint8_t errorType, const uint32_t er
     uint16_t cqTail = cqTail_.load();
     bool queueFull = TprtManage::Instance()->IsQueueFull(cqHead, cqTail, 1U);
     if (queueFull) {
-        TPRT_LOG(TPRT_LOG_ERROR, "[tprt]device_id[%u] cq_id[%u] queue is full, before:cqHead[%u], cqTail[%u], after:cqHead[%u]"
+        TPRT_LOG(TPRT_LOG_ERROR, "device_id[%u] cq_id[%u] queue is full, before:cqHead[%u], cqTail[%u], after:cqHead[%u]"
                  ", cqTail[%u].", devId_, cqId_, cqHead, cqTail, cqHead_.load(), cqTail_.load());
         return TPRT_SQ_QUEUE_FULL;
     }
