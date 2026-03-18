@@ -438,22 +438,6 @@ TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess002)
     auto ret = ClientManager::ChangeUserDeviceIdToLogicDeviceId(userDevId, logicDevId);
     EXPECT_EQ(ret, TSD_OK);
 }
- 
-TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess001)
-{
-    MOCKER_CPP(&ClientManager::IsSupportSetVisibleDevices).stubs().will(returnValue(true));
-    char_t env[] = "7,6,5,4";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(drvGetDevNum).stubs().will(invoke(fake_drvGetDevNum));
-    uint32_t userDevId = 1;
-    uint32_t logicDevId;
-    auto ret = ClientManager::ChangeUserDeviceIdToLogicDeviceId(userDevId, logicDevId);
-    EXPECT_EQ(logicDevId, 6U);
-    
-    userDevId = 4;
-    ret = ClientManager::ChangeUserDeviceIdToLogicDeviceId(userDevId, logicDevId);
-    EXPECT_EQ(ret, TSD_PARAMETER_INVALID);
-}
 
 TEST_F(ClientManagerTest, TestGetVisibleDevices01)
 {

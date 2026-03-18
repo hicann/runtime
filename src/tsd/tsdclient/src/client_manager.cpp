@@ -50,17 +50,20 @@ SchedMode ClientManager::aicpuSchedMode_ =  AICPU_SCHED_MODE_INTERRUPT;
 
 bool ClientManager::CheckDestructFlag(const uint32_t &logicDevId)
 {
-    // logicDevId is actually user device id
-    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDevId) != TSD_OK)) {
+    const uint32_t inputDeviceId = logicDevId;
+    uint32_t logicDeviceId = logicDevId;
+    const auto ret = ChangeUserDeviceIdToLogicDeviceId(logicDevId, logicDeviceId);
+    if (ret != TSD_OK) {
         return false;
     }
 
-    uint32_t logicDeviceId = logicDevId;
-    if (IsSupportSetVisibleDevices()) {
-        const auto ret = ChangeUserDeviceIdToLogicDeviceId(logicDevId, logicDeviceId);
-        if (ret != TSD_OK) {
-            return false;
-        }
+    // logicDevId is actually user device id
+    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
+        return false;
+    }
+
+    if (!IsSupportSetVisibleDevices()) {
+        logicDeviceId = inputDeviceId;
     }
 
     const std::lock_guard<std::mutex> lk(g_destructFlagMut);
@@ -110,16 +113,23 @@ TSD_StatusT ClientManager::GetHdcConctStatus(int32_t &hdcSessStat)
 
 std::shared_ptr<ClientManager> ClientManager::GetInstance(const uint32_t &deviceId, const uint32_t deviceMode, const bool transDevIdFlag)
 {
-    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(deviceId) != TSD_OK)) {
-        return nullptr;
-    }
+    const uint32_t inputDeviceId = deviceId;
     uint32_t logicDeviceId = deviceId;
-    if (IsSupportSetVisibleDevices() && transDevIdFlag) {
+    if (transDevIdFlag) {
         const auto ret = ChangeUserDeviceIdToLogicDeviceId(deviceId, logicDeviceId);
         if (ret != TSD_OK) {
             return nullptr;
         }
     }
+
+    if (!g_hadGetPlatformInfo && (ClientManager::GetPlatformInfo(logicDeviceId) != TSD_OK)) {
+        return nullptr;
+    }
+
+    if (!IsSupportSetVisibleDevices()) {
+        logicDeviceId = inputDeviceId;
+    }
+
     const std::lock_guard<std::mutex> lk(g_tsdClientMut);
     std::shared_ptr<ClientManager> clientManager = nullptr;
     const std::map<const uint32_t, std::shared_ptr<ClientManager>>::const_iterator iter =
@@ -630,6 +640,7 @@ TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t user
     if (g_userDeviceInfo == nullptr || g_userDeviceInfo->empty()) {
         return TSD_OK;
     }
+
     const std::map<const uint32_t, uint32_t>::const_iterator iter = g_userDeviceInfo->find(userDevId);
     if (iter != g_userDeviceInfo->end()) {
         logicDevId = iter->second;
