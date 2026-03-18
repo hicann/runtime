@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "ascend_hal.h"
+#include "securec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,5 +36,23 @@ drvError_t halGetChipInfo(uint32_t devId, halChipInfo *chipInfo)
 drvError_t halGetAPIVersion(int32_t *halAPIVersion)
 {
     *halAPIVersion = 467735;
+    return DRV_ERROR_NONE;
+}
+
+hdcError_t drvGetDevNum(uint32_t *devices)
+{
+    *devices = 1;
+    return DRV_ERROR_NONE;
+}
+
+hdcError_t drvGetDevIDs(uint32_t *devices, uint32_t len)
+{
+    memset_s(devices, len, 0, len);
+    return DRV_ERROR_NONE;
+}
+
+hdcError_t drvGetDeviceLocalIDs(uint32_t *dev_id, uint32_t len)
+{
+    memset_s(dev_id, len, 0, len);
     return DRV_ERROR_NONE;
 }

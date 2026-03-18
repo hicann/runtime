@@ -24,12 +24,33 @@ add_dependencies(adump_base_proto protobuf_host_build ascend_protobuf_static)
 ########################################################################
 
 set(adumpBaseSrcList
+    ${SRC_CODE_ROOT_PATH}/adcore/hdc/hdc_api.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/device/adx_dsmi.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/memory_utils.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/file_utils.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/memory_utils.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/string_utils.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/thread.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/thread_comm.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/adx_comm_opt_manager.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/hdc_comm_opt.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/component/adx_server_manager.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/epoll/adx_hdc_epoll.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/protocol/adx_msg_proto.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/device/adx_device.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/device/adx_hdc_device.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/device/adx_sock_device.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/adx_api.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/sock_api.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts/sock_comm_opt.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/epoll/adx_sock_epoll.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/common/file_utils.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/common/string_utils.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/common/create_func.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/component/server_register.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/component/adx_component_api_c.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/component/adx_common_component.cpp
+    ${SRC_CODE_ROOT_PATH}/adcore/adcore_api.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/host/adx_dump_receive.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/host/adx_datadump_callback.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/host/adx_datadump_server.cpp
 
     ${SRC_CODE_ROOT_PATH}/adump/common/str_utils.cpp
     ${SRC_CODE_ROOT_PATH}/adump/common/sys_utils.cpp
@@ -113,15 +134,23 @@ set(adumpBaseStubSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/stub/drv_stub.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/stub/error_manager_stub.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/stub/dump_exception_stub.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/../ut/stub/ide_hdc_stub.cc
+    ${ADUMP_BASE_UT_ROOT_PATH}/../ut/common_stub/sec_stub.cc
 )
 
 set(adumpBaseHeaders
-    ${SRC_CODE_ROOT_PATH}/adcore/
-    ${SRC_CODE_ROOT_PATH}/adcore/common/
-    ${SRC_CODE_ROOT_PATH}/adcore/protocol/
-    ${SRC_CODE_ROOT_PATH}/adcore/log/
-    ${SRC_CODE_ROOT_PATH}/adcore/common/
+    ${SRC_CODE_ROOT_PATH}/inc/adump
+    ${SRC_CODE_ROOT_PATH}/adcore
+    ${SRC_CODE_ROOT_PATH}/adcore/common
+    ${SRC_CODE_ROOT_PATH}/adcore/log
+    ${SRC_CODE_ROOT_PATH}/adcore/commopts
+    ${SRC_CODE_ROOT_PATH}/adcore/component
+    ${SRC_CODE_ROOT_PATH}/adcore/protocol
+    ${SRC_CODE_ROOT_PATH}/adcore/device
+    ${SRC_CODE_ROOT_PATH}/adcore/hdc
     ${SRC_CODE_ROOT_PATH}/adump/
+    ${SRC_CODE_ROOT_PATH}/adump/device
+    ${SRC_CODE_ROOT_PATH}/adump/host/
     ${SRC_CODE_ROOT_PATH}/adump/common/
     ${SRC_CODE_ROOT_PATH}/adump/common/adump_platform_api/
     ${SRC_CODE_ROOT_PATH}/adump/impl/

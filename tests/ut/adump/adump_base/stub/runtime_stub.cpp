@@ -20,6 +20,7 @@
 #include "rts/rts_device.h"
 #include "rts/rts_stream.h"
 #include "rts/rts_kernel.h"
+#include "rts/rts_snapshot.h"
 #include "rt_inner_dfx.h"
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
@@ -544,6 +545,11 @@ rtError_t rtGetOpExecuteTimeoutV2(uint32_t *const timeout)
 }
 
 rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
+{
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
 {
     return RT_ERROR_NONE;
 }

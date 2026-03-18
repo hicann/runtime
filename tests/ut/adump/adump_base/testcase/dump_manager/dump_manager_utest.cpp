@@ -52,6 +52,7 @@ TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 
 TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
 {
+    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
     int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);
@@ -65,4 +66,22 @@ TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
     MOCKER(&DumpSetting::Init).stubs().will(returnValue(ADUMP_FAILED));
     ret = DumpManager::Instance().UnSetDumpConfig();
     EXPECT_EQ(ret, ADUMP_FAILED);
+}
+
+TEST_F(DumpManagerUtest, Test_RegisterSnapShotCallback_OK)
+{
+    DumpManager::Instance().snapCbkRegistered_ = false;
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, true)
+}
+
+TEST_F(DumpManagerUtest, Test_RegisterSnapShotCallback_Failture)
+{
+    MOCKER(rtSnapShotCallbackRegister).stubs().will(returnValue(1)).then(returnValue(207000));
+    DumpManager::Instance().snapCbkRegistered_ = false;
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, false);
+
+    DumpManager::Instance().RegisterSnapShotCallback();
+    EXPECT_EQ(DumpManager::Instance().snapCbkRegistered_, false);
 }
