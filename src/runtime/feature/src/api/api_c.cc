@@ -323,7 +323,7 @@ rtError_t rtKernelLaunch(const void *stubFunc, uint32_t numBlocks, void *args, u
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithHandle(void *hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, const void* kernelInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -351,7 +351,7 @@ rtError_t rtKernelLaunchWithHandle(void * const hdl, const uint64_t tilingKey, u
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtKernelLaunchWithHandleV2(void * const hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
+rtError_t rtKernelLaunchWithHandleV2(void *hdl, const uint64_t tilingKey, uint32_t numBlocks, rtArgsEx_t *argsInfo,
     rtSmDesc_t *smDesc, rtStream_t stm, const rtTaskCfgInfo_t *cfgInfo)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
