@@ -218,20 +218,36 @@ bash build.sh --cann_3rd_lib_path=third_party
 ```bash
 bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={your_3rd_party_path}
 ```
-- `--ut`可以指定需要执行的`tests/ut`目录下的用例文件，例如`acl、runtime`等;
-- `--target`可以指定需要执行的用例文件编译出来的目标二进制文件（可能有多个），例如acl用例可以使用`tests/ut/acl/CMakeLists.txt`文件中定义的`ascendcl_utest`；runtime用例可以使用`tests/ut/runtime/runtime/CMakeLists.txt`文件中定义的`runtime_utest_task_910B`，执行runtime全量用例则需要指定target为`runtime_ut`;
-- `-c`可以获取覆盖率（如无需获取覆盖率，可省略此参数）。
-    > 需先安装 `lcov`(Ubuntu / Debian：`sudo apt install lcov`；openEuler：`sudo dnf install lcov`)；若因版本差异报错，请按提示调整脚本参数。
-- `--cann_3rd_lib_path`指定第三方依赖的路径，若在联网环境中，可省略此参数。
 
-UT测试用例编译输出目录为`build`，如果想清除历史编译记录，可以执行如下操作：
+**指定测试模块**
+
+通过`--ut`指定模块名称，上述示例中指定的模块名称为`acl`。
+
+`runtime`仓中的`UT`用例按模块分类归档在`tests/ut/`的不同目录下，所有模块名称以及和用例路径的映射关系可以查询`tests/build.sh`中的`ut_path_map`，例如：`acl`模块的`UT`在`tests/ut/acl`下，`runtime`模块的`UT`在`tests/ut/runtime/runtime`下。
+
+**指定测试目标文件**
+
+通过`--target`指定待测用例编译出的具体目标文件。
+
+各个模块所包含的目标文件可以从对应模块的`CMakeLists.txt`文件中查看。例如对于`acl`，从`tests/ut/acl/CMakeLists.txt`中的`add_custom_target`可以看出将编译目标命名为`ascendcl_utest`，并且包含了`ascendcl_c_utest`和`ascendcl_cpp_utest`两个目标文件。上述示例中通过指定`target`为`ascendcl_utest`表示编译执行`acl`模块中的所有用例。也可以指定具体的目标文件进行编译执行(可以同时指定多个，用空格分隔)。
+
+**其他编译参数**
+
+通过`-c`可以获取覆盖率，如无需获取覆盖率，可省略此参数。
+> 需先安装 `lcov`(Ubuntu / Debian：`sudo apt install lcov`；openEuler：`sudo dnf install lcov`)；若因版本差异报错，请按提示调整脚本参数。
+
+通过`--cann_3rd_lib_path`指定第三方依赖的路径，若在联网环境中，可省略此参数。
+
+更加详细的编译命令参数可以通过`bash tests/build_ut.sh -h`查看。
+
+
+UT测试用例编译的过程件以及产物位于`output`和`build`下，如果想清除历史编译记录，可以执行如下操作：
 
 ```bash
-rm -rf build_ut/ output/ build/
+rm -rf output/ build/
 ```
-注：`tests/build_ut.sh`脚本支持的详细命令参数可以通过`bash tests/build_ut.sh -h`查看。
 
-**接下来可参考[样例运行](example/README.md)尝试运行样例**。
+**接下来可参考[example](example/README.md)目录下的样例，进一步了解本仓**。
 
 ## 学习教程
 
