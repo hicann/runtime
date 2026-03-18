@@ -69,8 +69,8 @@ if (ENABLE_OPEN_SRC)
         find_program(PERL_PATH perl REQUIRED)
 
         # ========== 构建命令 ==========
-        set(OPENSSL_MAKE_CMD make)
-        set(OPENSSL_INSTALL_CMD make install_dev)
+        set(OPENSSL_MAKE_CMD $(MAKE))
+        set(OPENSSL_INSTALL_CMD $(MAKE) install_dev)
         # ========== ExternalProject_Add ==========
         if (NOT EXISTS "${OPEN_SOURCE_DIR}/openssl/Configure")
             message("openssl:not use cache")

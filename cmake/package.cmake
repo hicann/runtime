@@ -291,6 +291,11 @@ install(DIRECTORY ${RUNTIME_DIR}/src/platform/platform_config
     DESTINATION runtime/data
     OPTIONAL
 )
+install(FILES
+    ${PROTOBUF_HOST_STATIC_FINAL_PATH}
+    DESTINATION ${INSTALL_DIR}
+    OPTIONAL
+)
 
 # TODO: ge so packed temporarily for debugging, this need be reverted after ge code has been moved to ge repository.
 install(TARGETS acl_rt acl_rt_impl acl_tdt_queue acl_tdt_channel runtime xpu_tprt runtime_common runtime_v100 runtime_v201
@@ -352,12 +357,18 @@ install(TARGETS asc_dumper
     RUNTIME DESTINATION runtime/bin
     OPTIONAL
 )
-
-install(CODE "execute_process(COMMAND cd ${PROTOBUF_SHARED_PKG_DIR}/lib && ln -sf libascend_protobuf.so.3.13.0.0 libascend_protobuf.so)")
+install(CODE "
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E create_symlink 
+        libascend_protobuf.so.3.13.0.0 
+        libascend_protobuf.so
+        WORKING_DIRECTORY \"\$ENV{DESTDIR}${PROTOBUF_SHARED_LIB_DIR}\"
+    )
+")
 
 install(FILES
-    ${PROTOBUF_SHARED_PKG_DIR}/lib/libascend_protobuf.so.3.13.0.0
-    ${PROTOBUF_SHARED_PKG_DIR}/lib/libascend_protobuf.so
+    ${PROTOBUF_SHARED_LIB_DIR}/libascend_protobuf.so.3.13.0.0
+    ${PROTOBUF_SHARED_LIB_DIR}/libascend_protobuf.so
     DESTINATION ${INSTALL_DIR}
     OPTIONAL
 )

@@ -105,6 +105,9 @@ if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
         DESTINATION subprjs
         COMPONENT npu-runtime
     )
+    if(TARGET protobuf_host_build)
+        add_dependencies(device protobuf_host_build)
+    endif()
 endif()
 
 add_custom_target(npu_runtime DEPENDS ${NPU_DEPENDENCIES})
