@@ -286,6 +286,7 @@ typedef enum tagRtBinBufferType {
 
 typedef union rtLaunchAttributeValue_union {
     uint32_t blockDim;
+    RT_DEPRECATED_MESSAGE("Use dynUBufSize instead")
     uint32_t dynamicShareMemSize; // DEPRECATED: Use dynUBufSize
     uint32_t dynUBufSize;
     struct {
@@ -301,7 +302,8 @@ typedef union rtLaunchAttributeValue_union {
 
 typedef enum rtLaunchAttributeId {
     RT_LAUNCH_ATTRIBUTE_BLOCKDIM = 0,
-    RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE = 1, // DEPRECATED: Use RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE
+    RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE
+        RT_DEPRECATED_MESSAGE("Use RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE instead") = 1, // DEPRECATED: Use RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE
     RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE = 1,
     RT_LAUNCH_ATTRIBUTE_GROUP = 2,
     RT_LAUNCH_ATTRIBUTE_QOS = 3,

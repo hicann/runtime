@@ -43,6 +43,17 @@ typedef float float32_t;
 typedef double float64_t;
 #endif
 
+#ifdef __GNUC__
+    #define RT_DEPRECATED __attribute__((deprecated))
+    #define RT_DEPRECATED_MESSAGE(message) __attribute__((deprecated(message)))
+#elif defined(_MSC_VER)
+    #define RT_DEPRECATED __declspec(deprecated)
+    #define RT_DEPRECATED_MESSAGE(message) __declspec(deprecated(message))
+#else
+    #define RT_DEPRECATED
+    #define RT_DEPRECATED_MESSAGE(message)
+#endif
+
 /**
  * @ingroup dvrt_base
  * @brief device mode.
