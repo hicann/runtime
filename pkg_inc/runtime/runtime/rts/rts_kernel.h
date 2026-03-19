@@ -35,7 +35,8 @@ typedef enum {
  */
 typedef enum {
     RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
-    RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE = 2, // DEPRECATED: Use RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE
+    RT_LAUNCH_KERNEL_ATTR_LOCAL_MEM_SIZE
+ 	    RT_DEPRECATED_MESSAGE("Use RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE instead") = 2, // DEPRECATED: Use RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE
     RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE = 2,
     // vector core使能使用
     RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE,
@@ -63,6 +64,7 @@ typedef struct {
  */
 typedef union {
     uint8_t schemMode;
+    RT_DEPRECATED_MESSAGE("Use dynUBufSize instead")
     uint32_t localMemorySize; // DEPRECATED: Use dynUBufSize
     uint32_t dynUBufSize;
     rtEngineType engineType;

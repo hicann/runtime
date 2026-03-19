@@ -35,7 +35,7 @@ typedef enum {
 | ACL_DEV_ATTR_VECTOR_CORE_NUM | Vector Core数量。 |
 | ACL_DEV_ATTR_WARP_SIZE | 一个Warp里的线程数，在SIMT（单指令多线程，Single Instruction Multiple Thread）编程模型中，Warp是指执行相同指令的线程集合。<br>当前不支持该类型。 |
 | ACL_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE | 每个VECTOR_CORE上可同时驻留的最大线程数。<br>当前不支持该类型。 |
-| ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE | 每个VECTOR_CORE上可以使用的最大本地内存，单位Byte。<br>当前不支持该类型。 |
+| ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE | 每个VECTOR_CORE上可以使用的最大UB buffer的大小，单位Byte。<br>当前不支持该类型。 |
 | ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE | Device上的可用总内存，单位Byte。 |
 | ACL_DEV_ATTR_L2_CACHE_SIZE | L2 Cache（二级缓存）大小，单位Byte。 |
 | ACL_DEV_ATTR_SMP_ID | SMP（Symmetric Multiprocessing） ID，用于标识设备是否运行在同一操作系统上。 |

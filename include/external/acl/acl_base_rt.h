@@ -32,7 +32,7 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && (__GNUC__ >= 6)
 #define ACL_DEPRECATED __attribute__((deprecated))
 #define ACL_DEPRECATED_MESSAGE(message) __attribute__((deprecated(message)))
 #elif defined(_MSC_VER)
