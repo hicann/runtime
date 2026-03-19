@@ -4687,7 +4687,7 @@ TEST_F(ApiTest, ipc_set_notify_pid3)
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
     error = rtsNotifySetImportPid(notify, pid,num);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);

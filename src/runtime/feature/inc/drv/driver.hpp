@@ -140,6 +140,7 @@ public:
 
     virtual rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t * const phyId) = 0;
     virtual rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex) = 0;
+    virtual rtError_t EnableP2PNotify(const uint32_t deviceId, const uint32_t peerPhyDeviceId, const uint32_t flag) = 0;
     virtual rtError_t ParseSDID(const uint32_t sdid, uint32_t *srvId, uint32_t *chipId, uint32_t *dieId, uint32_t *pyhId) = 0;
 
     virtual rtError_t GetDeviceIDs(uint32_t * const deviceIds, const uint32_t len) = 0;
@@ -639,6 +640,8 @@ rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool &connectUbFlag);
 rtError_t InitDrvEventThread(const uint32_t deviceId);
 rtError_t GetDrvSentinelMode(void);
 bool IsOfflineNotSupportMemType(const rtMemType_t &type);
+rtError_t GetIpcNotifyVa(const uint32_t notifyId, Driver * const curDrv, const uint32_t deviceId, const uint32_t phyId,
+    uint64_t &Va);
 }  // namespace runtime
 }  // namespace cce
 

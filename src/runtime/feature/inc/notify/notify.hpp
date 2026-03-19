@@ -40,6 +40,8 @@ public:
     rtError_t SetName(const char_t * const nameIn);
     rtError_t GetAddrOffset(uint64_t * const devAddrOffset);
     rtError_t CheckIpcNotifyDevId();
+    void SetNotifyInfo(const uint64_t vaAddr, const char_t * const ipcNotifyName, const uint32_t curNotifyId,
+        const uint32_t curTsId);
     uint32_t GetPhyDevId() const
     {
         return phyId_;
@@ -137,6 +139,11 @@ public:
     {
         return isIpcCreator_;
     }
+
+    uint64_t GetNotifyVaAddr() const
+    {
+        return notifyVa_;
+    }
     rtError_t AllocId();
     rtError_t FreeId();
 private:
@@ -162,6 +169,7 @@ private:
     uint32_t chipId_;
     bool isPod_;
     Device *dev_{nullptr};
+    uint64_t notifyVa_{0ULL};
 };
 }
 }

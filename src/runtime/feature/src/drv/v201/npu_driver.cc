@@ -17,6 +17,17 @@
 
 namespace cce {
 namespace runtime {
+rtError_t GetIpcNotifyVa(const uint32_t notifyId, Driver * const curDrv, const uint32_t deviceId, const uint32_t phyId,
+    uint64_t &Va)
+{
+    UNUSED(curDrv);
+    UNUSED(phyId);
+    UNUSED(Va);
+    UNUSED(notifyId);
+    UNUSED(deviceId);
+    return RT_ERROR_NONE;
+}
+
 rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool &connectUbFlag)
 {
     UNUSED(deviceId);

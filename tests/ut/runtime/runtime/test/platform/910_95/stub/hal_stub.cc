@@ -926,6 +926,18 @@ drvError_t halDeviceDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t fl
 {
     return DRV_ERROR_NONE;
 }
+
+drvError_t halDeviceEnableP2PNotify(uint32_t phy_dev, uint32_t peer_phy_dev, uint32_t flag)
+{
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halResAddrMapV2(unsigned int devId, struct res_map_info_in *res_info_in,
+    struct res_map_info_out *res_info_out)
+{
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halDeviceCanAccessPeer(int32_t *canAccessPeer, uint32_t device, uint32_t peerDevice)
 {
     return DRV_ERROR_NONE;

@@ -99,6 +99,7 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH,
     RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY,
+    RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
     RtOptionalFeatureType::RT_FEATURE_TASK_FUSION,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK,
     RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL,

@@ -823,7 +823,7 @@ static rtError_t OpenIpcNotifyWithFlag(const IpcNotifyOpenPara &openPara,
         *isPod = 1U;
     }
 
-    RT_LOG(RT_LOG_INFO, "Open ipc notify success,phyId=%u, name=%s, notifyId=%u, tsId=%u, adcDieId=%u.",
+    RT_LOG(RT_LOG_INFO, "Open ipc notify success, phyId=%u, name=%s, notifyId=%u, tsId=%u, adcDieId=%u.",
            *phyId, openPara.name, *notifyId, *tsId, *adcDieId);
     return RT_ERROR_NONE;
 }
@@ -1021,6 +1021,42 @@ rtError_t NpuDriver::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc,
     }
 }
 
+rtError_t NpuDriver::EnableP2PNotify(const uint32_t deviceId, const uint32_t peerPhyDeviceId, const uint32_t flag)
+{
+    uint32_t phyDeviceId = 0U;
+    rtError_t error = DeviceGetPhyIdByIndex(deviceId, &phyDeviceId);
+ 	COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    if (phyDeviceId == peerPhyDeviceId) {
+        RT_LOG(RT_LOG_INFO, "phyId=%u, peerPhyId=%u, flag=%u", phyDeviceId, peerPhyDeviceId, flag);
+        return RT_ERROR_NONE;
+    }
+
+    if (&halDeviceEnableP2PNotify == nullptr) {
+        if ((flag & RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS) != 0U) {
+            uint32_t peerDeviceId = 0U;
+            /* 单机多容器场景无法通过对端物理id获取到逻辑id, 调用下面接口会报错, flag=2的场景需要升级driver包走新接口 */
+            error = GetDeviceIndexByPhyId(peerPhyDeviceId, &peerDeviceId);
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+            error = EnableP2P(peerDeviceId, phyDeviceId, 0U);
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+            error = EnableP2P(deviceId, peerPhyDeviceId, 0U);
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+        }
+    } else {
+        const drvError_t drvRet = halDeviceEnableP2PNotify(phyDeviceId, peerPhyDeviceId, flag);
+        COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_GET_DRV_ERRCODE(drvRet),
+            "[drv api] halDeviceEnableP2PNotify does not support");
+        if (drvRet != DRV_ERROR_NONE) {
+            DRV_ERROR_PROCESS(drvRet, "[drv api] halDeviceEnableP2PNotify failed: phyId=%u, peerPhyId=%u, "
+                "flag=%u, drvRetCode=%d!", phyDeviceId, peerPhyDeviceId, flag, static_cast<int32_t>(drvRet));
+            return RT_GET_DRV_ERRCODE(drvRet);
+        }
+    }
+
+    RT_LOG(RT_LOG_INFO, "phyId=%u, peerPhyId=%u, flag=%u", phyDeviceId, peerPhyDeviceId, flag);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc)
 {
     const rtChipType_t type = Runtime::Instance()->GetChipType();
@@ -1102,6 +1138,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         {FEATURE_SVM_MEM_HOST_UVA, "FEATURE_SVM_MEM_HOST_UVA"},
         {FEATURE_DMS_GET_QOS_MASTER_CONFIG, "FEATURE_DMS_GET_QOS_MASTER_CONFIG"},
         {FEATURE_DMS_QUERY_CHIP_DIE_ID, "FEATURE_DMS_QUERY_CHIP_DIE_ID"},
+        {FEATURE_APM_RES_MAP_REMOTE, "FEATURE_APM_RES_MAP_REMOTE"}, 
     };
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));

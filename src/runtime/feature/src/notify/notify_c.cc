@@ -64,15 +64,15 @@ rtError_t NtyRecord(Notify * const inNotify, Stream * const streamIn)
     NULL_PTR_RETURN_MSG(streamIn, RT_ERROR_STREAM_NULL);
     TaskInfo *recordTask = nullptr;
     const int32_t streamId = streamIn->Id_();
-    RT_LOG(RT_LOG_INFO, "notify_id=%u, lastLocalId=%u, lastBaseAddr_=%#x, device_id=%u.",
-           inNotify->GetNotifyId(), inNotify->GetLastLocalId(), inNotify->GetLastBaseAddr(), streamIn->Device_()->Id_());
+    RT_LOG(RT_LOG_INFO, "notify_id=%u, device_id=%u.", inNotify->GetNotifyId(), streamIn->Device_()->Id_());
 
+    uint64_t baseAddr = 0ULL;
     bool isIpc = false;
     if (inNotify->IsIpcNotify() && (inNotify->IsIpcCreator() == false)) {
         isIpc = true;
+        baseAddr = inNotify->GetNotifyVaAddr();
     }
-    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, inNotify->GetLastIsPcie(), inNotify->IsPod(),
-                                            inNotify->GetLastLocalId(), inNotify->GetLastBaseAddr(), false};
+    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, false, inNotify->IsPod(), MAX_UINT32_NUM, baseAddr, false};
     rtError_t error = CheckTaskCanSend(streamIn);
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;

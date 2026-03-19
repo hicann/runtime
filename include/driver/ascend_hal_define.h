@@ -1324,6 +1324,7 @@ typedef enum tagDrvFeature {
     FEATURE_SVM_MEM_HOST_UVA = 8,
     FEATURE_DMS_GET_QOS_MASTER_CONFIG = 9,
     FEATURE_DMS_QUERY_CHIP_DIE_ID = 10, /* Query by physical device id */
+    FEATURE_APM_RES_MAP_REMOTE = 12,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

@@ -433,6 +433,14 @@ drvError_t halDeviceDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t fl
     return DRV_ERROR_NONE;
 }
 
+drvError_t halDeviceEnableP2PNotify(uint32_t phy_dev, uint32_t peer_phy_dev, uint32_t flag)
+{
+    UNUSED(phy_dev);
+    UNUSED(peer_phy_dev);
+    UNUSED(flag);
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halDeviceCanAccessPeer(int32_t *canAccessPeer, uint32_t device, uint32_t peerDevice)
 {
     UNUSED(canAccessPeer);

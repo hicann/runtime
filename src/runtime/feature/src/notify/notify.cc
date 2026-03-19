@@ -202,16 +202,21 @@ ERROR_RECYCLE:
 
 rtError_t Notify::GetNotifyAddress(Stream * const streamIn, uint64_t &addr)
 {
-    rtError_t error;
+    rtError_t error = RT_ERROR_NONE;
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING)) {
-        rtDevResInfo resInfo = {
-            GetTsId(), RT_PROCESS_CP1, RT_RES_TYPE_STARS_NOTIFY_RECORD, notifyid_, 0U
-        };
-        uint64_t resAddr = 0U;
-        uint32_t len = 0U;
-        error = NpuDriver::GetDevResAddress(deviceId_, &resInfo, &resAddr, &len);
-        addr = resAddr;
+        if ((IsIpcNotify() && (!IsIpcCreator())) || (notifyVa_ != 0ULL)) {
+            addr = GetNotifyVaAddr();
+        } else {
+            rtDevResInfo resInfo = {
+                GetTsId(), RT_PROCESS_CP1, RT_RES_TYPE_STARS_NOTIFY_RECORD, notifyid_, 0U
+            };
+            uint64_t resAddr = 0U;
+            uint32_t len = 0U;
+            error = NpuDriver::GetDevResAddress(deviceId_, &resInfo, &resAddr, &len);
+            addr = resAddr;
+            notifyVa_ = resAddr;
+        }
         return error;
     }
     TaskInfo notifyTask = {};
@@ -357,16 +362,30 @@ rtError_t Notify::CheckIpcNotifyDevId()
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         Device *dev = curCtx->Device_();
         NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
-        RT_LOG(RT_LOG_INFO, "name=%s, device_id=%u, ctx_device_id=%u", ipcName_.c_str(), deviceId_, dev->Id_());
+        RT_LOG(RT_LOG_INFO, "name=%s, phyId=%u ctx_device_id=%u",
+            ipcName_.c_str(), phyId_, dev->Id_());
         
-        // deviceId_: notify create param, drv deviceId; dev->Id_: from ctx, drv deviceId 
-        if (deviceId_ != dev->Id_()) {
-            RT_LOG(RT_LOG_ERROR, "ipc notify can not notify wait, name=%s, device_id=%u, ctx_device_id=%u",
-                ipcName_.c_str(), deviceId_, dev->Id_());
+        // phyId_: notify create param; dev->Id_: from ctx, drv deviceId
+        uint32_t phyDeviceId = 0U;
+        rtError_t error = dev->Driver_()->GetDevicePhyIdByIndex(dev->Id_(), &phyDeviceId);
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+        if (phyId_ != phyDeviceId) {
+            RT_LOG(RT_LOG_ERROR, "ipc notify can not notify wait, name=%s, phyId=%u, ctx_device_id=%u, ctx_phy_id=%u",
+                ipcName_.c_str(), phyId_, dev->Id_(), phyDeviceId);
             return RT_ERROR_INVALID_VALUE;
         }
     }
     return RT_ERROR_NONE;
+}
+
+void Notify::SetNotifyInfo(const uint64_t vaAddr, const char_t * const ipcNotifyName, const uint32_t curNotifyId,
+    const uint32_t curTsId)
+{
+    notifyVa_ = vaAddr;
+    isIpcNotify_ = true;
+    (void)ipcName_.assign(ipcNotifyName);
+    notifyid_ = curNotifyId;
+    tsId_ = curTsId;
 }
 
 rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t flag)
@@ -394,10 +413,11 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
     rtError_t error = driver_->OpenIpcNotify(openPara, &phyId_, &curNotifyId, &curTsId, &isPod, &adcDieId_);
     ERROR_RETURN_MSG_INNER(error, "Failed to OpenIpcNotify, retCode=%#x!", static_cast<uint32_t>(error));
 
-    isIpcNotify_ = true;
-    (void)ipcName_.assign(ipcNotifyName);
-    notifyid_ = curNotifyId;
-    tsId_ = curTsId;
+    uint64_t vaAddr = 0ULL;
+    error = GetIpcNotifyVa(curNotifyId, driver_, localDevId_, phyId_, vaAddr);
+    ERROR_RETURN_MSG_INNER(error, "Failed to GetIpcNotifyVa, retCode=%#x!", static_cast<uint32_t>(error));
+
+    SetNotifyInfo(vaAddr, ipcNotifyName, curNotifyId, curTsId);
 
     if (isPod == 0U) {
         isPod_ = false;

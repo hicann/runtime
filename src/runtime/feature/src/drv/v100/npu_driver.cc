@@ -40,5 +40,16 @@ bool IsOfflineNotSupportMemType(const rtMemType_t &type)
         return (static_cast<uint32_t>(type) & RT_MEMORY_POLICY_P2P_MASK) != 0U;
     }
 }
+
+rtError_t GetIpcNotifyVa(const uint32_t notifyId, Driver * const curDrv, const uint32_t deviceId, const uint32_t phyId,
+    uint64_t &Va)
+{
+    UNUSED(notifyId);
+    UNUSED(curDrv);
+    UNUSED(Va);
+    UNUSED(phyId);
+    UNUSED(deviceId);
+    return RT_ERROR_NONE;
+}
 }  // namespace runtime
 }  // namespace cce

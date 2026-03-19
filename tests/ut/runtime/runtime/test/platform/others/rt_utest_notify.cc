@@ -479,5 +479,12 @@ TEST_F(NotifyTest, CheckIpcNotifyDevId)
     uint32_t tsId = 0;
     Notify notify(device_id, tsId);
     notify.isIpcNotify_ = true;
+
+    EXPECT_EQ(notify.CheckIpcNotifyDevId(), RT_ERROR_NONE);
+    uint32_t phyId = 3;
+    MOCKER(drvDeviceGetPhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&phyId, sizeof(uint32_t)))
+        .will(returnValue(DRV_ERROR_NONE));
     EXPECT_NE(notify.CheckIpcNotifyDevId(), RT_ERROR_NONE);
 }

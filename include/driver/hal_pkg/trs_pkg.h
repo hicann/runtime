@@ -130,6 +130,14 @@ enum res_addr_type {
     RES_ADDR_TYPE_MAX
 };
 
+# define TRS_RES_MAP_RSV_LEN 8
+struct trs_res_map_priv {
+    unsigned int flag;
+    unsigned int local_devid;
+    unsigned int remote_devid;
+    unsigned int rsv[TRS_RES_MAP_RSV_LEN];
+};
+
 #define RES_ADDR_INFO_RSV_LEN 2
 struct res_addr_info {
     unsigned int id;                 /* the meaning of 'id' depends on res_type, default is 0 */

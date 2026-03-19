@@ -9698,3 +9698,110 @@ TEST_F(ApiDavidTest, rtCheckArchCompatibility_socVersion)
     EXPECT_EQ(canCompatible, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
+
+drvError_t halShrIdOpen_stub(const char *name, struct drvShrIdInfo *info)
+{
+    info->devid = 0;
+    info->shrid = 1;
+    info->id_type = SHR_ID_NOTIFY_TYPE;
+    return DRV_ERROR_NONE;
+}
+
+TEST_F(ApiDavidTest, IpcOpenNotifyApi)
+{
+    rtNotify_t notify = nullptr;
+    ApiImpl apiImpl;
+    rtError_t error;
+    uint32_t devIndex = 1;
+    uint32_t phyId = 3;
+    MOCKER(halShrIdOpen).stubs().will(invoke(halShrIdOpen_stub));
+    MOCKER(drvDeviceGetIndexByPhyId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&devIndex, sizeof(uint32_t)))
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvDeviceGetPhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&phyId, sizeof(uint32_t)))
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halResAddrMap).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    error = apiImpl.IpcOpenNotify((Notify **)&notify, "notify", 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(notify != nullptr);
+
+    error = apiImpl.NotifyDestroy((Notify *)notify);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, IpcOpenNotifyApi_Fail)
+{
+    rtNotify_t notify = nullptr;
+    ApiImpl apiImpl;
+    rtError_t error;
+    uint32_t devIndex = 1;
+    uint32_t phyId = 3;
+
+    MOCKER(halShrIdOpen).stubs().will(invoke(halShrIdOpen_stub));
+    MOCKER(drvDeviceGetIndexByPhyId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&devIndex, sizeof(uint32_t)))
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvDeviceGetPhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&phyId, sizeof(uint32_t)))
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halResAddrMap).stubs().will(returnValue(DRV_ERROR_NONE));
+        MOCKER(drvDeviceGetPhyIdByIndex).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = apiImpl.IpcOpenNotify((Notify **)&notify, "notify", 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(notify != nullptr);
+
+    error = apiImpl.NotifyDestroy((Notify *)notify);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, GetNotifyAddressApi)
+{
+    uint64_t address = 50;
+    rtNotify_t notify;
+    int32_t devId = 0;
+    rtError_t error = rtSetDevice(devId);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtNotifyCreate(devId, &notify);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    MOCKER(halResAddrMap)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&address, sizeof(uint64_t)), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    error = rtGetNotifyAddress(notify, &address);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(address, 50);
+
+    struct res_map_info_out res_info_out;
+    res_info_out.va = 50;
+    MOCKER(halResAddrMapV2)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&res_info_out, sizeof(res_map_info_out)))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    uint32_t len = 65;
+    char name[65] = {0};
+    error = rtsNotifyGetExportKey(notify, name, len, RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    // ipc notify
+    rtNotify_t importNotify;
+    error = rtsNotifyImportByKey(&importNotify, name, RT_NOTIFY_FLAG_DEFAULT);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtGetNotifyAddress(importNotify, &address);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(address, 50);
+
+    error = rtNotifyDestroy(notify);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtNotifyDestroy(importNotify);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtDeviceReset(devId);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}

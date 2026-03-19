@@ -135,10 +135,6 @@ aclError aclrtNotifyImportByKeyImpl(aclrtNotify *notify, const char *key, uint64
     ACL_LOG_INFO("start to execute aclrtNotifyImportByKey, flags is [%lu]", flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
-    if (flags > ACL_NOTIFY_DEVICE_USE_ONLY) {
-        ACL_LOG_ERROR("param flag must be [0,%u] currently.", ACL_NOTIFY_DEVICE_USE_ONLY);
-        return ACL_ERROR_INVALID_PARAM;
-    }
 
     const rtError_t rtErr = rtsNotifyImportByKey(notify, key, flags);
     if (rtErr != RT_ERROR_NONE) {
