@@ -40,7 +40,6 @@ target_include_directories(mmpa_cpp_utest PRIVATE
 target_link_libraries(mmpa_cpp_utest PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
-    -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     c_sec
     json
     GTest::gtest

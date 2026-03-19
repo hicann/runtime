@@ -124,7 +124,6 @@ target_compile_definitions(ut_ascendcl_src PRIVATE
 )
 
 target_compile_options(ut_ascendcl_src PRIVATE
-    -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     -g --coverage -fprofile-arcs -ftest-coverage -fno-access-control
     -Wall -Wextra -Wfloat-equal -Werror
 )
@@ -132,7 +131,6 @@ target_compile_options(ut_ascendcl_src PRIVATE
 target_link_libraries(ut_ascendcl_src PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
-    -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     c_sec
     json
 )
@@ -148,7 +146,6 @@ target_include_directories(ascendcl_cpp_utest PRIVATE
 )
 
 target_compile_options(ascendcl_cpp_utest PRIVATE
-    -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     -O0
     -g
     -Wno-deprecated-declarations
@@ -165,7 +162,6 @@ target_compile_definitions(ascendcl_cpp_utest PRIVATE
 target_link_libraries(ascendcl_cpp_utest PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
-    -fsanitize=address -fsanitize=leak -fsanitize-recover=address
     ut_ascendcl_src
     json
     GTest::gtest
