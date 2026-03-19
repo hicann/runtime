@@ -57,6 +57,7 @@ set(ascendDumpSrcList
 
 set(ascendDumpHeaderList
     ${adumpServerHeaderList}
+    ${RUNTIME_DIR}/src/dfx/error_manager
     ${CMAKE_BINARY_DIR}/proto/ascend_dump_protos
     ${CMAKE_BINARY_DIR}/proto/adumpHostProto
     ${ADUMP_DIR}/adcore/

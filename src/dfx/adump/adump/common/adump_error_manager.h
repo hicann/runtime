@@ -13,8 +13,7 @@
 
 namespace Adx {
 
-#define ADUMP_INPUT_ERROR REPORT_INPUT_ERROR
-#define ADUMP_INNER_ERROR REPORT_INNER_ERROR
+#define ADUMP_INPUT_ERROR(error_code, key, value) REPORT_INPUT_ERROR(error_code, key, value)
 
 } // namespace Adx
 
