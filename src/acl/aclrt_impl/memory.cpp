@@ -9,6 +9,7 @@
  */
 
 #include <map>
+#include <mutex>
 #include <algorithm>
 #include <functional>
 #include "acl_rt_impl.h"
@@ -26,7 +27,9 @@
 
 namespace {
 constexpr uint32_t MEM_SIZE_MAX = 96U;
+constexpr uint32_t MAX_PADDING_SIZE_STR_LEN = 32U;
 constexpr size_t DATA_MEMORY_ALIGN_SIZE = 32UL;
+constexpr size_t DATA_MEMORY_PADDING_SIZE = 32UL;
 constexpr unsigned int FLAG_START_DYNAMIC_ALLOC_MEM = 0x200U;
 constexpr uint32_t DRV_MEM_HOST_NUMA_SIDE = 2U;
 
@@ -156,16 +159,41 @@ aclError CheckMemcpy2dParam(const void *const dst, const size_t dpitch, const vo
 }
 
 namespace acl {
+void GetPaddingSize(size_t *paddingSize)
+{
+    const char* AI_CORE_SPEC_STR = "AICoreSpec";
+    const char* PADDING_SIZE_STR = "padding_size";
+    char paddingSizeStr[MAX_PADDING_SIZE_STR_LEN] = {0};
+    const rtError_t error = rtGetSocSpec(AI_CORE_SPEC_STR, PADDING_SIZE_STR, paddingSizeStr, sizeof(paddingSizeStr));
+    if (error != RT_ERROR_NONE) {
+        ACL_LOG_EVENT("rtGetSocSpec did not complete successfully, ret=%d.", error);
+        return;
+    }
+    char *endPtr = NULL;
+    errno = 0;
+    *paddingSize = (size_t)strtoul(paddingSizeStr, &endPtr, 10);
+    if (errno == ERANGE || endPtr == paddingSizeStr || *endPtr != '\0') {
+        *paddingSize = DATA_MEMORY_PADDING_SIZE;
+        ACL_LOG_EVENT("paddingSizeStr could not be converted, paddingSizeStr[%s] is invalid.", paddingSizeStr);
+    }
+}
+
 aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_t &alignedSize)
 {
-    // check overflow, the max value of size must be less than 0xFFFFFFFFFFFFFFFF-32*2
-    if ((size + (DATA_MEMORY_ALIGN_SIZE * 2UL)) < size) {
+    static std::once_flag hasReadPaddingSize;
+    static size_t paddingSize = DATA_MEMORY_PADDING_SIZE;
+    std::call_once(hasReadPaddingSize, [&]() {
+        GetPaddingSize(&paddingSize);
+    });
+    // align size to multiple of 32 and paddingSize if needed
+    const size_t appendSize = isPadding ? DATA_MEMORY_ALIGN_SIZE + paddingSize : DATA_MEMORY_ALIGN_SIZE;
+    
+    // check overflow before alignment calculation
+    if ((size + appendSize) < size) {
         ACL_LOG_INNER_ERROR("[Check][Size]size too large: %zu", size);
         return ACL_ERROR_INVALID_PARAM;
     }
-
-    // align size to multiple of 32 and padding 32 if needed
-    const size_t appendSize = isPadding ? DATA_MEMORY_ALIGN_SIZE * 2UL : DATA_MEMORY_ALIGN_SIZE;
+    
     alignedSize = (size + appendSize - 1UL) / DATA_MEMORY_ALIGN_SIZE * DATA_MEMORY_ALIGN_SIZE;
     return ACL_SUCCESS;
 }

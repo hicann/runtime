@@ -63,6 +63,7 @@ namespace acl {
     extern void GetAllPackageVersion();
     extern aclError HandleDefaultDeviceAndStackSize(const char_t *const configPath);
     extern aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_t &alignedSize);
+    extern void GetPaddingSize(size_t *paddingSize);
     extern int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen);
     extern bool GetAclInitFlag();
     extern void resetAclJsonHash();
@@ -119,6 +120,59 @@ static aclError FinalizeCallback_Fail(void *userData) {
 static aclError FinalizeCallback_Success(void *userData) {
     (void)userData;
     return ACL_SUCCESS;
+}
+
+rtError_t rtGetSocSpec_Success(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    (void)label;
+    (void)key;
+    (void)valueLen;
+    if (strcmp(key, "padding_size") == 0) {
+        strcpy_s(value, valueLen, "32");
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtGetSocSpec_Fail(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    (void)label;
+    (void)key;
+    (void)value;
+    (void)valueLen;
+    return ACL_ERROR_RT_PARAM_INVALID;
+}
+
+rtError_t rtGetSocSpec_Invalid(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    (void)label;
+    (void)key;
+    (void)valueLen;
+    if (strcmp(key, "padding_size") == 0) {
+        strcpy_s(value, valueLen, "123invalid123");
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtGetSocSpec_Empty(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    (void)label;
+    (void)key;
+    (void)valueLen;
+    if (strcmp(key, "padding_size") == 0) {
+        strcpy_s(value, valueLen, "");
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtGetSocSpec_OutOfRange(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    (void)label;
+    (void)key;
+    (void)valueLen;
+    if (strcmp(key, "padding_size") == 0) {
+        strcpy_s(value, valueLen, "999999999999999999999999");
+    }
+    return RT_ERROR_NONE;
 }
 
 class UTEST_ACL_Common : public testing::Test
@@ -1750,7 +1804,7 @@ TEST_F(UTEST_ACL_Common, memory_malloc_device)
 {
     void *devPtr = nullptr;
     size_t size = 1;
-
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_Success));
     aclError ret = aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_NE(devPtr, nullptr);
@@ -2439,9 +2493,9 @@ TEST_F(UTEST_ACL_Common, GetAlignedAndPaddingSize)
     EXPECT_EQ(alignedSize, 64UL);
     ret = acl::GetAlignedAndPaddingSize(32UL, true, alignedSize);
     EXPECT_EQ(alignedSize, 64UL);
-
     ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 63UL, false, alignedSize);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(alignedSize, UINT64_MAX - 63UL);
     ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 64UL, false, alignedSize);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, UINT64_MAX - 63UL);
@@ -2450,6 +2504,30 @@ TEST_F(UTEST_ACL_Common, GetAlignedAndPaddingSize)
     EXPECT_EQ(alignedSize, 32UL);
     ret = acl::GetAlignedAndPaddingSize(32UL, false, alignedSize);
     EXPECT_EQ(alignedSize, 32UL);
+}
+
+TEST_F(UTEST_ACL_Common, GetPaddingSize)
+{
+    size_t paddingSize = 0UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_Success));
+    GetPaddingSize(&paddingSize);
+    EXPECT_EQ(paddingSize, 32UL);
+    paddingSize = 32UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_Fail));
+    GetPaddingSize(&paddingSize);
+    EXPECT_EQ(paddingSize, 32UL);
+    paddingSize = 32UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_Invalid));
+    GetPaddingSize(&paddingSize);
+    EXPECT_EQ(paddingSize, 32UL);
+    paddingSize = 32UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_Empty));
+    GetPaddingSize(&paddingSize);
+    EXPECT_EQ(paddingSize, 32UL);
+    paddingSize = 32UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(rtGetSocSpec_OutOfRange));
+    GetPaddingSize(&paddingSize);
+    EXPECT_EQ(paddingSize, 32UL);
 }
 
 static rtError_t rtDeviceStatusQueryInvok(const uint32_t devId, rtDeviceStatus *deviceStatus)
