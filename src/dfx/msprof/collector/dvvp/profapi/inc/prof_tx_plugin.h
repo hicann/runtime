@@ -16,6 +16,8 @@
 #include "prof_runtime_plugin.h"
 
 namespace ProfAPI {
+constexpr size_t MAX_TENSOR_NUM = 5;
+
 struct CacheOpInfoBasic {
     uint32_t taskType;
     uint32_t blockdim;
@@ -83,6 +85,7 @@ private:
     ProftxSetCategoryNameFunc proftxSetCategoryName_{nullptr};
     ProftxSetStampCategoryFunc proftxSetStampCategory_{nullptr};
     ProftxSetStampPayloadFunc proftxSetStampPayload_{nullptr};
+    int32_t CopyTensorData(const aclprofTensorInfo* tensorInfo, uint8_t* dest, uint64_t& destOffset, size_t maxCopySize);
 };
 }
 #endif
