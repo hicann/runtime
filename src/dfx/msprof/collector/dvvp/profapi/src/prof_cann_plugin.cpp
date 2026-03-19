@@ -195,7 +195,7 @@ int32_t ProfCannPlugin::RegisterProfileCallbackForAtls(int32_t callbackType, VOI
 
 int32_t ProfCannPlugin::RegisterProfileCallback(int32_t callbackType, VOID_PTR callback, uint32_t /* len */)
 {
-    MSPROF_LOGE("RegisterProfileCallback, callback type is %d", callbackType);
+    MSPROF_EVENT("RegisterProfileCallback, callback type is %d", callbackType);
     auto ret = PROFILING_SUCCESS;
     switch (callbackType) {
         case PROFILE_CTRL_CALLBACK:
