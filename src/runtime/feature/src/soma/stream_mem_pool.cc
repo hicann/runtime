@@ -464,5 +464,21 @@ bool PoolRegistry::QueryMemPool(SegmentManager *p)
     return entries_.find(p) != entries_.end();
 }
 
+SegmentManager *PoolRegistry::FindMemPoolByPtr(void *p)
+{
+    uint64_t ptr = RtPtrToValue(p);
+    std::lock_guard<std::mutex> lock(mutex_);
+    COND_RETURN_DEBUG(entries_.empty(), nullptr, "No memory pools created.");
+ 
+    auto it = std::lower_bound(entries_.begin(), entries_.end(), ptr,
+        [](const SegmentManager *memPool, const uint64_t p) {
+            return memPool->PoolSegAddr() + memPool->PoolSize() <= p;
+        });
+    COND_RETURN_DEBUG((it == entries_.end() || ptr < (*it)->PoolSegAddr()), nullptr,
+        "Pointer %" PRIx64 " not found in any memory pool range.", ptr);
+ 
+    return *it;
+}
+
 }  // namespace runtime
 }  // namespace cce

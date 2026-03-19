@@ -5602,6 +5602,74 @@ enum vmng_split_mode {
  */
 DLLEXPORT drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode);
 
+typedef struct {
+    uint64_t poolId;
+    uint32_t devId;
+} soma_mem_pool_t;
+ 
+typedef struct {
+    drv_mem_handle_type handle_type;
+    struct drv_mem_prop mem_prop;
+    uint64_t va;
+    uint64_t maxSize;
+} soma_mem_pool_prop;
+ 
+typedef struct {
+    uint64_t pool_offset;
+    uint64_t size;
+} soma_mem_pool_ptr_export_data;
+ 
+typedef enum {
+    MEM_POOL_ATTR_RELEASE_THRESHOLD = 0x1,
+    MEM_POOL_ATTR_RESERVED_MEM_CURRENT = 0x2,
+    MEM_POOL_ATTR_RESERVED_MEM_HIGH = 0x3,
+    MEM_POOL_ATTR_USED_MEM_CURRENT = 0x4,
+    MEM_POOL_ATTR_USED_MEM_HIGH = 0x5,
+    MEM_POOL_ATTR_MAX
+} soma_mem_pool_attr;
+ 
+/**
+ * @ingroup driver
+ * @brief create memory pool
+ * @attention null
+ * @param [in]  pool: pool info
+ * @param [in]  prop: pool prop
+ * @return   0 for success, others for fail
+ */
+DLLEXPORT drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop prop);
+ 
+/**
+ * @ingroup driver
+ * @brief destroy memory pool
+ * @attention null
+ * @param [in]  pool: pool info
+ * @return   0 for success, others for fail
+ */
+DLLEXPORT drvError_t halMemPoolDestroy(soma_mem_pool_t pool);
+ 
+/**
+ * @ingroup driver
+ * @brief apply for memory from the device memory pool
+ * @attention null
+ * @param [in]  pool: pool info
+ * @param [in]  va: virtual memory address
+ * @param [in]  size: memory size
+ * @param [in]  policy: memory request policy
+ * @return   0 for success, others for fail
+ */
+DLLEXPORT DV_ONLINE drvError_t halMemPoolMalloc(soma_mem_pool_t pool, uint64_t va, uint64_t size, int32_t policy);
+ 
+/**
+ * @ingroup driver
+ * @brief release memory to the device memory pool
+ * @attention null
+ * @param [in]  pool: pool info
+ * @param [in]  va: virtual memory address
+ * @param [in]  policy: memory release policy
+ * @return   0 for success, others for fail
+ */
+DLLEXPORT DV_ONLINE drvError_t halMemPoolFree(soma_mem_pool_t pool, uint64_t va, int32_t policy);
+
 #ifdef __cplusplus
 }
 #endif

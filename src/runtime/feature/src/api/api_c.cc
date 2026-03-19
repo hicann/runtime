@@ -207,7 +207,7 @@ rtError_t rtGetAddrAndPrefCntWithHandle(void *hdl, const void *kernelInfoExt, vo
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_ADDR_PREFETCH_CNT)) {
-        RT_LOG(RT_LOG_INFO, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(RT_LOG_INFO, "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
         return ACL_RT_SUCCESS;
     }
     Api * const apiInstance = Api::Instance();
@@ -1957,7 +1957,7 @@ rtError_t rtNotifyReset(rtNotify_t notify)
         const rtError_t error = apiInstance->NotifyReset(notifyPtr);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
     } else {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
     return ACL_RT_SUCCESS;
@@ -2599,7 +2599,7 @@ rtError_t rtGetC2cCtrlAddr(uint64_t *addr, uint32_t *len)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_C2C_SYNC)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -3177,7 +3177,7 @@ rtError_t rtMemcpyHostTask(void * const dst, const uint64_t destMax, const void 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 

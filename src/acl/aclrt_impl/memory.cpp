@@ -2054,3 +2054,38 @@ aclError aclrtMemPoolGetAttrImpl(aclrtMemPool memPool, aclrtMemPoolAttr attr, vo
     }
     return ACL_SUCCESS;
 }
+
+
+aclError aclrtMemPoolMallocAsyncImpl(void ** ptr, size_t size, aclrtMemPool memPool, aclrtStream stream)
+{   
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemPoolMallocAsync);
+    ACL_LOG_INFO("Start to execute aclrtMemPoolMallocAsync.");
+    ACL_REQUIRES_NOT_NULL(ptr);
+    ACL_REQUIRES_NOT_NULL(memPool);
+    ACL_REQUIRES_NOT_NULL(stream);
+    if (size == 0) {
+        return ACL_SUCCESS;
+    }
+    
+    const auto rtErr = rtMemPoolMallocAsync(ptr, size, memPool, stream);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("Call rtMemPoolMallocAsync failed, runtime result = %d, ptr = %p, size = %zu", rtErr, ptr, size);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+ 
+    return ACL_SUCCESS;
+}
+ 
+aclError aclrtMemPoolFreeAsyncImpl(void * ptr, aclrtStream stream) 
+{   
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemPoolFreeAsync);
+    ACL_LOG_INFO("Start to execute aclrtMemPoolFreeAsync.");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+ 
+    const auto rtErr = rtMemPoolFreeAsync(ptr, stream);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("Free memory pool failed, runtime result = %d.", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}

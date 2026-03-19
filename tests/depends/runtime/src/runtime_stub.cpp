@@ -910,6 +910,14 @@ rtError_t aclStub::rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, voi
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtMemPoolFreeAsync(void* ptr, rtStream_t stm) {
+  return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtMemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm) {
+  return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtMapMem(void *devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) {
     return RT_ERROR_NONE;
 }
@@ -3292,6 +3300,14 @@ rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
 
 rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) {
     return MockFunctionTest::aclStubInstance().rtMemPoolGetAttr(memPool, attr, value);
+}
+
+rtError_t rtMemPoolFreeAsync(void* ptr, rtStream_t stm) {
+  return MockFunctionTest::aclStubInstance().rtMemPoolFreeAsync(ptr, stm);
+}
+
+rtError_t rtMemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm) {
+  return MockFunctionTest::aclStubInstance().rtMemPoolMallocAsync(devPtr, size, memPoolId, stm);
 }
 
 rtError_t rtMallocPhysical(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags) {

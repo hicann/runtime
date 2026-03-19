@@ -305,6 +305,8 @@
     _(aclError, aclrtMemPoolDestroy, (const aclrtMemPool memPool), (memPool)) \
     _(aclError, aclrtMemPoolSetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
     _(aclError, aclrtMemPoolGetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
+    _(aclError, aclrtMemPoolMallocAsync, (void **devPtr, size_t size, aclrtMemPool memPool, aclrtStream stream), (devPtr, size, memPool, stream)) \
+ 	_(aclError, aclrtMemPoolFreeAsync, (void *ptr, aclrtStream stream), (ptr, stream)) \
 
 // aclrtAllocator interface map list
 #define ACL_RT_ALLOCATOR_FUNC_MAP(_)  \

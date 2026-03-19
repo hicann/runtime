@@ -145,6 +145,7 @@ set(libruntime_src_files_include_for_tiny
 
 set(libruntime_api_src_files_exclude_for_tiny
     src/api/api_c_standard_soc.cc
+    src/api/api_c_soma.cc
     src/api/api_preload_task.cc
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
@@ -350,7 +351,7 @@ set(libruntime_v100_src_files
     src/task/task_fail_callback_manager.cc
     src/task/v100/stub_task.cc
     src/memory/mem_type.cc
-    src/memory/stream_mem_pool.cc
+    src/soma/stream_mem_pool.cc
     ${libruntime_v100_task_src_files}
     ${libruntime_context_src_files}
     ${libruntime_stream_src_files}
@@ -410,6 +411,7 @@ set(RUNTIME_INC_DIR_TINY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs

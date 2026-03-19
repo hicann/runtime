@@ -183,7 +183,7 @@ rtError_t rtLaunchDvppTask(const void *sqe, uint32_t sqeLen, rtStream_t stm, rtD
     const rtChipType_t chipType = rtInstance->GetChipType();
     const bool isNotSupport = !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_DVPP);
     COND_RETURN_WARN(isNotSupport, ACL_ERROR_RT_FEATURE_NOT_SUPPORT,
-        "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
+        "chip type(%d) does not support.", static_cast<int32_t>(chipType));
     
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -207,7 +207,7 @@ rtError_t rtsLaunchRandomNumTask(const rtRandomNumTaskInfo_t *taskInfo, const rt
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     COND_RETURN_WARN(!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_RAND_GENERATOR), 
-        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support, return.", static_cast<int32_t>(chipType));
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();

@@ -192,10 +192,6 @@ public:
         const rtMemcpyKind_t kind, Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
         const rtD2DAddrCfgInfo_t * const addrCfg = nullptr, bool checkKind = true,
         const rtMemcpyConfig_t * const memcpyConfig = nullptr) override;
-    rtError_t StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps) override;
-    rtError_t StreamMemPoolDestroy(const rtMemPool_t memPool) override;
-    rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) override;
-    rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) override;
     rtError_t LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, uint64_t cnt,
                                   Stream * const stm, bool needCpuTask = false) override;
     rtError_t MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count,

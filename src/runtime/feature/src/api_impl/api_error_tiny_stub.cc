@@ -284,34 +284,5 @@ rtError_t ApiErrorDecorator::XpuProfilingCommandHandle(uint32_t type, void *data
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
-{
-    UNUSED(memPool);
-    UNUSED(poolProps);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolDestroy(const rtMemPool_t memPool)
-{
-    UNUSED(memPool);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    UNUSED(memPool);
-    UNUSED(attr);
-    UNUSED(value);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    UNUSED(memPool);
-    UNUSED(attr);
-    UNUSED(value);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 }
 }

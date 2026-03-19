@@ -21,6 +21,7 @@ namespace runtime {
 
 class Api;
 class ApiMbuf;
+class ApiSoma;
 class Context;
 
 struct RtTimeoutConfig {
@@ -49,6 +50,8 @@ public:
     virtual Api *Api_() const = 0;
     // Get apiMbuf implement.
     virtual ApiMbuf *ApiMbuf_() const = 0;
+    // Get apiSoma implement.
+    virtual ApiSoma *ApiSoma_() const = 0;
     virtual Api *ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(const uint64_t profConfig, const int32_t numsDev, uint32_t *const deviceList,
         const uint64_t profSwitchHi = 0) = 0;

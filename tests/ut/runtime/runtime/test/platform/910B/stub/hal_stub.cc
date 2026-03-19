@@ -1931,12 +1931,22 @@ drvError_t halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr *pbase, size_t *ps
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemPoolCreate(uint32_t devId, uint64_t poolId, uint64_t va, uint64_t size)
+drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop prop)
+{
+    return DRV_ERROR_NONE;
+}
+ 
+drvError_t halMemPoolDestroy(soma_mem_pool_t pool)
 {
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemPoolDestroy(uint32_t devId, uint64_t poolId)
+drvError_t halMemPoolMalloc(soma_mem_pool_t pool, uint64_t va, uint64_t size, int32_t policy)
+{
+    return DRV_ERROR_NONE;
+}
+ 
+drvError_t halMemPoolFree(soma_mem_pool_t pool, uint64_t va, int32_t policy)
 {
     return DRV_ERROR_NONE;
 }

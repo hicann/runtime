@@ -163,7 +163,7 @@ rtError_t rtFreeWithDevSync(void *devPtr)
 {
     const rtError_t error = rtDeviceSynchronize();
     if (error != ACL_RT_SUCCESS) {
-        RT_LOG(RT_LOG_ERROR, "rtFreeWithDevSync, device synchronize failed, result=%d",
+        RT_LOG(RT_LOG_ERROR, "Device synchronize failed, result=%d",
             static_cast<int32_t>(error));
         return error;
     }
@@ -175,7 +175,7 @@ rtError_t rtFreeHostWithDevSync(void *hostPtr)
 {
     const rtError_t error = rtDeviceSynchronize();
     if (error != ACL_RT_SUCCESS) {
-        RT_LOG(RT_LOG_ERROR, "rtFreeHostWithDevSync, device synchronize failed, result=%d",
+        RT_LOG(RT_LOG_ERROR, "Device synchronize failed, result=%d",
             static_cast<int32_t>(error));
         return error;
     }
@@ -344,7 +344,7 @@ rtError_t rtsGetMemcpyDescSize(rtMemcpyKind kind, size_t *descSize)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!rtInstance->ChipIsHaveStars()) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsGetMemcpyDescSize, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsGetMemcpyDescSize.",
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -366,7 +366,7 @@ rtError_t rtsSetMemcpyDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, void *srcAddr
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!rtInstance->ChipIsHaveStars()) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsSetMemcpyDesc, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsSetMemcpyDesc.",
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -386,7 +386,7 @@ rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcp
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!rtInstance->ChipIsHaveStars()) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsMemcpyAsyncWithDesc, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) not support rtsMemcpyAsyncWithDesc.",
             static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -559,7 +559,7 @@ rtError_t rtsValueWrite(const void * const devAddr, const uint64_t value, const 
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.",
                static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -578,7 +578,7 @@ rtError_t rtsValueWait(const void * const devAddr, const uint64_t value, const u
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.",
                static_cast<int32_t>(rtInstance->GetChipType()));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

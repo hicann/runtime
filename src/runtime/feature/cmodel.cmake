@@ -201,6 +201,7 @@ set(libruntime_cmodel_callback_files
 set(libruntime_cmodel_src_files_optional
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
+    src/api_impl/api_impl_soma.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -226,6 +227,7 @@ set(libruntime_cmodel_src_files_optional
 
 set(libruntime_cmodel_api_src_files
     src/api/api_c_standard_soc.cc
+    src/api/api_c_soma.cc
     src/api/api_c_xpu.cc
     src/api/api_preload_task.cc
     src/api/api_c_dqs.cc
@@ -286,8 +288,8 @@ set(libruntime_cmodel_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/kernel/kernel_utils.cc
-    src/memory/soma.cc
-    src/memory/stream_mem_pool.cc
+    src/soma/soma.cc
+    src/soma/stream_mem_pool.cc
     src/launch/label.cc
     src/launch/aicpu_stars.cc
     src/event/event.cc
@@ -393,8 +395,8 @@ set(libruntime_cmodel_v200_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/kernel/kernel_utils.cc
-    src/memory/soma.cc
-    src/memory/stream_mem_pool.cc
+    src/soma/soma.cc
+    src/soma/stream_mem_pool.cc
     src/launch/label.cc
     src/event/event.cc
     src/event/event_david.cc
@@ -509,6 +511,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/

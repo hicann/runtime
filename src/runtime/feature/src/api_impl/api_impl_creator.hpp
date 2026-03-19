@@ -17,6 +17,7 @@ namespace cce {
 namespace runtime {
 Api *CreateImplAndGet();
 ApiMbuf *CreateImplMbufAndGet();
+ApiSoma *CreateImplSomaAndGet();
 }  // namespace runtime
 }  // namespace cce
 

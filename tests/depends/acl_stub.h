@@ -263,6 +263,8 @@ public:
     virtual rtError_t rtMemPoolDestroy(const rtMemPool_t memPool);
     virtual rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
     virtual rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value);
+    virtual rtError_t rtMemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm);
+    virtual rtError_t rtMemPoolFreeAsync(void* ptr, rtStream_t stm);
     virtual rtError_t rtReleaseMemAddress(void *devPtr);
     virtual rtError_t rtMallocPhysical(rtDrvMemHandle *handle, size_t size, rtDrvMemProp_t *prop, uint64_t flags);
     virtual rtError_t rtFreePhysical(rtDrvMemHandle handle);

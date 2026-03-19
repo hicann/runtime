@@ -165,6 +165,7 @@ set(libruntime_v200_callback_files
 set(libruntime_v200_src_files_exclude_for_tiny
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
+    src/api_impl/api_impl_soma.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -233,8 +234,8 @@ set(libruntime_v200_v201_common_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/kernel/kernel_utils.cc
-    src/memory/soma.cc
-    src/memory/stream_mem_pool.cc
+    src/soma/soma.cc
+    src/soma/stream_mem_pool.cc
     src/launch/label.cc
     src/event/event.cc
     src/event/event_david.cc
@@ -390,6 +391,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/src/inc/runtime
     ${RUNTIME_DIR}/pkg_inc/tsd/

@@ -59,6 +59,7 @@ set(runtimeut_src_task_list
 set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_c.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_standard_soc.cc
+    ${TOP_DIR}/src/runtime/feature/src/api/api_c_soma.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_david.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_preload_task.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_context.cc
@@ -205,6 +206,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_standard_soc.cc
+    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/config.cc
@@ -234,8 +236,8 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/kernel/module.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/src/kernel/program.cc
-    ${TOP_DIR}/src/runtime/feature/src/memory/soma.cc
-    ${TOP_DIR}/src/runtime/feature/src/memory/stream_mem_pool.cc
+    ${TOP_DIR}/src/runtime/feature/src/soma/soma.cc
+    ${TOP_DIR}/src/runtime/feature/src/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/cmo_barrier_common.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/cmo_barrier_stars.cc
     ${TOP_DIR}/src/runtime/feature/src/launch/label.cc
@@ -422,6 +424,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/pkg_inc/platform
     ${TOP_DIR}/src/platform
     ${TOP_DIR}/src/runtime/feature/src/memory/
+    ${TOP_DIR}/src/runtime/feature/src/soma/
     ${C_SEC_INCLUDE}
 )
 

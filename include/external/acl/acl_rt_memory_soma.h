@@ -89,6 +89,32 @@ ACL_FUNC_VISIBILITY aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemP
 */
 ACL_FUNC_VISIBILITY aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value);
 
+/**
+* @ingroup AscendCL
+* @brief asynchronous allocate memory from specified memory pool
+*
+* @param ptr [OUT] pointer to the device memory address allocated from memory pool
+* @param size [IN] size of memory to allocate (unit: bytes, must be greater than 0)
+* @param memPool [IN] unique ID of the target memory pool
+* @param stream [IN] stream ID for asynchronous memory allocation operation
+*
+* @retval ACL_SUCCESS The function is successfully executed.
+* @retval OtherValues Failure
+*/
+ACL_FUNC_VISIBILITY aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, aclrtStream stream);
+
+/**
+* @ingroup AscendCL
+* @brief Asynchronous free memory from mempool
+*
+* @param ptr [IN] address pointer of the memory to be released
+* @param stream [IN] asynchronized task stream
+*
+* @retval ACL_SUCCESS The function is successfully executed.
+* @retval OtherValues Failure
+*/
+ACL_FUNC_VISIBILITY aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream);
+
 #ifdef __cplusplus
 }
 #endif

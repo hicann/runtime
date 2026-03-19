@@ -9,6 +9,7 @@
  */
 #include "api.hpp"
 #include "api_mbuf.hpp"
+#include "api_soma.hpp"
 #include "thread_local_container.hpp"
 
 namespace cce {
@@ -32,6 +33,16 @@ ApiMbuf *ApiMbuf::Instance()
         return nullptr;
     }
     return rtInstance->ApiMbuf_();
+}
+
+ApiSoma *ApiSoma::Instance()
+{
+    const Runtime * const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiSoma_();
 }
 
 }  // namespace runtime

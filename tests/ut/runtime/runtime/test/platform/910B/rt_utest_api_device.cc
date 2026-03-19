@@ -139,7 +139,7 @@ TEST_F(CloudV2ApiDeviceTest, streamMemPoolCreate_failed)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = 0,
         .reserve = 0
     };
@@ -158,7 +158,7 @@ TEST_F(CloudV2ApiDeviceTest, streamMemPoolCreate_failed)
     rtMemPoolProps poolProps_new = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = (30U * 1024 * 1024 * 1024),
         .reserve = 0
     };

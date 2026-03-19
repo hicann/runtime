@@ -37,7 +37,7 @@ rtError_t RtCheckDeviceIdListValid(const uint32_t * const devIdList, const uint3
     const rtError_t ret = rt->GetNpuDeviceCnt(npuDrvDevCnt);
     RT_LOG(RT_LOG_DEBUG, "npuDrvDevCnt:%u.", npuDrvDevCnt);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, ret != RT_ERROR_NONE, ACL_ERROR_RT_INTERNAL_ERROR,
-        "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(ret));
+        "Get device info count failed, retCode=%#x", static_cast<uint32_t>(ret));
     for (uint32_t i = 0U; i < devCnt; i++) {
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devIdList[i] >= static_cast<uint32_t>(npuDrvDevCnt),
             RT_ERROR_INVALID_VALUE, devIdList[i], "[0, " + std::to_string(npuDrvDevCnt) + ")");
@@ -53,7 +53,7 @@ rtError_t RtCheckDeviceIdValid(const uint32_t deviceId)
     const rtError_t error = rt->GetNpuDeviceCnt(npuDevCnt);
     RT_LOG(RT_LOG_DEBUG, "npuDevCnt:%u.", npuDevCnt);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, error != RT_ERROR_NONE, ACL_ERROR_RT_INTERNAL_ERROR,
-        "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
+        "Get device info count failed, retCode=%#x", static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, deviceId >= static_cast<uint32_t>(npuDevCnt), RT_ERROR_INVALID_VALUE,
         "Invalid drv devId, current drv devId=%u, valid device range is [0, %d)", deviceId, npuDevCnt);
     return RT_ERROR_NONE;

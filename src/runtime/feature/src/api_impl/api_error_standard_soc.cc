@@ -481,51 +481,5 @@ rtError_t ApiErrorDecorator::IpcOpenEventHandle(rtIpcEventHandle_t *handle, IpcE
     return impl_->IpcOpenEventHandle(handle, event);
 }
 
-rtError_t ApiErrorDecorator::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
-{
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(poolProps, RT_ERROR_INVALID_VALUE);
-
-    const rtError_t error = impl_->StreamMemPoolCreate(memPool, poolProps);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT),
-        error, "Memory pool create failed.");
-    return error;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolDestroy(const rtMemPool_t memPool)
-{
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-
-    const rtError_t error = impl_->StreamMemPoolDestroy(memPool);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT),
-        error, "Memory pool destroy failed, poolId=%#" PRIx64 ".", RtPtrToValue(memPool));
-    return error;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR((attr == rtMemPoolAttrReservedMemCurrent) || (attr == rtMemPoolAttrUsedMemCurrent),
-        RT_ERROR_POOL_OP_INVALID, "Read only attribute does not allow setting.");
-    
-    const rtError_t error = impl_->StreamMemPoolSetAttr(memPool, attr, value);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory pool set attribute failed, poolId=%#" PRIx64 ", attr=%u.",
-        RtPtrToValue(memPool), static_cast<uint32_t>(attr));
-    return error;
-}
-
-rtError_t ApiErrorDecorator::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    NULL_PTR_RETURN_MSG_OUTER(memPool, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
-
-    const rtError_t error = impl_->StreamMemPoolGetAttr(memPool, attr, value);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_NOT_SUPPORT), error,
-        "Memory pool get attribute failed, poolId=%#" PRIx64 ", attr=%u.",
-        RtPtrToValue(memPool), static_cast<uint32_t>(attr));
-    return error;
-}
 }
 }

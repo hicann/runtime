@@ -39,10 +39,6 @@ TIMESTAMP_EXTERN(CmoAddrTaskLaunch);
 TIMESTAMP_EXTERN(CmoTaskLaunch);
 TIMESTAMP_EXTERN(rtNpuGetFloatStatus);
 TIMESTAMP_EXTERN(rtNpuClearFloatStatus);
-TIMESTAMP_EXTERN(rtMemPoolCreate);
-TIMESTAMP_EXTERN(rtMemPoolDestroy);
-TIMESTAMP_EXTERN(rtMemPoolSetAttr);
-TIMESTAMP_EXTERN(rtMemPoolGetAttr);
 }
 }
 
@@ -1479,60 +1475,6 @@ rtError_t rtsNotifySetImportPid(rtNotify_t notify, int32_t pid[], int num)
     Notify * const notifyPtr = static_cast<Notify *>(notify);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(notifyPtr, RT_ERROR_INVALID_VALUE);
     const rtError_t error = apiInstance->SetIpcNotifyPid(notifyPtr->GetIpcName().c_str(), pid, num);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemPoolCreate);
-    const rtError_t error = apiInstance->StreamMemPoolCreate(memPool, poolProps);
-    TIMESTAMP_END(rtMemPoolCreate);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemPoolDestroy(const rtMemPool_t memPool)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemPoolDestroy);
-    const rtError_t error = apiInstance->StreamMemPoolDestroy(memPool);
-    TIMESTAMP_END(rtMemPoolDestroy);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemPoolSetAttr);
-    const rtError_t error = apiInstance->StreamMemPoolSetAttr(memPool, attr, value);
-    TIMESTAMP_END(rtMemPoolSetAttr);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMemPoolGetAttr);
-    const rtError_t error = apiInstance->StreamMemPoolGetAttr(memPool, attr, value);
-    TIMESTAMP_END(rtMemPoolGetAttr);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

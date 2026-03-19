@@ -18,7 +18,7 @@
 #include "acl/acl.h"
 #include "acl/acl_base.h"
 #include "acl/acl_rt_allocator.h"
-#include "acl/acl_rt_memory.h"
+#include "acl/acl_rt_memory_soma.h"
 #include "acl_rt_wrapper.h"
 
 #ifdef __cplusplus

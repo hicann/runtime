@@ -619,26 +619,6 @@ rtError_t ApiDecorator::MemcpyAsync(void * const dst, const uint64_t destMax, co
     return impl_->MemcpyAsync(dst, destMax, src, cnt, kind, stm, cfgInfo, addrCfg, checkKind, memcpyConfig);
 }
 
-rtError_t ApiDecorator::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
-{
-    return impl_->StreamMemPoolCreate(memPool, poolProps);
-}
-
-rtError_t ApiDecorator::StreamMemPoolDestroy(const rtMemPool_t memPool)
-{
-    return impl_->StreamMemPoolDestroy(memPool);
-}
-
-rtError_t ApiDecorator::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    return impl_->StreamMemPoolSetAttr(memPool, attr, value);
-}
-
-rtError_t ApiDecorator::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    return impl_->StreamMemPoolGetAttr(memPool, attr, value);
-}
-
 rtError_t ApiDecorator::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, uint64_t cnt,
     Stream * const stm, bool needCpuTask)
 {

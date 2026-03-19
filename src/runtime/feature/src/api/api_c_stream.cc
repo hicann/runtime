@@ -420,7 +420,7 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
         case RT_STREAM_ATTR_FAILURE_MODE: {
             COND_RETURN_WARN(!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
                 RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE), ACL_ERROR_RT_FEATURE_NOT_SUPPORT,
-                "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+                "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
             error = apiInstance->StreamSetMode(exeStream, attrValue->failureMode);
             break;
         }
@@ -547,7 +547,7 @@ rtError_t rtGetStreamTag(rtStream_t stm, uint32_t *geOpTag)
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_TAG)) {
-        RT_LOG(RT_LOG_DEBUG, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+        RT_LOG(RT_LOG_DEBUG, "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
         return ACL_RT_SUCCESS;
     }
 
@@ -659,7 +659,7 @@ rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support.",
             static_cast<int32_t>(chipType));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
@@ -680,7 +680,7 @@ rtError_t rtsStreamEndTaskUpdate(rtStream_t stm)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support, return.",
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) or ctx gen mode does not support.",
             static_cast<int32_t>(chipType));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }

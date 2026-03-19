@@ -458,28 +458,5 @@ rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t *handle, IpcEvent** con
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
-{
-    RT_LOG(RT_LOG_DEBUG, "Stream memory pool create.");
-    return SomaApi::StreamMemPoolCreate(memPool, poolProps);
-}
-
-rtError_t ApiImpl::StreamMemPoolDestroy(const rtMemPool_t memPool)
-{
-    RT_LOG(RT_LOG_DEBUG, "Stream memory pool destroy, poolId=%#" PRIx64 ".", RtPtrToValue(memPool));
-    return SomaApi::StreamMemPoolDestroy(memPool);
-}
-
-rtError_t ApiImpl::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    RT_LOG(RT_LOG_DEBUG, "Stream memory pool set attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool), static_cast<uint32_t>(attr));
-    return SomaApi::StreamMemPoolSetAttr(memPool, attr, value);
-}
-
-rtError_t ApiImpl::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
-{
-    RT_LOG(RT_LOG_DEBUG, "Stream memory pool get attribute, poolId=%#" PRIx64 ", attr=%u.", RtPtrToValue(memPool), static_cast<uint32_t>(attr));
-    return SomaApi::StreamMemPoolGetAttr(memPool, attr, value);
-}
 }
 }

@@ -132,6 +132,7 @@ set(libruntime_callback_files
 set(libruntime_src_files_optional
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
+    src/api_impl/api_impl_soma.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -157,6 +158,7 @@ set(libruntime_src_files_optional
 
 set(libruntime_api_src_files_optional
     src/api/api_c_standard_soc.cc
+    src/api/api_c_soma.cc
     src/api/api_preload_task.cc
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
@@ -214,8 +216,8 @@ set(libruntime_v100_src_files
     src/kernel/program.cc
     src/kernel/program_common.cc
     src/kernel/kernel_utils.cc
-    src/memory/soma.cc
-    src/memory/stream_mem_pool.cc
+    src/soma/soma.cc
+    src/soma/stream_mem_pool.cc
     src/launch/memcpy_stars.cc
     src/launch/cmo_barrier_common.cc
     src/launch/cmo_barrier_stars.cc
@@ -319,6 +321,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/arg_loader
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs

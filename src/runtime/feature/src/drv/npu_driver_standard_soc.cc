@@ -526,7 +526,30 @@ rtError_t NpuDriver::StreamMemPoolCreate(const uint32_t deviceId, const uint64_t
     UNUSED(isGraphPool);
     drvError_t drvRet = DRV_ERROR_NONE;
 
-    drvRet = halMemPoolCreate(deviceId, poolId, va, size);
+    soma_mem_pool_t pool = {
+        .poolId = poolId,
+        .devId = deviceId
+    };
+ 
+    struct drv_mem_prop mem_prop = {
+        .side = MEM_DEV_SIDE,
+        .devid = deviceId,
+        .module_id = ASCENDCL_MODULE_ID,
+        .pg_type = MEM_HUGE_PAGE_TYPE,
+        .mem_type = MEM_HBM_TYPE,
+        .reserve = 0
+    };
+ 
+    soma_mem_pool_prop prop = {
+        .handle_type = static_cast<drv_mem_handle_type>(RT_MEM_HANDLE_TYPE_POSIX),
+        .mem_prop = mem_prop,
+        .va = va,
+        .maxSize = size
+    };
+    
+    COND_RETURN_WARN(&halMemPoolCreate == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+    "[drv api] halMemPoolCreate does not exist");
+    drvRet = halMemPoolCreate(pool, prop);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] halMemPoolCreate failed: drvRetCode=%d.", static_cast<int32_t>(drvRet));
     }
@@ -537,7 +560,14 @@ rtError_t NpuDriver::StreamMemPoolDestroy(const uint32_t deviceId, const uint64_
 {
     drvError_t drvRet = DRV_ERROR_NONE;
 
-    drvRet = halMemPoolDestroy(deviceId, poolId);
+    soma_mem_pool_t pool = {
+        .poolId = poolId,
+        .devId = deviceId
+    };
+    
+    COND_RETURN_WARN(&halMemPoolDestroy == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+    "[drv api] halMemPoolFree does not exist");
+    drvRet = halMemPoolDestroy(pool);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] halMemPoolDestroy failed: drvRetCode=%d.", static_cast<int32_t>(drvRet));
     }

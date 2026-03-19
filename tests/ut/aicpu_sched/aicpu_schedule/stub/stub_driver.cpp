@@ -178,3 +178,13 @@ drvError_t halDrvEventThreadUninit(unsigned int devId)
 drvError_t halSdmaCopy(DVdeviceptr dst, size_t dst_size, DVdeviceptr src, size_t len) {
     return DRV_ERROR_NONE;
 }
+
+drvError_t halMemPoolMalloc(soma_mem_pool_t pool, uint64_t va, uint64_t size, int32_t policy)
+{
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halMemPoolFree(soma_mem_pool_t pool, uint64_t va, int32_t policy)
+{
+    return DRV_ERROR_NONE;
+}

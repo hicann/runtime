@@ -272,5 +272,15 @@ struct __attribute__((visibility("default"))) DataFlowExceptionNotify {
     uint64_t modelIdsAddr; // ptr which point to modelIds(uint32_t)
     char rsv[40];
 } __attribute__((packed));
+
+struct __attribute__((visibility("default"))) SomaMemMng {
+    uint64_t size;
+    uint64_t va; // Virtual address
+    uint64_t mempoolId; // Id of memory pool
+    uint32_t deviceId;
+    int32_t memAsyncOpType;  // Malloc(0) Free(1)
+    int32_t memAsyncSubCMD;  // Distinguish between Malloc reuse strategies and Free explicit/implicit reuse methods
+    char rsv[4];
+} __attribute__((packed));
 }
 #endif  // AICPUSD_AICPUSD_INFO_H

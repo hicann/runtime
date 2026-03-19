@@ -11,6 +11,7 @@
 #include "api_impl_creator.hpp"
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
+#include "api_impl_soma.hpp"
 
 namespace cce {
 namespace runtime {
@@ -18,6 +19,11 @@ namespace runtime {
 ApiMbuf *CreateImplMbufAndGet()
 {
     return new (std::nothrow) ApiImplMbuf();
+}
+
+ApiSoma *CreateImplSomaAndGet()
+{
+    return new (std::nothrow) ApiImplSoma();
 }
 }  // namespace runtime
 }  // namespace cce

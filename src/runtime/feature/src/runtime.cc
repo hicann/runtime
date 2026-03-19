@@ -53,6 +53,7 @@
 #include "global_state_manager.hpp"
 #include "kernel.hpp"
 #include "stream_mem_pool.hpp"
+#include "api_impl_soma.hpp"
 
 namespace cce {
 namespace runtime {
@@ -117,8 +118,10 @@ Runtime::Runtime() : RuntimeIntf()
     excptCallBack_ = nullptr;
     api_ = nullptr;
     apiMbuf_ = nullptr;
+    apiSoma_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
+    apiImplSoma_ = nullptr;
     logger_ = nullptr;
     apiError_ = nullptr;
     profiler_ = nullptr;
@@ -875,6 +878,13 @@ rtError_t Runtime::InitApiImplies()
         return RT_ERROR_API_NEW;
     }
     RT_LOG(RT_LOG_INFO, "ApiImplMbuf:Runtime_alloc_size %zu", sizeof(ApiImplMbuf));
+
+    apiImplSoma_ = CreateImplSomaAndGet();
+    if (apiImplSoma_ == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "create ApiImplSoma failed");
+        return RT_ERROR_API_NEW;
+    }
+    RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu", sizeof(ApiImplSoma));
     return RT_ERROR_NONE;
 }
 
@@ -1297,6 +1307,7 @@ rtError_t Runtime::Init()
         error, "Failed to new ApiErrorDecorator.");
     api_ = apiError_;
     apiMbuf_ = apiImplMbuf_; // apiImplMbuf_ no Profiler and Decorator
+    apiSoma_ = apiImplSoma_; // apiImplSoma_ no Profiler and Decorator
 
     error = InitThreadGuard();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error,
@@ -1352,6 +1363,7 @@ INIT_FAIL:
     DELETE_O(logger_);
     DELETE_O(apiImpl_);
     DELETE_O(apiImplMbuf_);
+    DELETE_O(apiImplSoma_);
     return error;
 }
 

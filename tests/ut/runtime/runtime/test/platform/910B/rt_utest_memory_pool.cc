@@ -515,7 +515,7 @@ TEST_F(MemoryPoolManagerTest, SomaApiTest_Create_Destory)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = 0,
         .reserve = 0
     };
@@ -532,7 +532,7 @@ TEST_F(MemoryPoolManagerTest, SomaApiTest_Create_Destory)
     rtMemPoolProps poolProps1 = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = DEVICE_POOL_ALIGN_SIZE * 3,
         .reserve = 0
     };
@@ -548,7 +548,7 @@ TEST_F(MemoryPoolManagerTest, SomaApiTest_Alloc_Free)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = 0,
         .reserve = 0
     };
@@ -577,7 +577,7 @@ TEST_F(MemoryPoolManagerTest, SomaApiMemoryAlignmentTest)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = DEVICE_POOL_ALIGN_SIZE - 1,
         .reserve = 0
     };

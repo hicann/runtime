@@ -112,6 +112,7 @@
         <file value="acl.h" install_mod="440" entity="true"/>
         <file value="acl_rt.h" install_mod="440" entity="true"/>
         <file value="acl_rt_allocator.h" install_mod="440" entity="true"/>
+        <file value="acl_rt_memory_soma.h" install_mod="440" entity="true"/>
         <file value="acl_base_rt.h" install_mod="440" entity="true"/>
         <file value="acl_base.h" install_mod="440" entity="true"/>
         <file value="acl_base_mdl.h" install_mod="440" entity="true"/>

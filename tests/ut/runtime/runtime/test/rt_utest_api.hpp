@@ -29,6 +29,8 @@
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
 #include "api_error.hpp"
+#include "api_soma.hpp"
+#include "api_impl_soma.hpp"
 #include "program.hpp"
 #include "context.hpp"
 #include "raw_device.hpp"

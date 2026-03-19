@@ -203,6 +203,11 @@ public:
         return apiMbuf_;
     }
 
+    ApiSoma *ApiSoma_() const override
+    {
+        return apiSoma_;
+    }
+
     Api *ApiImpl_() const override
     {
         return apiImpl_;
@@ -977,9 +982,11 @@ private:
 
     Api *api_;
     ApiMbuf *apiMbuf_;
+    ApiSoma *apiSoma_;
 
     Api *apiImpl_;
     ApiMbuf *apiImplMbuf_;
+    ApiSoma *apiImplSoma_;
 
     RefObject<Context *> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device *> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM];  // Last one is stub device

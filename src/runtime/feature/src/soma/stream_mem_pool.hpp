@@ -29,7 +29,7 @@
 namespace cce {
 
 namespace runtime {
-constexpr uint64_t DEVICE_POOL_VADDR_SIZE = (128ULL << 30);  // 128 GB
+constexpr uint64_t DEVICE_POOL_VADDR_SIZE = (64ULL << 30);  // 64 GB
 constexpr uint64_t DEVICE_POOL_MIN_BLOCK_SIZE = (2UL << 20); // 2 MB
 constexpr uint64_t DEVICE_POOL_ALIGN_SIZE = (2UL << 20); // 2 MB
 constexpr int INVALID_STREAM_ID = -1;
@@ -63,6 +63,7 @@ struct SegmentComparator {
 enum class AicpuOpType : uint8_t {
     MALLOC = 0,
     FREE = 1,
+    INVALID = 0xFF,
 };
 
 struct AicpuPoolCtxArgs {
@@ -161,6 +162,7 @@ public:
     void CleanupDevice(uint32_t deviceId);
     bool QueryMemPool(SegmentManager *p);
     std::unordered_map<int32_t, std::unordered_set<int32_t> > GetEventsMap() const { return eventsMap_; }
+    SegmentManager* FindMemPoolByPtr(void *p);
 
 private:
     PoolRegistry() = default;

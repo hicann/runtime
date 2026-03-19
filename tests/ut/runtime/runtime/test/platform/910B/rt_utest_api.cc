@@ -1206,7 +1206,7 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreate)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = (10UL << 30),
         .reserve = 0
     };
@@ -1221,19 +1221,6 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreate)
     poolProps.maxSize = 0;
     error = rtMemPoolCreate(&memPool, &poolProps);
     EXPECT_EQ(error, RT_ERROR_NONE);
-
-    // invalid param
-    ApiImpl impl;
-    ApiErrorDecorator api(&impl);
-    error = api.StreamMemPoolCreate(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::StreamMemPoolCreate)
-        .stubs()
-        .will(returnValue(RT_ERROR_INVALID_VALUE));
-    poolProps.maxSize = (10UL << 30);
-    error = api.StreamMemPoolCreate(&memPool, &poolProps);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     error = rtMemPoolDestroy(memPool);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1251,11 +1238,11 @@ TEST_F(CloudV2ApiTest2, rtMemPoolCreateAndDestroy)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
-        .maxSize = (100UL << 30),
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
+        .maxSize = (50UL << 30),
         .reserve = 0
     };
-    size_t totalSize = (128UL * 1024 * 1024 * 1024);
+    size_t totalSize = (64UL * 1024 * 1024 * 1024);
     MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
@@ -1291,18 +1278,12 @@ TEST_F(CloudV2ApiTest2, rtMemPoolDestroy)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = (10UL << 30),
         .reserve = 0
     };
     rtError_t error = rtMemPoolCreate(&memPool, &poolProps);
     EXPECT_EQ(error, RT_ERROR_NONE);
-
-    // invalid param
-    ApiImpl impl;
-    ApiErrorDecorator api(&impl);
-    error = api.StreamMemPoolDestroy(nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     error = rtMemPoolDestroy(memPool);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1322,7 +1303,7 @@ TEST_F(CloudV2ApiTest2, rtMemPoolSetAttr)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = (10UL << 30),
         .reserve= 0
     };
@@ -1333,19 +1314,6 @@ TEST_F(CloudV2ApiTest2, rtMemPoolSetAttr)
     error = rtMemPoolSetAttr(memPool, rtMemPoolAttrReleaseThreshold, (void *)&waterMark);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // invalid param
-    ApiImpl impl;
-    ApiErrorDecorator api(&impl);
-    size_t size = 1;
-    error = api.StreamMemPoolSetAttr(memPool, rtMemPoolAttrReservedMemHigh, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    error = api.StreamMemPoolSetAttr(memPool, rtMemPoolAttrReservedMemHigh, (void *)&size);
-    EXPECT_EQ(error, RT_ERROR_POOL_PROP_INVALID);
-    error = api.StreamMemPoolSetAttr(memPool, rtMemPoolAttrReservedMemCurrent, (void *)&size);
-    EXPECT_EQ(error, RT_ERROR_POOL_OP_INVALID);
-    int32_t numTen = 10;
-    error = api.StreamMemPoolSetAttr(memPool, static_cast<rtMemPoolAttr>(numTen), (void *)&size);
-    EXPECT_EQ(error, RT_ERROR_POOL_PROP_INVALID);
     error = rtMemPoolDestroy(memPool);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete device;
@@ -1364,7 +1332,7 @@ TEST_F(CloudV2ApiTest2, rtMemPoolGetAttr)
     rtMemPoolProps poolProps = {
         .side = 1,
         .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
         .maxSize = (10UL << 30),
         .reserve = 0
     };
@@ -1376,14 +1344,207 @@ TEST_F(CloudV2ApiTest2, rtMemPoolGetAttr)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(waterMark, 0);
 
-    // invalid param
-    ApiImpl impl;
-    ApiErrorDecorator api(&impl);
-    int32_t numTen = 10;
-    error = api.StreamMemPoolGetAttr(memPool, static_cast<rtMemPoolAttr>(numTen), (void *)&waterMark);
-    EXPECT_EQ(error, RT_ERROR_POOL_PROP_INVALID);
     error = rtMemPoolDestroy(memPool);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    delete device;
+}
+
+TEST_F(CloudV2ApiTest2, MallocFromPoolAsyncSuccess)
+{
+    rtError_t error;
+    rtStream_t streamId;
+    error = rtStreamCreate(&streamId, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+ 
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+ 
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(true));
+ 
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1,
+        .devId = 0,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
+        .maxSize = (10UL << 30),
+        .reserve = 0
+    };
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+ 
+    size_t size = 1;
+    void *devPtr = nullptr;
+    rtMemType_t asyncpolicy = RT_MEMORY_DEFAULT;
+    rtError_t ret = rtMemPoolMallocAsync(&devPtr, size, memPoolId, streamId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+ 
+    ret = rtMemPoolFreeAsync(devPtr, streamId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    
+    error = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete device;
+}
+
+TEST_F(CloudV2ApiTest2, rt_free_from_mempool_normal)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+    
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1,
+        .devId = 0,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
+        .maxSize = (10UL << 30),
+        .reserve = 0
+    };
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size_t size = 32;
+    void *ptr = nullptr;
+    const int32_t stmId = 0;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    size = (16UL * 1024 * 1024);
+    ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    size = (10UL * 1024 * 1024 * 1024) - (16UL * 1024 * 1024) - 31;
+    ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    error = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete device;
+}
+
+TEST_F(CloudV2ApiTest2, rt_free_from_mempool_invaild_ptr)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+    
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1,
+        .devId = 0,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
+        .maxSize = (10UL << 30),
+        .reserve = 0
+    };
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    void *ptr = nullptr;
+    rtError_t ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    size_t size = (6ULL << 10);
+    const int32_t stmId = 0;
+    ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ptr = (void*)0x290040700000;
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    error = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete device;
+}
+
+TEST_F(CloudV2ApiTest2, rt_free_from_mempool_nullptr_stm)
+{
+    rtError_t error;
+    rtStream_t stream1 = nullptr;
+
+    RawDevice *device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+    
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1,
+        .devId = 0,
+        .handleType = RT_MEM_HANDLE_TYPE_POSIX,
+        .maxSize = (10UL << 30),
+        .reserve = 0
+    };
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size_t size = 32;
+    void *ptr = nullptr;
+    const int32_t stmId = 0;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    error = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
     delete device;
 }
 

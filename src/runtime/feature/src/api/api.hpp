@@ -292,10 +292,6 @@ public:
     virtual rtError_t MemcpyAsync(void * const dst, uint64_t destMax, const void * const src, const uint64_t cnt,
         const rtMemcpyKind_t kind, Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
         const rtD2DAddrCfgInfo_t * const addrCfg = nullptr, bool checkKind = true, const rtMemcpyConfig_t * const memcpyConfig = nullptr) = 0;
-    virtual rtError_t StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps) = 0;
-    virtual rtError_t StreamMemPoolDestroy(const rtMemPool_t memPool) = 0;
-    virtual rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) = 0;
-    virtual rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value) = 0;
     virtual rtError_t LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, uint64_t cnt,
                                           Stream * const stm, bool needCpuTask = false) = 0;
     virtual rtError_t MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax,

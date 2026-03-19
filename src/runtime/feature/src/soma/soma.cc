@@ -106,5 +106,47 @@ rtError_t SomaApi::DestroyMemPool(SegmentManager *memPool)
     return PoolRegistry::Instance().RemoveMemPool(memPool);
 }
 
+rtError_t SomaApi::AllocFromMemPool(void **ptr, uint64_t size, rtMemPool_t memPool, int32_t streamId)
+{
+    COND_RETURN_ERROR(ptr == nullptr, RT_ERROR_MEM_POOL_NULL,
+        "Output pointer cannot be null for memory allocation.");
+    COND_RETURN_ERROR(memPool == nullptr, RT_ERROR_MEM_POOL_NULL,
+        "Memory pool handle is invalid.");
+    COND_RETURN_ERROR(streamId == INVALID_STREAM_ID, RT_ERROR_MEM_POOL_NULL,
+        "Stream ID is invalid for memory allocation.");
+ 
+    // Align the allocation size to DEVICE_POOL_MIN_BLOCK_SIZE
+    size = (size + DEVICE_POOL_MIN_BLOCK_SIZE - 1) & ~(DEVICE_POOL_MIN_BLOCK_SIZE - 1);
+ 
+    SegmentManager *curMemPool = RtPtrToPtr<SegmentManager *>(memPool);
+    Segment *seg = nullptr;
+    rtError_t error = curMemPool->SegmentAlloc(seg, size, streamId);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE || seg == nullptr), RT_ERROR_MEM_POOL_ALLOC,
+        "Failed to allocate segment from memory pool, size=%" PRIx64 ", memPoolId=%" PRIx64 ", streamId=%d.",
+        size, curMemPool->MemPoolId(), streamId);
+ 
+    *ptr = RtValueToPtr<void *>(seg->basePtr);
+    return RT_ERROR_NONE;
+}
+ 
+rtError_t SomaApi::FreeToMemPool(void *ptr)
+{
+    COND_RETURN_ERROR(ptr == nullptr, RT_ERROR_MEM_POOL_NULL, "Unable to free null pointer.");
+    uint64_t p = RtPtrToValue(ptr);
+    SegmentManager *curMemPool = PoolRegistry::Instance().FindMemPoolByPtr(ptr);
+    COND_RETURN_ERROR(curMemPool == nullptr, RT_ERROR_POOL_PTR_NOTFOUND,
+        "Unable to locate which memory pool the pointer is in, ptr=%" PRIx64 ".", p);
+ 
+    rtError_t error = curMemPool->SegmentFree(p);
+    ERROR_RETURN(error, "Unable to free ptr=%" PRIx64 ".", p);
+ 
+    return RT_ERROR_NONE;
+}
+ 
+SegmentManager* SomaApi::FindMemPoolByPtr(void *ptr)
+{
+    return PoolRegistry::Instance().FindMemPoolByPtr(ptr);
+}
+
 } // namespace runtime
 } // namespace cce

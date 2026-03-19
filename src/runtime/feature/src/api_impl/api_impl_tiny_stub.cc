@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
+#include "api_impl_soma.hpp"
 namespace cce {
 namespace runtime {
 
@@ -271,20 +272,20 @@ rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t *handle, IpcEvent** con
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
+rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t *memPool, const rtMemPoolProps *poolProps)
 {
     UNUSED(memPool);
     UNUSED(poolProps);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::StreamMemPoolDestroy(const rtMemPool_t memPool)
+rtError_t ApiImplSoma::StreamMemPoolDestroy(const rtMemPool_t memPool)
 {
     UNUSED(memPool);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
+rtError_t ApiImplSoma::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
 {
     UNUSED(memPool);
     UNUSED(attr);
@@ -292,11 +293,28 @@ rtError_t ApiImpl::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr,
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
+rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
 {
     UNUSED(memPool);
     UNUSED(attr);
     UNUSED(value);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImplSoma::MemPoolMallocAsync(void ** const devPtr, const uint64_t size, const rtMemPool_t memPoolId,
+                                      Stream * const stm)
+{
+    UNUSED(devPtr);
+    UNUSED(size);
+    UNUSED(memPoolId);
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+ 
+rtError_t ApiImplSoma::MemPoolFreeAsync(void * const ptr, Stream * const stm)
+{
+    UNUSED(ptr);
+    UNUSED(stm);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 }

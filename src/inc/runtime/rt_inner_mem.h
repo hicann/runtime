@@ -73,7 +73,7 @@ RTS_API rtError_t rtMemPoolDestroy(const rtMemPool_t memPool);
 
 /**
 * @ingroup rt_mem
-* @brief Set specific attribute of the memory pool.
+* @brief Set specific attributes of the memory pool.
 * @param [IN] memPool Virtual mem pool handle.
 * @param [IN] attr The Memory pool attribute to be modified.
 * @param [IN] value The value to be modified.
@@ -84,7 +84,7 @@ RTS_API rtError_t rtMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void
 
 /**
 * @ingroup rt_mem
-* @brief Get specific attribute of the memory pool.
+* @brief Get specific attributes of the memory pool.
 * @param [IN] memPool Virtual mem pool handle.
 * @param [IN] attr The Memory pool attribute to be obtained.
 * @param [OUT] value The value to be obtained.
@@ -116,6 +116,28 @@ RTS_API rtError_t rtMemGetAddressRange(void *ptr, void **pbase, size_t *psize);
  * @return RT_ERROR_DRV_ERR for driver error
  */
 RTS_API rtError_t rtMemPrefetchToDevice(void *devPtr, uint64_t len, int32_t devId);
+
+/**
+* @ingroup rt_mem
+* @brief Allocating memory from memory pool asynchronously.
+* @param [OUT] ptr The pointer pointing to the memory to be allocated.
+* @param [IN] size The size of memory to be allocated.
+* @param [IN] memPoolId Id of the target memory pool.
+* @param [IN] stm The stream to perform memory allocation task.
+* @return RT_ERROR_NONE for ok
+* @return RT_ERROR_INVALID_VALUE for error input
+*/
+RTS_API rtError_t rtMemPoolMallocAsync(void **ptr, const uint64_t size, const rtMemPool_t memPoolId, const rtStream_t stm);
+ 
+/**
+ * @ingroup rt_mem
+ * @brief Free memory from memory pool asynchronously.
+ * @param [IN] ptr The pointer to the memory to be released.
+ * @param [IN] stm The stream to perform memory releasing task.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtMemPoolFreeAsync(void* ptr, rtStream_t stm);
 
 #if defined(__cplusplus)
 }

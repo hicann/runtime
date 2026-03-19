@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api.hpp"
+
 using namespace cce::runtime;
 
 #ifdef __cplusplus
@@ -1056,6 +1057,26 @@ rtError_t rtMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void *value)
     UNUSED(memPool);
     UNUSED(attr);
     UNUSED(value);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPool_t memPoolId,
+                                const rtStream_t stm)
+{
+    UNUSED(devPtr);
+    UNUSED(size);
+    UNUSED(memPoolId);
+    UNUSED(stm);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemPoolFreeAsync(void *ptr, rtStream_t stm)
+{
+    UNUSED(ptr);
+    UNUSED(stm);
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 

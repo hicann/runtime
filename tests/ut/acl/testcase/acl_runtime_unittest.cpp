@@ -27,7 +27,7 @@
 #include "runtime/base.h"
 #include "runtime/config.h"
 #include "acl/acl_rt_allocator.h"
-#include "acl/acl_rt_memory.h"
+#include "acl/acl_rt_memory_soma.h"
 #include "acl_stub.h"
 #define private public
 #include "aclrt_impl/init_callback_manager.h"
@@ -7073,6 +7073,34 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemPoolGetAttr)
     aclrtMemPoolAttr attr = aclrtMemPoolAttr::ACL_RT_MEM_POOL_ATTR_RELEASE_THRESHOLD;
     uint64_t waterMark = (2UL << 30);
     rtError_t error = aclrtMemPoolGetAttr(memPool, attr, (void *)&waterMark);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemPoolFreeAsync)
+{
+    aclrtStream stream = (aclrtStream)0x01U;
+    void *ptr = nullptr;
+
+    rtError_t error = aclrtMemPoolFreeAsync(ptr, stream);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    ptr = (void*)0xff;
+    error = aclrtMemPoolFreeAsync(ptr, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemPoolMallocAsync)
+{
+    aclrtStream stream = (aclrtStream)0x01U;
+    aclrtMemPool memPool = (void*)0xff;
+    size_t size = 10 * 1024;
+    void *ptr = nullptr;
+
+    rtError_t error = aclrtMemPoolMallocAsync(&ptr, size, memPool, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size = 0;
+    error = aclrtMemPoolMallocAsync(&ptr, size, memPool, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

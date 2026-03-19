@@ -126,6 +126,7 @@ set(hwts_kernel_src_file
     ${CMAKE_CURRENT_SOURCE_DIR}/core/hwts_kernel/hwts_kernel_cust_so.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/hwts_kernel/hwts_kernel_queue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/hwts_kernel/hwts_kernel_model_control.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/hwts_kernel/hwts_kernel_soma.cpp
 )
 
 
