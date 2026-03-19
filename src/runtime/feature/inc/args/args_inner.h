@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_ARGS_INNNER_H
-#define CCE_RUNTIME_ARGS_INNNER_H
+#ifndef CCE_RUNTIME_ARGS_INNER_H
+#define CCE_RUNTIME_ARGS_INNER_H
 
 #include <stddef.h>
 #include "base.h"
