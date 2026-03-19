@@ -1524,8 +1524,9 @@ rtError_t GetArgsInfo(TaskInfo* taskInfo)
         RT_LOG(RT_LOG_ERROR, "[AIC_INFO] args(%u to %u) after execute:%s.",
             (j - 1U) * ARGS_PER_STRING_MAX_LEN, curLen - 1U, ss.str().c_str());
     }
-    RT_LOG(RT_LOG_ERROR, "tilingKey = %" PRIu64 ", print %u Times totalLen=(%u*8), argsSize=%u, blockDim=%hu",
-        tilingKey, argsTimes, totalLen, aicTaskInfo->comm.argsSize, aicTaskInfo->comm.dim);
+    RT_LOG(RT_LOG_ERROR, "tilingKey = %" PRIu64 ", print %u Times totalLen=(%u*8), argsSize=%u, schemMode=%u,"
+        " blockDim=%hu", tilingKey, argsTimes, totalLen, aicTaskInfo->comm.argsSize, GetSchemMode(aicTaskInfo),
+        aicTaskInfo->comm.dim);
     (void)dev->Driver_()->HostMemFree(hostMem);
     return RT_ERROR_NONE;
 }
