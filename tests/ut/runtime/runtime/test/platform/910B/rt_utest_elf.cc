@@ -1450,9 +1450,9 @@ TEST_F(CloudV2ELFTest, GetMetaInfo)
     elfData->section_headers[0].sh_size = 0;
 
     error = GetBinaryMetaNum(elfData, BinaryTLVType, &numOfMeta);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     error = GetBinaryMetaInfo(elfData, BinaryTLVType, numOfMeta, info.data(), size.data());
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     Elf_Internal_Shdr metaSection = {};
     metaSection.sh_size = 20;

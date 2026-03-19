@@ -1651,7 +1651,11 @@ rtError_t GetBinaryMetaNum(const rtElfData * const elfData, const uint16_t type,
 
     Elf_Internal_Shdr *section = nullptr;
     const rtError_t error = GetMetaSection(elfData, section, ELF_SECTION_ASCEND_META);
-    ERROR_RETURN(error, "Get meta section failed, ret=%d", error);
+    // 不存在.ascend.meta段
+    if (error != RT_ERROR_NONE) {
+        *numOfMeta = 0U;
+        return RT_ERROR_NONE;
+    }
 
     auto metaInfo = GetMetaInfo(elfData, section, type);
     *numOfMeta = metaInfo.size();
@@ -1667,7 +1671,11 @@ rtError_t GetBinaryMetaInfo(const rtElfData * const elfData, const uint16_t type
 
     Elf_Internal_Shdr *section = nullptr;
     const rtError_t error = GetMetaSection(elfData, section, ELF_SECTION_ASCEND_META);
-    ERROR_RETURN(error, "Get meta section failed, ret=%d", error);
+    // 不存在.ascend.meta段
+    if ((error != RT_ERROR_NONE) && (numOfMeta == 0U)) {
+        return RT_ERROR_NONE;
+    }
+    ERROR_RETURN(error, "Get meta section failed, meta type=%u, numOfMeta=%zu, ret=%d", type, numOfMeta, error);
 
     auto metaInfo = GetMetaInfo(elfData, section, type);
     // numOfMeta为0不需要特殊处理
