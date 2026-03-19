@@ -19,9 +19,8 @@ target_include_directories(slog_headers INTERFACE
     $<INSTALL_INTERFACE:include/slog/toolchain>
 )
 
-
-message("Variable value1: ${PRODUCT_SIDE}")
-message("Variable value2: ${PRODUCT}")
+message("PRODUCT_SIDE: ${PRODUCT_SIDE}")
+message("PRODUCT: ${PRODUCT}")
 
 if (${PRODUCT_SIDE} STREQUAL "device")
     set(liblog_type "device")
@@ -33,18 +32,15 @@ endif()
 
 if (${liblog_type} STREQUAL "mdc")
 ############################# [mdc] #########################################
-message("Variable value a")
 add_subdirectory(plog_device_mdc)
 else ()
 ############################# [device] #######################################
-message("Variable value b")
 add_subdirectory(plog_device)
 endif ()
 ############################# [ host ] ########################################
 elseif (${PRODUCT_SIDE} STREQUAL "host")
-message("Variable value c")
 add_subdirectory(plog)
 add_subdirectory(plog_host)
 endif ()
 
-message("Variable value3: ${liblog_type}")
+message("LIBLOG_TYPE: ${liblog_type}")

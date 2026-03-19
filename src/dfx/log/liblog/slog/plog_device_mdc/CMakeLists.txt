@@ -8,7 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-############################# [ascend610/ascend610Lite/ascend610Lite] ####################################
 ############################# libslog.so #################################################################
 set (libslogSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../alog_to_slog.c
@@ -32,18 +31,19 @@ set (libslogSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/library_load.c)
 
 set(libslogHeaderDir
-    ${RUNTIME_DIR}/abl/libc_sec/include
+    ${LIBC_SEC_HEADER}
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/log_buffer
     ${IAM_HEADER_DIR}/include
     ${MDC_LINUX_SDK_DIR}/include
-    ${RUNTIME_DIR}/inc/driver
-    ${RUNTIME_DIR}/manager/resmgr/procmgr/unified_timer/include)
+    ${RUNTIME_DIR}/include/driver
+    ${RUNTIME_DIR}/../manager/resmgr/procmgr/unified_timer/include)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 
+############################# libalog.so #################################################################
 add_library(slog
     SHARED
         ${libslogSrcFiles})
@@ -108,29 +108,9 @@ target_link_libraries(slog
         -lrt
         c_sec
     PUBLIC
-        slog_headers
+        $<BUILD_INTERFACE:slog_headers>
 )
 
-if (SLOG_NAME)
-if (${SLOG_NAME} STREQUAL "alog")
-set_target_properties(slog
-    PROPERTIES
-    OUTPUT_NAME ascendalog
-)
-else ()
-set_target_properties(slog
-    PROPERTIES
-    OUTPUT_NAME slog
-)
-endif ()
-else ()
-set_target_properties(slog
-    PROPERTIES
-    OUTPUT_NAME slog
-)
-endif()
-
-############################# [ascend610/ascend610Lite/ascend610Lite] ####################################
 ############################# libalog.so #################################################################
 add_library(alog
     SHARED
@@ -197,7 +177,7 @@ target_link_libraries(alog
         -lrt
         c_sec
     PUBLIC
-        slog_headers
+        $<BUILD_INTERFACE:slog_headers>
 )
 
 set_target_properties(alog
@@ -206,17 +186,15 @@ set_target_properties(alog
     OUTPUT_NAME ascendalog
 )
 
-############################# [ascend610/ascend610Lite/ascend610Lite] ####################################
 ############################# install ####################################################################
-install(TARGETS slog alog
+install(TARGETS alog
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
 
-install(TARGETS slog alog
+install(TARGETS alog
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR} OPTIONAL
 )
 
-############################# [ascend610/ascend610Lite/ascend610Lite] ####################################
 ################################# libunified_npu_log.so(driver) ##########################################
 add_library(unified_slog
     SHARED
@@ -280,7 +258,7 @@ target_link_libraries(unified_slog
         -lrt
         c_sec
     PUBLIC
-        slog_headers
+        $<BUILD_INTERFACE:slog_headers>
 )
 
 set_target_properties(unified_slog
@@ -362,7 +340,7 @@ target_link_libraries(unified_dlog
         -lrt
         c_sec
     PUBLIC
-        slog_headers
+        $<BUILD_INTERFACE:slog_headers>
 )
 
 set_target_properties(unified_dlog
