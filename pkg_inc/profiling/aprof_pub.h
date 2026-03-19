@@ -65,6 +65,7 @@ typedef void* VOID_PTR;
 #define MSPROF_REPORT_ACL_DVPP_BASE_TYPE          0x090000U
 #define MSPROF_REPORT_ACL_GRAPH_BASE_TYPE         0x0A0000U
 #define MSPROF_REPORT_ACL_ATB_BASE_TYPE           0x0B0000U
+#define MSPROF_REPORT_ACL_HIXL_BASE_TYPE          0x0C0000U
 
 /* Msprof report type of model(15000) level, offset: 0x000000 */
 #define MSPROF_REPORT_MODEL_GRAPH_ID_MAP_TYPE    0U         /* type info: graph_id_map */

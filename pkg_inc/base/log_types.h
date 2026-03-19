@@ -58,6 +58,7 @@ enum {
     HDC = 9,                /* HDC */
     DRV = 10,               /* Driver */
     NET = 11,               /* Network */
+    HIXL = 12,              /* Hixl */
     DEVMM = 22,             /* Dlog memory managent */
     KERNEL = 23,            /* Kernel */
     LIBMEDIA = 24,          /* Libmedia */
