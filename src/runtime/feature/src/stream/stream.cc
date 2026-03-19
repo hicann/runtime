@@ -1599,7 +1599,7 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
     rtError_t error = RT_ERROR_NONE;
     const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
     int32_t reportTime = REPORT_TIME_UINT;
-    const int32_t FAST_SYNC_TIMES = 20;
+    const int32_t FAST_SYNC_TIMES = 60;
     int32_t syncTimes = 0;
     while (true) {
         COND_PROC_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT, this->SetNeedSyncFlag(true);,
