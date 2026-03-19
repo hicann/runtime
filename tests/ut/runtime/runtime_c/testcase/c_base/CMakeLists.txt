@@ -42,7 +42,9 @@ target_include_directories(c_base_utest PRIVATE
 )
 
 target_compile_options(c_base_utest PRIVATE
-    -g --coverage -fprofile-arcs -ftest-coverage
+    $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+    $<$<BOOL:${ENABLE_GCOV}>:--coverage,-fprofile-arcs,-ftest-coverage>
+    -g
     -Wall
     -Wextra
     -Werror
@@ -61,7 +63,8 @@ target_link_libraries(c_base_utest
     -Wl,--no-whole-archive
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:c_sec_headers>
-    -lgcov
+    $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+    $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
 )
 
 include_directories(${OPEN_SOURCE_DIR}/boost-1.87.0)

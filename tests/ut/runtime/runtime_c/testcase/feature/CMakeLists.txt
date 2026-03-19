@@ -68,8 +68,9 @@ add_executable(c_feature_linux_utest
 )
 
 target_compile_options(c_feature_linux_utest PRIVATE
-    -fsanitize=address -fsanitize=leak
-    -g --coverage -fprofile-arcs -ftest-coverage
+    $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+    $<$<BOOL:${ENABLE_GCOV}>:--coverage,-fprofile-arcs,-ftest-coverage>
+    -g
     -Wall
     -Wextra
     -Werror
@@ -88,7 +89,8 @@ target_compile_definitions(c_feature_linux_utest PRIVATE
 
 target_link_libraries(c_feature_linux_utest
     PRIVATE
-        -fsanitize=address -fsanitize=leak
+        $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+        $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
         -Wl,--whole-archive
         -Wl,--no-whole-archive
         $<BUILD_INTERFACE:intf_llt_pub>
@@ -98,7 +100,6 @@ target_link_libraries(c_feature_linux_utest
         $<BUILD_INTERFACE:npu_runtime_headers>
         $<BUILD_INTERFACE:npu_runtime_inner_headers>
         c_sec
-        -lgcov
     PUBLIC
 )
 
@@ -121,8 +122,9 @@ add_executable(c_feature_liteos_utest
 )
 
 target_compile_options(c_feature_liteos_utest PRIVATE
-    -fsanitize=address -fsanitize=leak
-    -g --coverage -fprofile-arcs -ftest-coverage
+    $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+    $<$<BOOL:${ENABLE_GCOV}>:--coverage,-fprofile-arcs,-ftest-coverage>
+    -g
     -Wall
     -Wextra
     -Werror
@@ -141,7 +143,8 @@ target_compile_definitions(c_feature_liteos_utest PRIVATE
 
 target_link_libraries(c_feature_liteos_utest
     PRIVATE
-        -fsanitize=address -fsanitize=leak
+        $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
+        $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
         -Wl,--whole-archive
         -Wl,--no-whole-archive
         $<BUILD_INTERFACE:intf_llt_pub>
@@ -151,7 +154,6 @@ target_link_libraries(c_feature_liteos_utest
         $<BUILD_INTERFACE:npu_runtime_headers>
         $<BUILD_INTERFACE:npu_runtime_inner_headers>
         c_sec
-        -lgcov
     PUBLIC
 )
 
