@@ -569,6 +569,7 @@ rtError_t Event::CaptureWaitProcess(Stream * const stm)
         stm->Id_(), tsk->id, static_cast<uint32_t>(error));
     MemWaitValueTaskInfo *memWaitValueTask = &tsk->u.memWaitValueTask;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    memWaitValueTask->event = this;
     error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit wait task, retCode=%#x.",
                          static_cast<uint32_t>(error));
@@ -652,6 +653,7 @@ rtError_t Event::CaptureResetProcess(Stream * const stm)
     tsk->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
     MemWriteValueTaskInfo *memWriteValueTask = &tsk->u.memWriteValueTask;
  	memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    memWriteValueTask->event = this;
  	const rtError_t error = dev->SubmitTask(tsk);
     ERROR_RETURN_MSG_INNER(error, "Failed to submit reset task, retCode=%#x.",
                          static_cast<uint32_t>(error));

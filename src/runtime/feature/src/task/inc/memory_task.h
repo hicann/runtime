@@ -13,6 +13,7 @@
 #include "driver.hpp"
 #include "stars.hpp"
 #include "event.hpp"
+#include "rt_inner_task.h"
 namespace cce {
 namespace runtime {
 
@@ -58,6 +59,17 @@ rtError_t UpdateTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, v
 rtError_t UpdateLabelSwitchTask(TaskInfo * const updateTask);
 
 void ReleaseCpyTmpMem(TaskInfo * const taskInfo);
+
+rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+
+rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t GetWaitValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+
+rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params);
+
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_MEMORY_TASK_H

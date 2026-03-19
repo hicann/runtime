@@ -62,6 +62,7 @@
 #include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
+#include "event_task.h"
 #include "kernel_utils.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
@@ -8974,12 +8975,37 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
     (void)memset_s(params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
-    error = GetTaskType(taskInfo, &params->type);
+    error = ConvertTaskType(taskInfo, &params->type);
     ERROR_RETURN(error, "get task type failed, retCode=%d.", error);
     switch (taskInfo->type) {
         case TS_TASK_TYPE_KERNEL_AICORE:
         case TS_TASK_TYPE_KERNEL_AIVEC:
             error = GetKernelTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_EVENT_RECORD:
+            error = GetEventRecordTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_STREAM_WAIT_EVENT:
+            error = GetEventWaitTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_EVENT_RESET:
+            error = GetEventResetTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_CAPTURE_RECORD:
+            error = GetCaptureRecordTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT:
+            error = GetCaptureWaitTaskParams(taskInfo, params);
+            break;
+        case TS_TASK_TYPE_MEM_WRITE_VALUE:
+            if (strcmp(taskInfo->typeName, "EVENT_RESET") == 0) {
+                error = GetCaptureResetTaskParams(taskInfo, params);
+            } else {
+                error = GetWriteValueTaskParams(taskInfo, params);
+            }
+            break;
+        case TS_TASK_TYPE_MEM_WAIT_VALUE:
+            error = GetWaitValueTaskParams(taskInfo, params);
             break;
         default:
             RT_LOG(
@@ -9006,6 +9032,18 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     switch (params->type) {
         case RT_TASK_KERNEL:
             error = UpdateKernelParams(taskInfo, params);
+            break;
+        case RT_TASK_EVENT_RECORD:
+        case RT_TASK_EVENT_WAIT:
+        case RT_TASK_EVENT_RESET:
+            RT_LOG(RT_LOG_ERROR, "cannot update the event task params yet");
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+        case RT_TASK_VALUE_WRITE:
+            error = UpdateWriteValueTaskParams(taskInfo, params);
+            break;
+        case RT_TASK_VALUE_WAIT:
+            error = UpdateWaitValueTaskParams(taskInfo, params);
             break;
         default:
             RT_LOG_OUTER_MSG_INVALID_PARAM(params->type, "[0, " + std::to_string(RT_TASK_VALUE_WAIT) + "]");
@@ -9078,7 +9116,7 @@ rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *nu
 rtError_t ApiImpl::TaskGetType(rtTask_t task, rtTaskType *type)
 {
     const TaskInfo* const taskInfo = static_cast<const TaskInfo * const>(task);
-    return GetTaskType(taskInfo, type);
+    return ConvertTaskType(taskInfo, type);
 }
 
 rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)

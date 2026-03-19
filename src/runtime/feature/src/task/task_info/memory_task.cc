@@ -21,6 +21,8 @@
 #include "inner_thread_local.hpp"
 #include "model_update_task.h"
 #include "event.hpp"
+#include "kernel_utils.hpp"
+
 
 namespace cce {
 namespace runtime {
@@ -1967,6 +1969,122 @@ void IpcEventDestroy(IpcEvent **eventPtr, int32_t freeId, bool isNeedDestroy)
         delete *eventPtr;
         (*eventPtr) = nullptr;
     }
+}
+
+rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_RECORD;
+    params->taskGrp = nullptr;
+    params->opInfoPtr = nullptr;
+    params->opInfoSize = 0U;
+    params->eventRecordTaskParams.event = taskInfo->u.memWriteValueTask.event;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_WAIT;
+    params->taskGrp = nullptr;
+    params->opInfoPtr = nullptr;
+    params->opInfoSize = 0U;
+    params->eventWaitTaskParams.event = taskInfo->u.memWaitValueTask.event;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_RESET;
+    params->taskGrp = nullptr;
+    params->opInfoPtr = nullptr;
+    params->opInfoSize = 0U;
+    params->eventResetTaskParams.event = taskInfo->u.memWriteValueTask.event;
+
+    return RT_ERROR_NONE;
+}
+
+
+rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_VALUE_WRITE;
+    params->taskGrp = nullptr;
+    params->opInfoPtr = nullptr;
+    params->opInfoSize = 0U;
+    params->valueWriteTaskParams.devAddr = RtValueToPtr<void*>(taskInfo->u.memWriteValueTask.devAddr);
+    params->valueWriteTaskParams.value = taskInfo->u.memWriteValueTask.value;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetWaitValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_VALUE_WAIT;
+    params->taskGrp = nullptr;
+    params->opInfoPtr = nullptr;
+    params->opInfoSize = 0U;
+    params->valueWaitTaskParams.devAddr = RtValueToPtr<void*>(taskInfo->u.memWaitValueTask.devAddr);
+    params->valueWaitTaskParams.value = taskInfo->u.memWaitValueTask.value;
+    params->valueWaitTaskParams.flag = taskInfo->u.memWaitValueTask.flag;
+
+    return RT_ERROR_NONE;
+}
+
+static rtError_t CheckUpdatingTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    rtTaskType taskType;
+    rtError_t error = ConvertTaskType(taskInfo, &taskType);
+    ERROR_RETURN(error, "get task type failed, retCode=%d.", error);
+    // RT_TASK_DEFAULT表示外部不识别的类型，报错并打印RTS内部具体的Task类型
+    COND_RETURN_ERROR(taskType == RT_TASK_DEFAULT, RT_ERROR_INVALID_VALUE,
+        "current taskType(%d) is invalid", taskInfo->type);
+
+    COND_RETURN_ERROR(params->taskGrp != nullptr, RT_ERROR_INVALID_VALUE, "taskGrp must be nullptr");
+    COND_RETURN_ERROR(params->opInfoPtr != nullptr, RT_ERROR_INVALID_VALUE, "opInfoPtr must be nullptr");
+    COND_RETURN_ERROR(params->opInfoSize != 0U, RT_ERROR_INVALID_VALUE, "opInfoSize must be 0");
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "check input value failed");
+
+    TaskUnInitProc(taskInfo);
+    (void)MemWriteValueTaskInit(taskInfo, params->valueWriteTaskParams.devAddr, params->valueWriteTaskParams.value);
+    taskInfo->u.memWriteValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
+    taskInfo->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    taskInfo->typeName = "MEM_WRITE_VALUE";
+
+    Stream* stm = taskInfo->stream;
+    Device* dev = stm->Device_();
+    RT_LOG(RT_LOG_INFO, "update or convert to ValueWrite task succ: device_id=%u, stream_id=%d task_id=%hu, "
+        "typeName=%s, taskType=%d, devAddr=%llu, value=%llu",
+        dev->Id_(), stm->Id_(), taskInfo->id,
+        taskInfo->typeName, taskInfo->type, taskInfo->u.memWaitValueTask.devAddr, taskInfo->u.memWaitValueTask.value);
+    return RT_ERROR_NONE;
+}
+
+rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "check input value failed");
+
+    TaskUnInitProc(taskInfo);
+    rtError_t error = MemWaitValueTaskInit(taskInfo, params->valueWaitTaskParams.devAddr,
+        params->valueWaitTaskParams.value, params->valueWaitTaskParams.flag);
+    ERROR_RETURN_MSG_INNER(error, "mem wait value init failed, retCode=%#x.", static_cast<uint32_t>(error));
+    taskInfo->u.memWaitValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
+    taskInfo->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    taskInfo->typeName = "MEM_WAIT_VALUE";
+
+    Stream* stm = taskInfo->stream;
+    Device* dev = stm->Device_();
+    RT_LOG(RT_LOG_INFO, "update or convert to ValueWait task succ: device_id=%u, stream_id=%d task_id=%hu, "
+        "typeName=%s, taskType=%d, devAddr=%llu, value=%llu, flag=%u",
+        dev->Id_(), stm->Id_(), taskInfo->id,
+        taskInfo->typeName, taskInfo->type, taskInfo->u.memWaitValueTask.devAddr,
+        taskInfo->u.memWaitValueTask.value, taskInfo->u.memWaitValueTask.flag);
+    return RT_ERROR_NONE;
 }
 
 #endif

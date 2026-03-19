@@ -59,7 +59,7 @@ void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio)
     }
 }
 
-rtError_t GetTaskType(const TaskInfo * const task, rtTaskType *type)
+rtError_t ConvertTaskType(const TaskInfo * const task, rtTaskType *type)
 {
     if (task->stream == nullptr) {
         RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);

@@ -12,6 +12,7 @@
 
 #include "driver.hpp"
 #include "stars.hpp"
+#include "rt_inner_task.h"
 
 namespace cce {
 namespace runtime {
@@ -33,6 +34,9 @@ void DoCompleteSuccessForEventWaitTask(TaskInfo *const taskInfo, const uint32_t 
 void ConstructSqeForEventWaitTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
 void PrintErrorInfoForEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
 void SetStarsResultForEventWaitTask(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);
+rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
+rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 }  // namespace runtime
 }  // namespace cce
 #endif

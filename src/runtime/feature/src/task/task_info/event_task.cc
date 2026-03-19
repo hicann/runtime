@@ -620,6 +620,30 @@ void SetStarsResultForEventWaitTask(TaskInfo *taskInfo, const rtLogicCqReport_t 
 {
     taskInfo->errorCode = logicCq.errorCode;
 }
+
+rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_RECORD;
+    params->eventRecordTaskParams.event = taskInfo->u.eventRecordTaskInfo.event;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_WAIT;
+    params->eventWaitTaskParams.event = taskInfo->u.eventWaitTaskInfo.event;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_RESET;
+    params->eventResetTaskParams.event = taskInfo->u.eventResetTaskInfo.event;
+
+    return RT_ERROR_NONE;
+}
 #endif
 }  // namespace runtime
 }  // namespace cce

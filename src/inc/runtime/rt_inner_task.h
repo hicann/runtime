@@ -37,6 +37,29 @@ typedef struct rtKernelTaskParams {
     uint32_t rsv[10];
 } rtKernelTaskParams;
 
+typedef struct rtEventRecordTaskParams {
+    rtEvent_t event;
+} rtEventRecordTaskParams;
+
+typedef struct rtEventWaitTaskParams {
+    rtEvent_t event;
+} rtEventWaitTaskParams;
+
+typedef struct rtEventResetTaskParams {
+    rtEvent_t event;
+} rtEventResetTaskParams;
+
+typedef struct rtValueWriteTaskParams {
+    void* devAddr;
+    uint64_t value;
+} rtValueWriteTaskParams;
+
+typedef struct rtValueWaitTaskParams {
+    void* devAddr;
+    uint64_t value;
+    uint32_t flag;
+} rtValueWaitTaskParams;
+
 typedef struct rtTaskParams {
     rtTaskType type;
     uint32_t rsv0[3];
@@ -48,6 +71,11 @@ typedef struct rtTaskParams {
     union {
         uint8_t rsv2[128];
         struct rtKernelTaskParams kernelTaskParams;
+        struct rtEventRecordTaskParams eventRecordTaskParams;
+        struct rtEventWaitTaskParams eventWaitTaskParams;
+        struct rtEventResetTaskParams eventResetTaskParams;
+        struct rtValueWriteTaskParams valueWriteTaskParams;
+        struct rtValueWaitTaskParams valueWaitTaskParams;
     };
 } rtTaskParams;
 

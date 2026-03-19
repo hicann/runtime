@@ -365,3 +365,210 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDefault_Success)
 
     GlobalMockObject::verify();
 }
+
+void CreateEventTaskModel(rtStream_t& stream, rtStream_t& stream2, rtEvent_t& event, rtEvent_t& event2,
+    rtModel_t& model)
+{
+    rtError_t ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamCreate(&stream2, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    
+    ret = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtEventCreateExWithFlag(&event2, RT_EVENT_WITH_FLAG);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+
+    ret = rtEventRecord(event, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamWaitEvent(stream2, event);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtEventRecord(event2, stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamWaitEvent(stream, event2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskEventParam001)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    rtStream_t stream2;
+    rtEvent_t event;
+    rtEvent_t event2;
+    rtModel_t model;
+    CreateEventTaskModel(stream, stream2, event, event2, model);
+
+    uint32_t numStreams = 2;
+    rtStream_t inputStreams[numStreams];
+    ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(numStreams, 2);
+
+    uint32_t numTask = 4;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[1], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtTaskParams params;
+    ret = rtModelTaskGetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_RECORD);
+    ret = rtModelTaskSetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, 107000);
+
+    ret = rtModelTaskGetParams(inputTasks[1], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_WAIT);
+
+    ret = rtModelTaskGetParams(inputTasks[2], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_RESET);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtEventDestroy(event);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtEventDestroy(event2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}
+
+void CreateValueTaskModel(rtStream_t& stream, rtModel_t& model, void *addr)
+{
+    rtError_t ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+
+    ret = rtsValueWrite(addr, 1, 0, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtsValueWait(addr, 1, 0, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskGetValueParam001)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    rtModel_t model;
+    void *devAddr;
+    ret = rtMalloc(&devAddr, 64U, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    CreateValueTaskModel(stream, model, devAddr);
+
+    uint32_t numStreams = 1;
+    rtStream_t inputStreams[numStreams];
+    ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 2;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtTaskParams params;
+    ret = rtModelTaskGetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_VALUE_WRITE);
+    ret = rtModelTaskGetParams(inputTasks[1], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_VALUE_WAIT);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtFree(devAddr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam001)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    rtModel_t model;
+    void *addr;
+    ret = rtMalloc(&addr, 1024U, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    CreateValueTaskModel(stream, model, addr);
+
+    uint32_t numStreams = 1;
+    rtStream_t inputStreams[numStreams];
+    ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 2;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtTaskParams params;
+    ret = rtModelTaskGetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_VALUE_WRITE);
+    params.type = RT_TASK_VALUE_WAIT;
+    ret = rtModelTaskSetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelTaskGetParams(inputTasks[1], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_VALUE_WAIT);
+    params.type = RT_TASK_VALUE_WRITE;
+    ret = rtModelTaskSetParams(inputTasks[0], &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtFree(addr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}

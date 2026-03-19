@@ -530,6 +530,29 @@ typedef struct aclmdlRIKernelTaskParams {
     uint32_t rsv[10];
 } aclmdlRIKernelTaskParams;
 
+typedef struct aclmdlRIEventRecordTaskParams {
+    aclrtEvent event;
+} aclmdlRIEventRecordTaskParams;
+
+typedef struct aclmdlRIEventWaitTaskParams {
+    aclrtEvent event;
+} aclmdlRIEventWaitTaskParams;
+
+typedef struct aclmdlRIEventResetTaskParams {
+    aclrtEvent event;
+} aclmdlRIEventResetTaskParams;
+
+typedef struct aclmdlRIValueWriteTaskParams {
+    void* devAddr;
+    uint64_t value;
+} aclmdlRIValueWriteTaskParams;
+
+typedef struct aclmdlRIValueWaitTaskParams {
+    void* devAddr;
+    uint64_t value;
+    uint32_t flag;
+} aclmdlRIValueWaitTaskParams;
+
 typedef struct aclmdlRITaskParams {
     aclmdlRITaskType type;
     uint32_t rsv0[3];
@@ -541,6 +564,11 @@ typedef struct aclmdlRITaskParams {
     union {
         uint8_t rsv2[128];
         struct aclmdlRIKernelTaskParams kernelTaskParams;
+        struct aclmdlRIEventRecordTaskParams eventRecordTaskParams;
+        struct aclmdlRIEventWaitTaskParams eventWaitTaskParams;
+        struct aclmdlRIEventResetTaskParams eventResetTaskParams;
+        struct aclmdlRIValueWriteTaskParams valueWriteTaskParams;
+        struct aclmdlRIValueWaitTaskParams valueWaitTaskParams;
     };
 } aclmdlRITaskParams;
 
