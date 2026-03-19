@@ -5001,6 +5001,18 @@ ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandl
 
 /**
  * @ingroup AscendCL
+ * @brief Find binHandle based on funcHandle
+ *
+ * @param [in] funcHandle   funcHandle
+ * @param [out] binHandle   binHandle
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle);
+
+/**
+ * @ingroup AscendCL
  * @brief get an interprocess handle for a previously allocated event.
  *
  * @param [in]  event  event allocated with ACL_EVENT_IPC flags

@@ -8885,6 +8885,13 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle)
+{
+    Program * const prog = funcHandle->Program_();
+    *binHandle = prog;
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle)
 {
     const rtError_t error = NpuDriver::MemRetainAllocationHandle(virPtr, handle);

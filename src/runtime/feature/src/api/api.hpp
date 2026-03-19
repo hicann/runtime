@@ -810,6 +810,7 @@ public:
     virtual rtError_t EventWorkModeGet(uint8_t *mode) = 0;
 
     virtual rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) = 0;
+    virtual rtError_t FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle) = 0;
     
     virtual rtError_t BinarySetExceptionCallback(Program *binHandle, void *callback, void *userData) = 0;
 

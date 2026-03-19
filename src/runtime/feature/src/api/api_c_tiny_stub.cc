@@ -972,6 +972,14 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle)
+{
+    UNUSED(funcHandle);
+    UNUSED(binHandle);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtModelTaskGetParams(rtTask_t task, rtTaskParams* params)
 {
     UNUSED(task);

@@ -438,6 +438,33 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiKernelTest, TestFunctionGetBinary)
+{
+    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    uint64_t tilingKey = 0;
+    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    rtBinHandle binHandle = nullptr;
+
+    int64_t attrValue = 0;
+    rtError_t error = rtFunctionGetBinary(nullptr, &binHandle);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtFunctionGetBinary(static_cast<rtFuncHandle>(&kernel), nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtFunctionGetBinary(static_cast<rtFuncHandle>(&kernel), &binHandle);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    ApiImpl apiImpl;
+    Program* programHandle;
+    error = apiImpl.FunctionGetBinary(&kernel, &programHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ApiDecorator apiDecorator(&apiImpl);
+    error = apiDecorator.FunctionGetBinary(&kernel, &programHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
 {
     ElfProgram program(Program::MACH_AI_VECTOR);

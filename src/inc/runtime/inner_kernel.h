@@ -42,12 +42,21 @@ RTS_API rtError_t rtGetStackBuffer(const rtBinHandle binHandle, uint32_t deviceI
  * @ingroup rt_kernel
  * @brief get kernel size, if kernel is mix, the output param aicSize and aivSize are both valid,
  * otherwise, there will be only one valid size.
- * @param funcHandle the kernel
- * @param aicSize output param: kernel size of aicore
- * @param aivSize output param: kernel size of aivector
+ * @param [in] funcHandle the kernel
+ * @param [out] aicSize   kernel size of aicube
+ * @param [out] aivSize   kernel size of aivector
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize);
+
+/**
+ * @ingroup rt_kernel
+ * @brief Find binHandle based on funcHandle.
+ * @param [in] funcHandle  the kernel
+ * @param [out] binHandle  bin handle
+ * @return RT_ERROR_NONE for ok
+ */
+RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle);
 
 #if defined(__cplusplus)
 }

@@ -1246,6 +1246,13 @@ rtError_t aclStub::rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribu
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle)
+{
+    (void)funcHandle;
+    (void)binHandle;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtModelDebugDotPrint(rtModel_t mdl)
 {
     (void)mdl;
@@ -3555,6 +3562,11 @@ rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSiz
 rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
     return MockFunctionTest::aclStubInstance().rtFunctionGetAttribute(funcHandle, attrType, attrValue);
+}
+
+rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle)
+{
+    return MockFunctionTest::aclStubInstance().rtFunctionGetBinary(funcHandle, binHandle);
 }
 
 rtError_t rtModelDebugDotPrint(rtModel_t mdl)

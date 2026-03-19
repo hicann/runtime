@@ -781,6 +781,7 @@ private:
     rtError_t CheckMemCpyAttr(const void * const dst, const void * const src, const rtMemcpyBatchAttr &memAttr,
         rtPtrAttributes_t &dstAttr, rtPtrAttributes_t &srcAttr);
     rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) override;
+    rtError_t FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle) override;
 
     // task
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;

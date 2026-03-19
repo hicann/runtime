@@ -33,7 +33,6 @@
 #include "runtime/rt_preload_task.h"
 #include "runtime/rt_stars.h"
 #include "runtime/rt_model.h"
-#include "runtime/rt_inner_model.h"
 #include "runtime/rts/rts_model.h"
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
@@ -317,6 +316,7 @@ public:
     virtual rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t *captureMdl);
     virtual rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize);
     virtual rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue);
+    virtual rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle);
 
     virtual rtError_t rtModelDebugDotPrint(rtModel_t mdl);
     virtual rtError_t rtModelDebugJsonPrint(rtModel_t mdl, const char *path, uint32_t flags);
@@ -782,6 +782,7 @@ public:
     MOCK_METHOD2(rtStreamEndCapture, rtError_t(rtStream_t stm, rtModel_t *captureMdl));
     MOCK_METHOD2(rtCacheLastTaskOpInfo, rtError_t(const void * const infoPtr, const size_t infoSize));
     MOCK_METHOD3(rtFunctionGetAttribute, rtError_t(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue));
+    MOCK_METHOD2(rtFunctionGetBinary, rtError_t(const rtFuncHandle funcHandle, rtBinHandle *binHandle));
     MOCK_METHOD1(rtModelDebugDotPrint, rtError_t(rtModel_t mdl));
     MOCK_METHOD3(rtModelDebugJsonPrint, rtError_t(rtModel_t mdl, const char *path, uint32_t flags));
     MOCK_METHOD1(rtThreadExchangeCaptureMode, rtError_t(rtStreamCaptureMode *mode));

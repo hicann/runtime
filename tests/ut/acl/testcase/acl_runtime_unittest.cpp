@@ -6964,6 +6964,21 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAttribute)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetBinary)
+{
+    aclrtFuncHandle funcHandle = (aclrtFuncHandle)0x01;
+    aclrtBinHandle binHandle = nullptr;
+
+    auto ret = aclrtFunctionGetBinary(funcHandle, &binHandle);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtFunctionGetBinary(_, _))
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    ret = aclrtFunctionGetBinary(funcHandle, &binHandle);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtReserveMemAddressNoUCMemory)
 {
     void *virPtr = nullptr;

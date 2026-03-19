@@ -10,11 +10,10 @@
 
 #include "acl_rt_impl.h"
 #include "runtime/rt_model.h"
-#include "runtime/rt_inner_model.h"
 #include "runtime/stream.h"
 #include "runtime/rts/rts_model.h"
-#include "runtime/rt_inner_model.h"
 #include "runtime/rts/rts_stream.h"
+#include "runtime/rt_inner_model.h"
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"

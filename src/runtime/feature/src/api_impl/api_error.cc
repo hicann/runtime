@@ -6302,6 +6302,13 @@ rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFun
     return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
 }
 
+rtError_t ApiErrorDecorator::FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle)
+{
+    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
+    return impl_->FunctionGetBinary(funcHandle, binHandle);
+}
+
 rtError_t ApiErrorDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle)
 {
     NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);

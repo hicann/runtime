@@ -719,6 +719,16 @@ aclError aclmdlRITaskGetSeqIdImpl(aclmdlRITask task, uint32_t *id)
     return ACL_SUCCESS;
 }
 
+aclError aclrtFunctionGetBinaryImpl(const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle)
+{
+    const rtError_t rtErr = rtFunctionGetBinary(funcHandle, binHandle);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("rtFunctionGetBinary failed, runtime result = %d.", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclmdlRITaskGetTypeImpl(aclmdlRITask task, aclmdlRITaskType *type)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetType);

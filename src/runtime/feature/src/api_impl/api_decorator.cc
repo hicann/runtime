@@ -2522,6 +2522,11 @@ rtError_t ApiDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttr
     return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
 }
 
+rtError_t ApiDecorator::FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle)
+{
+    return impl_->FunctionGetBinary(funcHandle, binHandle);
+}
+
 rtError_t ApiDecorator::MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 {
     return impl_->MemGetAddressRange(ptr, pbase, psize);
