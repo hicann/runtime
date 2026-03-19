@@ -584,11 +584,6 @@ rtError_t ApiDecorator::MemAdvise(void *devPtr, uint64_t count, uint32_t advise)
     return impl_->MemAdvise(devPtr, count, advise);
 }
 
-rtError_t ApiDecorator::MemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
-{
-    return impl_->MemManagedAdvise(ptr, size, advise, location);
-}
-
 rtError_t ApiDecorator::DevMallocCached(void ** const devPtr, const uint64_t size, const rtMemType_t type,
     const uint16_t moduleId)
 {
@@ -742,17 +737,6 @@ rtError_t ApiDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t *
 rtError_t ApiDecorator::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
     return impl_->PointerGetAttributes(attributes, ptr);
-}
-
-rtError_t ApiDecorator::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
-{
-    return impl_->MemManagedGetAttr(attribute, ptr, size, data, dataSize);
-}
-
-rtError_t ApiDecorator::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes)
-{
-    return impl_->MemManagedGetAttrs(attributes, numAttributes, ptr, size, data, dataSizes);
 }
 
 rtError_t ApiDecorator::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes)

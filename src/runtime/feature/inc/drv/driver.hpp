@@ -27,7 +27,6 @@
 #include "hwts.hpp"
 #include "stars.hpp"
 #include "device_properties.h"
-#include "rt_inner_mem.h"
 
 namespace cce {
 namespace runtime {
@@ -185,7 +184,6 @@ public:
     virtual rtError_t ManagedMemFree(const void * const dptr) = 0;
 
     virtual rtError_t MemAdvise(void *devPtr, uint64_t cnt, uint32_t advise, uint32_t devid) = 0;
-    virtual rtError_t MemManagedAdvise(const void *const Ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location) = 0;
     virtual rtError_t MemSetSync(const void * const devPtr, const uint64_t destMax,
                                  const uint32_t val, const uint64_t cnt) = 0;
 
@@ -202,11 +200,6 @@ public:
                                    size_t * const freeSize, size_t * const totalSize) = 0;
 
     virtual rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) = 0;
-
-    virtual rtError_t MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize) = 0;
-
-    virtual rtError_t MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                      size_t size, void **data, size_t *dataSizes) = 0;
 
     virtual rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes) = 0;
 

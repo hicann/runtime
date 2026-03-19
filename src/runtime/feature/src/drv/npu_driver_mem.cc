@@ -731,26 +731,6 @@ rtError_t NpuDriver::MemAdvise(void * const devPtr, const uint64_t cnt, const ui
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::MemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
-{
-    COND_RETURN_WARN(&halMemManagedAdvise == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
-        "[drv api] halMemManagedAdvise does not exist.");
-    
-    struct drv_uvm_location drvUvmLocation;
-    drvUvmLocation.type = static_cast<drv_uvm_location_type>(location.type);
-    drvUvmLocation.id = location.id;
-    const drvError_t drvRet = halMemManagedAdvise(RtPtrToPtr<DVdeviceptr>(ptr),
-        static_cast<size_t>(size), advise, drvUvmLocation);
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "[drv api] MemManagedAdvise failed: size=%" PRIu64 ", advise=%hu, drvRetCode=%u", size,
-                        advise, static_cast<uint32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-    RT_LOG(RT_LOG_INFO, "MemManagedAdvise success, advise=%hu", advise);
-
-    return RT_ERROR_NONE;
-}
-
 /* ========================================================
  * Subcategory: Alloc and Free
  * ======================================================== */
@@ -2014,37 +1994,6 @@ rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t * const attribut
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
-{
-    TIMESTAMP_NAME(__func__);
-    COND_RETURN_WARN(&halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halMemManagedRangeGetAttributes does not support.");
-    size_t attribute_num = 1U;
-    const drvError_t drvRet = halMemManagedRangeGetAttributes(&data, &dataSize, RtPtrToPtr<uint32_t *>(&attribute), attribute_num, (DVdeviceptr)(uintptr_t)(ptr), size);
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "[drv api] halMemManagedRangeGetAttributes failed: drvRetCode=%d!",
-                        static_cast<int32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-
-    return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)
-{
-    TIMESTAMP_NAME(__func__);
-    COND_RETURN_WARN(&halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halMemManagedRangeGetAttributes does not support.");
-    const drvError_t drvRet = halMemManagedRangeGetAttributes(data, dataSizes, RtPtrToPtr<uint32_t *>(attributes), numAttributes, (DVdeviceptr)(uintptr_t)(ptr), size);
-    if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "[drv api] halMemManagedRangeGetAttributes failed: drvRetCode=%d!",
-                        static_cast<int32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
-    }
-
-    return RT_ERROR_NONE;
-}
-
 rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes)
 {
     TIMESTAMP_NAME(__func__);
@@ -2124,9 +2073,6 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         realLocation = RT_MEMORY_LOC_HOST; // to be check
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
         location = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
-        realLocation = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_UVM)) != 0U) {
-        location = RT_MEMORY_LOC_UVM_MANAGED;
         realLocation = RT_MEMORY_LOC_HOST;
     } else {
         RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);

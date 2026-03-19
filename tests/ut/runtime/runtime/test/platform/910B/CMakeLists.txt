@@ -76,7 +76,6 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_dqs.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_snapshot.cc
-    ${TOP_DIR}/src/runtime/feature/src/api/api_c_uvm.cc
 )
 
 set(runtimeut_src_context_list
@@ -210,9 +209,6 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/feature/src/config.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context_standard_soc.cc
@@ -398,7 +394,6 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/src/kernel
     ${TOP_DIR}/src/runtime/feature/src/kernel/arg_loader
     ${TOP_DIR}/src/runtime/feature/src/kernel/args
-    ${TOP_DIR}/src/runtime/feature/src/uvm
     ${TOP_DIR}/src
     ${TOP_DIR}/src/inc/runtime
     ${TOP_DIR}/src/runtime/raw_driver
@@ -610,7 +605,6 @@ add_executable(runtime_utest_api_910B
     rt_utest_profiler.cc
     rt_utest_api_others.cc
     rt_utest_api_910b.cc
-    rt_utest_uvm.cc
 )
 
 target_compile_definitions(runtime_utest_api_910B PUBLIC

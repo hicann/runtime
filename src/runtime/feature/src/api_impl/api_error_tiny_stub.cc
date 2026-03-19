@@ -284,36 +284,5 @@ rtError_t ApiErrorDecorator::XpuProfilingCommandHandle(uint32_t type, void *data
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::MemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(advise);
-    UNUSED(location);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
-{
-    UNUSED(attribute);
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(data);
-    UNUSED(dataSize);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes)
-{
-    UNUSED(attributes);
-    UNUSED(numAttributes);
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(data);
-    UNUSED(dataSizes);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 }
 }

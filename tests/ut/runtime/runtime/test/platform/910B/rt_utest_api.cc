@@ -225,7 +225,6 @@ TEST_F(CloudV2ApiTest, memory_advise)
     error = rtMemFreeManaged(ptr);
     delete profiler;
 }
-
 TEST_F(CloudV2ApiTest, ipc_memory_success){
     rtError_t error;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();

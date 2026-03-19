@@ -36,8 +36,6 @@ TIMESTAMP_DEFINE(rtsHostUnregister);
 TIMESTAMP_DEFINE(rtHostMemMapCapabilities);
 TIMESTAMP_DEFINE(rtHostGetDevicePointer);
 TIMESTAMP_DEFINE(rtsPointerGetAttributes);
-TIMESTAMP_DEFINE(rtMemManagedGetAttr);
-TIMESTAMP_DEFINE(rtMemManagedGetAttrs);
 TIMESTAMP_DEFINE(rtsMemcpy);
 TIMESTAMP_DEFINE(rtsMemcpyBatch);
 TIMESTAMP_DEFINE(rtsMemcpyBatchAsync);

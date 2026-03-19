@@ -17,9 +17,6 @@ int __attribute__((weak)) halMbufSetDataLen(Mbuf *mbufPtr, uint64_t len);
 int __attribute__((weak)) halMbufGetDataLen(Mbuf *mbuf, uint64_t *len);
 drvError_t __attribute__((weak)) halBufEventReport(const char *grpName);
 drvError_t __attribute__((weak)) halMemAdvise(DVdeviceptr ptr, size_t count, unsigned int type, DVdevice device);
-drvError_t __attribute__((weak)) halMemManagedAdvise(DVdeviceptr ptr, size_t size, uint32_t advise, struct drv_uvm_location location);
-drvError_t __attribute__((weak)) halMemManagedRangeGetAttributes(void **data, size_t *data_sizes, uint32_t *attributes,
-                                                            size_t attribute_num, DVdeviceptr ptr, size_t size);
 drvError_t __attribute__((weak)) halMemcpySumbit(struct DMA_ADDR *dma_addr, int32_t flag);
 drvError_t __attribute__((weak)) halMemcpyWait(struct DMA_ADDR *dma_addr);
 drvError_t __attribute__((weak)) halResourceInfoQuery(uint32_t devId, uint32_t tsId, drvResourceType_t type,

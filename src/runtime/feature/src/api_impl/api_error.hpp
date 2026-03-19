@@ -182,7 +182,6 @@ public:
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t ManagedMemFree(const void * const ptr) override;
     rtError_t MemAdvise(void *devPtr, uint64_t count, uint32_t advise) override;
-    rtError_t MemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location) override;
     rtError_t FlushCache(const uint64_t base, const size_t len) override;
     rtError_t InvalidCache(const uint64_t base, const size_t len) override;
     rtError_t MemCopySync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,
@@ -216,9 +215,6 @@ public:
     rtError_t MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize,
         size_t * const totalSize) override;
     rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) override;
-    rtError_t MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize) override;
-    rtError_t MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes) override;
     rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes) override;
     rtError_t MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId) override;
     rtError_t MemCopy2DSync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,

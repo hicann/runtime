@@ -87,8 +87,6 @@ public:
 
     rtError_t MemAdvise(void * const devPtr, const uint64_t cnt, const uint32_t advise, const uint32_t devid) override;
 
-    rtError_t MemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location) override;
-
     rtError_t MemGetInfo(const uint32_t deviceId, bool isHugeOnly, size_t * const freeSize, size_t * const totalSize) override;
 
     rtError_t MemGetInfoByType(const uint32_t deviceId, const rtMemType_t type, rtMemInfo_t * const info) override;
@@ -102,11 +100,6 @@ public:
                            size_t * const freeSize, size_t * const totalSize) override;
 
     rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) override;
-
-    rtError_t MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize) override;
-
-    rtError_t MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes) override;
 
     rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes) override;
 

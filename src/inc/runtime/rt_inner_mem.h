@@ -52,41 +52,6 @@ typedef enum rtMemPoolReleaseFlag {
     rtMemPoolReleaseFlagAll = 0x2
 } rtMemPoolReleaseFlag;
 
-typedef enum tagRtMemManagedRangeAttribute {
-    rtMemRangeAttributeReadMostly = 1,
-    rtMemRangeAttributePreferredLocation,
-    rtMemRangeAttributeAccessedBy,
-    rtMemRangeAttributePreferredLocationType,
-    rtMemRangeAttributePreferredLocationId,
-    rtMemRangeAttributeLastPrefetchLocation,
-    rtMemRangeAttributeLastPrefetchLocationType,
-    rtMemRangeAttributeLastPrefetchLocationId
-} rtMemManagedRangeAttribute;
-
-typedef enum rtMemManagedAdvise {
-    rtMemAdviseSetReadMostly = 0,
-    rtMemAdviseUnSetReadMostly,
-    rtMemAdviseSetPreferredLocation,
-    rtMemAdviseUnSetPreferredLocation,
-    rtMemAdviseSetAccessedBy,
-    rtMemAdviseUnSetAccessedBy
-} rtMemManagedAdviseType;
-
-typedef enum rtMemManagedLocationType {
-    rtMemLocationTypeInvalid = 0,
-    rtMemLocationTypeDevice,
-    rtMemLocationTypeHost,
-    rtMemLocationTypeHostNuma,
-    rtMemLocationTypeHostNumaCurrent
-} rtMemManagedLocationType;
-
-typedef struct rtMemManagedLocation{
-    rtMemManagedLocationType type;
-    int32_t id;
-} rtMemManagedLocation;
-
-
-
 /**
 * @ingroup rt_mem
 * @brief Create new memory pool.
@@ -173,46 +138,6 @@ RTS_API rtError_t rtMemPoolMallocAsync(void **ptr, const uint64_t size, const rt
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtMemPoolFreeAsync(void* ptr, rtStream_t stm);
-
-/**
- * @ingroup dvrt_mem
- * @brief Set/cancel the properties of a section of UVM memory
- * @param [in] Ptr      memory pointer
- * @param [in] size     memory count
- * @param [in] advise   advise type
- * @param [in] location the location information of physical memory
- * @return RT_ERROR_NONE for ok
- * @return others for error
- */
-RTS_API rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location);
-
-/**
- * @ingroup dvrt_mem
- * @brief query the attribute of UVM memory
- * @param [in] attribute    The type of the attribute
- * @param [in] ptr          memory pointer
- * @param [in] size         memory size
- * @param [out] data        the result of the query
- * @param [in] dataSize     the size of the buffer where the query result are stored  
- * @return RT_ERROR_NONE for ok, errno for failed
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize);
-
-/**
- * @ingroup dvrt_mem
- * @brief query the attributes of UVM memory
- * @param [in] attributes       The type of the attributes
- * @param [in] numAttributes    The number of the attributes
- * @param [in] ptr              memory pointer
- * @param [in] size             memory size
- * @param [out] data            the result of the query
- * @param [in] dataSizes        the size of the buffer where the query result are stored
- * @return RT_ERROR_NONE for ok, errno for failed
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                      size_t size, void **data, size_t *dataSizes);
 
 #if defined(__cplusplus)
 }

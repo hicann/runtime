@@ -110,7 +110,6 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_dqs.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_snapshot.cc
-    ${TOP_DIR}/src/runtime/feature/src/api/api_c_uvm.cc
 )
 
 set(runtimeut_src_david_series_common_c_list
@@ -274,15 +273,12 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/src/api/api_david.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_preload_task.cc
     ${TOP_DIR}/src/runtime/feature/src/api/api_c_snapshot.cc
-    ${TOP_DIR}/src/runtime/feature/src/api/api_c_uvm.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_xpu.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/drv/npu_driver_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/engine/hwts/direct_hwts_engine.cc
@@ -368,9 +364,6 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_creator_c.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/feature/src/config.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context_standard_soc.cc
@@ -521,9 +514,6 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/v200/api_impl_v200.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/feature/src/config.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context_standard_soc.cc
@@ -1160,7 +1150,6 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/src/task/
     ${TOP_DIR}/src/runtime/feature/src/memory/
     ${TOP_DIR}/src/runtime/feature/src/soma/
-    ${TOP_DIR}/src/runtime/feature/src/uvm
     ${TOP_DIR}/src
     ${TOP_DIR}/src/runtime/raw_driver
     ${TOP_DIR}/src/runtime/cmodel_driver
@@ -1318,9 +1307,6 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_error_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/api_impl/api_impl_uvm.cc
-    ${TOP_DIR}/src/runtime/feature/src/uvm/uvm_callback.cc
     ${TOP_DIR}/src/runtime/feature/src/config.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context.cc
     ${TOP_DIR}/src/runtime/feature/src/context/context_standard_soc.cc

@@ -155,8 +155,10 @@ MockFunctionTest& MockFunctionTest::aclStubInstance()
 
 void  MockFunctionTest::ResetToDefaultMock() {
     // delegates the default actions of the RTS methods to aclStub
-    ON_CALL(*this, rtDvppMallocWithFlag).WillByDefault([this](void **devPtr, uint64_t size, uint32_t flag, uint16_t moduleId) {
-      return aclStub::rtDvppMallocWithFlag(devPtr, size, flag, moduleId);});
+    ON_CALL(*this, rtDvppMallocWithFlag)
+        .WillByDefault([this](void **devPtr, uint64_t size, uint32_t flag, uint16_t moduleId) {
+          return aclStub::rtDvppMallocWithFlag(devPtr, size, flag, moduleId);
+        });
     ON_CALL(*this, rtDvppMalloc).WillByDefault([this](void **devPtr, uint64_t size, uint16_t moduleId) {
       return aclStub::rtDvppMalloc(devPtr, size, moduleId);
     });
@@ -169,16 +171,6 @@ void  MockFunctionTest::ResetToDefaultMock() {
     ON_CALL(*this, rtMemAllocManaged).WillByDefault([this](void **ptr, uint64_t size, uint32_t flag, const uint16_t moduleId) {
  	    return aclStub::rtMemAllocManaged(ptr, size, flag, moduleId);
  	});
-    ON_CALL(*this, rtMemManagedAdvise).WillByDefault([this](const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location) {
-        return aclStub::rtMemManagedAdvise(ptr, size, advise, location);
-    });
-    ON_CALL(*this, rtMemManagedGetAttr).WillByDefault([this](rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize) {
-        return aclStub::rtMemManagedGetAttr(attribute, ptr, size, data, dataSize);
-    });
-    ON_CALL(*this, rtMemManagedGetAttrs).WillByDefault([this](rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes) {
-        return aclStub::rtMemManagedGetAttrs(attributes, numAttributes, ptr, size, data, dataSizes);
-    });
     ON_CALL(*this, rtFree).WillByDefault([this](void *devPtr) {
       return aclStub::rtFree(devPtr);
     });
@@ -194,14 +186,22 @@ void  MockFunctionTest::ResetToDefaultMock() {
     ON_CALL(*this, rtFreeHostWithDevSync).WillByDefault([this](void *hostPtr) {
       return aclStub::rtFreeHostWithDevSync(hostPtr);
     });
-    ON_CALL(*this, rtMallocCached).WillByDefault([this](void **devPtr, uint64_t size, rtMemType_t type, uint16_t moduleId) {
-        return aclStub::rtMallocCached(devPtr, size, type, moduleId);});
-    ON_CALL(*this, rtMemcpy).WillByDefault([this](void *dst, uint64_t destMax, const void *src, uint64_t count, rtMemcpyKind_t kind) {
-        return aclStub::rtMemcpy(dst, destMax, src, count, kind);});
-    ON_CALL(*this, GetErrMgrErrorMessage).WillByDefault([this]() {
-        return aclStub::GetErrMgrErrorMessage();});
-    ON_CALL(*this, rtHostMemMapCapabilities).WillByDefault([this](uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) {
-        return aclStub::rtHostMemMapCapabilities(deviceId, hacType, capabilities);});
+    ON_CALL(*this, rtMallocCached)
+        .WillByDefault([this](void **devPtr, uint64_t size, rtMemType_t type, uint16_t moduleId) {
+          return aclStub::rtMallocCached(devPtr, size, type, moduleId);
+        });
+    ON_CALL(*this, rtMemcpy)
+        .WillByDefault([this](void *dst, uint64_t destMax, const void *src, uint64_t count, rtMemcpyKind_t kind) {
+          return aclStub::rtMemcpy(dst, destMax, src, count, kind);
+        });
+    ON_CALL(*this, GetErrMgrErrorMessage)
+        .WillByDefault([this]() {
+          return aclStub::GetErrMgrErrorMessage();
+        });
+    ON_CALL(*this, rtHostMemMapCapabilities)
+        .WillByDefault([this](uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) {
+          return aclStub::rtHostMemMapCapabilities(deviceId, hacType, capabilities);
+        });
 }
 
 

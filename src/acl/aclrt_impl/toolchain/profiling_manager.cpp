@@ -290,9 +290,6 @@ namespace acl {
         {AclProfType::AclmdlRITaskSetParams,                    "aclmdlRITaskSetParams"},
         {AclProfType::AclmdlRIUpdate,                           "aclmdlRIUpdate"},
         {AclProfType::AclmdlRITaskDisable,                      "aclmdlRITaskDisable"},
-        {AclProfType::AclrtMemManagedAdvise,                    "aclrtMemManagedAdvise"},
-        {AclProfType::AclrtMemManagedGetAttr,                   "aclrtMemManagedGetAttr"},
-        {AclProfType::AclrtMemManagedGetAttrs,                  "aclrtMemManagedGetAttrs"},
 };
 
 aclError RegisterType(const uint32_t index) {

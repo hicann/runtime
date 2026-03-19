@@ -70,10 +70,6 @@ public:
 
     // runtime function
     virtual rtError_t rtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag, const uint16_t moduleId);
-    virtual rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location);
-    virtual rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize);
-    virtual rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                        size_t size, void **data, size_t *dataSizes);
     virtual rtError_t rtSubscribeReport(uint64_t threadId, rtStream_t stream);
     virtual rtError_t rtRegTaskFailCallbackByModule(const char *moduleName, rtTaskFailCallback callback);
     virtual rtError_t rtCallbackLaunch(rtCallback_t callBackFunc, void *fnData, rtStream_t stream, bool isBlock);
@@ -569,10 +565,6 @@ public:
     MOCK_METHOD2(TdtHostPopData, int32_t(const std::string &channelName, std::vector<tdt::DataItem> &item));
     // runtime function stub
     MOCK_METHOD4(rtMemAllocManaged, rtError_t(void **ptr, uint64_t size, uint32_t flag, const uint16_t moduleId));
-    MOCK_METHOD4(rtMemManagedAdvise, rtError_t(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location));
-    MOCK_METHOD5(rtMemManagedGetAttr, rtError_t(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize));
-    MOCK_METHOD6(rtMemManagedGetAttrs, rtError_t(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-                                size_t size, void **data, size_t *dataSizes));
     MOCK_METHOD2(rtSubscribeReport, rtError_t(uint64_t threadId, rtStream_t stream));
     MOCK_METHOD2(rtRegTaskFailCallbackByModule, rtError_t(const char *moduleName, rtTaskFailCallback callback));
     MOCK_METHOD4(rtCallbackLaunch, rtError_t(rtCallback_t callBackFunc, void *fnData, rtStream_t stream, bool isBlock));

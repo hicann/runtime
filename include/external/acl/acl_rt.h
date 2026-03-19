@@ -131,28 +131,6 @@ typedef enum aclrtMemcpyKind {
     ACL_MEMCPY_INTER_DEVICE_TO_DEVICE,
 } aclrtMemcpyKind;
 
-typedef enum aclrtMemManagedAdviseType {
-    ACL_MEM_ADVISE_SET_READ_MOSTLY = 0,
-    ACL_MEM_ADVISE_UNSET_READ_MOSTLY,
-    ACL_MEM_ADVISE_SET_PREFERRED_LOCATION,
-    ACL_MEM_ADVISE_UNSET_PREFERRED_LOCATION,
-    ACL_MEM_ADVISE_SET_ACCESSED_BY,
-    ACL_MEM_ADVISE_UNSET_ACCESSED_BY,
-} aclrtMemManagedAdviseType;
-
-typedef enum aclrtMemManagedLocationType {
-    ACL_MEM_LOCATIONTYPE_INVALID = 0,
-    ACL_MEM_LOCATIONTYPE_DEVICE,
-    ACL_MEM_LOCATIONTYPE_HOST,
-    ACL_MEM_LOCATIONTYPE_HOST_NUMA,
-    ACL_MEM_LOCATIONTYPE_HOST_NUMA_CURRENT,
-} aclrtMemManagedLocationType;
-
-typedef struct aclrtMemManagedLocation{
-    aclrtMemManagedLocationType type;
-    int32_t id;
-} aclrtMemManagedLocation;
-
 typedef enum aclrtMemMallocPolicy {
     ACL_MEM_MALLOC_HUGE_FIRST,
     ACL_MEM_MALLOC_HUGE_ONLY,
@@ -312,17 +290,6 @@ typedef struct aclrtMemUsageInfo {
     uint64_t memPeakSize;
     size_t reserved[8];
 } aclrtMemUsageInfo;
-
-typedef enum aclrtMemManagedRangeAttribute {
-    ACL_MEM_RANGE_ATTRIBUTE_READ_MOSTLY = 1,
-    ACL_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION,
-    ACL_MEM_RANGE_ATTRIBUTE_ACCESSED_BY,
-    ACL_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION_TYPE,
-    ACL_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION_ID,
-    ACL_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION,
-    ACL_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION_TYPE,
-    ACL_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION_ID,
-} aclrtMemManagedRangeAttribute;
 
 typedef enum aclrtMemAllocationType {
     ACL_MEM_ALLOCATION_TYPE_PINNED = 0,
@@ -1804,37 +1771,6 @@ ACL_FUNC_VISIBILITY aclError aclrtPointerGetAttributes(const void *ptr,
 
 /**
  * @ingroup AscendCL
- * @brief query the attribute of UVM memory
- *
- * @param attribute [IN]    The type of the attribute
- * @param ptr [IN]          memory pointer
- * @param size [IN]         memory size
- * @param data [OUT]        the result of the query
- * @param dataSize [IN]     the size of the buffer where the query result are stored
- * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues Failure
- */
-ACL_FUNC_VISIBILITY aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const void *ptr, 
-                                                    size_t size, void *data, size_t dataSize);
-
-/**
- * @ingroup AscendCL
- * @brief query the attributes of UVM memory
- *
- * @param attributes [IN]        The type of the attributes
- * @param numAttributes [IN]    The number of the attributes
- * @param ptr [IN]              memory pointer
- * @param size [IN]             memory size
- * @param data [OUT]            the result of the query
- * @param dataSizes [IN]         the size of the buffer where the query results are stored
- * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues Failure
- */
-ACL_FUNC_VISIBILITY aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, 
-                                                     const void *ptr, size_t size, void **data, size_t *dataSizes);
-
-/**
- * @ingroup AscendCL
  * @brief register host memory
  *
  * @param ptr [IN]     memory pointer
@@ -2225,20 +2161,6 @@ ACL_FUNC_VISIBILITY aclError aclrtMemsetAsync(void *devPtr,
                                               size_t count,
                                               aclrtStream stream);
 
-/**
- * @ingroup AscendCL
- * @brief Set/cancel the properties of a section of UVM memory
- *
- * @param ptr [IN]       destination address pointer
- * @param size [IN]      the number of byte to set
- * @param advise [IN]    advise type
- * @param location [IN]  the location information of physical memory
- *
- * @retval ACL_SUCCESS The function is successfully executed.
- * @retval OtherValues Failure
- */
-ACL_FUNC_VISIBILITY aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size,
-                                                    aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location);
 /**
  * @ingroup AscendCL
  * @brief Allocate an address range reservation

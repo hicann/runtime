@@ -281,7 +281,6 @@ public:
         const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t ManagedMemFree(const void * const ptr) = 0;
     virtual rtError_t MemAdvise(void *devPtr, uint64_t count, uint32_t advise) = 0;
-    virtual rtError_t MemManagedAdvise(const void *const Ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location) = 0;
     virtual rtError_t DevMallocCached(void ** const devPtr, const uint64_t size, const rtMemType_t type,
         const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t FlushCache(const uint64_t base, const size_t len) = 0;
@@ -316,10 +315,6 @@ public:
         size_t * const totalSize) = 0;
     virtual rtError_t PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr) = 0;
     virtual rtError_t PtrGetAttributes(const void * const ptr, rtPtrAttributes_t  * const attributes) = 0;
-    virtual rtError_t MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, 
-        size_t dataSize) = 0;
-    virtual rtError_t MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
-        size_t size, void **data, size_t *dataSizes) = 0;
     virtual rtError_t MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId) = 0;
     virtual rtError_t MemCopy2DSync(void * const dst, const uint64_t dstPitch, const void * const src,
         const uint64_t srcPitch, const uint64_t width, const uint64_t height,
