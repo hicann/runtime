@@ -29,6 +29,7 @@ endif()
 
 # 创建临时安装目录
 set(STAGING_DIR "${CPACK_CMAKE_BINARY_DIR}/_CPack_Packages/makeself_staging")
+file(REMOVE_RECURSE "${STAGING_DIR}")
 file(MAKE_DIRECTORY "${STAGING_DIR}")
 
 # 执行安装到临时目录
@@ -41,10 +42,10 @@ if(NOT INSTALL_RESULT EQUAL 0)
     message(FATAL_ERROR "Installation to staging directory failed: ${INSTALL_RESULT}")
 endif()
 
-if(EXISTS "${STAGING_DIR}/subprjs")
+if(CPACK_ENABLE_DEVICE)
     # 解压子工程包
     execute_process(
-        COMMAND tar -zxpf "${STAGING_DIR}/subprjs/device-npu-runtime.tar.gz" -C "${STAGING_DIR}"
+        COMMAND tar --keep-old-files -zxpf "${STAGING_DIR}/subprjs/device-npu-runtime.tar.gz" -C "${STAGING_DIR}"
         RESULT_VARIABLE RETCODE
     )
     if(RETCODE)
