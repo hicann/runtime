@@ -44,7 +44,7 @@ rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t 
                   : totalSmSize;
     if (totalSmSize > maxSmSize) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The size of the dynamic shared memory is %uB, and the size of the"
-                         " shared memory required by the operator kernel is %uB. The sum of these two sizes must be less than %uB.",
+                         " shared memory required by the operator kernel is %uB. The sum of these two sizes must be less than or equal to %uB.",
                          dynamicShareMemSize, kernel->ShareMemSize_(), maxSmSize);
         return RT_ERROR_INVALID_VALUE;
     }
