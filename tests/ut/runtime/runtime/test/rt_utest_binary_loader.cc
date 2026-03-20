@@ -770,11 +770,11 @@ TEST_F(BinaryLoaderTest, TestAdaptKernelAttrType)
     program.elfData_->containsAscendMeta = false;
     program.SetElfMagic(RT_DEV_BINARY_MAGIC_ELF);
     program.AdaptKernelAttrType(&kernelInput, &kernel);
-    EXPECT_EQ(kernel.GetKernelAttrType(), RT_KERNEL_ATTR_TYPE_AICORE);
+    EXPECT_EQ(kernel.GetKernelAttrType(), RT_KERNEL_ATTR_TYPE_VECTOR);
 
     program.SetElfMagic(RT_DEV_BINARY_MAGIC_ELF_AICUBE);
     program.AdaptKernelAttrType(&kernelInput, &kernel);
-    EXPECT_EQ(kernel.GetKernelAttrType(), RT_KERNEL_ATTR_TYPE_CUBE);
+    EXPECT_EQ(kernel.GetKernelAttrType(), RT_KERNEL_ATTR_TYPE_VECTOR);
 
     program.SetElfMagic(RT_DEV_BINARY_MAGIC_ELF_AIVEC);
     program.AdaptKernelAttrType(&kernelInput, &kernel);

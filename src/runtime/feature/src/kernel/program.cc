@@ -1197,7 +1197,7 @@ bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::
 
     if ((kernelTmp->Offset2_() != 0ULL) || (kernelTmp->GetMixType() == mixType)) {
         RT_LOG(RT_LOG_WARNING, "found the previous mix kernel but conflict. found kernel name=[%s], mixType=%hu, "
-            "offset2=%llu, current kernel name=[%s], mixType=%hu", kernelTmp->Name_().c_str(), mixType,
+            "offset2=%u, current kernel name=[%s], mixType=%hu", kernelTmp->Name_().c_str(), mixType,
             kernelTmp->Offset2_(), kernel->name, mixType);
         return false;
     }
@@ -1227,7 +1227,7 @@ bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::
     (void)GetPrefetchCnt(static_cast<Program *>(this), kernelTmp);
     kernelTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
 
-    RT_LOG(RT_LOG_INFO, "proc mix kernel register, kernel name=[%s], offset1=%llu, offset2=%llu, mixType1=%hu, "
+    RT_LOG(RT_LOG_INFO, "proc mix kernel register, kernel name=[%s], offset1=%u, offset2=%u, mixType1=%hu, "
         "mixType2=%hu, final mixType=%hu version=%u, kernelVfType=%u, shareMemSize=%u", kernel->name,
         kernelTmp->Offset_(), kernelTmp->Offset2_(), kernelTmpMixType, 
         mixType, kernelTmp->GetMixType(), mixProcVersion, kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
@@ -1278,7 +1278,7 @@ void ElfProgram::AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel 
         return;
     }
 
-    if (ContainsAscendMeta()) {
+    if (kernelInput->funcType != KERNEL_FUNCTION_TYPE_INVALID) {
         rtError_t error = SetKernelTypeByMetaInfo(kernelInput->funcType, kernelOutput);
         COND_RETURN_NORMAL(error == RT_ERROR_NONE, "funcType=%u", kernelInput->funcType);
     }
