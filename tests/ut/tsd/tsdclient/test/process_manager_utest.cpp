@@ -20,6 +20,7 @@
 #include "inc/hdc_client.h"
 #include "inc/weak_ascend_hal.h"
 #include "src/env_internal_api.h"
+#include "platform_manager_v2.h"
 #undef private
 #undef protected
 
@@ -2993,21 +2994,31 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_load_finish)
     GlobalMockObject::verify();
 }
 
- TEST_F(ProcessManagerTest, GetShortSocVersion_Success) 
- { 
-     MOCKER(halGetSocVersion).stubs().will(invoke(halGetSocVersionStub)); 
-     ProcessModeManager processModeManager(deviceId, 0); 
-     std::string shortSocVersion;
-     const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
-     EXPECT_EQ(shortSocVersion, "Ascend910B"); 
-     EXPECT_EQ(ret, true); 
- }
+TEST_F(ProcessManagerTest, GetShortSocVersion_Success) 
+{ 
+    MOCKER(halGetSocVersion).stubs().will(invoke(halGetSocVersionStub)); 
+    ProcessModeManager processModeManager(deviceId, 0); 
+    std::string shortSocVersion;
+    const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
+    EXPECT_EQ(shortSocVersion, "Ascend910B"); 
+    EXPECT_EQ(ret, true); 
+}
 
 TEST_F(ProcessManagerTest, GetShortSocVersion_halGetSocVersionFailed_Failed) 
- { 
-     MOCKER(halGetSocVersion).stubs().will(returnValue(1)); 
-     ProcessModeManager processModeManager(deviceId, 0); 
-     std::string shortSocVersion;
-     const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
-     EXPECT_EQ(ret, false); 
- }
+{ 
+    MOCKER(halGetSocVersion).stubs().will(returnValue(1)); 
+    ProcessModeManager processModeManager(deviceId, 0); 
+    std::string shortSocVersion;
+    const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
+    EXPECT_EQ(ret, false); 
+}
+
+TEST_F(ProcessManagerTest, GetShortSocVersion_GetSocSpecFailed_Failed) 
+{ 
+    MOCKER(halGetSocVersion).stubs().will(invoke(halGetSocVersionStub));
+    MOCKER_CPP(&PlatformManagerV2::GetSocSpec).stubs().will(returnValue(1));
+    ProcessModeManager processModeManager(deviceId, 0); 
+    std::string shortSocVersion;
+    const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
+    EXPECT_EQ(ret, false); 
+}

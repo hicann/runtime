@@ -29,8 +29,7 @@
 #include "env_internal_api.h"
 #include "inc/package_process_config.h"
 #include "inc/process_util_common.h"
-#include "platform_info.h"
-
+#include "platform_manager_v2.h"
 
 namespace {
 // 每个OS上的1980芯片数目,每个芯片上每一种类型的进程都要创建一个，所以以芯片数为依据
@@ -2380,12 +2379,14 @@ bool ProcessModeManager::GetShortSocVersion(std::string &shortSocVersion) const
         return false;
     }
     TSD_INFO("get soc_version:%s", socVersion);
-    fe::PlatformInfoManager::Instance().InitializePlatformInfo();
-    fe::OptionalInfos optionalInfos;
-    fe::PlatFormInfos platformInfos;
-    fe::PlatformInfoManager::Instance().GetPlatformInfos(socVersion, platformInfos, optionalInfos);
-    auto ret = platformInfos.GetPlatformRes("version", "Short_SoC_version", shortSocVersion);
+    std::string label = "version";
+    std::string key = "Short_SoC_version";
+    const auto ret = PlatformManagerV2::Instance().GetSocSpec(std::string(socVersion), label, key, shortSocVersion);
+    if (ret != TSD_OK) {
+        TSD_RUN_WARN("get short_soc_version by PlatformManagerV2::GetSocSpec failed");
+        return false;
+    }
     TSD_RUN_INFO("get short_soc_version:%s", shortSocVersion.c_str());
-    return ret;
+    return true;
 }
 }  // namespace tsd
