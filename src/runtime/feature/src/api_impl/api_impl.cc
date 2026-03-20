@@ -8862,7 +8862,6 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
         default:
             RT_LOG(RT_LOG_WARNING, "Invalid attrType attrType=%d", attrType);
             break;
-        
     }
     return RT_ERROR_NONE;
 }
