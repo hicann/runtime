@@ -999,7 +999,7 @@ rtError_t NpuDriver::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc,
 rtError_t NpuDriver::EnableP2PNotify(const uint32_t deviceId, const uint32_t peerPhyDeviceId, const uint32_t flag)
 {
     uint32_t phyDeviceId = 0U;
-    rtError_t error = DeviceGetPhyIdByIndex(deviceId, &phyDeviceId);
+    rtError_t error = GetDevicePhyIdByIndex(deviceId, &phyDeviceId);
  	COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     if (phyDeviceId == peerPhyDeviceId) {
         RT_LOG(RT_LOG_INFO, "phyId=%u, peerPhyId=%u, flag=%u", phyDeviceId, peerPhyDeviceId, flag);
