@@ -14,7 +14,7 @@
 
 设置指定任务的参数信息。
 
-调用本接口之前，先调用[aclmdlRIGetTasksByStream](aclmdlRIGetTasksByStream.md)接口获取指定Stream中的所有任务，再根据指定任务更新其参数信息。
+在调用本接口之前，请先调用[aclmdlRIGetTasksByStream](aclmdlRIGetTasksByStream.md)接口获取指定Stream中的所有任务，然后使用[aclmdlRITaskGetParams](aclmdlRITaskGetParams.md)接口获取指定任务的参数信息。如果需要更新参数信息，再调用aclmdlRITaskSetParams接口。
 
 ## 函数原型
 
@@ -27,8 +27,8 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| task | 输入 | 指定任务，类型定义请参见aclmdlRITask。 |
-| params | 输入 | 更新的参数信息，类型定义请参见aclmdlRITaskParams。 |
+| task | 输入 | 指定任务，类型定义请参见[aclmdlRITask](aclmdlRITask.md)。 |
+| params | 输入 | 更新的参数信息，类型定义请参见[aclmdlRITaskParams](aclmdlRITaskParams.md)。 |
 
 ## 返回值说明
 

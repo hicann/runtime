@@ -25,7 +25,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelRI | 输入 | 指定更新的模型，类型定义请参见aclmdlRI。 |
+| modelRI | 输入 | 指定更新的模型，类型定义请参见[aclmdlRI](aclmdlRI.md)。 |
 
 ## 返回值说明
 

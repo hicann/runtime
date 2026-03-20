@@ -27,8 +27,8 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| task | 输入 | 指定任务，类型定义请参见aclmdlRITask。 |
-| params | 输出 | 参数信息，类型定义请参见aclmdlRITaskParams。 |
+| task | 输入 | 指定任务，类型定义请参见[aclmdlRITask](aclmdlRITask.md)。 |
+| params | 输出 | 参数信息，类型定义请参见[aclmdlRITaskParams](aclmdlRITaskParams.md)。 |
 
 ## 返回值说明
 
