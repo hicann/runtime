@@ -13,6 +13,7 @@
 #include "arg_loader.hpp"
 #include "task_res_da.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "inner_thread_local.hpp"
 
 #define TASK_NUM_FOR_HEAD_UPDATE (64U)
 namespace cce {
@@ -56,7 +57,7 @@ bool TaskResManageDavid::IsRecyclePosValid(uint16_t recyclePos) const
 TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
 {
     Device * const dev = Runtime::Instance()->GetDevice(static_cast<uint32_t>(deviceId_),
-        static_cast<uint32_t>(RT_TSC_ID), false);
+        InnerThreadLocalContainer::GetTsId(), false);
     if (dev != nullptr) {
         Stream *stm = nullptr;
         (void)dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
