@@ -352,26 +352,6 @@ rtError_t PoolRegistry::Init()
         return RT_ERROR_NONE;
     }
 
-    void *ptr = nullptr;
-    rtError_t error = NpuDriver::ReserveMemAddress(&ptr, DEVICE_POOL_VADDR_SIZE, 0U, nullptr, 1U);
-    COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_NONE,
-        "SOMA is not supported.");
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_MEMORY_ALLOCATION,
-        "Reserve mem address failed, size=%zu, alignment=%zu, flags=%" PRIx64 ", reCode=%#x", DEVICE_POOL_VADDR_SIZE, 0U, 1U, error);
-    
-    globalSegment_ = SegmentManager::CreateSegment(RtPtrToValue(ptr), DEVICE_POOL_VADDR_SIZE);
-    if (globalSegment_ == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Failed to allocate New Segment: Host out of memory.");
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
-
-    poolAllocator_ = CreateManager(globalSegment_, 0U, false);
-    if (poolAllocator_ == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Failed to allocate New SegmentManager: Host out of memory.");
-        delete globalSegment_;
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
-    RT_LOG(RT_LOG_DEBUG, "Init mem address success, devptr=%" PRIx64 ".", globalSegment_->basePtr);
     return RT_ERROR_NONE;
 }
 

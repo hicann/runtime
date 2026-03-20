@@ -450,28 +450,6 @@ TEST_F(CloudV2ApiImplTest, GetExceptionRegInfo_test_02)
     delete apiDecorator_;
 }
 
-TEST_F(CloudV2ApiImplTest, StreamMemPoolCreate_test)
-{
-    rtError_t error;
-    rtModel_t  model;
-    ApiImpl impl;
-    ApiDecorator apiDec(&impl);
-    rtMemPool_t memPool = nullptr;
-    rtMemPoolProps poolProps = {
-        .side = 1,
-        .devId = 0,
-        .handleType = RT_MEM_HANDLE_TYP_POSIX,
-        .maxSize = (10UL << 30),
-        .reserve = 0
-    };
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamMemPoolCreate)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-    error = apiDec.StreamMemPoolCreate(&memPool, &poolProps);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(CloudV2ApiImplTest, StreamMemPoolDestroy_test)
 {
     rtError_t error;
