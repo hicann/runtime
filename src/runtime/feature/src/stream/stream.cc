@@ -1620,7 +1620,8 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
                           device_->Id_(), streamId_, timeout);
         if (IsProcessTimeout(beginTime, reportTime)) {
             reportTime += REPORT_TIME_UINT;
-            RT_LOG(RT_LOG_EVENT, "report three minutes timeout! stream_id=%u, task_id=%u, pendingNum=%u.", Id_(), taskId, pendingNum_.Value());
+            RT_LOG(RT_LOG_EVENT, "report three minutes timeout! stream_id=%d, sq_id=%u, task_id=%u, flip_num=%u, pendingNum=%u.", Id_(), GetSqId(), taskId,
+                   GetTaskIdFlipNum(), GetPendingNum());
             if (Runtime::Instance()->excptCallBack_ != nullptr) {
                 Runtime::Instance()->excptCallBack_(RT_EXCEPTION_TASK_TIMEOUT);
             }
