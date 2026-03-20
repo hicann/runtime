@@ -402,8 +402,8 @@ static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& ta
     record.pid = std::to_string(pid) + " aclGraph";
     record.tid = "stream" + std::to_string(streamId);
     record.ts = taskDur;
-    taskDur += 10;
-    record.dur = 9.5;
+    taskDur += 10;  // ts表示每个节点的显示位置，表明了流内任务的先后顺序，按照10递增
+    record.dur = 9.5;   // 表示节点的显示宽度，固定为9.5
     record.ph = "X";
     record.args.modelId = modelId;
     record.args.streamId = streamId;
