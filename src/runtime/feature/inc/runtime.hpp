@@ -83,6 +83,9 @@ constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_US = 4294967.296;  // 2^32
 constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F;  // 0.001(us) = 1ns
 
 constexpr float64_t RT_STARS_OP_TIMEOUT_THRESHOLD = 100000.0F;  // 小于100ms则开启故障快速上报，单位：us
+constexpr uint32_t MAX_SINGLE_OP_STREAM_CNT = 2016U; // 单算子流最大个数
+constexpr uint32_t MAX_SINGLE_OP_STREAM_TASK_CNT = 2014U; // 2049 - 35 单算子流最大task个数
+constexpr uint32_t MAX_GRAPH_ENGINE_MODEL_CNT = 2048U; // 对外模型最大个数仍是2048
 } // namespace
 
 enum RtMixType : std::uint8_t {
