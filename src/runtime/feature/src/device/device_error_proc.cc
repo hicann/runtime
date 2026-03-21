@@ -1258,6 +1258,7 @@ rtError_t DeviceErrorProc::ProcCleanRingbuffer()
     std::unique_ptr<char[]> hostAddr(new (std::nothrow)  char[ringBufferSize_]);
     NULL_PTR_RETURN(hostAddr, RT_ERROR_MEMORY_ALLOCATION);
     NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
+    (void)memset_s(hostAddr.get(), ringBufferSize_, 0U, ringBufferSize_);
 
     // 1. memcpy ringbuffer to host
     const uint64_t copySize = ringBufferSize_;
