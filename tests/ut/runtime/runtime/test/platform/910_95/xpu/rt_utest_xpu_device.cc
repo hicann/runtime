@@ -414,3 +414,12 @@ TEST_F(XpuDeviceTest, XpuDriver_GetDrvErrCode_error)
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
     DELETE_O (driver);
 }
+
+TEST_F(XpuDeviceTest, ApiDecorator_XpuSetTaskFailCallback)
+{
+    ApiImplDavid impl;
+    ApiDecorator api(&impl);
+    char *regName ="lltruntime";
+    rtError_t error = api.XpuSetTaskFailCallback(RT_DEV_TYPE_DPU, regName, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

@@ -68,4 +68,3 @@ TEST_F(XpuCallbackTest, create_xpu_set_task_fail_callback_should_success_when_ca
     rtError_t error = rtXpuSetTaskFailCallback(RT_DEV_TYPE_DPU, regName, nullptr);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
-

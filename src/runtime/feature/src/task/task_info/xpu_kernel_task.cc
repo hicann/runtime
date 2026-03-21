@@ -13,6 +13,8 @@
 #include "kernel.hpp"
 #include "task_manager.h"
 #include "xpu_task_fail_callback_data_manager.h"
+#include "error_code.h"
+
 
 namespace cce {
 namespace runtime {
@@ -74,10 +76,12 @@ void XpuNotifyCallback(TaskInfo *taskInfo, const uint32_t devId)
     exception.tid = taskInfo->tid;
     exception.deviceid = devId;
     exception.streamid = static_cast<uint32_t>(taskInfo->stream->Id_());
-    exception.retcode = taskInfo->errorCode;
+    rtError_t rtErrCode = RT_ERROR_NONE;
+    const char_t *const retDes = GetTsErrCodeMap(taskInfo->errorCode, &rtErrCode);
+    exception.retcode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(rtErrCode));
     RT_LOG(RT_LOG_DEBUG,
-            "XpuNotifyCallback, notify auto-increment task_id=%u, stream_id=%u, retcode=%u, tid=%u, device_id=%u, ",
-            exception.taskid, exception.streamid, exception.retcode, exception.tid, exception.deviceid);
+            "XpuNotifyCallback, notify auto-increment task_id=%u, stream_id=%u, retcode=%#x[%s], tid=%u, device_id=%u, ",
+            exception.taskid, exception.streamid, exception.retcode, retDes, exception.tid, exception.deviceid);
     XpuTaskFailCallBackManager::Instance().XpuNotify(&exception);
 }
 

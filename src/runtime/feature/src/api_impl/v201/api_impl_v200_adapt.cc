@@ -72,10 +72,10 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
     return LaunchKernelByArgsWithType(kernel, blockDim, curStm, argsWithType, taskCfg);
 }
 
-rtError_t ApiImplDavid::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+rtError_t ApiImplDavid::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *moduleName, void *callback)
 {
     UNUSED(devType);
-    UNUSED(regName);
+    UNUSED(moduleName);
     UNUSED(callback);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

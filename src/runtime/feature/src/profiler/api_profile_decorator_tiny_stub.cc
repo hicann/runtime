@@ -143,10 +143,10 @@ rtError_t ApiDecorator::GetXpuDevCount(const rtXpuDevType devType, uint32_t *dev
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback)
+rtError_t ApiDecorator::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *moduleName, void *callback)
 {
     UNUSED(devType);
-    UNUSED(regName);
+    UNUSED(moduleName);
     UNUSED(callback);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
