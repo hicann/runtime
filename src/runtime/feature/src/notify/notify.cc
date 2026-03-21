@@ -419,6 +419,9 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
 
     SetNotifyInfo(vaAddr, ipcNotifyName, curNotifyId, curTsId);
 
+    error = driver_->EnableP2PNotify(localDevId_, phyId_, flag);
+    ERROR_RETURN_MSG_INNER(error, "Failed to EnableP2PNotify, retCode=%#x!", static_cast<uint32_t>(error));
+
     if (isPod == 0U) {
         isPod_ = false;
         int64_t val;
@@ -443,8 +446,7 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
         isPod_ = true;
     }
     COND_RETURN_ERROR(((isPod_ == true) && (srvId_ > RT_NOTIFY_MAX_SRV_ID)), RT_ERROR_INVALID_VALUE,
-        "phyId_=%#x, srvId=%u, chipId=%u, dieId=%u, adcDieId=%u",
-        phyId_, srvId_, chipId_, dieId_, adcDieId_);
+        "phyId_=%#x, srvId=%u, chipId=%u, dieId=%u, adcDieId=%u", phyId_, srvId_, chipId_, dieId_, adcDieId_);
     return error;
 }
 }

@@ -1018,7 +1018,7 @@ rtError_t NpuDriver::EnableP2PNotify(const uint32_t deviceId, const uint32_t pee
             COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
         }
     } else {
-        const drvError_t drvRet = halDeviceEnableP2PNotify(phyDeviceId, peerPhyDeviceId, flag);
+        const drvError_t drvRet = halDeviceEnableP2PNotify(phyDeviceId, peerPhyDeviceId, 0U);
         COND_RETURN_WARN(drvRet == DRV_ERROR_NOT_SUPPORT, RT_GET_DRV_ERRCODE(drvRet),
             "[drv api] halDeviceEnableP2PNotify does not support");
         if (drvRet != DRV_ERROR_NONE) {
