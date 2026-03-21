@@ -59,12 +59,14 @@ TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
     Device * const dev = Runtime::Instance()->GetDevice(static_cast<uint32_t>(deviceId_),
         InnerThreadLocalContainer::GetTsId(), false);
     if (dev != nullptr) {
-        Stream *stm = nullptr;
-        (void)dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
-        NULL_PTR_RETURN_MSG(stm, nullptr);
+        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) {
+            Stream *stm = nullptr;
+            (void)dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
+            NULL_PTR_RETURN_MSG(stm, nullptr);
 
-        if (stm->IsSoftwareSqEnable()) {
-            return dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId_), static_cast<uint16_t>(taskId));
+            if (stm->IsSoftwareSqEnable()) {
+                return dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId_), static_cast<uint16_t>(taskId));
+            }
         }
     }
 
