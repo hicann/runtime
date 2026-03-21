@@ -2164,7 +2164,6 @@ rtError_t ApiImplDavid::GetMaxStreamAndTask(const uint32_t streamType, uint32_t 
         return RT_ERROR_NONE;
     }
 
-
     *maxStrCount = MAX_SINGLE_OP_STREAM_CNT;
     *maxTaskCount = MAX_SINGLE_OP_STREAM_TASK_CNT;
     RT_LOG(RT_LOG_INFO, "Max streamNum=%u, max TaskNum=%u", *maxStrCount, *maxTaskCount);
