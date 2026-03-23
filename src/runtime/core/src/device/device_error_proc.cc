@@ -556,11 +556,13 @@ rtError_t DeviceErrorProc::GetQosInfoFromRingbuffer()
     }
 
     TsQosCfg_t tsQosCfgArray[hostRtQos->header.depth];
-    memcpy_s(tsQosCfgArray, sizeof(tsQosCfgArray), hostRtQos->qos, hostRtQos->header.depth * sizeof(TsQosCfg_t));
+    errno_t ret = memcpy_s(tsQosCfgArray, sizeof(tsQosCfgArray), hostRtQos->qos, hostRtQos->header.depth * sizeof(TsQosCfg_t));
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_SEC_HANDLE, "Call memcpy_s failed, dst length=%zu, src length=%u, retCode=%d!",
+        sizeof(tsQosCfgArray), hostRtQos->header.depth * sizeof(TsQosCfg_t), ret);
     uint32_t index = 0;
     QosMasterConfigType_t aicoreQosCfg = {};
-    for(size_t i = 0; i < hostRtQos->header.depth; i++) {
-        if(tsQosCfgArray[i].type >= static_cast<uint8_t>(QosMasterType::MASTER_AIC_DAT) 
+    for (size_t i = 0; i < hostRtQos->header.depth; i++) {
+        if (tsQosCfgArray[i].type >= static_cast<uint8_t>(QosMasterType::MASTER_AIC_DAT)
             && tsQosCfgArray[i].type <= static_cast<uint8_t>(QosMasterType::MASTER_AIV_INS)) {
             aicoreQosCfg.type = static_cast<QosMasterType>(tsQosCfgArray[i].type);
             aicoreQosCfg.mpamId = tsQosCfgArray[i].mpamId;
@@ -572,7 +574,7 @@ rtError_t DeviceErrorProc::GetQosInfoFromRingbuffer()
             }
             index = static_cast<uint32_t>(tsQosCfgArray[i].type) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
             RT_LOG(RT_LOG_INFO, "The QOS info from ringbuffer is: type=%u, mpamId=%u, qos=%u, pmg=%u, replaceEn=%u, index=%u.",
-                static_cast<QosMasterType>(tsQosCfgArray[i].type), tsQosCfgArray[i].mpamId, tsQosCfgArray[i].qos, 
+                static_cast<QosMasterType>(tsQosCfgArray[i].type), tsQosCfgArray[i].mpamId, tsQosCfgArray[i].qos,
                 tsQosCfgArray[i].pmg, tsQosCfgArray[i].replaceEn, index);
             device_->SetQosCfg(aicoreQosCfg, index);
             aicoreQosCfg.mode = MAX_UINT32_NUM;

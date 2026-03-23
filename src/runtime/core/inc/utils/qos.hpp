@@ -75,6 +75,6 @@ typedef struct RtQos {
     uint8_t qos[QOS_INFO_LEN - sizeof(RtQosHeader_t)];
 } RtQos_t;
 
-}
-}
+} // namespace runtime
+} // namespace cce
 #endif // __CCE_RUNTIME_QOS_HPP__
