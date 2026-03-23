@@ -33,7 +33,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,
     RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE,
     RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG,
-    RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU,
     RtOptionalFeatureType::RT_FEATURE_TASK_RDMA,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DVPP_GROUP,
     RtOptionalFeatureType::RT_FEATURE_TASK_CMO,

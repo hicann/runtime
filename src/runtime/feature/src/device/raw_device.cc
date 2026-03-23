@@ -2422,9 +2422,6 @@ rtError_t RawDevice::SetSupportHcomcpuFlag()
 
     int64_t hcomCpuNum = 0;
     rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_HCOM_CPU, INFO_TYPE_CORE_NUM, &hcomCpuNum);
-    if (error == RT_ERROR_DRV_NOT_SUPPORT) {
-        return RT_ERROR_NONE;
-    }
     ERROR_RETURN(error, "get hcom cpu num failed, deviceId=%d, retCode=%#x, hcomCpuNum=%lld", deviceId_, error, hcomCpuNum);
     isSupportHcomcpu_ = (hcomCpuNum == 0) ? 0U : 1U;
     return RT_ERROR_NONE;

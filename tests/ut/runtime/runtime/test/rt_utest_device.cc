@@ -2425,16 +2425,3 @@ TEST_F(DeviceTest, SetSupportHcomCpuFlagTest_01)
     uint32_t isSupportHcomcpu = dev.IsSupportHcomcpu();
     EXPECT_EQ(isSupportHcomcpu, 1);
 }
-
-TEST_F(DeviceTest, SetSupportHcomCpuFlagTest_02)
-{
-    RawDevice dev(0);
-    dev.Init();
-    GET_CHIP_FEATURE_SET(CHIP_DAVID, dev.featureSet_);
-    MOCKER_CPP_VIRTUAL(*(dev.Driver_()), &Driver::GetDevInfo)
-        .stubs()
-        .will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
-
-    rtError_t error = dev.SetSupportHcomcpuFlag();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
