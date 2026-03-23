@@ -867,6 +867,68 @@ LogStatus PlogFileMgrInit(void)
     return LOG_SUCCESS;
 }
 
+/**
+ * @brief       : re-initialize log file heads with the child process's own PID
+ *                after fork(). Must be called in the child's atfork/fork handler
+ *                so that the child's log files are named with the child PID
+ *                rather than inheriting the parent's PID from g_plogFileList.
+ *
+ * Root cause of the bug this fixes:
+ *   PlogInitHostLogList() / PlogInitDeviceMaxFileNum() call ToolGetPid() at
+ *   *parent* init time and bake the result into list->pid and list->aucFileHead.
+ *   After fork() the child inherits g_plogFileList verbatim; without this
+ *   function, every filename the child generates still contains the parent PID
+ *   → multiple child processes all write into the same parent-PID-named file.
+ */
+void PlogReinitFileHeadsForChild(void)
+{
+    if (g_plogFileList == NULL) {
+        return;
+    }
+    uint32_t childPid = (uint32_t)ToolGetPid();
+
+    /* Re-init host log file heads */
+    for (int32_t i = (int32_t)DEBUG_LOG; i < (int32_t)LOG_TYPE_NUM; i++) {
+        PlogFileList *list = &(g_plogFileList->hostLogList[i]);
+        list->pid = childPid;
+        list->fileNum = 0;
+        /* Clear current file name so next write creates a fresh child-PID file */
+        if ((list->aucFileName != NULL) && (list->currIndex < list->maxFileNum)) {
+            (void)memset_s(list->aucFileName[list->currIndex],
+                           MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
+        }
+        (void)PlogInitHostLogFileHead(list->aucFileHead, MAX_NAME_HEAD_LEN + 1U, childPid);
+    }
+
+    /* Re-init device log file heads */
+    for (uint32_t iType = 0; iType < (uint32_t)LOG_TYPE_NUM; iType++) {
+        if (g_plogFileList->deviceLogList[iType] == NULL) {
+            continue;
+        }
+        for (uint32_t idx = 0; idx < g_plogFileList->deviceNum; idx++) {
+            PlogFileList *list = &(g_plogFileList->deviceLogList[iType][idx]);
+            list->pid = childPid;
+            list->fileNum = 0;
+            if ((list->aucFileName != NULL) && (list->currIndex < list->maxFileNum)) {
+                (void)memset_s(list->aucFileName[list->currIndex],
+                               MAX_FILENAME_LEN + 1U, 0, MAX_FILENAME_LEN + 1U);
+            }
+            (void)PlogInitDeviceLogFileHead(list->aucFileHead, MAX_NAME_HEAD_LEN + 1U, childPid);
+        }
+    }
+    SELF_LOG_INFO("plog file heads reinitialized for child process, child_pid=%u.", childPid);
+}
+
+/**
+ * @brief  : return the internal file manager list pointer for unit-test access.
+ *           Production code must NOT call this function.
+ * @return : pointer to g_plogFileList
+ */
+PlogFileMgrInfo *PlogGetFileMgrInfo(void)
+{
+    return g_plogFileList;
+}
+
 void PlogFileMgrExit(void)
 {
     ONE_ACT_WARN_LOG(g_plogFileList == NULL, return, "file list is null.");
