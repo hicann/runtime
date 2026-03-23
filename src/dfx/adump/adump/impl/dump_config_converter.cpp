@@ -895,7 +895,7 @@ void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
             IDE_LOGW("Value[%s] of Env[ASCEND_DUMP_SCENE] is invalid, it must be %s",
                 envAscendDumpScene.c_str(), optionStr.c_str());
             std::string warnReason = StrUtils::Format("The dump scene must be selected form[%s]", optionStr.c_str());
-            ADUMP_INPUT_ERROR("EW0001", std::vector<std::string>({"value", "env", "reason"}),
+            ADUMP_INPUT_ERROR("WP0001", std::vector<std::string>({"value", "env", "reason"}),
                 std::vector<std::string>({envAscendDumpScene, ADUMP_ENV_ASCEND_DUMP_SCENE, warnReason}));
         }
     }
