@@ -21,11 +21,11 @@ rts:
     unrelease:
       - src/runtime/c
       - tests/depends/runtime
-      - src/runtime/feature/platform
-      - src/runtime/feature/src/common/performance_record.cc
-      - src/runtime/feature/src/drv/npu_driver_win.cc
-      - src/runtime/feature/src/drv/npu_driver_standard_soc_win.cc
-      - src/runtime/feature/src/api/api_c_tiny_stub.cc
+      - src/runtime/core/platform
+      - src/runtime/core/src/common/performance_record.cc
+      - src/runtime/core/src/drv/npu_driver_win.cc
+      - src/runtime/core/src/drv/npu_driver_standard_soc_win.cc
+      - src/runtime/core/src/api/api_c_tiny_stub.cc
       - src/runtime/cmodel_driver
   llt:
     ut_check: true
