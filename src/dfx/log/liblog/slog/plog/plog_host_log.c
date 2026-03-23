@@ -69,6 +69,9 @@ STATIC void PlogChildUnlock(void)
 {
     g_alogFlushTid = 0;
     PlogUnlock();
+    /* Fix: reinitialize file heads with the child's own PID so the child's
+     * logs land in a file named after the child PID, not the parent PID. */
+    PlogReinitFileHeadsForChild();
 }
 
 STATIC void PlogAtForkCallback(int32_t type)
@@ -256,6 +259,10 @@ STATIC void PlogForkCallback(void)
     PlogUnlock();
     PlogCleanUpBuff(BUFFER_TYPE_SEND);
     g_alogFlushTid = 0;
+    /* Fix: also reinitialize file heads here for the LOG_FORK path so that
+     * any caller going through alog.so's fork callback also gets the correct
+     * child PID in its log filenames. */
+    PlogReinitFileHeadsForChild();
 }
 
 static LogStatus PlogGetSyncEnv(int32_t *syncStatus)

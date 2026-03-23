@@ -48,6 +48,8 @@ typedef struct { // log file list paramter
 
 LogStatus PlogFileMgrInit(void);
 void PlogFileMgrExit(void);
+void PlogReinitFileHeadsForChild(void);
+PlogFileMgrInfo *PlogGetFileMgrInfo(void);
 
 LogStatus PlogWriteDeviceLog(char *msg, const PlogDeviceLogInfo *info);
 LogStatus PlogWriteHostLog(int32_t logType, char *msg, uint32_t len);
