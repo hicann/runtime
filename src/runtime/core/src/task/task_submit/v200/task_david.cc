@@ -132,7 +132,7 @@ static rtError_t AllocCaptureTaskInfo(TaskInfo **taskInfo, Stream * const stm, u
            ret, stm->Device_()->Id_(), stm->Id_(), sqeNum);
 
         pos = (*taskInfo)->id; // 这里返回task id作为pos，主要是为了任务下发失败时的任务回收。
-        dstStm = curCaptureStream;
+        dstStm = stm->GetCaptureStream();
         return RT_ERROR_NONE;
     }
 
