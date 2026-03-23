@@ -28,113 +28,192 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {
         GlobalMockObject::verify();
+        while(Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
+            Adx::AdxDumpRecord::Instance().UpdateDumpInitNum(false);
+        }
     }
 };
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_And_Uninit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
 }
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerReInit_And_ReUninit)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_AdxDumpRecord_InitFailed)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerReInit_And_ReUninit_Two)
 {
-    MOCKER(rtGetRunMode)
-        .stubs()
-        .will(returnValue(1));
-    MOCKER_CPP(&Adx::AdxDumpRecord::Init)
-        .stubs()
-        .will(returnValue(-1));
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 2);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_AdxDumpRecord_Failed)
+{
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    MOCKER_CPP(&Adx::AdxDumpRecord::Init).stubs().will(returnValue(-1));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerUnInit)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateRecordProcess_Failed)
 {
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_ERROR));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+}
 
-    while(Adx::AdxDumpRecord::Instance().GetDumpInitNum() > 0) {
-        Adx::AdxDumpRecord::Instance().UpdateDumpInitNum(false);
-    }
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateServerProcess_Failed)
+{
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
+        .stubs()
+        .will(returnValue(EN_OK))
+        .then(returnValue(EN_ERROR));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerUnInit_RecordUninit_Failed)
+{
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    AdxDataDumpServerInit();
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    MOCKER_CPP(&Adx::AdxDumpRecord::UnInit)
+        .stubs()
+        .will(returnValue(-1))
+        .then(returnValue(IDE_DAEMON_OK));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerUnInit_ServerExit_Failed)
+{
+    MOCKER(rtGetRunMode).stubs().will(returnValue(1));
+    AdxDataDumpServerInit();
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
 
     MOCKER_CPP(&Adx::AdxServerManager::Exit)
-    .stubs()
-    .will(returnValue(IDE_DAEMON_ERROR))
-    .then(returnValue(IDE_DAEMON_OK));
-
+        .stubs()
+        .will(returnValue(IDE_DAEMON_ERROR))
+        .then(returnValue(IDE_DAEMON_OK));
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInitFailed)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerReInit_And_ReUninit)
+{
+    std::string hostPID = "456";
+    (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 2);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    (void)unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerInit_Failed)
 {
     MOCKER_CPP(&Adx::AdxDumpRecord::Init)
         .stubs()
-        .will(returnValue(-1));
+        .will(returnValue(-1))
+        .then(returnValue(IDE_DAEMON_OK));
 
     std::string hostPID = "456";
-    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
-    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
-}
-
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInitRepeat)
-{
-    MOCKER_CPP(&Adx::AdxDumpRecord::GetDumpInitNum)
-        .stubs()
-        .will(returnValue(1));
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    (void)unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerInit)
-{
-    std::string hostPID = "456";
-    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
-    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
-    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
-}
-
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInitFailed)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerUnInit_Failed)
 {
     MOCKER_CPP(&Adx::AdxDumpRecord::UnInit)
         .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+        .will(returnValue(-1))
+        .then(returnValue(IDE_DAEMON_OK));
+
     std::string hostPID = "456";
-    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerUnInit());
-    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
-}
-
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInitDumpStillRun)
-{
-    MOCKER_CPP(&Adx::AdxDumpRecord::GetDumpInitNum)
-        .stubs()
-        .will(returnValue(1));
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    (void)unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
 }
 
-TEST_F(ADX_DATADUMP_SERVER_UTEST, HelperAdxDataDumpServerUnInit)
+TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerInit_WithoutServer)
 {
-    MOCKER_CPP(&Adx::AdxServerManager::Exit)
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr)
         .stubs()
-        .will(returnValue(IDE_DAEMON_ERROR));
+        .will(returnValue(EN_OK))
+        .then(returnValue(EN_ERROR));
     std::string hostPID = "456";
-    int ret = setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerInit());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 1);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
-    ret = unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+    EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
+    (void)unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
+}
+
+TEST_F(ADX_DATADUMP_SERVER_UTEST, Helper_AdxDataDumpServerUnInit_WithoutServer)
+{
+    MOCKER_CPP(&Adx::AdxServerManager::Exit).stubs().will(returnValue(IDE_DAEMON_ERROR));
+    std::string hostPID = "456";
+    (void)setenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str(), hostPID.c_str(), 0);
+    EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
+    (void)unsetenv(IdeDaemon::Common::Config::HELPER_HOSTPID.c_str());
 }
 
 TEST_F(ADX_DATADUMP_SERVER_UTEST, TimeProcess_FaultDevice)

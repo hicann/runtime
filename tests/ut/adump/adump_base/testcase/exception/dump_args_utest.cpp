@@ -40,6 +40,7 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown()
     {
+        ThreadManager::Instance().WaitAll();
         DumpManager::Instance().Reset();
         FreeExceptionRegInfo();
         GlobalMockObject::verify();

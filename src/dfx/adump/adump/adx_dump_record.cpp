@@ -170,9 +170,20 @@ void AdxDumpRecord::UpdateDumpInitNum(bool isPlus)
 {
     if (isPlus) {
         dumpInitNum_++;
-    } else {
+    } else if (dumpInitNum_ > 0) {
         dumpInitNum_--;
     }
+    IDE_LOGI("dump init number: %d", dumpInitNum_);
+}
+
+bool AdxDumpRecord::HasStartedServer() const
+{
+    return dumpInitNum_ > 0;
+}
+
+bool AdxDumpRecord::CanShutdownServer() const
+{
+    return dumpInitNum_ <= 1;
 }
 
 /**

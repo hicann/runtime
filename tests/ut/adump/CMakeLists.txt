@@ -29,6 +29,7 @@ target_compile_options(adump_intf_llt_pub INTERFACE
     -w
     $<$<BOOL:${ENABLE_GCOV}>:-fprofile-arcs -ftest-coverage>
     $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address -fno-omit-frame-pointer -static-libasan -fsanitize=undefined -static-libubsan -fsanitize=leak -static-libtsan>
+    $<$<STREQUAL: ${CMAKE_SYSTEM_PROCESS}, aarch64>:-falign-functions=32>
     -fPIC
     -pipe
 )
