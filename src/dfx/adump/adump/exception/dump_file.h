@@ -54,6 +54,8 @@ private:
     void LogIsOtherDeviceAddress(const DeviceData &devData, rtMemInfo_t &memInfo) const;
     int32_t AllocDefaultMemory(void **hostPtr, uint64_t size) const;
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
+    int32_t GetSocVersion(std::string &socVersion) const;
+    bool SupportDumpMc2spaces() const;
     uint64_t ComputeStructSize() const;
     uint64_t HandleMc2Ctx(const void *hostData, uint64_t opParamSize, size_t index);
     void HandleMc2CtxV1(const void *hostData, uint64_t &totalSize, std::vector<DeviceData> &dataList) const;

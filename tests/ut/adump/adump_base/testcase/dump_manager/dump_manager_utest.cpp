@@ -268,7 +268,7 @@ TEST_F(DumpManagerUtest, Test_StartDumpArgs_CallbackNoDeadlock)
 {
     g_callbackInvoked = 0;
 
-    int32_t ret = DumpManager::Instance().RegisterCallback(100, CallbackWithLockAccess, CallbackWithLockAccess);
+    int32_t ret = DumpManager::Instance().RegisterCallback(1001, CallbackWithLockAccess, CallbackWithLockAccess);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
     MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));

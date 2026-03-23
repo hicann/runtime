@@ -107,6 +107,7 @@ void DumpFile::SetWorkspaces(const std::vector<DumpWorkspace> &workspaces)
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
 void DumpFile::SetMc2spaces(const std::vector<DumpWorkspace> &mc2Spaces)
 {
+    IDE_CTRL_VALUE_WARN(SupportDumpMc2spaces(), return, "Not support to dump mc2 spaces data");
     IDE_LOGI("[Set][DumpData] mc2 space size is %zu", mc2Spaces.size());
     for (size_t i = 0U; i < mc2Spaces.size(); ++i) {
         if (mc2Spaces[i].addr == nullptr) {
@@ -370,16 +371,30 @@ int32_t DumpFile::WriteInputBuffer()
 }
 
 #if !defined(ADUMP_SOC_HOST) || ADUMP_SOC_HOST == 1
-uint64_t DumpFile::ComputeStructSize() const
+int32_t DumpFile::GetSocVersion(std::string &socVersion) const
 {
     constexpr uint32_t socVersionLength = 128U;
-    char socVersion[socVersionLength] = {0};
-    rtError_t ret = rtGetSocVersion(socVersion, socVersionLength);
-    if (ret != RT_ERROR_NONE) {
-        IDE_LOGE("[Dump][ExceptionWorkspace] Get soc version failed, ret = %d", ret);
-        return 0;
-    }
-    IDE_LOGI("Get socVersion: %s", socVersion);
+    char version[socVersionLength] = {0};
+    rtError_t ret = rtGetSocVersion(version, socVersionLength);
+    IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return ADUMP_FAILED, "Get soc version failed, ret=%d", ret);
+    IDE_LOGI("Get soc Version: %s", version);
+    socVersion = std::string(version);
+    return ADUMP_SUCCESS;
+}
+
+bool DumpFile::SupportDumpMc2spaces() const
+{
+    std::string socVersion;
+    int32_t ret = GetSocVersion(socVersion);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return false, "Get soc version failed");
+    return std::string(socVersion).find("Ascend910") != std::string::npos;
+}
+
+uint64_t DumpFile::ComputeStructSize() const
+{
+    std::string socVersion;
+    int32_t ret = GetSocVersion(socVersion);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return 0, "[Dump][ExceptionWorkspace] Get soc version failed");
     if (std::string(socVersion).find("Ascend910_93") != std::string::npos) {
         return sizeof(HcclOpResParam);
     } else {
