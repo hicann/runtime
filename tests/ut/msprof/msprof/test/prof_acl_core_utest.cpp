@@ -1451,10 +1451,15 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsParamAdaper) {
         new analysis::dvvp::message::ProfileParams());
 
     NanoJson::Json message;
+    message["output"] = "";
     message["aicpu"] = "on";
     message["training_trace"] = "on";
     message["task_trace"] = "on";
     std::string jobInfo = "123";
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::MsprofResultPathAdapter)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS));
+    ProfAclMgr::instance()->MsprofGeOptionsParamConstruct("hello", message);
 
     ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(nullptr, jobInfo, message);
     ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(params, jobInfo, message);
@@ -1462,6 +1467,21 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsParamAdaper) {
     EXPECT_EQ("on", params->ts_fw_training);
     EXPECT_EQ("level1", params->prof_level);
     EXPECT_EQ(analysis::dvvp::common::utils::Utils::GetPid(), params->host_sys_pid);
+
+    message["task_block"] = "on";
+    ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(params, jobInfo, message);
+    EXPECT_EQ("on", params->taskBlock);
+    EXPECT_EQ("on", params->taskBlockShink);
+
+    message["task_block"] = "all";
+    ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(params, jobInfo, message);
+    EXPECT_EQ("on", params->taskBlock);
+    EXPECT_EQ("off", params->taskBlockShink);
+
+    message["task_block"] = "off";
+    ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(params, jobInfo, message);
+    EXPECT_EQ("off", params->taskBlock);
+    EXPECT_EQ("off", params->taskBlockShink);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofGeOptionsResultPathAdapter) {
@@ -1598,7 +1618,7 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofAclJsonParamConstruct) {
     inputCfgPb["l2"] = "on";
     inputCfgPb["instr_profiling"] = "on";
     inputCfgPb["instr_profiling_freq"] = 300;
-    inputCfgPb["task_trace"] = "on";
+    inputCfgPb["task_time"] = "on";
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -1611,6 +1631,21 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofAclJsonParamConstruct) {
         .stubs()
         .will(returnValue(-1));
     EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
+
+    inputCfgPb["task_block"] = "on";
+    EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
+    EXPECT_EQ("on", profAclMgr.params_->taskBlock);
+    EXPECT_EQ("on", profAclMgr.params_->taskBlockShink);
+
+    inputCfgPb["task_block"] = "all";
+    EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
+    EXPECT_EQ("on", profAclMgr.params_->taskBlock);
+    EXPECT_EQ("off", profAclMgr.params_->taskBlockShink);
+
+    inputCfgPb["task_block"] = "off";
+    EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
+    EXPECT_EQ("off", profAclMgr.params_->taskBlock);
+    EXPECT_EQ("off", profAclMgr.params_->taskBlockShink);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofResultDirAdapter) {
