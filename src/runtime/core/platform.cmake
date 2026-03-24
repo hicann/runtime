@@ -35,7 +35,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/src/runtime/inc/stream
     ${RUNTIME_DIR}/src/runtime/inc/task
     ${RUNTIME_DIR}/src/runtime/inc/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+    ${RUNTIME_DIR}/src/runtime/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
@@ -82,7 +82,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
 #------------------------- runtime platform -------------------------
 macro(runtime_platform_910B_obj target_name)
     add_library(runtime_platform_910B OBJECT
-        platform/910_B_93/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/910_B_93/dev_info_reg.cc
     )
 
     target_include_directories(runtime_platform_910B PRIVATE
@@ -113,8 +113,8 @@ endmacro()
 
 macro(runtime_platform_kirin_obj target_name)
     add_library(runtime_platform_kirin OBJECT
-        platform/kirinx90/dev_info_reg.cc
-        platform/kirin9030/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirinx90/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/kirin9030/dev_info_reg.cc
     )
 
     target_include_directories(runtime_platform_kirin PRIVATE
@@ -145,20 +145,20 @@ endmacro()
 
 macro(runtime_platform_others_obj target_name)
     add_library(runtime_platform_others OBJECT
-        platform/610_lite/dev_info_reg.cc
-        platform/950/dev_info_reg.cc
-        platform/as31xm1/dev_info_reg.cc
-        platform/bs9sx1a/dev_info_reg.cc
-        platform/cloud/dev_info_reg.cc
-        platform/dc/dev_info_reg.cc
-        platform/mc62cm12a/dev_info_reg.cc
-        platform/adc/dev_info_reg.cc
-        platform/mini/dev_info_reg.cc
-        platform/mini_v3/dev_info_reg.cc
-        platform/nano/dev_info_reg.cc
-        platform/tiny/dev_info_reg.cc
-        platform/910_96/dev_info_reg.cc
-        platform/xpu/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/610_lite/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/950/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/as31xm1/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/bs9sx1a/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/cloud/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/dc/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/mc62cm12a/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/adc/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/mini/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/mini_v3/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/nano/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/910_96/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/xpu/dev_info_reg.cc
     )
 
     target_include_directories(runtime_platform_others PRIVATE
@@ -189,7 +189,7 @@ endmacro()
 
 macro(runtime_platform_tiny_obj target_name)
 add_library(runtime_platform_tiny OBJECT
-    platform/tiny/dev_info_reg.cc
+    ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_reg.cc
 )
 
 target_include_directories(runtime_platform_tiny PRIVATE

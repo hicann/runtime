@@ -110,19 +110,19 @@ set(libruntime_cmodel_v200_task_src_files
 )
 
 set(libruntime_cmodel_api_src_files_cmodel
-    src/api/api_c.cc
-    src/api/api_c_context.cc
-    src/api/api_c_device.cc
-    src/api/api_c_kernel.cc
-    src/api/api_c_memory.cc
-    src/api/api_c_stream.cc
-    src/api/api_c_task.cc
-    src/api/api_c_model.cc
-    src/api/api_c_event.cc
-    src/api/api_c_mbuf.cc
-    src/api/inner.cc
-    src/api/api_global_err.cc
-    src/api/api_c_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_task.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${RUNTIME_DIR}/src/runtime/api/inner.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
 )
 
 set(common_src_files_cmodel
@@ -228,14 +228,14 @@ set(libruntime_cmodel_src_files_optional
 )
 
 set(libruntime_cmodel_api_src_files
-    src/api/api_c_standard_soc.cc
-    src/api/api_c_soma.cc
-    src/api/api_c_xpu.cc
-    src/api/api_preload_task.cc
-    src/api/api_c_dqs.cc
-    src/api/api_c_snapshot.cc
-    src/api/api_david.cc
-    src/api/api_c_uvm.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_xpu.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_david.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
 set(xpu_tprt_api_file
@@ -246,8 +246,8 @@ set(xpu_tprt_api_file
 
 set(libruntime_cmodel_src_files
     src/common/inner_thread_local.cpp
-    src/api/api.cc
-    src/api/api_global_err.cc
+    ${RUNTIME_DIR}/src/runtime/api/api.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
     src/api_impl/api_decorator.cc
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
@@ -349,7 +349,7 @@ set(libruntime_cmodel_src_files
 
 set(libruntime_cmodel_v200_src_files
     src/common/inner_thread_local.cpp
-    src/api/api.cc
+    ${RUNTIME_DIR}/src/runtime/api/api.cc
     src/api_impl/api_decorator.cc
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
@@ -498,7 +498,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/src/runtime/inc/stream
     ${RUNTIME_DIR}/src/runtime/inc/task
     ${RUNTIME_DIR}/src/runtime/inc/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+    ${RUNTIME_DIR}/src/runtime/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
@@ -543,15 +543,15 @@ set(RUNTIME_CMODEL_INC_DIR
 )
 
 set(libruntime_model_dev_info_src_files
-    platform/610_lite/dev_info_proc_func.cc
-    platform/910_B_93/dev_info_proc_func.cc
-    platform/as31xm1/dev_info_proc_func.cc
-    platform/cloud/dev_info_proc_func.cc
-    platform/dc/dev_info_proc_func.cc
-    platform/adc/dev_info_proc_func.cc
-    platform/mini/dev_info_proc_func.cc
-    platform/mini_v3/dev_info_proc_func.cc
-    platform/tiny/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/610_lite/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/as31xm1/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/cloud/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/dc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/adc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini_v3/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_proc_func.cc
 )
 
 if(NOT ${TARGET_SYSTEM_NAME} STREQUAL "Windows")
@@ -606,9 +606,9 @@ target_link_libraries(runtime_model PRIVATE
 )
 
 set(libruntime_cmodel_v200_dev_info_src_files
-    platform/950/dev_info_proc_func.cc
-    platform/mc62cm12a/dev_info_proc_func.cc
-    platform/910_96/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/950/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mc62cm12a/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/910_96/dev_info_proc_func.cc
 )
 
 add_library(runtime_model_v200 OBJECT EXCLUDE_FROM_ALL

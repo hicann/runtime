@@ -48,18 +48,18 @@ set(libruntime_v100_task_src_files
 )
 
 set(libruntime_api_src_files
-    src/api/api_c.cc
-    src/api/api_c_context.cc
-    src/api/api_c_device.cc
-    src/api/api_c_kernel.cc
-    src/api/api_c_memory.cc
-    src/api/api_c_stream.cc
-    src/api/api_c_model.cc
-    src/api/api_c_event.cc
-    src/api/api_c_mbuf.cc
-    src/api/inner.cc
-    src/api/api_global_err.cc
-    src/api/api_c_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${RUNTIME_DIR}/src/runtime/api/inner.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
 )
 
 set(common_src_files
@@ -144,22 +144,22 @@ set(libruntime_src_files_include_for_tiny
 )
 
 set(libruntime_api_src_files_exclude_for_tiny
-    src/api/api_c_standard_soc.cc
-    src/api/api_c_soma.cc
-    src/api/api_preload_task.cc
-    src/api/api_c_dqs.cc
-    src/api/api_c_snapshot.cc
-    src/api/api_david.cc
-    src/api/api_c_uvm.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_david.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
 set(libruntime_api_src_files_include_for_tiny
-    src/api/api_c_tiny_stub.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_tiny_stub.cc
 )
 
 set(libruntime_common_src_files
     src/common/inner_thread_local.cpp
-    src/api/api.cc
+    ${RUNTIME_DIR}/src/runtime/api/api.cc
     src/api_impl/api_decorator.cc
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
@@ -258,7 +258,7 @@ set(libruntime_common_src_files
 )
 
 set(libruntime_dev_info_src_files
-    platform/tiny/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_proc_func.cc
 )
 
 #------------------------- runtime v100 -------------------------
@@ -395,7 +395,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_DIR}/src/runtime/inc/stream
     ${RUNTIME_DIR}/src/runtime/inc/task
     ${RUNTIME_DIR}/src/runtime/inc/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+    ${RUNTIME_DIR}/src/runtime/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
@@ -522,7 +522,7 @@ macro(add_runtime_api_library target_name)
             ${libruntime_api_src_files}
             $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_api_src_files_exclude_for_tiny}>
             $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
-            src/api/api.cc
+            ${RUNTIME_DIR}/src/runtime/api/api.cc
             src/profiler/prof_map_ge_model_device.cc
             src/plugin_manage/runtime_keeper.cc
             $<TARGET_OBJECTS:profapi_stub>
@@ -533,7 +533,7 @@ macro(add_runtime_api_library target_name)
             ${libruntime_api_src_files}
             $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_api_src_files_exclude_for_tiny}>
             $<$<STREQUAL:${PRODUCT},ascend031>:${libruntime_api_src_files_include_for_tiny}>
-            src/api/api.cc
+            ${RUNTIME_DIR}/src/runtime/api/api.cc
             src/profiler/prof_map_ge_model_device.cc
             src/plugin_manage/runtime_keeper.cc
             $<$<STREQUAL:${PRODUCT},ascend031>:$<TARGET_OBJECTS:runtime_platform_tiny>>

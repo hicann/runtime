@@ -53,19 +53,19 @@ set(libruntime_v100_task_src_files
 )
 
 set(libruntime_api_src_files
-    src/api/api_c.cc
-    src/api/api_c_context.cc
-    src/api/api_c_device.cc
-    src/api/api_c_kernel.cc
-    src/api/api_c_memory.cc
-    src/api/api_c_stream.cc
-    src/api/api_c_task.cc
-    src/api/api_c_model.cc
-    src/api/api_c_event.cc
-    src/api/api_c_mbuf.cc
-    src/api/inner.cc
-    src/api/api_global_err.cc
-    src/api/api_c_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_context.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_task.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${RUNTIME_DIR}/src/runtime/api/inner.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_global_err.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soc.cc
 )
 
 set(common_src_files
@@ -159,14 +159,14 @@ set(libruntime_src_files_optional
 )
 
 set(libruntime_api_src_files_optional
-    src/api/api_c_standard_soc.cc
-    src/api/api_c_soma.cc
-    src/api/api_preload_task.cc
-    src/api/api_c_dqs.cc
-    src/api/api_c_snapshot.cc
-    src/api/api_david.cc
-    src/api/api_c_xpu.cc
-    src/api/api_c_uvm.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_david.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_xpu.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
 #------------------------- runtime v100 -------------------------
@@ -307,7 +307,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/src/runtime/inc/stream
     ${RUNTIME_DIR}/src/runtime/inc/task
     ${RUNTIME_DIR}/src/runtime/inc/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+    ${RUNTIME_DIR}/src/runtime/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
@@ -432,7 +432,7 @@ macro(add_runtime_api_library target_name)
     add_library(${target_name} SHARED
         ${libruntime_api_src_files}
         ${libruntime_api_src_files_optional}
-        src/api/api.cc
+        ${RUNTIME_DIR}/src/runtime/api/api.cc
         src/profiler/prof_map_ge_model_device.cc
         src/plugin_manage/runtime_keeper.cc
         $<TARGET_OBJECTS:runtime_platform_910B>
@@ -525,15 +525,15 @@ macro(add_runtime_api_library target_name)
 endmacro()
 
 set(libruntime_dev_info_src_files
-    platform/610_lite/dev_info_proc_func.cc
-    platform/910_B_93/dev_info_proc_func.cc
-    platform/as31xm1/dev_info_proc_func.cc
-    platform/cloud/dev_info_proc_func.cc
-    platform/dc/dev_info_proc_func.cc
-    platform/adc/dev_info_proc_func.cc
-    platform/mini/dev_info_proc_func.cc
-    platform/mini_v3/dev_info_proc_func.cc
-    platform/tiny/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/610_lite/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/as31xm1/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/cloud/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/dc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/adc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini_v3/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_proc_func.cc
 )
 
 macro(add_runtime_v100_library target_name)

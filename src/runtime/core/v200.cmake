@@ -376,7 +376,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_DIR}/src/runtime/inc/stream
     ${RUNTIME_DIR}/src/runtime/inc/task
     ${RUNTIME_DIR}/src/runtime/inc/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+    ${RUNTIME_DIR}/src/runtime/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine/hwts
@@ -432,22 +432,22 @@ set(RUNTIME_INC_DIR_V201
 )
 
 set(libruntime_v200_dev_info_src_files
-    platform/950/dev_info_proc_func.cc
-    platform/910_96/dev_info_proc_func.cc
-    platform/610_lite/dev_info_proc_func.cc
-    platform/910_B_93/dev_info_proc_func.cc
-    platform/as31xm1/dev_info_proc_func.cc
-    platform/cloud/dev_info_proc_func.cc
-    platform/dc/dev_info_proc_func.cc
-    platform/adc/dev_info_proc_func.cc
-    platform/mini/dev_info_proc_func.cc
-    platform/mini_v3/dev_info_proc_func.cc
-    platform/tiny/dev_info_proc_func.cc
-    platform/mc62cm12a/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/950/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/910_96/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/610_lite/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/as31xm1/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/cloud/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/dc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/adc/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mini_v3/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/tiny/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mc62cm12a/dev_info_proc_func.cc
 )
 
 set(libruntime_v201_dev_info_src_files
-    platform/mc62cm12a/dev_info_proc_func.cc
+    ${RUNTIME_DIR}/src/runtime/config/mc62cm12a/dev_info_proc_func.cc
 )
 
 #------------------------- runtime -------------------------

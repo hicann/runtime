@@ -57,26 +57,26 @@ set(runtimeut_src_task_list
 )
 
 set(runtimeut_src_api_list
-    ${TOP_DIR}/src/runtime/core/src/api/api_c.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_david.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_preload_task.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_context.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_device.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_kernel.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_memory.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_stream.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_task.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_model.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_event.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_mbuf.cc
-    ${TOP_DIR}/src/runtime/core/src/api/inner.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_global_err.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_dqs.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_snapshot.cc
-    ${TOP_DIR}/src/runtime/core/src/api/api_c_uvm.cc
+    ${TOP_DIR}/src/runtime/api/api_c.cc
+    ${TOP_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/api_c_soma.cc
+    ${TOP_DIR}/src/runtime/api/api_david.cc
+    ${TOP_DIR}/src/runtime/api/api_preload_task.cc
+    ${TOP_DIR}/src/runtime/api/api_c_context.cc
+    ${TOP_DIR}/src/runtime/api/api_c_device.cc
+    ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
+    ${TOP_DIR}/src/runtime/api/api_c_memory.cc
+    ${TOP_DIR}/src/runtime/api/api_c_stream.cc
+    ${TOP_DIR}/src/runtime/api/api_c_task.cc
+    ${TOP_DIR}/src/runtime/api/api_c_model.cc
+    ${TOP_DIR}/src/runtime/api/api_c_event.cc
+    ${TOP_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/inner.cc
+    ${TOP_DIR}/src/runtime/api/api_global_err.cc
+    ${TOP_DIR}/src/runtime/api/api_c_soc.cc
+    ${TOP_DIR}/src/runtime/api/api_c_dqs.cc
+    ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
 set(runtimeut_src_context_list
@@ -164,32 +164,32 @@ set(runtimeut_src_common_list
 )
 
 set(runtimeut_platform_list
-    ${TOP_DIR}/src/runtime/core/platform/610_lite/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/950/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/910_B_93/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/as31xm1/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/bs9sx1a/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/cloud/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/dc/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/mc62cm12a/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/adc/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/mini/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/mini_v3/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/nano/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/tiny/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/910_96/dev_info_reg.cc
-    ${TOP_DIR}/src/runtime/core/platform/610_lite/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/950/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/910_B_93/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/as31xm1/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/cloud/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/dc/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/mc62cm12a/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/adc/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/mini/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/mini_v3/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/tiny/dev_info_proc_func.cc
-    ${TOP_DIR}/src/runtime/core/platform/910_96/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/610_lite/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/950/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/910_B_93/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/as31xm1/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/bs9sx1a/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/cloud/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/dc/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/mc62cm12a/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/adc/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/mini/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/mini_v3/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/nano/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/tiny/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/910_96/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/610_lite/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/950/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/910_B_93/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/as31xm1/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/cloud/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/dc/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/mc62cm12a/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/adc/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/mini/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/mini_v3/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/tiny/dev_info_proc_func.cc
+    ${TOP_DIR}/src/runtime/config/910_96/dev_info_proc_func.cc
 )
 
 set(runtimeut_910b_src_list
@@ -202,7 +202,7 @@ set(runtimeut_910b_src_list
     ${runtimeut_src_pool_list}
     ${runtimeut_src_ttlv_list}
     ${runtimeut_src_callback_list}
-    ${TOP_DIR}/src/runtime/core/src/api/api.cc
+    ${TOP_DIR}/src/runtime/api/api.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
@@ -283,7 +283,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/utils/aicpu_scheduler_agent.cc
     ${TOP_DIR}/src/runtime/core/src/task/host_task.cc
     ${TOP_DIR}/src/runtime/core/src/stream/dvpp_grp.cc
-    ${TOP_DIR}/src/runtime/core/src/api/inner.cc
+    ${TOP_DIR}/src/runtime/api/inner.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/drv/npu_driver_tiny.cpp
     ${TOP_DIR}/src/runtime/core/src/engine/engine.cc
@@ -380,7 +380,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/inc/profiler
     ${TOP_DIR}/src/runtime/inc/engine/hwts
     ${TOP_DIR}/src/runtime/inc/dqs
-    ${TOP_DIR}/src/runtime/core/src/api
+    ${TOP_DIR}/src/runtime/api
     ${TOP_DIR}/src/runtime/core/src/api_impl
     ${TOP_DIR}/src/runtime/core/src/engine
     ${TOP_DIR}/src/runtime/core/src/engine/hwts
