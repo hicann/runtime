@@ -276,7 +276,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask4)
     rtStarsSqe_t command = {};
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
 
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
     aicoreQosCfg[0].mode = 0;
     aicoreQosCfg[1].mode = 0;
     aicoreQosCfg[2].mode = 0;
@@ -439,7 +439,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask4)
 
     rtStarsSqe_t command = {};
 
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
     aicoreQosCfg[0].mode = 0;
     aicoreQosCfg[1].mode = 0;
     aicoreQosCfg[2].mode = 0;

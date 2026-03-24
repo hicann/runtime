@@ -939,18 +939,18 @@ void RawDevice::FreeCustomerStackPhyBase()
     }
 }
 
-static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_type & aicoreQosCfg)
+static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, QosMasterConfigType & aicoreQosCfg)
 {
-    int32_t bufSize = static_cast<int32_t>(sizeof(qos_master_config_type));
+    int32_t bufSize = static_cast<int32_t>(sizeof(QosMasterConfigType));
     RT_LOG(RT_LOG_INFO, "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=%u, moduleType=%d, infoType=%d.",
         deviceId, aicoreQosCfg.type, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
     const rtError_t error = NpuDriver::GetDeviceInfoByBuff(deviceId, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG,
         static_cast<void *>(&aicoreQosCfg), &bufSize);
     COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Not support get aicore qos config.");
-    if ((error != RT_ERROR_NONE) || (bufSize != static_cast<int32_t>(sizeof(qos_master_config_type)))) {
+    if ((error != RT_ERROR_NONE) || (bufSize != static_cast<int32_t>(sizeof(QosMasterConfigType)))) {
         RT_LOG(RT_LOG_ERROR, "Calling drv api halGetDeviceInfoByBuff failed, bufSize is %d, expect bufSize is %d, error=%#x.",
-            bufSize, sizeof(qos_master_config_type), static_cast<uint32_t>(error));
+            bufSize, sizeof(QosMasterConfigType), static_cast<uint32_t>(error));
         return RT_ERROR_DRV_ERR;
     }
     RT_LOG(RT_LOG_INFO, "The QOS info from halGetDeviceInfoByBuff is: type=%u, mpamId=%u, qos=%u, pmg=%u, mode=%u.",
@@ -958,9 +958,9 @@ static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, qos_master_config_t
     return RT_ERROR_NONE;
 }
 
-rtError_t RawDevice::InitQosCfg()
+rtError_t RawDevice::GetQosInfoByIpc()
 {
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
+    std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg = {};
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_DAT;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
@@ -972,7 +972,7 @@ rtError_t RawDevice::InitQosCfg()
             return RT_ERROR_NONE;
         }
         if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "InitQosCfg failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
+            RT_LOG(RT_LOG_ERROR, "Get qos info by ipc failed, error=%#x, index=%d.", static_cast<uint32_t>(error), i);
             return error;
         }
         error = SetQosCfg(aicoreQosCfg[i], i);
@@ -982,6 +982,15 @@ rtError_t RawDevice::InitQosCfg()
         }
     }
     return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::InitQosCfg()
+{
+    rtError_t error = deviceErrorProc_->GetQosInfoFromRingbuffer();
+    if (error != RT_ERROR_NONE) {
+        error = GetQosInfoByIpc();
+    }
+    return error;
 }
 
 rtError_t RawDevice::Start()
@@ -1019,14 +1028,6 @@ rtError_t RawDevice::Start()
             error, ERROR_FREE, "alloc customer stack phy failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
 
-    if (NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_DMS_GET_QOS_MASTER_CONFIG)) {
-        error = InitQosCfg();
-        ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "get acc qos cfg failed, retCode=%#x, drv deviceId=%u.",
-            static_cast<uint32_t>(error), deviceId_);
-    } else {
-        RT_LOG(RT_LOG_WARNING, "Driver does not support FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
-    }
-
     error = engine_->Start();
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Start runtime engine failed, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -1059,6 +1060,13 @@ rtError_t RawDevice::Start()
         error = deviceErrorProc_->CreateFastRingbuffer();
         COND_PROC_GOTO_MSG_INNER((error != RT_ERROR_NONE) && (error != RT_ERROR_DRV_MEMORY), ERROR_STOP, ;,
             "Failed to create fast ring buffer, error_code=%#x.", static_cast<uint32_t>(error));
+        if (NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_DMS_GET_QOS_MASTER_CONFIG)) {
+            error = InitQosCfg();
+            ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "get acc qos cfg failed, retCode=%#x, drv deviceId=%u.",
+                static_cast<uint32_t>(error), deviceId_);
+        } else {
+            RT_LOG(RT_LOG_WARNING, "Driver does not support FEATURE_DMS_GET_QOS_MASTER_CONFIG.");
+        }
     }
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         error = SendTopicMsgVersionToAicpu();
@@ -2422,7 +2430,7 @@ rtError_t RawDevice::SetSupportHcomcpuFlag()
     return RT_ERROR_NONE;
 }
 
-rtError_t RawDevice::SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index)
+rtError_t RawDevice::SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index)
 {
     COND_RETURN_ERROR(index >= MAX_ACC_QOS_CFG_NUM, RT_ERROR_INVALID_VALUE,
                     "index is invalid, index=%u.", index);

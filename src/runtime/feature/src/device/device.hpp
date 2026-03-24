@@ -30,6 +30,7 @@
 #include "dev_info_manage.h"
 #include "device_snapshot.hpp"
 #include "event_expanding.hpp"
+#include "qos.hpp"
 
 namespace cce {
 namespace runtime {
@@ -81,41 +82,9 @@ enum rtTschVersion {
 };
 
 #define MAX_ACC_QOS_CFG_NUM 4
-#define QOS_CFG_RESERVED_LEN 8
-#define QOS_MASTER_BITMAP_LEN 4
-
-enum class QosMasterType : uint32_t {
-    MASTER_DVPP_ALL     = 0,
-    MASTER_DVPP_VPC     = 1,
-    MASTER_DVPP_VDEC    = 2,
-    MASTER_DVPP_JPEGE   = 3,
-    MASTER_DVPP_JPEGD   = 4,
-    MASTER_ROCE         = 5,
-    MASTER_NIC          = 6,
-    MASTER_PCIE         = 7,
-    MASTER_AICPU        = 8,
-    MASTER_AIC_DAT      = 9,
-    MASTER_AIC_INS      = 10,
-    MASTER_AIV_DAT      = 11,
-    MASTER_AIV_INS      = 12,
-    MASTER_SDMA         = 13,
-    MASTER_STARS        = 14,
-    MASTER_INVALID,
-};
-
-// 这个结构体需要和QOS drv中定义的结构体保持一致
-typedef struct qos_master_config_type {
-    QosMasterType type;
-    uint32_t mpamId;
-    uint32_t qos;
-    uint32_t pmg;
-    uint64_t bitmap[QOS_MASTER_BITMAP_LEN];
-    uint32_t mode = MAX_UINT32_NUM;
-    uint32_t reserved[QOS_CFG_RESERVED_LEN - 1];
-} qos_master_config_type_t;
 
 typedef struct qos_master_config {
-    std::array<qos_master_config_type, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg;
+    std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM> aicoreQosCfg;
     bool isAicoreQosConfiged{false};
 } qos_master_config_t;
 
@@ -265,6 +234,7 @@ public:
     virtual rtError_t RegisterAndLaunchDcacheLockOp(Context *ctx) = 0;
     virtual rtError_t SendTopicMsgVersionToAicpu() = 0;
     virtual const DevProperties& GetDevProperties(void) const = 0;
+    virtual rtError_t SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index) = 0;
     bool IsStarsPlatform() const
     {
         return GetDevProperties().isStars;

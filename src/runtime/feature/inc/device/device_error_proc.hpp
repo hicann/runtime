@@ -143,6 +143,7 @@ public:
                                                       const Device * const dev, const DeviceErrorProc * const insPtr);
     static rtError_t ProcessStarsCoreTimeoutDfxInfo(const StarsDeviceErrorInfo *const info, const uint64_t errorNumber,
         const Device *const dev, const DeviceErrorProc *const insPtr);
+    rtError_t GetQosInfoFromRingbuffer();
 private:
     rtError_t ProcErrorInfoWithoutLock(const TaskInfo * const taskPtr = nullptr, const bool isPrintTaskInfo = false);
 

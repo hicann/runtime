@@ -19,6 +19,8 @@
 #include "event.hpp"
 #include "task_info.hpp"
 #include "device/device_error_proc.hpp"
+#include "device.hpp"
+#include "utils/qos.hpp"
 #include "program.hpp"
 #include "uma_arg_loader.hpp"
 #include "npu_driver.hpp"
@@ -2925,4 +2927,106 @@ TEST_F(CloudV2DeviceTest, BlockFree_test)
 {
     SegmentManager segManager(nullptr, 0U, true);
     segManager.SegmentFree(0U);
+}
+
+TEST_F(CloudV2DeviceTest, GetQosInfoFromRingbuffer_Invalid)
+{
+    RawDevice *dev = new RawDevice(1);
+    dev->Init();
+    DeviceErrorProc *errorProc = new (std::nothrow) DeviceErrorProc(dev, 2 * 1024 * 1024);
+
+    char *tmpRingbufferAddr = new (std::nothrow) char[2 * 1024 * 1024];
+    errorProc->deviceRingBufferAddr_ = tmpRingbufferAddr;
+
+    constexpr uint32_t len = RTS_TIMEOUT_STREAM_SNAPSHOT_LEN + RUNTME_TSCH_CAPABILITY_LEN + QOS_INFO_LEN;
+    const uint32_t qosOffset = errorProc->ringBufferSize_ - len;
+    RtQos_t *devRtQos = RtValueToPtr<RtQos_t *>(RtPtrToValue<const void *>(errorProc->deviceRingBufferAddr_) + qosOffset);
+    
+    devRtQos->header.magic = 1;
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(dev->Driver_()), &NpuDriver::MemCopySync).stubs()
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(1));
+
+    // magic 不匹配报错
+    rtError_t ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+
+    // 内存拷贝失败报错
+    ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, 1);
+
+    // ringBufferSize_判断失败报错
+    errorProc->ringBufferSize_ = 100;
+    ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, RT_ERROR_DRV_MEMORY);
+
+    errorProc->device_ = nullptr;
+    ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, RT_ERROR_DEVICE_NULL);    
+    
+    delete[] tmpRingbufferAddr;
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    delete dev;
+}
+
+rtError_t MemCopySync_stub1(
+    Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
+{
+    memcpy_s(dst, destMax, src, size);
+    return RT_ERROR_NONE;
+}
+
+TEST_F(CloudV2DeviceTest, GetQosInfoFromRingbuffer_Normal)
+{
+    RawDevice *dev = new RawDevice(1);
+    dev->Init();
+    DeviceErrorProc *errorProc = new (std::nothrow) DeviceErrorProc(dev, 2 * 1024 * 1024);
+
+    char *tmpRingbufferAddr = new (std::nothrow) char[2 * 1024 * 1024];
+    errorProc->deviceRingBufferAddr_ = tmpRingbufferAddr;
+
+    constexpr uint32_t len = RTS_TIMEOUT_STREAM_SNAPSHOT_LEN + RUNTME_TSCH_CAPABILITY_LEN + QOS_INFO_LEN;
+    const uint32_t qosOffset = errorProc->ringBufferSize_ - len;
+    RtQos_t *devRtQos = RtValueToPtr<RtQos_t *>(RtPtrToValue<void *>(errorProc->deviceRingBufferAddr_) + qosOffset);
+    TsQosCfg_t *devRtQosInfo = RtValueToPtr<TsQosCfg_t *>(RtPtrToValue<void *>(devRtQos->qos));
+
+    devRtQos->header.magic = RINGBUFFER_QOS_MAGIC;
+    devRtQos->header.len = sizeof(devRtQos->qos);
+    devRtQos->header.depth = 4;
+    devRtQosInfo[0].type = static_cast<uint8_t>(QosMasterType::MASTER_AIC_DAT);
+    devRtQosInfo[0].replaceEn = 1;
+    Driver* dev1 = (Driver *)(dev->Driver_());
+    MOCKER_CPP_VIRTUAL(dev1, &Driver::MemCopySync).expects(once()).will(invoke(MemCopySync_stub1));
+    
+    rtError_t ret = errorProc->GetQosInfoFromRingbuffer();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    delete[] tmpRingbufferAddr;
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    delete dev;
+}
+
+TEST_F(CloudV2DeviceTest, InitQosCfg)
+{
+    RawDevice *dev = new RawDevice(1);
+    dev->Init();
+
+    DeviceErrorProc *errorProc = new (std::nothrow) DeviceErrorProc(dev, 2 * 1024 * 1024);
+    dev->deviceErrorProc_ = errorProc;
+
+    MOCKER_CPP(&DeviceErrorProc::GetQosInfoFromRingbuffer).stubs()
+       .will(returnValue(1));
+    MOCKER_CPP(&NpuDriver::GetDeviceInfoByBuff).stubs().will(returnValue(1));
+    rtError_t ret = dev->InitQosCfg();
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    delete errorProc;
+    dev->deviceErrorProc_ = nullptr;
+    delete dev;
 }

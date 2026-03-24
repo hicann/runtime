@@ -524,6 +524,65 @@ DeviceErrorProc::~DeviceErrorProc() noexcept
     }
 }
 
+rtError_t DeviceErrorProc::GetQosInfoFromRingbuffer()
+{
+    NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
+    NULL_PTR_RETURN(deviceRingBufferAddr_, RT_ERROR_DRV_MEMORY);
+
+    constexpr uint32_t len = RTS_TIMEOUT_STREAM_SNAPSHOT_LEN + RUNTME_TSCH_CAPABILITY_LEN + QOS_INFO_LEN;
+    COND_RETURN_ERROR(len >= ringBufferSize_, RT_ERROR_INVALID_VALUE,
+        "ring buffer length invalid, ringBufferSize=%u(bytes), len=%u(bytes)",
+        ringBufferSize_, len);
+    const uint32_t qosOffset = ringBufferSize_ - len;
+    RtQos_t *devRtQos = RtValueToPtr<RtQos_t *>(RtPtrToValue<const void *>(deviceRingBufferAddr_) + qosOffset);
+    
+    std::unique_ptr<char[]> hostAddr(new (std::nothrow) char[sizeof(RtQos_t)]);
+    NULL_PTR_RETURN(hostAddr, RT_ERROR_MEMORY_ALLOCATION);
+
+    Driver * const devDrv = device_->Driver_();
+    rtError_t error = devDrv->MemCopySync(hostAddr.get(), sizeof(RtQos_t), devRtQos,
+        sizeof(RtQos_t), RT_MEMCPY_DEVICE_TO_HOST, false);
+    ERROR_RETURN(error, "Failed to Memcpy from dev to host, len=%u(bytes)", sizeof(RtQos_t));
+
+    RtQos_t *hostRtQos = RtPtrToPtr<RtQos_t *, char_t *>(hostAddr.get());
+    if ((hostRtQos->header.magic != RINGBUFFER_QOS_MAGIC) ||
+        (hostRtQos->header.len != sizeof(hostRtQos->qos)) ||
+        ((hostRtQos->header.depth * sizeof(TsQosCfg_t)) > hostRtQos->header.len) ||
+        (hostRtQos->header.depth <= (static_cast<uint32_t>(QosMasterType::MASTER_AIV_INS) -
+            static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT)))) {
+        // 二包不兼容或者ringbuffer中的数据异常
+        RT_LOG(RT_LOG_WARNING, "The qosinfo in ringbuffer is invalid, use ipc channel.");
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    TsQosCfg_t tsQosCfgArray[hostRtQos->header.depth];
+    errno_t ret = memcpy_s(tsQosCfgArray, sizeof(tsQosCfgArray), hostRtQos->qos, hostRtQos->header.depth * sizeof(TsQosCfg_t));
+    COND_RETURN_WARN(ret != EOK, RT_ERROR_SEC_HANDLE, "Call memcpy_s failed, dst length=%zu, src length=%u, retCode=%d!",
+        sizeof(tsQosCfgArray), hostRtQos->header.depth * sizeof(TsQosCfg_t), ret);
+    uint32_t index = 0;
+    QosMasterConfigType_t aicoreQosCfg = {};
+    for (size_t i = 0; i < hostRtQos->header.depth; i++) {
+        if (tsQosCfgArray[i].type >= static_cast<uint8_t>(QosMasterType::MASTER_AIC_DAT)
+            && tsQosCfgArray[i].type <= static_cast<uint8_t>(QosMasterType::MASTER_AIV_INS)) {
+            aicoreQosCfg.type = static_cast<QosMasterType>(tsQosCfgArray[i].type);
+            aicoreQosCfg.mpamId = tsQosCfgArray[i].mpamId;
+            aicoreQosCfg.qos = tsQosCfgArray[i].qos;
+            aicoreQosCfg.pmg = tsQosCfgArray[i].pmg;
+            // replace_en、vf_en 和 mode 的映射关系维护在驱动中，这里值关注replace_en=1的场景，其他场景下mode继续保持非法值
+            if (tsQosCfgArray[i].replaceEn == 1) {
+                aicoreQosCfg.mode = 0;
+            }
+            index = static_cast<uint32_t>(tsQosCfgArray[i].type) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
+            RT_LOG(RT_LOG_INFO, "The QOS info from ringbuffer is: type=%u, mpamId=%u, qos=%u, pmg=%u, replaceEn=%u, index=%u.",
+                static_cast<QosMasterType>(tsQosCfgArray[i].type), tsQosCfgArray[i].mpamId, tsQosCfgArray[i].qos,
+                tsQosCfgArray[i].pmg, tsQosCfgArray[i].replaceEn, index);
+            device_->SetQosCfg(aicoreQosCfg, index);
+            aicoreQosCfg.mode = MAX_UINT32_NUM;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t DeviceErrorProc::GetTschCapability(const void *devMem) const
 {
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE)) {

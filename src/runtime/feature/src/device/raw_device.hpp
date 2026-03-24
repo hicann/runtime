@@ -848,7 +848,7 @@ public:
         programMtx_.unlock();
     }
 
-    rtError_t SetQosCfg(const qos_master_config_type& qosCfg, uint32_t index);
+    rtError_t SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index) override;
 
     const qos_master_config_t& GetQosCfg()
     {
@@ -881,6 +881,7 @@ private:
     rtError_t InitSimtPrintInfo();
     rtError_t InitCtrlSQ();
     rtError_t InitQosCfg();
+    rtError_t GetQosInfoByIpc();
 
     Stream *primaryStream_;
     Stream *tsFftsDsaStream_;
