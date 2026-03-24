@@ -133,6 +133,8 @@ set(libruntime_src_files_optional
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
     src/api_impl/api_impl_soma.cc
+    src/api_impl/api_error_uvm.cc
+    src/api_impl/api_impl_uvm.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -164,6 +166,7 @@ set(libruntime_api_src_files_optional
     src/api/api_c_snapshot.cc
     src/api/api_david.cc
     src/api/api_c_xpu.cc
+    src/api/api_c_uvm.cc
 )
 
 #------------------------- runtime v100 -------------------------
@@ -178,6 +181,7 @@ set(libruntime_v100_src_files
     src/api_impl/api_impl.cc
     src/api_impl/api_impl_mbuf.cc
     src/api_impl/api_error.cc
+    src/uvm/uvm_callback.cc
 
     # for V100
     src/api_impl/api_impl_creator.cc
@@ -322,6 +326,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uvm
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs

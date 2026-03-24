@@ -951,6 +951,18 @@ struct drv_mem_location {
     enum drv_mem_side side;
 };
 
+typedef enum drv_uvm_location_type {
+    DRV_UVM_LOCATION_TYPE_INVALID = 0,
+    DRV_UVM_LOCATION_TYPE_DEVICE,
+    DRV_UVM_LOCATION_TYPE_HOST,
+    DRV_UVM_LOCATION_TYPE_HOST_NUMA,
+} drv_uvm_location_type;
+
+struct drv_uvm_location {
+    drv_uvm_location_type type;
+    int id;
+};
+
 struct drv_mem_access_desc {
     drv_mem_access_type type;
     struct drv_mem_location location;

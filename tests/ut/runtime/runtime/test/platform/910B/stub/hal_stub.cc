@@ -516,6 +516,17 @@ drvError_t halMemAdvise(DVdeviceptr ptr, size_t count, unsigned int advise, DVde
     return DRV_ERROR_NONE;
 }
 
+drvError_t halMemManagedAdvise(DVdeviceptr ptr, size_t size, uint32_t advise, struct drv_uvm_location location)
+{
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halMemManagedRangeGetAttributes(void **data, size_t *data_sizes, uint32_t *attributes,
+                                            size_t attribute_num, DVdeviceptr ptr, size_t size)
+{
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halMemFree(void *pp)
 {
     free(pp);

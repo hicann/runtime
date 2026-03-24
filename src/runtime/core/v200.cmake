@@ -166,6 +166,8 @@ set(libruntime_v200_src_files_exclude_for_tiny
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
     src/api_impl/api_impl_soma.cc
+    src/api_impl/api_error_uvm.cc
+    src/api_impl/api_impl_uvm.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -197,6 +199,7 @@ set(libruntime_v200_v201_common_src_files
     src/api_impl/api_impl_david.cc
     src/api_impl/api_impl.cc
     src/api_impl/api_impl_mbuf.cc
+    src/uvm/uvm_callback.cc
     src/config.cc
     src/context/context.cc
     src/device/device.cc
@@ -392,6 +395,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uvm
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/src/inc/runtime
     ${RUNTIME_DIR}/pkg_inc/tsd/

@@ -64,6 +64,7 @@
 #include "aicpu_c.hpp"
 #include "event_task.h"
 #include "kernel_utils.hpp"
+#include "uvm_callback.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -2627,6 +2628,7 @@ rtError_t ApiImpl::ManagedMemFree(const void * const ptr)
 {
     RT_LOG(RT_LOG_INFO, "managed memory free.");
     TIMESTAMP_NAME(__func__);
+
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
     if (!ContextManage::CheckContextIsValid(curCtx, true)) {
@@ -3088,7 +3090,7 @@ rtError_t ApiImpl::MemSetSync(const void * const devPtr, const uint64_t destMax,
 rtError_t ApiImpl::MemsetAsync(void * const ptr, const uint64_t destMax, const uint32_t val, const uint64_t cnt,
     Stream * const stm)
 {
-    RT_LOG(RT_LOG_DEBUG, "MemsetAsync, destMax=%" PRIu64 ", value=%u, count=%" PRIu64 ".", destMax, val, cnt);
+    RT_LOG(RT_LOG_DEBUG, "destMax=%" PRIu64 ", value=%u, count=%" PRIu64 ".", destMax, val, cnt);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3099,6 +3101,21 @@ rtError_t ApiImpl::MemsetAsync(void * const ptr, const uint64_t destMax, const u
     }
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Memset async failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+
+    if (UvmCallback::IsUvmMem(ptr, cnt)) {
+        MemsetCallbackStruct *memsetCallbackParams = new (std::nothrow) MemsetCallbackStruct;
+        COND_RETURN_ERROR(memsetCallbackParams == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Alloc memsetCallbackParams failed.");
+        memsetCallbackParams->ptr = ptr;
+        memsetCallbackParams->destMax = destMax;
+        memsetCallbackParams->val = val;
+        memsetCallbackParams->cnt = cnt;
+        const rtError_t error = LaunchHostFunc(stm, UvmCallback::MemsetAsyncCallback, static_cast<void *>(memsetCallbackParams));
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "CallbackLaunch fails in MemsetAsync with error code %#x.", error);
+            delete memsetCallbackParams;
+        }
+        return error;
+    }
 
     return curCtx->MemsetAsync(ptr, destMax, val, cnt, curStm);
 }

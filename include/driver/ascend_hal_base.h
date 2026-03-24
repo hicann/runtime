@@ -1904,6 +1904,7 @@ typedef drvError_t DVresult;
 #define DV_MEM_LOCK_DEV_DVPP    0x0020
 #define DV_MEM_LOCK_HOST_AGENT  0x0040
 #define DV_MEM_USER_MALLOC      0x0080
+#define DV_MEM_UVM              0x0200
 
 #define DV_MEM_RESV 8
 struct DVattribute {

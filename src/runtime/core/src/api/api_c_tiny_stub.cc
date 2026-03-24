@@ -63,6 +63,40 @@ rtError_t rtMemAdvise(void* devPtr, uint64_t count, uint32_t advise)
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
+{
+    (void)ptr;
+    (void)size;
+    (void)advise;
+    (void)location;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
+{
+    (void)attribute;
+    (void)ptr;
+    (void)size;
+    (void)data;
+    (void)dataSize;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
+                                size_t size, void **data, size_t *dataSizes)
+{
+    (void)attributes;
+    (void)numAttributes;
+    (void)ptr;
+    (void)size;
+    (void)data;
+    (void)dataSizes;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyRecordInfo_t *info)
 {
     (void)cntNotify;

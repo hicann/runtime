@@ -155,6 +155,7 @@ void initData(uint32_t *hostPtr, uint32_t count, uint32_t data);
 void initUpdateDsaSqe(uint32_t *hostAddr, rtStarsDsaSqe_t* dsaSqe);
 void drvStubInit(rtSocType_t socType);
 void StubClearHalSqSendAndRecvCnt(uint32_t devId);
+rtError_t LaunchHostFuncNormalStub(cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData);
 
 class ApiTest : public testing::Test {
 public:

@@ -380,6 +380,33 @@ aclError aclrtPointerGetAttributesImpl(const void *ptr, aclrtPtrAttributes *attr
     return ACL_SUCCESS;
 }
 
+aclError aclrtMemManagedGetAttrImpl(aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data,
+                                    size_t dataSize)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemManagedGetAttr);
+    ACL_LOG_DEBUG("start to execute aclrtMemManagedGetAttr");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
+    ACL_REQUIRES_POSITIVE(size);
+    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedGetAttr(static_cast<rtMemManagedRangeAttribute>(attribute), ptr, size, data, dataSize), rtMemManagedGetAttr);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtMemManagedGetAttrsImpl(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr,
+                                    size_t size, void **data, size_t *dataSizes)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemManagedGetAttrs);
+    ACL_LOG_DEBUG("start to execute aclrtMemManagedGetAttrs");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attributes);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataSizes);
+    ACL_REQUIRES_POSITIVE(size);
+    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedGetAttrs(reinterpret_cast<rtMemManagedRangeAttribute *>(attributes), 
+                                            numAttributes, ptr, size, data, dataSizes), rtMemManagedGetAttrs);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtHostRegisterImpl(void *ptr, uint64_t size, aclrtHostRegisterType type, void **devPtr)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtHostRegister);
@@ -564,6 +591,22 @@ aclError aclrtMemAllocManagedImpl(void **ptr, uint64_t size, uint32_t flag)
         ACL_LOG_CALL_ERROR("alloc uvm memory failed, runtime result = %d", rtErr);
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
+    return ACL_SUCCESS;
+}
+
+aclError aclrtMemManagedAdviseImpl(const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, 
+                                    aclrtMemManagedLocation location)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemManagedAdvise);
+    ACL_LOG_DEBUG("start to execute aclrtMemManagedAdvise");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+    ACL_REQUIRES_POSITIVE(size);
+
+    rtMemManagedLocation memLocation;
+    memLocation.id = location.id;
+    memLocation.type = static_cast<rtMemManagedLocationType>(location.type);
+    
+    ACL_REQUIRES_CALL_RTS_OK(rtMemManagedAdvise(ptr, size, advise, memLocation), rtMemManagedAdvise);
     return ACL_SUCCESS;
 }
 

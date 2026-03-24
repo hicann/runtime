@@ -1223,6 +1223,62 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemAllocManaged_DeviceTest)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtMemManagedAdvise_DeviceTest)
+{
+    void *ptr = nullptr;
+    size_t size = 1;
+    aclrtMemManagedLocation location;
+    location.type = ACL_MEM_LOCATIONTYPE_HOST;
+
+    aclError ret = aclrtMemAllocManaged(&ptr, size, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtMemManagedAdvise(ptr, size, ACL_MEM_ADVISE_SET_READ_MOSTLY, location);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtFree(ptr);
+    ptr = nullptr;
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemManagedGetAttr_DeviceTest)
+{
+    void *ptr = nullptr;
+    size_t size = 1;
+    void *data;
+    size_t dataSize = 4;
+
+    aclError ret = aclrtMemAllocManaged(&ptr, size, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtMemManagedGetAttr(ACL_MEM_RANGE_ATTRIBUTE_READ_MOSTLY, ptr, size, &data, dataSize);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtFree(ptr);
+    ptr = nullptr;
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemManagedGetAttrs_DeviceTest)
+{
+    void *ptr = nullptr;
+    size_t size = 1;
+    void *data;
+    size_t dataSizes = 8;
+    size_t numAttributes = 2;
+    aclrtMemManagedRangeAttribute attributes[2] = {ACL_MEM_RANGE_ATTRIBUTE_READ_MOSTLY, ACL_MEM_RANGE_ATTRIBUTE_ACCESSED_BY};
+
+    aclError ret = aclrtMemAllocManaged(&ptr, size, 1);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtMemManagedGetAttrs(attributes, numAttributes, ptr, size, &data, &dataSizes);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    ret = aclrtFree(ptr);
+    ptr = nullptr;
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtMalloc_DeviceTest)
 {
     void *devPtr = nullptr;

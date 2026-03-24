@@ -43,6 +43,7 @@ typedef enum {
     RT_MEMORY_LOC_MANAGED,
     RT_MEMORY_LOC_HOST_NUMA,
     RT_MEMORY_LOC_MAX,
+    RT_MEMORY_LOC_UVM_MANAGED,
 } rtMemLocationType;
 
 typedef struct {

@@ -26,11 +26,14 @@
 #include "runtime/rt_ras.h"
 #include "rt_error_codes.h"
 #include "acl/acl_base.h"
+#include "internal_error_define.hpp"
 
 #include <stdlib.h>
 #include <string.h>
 #include "securec.h"
 #include "acl_stub.h"
+
+using namespace cce::runtime;
 
 rtError_t aclStub::rtSetDevice(int32_t device)
 {
@@ -413,6 +416,37 @@ rtError_t aclStub::rtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag, c
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
+{
+    (void)ptr;
+    (void)size;
+    (void)advise;
+    (void)location;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
+{
+    (void)attribute;
+    (void)ptr;
+    (void)size;
+    (void)data;
+    (void)dataSize;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, 
+                            size_t size, void **data, size_t *dataSizes)
+{
+    (void)attributes;
+    (void)numAttributes;
+    (void)ptr;
+    (void)size;
+    (void)data;
+    (void)dataSizes;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtCallbackLaunch(rtCallback_t callBackFunc, void *fnData, rtStream_t stream, bool isBlock)
 {
     return RT_ERROR_NONE;
@@ -420,7 +454,23 @@ rtError_t aclStub::rtCallbackLaunch(rtCallback_t callBackFunc, void *fnData, rtS
 
 rtError_t rtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag, const uint16_t moduleId)
 {
- 	return MockFunctionTest::aclStubInstance().rtMemAllocManaged(ptr, size, flag, moduleId);
+    return MockFunctionTest::aclStubInstance().rtMemAllocManaged(ptr, size, flag, moduleId);
+}
+
+rtError_t rtMemManagedAdvise(const void *const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
+{
+    return MockFunctionTest::aclStubInstance().rtMemManagedAdvise(ptr, size, advise, location);
+}
+
+rtError_t rtMemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
+{
+    return MockFunctionTest::aclStubInstance().rtMemManagedGetAttr(attribute, ptr, size, data, dataSize);
+}
+
+rtError_t rtMemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr,
+                            size_t size, void **data, size_t *dataSizes)
+{
+    return MockFunctionTest::aclStubInstance().rtMemManagedGetAttrs(attributes, numAttributes, ptr, size, data, dataSizes);
 }
 
 rtError_t aclStub::rtsLaunchHostFunc(rtStream_t stm, const rtCallback_t callBackFunc, void * const fnData)

@@ -150,6 +150,7 @@ set(libruntime_api_src_files_exclude_for_tiny
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
     src/api/api_david.cc
+    src/api/api_c_uvm.cc
 )
 
 set(libruntime_api_src_files_include_for_tiny
@@ -168,6 +169,7 @@ set(libruntime_common_src_files
     src/launch/label_stars.cc
     src/launch/cmo_barrier_common.cc
     src/launch/cmo_barrier_stars.cc
+    src/uvm/uvm_callback.cc
 
     # for V100
     src/api_impl/api_impl_creator.cc
@@ -268,6 +270,7 @@ set(libruntime_v100_src_files
     src/api_impl/api_impl_creator.cc
     src/api_impl/api_impl_mbuf.cc
     src/dfx/kernel_dfx_info.cc
+    src/uvm/uvm_callback.cc
 
     # for V100
     src/api_impl/v100/api_impl_creator_c.cc
@@ -412,6 +415,7 @@ set(RUNTIME_INC_DIR_TINY
     ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uvm
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
     ## not open
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs

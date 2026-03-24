@@ -202,6 +202,8 @@ set(libruntime_cmodel_src_files_optional
     src/api_impl/api_error_standard_soc.cc
     src/api_impl/api_impl_standard_soc.cc
     src/api_impl/api_impl_soma.cc
+    src/api_impl/api_error_uvm.cc
+    src/api_impl/api_impl_uvm.cc
     src/context/context_standard_soc.cc
     src/dfx/fp16_t.cpp
     src/dfx/hifloat.cpp
@@ -233,6 +235,7 @@ set(libruntime_cmodel_api_src_files
     src/api/api_c_dqs.cc
     src/api/api_c_snapshot.cc
     src/api/api_david.cc
+    src/api/api_c_uvm.cc
 )
 
 set(xpu_tprt_api_file
@@ -249,6 +252,7 @@ set(libruntime_cmodel_src_files
     src/api_impl/api_error.cc
     src/api_impl/api_impl.cc
     src/api_impl/api_impl_mbuf.cc
+    src/uvm/uvm_callback.cc
 
     # for V100
     src/api_impl/api_impl_creator.cc
@@ -351,6 +355,7 @@ set(libruntime_cmodel_v200_src_files
     src/api_impl/api_impl.cc
     src/api_impl/api_impl_mbuf.cc
     src/api_impl/api_impl_david.cc
+    src/uvm/uvm_callback.cc
 
     # for V200
     src/api_impl/api_impl_creator.cc
@@ -512,6 +517,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/args
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uvm
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
