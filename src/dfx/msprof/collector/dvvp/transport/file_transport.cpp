@@ -267,7 +267,7 @@ int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::Pr
         if (fileChunkReq->chunk.length() > 0) {
             fileChunkReq->chunkSize = fileChunkReq->chunk.size() - headerSize;
             MSPROF_LOGD("store aicpu data in file chunk, size:%d", fileChunkReq->chunkSize);
-            return PROFILING_FAILED;
+            return (fileChunkReq->chunkSize > 0 ? PROFILING_FAILED : PROFILING_SUCCESS);
         } else {
             return PROFILING_SUCCESS;
         }
