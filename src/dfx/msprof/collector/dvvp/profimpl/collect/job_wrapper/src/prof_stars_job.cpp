@@ -142,8 +142,7 @@ int32_t ProfFftsProfileJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     cfgMode_ = 0;
     collectionJobCfg_ = cfg;
     if (collectionJobCfg_->comParams->params->ai_core_profiling.compare("on") != 0 &&
-        collectionJobCfg_->comParams->params->aiv_profiling.compare("on") != 0 &&
-        collectionJobCfg_->comParams->params->prof_level.compare(MSVP_LEVEL_L3) == 0) {
+        collectionJobCfg_->comParams->params->aiv_profiling.compare("on") != 0) {
         MSPROF_LOGI("Aicore not enable, devId:%d", collectionJobCfg_->comParams->devId);
         return PROFILING_FAILED;
     }
