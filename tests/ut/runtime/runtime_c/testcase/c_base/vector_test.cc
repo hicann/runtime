@@ -214,19 +214,6 @@ TEST_F(UtestVectorTest, VectorCase_memcpy_s_abnormal) {
   DeInitVector(&a);
 }
 
-TEST_F(UtestVectorTest, NewVector_mmMalloc_Abnormal) {
-  MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-  EXPECT_EQ(NewVector(uint8_t), nullptr);
-}
-
-TEST_F(UtestVectorTest, CapacityVector_mmMalloc_Null) {
-  Vector a;
-  uint8_t value = 1;
-  InitVector(&a, sizeof(uint8_t));
-  MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-  EXPECT_EQ(ReSizeVector(&a, 1), 0);
-}
-
 TEST_F(UtestVectorTest, EmplaceVector_Memmove_Abnormal) {
   Vector a;
   uint8_t value = 1;

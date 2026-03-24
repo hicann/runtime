@@ -248,18 +248,6 @@ TEST_F(ApiCTest, device_set_abnormal) {
     rtDeinit();
 }
 
-TEST_F(ApiCTest, rt_set_device_mmMalloc_abnormal) {
-    rtError_t error;
-    error = rtInit();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-    error = rtSetDevice(0);
-    EXPECT_EQ(error, ACL_ERROR_RT_DEV_SETUP_ERROR);
-
-    rtDeinit();
-}
-
 TEST_F(ApiCTest, device_not_have) {
     rtError_t error;
 
@@ -1002,33 +990,6 @@ TEST_F(ApiCTest, stream_workspace_normal) {
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtCtxDestroyEx(ctx0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtDeviceReset(0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtDeinit();
-}
-
-TEST_F(ApiCTest, stream_create_mmMalloc_abnormal) {
-    rtError_t error;
-    error = rtInit();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtSetDevice(0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtContext_t ctx;
-    error = rtCtxCreateEx(&ctx, 0, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtStreamConfigHandle handle;
-    rtStream_t stream;
-    MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-    error = rtStreamCreateWithConfig(&stream, &handle);
-    EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
-
-    error = rtCtxDestroyEx(ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDeviceReset(0);

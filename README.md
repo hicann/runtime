@@ -73,7 +73,6 @@
     - gperf
     - libtool
     - make
-    - asan （仅执行UT时依赖。asan通常不需要单独安装，已集成在gcc中，如需要单独安装asan，请确保与gcc版本兼容，例如gcc 9.5.0匹配libasan6版本。）
 
     Ubuntu/Debian操作系统安装命令示例如下：
     ```bash
@@ -238,6 +237,9 @@ bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={
 
 通过`-c`可以获取覆盖率，如无需获取覆盖率，可省略此参数。
 > 需先安装 `lcov`(Ubuntu / Debian：`sudo apt install lcov`；openEuler：`sudo dnf install lcov`)；若因版本差异报错，请按提示调整脚本参数。
+
+通过`--asan`可以启用AddressSanitizer进行内存错误检测，如无需启用，可省略此参数。
+> AddressSanitizer通常不需要单独安装，已集成在gcc中。如需单独安装asan，请确保与gcc版本兼容，例如gcc 9.5.0匹配libasan6版本。
 
 通过`--cann_3rd_lib_path`指定第三方依赖的路径，若在联网环境中，可省略此参数。
 

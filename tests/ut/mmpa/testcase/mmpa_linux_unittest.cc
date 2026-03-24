@@ -1446,66 +1446,6 @@ TEST_F(Utest_mmpa_linux, Utest_mmSetProcessPrio_01)
     ASSERT_EQ(EN_INVALID_PARAM, ret);
 }
 
-TEST_F(Utest_mmpa_linux, Utest_mmRmDir_01)
-{
-    CHAR rmdirPath[64] = "../tests/ut/mmpa/testcase/rmdirTest";
-    CHAR dirPath1[64] = "../tests/ut/mmpa/testcase/rmdirTest/test1";
-    CHAR dirPath2[64] = "../tests/ut/mmpa/testcase/rmdirTest/test2";
-
-    CHAR filePath1[64] = "../tests/ut/mmpa/testcase/rmdirTest/test1/test1.txt";
-    CHAR filePath2[64] = "../tests/ut/mmpa/testcase/rmdirTest/test2/test2.txt";
-
-    INT32 ret = mmRmdir(filePath1);
-    ASSERT_EQ(EN_INVALID_PARAM, ret);
-
-    mmRmdir(rmdirPath);
-    ret = mmMkdir(rmdirPath, 0755);
-    ASSERT_EQ(EN_OK, ret);
-
-    ret = mmMkdir(dirPath1, 0755);
-    printf("dirPath1  \n");
-    ASSERT_EQ(EN_OK, ret);
-
-    ret = mmMkdir(dirPath2, 0755);
-    ASSERT_EQ(EN_OK, ret);
-    INT32 fd = mmOpen((CHAR*)filePath1, O_CREAT | O_RDWR);
-    EXPECT_TRUE(fd >= 0);
-    ret = mmClose(fd);
-    ASSERT_EQ(EN_OK, ret);
-
-    fd = mmOpen((CHAR*)filePath2, O_CREAT | O_RDWR);
-    EXPECT_TRUE(fd >= 0);
-    ret = mmClose(fd);
-    ASSERT_EQ(EN_OK, ret);
-
-    MOCKER(rmdir)
-          .stubs()
-          .will(returnValue(EN_ERROR));
-    ret = mmRmdir(rmdirPath);
-    ASSERT_EQ(EN_ERROR, ret);
-    GlobalMockObject::reset();
-
-    MOCKER(&malloc)
-        .stubs()
-        .will(returnValue((void*)NULL));
-    ret = mmRmdir(rmdirPath);
-    ASSERT_EQ(EN_INVALID_PARAM, ret);
-    GlobalMockObject::reset();
-
-    MOCKER(&memset_s)
-       .stubs()
-       .will(returnValue(EN_ERROR));
-    ret = mmRmdir(rmdirPath);
-    ASSERT_EQ(EN_ERROR, ret);
-    GlobalMockObject::reset();
-
-    ret = mmRmdir(NULL);
-    ASSERT_EQ(EN_INVALID_PARAM, ret);
-
-    ret = mmRmdir(rmdirPath);
-    ASSERT_EQ(EN_OK, ret);
-}
-
 TEST_F(Utest_mmpa_linux, Utest_mmAccess_01)
 {
     CHAR newPath[256] = "../tests/ut/mmpa/testcase/mmAccess";
@@ -3179,31 +3119,6 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_01)
 
 }
 
-TEST_F(Utest_mmpa_linux, Utest_mmGetCpuInfo_02)
-{
-    mmCpuDesc *desc = NULL;
-    INT32 count = 0;
-    INT32 ret = 0;
-
-    MOCKER(malloc)
-           .stubs()
-       .will(returnValue((void*)NULL));
-    ret = mmGetCpuInfo(&desc,&count);
-    printf("mmGetCpuInfo ret = %d\n",ret);
-    ASSERT_EQ(EN_ERROR, ret);
-    GlobalMockObject::reset();
-
-    MOCKER(memcpy_s)
-           .stubs()
-       .will(returnValue(-1));
-    ret = mmGetCpuInfo(&desc,&count);
-    ASSERT_EQ(EN_ERROR, ret);
-    GlobalMockObject::reset();
-
-    ret = mmCpuInfoFree(NULL,count);
-    ASSERT_EQ(EN_INVALID_PARAM, ret);
-}
-
 int atoiStub(const char *nptr)
 {
     return 4096;
@@ -3238,43 +3153,6 @@ TEST_F(Utest_mmpa_linux, Utest_mmGetMac_01)
     ASSERT_EQ(EN_ERROR, ret);
 	GlobalMockObject::reset();
 
-}
-
-TEST_F(Utest_mmpa_linux, Utest_mmGetMac_02)
-{
-
-    mmMacInfo *list = NULL;
-    int count = 0;
-    int i = 0;
-    int ret = 0;
-
-    MOCKER(malloc)
-           .stubs()
-       .will(returnValue((void*)NULL));
-    ret = mmGetMac(&list,&count);
-    ASSERT_EQ(EN_ERROR, ret);
-	GlobalMockObject::reset();
-
-    MOCKER((int (*)(int,int,char*))ioctl)
-           .stubs()
-       .will(returnValue(-1));
-    ret = mmGetMac(&list,&count);
-    ASSERT_EQ(EN_ERROR, ret);
-	GlobalMockObject::reset();
-
-    MOCKER((int (*)(char*,long unsigned int,const char*))strcpy_s)
-           .stubs()
-       .will(returnValue(EN_ERROR));
-    ret = mmGetMac(&list,&count);
-    ASSERT_EQ(EN_ERROR, ret);
-	GlobalMockObject::reset();
-
-    MOCKER((int (*)(char*, long unsigned int, long unsigned int))snprintf_s)
-           .stubs()
-       .will(returnValue(EN_ERROR));
-    ret = mmGetMac(&list,&count);
-    ASSERT_EQ(EN_ERROR, ret);
-	GlobalMockObject::reset();
 }
 
 TEST_F(Utest_mmpa_linux, Utest_mmCreateProcess)

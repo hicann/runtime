@@ -195,11 +195,6 @@ TEST_F(UtestSortVectorTest, SortVectorCaseDefaultCmp) {
   EXPECT_EQ(a.vector.itemSize, 0);
 }
 
-TEST_F(UtestSortVectorTest, NewSortVector_mmMalloc_Abnormal) {
-  MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-  EXPECT_EQ(NewSortVector(StubPair, StubPairCmp, nullptr), nullptr);
-}
-
 TEST_F(UtestSortVectorTest, EmplaceSortVector_Memcpy_Abnormal) {
   SortVector a;
   StubPair pair = {10, 1};

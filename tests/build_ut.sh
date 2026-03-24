@@ -38,7 +38,7 @@ ut_path_map["mmpa"]="tests/ut/mmpa"
 usage() {
   echo "Usage:"
   echo "  sh build_ut.sh --pkg [-h | --help] [-v | --verbose] [-j<N>]"
-  echo "                 [-t | --target <target1> <target2> ...]"
+  echo "                 [-t | --target <target1> <target2> ...] [--asan]"
   echo "                 [-u | --ut] [-c | --cov] [--cann_3rd_lib_path=<PATH>]"
   echo ""
   echo "Options:"
@@ -48,6 +48,7 @@ usage() {
   echo "    -u, --ut [specific_ut]"
   echo "                   Build and execute ut, if specific_ut is provided, run only the specified unit test"
   echo "    -c, --cov      Build ut with coverage tag"
+  echo "    --asan         Enable AddressSanitizer"
   echo "    -t, --target   Build only the selected target and run"
   echo "    --cann_3rd_lib_path=<PATH>"
   echo "                   Set ascend third_party package install path, default ./output/third_party"
@@ -59,6 +60,7 @@ checkopts() {
   VERBOSE=""
   THREAD_NUM=8
   ENABLE_UT="off"
+  ENABLE_ASAN="off"
   ENABLE_COV="off"
   MAKE_PKG="off"
   ASCEND_3RD_LIB_PATH="$BASEPATH/output/third_party"
@@ -67,7 +69,7 @@ checkopts() {
   TARGETS=()
 
   # Process the options
-  parsed_args=$(getopt -o j:hvu::ct:f: -l help,cann_3rd_lib_path:,ut::,verbose,target:, -- "$@") || {
+  parsed_args=$(getopt -o j:hvu::ct:f: -l help,cann_3rd_lib_path:,ut::,verbose,asan,target:, -- "$@") || {
     usage
     exit 1
   }
@@ -108,6 +110,10 @@ checkopts() {
       -c | --cov)
         ENABLE_UT="on"
         ENABLE_COV="on"
+        shift
+        ;;
+      --asan)
+        ENABLE_ASAN="on"
         shift
         ;;
       -t | --target)
@@ -205,6 +211,7 @@ build_rts() {
               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
               -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
               -DOPEN_SOURCE_DIR=${ASCEND_3RD_LIB_PATH} \
+              -DENABLE_ASAN=${ENABLE_ASAN} \
               -DENABLE_COV=${ENABLE_COV} \
               -DENABLE_UT=${ENABLE_UT}"
 
@@ -245,12 +252,14 @@ run_ut() {
     fi
 
     ORIGINAL_LD_PRELOAD="$LD_PRELOAD"
-    LIBASAN_PATH=$(gcc -print-file-name=libasan.so)
-    if [ -f "$LIBASAN_PATH" ]; then
-      export LD_PRELOAD="$ORIGINAL_LD_PRELOAD:$LIBASAN_PATH"
-      echo "preload libasan from $LIBASAN_PATH"
-    else
-      echo "libasan not found for the current gcc version."
+    if [[ "X$ENABLE_ASAN" = "Xon" ]]; then
+      LIBASAN_PATH=$(gcc -print-file-name=libasan.so)
+      if [ -f "$LIBASAN_PATH" ]; then
+        export LD_PRELOAD="$ORIGINAL_LD_PRELOAD:$LIBASAN_PATH"
+        echo "preload libasan from $LIBASAN_PATH"
+      else
+        echo "libasan not found for the current gcc version."
+      fi
     fi
 
     local report_dir="${OUTPUT_PATH}/report/ut" && mk_dir "${report_dir}"

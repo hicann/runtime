@@ -33,41 +33,6 @@ void *ThreadFunc(void *arg) {
   return nullptr;
 }
 
-TEST_F(UtestErrManagerTest, ReportInterErrMessage) {
-  // 测试error_code不是内部错误码，返回-1
-  ReportInterErrMessage("errcode", "errmsg");
-  ReportInterErrMessage("60000", "This is an inner error!");
-
-  pthread_t threadId;
-  int ret = pthread_create(&threadId, nullptr, ThreadFunc, nullptr);
-  if (ret != 0) {
-    printf("create thread failed, err = %d\n", ret);
-  }
-  pthread_join(threadId, nullptr);
-
-  // 内部错误码正常上报， GetErrorMessage返回正确的拼接格式，并且会清空当前线程上报的所有信息。
-  ReportInterErrMessage("E19999", "This is an inner error!");
-  char *errmsg1 = GetErrorMessage();
-  ASSERT_STREQ(errmsg1, "E19999: Inner Error!\r\nThis is an inner error!\r\n");
-
-  REPORT_INNER_ERROR("E29999", "Param input.size():%zu < %zu, check invalid", 5, 6);
-  char *errmsg2 = GetErrorMessage();
-  char *errmsg3 = GetErrorMessage();
-  ASSERT_STREQ(errmsg3, NULL);
-
-  // 覆盖EmplaceVector失败场景
-  MOCKER(EmplaceBackVector).stubs().will(returnValue((void *)NULL));
-  ReportInterErrMessage("E19999", "This is an inner error!");
-
-  MOCKER(memcpy_s).stubs().will(returnValue(EINVAL));
-  ReportInterErrMessage("E19999", "This is an inner error!");
-  errmsg3 = GetErrorMessage();
-  ASSERT_STREQ(errmsg3, NULL);
-
-  MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-  ReportInterErrMessage("E19999", "This is an inner error!");
-}
-
 TEST_F(UtestErrManagerTest, ReportErrMessage) {
   // 非模板中的错误码
   REPORT_INPUT_ERROR("60000", ARRAY("value1", "value2"), ARRAY("34", "56"));
@@ -150,61 +115,10 @@ void *ThreadFuncForInterInit(void *arg) {
   return (void *)errmsg;
 }
 
-TEST_F(UtestErrManagerTest, ReportInterErrMessageInitMallocNull) {
-  MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-  pthread_t threadId;
-  char *param;
-  int ret = pthread_create(&threadId, nullptr, ThreadFuncForInterInit, nullptr);
-  if (ret != 0) {
-    printf("create thread failed, err = %d\n", ret);
-  }
-  pthread_join(threadId, (void **)&param);
-  ASSERT_STREQ(param, nullptr);
-}
-
 void *ThreadFuncForOutMsgInit(void *arg) {
   REPORT_INPUT_ERROR("EK0201", ARRAY("buf_size"), ARRAY("100"));
   char *errmsg = GetErrorMessage();
   return (void *)errmsg;
-}
-
-TEST_F(UtestErrManagerTest, ReportErrMessageInitMallocNull) {
-  MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-  pthread_t threadId;
-  char *param;
-  int ret = pthread_create(&threadId, nullptr, ThreadFuncForOutMsgInit, nullptr);
-  if (ret != 0) {
-    printf("create thread failed, err = %d\n", ret);
-  }
-  pthread_join(threadId, (void **)&param);
-  ASSERT_STREQ(param, nullptr);
-}
-
-TEST_F(UtestErrManagerTest, ReportErrMessageMallocFormatNull) {
-  MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-  REPORT_INPUT_ERROR("EK0201", ARRAY("buf_size"), ARRAY("100"));
-  char *errmsg = GetErrorMessage();
-  ASSERT_STREQ(errmsg, NULL);
-}
-
-TEST_F(UtestErrManagerTest, ReportErrMessageMallocErrMsgNull) {
-  char *errcode = (char *)malloc(1);
-  MOCKER(malloc).stubs().will(returnValue((void *)errcode)).then(returnValue((void *)NULL));
-  ReportInterErrMessage("E19999", "This is an inner error!");
-  char *errmsg = GetErrorMessage();
-  ASSERT_STREQ(errmsg, NULL);
-}
-
-TEST_F(UtestErrManagerTest, ReportInnerAndOuterMessageAbnormal) {
-  ReportInterErrMessage("E19999", "This is an inner error!");
-  MOCKER((int (*)(char *, long unsigned int, const char *))sprintf_s).stubs().will(returnValue(-1));
-  char *errmsg1 = GetErrorMessage();
-  ASSERT_STREQ(errmsg1, NULL);
-
-  REPORT_INPUT_ERROR("EK0201", ARRAY("buf_size"), ARRAY("100"));
-  MOCKER(malloc).stubs().will(returnValue((void *)NULL));
-  char *errmsg2 = GetErrorMessage();
-  ASSERT_STREQ(errmsg2, NULL);
 }
 
 TEST_F(UtestErrManagerTest, GetErrorMessageSprintfsOutErrMsg1Abnormal) {

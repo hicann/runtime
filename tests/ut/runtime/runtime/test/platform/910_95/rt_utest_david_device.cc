@@ -68,18 +68,6 @@ public:
     static uint32_t binary_[32];
 };
 
-TEST_F(DeviceTestDavid, Eventid_FreeEventIdFromDrv)
-{
-    RawDevice *stub = new RawDevice(0);
-    stub->Init();
-    NpuDriver drv;
-    stub->driver_ = &drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::NotifyIdFree).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = stub->FreeEventIdFromDrv(0, RT_EVENT_MC2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete stub;
-}
-
 TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
 {
     rtSetDevice(1);

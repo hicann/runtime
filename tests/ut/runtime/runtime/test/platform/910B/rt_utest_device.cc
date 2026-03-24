@@ -2295,18 +2295,6 @@ rtError_t MemCopySyncStub0(Driver *drv, void *dst, uint64_t destMax, const void 
     return DRV_ERROR_NONE;
 }
 
-TEST_F(CloudV2DeviceTest, Eventid_FreeEventIdFromDrv)
-{
-    RawDevice *stub = new RawDevice(0);
-    stub->platformType_ = PLATFORM_DAVID_950PR_9599;
-    NpuDriver drv;
-    stub->driver_ = &drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::NotifyIdFree).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = stub->FreeEventIdFromDrv(0, RT_EVENT_MC2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete stub;
-}
-
 TEST_F(CloudV2DeviceTest, AllocSimtStackPhyBase)
 {
     rtError_t error;

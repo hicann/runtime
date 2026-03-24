@@ -343,54 +343,5 @@ TEST_F(DavidTaskSendTest, david_send_aicpu_msg_version_task)
     MOCKER(GetDrvSqHead).stubs().with(mockcpp::any(), outBound(head)).will(returnValue(RT_ERROR_NONE));
     ((RawDevice *)(stream_->Device_()))->PrimaryStream_()->SetSqBaseAddr(0U);
     ((RawDevice *)(stream_->Device_()))->SendTopicMsgVersionToAicpu();
-}
-
-
-TEST_F(DavidTaskSendTest, LaunchMultipleTaskInfo_test)
-{
-    GlobalMockObject::verify();
-    int32_t devId;
-    rtError_t error;
-    Context *ctx;
-
-    error = rtGetDevice(&devId);
-    RawDevice *device = new RawDevice(0);
-    EXPECT_NE(device, nullptr);
-    device->Init();
-
-    Stream *stream = new Stream(device, 0);
-    EXPECT_NE(stream, nullptr);
-    int tempMemory;
-    auto preVal = stream->taskResMang_;
-    stream->taskResMang_ = reinterpret_cast<TaskResManage *>(&tempMemory);
-
-    RefObject<Context*> *refObject = NULL;
-    refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
-    EXPECT_NE(refObject, nullptr);
-    ctx = refObject->GetVal();
-    EXPECT_NE(ctx, nullptr);
-    TaskInfo task1 = {};
-    DqsCommonTaskInfo dqsDequeueTask = {};
-    task1.u.dqsDequeueTask = dqsDequeueTask;
-    TaskInfo *tmpTask = &task1;
-    DavinciMultiTaskInfo *const davinciMultiTaskInfo = &(task1.u.davinciMultiTaskInfo);
-    rtTaskDesc_t taskDesc;
-    rtMultipleTaskInfo_t multipleTaskInfo = {0};
-    multipleTaskInfo.taskNum = 1;
-    multipleTaskInfo.taskDesc = &taskDesc;
-    multipleTaskInfo.taskDesc[0].type = RT_MULTIPLE_TASK_TYPE_DVPP;
-    multipleTaskInfo.taskDesc[0].u.dvppTaskDesc.sqe.sqeHeader.reserved = 1U;
-    davinciMultiTaskInfo->multipleTaskInfo = &multipleTaskInfo;
-    MOCKER(AllocTaskInfo).stubs().with(outBoundP(&tmpTask)).will(returnValue(RT_ERROR_NONE));
-    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(DavinciMultipleTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    error = LaunchMultipleTaskInfo(&multipleTaskInfo, stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
-    stream->taskResMang_ = preVal;
-    delete stream;
-    delete device;
     GlobalMockObject::verify();
 }

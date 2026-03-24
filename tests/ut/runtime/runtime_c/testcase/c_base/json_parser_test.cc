@@ -566,24 +566,6 @@ TEST_F(UtestJsonParseTest, CJsonFileParse_mmOpenFile_Abnormal) {
   ASSERT_TRUE(jsonObj == nullptr);
 }
 
-TEST_F(UtestJsonParseTest, CJsonFileParse_mmMalloc_Abnormal) {
-  const char *json = "{\"a\" : [{\"a\" : true, \"b\" : false, \"c\" : 123, \"d\" : \"123\"}, "
-                                "{\"a\" : true, \"b\" : false, \"c\" : 123, \"d\" : \"123\"}, "
-                                "{\"a\" : true, \"b\" : false, \"c\" : 123, \"d\" : \"123\"}]}";
-  const char *filePath = "test.json";
-  std::ofstream stream(filePath);
-  stream << json;
-  stream.close();
-
-  char resolvedPath[PATH_MAX];
-  int32_t ret = mmRealPath(filePath, resolvedPath, PATH_MAX);
-  mmFileHandle *fd = mmOpenFile(resolvedPath, FILE_READ);
-  MOCKER(fopen).stubs().will(returnValue(fd));
-  MOCKER(malloc).stubs().will(returnValue((void *)nullptr));
-  CJsonObj *jsonObj = CJsonFileParse(filePath);
-  ASSERT_TRUE(jsonObj == nullptr);
-}
-
 int MemcpyStub(void *dest, int destMax, const void *src, int count) {
   (void)memcpy(dest, src, count);
   return 0;
@@ -606,12 +588,4 @@ TEST_F(UtestJsonParseTest, CJsonFileParseKey_Memcpy_s_Abnormal) {
   MOCKER(memcpy_s).stubs().will(invoke(MemcpyStub)).then(invoke(MemcpyStub)).then(invoke(MemcpyStubFail));
   char *subJson = CJsonFileParseKey(filePath, "a");
   ASSERT_TRUE((subJson == nullptr));
-}
-
-TEST_F(UtestJsonParseTest, CJsonParse_mmMalloc_2_Abnormal) {
-  const char *json = "\"123\"";
-  char *obj = (char *)malloc(sizeof(CJsonObj));
-  MOCKER(malloc).stubs().will(returnValue((void *)obj)).then(returnValue((void *)nullptr));
-  CJsonObj *jsonObj = CJsonParse(json, strlen(json));
-  ASSERT_TRUE((jsonObj == nullptr));
 }

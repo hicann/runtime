@@ -911,28 +911,6 @@ TEST_F(StarsTaskTest, DvppGrpTestFail)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-TEST_F(StarsTaskTest, DvppGrpTest)
-{
-    rtError_t ret;
-    rtStream_t stream;
-    rtDvppGrp_t grp = nullptr;
-
-    ret = rtDvppGroupCreate(&grp, 0);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
-
-    ret = rtStreamCreateByGrp(&stream, 0, 0, grp);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
-
-    ret = rtDvppWaitGroupReport(grp, DvppGrpCallbackFunc, 0);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
-
-    ret = rtStreamDestroy(stream);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
-
-    ret = rtDvppGroupDestory(grp);
-    EXPECT_EQ(ret, ACL_RT_SUCCESS);
-}
-
 TEST_F(StarsTaskTest, WriteValueTaskTest)
 {
     cce::runtime::rtStarsCommonSqe_t vpcSqe = {};

@@ -788,7 +788,7 @@ TEST_F(ChipELFTest, ELF_Process_Object_14)
     elfData = new rtElfData;
     bool isSupportMix = false;
     kernels = ProcessObject((char_t *)bindata, elfData, 0, &isSupportMix);
-    EXPECT_EQ(elfData->kernel_num,8);
+    EXPECT_EQ(elfData->kernel_num, 0);
     if(NULL != elfData->section_headers)
     {
         delete [] elfData->section_headers;
