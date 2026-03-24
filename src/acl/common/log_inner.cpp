@@ -75,16 +75,16 @@ void AclLog::ACLSaveLog(const aclLogLevel logLevel, const char_t *const strLog)
     }
     switch (logLevel) {
         case ACL_ERROR:
-            dlog_error(APP_MODE_ID, "%s", strLog);
+            DlogRecord(APP_MODE_ID, DLOG_ERROR, "%s", strLog);
             break;
         case ACL_WARNING:
-            dlog_warn(APP_MODE_ID, "%s", strLog);
+            DlogRecord(APP_MODE_ID, DLOG_WARN, "%s", strLog);
             break;
         case ACL_INFO:
-            dlog_info(APP_MODE_ID, "%s", strLog);
+            DlogRecord(APP_MODE_ID, DLOG_INFO, "%s", strLog);
             break;
         case ACL_DEBUG:
-            dlog_debug(APP_MODE_ID, "%s", strLog);
+            DlogRecord(APP_MODE_ID, DLOG_DEBUG, "%s", strLog);
             break;
         default:
             break;
