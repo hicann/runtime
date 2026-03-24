@@ -79,6 +79,8 @@ public:
     virtual ~AdxDumpRecord();
     int32_t GetDumpInitNum() const;
     void UpdateDumpInitNum(bool isPlus);
+    bool HasStartedServer() const;
+    bool CanShutdownServer() const;
     int32_t Init(const std::string &hostPid);
     int32_t UnInit();
     void SetWorkPath(const std::string &path);
