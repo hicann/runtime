@@ -7,7 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}../../../../" CACHE PATH "Project top directory") 
+set(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../.." CACHE PATH "Project top directory")
 set(PACKAGE_FILE_PATH_PREFIX ${TOP_DIR}/build/platform/linglong/liteos/Hi1A71_turing_cmc_package/fpga/vendor)
 
 set(NANO_LITEOS_HEADER_FILES_PATH

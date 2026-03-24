@@ -9,14 +9,14 @@
 # -----------------------------------------------------------------------------------------------------------
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
-set(C_BASE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_base)
-set(C_MMPA_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_mmpa)
+set(C_BASE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime_compact/c_base)
+set(C_MMPA_TESTED_SRC_DIR ${TOP_DIR}/src/runtime_compact/c_mmpa)
 
 set(C_FEATURE_INCLUDE_DIR
-    ${TOP_DIR}/src/runtime/c/stub/inc
-    ${TOP_DIR}/src/runtime/c/feature/inc
-    ${TOP_DIR}/src/runtime/c/c_mmpa/inc
-    ${TOP_DIR}/src/runtime/c/c_base/inc
+    ${TOP_DIR}/src/runtime_compact/stub/inc
+    ${TOP_DIR}/src/runtime_compact/feature/inc
+    ${TOP_DIR}/src/runtime_compact/c_mmpa/inc
+    ${TOP_DIR}/src/runtime_compact/c_base/inc
     ${TOP_DIR}/include/external/acl
 )
 
@@ -28,7 +28,7 @@ set(C_BASE_TESTED_FILES
     ${C_BASE_TESTED_SRC_DIR}/src/mem_pool.c
 )
 
-set(C_FEATURE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/feature)
+set(C_FEATURE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime_compact/feature)
 
 set(C_FEATURE_TESTED_COMMON_FILES
     ${C_FEATURE_TESTED_SRC_DIR}/src/api.c

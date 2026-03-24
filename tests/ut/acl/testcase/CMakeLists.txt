@@ -34,7 +34,7 @@ include_directories(${BASE_DIR}/src/acl/aclrt)
 include_directories(${BASE_DIR}/src/acl/aclrt_impl)
 include_directories(${BASE_DIR}/tests/depends/)
 include_directories(${BASE_DIR}/include/dfx)
-include_directories(${BASE_DIR}/src/runtime/core/inc/kernel)
+include_directories(${BASE_DIR}/src/runtime/inc/kernel)
 include_directories(${BASE_DIR}/include/dfx)
 
 set(UT_FILES

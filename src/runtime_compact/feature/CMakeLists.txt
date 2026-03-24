@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 #------------------------- runtime -------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../../../pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../../pkg_inc/runtime/runtime/runtime_headers.cmake)
 set(libruntime_feature_src_files
     src/api.c
     src/error_manage.c
@@ -26,7 +26,7 @@ set(libruntime_feature_src_files
 
 set(RUNTIME_INC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/external/acl
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/external/acl
 )
 
 add_library(runtime_static STATIC

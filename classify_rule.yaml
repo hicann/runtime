@@ -19,7 +19,7 @@ rts:
     release:
       - src/runtime
     unrelease:
-      - src/runtime/c
+      - src/runtime_compact
       - tests/depends/runtime
       - src/runtime/core/platform
       - src/runtime/core/src/common/performance_record.cc
@@ -36,7 +36,7 @@ rts_c:
   team: "rts"
   src:
     release:
-      - src/runtime/c
+      - src/runtime_compact
     unrelease:
   llt:
     ut_check: true

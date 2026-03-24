@@ -11,10 +11,10 @@ set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 ###################################################################################################
 add_executable(driver_stub_utest 
-    ${TOP_DIR}/ace/npuruntime/runtime/cmodel_driver/driver_api.c
-    ${TOP_DIR}/ace/npuruntime/runtime/cmodel_driver/driver_impl.c
-    ${TOP_DIR}/ace/npuruntime/runtime/cmodel_driver/driver_mem.c
-    ${TOP_DIR}/ace/npuruntime/runtime/cmodel_driver/driver_queue.c
+    ${TOP_DIR}/ace/npuruntime/src/cmodel_driver/driver_api.c
+    ${TOP_DIR}/ace/npuruntime/src/cmodel_driver/driver_impl.c
+    ${TOP_DIR}/ace/npuruntime/src/cmodel_driver/driver_mem.c
+    ${TOP_DIR}/ace/npuruntime/src/cmodel_driver/driver_queue.c
     test/main.cc
     test/drv_utest_device.cc
     test/drv_utest_event.cc
@@ -29,7 +29,7 @@ target_include_directories(driver_stub_utest PRIVATE
     ${TOP_DIR}/inc
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/abl/libc_sec/include
-    ${TOP_DIR}/ace/npuruntime/runtime/cmodel_driver
+    ${TOP_DIR}/ace/npuruntime/src/cmodel_driver
 )
 
 target_compile_definitions(driver_stub_utest PRIVATE

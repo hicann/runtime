@@ -37,6 +37,7 @@ add_subdirectory(acl/aclrt)
 add_subdirectory(acl/acl_tdt_queue)
 add_subdirectory(acl/acl_tdt_channel)
 add_subdirectory(../stub stub)
+add_subdirectory(tprt)
 
 include(${RUNTIME_DIR}/version.cmake)
 if(ENABLE_OPEN_SRC)

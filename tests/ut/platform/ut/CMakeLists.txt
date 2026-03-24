@@ -38,7 +38,7 @@ target_include_directories(platform_utest PRIVATE
         ${TOP_DIR}/src/platform
         ${TOP_DIR}/src/platform/inc
         ${TOP_DIR}/src/platform/inc/platform
-        ${TOP_DIR}/src/runtime/core/inc
+        ${TOP_DIR}/src/runtime/inc
         ${TOP_DIR}/pkg_inc
         ${TOP_DIR}/pkg_inc/platform
         ${TOP_DIR}/abl/slog/inc

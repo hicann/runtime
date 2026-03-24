@@ -31,12 +31,12 @@ set(SRC_FILES
     "${BASE_DIR}/src/acl/aclrt_c/common/model_config_rt.c"
 )
 set(SRC_CBASE_FILES
-    "${BASE_DIR}/src/runtime/c/c_base/src/error_manager.c"
-    "${BASE_DIR}/src/runtime/c/c_base/src/json_parser.c"
-    "${BASE_DIR}/src/runtime/c/c_base/src/mem_pool.c"
-    "${BASE_DIR}/src/runtime/c/c_base/src/ref_obj.c"
-    "${BASE_DIR}/src/runtime/c/c_base/src/sort_vector.c"
-    "${BASE_DIR}/src/runtime/c/c_base/src/vector.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/error_manager.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/json_parser.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/mem_pool.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/ref_obj.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/sort_vector.c"
+    "${BASE_DIR}/src/runtime_compact/c_base/src/vector.c"
 )
 
 ############ ascendcl_c_utest ############
@@ -58,7 +58,7 @@ target_include_directories(ascendcl_c_utest PRIVATE
     ${BASE_DIR}/src/acl/aclrt_c/common
     ${BASE_DIR}/pkg_inc/runtime # runtime/mem.h，runtime/base.h
     ${BASE_DIR}/pkg_inc/runtime/runtime # base.h
-    ${BASE_DIR}/src/runtime/c/c_base/inc
+    ${BASE_DIR}/src/runtime_compact/c_base/inc
     ${BASE_DIR}/src/acl/aclrt_c/common  # ge_executor_rt.h
     ${BASE_DIR}/tests/ut/acl/testcase_c/
     ${BASE_DIR}/tests/ut/acl/testcase_c/gmock_executor

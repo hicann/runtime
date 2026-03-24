@@ -11,8 +11,8 @@ include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 set(XPU_TPRT_INC_DIR
-    ${RUNTIME_DIR}/src/runtime/tprt/inc/external
-    ${RUNTIME_DIR}/src/runtime/tprt/feature/inc
+    ${RUNTIME_DIR}/src/tprt/inc/external
+    ${RUNTIME_DIR}/src/tprt/feature/inc
 )
 
 set(libruntime_v100_task_src_files
@@ -283,30 +283,30 @@ set(libruntime_v100_src_files
 )
 
 set(RUNTIME_INC_DIR_OPEN
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    ${RUNTIME_DIR}/src/runtime/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/inc_c
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/args
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/arg_loader
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/context
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/device
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/dfx
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/drv
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/engine
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/engine/hwts
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/event
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/kernel
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/launch
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/model
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/notify
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/profiler
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/soc
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/spec
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/sqe
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/stars
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/stream
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/task
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/utils
+    ${RUNTIME_DIR}/src/runtime/inc/args
+    ${RUNTIME_DIR}/src/runtime/inc/arg_loader
+    ${RUNTIME_DIR}/src/runtime/inc/common
+    ${RUNTIME_DIR}/src/runtime/inc/context
+    ${RUNTIME_DIR}/src/runtime/inc/device
+    ${RUNTIME_DIR}/src/runtime/inc/dfx
+    ${RUNTIME_DIR}/src/runtime/inc/drv
+    ${RUNTIME_DIR}/src/runtime/inc/engine
+    ${RUNTIME_DIR}/src/runtime/inc/engine/hwts
+    ${RUNTIME_DIR}/src/runtime/inc/event
+    ${RUNTIME_DIR}/src/runtime/inc/kernel
+    ${RUNTIME_DIR}/src/runtime/inc/launch
+    ${RUNTIME_DIR}/src/runtime/inc/model
+    ${RUNTIME_DIR}/src/runtime/inc/notify
+    ${RUNTIME_DIR}/src/runtime/inc/profiler
+    ${RUNTIME_DIR}/src/runtime/inc/soc
+    ${RUNTIME_DIR}/src/runtime/inc/spec
+    ${RUNTIME_DIR}/src/runtime/inc/sqe
+    ${RUNTIME_DIR}/src/runtime/inc/stars
+    ${RUNTIME_DIR}/src/runtime/inc/stream
+    ${RUNTIME_DIR}/src/runtime/inc/task
+    ${RUNTIME_DIR}/src/runtime/inc/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api
     ${CMAKE_CURRENT_SOURCE_DIR}/src/api_impl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
@@ -327,11 +327,11 @@ set(RUNTIME_INC_DIR_OPEN
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/src/soma
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uvm
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100
     ## not open
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/dqs
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/sqe/v200
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/sqe/v200_base
+    ${RUNTIME_DIR}/src/runtime/inc/dqs
+    ${RUNTIME_DIR}/src/runtime/inc/sqe/v200
+    ${RUNTIME_DIR}/src/runtime/inc/sqe/v200_base
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/

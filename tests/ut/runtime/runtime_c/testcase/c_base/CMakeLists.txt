@@ -7,8 +7,8 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set(C_BASE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_base)
-set(C_MMPA_TESTED_SRC_DIR ${TOP_DIR}/src/runtime/c/c_mmpa)
+set(C_BASE_TESTED_SRC_DIR ${TOP_DIR}/src/runtime_compact/c_base)
+set(C_MMPA_TESTED_SRC_DIR ${TOP_DIR}/src/runtime_compact/c_mmpa)
 
 # c_base ut
 set(C_BASE_TESTED_FILES

@@ -24,10 +24,10 @@ include $(CLEAR_VARS)
 LOCAL_INC_COV_BLACKLIST := $(LOCAL_PATH)/ut_runtime_black_list.txt
 LOCAL_MODULE := driver_stub_utest
 
-LOCAL_SRC_FILES := ../../../../runtime/cmodel_driver/driver_api.c \
-                   ../../../../runtime/cmodel_driver/driver_impl.c \
-                   ../../../../runtime/cmodel_driver/driver_mem.c \
-                   ../../../../runtime/cmodel_driver/driver_queue.c \
+LOCAL_SRC_FILES := ../../../../src/cmodel_driver/driver_api.c \
+                   ../../../../src/cmodel_driver/driver_impl.c \
+                   ../../../../src/cmodel_driver/driver_mem.c \
+                   ../../../../src/cmodel_driver/driver_queue.c \
                    test/main.cc \
 				   test/drv_utest_device.cc\
 				   test/drv_utest_event.cc\
@@ -37,7 +37,7 @@ LOCAL_SRC_FILES := ../../../../runtime/cmodel_driver/driver_api.c \
 				   test/drv_utest_dispatch.cc\
                    stub/drv_utest_stub.cc
 				   
-LOCAL_C_INCLUDES := $(TOPDIR)inc ${TOP_DIR}/inc/external $(TOPDIR) $(TOPDIR)runtime/cmodel_driver abl/libc_sec/include 
+LOCAL_C_INCLUDES := $(TOPDIR)inc ${TOP_DIR}/inc/external $(TOPDIR) $(TOPDIR)src/cmodel_driver abl/libc_sec/include 
 
 LOCAL_STATIC_LIBRARIES := libc_sec
 

@@ -301,7 +301,7 @@ target_include_directories(proftransport_static PRIVATE
     ${RUNTIME_DIR}/graphengine/inc
     ${RUNTIME_DIR}/graphengine/inc/framework
     ${LIBC_SEC_HEADER}
-    ${RUNTIME_DIR}/src/runtime/c/c_base/inc
+    ${RUNTIME_DIR}/src/runtime_compact/c_base/inc
     ${MSPROF_DIR}/inc/external
     ../dvvp/depend/c_base
 )
