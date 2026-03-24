@@ -39,14 +39,17 @@ typedef struct rtKernelTaskParams {
 
 typedef struct rtEventRecordTaskParams {
     rtEvent_t event;
+    uint64_t eventFlag;
 } rtEventRecordTaskParams;
 
 typedef struct rtEventWaitTaskParams {
     rtEvent_t event;
+    uint64_t eventFlag;
 } rtEventWaitTaskParams;
 
 typedef struct rtEventResetTaskParams {
     rtEvent_t event;
+    uint64_t eventFlag;
 } rtEventResetTaskParams;
 
 typedef struct rtValueWriteTaskParams {

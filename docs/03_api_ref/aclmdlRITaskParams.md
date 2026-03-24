@@ -12,6 +12,11 @@ typedef struct aclmdlRITaskParams {
     union {
         uint8_t rsv2[128];
         struct aclmdlRIKernelTaskParams kernelTaskParams;
+        struct aclmdlRIEventRecordTaskParams eventRecordTaskParams;
+        struct aclmdlRIEventWaitTaskParams eventWaitTaskParams;
+        struct aclmdlRIEventResetTaskParams eventResetTaskParams;
+        struct aclmdlRIValueWriteTaskParams valueWriteTaskParams;
+        struct aclmdlRIValueWaitTaskParams valueWaitTaskParams;
     };
 } aclmdlRITaskParams;
 ```
@@ -26,3 +31,8 @@ typedef struct aclmdlRITaskParams {
 | rsv1 | 预留参数。 |
 | rsv2 | 预留参数。 |
 | kernelTaskParams | 算子类型任务的参数，类型为 [aclmdlRIKernelTaskParams](aclmdlRIKernelTaskParams.md)。 |
+| eventRecordTaskParams | Event Record任务的参数，类型为 [aclmdlRIEventRecordTaskParams](aclmdlRIEventRecordTaskParams.md)。 |
+| eventWaitTaskParams | Event Wait任务的参数，类型为 [aclmdlRIEventWaitTaskParams](aclmdlRIEventWaitTaskParams.md)。 |
+| eventResetTaskParams | Event Reset任务的参数，类型为 [aclmdlRIEventResetTaskParams](aclmdlRIEventResetTaskParams.md)。 |
+| valueWriteTaskParams | Value Write任务的参数，类型为 [aclmdlRIValueWriteTaskParams](aclmdlRIValueWriteTaskParams.md)。 |
+| valueWaitTaskParams | Value Wait任务的参数，类型为 [aclmdlRIValueWaitTaskParams](aclmdlRIValueWaitTaskParams.md)。 |

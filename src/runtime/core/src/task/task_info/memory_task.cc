@@ -2049,13 +2049,22 @@ void IpcEventDestroy(IpcEvent **eventPtr, int32_t freeId, bool isNeedDestroy)
     }
 }
 
-rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+static void SetCommonTaskParams(rtTaskParams* const params)
 {
-    params->type = RT_TASK_EVENT_RECORD;
     params->taskGrp = nullptr;
     params->opInfoPtr = nullptr;
     params->opInfoSize = 0U;
-    params->eventRecordTaskParams.event = taskInfo->u.memWriteValueTask.event;
+}
+
+rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
+{
+    params->type = RT_TASK_EVENT_RECORD;
+    SetCommonTaskParams(params);
+
+    Event *event = taskInfo->u.memWriteValueTask.event;
+    NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
+    params->eventRecordTaskParams.event = event;
+    params->eventRecordTaskParams.eventFlag = event->GetEventFlag();
 
     return RT_ERROR_NONE;
 }
@@ -2063,10 +2072,12 @@ rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParam
 rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_WAIT;
-    params->taskGrp = nullptr;
-    params->opInfoPtr = nullptr;
-    params->opInfoSize = 0U;
-    params->eventWaitTaskParams.event = taskInfo->u.memWaitValueTask.event;
+    SetCommonTaskParams(params);
+
+    Event *event = taskInfo->u.memWaitValueTask.event;
+    NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
+    params->eventWaitTaskParams.event = event;
+    params->eventWaitTaskParams.eventFlag = event->GetEventFlag();
 
     return RT_ERROR_NONE;
 }
@@ -2074,10 +2085,12 @@ rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams*
 rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_RESET;
-    params->taskGrp = nullptr;
-    params->opInfoPtr = nullptr;
-    params->opInfoSize = 0U;
-    params->eventResetTaskParams.event = taskInfo->u.memWriteValueTask.event;
+    SetCommonTaskParams(params);
+
+    Event *event = taskInfo->u.memWriteValueTask.event;
+    NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
+    params->eventResetTaskParams.event = event;
+    params->eventResetTaskParams.eventFlag = event->GetEventFlag();
 
     return RT_ERROR_NONE;
 }
@@ -2086,9 +2099,8 @@ rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams
 rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_VALUE_WRITE;
-    params->taskGrp = nullptr;
-    params->opInfoPtr = nullptr;
-    params->opInfoSize = 0U;
+    SetCommonTaskParams(params);
+
     params->valueWriteTaskParams.devAddr = RtValueToPtr<void*>(taskInfo->u.memWriteValueTask.devAddr);
     params->valueWriteTaskParams.value = taskInfo->u.memWriteValueTask.value;
 
@@ -2098,9 +2110,8 @@ rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* 
 rtError_t GetWaitValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_VALUE_WAIT;
-    params->taskGrp = nullptr;
-    params->opInfoPtr = nullptr;
-    params->opInfoSize = 0U;
+    SetCommonTaskParams(params);
+
     params->valueWaitTaskParams.devAddr = RtValueToPtr<void*>(taskInfo->u.memWaitValueTask.devAddr);
     params->valueWaitTaskParams.value = taskInfo->u.memWaitValueTask.value;
     params->valueWaitTaskParams.flag = taskInfo->u.memWaitValueTask.flag;
@@ -2126,7 +2137,7 @@ static rtError_t CheckUpdatingTaskParams(TaskInfo* const taskInfo, rtTaskParams*
 
 rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params)
 {
-    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "check input value failed");
+    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "task type or input params is invalid");
 
     TaskUnInitProc(taskInfo);
     (void)MemWriteValueTaskInit(taskInfo, params->valueWriteTaskParams.devAddr, params->valueWriteTaskParams.value);
@@ -2136,7 +2147,7 @@ rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* con
 
     Stream* stm = taskInfo->stream;
     Device* dev = stm->Device_();
-    RT_LOG(RT_LOG_INFO, "update or convert to ValueWrite task succ: device_id=%u, stream_id=%d, task_id=%hu, "
+    RT_LOG(RT_LOG_INFO, "update or convert to ValueWriteTask succ: device_id=%u, stream_id=%d, task_id=%hu, "
         "typeName=%s, taskType=%d, devAddr=%#llx, value=%llu",
         dev->Id_(), stm->Id_(), taskInfo->id,
         taskInfo->typeName, taskInfo->type, taskInfo->u.memWriteValueTask.devAddr, taskInfo->u.memWriteValueTask.value);
@@ -2145,7 +2156,7 @@ rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* con
 
 rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params)
 {
-    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "check input value failed");
+    ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "task type or input params is invalid");
 
     TaskUnInitProc(taskInfo);
     rtError_t error = MemWaitValueTaskInit(taskInfo, params->valueWaitTaskParams.devAddr,
@@ -2157,7 +2168,7 @@ rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* cons
 
     Stream* stm = taskInfo->stream;
     Device* dev = stm->Device_();
-    RT_LOG(RT_LOG_INFO, "update or convert to ValueWait task succ: device_id=%u, stream_id=%d, task_id=%hu, "
+    RT_LOG(RT_LOG_INFO, "update or convert to ValueWaitTask succ: device_id=%u, stream_id=%d, task_id=%hu, "
         "typeName=%s, taskType=%d, devAddr=%#llx, value=%llu, flag=%u",
         dev->Id_(), stm->Id_(), taskInfo->id,
         taskInfo->typeName, taskInfo->type, taskInfo->u.memWaitValueTask.devAddr,

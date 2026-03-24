@@ -565,14 +565,17 @@ typedef struct aclmdlRIKernelTaskParams {
 
 typedef struct aclmdlRIEventRecordTaskParams {
     aclrtEvent event;
+    uint64_t eventFlag;
 } aclmdlRIEventRecordTaskParams;
 
 typedef struct aclmdlRIEventWaitTaskParams {
     aclrtEvent event;
+    uint64_t eventFlag;
 } aclmdlRIEventWaitTaskParams;
 
 typedef struct aclmdlRIEventResetTaskParams {
     aclrtEvent event;
+    uint64_t eventFlag;
 } aclmdlRIEventResetTaskParams;
 
 typedef struct aclmdlRIValueWriteTaskParams {
