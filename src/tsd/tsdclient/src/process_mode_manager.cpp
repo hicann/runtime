@@ -2273,7 +2273,7 @@ bool ProcessModeManager::SupportLoadPkg(const std::string &pkgName) const
         }
     }
 
-    TSD_INFO("current device chip:%u dose not support package:%s", currentChipType, pkgName.c_str());
+    TSD_RUN_INFO("current device chip:%u does not support package:%s", currentChipType, pkgName.c_str());
     return false;
 }
 
