@@ -23,9 +23,9 @@ if (ENABLE_OPEN_SRC AND NOT EXISTS "${CMAKE_BINARY_DIR}/include_acl")
         message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
 
-    set(LOCAL_TAR_FILE "${OPEN_SOURCE_DIR}/acl-compat_8.5.0_linux-${TARGET_ARCH}.tar.gz")
-    if (EXISTS "${LOCAL_TAR_FILE}")
-        set(REQ_URL "${LOCAL_TAR_FILE}")
+    file(GLOB LOCAL_TAR_FILE "${OPEN_SOURCE_DIR}/acl-compat_*_linux-${CMAKE_HOST_SYSTEM_PROCESSOR}.tar.gz")
+    if (LOCAL_TAR_FILE)
+        list(GET LOCAL_TAR_FILE -1 REQ_URL)
     else()
         set(REQ_URL "https://mirrors.huaweicloud.com/artifactory/cann-run/8.5.0/inner/${TARGET_ARCH}/acl-compat_8.5.0_linux-${TARGET_ARCH}.tar.gz")
     endif()
@@ -39,10 +39,11 @@ if (ENABLE_OPEN_SRC AND NOT EXISTS "${CMAKE_BINARY_DIR}/include_acl")
             BUILD_COMMAND ""
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
+            EXCLUDE_FROM_ALL TRUE
     )
     set(DST_LIB_DIR "${CMAKE_BINARY_DIR}/lib_acl")
     set(DST_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include_acl")
-    add_custom_target(_copy_acl_headers_and_libs ALL
+    add_custom_target(_copy_acl_headers_and_libs
         COMMAND ${CMAKE_COMMAND} -E make_directory "${DST_LIB_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${ACL_SOURCE_DIR}/lib64" "${DST_LIB_DIR}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${DST_INCLUDE_DIR}"

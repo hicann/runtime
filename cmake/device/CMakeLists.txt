@@ -23,6 +23,7 @@ set_runtime_params()
 include(${RUNTIME_DIR}/cmake/third_party/protobuf.cmake)
 include(${RUNTIME_DIR}/cmake/third_party/csec.cmake)
 include(${RUNTIME_DIR}/cmake/third_party/json.cmake)
+include(${RUNTIME_DIR}/cmake/third_party/acl_compat.cmake)
 
 add_subdirectories_relative(${RUNTIME_DIR}
     ${RUNTIME_DIR}/src/mmpa
@@ -40,9 +41,10 @@ add_dependencies(platform c_sec)
 
 sign_file(
   OUTPUT_TARGET sign_tsch_fw
-  INPUT "${RUNTIME_DIR}/build/lib_acl/libtsch_fw_plugin_910b.o"
+  INPUT "${CMAKE_BINARY_DIR}/lib_acl/libtsch_fw_plugin_910b.o"
   CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml" 
   RESULT_VAR "tsch_fw_sign_file"
+  DEPENDS copy_acl_headers_and_libs
 )
 
 pack_targets_and_files(

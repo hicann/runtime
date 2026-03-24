@@ -66,15 +66,12 @@ else()
 endif()
 
 if(ENABLE_DEVICE)
-    message(STATUS "start build device")
-    message(STATUS $ENV{TOOLCHAIN_DIR})
-
+    message(STATUS "Enable device.")
     set(TOOLCHAIN_DIR $ENV{TOOLCHAIN_DIR})
     # 对于libc_sec，只有makefile，需要传递编译器路径
     set(CMAKE_CXX_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-g++")
     set(CMAKE_C_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-gcc")
     set(CMAKE_C_AR "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-ar")
-    set(CHILD_INSTALL_DIR ${CMAKE_BINARY_DIR}/device_install)
     ExternalProject_Add(device
         SOURCE_DIR ${RUNTIME_DIR}/cmake/device
         BINARY_DIR ${CMAKE_BINARY_DIR}/device_build
@@ -82,7 +79,7 @@ if(ENABLE_DEVICE)
             -DENABLE_GCOV=${ENABLE_GCOV}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DTOOLCHAIN_DIR=${TOOLCHAIN_DIR}
-            -DCMAKE_INSTALL_PREFIX=${CHILD_INSTALL_DIR}
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/device_install
             -DCMAKE_TOOLCHAIN_FILE=${RUNTIME_DIR}/cmake/aarch64-hcc-toolchain.cmake
             -DOPEN_SOURCE_DIR=${OPEN_SOURCE_DIR}
             -DCMAKE_C_AR=${CMAKE_C_AR}
@@ -90,7 +87,6 @@ if(ENABLE_DEVICE)
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER_}
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-            -DINSTALL_LIBRARY_DIR=${INSTALL_LIBRARY_DIR}
             -DENABLE_SIGN=${ENABLE_SIGN}
             -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}
             -DVERSION_INFO=${VERSION_INFO}
@@ -99,7 +95,6 @@ if(ENABLE_DEVICE)
         INSTALL_COMMAND ${CMAKE_CPACK_COMMAND}
         BUILD_ALWAYS TRUE
     )
-    add_dependencies(device copy_acl_headers_and_libs)
 
     install(FILES
         ${CMAKE_BINARY_DIR}/device_build/device-npu-runtime.tar.gz

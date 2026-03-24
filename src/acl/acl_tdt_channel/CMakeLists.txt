@@ -58,3 +58,5 @@ target_link_libraries(acl_tdt_channel PRIVATE
     -ldl
     -lpthread
 )
+
+add_dependencies(acl_tdt_channel copy_acl_headers_and_libs)

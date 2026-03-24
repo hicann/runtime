@@ -213,28 +213,12 @@ mk_dir() {
   echo "created ${create_dir}"
 }
 
-extra_libascendcl_to_build() {
-  # find and extract tar.gz file
-  local targz_file=$(ls acl-compat*.tar.gz 2>/dev/null | head -n1)
-  if [ -z "$targz_file" ]; then
-    echo "acl-compat*.tar.gz not found in outer tar" >&2
-    return 0
-  fi
-
-  local tmpdir=".extract_tmp"
-  rm -rf "$tmpdir" && mkdir -p "$tmpdir" && tar -zxf "$targz_file" -C "$tmpdir" && {
-    rm -rf lib_acl/ && cp -rp "$tmpdir/lib64" lib_acl/
-    rm -rf include_acl/ && cp -rp "$tmpdir/include" include_acl/
-  }
-}
-
 # create build path
 build_rts() {
   echo "create build directory and build";
   mk_dir "${BUILD_PATH}"
   mk_dir "${OUTPUT_PATH}"
   cd "${BUILD_PATH}"
-  extra_libascendcl_to_build
   CMAKE_ARGS="-DENABLE_OPEN_SRC=True \
               -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
               -DVERSION=${VERSION} \
