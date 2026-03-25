@@ -146,7 +146,7 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(const Stream * const newStm, co
 
     rtError_t error = Alloc(streamId, drvFlag, sqId, cqId, info, sizeof(info),
                                   RtPtrToPtr<uint32_t *>(&infoEx), sizeof(rtStreamInfoExMsg_t));
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
+    COND_RETURN_WARN((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
     error = device_->Driver_()->GetSqAddrInfo(device_->Id_(), device_->DevGetTsId(), sqId, sqAddr);
     COND_LOG(error != RT_ERROR_NONE, "hal may not support get sq addr info, device_id=%u, retCode=%#x.", device_->Id_(), error);
     RT_LOG(RT_LOG_DEBUG, "Alloc sq cq: device_id=%u, stream_id=%u, sq_id=%u, cq_id=%u, drv_flag=%#x,"
