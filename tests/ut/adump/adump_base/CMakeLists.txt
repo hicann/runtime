@@ -20,7 +20,7 @@ set(adumpBaseProtoList
 )
 
 protobuf_generate(adump_base_proto adumpBaseProtoSrc adumBaseProtoHeaders ${adumpBaseProtoList} TARGET)
-add_dependencies(adump_base_proto protobuf_host_build ascend_protobuf_static)
+add_dependencies(adump_base_proto ascend_protobuf_static)
 ########################################################################
 
 set(adumpBaseSrcList

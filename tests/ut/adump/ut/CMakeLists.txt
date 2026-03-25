@@ -15,7 +15,7 @@ set(adumpBaseProtoList
     "${TOP_DIR}/src/dfx/adump/proto/dump_task.proto"
 )
 protobuf_generate(adump_base_proto adumpBaseProtoSrc adumBaseProtoHeaders ${adumpBaseProtoList} TARGET)
-add_dependencies(adump_base_proto protobuf_host_build ascend_protobuf_static)
+add_dependencies(adump_base_proto ascend_protobuf_static)
 
 set(adxSrcList
     ${SRC_CODE_ROOT_PATH}/adcore/hdc/hdc_api.cpp

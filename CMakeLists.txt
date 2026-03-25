@@ -101,9 +101,6 @@ if(ENABLE_DEVICE)
         DESTINATION subprjs
         COMPONENT npu-runtime
     )
-    if(TARGET protobuf_host_build)
-        add_dependencies(device protobuf_host_build)
-    endif()
 endif()
 
 if (ENABLE_OPEN_SRC AND NOT ENABLE_COV AND NOT ENABLE_UT)

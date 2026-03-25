@@ -72,9 +72,6 @@ set(HOST_PROTOBUF_STATIC_CXXFLAGS "${HOST_PROTOBUF_STATIC_CXXFLAGS} ${PROTOBUF_S
 # ==========================================================================================================
 # 优先搜索 LD_LIBRARY_PATH 里的 bin，然后搜索 PROTOBUF_LIB_CACHE_DIR 的 bin
 find_program(PROTOC_PATH protoc PATHS ${PROTOBUF_LIB_CACHE_DIR}/bin ${LD_BIN_PATHS} NO_DEFAULT_PATH)
-if (NOT PROTOC_PATH AND PRODUCT_SIDE STREQUAL "device")
-    set(PROTOC_PATH "${PROTOBUF_LIB_CACHE_DIR}/bin/protoc")
-endif()
 
 # 优先搜索 LD_LIBRARY_PATH 里的 lib，然后搜索 PROTOBUF_LIB_CACHE_DIR
 find_library(ASCEND_PROTOBUF_STATIC_LIB NAMES ${PROTOBUF_STATIC_FILE_NAME} PATHS ${PROTOBUF_LIB_CACHE_DIR}/lib ${LD_LIB_PATHS} NO_DEFAULT_PATH)
@@ -162,18 +159,15 @@ endif()
 add_executable(host_protoc IMPORTED)
 if (PROTOC_PATH)
     set_target_properties(host_protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_PATH})
-    if (NOT TARGET protobuf_host_build)
-        add_custom_target(protobuf_host_build)
-    endif()
 else()
     ExternalProject_Add(protobuf_host_build
         DEPENDS protobuf_src SOURCE_DIR ${PROTOBUF_SRC_DIR} DOWNLOAD_COMMAND "" UPDATE_COMMAND ""
         CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_CXX_STANDARD=14 -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER} -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER} -DCMAKE_INSTALL_PREFIX=${PROTOBUF_HOST_DIR} -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_WITH_ZLIB=OFF <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) protoc
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory ${PROTOBUF_HOST_DIR}/bin COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/protobuf_host_build-prefix/src/protobuf_host_build-build/protoc ${PROTOBUF_HOST_DIR}/bin/protoc
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/protobuf_host_build-prefix/src/protobuf_host_build-build/protoc ${CMAKE_BINARY_DIR}/bin/protoc
         EXCLUDE_FROM_ALL TRUE
     )
-    set_target_properties(host_protoc PROPERTIES IMPORTED_LOCATION ${PROTOBUF_HOST_DIR}/bin/protoc)
+    set_target_properties(host_protoc PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/bin/protoc)
     add_dependencies(host_protoc protobuf_host_build)
 endif()
 
