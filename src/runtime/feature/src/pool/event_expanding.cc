@@ -40,12 +40,12 @@ void *EventExpandingPool::MallocBufferForEvent(const size_t size, void * const p
     Device * const dev = static_cast<Device *>(para);
     rtError_t error = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_WARN(error != RT_ERROR_NONE, nullptr, "device mem alloc pool mem failed, "
-        "size=%u(bytes), kind=%d, device_id=%u, retCode=0x%#x",
+        "size=%u(bytes), kind=%d, device_id=%u, retCode=%#x",
         size, RT_MEMORY_DDR, dev->Id_(), static_cast<uint32_t>(error));
     error = dev->Driver_()->MemSetSync(addr, static_cast<uint64_t>(size), 0, static_cast<uint64_t>(size));
-    COND_RETURN_WARN(error != RT_ERROR_NONE, nullptr, "device memset sync failed, "
-        "size=%u(bytes), kind=%d, device_id=%u, retCode=0x%#x",
-        size, RT_MEMORY_DDR, dev->Id_(), static_cast<uint32_t>(error));
+    COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, nullptr, (void)dev->Driver_()->DevMemFree(addr, dev->Id_()), 
+ 	             "device memset sync failed, size=%u(bytes), kind=%d, device_id=%u, retCode=%#x",
+ 	             size, RT_MEMORY_DDR, dev->Id_(), static_cast<uint32_t>(error));
     return addr;
 }
 
@@ -53,7 +53,7 @@ void EventExpandingPool::FreeBufferForEvent(void * const addr, void * const para
 {
     Device * const dev = static_cast<Device *>(para);
     rtError_t error = dev->Driver_()->DevMemFree(addr, dev->Id_());
-    COND_LOG(error != RT_ERROR_NONE, "device mem free failed, device_id=%u, retCode=0x%#x!",
+    COND_LOG(error != RT_ERROR_NONE, "device mem free failed, device_id=%u, retCode=%#x!",
         dev->Id_(), static_cast<uint32_t>(error));
 }
 
