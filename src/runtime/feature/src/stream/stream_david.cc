@@ -186,30 +186,39 @@ rtError_t DavidStream::SubmitMaintenanceTask(const MtType type, bool isForceRecy
     return error;
 }
 
+static void ProcessEventRecordTask(TaskInfo *taskInfo, int32_t &eventId, uint32_t &isCountNotify, uint32_t &countValue) {
+    DavidEventRecordTaskInfo *eventRecordTaskInfo = &(taskInfo->u.davidEventRecordTaskInfo);
+    eventId = eventRecordTaskInfo->eventId;
+    if (eventRecordTaskInfo->isCountNotify == 1U) {
+        isCountNotify = 1U;
+        countValue = eventRecordTaskInfo->countValue;
+    }
+}
+
+static void ProcessEventWaitTask(TaskInfo *taskInfo, int32_t &eventId, uint32_t &isCountNotify, uint32_t &countValue) {
+    DavidEventWaitTaskInfo *eventWaitTaskInfo = &(taskInfo->u.davidEventWaitTaskInfo);
+    eventId = eventWaitTaskInfo->eventId;
+    if (eventWaitTaskInfo->isCountNotify == 1U) {
+        isCountNotify = 1U;
+        countValue = eventWaitTaskInfo->countValue;
+    }
+}
+
 static void GetEventIdOrNotifyId(TaskInfo *taskInfo, int32_t &eventId, uint32_t &isCountNotify, uint32_t &countValue,
-    uint32_t &notifyId)
+    uint32_t &notifyId, uint64_t &devAddr)
 {
-    DavidEventRecordTaskInfo *eventRecordTaskInfo = nullptr;
-    DavidEventWaitTaskInfo *eventWaitTaskInfo = nullptr;
     DavidEventResetTaskInfo *eventResetTaskInfo = nullptr;
     NotifyWaitTaskInfo* notifyWaitTask = nullptr;
     NotifyRecordTaskInfo *notifyRecord = nullptr;
+    MemWriteValueTaskInfo *memWriteValueTask = nullptr;
+    MemWaitValueTaskInfo *memWaitValueTask = nullptr;
+
     switch (taskInfo->type) {
         case TS_TASK_TYPE_DAVID_EVENT_RECORD:
-            eventRecordTaskInfo = &(taskInfo->u.davidEventRecordTaskInfo);
-            eventId = eventRecordTaskInfo->eventId;
-            if (eventRecordTaskInfo->isCountNotify == 1U) {
-                isCountNotify = 1U;
-                countValue = eventRecordTaskInfo->countValue;
-            }
+            ProcessEventRecordTask(taskInfo, eventId, isCountNotify, countValue);
             break;
         case TS_TASK_TYPE_DAVID_EVENT_WAIT:
-            eventWaitTaskInfo = &(taskInfo->u.davidEventWaitTaskInfo);
-            eventId = eventWaitTaskInfo->eventId;
-            if (eventWaitTaskInfo->isCountNotify == 1U) {
-                isCountNotify = 1U;
-                countValue = eventWaitTaskInfo->countValue;
-            }
+            ProcessEventWaitTask(taskInfo, eventId, isCountNotify, countValue);
             break;
         case TS_TASK_TYPE_DAVID_EVENT_RESET:
             eventResetTaskInfo = &(taskInfo->u.davidEventResetTaskInfo);
@@ -223,7 +232,16 @@ static void GetEventIdOrNotifyId(TaskInfo *taskInfo, int32_t &eventId, uint32_t 
             notifyRecord = &(taskInfo->u.notifyrecordTask);
             notifyId = notifyRecord->notifyId;
             break;
-
+        case TS_TASK_TYPE_CAPTURE_RECORD:
+        case TS_TASK_TYPE_MEM_WRITE_VALUE:
+            memWriteValueTask = &(taskInfo->u.memWriteValueTask);
+            devAddr = memWriteValueTask->devAddr;
+            break;
+        case TS_TASK_TYPE_CAPTURE_WAIT:
+        case TS_TASK_TYPE_MEM_WAIT_VALUE:
+            memWaitValueTask = &(taskInfo->u.memWaitValueTask);
+            devAddr = memWaitValueTask->devAddr;
+            break;
         default:
             break;
     }
@@ -237,20 +255,7 @@ void DavidStream::DebugDotPrintForModelStm()
     }
     uint16_t head = 0U;
     uint16_t tail = 0U;
-
-    if (this->IsSoftwareSqEnable()) {
-        if (!delayRecycleTaskid_.empty()) {
-            std::vector<uint16_t>::iterator headTask;
-            std::vector<uint16_t>::iterator tailTask;
-            headTask = delayRecycleTaskid_.begin();
-            head = *headTask;
-            tailTask = delayRecycleTaskid_.end();
-            tail = *tailTask;
-        }
-    } else {
-        COND_RETURN_DEBUG((taskResMang_ == nullptr), , " device_id=%u, stream_id=%d.", device_->Id_(), Id_());
-        (dynamic_cast<TaskResManageDavid *>(taskResMang_))->GetHeadTail(head, tail);
-    }
+    GetTaskQueueHeadTail(head, tail);
 
     RT_LOG(RT_LOG_INFO, "stream_id=%d, head=%hu, tail=%hu.", Id_(), head, tail);
     TaskInfo* nextTask = nullptr;
@@ -260,12 +265,14 @@ void DavidStream::DebugDotPrintForModelStm()
             i++;
             continue;
         }
-        i = static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum;
+        i = IsSoftwareSqEnable() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
+            (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
         int32_t eventId = INVALID_EVENT_ID;
         uint32_t notifyId = MAX_UINT32_NUM;
         uint32_t countValue = MAX_UINT32_NUM;
         uint32_t isCountNotify= 0U;
-        GetEventIdOrNotifyId(nextTask, eventId, isCountNotify, countValue, notifyId);
+        uint64_t devAddr = MAX_UINT64_NUM;
+        GetEventIdOrNotifyId(nextTask, eventId, isCountNotify, countValue, notifyId, devAddr);  
 
         if (eventId != INVALID_EVENT_ID) {
             if (isCountNotify == 1U) {
@@ -283,6 +290,12 @@ void DavidStream::DebugDotPrintForModelStm()
                 device_->Id_(), Id_(), nextTask->id, nextTask->typeName, notifyId);
             continue;
         }
+
+        if (devAddr != MAX_UINT64_NUM) {
+            RT_LOG(RT_LOG_EVENT, "device_id=%u, stream_id=%d, task_id=%hu, task_type=%s, dev_addr=0x%llx.",
+                device_->Id_(), Id_(), nextTask->id, nextTask->typeName, devAddr);
+            continue;
+        } 
 
         if ((nextTask->type == TS_TASK_TYPE_KERNEL_AICORE) || (nextTask->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
             std::string mixTypeName = "NO_MIX";
@@ -365,7 +378,8 @@ static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& ta
     uint32_t notifyId = MAX_UINT32_NUM;
     uint32_t countValue = MAX_UINT32_NUM;
     uint32_t isCountNotify = 0U;
-    GetEventIdOrNotifyId(task, eventId, isCountNotify, countValue, notifyId);
+    uint64_t devAddr = MAX_UINT64_NUM;
+    GetEventIdOrNotifyId(task, eventId, isCountNotify, countValue, notifyId, devAddr);  
     
     // 构建完整的任务名称
     if (eventId != INVALID_EVENT_ID) {
@@ -376,6 +390,8 @@ static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& ta
         }
     } else if (notifyId != MAX_UINT32_NUM) {
         taskName += "_" + std::to_string(notifyId);
+    } else if (devAddr != MAX_UINT64_NUM) {
+        taskName += "_" + std::to_string(devAddr);
     } else  {
         // no op
     }
@@ -386,8 +402,8 @@ static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& ta
     record.pid = std::to_string(pid) + " aclGraph";
     record.tid = "stream" + std::to_string(streamId);
     record.ts = taskDur;
-    taskDur += 10; // ts表示每个节点的显示位置，可表示流内任务的前后关系，按照10递增
-    record.dur = 9.5; // 表示节点的显示宽度，固定为9.5
+    taskDur += 10;
+    record.dur = 9.5;
     record.ph = "X";
     record.args.modelId = modelId;
     record.args.streamId = streamId;
@@ -398,7 +414,7 @@ static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& ta
 
 void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm)
 {
-    if (!GetBindFlag() || (taskResMang_ == nullptr)) {
+    if (!GetBindFlag()) {
         RT_LOG(RT_LOG_DEBUG, "Model debug json print unmatch, bindFlag=%d, device_id=%u, stream_id=%d.", 
             GetBindFlag(), device_->Id_(), Id_());
         return;
@@ -407,12 +423,8 @@ void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uin
     // 获取任务队列的头尾指针
     uint16_t head = 0U;
     uint16_t tail = 0U;
-    TaskResManageDavid *taskResMangDavid = dynamic_cast<TaskResManageDavid *>(taskResMang_);
-    if (taskResMangDavid == nullptr) {
-        RT_LOG(RT_LOG_DEBUG, "TaskResManageDavid is nullptr, device_id=%u, stream_id=%d.", device_->Id_(), Id_());
-        return;
-    }
-    taskResMangDavid->GetHeadTail(head, tail);
+    GetTaskQueueHeadTail(head, tail);
+
     RT_LOG(RT_LOG_DEBUG, "Model debug json print, device_id=%u, stream_id=%d, head=%hu, tail=%hu.", 
         device_->Id_(), Id_(), head, tail);
     
@@ -422,12 +434,13 @@ void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uin
     uint32_t taskDur = 0;
     
     for (uint32_t i = head; i < tail;) {
-        TaskInfo* nextTask = taskResMangDavid->GetTaskInfo(i);
+        TaskInfo* nextTask = GetTaskInfo(this->Device_(), Id_(), i);
         if (unlikely(nextTask == nullptr)) {
             i++;
             continue;
         }
-        i = static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum;
+        i = IsSoftwareSqEnable() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
+            (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
         
         // 构建并添加TraceEvent记录
         TraceEvent record = BuildTraceEventForTask(nextTask, pid, taskDur, modelId, streamId_);
@@ -1421,6 +1434,22 @@ void DavidStream::ExpandStreamRecycleModelBindStreamAllTask()
     SetLastTaskId(0);
 
     return;
+}
+
+void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) {
+    if (IsSoftwareSqEnable()) {
+        if (!delayRecycleTaskid_.empty()) {
+            head = *delayRecycleTaskid_.begin();
+            tail = *(delayRecycleTaskid_.end() - 1);
+        }
+    } else {
+        if(taskResMang_ == nullptr) {
+            RT_LOG(RT_LOG_WARNING, " taskResMang_ is null, device_id=%u, stream_id=%d.", 
+            device_->Id_(), Id_());
+            return;
+        }
+        (dynamic_cast<TaskResManageDavid *>(taskResMang_))->GetHeadTail(head, tail);
+    }
 }
 
 }  // namespace runtime

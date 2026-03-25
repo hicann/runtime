@@ -9596,6 +9596,14 @@ TaskInfo* CreateTask(TaskResManageDavid *taskResMng, uint32_t& pos, tsTaskType_t
     return task;
 }
 
+TaskInfo* CreateFusionTask(TaskResManageDavid *taskResMng, uint32_t& pos, uint32_t sqeSubType, Kernel *kernel = nullptr)
+{
+    TaskInfo *fusionTask = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
+    fusionTask->u.fusionKernelTask.sqeSubType = sqeSubType;
+    fusionTask->u.fusionKernelTask.aicPart.kernel = kernel;
+    return fusionTask;
+}
+
 TEST_F(ApiDavidTest, modelDebugJsonPrintApi)
 {
     // 获取当前上下文
@@ -9644,16 +9652,18 @@ TEST_F(ApiDavidTest, modelDebugJsonPrintApi)
     EXPECT_EQ(GetCaptureEventFromTask(ctx->device_, ((Stream *)stream)->Id_(), pos+1, getEvent, cntInfo), RT_ERROR_TASK_NULL);
     CreateTask(taskResMng, pos, TS_TASK_TYPE_KERNEL_AICPU, "KERNEL_AICPU");
     
-    TaskInfo *fusionTask1 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
-    fusionTask1->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_AICPU) | (1U << RT_FUSION_AICORE);
-    fusionTask1->u.fusionKernelTask.aicPart.kernel = nullptr;
-
-    TaskInfo *fusionTask2 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
-    fusionTask2->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_HCOM_CPU) | (1U << RT_FUSION_AICORE);
-    fusionTask2->u.fusionKernelTask.aicPart.kernel = nullptr;
-
-    TaskInfo *fusionTask3 = CreateTask(taskResMng, pos, TS_TASK_TYPE_FUSION_KERNEL, "FUSION_KERNEL");
-    fusionTask3->u.fusionKernelTask.sqeSubType = (1U << RT_FUSION_CCU);
+    // 创建融合内核任务
+    TaskInfo *fusionTask1 = CreateFusionTask(taskResMng, pos, (1U << RT_FUSION_AICPU) | (1U << RT_FUSION_AICORE));
+    TaskInfo *fusionTask2 = CreateFusionTask(taskResMng, pos, (1U << RT_FUSION_HCOM_CPU) | (1U << RT_FUSION_AICORE));
+    TaskInfo *fusionTask3 = CreateFusionTask(taskResMng, pos, (1U << RT_FUSION_CCU));
+    
+    // 内存写入值任务
+    TaskInfo *memWriteTask = CreateTask(taskResMng, pos, TS_TASK_TYPE_CAPTURE_RECORD, "EVENT_RECORD");
+    memWriteTask->u.memWriteValueTask.devAddr = 0x1234567890ABCDEF;
+    
+    // 内存等待值任务
+    TaskInfo *memWaitTask = CreateTask(taskResMng, pos, TS_TASK_TYPE_CAPTURE_WAIT, "EVENT_WAIT");
+    memWaitTask->u.memWaitValueTask.devAddr = 0x9876543210FEDCBA;
 
     // 测试JSON打印
     EXPECT_EQ(ctx->ModelDebugJsonPrint(model, "./test.json", 0), RT_ERROR_NONE);

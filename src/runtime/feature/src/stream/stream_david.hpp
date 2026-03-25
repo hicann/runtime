@@ -95,6 +95,8 @@ public:
     void ArgReleaseSingleTask(TaskInfo * const taskInfo, bool freeStmPool);
     void ArgReleaseStmPool(TaskInfo * const taskInfo);
     void ArgReleaseMultipleTask(TaskInfo * const taskInfo);
+
+    void GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail);
 protected:
     bool isHasArgPool_{false};
 
