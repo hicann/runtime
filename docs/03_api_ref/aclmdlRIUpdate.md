@@ -30,3 +30,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 ## 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
+
+## 约束说明
+
+由于profiling不支持在模型执行过程中动态更新上报的算子参数，因此若需分析profiling数据，必须在模型首次执行前完成所有参数的更新。
