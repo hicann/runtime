@@ -18,13 +18,13 @@
 namespace cce {
 namespace runtime {
 #pragma pack(push)
-#pragma pack (1)
+#pragma pack(1)
 
 struct DavidStarsMaintaince {
-    uint8_t  subType; // force recyle
-    uint8_t  rsv;
+    uint8_t subType; // force recyle
+    uint8_t rsv;
     uint16_t targetId;
-    uint8_t  reserved[44];
+    uint8_t reserved[44];
 };
 
 struct DavidDataDumpLoadInfo {
@@ -87,8 +87,10 @@ struct DavidRingBufferControl {
     uint64_t ringbufferPhyAddr;
     uint64_t pid;
     uint32_t totalLen;
-    uint8_t  ringbufferDelFlag; // 0:create 1:delete
-    uint8_t  reserved[19];
+    uint8_t ringbufferDelFlag; // 0:create 1:delete
+    uint8_t reserved1[3];
+    uint32_t elementSize; // one ringbuffer element size
+    uint8_t reserved[12];
 };
 
 struct DavidMemCpyAsyncWithoutSdma {
@@ -172,7 +174,7 @@ struct DavidCallBackTask {
     uint32_t fndataHigh;
 
     /* word12-13 */
-    uint32_t res2;               // noly vf & topic AICPU & callback msg use for hostpid.
+    uint32_t res2; // noly vf & topic AICPU & callback msg use for hostpid.
     uint32_t res3;
 
     /* word14 */
@@ -191,7 +193,7 @@ struct RtDavidPlaceHolderSqe {
     uint32_t res1;
     uint16_t taskType;
     uint8_t kernelCredit;
-    uint8_t timeoutType;  // use for timeout cqe in david
+    uint8_t timeoutType; // use for timeout cqe in david
 
     /* use reserved field */
     /* The struct in the union must be 48 bytes */
@@ -208,7 +210,7 @@ struct RtDavidPlaceHolderSqe {
         DavidStreamOverflowSwitch streamOverflowSwitchInfo;
         DavidGetDevMsg getDevMsgInfo;
         DavidStreamSetTag streamSetTagInfo;
-        DavidDebugStatus  debugStatusInfo;
+        DavidDebugStatus debugStatusInfo;
         DavidFlipTaskTag flipTaskInfo;
         DavidMdlTaskUpdate mdlTaskUpdateInfo;
         DavidAicpuInfoLoad aiCpuLoadInfo;
@@ -218,6 +220,6 @@ struct RtDavidPlaceHolderSqe {
 };
 
 #pragma pack(pop)
-}
-}
+} // namespace runtime
+} // namespace cce
 #endif

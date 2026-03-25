@@ -20,7 +20,7 @@ namespace {
     constexpr uint32_t RINGBUFFER_ONE_ELEMENT_LENGTH = 4096U;
     constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH = 12288U; // 4K + 8K
     constexpr uint32_t RINGBUFFER_LEN = 10U;
-    // total 2M, used:element(42k) * 30, stream snap shot:17k, TSCH_CAPABILITY_LEN:10k
+    // total 2M, used:element(47k) * 30 = 1410k, stream snap shot:17k, TSCH_CAPABILITY_LEN:10k
     constexpr uint32_t RINGBUFFER_LEN_DAVID = 30U;
     constexpr uint32_t DEVICE_ERR_MSG_MAGIC = 0xA55A2021U;
     constexpr uint32_t MAX_CORE_BLOCK_NUM  = 50U;
@@ -32,7 +32,7 @@ namespace {
     constexpr uint32_t MAX_STREAM_NUM_CLOUD = 2048U;
     constexpr uint32_t RINGBUFFER_HCCL_FFTSPLUS_MAX_CONTEXT_NUM = 8U;
 	constexpr uint32_t MAX_CORE_BLOCK_NUM_ON_DAVID  = 72U;
-    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 43008U; // 42K For David
+    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 48128U; // 47K for david
     constexpr uint32_t MAX_AIC_ID = 64U;
     constexpr uint32_t MAX_AIV_ID = 64U;
     constexpr uint32_t MAX_DEV_ID = 16U;
@@ -391,6 +391,11 @@ struct StarsDeviceErrorInfo {
         StarsCoreTimeoutDfxInfo      coreTimeoutDfxInfo;
     }u;
 };
+
+static_assert(
+ 	(sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo)) <= RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID,
+ 	"Element info exceeds single element capacity.");
+
 /*********************************** ringbuffer for STARS ***********************************/
 
 // it is control info in device ringbuffer.

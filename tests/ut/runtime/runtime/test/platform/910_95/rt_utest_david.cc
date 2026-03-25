@@ -4319,6 +4319,7 @@ TEST_F(DavidTaskTest, test_sdma_mte_error)
         ctlInfo->head = 0;
         ctlInfo->magic = RINGBUFFER_MAGIC;
         ctlInfo->ringBufferLen = RINGBUFFER_LEN;
+        ctlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
         uint64_t oneElementLen = sizeof(StarsDeviceErrorInfo) + sizeof(RingBufferElementInfo);
         uintptr_t infoAddr =
             reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo) + ctlInfo->head * oneElementLen;

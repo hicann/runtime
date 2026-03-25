@@ -20,6 +20,7 @@
 #include "task_execute_time.h"
 #include "task_res_da.hpp"
 #include "fusion_c.hpp"
+#include "device/device_error_proc.hpp"
 
 namespace cce {
 namespace runtime {
@@ -765,10 +766,13 @@ static void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo
     sqe->u.ringBufferControlInfo.ringbufferOffset = offset;
     sqe->u.ringBufferControlInfo.totalLen = ringBufMtTsk->bufferLen;
     sqe->u.ringBufferControlInfo.ringbufferDelFlag = 0U;
+    sqe->u.ringBufferControlInfo.elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
 
-    PrintDavidSqe(davidSqe, "RingBufferMaintain");
-    RT_LOG(RT_LOG_INFO, "RingBufferMaintainTask, device_id=%u, stream_id=%d, task_id=%hu, offset=%#" PRIx64,
-        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, offset);
+    PrintDavidSqe(davidSqe, "RingBufferCreate");
+    RT_LOG(RT_LOG_INFO, "RingBufferCreate, device_id=%u, stream_id=%d, task_id=%hu,"
+        " offset=%#" PRIx64 ", elementSize=%u.",
+        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, offset,
+        sqe->u.ringBufferControlInfo.elementSize);
 }
 
 static void ConstructWriteValueSqePtr(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)

@@ -1129,16 +1129,26 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(const DevRingBufferCtlInfo * 
     Driver * const devDrv, uint16_t *errorStreamId)
 {
     // copy element
-    const size_t elementSize = (device_->IsDavidPlatform()) ? \
-        static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID) : \
-        static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH);
-    constexpr size_t copySize  = sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo);
+    size_t copySize  = sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo);
     std::unique_ptr<char[]> elementHostAddr(new (std::nothrow) char[copySize]);
     NULL_PTR_RETURN(elementHostAddr, RT_ERROR_MEMORY_ALLOCATION);
+
+    const size_t elementSize = (device_->IsDavidPlatform()) ? \
+        static_cast<size_t>(tmpCtrlInfo->elementSize) : \
+        static_cast<size_t>(RINGBUFFER_EXT_ONE_ELEMENT_LENGTH);
+    if (elementSize == 0U) {
+        RT_LOG(RT_LOG_ERROR, "The element size in ringbuffer is invalid.");
+        PrintRingbufferErrorInfo(tmpCtrlInfo);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     uint32_t head = tmpCtrlInfo->head;
     const uint32_t tail = tmpCtrlInfo->tail;
     const uint32_t depth = tmpCtrlInfo->ringBufferLen;
+    RT_LOG(RT_LOG_INFO, "head=%u, tail=%u, depth=%u, elementSize=%zu, infoSize=%zu",
+ 	    head, tail, depth, elementSize, copySize);
+
+    copySize = (copySize < elementSize) ? copySize : elementSize;
     StreamTaskId sTaskId;
     std::shared_ptr<Stream> stm = nullptr;
     RingBufferElementInfo *info = nullptr;
@@ -2122,13 +2132,19 @@ rtError_t DeviceErrorProc::ProcessStarsOneElementInRingBuffer(const DevRingBuffe
 {
     constexpr size_t headSize = sizeof(DevRingBufferCtlInfo);
     const size_t elementSize = (device_->IsDavidPlatform()) ? \
-        RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID : RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+        ctlInfo->elementSize : RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+    if (elementSize == 0U) {
+        RT_LOG(RT_LOG_ERROR, "The element size in ringbuffer is invalid.");
+        PrintRingbufferErrorInfo(ctlInfo);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     RT_LOG(RT_LOG_INFO, "it need to process %u errMessages, headSize=%zu, elementSize=%zu.",
         (tail + ctlInfo->ringBufferLen - head) % ctlInfo->ringBufferLen, headSize, elementSize);
 
     while (head != tail) {
-        const uint8_t * const infoAddr = RtPtrToPtr<const uint8_t *, const DevRingBufferCtlInfo *>(ctlInfo) + headSize + (head * elementSize);
+        const uint8_t * const infoAddr = RtPtrToPtr<const uint8_t *, const DevRingBufferCtlInfo *>(ctlInfo)
+            + headSize + (head * elementSize);
         const RingBufferElementInfo * const info = RtPtrToPtr<const RingBufferElementInfo *, const uint8_t *>(infoAddr);
 
         RT_LOG(RT_LOG_INFO, "head info %u, tail info=%u, type=%u.", head, tail,

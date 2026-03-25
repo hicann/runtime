@@ -93,6 +93,7 @@ public:
             tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
             tmpCtrlInfo->tail = 0;
             tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
             return RT_ERROR_NONE;
         }
         if (size == sizeof(DevRingBufferCtlInfo)) {
@@ -100,9 +101,10 @@ public:
             tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
             tmpCtrlInfo->tail = 1;
             tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
             return RT_ERROR_NONE;
         }
-        if (size == (sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo))) {
+        if (size == RINGBUFFER_EXT_ONE_ELEMENT_LENGTH) {
             RingBufferElementInfo *info = reinterpret_cast<RingBufferElementInfo *>(dst);
             info->errorType = g_case_num;
             StarsDeviceErrorInfo *errorInfo = reinterpret_cast<StarsDeviceErrorInfo *>(info + 1);
@@ -2344,6 +2346,7 @@ rtError_t MemCopySyncForRingBuffer(Driver *drv, void *dst, uint64_t destMax, con
         tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
         tmpCtrlInfo->tail = 0;
         tmpCtrlInfo->head = 0;
+        tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
         return RT_ERROR_NONE;
     }
     if (size == sizeof(DevRingBufferCtlInfo)) {
@@ -2351,9 +2354,10 @@ rtError_t MemCopySyncForRingBuffer(Driver *drv, void *dst, uint64_t destMax, con
         tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
         tmpCtrlInfo->tail = 1;
         tmpCtrlInfo->head = 0;
+        tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
         return RT_ERROR_NONE;
     }
-    if (size == (sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo))) {
+    if (size == RINGBUFFER_EXT_ONE_ELEMENT_LENGTH) {
         RingBufferElementInfo *info = reinterpret_cast<RingBufferElementInfo *>(dst);
         info->errorType = g_case_num;
         StarsDeviceErrorInfo *errorInfo = reinterpret_cast<StarsDeviceErrorInfo *>(info + 1);

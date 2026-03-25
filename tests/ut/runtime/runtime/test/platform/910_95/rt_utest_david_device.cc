@@ -86,38 +86,50 @@ TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
     Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
     DeviceErrorProc *errorProc = new DeviceErrorProc(device);
     DevRingBufferCtlInfo *ctlInfo  = (DevRingBufferCtlInfo *)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
-    memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
-    if (ctlInfo != nullptr) {
-        ctlInfo->tail = 1;
-        ctlInfo->head = 0;
-        ctlInfo->magic = RINGBUFFER_MAGIC;
-        ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
-        uint64_t oneElementLen = sizeof(StarsDeviceErrorInfo) + sizeof(RingBufferElementInfo);
-        uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) +
-                             sizeof(DevRingBufferCtlInfo) +
-                             ctlInfo->head * oneElementLen;
-        RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
-        StarsDeviceErrorInfo *errorInfo = reinterpret_cast<StarsDeviceErrorInfo *>(info + 1);
-        info->errorType = AICORE_ERROR;
-        errorInfo->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
-        errorInfo->u.davidCoreErrorInfo.comm.coreNum = 1;
-        errorInfo->u.davidCoreErrorInfo.info[0].coreId = 1;
-        errorInfo->u.davidCoreErrorInfo.info[0].scError = 0x6;
-        rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-
-        errorInfo->u.davidCoreErrorInfo.comm.type = AIVECTOR_ERROR;
-        errorInfo->u.davidCoreErrorInfo.comm.coreNum = 2;
-        errorInfo->u.davidCoreErrorInfo.comm.exceptionSlotId = 3;
-        errorInfo->u.davidCoreErrorInfo.comm.dieId = 4;
-        errorInfo->u.davidCoreErrorInfo.info[0].coreId = 5;
-        errorInfo->u.davidCoreErrorInfo.info[0].vecError = 0x6;
-        errorInfo->u.davidCoreErrorInfo.info[1].coreId = 25;
-
-        error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-        free(ctlInfo);
+    EXPECT_NE(ctlInfo, nullptr);
+    if (ctlInfo == nullptr) {
+        return;
     }
+
+    memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    ctlInfo->tail = 1;
+    ctlInfo->head = 0;
+    ctlInfo->magic = RINGBUFFER_MAGIC;
+    ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
+
+    // element size is invalid
+    rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    // init element size
+    ctlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+
+    uint64_t oneElementLen = sizeof(StarsDeviceErrorInfo) + sizeof(RingBufferElementInfo);
+    uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) +
+                            sizeof(DevRingBufferCtlInfo) +
+                            ctlInfo->head * oneElementLen;
+    RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
+    StarsDeviceErrorInfo *errorInfo = reinterpret_cast<StarsDeviceErrorInfo *>(info + 1);
+    info->errorType = AICORE_ERROR;
+    errorInfo->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    errorInfo->u.davidCoreErrorInfo.comm.coreNum = 1;
+    errorInfo->u.davidCoreErrorInfo.info[0].coreId = 1;
+    errorInfo->u.davidCoreErrorInfo.info[0].scError = 0x6;
+    error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    errorInfo->u.davidCoreErrorInfo.comm.type = AIVECTOR_ERROR;
+    errorInfo->u.davidCoreErrorInfo.comm.coreNum = 2;
+    errorInfo->u.davidCoreErrorInfo.comm.exceptionSlotId = 3;
+    errorInfo->u.davidCoreErrorInfo.comm.dieId = 4;
+    errorInfo->u.davidCoreErrorInfo.info[0].coreId = 5;
+    errorInfo->u.davidCoreErrorInfo.info[0].vecError = 0x6;
+    errorInfo->u.davidCoreErrorInfo.info[1].coreId = 25;
+
+    error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    free(ctlInfo);
+
 
     errorProc->deviceRingBufferAddr_ = nullptr;
     delete errorProc;
