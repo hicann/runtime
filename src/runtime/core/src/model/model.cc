@@ -2011,12 +2011,8 @@ rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, const void 
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
     MdlDestroyCallbackInfo info{fn, RtPtrToUnConstPtr<void *>(ptr)};
     const auto callBackIter = mdlDestroyCallbackSet_.find(info);
-    if (callBackIter != mdlDestroyCallbackSet_.end()) {
-        RT_LOG(RT_LOG_ERROR,
-            "this callback function already registered , callback=%p.",
-            fn);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_OUT_ERROR_MSG_CALL(callBackIter != mdlDestroyCallbackSet_.end(), RT_ERROR_INVALID_VALUE,
+        "Callback function %p has been registered.", fn);
     (void)mdlDestroyCallbackSet_.insert(info);
     return RT_ERROR_NONE;
 }
@@ -2026,12 +2022,8 @@ rtError_t Model::ModelDestroyUnregisterCallback(const rtCallback_t fn)
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);
     MdlDestroyCallbackInfo info{fn, nullptr};
     const auto callBackIter = mdlDestroyCallbackSet_.find(info);
-    if (callBackIter == mdlDestroyCallbackSet_.end()) {
-        RT_LOG(RT_LOG_ERROR,
-            "this callback function was not registered , callback=%p.",
-            fn);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_OUT_ERROR_MSG_CALL(callBackIter == mdlDestroyCallbackSet_.end(), RT_ERROR_INVALID_VALUE,
+        "Callback function %p has not been registered.", fn);
     (void)mdlDestroyCallbackSet_.erase(callBackIter);
     return RT_ERROR_NONE;
 }
