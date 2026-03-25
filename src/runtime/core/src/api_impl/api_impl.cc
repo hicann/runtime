@@ -5504,6 +5504,11 @@ rtError_t ApiImpl::GetRtCapability(const rtFeatureType_t featureType, const int3
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     RT_LOG(RT_LOG_INFO, "GetRtCapability chip_type=%d", chipType);
 
+    if (featureType == FEATURE_TYPE_PERSISTENT_STREAM_UNLIMITED_DEPTH) {
+        *val = static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
+        return RT_ERROR_NONE;
+    }
+
     if ((featureType == FEATURE_TYPE_MEMCPY) && (featureInfo == static_cast<int32_t>(MEMCPY_INFO_SUPPORT_ZEROCOPY))) {
         *val = static_cast<int64_t>(RT_CAPABILITY_SUPPORT);
         return RT_ERROR_NONE;

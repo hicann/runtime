@@ -2103,6 +2103,8 @@ TEST_F(NewCloudV2ApiTest, get_runtime_milan_capability)
     int64_t value = 0;
     error = rtGetRtCapability(FEATURE_TYPE_UPDATE_SQE, UPDATE_SQE_SUPPORT_DSA, &value);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtGetRtCapability(FEATURE_TYPE_PERSISTENT_STREAM_UNLIMITED_DEPTH, 0, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(NewCloudV2ApiTest, GetAddrAndPrefCntWithHandle1)

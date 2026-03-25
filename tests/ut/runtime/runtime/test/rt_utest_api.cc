@@ -4120,6 +4120,8 @@ TEST_F(ApiTest, get_runtime_capability)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtGetRtCapability(FEATURE_TYPE_MEMORY, MEMORY_INFO_TS_4G_LIMITED, &value);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtGetRtCapability(FEATURE_TYPE_PERSISTENT_STREAM_UNLIMITED_DEPTH, 0, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ApiTest, get_runtime_1951_capability)
