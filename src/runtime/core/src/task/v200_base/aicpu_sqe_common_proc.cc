@@ -239,7 +239,7 @@ void ConstructAicpuSubSqeBase(TaskInfo * const taskInfo, rtDavidSqe_t * const da
         sqe->resv.fusionSubTypeDesc.subType = fusionKernelTask->sqeSubType;
         sqe->resv.fusionSubTypeDesc.aic = fusionKernelTask->aicAivType;
         sqe->sqeLength = fusionKernelTask->sqeLen - 1U;
-        sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+        sqe->kernelCredit = static_cast<uint8_t>(GetAicoreKernelCredit(0U));
     }
 
     RT_LOG(RT_LOG_INFO, "taskIdx=%u, sqeIndex=%u, aicpuIndex=%u, kfcArgsFmtOffset=%hu, kernelFlag=%u, aicpuKernelType=%hu.",
