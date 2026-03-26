@@ -588,8 +588,6 @@ rtError_t AllocTaskAndSendStars(TaskInfo *submitTask, Stream *stm, uint32_t * co
 
     const uint32_t posTail = stm->GetBindFlag() ? stm->GetDelayRecycleTaskSqeNum() : stm->GetTaskPosTail();
     const uint32_t posHead = stm->GetBindFlag() ? stm->GetTaskPersistentHeadValue() : stm->GetTaskPosHead();
-    const uint32_t rtsqDepth = (((stm->Flags() & RT_STREAM_HUGE) != 0U) && (Runtime::macroValue_.maxTaskNumPerHugeStream != 0)) ?
-        Runtime::macroValue_.maxTaskNumPerHugeStream : stm->GetSqDepth();
     RT_LOG(RT_LOG_INFO, "device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d, task_id=%hu, task_type=%u(%s), "
         "sendSqeNum=%u, isSupportASyncRecycle=%d, isNeedPostProc=%d, davinciHead=%u, davinciTail=%u, taskHead=%u, "
         "taskTail=%u, bindFlag=%d, head=%u, tail=%u, delay recycle num=%zu.",
