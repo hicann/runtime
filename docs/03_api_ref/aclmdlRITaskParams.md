@@ -31,8 +31,8 @@ typedef struct aclmdlRITaskParams {
 | rsv1 | 预留参数。 |
 | rsv2 | 预留参数。 |
 | kernelTaskParams | 算子类型任务的参数，类型为 [aclmdlRIKernelTaskParams](aclmdlRIKernelTaskParams.md)。 |
-| eventRecordTaskParams | Event Record任务的参数，类型为 [aclmdlRIEventRecordTaskParams](aclmdlRIEventRecordTaskParams.md)。 |
-| eventWaitTaskParams | Event Wait任务的参数，类型为 [aclmdlRIEventWaitTaskParams](aclmdlRIEventWaitTaskParams.md)。 |
-| eventResetTaskParams | Event Reset任务的参数，类型为 [aclmdlRIEventResetTaskParams](aclmdlRIEventResetTaskParams.md)。 |
+| eventRecordTaskParams | Event Record任务的参数，类型为 [aclmdlRIEventRecordTaskParams](aclmdlRIEventRecordTaskParams.md)。<br>该参数仅用于查询接口的输出，设置接口暂不支持使用。 |
+| eventWaitTaskParams | Event Wait任务的参数，类型为 [aclmdlRIEventWaitTaskParams](aclmdlRIEventWaitTaskParams.md)。<br>该参数仅用于查询接口的输出，设置接口暂不支持使用。 |
+| eventResetTaskParams | Event Reset任务的参数，类型为 [aclmdlRIEventResetTaskParams](aclmdlRIEventResetTaskParams.md)。<br>该参数仅用于查询接口的输出，设置接口暂不支持使用。 |
 | valueWriteTaskParams | Value Write任务的参数，类型为 [aclmdlRIValueWriteTaskParams](aclmdlRIValueWriteTaskParams.md)。 |
 | valueWaitTaskParams | Value Wait任务的参数，类型为 [aclmdlRIValueWaitTaskParams](aclmdlRIValueWaitTaskParams.md)。 |
