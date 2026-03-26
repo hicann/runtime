@@ -33,9 +33,10 @@ rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t 
         simd     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize<=256K, sqe中dcuSmSize=256K
         simt     - 1982&1952: 校验compilerAllocUbSize+dynamicSmSize+dcache(32K)<=256K, sqe中dcuSmSize=compilerAllocUbSize+dynamicSmSize
     */
-    bool canUseSimt = (kernel->KernelVfType_() != 0);
-    bool simtFlag = (kernel->KernelVfType_() == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
-                    (kernel->KernelVfType_() == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
+    const uint32_t kernelVfType = kernel->KernelVfType_();
+    bool canUseSimt = (kernelVfType != 0);
+    bool simtFlag = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
+                    (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
     uint32_t totalSmSize = kernel->ShareMemSize_() + dynamicShareMemSize;
     uint32_t maxSmSize = simtFlag ? RT_SIMT_REMAIN_UB_SIZE : RT_SIMT_UB_SIZE;
     maxSmSize = canUseSimt ? maxSmSize : 0U;
@@ -43,9 +44,9 @@ rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t 
     totalSmSize = simtFlag ? ((totalSmSize + RT_SIMT_SHARE_MEM_ALIGN_LEN - 1)/ RT_SIMT_SHARE_MEM_ALIGN_LEN * RT_SIMT_SHARE_MEM_ALIGN_LEN)
                   : totalSmSize;
     if (totalSmSize > maxSmSize) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The size of the dynamic shared memory is %uB, and the size of the"
-                         " shared memory required by the operator kernel is %uB. The sum of these two sizes must be less than or equal to %uB.",
-                         dynamicShareMemSize, kernel->ShareMemSize_(), maxSmSize);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "The size of dynamic shared memory is %uB, and shared memory"
+                         " required by kernel is %uB, their sum must be less than or equal to %uB, kernelVfType=%u.",
+                         dynamicShareMemSize, kernel->ShareMemSize_(), maxSmSize, kernelVfType);
         return RT_ERROR_INVALID_VALUE;
     }
 

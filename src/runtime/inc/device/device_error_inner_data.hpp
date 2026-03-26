@@ -32,7 +32,7 @@ namespace {
     constexpr uint32_t MAX_STREAM_NUM_CLOUD = 2048U;
     constexpr uint32_t RINGBUFFER_HCCL_FFTSPLUS_MAX_CONTEXT_NUM = 8U;
 	constexpr uint32_t MAX_CORE_BLOCK_NUM_ON_DAVID  = 72U;
-    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 48128; // 47k for David
+    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 48128U; // 47k for David
     constexpr uint32_t MAX_AIC_ID = 64U;
     constexpr uint32_t MAX_AIV_ID = 64U;
     constexpr uint32_t MAX_DEV_ID = 16U;
