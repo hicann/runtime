@@ -3189,3 +3189,17 @@ TEST_F(ProfilerTest, ProfileLogDecoratorModelApiTest)
     profiler->SetProfLogEnable(false);
     delete apiImpl_;
 }
+
+ TEST_F(ProfilerTest, get_overflow_capability_david)
+{
+    rtError_t error;
+    int64_t value = 0;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    rtChipType_t oriChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_DAVID);
+    GlobalContainer::SetRtChipType(CHIP_DAVID);
+    error = rtGetRtCapability(FEATURE_TYPE_AICPU_OVERFLOW_DUMP, 0, &value);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rtInstance->SetChipType(oriChipType);
+    GlobalContainer::SetRtChipType(oriChipType);
+}

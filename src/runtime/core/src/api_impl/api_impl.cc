@@ -5514,6 +5514,11 @@ rtError_t ApiImpl::GetRtCapability(const rtFeatureType_t featureType, const int3
         return RT_ERROR_NONE;
     }
 
+    if (featureType == FEATURE_TYPE_AICPU_OVERFLOW_DUMP) {
+        *val = static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
+        return RT_ERROR_NONE;
+    }
+
     DevProperties props;
     rtError_t error = GET_DEV_PROPERTIES(chipType, props);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties fail");
