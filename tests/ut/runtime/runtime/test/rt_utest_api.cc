@@ -4141,7 +4141,7 @@ TEST_F(ApiTest, get_runtime_capability)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiTest, get_runtime_1951_capability)
+TEST_F(ApiTest, get_runtime_310p_capability)
 {
     rtError_t error;
     int64_t value = 0;

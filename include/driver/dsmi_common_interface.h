@@ -858,7 +858,7 @@ typedef struct dsmi_sensorhub_status_stru {
     unsigned int status;
     unsigned int timestamp_lost_error_cnt[FSIN_USER_NUM];       /**< timestamp irq lost error count */
     unsigned int timestamp_op_error_cnt;         /**< timestamp read/write operation error count */
-    unsigned int pps_lost_error_cnt;             /**< GPS PPS lost error count */
+    unsigned int pps_lost_error_cnt;             /**< PPS lost error count */
 } DSMI_SENSORHUB_STATUS_STRU;
 
 #define MAX_SID_FILTER_NUM  128
@@ -1058,12 +1058,12 @@ typedef struct dsmi_sensorhub_config_stru {
     unsigned int imu_fps;                            /**< imu0_thr frame rate value */
     unsigned int ssu_ctrl_ssu_en;                    /**< ssu enable,  */
     unsigned int ssu_ctrl_pps_sel;                   /**< pps resource select,  */
-    unsigned int pps_lock_thr;                       /**< GPS pps lock threshold */
-    unsigned int pps_lost_thr;                       /**< GPS pps lost threshold */
+    unsigned int pps_lock_thr;                       /**< pps lock threshold */
+    unsigned int pps_lost_thr;                       /**< pps lost threshold */
     unsigned int fsin_initial_pre[__FSIN_INT_NUM];   /**< fsin0~3 initial advance count to pps pulse */
     unsigned int imu0_initial_pre;                   /**< imu0 initial advance count to pps pulse */
     unsigned int ssu_normal_taishan_mask;            /**< mask of ssu normal irq to taishan */
-    unsigned int ssu_normal_taishan_mask_2;          /**< mask of GPS PPS lost irq to taishan */
+    unsigned int ssu_normal_taishan_mask_2;          /**< mask of PPS lost irq to taishan */
     unsigned int ssu_error_taishan_mask_1;           /**< mask of read/write error irq to taishan(expose mode) */
     unsigned int ssu_error_taishan_mask_2;           /**< mask of read/write error irq to taishan(strobe mode) */
     unsigned int ssu_path_en;                        /**< register to enable interrupt path */

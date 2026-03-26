@@ -2064,7 +2064,7 @@ TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed)
     delete rawDrv;
 }
 
-TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed_1981)
+TEST_F(CloudV2NpuDriverTest, NormalSqCqAllocate_failed_910_93)
 {
     g_isAddrFlatDevice = true;
     rtError_t error;

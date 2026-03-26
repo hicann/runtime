@@ -80,7 +80,6 @@ endif()
 SET(SUPPORT_ASCEND_MONITOR false)
 if (PRODUCT)
     if ((${SUPPORT_IAM} STREQUAL false) AND ((NOT (${PRODUCT} STREQUAL ascend610)) AND
-                                             (NOT (${PRODUCT} STREQUAL ascend615)) AND
                                              (NOT (${PRODUCT} STREQUAL as31xm1)) AND
                                              (NOT (${PRODUCT} STREQUAL ascend610Lite))))
         SET(SUPPORT_ASCEND_MONITOR true)

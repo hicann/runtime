@@ -3654,7 +3654,6 @@ TEST_F(DavidTaskTest1, load_args_for_aicpu_task)
     TaskUnInitProc(&kernTask);
 }
 
-#ifdef ASCEND910D
 TEST_F(DavidTaskTest1, notify_task_wait_timeout_error_proc)
 {
     rtSetDevice(1);
@@ -3673,7 +3672,6 @@ TEST_F(DavidTaskTest1, notify_task_wait_timeout_error_proc)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
     rtDeviceReset(1);
 }
-#endif
 
 class DavidVnpuApiTest : public testing::Test {
 protected:

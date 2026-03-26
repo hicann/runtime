@@ -4114,7 +4114,7 @@ TEST_F(ApiTest, ADCProfiler)
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 //changed
-TEST_F(ApiTest, memcpy_async_device_to_host_1911)
+TEST_F(ApiTest, memcpy_async_device_to_host_310b)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtChipType_t oriChipType = rtInstance->GetChipType();

@@ -2533,7 +2533,7 @@ extern bool g_isAddrFlatDevice;
 } // runtime
 } // cce
 
-TEST_F(NpuDriverTest2, NormalSqCqAllocate_failed_1981)
+TEST_F(NpuDriverTest2, NormalSqCqAllocate_failed_910_93)
 {
     g_isAddrFlatDevice = true;
     rtError_t error;

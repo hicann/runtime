@@ -142,7 +142,7 @@ add_library(tsdclient SHARED
     ${BASE_DIR}/common/src/process_util_common.cpp
     ${BASE_DIR}/common/src/tsd_path_mgr.cpp
     ${BASE_DIR}/common/src/tsd_hash_verify.cpp
-    $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend615>,$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${CMAKE_CURRENT_SOURCE_DIR}/src/stub/stub_dc.cpp>
+    $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${CMAKE_CURRENT_SOURCE_DIR}/src/stub/stub_dc.cpp>
     ${tdt_common_files}
     ${PROTO_SRCS}
     src/stub/stub_process_mode_nowin.cpp
