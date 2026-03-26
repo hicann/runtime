@@ -140,6 +140,7 @@ private:
 
     Thread *monitorThread_;
     Thread *recycleThread_;
+    std::string recycleThreadName_;
     volatile bool recycleThreadRunFlag_ = false;
     volatile bool monitorThreadRunFlag_ = false;
     mmSem_t recycleThreadSem_;
