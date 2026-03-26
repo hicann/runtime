@@ -159,7 +159,8 @@ rtError_t StarsEngine::Stop()
 rtError_t StarsEngine::CreateRecycleThread(void)
 {
     void * const recycle = RtValueToPtr<void *>(THREAD_RECYCLE);
-    recycleThread_ = OsalFactory::CreateThread("RT_RECYCLE", this, recycle);
+    recycleThreadName_ = "RT_RECYCLE_" + std::to_string(device_->Id_());
+    recycleThread_ = OsalFactory::CreateThread(recycleThreadName_.c_str(), this, recycle);
     if (recycleThread_ == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Create recycle thread failed");
         return RT_ERROR_MEMORY_ALLOCATION;

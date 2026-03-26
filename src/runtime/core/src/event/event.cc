@@ -835,9 +835,15 @@ rtError_t Event::WaitTask(const int32_t timeout)
     COND_RETURN_ERROR_MSG_INNER(((error != RT_ERROR_NONE) || (stm == nullptr)), error,
                                 "Query stream failed, stream_id=%d, retCode=%#x.",
                                 streamId, static_cast<uint32_t>(error));
-    // if set stream fail mode, need to reclaim task to update error info
-    bool isReclaim = (stm->Context_()->GetCtxMode() == STOP_ON_FAILURE);
-    error = stm->WaitTask(isReclaim, taskId, timeout);
+    if (stm->IsSeparateSendAndRecycle()) {
+        // no timeline，MAX_UINT16_NUM is used to indicate that task reclamation does not need to be waited for.
+        uint32_t concernedTaskId = ((eventFlag_ & RT_EVENT_TIME_LINE) == 0) ? MAX_UINT16_NUM : taskId;
+        error = stm->SynchronizeImpl(taskId, static_cast<uint16_t>(concernedTaskId), timeout);
+    } else {
+        // if set stream fail mode, need to reclaim task to update error info
+        bool isReclaim = (stm->Context_()->GetCtxMode() == STOP_ON_FAILURE);
+        error = stm->WaitTask(isReclaim, taskId, timeout);
+    }
     stm.reset();
     return error;
 }
