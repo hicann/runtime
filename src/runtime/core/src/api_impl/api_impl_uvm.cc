@@ -28,7 +28,6 @@ rtError_t ApiImpl::MemManagedAdvise(const void *const ptr, uint64_t size, uint16
 rtError_t ApiImpl::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
 {
     RT_LOG(RT_LOG_DEBUG, "get memory attribute.");
-    TIMESTAMP_NAME(__func__);
 
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
@@ -45,7 +44,6 @@ rtError_t ApiImpl::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const
 rtError_t ApiImpl::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)
 {
     RT_LOG(RT_LOG_DEBUG, "get memory attributes.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
 

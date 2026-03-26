@@ -25,7 +25,6 @@ rtError_t rtMbufInit(rtMemBuffCfg_t *cfg)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiMbufInstance->MbufInit(cfg);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_REPEATED_INIT, ACL_ERROR_RT_REPEATED_INIT); // special state
@@ -39,7 +38,6 @@ rtError_t rtMbufBuild(void* buff, const uint64_t size, rtMbufPtr_t *mbufPtr)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(buff, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufBuild(buff, size, mbufPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -53,7 +51,6 @@ rtError_t rtMbufAlloc(rtMbufPtr_t *memBuf, uint64_t size)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufAlloc(memBuf, size);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -80,7 +77,6 @@ rtError_t rtMbufUnBuild(const rtMbufPtr_t mbufPtr, void **buff, uint64_t *size)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(mbufPtr, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufUnBuild(mbufPtr, buff, size);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -93,7 +89,6 @@ rtError_t rtBuffGet(const rtMbufPtr_t mbufPtr, void *buff, const uint64_t size)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(buff, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufGet(mbufPtr, buff, size);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -107,7 +102,6 @@ rtError_t rtBuffPut(const rtMbufPtr_t mbufPtr, void *buff)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(buff, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufPut(mbufPtr, buff);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -121,7 +115,6 @@ rtError_t rtMbufFree(rtMbufPtr_t memBuf)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufFree(memBuf);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -135,7 +128,6 @@ rtError_t rtMbufSetDataLen(rtMbufPtr_t memBuf, uint64_t len)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufSetDataLen(memBuf, len);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -147,7 +139,6 @@ rtError_t rtMbufGetDataLen(rtMbufPtr_t memBuf, uint64_t *len)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG_OUTER(len, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufGetDataLen(memBuf, len);
@@ -161,7 +152,6 @@ rtError_t rtMbufGetBuffAddr(rtMbufPtr_t memBuf, void **buf)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG_OUTER(buf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufGetBuffAddr(memBuf, buf);
@@ -175,7 +165,6 @@ rtError_t rtMbufGetBuffSize(rtMbufPtr_t memBuf, uint64_t *totalSize)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG_OUTER(totalSize, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufGetBuffSize(memBuf, totalSize);
@@ -189,7 +178,6 @@ rtError_t rtMbufGetPrivInfo(rtMbufPtr_t memBuf,  void **priv, uint64_t *size)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG_OUTER(priv, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG_OUTER(size, ACL_ERROR_RT_PARAM_INVALID);
@@ -217,7 +205,6 @@ rtError_t rtMbufChainAppend(rtMbufPtr_t memBufChainHead, rtMbufPtr_t memBuf)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG(memBufChainHead, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufChainAppend(memBufChainHead, memBuf);
@@ -231,7 +218,6 @@ rtError_t rtMbufChainGetMbufNum(rtMbufPtr_t memBufChainHead, uint32_t *num)
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG(memBufChainHead, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG(num, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufChainGetMbufNum(memBufChainHead, num);
@@ -245,7 +231,6 @@ rtError_t rtMbufChainGetMbuf(rtMbufPtr_t memBufChainHead, uint32_t index, rtMbuf
 {
     ApiMbuf * const apiMbufInstance = ApiMbuf::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiMbufInstance);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG(memBufChainHead, ACL_ERROR_RT_PARAM_INVALID);
     NULL_PTR_RETURN_MSG(memBuf, ACL_ERROR_RT_PARAM_INVALID);
     const rtError_t error = apiMbufInstance->MbufChainGetMbuf(memBufChainHead, index, memBuf);

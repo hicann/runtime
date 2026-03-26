@@ -554,7 +554,6 @@ rtError_t rtCmoAddrTaskLaunch(void *cmoAddrInfo, uint64_t destMax, rtCmoOpCode_t
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const streamPtr = static_cast<Stream *>(stm);
     TIMESTAMP_BEGIN(CmoAddrTaskLaunch);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
@@ -573,7 +572,6 @@ rtError_t rtModelTaskUpdate(rtStream_t desStm, uint32_t desTaskId, rtStream_t si
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->ModelTaskUpdate(static_cast<Stream *>(desStm), desTaskId,
                                                          static_cast<Stream *>(sinkStm), para);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -804,7 +802,6 @@ rtError_t rtCmoTaskLaunch(rtCmoTaskInfo_t *taskInfo, rtStream_t stm, uint32_t fl
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const streamPtr = static_cast<Stream *>(stm);
     TIMESTAMP_BEGIN(CmoTaskLaunch);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
@@ -932,7 +929,6 @@ rtError_t rtMemcpyD2DAddrAsync(void *dst, uint64_t dstMax, uint64_t dstOffset, c
     }
 
     Stream * const exeStream = static_cast<Stream *>(stm);
-    TIMESTAMP_NAME(__func__);
 
     rtD2DAddrCfgInfo_t addrCfgInfo = {};
     addrCfgInfo.dstOffset = dstOffset;
@@ -1155,7 +1151,6 @@ rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const streamPtr = static_cast<Stream *>(stm);
     const rtError_t error = apiInstance->SetStreamTag(streamPtr, geOpTag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

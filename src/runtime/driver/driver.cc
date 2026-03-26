@@ -61,7 +61,6 @@ Driver::~Driver()
 rtError_t FacadeDriver::GetDeviceCount(int32_t * const deviceCount) const
 {
     rtError_t error = RT_ERROR_NONE;
-    TIMESTAMP_NAME(__func__);
     uint32_t devCnt = 0U;
     const drvError_t drvRet = drvGetDevNum(&devCnt);
     if (drvRet != DRV_ERROR_NONE) {
@@ -76,7 +75,6 @@ rtError_t FacadeDriver::GetDeviceIDs(uint32_t * const devices, const uint32_t le
 {
     rtError_t error = RT_ERROR_NONE;
 
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = drvGetDevIDs(devices, len);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Call drvGetDevIDs, drvRetCode=%d, length=%u.", drvRet, len);

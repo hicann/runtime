@@ -312,7 +312,6 @@ static void CheckBlockDim(TaskInfo* const taskInfo, const RtFftsPlusKernelSqe* c
 
 void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t *const command)
 {
-    TIMESTAMP_NAME(__func__);
 
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     Stream * const stm = taskInfo->stream;
@@ -353,7 +352,6 @@ void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t *const command)
 
 void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t *const command)
 {
-    TIMESTAMP_NAME(__func__);
 
     AicpuTaskInfo *aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
     Stream * const stm = taskInfo->stream;

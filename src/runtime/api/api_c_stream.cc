@@ -74,7 +74,6 @@ rtError_t rtStreamCreateWithFlags(rtStream_t *stm, int32_t priority, uint32_t fl
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     TIMESTAMP_BEGIN(rtStreamCreate);
     const rtError_t ret = apiInstance->StreamCreate(RtPtrToPtr<Stream **>(stm), priority, flags, nullptr);
     TIMESTAMP_END(rtStreamCreate);
@@ -90,7 +89,6 @@ rtError_t rtStreamDestroy(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     TIMESTAMP_BEGIN(rtStreamDestroy);
     const rtError_t error = apiInstance->StreamDestroy(exeStream, false);
@@ -106,7 +104,6 @@ rtError_t rtStreamDestroyForce(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     TIMESTAMP_BEGIN(rtStreamDestroyForce);
     const rtError_t error = apiInstance->StreamDestroy(exeStream, true);
@@ -124,7 +121,6 @@ rtError_t rtStreamWaitEvent(rtStream_t stm, rtEvent_t evt)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(Runtime::Instance());
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     rtError_t ret;
@@ -192,7 +188,6 @@ rtError_t rtStreamQuery(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->StreamQuery(exeStream);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_STREAM_NOT_COMPLETE, ACL_ERROR_RT_STREAM_NOT_COMPLETE); // special state
@@ -205,7 +200,6 @@ rtError_t rtGetStreamId(rtStream_t stm, int32_t *streamId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->GetStreamId(exeStream, streamId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -217,7 +211,6 @@ rtError_t rtStreamGetPriority(const rtStream_t stm, uint32_t *priority)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->StreamGetPriority(exeStream, priority);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -229,7 +222,6 @@ rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t *flags)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->StreamGetFlags(exeStream, flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -241,7 +233,6 @@ rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->GetSqId(exeStream, sqId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -253,7 +244,6 @@ rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicC
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t ret = apiInstance->GetCqId(exeStream, cqId, logicCqId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -265,7 +255,6 @@ rtError_t rtGetMaxStreamAndTask(uint32_t streamType, uint32_t *maxStrCount, uint
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->GetMaxStreamAndTask(streamType, maxStrCount, maxTaskCount);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -277,7 +266,6 @@ rtError_t rtGetAvailStreamNum(const uint32_t streamType, uint32_t * const stream
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->GetAvailStreamNum(streamType, streamCount);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -288,7 +276,6 @@ rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->GetTaskIdAndStreamID(taskId, streamId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -553,7 +540,6 @@ rtError_t rtGetStreamTag(rtStream_t stm, uint32_t *geOpTag)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const streamPtr = static_cast<Stream *>(stm);
     const rtError_t error = apiInstance->GetStreamTag(streamPtr, geOpTag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

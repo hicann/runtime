@@ -35,7 +35,6 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
     Stream * const stream = taskInfo->stream;
 
     PreCheckTaskErr(taskInfo, devId);
-    TIMESTAMP_NAME(__func__);
 
     if ((errorCode != TS_ERROR_AICORE_OVERFLOW) && (errorCode != TS_ERROR_AIVEC_OVERFLOW) &&
         (errorCode != TS_ERROR_AICPU_OVERFLOW) && (errorCode != TS_ERROR_SDMA_OVERFLOW) && (errorCode != 0U)) {

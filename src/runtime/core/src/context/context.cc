@@ -485,7 +485,6 @@ rtError_t Context::Setup()
 
 rtError_t Context::TearDown()
 {
-    TIMESTAMP_NAME(__func__);
     modelLock_.Lock();
     for (Model *tdModel : models_) {
         RT_LOG(RT_LOG_INFO, "Tear down model abandon, model_id=%u.", tdModel->Id_());
@@ -686,7 +685,6 @@ rtError_t Context::Synchronize(int32_t timeout)
     const Stream *defaultStream = defaultStream_;
     NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL);
 
-    TIMESTAMP_NAME(__func__);
     std::list<Stream *> syncStreams;
     const std::unique_lock<std::mutex> taskLock(streamLock_);
     for (const auto &syncStream : streams_) {

@@ -33,7 +33,6 @@ rtError_t rtDevBinaryRegister(const rtDevBinary_t *bin, void **hdl)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->DevBinaryRegister(bin, RtPtrToPtr<Program **>(hdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;

@@ -88,7 +88,6 @@ void HwtsEngine::ProcessNullTaskOverFlowReport(const uint32_t streamId,
 
 void HwtsEngine::ReportReceive(const rtTaskReport_t * const report, TaskInfo * const reportTask)
 {
-    TIMESTAMP_NAME(__func__);
     uint8_t package[M_PROF_PACKAGE_LEN] = {0U};
     constexpr size_t pktLen  = static_cast<size_t>(M_PROF_PACKAGE_LEN);
     if (likely(rebuilder_.PackageReportReceive(report, package, pktLen, reportTask))) {

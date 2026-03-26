@@ -27,7 +27,6 @@ namespace runtime {
 rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const in,
     rtMallocHostSharedMemoryOut * const out, const uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
     rtError_t error = RT_ERROR_NONE;
     int32_t retVal;
 
@@ -120,7 +119,6 @@ ERROR:
 
 rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, const uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         struct stat buf;
         constexpr const char_t *path = "/dev/shm/";
@@ -166,7 +164,6 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
 rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr,
     const uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
 
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
@@ -204,7 +201,6 @@ rtError_t NpuDriver::HostRegister(void *ptr, uint64_t size, rtHostRegisterType t
 
 rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
 
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
@@ -657,7 +653,6 @@ rtError_t NpuDriver::PcieHostUnRegister(void * const addr, const uint32_t device
 
 rtError_t NpuDriver::MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
     uint32_t logicDevId = 0U;
     drvError_t drvRet = drvDeviceGetIndexByPhyId(static_cast<uint32_t>(deviceId), &logicDevId);
     if (drvRet != DRV_ERROR_NONE) {
@@ -679,7 +674,6 @@ rtError_t NpuDriver::MemPrefetchToDevice(const void * const devPtr, const uint64
 
 rtError_t NpuDriver::MemAddressTranslate(const int32_t deviceId, const uint64_t vptr, uint64_t * const pptr)
 {
-    TIMESTAMP_NAME(__func__);
 
     const drvError_t drvRet = drvMemAddressTranslate(static_cast<UINT64>(vptr), RtPtrToPtr<UINT64 *>(pptr));
     if (drvRet != DRV_ERROR_NONE) {
@@ -703,7 +697,6 @@ rtError_t NpuDriver::MemSetSync(const void * const devPtr, const uint64_t destMa
     TIMESTAMP_END(drvMemsetD8);
     record.SaveRecord();
 
-    TIMESTAMP_NAME(__func__);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] drvMemsetD8 failed: destMax=%" PRIu64 ", value=%u, "
             "count=%" PRIu64 ", drvRetCode=%d!", destMax, val, cnt, static_cast<int32_t>(drvRet));
@@ -758,7 +751,6 @@ rtError_t NpuDriver::MemManagedAdvise(const void *const ptr, uint64_t size, uint
 rtError_t NpuDriver::HostMemAlloc(void ** const dptr, const uint64_t size, const uint32_t deviceId,
     const uint16_t moduleId, const uint32_t vaFlag)
 {
-    TIMESTAMP_NAME(__func__);
     uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST);
     if (vaFlag == 1U) {
         // 接口cfg里面配置了使用UVA特性，但是驱动不支持，直接返回
@@ -780,7 +772,6 @@ rtError_t NpuDriver::HostMemAlloc(void ** const dptr, const uint64_t size, const
 
 rtError_t NpuDriver::HostMemFree(void * const dptr)
 {
-    TIMESTAMP_NAME(__func__);
 
 #ifndef CFG_DEV_PLATFORM_PC
     const drvError_t drvRet = halMemFree(dptr);
@@ -808,7 +799,6 @@ rtError_t NpuDriver::ManagedMemAlloc(void ** const dptr, const uint64_t size, co
 rtError_t NpuDriver::ManagedMemAllocInner(void ** const dptr, const uint64_t size, const ManagedMemFlag flag,
                                           const uint32_t deviceId, const uint16_t moduleId)
 {
-    TIMESTAMP_NAME(__func__);
     drvError_t drvRet;
     uint32_t hugePage = 1U;
     uint64_t drvFlag = 0;
@@ -853,7 +843,6 @@ rtError_t NpuDriver::ManagedMemAllocInner(void ** const dptr, const uint64_t siz
 
 rtError_t NpuDriver::ManagedMemFree(const void * const dptr)
 {
-    TIMESTAMP_NAME(__func__);
     NpuDriverRecord record(static_cast<uint16_t>(RT_PROF_DRV_API_MngFree));
     const drvError_t drvRet = halMemFree(RtPtrToUnConstPtr<void *>(dptr));
     record.SaveRecord();
@@ -1467,7 +1456,6 @@ rtError_t NpuDriver::DevContinuousMemFree(void * const dptr, const uint32_t devi
 
 rtError_t NpuDriver::DevMemAllocForPctrace(void ** const dptr, const uint64_t size, const uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
     if (GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "online mode");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -1489,7 +1477,6 @@ rtError_t NpuDriver::DevMemAllocForPctrace(void ** const dptr, const uint64_t si
 
 rtError_t NpuDriver::DevMemFreeForPctrace(const void * const dst)
 {
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = halMemFree(const_cast<void *>(dst));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] halMemFree for pctrace failed: drvRetCode=%d.",
@@ -1503,7 +1490,6 @@ rtError_t NpuDriver::DevMemFreeForPctrace(const void * const dst)
 rtError_t NpuDriver::DevMemAllocCached(void ** const dptr, const uint64_t size,
     const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId)
 {
-    TIMESTAMP_NAME(__func__);
 
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     if (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_ONLY) {
@@ -1555,7 +1541,6 @@ rtError_t NpuDriver::MemFreeEx(void * const dptr)
 rtError_t NpuDriver::DevMemFree(void * const dptr, const uint32_t deviceId)
 {
     (void)deviceId;
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG(dptr, RT_ERROR_DRV_PTRNULL);
 
     const drvError_t drvRet = halMemFree(dptr);
@@ -1763,7 +1748,6 @@ static void ExtractDrvMemGetInfo(const rtMemType_t type, rtMemInfo_t * const inf
 
 rtError_t NpuDriver::MemGetInfo(const uint32_t deviceId, bool isHugeOnly, size_t * const freeSize, size_t * const totalSize)
 {
-    TIMESTAMP_NAME(__func__);
     struct MemInfo info;
     uint32_t type = GetDevProperties().memInfoType;
     RT_LOG(RT_LOG_DEBUG, "halMemGetInfo get memType=%u", type);
@@ -1823,7 +1807,6 @@ static void ConvertUbTokenMemType(const rtMemType_t type, rtMemInfo_t * const in
 
 rtError_t NpuDriver::MemGetInfoByType(const uint32_t deviceId, const rtMemType_t type, rtMemInfo_t * const info)
 {
-    TIMESTAMP_NAME(__func__);
     struct MemInfo drvMemInfo;
     (void)memset_s(&drvMemInfo, sizeof(struct MemInfo), 0x0, sizeof(struct MemInfo));
     ConvertAddrCheckMemType(type, info, &drvMemInfo);
@@ -1844,7 +1827,6 @@ rtError_t NpuDriver::MemGetInfoByType(const uint32_t deviceId, const rtMemType_t
 
 rtError_t NpuDriver::CheckMemType(void **addrs, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t deviceId)
 {
-    TIMESTAMP_NAME(__func__);
     rtMemInfo_t info{};
     info.addrInfo.addr = RtPtrToPtr<uint64_t **>(addrs);
     info.addrInfo.cnt = size;
@@ -1914,7 +1896,6 @@ rtError_t NpuDriver::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t *
 rtError_t NpuDriver::MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t memInfoType,
                                   size_t * const freeSize, size_t * const totalSize)
 {
-    TIMESTAMP_NAME(__func__);
     uint32_t type = 0U;
     rtMemInfoType_t curMemInfoType = memInfoType;
     if ((GetDevProperties().memInfoMapType & MAP_WHEN_GET_INFO) != 0) {
@@ -1965,7 +1946,6 @@ rtError_t NpuDriver::MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t
 
 rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
-    TIMESTAMP_NAME(__func__);
     struct DVattribute dvAttributes;
     dvAttributes.devId = 0U;
     dvAttributes.memType = 0U;
@@ -2019,7 +1999,6 @@ rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t * const attribut
 
 rtError_t NpuDriver::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
 {
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_WARN(&halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halMemManagedRangeGetAttributes does not support.");
     size_t attribute_num = 1U;
@@ -2035,7 +2014,6 @@ rtError_t NpuDriver::MemManagedGetAttr(rtMemManagedRangeAttribute attribute, con
 
 rtError_t NpuDriver::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)
 {
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_WARN(&halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halMemManagedRangeGetAttributes does not support.");
     const drvError_t drvRet = halMemManagedRangeGetAttributes(data, dataSizes, RtPtrToPtr<uint32_t *>(attributes), numAttributes, (DVdeviceptr)(uintptr_t)(ptr), size);
@@ -2050,7 +2028,6 @@ rtError_t NpuDriver::MemManagedGetAttrs(rtMemManagedRangeAttribute *attributes, 
 
 rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes)
 {
-    TIMESTAMP_NAME(__func__);
     struct DVattribute dvAttributes;
     dvAttributes.devId = 0U;
     dvAttributes.memType = 0U;
@@ -2096,7 +2073,6 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
 
 rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationType &location, rtMemLocationType &realLocation)
 {
-    TIMESTAMP_NAME(__func__);
     struct DVattribute dvAttributes;
     dvAttributes.devId = 0U;
     dvAttributes.memType = 0U;
@@ -2171,7 +2147,6 @@ TIMESTAMP_EXTERN(MemCopySync_drv);
 rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const void * const src,
                                  const uint64_t size, const rtMemcpyKind_t kind, bool errShow, uint32_t devId)
 {
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
     if (kind >= RT_MEMCPY_RESERVED) {

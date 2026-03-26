@@ -46,7 +46,6 @@ rtError_t rtGetTaskBufferLen(const rtTaskBuffType_t type, uint32_t * const buffe
  
     Api *api = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = api->GetTaskBufferLen(type, bufferLen);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -64,7 +63,6 @@ rtError_t rtTaskBuild(const rtTaskInput_t * const taskInput, uint32_t* taskLen)
  
     Api *api = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = api->TaskSqeBuild(taskInput, taskLen);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

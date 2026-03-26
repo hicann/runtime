@@ -98,7 +98,6 @@ rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t * const notifyAddres)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Notify * const notifyPtr = static_cast<Notify *>(notify);
     const rtError_t ret = apiInstance->GetNotifyAddress(notifyPtr, notifyAddres);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -109,7 +108,6 @@ rtError_t rtRegisterAllKernel(const rtDevBinary_t *bin, void **hdl)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->RegisterAllKernel(bin, RtPtrToPtr<Program **>(hdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -136,7 +134,6 @@ rtError_t rtDevBinaryUnRegister(void *hdl)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->DevBinaryUnRegister(prog);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -173,7 +170,6 @@ rtError_t rtFunctionRegister(void *binHandle, const void *stubFunc, const char_t
     Program * const prog = static_cast<Program *>(binHandle);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->FunctionRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_DUPLICATE, ACL_ERROR_RT_KERNEL_DUPLICATE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -545,7 +541,6 @@ rtError_t rtDatadumpInfoLoadWithFlag(const void *dumpInfo, const uint32_t length
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->DatadumpInfoLoad(dumpInfo, length, flag);
 
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -555,7 +550,6 @@ rtError_t rtDatadumpInfoLoadWithFlag(const void *dumpInfo, const uint32_t length
 VISIBILITY_DEFAULT
 rtError_t rtConfigureCall(uint32_t numBlocks, rtSmDesc_t *smDesc, rtStream_t stm)
 {
-    TIMESTAMP_NAME(__func__);
     errno_t ret;
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
 
@@ -583,7 +577,6 @@ rtError_t rtSetupArgument(const void *args, uint32_t size, uint32_t offset)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->SetupArgument(args, size, offset);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -594,7 +587,6 @@ rtError_t rtLaunch(const void *stubFunc)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     LaunchArgment &launchArg = ThreadLocalContainer::GetLaunchArg();
-    TIMESTAMP_NAME(__func__);
 
     const rtError_t error = rtKernelLaunch(stubFunc, launchArg.numBlocks, launchArg.args, launchArg.argSize,
                                            launchArg.smUsed ? &launchArg.smDesc : nullptr, launchArg.stm);
@@ -636,7 +628,6 @@ rtError_t rtGetAvailEventNum(uint32_t * const eventCount)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->GetAvailEventNum(eventCount);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -791,7 +782,6 @@ rtError_t rtEventQuery(rtEvent_t evt)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Event * const eventPtr = static_cast<Event *>(evt);
     const rtError_t error = apiInstance->EventQuery(eventPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_EVENT_NOT_COMPLETE, ACL_ERROR_RT_EVENT_NOT_COMPLETE); // special state
@@ -816,7 +806,6 @@ rtError_t rtEventQueryWaitStatus(rtEvent_t evt, rtEventWaitStatus_t *status)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Event * const eventPtr = static_cast<Event *>(evt);
     const rtError_t error = apiInstance->EventQueryWaitStatus(eventPtr, status);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -829,7 +818,6 @@ rtError_t rtEventElapsedTime(float32_t *timeInterval, rtEvent_t startEvent, rtEv
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->EventElapsedTime(timeInterval, static_cast<Event *>(startEvent),
         static_cast<Event *>(endEvent));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -841,7 +829,6 @@ rtError_t rtEventGetTimeStamp(uint64_t *timeStamp, rtEvent_t evt)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Event * const eventPtr = static_cast<Event *>(evt);
     const rtError_t error = apiInstance->EventGetTimeStamp(timeStamp, eventPtr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1099,7 +1086,6 @@ rtError_t rtMemcpyAsync(void *dst, uint64_t destMax, const void *src, uint64_t c
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemcpyAsync(dst, destMax, src, cnt, kind, exeStream, nullptr);
@@ -1119,7 +1105,6 @@ rtError_t rtMemcpyAsyncWithoutCheckKind(void *dst, uint64_t destMax, const void 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemcpyAsync(dst, destMax, src, cnt, kind, exeStream,
@@ -1139,7 +1124,6 @@ rtError_t rtMemcpyAsyncEx(void *dst, uint64_t destMax, const void *src, uint64_t
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemcpyAsync(dst, destMax, src, cnt, kind, exeStream, nullptr, nullptr, true, memcpyConfig);
@@ -1164,7 +1148,6 @@ rtError_t rtMemcpyAsyncWithCfg(void *dst, uint64_t destMax, const void *src, uin
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
 
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemcpyAsync(dst, destMax, src, cnt, kind, exeStream, &cfgInfo);
@@ -1184,7 +1167,6 @@ rtError_t rtMemcpyAsyncWithCfgV2(void *dst, uint64_t destMax, const void *src, u
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     Stream * const exeStream = static_cast<Stream *>(stm);
 
-    TIMESTAMP_NAME(__func__);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->MemcpyAsync(dst, destMax, src, cnt, kind, exeStream, cfgInfo);
@@ -1309,7 +1291,6 @@ rtError_t rtCtxCreate(rtContext_t *createCtx, uint32_t flags, int32_t devId)
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 
-    TIMESTAMP_NAME(__func__);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->ContextCreate(RtPtrToPtr<Context **>(createCtx), devId);
@@ -1323,7 +1304,6 @@ rtError_t rtCtxDestroy(rtContext_t destroyCtx)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Context * const ctx = static_cast<Context *>(destroyCtx);
     const rtError_t error = apiInstance->ContextDestroy(ctx);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1346,7 +1326,6 @@ rtError_t rtCtxGetCurrent(rtContext_t *currentCtx)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->ContextGetCurrent(RtPtrToPtr<Context **>(currentCtx));
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_CONTEXT_NULL, ACL_ERROR_RT_CONTEXT_NULL); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1376,7 +1355,6 @@ rtError_t rtCtxGetDevice(int32_t *devId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->ContextGetDevice(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -1796,7 +1774,6 @@ rtError_t rtModelGetId(rtModel_t mdl, uint32_t *modelId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Model * const modelPtr = static_cast<Model *>(mdl);
     const rtError_t error = apiInstance->ModelGetId(modelPtr, modelId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1808,7 +1785,6 @@ rtError_t rtModelSetSchGroupId(rtModel_t mdl, const int16_t schGrpId)
 {
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->ModelSetSchGroupId(static_cast<Model *>(mdl), schGrpId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2154,7 +2130,6 @@ rtError_t rtCtxCreateEx(rtContext_t *createCtx, uint32_t flags, int32_t devId)
     Api * const apiInstance = Api::Instance();
 
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
 
     const rtError_t error = apiInstance->ContextCreate(RtPtrToPtr<Context **>(createCtx), devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2167,7 +2142,6 @@ rtError_t rtCtxDestroyEx(rtContext_t destroyCtx)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Context * const context = static_cast<Context *>(destroyCtx);
     const rtError_t error = apiInstance->ContextDestroy(context);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2225,7 +2199,6 @@ rtError_t rtGetRunMode(rtRunMode *runMode)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetRunMode(runMode);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2307,7 +2280,6 @@ rtError_t rtDebugRegister(rtModel_t mdl, uint32_t flag, const void *addr, uint32
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DebugRegister(static_cast<Model *>(mdl), flag, addr, streamId, taskId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2325,7 +2297,6 @@ rtError_t rtDebugUnRegister(rtModel_t mdl)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DebugUnRegister(static_cast<Model *>(mdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2344,7 +2315,6 @@ rtError_t rtDebugRegisterForStream(rtStream_t stm, uint32_t flag, const void *ad
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t error = apiInstance->DebugRegisterForStream(exeStream, flag, addr, streamId, taskId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2363,7 +2333,6 @@ rtError_t rtDebugUnRegisterForStream(rtStream_t stm)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const exeStream = static_cast<Stream *>(stm);
     const rtError_t error = apiInstance->DebugUnRegisterForStream(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2375,7 +2344,6 @@ rtError_t rtGetAicpuDeploy(rtAicpuDeployType_t *deployType)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetAicpuDeploy(deployType);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2436,7 +2404,6 @@ rtError_t rtSetDeviceWithoutTsd(int32_t devId)
 {
     Api * const apiInstance = Api::Instance(API_ENV_FLAGS_NO_TSD);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->SetDevice(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -2667,7 +2634,6 @@ rtError_t rtMemQueueCreate(int32_t devId, const rtMemQueueAttr_t *queAttr, uint3
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueCreate(devId, queAttr, qid);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2679,7 +2645,6 @@ rtError_t rtMemQueueExport(int32_t devId, uint32_t qid, int32_t peerDevId, const
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueExport(devId, qid, peerDevId, shareName);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2691,7 +2656,6 @@ rtError_t rtMemQueueUnExport(int32_t devId, uint32_t qid, int32_t peerDevId, con
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueUnExport(devId, qid, peerDevId, shareName);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2703,7 +2667,6 @@ rtError_t rtMemQueueImport(int32_t devId, int32_t peerDevId, const char * const 
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueImport(devId, peerDevId, shareName, qid);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2715,7 +2678,6 @@ rtError_t rtMemQueueUnImport(int32_t devId, uint32_t qid, int32_t peerDevId, con
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueUnImport(devId, qid, peerDevId, shareName);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2727,7 +2689,6 @@ rtError_t rtMemQueueSet(int32_t devId, rtMemQueueSetCmdType cmd, const rtMemQueu
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueSet(devId, cmd, input);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2739,7 +2700,6 @@ rtError_t rtMemQueueDestroy(int32_t devId, uint32_t qid)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueDestroy(devId, qid);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2751,7 +2711,6 @@ rtError_t rtMemQueueInit(int32_t devId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueInit(devId);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -2765,7 +2724,6 @@ rtError_t rtMemQueueReset(int32_t devId, uint32_t qid)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueReset(devId, qid);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -2778,7 +2736,6 @@ rtError_t rtMemQueueEnQueue(int32_t devId, uint32_t qid, void *memBuf)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueEnQueue(devId, qid, memBuf);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_QUEUE_FULL, ACL_ERROR_RT_QUEUE_FULL); // special state
@@ -2791,7 +2748,6 @@ rtError_t rtMemQueueDeQueue(int32_t devId, uint32_t qid, void **memBuf)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueDeQueue(devId, qid, memBuf);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_QUEUE_EMPTY, ACL_ERROR_RT_QUEUE_EMPTY); // special state
@@ -2804,7 +2760,6 @@ rtError_t rtMemQueuePeek(int32_t devId, uint32_t qid, size_t *bufLen, int32_t ti
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueuePeek(devId, qid, bufLen, timeout);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_QUEUE_EMPTY, ACL_ERROR_RT_QUEUE_EMPTY); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
@@ -2817,7 +2772,6 @@ rtError_t rtMemQueueEnQueueBuff(int32_t devId, uint32_t qid, rtMemQueueBuff_t *i
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueEnQueueBuff(devId, qid, inBuf, timeout);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_QUEUE_FULL, ACL_ERROR_RT_QUEUE_FULL); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
@@ -2830,7 +2784,6 @@ rtError_t rtMemQueueDeQueueBuff(int32_t devId, uint32_t qid, rtMemQueueBuff_t *o
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueDeQueueBuff(devId, qid, outBuf, timeout);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_QUEUE_EMPTY, ACL_ERROR_RT_QUEUE_EMPTY); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
@@ -2843,7 +2796,6 @@ rtError_t rtMemQueueQueryInfo(int32_t devId, uint32_t qid, rtMemQueueInfo_t *que
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueQueryInfo(devId, qid, queInfo);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2856,7 +2808,6 @@ rtError_t rtMemQueueQuery(int32_t devId, rtMemQueueQueryCmd_t cmd, const void *i
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueQuery(devId, cmd, inBuff, inLen, outBuff, outLen);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2868,7 +2819,6 @@ rtError_t rtMemQueueGrant(int32_t devId, uint32_t qid, int32_t pid, rtMemQueueSh
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueGrant(devId, qid, pid, attr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2880,7 +2830,6 @@ rtError_t rtMemQueueAttach(int32_t devId, uint32_t qid, int32_t timeOut)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueAttach(devId, qid, timeOut);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2933,7 +2882,6 @@ rtError_t rtEschedSubmitEventSync(int32_t devId, rtEschedEventSummary_t *evt,
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->EschedSubmitEventSync(devId, evt, ack);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -2945,7 +2893,6 @@ rtError_t rtQueryDevPid(rtBindHostpidInfo_t *info, int32_t *devPid)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->QueryDevPid(info, devPid);
     return GetRtExtErrCodeAndSetGlobalErr(error);
 }
@@ -3028,7 +2975,6 @@ rtError_t rtBuffAlloc(const uint64_t size, void **buff)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->BuffAlloc(size, buff);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3041,7 +2987,6 @@ rtError_t rtBuffConfirm(void *buff, const uint64_t size)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->BuffConfirm(buff, size);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     return GetRtExtErrCodeAndSetGlobalErr(error);
@@ -3053,7 +2998,6 @@ rtError_t rtBuffFree(void *buff)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->BuffFree(buff);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3065,7 +3009,6 @@ rtError_t rtMemQueueInitQS(int32_t devId, const char_t* grpName)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemQueueInitQS(devId, grpName);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -3076,7 +3019,6 @@ rtError_t rtMemGrpCreate(const char_t *name, const rtMemGrpConfig_t *cfg)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemGrpCreate(name, cfg);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3089,7 +3031,6 @@ rtError_t rtBuffGetInfo(rtBuffGetCmdType type, const void * const inBuff, uint32
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->BuffGetInfo(type, inBuff, inLen, outBuff, outLen);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3101,7 +3042,6 @@ rtError_t rtMemGrpCacheAlloc(const char_t *name, int32_t devId, const rtMemGrpCa
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemGrpCacheAlloc(name, devId, para);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3113,7 +3053,6 @@ rtError_t rtMemGrpAddProc(const char_t *name, int32_t pid, const rtMemGrpShareAt
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemGrpAddProc(name, pid, attr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_REPEATED_INIT, ACL_ERROR_RT_REPEATED_INIT); // special state
@@ -3126,7 +3065,6 @@ rtError_t rtMemGrpAttach(const char_t *name, int32_t timeout)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemGrpAttach(name, timeout);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3138,7 +3076,6 @@ rtError_t rtMemGrpQuery(rtMemGrpQueryInput_t * const input, rtMemGrpQueryOutput_
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->MemGrpQuery(input, output);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -3158,7 +3095,6 @@ rtError_t rtBarrierTaskLaunch(rtBarrierTaskInfo_t *taskInfo, rtStream_t stm, uin
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     Stream * const streamPtr = static_cast<Stream *>(stm);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -3655,7 +3591,6 @@ RTS_API rtError_t rtGetAllUtilizations(const int32_t devId, const rtTypeUtil_t k
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetAllUtilizations(devId, kind, util);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -4011,7 +3946,6 @@ rtError_t rtAicpuInfoLoad(const void *aicpuInfo, uint32_t length)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    TIMESTAMP_NAME(__func__);
     const rtError_t ret = apiInstance->AicpuInfoLoad(aicpuInfo, length);
 
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

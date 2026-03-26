@@ -29,7 +29,6 @@ rtError_t rtOpenNetService(const rtNetServiceOpenArgs *args)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->OpenNetService(args);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -40,7 +39,6 @@ rtError_t rtCloseNetService()
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->CloseNetService();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -51,7 +49,6 @@ rtError_t rtGetDeviceCount(int32_t *cnt)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetDeviceCount(cnt);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -68,7 +65,6 @@ rtError_t rtGetDeviceIDs(uint32_t *devices, uint32_t len)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetDeviceIDs(devices, len);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -86,7 +82,6 @@ rtError_t rtSetDevice(int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->SetDevice(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -98,7 +93,6 @@ rtError_t rtGetDevice(int32_t *devId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetDevice(devId);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_CONTEXT_NULL, ACL_ERROR_RT_CONTEXT_NULL); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -116,7 +110,6 @@ rtError_t rtGetVisibleDeviceIdByLogicDeviceId(const int32_t logicDeviceId, int32
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_CONTEXT_NULL, ACL_ERROR_RT_CONTEXT_NULL); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -129,7 +122,6 @@ rtError_t rtDeviceReset(int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceReset(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -176,7 +168,6 @@ rtError_t rtDeviceSetLimit(int32_t devId, rtLimitType_t type, uint32_t val)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceSetLimit(devId, type, val);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -229,7 +220,6 @@ rtError_t rtDeviceSynchronize(void)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceSynchronize();
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -240,7 +230,6 @@ rtError_t rtDeviceSynchronizeWithTimeout(int32_t timeout)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceSynchronize(timeout);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -287,7 +276,6 @@ rtError_t rtGetDevicePhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetDevicePhyIdByIndex(devIndex, phyId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -298,7 +286,6 @@ rtError_t rtGetDeviceIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetDeviceIndexByPhyId(phyId, devIndex);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -349,7 +336,6 @@ rtError_t rtEnableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->EnableP2P(devIdDes, phyIdSrc, flag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -360,7 +346,6 @@ rtError_t rtDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DisableP2P(devIdDes, phyIdSrc);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -371,7 +356,6 @@ rtError_t rtDeviceCanAccessPeer(int32_t* canAccessPeer, uint32_t  devId, uint32_
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceCanAccessPeer(canAccessPeer, devId, peerDevice);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -382,7 +366,6 @@ rtError_t rtGetP2PStatus(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t *status)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->GetP2PStatus(devIdDes, phyIdSrc, status);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -398,7 +381,6 @@ rtError_t rtsSetTsDevice(uint32_t tsId)
 VISIBILITY_DEFAULT
 rtError_t rtSetTSDevice(uint32_t tsId)
 {
-    TIMESTAMP_NAME(__func__);
     DevProperties prop;
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -452,7 +434,6 @@ rtError_t rtSetDeviceEx(int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->SetDevice(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -464,7 +445,6 @@ rtError_t rtDeviceResetEx(int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceReset(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -527,7 +507,6 @@ rtError_t rtDeviceResetWithoutTsd(int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance(API_ENV_FLAGS_NO_TSD);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceReset(devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -639,7 +618,6 @@ rtError_t rtDeviceTaskAbort(int32_t devId, uint32_t timeout)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = apiInstance->DeviceTaskAbort(devId, timeout);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -967,7 +945,6 @@ VISIBILITY_DEFAULT
 rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    TIMESTAMP_NAME(__func__);
     rtError_t error;
     if (flags == RT_DEVICE_FLAG_DEFAULT) {
         Api * const apiInstance = Api::Instance();

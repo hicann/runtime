@@ -647,7 +647,6 @@ rtError_t NpuDriver::BufEventTrigger(const char_t * const name)
     attr.flowCtrlDropTime = queAttr->flowCtrlDropTime;
     attr.overWriteFlag = queAttr->overWriteFlag;
     attr.deploy_type = queAttr->deployType;
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "create mem queue, drv devId=%d, name=%s.", devId, attr.name);
 
     const drvError_t drvRet = halQueueCreate(static_cast<uint32_t>(devId), &attr, qid);
@@ -756,7 +755,6 @@ rtError_t NpuDriver::MemQueueExport(const int32_t devId, const uint32_t qid, con
 {
     COND_RETURN_WARN(&halQueueExport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueExport does not exist.");
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "Export mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d .", 
         devId, qid, peerDevId);
 
@@ -779,7 +777,6 @@ rtError_t NpuDriver::MemQueueUnExport(const int32_t devId, const uint32_t qid, c
 {
     COND_RETURN_WARN(&halQueueUnexport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueUnExport does not exist.");
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "UnExport mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d .", 
         devId, qid, peerDevId);
 
@@ -802,7 +799,6 @@ rtError_t NpuDriver::MemQueueImport(const int32_t devId, const int32_t peerDevId
 {
     COND_RETURN_WARN(&halQueueImport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueImport does not exist.");
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "Import mem queue, drv deviceId=%d, peerDevId=%dm.", 
         devId, peerDevId);
 
@@ -825,7 +821,6 @@ rtError_t NpuDriver::MemQueueUnImport(const int32_t devId, const uint32_t qid, c
 {
     COND_RETURN_WARN(&halQueueUnimport == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueUnImport does not exist.");
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "UnImport mem queue, drv deviceId=%d, qid=%dm, peerDevId=%d.", devId, qid, 
         peerDevId);
 
@@ -874,7 +869,6 @@ rtError_t NpuDriver::MemQueueSet(const int32_t devId, const rtMemQueueSetCmdType
     QueueSetInputPara para;
     para.inBuff = input->inBuff;
     para.inLen = input->inLen;
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "drv devId=%d, type=%d.", devId, static_cast<int32_t>(cmd));
 
     const drvError_t drvRet = halQueueSet(static_cast<uint32_t>(devId), type, &para);
@@ -1097,7 +1091,6 @@ rtError_t NpuDriver::MemQueueQuery(const int32_t devId, const rtMemQueueQueryCmd
 
 rtError_t NpuDriver::MemQueueGetQidByName(const int32_t devId, const char_t * const name, uint32_t * const qId)
 {
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "Esched attach device, drv devId=%d.", devId);
 
     COND_RETURN_WARN(&halQueueGetQidbyName == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1178,7 +1171,6 @@ rtError_t NpuDriver::EschedSubmitEvent(const int32_t devId, const rtEschedEventS
 rtError_t NpuDriver::EschedSubmitEventSync(const int32_t devId, rtEschedEventSummary_t * const evt,
                                            rtEschedEventReply_t * const ack)
 {
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "submit event, drv devId=%d.", devId);
 
     COND_RETURN_WARN(&halEschedSubmitEventSync == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,

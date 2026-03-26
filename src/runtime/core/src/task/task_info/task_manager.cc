@@ -684,7 +684,6 @@ void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
 
 void ToCommand(TaskInfo *taskInfo, rtCommand_t *const command)
 {
-    TIMESTAMP_NAME(__func__);
     Stream * const stream = taskInfo->stream;
     command->taskID = taskInfo->id;
     if (!stream->IsCtrlStream()) {

@@ -28,7 +28,6 @@ rtError_t ApiImplMbuf::MbufBuild(void * const buff, const uint64_t size, rtMbufP
 rtError_t ApiImplMbuf::MbufAlloc(rtMbufPtr_t * const mbufPtr, const uint64_t size)
 {
     RT_LOG(RT_LOG_INFO, "Start to alloc mbuf, size is %" PRIu64, size);
-    TIMESTAMP_NAME(__func__);
     return NpuDriver::MbufAlloc(mbufPtr, size);
 }
 

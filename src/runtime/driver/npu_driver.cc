@@ -136,7 +136,6 @@ const DevProperties& NpuDriver::GetDevProperties(void) const
 
 rtError_t NpuDriver::GetDeviceCount(int32_t * const cnt)
 {
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = drvGetDevNum(RtPtrToPtr<uint32_t *>(cnt));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] drvGetDevNum failed: drvRetCode=%d!", static_cast<int32_t>(drvRet));
@@ -148,7 +147,6 @@ rtError_t NpuDriver::GetDeviceCount(int32_t * const cnt)
 
 rtError_t NpuDriver::GetDeviceIDs(uint32_t * const deviceIds, const uint32_t len)
 {
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = drvGetDevIDs(deviceIds, len);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] drvGetDevIDs failed: len=%u(bytes), drvRetCode=%d!", len,
@@ -160,7 +158,6 @@ rtError_t NpuDriver::GetDeviceIDs(uint32_t * const deviceIds, const uint32_t len
 
 rtError_t NpuDriver::GetTransWayByAddr(void * const src, void * const dst, uint8_t * const transType)
 {
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = drvDeviceGetTransWay(src, dst, transType);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "[drv api] drvDeviceGetTransWay failed:drvRetCode=%d",
@@ -243,14 +240,12 @@ void RtLogErrorLevelControl(bool isLogError, const char * format, ...)
 
 rtError_t NpuDriver::DevMemFlushCache(const uint64_t base, const size_t len)
 {
-    TIMESTAMP_NAME(__func__);
     drvFlushCache(base, static_cast<uint32_t>(len));
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemInvalidCache(const uint64_t base, const size_t len)
 {
-    TIMESTAMP_NAME(__func__);
     drvFlushCache(base, static_cast<uint32_t>(len));
     return RT_ERROR_NONE;
 }
@@ -258,7 +253,6 @@ rtError_t NpuDriver::DevMemInvalidCache(const uint64_t base, const size_t len)
 rtError_t NpuDriver::MemConvertAddr(const uint64_t src, const uint64_t dst, const uint64_t len,
                                     struct DMA_ADDR * const dmaAddress)
 {
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG(dmaAddress, RT_ERROR_DRV_PTRNULL);
     const drvError_t drvRet = drvMemConvertAddr(static_cast<DVdeviceptr>(src), static_cast<DVdeviceptr>(dst),
         static_cast<UINT32>(len), dmaAddress);
@@ -296,7 +290,6 @@ rtError_t NpuDriver::MemConvertAddr(const uint64_t src, const uint64_t dst, cons
 
 rtError_t NpuDriver::MemDestroyAddr(struct DMA_ADDR * const ptr)
 {
-    TIMESTAMP_NAME(__func__);
 
     struct DMA_ADDR *tmp = ptr;
     drvError_t drvRet;
@@ -370,7 +363,6 @@ rtError_t NpuDriver::DeviceClose(const uint32_t deviceId, const uint32_t tsId)
         return RT_ERROR_NONE;
     }
 
-    TIMESTAMP_NAME(__func__);
     drvError_t drvRet = DRV_ERROR_NONE;
 #ifndef CFG_DEV_PLATFORM_PC
     if (&halDeviceClose != nullptr) {
@@ -410,7 +402,6 @@ rtError_t NpuDriver::DeviceClose(const uint32_t deviceId, const uint32_t tsId)
 
 rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, uint32_t * const ssId)
 {
-    TIMESTAMP_NAME(__func__);
 
     const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
     if (tsId == static_cast<uint32_t>(RT_TSV_ID)) {
@@ -482,7 +473,6 @@ rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, ui
 rtError_t NpuDriver::GetDevInfo(const uint32_t deviceId, const int32_t moduleType,
                                 const int32_t infoType, int64_t * const val)
 {
-    TIMESTAMP_NAME(__func__);
     uint32_t curDevIdx = deviceId;
     if (infoType == INFO_TYPE_MASTERID) { // INFO_TYPE_MASTERID need to use physical device ID
         const drvError_t drvRet = drvDeviceGetPhyIdByIndex(deviceId, &curDevIdx);
@@ -510,7 +500,6 @@ rtError_t NpuDriver::GetDevInfo(const uint32_t deviceId, const int32_t moduleTyp
 rtError_t NpuDriver::GetPhyDevInfo(const uint32_t phyId, const int32_t moduleType,
                                    const int32_t infoType, int64_t * const val)
 {
-    TIMESTAMP_NAME(__func__);
     const drvError_t drvRet = halGetPhyDeviceInfo(phyId, moduleType, infoType, val);
     if (drvRet != DRV_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "[drv api] halGetPhyDeviceInfo failed: phyId=%u, drvRetCode=%d!",
@@ -523,7 +512,6 @@ rtError_t NpuDriver::GetPhyDevInfo(const uint32_t phyId, const int32_t moduleTyp
 rtError_t NpuDriver::CreateIpcMem(const void * const vptr, const uint64_t byteCount,
                                   char_t * const name, const uint32_t len)
 {
-    TIMESTAMP_NAME(__func__);
 
     const drvError_t drvRet = halShmemCreateHandle(RtPtrToPtr<DVdeviceptr>(vptr),
         byteCount, name, len);
@@ -560,7 +548,6 @@ rtError_t NpuDriver::SetIpcMemAttr(const char *name, uint32_t type, uint64_t att
 
 rtError_t NpuDriver::OpenIpcMem(const char_t * const name, uint64_t * const vptr, uint32_t devId)
 {
-    TIMESTAMP_NAME(__func__);
 
     drvError_t drvRet = DRV_ERROR_NONE;
     SpinLock &ipcMemNameLock = Runtime::Instance()->GetIpcMemNameLock();
@@ -606,7 +593,6 @@ rtError_t NpuDriver::GetPhyDevIdByIpcMemName(const char *name, uint32_t *const p
 
 rtError_t NpuDriver::CloseIpcMem(const uint64_t vptr)
 {
-    TIMESTAMP_NAME(__func__);
 
     const drvError_t drvRet = halShmemCloseHandle(static_cast<DVdeviceptr>(vptr));
     if (drvRet != DRV_ERROR_NONE) {
@@ -631,7 +617,6 @@ rtError_t NpuDriver::CloseIpcMem(const uint64_t vptr)
 
 rtError_t NpuDriver::DestroyIpcMem(const char_t * const name)
 {
-    TIMESTAMP_NAME(__func__);
 
     const drvError_t drvRet = halShmemDestroyHandle(name);
     if (drvRet != DRV_ERROR_NONE) {
@@ -1193,7 +1178,6 @@ rtError_t NpuDriver::QueueSubF2NFEvent(const int32_t devId, const uint32_t qId, 
 
 rtError_t NpuDriver::QueryDevPid(const rtBindHostpidInfo_t * const info, int32_t * const devPid)
 {
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "chipId=%d, hostPid=%u.", info->chipId, static_cast<uint32_t>(info->hostPid));
 
     COND_RETURN_WARN(&halQueryDevpid == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,

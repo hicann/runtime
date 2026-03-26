@@ -1227,7 +1227,6 @@ rtError_t NpuDriver::EventIdAlloc(int32_t * const id, const uint32_t deviceId, c
 rtError_t NpuDriver::EventIdFree(const int32_t id, const uint32_t deviceId, const uint32_t tsId,
                                  const uint32_t eventFlag)
 {
-    TIMESTAMP_NAME(__func__);
     struct halResourceIdInputInfo resFreeInput;
 
     (void)memset_s(resFreeInput.res, sizeof(resFreeInput.res), 0U, sizeof(resFreeInput.res));
@@ -1457,7 +1456,6 @@ rtError_t NpuDriver::SqCqFree(const uint32_t sqId, const uint32_t cqId, const ui
     SqCqFreeInputInfo.cqId = cqId;
     SqCqFreeInputInfo.flag = 0U;
 
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "deviceId=%u, tsId=%u, sqId=%d, cqId=%u", deviceId, tsId, sqId, cqId);
 
     const drvError_t drvRet = halSqCqFree(deviceId, &SqCqFreeInputInfo);
@@ -1531,7 +1529,6 @@ rtError_t NpuDriver::NormalSqCqAllocate(const uint32_t deviceId, const uint32_t 
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
                                "Call memcpy_s failed, dst length=%zu, src length=%u, retCode=%d!",
                                sizeof(normalSqCqAllocInputInfo.info), len, ret);
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_DEBUG, "normal sqcq alloc, device_id=%u, tsId=%u, flag=%u, cqId=%u, sqId=%u.",
         deviceId, tsId, normalSqCqAllocInputInfo.flag, *cqId, *sqId);
 
@@ -1722,7 +1719,6 @@ rtError_t NpuDriver::CtrlSqCqAllocate(const uint32_t deviceId, const uint32_t ts
     ctrlSqCqAllocOutputInfo.sqId = 0U;
     ctrlSqCqAllocOutputInfo.cqId = 0U;
 
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_DEBUG, "ctrl sqcq alloc, device_id=%u, tsId=%u, flag=%u, cqId=%u, sqId=%u, logicCqId=%u.",
         deviceId, tsId, ctrlSqCqAllocInputInfo.flag, *cqId, *sqId, logicCqId);
 
@@ -1945,7 +1941,6 @@ rtError_t NpuDriver::SqCommandOccupy(const uint32_t deviceId, const uint32_t tsI
     sqMemGetInput.cmdCount = static_cast<uint32_t>(cnt);
     sqMemGetOutput.cmdPtr = nullptr;
 
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "deviceId=%u, tsId=%u, sqId=%u, count=%u.", deviceId, tsId, sqId, cnt);
 
     const drvError_t drvRet = halSqMemGet(deviceId, &sqMemGetInput, &sqMemGetOutput);
@@ -1982,7 +1977,6 @@ rtError_t NpuDriver::CommandSend(const uint32_t sqId, const rtTsCmdSqBuf_t * con
                                  const uint32_t deviceId, const uint32_t tsId, const uint32_t cmdCount)
 {
     UNUSED(command);
-    TIMESTAMP_NAME(__func__);
     halSqMsgInfo sendInfo;
     sendInfo.type = DRV_NORMAL_TYPE;
     sendInfo.tsId = tsId;
@@ -2013,7 +2007,6 @@ rtError_t NpuDriver::SqCommandSend(const uint32_t deviceId, const uint32_t tsId,
     sendInfo.cmdCount = static_cast<uint32_t>(cnt);
     sendInfo.reportCount = static_cast<uint32_t>(cnt);
 
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "deviceId=%u, tsId=%u, sqId=%u, count=%d.", deviceId, tsId, sqId, cnt);
 
     const drvError_t drvRet = halSqMsgSend(deviceId, &sendInfo);
@@ -2145,7 +2138,6 @@ rtError_t NpuDriver::LogicCqReportV2(const LogicCqWaitInfo &waitInfo, uint8_t *r
 
 rtError_t NpuDriver::LogicCqReport(const LogicCqWaitInfo &waitInfo, rtLogicReport_t *&report, uint32_t &cnt)
 {
-    TIMESTAMP_NAME(__func__);
     struct halReportInfoInput irqWaitInputInfo;
     struct halReportInfoOutput irqWaitOutputInfo;
     irqWaitInputInfo.type = DRV_LOGIC_TYPE;
@@ -2219,7 +2211,6 @@ rtError_t NpuDriver::CqReportIrqWait(const uint32_t deviceId, const uint32_t tsI
 {
     struct halReportInfoInput irqWaitInputInfo;
     struct halReportInfoOutput irqWaitOutputInfo;
-    TIMESTAMP_NAME(__func__);
 
     irqWaitInputInfo.type = DRV_CALLBACK_TYPE;
     irqWaitInputInfo.grpId = groupId;
@@ -2243,7 +2234,6 @@ rtError_t NpuDriver::CqReportGet(const uint32_t deviceId, const uint32_t tsId, c
     struct halReportGetInput repGetInputInfo;
     struct halReportGetOutput repGetOutputInfo;
 
-    TIMESTAMP_NAME(__func__);
     RT_LOG(RT_LOG_INFO, "cq report get start, device_id=%u, tsId=%u.", deviceId, tsId);
     repGetInputInfo.type = DRV_CALLBACK_TYPE;
     repGetInputInfo.tsId = tsId;
@@ -2271,7 +2261,6 @@ rtError_t NpuDriver::CqReportRelease(rtHostFuncCqReport_t * const report, const 
     const uint32_t reportCount = 1U;
     halReportReleaseInfo drvRepReleaseInfo;
 
-    TIMESTAMP_NAME(__func__);
     drvRepReleaseInfo.type = DRV_CALLBACK_TYPE;
     drvRepReleaseInfo.tsId = tsId;
     drvRepReleaseInfo.cqId = cqId;
@@ -2294,7 +2283,6 @@ rtError_t NpuDriver::CqReportRelease(rtHostFuncCqReport_t * const report, const 
 rtError_t NpuDriver::ReportWait(void ** const report, int32_t * const cnt, const uint32_t deviceId,
                                 const uint32_t tsId, const uint32_t cqId)
 {
-    TIMESTAMP_NAME(__func__);
     struct halReportInfoInput irqWaitInputInfo;
     struct halReportInfoOutput irqWaitOutputInfo;
     irqWaitInputInfo.type = DRV_NORMAL_TYPE;
@@ -2338,7 +2326,6 @@ rtError_t NpuDriver::ReportRelease(const uint32_t deviceId, const uint32_t tsId,
     constexpr uint32_t reportCount = 1U;
     struct halReportReleaseInfo repReleaseInfo;
 
-    TIMESTAMP_NAME(__func__);
 
     repReleaseInfo.type = type;
     repReleaseInfo.tsId = tsId;

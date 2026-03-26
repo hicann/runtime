@@ -105,7 +105,6 @@ void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
             taskInfo->tid, errorCode, stream->Device_());
     }
 
-    TIMESTAMP_NAME(__func__);
     TIMESTAMP_BEGIN(ArgRelease);
 
     // if stream with flag of "persistent and force cpy", record argHandle instand of releasing

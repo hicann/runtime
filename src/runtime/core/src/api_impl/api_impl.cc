@@ -299,7 +299,6 @@ rtError_t ApiImpl::DevBinaryRegister(const rtDevBinary_t * const bin, Program **
 {
     Program *programPtr = nullptr;
 
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
@@ -331,7 +330,6 @@ rtError_t ApiImpl::RegisterAllKernel(const rtDevBinary_t * const bin, Program **
     Program *programPtr = nullptr;
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
 
-    TIMESTAMP_NAME(__func__);
     const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
@@ -356,7 +354,6 @@ rtError_t ApiImpl::BinaryRegisterToFastMemory(Program * const prog)
 rtError_t ApiImpl::DevBinaryUnRegister(Program * const prog)
 {
     RT_LOG(RT_LOG_DEBUG, "unregister binary.");
-    TIMESTAMP_NAME(__func__);
     prog->Dereference();
     prog->SetUnRegisteringFlag();
     Runtime::Instance()->PutProgram(prog, true);
@@ -392,7 +389,6 @@ rtError_t ApiImpl::FunctionRegister(Program * const prog, const void * const stu
 {
     RT_LOG(RT_LOG_DEBUG, "register function, type=%u, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
         prog->Machine(), stubFunc, funcMode, (stubName != nullptr) ? stubName : "(none)", kernelInfoExt);
-    TIMESTAMP_NAME(__func__);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if ((prog->Machine() == Program::MACH_AI_MIX_KERNEL) &&
         (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2))) {
@@ -851,7 +847,6 @@ rtError_t ApiImpl::BinaryLoad(const rtDevBinary_t * const bin, Program ** const 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    TIMESTAMP_NAME(__func__);
     rtError_t error = Runtime::Instance()->MallocProgramAndReg(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "MallocProgramAndReg failed.");
@@ -882,7 +877,6 @@ rtError_t ApiImpl::BinaryGetFunction(const Program * const prog, const uint64_t 
                                      Kernel ** const funcHandle)
 {
     RT_LOG(RT_LOG_DEBUG, "BinaryGetFunction prog=0x%x, tilingKey=%llu", prog, tilingKey);
-    TIMESTAMP_NAME(__func__);
     Kernel *kerneltmp = nullptr;
     *funcHandle = nullptr;
     Context * const curCtx = CurrentContext();
@@ -909,7 +903,6 @@ rtError_t ApiImpl::BinaryLoadWithoutTilingKey(const void *data, const uint64_t l
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    TIMESTAMP_NAME(__func__);
     rtError_t error = Runtime::Instance()->MallocProgramAndRegMixKernel(data, length, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "MallocProgramAndRegMixKernel failed.");
@@ -941,7 +934,6 @@ rtError_t ApiImpl::BinaryGetFunctionByName(const Program * const binHandle, cons
 {
     RT_LOG(RT_LOG_DEBUG, "BinaryGetFunction prog=%p,kernel_name=%s,kernelRegType=%d",
         binHandle, kernelName, binHandle->GetKernelRegType());
-    TIMESTAMP_NAME(__func__);
     Kernel *kerneltmp = nullptr;
     *funcHandle = nullptr;
     const rtError_t error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kerneltmp);
@@ -1031,7 +1023,6 @@ rtError_t ApiImpl::RegisterCpuFunc(rtBinHandle binHandle, const char_t *const fu
 rtError_t ApiImpl::BinaryUnLoad(Program * const binHandle)
 {
     RT_LOG(RT_LOG_DEBUG, "BinaryUnLoad prog=0x%x", binHandle);
-    TIMESTAMP_NAME(__func__);
 
     rtError_t error = RT_ERROR_NONE;
     if (!binHandle->IsNewBinaryLoadFlow()) {
@@ -1359,7 +1350,6 @@ rtError_t ApiImpl::SetupArgument(const void * const setupArg, const uint32_t siz
 rtError_t ApiImpl::StreamCreate(Stream ** const stm, const int32_t priority, const uint32_t flags, DvppGrp *grp)
 {
     RT_LOG(RT_LOG_INFO, "priority=%d, flags=%u.", priority, flags);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1407,7 +1397,6 @@ rtError_t ApiImpl::StreamCreate(Stream ** const stm, const int32_t priority, con
 rtError_t ApiImpl::KernelTransArgSet(const void * const ptr, const uint64_t size, const uint32_t flag,
     void ** const setupArg)
 {
-    TIMESTAMP_NAME(__func__);
     UNUSED(flag);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -1431,7 +1420,6 @@ rtError_t ApiImpl::KernelTransArgSet(const void * const ptr, const uint64_t size
 rtError_t ApiImpl::KernelFusionStart(Stream * const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "kernel fusion start.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1466,7 +1454,6 @@ rtError_t ApiImpl::KernelFusionEnd(Stream * const stm)
 rtError_t ApiImpl::StreamDestroy(Stream * const stm, bool flag)
 {
     RT_LOG(RT_LOG_INFO, "stream_id=%d.", stm->Id_());
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
@@ -1549,7 +1536,6 @@ rtError_t ApiImpl::CaptureEventWait(Context * const ctx, Stream * const stm, Eve
 rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const uint32_t timeout)
 {
     RT_LOG(RT_LOG_DEBUG, "Stream wait event, timeout=%us.", timeout);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1633,7 +1619,6 @@ static rtError_t CheckStreamSynchronizeParam(Stream *&curStm, Context * const cu
 
 rtError_t ApiImpl::StreamSynchronize(Stream * const stm, const int32_t timeout)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1688,7 +1673,6 @@ rtError_t ApiImpl::StreamSynchronize(Stream * const stm, const int32_t timeout)
 rtError_t ApiImpl::StreamQuery(Stream * const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "Query stream.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1707,7 +1691,6 @@ rtError_t ApiImpl::StreamQuery(Stream * const stm)
 
 rtError_t ApiImpl::GetStreamId(Stream * const stm, int32_t * const streamId)
 {
-    TIMESTAMP_NAME(__func__);
 
     Stream *curStm = stm;
     if (curStm == nullptr) {
@@ -1723,7 +1706,6 @@ rtError_t ApiImpl::GetStreamId(Stream * const stm, int32_t * const streamId)
 
 rtError_t ApiImpl::GetSqId(Stream * const stm, uint32_t * const sqId)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1733,7 +1715,6 @@ rtError_t ApiImpl::GetSqId(Stream * const stm, uint32_t * const sqId)
 
 rtError_t ApiImpl::GetCqId(Stream * const stm, uint32_t * const cqId, uint32_t * const logicCqId)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1745,7 +1726,6 @@ rtError_t ApiImpl::GetCqId(Stream * const stm, uint32_t * const cqId, uint32_t *
 
 rtError_t ApiImpl::StreamGetPriority(Stream * const stm, uint32_t * const priority)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1761,7 +1741,6 @@ rtError_t ApiImpl::StreamGetPriority(Stream * const stm, uint32_t * const priori
 
 rtError_t ApiImpl::StreamGetFlags(Stream * const stm, uint32_t * const flags)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1778,7 +1757,6 @@ rtError_t ApiImpl::StreamGetFlags(Stream * const stm, uint32_t * const flags)
 rtError_t ApiImpl::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
     uint32_t * const maxTaskCount)
 {
-    TIMESTAMP_NAME(__func__);
     const Runtime * const rt = Runtime::Instance();
     if (!rt->HaveDevice() && !rt->GetIsUserSetSocVersion()) {
         RT_LOG(RT_LOG_WARNING, "No device exists, Resources cannot be queried without set soc version.");
@@ -1806,7 +1784,6 @@ rtError_t ApiImpl::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * con
 rtError_t ApiImpl::GetAvailStreamNum(const uint32_t streamType, uint32_t * const streamCount)
 {
     RT_LOG(RT_LOG_DEBUG, "streamType=%u.", streamType);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const uint32_t deviceId = curCtx->Device_()->Id_();
@@ -1844,7 +1821,6 @@ rtError_t ApiImpl::GetFreeStreamNum(uint32_t * const streamCount)
 rtError_t ApiImpl::GetAvailEventNum(uint32_t * const eventCount)
 {
     RT_LOG(RT_LOG_DEBUG, "Query event num");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const uint32_t deviceId = curCtx->Device_()->Id_();
@@ -1863,7 +1839,6 @@ rtError_t ApiImpl::GetAvailEventNum(uint32_t * const eventCount)
 
 rtError_t ApiImpl::GetTaskIdAndStreamID(uint32_t * const taskId, uint32_t * const streamId)
 {
-    TIMESTAMP_NAME(__func__);
     const uint32_t lastTaskId = InnerThreadLocalContainer::GetLastTaskId();
     const uint32_t lastStreamId = InnerThreadLocalContainer::GetLastStreamId();
 
@@ -1919,7 +1894,6 @@ rtError_t ApiImpl::SetDeviceFailureMode(uint64_t failureMode)
 rtError_t ApiImpl::StreamSetMode(Stream * const stm, const uint64_t stmMode)
 {
     RT_LOG(RT_LOG_DEBUG, "set stream mode entry, mode = %llu.", stmMode);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device * const dev = curCtx->Device_();
@@ -2004,7 +1978,6 @@ rtError_t ApiImpl::GetMaxModelNum(uint32_t * const maxModelCount)
 rtError_t ApiImpl::EventCreate(Event ** const evt, const uint64_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "flag=%" PRIu64 ".", flag);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device * const dev = curCtx->Device_();
@@ -2033,7 +2006,6 @@ rtError_t ApiImpl::EventCreate(Event ** const evt, const uint64_t flag)
 rtError_t ApiImpl::EventCreateEx(Event ** const evt, const uint64_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "flag=%" PRIu64 ".", flag);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device * const dev = curCtx->Device_();
@@ -2054,7 +2026,6 @@ rtError_t ApiImpl::EventCreateEx(Event ** const evt, const uint64_t flag)
 
 rtError_t ApiImpl::EventDestroy(Event *evt)
 {
-    TIMESTAMP_NAME(__func__);
     EventStateCallbackManager::Instance().Notify(nullptr, evt, EventStatePeriod::EVENT_STATE_PERIOD_DESTROY);
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         IpcEvent *eventIpc = dynamic_cast<IpcEvent *>(evt);
@@ -2068,7 +2039,6 @@ rtError_t ApiImpl::EventDestroy(Event *evt)
 
 rtError_t ApiImpl::EventDestroySync(Event *evt)
 {
-    TIMESTAMP_NAME(__func__);
     const bool isDisableThreadFlag = Runtime::Instance()->GetDisableThread();
     if (!isDisableThreadFlag) {
         return EventDestroy(evt);
@@ -2131,7 +2101,6 @@ rtError_t ApiImpl::CaptureEventRecord(Context * const ctx, Event * const evt, St
 rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "event record.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2175,7 +2144,6 @@ rtError_t ApiImpl::EventRecord(Event * const evt, Stream * const stm)
 
 rtError_t ApiImpl::GetEventID(Event * const evt, uint32_t * const evtId)
 {
-    TIMESTAMP_NAME(__func__);
     return evt->GetEventID(evtId);
 }
 
@@ -2205,7 +2173,6 @@ rtError_t ApiImpl::CaptureEventReset(const Event * const evt, Stream * const stm
 rtError_t ApiImpl::EventReset(Event * const evt, Stream * const stm)
 {
     RT_LOG(RT_LOG_DEBUG, "event reset.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2249,7 +2216,6 @@ rtError_t ApiImpl::EventReset(Event * const evt, Stream * const stm)
 
 rtError_t ApiImpl::EventSynchronize(Event * const evt, const int32_t timeout)
 {
-    TIMESTAMP_NAME(__func__);
     Context *eventCtx = evt->Context_();
     rtError_t error = RT_ERROR_NONE;
     if (eventCtx != nullptr) {
@@ -2274,7 +2240,6 @@ rtError_t ApiImpl::EventSynchronize(Event * const evt, const int32_t timeout)
 
 rtError_t ApiImpl::EventQuery(Event * const evt)
 {
-    TIMESTAMP_NAME(__func__);
     Context *eventCtx = evt->Context_();
     if (eventCtx != nullptr) {
         const rtError_t error = eventCtx->CheckStatus();
@@ -2300,7 +2265,6 @@ rtError_t ApiImpl::EventQueryStatus(Event * const evt, rtEventStatus_t * const s
 
 rtError_t ApiImpl::EventQueryWaitStatus(Event * const evt, rtEventWaitStatus_t * const status)
 {
-    TIMESTAMP_NAME(__func__);
     Context *const curCtx = CurrentContext();
     rtError_t error = RT_ERROR_NONE;
 
@@ -2328,13 +2292,11 @@ rtError_t ApiImpl::EventQueryWaitStatus(Event * const evt, rtEventWaitStatus_t *
 
 rtError_t ApiImpl::EventElapsedTime(float32_t * const retTime, Event * const startEvt, Event * const endEvt)
 {
-    TIMESTAMP_NAME(__func__);
     return endEvt->ElapsedTime(retTime, startEvt);
 }
 
 rtError_t ApiImpl::EventGetTimeStamp(uint64_t * const retTime, Event * const evt)
 {
-    TIMESTAMP_NAME(__func__);
     return evt->GetTimeStamp(retTime);
 }
 
@@ -2342,7 +2304,6 @@ rtError_t ApiImpl::DevMalloc(void ** const devPtr, const uint64_t size, const rt
     const uint16_t moduleId)
 {
     RT_LOG(RT_LOG_INFO, "size=%" PRIu64 ", type=%u, moduleId=%hu.", size, type, moduleId);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2367,7 +2328,6 @@ rtError_t ApiImpl::DevMalloc(void ** const devPtr, const uint64_t size, const rt
 rtError_t ApiImpl::DevFree(void * const devPtr)
 {
     RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", reinterpret_cast<uint64_t *>(devPtr));
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext(false);
     rtError_t error = DevFreeStatic(devPtr, curCtx);
 
@@ -2398,7 +2358,6 @@ rtError_t ApiImpl::DevFreeStatic(void * const devPtr, Context * const curCtx)
 rtError_t ApiImpl::DevDvppMalloc(void ** const devPtr, const uint64_t size, const uint32_t flag,
     const uint16_t moduleId)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2410,7 +2369,6 @@ rtError_t ApiImpl::DevDvppMalloc(void ** const devPtr, const uint64_t size, cons
 
 rtError_t ApiImpl::DevDvppFree(void * const devPtr)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
     uint32_t id = RT_MAX_DEV_NUM;
@@ -2440,7 +2398,6 @@ rtError_t ApiImpl::DevDvppFree(void * const devPtr)
 rtError_t ApiImpl::HostMalloc(void ** const hostPtr, const uint64_t size, const uint16_t moduleId)
 {
     RT_LOG(RT_LOG_INFO, "size=%" PRIu64, size);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2520,7 +2477,6 @@ rtError_t ApiImpl::HostMallocWithCfg(void ** const hostPtr, const uint64_t size,
 
 rtError_t ApiImpl::HostFree(void * const hostPtr)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
     if (!ContextManage::CheckContextIsValid(curCtx, true)) {
@@ -2549,7 +2505,6 @@ rtError_t ApiImpl::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const in,
 {
     RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", flag=%u.",
         in->name, in->size, in->flag);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2561,7 +2516,6 @@ rtError_t ApiImpl::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in)
 {
     RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", fd=%u.",
         in->name, in->size,  in->fd);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2572,7 +2526,6 @@ rtError_t ApiImpl::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in)
 rtError_t ApiImpl::HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr)
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 "u.", size);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2583,7 +2536,6 @@ rtError_t ApiImpl::HostRegister(void *ptr, uint64_t size, rtHostRegisterType typ
 rtError_t ApiImpl::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
-    TIMESTAMP_NAME(__func__);
     Context *const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device *const dev = curCtx->Device_();
@@ -2608,7 +2560,6 @@ rtError_t ApiImpl::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 
 rtError_t ApiImpl::HostUnregister(void *ptr)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2636,7 +2587,6 @@ rtError_t ApiImpl::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t fl
 
 rtError_t ApiImpl::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2647,7 +2597,6 @@ rtError_t ApiImpl::ManagedMemAlloc(void ** const ptr, const uint64_t size, const
     const uint16_t moduleId)
 {
     RT_LOG(RT_LOG_DEBUG, "managed memory alloc, size=%" PRIu64 ", flag=%u", size, flag);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -2667,7 +2616,6 @@ rtError_t ApiImpl::ManagedMemAlloc(void ** const ptr, const uint64_t size, const
 rtError_t ApiImpl::ManagedMemFree(const void * const ptr)
 {
     RT_LOG(RT_LOG_INFO, "managed memory free.");
-    TIMESTAMP_NAME(__func__);
 
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
@@ -2701,7 +2649,6 @@ rtError_t ApiImpl::DevMallocCached(void ** const devPtr, const uint64_t size, co
     const uint16_t moduleId)
 {
     RT_LOG(RT_LOG_INFO, "dev cached memory alloc, size=%" PRIu64 ", type=%u.", size, type);
-    TIMESTAMP_NAME(__func__);
     NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(size > MAX_ALLOC_SIZE, RT_ERROR_INVALID_VALUE, 
         size, "(0, " + std::to_string(MAX_ALLOC_SIZE) + "]");
@@ -2716,7 +2663,6 @@ rtError_t ApiImpl::DevMallocCached(void ** const devPtr, const uint64_t size, co
 rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "flush cache base=%" PRIu64 ", len=%zu.", base, len);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, base, "not equal to 0");
 
     Context * const curCtx = CurrentContext();
@@ -2729,7 +2675,6 @@ rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)
 rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 {
     RT_LOG(RT_LOG_INFO, "invalid cache base=%" PRIu64 ", len=%zu.", base, len);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(base == 0U, RT_ERROR_INVALID_VALUE, 
         base, "not equal to 0");
 
@@ -2743,7 +2688,6 @@ rtError_t ApiImpl::MemCopySync(void * const dst, const uint64_t destMax, const v
     const rtMemcpyKind_t kind, const uint32_t checkKind)
 {
     RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%d.", cnt, kind);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
@@ -2777,7 +2721,6 @@ rtError_t ApiImpl::MemCopySyncEx(void * const dst, const uint64_t destMax, const
     const rtMemcpyKind_t kind)
 {
     RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%d.", cnt, kind);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
@@ -2811,7 +2754,6 @@ rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const v
 {
     RT_LOG(RT_LOG_DEBUG, "async memcpy, count=%" PRIu64 ", kind=%d", cnt, kind);
     UNUSED(memcpyConfig);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3121,7 +3063,6 @@ rtError_t ApiImpl::MemSetSync(const void * const devPtr, const uint64_t destMax,
     const uint64_t cnt)
 {
     RT_LOG(RT_LOG_INFO, "destMax=%" PRIu64 ", value=%u, count=%" PRIu64, destMax, val, cnt);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const rtError_t error = curCtx->Device_()->GetDeviceStatus();
@@ -3171,7 +3112,6 @@ rtError_t ApiImpl::MemsetAsync(void * const ptr, const uint64_t destMax, const u
 rtError_t ApiImpl::MemGetInfo(size_t * const freeSize, size_t * const totalSize)
 {
     RT_LOG(RT_LOG_DEBUG, "mem get info free=%zu, total=%zu.", *freeSize, *totalSize);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3212,7 +3152,6 @@ rtError_t ApiImpl::GetMemUsageInfo(const uint32_t deviceId, rtMemUsageInfo_t * c
 rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * const freeSize, size_t * const totalSize)
 {
     RT_LOG(RT_LOG_DEBUG, "mem get info memInfoType=%u, free=%zu, total=%zu.", memInfoType, *freeSize, *totalSize);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3223,7 +3162,6 @@ rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t * cons
 rtError_t ApiImpl::PointerGetAttributes(rtPointerAttributes_t * const attributes, const void * const ptr)
 {
     RT_LOG(RT_LOG_DEBUG, "get memory attribute.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
 
@@ -3239,7 +3177,6 @@ rtError_t ApiImpl::PointerGetAttributes(rtPointerAttributes_t * const attributes
 rtError_t ApiImpl::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * const attributes)
 {
     RT_LOG(RT_LOG_DEBUG, "get memory attribute.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     Driver *curDrv = nullptr;
     if (!ContextManage::CheckContextIsValid(curCtx, true)) {
@@ -3263,7 +3200,6 @@ rtError_t ApiImpl::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t * 
 rtError_t ApiImpl::MemPrefetchToDevice(const void * const devPtr, const uint64_t len, const int32_t devId)
 {
     RT_LOG(RT_LOG_DEBUG, "memory prefetch to device, len=%" PRIu64 ", devId=%d.", len, devId);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext(true, devId);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -3272,7 +3208,6 @@ rtError_t ApiImpl::MemPrefetchToDevice(const void * const devPtr, const uint64_t
 
 rtError_t ApiImpl::GetDeviceIDs(uint32_t * const devId, const uint32_t len)
 {
-    TIMESTAMP_NAME(__func__);
     int32_t devCnt = 0;
     FacadeDriver &curDrv = Runtime::Instance()->FacadeDriver_();
     rtError_t error = curDrv.GetDeviceCount(&devCnt);
@@ -3324,7 +3259,6 @@ rtError_t ApiImpl::CloseNetService()
 
 rtError_t ApiImpl::GetDeviceCount(int32_t * const cnt)
 {
-    TIMESTAMP_NAME(__func__);
     if (!Runtime::Instance()->isSetVisibleDev) {
         FacadeDriver &curDrv = Runtime::Instance()->FacadeDriver_();
         return curDrv.GetDeviceCount(cnt);
@@ -3364,7 +3298,6 @@ rtError_t ApiImpl::GetDeviceCount(int32_t * const cnt)
 rtError_t ApiImpl::SetDevice(const int32_t devId)
 {
     RT_LOG(RT_LOG_INFO, "drv devId=%d.", devId);
-    TIMESTAMP_NAME(__func__);
 
     Runtime * const rt = Runtime::Instance();
     const rtError_t ret = GetDrvSentinelMode();
@@ -3422,7 +3355,6 @@ rtError_t ApiImpl::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t * con
 {
     // the api use before setdevice, so it do not need context
     RT_LOG(RT_LOG_INFO, "get PhyId by Index=%u.", devIndex);
-    TIMESTAMP_NAME(__func__);
     return Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDevicePhyIdByIndex(devIndex, phyId);
 }
 
@@ -3430,7 +3362,6 @@ rtError_t ApiImpl::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const 
 {
     // the api use before setdevice, so it do not need context
     RT_LOG(RT_LOG_INFO, "get Index by PhyId=%u.", phyId);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_ERROR(CheckCurCtxValid(static_cast<int32_t>(phyId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
                       "Current Context is null, phyId[%d].", phyId);
     rtError_t error = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDeviceIndexByPhyId(phyId, devIndex);
@@ -3441,21 +3372,18 @@ rtError_t ApiImpl::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const 
 rtError_t ApiImpl::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "Enable P2P drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    TIMESTAMP_NAME(__func__);
     return NpuDriver::EnableP2P(devIdDes, phyIdSrc, flag);
 }
 
 rtError_t ApiImpl::DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc)
 {
     RT_LOG(RT_LOG_INFO, "Disable P2P drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    TIMESTAMP_NAME(__func__);
     return NpuDriver::DisableP2P(devIdDes, phyIdSrc);
 }
 
 rtError_t ApiImpl::DeviceCanAccessPeer(int32_t * const canAccessPeer, const uint32_t devId, const uint32_t peerDevice)
 {
     RT_LOG(RT_LOG_INFO, "DeviceCanAccessPeer drv devId=%u, peerDevice=%u.", devId, peerDevice);
-    TIMESTAMP_NAME(__func__);
     const Runtime * const rtInstance = Runtime::Instance();
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P)) {
@@ -3477,7 +3405,6 @@ rtError_t ApiImpl::DeviceCanAccessPeer(int32_t * const canAccessPeer, const uint
 rtError_t ApiImpl::GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t * const status)
 {
     RT_LOG(RT_LOG_INFO, "drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_ERROR(CheckCurCtxValid(static_cast<int32_t>(devIdDes)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
                       "Current Context is null, drv devId[%lu].", devIdDes);
     return NpuDriver::GetP2PStatus(devIdDes, phyIdSrc, status);
@@ -3485,7 +3412,6 @@ rtError_t ApiImpl::GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc
 
 rtError_t ApiImpl::DeviceGetBareTgid(uint32_t * const pid)
 {
-    TIMESTAMP_NAME(__func__);
     Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
     return curDrv->DeviceGetBareTgid(pid);
@@ -3660,7 +3586,6 @@ void ApiImpl::DumpTimeStampPart2() const
 rtError_t ApiImpl::DeviceReset(const int32_t devId, const bool isForceReset)
 {
     RT_LOG(RT_LOG_INFO, "Reset device, drv devId=%d.", devId);
-    TIMESTAMP_NAME(__func__);
     Runtime * const rt = Runtime::Instance();
     rtError_t ret = rt->PrimaryContextRelease(static_cast<uint32_t>(devId), isForceReset);
     if (ret != RT_ERROR_NONE) {
@@ -3681,7 +3606,6 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
 {
     RT_LOG(RT_LOG_INFO, "Set Limit, drv devId=%d, type=%d, value=%u.", devId, type, val);
     (void)devId;
-    TIMESTAMP_NAME(__func__);
     rtError_t ret = RT_ERROR_NONE;
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime *rt = Runtime::Instance();
@@ -3808,7 +3732,6 @@ rtError_t ApiImpl::GetPhyDeviceInfo(const uint32_t phyId, const int32_t moduleTy
 rtError_t ApiImpl::DeviceSynchronize(const int32_t timeout)
 {
     RT_LOG(RT_LOG_INFO, "device synchronize.");
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     rtError_t error = curCtx->Synchronize(timeout);
@@ -5368,7 +5291,6 @@ rtError_t ApiImpl::UnSubscribeReport(const uint64_t threadId, Stream * const stm
 rtError_t ApiImpl::GetRunMode(rtRunMode * const runMode)
 {
     // the api do not need context
-    TIMESTAMP_NAME(__func__);
     const rtRunMode ret = static_cast<rtRunMode>(NpuDriver::RtGetRunMode());
     *runMode = (ret == RT_RUN_MODE_AICPU_SCHED) ? RT_RUN_MODE_OFFLINE : ret;
     return RT_ERROR_NONE;
@@ -5476,7 +5398,6 @@ rtError_t ApiImpl::GetAicpuDeploy(rtAicpuDeployType_t * const deployType)
 rtError_t ApiImpl::GetPairDevicesInfo(const uint32_t devId, const uint32_t otherDevId, const int32_t infoType,
     int64_t * const val)
 {
-    TIMESTAMP_NAME(__func__);
     Driver * const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
     rtError_t ret = curDrv->GetPairDevicesInfo(devId, otherDevId, infoType, val);
@@ -5550,7 +5471,6 @@ rtError_t ApiImpl::GetRtCapability(const rtFeatureType_t featureType, const int3
 
 rtError_t ApiImpl::SetGroup(const int32_t groupId)
 {
-    TIMESTAMP_NAME(__func__);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device group not support in chipType=%d", chipType);
@@ -5564,7 +5484,6 @@ rtError_t ApiImpl::SetGroup(const int32_t groupId)
 
 rtError_t ApiImpl::GetGroupCount(uint32_t * const cnt)
 {
-    TIMESTAMP_NAME(__func__);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device group not support in chipType=%d", chipType);
@@ -5578,7 +5497,6 @@ rtError_t ApiImpl::GetGroupCount(uint32_t * const cnt)
 
 rtError_t ApiImpl::GetGroupInfo(const int32_t groupId, rtGroupInfo_t * const groupInfo, const uint32_t cnt)
 {
-    TIMESTAMP_NAME(__func__);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP)) {
         RT_LOG(RT_LOG_ERROR, "Device group not support in chipType=%d", chipType);
@@ -5592,7 +5510,6 @@ rtError_t ApiImpl::GetGroupInfo(const int32_t groupId, rtGroupInfo_t * const gro
 
 rtError_t ApiImpl::ContextSetINFMode(const bool infMode)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     curCtx->SetINFMode(infMode);
@@ -5681,7 +5598,6 @@ rtError_t ApiImpl::GetDeviceCapability(const int32_t deviceId, const int32_t mod
 {
     RT_LOG(RT_LOG_DEBUG, "get feature info deviceId=%d, moduleType=%d, featureType=%d.",
         deviceId, moduleType, featureType);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_ERROR(CheckCurCtxValid(deviceId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
                       "Current Context is null, drv devId[%d].", deviceId);
     if ((featureType == static_cast<int32_t>(FEATURE_TYPE_SCHE)) &&
@@ -5937,7 +5853,6 @@ rtError_t ApiImpl::SetOpWaitTimeOut(const uint32_t timeout)
 {
     RT_LOG(RT_LOG_DEBUG, "set op event wait timeout, timeout=%us.", timeout);
     rtError_t ret = RT_ERROR_NONE;
-    TIMESTAMP_NAME(__func__);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties prop;
     rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
@@ -5972,7 +5887,6 @@ rtError_t ApiImpl::SetOpExecuteTimeOut(const uint32_t timeout, const RtTaskTimeU
 {
     RT_LOG(RT_LOG_DEBUG, "set op execute timeout, timeout=%us, timeUnitType=%d.",
         timeout, static_cast<int32_t>(timeUnitType));
-    TIMESTAMP_NAME(__func__);
     rtError_t ret = RT_ERROR_NONE;
     Runtime * const rtInstance = Runtime::Instance();
     NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
@@ -6120,7 +6034,6 @@ rtError_t ApiImpl::StarsTaskLaunch(const void * const sqe, const uint32_t sqeLen
     const uint32_t flag)
 {
     RT_LOG(RT_LOG_DEBUG, "Stars launch, sqeLen=%u, flag=%u.", sqeLen, flag);
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -6256,7 +6169,6 @@ rtError_t ApiImpl::ProcError(rtError_t error)
 rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, const rtGetMsgCallback callback)
 {
     RT_LOG(RT_LOG_DEBUG, "GetDeviceMsg, getMsgType=%d", static_cast<int32_t>(getMsgType));
-    TIMESTAMP_NAME(__func__);
     const auto chipType = Runtime::Instance()->GetChipType();
     COND_RETURN_ERROR_MSG_INNER(!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG),
         RT_ERROR_FEATURE_NOT_SUPPORT, "chipType=%d does not support get device msg feature.", chipType);
@@ -6493,7 +6405,6 @@ rtError_t ApiImpl::MemQueueGrant(const int32_t devId, const uint32_t qid, const 
     rtMemQueueShareAttr_t * const attr)
 {
     RT_LOG(RT_LOG_INFO, "Start to grant queue on drv devId %d, qid is %u, pid is %d", devId, qid, pid);
-    TIMESTAMP_NAME(__func__);
     COND_RETURN_ERROR(CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
                       "Current Context is null, drv devId[%d].", devId);
     return NpuDriver::MemQueueGrant(devId, qid, pid, attr);
@@ -6650,7 +6561,6 @@ rtError_t ApiImpl::MemGrpAddProc(const char_t * const name, const int32_t pid, c
 rtError_t ApiImpl::MemGrpAttach(const char_t * const name, const int32_t timeout)
 {
     RT_LOG(RT_LOG_INFO, "Start to attach group %s, timeout=%dms.", name, timeout);
-    TIMESTAMP_NAME(__func__);
     return NpuDriver::MemGrpAttach(name, timeout);
 }
 
@@ -8085,7 +7995,6 @@ rtError_t ApiImpl::ParseMallocCfg(const rtMallocConfig_t * const cfg, rtConfigVa
 rtError_t ApiImpl::DevMalloc(void ** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,
                             const rtMallocConfig_t * const cfg)
 {
-    TIMESTAMP_NAME(__func__);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     rtMemType_t type = RT_MEMORY_DEFAULT;
