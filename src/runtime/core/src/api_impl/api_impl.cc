@@ -9139,11 +9139,15 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
 
+    if (captureModel->GetCaptureModelStatus() == RT_CAPTURE_MODEL_STATUS_READY) {
+        return RT_ERROR_NONE;
+    }
+
     if (captureModel->GetCaptureModelStatus() != RT_CAPTURE_MODEL_STATUS_UPDATING) {
         RT_LOG(
             RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
             captureModel->GetCaptureModelStatus());
-        return RT_ERROR_MODEL_NOT_READY_FOR_UPDATE;
+        return RT_ERROR_MODEL_UPDATE_FAILED;
     }
 
     rtError_t ret = captureModel->Update();

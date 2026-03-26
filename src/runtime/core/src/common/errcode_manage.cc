@@ -237,9 +237,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_MODEL_CAPTURE_STATUS] = {ACL_ERROR_RT_INTERNAL_ERROR, "model status error"};
     rtErrMap_[RT_ERROR_MODEL_RUNNING] = {ACL_ERROR_RT_MODEL_RUNNING, "model is running"};
     rtErrMap_[RT_ERROR_MODEL_OP_CACHE_CLOSED] = {ACL_ERROR_RT_INTERNAL_ERROR, "model cache op info switch is closed"};
-    rtErrMap_[RT_ERROR_MODEL_UPDATING] = {ACL_ERROR_RT_MODEL_UPDATING, "model is updating"};
-    rtErrMap_[RT_ERROR_MODEL_NOT_READY_FOR_UPDATE] = {ACL_ERROR_RT_MODEL_NOT_READY_FOR_UPDATE, "model is not ready for update"};
-    rtErrMap_[RT_ERROR_MODEL_NOT_READY] = {ACL_ERROR_RT_MODEL_NOT_READY, "model is not ready, can't execute"};
+    rtErrMap_[RT_ERROR_MODEL_UPDATE_FAILED] = {ACL_ERROR_RT_MODEL_UPDATE_FAILED, "model update failed"};
     
     // instance error
     rtErrMap_[RT_ERROR_INSTANCE_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "instance base error"};

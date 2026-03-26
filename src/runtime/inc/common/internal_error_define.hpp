@@ -173,9 +173,7 @@ constexpr int32_t RT_ERROR_MODEL_CAPTURED           = 0x07040010;
 constexpr int32_t RT_ERROR_MODEL_CAPTURE_STATUS     = 0x07040011;
 constexpr int32_t RT_ERROR_MODEL_RUNNING            = 0x07040012;
 constexpr int32_t RT_ERROR_MODEL_OP_CACHE_CLOSED    = 0x07040013;
-constexpr int32_t RT_ERROR_MODEL_UPDATING           = 0x07040014;
-constexpr int32_t RT_ERROR_MODEL_NOT_READY_FOR_UPDATE = 0x07040015;
-constexpr int32_t RT_ERROR_MODEL_NOT_READY          = 0x07040016;
+constexpr int32_t RT_ERROR_MODEL_UPDATE_FAILED      = 0x07040014;
 
 constexpr int32_t RT_ERROR_EVENT_BASE               = 0x07050000;
 constexpr int32_t RT_ERROR_EVENT_NULL               = 0x07050001;

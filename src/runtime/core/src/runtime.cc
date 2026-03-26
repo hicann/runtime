@@ -1712,6 +1712,7 @@ rtError_t Runtime::KernelRegister(Program *prog, const void *stubFunc, const cha
     (void)GetPrefetchCnt(prog, kernelPtr);
     kernelPtr->SetKernelVfType_(info1.kernelVfType);
     kernelPtr->SetShareMemSize_(info1.shareMemSize);
+    kernelPtr->SetKernelType_(prog->Machine());
     if ((funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_RECORDLOOP) ||
         (funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_SKIPLOOP) ||
         (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_RECORDLOOP) ||

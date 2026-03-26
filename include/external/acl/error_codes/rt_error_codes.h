@@ -58,9 +58,7 @@ extern "C" {
 #define  ACL_ERROR_RT_MODEL_RUNNING              107037 // the model is still running
 #define  ACL_ERROR_RT_STREAM_CAPTURE_WRONG_THREAD 107038 // the thread of end capture and begin capture is not same
 #define  ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY   107039 // input array capacity insufficient
-#define  ACL_ERROR_RT_MODEL_UPDATING             107040 // the model is updating
-#define  ACL_ERROR_RT_MODEL_NOT_READY_FOR_UPDATE 107041 // the model is not ready for updating
-#define  ACL_ERROR_RT_MODEL_NOT_READY            107042 // the model is not ready
+#define  ACL_ERROR_RT_MODEL_UPDATE_FAILED        107040 // the model update failed
 
 #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT        207000 // feature not support
 #define  ACL_ERROR_RT_MEMORY_ALLOCATION          207001 // memory allocation error, only used by out of memory

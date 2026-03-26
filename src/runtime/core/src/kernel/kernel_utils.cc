@@ -194,7 +194,13 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
 
     const rtKernelTaskParams* kernelTaskParams = &(params->kernelTaskParams);
     Kernel* const kernel = RtPtrToPtr<Kernel*>(kernelTaskParams->funcHandle);
-    NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER((kernel == nullptr),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "funcHandle cannot be nullptr.");
+    COND_RETURN_AND_MSG_OUTER((kernelTaskParams->args == nullptr),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "args cannot be nullptr.");
+    COND_RETURN_AND_MSG_OUTER((kernelTaskParams->argsSize == 0U),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "argsSize cannot be 0.");
+
     TaskCfg taskCfg = {};
     rtError_t error = ConvertLaunchCfgToTaskCfg(taskCfg, kernelTaskParams->cfg);
     ERROR_RETURN(error, "convert task cfg failed, retCode=%#x.", error);

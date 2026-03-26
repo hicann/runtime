@@ -584,15 +584,22 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStream_t stream;
+    rtStream_t exeStream;
     rtModel_t model;
     void *addr;
     ret = rtMalloc(&addr, 1024U, RT_MEMORY_HBM, DEFAULT_MODULEID);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     CreateValueTaskModel(stream, model, addr);
 
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
     uint32_t numStreams = 1;
     rtStream_t inputStreams[numStreams];
     ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     uint32_t numTask = 2;
@@ -612,6 +619,9 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_VALUE_WAIT);
 
+    ret = rtModelExecute(model, exeStream, 0);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
     ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
@@ -619,6 +629,9 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(exeStream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = rtFree(addr);

@@ -160,40 +160,6 @@ rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev)
     return RT_ERROR_NONE;
 }
 
-rtError_t ConstructNopTask(Stream* stm, uint8_t* sqeBufferBackup, uint32_t& sendSqeNum)
-{
-    rtError_t error = RT_ERROR_NONE;
-    TaskInfo taskSubmit = {};
-    TaskInfo* rtNopTask = stm->AllocTask(&taskSubmit, TS_TASK_TYPE_NOP, error);
-    NULL_PTR_RETURN(rtNopTask, error);
-    Device* dev = stm->Device_();
-    std::function<void()> const errRecycle = [&dev, &rtNopTask]() { (void)dev->GetTaskFactory()->Recycle(rtNopTask); };
-    ScopeGuard tskErrRecycle(errRecycle);
-    error = NopTaskInit(rtNopTask);
-    ERROR_RETURN(
-        error, "nop task init failed,stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(), rtNopTask->id, error);
-
-    rtTsCommand_t cmdLocal = {};
-    cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-    ToConstructSqe(rtNopTask, cmdLocal.cmdBuf.u.starsSqe);
-    sendSqeNum = GetSendSqeNum(rtNopTask);
-    error = stm->StarsAddTaskToStreamForModelUpdate(rtNopTask, sendSqeNum);
-    ERROR_RETURN(error, "Add task failed stream_id=%d, task_id=%u.", stm->Id_(), rtNopTask->id);
-    auto ret = memcpy_s(
-        RtPtrToPtr<void*>(sqeBufferBackup + sizeof(rtStarsSqe_t) * rtNopTask->pos), sendSqeNum * sizeof(rtStarsSqe_t),
-        RtPtrToPtr<void*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe), sendSqeNum * sizeof(rtStarsSqe_t));
-
-    COND_RETURN_ERROR(
-        ret != EOK, RT_ERROR_INVALID_VALUE, "memcpy_s failed, device_id=%u, stream_id=%d, task_id=%hu, error=%d",
-        dev->Id_(), stm->Id_(), rtNopTask->id, ret);
-    Complete(rtNopTask, dev->Id_());
-    GET_THREAD_TASKID_AND_STREAMID(rtNopTask, stm->Id_());
-    tskErrRecycle.ReleaseGuard();
-    stm->CacheCaptureTaskId(rtNopTask->id);
-    RT_LOG(RT_LOG_INFO, "construct nop task finish, stream_id=%d, task_id=%hu.", stm->Id_(), rtNopTask->id);
-    return error;
-}
-
 rtError_t CheckCaptureModelForUpdate(Stream* stm) {
     NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
     Device* dev = stm->Device_();
@@ -210,7 +176,7 @@ rtError_t CheckCaptureModelForUpdate(Stream* stm) {
         RT_LOG(
             RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
             captureModel->GetCaptureModelStatus());
-        return RT_ERROR_MODEL_NOT_READY_FOR_UPDATE;
+        return RT_ERROR_MODEL_UPDATE_FAILED;
     }
     return RT_ERROR_NONE;
 }

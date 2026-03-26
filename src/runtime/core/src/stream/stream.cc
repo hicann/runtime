@@ -3275,10 +3275,11 @@ rtError_t Stream::UpdateAllPersistentTask()
     }
 
     if (totalSendSqeNum == 0U && parentCaptureStream_ != nullptr) {
-        uint32_t nopSqeNum = 0U;
-        error = ConstructNopTask(this, sqeBufferBackup.get(), nopSqeNum);
-        ERROR_RETURN(error, "construct nop failed.");
-        totalSendSqeNum += nopSqeNum;
+        error = Context_()->NopTask(this);
+        ERROR_RETURN(error, "construct nop failed, stream_id=%d.", streamId_);
+
+        RT_LOG(RT_LOG_INFO, "construct nop success, stream_id=%d.", streamId_);
+        return RT_ERROR_NONE;
     }
 
     if (totalSendSqeNum > 0U) {
@@ -4543,44 +4544,44 @@ bool Stream::IsStreamFull(const uint32_t head, const uint32_t tail, const uint32
 
 void Stream::GetTaskEventIdOrNotifyId(TaskInfo *taskInfo, int32_t &eventId, uint32_t &notifyId, uint64_t &devAddr) const
 {
-    EventRecordTaskInfo *eventRecordTaskInfo = nullptr;
-    EventWaitTaskInfo *eventWaitTaskInfo = nullptr;
-    EventResetTaskInfo *eventResetTaskInfo = nullptr;
-    NotifyWaitTaskInfo* notifyWaitTaskInfo = nullptr;
-    NotifyRecordTaskInfo *notifyRecordInfo = nullptr;
-    MemWriteValueTaskInfo *memWriteValueTaskInfo = nullptr;
-    MemWaitValueTaskInfo *memWaitValueTaskInfo = nullptr;
+    EventRecordTaskInfo *eventRecordTask = nullptr;
+    EventWaitTaskInfo *eventWaitTask = nullptr;
+    EventResetTaskInfo *eventResetTask = nullptr;
+    NotifyWaitTaskInfo* notifyWaitTask = nullptr;
+    NotifyRecordTaskInfo *notifyRecord = nullptr;
+    MemWriteValueTaskInfo *memWriteValueTask = nullptr;
+    MemWaitValueTaskInfo *memWaitValueTask = nullptr;
 
     switch (taskInfo->type) {
         case TS_TASK_TYPE_EVENT_RECORD:
-            eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
-            eventId = eventRecordTaskInfo->eventid;
+            eventRecordTask = &(taskInfo->u.eventRecordTaskInfo);
+            eventId = eventRecordTask->eventid;
             break;
         case TS_TASK_TYPE_STREAM_WAIT_EVENT:
-            eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
-            eventId = eventWaitTaskInfo->eventId;
+            eventWaitTask = &(taskInfo->u.eventWaitTaskInfo);
+            eventId = eventWaitTask->eventId;
             break;
         case TS_TASK_TYPE_EVENT_RESET:
-            eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
-            eventId = eventResetTaskInfo->eventid;
+            eventResetTask = &(taskInfo->u.eventResetTaskInfo);
+            eventId = eventResetTask->eventid;
             break;
         case TS_TASK_TYPE_NOTIFY_WAIT:
-            notifyWaitTaskInfo = &(taskInfo->u.notifywaitTask);
-            notifyId = notifyWaitTaskInfo->notifyId;
+            notifyWaitTask = &(taskInfo->u.notifywaitTask);
+            notifyId = notifyWaitTask->notifyId;
             break;
         case TS_TASK_TYPE_NOTIFY_RECORD:
-            notifyRecordInfo = &(taskInfo->u.notifyrecordTask);
-            notifyId = notifyRecordInfo->notifyId;
+            notifyRecord = &(taskInfo->u.notifyrecordTask);
+            notifyId = notifyRecord->notifyId;
             break;
         case TS_TASK_TYPE_CAPTURE_RECORD:
         case TS_TASK_TYPE_MEM_WRITE_VALUE:
-            memWriteValueTaskInfo = &taskInfo->u.memWriteValueTask;
-            devAddr = memWriteValueTaskInfo->devAddr;
+            memWriteValueTask = &taskInfo->u.memWriteValueTask;
+            devAddr = memWriteValueTask->devAddr;
             break;
         case TS_TASK_TYPE_CAPTURE_WAIT:
         case TS_TASK_TYPE_MEM_WAIT_VALUE:
-            memWaitValueTaskInfo = &taskInfo->u.memWaitValueTask;
-            devAddr = memWaitValueTaskInfo->devAddr;
+            memWaitValueTask = &taskInfo->u.memWaitValueTask;
+            devAddr = memWaitValueTask->devAddr;
             break;
 
         default:

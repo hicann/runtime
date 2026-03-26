@@ -193,7 +193,7 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
 
     if (captureModelStatus_ != RT_CAPTURE_MODEL_STATUS_READY) {
         RT_LOG(RT_LOG_ERROR, "model is not ready, can't execute, model_id=%u, status=%d", Id_(), captureModelStatus_);
-        return RT_ERROR_MODEL_NOT_READY;
+        return RT_ERROR_MODEL_EXE_FAILED;
     }
 
     rtError_t error;
