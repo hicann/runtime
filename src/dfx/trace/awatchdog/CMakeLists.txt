@@ -97,7 +97,6 @@ add_library(awatchdog_stub_share
 
 target_include_directories(awatchdog_stub_share
     PRIVATE
-        ${LIBC_SEC_HEADER}
         ${libawatchdogHeaderDir})
 
 target_compile_definitions(awatchdog_stub_share
