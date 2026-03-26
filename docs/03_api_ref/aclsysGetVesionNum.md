@@ -30,7 +30,7 @@
 ## 函数原型
 
 ```
-aclError aclsysGetVersionNum(char *pkgName, char * versionNum)
+aclError aclsysGetVersionNum(char *pkgName, int32_t *versionNum)
 ```
 
 ## 参数说明

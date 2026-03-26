@@ -1,7 +1,7 @@
-# aclRtMemPoolAttr
+# aclrtMemPoolAttr
 
 ```
-typedef enum aclRtMemPoolAttr{
+typedef enum aclrtMemPoolAttr{
     ACL_RT_MEM_POOL_REUSE_FOLLOW_EVENT_DEPENDENCIES = 0x1,
     ACL_RT_MEM_POOL_REUSE_ALLOW_OPPORTUNISTIC = 0x2,
     ACL_RT_MEM_POOL_REUSE_ALLOW_INTERNAL_DEPENDENCIES = 0x3,
@@ -10,7 +10,7 @@ typedef enum aclRtMemPoolAttr{
     ACL_RT_MEM_POOL_ATTR_RESERVED_MEM_HIGH = 0x6,
     ACL_RT_MEM_POOL_ATTR_USED_MEM_CURRENT = 0x7,
     ACL_RT_MEM_POOL_ATTR_USED_MEM_HIGH = 0x8
-} aclRtMemPoolAttr;
+} aclrtMemPoolAttr;
 ```
 
 | 枚举项 | 说明 |

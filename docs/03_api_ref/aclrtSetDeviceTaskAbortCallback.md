@@ -24,7 +24,7 @@ aclError aclrtSetDeviceTaskAbortCallback(const char *regName, aclrtDeviceTaskAbo
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | regName | 输入 | 注册名称，保持唯一，不能为空，输入保证字符串以\0结尾。 |
-| callback | 输入 | 回调函数。若callback不为NULL，则表示注册回调函数；若为NULL，则表示取消注册回调函数。<br>回调函数的函数原型为：<br>typedef enum {<br>ACL_RT_DEVICE_ABORT_PRE = 0,<br>ACL_RT_DEVICE_ABORT_POST,<br>} aclrtDeviceTaskAbortStage;<br>typedef int32_t (*aclrtDeviceTaskAbortCallback)(int32_t deviceId, aclrtDeviceTaskAbortStage stage, uint32_t timeout, void *args); <br>此处的timeout表示期望回调函数执行的最长时间。|
+| callback | 输入 | 回调函数。若callback不为NULL，则表示注册回调函数；若为NULL，则表示取消注册回调函数。<br>回调函数的函数原型为：<br>typedef enum {<br>ACL_RT_DEVICE_TASK_ABORT_PRE = 0,<br>ACL_RT_DEVICE_TASK_ABORT_POST,<br>} aclrtDeviceTaskAbortStage;<br>typedef int32_t (*aclrtDeviceTaskAbortCallback)(int32_t deviceId, aclrtDeviceTaskAbortStage stage, uint32_t timeout, void *args); <br>此处的timeout表示期望回调函数执行的最长时间。|
 | args | 输入 | 待传递给回调函数的用户数据的指针。 |
 
 ## 返回值说明

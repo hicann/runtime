@@ -57,7 +57,7 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 | --- | --- | --- |
 | handle | 输入 | 存放物理内存信息的handle。<br>需先在本进程调用aclrtMallocPhysical接口申请物理内存，该接口调用成功，会返回一个handle。<br>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一，否则报错，例如重复调用本接口导出时则会返回报错。 |
 | handleType | 输入 | 预留参数，当前固定填ACL_MEM_HANDLE_TYPE_NONE。 |
-| flags | 输入 | 是否启用进程白名单校验。<br>取值为如下宏：<br><br>  - ACL_RT_VMM_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。配置为该值时，需单独调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口将使用shareableHandle的进程ID设置为白名单。<br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。配置为该值时，则无需调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_VMM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
+| flags | 输入 | 是否启用进程白名单校验。<br>取值为如下宏：<br><br>  - ACL_RT_VMM_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。配置为该值时，需单独调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口将使用shareableHandle的进程ID设置为白名单。<br>  - ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。配置为该值时，则无需调用[aclrtMemSetPidToShareableHandle](aclrtMemSetPidToShareableHandle.md)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_VMM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
 | shareableHandle | 输出 | 标识共享给其它进程的shareableHandle。 |
 
 ## 返回值说明

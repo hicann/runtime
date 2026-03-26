@@ -9,7 +9,7 @@ typedef struct {
     void *randomCounterAddr;
     aclrtRandomParaInfo randomSeed; 
     aclrtRandomParaInfo randomNum; 
-    uint8_t rsv[10]; 
+    uint8_t rsv[8]; 
 } aclrtRandomNumTaskInfo;
 ```
 

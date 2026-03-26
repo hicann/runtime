@@ -4,7 +4,7 @@
 typedef enum { 
     ACL_RT_DEV_RES_CUBE_CORE = 0,   // AI Core或Cube Core
     ACL_RT_DEV_RES_VECTOR_CORE,     // Vector Core
-} aclrtDevResType;
+} aclrtDevResLimitType;
 ```
 
 关于Core的定义及详细说明，请参见[aclrtDevAttr](aclrtDevAttr.md)。
