@@ -279,7 +279,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/stars_david.cc
-    ${RUNTIME_CORE_DIR}/src/notify/count_notify.cc
+    ${RUNTIME_FEATURE_DIR}/cntnotify/count_notify.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_c.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/launch/fusion_c.cc
@@ -398,6 +398,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_CORE_DIR}/src/kernel/args
     ${RUNTIME_CORE_DIR}/src/memory
     ${RUNTIME_FEATURE_DIR}/soma
+    ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/inc

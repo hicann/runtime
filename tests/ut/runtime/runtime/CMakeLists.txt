@@ -72,7 +72,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_david.cc
-    ${TOP_DIR}/src/runtime/core/src/notify/count_notify.cc
+    ${TOP_DIR}/src/runtime/feature/cntnotify/count_notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task_launch_config.cc
@@ -296,7 +296,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/dfx/fp16_t.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/hifloat.cpp
     ${TOP_DIR}/src/runtime/core/src/dfx/printf.cc
-    ${TOP_DIR}/src/runtime/core/src/notify/count_notify.cc
+    ${TOP_DIR}/src/runtime/feature/cntnotify/count_notify.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_decorator_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/api_profile_log_decoratoc_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_to_sqe.cc
@@ -1163,6 +1163,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/task/
     ${TOP_DIR}/src/runtime/core/src/memory/
     ${TOP_DIR}/src/runtime/feature/soma/
+    ${TOP_DIR}/src/runtime/feature/cntnotify/
     ${TOP_DIR}/src/runtime/core/src/uvm
     ${TOP_DIR}/src/runtime/core/src/event
     ${TOP_DIR}/src

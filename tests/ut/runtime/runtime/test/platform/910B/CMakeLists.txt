@@ -379,6 +379,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/inc/arg_loader
     ${TOP_DIR}/src/runtime/inc/notify
     ${TOP_DIR}/src/runtime/inc/profiler
+    ${TOP_DIR}/src/runtime/feature/cntnotify
     ${TOP_DIR}/src/runtime/inc/engine/hwts
     ${TOP_DIR}/src/runtime/inc/dqs
     ${TOP_DIR}/src/runtime/api

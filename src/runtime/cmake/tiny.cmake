@@ -417,6 +417,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_CORE_DIR}/inc_c
     ${RUNTIME_CORE_DIR}/src/memory
     ${RUNTIME_FEATURE_DIR}/soma
+    ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100
