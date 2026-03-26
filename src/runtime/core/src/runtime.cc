@@ -70,7 +70,7 @@ constexpr uint32_t  TSD_ADD_AICPUSD_TO_CGROUP_FAILED = 104;
 constexpr uint32_t  TSD_OPEN_NOT_SUPPORT_FOR_MDC = 200U;
 constexpr uint32_t  MONITOR_THREAD_MAX_WAIT_TIMES = 10U;
 constexpr uint32_t  TSD_CLOSE_EX_FLAG_QUICK_CLOSE = 1U;
-constexpr uint32_t  PAGE_FAULT_CNT_THRESHOLD = 100U;
+constexpr uint32_t  PAGE_FAULT_CNT_THRESHOLD = 5000U; // 单次aicore可能发生最多缺页数量48*48 
 constexpr uint64_t  PAGE_FAULT_TIME_THRESHOLD = 2000U;
 constexpr int32_t FEATURE_TRSDRV_SQ_DEVICE_MEM_PRIORITY = 0;
 constexpr uint32_t BASE_AICPU_STREAM_ID = 1024U;
@@ -6001,12 +6001,13 @@ void Runtime::ReportPageFaultProc(void)
                 device->SetPageFaultBaseTime(currentTime);
                 continue;
             }
-            if ((value - device->GetPageFaultBaseCnt()) >= PAGE_FAULT_CNT_THRESHOLD) {
+            const uint32_t pageFaultCnt = value - device->GetPageFaultBaseCnt();
+ 	        if (pageFaultCnt > PAGE_FAULT_CNT_THRESHOLD) {
                 if ((currentTime - device->GetPageFaultBaseTime()) >= PAGE_FAULT_TIME_THRESHOLD) {
                     RT_LOG(RT_LOG_ERROR,
                         "Page fault count exceeds the limit, drv devId=%u, current page fault count=%u.",
-                        device->Id_(), value);
-                    ProcPageFault(device, value);
+                        device->Id_(), pageFaultCnt);
+                    ProcPageFault(device, pageFaultCnt);
                 }
             }
         }

@@ -192,6 +192,7 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
     uint64_t currentTime;
     uint32_t value = 0;
     Runtime *const rtInstance = Runtime::Instance();
+    Device *dev = rtInstance->GetDevice(devId, 0U);
     mmGetTimeOfDay(&tv[index], nullptr);
     startTime = (tv[index].tv_sec * RT_MS_PER_S) + (tv[index].tv_usec / RT_US_TO_MS);
 
@@ -237,12 +238,10 @@ rtError_t ContextManage::DeviceTaskAbort(const int32_t devId, const uint32_t tim
     ERROR_GOTO_MSG_INNER(error, TIMEINFO, "DeviceClean, retCode=%#x", static_cast<uint32_t>(error));
 
     currentTime = (tv[index].tv_sec * RT_MS_PER_S) + (tv[index].tv_usec / RT_US_TO_MS);
-    for (Context *const ctx : g_ctxMan.GetSetObj()) {
-        COND_GOTO_ERROR((ctx->Device_() == nullptr), TIMEINFO, error, RT_ERROR_CONTEXT_NULL, "ctx device is null.");
-        COND_PROC((ctx->Device_()->Id_() != static_cast<uint32_t>(devId)), continue);
+    if (dev != nullptr) {
         (void)NpuDriver::GetPageFaultCount(static_cast<uint32_t>(devId), &value);
-        ctx->Device_()->SetPageFaultBaseCnt(value);
-        ctx->Device_()->SetPageFaultBaseTime(currentTime);
+        dev->SetPageFaultBaseCnt(value);
+        dev->SetPageFaultBaseTime(currentTime);
     }
     mmGetTimeOfDay(&tv[++index], nullptr);
 
