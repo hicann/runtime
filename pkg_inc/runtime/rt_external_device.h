@@ -103,6 +103,7 @@ typedef enum tagRtFeatureType {
     FEATURE_TYPE_MEMORY,
     FEATURE_TYPE_UPDATE_SQE,
     FEATURE_TYPE_PERSISTENT_STREAM_UNLIMITED_DEPTH,
+    FEATURE_TYPE_AICPU_OVERFLOW_DUMP, // check new dump process for GE.
     FEATURE_TYPE_RSV
 } rtFeatureType_t;
 
