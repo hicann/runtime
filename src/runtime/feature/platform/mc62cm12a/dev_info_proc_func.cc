@@ -33,6 +33,7 @@ static void MacroInitMC62CM12A(rtSocType_t socType, RtMacroValue &value)
     value.maxAllocHugeStreamNum = 0U;
     value.maxModelNum = 256U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 static DevDynInfoProcFunc CHIP_MC62CM12A_PROC_FUNC = {

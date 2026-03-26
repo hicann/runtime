@@ -33,6 +33,7 @@ static void MacroInitDc(rtSocType_t socType, RtMacroValue &value)
     value.maxModelNum = 1024U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
     value.rtsqDepth = 2048U;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 static DevDynInfoProcFunc CHIP_DC_PROC_FUNC = {

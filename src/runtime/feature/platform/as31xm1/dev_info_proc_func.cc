@@ -33,6 +33,7 @@ static void MacroInitAS31XM1(rtSocType_t socType, RtMacroValue &value)
     value.rtsqDepth = 4096U; // rtsq depth
     value.stubEventCount = 65536U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 static DevDynInfoProcFunc CHIP_AS31XM1_PROC_FUNC = {

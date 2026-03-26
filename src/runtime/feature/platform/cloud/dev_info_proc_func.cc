@@ -33,6 +33,7 @@ static void MacroInitCloud(rtSocType_t socType, RtMacroValue &value)
     value.maxAllocHugeStreamNum = 0U;
     value.maxModelNum = 1024U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 static DevDynInfoProcFunc CHIP_CLOUD_PROC_FUNC = {

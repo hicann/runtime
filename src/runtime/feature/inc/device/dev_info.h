@@ -33,6 +33,7 @@ struct RtMacroValue {
     uint32_t expandStreamSqDepthAdapt;
     uint32_t expandStreamAdditionalSqeNum;
     uint32_t rsvAicpuStreamNum;
+    uint32_t maxPhysicalStreamNum;
 };
 
 using MACRO_VALUE_INIT_FUNC = void (*)(rtSocType_t, RtMacroValue &);

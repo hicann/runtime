@@ -266,6 +266,7 @@ void Runtime::MacroInitDefault(RtMacroValue &value) const
     value.maxReportTimeoutCnt = MAX_REPORT_TIMEOUT_CNT;
     value.maxModelNum = 1024U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 void Runtime::MacroInit(const rtChipType_t chipTypeValue)

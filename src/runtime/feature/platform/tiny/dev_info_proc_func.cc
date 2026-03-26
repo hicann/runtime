@@ -34,6 +34,7 @@ static void MacroInitMini5612(rtSocType_t socType, RtMacroValue &value)
     value.maxModelNum = 2048U;
     value.rtsqDepth = 2048U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
 }
 
 static DevDynInfoProcFunc CHIP_5612_PROC_FUNC = {

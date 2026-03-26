@@ -74,6 +74,7 @@ static void MacroInitMdc(rtSocType_t socType, RtMacroValue &value)
     value.maxAllocHugeStreamNum = 0U;
     value.maxModelNum = 256U;
     value.baseAicpuStreamId = BASE_AICPU_STREAM_ID;
+    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
     ParseIniFile(socType, value);
 }
 

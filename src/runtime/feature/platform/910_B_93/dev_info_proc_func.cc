@@ -49,6 +49,7 @@ static void MacroInit910B(rtSocType_t socType, RtMacroValue &value)
     if (NpuDriver::CheckIsSupportFeature(0U, FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND)) {
         value.baseAicpuStreamId = BASE_AICPU_STREAM_ID_V2_MAX_STREAM;
     }
+    value.maxPhysicalStreamNum = 2038U; // 2048 - 10. 10 streams reserved
 }
 
 static DevDynInfoProcFunc CHIP_910B_PROC_FUNC = {
