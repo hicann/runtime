@@ -13,6 +13,7 @@
  */
 
 #include "kernel_operator.h"
+#include "kernel_ops.h"
 
 extern "C" __global__ __aicore__ void DeviceWrite(__gm__ int* devPtr, int value)
 {

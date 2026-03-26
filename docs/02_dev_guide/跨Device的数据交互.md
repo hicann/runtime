@@ -1,8 +1,8 @@
-# 跨Device的数据交互
+﻿# 跨Device的数据交互
 
 本节中的“跨Device的数据交互”是指一个进程内、根据硬件组网（例如处于PCIe或者HCCS互联的组网拓扑下）、Device之间能够访问彼此的内存。可以使用aclrtDeviceCanAccessPeer接口查询两个Device之间是否支持数据交互，若支持，再根据访问方向，分别调用aclrtDeviceEnablePeerAccess接口开启一个Device到另一个Device的数据交互功能，例如，调用一次aclrtDeviceEnablePeerAccess接口开启Device 0到Device 1的数据交互，再调用一次aclrtDeviceEnablePeerAccess接口开启Device 1到Device 0的数据交互。若需关闭Device之间的数据交互，可调用aclrtDeviceDisablePeerAccess接口。对于两个进程之间的通信请参见[进程间通信](进程间通信.md)。
 
-以下是跨Device内存复制的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/device/2_device_P2P)。
+以下是跨Device内存复制的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/device/2_device_P2P)。
 
 ```
 aclInit(NULL); // 初始化
@@ -32,4 +32,5 @@ if (canAccessPeer == 1) {
 }
 aclFinalize(); // 去初始化
 ```
+
 

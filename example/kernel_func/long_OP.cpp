@@ -9,6 +9,7 @@
  */
 
 #include "kernel_operator.h"
+#include "kernel_ops.h"
 
 // 核函数，长时间任务
 extern "C" __global__ __aicore__ void LongOPf(__gm__ uint32_t* x)

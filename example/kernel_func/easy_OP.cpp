@@ -9,6 +9,7 @@
  */
 
 #include "kernel_operator.h"
+#include "kernel_ops.h"
 
 // 简单核函数，让x自增1
 extern "C" __global__ __aicore__ void EasyOPf(__gm__ uint32_t* x)

@@ -1,85 +1,57 @@
-# 样例使用指导
-examples目录下提供了一系列Runtime接口样例，包括Device管理、Stream管理、Event管理、内存管理、Kernel执行等，供开发者参考，帮助开发者快速入门，进而掌握Runtime关键特性。
+# 样例目录
 
-## 样例列表
+`example/` 目录按学习阶段组织，可从快速入门逐步学习到基础能力、高级能力、性能分析和场景化主题。
 
-|样例目录|子目录            | 功能介绍 |
-|--------|-----------------|--------------------------|
-|quickstart|[quickstart](./quickstart/)|本示例是使用Runtime接口的快速入门示示例。展示了如何使用 CANN Runtime 的 `aclnnAdd` API 执行向量加法操作。`aclnnAdd` 是 CANN 神经网络算子库提供的加法算子，实现了 `out = self + alpha * other` 的运算。|
-|device|[0_device_normal](./device/0_device_normal/)|本样例展示了从资源初始化、指定Device计算设备、在Device上执行Add算子、到最后销毁资源的全部流程，是一个基础的使用Device的样例。|
-|device|[1_device_multi_thread](./device/1_device_multi_thread/)|本用例展示了多线程的场景如何管理Device，主线程中设置Device，设置资源限制，另一个线程获取Device相关信息（例如昇腾AI处理器版本、Device运行模式、Device资源限制）后，再根据Device资源限制下发和执行和函数任务，线程结束时采用aclrtResetDeviceForce接口释放Device上的资源。|
-|device|[2_device_P2P](./device/2_device_P2P/)|本样例展示了如何在多个Device之间进行切换，并进行内存复制。|
-|stream|[0_simple_stream](./stream/0_simple_stream/)|本样例展示单Stream下发任务的场景，包括默认Stream下发任务、新建Stream下发任务、在一个Stream多次下发任务并查询状态三个部分。|
-|stream|[1_stream_with_failure_mode](./stream/1_stream_with_failure_mode/)|本样例展示Stream设置遇错即停并且模拟运行核函数时发生错误的场景。|
-|stream|[2_multi_stream](./stream/2_multi_stream/)|本样例展示了多个Stream之间流间任务同步功能。|
-|event|[0_event_status](./event/0_event_status/)|本样例展示了Event的不同状态，包括创建后，记录后，同步后。|
-|event|[1_event_timestamp](./event/1_event_timestamp/)|本样例展示了Event计时的功能，既可以记录时间帧，还可以计算时间差。|
-|memory|[0_h2h_memory_copy](./memory/0_h2h_memory_copy/)|本样例展示了Host内的内存复制功能。|
-|memory|[1_h2d_sync_memory_copy](./memory/1_h2d_sync_memory_copy/)|本样例展示了Host到Device的内存复制，使用aclrtMemcpy内存复制接口。|
-|memory|[2_h2d_async_memory_copy](./memory/2_h2d_async_memory_copy/)|本样例展示了Host到Device的内存复制，使用aclrtMemcpyAsync内存复制接口。|
-|memory|[3_d2h_sync_memory_copy](./memory/3_d2h_sync_memory_copy/)|本样例展示了Device到Host的内存复制，使用aclrtMemcpy内存复制接口。|
-|memory|[4_d2h_async_memory_copy](./memory/4_d2h_async_memory_copy/)|本样例展示了Device到Host的内存复制，使用aclrtMemcpyAsync内存复制接口。|
-|memory|[5_d2d_sync_memory_copy](./memory/5_d2d_sync_memory_copy/)|本样例展示了Device内的内存复制，使用aclrtMemcpy内存复制接口。|
-|memory|[6_d2d_async_memory_copy](./memory/6_d2d_async_memory_copy/)|本样例展示了Device内的内存复制，使用aclrtMemcpyAsync内存复制接口。|
-|memory|[7_physical_memory_sharing_withpid](./memory/7_physical_memory_sharing_withpid/)|本样例展示了同一个Device、两个进程间的物理内存共享，但在共享内存时启用进程白名单校验。|
-|memory|[8_physical_memory_sharing_withoutpid](./memory/8_physical_memory_sharing_withoutpid/)|本样例展示了同一个Device、两个进程间的物理内存共享，在共享内存时关闭进程白名单校验。|
-|memory|[9_multistream_sync_memory](./memory/9_multistream_sync_memory/)|本样例会触发两个线程，一个线程A等待指定内存中的数据满足一定条件后解除阻塞，一个线程B向指定内存中写入数据，在线程B写入满足条件的数据之前线程A将持续阻塞。|
-|memory|[10_ipc_memory_withpid](./memory/10_ipc_memory_withpid)|本样例展示了同一个Device、两个进程间的内存共享，在共享内存时启用进程白名单校验。|
-|memory|[11_ipc_memory_withoutpid](./memory/11_ipc_memory_withoutpid)|本样例展示了同一个Device、两个进程间的内存共享，在内存共享时关闭进程白名单校验。|
-|memory|[12_cross_server_physical_memory_sharing_withoutpid](./memory/12_cross_server_physical_memory_sharing_withoutpid/)|本样例展示了两个服务器间的内存共享，在共享内存时关闭进程白名单校验。|
-|built_in_task|[0_reduce_task](./built_in_task/0_reduce_task/)|本示例展示了如何使用 CANN Runtime 的 `aclrtReduceAsync` API 执行规约（Reduce）操作。规约是并行计算中的常见操作，用于对数组元素进行求和、求最大值等操作。|
-|built_in_task|[1_random_num_task](./built_in_task/1_random_num_task/)|本示例展示了如何使用 CANN Runtime 的 `aclrtRandomNumAsync` API 生成随机数。支持多种随机数分布类型和数据类型，用于满足不同场景下的随机数生成需求。|
-|callback|[0_simple_callback](./callback/0_simple_callback/)|本样例展示了在Stream上下发一个Host侧函数，由用户显式注册线程，触发Host侧函数调用。|
-|callback|[1_callback_hostfunc](./callback/1_callback_hostfunc/)|本样例展示了在Stream上下发一个Host侧函数，该Host侧函数将在当前已下发的任务执行之后被调用，并会阻塞之后添加的任务。|
-|callback|[2_callback_exception](./callback/2_callback_exception/)|本样例展示了如何通过错误回调函数获取任务的异常信息，包括Device ID、Stream ID、Task ID、Error Code等。|
-|model|[0_simple_model](./model/0_simple_model/)|本样例展示了如何捕获Stream中的任务并创建一个模型实例，然后执行该模型实例得到结果。|
-|model|[1_model_update](./model/1_model_update/)|本样例展示了捕获一个模型实例后如何更新该实例中的任务。|
-|model|[2_model_switch](./model/2_model_switch/)|本样例展示了如何使用aclmdlRIBuildBegin接口创建模型实例，并且在任务中实现了Stream跳转以及Stream激活。|
-|kernel|[0_launch_kernel](./kernel/0_launch_kernel/)|本样例展示了如何基于Launch Kernel方式加载与执行Add算子。|
-|kernel|[1_launch_kernel_with_reslimit](./kernel/1_launch_kernel_with_reslimit/)|本样例展示了在设置了当前进程的Device资源限制下，Add算子的加载与执行。|
-|notify|[0_ipc_notify_withpid](./notify/0_ipc_notify_withpid)|本样例展示了两个Device、两个进程间的Notify共享，但在共享Notify时启用进程白名单校验。|
-|notify|[1_ipc_notify_withoutpid](./notify/1_ipc_notify_withoutpid)|本样例展示了两个Device、两个进程间的Notify共享，但在共享Notify时关闭进程白名单校验。|
-|notify|[2_cntnotify](./notify/2_cntnotify/)|本样例展示在流间使用CntNotify进行同步的场景，包括创建、记录、等待、复位、获取ID和销毁的操作。|
-|adump|[0_adump_args](./adump/0_adump_args)|本样例展示了单算子执行场景下，使用aclopStartDumpArgs和aclopStopDumpArgs接口Dump算子信息。|
-|adump|[1_adump_callback](./adump/1_adump_callback)|本样例展示了单算子执行场景下，使用acldumpRegCallback和acldumpUnregCallback接口Dump算子信息。|
-|profiling|[0_create_config](./profiling/0_create_config)|本样例展示了Profiling采集、解析和展示性能数据。|
-|profiling|[1_msproftx](./profiling/1_msproftx)|本样例展示了使用msproftx扩展接口采集、解析和展示性能数据。|
-|profiling|[2_subscribe_model](./profiling/2_subscribe_model)|本样例展示了订阅算子信息, 实现将采集到的Profiling数据解析后写入管道，由用户读入内存，再由用户调用接口获取性能数据。|
+## 目录总览
 
-## 环境准备
-编译运行样例前，需获取固件、驱动及CANN软件包安装，具体操作请参见runtime仓下的[README](../README.md)。
-有些样例依赖ops算子包，需要根据产品型号和环境架构下载安装对应的软件包。
+- [0_quickstart](./0_quickstart/README.md)：快速入门，包含最基础的 Runtime Hello World、自定义 Kernel `<<<>>>` 调用、错误处理、系统信息和兼容性主题。
+- [1_basic_features](./1_basic_features/README.md)：基础特性，覆盖 Device、Context、Stream、Event、Memory。
+- [2_advanced_features](./2_advanced_features/README.md)：高级特性，覆盖 Kernel、Model RI、Callback、Notify、TDT、Label、Group 和内建任务。
+- [3_memory_advanced](./3_memory_advanced/README.md)：高级内存管理，覆盖自定义分配器、流序内存池以及更细粒度的内存控制主题。
+- [4_reliability](./4_reliability/README.md)：可靠性主题，覆盖快照、溢出检测、错误恢复和容错执行。
+- [5_performance](./5_performance/README.md)：性能分析与精度调试，包含 Profiling 和 Adump。
+- [6_scenarios](./6_scenarios/README.md)：场景化主题，面向训练流水线、多设备推理和容错执行等典型用法。
 
-## 编译运行
+## 使用方式
 
-  1.设置环境变量。
-  ```bash
-  # ${ascend_name}替换为昇腾AI处理器的型号
-  export SOC_VERSION=${ascend_name}
-  # 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径
-  # 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
-  export ASCENDC_CMAKE_DIR=${cmake_path}
-  # ${install_path}替换为CANN toolkit包的安装路径，默认安装在`/usr/local/Ascend`目录
-  export ASCEND_INSTALL_PATH=${install_path}/cann
-  ```
+编译运行样例前，请先完成固件、驱动和 CANN 软件包安装，具体操作请参见仓库根目录的 [README](../README.md)。
 
-  2.下载样例代码并上传至安装CANN软件的环境，切换到样例目录。
-  ```bash
-  # 此处以0_h2h_memory_copy样例为例
-  cd ${git_clone_path}/example/memory/0_h2h_memory_copy
-  ```
+典型运行步骤如下：
 
-  3.执行以下命令运行样例。
-  ```bash
-  # 请注意部分用例的运行命令不同，具体以各用例目录下的README.md中的编译运行命令为准
-  bash run.sh
-  ```
+```bash
+# ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
+source ${install_root}/cann/set_env.sh
+export ASCEND_INSTALL_PATH=${install_root}/cann
+
+# ${ascend_name} 替换为昇腾AI处理器的型号，可通过 npu-smi info 查看 Name 字段并去掉空格获得，例如 ascend910b3
+export SOC_VERSION=${ascend_name}
+
+# 部分样例中涉及调用AscendC算子，需配置AscendC编译器 ascendc.cmake 所在路径
+export ASCENDC_CMAKE_DIR=${cmake_path}
+
+# 以基础内存样例为例
+cd ${git_clone_path}/example/1_basic_features/memory/0_h2h_memory_copy
+bash run.sh
+```
+
+请注意：
+
+- 具体运行方式以各样例子目录中的 `README.md` 为准。
+- 部分主题目录用于集中说明某类能力，便于按主题查找相关样例。
+- 部分样例依赖额外算子包或特定环境能力，请按样例说明准备环境。
+- 涉及 AscendC Kernel 的样例还需要提前设置 `SOC_VERSION` 和 `ASCENDC_CMAKE_DIR`。
+
+## 共享文件
+
+以下目录和文件供多个样例复用，一般无需单独运行：
+
+- `kernel_func/`：Kernel 与部分 Callback 样例复用的 AscendC 核函数源码。
+- `utils.h`：多个样例共享的日志与错误检查宏。
 
 ## 示例代码说明
-所有示例演示了 CANN Runtime API 的典型使用模式
-* 样例代码仅用于演示说明，并非生产环境代码
-* 为了简化示例，错误处理被简化
-* 在发生错误时，资源清理可能并不完整
-* 在未进行充分加固和完善之前，请勿直接用于商业应用
 
-用于生产环境时，请务必实现完善的错误处理机制以及 RAII 资源管理模式。
+所有示例演示了 CANN Runtime API 的典型使用模式。
+
+- 样例代码用于学习和接口理解。
+- 为了突出核心流程，部分示例会简化工程化处理。
+- 用于生产环境前，请补充完整的错误处理、资源管理和边界检查。

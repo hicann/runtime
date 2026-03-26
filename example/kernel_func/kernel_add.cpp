@@ -9,6 +9,7 @@
  */
 
 #include "kernel_operator.h"
+#include "kernel_add.h"
 
 using namespace AscendC;
 
