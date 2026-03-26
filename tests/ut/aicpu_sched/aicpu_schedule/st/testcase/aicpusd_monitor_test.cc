@@ -243,7 +243,7 @@ TEST_F(AicpuMonitorSTest, SendKillMsgToTsdFail1) {
     const int32_t ret = monitor.InitMonitor(0, true);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
     MOCKER(TsdDestroy).stubs().will(returnValue(1));
-    monitor.SendKillMsgToTsd(0);
+    monitor.SendKillMsgToTsd();
 }
 
 TEST_F(AicpuMonitorSTest, RunSemWaitFail) {

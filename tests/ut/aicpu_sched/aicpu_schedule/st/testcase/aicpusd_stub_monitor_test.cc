@@ -28,7 +28,6 @@ TEST_F(AicpuStubMonitorTEST, HandleOpTimeoutTest) {
     AicpuMonitor::GetInstance().HandleOpTimeout();
     AicpuMonitor::GetInstance().InitAsyncOpTimer();
     AicpuMonitor::GetInstance().SendKillMsgToTsd();
-    AicpuMonitor::GetInstance().SendKillMsgToTsd(10);
     AicpuMonitor::GetInstance().SetOpTimeoutFlag(0U);
     aicpu::TimerHandle timerId = 0UL;
     AicpuMonitor::GetInstance().SetOpTimerEndTime(timerId);
@@ -41,12 +40,7 @@ TEST_F(AicpuStubMonitorTEST, InitMonitorTest) {
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
-TEST_F(AicpuStubMonitorTEST, SendKillMsgToTsdTest02) {
-    AicpuMonitor::GetInstance().SendKillMsgToTsd(2);
-    EXPECT_EQ(AicpuMonitor::GetInstance().deviceId_, 0);
-}
-
-TEST_F(AicpuStubMonitorTEST, SendKillMsgToTsdTest2) {
+TEST_F(AicpuStubMonitorTEST, SendKillMsgToTsdTest) {
     AicpuMonitor::GetInstance().SendKillMsgToTsd();
     EXPECT_EQ(AicpuMonitor::GetInstance().deviceId_, 0);
 }

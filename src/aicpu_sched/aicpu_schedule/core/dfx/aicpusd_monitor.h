@@ -98,7 +98,7 @@ public:
     void SetOpTimerStartTime(const aicpu::TimerHandle timerId, const uint32_t timeInS);
     void SetOpTimerEndTime(const aicpu::TimerHandle timerId);
     uint32_t GetTaskDefaultTimeout() const;
-    void SendKillMsgToTsd();
+    void SendKillMsgToTsd() const;
 
     void SetOpExecuteTimeOut(const uint32_t timeOutEn, const uint32_t opExecuteTimeOut);
     void SetOpTimeoutFlag(const bool flag);
@@ -122,7 +122,6 @@ private:
     void HandleTaskTimeout();
     void HandleModelTimeout();
     void HandleOpTimeout();
-    void SendKillMsgToTsd(uint64_t delayReportSecond);
 
     uint32_t deviceId_;
     std::atomic<bool> taskTimeoutFlag_;

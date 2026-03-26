@@ -51,14 +51,8 @@ int32_t AicpuMonitor::InitMonitor(const uint32_t deviceId, const bool online)
     return AICPU_SCHEDULE_OK;
 }
 
-void AicpuMonitor::SendKillMsgToTsd()
+void AicpuMonitor::SendKillMsgToTsd() const
 {
-    return;
-}
-
-void AicpuMonitor::SendKillMsgToTsd(uint64_t delayReportSecond)
-{
-    UNUSED(delayReportSecond);
     return;
 }
 

@@ -30,8 +30,6 @@ namespace {
 const uint64_t AICPU_TASK_TIMEOUT = 28UL;
 const uint64_t AICPU_TASK_TIMEOUT_LONG = 60UL;
 const uint64_t AICPU_TASK_TIMEOUT_FPGA = 2800UL;
-// delay to report kill message until TS timeout
-const uint64_t AICPU_REPORT_DELAY = 5UL;
 constexpr const uint32_t MONITOR_SLEEP_INTERVAL = 100000U; // 100ms
 #ifndef aicpusd_UT
 constexpr const uint32_t MONITOR_TIMEOUT_COUNT = 10U; // 1s
@@ -175,12 +173,7 @@ void AicpuMonitor::InitAsyncOpTimer()
     aicpu::AicpuTimer::GetInstance().RegistMonitorFunc(startTimerCbk, stopTimerCbk);
 }
 
-void AicpuMonitor::SendKillMsgToTsd()
-{
-    SendKillMsgToTsd(0);
-}
-
-void AicpuMonitor::SendKillMsgToTsd(uint64_t delayReportSecond)
+void AicpuMonitor::SendKillMsgToTsd() const
 {
     aicpusd_run_info("dev[%u] send msg to tsdaemon, tsdaemon will kill aicpu-sd process[%u]", deviceId_,
         static_cast<uint32_t>(getpid()));
@@ -189,10 +182,6 @@ void AicpuMonitor::SendKillMsgToTsd(uint64_t delayReportSecond)
     DlogFlushAicpu();
     (void)AicpuSchedule::mpi::MpiDvppStatisticManager::Instance().PrintStatisticInfo();
 
-    if (delayReportSecond != 0) {
-        // delay report when using default timeout config
-        (void)sleep(delayReportSecond);
-    }
     // thread node ppid is not tsd, don't need to destroy
     if (!online_) {
         aicpusd_run_info("offline mode no need send msg to tsd");
@@ -481,7 +470,7 @@ void AicpuMonitor::HandleTaskTimeout()
             aicpusd_err("%s, nowTick:%llu, startTick:%llu, timeOut:%llu, tickFreq:%llu.", oss.str().c_str(),
                         nowTick, startTick, taskTimeoutTick_.load(), aicpu::GetSystemTickFreq());
             aicpusd_run_info("%s", ComputeProcess::GetInstance().DebugString().c_str());
-            SendKillMsgToTsd(!tsTimeoutEnable_ ? AICPU_REPORT_DELAY : 0);
+            SendKillMsgToTsd();
             return;
         }
     }
@@ -491,7 +480,7 @@ void AicpuMonitor::HandleTaskTimeout()
         if (runFlag && (nowTick > startTick) && ((nowTick - startTick) >= taskTimeoutTick_.load())) {
             // handle aicpu stream task timeout
             aicpusd_err("Send stream task timeout, tsdaemon will kill aicpu-sd process, model id[%u].", modelId);
-            SendKillMsgToTsd(AICPU_REPORT_DELAY);
+            SendKillMsgToTsd();
             break;
         }
     }
@@ -543,7 +532,7 @@ void AicpuMonitor::HandleModelTimeout()
                 ((nowTick - timer.GetStartTick()) >= modelTimeoutTick_)) {
                 // handle model timeout
                 aicpusd_err("Send model timeout, tsdaemon will kill aicpu-sd process, model id[%u].", modelId);
-                SendKillMsgToTsd(AICPU_REPORT_DELAY);
+                SendKillMsgToTsd();
                 break;
             }
         }
