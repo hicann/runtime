@@ -4770,9 +4770,10 @@ rtError_t ApiImpl::NotifyWait(Notify * const inNotify, Stream * const stm, const
         RT_ERROR_STREAM_CONTEXT,
         "Notify wait failed, stream is not in current ctx, stream_id=%d.",
         curStm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE,
-        RT_ERROR_INVALID_VALUE,
-        "Notify wait failed, ipc notify can not notify wait.");
+    COND_RETURN_AND_MSG_OUTER(inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1012, __func__, dev->Id_(), "current deviceId",
+            "The current device cannot deliver Notify Wait, the corresponding Notify Wait must be delivered on "
+            "the device that creates the IPC Notify");
 
     uint32_t timeOutTmp = timeOut;
     if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT) &&

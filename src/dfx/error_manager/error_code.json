@@ -551,6 +551,17 @@
     },
     {
       "errClass": "RTS Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EE1012",
+      "ErrMessage": "%s failed. Value %s for %s is invalid. Reason: %s.",
+      "Arglist": "func, value, param, reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "NA"
+      }
+    },
+    {
+      "errClass": "RTS Errors",
       "errTitle": "Profiling_Enable_Errors",
       "ErrCode": "EE4004",
       "ErrMessage": "Failed to enable profiling.  %s",

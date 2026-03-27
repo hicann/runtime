@@ -49,7 +49,7 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t * const
     sqe->writeAddrHigh = static_cast<uint32_t>((notifyAddr >> UINT32_BIT_NUM) & MASK_17_BIT);
 
     PrintDavidSqe(command, "IpcNotifyRecordTask");
-    RT_LOG(RT_LOG_INFO, "ipc_notify_record: device_id=%u, stream_id=%u, task_id=%u, task_sn=%u, sq_id=%u, "
+    RT_LOG(RT_LOG_INFO, "ipc_notify_record: device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, sq_id=%u, "
         "writeAddrLow=0x%x, writeAddrHigh=0x%x, subType=%u.", devId, stream->Id_(), taskInfo->id,
         taskInfo->taskSn, stream->GetSqId(), sqe->writeAddrLow, sqe->writeAddrHigh, sqe->subType);
 }

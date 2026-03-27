@@ -92,6 +92,9 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
  
     std::vector<std::string> values1011 = {"rtMemCpy", "0", "size", "size is not 0"};
     PrintErrMsgToLog(ErrorCode::EE1011, "file", 1000, "func", values1011);
+
+    std::vector<std::string> values1012 = {"NotifyWait", "0", "current deviceId", "The current device cannot deliver Notify Wait"};
+    PrintErrMsgToLog(ErrorCode::EE1012, "file", 1000, "func", values1012);
  
     std::vector<std::string> values9 = {"1, 2, 2", "SetVisible", "not repeat"};
     PrintErrMsgToLog(ErrorCode::EE2002, "file", 1000, "func", values9);
@@ -116,6 +119,7 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011, "rtMemCpy", "0", "size", "size is not 0");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, "1, 2, 2", "SetVisible", "not repeat");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::WE0001, "set the saturation mode", "only the Inf/NaN mode can be set and the saturation mode");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "NotifyWait", "0", "current deviceId", "The current device cannot deliver Notify Wait");
  
     auto names = GetParamNames(ErrorCode::EE1001);
     EXPECT_EQ(names, (std::vector<std::string>{"extend_info"}));
@@ -145,4 +149,6 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     EXPECT_EQ(names, (std::vector<std::string>{}));
     names = GetParamNames(ErrorCode::WE0001);
     EXPECT_EQ(names, (std::vector<std::string>{"function", "type"}));
+    names = GetParamNames(ErrorCode::EE1012);
+    EXPECT_EQ(names, (std::vector<std::string>{"func", "value", "param", "reason"}));
 }

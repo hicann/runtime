@@ -225,6 +225,8 @@ constexpr const char* ErrorCodeToString(ErrorCode code) {
             return "EE2002";
         case ErrorCode::WE0001:
             return "WE0001";
+        case ErrorCode::EE1012:
+            return "EE1012";
         default:
             return "UNKNOWN";
     }
