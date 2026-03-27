@@ -1441,6 +1441,7 @@ void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) {
         if (!delayRecycleTaskid_.empty()) {
             head = *delayRecycleTaskid_.begin();
             tail = *(delayRecycleTaskid_.end() - 1);
+            tail++;
         }
     } else {
         if(taskResMang_ == nullptr) {

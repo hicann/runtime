@@ -168,8 +168,6 @@ public:
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *regName, void *callback) override;
     rtError_t XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len) override;
-    rtError_t GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
-        uint32_t * const maxTaskCount) override;
 
 protected:
     rtError_t GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val) override;

@@ -12,7 +12,6 @@
 #include "error_message_manage.hpp"
 #include "arg_loader.hpp"
 #include "task_res_da.hpp"
-#include "stream_sqcq_manage.hpp"
 #include "inner_thread_local.hpp"
 
 #define TASK_NUM_FOR_HEAD_UPDATE (64U)
@@ -56,20 +55,6 @@ bool TaskResManageDavid::IsRecyclePosValid(uint16_t recyclePos) const
 }
 TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
 {
-    Device * const dev = Runtime::Instance()->GetDevice(static_cast<uint32_t>(deviceId_),
-        InnerThreadLocalContainer::GetTsId(), false);
-    if (dev != nullptr) {
-        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) {
-            Stream *stm = nullptr;
-            (void)dev->GetStreamSqCqManage()->GetStreamById(streamId_, &stm);
-            NULL_PTR_RETURN_MSG(stm, nullptr);
-
-            if (stm->IsSoftwareSqEnable()) {
-                return dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId_), static_cast<uint16_t>(taskId));
-            }
-        }
-    }
-
     if (unlikely(taskId >= taskPoolNum_)) {
         RT_LOG(RT_LOG_WARNING, "taskId is invalid, device_id=%u, stream_id=%d, taskId=%u",
             deviceId_, streamId_, taskId);

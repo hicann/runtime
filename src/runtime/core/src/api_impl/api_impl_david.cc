@@ -2163,33 +2163,5 @@ rtError_t ApiImplDavid::MemWaitValue(const void * const devAddr, const uint64_t 
     return CondMemWaitValue(devAddr, value, flag, curStm);
 }
 
-rtError_t ApiImplDavid::GetMaxStreamAndTask(const uint32_t streamType, uint32_t * const maxStrCount,
-    uint32_t * const maxTaskCount)
-{
-    const Runtime * const rt = Runtime::Instance();
-    if (!rt->HaveDevice() && !rt->GetIsUserSetSocVersion()) {
-        RT_LOG(RT_LOG_WARNING, "No device exists, Resources cannot be queried without set soc version.");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    if (streamType == RT_HUGE_STREAM) {
-        DevProperties props;
-        GET_DEV_PROPERTIES(rt->GetChipType(), props);
-        if (props.maxAllocHugeStreamNum == 0U) {
-            RT_LOG(RT_LOG_WARNING, "Get max stream and task failed, unsupported huge stream mode in chipType=%d, "
-                                   "streamType=%u", rt->GetChipType(), streamType);
-            return RT_ERROR_FEATURE_NOT_SUPPORT;
-        }
-        *maxStrCount = props.maxAllocHugeStreamNum;
-        *maxTaskCount = Runtime::macroValue_.maxTaskNumPerHugeStream;
-        return RT_ERROR_NONE;
-    }
-
-    *maxStrCount = MAX_SINGLE_OP_STREAM_CNT;
-    *maxTaskCount = MAX_SINGLE_OP_STREAM_TASK_CNT;
-    RT_LOG(RT_LOG_INFO, "Max streamNum=%u, max TaskNum=%u", *maxStrCount, *maxTaskCount);
-    return RT_ERROR_NONE;
-}
-
 }  // namespace runtime
 }  // namespace cce

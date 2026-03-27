@@ -867,6 +867,86 @@ bool IsNeedFreeStreamRes(const TaskInfo *task)
 #endif
 
 #if F_DESC("钩子注册框架")
+static void RegTaskToSqefunc(void)
+{
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ConstructAICpuSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ConstructAicAivSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ConstructAicAivSqeForDavinciTask;
+    g_toSqeFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &ConstructSqeForDavinciMultipleTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructSqeForMemcpyAsyncTask;
+    g_toSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_EVENT_RECORD] = &ConstructSqeForEventRecordTask;
+    g_toSqeFunc[TS_TASK_TYPE_EVENT_RESET] = &ConstructSqeForEventResetTask;
+    g_toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
+    g_toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
+    g_toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
+    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &ConstructSqeRdmaPiValueModifyTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ConstructSqeForDebugUnRegisterForStreamTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
+    g_toSqeFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ConstructSqeForCallbackLaunchTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ConstructSqeForStreamLabelSwitchByIndexTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STARS_COMMON] = &ConstructSqeForStarsCommonTask;
+    g_toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
+    g_toSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructSqeForNpuGetFloatStaTask;
+    g_toSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructSqeForNpuClrFloatStaTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &ConstructSqeForOverflowSwitchSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &ConstructSqeForStreamTagSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
+    g_toSqeFunc[TS_TASK_TYPE_WRITE_VALUE] = &ConstructSqeForWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CMO] = &ConstructSqeForCmoTask;
+    g_toSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructSqeForBarrierTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructSqeForRdmaDbSendTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructSqeForNotifyRecordTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructSqeForNotifyWaitTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ConstructSqeForStreamSwitchTask;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ConstructSqeForStreamActiveTask;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_SET] = &ConstructSqeForLabelSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_LABEL_GOTO] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
+    g_toSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructSqeBase;
+    g_toSqeFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ConstructSqeForDataDumpLoadInfoTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ConstructSqeForDebugRegisterTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ConstructSqeForDebugUnRegisterTask;
+    g_toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
+    g_toSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructSqeForGetDevMsgTask;
+    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructSqeForDebugRegisterForStreamTask;
+    g_toSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructSqeForAllocDsaAddrTask;
+    g_toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
+    g_toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
+    g_toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
+    g_toSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructSqeForUpdateAddressTask;
+    g_toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
+    g_toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
+    g_toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
+    g_toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructSqeForMemWaitValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructSqeForMemWaitValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructSqeForMemWriteValueTask;
+    g_toSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructSqeForMemWaitValueTask;
+}
+
 void RegTaskToCommandFunc(void)
 {
     g_toCommandFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ToCommandBodyForAicpuTask;
@@ -1099,86 +1179,6 @@ static void RegSetStarsResultFunc(void)
     g_setStarsResultFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &SetStarsResultForEventWaitTask;
     g_setStarsResultFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &SetStarsResultForStarsVersionTask;
     g_setStarsResultFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &SetStarsResultForAicpuInfoLoadTask;
-}
-
-static void RegTaskToSqefunc(void)
-{
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU] = &ConstructAICpuSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &ConstructAicAivSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE] = &ConstructAicAivSqeForDavinciTask;
-    g_toSqeFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &ConstructSqeForDavinciMultipleTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructSqeForMemcpyAsyncTask;
-    g_toSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_EVENT_RECORD] = &ConstructSqeForEventRecordTask;
-    g_toSqeFunc[TS_TASK_TYPE_EVENT_RESET] = &ConstructSqeForEventResetTask;
-    g_toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
-    g_toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
-    g_toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
-    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_START] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_ONLINEPROF_STOP] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_ADCPROF] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructSqeForModelMaintainceTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructSqeForModelExecuteTask;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &ConstructSqeRdmaPiValueModifyTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ConstructSqeForDebugUnRegisterForStreamTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
-    g_toSqeFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ConstructSqeForCallbackLaunchTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ConstructSqeForStreamLabelSwitchByIndexTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STARS_COMMON] = &ConstructSqeForStarsCommonTask;
-    g_toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
-    g_toSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructSqeForNpuGetFloatStaTask;
-    g_toSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructSqeForNpuClrFloatStaTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &ConstructSqeForOverflowSwitchSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &ConstructSqeForStreamTagSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
-    g_toSqeFunc[TS_TASK_TYPE_WRITE_VALUE] = &ConstructSqeForWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CMO] = &ConstructSqeForCmoTask;
-    g_toSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructSqeForBarrierTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructSqeForRdmaDbSendTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructSqeForNotifyRecordTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructSqeForNotifyWaitTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ConstructSqeForStreamSwitchTask;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ConstructSqeForStreamActiveTask;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_SET] = &ConstructSqeForLabelSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_LABEL_GOTO] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
-    g_toSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructSqeBase;
-    g_toSqeFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ConstructSqeForDataDumpLoadInfoTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ConstructSqeForDebugRegisterTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ConstructSqeForDebugUnRegisterTask;
-    g_toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
-    g_toSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructSqeForGetDevMsgTask;
-    g_toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructSqeForDebugRegisterForStreamTask;
-    g_toSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructSqeForAllocDsaAddrTask;
-    g_toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
-    g_toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
-    g_toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
-    g_toSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructSqeForUpdateAddressTask;
-    g_toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
-    g_toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
-    g_toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
-    g_toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructSqeForMemWaitValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructSqeForMemWaitValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructSqeForMemWriteValueTask;
-    g_toSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructSqeForMemWaitValueTask;
 }
 
 static void RegPrintErrorInfoFunc(void)

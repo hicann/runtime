@@ -40,7 +40,7 @@ static void MacroInitDavid(rtSocType_t socType, RtMacroValue &value)
     value.expandStreamSqDepthAdapt = 7U;
     value.expandStreamAdditionalSqeNum = 8U;
     value.rsvAicpuStreamNum = 0U;
-    value.maxPhysicalStreamNum = value.maxAllocStreamNum;
+    value.maxPhysicalStreamNum = 2016U;
 }
 
 static DevDynInfoProcFunc CHIP_DAVID_PROC_FUNC = {

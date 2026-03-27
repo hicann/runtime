@@ -477,28 +477,6 @@ TEST_F(DavidStreamTest, ResClear_01)
     delete stream;
 }
 
-TEST_F(DavidStreamTest, ResClear_02)
-{
-    DavidStream *stream = new DavidStream(device_, 0, RT_STREAM_AICPU, nullptr);
-    rtError_t ret = stream->Setup();
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    TaskResManageDavid *taskRes = reinterpret_cast<TaskResManageDavid *>(stream->taskResMang_);
-    uint16_t tail = taskRes->taskResATail_.Value();
-    taskRes->taskResATail_.Set(10);
-
-    MOCKER_CPP_VIRTUAL(device_, &Device::GetDevRunningState)
-        .stubs()
-        .will(returnValue((uint32_t)DEV_RUNNING_NORMAL))
-        .then(returnValue((uint32_t)DEV_RUNNING_DOWN));
-
-    int32_t timeout = 60000;
-    rtError_t error = stream->ResClear(timeout);
-    taskRes->taskResATail_.Set(tail);
-    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
-    delete stream;
-}
-
 TEST_F(DavidStreamTest, DavidrtStreamTaskAbort_01)
 {
     rtStream_t stream = 0;
