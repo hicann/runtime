@@ -307,7 +307,7 @@ rtError_t UmaArgLoader::LoadForMix(const uint32_t kernelType, const rtArgsEx_t *
                                    rtSmDesc_t * const smDesc, Stream * const stm, ArgLoaderResult * const result, bool &mixOpt)
 {
     Handle *argHandle = nullptr;
-    rtError_t error;
+    rtError_t error = RT_ERROR_NONE;
     void *kerArgs = argsInfo->args;
     void *smArgs = smDesc;
     bool copyL2Desc = false;

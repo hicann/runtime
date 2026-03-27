@@ -2322,6 +2322,9 @@ rtError_t RawDevice::DeleteEndGraphNotifyInfo(const uint32_t streamId, Model* ca
         auto posIt = std::find(posList.begin(), posList.end(), endGraphNotifyPos);
         if (posIt != posList.end()) {
             posList.erase(posIt);
+        } else {
+            captureModelExeInfoLock_.unlock();
+            return RT_ERROR_NONE;
         }
 
         numOfPos = posList.size();

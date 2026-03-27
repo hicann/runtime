@@ -1291,6 +1291,9 @@ TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
     error = rawDevice->DeleteEndGraphNotifyInfo(streamId, RtPtrToPtr<CaptureModel *>(model1), 49);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rawDevice->DeleteEndGraphNotifyInfo(streamId, RtPtrToPtr<CaptureModel *>(model1), 49);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelDestroy(model2);
