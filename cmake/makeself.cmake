@@ -45,7 +45,7 @@ endif()
 if(CPACK_ENABLE_DEVICE)
     # 解压子工程包
     execute_process(
-        COMMAND tar --keep-old-files -zxpf "${STAGING_DIR}/subprjs/device-npu-runtime.tar.gz" -C "${STAGING_DIR}"
+        COMMAND tar --keep-old-files -zxpf "${STAGING_DIR}/device-npu-runtime.tar.gz" -C "${STAGING_DIR}"
         RESULT_VARIABLE RETCODE
     )
     if(RETCODE)
@@ -54,7 +54,7 @@ if(CPACK_ENABLE_DEVICE)
 endif()
 
 # 刪除子工程压缩包，避免打到run包中
-file(REMOVE_RECURSE "${STAGING_DIR}/subprjs")
+file(REMOVE "${STAGING_DIR}/device-npu-runtime.tar.gz")
 
 if(CPACK_REMOVE_LIB_FILES)
     message("Remove files from ${CPACK_CMAKE_BINARY_DIR}/_CPack_Packages/makeself_staging/lib")

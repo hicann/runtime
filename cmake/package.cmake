@@ -332,13 +332,13 @@ install(TARGETS platform
 )
 
 install(TARGETS platform stub_acl_rt stub_acl_tdt_channel stub_acl_tdt_queue stub_acl_prof stub_error_manager ascend_hal_stub
-        LIBRARY DESTINATION runtime/devlib/linux/${HOST_ARCH} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
-        ARCHIVE DESTINATION runtime/devlib/linux/${HOST_ARCH} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
+        LIBRARY DESTINATION runtime/devlib/linux/${TARGET_ARCH} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
+        ARCHIVE DESTINATION runtime/devlib/linux/${TARGET_ARCH} ${INSTALL_OPTIONAL} COMPONENT npu-runtime
 )
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/lib_acl/stub/linux/${HOST_ARCH}/libascendcl.so
-    DESTINATION runtime/devlib/linux/${HOST_ARCH}
+    ${CMAKE_BINARY_DIR}/lib_acl/stub/linux/${TARGET_ARCH}/libascendcl.so
+    DESTINATION runtime/devlib/linux/${TARGET_ARCH}
     ${INSTALL_OPTIONAL}
     COMPONENT npu-runtime
 )

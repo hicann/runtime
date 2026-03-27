@@ -11,13 +11,6 @@
 cmake_minimum_required(VERSION 3.14)
 project (rts)
 
-if(NOT ENABLE_COV AND NOT ENABLE_UT)
-    set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE PATH "Project top directory")
-    include(${RUNTIME_DIR}/cmake/func.cmake)
-    set_common_params("${RUNTIME_DIR}")
-    set_runtime_params()
-endif()
-
 include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)
 
 add_subdirectory(aicpu_sched)
@@ -40,7 +33,7 @@ add_subdirectory(../stub stub)
 add_subdirectory(tprt)
 
 include(${RUNTIME_DIR}/version.cmake)
-if(ENABLE_OPEN_SRC)
+if(TOPLEVEL_PROJECT)
     check_pkg_build_deps("npu-runtime")
 endif()
 add_version_info_targets()

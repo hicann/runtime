@@ -59,7 +59,7 @@ if (ENABLE_COV OR ENABLE_UT)
     add_subdirectory(tests)
 endif()
 
-if(DEFINED ENV{TOOLCHAIN_DIR} AND NOT BUILD_HOST_ONLY)
+if(DEFINED ENV{TOOLCHAIN_DIR} AND ENABLE_BUILD_DEVICE)
     set(ENABLE_DEVICE ON)
 else()
     set(ENABLE_DEVICE OFF)
@@ -90,7 +90,6 @@ if(ENABLE_DEVICE)
             -DENABLE_SIGN=${ENABLE_SIGN}
             -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}
             -DVERSION_INFO=${VERSION_INFO}
-            -DCMAKE_SKIP_RPATH=TRUE
             -DENABLE_OPEN_SRC=TRUE
         INSTALL_COMMAND ${CMAKE_CPACK_COMMAND}
         BUILD_ALWAYS TRUE
@@ -98,12 +97,12 @@ if(ENABLE_DEVICE)
 
     install(FILES
         ${CMAKE_BINARY_DIR}/device_build/device-npu-runtime.tar.gz
-        DESTINATION subprjs
+        DESTINATION .
         COMPONENT npu-runtime
     )
 endif()
 
-if (ENABLE_OPEN_SRC AND NOT ENABLE_COV AND NOT ENABLE_UT)
+if (TOPLEVEL_PROJECT AND NOT ENABLE_COV AND NOT ENABLE_UT)
     include(${RUNTIME_DIR}/cmake/makeself-fetch.cmake)
     # ============= CPack =============
     # acl-compat do not need pack
@@ -117,7 +116,7 @@ if (ENABLE_OPEN_SRC AND NOT ENABLE_COV AND NOT ENABLE_UT)
     set(CPACK_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}")
     set(CPACK_CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     set(CPACK_CMAKE_CURRENT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-    set(CPACK_ARCH "${HOST_ARCH}")
+    set(CPACK_ARCH "${TARGET_ARCH}")
     set(CPACK_ENABLE_DEVICE "${ENABLE_DEVICE}")
     set(CPACK_SET_DESTDIR ON)
     set(CPACK_GENERATOR External)

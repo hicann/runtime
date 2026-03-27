@@ -56,7 +56,7 @@ checkopts() {
   BUILD_TYPE="Release"
   CUSTOM_SIGN_SCRIPT="${BASEPATH}/scripts/sign/community_sign_build.py"
   ENABLE_SIGN="OFF"
-  BUILD_HOST_ONLY="OFF"
+  ENABLE_BUILD_DEVICE="ON"
   VERSION_INFO="8.5.0"
 
   if [ -z "$ASCEND_INSTALL_PATH" ]; then
@@ -104,7 +104,7 @@ checkopts() {
         shift
         ;;
       --build_host_only)
-        BUILD_HOST_ONLY="on"
+        ENABLE_BUILD_DEVICE="OFF"
         shift
         ;;
       --build-type)
@@ -230,7 +230,7 @@ build_rts() {
               -DENABLE_ASAN=${ENABLE_ASAN} \
               -DENABLE_UT=${ENABLE_UT} \
               -DENABLE_SIGN=${ENABLE_SIGN} \
-              -DBUILD_HOST_ONLY=${BUILD_HOST_ONLY} \
+              -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE} \
               -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT} \
               -DVERSION_INFO=${VERSION_INFO}"
 

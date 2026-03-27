@@ -487,21 +487,35 @@ macro(set_common_params base_dir)
     set(INSTALL_INCLUDE_DIR include)
     set(INSTALL_CONFIG_DIR cmake)
 
-    set(INSTALL_OPTIONAL "OPTIONAL")
     if(ENABLE_OPEN_SRC)
+        # install时不添加OPTIONAL选项，以保证打包产物完整
         set(INSTALL_OPTIONAL)
     endif()
+
     set(PROJECT_BASE_DIR "${base_dir}")  # 工程根目录，仅在func.cmake中使用
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _ARCH_LOW)
+    if (_ARCH_LOW MATCHES "x86_64|amd64")
         message(STATUS "Detected architecture: x86_64")
-        set(HOST_ARCH x86_64)
-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|arm")
+        set(TARGET_ARCH x86_64)
+    elseif (_ARCH_LOW MATCHES "aarch64|arm64|arm")
         message(STATUS "Detected architecture: aarch64")
-        set(HOST_ARCH aarch64)
+        set(TARGET_ARCH aarch64)
     else ()
         message(WARNING "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
     endif ()
+
+    if(NOT ENABLE_COV AND NOT ENABLE_UT)
+        set(CMAKE_SKIP_RPATH TRUE)
+    endif()
+
+    if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+        # 单仓编译
+        set(TOPLEVEL_PROJECT ON)
+    else()
+        # 多仓联编
+        set(TOPLEVEL_PROJECT OFF)
+    endif()
 endmacro()
 
 # 设置rts参数

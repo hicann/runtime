@@ -68,4 +68,6 @@ install(FILES
   COMPONENT npu-runtime
 )
 
-set_subprj_package()
+if(TOPLEVEL_PROJECT)
+  set_subprj_package()
+endif()
