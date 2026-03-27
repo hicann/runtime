@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,7 +27,7 @@ aclError aclrtSetMemcpyDesc(void *desc, aclrtMemcpyKind kind, void *srcAddr, voi
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | desc | 输出 | 内存复制描述符地址指针。<br>需先调用[aclrtGetMemcpyDescSize](aclrtGetMemcpyDescSize.md)接口获取内存描述符所需的内存大小，再申请Device内存后（例如aclrtMalloc接口），将Device内存地址作为入参传入此处。 |
-| kind | 输入 | 内存复制的类型。<br>当前仅支持ACL_MEMCPY_INNER_DEVICE_TO_DEVICE，表示Device内的内存复制。 |
+| kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。<br>当前仅支持ACL_MEMCPY_INNER_DEVICE_TO_DEVICE，表示Device内的内存复制。 |
 | srcAddr | 输入 | 源内存地址指针。<br>由用户申请内存并管理内存。 |
 | dstAddr | 输入 | 目的内存地址指针。<br>由用户申请内存并管理内存。 |
 | count | 输入 | 内存复制的长度，单位Byte。 |

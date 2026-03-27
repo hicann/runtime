@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,9 +28,9 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| handle | 输出 | 存放物理内存信息的handle。 |
+| handle | 输出 | 存放物理内存信息的handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。 |
 | size | 输入 | 物理内存大小，单位Byte。<br>先调用[aclrtMemGetAllocationGranularity](aclrtMemGetAllocationGranularity.md)接口获取内存申请粒度，然后再调用本接口申请物理内存时size按获取到的内存申请粒度对齐，以便节约内存。 |
-| prop | 输入 | 物理内存属性信息。 |
+| prop | 输入 | 物理内存属性信息。类型定义请参见[aclrtPhysicalMemProp](aclrtPhysicalMemProp.md)。 |
 | flags | 输入 | 预留，当前只能设置为0。 |
 
 ## 返回值说明
@@ -46,6 +47,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 
         仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
 
+        其它型号当前不支持该类型。
+
     -   ACL\_MEM\_P2P\_NORMAL：用于Device间数据复制的普通内存。
     -   ACL\_MEM\_P2P\_HUGE：用于Device间数据复制的大页内存，内存申请粒度为2M。
     -   ACL\_MEM\_P2P\_HUGE1G：用于Device间数据复制的大页内存，内存申请粒度为1G，仅支持Device。
@@ -56,6 +59,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 
     -   ACL\_HBM\_MEM\_HUGE：2M粒度对齐的大页内存。
     -   ACL\_HBM\_MEM\_HUGE1G：1G粒度对齐的大页内存，仅支持Device。
+
+        Ascend 950PR/Ascend950DT支持该类型。
 
         Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
 

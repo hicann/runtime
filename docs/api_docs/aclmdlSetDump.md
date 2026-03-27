@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -30,11 +31,29 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 | --- | --- | --- |
 | dumpCfgPath | 输入 | 配置文件路径的指针，包含文件名。配置文件格式为json格式。<br>可通过该配置文件配置开启或配置各类Dump信息，详细描述请参见下文各功能配置示例中的描述。如果算子输入或输出中包含用户的敏感信息，则存在信息泄露风险。 |
 
+## 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
+
+## 约束说明
+
+-   只有在调用本接口开启Dump之后加载模型，配置的Dump信息有效。在调用本接口之前已经加载的模型不受影响，除非用户在调用本接口后重新加载该模型。
+
+    例如以下接口调用顺序中，加载的模型1不受影响，配置的Dump信息仅对加载的模型2有效：
+
+    [aclmdlInitDump](aclmdlInitDump.md)接口--\>模型1加载--\>aclmdlSetDump接口--\>模型2加载--\>[aclmdlFinalizeDump](aclmdlFinalizeDump.md)接口
+
+-   多次调用本接口对同一个模型配置了Dump信息，系统内处理时会采用覆盖策略。
+
+    例如以下接口调用顺序中，第二次调用本接口配置的Dump信息会覆盖第一次配置的Dump信息：
+
+    [aclmdlInitDump](aclmdlInitDump.md)接口--\>aclmdlSetDump接口--\>aclmdlSetDump接口--\>模型1加载--\>[aclmdlFinalizeDump](aclmdlFinalizeDump.md)接口
+
 ## 模型Dump配置、单算子Dump配置
 
 **模型Dump配置**（用于导出模型中每一层算子输入和输出数据）、**单算子Dump配置**（用于导出单个算子的输入和输出数据），导出的数据用于与指定模型或算子进行比对，定位精度问题，具体比对方法请参见《精度调试工具用户指南》。**默认不启用该Dump配置。**
 
-通过本接口启用Dump配置，需通过dump\_path参数配置Dump数据的落盘路径。
+通过本接口启用Dump配置，需通过dump\_path参数配置保存Dump数据的路径。
 
 模型Dump配置示例如下：
 
@@ -90,9 +109,9 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 | dump_mode | dump数据模式。<br><br>  - input：dump算子的输入数据。<br>  - output：dump算子的输出数据，默认取值output。<br>  - all：dump算子的输入、输出数据。注意，配置为all时，由于部分算子在执行过程中会修改输入数据，例如集合通信类算子HcomAllGather、HcomAllReduce等，因此系统在进行dump时，会在算子执行前dump算子输入，在算子执行后dump算子输出，这样，针对同一个算子，算子输入、输出的dump数据是分开落盘，会出现多个dump文件，在解析dump文件后，用户可通过文件内容判断是输入还是输出。 |
 | dump_level | dump数据级别，取值：<br><br>  - op：按算子级别dump数据。<br>  - kernel：按kernel级别dump数据。<br>  - all：默认值，op和kernel级别的数据都dump。<br><br>默认配置下，dump数据文件会比较多，例如有一些aclnn开头的dump文件，若用户对dump性能有要求或内存资源有限时，则可以将该参数设置为op级别，以便提升dump性能、精简dump数据文件数量。<br>说明：算子是一个运算逻辑的表示（如加减乘除运算），kernel是运算逻辑真正进行计算处理的实现，需要分配具体的计算设备完成计算。 |
 | dump_op_switch | 单算子调用场景（包括单算子模型执行和单算子API执行）下，是否开启dump数据采集。<br><br>  - on：开启。<br>  - off：关闭，默认取值off。 |
-| dump_step | 指定采集哪些迭代的dump数据。推理场景无需配置。<br>不配置该参数，默认所有迭代都会产生dump数据，数据量比较大，建议按需指定迭代。<br>多个迭代用“|”分割，例如：0|5|10；也可以用“-”指定迭代范围，例如：0|3-5|10。<br>配置示例：<br>{<br>	"dump":{<br>		"dump_list":[   <br>			...... <br>		],  <br>		"dump_path":"/home/output",<br>   "dump_mode":"output",<br>		"dump_op_switch":"off",<br>   "dump_step": "0|3-5|10"<br>	}  <br>}<br>训练场景下，若通过acl.json中的dump_step参数指定采集哪些迭代的dump数据，又同时在GEInitialize接口中配置了ge.exec.dumpStep参数（该参数也用于指定采集哪些迭代的dump数据），则以最后配置的参数为准。GEInitialize接口的详细介绍请参见《图模式开发指南》。 |
+| dump_step | 指定采集哪些迭代的dump数据。推理场景无需配置。<br>不配置该参数，默认所有迭代都会产生dump数据，数据量比较大，建议按需指定迭代。<br>多个迭代用“|”分割，例如：0|5|10；也可以用“-”指定迭代范围，例如：0|3-5|10。<br>配置示例：<br>{<br>	"dump":{<br>		"dump_list":[   <br>			...... <br>		],  <br>		"dump_path":"/home/output",<br>   "dump_mode":"output",<br>		"dump_op_switch":"off",<br>   "dump_step": "0|3-5|10"<br>	}  <br>}<br>训练场景下，若通过acl.json中的dump_step参数指定采集哪些迭代的dump数据，又同时在GEInitialize接口中配置了ge.exec.dumpStep参数（该参数也用于指定采集哪些迭代的dump数据），则以最后配置的参数为准。GEInitialize接口的详细介绍请参见《图引擎开发指南》。 |
 | dump_data | 算子dump内容类型，取值：<br><br>  - tensor: dump算子数据，默认为tensor。<br>  - stats: dump算子统计数据，结果文件为csv格式，文件中包含算子名称、输入/输出的数据类型、最大值、最小值等。<br><br>通常dump数据量太大并且耗时长，可以先对算子统计数据进行dump，根据统计数据识别可能异常的算子，然后再dump算子数据。 |
-| dump_stats | 仅Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该参数，当dump_data=stats时，可通过本参数设置收集统计数据中的哪一类数据，本参数取值如下（若不指定取值，默认采集Max、Min、Avg、Nan、Negative Inf、Positive Inf数据）：<br><br>  - Max：dump算子统计数据中的最大值。<br>  - Min：dump算子统计数据中的最小值。<br>  - Avg：dump算子统计数据中的平均值。<br>  - Nan：dump算子统计数据中未定义或不可表示的数值，仅针对浮点类型half、bfloat、float。<br>  - Negative Inf：dump算子统计数据中的负无穷值，仅针对浮点类型half、bfloat、float。<br>  - Positive Inf：dump算子统计数据中的正无穷值，仅针对浮点类型half、bfloat、float。<br>  - L2norm：dump算子统计数据的L2Norm值。<br><br>配置示例：<br>{<br>   "dump":{<br>	"dump_list":[   <br>		...... <br>	],  <br>   "dump_path":"/home/output",<br>   "dump_mode":"output",<br>   "dump_data":"stats",<br>   "dump_stats":["Max", "Min"]<br>   }<br>} |
+| dump_stats | 当dump_data=stats时，可通过本参数设置收集统计数据中的哪一类数据。<br>仅Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该参数。<br>本参数取值如下（若不指定取值，默认采集Max、Min、Avg、Nan、Negative Inf、Positive Inf数据）：<br><br>  - Max：dump算子统计数据中的最大值。<br>  - Min：dump算子统计数据中的最小值。<br>  - Avg：dump算子统计数据中的平均值。<br>  - Nan：dump算子统计数据中未定义或不可表示的数值，仅针对浮点类型half、bfloat、float。<br>  - Negative Inf：dump算子统计数据中的负无穷值，仅针对浮点类型half、bfloat、float。<br>  - Positive Inf：dump算子统计数据中的正无穷值，仅针对浮点类型half、bfloat、float。<br>  - L2norm：dump算子统计数据的L2Norm值。<br><br>配置示例：<br>{<br>   "dump":{<br>	"dump_list":[   <br>		...... <br>	],  <br>   "dump_path":"/home/output",<br>   "dump_mode":"output",<br>   "dump_data":"stats",<br>   "dump_stats":["Max", "Min"]<br>   }<br>} |
 
 ## 配置文件示例（异常算子Dump配置）
 
@@ -147,7 +166,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 ## 溢出算子Dump配置
 
-**溢出算子Dump配置**（用于导出模型中溢出算子的输入和输出数据），导出的数据用于分析溢出原因，定位模型精度的问题。**默认不启用该Dump配置。**
+**溢出算子Dump配置**，用于导出模型中溢出算子的输入和输出数据。导出的数据用于分析溢出原因，定位模型精度的问题。**默认不启用该Dump配置。**
 
 将dump\_debug参数设置为on表示开启溢出算子配置，配置文件中的示例内容如下：
 
@@ -177,7 +196,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 ## 算子Dump Watch模式配置
 
-**算子Dump Watch模式配置**（用于开启指定算子输出数据的观察模式），在定位部分算子精度问题且已排除算子本身的计算问题后，若怀疑被其它算子踩踏内存导致精度问题，可开启Dump Watch模式。**默认不开启Dump Watch模式。**
+**算子Dump Watch模式配置**，用于开启指定算子输出数据的观察模式。在定位部分算子精度问题且已排除算子本身的计算问题后，若怀疑被其它算子踩踏内存导致精度问题，可开启Dump Watch模式。**默认不开启Dump Watch模式。**
 
 将dump\_scene参数设置为watcher，开启算子Dump Watch模式，配置文件中的示例内容如下，配置效果为：（1）当执行完A算子、B算子时，会把C算子和D算子的输出Dump出来；（2）当执行完C算子、D算子时，也会把C算子和D算子的输出Dump出来。将（1）、（2）中的C算子、D算子的Dump文件进行比较，用于排查A算子、B算子是否会踩踏C算子、D算子的输出内存。
 
@@ -218,11 +237,19 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 -   通过dump\_mode参数控制导出watcher\_nodes中所配置算子的哪部分数据，当前仅支持配置为output。
 
-## 算子Kernel调测数据Dump配置
+## 算子Kernel调测信息Dump配置
 
-**算子Kernel调测数据Dump配置**，用于导出Ascend C算子Kernel的调测信息，便于算子问题定位。**默认不启用该Dump配置。**
+**算子Kernel调测信息Dump配置**，用于导出Ascend C算子Kernel的调测信息，便于定位算子问题。**默认不启用该Dump配置。**
 
-配置dump\_kernel\_data参数值开启算子Kernel数据Dump功能，配置文件中的示例如下：
+仅如下型号支持该配置：
+
+Ascend 950PR/Ascend950DT
+
+Atlas A3 训练系列产品/Atlas A3 推理系列产品
+
+Atlas A2 训练系列产品/Atlas A2 推理系列产品
+
+配置dump\_kernel\_data参数开启算子Kernel调测信息Dump功能，配置文件中的示例如下：
 
 ```
 {
@@ -235,34 +262,21 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 详细配置说明及约束如下：
 
--   dump_kernel_data：指定导出数据的类型，支持配置多个类型，用英文逗号隔开。如果未配置该字段，但启用了模型Dump配置、单算子Dump配置，则默认按all导出调测信息。
-    -    all：导出以下所有类型调测的输出数据。
-    -    printf：导出通过AscendC::printf调测的输出数据。
-    -    tensor：导出通过AscendC::DumpTensor调测的输出数据。
-    -    assert：导出通过assert/ascendc_assert调测的输出数据。
-    -    timestamp：导出通过AscendC::PrintTimeStamp调测的输出数据。
+-   dump\_kernel\_data：指定导出数据的类型，支持配置多个类型，用英文逗号隔开。如果未配置该字段，但启用了模型Dump配置、单算子Dump配置，则默认按all导出调测信息。
 
--   dump_path：启用算子Kernel数据Dump功能时，dump\_path必须配置，表示导出Dump文件的存储路径，支持配置绝对路径或相对路径。
+    当前支持如下类型：
+
+    -   all：导出以下所有类型调测的输出数据。
+    -   printf：导出通过AscendC::printf调测的输出数据。
+    -   tensor：导出通过AscendC::DumpTensor调测的输出数据。
+    -   assert：导出通过assert/ascendc\_assert调测的输出数据。
+    -   timestamp：导出通过AscendC::PrintTimeStamp调测的输出数据。
+
+-   dump\_path：启用算子Kernel调测信息Dump功能时，dump\_path必须配置，表示导出Dump文件的存储路径，支持配置绝对路径或相对路径。
+
     Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见《环境变量参考》。
-    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show_kernel_debug_data工具将调测信息解析为可读格式，工具使用指导请参见《Ascend C算子开发指南》中的“编程指南 > 附录 > show_kernel_debug_data工具”。
 
-## 返回值说明
-
-返回0表示成功，返回其他值表示失败，请参见[aclError](aclError.md)。
-
-## 约束说明
-
--   只有在调用本接口开启Dump之后加载模型，配置的Dump信息有效。在调用本接口之前已经加载的模型不受影响，除非用户在调用本接口后重新加载该模型。
-
-    例如以下接口调用顺序中，加载的模型1不受影响，配置的Dump信息仅对加载的模型2有效：
-
-    [aclmdlInitDump](aclmdlInitDump.md)接口--\>模型1加载--\>aclmdlSetDump接口--\>模型2加载--\>[aclmdlFinalizeDump](aclmdlFinalizeDump.md)接口
-
--   多次调用本接口对同一个模型配置了Dump信息，系统内处理时会采用覆盖策略。
-
-    例如以下接口调用顺序中，第二次调用本接口配置的Dump信息会覆盖第一次配置的Dump信息：
-
-    [aclmdlInitDump](aclmdlInitDump.md)接口--\>aclmdlSetDump接口--\>aclmdlSetDump接口--\>模型1加载--\>[aclmdlFinalizeDump](aclmdlFinalizeDump.md)接口
+    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见《Ascend C算子开发指南》中的”。
 
 ## 参考资源
 

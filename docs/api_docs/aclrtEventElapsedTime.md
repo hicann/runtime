@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,8 +27,8 @@ aclError aclrtEventElapsedTime(float *ms, aclrtEvent startEvent, aclrtEvent endE
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | ms | 输出 | 表示两个Event之间耗时的指针，单位为毫秒。 |
-| startEvent | 输入 | 起始Event。 |
-| endEvent | 输入 | 结尾Event。 |
+| startEvent | 输入 | 起始Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
+| endEvent | 输入 | 结尾Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
 
 ## 返回值说明
 

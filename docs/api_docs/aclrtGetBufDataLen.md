@@ -17,7 +17,7 @@ aclError aclrtGetBufDataLen(aclrtMbuf buf, size_t *len)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输入 | 共享Buffer，须通过[aclrtAllocBuf](aclrtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
+| buf | 输入 | 共享Buffer，类型定义请参见[aclrtMbuf](aclrtMbuf.md)。<br>须通过[aclrtAllocBuf](aclrtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
 | len | 输出 | 有效数据的长度，单位为Byte。 |
 
 ## 返回值说明

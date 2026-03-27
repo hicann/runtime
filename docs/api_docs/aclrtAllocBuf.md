@@ -15,7 +15,7 @@ aclError aclrtAllocBuf(aclrtMbuf *buf, size_t size)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输出 | 申请到的共享Buffer。 |
+| buf | 输出 | 申请到的共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
 | size | 输入 | 用于指定数据区的内存大小，单位Byte，不能超过4G。 |
 
 ## 返回值说明

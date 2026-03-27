@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclrtMemSetAccess(void* virPtr, size_t size, aclrtMemAccessDesc* desc, 
 | --- | --- | --- |
 | virPtr | 输入 | 虚拟内存的起始地址。<br>必须与[aclrtMapMem](aclrtMapMem.md)接口的virPtr地址相同。 |
 | size | 输入 | 虚拟内存的长度。<br>必须与[aclrtMapMem](aclrtMapMem.md)接口的size相同。 |
-| desc | 输入 | 内存访问的配置信息，包含内存访问保护标志、内存所在位置等。 |
+| desc | 输入 | 内存访问的配置信息，包含内存访问保护标志、内存所在位置等。类型定义请参见[aclrtMemAccessDesc](aclrtMemAccessDesc.md)。 |
 | count | 输入 | desc数组长度。 |
 
 ## 返回值说明

@@ -7,6 +7,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,9 +26,9 @@ aclError aclmdlRICaptureGetInfo(aclrtStream stream, aclmdlRICaptureStatus *statu
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。 |
-| status | 输出 | Stream上任务的捕获状态。 |
-| modelRI | 输出 | 模型运行实例，该模型用于暂存所捕获的任务。<br>若本接口指定的Stream不在捕获状态，则此处返回的modelRI无效。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| status | 输出 | Stream上任务的捕获状态。类型定义请参见[aclmdlRICaptureStatus](aclmdlRICaptureStatus.md)。 |
+| modelRI | 输出 | 模型运行实例，该模型用于暂存所捕获的任务。类型定义请参见[aclmdlRI](aclmdlRI.md)。<br>若本接口指定的Stream不在捕获状态，则此处返回的modelRI无效。 |
 
 ## 返回值说明
 

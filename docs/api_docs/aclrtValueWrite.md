@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,7 +27,7 @@ aclError aclrtValueWrite(void* devAddr, uint64_t value, uint32_t flag, aclrtStre
 | devAddr | 输入 | Device侧内存地址。<br>此处需用户提前申请Device内存（例如调用aclrtMalloc接口），devAddr要求8字节对齐，有效内存位宽为64bit。 |
 | value | 输入 | 需向内存中写入的数据。 |
 | flag | 输入 | 预留参数，当前固定设置为0。 |
-| stream | 输入 | 执行写数据任务的stream。<br>此处支持传NULL，表示使用默认Stream。 |
+| stream | 输入 | 执行写数据任务的stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处支持传NULL，表示使用默认Stream。 |
 
 ## 返回值说明
 

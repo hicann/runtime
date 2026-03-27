@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclprofModelSubscribe(uint32_t modelId, const aclprofSubscribeConfig *p
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelId | 输入 | 待订阅的网络模型的ID。<br>调用aclmdlLoadFromFile接口/aclmdlLoadFromMem接口/aclmdlLoadFromFileWithMem接口/aclmdlLoadFromMemWithMem接口加载模型成功后，会返回模型ID。 |
+| modelId | 输入 | 待订阅的网络模型的ID。<br>调用aclmdlLoadFromFile接口/aclmdlLoadFromMem接口/aclmdlLoadFromFileWithMem接口/aclmdlLoadFromMemWithMem接口加载模型成功后，会返回模型ID。<br>类型定义请参见[aclprofSubscribeConfig](aclprofSubscribeConfig.md)。 |
 | profSubscribeConfig | 输入 | 待订阅的配置信息。<br>需提前调用[aclprofCreateSubscribeConfig](aclprofCreateSubscribeConfig.md)接口创建aclprofSubscribeConfig类型的数据。 |
 
 ## 返回值说明

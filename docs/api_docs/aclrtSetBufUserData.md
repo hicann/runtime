@@ -15,7 +15,7 @@ aclError aclrtSetBufUserData(aclrtMbuf buf, const void *dataPtr, size_t size, si
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输出 | 共享Buffer，须通过[aclrtAllocBuf](aclrtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
+| buf | 输出 | 共享Buffer，类型定义请参见[aclrtMbuf](aclrtMbuf.md)。<br>须通过[aclrtAllocBuf](aclrtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
 | dataPtr | 输入 | 存放用户数据的内存地址指针。 |
 | size | 输入 | 用户数据的长度，单位为Byte。<br>数据长度小于或等于96Byte。 |
 | offset | 输入 | 地址偏移，单位为Byte。<br>偏移量小于或等于96Byte。 |

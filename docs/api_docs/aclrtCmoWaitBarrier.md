@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
@@ -23,8 +24,8 @@ aclError aclrtCmoWaitBarrier(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream,
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| taskInfo | 输入 | Cache内存操作的任务信息。<br>任务信息中的cmoType当前仅支持ACL_RT_CMO_TYPE_INVALID。 |
-| stream | 输入 | 执行等待任务的Stream。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
+| taskInfo | 输入 | Cache内存操作的任务信息。类型定义请参见[aclrtBarrierTaskInfo](aclrtBarrierTaskInfo.md)。<br>任务信息中的cmoType当前仅支持ACL_RT_CMO_TYPE_INVALID。 |
+| stream | 输入 | 执行等待任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
 | flag | 输入 | 预留参数。当前固定配置为0。 |
 
 ## 返回值说明

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtAllocatorRegister(aclrtStream stream, aclrtAllocatorDesc allocator
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 该Allocator需要注册的Stream。<br>传入的stream参数值不能为NULL，否则返回报错。 |
-| allocatorDesc | 输入 | Allocator描述符指针。 |
+| stream | 输入 | 该Allocator需要注册的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>传入的stream参数值不能为NULL，否则返回报错。 |
+| allocatorDesc | 输入 | Allocator描述符指针。类型定义请参见[aclrtAllocatorDesc](aclrtAllocatorDesc.md)。 |
 
 ## 返回值说明
 
@@ -34,7 +35,7 @@ aclError aclrtAllocatorRegister(aclrtStream stream, aclrtAllocatorDesc allocator
 
 -   当前仅支持在单算子模型执行、动态shape模型推理场景下使用本接口。
 
-    单算子模型场景下，需在算子执行接口（例如：aclopExecuteV2、aclopCompileAndExecuteV2等）之前调用本接口。
+    单算子模型场景下，需在算子执行接口（例如aclopExecuteV2）之前调用本接口。
 
     动态shape模型推理场景，本接口需配合aclmdlExecuteAsync接口一起使用，且需在aclmdlExecuteAsync接口之前调用本接口。
 

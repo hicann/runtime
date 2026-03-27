@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,9 +24,9 @@ aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num, aclrtLabelList *la
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| labels | 输入 | 标签数组。<br>数组中的标签需通过[aclrtCreateLabel](aclrtCreateLabel.md)接口创建。 |
+| labels | 输入 | 标签数组。类型定义请参见[aclrtLabel](aclrtLabel.md)。<br>数组中的标签需通过[aclrtCreateLabel](aclrtCreateLabel.md)接口创建。 |
 | num | 输入 | 标签数组长度，取值(0, 65535]。 |
-| labelList | 输出 | 标签列表。 |
+| labelList | 输出 | 标签列表。类型定义请参见[aclrtLabelList](aclrtLabelList.md)。 |
 
 ## 返回值说明
 

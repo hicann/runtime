@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| activeStream | 输入 | 待激活的Stream。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
-| stream | 输入 | 执行激活任务的Stream。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
+| activeStream | 输入 | 待激活的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
+| stream | 输入 | 执行激活任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
 
 ## 返回值说明
 

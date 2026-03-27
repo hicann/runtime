@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtKernelArgsGetPlaceHolderBuffer(aclrtArgsHandle argsHandle, aclrtPa
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| argsHandle | 输入 | 参数列表句柄。 |
-| paramHandle | 输入 | 参数句柄。<br>此处的paramHandle需与[aclrtKernelArgsAppendPlaceHolder](aclrtKernelArgsAppendPlaceHolder.md)接口中的paramHandle保持一致。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](aclrtArgsHandle.md)。 |
+| paramHandle | 输入 | 参数句柄。类型定义请参见[aclrtParamHandle](aclrtParamHandle.md)。<br>此处的paramHandle需与[aclrtKernelArgsAppendPlaceHolder](aclrtKernelArgsAppendPlaceHolder.md)接口中的paramHandle保持一致。 |
 | dataSize | 输入 | 内存大小。 |
 | bufferAddr | 输出 | paramHandle占位符指向的内存地址。<br>后续由用户管理该内存中的数据，但无需管理该内存的生命周期。 |
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -12,7 +13,7 @@
 
 在指定Stream中记录一个Event。异步接口。
 
-aclrtRecordEvent接口与aclrtStreamWaitEvent接口配合使用时，主要用于多Stream之间同步等待的场景，在调用aclrtRecordEvent接口时，系统内部会申请Event资源。
+aclrtRecordEvent接口与aclrtStreamWaitEvent接口配合使用时，主要用于多Stream之间同步等待的场景。
 
 调用aclrtRecordEvent接口时，会捕获当前Stream上已下发的任务，并记录到Event事件中，因此后续若调用[aclrtQueryEventStatus](aclrtQueryEventStatus.md)或[aclrtStreamWaitEvent](aclrtStreamWaitEvent.md)接口时，会检查或等待该Event事件中所捕获的任务都已经完成。
 
@@ -32,8 +33,8 @@ aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| event | 输入 | 待记录的Event。 |
-| stream | 输入 | 指定Stream。<br>多Stream同步等待场景下，例如，Stream2等待Stream1的场景，此处配置为Stream1。<br>如果使用默认Stream，此处设置为NULL。 |
+| event | 输入 | 待记录的Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>多Stream同步等待场景下，例如，Stream2等待Stream1的场景，此处配置为Stream1。 |
 
 ## 返回值说明
 

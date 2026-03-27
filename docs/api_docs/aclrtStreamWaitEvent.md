@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。<br>多Stream同步等待场景下，例如，Stream2等待Stream1的场景，此处配置为Stream2。<br>如果使用默认Stream，此处设置为NULL。 |
-| event | 输入 | 需等待的Event。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>多Stream同步等待场景下，例如，Stream2等待Stream1的场景，此处配置为Stream2。 |
+| event | 输入 | 需等待的Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,11 +24,11 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| funcHandle | 输入 | 调用[aclrtBinaryGetFunction](aclrtBinaryGetFunction.md)接口根据kernelName获取funcHandle。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。<br>调用[aclrtBinaryGetFunction](aclrtBinaryGetFunction.md)接口根据kernelName获取funcHandle。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
 | argsData | 输入 | 存放核函数所有入参数据的Device内存地址指针。<br>内存申请接口请参见[内存管理](内存管理.md)。<br>注意，执行本接口下发任务的Device需与argsData中使用的Device内存要是同一个Device。 |
 | argsSize | 输入 | argsData参数值的大小，单位为Byte。 |
-| stream | 输入 | 指定执行任务的Stream，可复用已创建的Stream节省资源或调用[aclrtCreateStream](aclrtCreateStream.md)接口创建Stream，再作为入参在此处传入。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

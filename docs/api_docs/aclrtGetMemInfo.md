@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| attr | 输入 | 需要查询的内存的属性值。 |
+| attr | 输入 | 需要查询的内存的属性值。类型定义请参见[aclrtMemAttr](aclrtMemAttr.md)。 |
 | free | 输出 | 对应属性内存空闲大小的指针，单位Byte。 |
 | total | 输出 | 对应属性内存总大小的指针，单位Byte。 |
 
@@ -34,11 +35,5 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
 ## 约束说明
 
 -   调用本接口前必须先指定用于计算的Device（例如调用aclrtSetDevice接口指定用于计算的Device），因此本接口中不体现Device ID。
--   请根据实际硬件支持的情况，选择对应属性的内存，否则调用本接口获取到的空闲大小和总大小都为0。
-
-    **该约束适用以下型号：**
-
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
-
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+-   请根据实际硬件支持的情况选择相应的内存属性；否则，通过本接口获取的空闲大小和总大小都将为0。如果硬件不支持HBM内存，在查询HBM内存信息时，接口将自动转换为查询DDR内存信息，例如，查询ACL\_HBM\_MEM时，接口实际会查询ACL\_DDR\_MEM。
 

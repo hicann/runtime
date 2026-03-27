@@ -7,3 +7,5 @@ typedef struct aclrtLaunchKernelCfg {
 } aclrtLaunchKernelCfg;
 ```
 
+attrs结构体定义请参见[aclrtLaunchKernelAttr](aclrtLaunchKernelAttr.md)。
+

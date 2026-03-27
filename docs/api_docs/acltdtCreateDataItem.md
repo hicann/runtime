@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -30,10 +31,10 @@ size_t size)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| tdtType | 输入 | tensor类型。 |
+| tdtType | 输入 | tensor类型。类型定义请参见[acltdtTensorType](acltdtTensorType.md)。 |
 | dims | 输入 | tensor的Shape。 |
 | dimNum | 输入 | tensor的Shape中的维度个数。 |
-| dataType | 输入 | 正常数据里的数据类型。 |
+| dataType | 输入 | 正常数据里的数据类型。类型定义请参见[aclDataType](aclDataType.md)。 |
 | data | 输入 | 数据地址指针。 |
 | size | 输入 | 数据长度。 |
 

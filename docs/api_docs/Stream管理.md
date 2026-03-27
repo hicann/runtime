@@ -40,7 +40,7 @@
 
 -   **[aclrtRegStreamStateCallback](aclrtRegStreamStateCallback.md)**  
 
--   **[aclrtStreamStop](aclrtStreamStop.md)**  
+-   **[acIrtStreamStop](acIrtStreamStop.md)**  
 
 -   **[aclrtPersistentTaskClean](aclrtPersistentTaskClean.md)**  
 

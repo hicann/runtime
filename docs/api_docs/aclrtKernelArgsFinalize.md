@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| argsHandle | 输入 | 参数列表句柄。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](aclrtArgsHandle.md)。 |
 
 ## 返回值说明
 

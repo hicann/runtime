@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -48,7 +49,7 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| notify | 输入 | 指定Notify。 |
+| notify | 输入 | 指定Notify。类型定义请参见[aclrtNotify](aclrtNotify.md)。 |
 | key | 输出 | Notify共享名称。 |
 | len | 输入 | Notify共享名称的长度，最小长度为65。 |
 | flags | 输入 | 是否启用进程白名单校验。<br>取值为如下宏：<br><br>  - ACL_RT_NOTIFY_EXPORT_FLAG_DEFAULT：默认值，启用进程白名单校验。配置为该值时，需单独调用[aclrtNotifySetImportPid](aclrtNotifySetImportPid.md)接口将使用Notify共享名称的进程ID设置为白名单。<br>  - ACL_RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION：关闭进程白名单校验。配置为该值时，则无需调用[aclrtNotifySetImportPid](aclrtNotifySetImportPid.md)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_NOTIFY_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x02UL |

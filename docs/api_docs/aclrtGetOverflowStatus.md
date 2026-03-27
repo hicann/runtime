@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,9 +24,9 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| outputAddr | 输入&输出 | 用户申请的Device内存，需通过aclrtMalloc接口申请。<br>如果需要在Host侧查看数据，可调用[aclrtMemcpy](aclrtMemcpy.md)或[aclrtMemcpyAsync](aclrtMemcpyAsync.md)接口，将Device侧的数据传输到Host侧。 |
+| outputAddr | 输入&输出 | 用户申请的Device内存，例如通过aclrtMalloc接口申请。 |
 | outputSize | 输入 | 需申请的Device内存大小，单位Byte，固定大小为64Byte。 |
-| stream | 输入 | 指定Stream，用于下发溢出状态查询任务。 |
+| stream | 输入 | 指定Stream，用于下发溢出状态查询任务。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 
@@ -35,6 +36,7 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 
 对于以下产品型号，调用本接口查询出来的溢出状态是进程级别的：
 
+-   Ascend 950PR/Ascend950DT
 -   Atlas A3 训练系列产品/Atlas A3 推理系列产品
 -   Atlas A2 训练系列产品/Atlas A2 推理系列产品
 

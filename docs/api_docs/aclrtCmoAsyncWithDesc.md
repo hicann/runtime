@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,8 +25,8 @@ aclError aclrtCmoAsyncWithDesc(void *cmoDesc, aclrtCmoType cmoType, aclrtStream 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | cmoDesc | 输入 | Cache内存描述符地址指针，Device侧内存地址。<br>此处需先调用aclrtCmoSetDesc接口设置内存描述符，再将内存描述符地址指针作为入参传入本接口。 |
-| stream | 输入 | 执行内存操作任务的Stream。 |
-| cmoType | 输入 | Cache内存操作类型。<br>当前仅支持ACL_RT_CMO_TYPE_PREFETCH（内存预取）。 |
+| cmoType | 输入 | Cache内存操作类型。类型定义请参见[aclrtCmoType](aclrtCmoType.md)。<br>当前仅支持ACL_RT_CMO_TYPE_PREFETCH（内存预取）。 |
+| stream | 输入 | 执行内存操作任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 | reserve | 输入 | 预留参数。当前固定传NULL。 |
 
 ## 返回值说明

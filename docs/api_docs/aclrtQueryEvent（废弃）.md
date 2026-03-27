@@ -7,6 +7,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| event | 输入 | 指定待查询的Event。 |
-| status | 输出 | Event状态的指针。 |
+| event | 输入 | 指定待查询的Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
+| status | 输出 | Event状态的指针。类型定义请参见[aclrtEventStatus](aclrtEventStatus.md)。 |
 
 ## 返回值说明
 

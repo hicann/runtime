@@ -17,7 +17,7 @@ aclError aclrtGetBufData(const aclrtMbuf buf, void **dataPtr, size_t *size)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输入 | 共享Buffer，须通过[acltdtAllocBuf](acltdtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
+| buf | 输入 | 共享Buffer，类型定义请参见[aclrtMbuf](aclrtMbuf.md)。<br>须通过[acltdtAllocBuf](acltdtAllocBuf.md)或[aclrtCopyBufRef](aclrtCopyBufRef.md)接口申请获得。 |
 | dataPtr | 输出 | 数据区指针（Device侧地址）。 |
 | size | 输出 | 数据区的长度，单位为Byte。 |
 

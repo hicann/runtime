@@ -15,9 +15,9 @@ aclError aclrtGetBufFromChain(aclrtMbuf headBuf, uint32_t index, aclrtMbuf *buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| headBuf | 输入 | Mbuf链表中的第一个共享Buffer。 |
+| headBuf | 输入 | Mbuf链表中的第一个共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
 | index | 输入 | Mbuf链表中的索引（从0开始计数）。 |
-| buf | 输出 | 输出第index个共享Buffer。 |
+| buf | 输出 | 输出第index个共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -28,7 +29,7 @@ aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemShared
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | shareableHandle | 输入 | 通过aclrtMemExportToShareableHandleV2接口导出的shareableHandle，表示指向共享句柄的指针。 |
-| shareType | 输入 | 导出的共享句柄类型。 |
+| shareType | 输入 | 导出的共享句柄类型。类型定义请参见[aclrtMemSharedHandleType](aclrtMemSharedHandleType.md)。 |
 | pid | 输入 | 用于存放白名单进程ID的数组。<br>进程ID可调用[aclrtDeviceGetBareTgid](aclrtDeviceGetBareTgid.md)接口获取，Docker场景下获取到的是物理机上的进程ID，非Docker场景下获取到的是进程ID。 |
 | pidNum | 输入 | 白名单进程数量，与pid参数数组的大小保持一致。 |
 

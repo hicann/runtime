@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -35,8 +36,8 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| event | 输入 | 指定Event。<br>仅支持通过[aclrtCreateEventExWithFlag](aclrtCreateEventExWithFlag.md)接口创建的、flag为ACL_EVENT_IPC的Event。 |
-| handle | 输出 | 进程间通信的Event句柄。 |
+| event | 输入 | 指定Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。<br>仅支持通过[aclrtCreateEventExWithFlag](aclrtCreateEventExWithFlag.md)接口创建的、flag为ACL_EVENT_IPC的Event。 |
+| handle | 输出 | 进程间通信的Event句柄。类型定义请参见[aclrtIpcEventHandle](aclrtIpcEventHandle.md)。 |
 
 ## 返回值说明
 

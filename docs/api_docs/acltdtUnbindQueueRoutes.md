@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList *qRouteList)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由去绑定结果。<br>可先通过[acltdtQueryQueueRoutes](acltdtQueryQueueRoutes.md)获取路由关系数组。 |
+| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由去绑定结果。类型定义请参见[acltdtQueueRouteList](acltdtQueueRouteList.md)。<br>可先通过[acltdtQueryQueueRoutes](acltdtQueryQueueRoutes.md)获取路由关系数组。 |
 
 ## 返回值说明
 

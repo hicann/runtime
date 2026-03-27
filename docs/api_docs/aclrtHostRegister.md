@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,7 +30,7 @@ aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type,
 | --- | --- | --- |
 | ptr | 输入 | Host内存地址。<br>Host内存地址需4K页对齐。<br>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost接口来申请Host锁页内存。<br>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。 |
 | size | 输入 | 内存大小，单位Byte。 |
-| type | 输入 | 内存注册类型。 |
+| type | 输入 | 内存注册类型。类型定义请参见[aclrtHostRegisterType](aclrtHostRegisterType.md)。 |
 | devPtr | 输出 | Host内存映射成的Device可访问的内存地址。 |
 
 ## 返回值说明

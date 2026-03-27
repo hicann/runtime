@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | x |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,8 +28,8 @@ aclError aclrtSetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, u
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。<br>若传入NULL，则表示默认Stream。 |
-| type | 输入 | 资源类型。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>若传入NULL，则表示默认Stream。 |
+| type | 输入 | 资源类型，请参见[aclrtDevResLimitType](aclrtDevResLimitType.md)。 |
 | value | 输入 | 资源限制的大小。 |
 
 ## 返回值说明

@@ -9,7 +9,7 @@
 ## 函数原型
 
 ```
-aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout);
+aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 ```
 
 ## 参数说明

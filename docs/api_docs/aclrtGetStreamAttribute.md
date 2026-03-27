@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,9 +24,9 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。 |
-| stmAttrType | 输入 | 属性类型。 |
-| value | 输出 | 属性值。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend950DT，不支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
+| stmAttrType | 输入 | 属性类型。类型定义请参见[aclrtStreamAttr](aclrtStreamAttr.md)。 |
+| value | 输出 | 属性值。类型定义请参见[aclrtStreamAttrValue](aclrtStreamAttrValue.md)。 |
 
 ## 返回值说明
 

@@ -5,12 +5,13 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-设置异常回调函数。
+设置异常回调函数。若多次设置异常回调函数，以最后一次设置为准。
 
 ## 函数原型
 
@@ -36,6 +37,5 @@ aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)
 
     **使用场景举例**：例如，在调用aclopExecuteV2接口前，调用aclrtSetExceptionInfoCallback接口设置异常回调函数，当算子在Device执行异常时，系统会向用户设置的异常回调函数中传入一个包含任务ID、Stream ID、线程ID、Device ID以及错误码的aclrtExceptionInfo结构体指针，并执行回调函数。
 
--   如果多次设置异常回调函数，以最后一次设置为准。
 -   如果想清空回调函数，可调用aclrtSetExceptionInfoCallback接口，将入参设置为空指针。
 

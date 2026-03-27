@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,7 +28,7 @@ aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy poli
 | --- | --- | --- |
 | devPtr | 输出 | “Device上已分配内存的指针”的指针。 |
 | size | 输入 | 申请内存的大小，单位Byte。<br>size不能为0。 |
-| policy | 输入 | 内存分配规则。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](aclrtMemMallocPolicy.md)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
+| policy | 输入 | 内存分配规则。类型定义请参见[aclrtMemMallocPolicy](aclrtMemMallocPolicy.md)。<br>若配置的内存分配规则超出[aclrtMemMallocPolicy](aclrtMemMallocPolicy.md)取值范围，size≥2M时，按大页申请内存，否则按普通页申请内存。 |
 
 ## 返回值说明
 

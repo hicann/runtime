@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,8 +27,8 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | binPath | 输入 | 算子二进制文件（*.o文件）的路径，要求绝对路径。<br>对于AI CPU算子，该参数支持传算子信息库文件（*.json）。 |
-| options | 输入 | 加载算子二进制文件的可选参数。 |
-| binHandle | 输出 | 标识算子二进制的句柄。 |
+| options | 输入 | 加载算子二进制文件的可选参数。类型定义请参见[aclrtBinaryLoadOptions](aclrtBinaryLoadOptions.md)。 |
+| binHandle | 输出 | 标识算子二进制的句柄。类型定义请参见[aclrtBinHandle](aclrtBinHandle.md)。 |
 
 ## 返回值说明
 

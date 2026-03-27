@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,7 +28,7 @@ aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelRI | 输入 | 模型运行实例，该模型用于暂存所编译的任务。 |
+| modelRI | 输入 | 模型运行实例，该模型用于暂存所编译的任务。类型定义请参见[aclmdlRI](aclmdlRI.md)。 |
 | flag | 输入 | 预留参数。当前固定配置为0。 |
 
 ## 返回值说明

@@ -1,5 +1,0 @@
-# aclrtMemPool
-
-```
-typedef void *aclrtMemPool;
-```

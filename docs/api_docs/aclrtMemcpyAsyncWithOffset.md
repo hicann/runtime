@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,8 +30,8 @@ aclError aclrtMemcpyAsyncWithOffset(void **dst, size_t destMax, size_t dstDataOf
 | src | 输入 | 源内存地址指针。 |
 | count | 输入 | 内存复制的长度，单位Byte。 |
 | srcDataOffset | 输入 | 源内存地址偏移。 |
-| kind | 输入 | 内存复制的类型。<br>当前kind只支持ACL_MEMCPY_INNER_DEVICE_TO_DEVICE（Device内的内存复制）。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。 |
+| kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。<br>当前kind只支持ACL_MEMCPY_INNER_DEVICE_TO_DEVICE（Device内的内存复制）。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

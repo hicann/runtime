@@ -17,13 +17,17 @@ typedef enum {
     ACL_FRACTAL_Z_3D = 33,
     ACL_FORMAT_NC = 35,
     ACL_FORMAT_NCL = 47,
-    ACL_FORMAT_FRACTAL_NZ_C0_16 = 50,  // 当前不支持该类型
-    ACL_FORMAT_FRACTAL_NZ_C0_32 = 51,  // 当前不支持该类型
-    ACL_FORMAT_FRACTAL_NZ_C0_2 = 52,   // 当前不支持该类型
-    ACL_FORMAT_FRACTAL_NZ_C0_4 = 53,   // 当前不支持该类型
-    ACL_FORMAT_FRACTAL_NZ_C0_8 = 54,   // 当前不支持该类型
+    ACL_FORMAT_FRACTAL_NZ_C0_16 = 50,
+    ACL_FORMAT_FRACTAL_NZ_C0_32 = 51,
+    ACL_FORMAT_FRACTAL_NZ_C0_2 = 52, 
+    ACL_FORMAT_FRACTAL_NZ_C0_4 = 53, 
+    ACL_FORMAT_FRACTAL_NZ_C0_8 = 54, 
 } aclFormat;
 ```
+
+各维度的含义如下：N（Batch）表示批量大小、H（Height）表示特征图高度、W（Width）表示特征图宽度、C（Channels）表示特征图通道、D（Depth）表示特征图深度、L是特征图长度。
+
+aclFormat各项含义如下：
 
 -   UNDEFINED：未知格式，默认值。
 -   NCHW：4维数据格式。
@@ -42,5 +46,5 @@ typedef enum {
 -   NCL：3维数据格式。
 -   FRACTAL\_NZ\_C0\__\[M\]_：内部用于分形的特殊数据排布格式，_\[M\]_代表C0的数值，当前支持（2, 4, 8, 16, 32）。用户目前无需使用。
 
-**各维度的含义如下**：N（Batch）表示批量大小、H（Height）表示特征图高度、W（Width）表示特征图宽度、C（Channels）表示特征图通道、D（Depth）表示特征图深度、L是特征图长度。
+    仅Ascend 950PR/Ascend950DT支持该类型。
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtFreePhysical(aclrtDrvMemHandle handle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| handle | 输入 | 待释放的物理内存信息handle。 |
+| handle | 输入 | 待释放的物理内存信息handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。 |
 
 ## 返回值说明
 

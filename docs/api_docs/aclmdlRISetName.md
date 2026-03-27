@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclmdlRISetName(aclmdlRI modelRI, const char *name)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelRI | 输入 | 模型运行实例。<br>modelRI支持通过以下方式获取：<br><br>  - 调用[aclmdlRICaptureBegin](aclmdlRICaptureBegin.md)接口捕获Stream上下发的任务后，可通过[aclmdlRICaptureGetInfo](aclmdlRICaptureGetInfo.md)接口获取模型运行实例，再传入本接口。<br>  - 调用[aclmdlRIBuildBegin](aclmdlRIBuildBegin.md)、[aclmdlRIBuildEnd](aclmdlRIBuildEnd.md)等接口构建模型运行实例，再传入本接口。 |
+| modelRI | 输入 | 模型运行实例。类型定义请参见[aclmdlRI](aclmdlRI.md)。<br>modelRI支持通过以下方式获取：<br><br>  - 调用[aclmdlRICaptureBegin](aclmdlRICaptureBegin.md)接口捕获Stream上下发的任务后，可通过[aclmdlRICaptureGetInfo](aclmdlRICaptureGetInfo.md)接口获取模型运行实例，再传入本接口。<br>  - 调用[aclmdlRIBuildBegin](aclmdlRIBuildBegin.md)、[aclmdlRIBuildEnd](aclmdlRIBuildEnd.md)等接口构建模型运行实例，再传入本接口。 |
 | name | 输入 | 名称。 |
 
 ## 返回值说明

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -15,7 +16,7 @@
 ## 函数原型
 
 ```
-aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **devArgsPtr, uint32 *devArgsLen)
+aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)
 ```
 
 ## 参数说明
@@ -25,7 +26,7 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 | --- | --- | --- |
 | info | 输入 | 异常信息的指针。 |
 | devArgsPtr | 输出 | 用户下发算子执行任务时的参数。 |
-| devArgsPtr | 输出 | 参数个数。 |
+| devArgsLen | 输出 | 参数个数。 |
 
 ## 返回值说明
 

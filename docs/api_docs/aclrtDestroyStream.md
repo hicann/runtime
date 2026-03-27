@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtDestroyStream(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 待销毁的Stream。 |
+| stream | 输入 | 待销毁的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

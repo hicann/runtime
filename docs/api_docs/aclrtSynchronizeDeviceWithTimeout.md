@@ -5,12 +5,13 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-阻塞应用程序运行，直到正在运算中的Device完成运算。该接口是在[aclrtSynchronizeDevice](aclrtSynchronizeDevice.md)接口基础上进行了增强，支持用户设置超时时间，当应用程序异常时可根据所设置的超时时间自行退出，超时退出时本接口返回ACL\_ERROR\_RT\_STREAM\_SYNC\_TIMEOUT。
+阻塞当前线程，直到与当前线程绑定的Context所对应的Device完成运算。该接口是在[aclrtSynchronizeDevice](aclrtSynchronizeDevice.md)接口基础上进行了增强，支持用户设置超时时间，当应用程序异常时可根据所设置的超时时间自行退出，超时退出时本接口返回ACL\_ERROR\_RT\_STREAM\_SYNC\_TIMEOUT。
 
 多Device场景下，调用该接口等待的是当前Context对应的Device。
 

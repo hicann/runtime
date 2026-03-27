@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -28,9 +29,9 @@ aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemShar
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | shareableHandle | 输入 | 待共享的shareableHandle，与[aclrtMemExportToShareableHandleV2](aclrtMemExportToShareableHandleV2.md)接口中导出的shareableHandle保持一致。<br>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一。 |
-| shareType | 输入 | 导出的共享句柄类型。 |
+| shareType | 输入 | 导出的共享句柄类型。类型定义请参见[aclrtMemSharedHandleType](aclrtMemSharedHandleType.md)。 |
 | flags | 输入 | 预留参数，当前固定设置为0。 |
-| handle | 输出 | 本进程的物理内存handle。 |
+| handle | 输出 | 本进程的物理内存handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。 |
 
 ## 返回值说明
 

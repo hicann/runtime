@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,10 +24,10 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| taskStream | 输入 | 目标任务所在的Stream。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
+| taskStream | 输入 | 目标任务所在的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口。 |
 | taskId | 输入 | 目标任务ID。<br>可调用[aclrtGetThreadLastTaskId](aclrtGetThreadLastTaskId.md)接口获取任务ID。 |
-| info | 输入 | 配置信息。 |
-| execStream | 输入 | 执行刷新任务的Stream。 |
+| info | 输入 | 配置信息。类型定义请参见[aclrtTaskUpdateInfo](aclrtTaskUpdateInfo.md)。 |
+| execStream | 输入 | 执行刷新任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

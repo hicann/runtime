@@ -5,12 +5,13 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-在本进程中获取key的信息，并返回本进程可以使用的Device内存地址指针。
+在本进程中导入key的信息，并返回本进程可以使用的Device内存地址指针。
 
 本接口需与其它接口配合使用，以便实现内存共享的目的，配合使用流程请参见[aclrtIpcMemGetExportKey](aclrtIpcMemGetExportKey.md)接口处的说明。
 

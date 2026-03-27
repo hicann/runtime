@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| notify | 输出 | Notify指针。 |
+| notify | 输出 | Notify指针。类型定义请参见[aclrtNotify](aclrtNotify.md)。 |
 | key | 输入 | Notify共享名称。<br>必须先调用[aclrtNotifyGetExportKey](aclrtNotifyGetExportKey.md)接口获取指定Notify的共享名称，再作为入参传入。 |
 | flags | 输入 | 是否开启两个Device之间的数据交互。<br>取值为如下宏：<br><br>  - ACL_RT_NOTIFY_IMPORT_FLAG_DEFAULT：默认值，关闭两个Device之间的数据交互。配置为该值时，需单独调用[aclrtDeviceEnablePeerAccess](aclrtDeviceEnablePeerAccess.md)接口开启两个Device之间的数据交互。<br>  - ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS：开启两个Device之间的数据交互。配置为该值时，则无需调用[aclrtDeviceEnablePeerAccess](aclrtDeviceEnablePeerAccess.md)接口。<br><br><br>宏的定义如下：<br>#define ACL_RT_NOTIFY_IMPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS 0x02UL |
 

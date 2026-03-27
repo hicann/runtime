@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtGetStreamOverflowSwitch(aclrtStream stream, uint32_t *flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 待操作Stream。<br>若传入NULL，则操作默认Stream。 |
+| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 | flag | 输出 | 溢出检测开关，取值范围如下：<br><br>  - 0：关闭<br>  - 1：打开 |
 
 ## 返回值说明

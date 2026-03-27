@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,7 +27,7 @@ aclError aclrtValueWait(void* devAddr, uint64_t value, uint32_t flag, aclrtStrea
 | devAddr | 输入 | Device侧内存地址。<br>devAddr的有效内存位宽为64bit。 |
 | value | 输入 | 需与内存中的数据作比较的值。 |
 | flag | 输入 | 比较的方式，等满足条件后解除阻塞。取值如下：<br>ACL_VALUE_WAIT_GEQ = 0x0;  // 等到(int64_t)(*devAddr - value) >= 0 <br>ACL_VALUE_WAIT_EQ = 0x1;  // 等到*devAddr == value<br>ACL_VALUE_WAIT_AND = 0x2;  // 等到(*devAddr & value) != 0<br>ACL_VALUE_WAIT_NOR = 0x3;  // 等到~(*devAddr | value) != 0 |
-| stream | 输入 | 执行等待任务的stream。<br>此处支持传NULL，表示使用默认Stream。 |
+| stream | 输入 | 执行等待任务的stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>此处支持传NULL，表示使用默认Stream。 |
 
 ## 返回值说明
 

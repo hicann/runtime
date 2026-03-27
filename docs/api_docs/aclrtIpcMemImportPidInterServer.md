@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
@@ -24,7 +25,7 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | key | 输入 | 进程间共享时使用的名称。<br>必须先调用[aclrtIpcMemGetExportKey](aclrtIpcMemGetExportKey.md)接口获取共享内存key，再作为入参传入。 |
-| serverPids | 输入 | 白名单信息数组。 |
+| serverPids | 输入 | 白名单信息数组。类型定义请参见[aclrtServerPid](aclrtServerPid.md)。 |
 | num | 输入 | serverPids数组的大小。 |
 
 ## 返回值说明

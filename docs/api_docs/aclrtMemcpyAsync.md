@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,8 +30,8 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 | destMax | 输入 | 目的内存地址的最大内存长度，单位Byte。 |
 | src | 输入 | 源内存地址指针。 |
 | count | 输入 | 内存复制的长度，单位Byte。 |
-| kind | 输入 | 内存复制的类型。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。 |
+| kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 
@@ -38,9 +39,5 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 
 ## 约束说明
 
-
-| 型号 | 约束 |
-| --- | --- |
-| 各型号通用 | - 调用本接口进行内存复制时，源地址和目的地址都必须64字节对齐。 |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | 本接口不支持异步Host内的内存复制功能，若传入的kind为ACL_MEMCPY_HOST_TO_HOST时，接口返回报错ACL_ERROR_RT_FEATURE_NOT_SUPPORT 。 |
+-   Ascend EP形态下，本接口不支持异步Host内的内存复制功能，若传入的kind为ACL\_MEMCPY\_HOST\_TO\_HOST时，接口返回报错ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT 。
 

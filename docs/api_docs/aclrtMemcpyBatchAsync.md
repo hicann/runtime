@@ -7,6 +7,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -32,11 +33,11 @@ aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_
 | srcs | 输入 | 源内存地址数组。 |
 | sizes | 输入 | 内存复制长度数组，用于存放每一段要复制的内存大小，单位Byte。 |
 | numBatches | 输入 | dsts、srcs和sizes数组的长度。 |
-| attrs | 输入 | 内存复制属性数组。 |
+| attrs | 输入 | 内存复制属性数组。类型定义请参见[aclrtMemcpyBatchAttr](aclrtMemcpyBatchAttr.md)。 |
 | attrsIndexes | 输入 | 内存复制属性索引数组，用于指定attrs数组中每个条目适用的复制范围。attrs[k]中指定的属性将应用于从attrsIndexes[k]到attrsIndexes[k+1] - 1的复制操作，同时attrs[numAttrs-1]将应用于从attrsIndexes[numAttrs-1]到numBatches - 1的复制操作。 |
 | numAttrs | 输入 | attrs和attrsIndexes数组的长度。 |
 | failIndex | 输出 | 用于发生错误时指示出错的复制项下标（仅支持对内存属性和复制方向的校验）。若错误不涉及特定复制操作，该值将为SIZE_MAX。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

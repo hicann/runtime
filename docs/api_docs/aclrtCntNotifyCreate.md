@@ -5,12 +5,15 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
 ## 功能说明
 
 创建CntNotify。
+
+CntNotify通常也用于Device与Device之间的状态/动作通信通知。但CntNotify是利用计数值实现任务间的同步，跟Notify的区别是，Notify的计数值仅支持1，CntNotify的计数值支持\[1\~uint32\_t最大值\]。
 
 ## 函数原型
 
@@ -23,7 +26,7 @@ aclError aclrtCntNotifyCreate(aclrtCntNotify *cntNotify, uint64_t flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| cntNotify | 输入 | CntNotify的指针。 |
+| cntNotify | 输入 | CntNotify的指针。类型定义请参见[aclrtCntNotify](aclrtCntNotify.md)。 |
 | flag | 输入 | 预留参数，当前固定配置为0。 |
 
 ## 返回值说明

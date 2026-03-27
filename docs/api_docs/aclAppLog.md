@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -12,7 +13,7 @@
 
 将日志记录到日志文件中。
 
-acl接口还提供了ACL\_APP\_LOG宏，封装aclAppLog接口，推荐用户调用ACL\_APP\_LOG宏，传入日志级别、日志描述、fmt中的可变参数。日志文件的详细说明，请参见《日志参考》。
+acl接口还提供了ACL\_APP\_LOG宏，封装aclAppLog接口，推荐用户调用ACL\_APP\_LOG宏，传入日志级别、日志描述、fmt中的可变参数。
 
 ```
 #define ACL_APP_LOG(level, fmt, ...) \

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,7 +25,7 @@ aclError acltdtDequeueData(uint32_t qid, void *data, size_t dataSize, size_t *re
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | qid | 输入 | 需要从哪个队列中获取数据。<br>队列需提前调用[acltdtCreateQueue](acltdtCreateQueue.md)接口创建。 |
-| data | 输入 | 内存数据指针，支持Host侧或Device侧的内存。 |
+| data | 输入 | 内存数据指针。<br>支持Host侧或Device侧的内存。 |
 | dataSize | 输入 | 内存数据大小，单位为Byte。 |
 | retDataSize | 输入&输出 | 返回实际数据大小，单位为Byte。 |
 | userData | 输入 | 用户自定义数据指针。<br>若用户没有自定义数据，则传nullptr。 |

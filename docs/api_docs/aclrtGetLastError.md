@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtGetLastError(aclrtLastErrLevel level)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| level | 输入 | 指定获取错误码的级别，当前仅支持线程级别。 |
+| level | 输入 | 指定获取错误码的级别，当前仅支持线程级别。类型定义请参见[aclrtLastErrLevel](aclrtLastErrLevel.md)。 |
 
 ## 返回值说明
 

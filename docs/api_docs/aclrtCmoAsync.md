@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtCmoAsync(void *src, size_t size, aclrtCmoType cmoType, aclrtStream
 | --- | --- | --- |
 | src | 输入 | 待操作的Device内存地址。<br>只支持本Device上的Cache内存操作。 |
 | size | 输入 | 待操作的Device内存大小，单位Byte。 |
-| cmoType | 输入 | Cache内存操作类型。<br>当前仅支持ACL_RT_CMO_TYPE_PREFETCH（内存预取）。 |
-| stream | 输入 | 执行内存操作任务的Stream。 |
+| cmoType | 输入 | Cache内存操作类型。类型定义请参见[aclrtCmoType](aclrtCmoType.md)。<br>当前仅支持ACL_RT_CMO_TYPE_PREFETCH（内存预取）。 |
+| stream | 输入 | 执行内存操作任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

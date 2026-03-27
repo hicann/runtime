@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,7 +30,7 @@ aclError aclrtMemcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch,
 | spitch | 输入 | 源内存中相邻两列向量的地址距离。 |
 | width | 输入 | 待复制的数据宽度。 |
 | height | 输入 | 待复制的数据高度。 |
-| kind | 输入 | 内存复制的类型。 |
+| kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。 |
 
 ## 返回值说明
 

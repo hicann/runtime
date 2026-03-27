@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,7 +27,7 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | virPtr | 输入 | “已分配的虚拟内存地址的指针”的指针。<br>必须与[aclrtMapMem](aclrtMapMem.md)接口的virPtr地址相同。 |
-| handle | 输出 | 存放物理内存信息的handle。 |
+| handle | 输出 | 存放物理内存信息的handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。 |
 
 ## 返回值说明
 

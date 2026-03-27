@@ -15,8 +15,8 @@ aclError aclrtAppendBufChain(aclrtMbuf headBuf, aclrtMbuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| headBuf | 输入 | Mbuf链表中的第一个共享Buffer。 |
-| buf | 输入 | 待添加的共享Buffer。 |
+| headBuf | 输入 | Mbuf链表中的第一个共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
+| buf | 输入 | 待添加的共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
 
 ## 返回值说明
 

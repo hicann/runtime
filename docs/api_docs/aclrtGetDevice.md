@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -31,5 +32,5 @@ aclError aclrtGetDevice(int32_t *deviceId)
 
 ## 约束说明
 
-如果没有提前指定Device，则调用aclrtGetDevice接口时，返回错误。指定Device的方式包括：在[aclInit](aclInit.md)接口中开启默认Device、调用[aclrtSetDevice](aclrtSetDevice.md)接口显式指定Device、调用[aclrtCreateContext](aclrtCreateContext.md)接口隐式指定Device。
+如果没有提前指定计算设备（例如调用[aclrtSetDevice](aclrtSetDevice.md)接口），则调用aclrtGetDevice接口时，返回错误。
 

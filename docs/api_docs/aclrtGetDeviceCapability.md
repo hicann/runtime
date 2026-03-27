@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,7 +25,7 @@ aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatu
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](aclrtGetDeviceCount.md)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)]。 |
-| devFeatureType | 输入 | 特性类型。 |
+| devFeatureType | 输入 | 特性类型。类型定义请参见[aclrtDevFeatureType](aclrtDevFeatureType.md)。 |
 | value | 输出 | 特性是否支持。<br><br>  - ACL_DEV_FEATURE_NOT_SUPPORT(0)：不支持<br>  - ACL_DEV_FEATURE_SUPPORT(1)：支持<br><br><br>相关宏定义如下：<br>#define ACL_DEV_FEATURE_SUPPORT  0x00000001<br>#define ACL_DEV_FEATURE_NOT_SUPPORT 0x00000000 |
 
 ## 返回值说明

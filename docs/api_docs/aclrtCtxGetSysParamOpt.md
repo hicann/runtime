@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| opt | 输入 | 系统参数。 |
+| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](aclSysParamOpt.md)。 |
 | value | 输出 | 存放系统参数值的内存的指针。 |
 
 ## 返回值说明

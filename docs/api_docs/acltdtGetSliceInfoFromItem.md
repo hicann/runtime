@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *slic
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| dataItem | 输入 | acltdtDataItem类型的指针。acltdtDataItem用于标识一个业务上的Tensor。<br>需提前调用[acltdtCreateDataItem](acltdtCreateDataItem.md)接口创建acltdtDataItem类型的数据。 |
+| dataItem | 输入 | acltdtDataItem类型的指针。acltdtDataItem用于标识一个业务上的Tensor。类型定义请参见[acltdtDataItem](acltdtDataItem.md)。<br>需提前调用[acltdtCreateDataItem](acltdtCreateDataItem.md)接口创建acltdtDataItem类型的数据。 |
 | sliceNum | 输出 | 单个Tensor被切片的数量。 |
 | sliceId | 输出 | 被切片Tensor的数据段索引。 |
 

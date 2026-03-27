@@ -19,9 +19,9 @@ aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEn
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| binHandle | 输入 | 算子二进制句柄。<br>调用[aclrtBinaryLoadFromFile](aclrtBinaryLoadFromFile.md)接口或[aclrtBinaryLoadFromData](aclrtBinaryLoadFromData.md)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](aclrtBinHandle.md)。<br>调用[aclrtBinaryLoadFromFile](aclrtBinaryLoadFromFile.md)接口或[aclrtBinaryLoadFromData](aclrtBinaryLoadFromData.md)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcEntry | 输入 | 标识核函数的关键字。 |
-| funcHandle | 输出 | 核函数句柄。 |
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。 |
 
 ## 返回值说明
 

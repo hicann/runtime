@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -16,7 +17,7 @@
 
 除了进程级别的Device资源限制，当前还支持设置Stream级别的Device资源限制，可通过[aclrtSetStreamResLimit](aclrtSetStreamResLimit.md)、[aclrtUseStreamResInCurrentThread](aclrtUseStreamResInCurrentThread.md)接口配合使用实现。
 
-Device资源限制的优先级为：Stream级别的Device资源限制 \> 进程级别的Device资源限制 \>  昇腾AI处理器硬件的资源限制
+Device资源限制的优先级为：Stream级别的Device资源限制 \> 进程级别的Device资源限制 \>  AI处理器硬件的资源限制
 
 ## 函数原型
 
@@ -30,7 +31,7 @@ aclError aclrtSetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uin
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](aclrtGetDeviceCount.md)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| type | 输入 | 资源类型。 |
+| type | 输入 | 资源类型，请参见[aclrtDevResLimitType](aclrtDevResLimitType.md)。 |
 | value | 输入 | 资源限制的大小。 |
 
 ## 返回值说明

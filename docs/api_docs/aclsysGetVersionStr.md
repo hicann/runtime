@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -15,7 +16,7 @@
 ## 函数原型
 
 ```
-aclError aclsysGetVersionStr(char *pkgName, char * versionStr)
+aclError aclsysGetVersionStr(char *pkgName, char *versionStr)
 ```
 
 ## 参数说明

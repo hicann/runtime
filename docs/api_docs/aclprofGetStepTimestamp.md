@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stepinfo | 输入 | 指定迭代信息。需提前调用[aclprofCreateStepInfo](aclprofCreateStepInfo.md)接口创建[aclprofStepInfo](aclprofStepInfo.md)类型的数据。 |
+| stepinfo | 输入 | 指定迭代信息。需提前调用[aclprofCreateStepInfo](aclprofCreateStepInfo.md)接口创建[aclprofStepInfo](aclprofStepInfo.md)类型的数据。<br>类型定义请参见[aclprofStepInfo](aclprofStepInfo.md)、[aclprofStepTag](aclprofStepTag.md)和[aclrtStream](aclrtStream.md)。 |
 | tag | 输入 | 用于标记迭代开始或结束。在迭代开始时传入枚举值ACL_STEP_START，迭代结束时需传入枚举值ACL_STEP_END。 |
 | stream | 输入 | 指定Stream。 |
 

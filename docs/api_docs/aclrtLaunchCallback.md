@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -39,7 +40,7 @@ aclError aclrtLaunchCallback(aclrtCallback fn, void *userData, aclrtCallbackBloc
 | fn | 输入 | 指定要增加的回调函数。<br>回调函数的函数原型为：<br>typedef void (*aclrtCallback)(void *userData) |
 | userData | 输入 | 待传递给回调函数的用户数据的指针。 |
 | blockType | 输入 | 指定回调任务是否阻塞本Stream上后续任务的执行。<br>typedef enum aclrtCallbackBlockType {<br>   ACL_CALLBACK_NO_BLOCK,  //非阻塞<br>   ACL_CALLBACK_BLOCK,  //阻塞<br>} aclrtCallbackBlockType; |
-| stream | 输入 | 指定Stream。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

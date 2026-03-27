@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclGetCannAttribute(aclCannAttr cannAttr, int32_t *value)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| cannAttr | 输入 | 特性列表枚举值，一次查询可指定其中一项。 |
+| cannAttr | 输入 | 特性列表枚举值，一次查询可指定其中一项。类型定义请参见[aclCannAttr](aclCannAttr.md)。 |
 | value | 输出 | 是否支持：<br><br>  - 1：支持<br>  - 0：不支持 |
 
 ## 返回值说明

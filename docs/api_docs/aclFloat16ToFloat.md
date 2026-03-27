@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ float aclFloat16ToFloat(aclFloat16 value)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| value | 输入 | 待转换的数据。 |
+| value | 输入 | 待转换的数据。类型定义请参见[aclFloat16](aclFloat16.md)。 |
 
 ## 返回值说明
 

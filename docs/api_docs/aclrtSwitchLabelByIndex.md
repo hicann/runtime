@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList la
 | --- | --- | --- |
 | ptr | 输入 | 标签索引。<br>存放目标标签索引值的Device内存地址，索引值的数据类型uint32，长度4字节，索引值从0开始。<br>当目标标签索引大于labelList数组的最大索引值时，跳转到最大标签。 |
 | maxValue | 输入 | 标签列表中的标签个数。 |
-| labelList | 输入 | 标签列表。<br>通过[aclrtCreateLabelList](aclrtCreateLabelList.md)接口创建的标签列表作为此处的输入。 |
-| stream | 输入 | 执行跳转任务的Stream。 |
+| labelList | 输入 | 标签列表。类型定义请参见[aclrtLabelList](aclrtLabelList.md)。<br>通过[aclrtCreateLabelList](aclrtCreateLabelList.md)接口创建的标签列表作为此处的输入。 |
+| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

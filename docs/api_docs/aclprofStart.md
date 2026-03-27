@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclprofStart(const aclprofConfig *profilerConfig)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| profilerConfig | 输入 | 指定Profiling配置数据。<br>需提前调用[aclprofCreateConfig](aclprofCreateConfig.md)接口创建aclprofConfig类型的数据。 |
+| profilerConfig | 输入 | 指定Profiling配置数据。类型定义请参见[aclprofConfig](aclprofConfig.md)。<br>需提前调用[aclprofCreateConfig](aclprofCreateConfig.md)接口创建aclprofConfig类型的数据。 |
 
 ## 返回值说明
 

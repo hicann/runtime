@@ -5,8 +5,9 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | x |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | x |
+| Ascend 950PR/Ascend950DT | ☓ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
 ## 功能说明
 
@@ -28,8 +29,8 @@ aclError acltdtAllocBuf(size_t size, uint32_t type, acltdtBuf *buf)
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | size | 输入 | 用于指定数据区的内存大小，单位Byte，不能超过4G。 |
-| type | 输入 | 共享Buffer内存类型，支持设置如下枚举值。<br>typedef enum {<br>   ACL_TDT_NORMAL_MEM = 0,<br>   ACL_TDT_DVPP_MEM<br>} acltdtAllocBufType; |
-| buf | 输出 | 申请成功，输出共享Buffer。 |
+| type | 输入 | 共享Buffer内存类型，支持设置如下枚举值。<br>typedef enum {<br>   ACL_TDT_NORMAL_MEM = 0,<br>   ACL_TDT_DVPP_MEM<br>} acltdtAllocBufType;<br>当前仅支持设置ACL_TDT_NORMAL_MEM。 |
+| buf | 输出 | 申请成功，输出共享Buffer。类型定义请参见[acltdtBuf](acltdtBuf.md)。 |
 
 ## 返回值说明
 

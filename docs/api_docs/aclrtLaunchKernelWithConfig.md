@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,11 +26,11 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| funcHandle | 输入 | 核函数句柄。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| stream | 输入 | 指定执行任务的Stream。 |
-| cfg | 输入 | 任务下发的配置信息。<br>不指定配置时，此处可传NULL。 |
-| argsHandle | 输入 | 参数列表句柄。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](aclrtLaunchKernelCfg.md)。<br>不指定配置时，此处可传NULL。 |
+| argsHandle | 输入 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](aclrtArgsHandle.md)。 |
 | reserve | 输入 | 预留参数。当前固定传NULL。 |
 
 ## 返回值说明

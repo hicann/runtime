@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtDestroyContext(aclrtContext context)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| context | 输入 | 需销毁的Context。 |
+| context | 输入 | 需销毁的Context。类型定义请参见[aclrtContext](aclrtContext.md)。 |
 
 ## 返回值说明
 

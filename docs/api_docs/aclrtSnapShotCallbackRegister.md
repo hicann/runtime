@@ -1,10 +1,13 @@
 # aclrtSnapShotCallbackRegister
 
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
 ## 产品支持情况
 
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +26,8 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stage | 输入 | 指定触发回调的快照阶段。 |
-| callback | 输入 | 指向回调函数的指针。当指定的快照阶段到达时，系统将自动调用此函数。<br>函数定义如下：<br>typedef uint32_t (\*aclrtSnapShotCallBack)(int32_t deviceId, void* args); |
+| stage | 输入 | 指定触发回调的快照阶段。类型定义请参见[aclrtSnapShotStage](aclrtSnapShotStage.md)。 |
+| callback | 输入 | 指向回调函数的指针。当指定的快照阶段到达时，系统将自动调用此函数。<br>函数定义如下：<br>typedef uint32_t (*aclrtSnapShotCallBack)(int32_t deviceId, void* args); |
 | args | 输入 | 用户自定义参数指针，在回调函数调用时传递，可以为NULL，表示不需要传递额外参数。 |
 
 ## 返回值说明

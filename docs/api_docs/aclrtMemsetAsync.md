@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,7 +30,7 @@ aclError aclrtMemsetAsync(void *devPtr, size_t maxCount, int32_t value, size_t c
 | maxCount | 输入 | 内存的最大长度，单位Byte。 |
 | value | 输入 | 设置的值。 |
 | count | 输入 | 需要设置为指定值的内存长度，单位Byte。 |
-| stream | 输入 | 指定执行内存初始化任务的Stream。 |
+| stream | 输入 | 指定执行内存初始化任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

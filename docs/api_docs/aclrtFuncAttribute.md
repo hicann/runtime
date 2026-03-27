@@ -6,4 +6,5 @@ typedef enum {
 } aclrtFuncAttribute;
 ```
 
-当属性设置为ACL\_FUNC\_ATTR\_KERNEL\_TYPE时，属性值请参见[aclrtKernelType](aclrtKernelType.md)。
+当属性设置为ACL\_FUNC\_ATTR\_KERNEL\_TYPE时，属性值说明请参见[aclrtKernelType](aclrtKernelType.md)。
+

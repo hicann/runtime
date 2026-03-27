@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| notify | 输出 | Notify的指针。 |
-| flag | 输入 | Notify指针的flag。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_NOTIFY_DEFAULT使能该bit表示创建的Notify默认在Host上调用。#define ACL_NOTIFY_DEFAULT 0x00000000U<br><br><br>  - ACL_NOTIFY_DEVICE_USE_ONLY使能该bit表示创建的Notify仅在Device上调用。#define ACL_NOTIFY_DEVICE_USE_ONLY 0x00000001U |
+| notify | 输出 | Notify的指针。类型定义请参见[aclrtNotify](aclrtNotify.md)。 |
+| flag | 输入 | Notify指针的flag。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_NOTIFY_DEFAULT：使能该bit表示创建的Notify默认在Host上调用。<br><br><br>  - ACL_NOTIFY_DEVICE_USE_ONLY：使能该bit表示创建的Notify仅在Device上调用。<br><br><br>宏的定义如下：<br>#define ACL_NOTIFY_DEFAULT 0x00000000U<br>#define ACL_NOTIFY_DEVICE_USE_ONLY 0x00000001U |
 
 ## 返回值说明
 
@@ -37,5 +38,6 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 
 | 型号 | 单个Device支持的Notify最大数 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | 65535 |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | 8192 |
 

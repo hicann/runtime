@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| mode | 输入 | 设置浮点计算结果输出模式。 |
+| mode | 输入 | 设置浮点计算结果输出模式。类型定义请参见[aclrtFloatOverflowMode](aclrtFloatOverflowMode.md)。 |
 
 ## 返回值说明
 

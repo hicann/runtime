@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,7 +25,7 @@ aclError aclrtAllocatorSetObjToDesc(aclrtAllocatorDesc allocatorDesc,  aclrtAllo
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | allocatorDesc | 输入 | Allocator描述符指针。<br>需提前调用[aclrtAllocatorCreateDesc](aclrtAllocatorCreateDesc.md)接口设置Allocator描述信息。 |
-| allocator | 输入 | 用户提供的Allocator对象指针。 |
+| allocator | 输入 | 用户提供的Allocator对象指针。类型定义请参见[aclrtAllocator](aclrtAllocator.md)。 |
 
 ## 返回值说明
 

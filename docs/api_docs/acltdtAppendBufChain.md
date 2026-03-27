@@ -5,8 +5,9 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | x |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | x |
+| Ascend 950PR/Ascend950DT | ☓ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
 ## 功能说明
 
@@ -23,8 +24,8 @@ aclError acltdtAppendBufChain(acltdtBuf headBuf, acltdtBuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。 |
-| buf | 输入 | 待添加的共享Buffer。 |
+| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](acltdtBuf.md)。 |
+| buf | 输入 | 待添加的共享Buffer。类型定义请参见[acltdtBuf](acltdtBuf.md)。 |
 
 ## 返回值说明
 

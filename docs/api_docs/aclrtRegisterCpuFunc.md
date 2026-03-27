@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,10 +26,10 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| handle | 输入 | 算子二进制句柄。<br>调用[aclrtBinaryLoadFromData](aclrtBinaryLoadFromData.md)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| handle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](aclrtBinHandle.md)。<br>调用[aclrtBinaryLoadFromData](aclrtBinaryLoadFromData.md)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcName | 输入 | 执行AI CPU算子的入口函数。不能为空。 |
 | kernelName | 输入 | AI CPU算子的opType。不能为空。 |
-| funcHandle | 输出 | 函数句柄。 |
+| funcHandle | 输出 | 函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| notifies | 输入 | Notify数组。 |
+| notifies | 输入 | Notify数组。类型定义请参见[aclrtNotify](aclrtNotify.md)。 |
 | num | 输入 | Notify数组的长度。 |
 
 ## 返回值说明

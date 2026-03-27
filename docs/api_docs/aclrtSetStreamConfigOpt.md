@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
@@ -30,8 +31,8 @@ aclError aclrtSetStreamConfigOpt(aclrtStreamConfigHandle *handle, aclrtStreamCon
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| handle | 输出 | Stream配置对象的指针。需提前调用[aclrtCreateStreamConfigHandle](aclrtCreateStreamConfigHandle.md)接口创建该对象。 |
-| attr | 输入 | 指定需设置的属性。 |
+| handle | 输出 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](aclrtStreamConfigHandle.md)。<br>需提前调用[aclrtCreateStreamConfigHandle](aclrtCreateStreamConfigHandle.md)接口创建该对象。 |
+| attr | 输入 | 指定需设置的属性。类型定义请参见[aclrtStreamConfigAttr](aclrtStreamConfigAttr.md)。 |
 | attrValue | 输入 | 指向属性值的指针，attr对应的属性取值。<br>如果属性值本身是指针，则传入该指针的地址。 |
 | valueSize | 输入 | attrValue部分的数据长度。<br>用户可使用C/C++标准库的函数sizeof(*attrValue)查询数据长度。 |
 

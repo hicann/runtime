@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,7 +28,7 @@ aclError aclrtMemImportFromShareableHandle(uint64_t shareableHandle, int32_t dev
 | --- | --- | --- |
 | shareableHandle | 输入 | 待共享的shareableHandle，与[aclrtMemExportToShareableHandle](aclrtMemExportToShareableHandle.md)接口中导出的shareableHandle保持一致。<br>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一。 |
 | deviceId | 输入 | 用于生成指定Device ID上的handle。<br>用户调用[aclrtGetDeviceCount](aclrtGetDeviceCount.md)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| handle | 输出 | 本进程的物理内存handle。 |
+| handle | 输出 | 本进程的物理内存handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。 |
 
 ## 返回值说明
 

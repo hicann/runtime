@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -31,7 +32,7 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(int8_t timeInfoSwitch, aclp
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| timeInfoSwitch | 输入 | 是否采集网络模型中算子的性能数据：<br><br>  - 1：采集<br>  - 0：不采集 |
+| timeInfoSwitch | 输入 | 是否采集网络模型中算子的性能数据：<br><br>  - 1：采集<br>  - 0：不采集<br><br>类型定义请参见[aclprofSubscribeConfig](aclprofSubscribeConfig.md)和[aclprofAicoreMetrics](aclprofAicoreMetrics.md)。 |
 | aicoreMetrics | 输入 | 表示AI Core性能指标采集项。<br> 说明： 订阅接口目前仅提供算子耗时统计的功能，暂时不支持AicoreMetrics采集功能。 |
 | fd | 输入 | 用户创建的管道写指针。<br>用户在调用aclprofModelUnSubscribe接口后，系统内部会在数据发送结束后，关闭该模型的管道写指针。 |
 

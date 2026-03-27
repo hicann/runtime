@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtMemGetAllocationGranularity(aclrtPhysicalMemProp *prop, aclrtMemGr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| prop | 输入 | 物理内存属性信息。 |
-| option | 输入 | 最小粒度或推荐粒度。 |
+| prop | 输入 | 物理内存属性信息。类型定义请参见[aclrtPhysicalMemProp](aclrtPhysicalMemProp.md)。 |
+| option | 输入 | 最小粒度或推荐粒度。类型定义请参见[aclrtMemGranularityOptions](aclrtMemGranularityOptions.md)。 |
 | granularity | 输出 | 内存申请粒度，单位为Byte。 |
 
 ## 返回值说明

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,8 +26,8 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| funcHandle | 输入 | 核函数句柄。<br>调用[aclrtBinaryGetFunctionByEntry](aclrtBinaryGetFunctionByEntry.md)或[aclrtBinaryGetFunction](aclrtBinaryGetFunction.md)获取核函数句柄，再将其作为入参传入本接口。 |
-| argsHandle | 输出 | 参数列表句柄。<br>需提前调用[aclrtKernelArgsGetHandleMemSize](aclrtKernelArgsGetHandleMemSize.md)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。<br>调用[aclrtBinaryGetFunctionByEntry](aclrtBinaryGetFunctionByEntry.md)或[aclrtBinaryGetFunction](aclrtBinaryGetFunction.md)获取核函数句柄，再将其作为入参传入本接口。 |
+| argsHandle | 输出 | 参数列表句柄。类型定义请参见[aclrtArgsHandle](aclrtArgsHandle.md)。<br>需提前调用[aclrtKernelArgsGetHandleMemSize](aclrtKernelArgsGetHandleMemSize.md)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
 | userHostMem | 输入 | Host内存地址。<br>需提前调用[aclrtKernelArgsGetMemSize](aclrtKernelArgsGetMemSize.md)接口获取内存大小，申请Host内存，再将Host内存地址作为入参传入此处。 |
 | actualArgsSize | 输入 | 内存大小。<br>需提前调用[aclrtKernelArgsGetMemSize](aclrtKernelArgsGetMemSize.md)接口获取内存大小，再将其作为入参传入此处。 |
 

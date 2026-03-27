@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclprofStop(const aclprofConfig *profilerConfig)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| profilerConfig | 输入 | 指定停止Profiling数据采集的配置。<br>与[aclprofStart](aclprofStart.md)接口中的[aclprofConfig](aclprofConfig.md)类型数据保持一致。 |
+| profilerConfig | 输入 | 指定停止Profiling数据采集的配置。类型定义请参见[aclprofConfig](aclprofConfig.md)。<br>与[aclprofStart](aclprofStart.md)接口中的[aclprofConfig](aclprofConfig.md)类型数据保持一致。 |
 
 ## 返回值说明
 

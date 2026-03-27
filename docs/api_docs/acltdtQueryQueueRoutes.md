@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *queryInfo, aclt
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| queryInfo | 输入 | 查询条件的指针。<br>需提前调用[acltdtCreateQueueRouteQueryInfo](acltdtCreateQueueRouteQueryInfo.md)接口创建acltdtQueueRouteQueryInfo类型的数据。 |
-| qRouteList | 输入&输出 | 路由关系数组的指针。<br>需提前调用[acltdtCreateQueueRouteList](acltdtCreateQueueRouteList.md)接口创建acltdtQueueRouteList类型的数据。 |
+| queryInfo | 输入 | 查询条件的指针。类型定义请参见[acltdtQueueRouteQueryInfo](acltdtQueueRouteQueryInfo.md)。<br>需提前调用[acltdtCreateQueueRouteQueryInfo](acltdtCreateQueueRouteQueryInfo.md)接口创建acltdtQueueRouteQueryInfo类型的数据。 |
+| qRouteList | 输入&输出 | 路由关系数组的指针。类型定义请参见[acltdtQueueRouteList](acltdtQueueRouteList.md)。<br>需提前调用[acltdtCreateQueueRouteList](acltdtCreateQueueRouteList.md)接口创建acltdtQueueRouteList类型的数据。 |
 
 ## 返回值说明
 

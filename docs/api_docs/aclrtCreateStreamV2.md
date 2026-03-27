@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
@@ -30,8 +31,8 @@ aclError aclrtCreateStreamV2(aclrtStream *stream, const aclrtStreamConfigHandle 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输出 | Stream的指针。 |
-| handle | 输入 | Stream配置对象的指针。与[aclrtSetStreamConfigOpt](aclrtSetStreamConfigOpt.md)中的handle保持一致。 |
+| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| handle | 输入 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](aclrtStreamConfigHandle.md)。<br>与[aclrtSetStreamConfigOpt](aclrtSetStreamConfigOpt.md)中的handle保持一致。 |
 
 ## 返回值说明
 

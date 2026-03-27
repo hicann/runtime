@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定待停止任务的Stream。<br>不支持使用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口来绑定模型运行实例的Stream。 |
+| stream | 输入 | 指定待停止任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 
@@ -31,7 +32,9 @@ aclError aclrtStreamAbort(aclrtStream stream)
 
 ## 约束说明
 
-如果有其它Stream依赖本接口中指定的Stream（例如通过[aclrtRecordEvent](aclrtRecordEvent.md)、[aclrtStreamWaitEvent](aclrtStreamWaitEvent.md)等接口实现两个Stream间同步等待），则其它Stream执行可能会卡住，此时您需要显式调用本接口清除其它Stream上的任务。
-
-如果调用本接口清除指定Stream上的任务时，再调用同步等待接口（例如[aclrtSynchronizeStream](aclrtSynchronizeStream.md)、[aclrtSynchronizeEvent](aclrtSynchronizeEvent.md)等），同步等待接口会退出并返回ACL\_ERROR\_RT\_STREAM\_ABORT的报错。
+-   不支持使用[aclmdlRIBindStream](aclmdlRIBindStream.md)接口来绑定模型运行实例的Stream。
+-   不支持如下方式创建的Stream：调用[aclrtCreateStreamWithConfig](aclrtCreateStreamWithConfig.md)接口，将flag设置为ACL\_STREAM\_DEVICE\_USE\_ONLY（表示该Stream仅在Device上调用）。
+-   Ascend 950PR/Ascend950DT不支持默认Stream（即stream参数传入NULL）。
+-   如果有其它Stream依赖本接口中指定的Stream（例如通过[aclrtRecordEvent](aclrtRecordEvent.md)、[aclrtStreamWaitEvent](aclrtStreamWaitEvent.md)等接口实现两个Stream间同步等待），则其它Stream执行可能会卡住，此时您需要显式调用本接口清除其它Stream上的任务。
+-   如果调用本接口清除指定Stream上的任务时，再调用同步等待接口（例如[aclrtSynchronizeStream](aclrtSynchronizeStream.md)、[aclrtSynchronizeEvent](aclrtSynchronizeEvent.md)等），同步等待接口会退出并返回ACL\_ERROR\_RT\_STREAM\_ABORT的报错。
 

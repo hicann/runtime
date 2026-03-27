@@ -5,12 +5,13 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-释放Host内存。
+释放通过[aclrtMallocHost](aclrtMallocHost.md)接口或[aclrtMallocHostWithCfg](aclrtMallocHostWithCfg.md)接口申请的Host内存。
 
 本接口内部会进行隐式的Device同步，并等待使用该内存的任务完成。
 

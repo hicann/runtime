@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrt
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| taskInfo | 输入 | 随机数生成任务信息 |
-| stream | 输入 | 执行随机数生成任务的Stream。 |
+| taskInfo | 输入 | 随机数生成任务信息。类型定义请参见[aclrtRandomNumTaskInfo](aclrtRandomNumTaskInfo.md)。 |
+| stream | 输入 | 执行随机数生成任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 | reserve | 输入 | 预留参数。当前固定传NULL。 |
 
 ## 返回值说明

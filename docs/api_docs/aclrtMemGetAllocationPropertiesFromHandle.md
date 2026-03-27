@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, acl
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| handle | 输入 | 存放物理内存信息的handle。<br>查询通过aclrtMallocPhysical接口申请的物理内存属性信息。 |
-| prop | 输出 | 物理内存属性信息。 |
+| handle | 输入 | 存放物理内存信息的handle。类型定义请参见[aclrtDrvMemHandle](aclrtDrvMemHandle.md)。<br>查询通过aclrtMallocPhysical接口申请的物理内存属性信息。 |
+| prop | 输出 | 物理内存属性信息。类型定义请参见[aclrtPhysicalMemProp](aclrtPhysicalMemProp.md)。 |
 
 ## 返回值说明
 

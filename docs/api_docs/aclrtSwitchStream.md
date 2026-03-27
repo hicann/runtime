@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -26,12 +27,12 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | leftValue | 输入 | 左值数据的Device内存地址。 |
-| cond | 输入 | 左值数据与右值数据的比较条件。 |
+| cond | 输入 | 左值数据与右值数据的比较条件。类型定义请参见[aclrtCondition](aclrtCondition.md)。 |
 | rightValue | 输入 | 右值数据的Device内存地址。 |
-| dataType | 输入 | 左值数据、右值数据的数据类型。 |
-| trueStream | 输入 | 根据cond处指定的条件，条件成立时，则执行trueStream上的任务。 |
-| falseStream | 输入 | 根据cond处指定的条件，条件不成立时，则执行falseStream上的任务。当前为预留参数，只能传NULL。 |
-| stream | 输入 | 执行跳转任务的Stream。 |
+| dataType | 输入 | 左值数据、右值数据的数据类型。类型定义请参见[aclrtCompareDataType](aclrtCompareDataType.md)。 |
+| trueStream | 输入 | 根据cond处指定的条件，条件成立时，则执行trueStream上的任务。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| falseStream | 输入 | 预留参数，当前固定传NULL。 |
+| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | x |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -15,7 +16,7 @@
 ## 函数原型
 
 ```
-aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
+aclError aclrtUseStreamResInCurrentThread([aclrtStream](aclrtStream.md) stream)
 ```
 
 ## 参数说明
@@ -23,7 +24,7 @@ aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定Stream。<br>需先调用[aclrtSetStreamResLimit](aclrtSetStreamResLimit.md)接口设置该Stream上的Device资源限制。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>需先调用[aclrtSetStreamResLimit](aclrtSetStreamResLimit.md)接口设置该Stream上的Device资源限制。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -29,10 +30,10 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
 | dpitch | 输入 | 目的内存中相邻两列向量的地址距离。 |
 | src | 输入 | 源内存地址指针。 |
 | spitch | 输入 | 源内存中相邻两列向量的地址距离。 |
-| width | 输入 | 待复制的数据宽度。 |
+| width | 输入 | 待复制的数据宽度。<br>width最大设置为5000000，且必须小于或等于dpitch和spitch。 |
 | height | 输入 | 待复制的数据高度。<br>height最大设置为5*1024*1024=5242880，否则接口返回失败。 |
-| kind | 输入 | 内存复制的类型。 |
-| stream | 输入 | 指定执行内存复制任务的Stream。 |
+| kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。 |
+| stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 
@@ -40,7 +41,22 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
 
 ## 约束说明
 
-本接口仅支持ACL\_MEMCPY\_HOST\_TO\_DEVICE、ACL\_MEMCPY\_DEVICE\_TO\_HOST、ACL\_MEMCPY\_DEVICE\_TO\_DEVICE内存复制类型。对于不支持的内存复制类型，接口返回ACL\_ERROR\_INVALID\_PARAM。
+-   本接口仅支持ACL\_MEMCPY\_HOST\_TO\_DEVICE、ACL\_MEMCPY\_DEVICE\_TO\_HOST或ACL\_MEMCPY\_DEVICE\_TO\_DEVICE内存复制类型，且不同型号支持的类型不同。对于不支持的内存复制类型，接口返回ACL\_ERROR\_INVALID\_PARAM。
+    -   ACL\_MEMCPY\_HOST\_TO\_DEVICE、ACL\_MEMCPY\_DEVICE\_TO\_HOST类型，以下型号支持：
+
+        Ascend 950PR/Ascend950DT
+
+        Atlas A3 训练系列产品/Atlas A3 推理系列产品
+
+        Atlas A2 训练系列产品/Atlas A2 推理系列产品
+
+    -   ACL\_MEMCPY\_DEVICE\_TO\_DEVICE类型，以下型号支持：
+
+        Ascend 950PR/Ascend950DT
+
+        Atlas A3 训练系列产品/Atlas A3 推理系列产品
+
+        Atlas A2 训练系列产品/Atlas A2 推理系列产品
 
 ## 参考资源
 

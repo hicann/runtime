@@ -7,3 +7,5 @@ typedef struct aclrtBinaryLoadOptions {
 } aclrtBinaryLoadOptions;
 ```
 
+options结构体的定义请参见[aclrtBinaryLoadOption](aclrtBinaryLoadOption.md)。
+

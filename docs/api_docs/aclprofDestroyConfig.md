@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -28,7 +29,7 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| profilerConfig | 输入 | 待销毁的aclprofConfig类型的指针。 |
+| profilerConfig | 输入 | 待销毁的aclprofConfig类型的指针。类型定义请参见[aclprofConfig](aclprofConfig.md)。 |
 
 ## 返回值说明
 

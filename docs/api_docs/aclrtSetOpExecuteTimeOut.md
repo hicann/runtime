@@ -5,18 +5,15 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-设置算子执行的超时时间，单位为秒。
+设置算子执行的超时时间，单位为秒。一个进程内多次调用本接口，则以最后一次设置的时间为准。
 
-对于以下产品型号，建议使用aclrtSetOpExecuteTimeOutV2接口，该接口会返回实际生效的超时时间：
-
-Atlas A3 训练系列产品/Atlas A3 推理系列产品
-
-Atlas A2 训练系列产品/Atlas A2 推理系列产品
+建议使用aclrtSetOpExecuteTimeOutV2接口，该接口会返回实际生效的超时时间。
 
 ## 函数原型
 
@@ -37,12 +34,19 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 
 ## 约束说明
 
--   一个进程内多次调用本接口，则以最后一次设置的时间为准。
--   不调用本接口，算子的默认超时时间如下：
-    在Atlas A3 训练系列产品/Atlas A3 推理系列产品上，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为60秒。
-    在Atlas A2 训练系列产品/Atlas A2 推理系列产品上，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
+不调用本接口，算子的默认超时时间如下表所示：
 
--   在Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品上，算子的最大超时时间为：interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeoutInterval接口获取。AI Core算子和AI CPU算子的interval相同，因此算子的最大超时时间都为interval \* 254。
 
-    ​    
+| 型号 | AI Core算子的默认超时时间 | AI CPU算子的默认超时时间 |
+| --- | --- | --- |
+| Ascend 950PR/Ascend950DT | 1091秒 | 28秒 |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | 1091秒 | 60秒 |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | 1091秒 | 28秒 |
+
+由于不同产品型号的架构差异，AI Core算子、AI CPU算子的最大超时时间有所不同：
+
+
+| 型号 | 最大超时时间 |
+| --- | --- |
+| Ascend 950PR/Ascend950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 | interval * 254，单位是微秒，interval可通过aclrtGetOpTimeoutInterval接口获取。 |
 

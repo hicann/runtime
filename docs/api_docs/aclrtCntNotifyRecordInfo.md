@@ -7,3 +7,5 @@ typedef struct {
 } aclrtCntNotifyRecordInfo;
 ```
 
+mode枚举值的定义请参见[aclrtCntNotifyRecordMode](aclrtCntNotifyRecordMode.md)。
+

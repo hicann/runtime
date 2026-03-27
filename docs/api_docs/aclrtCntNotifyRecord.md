@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
@@ -25,9 +26,9 @@ aclError aclrtCntNotifyRecord(aclrtCntNotify cntNotify, aclrtStream stream, aclr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| cntNotify | 输入 | 需记录的CntNotify。 |
-| stream | 输入 | 指定Stream。<br>如果使用默认Stream，此处设置为NULL。<br>多Stream同步等待场景下，例如，Stream2等Stream1的场景，此处配置为Stream1。 |
-| info | 输入 | 控制Record的行为模式。 |
+| cntNotify | 输入 | 需记录的CntNotify。类型定义请参见[aclrtCntNotify](aclrtCntNotify.md)。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](aclrtStream.md)。<br>如果使用默认Stream，此处设置为NULL。<br>多Stream同步等待场景下，例如，Stream2等Stream1的场景，此处配置为Stream1。 |
+| info | 输入 | 控制Record的行为模式。类型定义请参见[aclrtCntNotifyRecordInfo](aclrtCntNotifyRecordInfo.md)。 |
 
 ## 返回值说明
 

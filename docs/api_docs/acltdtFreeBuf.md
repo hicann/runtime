@@ -5,8 +5,9 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | x |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | x |
+| Ascend 950PR/Ascend950DT | ☓ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
 ## 功能说明
 
@@ -23,7 +24,7 @@ aclError acltdtFreeBuf(acltdtBuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输入 | 指定要释放的mbuf。 |
+| buf | 输入 | 指定要释放的mbuf。类型定义请参见[acltdtBuf](acltdtBuf.md)。 |
 
 ## 返回值说明
 

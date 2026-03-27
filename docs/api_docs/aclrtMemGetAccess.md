@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,7 +25,7 @@ aclError aclrtMemGetAccess(void *virPtr, aclrtMemLocation *location, uint64_t *f
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | virPtr | 输入 | 虚拟内存的起始地址。<br>必须与[aclrtMapMem](aclrtMapMem.md)接口的virPtr地址相同。 |
-| location | 输入 | 内存所在位置。<br>当前仅支持将aclrtMemLocation.type设置为ACL_MEM_LOCATION_TYPE_HOST或ACL_MEM_LOCATION_TYPE_DEVICE。当aclrtMemLocation.type为ACL_MEM_LOCATION_TYPE_HOST时，aclrtMemLocation.id无效，固定设置为0即可。 |
+| location | 输入 | 内存所在位置。类型定义请参见[aclrtMemLocation](aclrtMemLocation.md)。<br>当前仅支持将aclrtMemLocation.type设置为ACL_MEM_LOCATION_TYPE_HOST或ACL_MEM_LOCATION_TYPE_DEVICE。当aclrtMemLocation.type为ACL_MEM_LOCATION_TYPE_HOST时，aclrtMemLocation.id无效，固定设置为0即可。 |
 | flag | 输出 | 内存访问保护标志。 |
 
 ## 返回值说明

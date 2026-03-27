@@ -5,12 +5,13 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 功能说明
 
-阻塞应用程序运行，直到指定Stream中的所有任务都完成。
+阻塞Host侧当前线程直到指定Stream中的所有任务都完成。
 
 ## 函数原型
 
@@ -23,7 +24,7 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定需要完成所有任务的Stream。 |
+| stream | 输入 | 指定需要完成所有任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 
 ## 返回值说明
 

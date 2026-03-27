@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -35,6 +36,6 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 
 -   仅支持物理机和容器场景；
 -   仅支持同一个PCIe Switch内Device之间的数据交互。AI Server场景下，虽然是跨PCIe Switch，但也支持Device之间的数据交互。
--   仅支持同一个物理机或容器内的Device之间的数据交互操作；
+-   仅支持同一个物理机或容器内的Device之间的数据交互操作。
 -   仅支持同一个进程内、线程间的Device之间的数据交互，不支持不同进程间Device之间的数据交互。
 

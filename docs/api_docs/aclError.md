@@ -28,7 +28,7 @@ typedef int aclError;
 | static const int ACL_ERROR_PARSE_FILE = 100006; | 解析文件失败。 | 请检查文件内容是否合法。 |
 | static const int ACL_ERROR_FILE_MISSING_ATTR = 100007; | 文件缺失参数。 | 请检查文件内容是否完整。 |
 | static const int ACL_ERROR_FILE_ATTR_INVALID = 100008; | 文件参数无效。 | 请检查文件中参数值是否正确。 |
-| static const int ACL_ERROR_INVALID_DUMP_CONFIG = 100009; | 无效的Dump配置。 | 请检查Dump配置是否正确，详细配置请参见《精度调试工具用户指南》。 |
+| static const int ACL_ERROR_INVALID_DUMP_CONFIG = 100009; | 无效的Dump配置。 | 请检查Dump配置是否正确。 |
 | static const int ACL_ERROR_INVALID_PROFILING_CONFIG = 100010; | 无效的Profiling配置。 | 请检查Profiling配置是否正确。 |
 | static const int ACL_ERROR_INVALID_MODEL_ID = 100011; | 无效的模型ID。 | 请检查模型ID是否正确、模型是否正确加载。 |
 | static const int ACL_ERROR_DESERIALIZE_MODEL = 100012; | 反序列化模型失败。 | 模型可能与当前版本不匹配，请重新构建模型。 |
@@ -61,12 +61,12 @@ typedef int aclError;
 | static const int ACL_ERROR_COMPILING_STUB_MODE = 100039; | 运行应用前配置的动态库路径是编译桩的路径，不是正确的动态库路径。 | 请检查动态库路径的配置，确保使用运行模式的动态库。 |
 | static const int ACL_ERROR_GROUP_NOT_SET = 100040;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_SET](#table1089051917356)返回码。 | 未设置Group。 | 请检查是否已调用aclrtSetGroup接口。 |
 | static const int  ACL_ERROR_GROUP_NOT_CREATE = 100041;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_CREATE](#table1089051917356)返回码。 | 未创建对应的Group。 | 请检查调用接口时设置的Group ID是否在支持的范围内，Group ID的取值范围：[0, (Group数量-1)]，用户可调用aclrtGetGroupCount接口获取Group数量。 |
-| static const int ACL_ERROR_PROF_ALREADY_RUN = 100042; | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，“通过调用AscendCL API方式采集Profiling数据”的配置不能与其它方式的Profiling配置并存，只能保留一种，各种方式的Profiling采集配置请参见《性能调优工具用户指南》。<br>  - 请检查是否对同一个Device重复下发了多次Profiling配置。 |
+| static const int ACL_ERROR_PROF_ALREADY_RUN = 100042; | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，“通过调用AscendCL API方式采集Profiling数据”的配置不能与其它方式的Profiling配置并存，只能保留一种。<br>  - 请检查是否对同一个Device重复下发了多次Profiling配置。 |
 | static const int ACL_ERROR_PROF_NOT_RUN = 100043; | 未使用aclprofInit接口先进行Profiling初始化。 | 请检查接口调用顺序。 |
 | static const int ACL_ERROR_DUMP_ALREADY_RUN = 100044; | 已存在获取Dump数据的任务。 | 请检查在调用aclmdlInitDump接口、aclmdlSetDump接口、aclmdlFinalizeDump接口配置Dump信息前，是否已调用aclInit接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
 | static const int ACL_ERROR_DUMP_NOT_RUN = 100045; | 未使用aclmdlInitDump接口先进行Dump初始化。 | 请检查获取Dump数据的接口调用顺序，参考aclmdlInitDump接口处的说明。 |
 | static const int ACL_ERROR_PROF_REPEAT_SUBSCRIBE = 148046; | 重复订阅同一个模型。 | 请检查接口调用顺序。 |
-| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSubscribe接口、aclprofGet*接口、aclprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
+| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSub接口、aclprofGet*接口、clprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
 | static const int ACL_ERROR_INVALID_MAX_OPQUEUE_NUM_CONFIG = 148048; | 无效的算子缓存信息老化配置。 | 请检查算子缓存信息老化配置，参考aclInit处的配置说明及示例。 |
 | static const int ACL_ERROR_INVALID_OPP_PATH = 148049; | 没有设置ASCEND_OPP_PATH环境变量，或该环境变量的值设置错误。 | 请检查是否设置ASCEND_OPP_PATH环境变量，且该环境变量的值是否为opp软件包的安装路径。 |
 | static const int ACL_ERROR_OP_UNSUPPORTED_DYNAMIC = 148050; | 算子不支持动态Shape。 | - 请检查单算子模型文件中该算子的Shape是否为动态，如果是动态的，需要修改为固定Shape。<br>  - 请检查编译算子时，aclTensorDesc的Shape是否为动态，如果是动态的，需要按照固定Shape重新创建aclTensorDesc。 |

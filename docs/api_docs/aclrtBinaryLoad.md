@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -24,7 +25,7 @@ aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | binary | 输入 | 算子二进制信息。<br>此处需先调用[aclrtCreateBinary](aclrtCreateBinary.md)接口，获取aclrtBinary类型数据的指针。 |
-| binHandle | 输出 | 指向二进制的handle。 |
+| binHandle | 输出 | 指向二进制的handle。类型定义请参见[aclrtBinHandle](aclrtBinHandle.md)。 |
 
 ## 返回值说明
 

@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,7 +28,7 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
 | destMax | 输入 | 目的内存地址的最大内存长度，单位Byte。 |
 | src | 输入 | 源内存地址指针。 |
 | count | 输入 | 内存复制的长度，单位Byte。 |
-| kind | 输入 | 内存复制的类型，预留参数，配置枚举值中的值无效，系统内部会根据源内存地址指针、目的内存地址指针判断是否可以将源地址的数据复制到目的地址，如果不可以，则系统会返回报错。 |
+| kind | 输入 | 内存复制的类型，预留参数，配置枚举值中的值无效，系统内部会根据源内存地址指针、目的内存地址指针判断是否可以将源地址的数据复制到目的地址，如果不可以，则系统会返回报错。<br>类型定义请参见[aclrtMemcpyKind](aclrtMemcpyKind.md)。 |
 
 ## 返回值说明
 
@@ -39,6 +40,8 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
 -   如果执行两个Device间的内存复制，需先调用[aclrtDeviceCanAccessPeer](aclrtDeviceCanAccessPeer.md)接口查询两个Device间是否支持数据交互、调用[aclrtDeviceEnablePeerAccess](aclrtDeviceEnablePeerAccess.md)接口开启两个Device间的数据交互功能，再调用本接口进行内存复制。
 
     **该约束适用以下型号：**
+
+    Ascend 950PR/Ascend950DT
 
     Atlas A2 训练系列产品/Atlas A2 推理系列产品
 

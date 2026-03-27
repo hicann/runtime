@@ -15,7 +15,7 @@ aclError aclrtFreeBuf(aclrtMbuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输入 | 待释放的共享Buffer。 |
+| buf | 输入 | 待释放的共享Buffer。类型定义请参见[aclrtMbuf](aclrtMbuf.md)。 |
 
 ## 返回值说明
 

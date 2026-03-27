@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -27,7 +28,7 @@ aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void *args)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 指定执行回调任务的Stream。 |
+| stream | 输入 | 指定执行回调任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
 | fn | 输入 | 指定要增加的回调函数。<br>回调函数的函数原型为：<br>typedef void (*aclrtHostFunc)(void *args) |
 | args | 输入 | 待传递给回调函数的用户数据。 |
 

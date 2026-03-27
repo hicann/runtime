@@ -5,8 +5,9 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | x |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | x |
+| Ascend 950PR/Ascend950DT | ☓ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | ☓ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | ☓ |
 
 ## 功能说明
 
@@ -23,8 +24,8 @@ aclError acltdtCopyBufRef(const acltdtBuf buf, acltdtBuf *newBuf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| buf | 输入 | 共享Buffer，须通过[acltdtAllocBuf](acltdtAllocBuf.md)或[acltdtCopyBufRef](acltdtCopyBufRef.md)接口申请获得。 |
-| newBuf | 输出 | 返回一个新的共享Buffer，指向相同的数据区。 |
+| buf | 输入 | 共享Buffer。类型定义请参见[acltdtBuf](acltdtBuf.md)。<br>须通过[acltdtAllocBuf](acltdtAllocBuf.md)或[acltdtCopyBufRef](acltdtCopyBufRef.md)接口申请获得。 |
+| newBuf | 输出 | 返回一个新的共享Buffer，指向相同的数据区。类型定义请参见[acltdtBuf](acltdtBuf.md)。 |
 
 ## 返回值说明
 

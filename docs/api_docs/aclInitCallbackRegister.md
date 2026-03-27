@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclInitCallbackRegister(aclRegisterCallbackType type, aclInitCallbackFu
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| type | 输入 | 注册类型，按照不同的功能区分。 |
+| type | 输入 | 注册类型，按照不同的功能区分，请参见[aclRegisterCallbackType](aclRegisterCallbackType.md)。 |
 | cbFunc | 输入 | 初始化回调函数。<br>回调函数的函数原型为：<br>typedef aclError (*aclInitCallbackFunc)(const char *configStr, size_t len, void *userData);<br>configStr跟aclInit接口中的json文件内容保持一致；len表示json文件内容的长度，单位Byte。 |
 | userData | 输入 | 待传递给回调函数的用户数据的指针。 |
 

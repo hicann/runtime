@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -14,7 +15,7 @@
 
 如下图所示，可以建立两条路由关系Q1-\>Q2，Q1-\>Q3。数据一对多分发时，传递的共享Buffer数据是无锁的，消费者不能对数据进行inplace操作，如下图所示消费者1对共享数据的修改会导致消费者2访问的数据发生变化。
 
-![](figures/zh-cn_image_0000001264922118.png)
+![](figures/zh-cn_image_0000002531354738.png)
 
 ## 函数原型
 
@@ -27,7 +28,7 @@ aclError acltdtBindQueueRoutes(acltdtQueueRouteList *qRouteList)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由绑定结果。<br>需提前调用[acltdtCreateQueueRouteList](acltdtCreateQueueRouteList.md)接口创建acltdtQueueRouteList类型的数据，再调用[acltdtAddQueueRoute](acltdtAddQueueRoute.md)接口添加路由关系。 |
+| qRouteList | 输入/输出 | 路由关系数组的指针，接口调用完成后返回路由绑定结果。类型定义请参见[acltdtQueueRouteList](acltdtQueueRouteList.md)。<br>需提前调用[acltdtCreateQueueRouteList](acltdtCreateQueueRouteList.md)接口创建acltdtQueueRouteList类型的数据，再调用[acltdtAddQueueRoute](acltdtAddQueueRoute.md)接口添加路由关系。 |
 
 ## 返回值说明
 

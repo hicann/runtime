@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,10 +24,10 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| funcHandle | 输入 | 核函数句柄。 |
+| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](aclrtFuncHandle.md)。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| stream | 输入 | 指定执行任务的Stream。 |
-| cfg | 输入 | 任务下发的配置信息。<br>不指定配置时，此处可传NULL。 |
+| stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](aclrtLaunchKernelCfg.md)。<br>不指定配置时，此处可传NULL。 |
 | hostArgs | 输入 | 存放核函数所有入参数据的Host内存地址指针。 |
 | argsSize | 输入 | hostArgs参数值的大小，单位为Byte。 |
 | placeHolderArray | 输入 | placeholder参数数组。<br>aclrtPlaceHolderInfo定义如下：<br>typedef struct {<br>   uint32_t addrOffset;<br>   uint32_t dataOffset;<br>} aclrtPlaceHolderInfo;<br>成员变量说明如下：<br><br>  - addrOffset：placeholder指向的数据区拷贝到Device后，其真实Device内存地址在launch时需要刷新到hostArgs中，该参数用于指定需刷新的位置偏移<br>  - dataOffset：placeholder指向的数据区需拷贝到Device侧，该参数用于指定数据区基于hostArgs的地址偏移 |

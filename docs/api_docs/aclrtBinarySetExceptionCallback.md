@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -17,7 +18,7 @@
 ## 函数原型
 
 ```
-aclError aclrtBinarySetExceptionCallback(const aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
+aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
 ```
 
 ## 参数说明
@@ -26,7 +27,7 @@ aclError aclrtBinarySetExceptionCallback(const aclrtBinHandle binHandle, aclrtOp
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | binHandle | 输入 | 算子二进制句柄。<br>调用[aclrtBinaryLoadFromFile](aclrtBinaryLoadFromFile.md)接口或[aclrtBinaryLoadFromData](aclrtBinaryLoadFromData.md)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
-| callback | 输入 | 指定要注册的回调函数。<br>回调函数的函数原型为：<br/>typedef void (*aclrtOpExceptionCallback)(aclrtExceptionInfo *exceptionInfo, void *userData); |
+| callback | 输入 | 指定要注册的回调函数。<br>回调函数的函数原型为：<br>typedef void (*aclrtOpExceptionCallback)(aclrtExceptionInfo *exceptionInfo, void *userData); |
 | userData | 输入 | 待传递给回调函数的用户数据的指针。 |
 
 ## 返回值说明

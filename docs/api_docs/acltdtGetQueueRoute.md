@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError acltdtGetQueueRoute(const acltdtQueueRouteList *routeList, size_t index
 | --- | --- | --- |
 | routeList | 输入 | 队列路由配置数组。<br>需提前调用[acltdtCreateQueueRouteList](acltdtCreateQueueRouteList.md)接口创建acltdtQueueRouteList类型的数据。 |
 | index | 输入 | 指定获取哪一个队列路由配置信息，index编号从0开始。 |
-| route | 输入&输出 | 需添加的队列路由配置信息的指针。 |
+| route | 输入&输出 | 需添加的队列路由配置信息的指针。类型定义请参见[acltdtQueueRoute](acltdtQueueRoute.md)。 |
 
 ## 返回值说明
 

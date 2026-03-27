@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclrtBinary aclrtCreateBinary(const void *data, size_t dataLen)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| data | 输入 | 存放算子二进制文件（*.o文件）数据的内存地址指针。<br>应用运行在Host时，此处需申请Host上的内存；应用运行在Device时，此处需申请Device上的内存。内存申请接口请参见[内存管理](内存管理.md)。 |
+| data | 输入 | 存放算子二进制文件（*.o文件）数据的内存地址指针。<br>Ascend EP标准形态下，此处需申请Host上的内存；Ascend RC形态或Control CPU开放形态下，此处需申请Device上的内存。 |
 | dataLen | 输入 | 内存大小，单位Byte。 |
 
 ## 返回值说明

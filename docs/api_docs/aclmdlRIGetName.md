@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,7 +24,7 @@ aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, char *name)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelRI | 输入 | 模型运行实例。 |
+| modelRI | 输入 | 模型运行实例。类型定义请参见[aclmdlRI](aclmdlRI.md)。 |
 | maxLen | 输入 | 用户申请的用于存放name的最大内存长度，单位Byte。 |
 | name | 输出 | 模型运行实例的名称。<br>name的最大长度为512Byte，超过512Byte的部分将被截断并返回。 |
 

@@ -7,6 +7,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -25,7 +26,7 @@ aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| modelRI | 输入 | 模型运行实例，该模型用于暂存所捕获的任务。<br>仅支持在[aclmdlRICaptureEnd](aclmdlRICaptureEnd.md)接口之后打印模型信息，将[aclmdlRICaptureEnd](aclmdlRICaptureEnd.md)接口输出的模型运行实例作为入参传入本接口，但需确保modelRI是有效的。 |
+| modelRI | 输入 | 模型运行实例，该模型用于暂存所捕获的任务。类型定义请参见[aclmdlRI](aclmdlRI.md)。<br>仅支持在[aclmdlRICaptureEnd](aclmdlRICaptureEnd.md)接口之后打印模型信息，将[aclmdlRICaptureEnd](aclmdlRICaptureEnd.md)接口输出的模型运行实例作为入参传入本接口，但需确保modelRI是有效的。 |
 
 ## 返回值说明
 

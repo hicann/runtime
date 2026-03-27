@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,8 +24,8 @@ aclError aclrtSynchronizeEventWithTimeout(aclrtEvent event, int32_t timeout)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| event | 输入 | 需等待的Event。 |
-| timeout | 输入 | 接口的超时时间。<br>取值说明如下：<br><br>  - -1：表示永久等待，和接口[aclrtSynchronizeEvent](aclrtSynchronizeEvent.md)功能一样；<br>  - >0：配置具体的超时时间，单位是毫秒。 |
+| event | 输入 | 需等待的Event。类型定义请参见[aclrtEvent](aclrtEvent.md)。 |
+| timeout | 输入 | 接口的超时时间。<br>取值说明如下：<br><br>  - -1：表示永久等待，和接口[aclrtSynchronizeEvent](aclrtSynchronizeEvent.md)功能一样。<br>  - >0：配置具体的超时时间，单位是毫秒。 |
 
 ## 返回值说明
 

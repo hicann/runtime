@@ -5,6 +5,7 @@
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | √ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
@@ -23,9 +24,9 @@ aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *alloc
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| stream | 输入 | 注册的类型，按照不同的子模块区分。 |
-| allocatorDesc | 输出 | Allocator描述符指针。 |
-| allocator | 输出 | 用户提供的Allocator对象指针。 |
+| stream | 输入 | 注册的类型，按照不同的子模块区分。类型定义请参见[aclrtStream](aclrtStream.md)。 |
+| allocatorDesc | 输出 | Allocator描述符指针。类型定义请参见[aclrtAllocatorDesc](aclrtAllocatorDesc.md)。 |
+| allocator | 输出 | 用户提供的Allocator对象指针。类型定义请参见[aclrtAllocator](aclrtAllocator.md)。 |
 | allocFunc | 输出 | 申请内存block的回调函数。<br>回调函数定义如下：<br>typedef void *(*aclrtAllocatorAllocFunc)([aclrtAllocator](aclrtAllocator.md) allocator, size_t size); |
 | freeFunc | 输出 | 释放内存block的回调函数。<br>回调函数定义如下：<br>typedef void (*aclrtAllocatorFreeFunc)([aclrtAllocator](aclrtAllocator.md) allocator, [aclrtAllocatorBlock](aclrtAllocatorBlock.md) block); |
 | allocAdviseFunc | 输出 | 根据建议地址申请内存block的回调函数。<br>回调函数定义如下：<br>typedef void *(*aclrtAllocatorAllocAdviseFunc)([aclrtAllocator](aclrtAllocator.md) allocator, size_t size, [aclrtAllocatorAddr](aclrtAllocatorAddr.md) addr); |

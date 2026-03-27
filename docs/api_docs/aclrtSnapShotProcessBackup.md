@@ -1,10 +1,13 @@
 # aclrtSnapShotProcessBackup
 
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
 ## 产品支持情况
 
 
 | 产品 | 是否支持 |
 | --- | --- |
+| Ascend 950PR/Ascend950DT | ☓ |
 | Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 | Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
