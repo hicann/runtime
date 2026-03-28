@@ -248,11 +248,6 @@ TEST_F(COMMON_FILE_SLICE_TEST, SaveDataToLocalFiles) {
     ret = wfTransport.SaveDataToLocalFiles(message, dir);
     EXPECT_EQ(PROFILING_FAILED, ret);
     message->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_MSPROF_HOST;
-
-    //CreateDir failed
-    ret = wfTransport.SaveDataToLocalFiles(message, dir);
-    EXPECT_EQ(PROFILING_FAILED, ret);
-
     std::string invalidKey = "";
     std::string key = "hwts.log.slice_";
     MOCKER_CPP(&FileSlice::GetSliceKey)

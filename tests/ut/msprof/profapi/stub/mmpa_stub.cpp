@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <map>
+#include <string>
 #include "mmpa_api.h"
 #include "prof_inner_api.h"
 #include "acl/acl_base.h"

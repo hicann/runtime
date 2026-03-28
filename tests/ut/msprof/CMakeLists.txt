@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 set(MSPROF_SOURCE_DIR ${TOP_DIR}/src/dfx/msprof/collector)
 
-include_directories(${OPEN_SOURCE_DIR}/boost)
+include_directories(${OPEN_SOURCE_DIR}/boost-1.87.0)
 include_directories(${OPEN_SOURCE_DIR}/mockcpp_src/include)
 
 ############# intf_llt_pub ####################

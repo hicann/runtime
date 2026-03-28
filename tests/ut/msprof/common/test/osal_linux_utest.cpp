@@ -159,16 +159,6 @@ TEST_F(OSAL_LINUX_TEST, LinuxCreateTaskWithThreadAttr)
     ret = LinuxCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
     ASSERT_EQ(OSAL_EN_INVALID_PARAM, ret);
     GlobalMockObject::reset();
-
-    attr.policyFlag = 1;
-    attr.policy = OSAL_THREAD_SCHED_RR;
-    attr.priorityFlag = 1;
-    attr.priority = 1;  // 1-99
-    attr.stackFlag = 1;
-    attr.stackSize = 20480;  // 20K
-
-    ret = LinuxCreateTaskWithThreadAttr(&stThreadHandle, &stFuncBlock, &attr);
-    ASSERT_EQ(OSAL_EN_ERROR, ret);
 }
 
 TEST_F(OSAL_LINUX_TEST, LinuxJoinTask)

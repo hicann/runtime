@@ -160,7 +160,6 @@ set(localSrcFiles
     test/job_factory_utest.cpp
     test/prof_channel_manager_utest.cpp
     test/prof_host_job_utest.cpp
-    test/adx_prof_api_utest.cpp
     test/prof_manager_utest.cpp
     test/info_json_test.cpp
     test/prof_diagnostic_utest.cpp

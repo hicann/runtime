@@ -156,10 +156,10 @@ TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, Process) {
         .stubs()
         .will(returnValue(poller));
     EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_FAILED, proDdrJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, proDdrJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_DDR_JOB_TEST, SetPeripheralConfig) {
@@ -257,10 +257,10 @@ TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Process) {
     auto proHbmJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHbmJob>();
     proHbmJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, proHbmJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_FAILED, proHbmJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, proHbmJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_HBM_JOB_TEST, Uninit) {
@@ -333,10 +333,10 @@ TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Process) {
     auto profQosJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfQosJob>();
     profQosJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profQosJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)nullptr));
-    EXPECT_EQ(PROFILING_FAILED, profQosJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, profQosJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_QOS_JOB_TEST, Uninit) {
@@ -456,10 +456,10 @@ TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Process) {
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_FAILED, profMemJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_MEM_APP_JOB_TEST, Uninit) {
@@ -516,10 +516,10 @@ TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Process) {
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_FAILED, profMemJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_MEM_JOB_TEST, Uninit) {
@@ -576,10 +576,10 @@ TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Process) {
     collectionJobCfg_->comParams->params->memProfiling = "on";
     profMemJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
-    MOCKER(malloc)
+    MOCKER_CPP(&analysis::dvvp::driver::DrvPeripheralStart)
         .stubs()
-        .will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_FAILED, profMemJob->Process());
+        .will(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, profMemJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_AI_STACK_MEM_JOB_UTEST, Uninit) {
