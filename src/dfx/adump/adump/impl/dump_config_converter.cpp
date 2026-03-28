@@ -331,7 +331,7 @@ bool DumpConfigConverter::CheckDumpPath() const
         std::string errorMsg;
         if (!FileUtils::IsPathHasPermission(dumpPath, errorMsg)) {
             IDE_LOGE("%s", errorMsg.c_str());
-            std::string errReason = "The value is a path without read and write permissions";
+            std::string errReason = (errno == EACCES) ? "The value is a path without read and write permissions" : "The value is an invalid path";
             ADUMP_INPUT_ERROR("EP0003", std::vector<std::string>({"value", "item", "path", "reason"}),
                 std::vector<std::string>({dumpPath, ADUMP_DUMP_PATH, configPath_, errReason}));
             return false;
@@ -836,6 +836,9 @@ int32_t DumpConfigConverter::Convert(DumpType &dumpType, DumpConfig &dumpConfig,
         );
     } catch (const std::exception &e) {
  	    IDE_LOGE("convert exception: %s", e.what());
+        std::string errReason(e.what());
+        ADUMP_INPUT_ERROR("EP0004", std::vector<std::string>({"path", "reason"}),
+            std::vector<std::string>({configPath_, errReason}));
         return ADUMP_FAILED;
     }
     return ADUMP_SUCCESS;
@@ -905,9 +908,6 @@ void DumpConfigConverter::LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable)
             std::string optionStr = TransOptionsToStr(envDumpScenes);
             IDE_LOGW("Value[%s] of Env[ASCEND_DUMP_SCENE] is invalid, it must be %s",
                 envAscendDumpScene.c_str(), optionStr.c_str());
-            std::string warnReason = StrUtils::Format("The dump scene must be selected form[%s]", optionStr.c_str());
-            ADUMP_INPUT_ERROR("WP0001", std::vector<std::string>({"value", "env", "reason"}),
-                std::vector<std::string>({envAscendDumpScene, ADUMP_ENV_ASCEND_DUMP_SCENE, warnReason}));
         }
     }
 
