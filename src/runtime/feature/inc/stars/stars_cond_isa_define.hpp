@@ -526,6 +526,7 @@ struct RtStarsMemWaitValueInstrFcPara {
     uint32_t sqHeadNext;
     uint32_t lastSqePos;      // 当lastSqePos和sqTail相同是，说明最后一个sqe还没下发下来，不能跳转到sqHeadNext
     uint16_t awSize;
+    uint8_t  bindFlag;
 };
 
 #pragma pack(pop)

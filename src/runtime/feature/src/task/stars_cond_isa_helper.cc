@@ -2009,19 +2009,27 @@ void MemWaitInstrWaitSuccessForSoftwareSq(RtStarsMemWaitValueLastInstrFcEx &fc,
     constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
     constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
 
-    uint64_t nextCheckOffset = offsetof(RtStarsMemWaitValueLastInstrFcEx, loadSqId3);
-    nextCheckOffset = nextCheckOffset / sizeof(uint32_t);
-
     uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcEx, end);
     endOffset = endOffset / sizeof(uint32_t);
+
+    uint64_t nextOffset;
+    if (fcPara.bindFlag != 0U) {
+        // next is modify sq head
+        nextOffset = offsetof(RtStarsMemWaitValueLastInstrFcEx, loadSqId2);
+    } else {
+        // next is sqe next check
+        nextOffset = offsetof(RtStarsMemWaitValueLastInstrFcEx, loadSqId3);
+    }
+
+    nextOffset = nextOffset / sizeof(uint32_t);
 
     /* wait success */
     // load prof disable status to r2
     ConstructLoadImm(r2, fcPara.profDisableAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus1);
 
     // r2 == 0, goto sqe next check
-    ConstructSetJumpPcFc(r1, nextCheckOffset, fc.jumpPc4);
-    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(nextCheckOffset), fc.branch4);
+    ConstructSetJumpPcFc(r1, nextOffset, fc.jumpPc4);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(nextOffset), fc.branch4);
 
     // r2 != 0, write prof disable status to 0
     // load profDisableAddr to r4
