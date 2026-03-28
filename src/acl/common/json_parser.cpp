@@ -128,7 +128,7 @@ namespace acl {
         return true;
     }
 
-    aclError JsonParser::ParseJson(const char_t *const configStr, nlohmann::json &js)
+    aclError JsonParser::ParseJson(const char_t* const fileName, const char_t *const configStr, nlohmann::json &js)
     {
         if (strlen(configStr) == 0UL) {
             ACL_LOG_DEBUG("buffer is empty, no need parse json.");
@@ -138,6 +138,9 @@ namespace acl {
             js = nlohmann::json::parse(std::string(configStr));
         } catch (const nlohmann::json::exception &e) {
             ACL_LOG_INNER_ERROR("[Check][JsonFile]invalid json buffer, exception:%s.", e.what());
+            acl::AclErrorLogManager::ReportInputError(
+                acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
+                std::vector<const char*>({fileName, ("Parse exception: " + std::string(e.what())).c_str()}));
             return ACL_ERROR_PARSE_FILE;
         }
         ACL_LOG_DEBUG("parse json from buffer successfully.");
@@ -196,7 +199,7 @@ namespace acl {
             return ret;
         }
 
-        ret= ParseJson(configStr.c_str(), js);
+        ret= ParseJson(fileName, configStr.c_str(), js);
         if (ret != ACL_SUCCESS) {
             ACL_LOG_INNER_ERROR("[Parse][File]parse config file[%s] to json failed.", fileName);
             return ACL_ERROR_PARSE_FILE;
