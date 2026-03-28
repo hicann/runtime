@@ -25,7 +25,7 @@ aclError aclsysGetVersionNum(char *pkgName，int32_t * versionNum)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| pkgName | 输入 | 软件包名称，与${INSTALL_DIR}/share/info下的目录名称保持一致。<br>${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。 |
+| pkgName | 输入 | 软件包名称，与${INSTALL_DIR}/share/info下的目录名称保持一致。<br>${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。<br>驱动包名称为driver。 |
 | versionNum | 输出 | 数值类型的版本号。 |
 
 ## 返回值说明
