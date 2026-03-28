@@ -3023,12 +3023,14 @@ TEST_F(ProcessManagerTest, GetShortSocVersion_halGetSocVersionFailed_Failed)
     EXPECT_EQ(ret, false); 
 }
 
-TEST_F(ProcessManagerTest, GetShortSocVersion_GetSocSpecFailed_Failed) 
-{ 
+TEST_F(ProcessManagerTest, GetShortSocVersion_GetPlatformInfos_Failed)
+{
     MOCKER(halGetSocVersion).stubs().will(invoke(halGetSocVersionStub));
-    MOCKER_CPP(&PlatformManagerV2::GetSocSpec).stubs().will(returnValue(1));
-    ProcessModeManager processModeManager(deviceId, 0); 
+    MOCKER_CPP(&fe::PlatFormInfos::GetPlatformRes,
+        bool (fe::PlatFormInfos::*)(const std::string& label, const std::string& key, std::string& val))
+        .stubs().will(returnValue(false));
+    ProcessModeManager processModeManager(deviceId, 0);
     std::string shortSocVersion;
-    const auto ret = processModeManager.GetShortSocVersion(shortSocVersion); 
-    EXPECT_EQ(ret, false); 
+    const auto ret = processModeManager.GetShortSocVersion(shortSocVersion);
+    EXPECT_EQ(ret, false);
 }
