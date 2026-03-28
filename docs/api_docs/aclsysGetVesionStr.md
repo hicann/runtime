@@ -46,7 +46,7 @@ aclError aclsysGetVersionStr(char *pkgName, char * versionStr)
 <td class="cellrowborder" valign="top" width="13.03%" headers="mcps1.1.4.1.2 "><p id="p783015417719"><a name="p783015417719"></a><a name="p783015417719"></a>输入</p>
 </td>
 <td class="cellrowborder" valign="top" width="67.80000000000001%" headers="mcps1.1.4.1.3 "><p id="p1039820018572">软件包名称，与${INSTALL_DIR}/share/info下的目录名称保持一致。</p>
-<p id="p513515485719">${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root安装举例，安装后文件默认存储路径为：/usr/local/Ascend/cann。</p>
+<p id="p513515485719">${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root安装举例，安装后文件默认存储路径为：/usr/local/Ascend/cann。<br>驱动包名称为driver。<br>固件包名称为firmware。</p>
 </td>
 </tr>
 <tr id="row1660814462512"><td class="cellrowborder" valign="top" width="19.17%" headers="mcps1.1.4.1.1 "><p id="p19609124617516"><a name="p19609124617516"></a><a name="p19609124617516"></a>versionStr</p>
