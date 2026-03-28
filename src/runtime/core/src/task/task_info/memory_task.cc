@@ -1659,6 +1659,7 @@ static void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitVal
     }
 
     fcPara.profDisableAddr = memWaitValueTask->profDisableStatusAddr;
+    fcPara.bindFlag = stream->GetBindFlag();
 
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%u, sqHeadPre=%u, sqHeadNext=%u, "
         "lastSqePos=%u, profDisableAddr=0x%lx, "
