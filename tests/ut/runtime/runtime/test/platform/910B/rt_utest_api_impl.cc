@@ -36,6 +36,7 @@
 #include "dqs/task_dqs.hpp"
 #include "stub_task.hpp"
 #include "device_error_proc.hpp"
+#include "snapshot_process_helper.hpp"
 #undef private
 #include <string>
 #include "driver/ascend_hal.h"
@@ -532,6 +533,56 @@ TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
     processResRestoreFlag = 0;
 
     delete stream;
+}
+
+TEST_F(CloudV2ApiImplTest, SnapShotDeviceRestore_ut)
+{
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::ReOpen).stubs().will(returnValue(RT_ERROR_NONE));
+
+    processResRestoreFlag = 0;
+    rtError_t error = SnapShotDeviceRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    processResRestoreFlag = 1;
+    error = SnapShotDeviceRestore();
+    EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
+    processResRestoreFlag = 0;
+}
+
+TEST_F(CloudV2ApiImplTest, SnapShotResourceRestore_ut)
+{
+    ContextDataManage ctxMan;
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+
+    Context context(device, false);
+    ctxMan.InsertSetValueWithoutLock(&context);
+
+    MOCKER_CPP(&Context::StreamsTaskClean).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Context::StreamsRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::EventsReAllocId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::NotifiesReAllocId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::ResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::EventExpandingPoolRestore)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = SnapShotResourceRestore(ctxMan);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    GlobalMockObject::reset();
+
+    MOCKER_CPP(&Context::StreamsTaskClean).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Context::StreamsRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<RawDevice *>(device), &RawDevice::EventsReAllocId)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    error = SnapShotResourceRestore(ctxMan);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
 TEST_F(CloudV2ApiImplTest, dev_binary_register_test)

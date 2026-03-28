@@ -380,7 +380,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq.cc
@@ -533,7 +534,8 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc
@@ -1164,6 +1166,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/memory/
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/cntnotify/
+    ${TOP_DIR}/src/runtime/feature/snapshot/
     ${TOP_DIR}/src/runtime/core/src/uvm
     ${TOP_DIR}/src/runtime/core/src/event
     ${TOP_DIR}/src
@@ -1333,7 +1336,8 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
-    ${TOP_DIR}/src/runtime/core/src/device/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc

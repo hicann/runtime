@@ -182,7 +182,8 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/npu_driver.cc
@@ -280,7 +281,8 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
@@ -418,6 +420,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_CORE_DIR}/src/memory
     ${RUNTIME_FEATURE_DIR}/soma
     ${RUNTIME_FEATURE_DIR}/cntnotify
+    ${RUNTIME_FEATURE_DIR}/snapshot
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100
