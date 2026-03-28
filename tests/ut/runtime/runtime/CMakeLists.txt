@@ -1121,6 +1121,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/src/runtime/inc
     ${TOP_DIR}/src/runtime/core/inc_c
+    ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/inc/context
     ${TOP_DIR}/src/runtime/inc/spec
     ${TOP_DIR}/src/runtime/inc/common
@@ -1152,6 +1153,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/dfx
     ${TOP_DIR}/src/runtime/core/src/stream
     ${TOP_DIR}/src/runtime/core/src/task/inc
+    ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/core/src/profiler
     ${TOP_DIR}/src/runtime/core/src/pool
     ${TOP_DIR}/src/runtime/core/src/ttlv
@@ -1281,7 +1283,7 @@ set(runtimeut_v201_src_stream_list
     ${runtimeut_common_src_stream_list}
 
     ${TOP_DIR}/src/runtime/core/src/stream/stream_david.cc
-    ${TOP_DIR}/src/runtime/core/src/stream/v201/stream_with_dqs.cc
+    ${TOP_DIR}/src/runtime/feature/dps/stream_with_dqs.cc
     ${TOP_DIR}/src/runtime/core/src/stream/v201/stream_creator_c.cc
 )
 
@@ -1292,8 +1294,8 @@ set(runtimeut_v201_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v201/memcpy_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/aicpu_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_checker.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v201/dqs_task.cc
-    ${TOP_DIR}/src/runtime/core/src/launch/v201/dqs_c.cc
+    ${TOP_DIR}/src/runtime/feature/dps/dqs_task.cc
+    ${TOP_DIR}/src/runtime/feature/dps/dqs_c.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/notify_task_to_sqe.cc
 )
@@ -1393,7 +1395,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/device/v200_base/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v201/stars_dqs_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/feature/dps/stars_dqs_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/common/thread_local_container.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp
     ${TOP_DIR}/src/runtime/core/src/utils/aicpu_scheduler_agent.cc
@@ -1472,9 +1474,9 @@ set(RUNTIME_V201_INC_DIR
     ${RUNTIME_TEST_INC_DIR_COMMON}
     ${TOP_DIR}/src/runtime/inc/sqe/v201
     ${TOP_DIR}/src/runtime/inc/cond_isa/v201
-    ${TOP_DIR}/src/runtime/core/src/task/inc/v201
+    ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201
-    ${TOP_DIR}/src/runtime/core/src/stream/v201
+    ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/core/src/common/ioctl/v201
 )
 
