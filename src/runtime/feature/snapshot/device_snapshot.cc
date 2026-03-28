@@ -270,16 +270,7 @@ rtError_t DeviceSnapshot::ArgsPoolRestore(void) const
     UmaArgLoader *umaArgLoader = dynamic_cast<UmaArgLoader *>(argLoaderObj);
     COND_RETURN_ERROR((umaArgLoader == nullptr), RT_ERROR_INVALID_VALUE, "Get umaArgLoader nullptr, devId=%d", device_->Id_());
 
-    const std::vector<std::pair<void*, size_t>> &argPcieBarInfos = GetArgPcieBarInfos();
-    void* outAddr = nullptr;
     rtError_t ret = RT_ERROR_NONE;
-
-    for (const auto &argPcieBarInfo : argPcieBarInfos) {
-        ret = device_->Driver_()->PcieHostRegister(
-            argPcieBarInfo.first, static_cast<uint64_t>(argPcieBarInfo.second), device_->Id_(), outAddr);
-        ERROR_RETURN(ret, "PcieHostRegister failed, retCode=%#x.", ret);
-    }
-
     H2DCopyMgr *mgr = umaArgLoader->GetArgsAllocator();
     ret = ArgsPoolConvertAddr(mgr);
     ERROR_RETURN(ret, "convert args pool addr failed, retCode=%#x.", ret);

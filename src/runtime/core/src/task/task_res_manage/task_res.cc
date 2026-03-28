@@ -104,20 +104,6 @@ void TaskResManage::FreePcieBarBuffer(void *addr, Device* para) const
     }
 }
 
-rtError_t TaskResManage::RePcieHostRegister(const Stream *const stm) const 
-{
-    if (pcieBaseAddr_ == nullptr) {
-        RT_LOG(RT_LOG_WARNING, "dev not support pcie bar copy.");
-        return RT_ERROR_NONE;
-    }
-    Device *dev = stm->Device_();
-    const uint64_t size = taskPoolNum_ * RTS_LITE_PCIE_BAR_COPY_SIZE;
-    void *outAddr = nullptr;
-    const rtError_t ret = dev->Driver_()->PcieHostRegister(pcieBaseAddr_, size, dev->Id_(), outAddr);
-    ERROR_RETURN_MSG_INNER(ret, "Pcie Host Register failed, size=%lu, dev_id=%u, ret=%d.", size, dev->Id_(), ret);
-    return RT_ERROR_NONE;
-}
-
 void* TaskResManage::MallocPcieBarBuffer(const uint32_t size, Device* const dev, bool isLogError) const
 {
     void *addr = nullptr;

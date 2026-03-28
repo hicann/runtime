@@ -1094,12 +1094,6 @@ rtError_t Stream::Restore()
     ERROR_RETURN_MSG_INNER(error, "Realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.",
         streamId_, device_->Id_(), error);
 
-    if (taskResMang_ != nullptr) {
-        error = taskResMang_->RePcieHostRegister(this);
-        ERROR_RETURN_MSG_INNER(error, "RePcieHostRegister failed, streamId=%d, deviceId=%u, ret=%d.",
-            streamId_, device_->Id_(), error);
-    }
-
     if (executedTimesSvm_ != nullptr) {
         error = device_->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,

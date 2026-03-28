@@ -294,43 +294,6 @@ TEST_F(SnapshotTest, StreamTaskClean)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
-TEST_F(SnapshotTest, AddArgPcieBar_Single) {
-    void* testAddr = reinterpret_cast<void*>(0x1000);
-    size_t testSize = 4096;
-
-    deviceSnapshot_->AddArgPcieBar(testAddr, testSize);
-
-    const auto& barInfos = deviceSnapshot_->GetArgPcieBarInfos();
-    EXPECT_EQ(barInfos.size(), 1U);
-    EXPECT_EQ(barInfos[0].first, testAddr);
-    EXPECT_EQ(barInfos[0].second, testSize);
-}
-
-TEST_F(SnapshotTest, AddArgPcieBar_Multiple) {
-    std::vector<std::pair<void*, size_t>> testData = {
-        {reinterpret_cast<void*>(0x1000), 4096},
-        {reinterpret_cast<void*>(0x2000), 8192},
-        {reinterpret_cast<void*>(0x3000), 16384}
-    };
-
-    for (const auto& data : testData) {
-        deviceSnapshot_->AddArgPcieBar(data.first, data.second);
-    }
-
-    const auto& barInfos = deviceSnapshot_->GetArgPcieBarInfos();
-    EXPECT_EQ(barInfos.size(), testData.size());
-
-    for (size_t i = 0; i < testData.size(); ++i) {
-        EXPECT_EQ(barInfos[i].first, testData[i].first);
-        EXPECT_EQ(barInfos[i].second, testData[i].second);
-    }
-}
-
-TEST_F(SnapshotTest, GetArgPcieBarInfos_Empty) {
-    const auto& barInfos = deviceSnapshot_->GetArgPcieBarInfos();
-    EXPECT_EQ(barInfos.size(), 0U);
-}
-
 TEST_F(SnapshotTest, ResetBufferForEvent_Normal) {
     void* eventAddr = nullptr;
     int32_t eventId = 0;

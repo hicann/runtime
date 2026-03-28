@@ -38,7 +38,6 @@ public:
     uint16_t GetResHead() const;
     virtual bool CreateTaskRes(Stream* stm);
     void ReleaseTaskResource(Stream* stm);
-    rtError_t RePcieHostRegister(const Stream *const stm) const;
     void *MallocPcieBarBuffer(const uint32_t size, Device * const dev, bool isLogError=true) const;
 
     bool AllocTaskResId(uint32_t &taskResId);

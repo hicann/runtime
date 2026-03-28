@@ -401,12 +401,6 @@ void *H2DCopyMgr::MallocPcieBarBuffer(size_t size, void *para)
         return nullptr;
     }
 
-    DeviceSnapshot *deviceSnapShot = dev->GetDeviceSnapShot();
-    if (deviceSnapShot != nullptr) {
-        deviceSnapShot->AddArgPcieBar(addr, size);
-        RT_LOG(RT_LOG_DEBUG, "pcie bar addr=%p, size=%u(bytes), drv deviceId=%u.",
-            addr, size, dev->Id_());
-    }
     return addr;
 }
 
