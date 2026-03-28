@@ -5437,8 +5437,7 @@ rtError_t ApiImpl::GetRtCapability(const rtFeatureType_t featureType, const int3
     }
 
     if (featureType == FEATURE_TYPE_AICPU_OVERFLOW_DUMP) {
-        *val = static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
-        return RT_ERROR_NONE;
+        return GetOverflowDetectionCapability(chipType, val);
     }
 
     DevProperties props;
@@ -5473,6 +5472,27 @@ rtError_t ApiImpl::GetRtCapability(const rtFeatureType_t featureType, const int3
         return RT_ERROR_NONE;
     }
     return RT_ERROR_INVALID_VALUE;
+}
+
+rtError_t ApiImpl::GetOverflowDetectionCapability(rtChipType_t chipType, int64_t *val)
+{
+    bool haveDevice = Runtime::Instance()->HaveDevice();
+    if (haveDevice) {
+        Context * const curCtx = CurrentContext();
+ 	    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);    
+ 	    Device * const dev = curCtx->Device_();
+ 	    const bool isSupport = dev->CheckFeatureSupport(TS_FEATURE_QUERY_STREAM_OVERFLOW_STATUS);
+        if (isSupport) {
+            *val = static_cast<int64_t>(RT_CAPABILITY_SUPPORT);
+        } else {
+            RT_LOG(RT_LOG_WARNING, "query aicpu dump not support in chipType=%d", chipType);
+            *val = static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
+        }
+ 	} else {
+        RT_LOG(RT_LOG_WARNING, "query aicpu dump not support because not setdevice");
+        *val = static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::SetGroup(const int32_t groupId)
