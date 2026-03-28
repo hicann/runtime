@@ -84,6 +84,11 @@ int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
     return DumpManager::Instance().SetDumpConfig(dumpConfigData, dumpConfigSize);
 }
 
+int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo)
+{
+    return DumpManager::Instance().SetDumpConfig(configInfo.dumpConfigData, configInfo.dumpConfigSize, configInfo.dumpConfigPath);
+}
+
 int32_t AdumpUnSetDump()
 {
     return DumpManager::Instance().UnSetDumpConfig();

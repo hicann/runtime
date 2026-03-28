@@ -537,6 +537,7 @@ public:
     virtual int AdxDataDumpServerInit();
     virtual int AdxDataDumpServerUnInit();
     virtual int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize);
+    virtual int32_t AdumpSetDumpConfig(const Adx::DumpConfigInfo configInfo);
     virtual int32_t AdumpUnSetDump();
 
     // slog function
@@ -1015,6 +1016,7 @@ public:
     MOCK_METHOD0(AdxDataDumpServerInit, int());
     MOCK_METHOD0(AdxDataDumpServerUnInit, int());
     MOCK_METHOD2(AdumpSetDump, int32_t(const char *dumpConfigData, size_t dumpConfigSize));
+    MOCK_METHOD1(AdumpSetDumpConfig, int32_t(const Adx::DumpConfigInfo configInfo));
     MOCK_METHOD0(AdumpUnSetDump, int32_t());
 
     // slog function stub

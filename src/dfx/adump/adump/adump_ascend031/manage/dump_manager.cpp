@@ -126,10 +126,10 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConf
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize)
+int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath)
 {
     std::lock_guard<std::mutex> lk(resourceMtx2_);
-    if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U)) {
+    if ((dumpConfigData == nullptr) || (dumpConfigSize == 0U) || (dumpConfigPath == nullptr)) {
         IDE_LOGE("Set dump config failed. Config data is null or empty.");
         return ADUMP_FAILED;
     }
@@ -137,7 +137,7 @@ int32_t DumpManager::SetDumpConfig(const char *dumpConfigData, size_t dumpConfig
     DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool needDump = true;
-    DumpConfigConverter converter{dumpConfigData, dumpConfigSize};
+    DumpConfigConverter converter{dumpConfigData, dumpConfigSize, dumpConfigPath};
     int32_t ret = converter.Convert(dumpType, dumpConfig, needDump, dumpDfxConfig);
     if (ret != ADUMP_SUCCESS) {
         IDE_LOGE("Parse dump config from memory[%s] failed.", dumpConfigData);

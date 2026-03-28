@@ -33,6 +33,12 @@ int32_t aclStub::AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
     return 0;
 }
 
+int32_t aclStub::AdumpSetDumpConfig(const Adx::DumpConfigInfo configInfo)
+{
+    (void)configInfo;
+    return 0;
+}
+
 int32_t aclStub::AdumpUnSetDump()
 {
     return 1;
@@ -67,6 +73,11 @@ namespace Adx {
     int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
     {
         return MockFunctionTest::aclStubInstance().AdumpSetDump(dumpConfigData, dumpConfigSize);
+    }
+
+    int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo)
+    {
+        return MockFunctionTest::aclStubInstance().AdumpSetDumpConfig(configInfo);
     }
 
     int32_t AdumpUnSetDump()

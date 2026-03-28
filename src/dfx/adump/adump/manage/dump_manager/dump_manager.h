@@ -30,9 +30,9 @@ enum class DumpEnableAction : int32_t {
 
 class DumpManager {
 public:
-    static DumpManager& Instance();
-    int32_t SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConfig);
-    int32_t SetDumpConfig(const char* dumpConfigData, size_t dumpConfigSize);
+    static DumpManager &Instance();
+    int32_t SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig);
+    int32_t SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath = "null");
     int32_t UnSetDumpConfig();
     bool IsEnableDump(DumpType dumpType);
     int32_t DumpOperatorWithCapture(

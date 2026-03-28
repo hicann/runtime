@@ -72,16 +72,36 @@ ADX_API uint64_t AdumpGetDumpSwitch(const DumpType dumpType);
 
 /**
  * @ingroup dump
- * @par 描述: 根据配置文件设置dump功能
+ * @par 描述: 根据配置文件设置dump功能, 接口即将废弃, 不建议使用
  *
  * @attention  无
- * @param[in]  configPath  config文件配置路径
+ * @param[in]  dumpConfigData  config文件数据内容
+ * @param[in]  dumpConfigSize  config文件数据内容的大小
  * @retval     #0 dump     开关设置成功
  * @retval     #!0 dump    开关设置失败
  * @see        无
  * @since
  */
 ADX_API int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize);
+
+typedef struct DumpConfigInfo {
+    const char *dumpConfigPath; // 配置文件路径
+    const char *dumpConfigData; // 配置文件数据内容
+    size_t dumpConfigSize;      // 配置文件数据内容的大小
+}DumpConfigInfo;
+
+/**
+ * @ingroup dump
+ * @par 描述: 根据配置文件设置dump功能
+ *
+ * @attention  无
+ * @param[in]  configInfo  config文件的信息（路径，数据内容，内容大小）
+ * @retval     #0 dump     开关设置成功
+ * @retval     #!0 dump    开关设置失败
+ * @see        无
+ * @since
+ */
+ADX_API int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo);
 
 /**
  * @ingroup dump

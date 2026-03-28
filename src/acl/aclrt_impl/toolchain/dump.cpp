@@ -39,7 +39,7 @@ namespace acl {
         return aclDumpProc;
     }
 
-    aclError AclDump::HandleDumpCommand(const char *configStr, size_t size)
+    aclError AclDump::HandleDumpCommand(const char *configStr, size_t size, const char *configPath)
     {
         ACL_LOG_INFO("start to execute HandleDumpCommand.");
 
@@ -51,7 +51,11 @@ namespace acl {
         acl::AclDump::GetInstance().SetAdxInitFromAclInitFlag(true);
 
         // base dump
-        adxRet = Adx::AdumpSetDump(configStr, size);
+        Adx::DumpConfigInfo configInfo;
+        configInfo.dumpConfigPath = configPath;
+        configInfo.dumpConfigData = configStr;
+        configInfo.dumpConfigSize = size;
+        adxRet = Adx::AdumpSetDumpConfig(configInfo);
         if (adxRet != ADX_ERROR_NONE) {
             auto ret =
                 (adxRet == Adx::ADUMP_INPUT_FAILED) ? ACL_ERROR_INVALID_DUMP_CONFIG : ACL_ERROR_INTERNAL_ERROR;
@@ -74,7 +78,7 @@ namespace acl {
         }
         try {
             if (!configStr.empty()) {
-                return HandleDumpCommand(configStr.c_str(), configStr.size());
+                return HandleDumpCommand(configStr.c_str(), configStr.size(), configPath);
             }
         } catch (const nlohmann::json::exception &e) {
             ACL_LOG_INNER_ERROR("[Convert][DumpConfig]parse json for config failed, exception:%s.",
@@ -138,7 +142,11 @@ aclError aclmdlSetDumpImpl(const char *dumpCfgPath)
     // base dump
     if (!configStr.empty()) {
         ACL_LOG_INFO("Start to set dump.");
-        const auto adxRet = Adx::AdumpSetDump(configStr.c_str(), configStr.size());
+        Adx::DumpConfigInfo configInfo;
+        configInfo.dumpConfigPath = dumpCfgPath;
+        configInfo.dumpConfigData = configStr.c_str();
+        configInfo.dumpConfigSize = configStr.size();
+        const auto adxRet = Adx::AdumpSetDumpConfig(configInfo);
         if (adxRet != ADX_ERROR_NONE) {
             ret =
                 (adxRet == Adx::ADUMP_INPUT_FAILED) ? ACL_ERROR_INVALID_DUMP_CONFIG : ACL_ERROR_INTERNAL_ERROR;
