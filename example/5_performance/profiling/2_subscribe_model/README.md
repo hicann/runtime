@@ -27,10 +27,17 @@ export ASCEND_HOME_PATH=${install_root}/cann
 ## CANN RUNTIME API
 
 在该sample中，涉及的关键功能点及其关键接口，如下所示：
-- 调用aclprofCreateSubscribeConfig接口，创建模型订阅的配置并且进行模型订阅。
+- 调用aclprofCreateSubscribeConfig接口，创建模型订阅的配置并且进行模型订阅
 - 调用aclprofModelSubscribe接口进行模型订阅
 - 调用aclprofModelUnSubscribe接口释放模型订阅
 - 调用aclprofDestroySubscribeConfig释放config指针
+
+## CANN GE API
+在该sample中，涉及模型的关键功能点及其关键接口，如下所示：
+- 调用aclmdlLoadFromFile接口，加载模型
+- 调用aclmdlExecute接口，执行模型
+
+请移步[LINK](https://gitcode.com/cann/ge)查看模型相关流程
 
 ## 已知issue
 

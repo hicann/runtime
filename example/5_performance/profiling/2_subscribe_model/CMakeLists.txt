@@ -21,7 +21,8 @@ include_directories(${ASCEND_CANN_PACKAGE_PATH}/include
                     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
                     ${ASCEND_CANN_PACKAGE_PATH}/include/acl
                     ${ASCEND_CANN_PACKAGE_PATH}/runtime/include
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../../..
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../pkg_inc)
 
 link_directories(${ASCEND_CANN_PACKAGE_PATH}/lib64)
 

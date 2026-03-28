@@ -16,6 +16,7 @@
 #include "utils.h"
 #include "acl/acl.h"
 #include "acl/acl_prof.h"
+#include "profiling/aprof_pub.h"
 
 namespace {
 // 自定义函数，实现从用户内存中读取订阅数据的函数
@@ -64,9 +65,6 @@ void *profDataRead(void *fd)
     ssize_t dataLen = read(*(int*)fd, readbuf, readbufLen);
     // 读取数据到readbuf成功
     while (dataLen > 0) {
-        if (dataLen == static_cast<ssize_t>(5) && strncmp(readbuf, "Stop", 4) == 0) { // 检查是否读取到Stop字符，读取长度为5，字符长度为4
-            break;
-        }
         // 调用实现的函数解析内存中的数据
         getModelInfo(readbuf, static_cast<uint32_t>(dataLen));
         if (dataLen > static_cast<ssize_t>(readbufLen)) {
@@ -82,61 +80,57 @@ void *profDataRead(void *fd)
 
 int main(int argc, char *argv[])
 {
-    INFO_LOG("-------- Start --------");
-    // 初始化
-    uint32_t deviceIdList[1] = {0};  // 根据实际环境的DeviceID配置
-    aclrtStream stream = nullptr;
-    // 申请运行时资源
+    INFO_LOG("-------- Start -------- \n");
+    // 调用aclInit初始化
     aclInit(nullptr);
+    // 申请运行管理资源
+    uint32_t deviceIdList[1] = {0};  // 根据实际环境的DeviceID配置
     aclrtSetDevice(deviceIdList[0]);
+    aclrtStream stream = nullptr;
     aclrtCreateStream(&stream);
-    // profiling初始化
+    uint32_t modelId = 0;
+    // 模型加载aclmdlLoadFromFile，加载成功后，返回标识模型的modelId
+
+    // 模拟aclmdlLoadFromFile内部的注册动作，正常使能aclmdlLoadFromFile请删除
+    MsprofSetDeviceIdByGeModelIdx(modelId, deviceIdList[0]);
+
+    // 创建aclmdlDataset类型的数据，用于描述模型的输入数据input、输出数据output
+
     // 创建管道（UNIX操作系统下需要引用C++标准库头文件unistd.h），用于读取以及写入模型订阅的数据
     int subFd[2];
     // 读管道指针指向subFd[0]，写管道指针指向subFd[1]
     CHECK_ERROR(pipe(subFd));
-    // 进行profiling配置
-    // 创建配置结构体
     // 创建模型订阅的配置并且进行模型订阅
     aclprofSubscribeConfig *config = aclprofCreateSubscribeConfig(1, ACL_AICORE_NONE, &subFd[1]);
     // 模型订阅需要传入模型的modelId
-    uint32_t fake_modelId = 1;
-    aclprofModelSubscribe(fake_modelId, config);
-
-    // 模型加载，加载成功后，返回标识模型的modelId
-    // 创建aclmdlDataset类型的数据，用于描述模型的输入数据input、输出数据output
+    aclprofModelSubscribe(modelId, config);
 
     // 启动线程读取管道数据并解析
     pthread_t subTid = 0;
     CHECK_ERROR(pthread_create(&subTid, nullptr, profDataRead, &subFd[0]));
 
-    // 手动写入消息避免read阻塞
+    // 模型执行aclmdlExecute
+
+    // 模拟模型执行耗时，正常使能aclmdlExecute请删除
     INFO_LOG("Running ...... \n");
-    if (write(subFd[1], "Hello", static_cast<size_t>(6)) != static_cast<size_t>(6)) { // 写入长度为6
-        ERROR_LOG("Write Hello error");
-    }
-    (void)sleep(static_cast<uint8_t>(3));   // 3秒
-    INFO_LOG("Try to Stop ...... \n");
-    if (write(subFd[1], "Stop", static_cast<size_t>(5)) != static_cast<size_t>(5)) { // 写入长度为5
-        ERROR_LOG("Write Stop error");
-    }
-    // 执行模型 ret = aclmdlExecute(modelId, input, output);
+    (void)sleep(3);
+
     // 处理模型推理结果
+
     // 释放描述模型输入/输出信息、内存等资源，卸载模型
 
-    // 取消订阅，释放订阅相关资源
-    aclprofModelUnSubscribe(fake_modelId);
-    CHECK_ERROR(pthread_join(subTid, nullptr));
     INFO_LOG("Stopped ...... \n");
+    // 取消订阅，释放订阅相关资源
+    aclprofModelUnSubscribe(modelId);
+    CHECK_ERROR(pthread_join(subTid, nullptr));
     // 关闭读管道指针
     CHECK_ERROR(close(subFd[0]));
     // 释放config指针
     aclprofDestroySubscribeConfig(config);
-
     // 释放运行时资源
     aclrtDestroyStream(stream);
     aclrtResetDeviceForce(deviceIdList[0]);
     aclFinalize();
-    INFO_LOG("-------- End --------");
+    INFO_LOG("-------- End -------- \n");
     return 0;
 }
