@@ -1288,13 +1288,13 @@
     },
     {
       "errClass": "DUMP Errors",
-      "errTitle": "Config_Error_Invalid_Environment_Variable",
-      "ErrCode": "WP0001",
-      "ErrMessage": "Value %s for environment variable %s is invalid. Reason: %s.",
-      "Arglist": "value,env,reason",
+      "errTitle": "File_Operation_Error_Parse",
+      "ErrCode": "EP0004",
+      "ErrMessage": "Failed to parse file %s. Reason: %s.",
+      "Arglist": "path,reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Reset the environment variable by referring to the Environment Variable Reference."
+        "Solution": "N/A"
       }
     },
     {
