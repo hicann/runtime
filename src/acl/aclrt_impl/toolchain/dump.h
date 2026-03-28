@@ -31,7 +31,7 @@ namespace acl {
         }
 
     private:
-        static aclError HandleDumpCommand(const char *configStr, size_t size);
+        static aclError HandleDumpCommand(const char *configStr, size_t size, const char *configPath);
         bool adxInitFromAclInitFlag_ = false;
         ~AclDump() = default;
         AclDump() = default;

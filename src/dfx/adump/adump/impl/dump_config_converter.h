@@ -126,8 +126,8 @@ struct DumpDfxConfig {
 class DumpConfigConverter
 {
 public:
-    DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize)
-    : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize) {};
+    DumpConfigConverter(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath = "null")
+    : dumpConfigData_(dumpConfigData), dumpConfigSize_(dumpConfigSize), configPath_(dumpConfigPath) {}
     ~DumpConfigConverter() = default;
     int32_t Convert(DumpType &dumpType, DumpConfig &dumpConfig, bool &needDump, DumpDfxConfig &dumpDfxConfig);
     bool IsValidDumpConfig() const;
@@ -170,10 +170,10 @@ private:
     static bool GetEnvDumpPath(const std::string &env, std::string &envPath);
     static void LoadDumpEnvVariables(DumpEnvVariable &dumpEnvVariable);
     bool CheckDumpStep() const;
-    const char *configPath_ = "null";  //后续会下线，默认赋值null，防止日志打印逻辑出现异常
     nlohmann::json dumpJs_;
     const char *dumpConfigData_;
     size_t dumpConfigSize_;
+    const char *configPath_;
 };
 } // namespace Adx
 #endif // DUMP_CONFIG_CONVERTER_H

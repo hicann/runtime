@@ -31,7 +31,7 @@ class DumpManager {
 public:
     static DumpManager &Instance();
     int32_t SetDumpConfig(DumpType dumpType, const DumpConfig &dumpConfig);
-    int32_t SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize);
+    int32_t SetDumpConfig(const char *dumpConfigData, size_t dumpConfigSize, const char *dumpConfigPath = "null");
     int32_t UnSetDumpConfig();
     bool IsEnableDump(DumpType dumpType);
     int32_t DumpOperator(const std::string &opType, const std::string &opName, const std::vector<TensorInfo> &tensors,

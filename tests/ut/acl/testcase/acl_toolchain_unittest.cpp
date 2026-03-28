@@ -148,7 +148,7 @@ TEST_F(UTEST_ACL_toolchain, dumpParamTest)
     ret = aclDump.HandleDumpConfig(ACL_BASE_DIR "/tests/ut/acl/json/testDump_DumpLevelKernel.json");
     EXPECT_EQ(ret, ACL_SUCCESS);
 
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), AdumpSetDump(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), AdumpSetDumpConfig(_)).WillOnce(Return(1));
     ret = aclDump.HandleDumpConfig(ACL_BASE_DIR "/tests/ut/acl/json/testDump_DumpLevelKernel.json");
     EXPECT_NE(ret, ACL_SUCCESS);
 }
@@ -177,7 +177,7 @@ TEST_F(UTEST_ACL_toolchain, AdumpSetDumpFailedTest)
     aclError ret = aclmdlInitDump();
     EXPECT_EQ(ret, ACL_SUCCESS);
 
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), AdumpSetDump(_, _)).WillOnce(Return(1));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), AdumpSetDumpConfig(_)).WillOnce(Return(1));
     ret = aclmdlSetDump(ACL_BASE_DIR "/tests/ut/acl/json/dumpConfig.json");
     EXPECT_NE(ret, ACL_SUCCESS);
 
