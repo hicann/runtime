@@ -1,7 +1,6 @@
 project(platform)
 
 add_library(platform_headers INTERFACE)
-message(STATUS "PRODUCT  ${PRODUCT}")
 
 set(STATICPLATFORMFILE
     ${CMAKE_CURRENT_LIST_DIR}/platform_info.cpp

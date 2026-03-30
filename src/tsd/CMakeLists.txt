@@ -16,9 +16,6 @@ if (AOSCORE_LLVM_MUSL)
     add_definitions(-D_AOSCORE_)
 endif()
 
-message("-- INSTALL_LIBRARY_DIR   " ${INSTALL_LIBRARY_DIR}})
-message("-- INSTALL_RUNTIME_DIR   " ${INSTALL_RUNTIME_DIR}})
-
 include(CMakePackageConfigHelpers)
 
 add_subdirectory(tsdclient)

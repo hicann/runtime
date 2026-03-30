@@ -19,28 +19,22 @@ target_include_directories(slog_headers INTERFACE
     $<INSTALL_INTERFACE:include/slog/toolchain>
 )
 
-message("PRODUCT_SIDE: ${PRODUCT_SIDE}")
-message("PRODUCT: ${PRODUCT}")
-
 if (${PRODUCT_SIDE} STREQUAL "device")
     set(liblog_type "device")
-if (PRODUCT)
-if (${PRODUCT} STREQUAL "pegasus")
-    set(liblog_type "mdc")
-endif()
-endif()
+    if (PRODUCT AND PRODUCT STREQUAL "pegasus")
+        set(liblog_type "mdc")
+    endif()
 
-if (${liblog_type} STREQUAL "mdc")
-############################# [mdc] #########################################
-add_subdirectory(plog_device_mdc)
-else ()
-############################# [device] #######################################
-add_subdirectory(plog_device)
-endif ()
+    if (${liblog_type} STREQUAL "mdc")
+    ############################# [mdc] #########################################
+        add_subdirectory(plog_device_mdc)
+    else ()
+    ############################# [device] #######################################
+        add_subdirectory(plog_device)
+    endif ()
 ############################# [ host ] ########################################
 elseif (${PRODUCT_SIDE} STREQUAL "host")
-add_subdirectory(plog)
-add_subdirectory(plog_host)
+    add_subdirectory(plog)
+    add_subdirectory(plog_host)
 endif ()
 
-message("LIBLOG_TYPE: ${liblog_type}")

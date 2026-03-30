@@ -70,7 +70,6 @@ else()
 endif()
 
 if(ENABLE_DEVICE)
-    message(STATUS "Enable device.")
     set(TOOLCHAIN_DIR $ENV{TOOLCHAIN_DIR})
     # 对于libc_sec，只有makefile，需要传递编译器路径
     set(CMAKE_CXX_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-g++")

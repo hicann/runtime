@@ -8,7 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 # add_subdirectory(adda)
-add_subdirectory(acp)
 # add_subdirectory(adprof)
 add_subdirectory(msprof)
 # add_subdirectory(msprofbin)
