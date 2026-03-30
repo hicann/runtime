@@ -129,8 +129,10 @@ typedef uint32_t rtMemType_t;
  * @ingroup dvrt_mem
  * @brief register host memory
  */
-#define RT_MEM_HOST_REGISTER_MAPPED (0X2U)
-#define RT_MEM_HOST_REGISTER_PINNED (0X10000000U)
+#define RT_MEM_HOST_REGISTER_MAPPED   (0x2U)
+#define RT_MEM_HOST_REGISTER_IOMEMORY (0x4U)
+#define RT_MEM_HOST_REGISTER_READONLY (0x8U)
+#define RT_MEM_HOST_REGISTER_PINNED   (0x10000000U)
 
 /**
  * @ingroup dvrt_mem

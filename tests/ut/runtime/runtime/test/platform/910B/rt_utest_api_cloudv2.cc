@@ -1049,6 +1049,14 @@ drvError_t halHostRegister_stub(void *hostPtr, UINT64 size, UINT32 flag, UINT32 
     return DRV_ERROR_NONE;
 }
 
+static UINT32 g_halHostRegisterFlag = 0U;
+drvError_t halHostRegister_flag_stub(void *hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void **devPtr)
+{
+    g_halHostRegisterFlag = flag;
+    *devPtr = hostPtr;
+    return DRV_ERROR_NONE;
+}
+
 TEST_F(RtApiTest, host_register_pinned_mapped)
 {
     rtError_t error;
@@ -1123,6 +1131,53 @@ TEST_F(RtApiTest, host_register_atomic)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(*devPtr, nullptr);
     error = rtsHostUnregister(ptr.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(RtApiTest, host_register_iomemory_readonly)
+{
+    rtError_t error;
+    uintptr_t value = 0x123U;
+
+    MOCKER(&halHostRegister)
+        .stubs()
+        .will(invoke(halHostRegister_flag_stub));
+
+    auto readOnlyPtr = std::make_unique<uint32_t>();
+    void **readOnlyDevPtr = reinterpret_cast<void **>(&value);
+    g_halHostRegisterFlag = 0U;
+    error = rtHostRegisterV2(readOnlyPtr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_READONLY);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_NE((g_halHostRegisterFlag & MEM_REGISTER_READ_ONLY), 0U);
+    error = rtHostGetDevicePointer(readOnlyPtr.get(), readOnlyDevPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*readOnlyDevPtr, readOnlyPtr.get());
+    error = rtsHostUnregister(readOnlyPtr.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    auto ioPtr = std::make_unique<uint32_t>();
+    void **ioDevPtr = reinterpret_cast<void **>(&value);
+    g_halHostRegisterFlag = 0U;
+    error = rtHostRegisterV2(ioPtr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_IOMEMORY);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(g_halHostRegisterFlag, static_cast<UINT32>(HOST_IO_MAP_DEV));
+    error = rtHostGetDevicePointer(ioPtr.get(), ioDevPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*ioDevPtr, ioPtr.get());
+    error = rtsHostUnregister(ioPtr.get());
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
+    auto ioReadOnlyPtr = std::make_unique<uint32_t>();
+    void **ioReadOnlyDevPtr = reinterpret_cast<void **>(&value);
+    g_halHostRegisterFlag = 0U;
+    error = rtHostRegisterV2(ioReadOnlyPtr.get(), sizeof(uint32_t),
+        RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(g_halHostRegisterFlag, static_cast<UINT32>(HOST_IO_MAP_DEV) | MEM_REGISTER_READ_ONLY);
+    error = rtHostGetDevicePointer(ioReadOnlyPtr.get(), ioReadOnlyDevPtr, 0U);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(*ioReadOnlyDevPtr, ioReadOnlyPtr.get());
+    error = rtsHostUnregister(ioReadOnlyPtr.get());
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 

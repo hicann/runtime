@@ -4269,11 +4269,34 @@ TEST_F(UTEST_ACL_Runtime, aclrtHostRegisterV2_succ)
 {
     void *ptr = (void*)0xff;
     uint64_t size = 1024UL;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostRegisterV2(ptr, size, ACL_HOST_REG_MAPPED))
+        .WillOnce(Return(ACL_SUCCESS));
     uint32_t flag = ACL_HOST_REG_MAPPED;
     auto ret = aclrtHostRegisterV2(ptr, size, flag);
     EXPECT_EQ(ret, ACL_SUCCESS);
 
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostRegisterV2(ptr, size, ACL_HOST_REG_PINNED))
+        .WillOnce(Return(ACL_SUCCESS));
     flag = ACL_HOST_REG_PINNED;
+    ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostRegisterV2(ptr, size, ACL_HOST_REG_IOMEMORY))
+        .WillOnce(Return(ACL_SUCCESS));
+    flag = ACL_HOST_REG_IOMEMORY;
+    ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtHostRegisterV2(ptr, size, ACL_HOST_REG_READONLY))
+        .WillOnce(Return(ACL_SUCCESS));
+    flag = ACL_HOST_REG_READONLY;
+    ret = aclrtHostRegisterV2(ptr, size, flag);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(),
+        rtHostRegisterV2(ptr, size, ACL_HOST_REG_IOMEMORY | ACL_HOST_REG_READONLY))
+        .WillOnce(Return(ACL_SUCCESS));
+    flag = ACL_HOST_REG_IOMEMORY | ACL_HOST_REG_READONLY;
     ret = aclrtHostRegisterV2(ptr, size, flag);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }

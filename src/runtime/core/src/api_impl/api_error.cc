@@ -1501,14 +1501,18 @@ rtError_t ApiErrorDecorator::HostRegisterV2(void *ptr, uint64_t size, uint32_t f
 {
     NULL_PTR_RETURN_MSG_OUTER(ptr, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_MSG_OUTER(size);
-    constexpr uint32_t validFlags = RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED;
- 	const bool isValidFlag = ((flag & validFlags) != 0U) && ((flag & (~validFlags)) == 0U);
- 	COND_RETURN_OUT_ERROR_MSG_CALL(!isValidFlag,
- 	    RT_ERROR_INVALID_VALUE,
- 	    "Invalid flag:%#x, valid flag range is %#x, %#x or %#x.", flag,
- 	    RT_MEM_HOST_REGISTER_MAPPED,
+    constexpr uint32_t validFlags = RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY |
+        RT_MEM_HOST_REGISTER_READONLY | RT_MEM_HOST_REGISTER_PINNED;
+    const bool isValidFlag = ((flag & validFlags) != 0U) && ((flag & (~validFlags)) == 0U);
+    COND_RETURN_OUT_ERROR_MSG_CALL(!isValidFlag,
+        RT_ERROR_INVALID_VALUE,
+        "Invalid flag:%#x, valid flag range is combinations of [%#x, %#x, %#x, %#x, %#x, %#x].", flag,
+        RT_MEM_HOST_REGISTER_MAPPED,
+        RT_MEM_HOST_REGISTER_IOMEMORY,
+        RT_MEM_HOST_REGISTER_READONLY,
+        (RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY),
         RT_MEM_HOST_REGISTER_PINNED,
- 	    (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED));
+        (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED));
     
     rtError_t error = CheckMemoryRangeRegistered(ptr, size);
  	COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);

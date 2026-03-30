@@ -71,8 +71,11 @@ extern "C" {
 #define ACL_RT_VMM_EXPORT_FLAG_DEFAULT                0x0UL
 #define ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL
 
-#define ACL_HOST_REG_MAPPED 0x2UL
-#define ACL_HOST_REG_PINNED 0X10000000UL
+// Host register flags for aclrtHostRegisterV2
+#define ACL_HOST_REG_MAPPED   0x2UL    // Map host memory to device address
+#define ACL_HOST_REG_IOMEMORY 0x4UL    // Register as IO memory
+#define ACL_HOST_REG_READONLY 0x8UL    // Register as read-only memory
+#define ACL_HOST_REG_PINNED   0x10000000UL  // Pin memory to prevent swapping
 
 #define ACL_RT_MAX_RECORD_PA_NUM_PER_DEV 20U
 

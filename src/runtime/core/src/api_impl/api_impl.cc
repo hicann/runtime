@@ -2546,8 +2546,16 @@ rtError_t ApiImpl::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
     void *devPtr = nullptr;
     void **pDevice = &devPtr;
 
-    if ((flag & RT_MEM_HOST_REGISTER_MAPPED) != 0U) {
-        error = dev->Driver_()->HostRegister(ptr, size, RT_HOST_REGISTER_MAPPED, pDevice, deviceId);
+    if ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) != 0U) {
+        uint32_t typeMask = static_cast<uint32_t>(RT_HOST_REGISTER_MAPPED);
+        if ((flag & RT_MEM_HOST_REGISTER_IOMEMORY) != 0U) {
+            typeMask |= RT_HOST_REGISTER_IOMEMORY;
+        }
+        if ((flag & RT_MEM_HOST_REGISTER_READONLY) != 0U) {
+            typeMask |= RT_HOST_REGISTER_READONLY;
+        }
+        error = dev->Driver_()->HostRegister(ptr, size, static_cast<rtHostRegisterType>(typeMask), pDevice,
+            deviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     }
 
