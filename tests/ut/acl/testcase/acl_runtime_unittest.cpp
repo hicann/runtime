@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include "acl/acl.h"
+#include "acl/error_codes/rt_error_codes.h"
 #include "common/log_inner.h"
 #include "acl/acl_rt.h"
 #include "acl_rt_impl_base.h"
@@ -7405,4 +7406,55 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemManagedPrefetchBatchAsyncTest)
     ret = aclrtMemManagedPrefetchBatchAsync((const void**)ptrs, sizes, count, prefetchLocs, prefetchLocIdxs,
         numPrefetchLocs, flags, stream);
     EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetHostAtomicCapabilities)
+{
+    uint32_t capabilities[2] = {0};
+    aclrtAtomicOperation operations[2] = {ACL_RT_ATOMIC_OPERATION_INTEGER_ADD, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH};
+    uint32_t count = 2;
+    int32_t deviceId = 0;
+
+    // Test successful execution
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetHostAtomicCapabilities(_, _, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtDeviceGetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Test failure from runtime
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetHostAtomicCapabilities(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtDeviceGetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetHostAtomicCapabilities(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_INVALID_DEVICEID));
+    ret = aclrtDeviceGetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_DEVICEID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetP2PAtomicCapabilities)
+{
+    uint32_t capabilities[1] = {0};
+    aclrtAtomicOperation operations[1] = {ACL_RT_ATOMIC_OPERATION_DMA_MAX};
+    uint32_t count = 1;
+    int32_t srcDeviceId = 0;
+    int32_t dstDeviceId = 1;
+
+    // Test successful execution
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetP2PAtomicCapabilities(_, _, _, _, _))
+        .WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtDeviceGetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    // Test failure from runtime
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetP2PAtomicCapabilities(_, _, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_INVALID_DEVICEID));
+    ret = aclrtDeviceGetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_DEVICEID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceGetP2PAtomicCapabilities(_, _, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtDeviceGetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }

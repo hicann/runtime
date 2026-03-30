@@ -914,5 +914,24 @@ rtError_t ApiProfileLogDecorator::CacheLastTaskOpInfo(const void * const infoPtr
     return error;
 }
 
+rtError_t ApiProfileLogDecorator::GetHostAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
+{
+    ProfileLogRecord record(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES, profiler_);
+    const rtError_t error = impl_->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    record.SaveRecord();
+    return error;
+}
+
+rtError_t ApiProfileLogDecorator::GetP2PAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+    int32_t dstDeviceId)
+{
+    ProfileLogRecord record(RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES, profiler_);
+    const rtError_t error = impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    record.SaveRecord();
+    return error;
+}
+
 }  // namespace runtime
 }  // namespace cce

@@ -963,6 +963,30 @@ rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
     return ACL_RT_SUCCESS;
 }
 
+VISIBILITY_DEFAULT
+rtError_t rtDeviceGetHostAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtDeviceGetP2PAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+    int32_t dstDeviceId)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error =
+        apiInstance->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

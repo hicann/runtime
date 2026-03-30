@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "cond_c.hpp"
+#include "internal_error_define.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
 #include "stars_common_task.h"
@@ -60,6 +61,7 @@
 #include "inner_kernel.h"
 #include "rt_inner_model.h"
 #include "rt_inner_stream.h"
+#include "rt_inner_device.h"
 #include "rt_inner_task.h"
 #include "kernel_dfx_info.hpp"
 #include "aicpu_c.hpp"
@@ -9152,6 +9154,131 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     taskInfo->updateFlag = RT_TASK_DISABLE;
     RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
  	        taskInfo->stream->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetAtomicDevProperties(uint32_t* capabilities, uint32_t count, DevProperties& prop)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        capabilities[i] = 0U;
+    }
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties fail");
+    return RT_ERROR_NONE;
+}
+
+void ApiImpl::FillAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations, uint32_t count,
+                                     const uint32_t* sourceCapabilities)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        if (operations[i] >= 0 && operations[i] < RT_ATOMIC_OPERATION_MAX_VAL) {
+            capabilities[i] = sourceCapabilities[operations[i]];
+        }
+    }
+}
+
+rtError_t ApiImpl::CheckHostAtomicSupport(int32_t deviceId, bool &supported)
+{
+    supported = false;
+    Runtime* const rt = Runtime::Instance();
+    Driver* const curDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
+
+    int64_t topoType = 0;
+    rtError_t error = curDrv->GetDevInfo(
+        static_cast<uint32_t>(deviceId), static_cast<int32_t>(MODULE_TYPE_SYSTEM),
+        static_cast<int32_t>(INFO_TYPE_HD_CONNECT_TYPE), &topoType);
+    if (error != RT_ERROR_NONE) {
+        if (error == RT_ERROR_DRV_INPUT) {
+            // 驱动A2/A3部分版本不支持查询拓扑，atomic能力也不支持
+            return RT_ERROR_NONE;
+        }
+        RT_LOG(RT_LOG_ERROR, "GetDevInfo fail, retCode=%#x", error);
+        return error;
+    }
+
+    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
+
+    if (topoType != HOST_DEVICE_CONNECT_TYPE_UB) {
+        RT_LOG(RT_LOG_INFO, "the topoType not support atomic, topoType=%ld", topoType);
+        return RT_ERROR_NONE;
+    }
+
+    supported = true;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::CheckP2PAtomicSupport(int32_t srcDeviceId, int32_t dstDeviceId, bool &supported)
+{
+    supported = false;
+    Runtime* const rtInstance = Runtime::Instance();
+    Driver* const curDrv = rtInstance->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
+
+    int64_t topoType = 0;
+    rtError_t error = curDrv->GetPairDevicesInfo(
+        static_cast<uint32_t>(srcDeviceId), static_cast<uint32_t>(dstDeviceId),
+        static_cast<int32_t>(DEVS_INFO_TYPE_TOPOLOGY), &topoType);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "GetPairDevicesInfo fail, retCode=%#x", error);
+        return error;
+    }
+
+    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
+
+    if (topoType != TOPOLOGY_HCCS && topoType != TOPOLOGY_SIO &&
+        topoType != TOPOLOGY_HCCS_SW && topoType != TOPOLOGY_UB) {
+        RT_LOG(RT_LOG_INFO, "the topoType not support atomic, topoType=%ld", topoType);
+        return RT_ERROR_NONE;
+    }
+
+    supported = true;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetHostAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
+{
+    DevProperties prop;
+    rtError_t error = GetAtomicDevProperties(capabilities, count, prop);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    bool supported = false;
+    error = CheckHostAtomicSupport(deviceId, supported);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    if (supported) {
+        FillAtomicCapabilities(capabilities, operations, count, prop.hostAtomicCapabilities.data());
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetP2PAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+    int32_t dstDeviceId)
+{
+    DevProperties prop;
+    rtError_t error = GetAtomicDevProperties(capabilities, count, prop);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    bool supported = false;
+    error = CheckP2PAtomicSupport(srcDeviceId, dstDeviceId, supported);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    if (supported) {
+        FillAtomicCapabilities(capabilities, operations, count, prop.p2pAtomicCapabilities.data());
+    }
+
     return RT_ERROR_NONE;
 }
 

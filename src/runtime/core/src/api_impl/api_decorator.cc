@@ -1796,6 +1796,18 @@ rtError_t ApiDecorator::GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDev
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
+rtError_t ApiDecorator::GetHostAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations,
+    const uint32_t count, int32_t deviceId)
+{
+    return impl_->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+}
+
+rtError_t ApiDecorator::GetP2PAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations,
+    const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)
+{
+    return impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+}
+
 rtError_t ApiDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
     return impl_->CtxSetSysParamOpt(configOpt, configVal);

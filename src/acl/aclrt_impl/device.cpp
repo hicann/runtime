@@ -19,6 +19,7 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "runtime/rt_inner_device.h"
 
 namespace {
     constexpr int32_t DEVICE_UTILIZATION_NOT_SUPPORT = -1;
@@ -380,6 +381,42 @@ aclError aclrtGetDeviceCapabilityImpl(int32_t deviceId, aclrtDevFeatureType devF
     }
 
     ACL_LOG_INFO("successfully execute aclrtGetDeviceCapability");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceGetHostAtomicCapabilitiesImpl(uint32_t* capabilities, const aclrtAtomicOperation* operations,
+    const uint32_t count, int32_t deviceId)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetHostAtomicCapabilities);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetHostAtomicCapabilities, deviceId is [%u], count is [%u]",
+        deviceId, count);
+
+    const rtError_t rtErr = rtDeviceGetHostAtomicCapabilities(capabilities,
+        reinterpret_cast<const rtAtomicOperation*>(operations), count, deviceId);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call rtDeviceGetHostAtomicCapabilities failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_INFO("successfully execute aclrtDeviceGetHostAtomicCapabilities");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceGetP2PAtomicCapabilitiesImpl(uint32_t* capabilities, const aclrtAtomicOperation* operations,
+    const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetP2PAtomicCapabilities);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetP2PAtomicCapabilities, srcDeviceId is [%u], dstDeviceId is [%u], "
+        "count is [%u]", srcDeviceId, dstDeviceId, count);
+
+    const rtError_t rtErr = rtDeviceGetP2PAtomicCapabilities(capabilities,
+        reinterpret_cast<const rtAtomicOperation*>(operations), count, srcDeviceId, dstDeviceId);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call rtDeviceGetP2PAtomicCapabilities failed, runtime result = %d.", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_INFO("successfully execute aclrtDeviceGetP2PAtomicCapabilities");
     return ACL_SUCCESS;
 }
 

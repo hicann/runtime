@@ -21,6 +21,7 @@
 #include "runtime/rt_inner_mem.h"
 #include "runtime/rt_inner_model.h"
 #include "runtime/rt_inner_stream.h"
+#include "runtime/rt_inner_device.h"
 #include "runtime/rt_inner_task.h"
 #include "dqs/task_dqs.hpp"
 
@@ -453,6 +454,11 @@ public:
     virtual rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) = 0;
     virtual rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) = 0;
     virtual rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) = 0;
+    virtual rtError_t GetHostAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) = 0;
+    virtual rtError_t GetP2PAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+        int32_t dstDeviceId) = 0;
 
     // context
     virtual rtError_t ContextCreate(Context ** const inCtx, const int32_t devId) = 0;

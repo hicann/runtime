@@ -165,6 +165,8 @@ static const DevProperties CHIP_610LITE_PROPERTIES = {
     .aicNumForCoreStack = 4U,
     .engineWaitCompletionTImeout = ENGINE_WAIT_COMPLETION_TIMEOUT,
     .reportWaitTimeout = RT_REPORT_MDC_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = {},
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_610LITE, CHIP_610LITE_PROPERTIES);

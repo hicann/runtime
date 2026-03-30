@@ -940,6 +940,44 @@ struct MemAttrMapping {
     aclrtMemAttr memAttr;
 };
 
+typedef enum aclrtAtomicOperationCapability {
+    ACL_RT_ATOMIC_CAPABILITY_SIGNED = 1U << 0,
+    ACL_RT_ATOMIC_CAPABILITY_UNSIGNED = 1U << 1,
+    ACL_RT_ATOMIC_CAPABILITY_REDUCATION = 1U << 2,
+    ACL_RT_ATOMIC_CAPABILITY_SCALAR8 = 1U << 3,
+    ACL_RT_ATOMIC_CAPABILITY_SCALAR16 = 1U << 4,
+    ACL_RT_ATOMIC_CAPABILITY_SCALAR32 = 1U << 5,
+    ACL_RT_ATOMIC_CAPABILITY_SCALAR64 = 1U << 6,
+    ACL_RT_ATOMIC_CAPABILITY_SCALAR128 = 1U << 7,
+    ACL_RT_ATOMIC_CAPABILITY_VECTOR32X4 = 1U << 8,
+} aclrtAtomicOperationCapability;
+
+typedef enum aclrtAtomicOperation {
+    ACL_RT_ATOMIC_OPERATION_INTEGER_ADD = 0,
+    ACL_RT_ATOMIC_OPERATION_INTEGER_MIN = 1,
+    ACL_RT_ATOMIC_OPERATION_INTEGER_MAX = 2,
+    ACL_RT_ATOMIC_OPERATION_INTEGER_INCREMENT = 3,
+    ACL_RT_ATOMIC_OPERATION_INTEGER_DECREMENT = 4,
+    ACL_RT_ATOMIC_OPERATION_AND = 5,
+    ACL_RT_ATOMIC_OPERATION_OR = 6,
+    ACL_RT_ATOMIC_OPERATION_XOR = 7,
+    ACL_RT_ATOMIC_OPERATION_EXCHANGE = 8,
+    ACL_RT_ATOMIC_OPERATION_CAS = 9,
+    ACL_RT_ATOMIC_OPERATION_FLOAT_ADD = 10,
+    ACL_RT_ATOMIC_OPERATION_FLOAT_MIN = 11,
+    ACL_RT_ATOMIC_OPERATION_FLOAT_MAX = 12,
+
+    ACL_RT_ATOMIC_OPERATION_DMA_ADD = 30,
+    ACL_RT_ATOMIC_OPERATION_DMA_MIN = 31,
+    ACL_RT_ATOMIC_OPERATION_DMA_MAX = 32,
+
+    ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD = 40,
+    ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_MIN = 41,
+    ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX = 42,
+    ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS = 43,
+    ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH = 44,
+} aclrtAtomicOperation;
+
 /**
  * @ingroup AscendCL
  * @brief acl initialize
@@ -3626,6 +3664,34 @@ ACL_FUNC_VISIBILITY aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDev
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid);
+
+/**
+ * @ingroup AscendCL
+ * @brief get h2d atomic capabilities by device id
+ * @param [out] capabilities  atomic capabilities
+ * @param [in] operations     atomic operations
+ * @param [in] count          atomic operations count
+ * @param [in] deviceId       device id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetHostAtomicCapabilities(
+    uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId);
+
+/**
+ * @ingroup AscendCL
+ * @brief get p2p atomic capabilities by device id
+ * @param [out] capabilities  atomic capabilities
+ * @param [in] operations     atomic operations
+ * @param [in] count          atomic operations count
+ * @param [in] srcDeviceId    source device id
+ * @param [in] dstDeviceId    destination device id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetP2PAtomicCapabilities(
+    uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+    int32_t dstDeviceId);
 
 /**
  * @ingroup AscendCL

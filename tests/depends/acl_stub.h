@@ -26,6 +26,7 @@
 #include "runtime/rt_inner_model.h"
 #include "runtime/rt_inner_stream.h"
 #include "runtime/rt_inner_task.h"
+#include "runtime/rt_inner_device.h"
 #include "runtime/kernel.h"
 #include "runtime/base.h"
 #include "runtime/config.h"
@@ -254,6 +255,8 @@ public:
     virtual rtError_t rtGetStreamOverflowSwitch(rtStream_t stm, uint32_t *flags);
     virtual rtError_t rtGetAiCoreCount(uint32_t *aiCoreCnt);
     virtual rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t *val);
+    virtual rtError_t rtDeviceGetHostAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t deviceId);
+    virtual rtError_t rtDeviceGetP2PAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId);
     virtual rtError_t rtGetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t *const util);
     virtual rtError_t rtDeviceStatusQuery(const uint32_t devId, rtDeviceStatus *deviceStatus);
 
@@ -737,6 +740,8 @@ public:
     MOCK_METHOD2(rtGetStreamOverflowSwitch, rtError_t(rtStream_t stm, uint32_t *flags));
     MOCK_METHOD1(rtGetAiCoreCount, rtError_t(uint32_t *aiCoreCnt));
     MOCK_METHOD4(rtGetDeviceInfo, rtError_t(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t *val));
+    MOCK_METHOD4(rtDeviceGetHostAtomicCapabilities, rtError_t(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t deviceId));
+    MOCK_METHOD5(rtDeviceGetP2PAtomicCapabilities, rtError_t(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId));
     MOCK_METHOD3(rtGetAllUtilizations, rtError_t(const int32_t devId, const rtTypeUtil_t kind, uint8_t *const util));
     MOCK_METHOD2(rtDeviceStatusQuery, rtError_t(const uint32_t devId, rtDeviceStatus *deviceStatus));
 

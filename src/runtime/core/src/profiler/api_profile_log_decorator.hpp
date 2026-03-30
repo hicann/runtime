@@ -140,6 +140,11 @@ public:
     rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) override;
     rtError_t DeviceSynchronize(const int32_t timeout) override;
     rtError_t DeviceResetForce(const int32_t devId) override;
+    rtError_t GetHostAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
+    rtError_t GetP2PAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+        int32_t dstDeviceId) override;
 
     // context
     rtError_t ContextCreate(Context ** const inCtx, const int32_t devId) override;

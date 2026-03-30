@@ -1123,6 +1123,24 @@ rtError_t ApiProfileDecorator::GetVisibleDeviceIdByLogicDeviceId(const int32_t l
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
+rtError_t ApiProfileDecorator::GetHostAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations,
+    const uint32_t count, int32_t deviceId)
+{
+    CallApiBegin(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES);
+    const rtError_t error = impl_->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
+    CallApiEnd(error, static_cast<uint32_t>(deviceId));
+    return error;
+}
+
+rtError_t ApiProfileDecorator::GetP2PAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations,
+    const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)
+{
+    CallApiBegin(RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES);
+    const rtError_t error = impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
+    CallApiEnd(error, static_cast<uint32_t>(srcDeviceId));
+    return error;
+}
+
 rtError_t ApiProfileDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t * const logicDevId)
 {
     CallApiBegin(RT_PROF_API_USER_TO_LOGIC_ID);

@@ -60,3 +60,6 @@
 
 -   **[aclrtDeviceGetUuid](aclrtDeviceGetUuid.md)**  
 
+-   **[aclrtDeviceGetHostAtomicCapabilities](aclrtDeviceGetHostAtomicCapabilities.md)**  
+
+-   **[aclrtDeviceGetP2PAtomicCapabilities](aclrtDeviceGetP2PAtomicCapabilities.md)**

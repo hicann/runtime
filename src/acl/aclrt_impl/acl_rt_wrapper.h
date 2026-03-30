@@ -307,13 +307,15 @@
     _(aclError, aclrtMemPoolSetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
     _(aclError, aclrtMemPoolGetAttr, (aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value), (memPool, attr, value)) \
     _(aclError, aclrtMemPoolMallocAsync, (void **devPtr, size_t size, aclrtMemPool memPool, aclrtStream stream), (devPtr, size, memPool, stream)) \
- 	_(aclError, aclrtMemPoolFreeAsync, (void *ptr, aclrtStream stream), (ptr, stream)) \
+    _(aclError, aclrtMemPoolFreeAsync, (void *ptr, aclrtStream stream), (ptr, stream)) \
     _(aclError, aclrtMemManagedGetAttr, (aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize), (attribute, ptr, size, data, dataSize)) \
     _(aclError, aclrtMemManagedGetAttrs, (aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes), (attributes, numAttributes, ptr, size, data, dataSizes)) \
     _(aclError, aclrtMemManagedAdvise, (const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location), (ptr, size, advise, location)) \
     _(aclError, aclrtMemPoolTrimTo, (aclrtMemPool memPool, size_t minBytesToKeep), (memPool, minBytesToKeep)) \
     _(aclError, aclrtMemManagedPrefetchAsync, (const void* ptr, size_t size, aclrtMemManagedLocation location, uint32_t flags, aclrtStream stream), (ptr, size, location, flags, stream)) \
     _(aclError, aclrtMemManagedPrefetchBatchAsync, (const void** ptrs, size_t* sizes, size_t count, aclrtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags, aclrtStream stream), (ptrs, sizes, count, prefetchLocs, prefetchLocIdxs, numPrefetchLocs, flags, stream)) \
+    _(aclError, aclrtDeviceGetHostAtomicCapabilities, (uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId), (capabilities, operations, count, deviceId)) \
+    _(aclError, aclrtDeviceGetP2PAtomicCapabilities, (uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId), (capabilities, operations, count, srcDeviceId, dstDeviceId)) \
 
 // aclrtAllocator interface map list
 #define ACL_RT_ALLOCATOR_FUNC_MAP(_)  \

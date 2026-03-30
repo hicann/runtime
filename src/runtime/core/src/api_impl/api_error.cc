@@ -6404,5 +6404,82 @@ rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
     return impl_->ModelTaskDisable(task);
 }
 
+static rtError_t ValidateAtomicOperations(const rtAtomicOperation* operations, uint32_t count)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        COND_RETURN_AND_MSG_OUTER(
+            (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD || operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(operations[i]),
+            "operations[" + std::to_string(i) + "]",
+            "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
+                std::to_string(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + "]");
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiErrorDecorator::GetHostAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
+{
+    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(operations, RT_ERROR_INVALID_VALUE);
+    ZERO_RETURN_AND_MSG_OUTER(count);
+
+    int32_t realDeviceId;
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId), true);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error devId:%d is err:%#x", deviceId,
+        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+
+    error = CheckDeviceIdIsValid(realDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId,
+        static_cast<uint32_t>(error));
+
+    error = ValidateAtomicOperations(operations, count);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
+
+    return impl_->GetHostAtomicCapabilities(capabilities, operations, count, realDeviceId);
+}
+
+rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
+    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+    int32_t dstDeviceId)
+{
+    NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(operations, RT_ERROR_INVALID_VALUE);
+    ZERO_RETURN_AND_MSG_OUTER(count);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+        (srcDeviceId == dstDeviceId), RT_ERROR_DEVICE_ID, srcDeviceId, "srcDeviceId must be different from dstDeviceId");
+
+    int32_t realSrcDeviceId;
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
+        static_cast<uint32_t>(srcDeviceId), RtPtrToPtr<uint32_t*>(&realSrcDeviceId), true);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error srcDevId:%d is err:%#x", srcDeviceId,
+        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    error = CheckDeviceIdIsValid(realSrcDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realSrcDeviceId,
+        static_cast<uint32_t>(error));
+
+    int32_t realDstDeviceId;
+    error = Runtime::Instance()->ChgUserDevIdToDeviceId(
+        static_cast<uint32_t>(dstDeviceId), RtPtrToPtr<uint32_t*>(&realDstDeviceId), true);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error dstDevId:%d is err:%#x", dstDeviceId,
+        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    error = CheckDeviceIdIsValid(realDstDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDstDeviceId,
+        static_cast<uint32_t>(error));
+
+    error = ValidateAtomicOperations(operations, count);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
+
+    return impl_->GetP2PAtomicCapabilities(capabilities, operations, count, realSrcDeviceId, realDstDeviceId);
+}
+
 }  // namespace runtime
 }  // namespace cce

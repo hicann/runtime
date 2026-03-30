@@ -20,6 +20,7 @@
 #include "runtime/rt_mem_queue.h"
 #include "runtime/rt_model.h"
 #include "runtime/rt_inner_model.h"
+#include "runtime/rt_inner_device.h"
 #include "runtime/rts/rts.h"
 #include "runtime/rt_stars_define.h"
 #include "runtime/rts/rts_stars.h"
@@ -910,6 +911,14 @@ rtError_t aclStub::rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_
 }
 
 rtError_t aclStub::rtGetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util){
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtDeviceGetHostAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t deviceId) {
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtDeviceGetP2PAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId) {
     return RT_ERROR_NONE;
 }
 
@@ -3346,6 +3355,14 @@ rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoTyp
 
 rtError_t rtGetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util){
     return MockFunctionTest::aclStubInstance().rtGetAllUtilizations(devId, kind, util);
+}
+
+rtError_t rtDeviceGetHostAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t deviceId) {
+    return MockFunctionTest::aclStubInstance().rtDeviceGetHostAtomicCapabilities(caps, ops, count, deviceId);
+}
+
+rtError_t rtDeviceGetP2PAtomicCapabilities(uint32_t *caps, const rtAtomicOperation *ops, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId) {
+    return MockFunctionTest::aclStubInstance().rtDeviceGetP2PAtomicCapabilities(caps, ops, count, srcDeviceId, dstDeviceId);
 }
 
 rtError_t rtReserveMemAddress(void **devPtr, size_t size, size_t alignment, void *devAddr, uint64_t flags) {

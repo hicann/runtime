@@ -348,6 +348,11 @@ public:
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) override;
     rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) override;
+    rtError_t GetHostAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
+    rtError_t GetP2PAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+        int32_t dstDeviceId) override;
 
     // context
     rtError_t ContextCreate(Context ** const inCtx, const int32_t devId) override;

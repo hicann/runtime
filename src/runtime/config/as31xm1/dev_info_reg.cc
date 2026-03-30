@@ -176,6 +176,8 @@ static const DevProperties CHIP_AS31XM1_PROPERTIES = {
     .aicNumForCoreStack = 1U,
     .engineWaitCompletionTImeout = ENGINE_WAIT_COMPLETION_TIMEOUT,
     .reportWaitTimeout = RT_REPORT_MDC_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = {},
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_AS31XM1, CHIP_AS31XM1_PROPERTIES);

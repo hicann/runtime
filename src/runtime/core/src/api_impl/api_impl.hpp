@@ -362,6 +362,11 @@ public:
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t *devCount) override;
     rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t *uuid) override;
+    rtError_t GetHostAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
+    rtError_t GetP2PAtomicCapabilities(
+        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
+        int32_t dstDeviceId) override;
 
     // context
     rtError_t ContextCreate(Context ** const inCtx, const int32_t devId) override;
@@ -792,6 +797,11 @@ private:
         rtPtrAttributes_t &dstAttr, rtPtrAttributes_t &srcAttr);
     rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) override;
     rtError_t FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle) override;
+    rtError_t GetAtomicDevProperties(uint32_t* capabilities, uint32_t count, DevProperties& prop);
+    void FillAtomicCapabilities(uint32_t* capabilities, const rtAtomicOperation* operations, uint32_t count,
+                                const uint32_t* sourceCapabilities);
+    rtError_t CheckHostAtomicSupport(int32_t deviceId, bool &supported);
+    rtError_t CheckP2PAtomicSupport(int32_t srcDeviceId, int32_t dstDeviceId, bool &supported);
 
     // task
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;

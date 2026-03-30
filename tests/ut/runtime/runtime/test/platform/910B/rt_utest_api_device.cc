@@ -600,3 +600,48 @@ TEST_F(CloudV2ApiDeviceTest, get_device_uuid_fail)
     error = rtGetDeviceUuid(devId, &uuid);
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
 }
+
+TEST_F(CloudV2ApiDeviceTest, rtDeviceGetHostAtomicCapabilities)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[1] = {0};
+    rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    int64_t topoType = HOST_DEVICE_CONNECT_TYPE_PCIE;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetHostAtomicCapabilities(capabilities, operations, 1, devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(capabilities[0], 0U);
+}
+
+TEST_F(CloudV2ApiDeviceTest, rtDeviceGetP2PAtomicCapabilities)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[3] = {0};
+    rtAtomicOperation operations[3] = {
+        RT_ATOMIC_OPERATION_DMA_ADD,
+        RT_ATOMIC_OPERATION_DMA_MIN,
+        RT_ATOMIC_OPERATION_INTEGER_ADD
+    };
+
+    int64_t topoType = TOPOLOGY_HCCS;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetPairDevicesInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetP2PAtomicCapabilities(capabilities, operations, 3, devId, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(capabilities[0], 57U);
+    EXPECT_EQ(capabilities[1], 57U);
+    EXPECT_EQ(capabilities[2], 0U);
+}

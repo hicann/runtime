@@ -171,6 +171,32 @@ protected:
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
+    void VerifyDavidAtomicCapabilities(const uint32_t *capabilities, uint32_t count)
+    {
+        EXPECT_EQ(count, 21U);
+        EXPECT_EQ(capabilities[0], 99U);
+        EXPECT_EQ(capabilities[1], 99U);
+        EXPECT_EQ(capabilities[2], 99U);
+        EXPECT_EQ(capabilities[3], 98U);
+        EXPECT_EQ(capabilities[4], 98U);
+        EXPECT_EQ(capabilities[5], 99U);
+        EXPECT_EQ(capabilities[6], 99U);
+        EXPECT_EQ(capabilities[7], 99U);
+        EXPECT_EQ(capabilities[8], 99U);
+        EXPECT_EQ(capabilities[9], 99U);
+        EXPECT_EQ(capabilities[10], 48U);
+        EXPECT_EQ(capabilities[11], 48U);
+        EXPECT_EQ(capabilities[12], 48U);
+        EXPECT_EQ(capabilities[13], 57U);
+        EXPECT_EQ(capabilities[14], 57U);
+        EXPECT_EQ(capabilities[15], 57U);
+        EXPECT_EQ(capabilities[16], 99U);
+        EXPECT_EQ(capabilities[17], 99U);
+        EXPECT_EQ(capabilities[18], 99U);
+        EXPECT_EQ(capabilities[19], 98U);
+        EXPECT_EQ(capabilities[20], 98U);
+    }
+
     virtual void TearDown()
     {
         rtStreamDestroy(streamHandle_);
@@ -4572,4 +4598,124 @@ TEST_F(DavidTaskTest, get_tseg_info_failed)
     MOCKER(halPutTsegInfo).stubs().will(returnValue(1));
     err = ((NpuDriver *)(driver_))->PutTsegInfo(0, nullptr);
     EXPECT_NE(err, RT_ERROR_NONE);
+}
+
+TEST_F(DavidTaskTest, rtDeviceGetHostAtomicCapabilities_pcie)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[1] = {0};
+    rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    int64_t topoType = HOST_DEVICE_CONNECT_TYPE_PCIE;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetHostAtomicCapabilities(capabilities, operations, 1, devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(capabilities[0], 0U);
+}
+
+TEST_F(DavidTaskTest, rtDeviceGetHostAtomicCapabilities_ub)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[21] = {0};
+    rtAtomicOperation operations[21] = {
+        RT_ATOMIC_OPERATION_INTEGER_ADD,
+        RT_ATOMIC_OPERATION_INTEGER_MIN,
+        RT_ATOMIC_OPERATION_INTEGER_MAX,
+        RT_ATOMIC_OPERATION_INTEGER_INCREMENT,
+        RT_ATOMIC_OPERATION_INTEGER_DECREMENT,
+        RT_ATOMIC_OPERATION_AND,
+        RT_ATOMIC_OPERATION_OR,
+        RT_ATOMIC_OPERATION_XOR,
+        RT_ATOMIC_OPERATION_EXCHANGE,
+        RT_ATOMIC_OPERATION_CAS,
+        RT_ATOMIC_OPERATION_FLOAT_ADD,
+        RT_ATOMIC_OPERATION_FLOAT_MIN,
+        RT_ATOMIC_OPERATION_FLOAT_MAX,
+        RT_ATOMIC_OPERATION_DMA_ADD,
+        RT_ATOMIC_OPERATION_DMA_MIN,
+        RT_ATOMIC_OPERATION_DMA_MAX,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_MIN,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH};
+
+    int64_t topoType = HOST_DEVICE_CONNECT_TYPE_UB;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetHostAtomicCapabilities(capabilities, operations, 21, devId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    VerifyDavidAtomicCapabilities(capabilities, 21);
+}
+
+TEST_F(DavidTaskTest, rtDeviceGetP2PAtomicCapabilities_pix)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[1] = {0};
+    rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    int64_t topoType = TOPOLOGY_PIX;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetPairDevicesInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetP2PAtomicCapabilities(capabilities, operations, 1, devId, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(capabilities[0], 0U);
+}
+
+TEST_F(DavidTaskTest, rtDeviceGetP2PAtomicCapabilities_ub)
+{
+    rtError_t error;
+    int32_t devId = 0;
+    uint32_t capabilities[21] = {0};
+    rtAtomicOperation operations[21] = {
+        RT_ATOMIC_OPERATION_INTEGER_ADD,
+        RT_ATOMIC_OPERATION_INTEGER_MIN,
+        RT_ATOMIC_OPERATION_INTEGER_MAX,
+        RT_ATOMIC_OPERATION_INTEGER_INCREMENT,
+        RT_ATOMIC_OPERATION_INTEGER_DECREMENT,
+        RT_ATOMIC_OPERATION_AND,
+        RT_ATOMIC_OPERATION_OR,
+        RT_ATOMIC_OPERATION_XOR,
+        RT_ATOMIC_OPERATION_EXCHANGE,
+        RT_ATOMIC_OPERATION_CAS,
+        RT_ATOMIC_OPERATION_FLOAT_ADD,
+        RT_ATOMIC_OPERATION_FLOAT_MIN,
+        RT_ATOMIC_OPERATION_FLOAT_MAX,
+        RT_ATOMIC_OPERATION_DMA_ADD,
+        RT_ATOMIC_OPERATION_DMA_MIN,
+        RT_ATOMIC_OPERATION_DMA_MAX,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_MIN,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS,
+        RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH};
+
+    int64_t topoType = TOPOLOGY_UB;
+    Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::GetPairDevicesInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topoType, sizeof(topoType)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = rtDeviceGetP2PAtomicCapabilities(capabilities, operations, 21, devId, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    VerifyDavidAtomicCapabilities(capabilities, 21);
 }

@@ -205,6 +205,8 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .aicNumForCoreStack = RT_AICORE_NUM_25,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = {},
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);

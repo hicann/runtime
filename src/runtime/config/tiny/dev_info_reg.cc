@@ -158,6 +158,8 @@ static const DevProperties CHIP_5612_PROPERTIES = {
     .aicNumForCoreStack = RT_AICORE_NUM_25,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = {},
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_ASCEND_031, CHIP_5612_PROPERTIES);

@@ -10,7 +10,9 @@
 #ifndef CCE_RUNTIME_DEVICE_PROPERTIES_H
 #define CCE_RUNTIME_DEVICE_PROPERTIES_H
 #include <string>
+#include <array>
 #include "dev_info.h"
+#include "runtime/rt_inner_device.h"
 namespace cce {
 namespace runtime {
 
@@ -49,6 +51,8 @@ constexpr size_t MEMCPY_DESC_SIZE_V1 = 32U;
 constexpr int32_t TIMELINE_EVENT_ID_DEFAULT = 1023;
 constexpr uint8_t OVERFLOW_MODE_SATURATION = 0x1U;
 constexpr uint8_t OVERFLOW_MODE_INFNAN = 0x2U;
+constexpr uint32_t RT_ATOMIC_OPERATION_MAX_VAL =
+    static_cast<uint32_t>(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + 1U;
 
 enum class EventWaitTimeoutType : uint8_t {
     SET_OP_WAIT_TIMEOUT_NOT_SUPPORT,
@@ -306,6 +310,8 @@ struct DevProperties final {
     uint32_t aicNumForCoreStack;
     uint64_t engineWaitCompletionTImeout;
     int32_t reportWaitTimeout;
+    std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> hostAtomicCapabilities;
+    std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> p2pAtomicCapabilities;
 };
 }
 }

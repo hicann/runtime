@@ -794,6 +794,108 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtStreamAttr)
   EXPECT_EQ(sizeof(aclrtStreamAttr), 4);
 }
 
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtAtomicOperationCapability)
+{
+    aclrtAtomicOperationCapability cap;
+    cap = (aclrtAtomicOperationCapability)(1U << 0);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SIGNED);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 1);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_UNSIGNED);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 2);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_REDUCATION);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 3);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR8);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 4);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR16);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 5);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR32);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 6);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR64);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 7);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_SCALAR128);
+
+    cap = (aclrtAtomicOperationCapability)(1U << 8);
+    EXPECT_EQ(cap, ACL_RT_ATOMIC_CAPABILITY_VECTOR32X4);
+
+    EXPECT_EQ(sizeof(aclrtAtomicOperationCapability), sizeof(uint32_t));
+}
+
+TEST_F(UTEST_ACL_compatibility_enum_check, aclrtAtomicOperation)
+{
+    aclrtAtomicOperation op;
+    op = (aclrtAtomicOperation)0;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_INTEGER_ADD);
+
+    op = (aclrtAtomicOperation)1;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_INTEGER_MIN);
+
+    op = (aclrtAtomicOperation)2;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_INTEGER_MAX);
+
+    op = (aclrtAtomicOperation)3;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_INTEGER_INCREMENT);
+
+    op = (aclrtAtomicOperation)4;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_INTEGER_DECREMENT);
+
+    op = (aclrtAtomicOperation)5;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_AND);
+
+    op = (aclrtAtomicOperation)6;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_OR);
+
+    op = (aclrtAtomicOperation)7;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_XOR);
+
+    op = (aclrtAtomicOperation)8;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_EXCHANGE);
+
+    op = (aclrtAtomicOperation)9;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_CAS);
+
+    op = (aclrtAtomicOperation)10;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_FLOAT_ADD);
+
+    op = (aclrtAtomicOperation)11;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_FLOAT_MIN);
+
+    op = (aclrtAtomicOperation)12;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_FLOAT_MAX);
+
+    op = (aclrtAtomicOperation)30;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_DMA_ADD);
+
+    op = (aclrtAtomicOperation)31;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_DMA_MIN);
+
+    op = (aclrtAtomicOperation)32;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_DMA_MAX);
+
+    op = (aclrtAtomicOperation)40;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD);
+
+    op = (aclrtAtomicOperation)41;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_MIN);
+
+    op = (aclrtAtomicOperation)42;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX);
+
+    op = (aclrtAtomicOperation)43;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS);
+
+    op = (aclrtAtomicOperation)44;
+    EXPECT_EQ(op, ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH);
+
+    EXPECT_EQ(sizeof(aclrtAtomicOperation), sizeof(uint32_t));
+}
+
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
 {
   aclrtDevAttr value;

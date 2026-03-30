@@ -198,6 +198,8 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .aicNumForCoreStack = RT_AICORE_NUM_25,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = {},
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_MC62CM12A, CHIP_MC62CM12A_PROPERTIES);

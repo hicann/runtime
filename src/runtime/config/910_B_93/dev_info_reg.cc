@@ -157,6 +157,18 @@ static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX
 static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 = 254U; // The STARS reference time is 1090921693.184 us.
 static constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F;  // 0.001(us) = 1ns
 
+static constexpr uint32_t RT_STARS_ATOMIC_DMA_CAPS = RT_ATOMIC_CAPABILITY_SIGNED | RT_ATOMIC_CAPABILITY_SCALAR8 |
+                                                     RT_ATOMIC_CAPABILITY_SCALAR16 | RT_ATOMIC_CAPABILITY_SCALAR32;
+
+static constexpr std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> GetStarsP2PAtomicCaps()
+{
+    std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> caps{};
+    caps[RT_ATOMIC_OPERATION_DMA_ADD] = RT_STARS_ATOMIC_DMA_CAPS;
+    caps[RT_ATOMIC_OPERATION_DMA_MIN] = RT_STARS_ATOMIC_DMA_CAPS;
+    caps[RT_ATOMIC_OPERATION_DMA_MAX] = RT_STARS_ATOMIC_DMA_CAPS;
+    return caps;
+}
+
 static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .engineType = "STARS",
     .isStars = true,
@@ -255,6 +267,8 @@ static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .aicNumForCoreStack = RT_AICORE_NUM_25,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
+    .hostAtomicCapabilities = {},
+    .p2pAtomicCapabilities = GetStarsP2PAtomicCaps(),
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_CLOUD_V2_PROPERTIES);

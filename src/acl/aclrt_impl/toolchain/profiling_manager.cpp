@@ -296,6 +296,8 @@ namespace acl {
         {AclProfType::AclrtMemManagedGetAttrs,                  "aclrtMemManagedGetAttrs"},
         {AclProfType::AclrtMemManagedPrefetchAsync,             "aclrtMemManagedPrefetchAsync"},
         {AclProfType::AclrtMemManagedPrefetchBatchAsync,        "aclrtMemManagedPrefetchBatchAsync"},
+        {AclProfType::AclrtDeviceGetHostAtomicCapabilities,     "aclrtDeviceGetHostAtomicCapabilities"},
+        {AclProfType::AclrtDeviceGetP2PAtomicCapabilities,      "aclrtDeviceGetP2PAtomicCapabilities"},
 };
 
 aclError RegisterType(const uint32_t index) {

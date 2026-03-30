@@ -564,3 +564,120 @@ TEST_F(CloudV2ApiAbnormalTest, rtDevBinaryRegister_Null)
     error = rtDevBinaryRegister(NULL, &handle);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
+
+TEST_F(CloudV2ApiAbnormalTest, GetHostAtomicCapabilities_ApiErrorDecorator)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t caps[1];
+    rtAtomicOperation ops[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetHostAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 1, 0), RT_ERROR_NONE);
+
+    EXPECT_EQ(api.GetHostAtomicCapabilities(nullptr, ops, 1, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, nullptr, 1, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 0, 0), RT_ERROR_INVALID_VALUE);
+    
+    rtAtomicOperation invalidOps[1] = {static_cast<rtAtomicOperation>(999)};
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, invalidOps, 1, 0), RT_ERROR_INVALID_VALUE);
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId)
+        .stubs()
+        .will(returnValue(RT_ERROR_DEVICE_ID));
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 1, 255), RT_ERROR_DEVICE_ID); // Invalid device id
+}
+
+TEST_F(CloudV2ApiAbnormalTest, GetP2PAtomicCapabilities_ApiErrorDecorator)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t caps[1];
+    rtAtomicOperation ops[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 1), RT_ERROR_NONE);
+
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(nullptr, ops, 1, 0, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, nullptr, 1, 0, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 0, 0, 1), RT_ERROR_INVALID_VALUE);
+    
+    rtAtomicOperation invalidOps[1] = {static_cast<rtAtomicOperation>(999)};
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, invalidOps, 1, 0, 1), RT_ERROR_INVALID_VALUE);
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId)
+        .stubs()
+        .will(returnValue(RT_ERROR_DEVICE_ID));
+
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 0), RT_ERROR_DEVICE_ID); // src == dst
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 255, 1), RT_ERROR_DEVICE_ID); // invalid src
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 255), RT_ERROR_DEVICE_ID); // invalid dst
+}
+
+TEST_F(CloudV2ApiAbnormalTest, GetAtomicCapabilities_ApiDecorator_Forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    uint32_t caps[1];
+    rtAtomicOperation ops[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetHostAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+        
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 1, 0), RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 1), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiAbnormalTest, GetAtomicCapabilities_ApiProfileDecorator)
+{
+    ApiImpl impl;
+    Profiler profiler(nullptr);
+    ApiProfileDecorator api(&impl, &profiler);
+    uint32_t caps[1];
+    rtAtomicOperation ops[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetHostAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 1, 0), RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 1), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiAbnormalTest, GetAtomicCapabilities_ApiProfileLogDecorator)
+{
+    ApiImpl impl;
+    Profiler profiler(nullptr);
+    ApiProfileLogDecorator api(&impl, &profiler);
+    uint32_t caps[1];
+    rtAtomicOperation ops[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetHostAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.GetHostAtomicCapabilities(caps, ops, 1, 0), RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PAtomicCapabilities)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 1), RT_ERROR_NONE);
+}

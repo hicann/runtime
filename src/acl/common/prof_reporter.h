@@ -300,6 +300,8 @@ namespace acl {
         AclrtMemManagedAdvise,
         AclrtMemManagedPrefetchAsync,
         AclrtMemManagedPrefetchBatchAsync,
+        AclrtDeviceGetHostAtomicCapabilities,
+        AclrtDeviceGetP2PAtomicCapabilities,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };
