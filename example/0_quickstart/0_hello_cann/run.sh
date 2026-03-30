@@ -36,3 +36,4 @@ cd "${SCRIPT_DIR}"
 echo "Build completed successfully!"
 echo "Executable location: ${SCRIPT_DIR}/build/main"
 echo "Run the sample: ./build/main"
+./build/main

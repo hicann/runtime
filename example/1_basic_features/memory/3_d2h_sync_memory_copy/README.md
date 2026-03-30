@@ -3,20 +3,20 @@
 ## 描述
 本样例展示了Device到Host的内存复制，使用aclrtMemcpy内存复制接口。
 
-## 支持的产品型号
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品 
-- Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件
-- Atlas 200I/500 A2 推理产品
-- Atlas 推理系列产品
-- Atlas 训练系列产品
+## 产品支持情况
+
+本样例支持以下产品：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。
 
 
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
@@ -29,6 +29,9 @@ export SOC_VERSION=${ascend_name}
 # 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
 # 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
 export ASCENDC_CMAKE_DIR=${cmake_path}
+
+# 编译运行
+bash run.sh
 ```
 ## CANN RUNTIME API
 在该Sample中，涉及的关键功能点及其关键接口，如下所示：

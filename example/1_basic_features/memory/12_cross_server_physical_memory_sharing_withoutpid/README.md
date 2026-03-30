@@ -3,11 +3,16 @@
 ## 描述
 本样例展示了 aclrtMemExportToShareableHandleV2 和 aclrtMemImportFromShareableHandleV2 接口实现跨机物理内存共享，在内存共享时关闭进程白名单校验。
 
-## 支持的产品型号
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品
+## 产品支持情况
+
+本样例支持以下产品：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
 
 ## 编译运行
-- 环境安装详情请见example目录下的[README](../../README.md)。
+- 环境安装详情请见example目录下的[README](../../../README.md)。
 - 本样例用于展示跨服务器共享内存功能，需在两台已完成环境配置且网络互通的服务器上分别运行脚本：
     - 在服务端服务器执行：bash run_server.sh，按提示输入监听端口号。
     - 在客户端服务器执行：bash run_client.sh，按提示输入服务端地址与端口号。

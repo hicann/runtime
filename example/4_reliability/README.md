@@ -2,7 +2,7 @@
 
 本章节聚焦 Runtime 的可靠性能力，适合用于学习快照、溢出检测、错误恢复和容错执行等主题。
 
-## 当前可运行样例
+## 样例列表
 
 - [snapshot](./snapshot/README.md)：运行时快照回调、备份和恢复流程。
 - [overflow_detection](./overflow_detection/README.md)：流级溢出检测开关、状态查询和重置。

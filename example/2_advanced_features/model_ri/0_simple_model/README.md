@@ -3,22 +3,28 @@
 ## 描述
 本样例展示了如何捕获Stream中的任务并创建一个模型实例，然后执行该模型实例得到结果。
 
-## 支持的产品型号
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品 
-- Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件
+## 产品支持情况
+
+本样例在以下产品上的支持情况如下：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。
 
 
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
 export ASCEND_INSTALL_PATH=${install_root}/cann
+
+# 编译运行
+bash run.sh
 ```
 ## CANN RUNTIME API
 在该Sample中，涉及的关键功能点及其关键接口，如下所示：

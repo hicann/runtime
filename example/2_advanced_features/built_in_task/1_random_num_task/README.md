@@ -4,39 +4,49 @@
 
 本示例展示了如何使用 CANN Runtime 的 `aclrtRandomNumAsync` API 生成随机数。支持多种随机数分布类型和数据类型，用于满足不同场景下的随机数生成需求。
 
-## 支持的产品型号
+## 产品支持情况
 
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品
+本样例在以下产品上的支持情况如下：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。
 
 
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
 export ASCEND_INSTALL_PATH=${install_root}/cann
-```
-## 相关 API
 
-| API | 说明 |
-|-----|------|
-| `aclInit` | 初始化 ACL |
-| `aclrtSetDevice` | 设置设备 |
-| `aclrtCreateStream` | 创建 Stream |
-| `aclrtMalloc` | 分配 Device 内存 |
-| `aclrtRandomNumAsync` | 异步生成随机数 |
-| `aclrtSynchronizeStream` | 同步 Stream |
-| `aclrtMemcpy` | 内存拷贝 |
-| `aclrtFree` | 释放 Device 内存 |
-| `aclrtDestroyStream` | 销毁 Stream |
-| `aclrtResetDeviceForce` | 重置设备 |
-| `aclFinalize` | 释放 ACL 资源 |
+# 编译运行
+bash run.sh
+```
+
+## CANN RUNTIME API
+
+在该Sample中，涉及的关键功能点及其关键接口，如下所示：
+- 初始化
+    - 调用aclInit接口初始化AscendCL配置。
+    - 调用aclFinalize接口实现AscendCL去初始化。
+- Device管理
+    - 调用aclrtSetDevice接口指定用于运算的Device。
+    - 调用aclrtResetDeviceForce接口强制复位当前运算的Device，回收Device上的资源。
+- Stream管理
+    - 调用aclrtCreateStream接口创建Stream。
+    - 调用aclrtSynchronizeStream接口阻塞等待Stream上任务执行完成。
+- 内存管理
+    - 调用aclrtMalloc接口申请Device上的输出缓冲区和随机数计数器缓冲区。
+    - 调用aclrtFree接口释放Device上的内存。
+- 数据传输
+    - 调用aclrtMemcpy接口将生成的随机数拷贝回Host侧进行检查。
+- 随机数任务执行
+    - 调用aclrtRandomNumAsync接口异步下发随机数任务，生成uniform、normal等分布结果以及 dropout bitmask。
 
 ## 核心 API
 
@@ -121,7 +131,6 @@ typedef struct {
 1. **Counter 内存**: 固定 16 字节，任意字节对齐地址即可
 2. **输出内存**: 根据数据类型和随机数数量动态分配
 3. **参数内存**: 均值、标准差、范围等参数可使用立即值或设备内存
-
 
 ## 已知issue
 

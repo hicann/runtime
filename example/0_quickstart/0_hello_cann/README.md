@@ -17,57 +17,59 @@
 8. 同步等待计算完成并获取结果
 9. 销毁 `aclDataBuffer` 并释放资源
 
-## 支持的产品型号
+## 产品支持情况
 
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品 
-- Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件
-- Atlas 200I/500 A2 推理产品
-- Atlas 推理系列产品
-- Atlas 训练系列产品
+本样例支持以下产品：
 
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 编译运行
 
 环境安装详情以及运行详情请见 example 目录下的 [README](../../README.md)。
 
 
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
 export ASCEND_INSTALL_PATH=${install_root}/cann
+
+# 编译运行
+bash run.sh
 ```
 
 ## 相关样例
 
 - [4_custom_kernel_launch](../4_custom_kernel_launch/README.md)：如果需要使用 `<<<>>>` 调用自定义 AscendC Kernel，可参考该样例。
 
-## 相关 API
+## CANN RUNTIME API
 
-| API | 说明 |
-|-----|------|
-| `aclInit` | 初始化 ACL |
-| `aclrtSetDevice` | 设置设备 |
-| `aclrtCreateStream` | 创建 Stream |
-| `aclrtMalloc` | 分配 Device 内存 |
-| `aclrtMemcpy` | 内存拷贝 |
-| `aclCreateDataBuffer` | 创建 DataBuffer，描述一段内存地址和大小 |
-| `aclGetDataBufferAddr` | 获取 DataBuffer 中保存的内存地址 |
-| `aclCreateTensor` | 创建 Tensor |
-| `aclCreateScalar` | 创建 Scalar |
-| `aclnnAddGetWorkspaceSize` | 获取加法算子所需 workspace 大小 |
-| `aclnnAdd` | 执行加法运算 |
-| `aclrtSynchronizeStream` | 同步 Stream |
-| `aclDestroyTensor` | 销毁 Tensor |
-| `aclDestroyScalar` | 销毁 Scalar |
-| `aclDestroyDataBuffer` | 销毁 DataBuffer 描述对象 |
-| `aclrtFree` | 释放 Device 内存 |
-| `aclrtDestroyStream` | 销毁 Stream |
-| `aclrtResetDeviceForce` | 重置设备 |
-| `aclFinalize` | 释放 ACL 资源 |
+在本样例中，涉及的关键功能点及其关键接口如下所示：
+- 初始化
+    - 调用 `aclInit` 接口初始化 ACL。
+    - 调用 `aclFinalize` 接口释放 ACL 资源。
+- Device 与 Stream 管理
+    - 调用 `aclrtSetDevice` 接口设置计算设备。
+    - 调用 `aclrtCreateStream` 接口创建 Stream。
+    - 调用 `aclrtSynchronizeStream` 接口等待 Stream 上任务完成。
+    - 调用 `aclrtDestroyStream` 接口销毁 Stream。
+    - 调用 `aclrtResetDeviceForce` 接口重置设备。
+- Tensor 与数据描述
+    - 调用 `aclCreateTensor` 接口创建输入和输出 Tensor。
+    - 调用 `aclCreateScalar` 接口创建缩放因子 `alpha`。
+    - 调用 `aclCreateDataBuffer` 和 `aclGetDataBufferAddr` 接口管理输出 Buffer。
+    - 调用 `aclDestroyTensor`、`aclDestroyScalar` 和 `aclDestroyDataBuffer` 接口释放描述对象。
+- 内存管理与数据传输
+    - 调用 `aclrtMalloc` 接口分配 Device 内存。
+    - 调用 `aclrtMemcpy` 接口完成 Host/Device 数据传输。
+    - 调用 `aclrtFree` 接口释放 Device 内存。
+- 算子执行
+    - 调用 `aclnnAddGetWorkspaceSize` 接口查询算子执行所需 workspace。
+    - 调用 `aclnnAdd` 接口执行向量加法。
 
 ## 核心 API
 

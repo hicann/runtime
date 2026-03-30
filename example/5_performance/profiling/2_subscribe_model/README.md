@@ -3,18 +3,19 @@
 ## 描述
 本样例展示了订阅算子信息。通过调用消息订阅接口实现将采集到的Profiling数据解析后写入管道，由用户读入内存，再由用户调用API获取性能数据。当前支持获取网络模型中算子的性能数据，包括算子名称、算子类型名称、算子执行时间等。
 
-## 支持的产品型号
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品
-- Atlas A2 训练系列产品/Atlas 800I A2 推理产品/A200I A2 Box 异构组件
-- Atlas 训练系列产品
+## 产品支持情况
+
+本样例支持以下产品：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。
 
-
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
@@ -23,6 +24,9 @@ export ASCEND_INSTALL_PATH=${install_root}/cann
 
 # Profiling 样例的 run.sh 还会读取 ASCEND_HOME_PATH，请一并设置为同一路径
 export ASCEND_HOME_PATH=${install_root}/cann
+
+# 编译运行
+bash run.sh
 ```
 ## CANN RUNTIME API
 
@@ -42,4 +46,3 @@ export ASCEND_HOME_PATH=${install_root}/cann
 ## 已知issue
 
    暂无
-

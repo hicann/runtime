@@ -4,16 +4,20 @@
 - 该特性当前阶段为预留功能
 - 本样例展示在流间使用CntNotify进行同步的场景，包括创建、记录、等待、复位、获取ID和销毁的操作。
 
-## 支持的产品型号
-- 该特性当前为试验阶段，暂未明确支持的产品型号
+## 产品支持情况
+
+本样例在以下产品上的支持情况如下：
+
+| 产品 | 是否支持 |
+| --- | --- |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | x |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | x |
 
 ## 编译运行
-环境安装详情以及运行详情请见example目录下的[README](../../README.md)。
+环境安装详情以及运行详情请见example目录下的[README](../../../README.md)。
 
 
-## 运行前环境变量
-
-运行 `bash run.sh` 前，请先在同一个 shell 中导入以下环境变量：
+运行步骤如下：
 
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
@@ -26,6 +30,9 @@ export SOC_VERSION=${ascend_name}
 # 部分样例中涉及调用AscendC算子，需配置AscendC编译器ascendc.cmake所在的路径，如 ${install_root}/cann/aarch64-linux/tikcpp/ascendc_kernel_cmake
 # 可在CANN包安装路径下查找ascendc_kernel_cmake，例如find ./ -name ascendc_kernel_cmake，并将${cmake_path}替换为ascendc_kernel_cmake所在路径
 export ASCENDC_CMAKE_DIR=${cmake_path}
+
+# 编译运行
+bash run.sh
 ```
 ## CANN RUNTIME API
 在该Sample中，涉及的关键功能点及其关键接口，如下所示：
