@@ -35,6 +35,8 @@ public:
     const char* GetDumpCPath() const;
     uint32_t GetDumpMode() const;
     bool GetDumpStatus() const;
+    bool GetDumpStatusEx() const;
+    bool IsDumpDataStats() const;
     bool GetDumpDebugStatus() const;
     bool InitDumpStatus(const std::string &dumpStatus, bool &status) const;
     const std::string GetDumpData() const;

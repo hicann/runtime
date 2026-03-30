@@ -20,6 +20,7 @@
 #include "adump_api.h"
 #include "sys_utils.h"
 #include "dump_manager.h"
+#include "operator_dumper.h"
 #include "acl/acl_base.h"
 #include "acl/acl_dump.h"
 #include "sys_utils.h"
@@ -96,6 +97,9 @@ TEST_F(AdumpApiUtest, Test_EnableOperatorDumpStats)
     dumpConf.dumpData = "stats";
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), true);
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+     EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
 }
 
 TEST_F(AdumpApiUtest, Test_EnableOperatorOverflowDump)
@@ -107,6 +111,10 @@ TEST_F(AdumpApiUtest, Test_EnableOperatorOverflowDump)
     dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, dumpConf), ADUMP_SUCCESS);
     EXPECT_EQ(AdumpIsDumpEnable(DumpType::OP_OVERFLOW), true);
+    dumpConf.dumpStatus = "off";
+    dumpConf.dumpSwitch = 0;
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OP_OVERFLOW), false);
 }
 
 TEST_F(AdumpApiUtest, Test_DisableOperatorDump)
@@ -152,6 +160,7 @@ TEST_F(AdumpApiUtest, Test_SetOperatorDumpConf_fail)
     invalidDumpConf.dumpStatus = "on";
     invalidDumpConf.dumpMode = "all";
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, invalidDumpConf), ADUMP_FAILED);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
 }
 
 TEST_F(AdumpApiUtest, Test_SetOperatorOverflowDumpConf_fail)
@@ -164,17 +173,12 @@ TEST_F(AdumpApiUtest, Test_SetOperatorOverflowDumpConf_fail)
     invalidDumpConf.dumpMode = "all";
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, invalidDumpConf), ADUMP_FAILED);
 
-    // invalid dump mode
-    invalidDumpConf.dumpPath = "/path/to/dump/";
-    invalidDumpConf.dumpStatus = "on";
-    invalidDumpConf.dumpMode = "invalid";
-    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, invalidDumpConf), ADUMP_SUCCESS);
-
     // invalid dump path
     invalidDumpConf.dumpPath = "";
     invalidDumpConf.dumpStatus = "on";
     invalidDumpConf.dumpMode = "all";
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OP_OVERFLOW, invalidDumpConf), ADUMP_FAILED);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
 }
 
 TEST_F(AdumpApiUtest, Test_AdumpDumpTensor_with_DumpStatus_off)
@@ -184,7 +188,209 @@ TEST_F(AdumpApiUtest, Test_AdumpDumpTensor_with_DumpStatus_off)
     EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
     aclrtStream stream = (aclrtStream)0x1234;
     MOCKER(rtStreamGetCaptureInfo).stubs().will(returnValue(0));
-    EXPECT_EQ(AdumpDumpTensor("Conv2D", "op_name", {}, stream), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpDumpTensor("AdumpDumpTensor", "DumpStatus_off", {}, stream), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpDumpTensorV2("AdumpDumpTensor", "DumpStatus_off", {}, stream), ADUMP_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensor_With_Launch_Error)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpPath = "/path/to/dump/Test_AdumpDumpTensor_With_Launch_Error";
+    dumpConf.dumpStatus = "on";
+    dumpConf.dumpMode = "all";
+    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpData = "data";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+
+    MOCKER(rtStreamGetCaptureInfo).stubs().will(returnValue(-1));
+    MOCKER(&OperatorDumper::Launch).stubs().will(returnValue(ADUMP_FAILED));
+    std::vector<TensorInfo> tensors;
+    TensorInfo tensor1;
+    tensor1.type = TensorType::INPUT;
+    tensor1.placement = TensorPlacement::kOnDeviceHbm;
+    tensor1.tensorAddr = (int64_t *)0x1111;
+    tensor1.tensorSize = 1;
+    tensors.push_back(tensor1);
+    DumpCfg dumpcfg{nullptr, 0};
+    aclrtStream stream = (aclrtStream)0x1234;
+    EXPECT_EQ(AdumpDumpTensor("AdumpDumpTensor", "Launch_Error", tensors, stream), ADUMP_FAILED);
+
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensorWithCfg_With_DumpStatus_Off)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    aclrtStream stream = (aclrtStream)0x1234;
+    DumpCfg dumpcfg{nullptr, 0};
+    EXPECT_EQ(AdumpDumpTensorWithCfg("Conv2D", "op_name", {}, stream, dumpcfg), ADUMP_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensorWithCfg_With_DumpCfg_Invalid)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpPath = "/path/to/dump/Test_AdumpDumpTensorWithCfg_With_DumpCfg_Invalid";
+    dumpConf.dumpStatus = "on";
+    dumpConf.dumpMode = "all";
+    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpData = "stats";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+
+    aclrtStream stream = (aclrtStream)0x1234;
+    DumpCfg dumpcfg{nullptr, 1};
+    EXPECT_EQ(AdumpDumpTensorWithCfg("AdumpDumpTensorWithCfg", "DumpCfg_Invalid", {}, stream, dumpcfg), ADUMP_FAILED);
+
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensorWithCfg_With_Tensor_Empty)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpPath = "/path/to/dump/Test_AdumpDumpTensorWithCfg_With_Tensor_Empty";
+    dumpConf.dumpStatus = "on";
+    dumpConf.dumpMode = "all";
+    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpData = "stats";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+
+    aclrtStream stream = (aclrtStream)0x1234;
+    DumpCfg dumpcfg{nullptr, 0};
+    EXPECT_EQ(AdumpDumpTensorWithCfg("AdumpDumpTensorWithCfg", "Tensor_Empty", {}, stream, dumpcfg), ADUMP_SUCCESS);
+
+    std::vector<TensorInfo> tensors;
+    TensorInfo tensor1;
+    tensor1.type = TensorType::INPUT;
+    tensor1.placement = TensorPlacement::kOnHost;
+    tensor1.tensorAddr = (int64_t *)0x1234;
+    tensor1.tensorSize = 1;
+
+    TensorInfo tensor2;
+    tensor2.type = TensorType::OUTPUT;
+    tensor2.placement = TensorPlacement::kOnDeviceHbm;
+    tensor2.tensorAddr = nullptr;
+    tensor2.tensorSize = 1;
+
+    TensorInfo tensor3;
+    tensor3.type = TensorType::OUTPUT;
+    tensor3.placement = TensorPlacement::kOnDeviceHbm;
+    tensor3.tensorAddr = (int64_t *)0x1234;
+    tensor3.tensorSize = 0;
+
+    tensors.push_back(tensor1);
+    tensors.push_back(tensor2);
+    tensors.push_back(tensor3);
+    EXPECT_EQ(AdumpDumpTensorWithCfg("AdumpDumpTensorWithCfg", "Tensor_Empty", tensors, stream, dumpcfg), ADUMP_SUCCESS);
+
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensorWithCfg_With_Capture_Error)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpPath = "/path/to/dump/Test_AdumpDumpTensorWithCfg_With_Capture_Error";
+    dumpConf.dumpStatus = "on";
+    dumpConf.dumpMode = "all";
+    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpData = "data";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+
+    std::vector<TensorInfo> tensors;
+    TensorInfo tensor1;
+    tensor1.type = TensorType::INPUT;
+    tensor1.placement = TensorPlacement::kOnDeviceHbm;
+    tensor1.tensorAddr = (int64_t *)0x1234;
+    tensor1.tensorSize = 1;
+    tensors.push_back(tensor1);
+
+    aclrtStream stream = (aclrtStream)0x0;
+    DumpCfg dumpcfg{nullptr, 0};
+    EXPECT_EQ(AdumpDumpTensorWithCfg("AdumpDumpTensorWithCfg", "Capture_Error", tensors, stream, dumpcfg), ADUMP_FAILED);
+
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpDumpTensorWithCfg_With_Launch_Error)
+{
+    DumpConfig dumpConf;
+    dumpConf.dumpPath = "/path/to/dump/Test_AdumpDumpTensorWithCfg_With_Launch_Error";
+    dumpConf.dumpStatus = "on";
+    dumpConf.dumpMode = "all";
+    dumpConf.dumpSwitch = (OPERATOR_OP_DUMP | OPERATOR_KERNEL_DUMP);
+    dumpConf.dumpData = "data";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+
+    MOCKER(rtStreamGetCaptureInfo).stubs().will(returnValue(-1));
+    MOCKER(&OperatorDumper::LaunchWithCfg).stubs().will(returnValue(ADUMP_FAILED));
+    std::vector<TensorInfo> tensors;
+    TensorInfo tensor1;
+    tensor1.type = TensorType::INPUT;
+    tensor1.placement = TensorPlacement::kOnDeviceHbm;
+    tensor1.tensorAddr = (int64_t *)0x1111;
+    tensor1.tensorSize = 1;
+    tensors.push_back(tensor1);
+    DumpCfg dumpcfg{nullptr, 0};
+    aclrtStream stream = (aclrtStream)0x1234;
+    EXPECT_EQ(AdumpDumpTensorWithCfg("AdumpDumpTensorWithCfg", "Launch_Error", tensors, stream, dumpcfg), ADUMP_FAILED);
+
+    dumpConf.dumpStatus = "off";
+    EXPECT_EQ(AdumpSetDumpConfig(DumpType::OPERATOR, dumpConf), ADUMP_SUCCESS);
+    EXPECT_EQ(AdumpIsDumpEnable(DumpType::OPERATOR), false);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpAddExceptionOperatorInfo)
+{
+    uint32_t testId = 10U;
+    OperatorInfo opInfo;
+    opInfo.agingFlag = false;
+    opInfo.taskId = testId;
+    opInfo.streamId = testId;
+    opInfo.deviceId = testId;
+    TensorInfo tensor;
+    tensor.type = TensorType::INPUT;
+    tensor.addrType = AddressType::TRADITIONAL;
+    tensor.shape.push_back(10);
+    tensor.originShape.push_back(10);
+    opInfo.tensorInfos.push_back(tensor);
+
+    EXPECT_EQ(AdumpAddExceptionOperatorInfo(opInfo), ADUMP_SUCCESS);
+    EXPECT_NE(DumpManager::Instance().exceptionDumper_.residentOperators_.find(testId),
+        DumpManager::Instance().exceptionDumper_.residentOperators_.end());
+    EXPECT_EQ(AdumpDelExceptionOperatorInfo(testId, testId), ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().exceptionDumper_.residentOperators_.find(testId),
+        DumpManager::Instance().exceptionDumper_.residentOperators_.end());
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpAddExceptionOperatorInfoV2)
+{
+    uint32_t testId = 11U;
+    OperatorInfoV2 opInfo;
+    opInfo.agingFlag = false;
+    opInfo.taskId = testId;
+    opInfo.streamId = testId;
+    opInfo.deviceId = testId;
+    TensorInfoV2 tensor;
+    tensor.type = TensorType::INPUT;
+    tensor.addrType = AddressType::TRADITIONAL;
+    tensor.shape.push_back(11);
+    tensor.originShape.push_back(11);
+    opInfo.tensorInfos.push_back(tensor);
+
+    EXPECT_EQ(AdumpAddExceptionOperatorInfoV2(opInfo), ADUMP_SUCCESS);
+    EXPECT_NE(DumpManager::Instance().exceptionDumper_.residentOperators_.find(testId),
+        DumpManager::Instance().exceptionDumper_.residentOperators_.end());
+    EXPECT_EQ(AdumpDelExceptionOperatorInfo(testId, testId), ADUMP_SUCCESS);
+    EXPECT_EQ(DumpManager::Instance().exceptionDumper_.residentOperators_.find(testId),
+        DumpManager::Instance().exceptionDumper_.residentOperators_.end());
 }
 
 ////////////// test exception dump //////////////////////
@@ -351,44 +557,8 @@ TEST_F(AdumpApiUtest, Test_ArgsException_GetSizeInfoAddr_With_Right_Addr)
 
 TEST_F(AdumpApiUtest, Test_GetEnv_Exception)
 {
-    const char* env = "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-    "1111111111";
-    EXPECT_EQ(SysUtils::HandleEnv(env), "");
+    std::string env(4097U, '1');
+    EXPECT_EQ(SysUtils::HandleEnv(env.c_str()), "");
 }
 
 TEST_F(AdumpApiUtest, Test_AdumpSetDump)

@@ -43,11 +43,13 @@ public:
     void ExceptionModeDowngrade();
     int32_t DumpOperatorV2(const std::string &opType, const std::string &opName,
         const std::vector<TensorInfoV2> &tensors, rtStream_t stream);
+    int32_t DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
+        const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg);
     void AddExceptionOpV2(const OperatorInfoV2 &opInfo);
     int32_t RegisterCallback(uint32_t moduleId, AdumpCallback enableFunc, AdumpCallback disableFunc);
     int32_t HandleDumpEvent(uint32_t moduleId, DumpEnableAction action);
     void ConvertOperatorInfo(const OperatorInfo &opInfo, OperatorInfoV2 &operatorInfoV2) const;
-    std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &TensorInfos) const; 
+    std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo> &TensorInfos) const;
 
 #ifdef __ADUMP_LLT
     void Reset();

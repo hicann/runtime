@@ -10,7 +10,6 @@
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 #include "operator_dumper.h"
-#include "gert_tensor_builder.h"
 #include "runtime/rt.h"
 #include "rts/rts_device.h"
 #include "rts/rts_stream.h"
@@ -55,31 +54,47 @@ public:
         return *this;
     }
 
-    OperatorDumperBuilder &AddInputTensor(gert::Tensor *tensor, AddressType addrType = AddressType::TRADITIONAL)
+    OperatorDumperBuilder &DumpData(const std::string &dumpData)
     {
-        if (tensor == nullptr) {
-            return *this;
-        }
+        dumpData_ = dumpData;
+        return *this;
+    }
 
-        TensorInfoV2 tensorV2 = {};
-        tensorV2.addrType = addrType;
-        tensorV2.argsOffSet = 0U;
-        TensorInfo tensor1 = {tensor, TensorType::INPUT, AddressType::TRADITIONAL};
-        DumpManager::Instance().ConvertTensorInfo(tensor1, tensorV2);
+    OperatorDumperBuilder &SetDumpType(const DumpType &dumpType)
+    {
+        dumpType_ = dumpType;
+        return *this;
+    }
+
+
+    OperatorDumperBuilder &AddInputTensor(AddressType addrType = AddressType::TRADITIONAL)
+    {
+        TensorInfo tensor = {};
+        tensor.tensorAddr = (int64_t *)0x1234;
+        tensor.tensorSize = 1;
+        tensor.type = TensorType::INPUT;
+        tensor.placement = TensorPlacement::kOnDeviceHbm;
+        tensor.addrType = addrType;
+        tensor.shape.push_back(1);
+        tensor.originShape.push_back(1);
+        TensorInfoV2 tensorV2;
+        DumpManager::Instance().ConvertTensorInfo(tensor, tensorV2);
         inputDumpTensors_.emplace_back(tensorV2);
         return *this;
     }
 
-    OperatorDumperBuilder &AddOutputTensor(gert::Tensor *tensor, AddressType addrType = AddressType::TRADITIONAL)
+    OperatorDumperBuilder &AddOutputTensor(AddressType addrType = AddressType::TRADITIONAL)
     {
-        if (tensor == nullptr) {
-            return *this;
-        }
-        TensorInfoV2 tensorV2 = {};
-        tensorV2.addrType = addrType;
-        tensorV2.argsOffSet = 0U;
-        TensorInfo tensor1 = {tensor, TensorType::INPUT, AddressType::TRADITIONAL};
-        DumpManager::Instance().ConvertTensorInfo(tensor1, tensorV2);
+        TensorInfo tensor = {};
+        tensor.tensorAddr = (int64_t *)0x1234;
+        tensor.tensorSize = 2;
+        tensor.type = TensorType::OUTPUT;
+        tensor.placement = TensorPlacement::kOnDeviceHbm;
+        tensor.addrType = addrType;
+        tensor.shape.push_back(2);
+        tensor.originShape.push_back(2);
+        TensorInfoV2 tensorV2;
+        DumpManager::Instance().ConvertTensorInfo(tensor, tensorV2);
         outputDumpTensors_.emplace_back(tensorV2);
         return *this;
     }
@@ -106,8 +121,9 @@ public:
         dumpConf.dumpPath = dumpPath_;
         dumpConf.dumpStatus = "on";
         dumpConf.dumpMode = dumpMode_;
+        dumpConf.dumpData = dumpData_;
         DumpSetting setting;
-        (void) setting.Init(DumpType::OPERATOR, dumpConf);
+        (void) setting.Init(dumpType_, dumpConf);
         return setting;
     }
 
@@ -116,65 +132,149 @@ private:
     std::string opName_ {"TestOpName"};
     std::string dumpPath_ {"/path/to/dump/"};
     std::string dumpMode_ {"all"};
+    std::string dumpData_ {"tensor"};
+    DumpType dumpType_ = DumpType::OPERATOR;
     std::vector<DumpTensor> inputDumpTensors_;
     std::vector<DumpTensor> outputDumpTensors_;
     rtStream_t stream_ {nullptr};
 };
 
-TEST_F(OperatorDumperUtest, Test_DumpTensor_Success)
+TEST_F(OperatorDumperUtest, Test_DumpTensor_Tensor_Success)
 {
-    auto inputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
-    auto outputTensor = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Shape({4, 16}).Build();
-
-    OperatorDumper opDumper = OperatorDumperBuilder()
-        .AddInputTensor(inputTensor.GetTensor())
-        .AddOutputTensor(outputTensor.GetTensor())
-        .Build();
-
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor(AddressType::RAW).Build();
     EXPECT_EQ(opDumper.Launch(), ADUMP_SUCCESS);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_Stats_Success)
+{
+    OperatorDumper opDumper = OperatorDumperBuilder().DumpData("stats").AddInputTensor(AddressType::NOTILING).Build();
+    EXPECT_EQ(opDumper.Launch(), ADUMP_SUCCESS);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtGetDevice_Error)
+{
+    MOCKER(rtGetDevice).stubs().will(returnValue(-1));
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
+    EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtsGetThreadLastTaskId_Error)
+{
+    MOCKER(rtsGetThreadLastTaskId).stubs().will(returnValue(-1));
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
+    EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtsStreamGetId_Error)
+{
+    MOCKER(rtsStreamGetId).stubs().will(returnValue(-1));
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
+    EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtsDeviceGetCapability_Error)
+{
+    MOCKER(rtsDeviceGetCapability).stubs().will(returnValue(-1));
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
+    EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
 }
 
 TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtMalloc_Error)
 {
     MOCKER(rtMalloc).stubs().will(returnValue(-1));
-    auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
-    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(th.GetTensor()).Build();
+    OperatorDumper opDumper = OperatorDumperBuilder().DumpData("stats").AddInputTensor().Build();
     EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
 }
 
 TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtMemcpy_Error)
 {
     MOCKER(rtMemcpy).stubs().will(returnValue(-1));
-    auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
-    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(th.GetTensor()).Build();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
     EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
-}
-
-TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtGetDevice_Error)
-{
-    MOCKER(rtGetDevice).stubs().will(returnValue(-1));
-    auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
-    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(th.GetTensor()).Build();
-    EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
-}
-
-
-TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtGetTaskIdAndStreamID_Error)
-{
-    MOCKER(rtsDeviceGetCapability).stubs().will(returnValue(-1));
-    auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
-    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(th.GetTensor()).Build();
-    EXPECT_EQ(ADUMP_FAILED, opDumper.Launch());
-    MOCKER(rtsStreamGetId).stubs().will(returnValue(-1));
-    EXPECT_EQ(ADUMP_FAILED, opDumper.Launch());
-    MOCKER(rtsGetThreadLastTaskId).stubs().will(returnValue(-1));
-    EXPECT_EQ(ADUMP_FAILED, opDumper.Launch());
 }
 
 TEST_F(OperatorDumperUtest, Test_DumpTensor_With_rtCpuKernelLaunch_Error)
 {
     MOCKER(rtCpuKernelLaunchWithFlag).stubs().will(returnValue(-1));
-    auto th = gert::TensorBuilder().Placement(gert::kOnDeviceHbm).DataType(ge::DT_INT32).Build();
-    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(th.GetTensor()).Build();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor().Build();
     EXPECT_EQ(opDumper.Launch(), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_StaticGraph_Tensor_Success)
+{
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    std::string modelName {"modelName"};
+    std::string dumpStep {"0|1|3"};
+    attrs.push_back({DUMP_ATTR_MODEL_NAME, {.modelName = const_cast<char *>(modelName.c_str())}});
+    attrs.push_back({DUMP_ATTR_MODEL_NAMESIZE, {.modelNameSize = modelName.size()}});
+    attrs.push_back({DUMP_ATTR_MODEL_ID, {.modelId = 10U}});
+    attrs.push_back({DUMP_ATTR_STEP_ID_ADDR, {.stepIdAddr = 0x1234}});
+    attrs.push_back({DUMP_ATTR_ITER_PER_LOOP_ADDR, {.iterPerLoopAddr = 0x1234}});
+    attrs.push_back({DUMP_ATTR_LOOP_COND_ADDR, {.loopCondAddr = 0x1234}});
+    attrs.push_back({DUMP_ATTR_DUMP_STEP, {.dumpStep = const_cast<char *>(dumpStep.c_str())}});
+    attrs.push_back({DUMP_ATTR_DUMP_STEPSIZE, {.dumpStepSize = dumpStep.size()}});
+    attrs.push_back({DUMP_ATTR_STREAM_MODEL, {.streamModel = 0U}});
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
+    opDumper.FreeDevMemCache();
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_DynamicGraph_Tensor_Success)
+{
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    attrs.push_back({DUMP_ATTR_STREAM_MODEL, {.streamModel = 1U}});
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddInputTensor().AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
+    opDumper.FreeDevMemCache();
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_StaticGraph_Stats_Success)
+{
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().DumpData("stats").AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
+    opDumper.FreeDevMemCache();
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_StaticGraph_OverFlow_Success)
+{
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().SetDumpType(
+        DumpType::OP_OVERFLOW).AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_SUCCESS);
+    opDumper.FreeDevMemCache();
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_InitDumpSwitch_rtMalloc_Error)
+{
+    MOCKER(rtMalloc).stubs().will(returnValue(-1));
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_FAILED);
+}
+
+TEST_F(OperatorDumperUtest, Test_DumpTensorWithCfg_InitDumpSwitch_rtMemcpy_Error)
+{
+    MOCKER(rtMemcpy).stubs().will(returnValue(-1));
+    DumpCfg dumpCfg;
+    std::vector<DumpAttr> attrs;
+    dumpCfg.attrs = attrs.data();
+    dumpCfg.numAttrs = attrs.size();
+    OperatorDumper opDumper = OperatorDumperBuilder().AddOutputTensor(AddressType::RAW).Build();
+    EXPECT_EQ(opDumper.LaunchWithCfg(dumpCfg), ADUMP_FAILED);
 }

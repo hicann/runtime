@@ -120,7 +120,7 @@ TEST_F(DumpManagerUtest, Test_DumpOperatorV2_WithCapture_Success)
 
 TEST_F(DumpManagerUtest, Test_DumpOperatorV2_WithCapture_NullStream)
 {
-    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
+    std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_tensor.json");
     int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
     ASSERT_EQ(ret, ADUMP_SUCCESS);
 

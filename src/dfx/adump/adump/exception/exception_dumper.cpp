@@ -173,7 +173,13 @@ void ExceptionDumper::AddDumpOperatorV2(const OperatorInfoV2 &opInfo)
 int32_t ExceptionDumper::DelDumpOperator(uint32_t deviceId, uint32_t streamId)
 {
     const std::lock_guard<std::mutex> lock(mutex_);
-    residentOperators_[deviceId].erase(streamId);
+    auto it = residentOperators_.find(deviceId);
+    if (it != residentOperators_.end()) {
+        it->second.erase(streamId);
+        if (it->second.empty()) {
+            residentOperators_.erase(deviceId);
+        }
+    }
     return ADUMP_SUCCESS;
 }
 

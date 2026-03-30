@@ -42,13 +42,15 @@ int32_t DumpSetting::Init(const DumpType type, const DumpConfig &dumpConfig)
 
 int32_t DumpSetting::DumpOperatorInit(const DumpConfig &dumpConfig)
 {
-    if (!InitDumpStatus(dumpConfig.dumpStatus, dumpStatus_)) {
+    bool dumpStatus = dumpStatus_;
+    if (!InitDumpStatus(dumpConfig.dumpStatus, dumpStatus)) {
         IDE_LOGE("Dump status(%s) is not valid.", dumpConfig.dumpStatus.c_str());
         return ADUMP_FAILED;
     }
 
     // if disable dump, just return.
-    if (!dumpStatus_) {
+    if (!dumpStatus) {
+        dumpStatus_ = dumpStatus;
         return ADUMP_SUCCESS;
     }
 
@@ -74,27 +76,26 @@ int32_t DumpSetting::DumpOperatorInit(const DumpConfig &dumpConfig)
         IDE_LOGE("Get platform type failed.");
         return ADUMP_FAILED;
     }
+    dumpStatus_ = dumpStatus;
     IDE_LOGD("DumpOperatorInit finished.");
     return ADUMP_SUCCESS;
 }
 
 int32_t DumpSetting::DumpOverflowInit(const DumpConfig &dumpConfig)
 {
-    if (!InitDumpStatus(dumpConfig.dumpStatus, dumpDebugStatus_)) {
+    bool dumpDebugStatus = dumpDebugStatus_;
+    if (!InitDumpStatus(dumpConfig.dumpStatus, dumpDebugStatus)) {
         IDE_LOGE("Dump status(%s) is not valid.", dumpConfig.dumpStatus.c_str());
         return ADUMP_FAILED;
     }
 
-    // Non-Zero when enable, Zero when disable(dumpDebug is converted to be dumpStatus when convert dump config)
-    if (dumpConfig.dumpSwitch != 0) {
-        dumpDebugStatus_ = true;
-    }
-
     // if disable dump, just return.
-    if (!dumpDebugStatus_) {
+    if (!dumpDebugStatus) {
+        dumpDebugStatus_ = dumpDebugStatus;
         return ADUMP_SUCCESS;
     }
 
+    // default all
     if (!InitDumpMode(CONF_DUMP_MODE_ALL)) {
         IDE_LOGE("Dump mode(%s) is not valid.", dumpConfig.dumpMode.c_str());
         return ADUMP_FAILED;
@@ -106,6 +107,7 @@ int32_t DumpSetting::DumpOverflowInit(const DumpConfig &dumpConfig)
     }
 
     InitDumpSwitch(dumpConfig.dumpSwitch & DUMP_SWITCH_MASK);
+    dumpDebugStatus_ = dumpDebugStatus;
     IDE_LOGD("DumpOverflowInit finished.");
     return ADUMP_SUCCESS;
 }
@@ -131,6 +133,16 @@ bool DumpSetting::GetDumpStatus() const
         return ((dumpSwitch_ & OPERATOR_KERNEL_DUMP) != 0);
     }
     return dumpStatus_;
+}
+
+bool DumpSetting::GetDumpStatusEx() const
+{
+    return dumpStatus_;
+}
+
+bool DumpSetting::IsDumpDataStats() const
+{
+    return dumpData_.compare(DUMP_STATS_DATA) == 0;
 }
 
 bool DumpSetting::GetDumpDebugStatus() const

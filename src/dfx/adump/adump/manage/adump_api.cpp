@@ -106,6 +106,12 @@ int32_t AdumpDumpTensorV2(const std::string &opType, const std::string &opName, 
     return DumpManager::Instance().DumpOperatorV2(opType, opName, tensors, stream);
 }
 
+int32_t AdumpDumpTensorWithCfg(const std::string &opType, const std::string &opName,
+    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg& dumpCfg)
+{
+    return DumpManager::Instance().DumpOperatorWithCfg(opType, opName, tensors, stream, dumpCfg);
+}
+
 int32_t AdumpAddExceptionOperatorInfo(const OperatorInfo &opInfo)
 {
     DumpManager::Instance().AddExceptionOp(opInfo);

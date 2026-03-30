@@ -11,12 +11,11 @@
 #define DUMP_MANAGER_H
 
 #include <mutex>
+#include <set>
 #include "adump_pub.h"
 #include "adump_api.h"
 #include "dump_setting.h"
 #include "exception_dumper.h"
-#include <set>
-
 #include "operator_preliminary.h"
 #include "dump_stream_info.h"
 
@@ -55,6 +54,8 @@ public:
     int32_t DumpOperatorV2(
         const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors,
         rtStream_t stream);
+    int32_t DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
+        const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg);
     void AddExceptionOpV2(const OperatorInfoV2& opInfo);
     void ConvertOperatorInfo(const OperatorInfo& opInfo, OperatorInfoV2& operatorInfoV2) const;
     std::vector<TensorInfoV2> ConvertTensorInfoToDumpTensorV2(const std::vector<TensorInfo>& tensorInfos) const;
@@ -84,6 +85,10 @@ private:
     void ConvertTensorInfo(const TensorInfo& tensorInfo, TensorInfoV2& tensor) const;
     int32_t HandleDumpEvent(uint32_t moduleId, DumpEnableAction action);
     int32_t CallbackEnvExceptionDumpEvent(AdumpCallback callbackFunc);
+    int32_t GetInputOutputTensors(
+        const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors,
+        std::vector<DumpTensor>& inputTensors, std::vector<DumpTensor>& outputTensors);
+    bool IsEnableDumpOperatorWithCapture(const std::string& opType, const std::string& opName, aclrtStream stream);
     void RegisterSnapShotCallback();
     void EnableExceptionDumpWithEnv();
     bool snapCbkRegistered_ = false;

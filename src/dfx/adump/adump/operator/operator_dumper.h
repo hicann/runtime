@@ -11,7 +11,8 @@
 #define OPERATOR_DUMPER_H
 #include <string>
 #include <vector>
-#include "proto/op_mapping.pb.h"
+#include "proto/op_mapping_v2.pb.h"
+#include "adump_pub.h"
 #include "dump_setting.h"
 #include "dump_tensor.h"
 
@@ -19,21 +20,31 @@ namespace Adx {
 class OperatorDumper {
 public:
     OperatorDumper(const std::string &opType, const std::string &opName);
+    OperatorDumper(const DumpSetting &setting);
     OperatorDumper &SetDumpSetting(const DumpSetting &setting);
     OperatorDumper &InputDumpTensor(const std::vector<DumpTensor> &inputTensors);
     OperatorDumper &OutputDumpTensor(const std::vector<DumpTensor> &outputTensors);
     OperatorDumper &RuntimeStream(aclrtStream stream);
     int32_t Launch();
+    int32_t LaunchWithCfg(const DumpCfg &dumpCfg);
+    int32_t UpdateDevMemCache();
+    static void FreeDevMemCache();
 
 private:
-    int32_t FillOpMappinfInfo();
+    int32_t FillOpMappingInfo();
     int32_t FillDumpPath(int32_t deviceId);
     int32_t FillDumpTask(int32_t deviceId);
-    void DumpInput(toolkit::aicpu::dump::Task &task);
-    void DumpOutput(toolkit::aicpu::dump::Task &task);
-
-    int32_t LaunchDumpKernal() const;
-    int32_t LaunchDumpKernal(const void *const protoMsgDevMem, const void *const protoMsgSizeDevMem) const;
+    void DumpInput(toolkitV2::aicpu::dump::Task &task);
+    void DumpOutput(toolkitV2::aicpu::dump::Task &task);
+    void FillOpMappingInfoWithCfg(const DumpCfg &dumpCfg, bool &synchronize);
+    toolkitV2::aicpu::dump::AddressType ConvertAddressType(const DumpTensor &dumpTensor);
+    int32_t InitDevMemDumpSwitch();
+    int32_t SetDevMemDumpSwitch();
+    uint64_t GetDevMemDumpSwitch();
+    static void FreeDevMemProtoCache();
+    int32_t LaunchDumpKernel(bool synchronize = true) const;
+    int32_t LaunchDumpKernel(const void *const protoMsgDevMem, const void *const protoMsgSizeDevMem,
+        bool synchronize) const;
 
     std::string opType_;
     std::string opName_;
@@ -41,7 +52,7 @@ private:
     std::vector<DumpTensor> inputTensors_;
     std::vector<DumpTensor> outputTensors_;
     aclrtStream stream_;
-    toolkit::aicpu::dump::OpMappingInfo opMappingInfo_;
+    toolkitV2::aicpu::dump::OpMappingInfo opMappingInfo_;
 };
 } // namespace Adx
 #endif // OPERATOR_DUMPER_H

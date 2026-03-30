@@ -244,6 +244,17 @@ int32_t DumpManager::DumpOperatorV2(const std::string &opType, const std::string
     return ADUMP_SUCCESS;
 }
 
+int32_t DumpManager::DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
+    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg)
+{
+    UNUSED(opType);
+    UNUSED(opName);
+    UNUSED(tensors);
+    UNUSED(stream);
+    UNUSED(dumpCfg);
+    return ADUMP_SUCCESS;
+}
+
 void DumpManager::AddExceptionOp(const OperatorInfo &opInfo)
 {
     exceptionDumper_.AddDumpOperator(opInfo);

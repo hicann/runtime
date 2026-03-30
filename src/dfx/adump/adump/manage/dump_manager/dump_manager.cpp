@@ -255,6 +255,12 @@ int32_t DumpManager::SetDumpConfig(DumpType dumpType, const DumpConfig& dumpConf
             return ADUMP_FAILED;
         }
     }
+
+    ret = OperatorDumper(dumpSetting_).UpdateDevMemCache();
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "Update device memery cache for data dump failed! dumpType=%s[%d]",
+        DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType);
+
     IDE_RUN_LOGI(
         "Set %s[%d] dump setting, status: %s, mode: %s, data: %s, dump switch: %llu, path:%s, dump stats:%s.",
         DumpConfigConverter::DumpTypeToStr(dumpType).c_str(), dumpType, dumpConfig.dumpStatus.c_str(),
@@ -338,7 +344,8 @@ int32_t DumpManager::UnSetDumpConfig()
 
     // 等待所有 dump 操作完成并清理资源
     DumpResourceSafeMap::Instance().waitAndClear();
-
+    // 释放device资源
+    OperatorDumper::FreeDevMemCache();
     // 停止data dump server
     IDE_CTRL_VALUE_FAILED(StopDataDumpServer(), return ADUMP_FAILED, "Stop data dump server failed!");
 
@@ -387,6 +394,86 @@ bool DumpManager::IsEnableDump(DumpType dumpType)
     return false;
 }
 
+int32_t DumpManager::GetInputOutputTensors(
+    const std::string& opType, const std::string& opName, const std::vector<TensorInfoV2>& tensors,
+    std::vector<DumpTensor>& inputTensors, std::vector<DumpTensor>& outputTensors)
+{
+    for (const auto& tensorInfo : tensors) {
+        if (tensorInfo.tensorAddr == nullptr || tensorInfo.tensorSize == 0) {
+            IDE_LOGW("Tensor of op=%s[%s] is empty, addr=%p, size=%zu, skip it.",
+                opName.c_str(), opType.c_str(), tensorInfo.tensorAddr, tensorInfo.tensorSize);
+            continue;
+        }
+
+        if (tensorInfo.placement != TensorPlacement::kOnDeviceHbm) {
+            IDE_LOGW("Tensor of op=%s[%s] is not on device, skip it.", opName.c_str(), opType.c_str());
+            continue;
+        }
+
+        if (tensorInfo.type == TensorType::INPUT) {
+            inputTensors.emplace_back(tensorInfo);
+        } else if (tensorInfo.type == TensorType::OUTPUT) {
+            outputTensors.emplace_back(tensorInfo);
+        }
+    }
+    return ADUMP_SUCCESS;
+}
+
+bool DumpManager::IsEnableDumpOperatorWithCapture(const std::string& opType, const std::string& opName,
+    aclrtStream stream)
+{
+    if (dumpSetting_.GetDumpDebugStatus() || dumpSetting_.IsDumpDataStats()) {
+        IDE_LOGI("overflow or stats is not follow the capture");
+        return false;
+    }
+    rtStreamCaptureStatus status = RT_STREAM_CAPTURE_STATUS_MAX;
+    rtModel_t* captureMdl = nullptr;
+    int32_t ret = rtStreamGetCaptureInfo(stream, &status, captureMdl);
+    if (ret != ACL_SUCCESS) {
+        IDE_LOGW("Get stream capture info error: %d, will switch to common dump", ret);
+        return false;
+    }
+    IDE_LOGI("%s[%s] : stream capture status: %d", opName.c_str(), opType.c_str(), status);
+    return status == RT_STREAM_CAPTURE_STATUS_ACTIVE;
+}
+
+int32_t DumpManager::DumpOperatorWithCfg(const std::string &opType, const std::string &opName,
+    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg)
+{
+    std::lock_guard<std::mutex> lk(resourceMtx_);
+    if (!dumpSetting_.GetDumpStatusEx() && !dumpSetting_.GetDumpDebugStatus()) {
+        IDE_LOGW("Operator or overflow dump is not enable, can't dump data.");
+        return ADUMP_SUCCESS;
+    }
+
+    bool isInvalid = dumpCfg.numAttrs != 0UL && dumpCfg.attrs == nullptr;
+    IDE_CTRL_VALUE_FAILED(!isInvalid, return ADUMP_FAILED,
+        "The dump cfg attrs is null pointer! op=%s[%s].", opName.c_str(), opType.c_str());
+
+    std::vector<DumpTensor> inputTensors;
+    std::vector<DumpTensor> outputTensors;
+    int32_t ret = GetInputOutputTensors(opType, opName, ConvertTensorInfoToDumpTensorV2(tensors),
+        inputTensors, outputTensors);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "Get input and output tensors failed! op=%s[%s].", opName.c_str(), opType.c_str());
+    IDE_CTRL_VALUE_WARN(!inputTensors.empty() || !outputTensors.empty(), return ADUMP_SUCCESS,
+        "No tensor need to dump. op=%s[%s].", opName.c_str(), opType.c_str());
+
+    if (IsEnableDumpOperatorWithCapture(opType, opName, stream)) {
+        return DumpOperatorWithCapture(opType, opName, inputTensors, outputTensors, stream);
+    }
+
+    OperatorDumper opDumper(opType, opName);
+    ret = opDumper.SetDumpSetting(dumpSetting_)
+              .RuntimeStream(stream)
+              .InputDumpTensor(inputTensors)
+              .OutputDumpTensor(outputTensors)
+              .LaunchWithCfg(dumpCfg);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ret,
+        "Launch dump operator with dump cfg failed! op=%s[%s].", opName.c_str(), opType.c_str());
+    return ADUMP_SUCCESS;
+}
+
 int32_t DumpManager::DumpOperator(
     const std::string& opType, const std::string& opName, const std::vector<TensorInfo>& tensors, aclrtStream stream)
 {
@@ -402,37 +489,13 @@ int32_t DumpManager::DumpOperatorV2(
         return ADUMP_SUCCESS;
     }
 
-    rtStreamCaptureStatus status = RT_STREAM_CAPTURE_STATUS_MAX;
-    rtModel_t* captureMdl = nullptr;
-    int32_t ret = rtStreamGetCaptureInfo(stream, &status, captureMdl);
-    if (ret != ACL_SUCCESS) {
-        IDE_LOGE("Get stream capture info error: %d", ret);
-        return ret;
-    }
-    IDE_LOGI("%s[%s] : stream capture status: %d", opName.c_str(), opType.c_str(), status);
-
     std::vector<DumpTensor> inputTensors;
     std::vector<DumpTensor> outputTensors;
-    for (const auto& tensorInfo : tensors) {
-        if (tensorInfo.tensorAddr == nullptr || tensorInfo.tensorSize == 0) {
-            IDE_LOGW("Tensor of op=%s[%s] is empty, addr=%p, size=%zu, skip it.",
-                opName.c_str(), opType.c_str(), tensorInfo.tensorAddr, tensorInfo.tensorSize);
-            return ADUMP_FAILED;
-        }
+    int32_t ret = GetInputOutputTensors(opType, opName, tensors, inputTensors, outputTensors);
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ADUMP_FAILED,
+        "Get input and output tensors failed! opName: %s, opType: %s", opName.c_str(), opType.c_str());
 
-        if (tensorInfo.placement != TensorPlacement::kOnDeviceHbm) {
-            IDE_LOGW("Tensor of of %s[%s] is on device, skip it.", opName.c_str(), opType.c_str());
-            continue;
-        }
-
-        if (tensorInfo.type == TensorType::INPUT) {
-            inputTensors.emplace_back(tensorInfo);
-        } else if (tensorInfo.type == TensorType::OUTPUT) {
-            outputTensors.emplace_back(tensorInfo);
-        }
-    }
-
-    if (status == RT_STREAM_CAPTURE_STATUS_ACTIVE) {
+    if (IsEnableDumpOperatorWithCapture(opType, opName, stream)) {
         return DumpOperatorWithCapture(opType, opName, inputTensors, outputTensors, stream);
     }
 
@@ -442,10 +505,8 @@ int32_t DumpManager::DumpOperatorV2(
               .InputDumpTensor(inputTensors)
               .OutputDumpTensor(outputTensors)
               .Launch();
-    if (ret != ADUMP_SUCCESS) {
-        IDE_LOGE("Launch dump operator failed.");
-        return ret;
-    }
+    IDE_CTRL_VALUE_FAILED(ret == ADUMP_SUCCESS, return ret,
+        "Launch dump operator failed! op=%s[%s].", opName.c_str(), opType.c_str());
     return ADUMP_SUCCESS;
 }
 

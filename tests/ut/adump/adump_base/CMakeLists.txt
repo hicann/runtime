@@ -16,6 +16,7 @@ set(ADUMP_BASE_UT_ROOT_PATH ${TOP_DIR}/tests/ut/adump/adump_base)
 ########################### adump proto for test #######################
 set(adumpBaseProtoList
     "${TOP_DIR}/src/dfx/adump/proto/op_mapping.proto"
+    "${TOP_DIR}/src/dfx/adump/proto/op_mapping_v2.proto"
     "${TOP_DIR}/src/dfx/adump/proto/dump_task.proto"
 )
 
@@ -115,6 +116,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_config_converter_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_preliminary_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_preliminary_platform_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_dumper_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/kernel_dfx_dumper_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_ELF_utest.cpp

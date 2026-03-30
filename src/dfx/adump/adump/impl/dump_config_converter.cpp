@@ -717,9 +717,6 @@ DumpConfig DumpConfigConverter::ConvertDumpConfig(const RawDumpConfig &rawDumpCo
             dumpConfig.dumpPath = envDumpPath;
         }
     }
-    if (rawDumpConfig.dumpDebug == ADUMP_DUMP_STATUS_SWITCH_ON) {
-        dumpConfig.dumpStatus = ADUMP_DUMP_STATUS_SWITCH_OFF;
-    }
     if (rawDumpConfig.dumpLevel == ADUMP_DUMP_LEVEL_OP) {
         dumpConfig.dumpSwitch = OPERATOR_OP_DUMP;
     } else if (rawDumpConfig.dumpLevel == ADUMP_DUMP_LEVEL_KERNEL) {

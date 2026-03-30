@@ -245,8 +245,9 @@ typedef struct {
  * @see        无
  * @since
  */
-ADX_API int32_t AdumpDumpTensorWithCfg(const std::string &opType, const std::string &opName,
-    const std::vector<TensorInfo> &tensors, aclrtStream stream, const DumpCfg &dumpCfg);
+__attribute__((weak)) ADX_API int32_t AdumpDumpTensorWithCfg(const std::string &opType,
+    const std::string &opName, const std::vector<TensorInfo> &tensors, aclrtStream stream,
+    const DumpCfg &dumpCfg);
 
 constexpr char DUMP_ADDITIONAL_BLOCK_DIM[] = "block_dim";
 constexpr char DUMP_ADDITIONAL_TILING_KEY[] = "tiling_key";
