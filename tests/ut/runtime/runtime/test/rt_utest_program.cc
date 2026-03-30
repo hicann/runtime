@@ -184,7 +184,7 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel)
         TilingTabl *tilingTab2 = nullptr;
         uint32_t kernelLen2 = 0U;
         program->kernelNameMap_["test1"] = kernel2;
-        error = program->BuildTilingTbl(nullptr, &tilingTab2, &kernelLen2);
+        error = program->BuildTilingTbl(&tilingTab2, &kernelLen2);
         EXPECT_EQ(kernelLen2, 1);
         free(tilingTab2);
 
@@ -198,7 +198,7 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel)
         Module *mdl;
         TilingTabl *tilingTab = nullptr;
         uint32_t kernelLen = 0;
-        error = program->BuildTilingTbl(mdl, &tilingTab, &kernelLen);
+        error = program->BuildTilingTbl(&tilingTab, &kernelLen);
         EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
     
         error = program->Register(binary.data, binary.length);

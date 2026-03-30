@@ -308,8 +308,7 @@ public:
     virtual rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                           void *data, const uint32_t length) = 0;
 
-    rtError_t BuildTilingTbl(const Module *mdl, TilingTabl **tilingTab, uint32_t *kernelLen);
-    rtError_t BuildTilingTblForNewFlow(TilingTabl **tilingTab, uint32_t *kernelLen);
+    rtError_t BuildTilingTbl(TilingTabl **tilingTab, uint32_t *kernelLen);
     rtError_t BuildTilingTblForDavid(const Module *mdl, TilingTablForDavid **tilingTab, uint32_t *kernelLen);
     rtError_t DavidBuildTilingTblForNewFlow(TilingTablForDavid **tilingTab, uint32_t *kernelLen);
     void DestroyTilingTbl(TilingTabl *tilingTab) const;

@@ -413,53 +413,8 @@ uint32_t Program::AppendKernelName(const char_t *kernelName)
     return offset;
 }
 
-rtError_t Program::BuildTilingTblForNewFlow(TilingTabl **tilingTab, uint32_t *kernelLen)
+rtError_t Program::BuildTilingTbl(TilingTabl **tilingTab, uint32_t *kernelLen)
 {
-    kernelMapLock_.Lock();
-    const size_t kernelCnt = kernelNameMap_.size();
-    COND_PROC_RETURN_ERROR(kernelCnt == 0U, RT_ERROR_PROGRAM_SIZE, kernelMapLock_.Unlock(),
-        "kernel count == 0");
-    const size_t totalSize = sizeof(TilingTabl) * kernelCnt;
-    TilingTabl *tilingTabInfo = (TilingTabl *)malloc(totalSize);
-    COND_PROC_RETURN_ERROR(tilingTabInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, kernelMapLock_.Unlock(),
-        "Call malloc failed, copy size is %u", totalSize);
-
-    uint64_t func1 = 0ULL;
-    uint64_t func2 = 0ULL;
-    uint32_t idx = 0U;
-    rtError_t err = RT_ERROR_NONE;
-    for (auto iter = kernelNameMap_.begin(); iter != kernelNameMap_.end(); ++iter) {
-        const Kernel * const kernel = iter->second;
-        err = kernel->GetFunctionDevAddr(func1, func2);
-        COND_PROC(err != RT_ERROR_NONE, continue);
-        tilingTabInfo[idx].tilingKey = kernel->TilingKey();
-        tilingTabInfo[idx].pcInfo[0] = func1;
-        tilingTabInfo[idx].pcInfo[1] = func2;
-        tilingTabInfo[idx].taskRation = kernel->GetTaskRation();
-        tilingTabInfo[idx].mixType = kernel->GetMixType();
-        tilingTabInfo[idx].rsv = {0U};
-        RT_LOG(RT_LOG_INFO,
-            "tilingKey=%" PRIu64 ",func1=%#" PRIu64 ",func2=%#" PRIu64 ",taskRation=%u,mixType=%u,idx=%u.",
-            tilingTabInfo[idx].tilingKey, tilingTabInfo[idx].pcInfo[0],
-            tilingTabInfo[idx].pcInfo[1], tilingTabInfo[idx].taskRation, tilingTabInfo[idx].mixType, idx);
-        idx++;
-    }
-
-    *tilingTab = tilingTabInfo;
-    *kernelLen = idx;
-    kernelMapLock_.Unlock();
-    RT_LOG(RT_LOG_INFO, "kernelCnt=%zu, realCnt=%u, tilingTabSize=%u, totalSize=%zu.",
-        kernelCnt, idx, sizeof(TilingTabl), totalSize);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Program::BuildTilingTbl(const Module *mdl, TilingTabl **tilingTab, uint32_t *kernelLen)
-{
-    if (IsNewBinaryLoadFlow()) {
-        return BuildTilingTblForNewFlow(tilingTab, kernelLen);
-    }
-
-    NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODULE_NULL);
     RT_LOG(RT_LOG_INFO, "kernelPos_ = %u tilingTab size=%u.", kernelPos_, sizeof(TilingTabl));
     if (kernelPos_ == 0) {
         RT_LOG(RT_LOG_ERROR, "kernelPos_ == 0.");
@@ -478,11 +433,11 @@ rtError_t Program::BuildTilingTbl(const Module *mdl, TilingTabl **tilingTab, uin
     uint64_t function1;
     uint64_t function2;
     for (uint32_t i = 0; i < size; i++) {
-        (void)mdl->GetFunction(KernelTable_[i].kernel, &function1, &function2);
+        (void)KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
         tilingTabInfo[i].tilingKey = KernelTable_[i].TilingKey;
         tilingTabInfo[i].pcInfo[0] = function1;
         tilingTabInfo[i].pcInfo[1] = function2;
-        (void)mdl->GetTaskRation(KernelTable_[i].kernel, tilingTabInfo[i].taskRation);
+        tilingTabInfo[i].taskRation = KernelTable_[i].kernel->GetTaskRation();
         tilingTabInfo[i].mixType = KernelTable_[i].kernel->GetMixType();
         tilingTabInfo[i].rsv = {0U};
         RT_LOG(RT_LOG_INFO,

@@ -3221,7 +3221,7 @@ rtError_t Context::CopyTilingTabToDev(Program * const programHdl, const Device *
         /* 构建拷贝的内容 */
         TilingTabl *tilingTab = nullptr;
         const bool starsTillingFlag = (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS)) ? true : false;
-        ret = programHdl->BuildTilingTbl(mdl, &tilingTab, &kernelLen);
+        ret = programHdl->BuildTilingTbl(&tilingTab, &kernelLen);
         if (ret != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
             return ret;
