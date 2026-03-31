@@ -286,6 +286,7 @@ static void newSigHandler(int signum) {
 }
 
 static void RegisterSiganlHandler(ProfAclMgr* ptr) {
+    if (oldSigHandler != NULL) return;
     oldSigHandler = signal(SIGINT, newSigHandler);
     profAclMgrObjPtr = ptr;
     MSPROF_LOGI("RegisterSiganlHandler done");

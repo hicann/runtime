@@ -365,6 +365,19 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfAclInit_failed) {
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
+static void CustomerSigHandler(int signum) {
+    MSPROF_LOGI("CustomerSigHandler");
+}
+ 	 
+TEST_F(MSPROF_ACL_CORE_UTEST, RegisterSignalHandlerTwice) {
+    signal(SIGINT, CustomerSigHandler);
+ 	EXPECT_EQ(Msprofiler::Api::ProfAclMgr::oldSigHandler, NULL);
+ 	RegisterSiganlHandler();
+ 	EXPECT_EQ(Msprofiler::Api::ProfAclMgr::oldSigHandler, CustomerSigHandler);
+ 	RegisterSiganlHandler();
+ 	EXPECT_EQ(Msprofiler::Api::ProfAclMgr::oldSigHandler, CustomerSigHandler);
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, acl_api) {
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
