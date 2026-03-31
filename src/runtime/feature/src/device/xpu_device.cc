@@ -84,9 +84,9 @@ static rtError_t ParseXpuConfigInfoFromFile(XpuConfigInfo *configInfo, const std
 rtError_t XpuDevice::ParseXpuConfigInfo()
 {
     const char_t *env = nullptr;
-    MM_SYS_GET_ENV(MM_ENV_ASCEND_LATEST_INSTALL_PATH, env);
+    MM_SYS_GET_ENV(MM_ENV_ASCEND_HOME_PATH, env);
     if ((env == nullptr) || (*env == '\0')) {
-        RT_LOG(RT_LOG_ERROR, "Can not read ASCEND_LATEST_INSTALL_PATH!");
+        RT_LOG(RT_LOG_ERROR, "Can not read ASCEND_HOME_PATH!");
         return RT_ERROR_INVALID_VALUE;
     }
     const std::string rtCfgFile("/conf/RuntimeConfig.ini");

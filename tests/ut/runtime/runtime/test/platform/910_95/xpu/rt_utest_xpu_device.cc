@@ -228,15 +228,15 @@ TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_05)
 
 TEST_F(XpuDeviceTest, ParseXpuConfigInfo_Fail_06)
 {
-    char *envpath = nullptr;
-    MOCKER(mmSysGetEnv)
-    .stubs()
-    .will(returnValue(envpath));
+    int32_t mmRet = 0;
+    MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, "", 1, mmRet);
+    (void)mmRet;
+
     XpuDevice * xpuDev = new XpuDevice(0);
     rtError_t error = xpuDev->ParseXpuConfigInfo();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     delete xpuDev;
-    GlobalMockObject::verify();
+    MM_SYS_UNSET_ENV(MM_ENV_ASCEND_HOME_PATH, mmRet);
 }
 
 TEST_F(XpuDeviceTest, SetXpuDevice_success)
@@ -322,10 +322,16 @@ TEST_F(XpuDeviceTest, SetXpuDevice_XpuDeviceRetain_error2)
 
 TEST_F(XpuDeviceTest, XpuDevice_Init_error1)
 {
+    int32_t mmRet = 0;
+    MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, "", 1, mmRet);
+    (void)mmRet;
+
     XpuDevice *device = new XpuDevice(0);
     rtError_t error = device->Init();
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     delete device;
+    
+    MM_SYS_UNSET_ENV(MM_ENV_ASCEND_HOME_PATH, mmRet);
 }
 
 TEST_F(XpuDeviceTest, CreateRecycleThread_mmSemInit_error)
