@@ -920,6 +920,27 @@ TEST_F(ADX_DUMP_FP16_UTEST, AdxDumpFP16_Large)
     EXPECT_EQ(num10[0].toFloat(), 65504.0);
 }
 
+TEST_F(ADX_DUMP_FP16_UTEST, AdxDumpFP16_InfAndNan)
+{
+    // +Infinity
+    Adx::fp16_t posInf(static_cast<uint16_t>(0x7C00));
+    EXPECT_TRUE(std::isinf(posInf.toFloat()));
+    EXPECT_GT(posInf.toFloat(), 0.0f);
+
+    // -Infinity
+    Adx::fp16_t negInf(static_cast<uint16_t>(0xFC00));
+    EXPECT_TRUE(std::isinf(negInf.toFloat()));
+    EXPECT_LT(negInf.toFloat(), 0.0f);
+
+    // NaN
+    Adx::fp16_t nanVal(static_cast<uint16_t>(0x7C01));
+    EXPECT_TRUE(std::isnan(nanVal.toFloat()));
+    
+    // NaN
+    Adx::fp16_t nanVal2(static_cast<uint16_t>(0x7FFF));
+    EXPECT_TRUE(std::isnan(nanVal2.toFloat()));
+}
+
 TEST_F(ADX_DUMP_ASSERT_UTEST, AdxDumpAssert_MixFftsPlus)
 {
     rtExceptionInfo_t exceptionInfo;
