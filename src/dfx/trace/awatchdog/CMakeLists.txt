@@ -16,7 +16,6 @@ set(libawatchdogSrcFiles
 set(libawatchdogHeaderDir
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ATRACE_DIR}/common
-    ${LIBC_SEC_HEADER}
     ${ATRACE_DIR}/../../../include/driver
     ${ATRACE_DIR}/inc/toolchain
     ${ATRACE_DIR}/../../../pkg_inc/mmpa
@@ -29,7 +28,6 @@ add_library(awatchdog_share
 
 target_include_directories(awatchdog_share
     PRIVATE
-        ${LIBC_SEC_HEADER}
         ${ATRACE_DIR}/../../../include/driver
         ${libawatchdogHeaderDir})
 
@@ -61,6 +59,7 @@ target_link_options(awatchdog_share
 target_link_libraries(awatchdog_share
     PRIVATE
         $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:c_sec_headers>
         $<BUILD_INTERFACE:slog_headers>
         mmpa
         unified_dlog
