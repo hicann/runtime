@@ -122,7 +122,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *cons
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
     Stream * const stream = taskInfo->stream;
 
-    const uint32_t taskPosTail = stream->GetBindFlag() ? stream->GetCurSqPos() : taskInfo->id;
+    const uint32_t taskPosTail = (stream->taskResMang_ == nullptr) ? (static_cast<Stream *>(stream))->GetCurSqPos() : taskInfo->id;
     fcPara.devAddr = memWaitValueTask->devAddr;
     fcPara.value = memWaitValueTask->value;
     fcPara.flag = memWaitValueTask->flag;
