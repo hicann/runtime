@@ -3932,7 +3932,7 @@ TEST_F(ContextTest, CopyTilingTabToDev_test)
         .will(returnValue((Module *)nullptr))
         .then(returnValue(&module));
     error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_MODULE_NULL);
+    EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
 
     MOCKER_CPP(&Program::BuildTilingTbl)
         .stubs()
