@@ -1009,6 +1009,7 @@ private:
     Atomic<DeviceFaultType> deviceFaultType_{DeviceFaultType::NO_ERROR};
     Atomic<uint32_t> aixErrRecoverCnt_{0};
     bool isDrvSupportUserMem_ = false;
+    bool isDrvSupportRegisterQueryAndGetAttr_ = false;
     std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
     DevProperties properties_;
     std::unordered_set<Event *> events_;

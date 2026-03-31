@@ -1009,12 +1009,24 @@ TEST_F(RtApiTest, capture_api_mutil_thread_2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+drvError_t halMemHostGetDevPointer_not_support_stub(void *srcPtr, uint32_t devid, void **dstPtr)
+{
+    UNUSED(srcPtr);
+    UNUSED(devid);
+    UNUSED(dstPtr);
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
 TEST_F(RtApiTest, host_register_pinned)
 {
     rtError_t error;
     auto ptr = std::make_unique<uint32_t>();
     uintptr_t value = 0x123U;
     void **devPtr = (void **)&value;
+
+    MOCKER(&halMemHostGetDevPointer)
+        .stubs()
+        .will(invoke(halMemHostGetDevPointer_not_support_stub));
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1067,6 +1079,9 @@ TEST_F(RtApiTest, host_register_pinned_mapped)
     MOCKER(&halHostRegister)
         .stubs()
         .will(invoke(halHostRegister_stub));
+    MOCKER(&halMemHostGetDevPointer)
+        .stubs()
+        .will(invoke(halMemHostGetDevPointer_not_support_stub));
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1122,6 +1137,9 @@ TEST_F(RtApiTest, host_register_atomic)
     MOCKER(&halHostRegister)
         .stubs()
         .will(invoke(halHostRegister_stub));
+    MOCKER(&halMemHostGetDevPointer)
+        .stubs()
+        .will(invoke(halMemHostGetDevPointer_not_support_stub));
 
     error = rtHostRegisterV2(ptr.get(), sizeof(uint32_t), RT_MEM_HOST_REGISTER_PINNED);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1142,6 +1160,9 @@ TEST_F(RtApiTest, host_register_iomemory_readonly)
     MOCKER(&halHostRegister)
         .stubs()
         .will(invoke(halHostRegister_flag_stub));
+    MOCKER(&halMemHostGetDevPointer)
+        .stubs()
+        .will(invoke(halMemHostGetDevPointer_not_support_stub));
 
     auto readOnlyPtr = std::make_unique<uint32_t>();
     void **readOnlyDevPtr = reinterpret_cast<void **>(&value);

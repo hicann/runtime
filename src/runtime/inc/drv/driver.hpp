@@ -169,6 +169,9 @@ public:
     // Unegister host memory.
     virtual rtError_t HostUnregister(void *ptr,  const uint32_t deviceId) = 0;
 
+    // Get device pointer from host pointer
+    virtual rtError_t HostGetDevPointer(void *srcPtr, uint32_t deviceId, void **dstPtr) = 0;
+
     // Query host memory mapping capabilities.
     virtual rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) = 0;
 

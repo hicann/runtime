@@ -2591,6 +2591,13 @@ rtError_t ApiImpl::HostUnregister(void *ptr)
 rtError_t ApiImpl::HostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
 {
     (void)flag;
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    rtError_t ret = curCtx->Device_()->Driver_()->HostGetDevPointer(pHost, curCtx->Device_()->Id_(), pDevice);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_NONE, ret);
+
+    RT_LOG(RT_LOG_WARNING, "HostGetDevicePointer failed, try to get mapped device pointer, hostPtr=%#" PRIx64 ", error=%#x.",
+        RtPtrToValue(pHost), ret);
     *pDevice = GetMappedDevicePointer(pHost);
     return RT_ERROR_NONE;
 }

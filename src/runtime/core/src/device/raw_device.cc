@@ -213,7 +213,9 @@ rtError_t RawDevice::InitRawDriver()
                            static_cast<uint32_t>(error), deviceId_);
 
     // fix drvMemGetAttribute bug
-    isDrvSupportUserMem_ = NpuDriver::CheckIsSupportFeature(deviceId_, 2); // 2 is FEATURE_SVM_GET_USER_MALLOC_ATTR
+    isDrvSupportUserMem_ = NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_SVM_GET_USER_MALLOC_ATTR);
+
+    isDrvSupportRegisterQueryAndGetAttr_ = NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_SVM_MEM_REGISTER_QUERY_AND_GET_ATTR);
 
     driver_ = devDrv;
     return error;

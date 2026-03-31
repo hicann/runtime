@@ -133,3 +133,29 @@ TEST_F(DriverTest, get_topology_type_fail)
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
     delete rawDrv;
 }
+
+TEST_F(DriverTest, test_HostGetDevPointer_succ)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    MOCKER(halMemHostGetDevPointer)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->HostGetDevPointer(nullptr, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    delete rawDrv;
+}
+
+TEST_F(DriverTest, test_HostGetDevPointer_fail)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+
+    MOCKER(halMemHostGetDevPointer)
+        .stubs()
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+    error = rawDrv->HostGetDevPointer(nullptr, 0, nullptr);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    delete rawDrv;
+}

@@ -58,6 +58,14 @@ rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::HostGetDevPointer(void *srcPtr, uint32_t devid, void **dstPtr)
+{
+    UNUSED(srcPtr);
+    UNUSED(devid);
+    UNUSED(dstPtr);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::HostAddrRegister(void * const addr, const uint64_t size, const uint32_t deviceId)
 {
     UNUSED(addr);

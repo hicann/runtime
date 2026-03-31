@@ -150,6 +150,14 @@ drvError_t halHostUnregister(void *hostPtr, UINT32 devid)
     return DRV_ERROR_NONE;
 }
 
+drvError_t halMemHostGetDevPointer(void *srcPtr, uint32_t devid, void **dstPtr)
+{
+    UNUSED(srcPtr);
+    UNUSED(devid);
+    UNUSED(dstPtr);
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int *mode)
 {
     UNUSED(dev_id);
