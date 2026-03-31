@@ -2230,12 +2230,13 @@ rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* cons
     ERROR_RETURN(CheckUpdatingTaskParams(taskInfo, params), "task type or input params is invalid");
 
     TaskUnInitProc(taskInfo);
+    // 需要先赋值类型，此类型会影响Init中的内存申请方式
+    taskInfo->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    taskInfo->typeName = "MEM_WAIT_VALUE";
     rtError_t error = MemWaitValueTaskInit(taskInfo, params->valueWaitTaskParams.devAddr,
         params->valueWaitTaskParams.value, params->valueWaitTaskParams.flag);
     ERROR_RETURN_MSG_INNER(error, "mem wait value init failed, retCode=%#x.", error);
     taskInfo->u.memWaitValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
-    taskInfo->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
-    taskInfo->typeName = "MEM_WAIT_VALUE";
 
     Stream* stm = taskInfo->stream;
     Device* dev = stm->Device_();
