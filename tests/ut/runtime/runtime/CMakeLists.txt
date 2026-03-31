@@ -152,7 +152,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/soc_info.cc
     ${TOP_DIR}/src/runtime/core/src/common/context_data_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/task_fail_callback_data_manager.cc
-    ${TOP_DIR}/src/runtime/core/src/common/xpu_task_fail_callback_data_manager.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.cc
     ${TOP_DIR}/src/runtime/core/src/common/performance_record.cc
     ${TOP_DIR}/src/runtime/core/src/common/profiling_agent.cc
     ${TOP_DIR}/src/runtime/core/src/common/errcode_manage.cc
@@ -278,11 +278,11 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
     ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_david.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
@@ -360,14 +360,14 @@ set(runtimeut_src_list
     ${runtimeut_src_callback_list}
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
@@ -469,16 +469,17 @@ set(runtimeut_src_list
 set(runtime_xpu_src
     ${TOP_DIR}/src/runtime/api/api_c_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/json_parse.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/stream/stream_xpu.cc
-    ${TOP_DIR}/src/runtime/core/inc_c/xpu_aicpu_c.hpp
-    ${TOP_DIR}/src/runtime/core/src/context/xpu_context.cc
-    ${TOP_DIR}/src/runtime/core/src/device/xpu_device.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/runtime_xpu_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_manager_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_aicpu_c.hpp
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_context.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_device.cc
     ${TOP_DIR}/src/runtime/driver/xpu_driver.cc
-    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c.cc
-    ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/stream/stream_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_submit/xpu/task_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_aicpu_c.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_sqcq_manage_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_xpu.cc
     ${TOP_DIR}/src/tprt/c/tprt_api.cc
     ${TOP_DIR}/src/tprt/feature/src/tprt.cc
     ${TOP_DIR}/src/tprt/feature/src/tprt_cqhandle.cc
@@ -488,13 +489,13 @@ set(runtime_xpu_src
     ${TOP_DIR}/src/tprt/feature/src/tprt_worker.cc
     ${TOP_DIR}/src/tprt/feature/src/tprt_timer.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_res_manage/v200/task_res_da.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_recycle/xpu/task_xpu_recycle.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_xpu_recycle.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_david.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/arg_manage_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/pool/h2h_copy_mgr.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/stream/stream_xpu_c.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/xpu_kernel_task.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/arg_loader_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_xpu_c.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_kernel_task.cc
     ${TOP_DIR}/src/tprt/feature/src/tprt_profiling.cc
 )
 
@@ -512,7 +513,7 @@ set(runtimeut_david_src_list
     ${runtime_raw_device_adpt_david_list}
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
@@ -521,10 +522,11 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/v200/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v200/api_impl_v200.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_impl_xpu_v200.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
@@ -610,7 +612,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
     ${TOP_DIR}/src/runtime/core/src/runtime_v200/runtime_adapt.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/xpu/program_plat.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/program_plat.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
@@ -1123,6 +1125,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/src/runtime/inc
     ${TOP_DIR}/src/runtime/core/inc_c
+    ${TOP_DIR}/src/runtime/feature/xpu
     ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/inc/context
     ${TOP_DIR}/src/runtime/inc/spec
@@ -1171,6 +1174,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/cntnotify/
     ${TOP_DIR}/src/runtime/feature/snapshot/
+    ${TOP_DIR}/src/runtime/feature/xpu/
     ${TOP_DIR}/src/runtime/core/src/uvm
     ${TOP_DIR}/src/runtime/core/src/event
     ${TOP_DIR}/src
@@ -1316,7 +1320,7 @@ set(runtimeut_v201_src_list
     ${runtime_raw_device_adpt_david_list}
     ${runtime_xpu_src}
     ${TOP_DIR}/src/runtime/api/api.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_mbuf.cc
@@ -1328,7 +1332,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_soma.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
@@ -1367,7 +1371,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/core/src/runtime_v200/runtime_adapt.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/xpu/program_plat.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/program_plat.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc

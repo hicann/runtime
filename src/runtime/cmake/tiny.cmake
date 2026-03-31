@@ -73,7 +73,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
-    ${RUNTIME_CORE_DIR}/src/common/xpu_task_fail_callback_data_manager.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/performance_record.cc
     ${RUNTIME_CORE_DIR}/src/common/prof_ctrl_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/rt_log.cc
@@ -421,6 +421,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_FEATURE_DIR}/soma
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
+    ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100

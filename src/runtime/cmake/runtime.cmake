@@ -79,7 +79,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
-    ${RUNTIME_CORE_DIR}/src/common/xpu_task_fail_callback_data_manager.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/performance_record.cc
     ${RUNTIME_CORE_DIR}/src/common/prof_ctrl_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/rt_log.cc
@@ -172,9 +172,9 @@ set(libruntime_api_src_files_optional
 
 #------------------------- runtime v100 -------------------------
 set(xpu_tprt_api_file
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
 set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
@@ -331,6 +331,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_FEATURE_DIR}/soma
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
+    ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100

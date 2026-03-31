@@ -152,7 +152,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/soc_info.cc
     ${TOP_DIR}/src/runtime/core/src/common/context_data_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/task_fail_callback_data_manager.cc
-    ${TOP_DIR}/src/runtime/core/src/common/xpu_task_fail_callback_data_manager.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.cc
     ${TOP_DIR}/src/runtime/core/src/common/performance_record.cc
     ${TOP_DIR}/src/runtime/core/src/common/profiling_agent.cc
     ${TOP_DIR}/src/runtime/core/src/common/errcode_manage.cc
@@ -300,9 +300,9 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
  	${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/json_parse.cc
@@ -434,6 +434,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/src/memory/
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/snapshot/
+    ${TOP_DIR}/src/runtime/feature/xpu/
     ${TOP_DIR}/src/runtime/core/src/event
     ${C_SEC_INCLUDE}
 )

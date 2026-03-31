@@ -11,27 +11,28 @@ include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 set(xpu_tprt_api_file
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_error_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
 
 set(xpu_tprt_src_file
-    ${RUNTIME_CORE_DIR}/src/task/task_submit/xpu/task_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/xpu_kernel_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_recycle/xpu/task_xpu_recycle.cc
-    ${RUNTIME_CORE_DIR}/src/context/xpu_context.cc
-    ${RUNTIME_CORE_DIR}/src/stream/stream_sqcq_manage_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/stream/stream_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/stream/stream_xpu_c.cc
-    ${RUNTIME_CORE_DIR}/src/device/xpu_device.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/task_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/task_manager_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_kernel_task.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/task_xpu_recycle.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_context.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_sqcq_manage_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_xpu_c.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_device.cc
     ${RUNTIME_CORE_DIR}/src/pool/h2h_copy_mgr.cc
     ${RUNTIME_DIR}/src/runtime/driver/xpu_driver.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/xpu/program_plat.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/arg_loader_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/arg_manage_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_aicpu_c.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/program_plat.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/api_impl_xpu_v200.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_v200.cc
 )
@@ -309,6 +310,7 @@ set(libruntime_v200_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/v200/api_impl_creator_c.cc
     ${RUNTIME_DIR}/src/runtime/driver/v200/npu_driver.cc
     ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/runtime_xpu_adapt.cc
     ${libruntime_v200_task_src_files}
     ${libruntime_v200_context_src_files}
     ${libruntime_v200_stream_src_files}
@@ -405,6 +407,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_FEATURE_DIR}/soma
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
+    ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/inc
