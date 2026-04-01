@@ -8,8 +8,23 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "fp16_t.h"
+#include "securec.h"
+#include "log/hdc_log.h"
  
 namespace Adx {
+namespace {
+inline float uint32ToFloat(uint32_t val)
+{
+    float result = 0.0f;
+    auto ret = memcpy_s(&result, sizeof(result), &val, sizeof(val));
+    if (ret != EOK) {
+        IDE_LOGE("memcpy_s from uint32 to float failed, ret=%d.", ret);
+        return 0.0f;
+    }
+    return result;
+}
+}
+
 /**
  * @ingroup fp16_t global filed
  * @brief   round mode of last valid digital
@@ -80,12 +95,23 @@ static void Fp16Normalize(int16_t &exp, uint16_t &man)
  */
 static float fp16ToFloat(const uint16_t &fpVal)
 {
-    float ret;
- 
     uint16_t hfSign;
     uint16_t hfMan;
     int16_t hfExp;
     ExtractFP16(fpVal, &hfSign, &hfExp, &hfMan);
+
+    if (hfExp == FP16_MAX_EXP) {
+        if (hfMan == FP16_MAN_HIDE_BIT) {
+            // Infinity
+            uint32_t fVal = (hfSign << FP32_SIGN_INDEX) | FP32_EXP_MASK;
+            return uint32ToFloat(fVal);
+        } else {
+            // NaN
+            uint32_t mRet = (hfMan & FP16_MAN_MASK) << (FP32_MAN_LEN - FP16_MAN_LEN);
+            uint32_t fVal = (hfSign << FP32_SIGN_INDEX) | FP32_EXP_MASK | mRet;
+            return uint32ToFloat(fVal);
+        }
+    }
  
     while (hfMan && !(hfMan & FP16_MAN_HIDE_BIT)) {
         hfMan <<= 1;
@@ -107,11 +133,7 @@ static float fp16ToFloat(const uint16_t &fpVal)
         mRet = mRet << (FP32_MAN_LEN - FP16_MAN_LEN);
     }
     fVal = FP32_CONSTRUCTOR(sRet, eRet, mRet);
-    uint32_t *ptrFVal = &fVal;
-    float *ptrRet = reinterpret_cast<float *>(ptrFVal);
-    ret = *ptrRet;
- 
-    return ret;
+    return uint32ToFloat(fVal);
 }
  
 // evaluation
