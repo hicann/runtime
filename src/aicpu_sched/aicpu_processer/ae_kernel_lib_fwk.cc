@@ -26,7 +26,6 @@ namespace {
     constexpr const char *AICPU_SO_UNCOMPRESS_PATH = "aicpu_kernels_device";
     constexpr const uint32_t MAX_SO_PATH = 4096U;
     const std::string THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
-    const std::string HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/aicpu_kernels/";
 }
 
 namespace cce {
@@ -131,10 +130,6 @@ namespace cce {
         const aicpu::status_t status = aicpu::aicpuGetContext(&currentAicpuCtx);
         if (status == aicpu::AICPU_ERROR_NONE) {
             std::string soPath(AICPU_SO_ROOT_PATH);
-            (void) HELPER_AICPU_OPKERNEL_PATH_HEAD;
-#ifdef AICPU_KERNEL_HELPER
-            soPath = HELPER_AICPU_OPKERNEL_PATH_HEAD;
-#endif
             (void)soPath.append(std::to_string(aicpu::GetUniqueVfId()))
                 .append("/")
                 .append(AICPU_SO_UNCOMPRESS_PATH)
@@ -173,9 +168,6 @@ namespace cce {
 
     void FWKKernelTfImpl::GetTfKernelThreadModeSoPath(std::string &soPath) const
     {
-#ifdef AICPU_KERNEL_HELPER
-        soPath.append("inuse").append("/");
-#endif
         (void)soPath.append(THREAD_MODE_SO_PATH_FIX)
             .append("/")
             .append(std::to_string(aicpu::GetUniqueVfId()))

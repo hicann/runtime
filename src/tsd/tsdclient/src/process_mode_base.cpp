@@ -35,7 +35,6 @@ ProcessModeManager::ProcessModeManager(const uint32_t deviceId, const uint32_t d
       pidArryLen_(0U),
       supportOmInnerDec_(false),
       pidList_(nullptr),
-      tsdVersion_(0UL),
       adprofSupport_(false),
       versionCheckMap_({{TSD_SUB_PROC_UDF, &ProcessModeManager::IsSupportHeterogeneousInterface},
           {TSD_SUB_PROC_NPU, &ProcessModeManager::IsSupportHeterogeneousInterface},

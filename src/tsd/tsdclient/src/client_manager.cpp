@@ -14,7 +14,6 @@
 #include "inc/log.h"
 #include "inc/process_mode_manager.h"
 #include "inc/thread_mode_manager.h"
-#include "inc/aicpu_thread_mode_manager.h"
 #include "driver/dsmi_common_interface.h"
 #include "env_internal_api.h"
 namespace tsd {
@@ -26,7 +25,6 @@ std::map<const uint32_t, bool> *g_destructFlagMap = nullptr;
 std::mutex g_tsdClientMut;
 // tsdClientInstanceMap_中存储的对象是全局的，进程销毁时才销毁
 static std::map<const uint32_t, std::shared_ptr<ClientManager>> tsdClientInstanceMap_;
-const std::string TSD_VERSION_SO = "/usr/lib64/libtsdversion.so";
 
 static std::map<const uint32_t, uint32_t> *g_userDeviceInfo = nullptr;
 bool g_hadGetVisibleDevices = false;
@@ -145,8 +143,6 @@ std::shared_ptr<ClientManager> ClientManager::GetInstance(const uint32_t &device
             clientManager.reset(new(std::nothrow)ProcessModeManager(logicDeviceId, deviceMode));
         } else if (curMode == RunningMode::THREAD_MODE) {
             clientManager.reset(new(std::nothrow)ThreadModeManager(logicDeviceId));
-        } else if (curMode == RunningMode::AICPU_THREAD_MODE) {
-            clientManager.reset(new(std::nothrow)AicpuThreadModeManager(logicDeviceId, deviceMode));
         } else {
             TSD_ERROR("[TsdClient] current mode is error");
             return nullptr;
@@ -393,99 +389,17 @@ void ClientManager::GetProfilingMode()
     }
 }
 
-bool ClientManager::ResetClientManagerByConfig(RunningMode &runningMode)
-{
-#ifdef WIN_TSD
-    return false;
-#else
-    std::string fileName;
-    // read env ASCEND_LATEST_INSTALL_PATH
-    const char_t *env = nullptr;
-    MM_SYS_GET_ENV(MM_ENV_ASCEND_LATEST_INSTALL_PATH, env);
-    if ((env == nullptr) || (*env == '\0')) {
-        return false;
-    } else {
-        const std::string rtCfgFile("/runtime/conf/RuntimeConfig.ini");
-        const std::string path(env);
-        const std::string rawFileName = path + rtCfgFile;
-        std::unique_ptr<char_t []> formatPath(new (std::nothrow) char_t[PATH_MAX]);
-        if (formatPath == nullptr) {
-            TSD_RUN_WARN("Alloc memory for path failed.");
-            return false;
-        }
-
-        const auto eRet = memset_s(formatPath.get(), PATH_MAX, 0, PATH_MAX);
-        if (eRet != EOK) {
-            TSD_RUN_WARN("Mem set error, ret= [%d]", eRet);
-            return false;
-        }
-
-        if (realpath(rawFileName.data(), formatPath.get()) == nullptr) {
-            TSD_INFO("Format to realpath not success, rawFileName is [%s]", rawFileName.c_str());
-            return false;
-        }
-        fileName = std::string(formatPath.get());
-    }
-
-    const std::string aicpuSdRunMode("AicpuSdRunMode=");
-    int32_t valueRunMode = 0;
-    const bool ret = GetConfigIniValueInt32(fileName, aicpuSdRunMode, valueRunMode);
-    if (!ret) {
-        TSD_RUN_INFO("GetConfigIniValueInt32 false");
-        return false;
-    }
-    TSD_RUN_INFO("cur mode is %d", valueRunMode);
-    if (valueRunMode == static_cast<int32_t>(RunningMode::PROCESS_MODE)) {
-        TSD_RUN_INFO("set process");
-        runningMode = RunningMode::PROCESS_MODE;
-        return true;
-    } else if (valueRunMode == static_cast<int32_t>(RunningMode::THREAD_MODE)) {
-        TSD_RUN_INFO("set thread");
-        runningMode = RunningMode::THREAD_MODE;
-        return true;
-    } else if (valueRunMode == static_cast<int32_t>(RunningMode::AICPU_THREAD_MODE)) {
-        uint64_t drvVersion;
-        const auto res = GetDriverVersion(&drvVersion);
-        if ((res == TSD_OK) && (TSD_BITMAP_GET(drvVersion, 0U) != 0U)) {
-            runningMode = RunningMode::AICPU_THREAD_MODE;
-        } else {
-            runningMode = RunningMode::PROCESS_MODE;
-        }
-        TSD_RUN_INFO("running mode:%u, drvVersion:%d, drvVersion:%x", static_cast<uint32_t>(runningMode),
-                     drvVersion, drvVersion);
-        return true;
-    } else {
-        return false;
-    }
-#endif
-}
-
 RunningMode ClientManager::GetClientRunMode(const uint32_t logicDeviceId)
 {
     (void)logicDeviceId;
     if (g_runningMode == RunningMode::UNSET_MODE) {
-        RunningMode runningMode = RunningMode::UNSET_MODE;
-        if (!ResetClientManagerByConfig(runningMode)) {
-            TSD_RUN_INFO("runMode:%u", static_cast<uint32_t>(runningMode));
-            if ((g_platInfo.onlineStatus == static_cast<uint32_t>(ModeType::OFFLINE)) && !g_platInfo.isAdcEnv) {
-                return RunningMode::THREAD_MODE;
-            } else {
-                return RunningMode::PROCESS_MODE;
-            }
-        } else {
-            TSD_RUN_INFO("runningMode:%u", static_cast<uint32_t>(runningMode));
-            return runningMode;
-        }
-    } else {
-        if (g_runningMode == RunningMode::PROCESS_MODE) {
-            return RunningMode::PROCESS_MODE;
-        }
-        if (g_runningMode == RunningMode::THREAD_MODE) {
+        if ((g_platInfo.onlineStatus == static_cast<uint32_t>(ModeType::OFFLINE)) && !g_platInfo.isAdcEnv) {
             return RunningMode::THREAD_MODE;
-        }
+        } else {
+            return RunningMode::PROCESS_MODE;
+        }  
     }
-
-    return RunningMode::UNSET_MODE;
+    return g_runningMode;
 }
 
 // just for ut test don't use other place
@@ -497,30 +411,6 @@ void ClientManager::SetPlatInfoChipType(const ChipType_t curType)
 void ClientManager::ResetPlatInfoFlag()
 {
     g_hadGetPlatformInfo = false;
-}
-
-TSD_StatusT ClientManager::GetDriverVersion(uint64_t *halVersion)
-{
-    void *handle = dlopen(TSD_VERSION_SO.c_str(),
-        ((static_cast<uint32_t>(RTLD_LAZY))|(static_cast<uint32_t>(RTLD_GLOBAL))));
-    if (handle == nullptr) {
-        TSD_RUN_INFO("not open %s reason:%s", TSD_VERSION_SO.c_str(), dlerror());
-        (*halVersion) = 0UL;
-        return TSD_NO_VERSION_SO;
-    }
-    const ScopeGuard closeHandleGuard([&handle]() {
-        dlclose(handle);
-    });
-    using GetVersionFunc = uint64_t (*)();
-    const GetVersionFunc tsdVersionFuncPtr = reinterpret_cast<GetVersionFunc>(dlsym(handle, "GetCurTsdVersion"));
-    if (tsdVersionFuncPtr == nullptr) {
-        TSD_ERROR("dlsym GetCurTsdVersion error:%s", dlerror());
-        (*halVersion) = 0UL;
-        return TSD_INTERNAL_ERROR;
-    }
-    (*halVersion) = tsdVersionFuncPtr();
-    TSD_RUN_INFO("get version %llu", (*halVersion));
-    return TSD_OK;
 }
 
 bool ClientManager::IsSupportSetVisibleDevices()

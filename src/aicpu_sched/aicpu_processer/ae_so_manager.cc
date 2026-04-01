@@ -59,7 +59,6 @@ namespace cce {
         const std::string TRUST_SO_LIST_PREFIX = "Trustlist=";
 
         constexpr const char_t *THREAD_MODE_SO_PATH_FIX = "aicpu_kernels";
-        constexpr const char_t *HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/aicpu_kernels/";
     }
 
 SingleSoManager::~SingleSoManager()
@@ -374,9 +373,6 @@ aeStatus_t MultiSoManager::GetThreadModeSoPath(std::string &soPath) const
         if (soPath[soPath.size() - 1UL] != '/') {
             (void)soPath.append("/");
         }
-#ifdef AICPU_KERNEL_HELPER
-        soPath.append("inuse").append("/");
-#endif
         (void)soPath.append(THREAD_MODE_SO_PATH_FIX).append("/")
             .append(std::to_string(aicpu::GetUniqueVfId())).append("/")
             .append(AICPU_SO_UNCOMPRESS_DIR).append("/");
@@ -427,10 +423,6 @@ aeStatus_t MultiSoManager::GetInnerSoPath(const std::string &soName, std::string
     }
     // libtf_kernels.so and libaicpu_kernels.so and libcpu_kernels.so and libpt_kernels.so path from context
     soPath = AICPU_SO_ROOT_DIR;
-    (void) HELPER_AICPU_OPKERNEL_PATH_HEAD;
-#ifdef AICPU_KERNEL_HELPER
-        soPath = HELPER_AICPU_OPKERNEL_PATH_HEAD;
-#endif
     (void)soPath.append(std::to_string(aicpu::GetUniqueVfId())).append("/").append(AICPU_SO_UNCOMPRESS_DIR).append("/");
 
     return AE_STATUS_SUCCESS;

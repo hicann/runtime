@@ -387,10 +387,7 @@ TEST_F(TsdClientTest, TsdOpen_Close_NetService_Success) {
 
 TEST_F(TsdClientTest, NotifyPmToStartTsdaemon_Success) {
     // NotifyPmToStartTsdaemon 接口已经在日落计划中，已经不建议外部使用
-    // 次用例需要模拟 打开真实环境上的so提取符号调用对应的函数，ut工程采用打桩模拟
-    MOCKER_CPP(&dlopen).stubs().will(invoke(stub_dlopen_success));
-    MOCKER_CPP(&dlclose).stubs().will(invoke(stub_dlclose_success));
-    MOCKER_CPP(&dlsym).stubs().will(invoke(stub_dlsym_start_app_success));
+    // 直接返回ERROR
     auto result = NotifyPmToStartTsdaemon(0U);
-    EXPECT_EQ(result, tsd::TSD_OK);
+    EXPECT_EQ(result, TSD_PARAMETER_INVALID);
 }

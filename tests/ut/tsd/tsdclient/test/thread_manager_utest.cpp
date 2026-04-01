@@ -308,8 +308,6 @@ TEST_F(ThreadManagerTest, HelperTest)
     EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
     ret = threadModeManager->RemoveFileOnDevice(nullptr, 0);
     EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
-    ret = threadModeManager->NotifyPmToStartTsdaemon();
-    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
     ret = threadModeManager->ProcessCloseSubProcList(nullptr, 0U);
     EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
     ret = threadModeManager->GetSubProcListStatus(nullptr, 0U);

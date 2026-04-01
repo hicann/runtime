@@ -29,7 +29,6 @@ enum class RunningMode {
     UNSET_MODE = 0,
     PROCESS_MODE,
     THREAD_MODE,
-    AICPU_THREAD_MODE,
 };
 
 typedef enum tagChipType {
@@ -161,11 +160,7 @@ public:
  
     static uint32_t GetPlatInfoChipType();
 
-    virtual TSD_StatusT NotifyPmToStartTsdaemon() = 0;
-
     virtual TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) = 0;
-
-    static TSD_StatusT GetDriverVersion(uint64_t *driverVersion);
 
     static bool IsNumeric(const std::string& str);
 
@@ -230,7 +225,6 @@ private:
     ClientManager &operator=(ClientManager &) = delete;
     ClientManager &operator=(ClientManager &&) = delete;
     bool GetPackagePath(std::string &packagePath, const uint32_t packageType) const;
-    static bool ResetClientManagerByConfig(RunningMode &runningMode);
     bool CheckPackageExistsOnce(const uint32_t packageType);
     std::string packagePattern_[static_cast<uint32_t>(TsdLoadPackageType::TSD_PKG_TYPE_MAX)];
 };

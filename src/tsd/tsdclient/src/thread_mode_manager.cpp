@@ -461,11 +461,6 @@ TSD_StatusT ThreadModeManager::RemoveFileOnDevice(const char_t *const filePath, 
     return TSD_INTERNAL_ERROR;
 }
 
-TSD_StatusT ThreadModeManager::NotifyPmToStartTsdaemon()
-{
-    return TSD_INTERNAL_ERROR;
-}
-
 TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize)
 {
     if ((listSize == 0U) || (closeList == nullptr)) {

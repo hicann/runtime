@@ -87,8 +87,6 @@ public:
 
     TSD_StatusT RemoveFileOnDevice(const char_t *const filePath, const uint64_t pathLen) override;
 
-    TSD_StatusT NotifyPmToStartTsdaemon() override;
-
     TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) override;
 
     TSD_StatusT GetSubProcListStatus(ProcStatusParam *pidInfo, const uint32_t arrayLen) override;

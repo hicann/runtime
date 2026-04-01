@@ -1613,15 +1613,6 @@ TEST_F(ProcessManagerTest, GetSubProcListStatus)
     GlobalMockObject::verify();
 }
 
-TEST_F(ProcessManagerTest, GetCurDriverPkgVersion_03)
-{
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER(&halGetAPIVersion).stubs().will(returnValue(1));
-    auto ret = processModeManager.GetCurDriverPkgVersion(0UL);
-    EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
-    GlobalMockObject::verify();
-}
-
 TEST_F(ProcessManagerTest, SendExtendPackage_01)
 {
     ProcessModeManager processModeManager(deviceId, 0);
@@ -2500,18 +2491,6 @@ TEST_F(ProcessManagerTest, GetHdcConctStatus_002)
     EXPECT_EQ(hdcSessStat, HDC_SESSION_STATUS_CLOSE);
 }
 
-TEST_F(ProcessManagerTest, GetCurDriverPkgVersion_VersionNok)
-{
-    uint64_t result = 0;
-    uint64_t *ptr = &result;
-    uint64_t ptrRes = static_cast<uint64_t>((reinterpret_cast<uintptr_t>(ptr)));
-    ProcessModeManager processModeManager(deviceId, 0);
-    MOCKER_CPP(&ClientManager::GetDriverVersion).stubs().will(returnValue(1));
-    auto ret = processModeManager.GetCurDriverPkgVersion(ptrRes);
-    EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
-    GlobalMockObject::verify();
-}
-
 TEST_F(ProcessManagerTest, SaveDeviceCheckCode_normalpackage)
 {
     HDCMessage msg;
@@ -3023,4 +3002,15 @@ TEST_F(ProcessManagerTest, GetShortSocVersion_GetPlatformInfos_Failed)
     std::string shortSocVersion;
     const auto ret = processModeManager.GetShortSocVersion(shortSocVersion);
     EXPECT_EQ(ret, false);
+}
+
+TEST_F(ProcessManagerTest, GetDriverVersion)
+{
+    uint64_t result = 1UL;
+    uint64_t *ptr = &result;
+    uint64_t ptrRes = static_cast<uint64_t>((reinterpret_cast<uintptr_t>(ptr)));
+    ProcessModeManager processModeManager(deviceId, 0);
+    EXPECT_TRUE(processModeManager.UseStoredCapabityInfo(TSD_CAPABILITY_DRIVER_VERSION, ptrRes));
+    EXPECT_EQ(result, 0UL);
+    GlobalMockObject::verify();
 }

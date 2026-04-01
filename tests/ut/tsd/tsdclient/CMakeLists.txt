@@ -8,7 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(TSD_CLIENT_SRC_FILE
-    ${TSD_SRC_PATH}/tsdclient/src/aicpu_thread_mode_manager.cpp
     ${TSD_SRC_PATH}/tsdclient/src/client_manager.cpp
     ${TSD_SRC_PATH}/tsdclient/src/env_internal_api.cpp
     ${TSD_SRC_PATH}/tsdclient/src/env_internal_api.h
@@ -43,7 +42,6 @@ set(TSD_COMMON_SRC_FILE
 set(TSD_UT_TEST_SRC_FILE
     test/tsdclient_utest.cpp
     test/aicpu_package_process_utest.cpp
-    test/aicpu_thread_mode_utest.cpp
     test/aicpu_thread_package_worker_utest.cpp
     test/client_manager_utest.cpp
     test/process_manager_utest.cpp

@@ -56,7 +56,6 @@ const std::string TSDEMON_START_APP = "TSDaemon";
 constexpr int32_t TSD_START_TIMEOUT = 5000;
 constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
 constexpr uint32_t CLOSE_PID_PER_LOOP = 50U;
-const std::string START_APP_SO = "/usr/lib64/libgroup_client.so";
 const std::string DRIVER_EXTEND_PKG_NAME = "Ascend-device-sw-plugin.tar.gz";
 constexpr uint32_t DRIVER_EXTEND_MAX_PROCESS_TIME = 140U;
 const std::string QUEUE_SCHEDULE_SO = "libqueue_schedule.so";
@@ -970,10 +969,10 @@ bool ProcessModeManager::UseStoredCapabityInfo(const int32_t type, const uint64_
     }
 
     if (type == TSD_CAPABILITY_DRIVER_VERSION) {
-        if (GetCurDriverPkgVersion(ptr) == TSD_OK) {
-            return true;
-        }
-    }
+         uint64_t * const resultPtr = PtrToPtr<void, uint64_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
+         *resultPtr = 0UL;
+         return true;
+     }
 
     if (type == TSD_CAPABILITY_ADPROF) {
         if (adprofSupport_) {
@@ -1783,56 +1782,6 @@ void ProcessModeManager::GetAscendLatestIntallPath(std::string &pkgBasePath) con
         }
     }
     TSD_RUN_INFO("latest install path:%s", pkgBasePath.c_str());
-}
-
-TSD_StatusT ProcessModeManager::GetCurDriverPkgVersion(const uint64_t ptr)
-{
-    if (ptr == 0UL) {
-        TSD_ERROR("input is nullptr");
-        return TSD_INTERNAL_ERROR;
-    }
-    uint64_t * const resultPtr = reinterpret_cast<uint64_t *>(static_cast<uintptr_t>(ptr));
-    if (tsdVersion_ != 0UL) {
-        (*resultPtr) = tsdVersion_;
-        return TSD_OK;
-    }
-
-    uint64_t halVersion;
-    const auto ret = GetDriverVersion(&halVersion);
-    if ((ret != TSD_OK) && (ret != TSD_NO_VERSION_SO)) {
-        TSD_ERROR("halGetAPIVersion error ret:%d", ret);
-        return TSD_INTERNAL_ERROR;
-    }
-
-    (*resultPtr) = halVersion;
-    tsdVersion_ = halVersion;
-    return TSD_OK;
-}
-
-TSD_StatusT ProcessModeManager::NotifyPmToStartTsdaemon()
-{
-    void *handle = dlopen(START_APP_SO.c_str(),
-        ((static_cast<uint32_t>(RTLD_LAZY))|(static_cast<uint32_t>(RTLD_GLOBAL))));
-    if (handle == nullptr) {
-        TSD_ERROR("open libgroup_client.so error:%s", dlerror());
-        return TSD_INTERNAL_ERROR;
-    }
-    const ScopeGuard closeHandleGuard([&handle]() {
-        dlclose(handle);
-    });
-    using StartAppFunc = int32_t (*)(const char *appName, const size_t nameLen, const int32_t timeout);
-    const StartAppFunc tsdStartFuncPtr = reinterpret_cast<StartAppFunc>(dlsym(handle, "GrpOwnerClientStartApp"));
-    if (tsdStartFuncPtr == nullptr) {
-        TSD_ERROR("dlsym GrpOwnerClientStartApp error:%s", dlerror());
-        return TSD_INTERNAL_ERROR;
-    }
-    const auto ret = tsdStartFuncPtr(TSDEMON_START_APP.c_str(), TSDEMON_START_APP.size(), TSD_START_TIMEOUT);
-    if (ret != 0U) {
-        TSD_ERROR("tsdStartFuncPtr errorRet:%u", ret);
-        return TSD_INTERNAL_ERROR;
-    }
-    TSD_RUN_INFO("NotifyPmToStartTsdaemon success");
-    return TSD_OK;
 }
 
 TSD_StatusT ProcessModeManager::ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize)

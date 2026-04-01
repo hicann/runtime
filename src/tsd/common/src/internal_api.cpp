@@ -32,8 +32,6 @@
 #endif
 
 namespace tsd {
-    bool g_isAicpuHeterogeneousThreadMode = false;
-
     constexpr int32_t SYSTE_EXECUTE_CMD_ERROR = 127; // 与system实现保持一致
     /**
     * @ingroup Trim
@@ -132,17 +130,6 @@ namespace tsd {
     {
         static bool isAdc = GetFlagFromEnv("REGISTER_TO_ASCENDMONITOR", "0");
         return isAdc;
-    }
-
-    void SetAicpuHeterogeneousThreadMode(const bool flag)
-    {
-        g_isAicpuHeterogeneousThreadMode = flag;
-        TSD_INFO("Set aicpu heterogeneous thread mode, flag=%u", static_cast<uint32_t>(flag));
-    }
-
-    bool IsAicpuHeterogeneousThreadMode()
-    {
-        return g_isAicpuHeterogeneousThreadMode;
     }
 
     bool CheckRealPath(const std::string &inputPath)
@@ -291,43 +278,6 @@ namespace tsd {
         } else {
             TSD_ERROR("Error! Input is not a hex value!");
         }
-        return ret;
-    }
-
-    bool GetConfigIniValueInt32(const std::string &fileName, const std::string &key, int32_t &val)
-    {
-        std::ifstream ifs(fileName, std::ifstream::in);
-
-        if (!ifs.is_open()) {
-            TSD_INFO("[TsdClient] open file[%s],errno[%d],reason[%s]", fileName.c_str(), errno, SafeStrerror().c_str());
-            return false;
-        }
-
-        bool ret = false;
-        std::string line;
-        std::string valueOfStr;
-        while (std::getline(ifs, line)) {
-            const std::size_t found = line.find(key);
-            if (found == 0UL) {
-                valueOfStr = line.substr(key.length());
-                ret = true;
-                break;
-            }
-        }
-        ifs.close();
-
-        if (ret) {
-            try {
-                val = std::stoi(valueOfStr);
-            } catch (std::exception &e) {
-                TSD_ERROR("Invalid argument[%s]:[%s], file[%s], error: %s", valueOfStr.c_str(), key.c_str(),
-                    fileName.c_str(), e.what());
-                ret = false;
-            }
-
-            TSD_INFO("Read file %s result: value=%d, valueOfStr=%s.", fileName.c_str(), val, valueOfStr.c_str());
-        }
-
         return ret;
     }
 

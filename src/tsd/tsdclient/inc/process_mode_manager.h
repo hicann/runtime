@@ -185,10 +185,6 @@ public:
 
     void GetAscendLatestIntallPath(std::string &pkgBasePath) const;
 
-    TSD_StatusT GetCurDriverPkgVersion(const uint64_t ptr);
-
-    TSD_StatusT NotifyPmToStartTsdaemon() override;
-
     TSD_StatusT ProcessCloseSubProcList(const ProcStatusParam *closeList, const uint32_t listSize) override;
 
     TSD_StatusT ExecuteClosePidList(const ProcStatusParam *closeList, const uint32_t startIndex, const uint32_t pidCnt);
@@ -500,7 +496,6 @@ private:
     uint32_t pidArryLen_;
     bool supportOmInnerDec_;
     ProcStatusParam *pidList_;
-    uint64_t tsdVersion_;
     bool adprofSupport_;
     using VersionCheckFunc = bool (ProcessModeManager::*)();
     std::map<SubProcType, VersionCheckFunc> versionCheckMap_;

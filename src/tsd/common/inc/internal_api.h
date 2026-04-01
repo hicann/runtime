@@ -151,10 +151,6 @@ namespace tsd {
      */
     bool IsFpgaEnv();
 
-    void SetAicpuHeterogeneousThreadMode(const bool flag);
-
-    bool IsAicpuHeterogeneousThreadMode();
-
     inline uint64_t GetCurrentTime()
     {
         uint64_t ret = 0U;
@@ -216,8 +212,6 @@ namespace tsd {
     int32_t PackSystem(const char_t * const cmdLine);
 
     int32_t TsdExecuteCmd(const std::string &cmd);
-
-    bool GetConfigIniValueInt32(const std::string &fileName, const std::string &key, int32_t &val);
 
     /**
      * @ingroup TSD

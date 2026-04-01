@@ -43,7 +43,6 @@ add_library(tsdclient SHARED
     src/process_mode_msg_parse.cpp
     src/stub/stub_process_mode_win.cpp
     src/thread_mode_manager.cpp
-    src/aicpu_thread_mode_manager.cpp
     src/env_internal_api.cpp
     ${tdt_common_files}
     ${PROTO_SRCS}
@@ -122,7 +121,6 @@ add_library(tsdclient SHARED
     src/process_mode_base.cpp
     src/process_mode_msg_parse.cpp
     src/thread_mode_manager.cpp
-    src/aicpu_thread_mode_manager.cpp
     src/env_internal_api.cpp
     ${BASE_DIR}/common/src/package_worker.cpp
     ${BASE_DIR}/common/src/package_worker_utils.cpp

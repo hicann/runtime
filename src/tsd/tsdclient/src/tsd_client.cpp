@@ -284,16 +284,8 @@ uint32_t TsdGetProcStatus(const uint32_t logicDeviceId, ProcStatusInfo *pidInfo,
 
 uint32_t NotifyPmToStartTsdaemon(const uint32_t logicDeviceId)
 {
-    if (tsd::ClientManager::CheckDestructFlag(logicDeviceId)) {
-        return tsd::TSD_OK;
-    }
-    const std::shared_ptr<tsd::ClientManager> clientManager = tsd::ClientManager::GetInstance(logicDeviceId);
-    TSD_CHECK_NULLPTR(clientManager, tsd::TSD_INTERNAL_ERROR, "Get ClientManager failed for NotifyPmToStartTsdaemon.");
-    const tsd::TSD_StatusT ret = clientManager->NotifyPmToStartTsdaemon();
-    if (ret != tsd::TSD_OK) {
-        TSD_ERROR("NotifyPmToStartTsdaemon failed");
-    }
-    return ret;
+    (void) logicDeviceId;
+    return tsd::TSD_PARAMETER_INVALID;
 }
 
 uint32_t ProcessCloseSubProcList(const uint32_t logicDeviceId, const ProcStatusParam *closeList,

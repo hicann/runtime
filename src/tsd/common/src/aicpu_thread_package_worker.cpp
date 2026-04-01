@@ -116,9 +116,6 @@ void AicpuThreadPackageWorker::SetDecompressPackagePath()
     }
 
     std::string dstPath = pathEnv + "/";
-    if (IsAicpuHeterogeneousThreadMode()) {
-        dstPath += "inuse/";
-    }
 
     decomPackagePath_ = PackagePath(dstPath, originPackagePath_.name);
 

@@ -80,18 +80,6 @@ int32_t halGetDeviceInfo_invoke(uint32_t devId, int32_t moduleType, int32_t info
     return 0;
 }
 
-bool GetConfigIniValueInt32RetProcessMode(const std::string &fileName, const std::string &key, int32_t &val)
-{
-    val = static_cast<int32_t>(RunningMode::PROCESS_MODE);
-    return true;
-}
-
-bool GetConfigIniValueInt32RetAicpuThreadMode(const std::string &fileName, const std::string &key, int32_t &val)
-{
-    val = static_cast<int32_t>(RunningMode::AICPU_THREAD_MODE);
-    return true;
-}
-
 drvError_t fake_drvGetDevNum(uint32_t *num_dev)
 {
     *num_dev = 8;
@@ -262,55 +250,6 @@ TEST_F(ClientManagerTest, GetHdcConctStatusProcessMode)
     ClientManager::GetInstance(666)->GetHdcConctStatus(hdcSessStat);
 }
 
-TEST_F(ClientManagerTest, ResetClientManagerByConfigToThreadMode)
-{
-    char_t env[] = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
-
-    int32_t val = 2;
-    MOCKER(GetConfigIniValueInt32).stubs().with(mockcpp::any(), mockcpp::any(), outBound(val))
-        .will(returnValue(true));
-    RunningMode runningMode = RunningMode::UNSET_MODE;
-    EXPECT_TRUE(ClientManager::ResetClientManagerByConfig(runningMode));
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigFailWithoutRunMode)
-{
-    char_t env[] = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
-
-    int32_t val = 4;
-    MOCKER(GetConfigIniValueInt32).stubs().with(mockcpp::any(), mockcpp::any(), outBound(val))
-        .will(returnValue(true));
-    RunningMode runningMode = RunningMode::UNSET_MODE;
-    EXPECT_FALSE(ClientManager::ResetClientManagerByConfig(runningMode));
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigFailMemset)
-{
-    char_t env[] = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(memset_s).stubs().will(returnValue(-1));
-    RunningMode runningMode = RunningMode::UNSET_MODE;
-    EXPECT_FALSE(ClientManager::ResetClientManagerByConfig(runningMode));
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigFailRealpath)
-{
-    char_t env[] = "./tsd";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(memset_s).stubs().will(returnValue(EOK));
-    char *a = nullptr;
-    MOCKER(realpath)
-        .stubs()
-        .will(returnValue(a));
-    RunningMode runningMode = RunningMode::UNSET_MODE;
-    EXPECT_FALSE(ClientManager::ResetClientManagerByConfig(runningMode));
-}
-
-
 TEST_F(ClientManagerTest, GetClientRunMode)
 {
     MOCKER(halGetDeviceInfo).stubs().will(returnValue(0U));
@@ -322,9 +261,6 @@ TEST_F(ClientManagerTest, GetClientRunMode002)
 {
     std::string valueStr("");
     ClientManager::SetRunMode(valueStr);
-    MOCKER_CPP(&ClientManager::ResetClientManagerByConfig)
-        .stubs()
-        .will(returnValue(false));
     ProcessModeManager processModeManager(0, 0);
     processModeManager.SetPlatInfoMode(static_cast<uint32_t>(ModeType::OFFLINE));
     RunningMode mode = ClientManager::GetClientRunMode(0U);
@@ -339,13 +275,6 @@ TEST_F(ClientManagerTest, CheckPackageExistsMatchExtend)
     MOCKER(mmScandirFree2).stubs().will(invoke(mmScandirFree2_invokeExtend));
     bool ret = ClientManager::GetInstance(0)->CheckPackageExists();
     EXPECT_EQ(ret, true);
-}
-
-TEST_F(ClientManagerTest, GetAicpuThreadModeInstance)
-{
-    MOCKER_CPP(&ClientManager::GetClientRunMode).stubs().will(returnValue(RunningMode::AICPU_THREAD_MODE));
-    const auto inst = ClientManager::GetInstance(199);
-    EXPECT_NE(inst, nullptr);
 }
 
 TEST_F(ClientManagerTest, CheckPackageExistsFail)
@@ -381,52 +310,6 @@ TEST_F(ClientManagerTest, GetPackageTitleForCloud)
     const bool ret = instance->GetPackageTitle(pkgTitle);
     EXPECT_EQ(ret, true);
     EXPECT_STREQ(pkgTitle.c_str(), "Ascend910");
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigGetValFail)
-{
-    char_t env[] = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
-    MOCKER_CPP(GetConfigIniValueInt32).stubs().will(returnValue(false));
-    RunningMode mode;
-    const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
-    EXPECT_EQ(ret, false);
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigProcessMode)
-{
-    char_t env[] = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
-    MOCKER_CPP(GetConfigIniValueInt32).stubs().will(invoke(GetConfigIniValueInt32RetProcessMode));
-    RunningMode mode;
-    const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
-    EXPECT_EQ(ret, true);
-    EXPECT_EQ(mode, RunningMode::PROCESS_MODE);
-}
-
-TEST_F(ClientManagerTest, ResetClientManagerByConfigAicpuThreadMode)
-{
-    char_t env[] = "./tsd_testa";
-    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
-    MOCKER(realpath).stubs().will(returnValue(&env[0U]));
-    MOCKER_CPP(GetConfigIniValueInt32).stubs().will(invoke(GetConfigIniValueInt32RetAicpuThreadMode));
-    RunningMode mode;
-    const bool ret = ClientManager::GetInstance(0)->ResetClientManagerByConfig(mode);
-    EXPECT_EQ(ret, true);
-    EXPECT_EQ(mode, RunningMode::PROCESS_MODE);
-}
-
-TEST_F(ClientManagerTest, GetDriverVersionFail)
-{
-
-    MOCKER(dlopen).stubs().will(returnValue((void*)1));
-    MOCKER(dlclose).stubs().will(returnValue(0));
-    MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
-    uint64_t version;
-    const auto ret = ClientManager::GetInstance(0)->GetDriverVersion(&version);
-    EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
 }
 
 TEST_F(ClientManagerTest, TestChangeUserDeviceIdToLogicDeviceIdSuccess002)
