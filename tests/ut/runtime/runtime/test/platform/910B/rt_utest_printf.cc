@@ -1052,3 +1052,28 @@ TEST_F(PrintfTest, DumpFP16_DiffType) {
     int32_t data6 = -5;
     cce::runtime::fp16_t num6 = data6;
 }
+
+TEST_F(PrintfTest, DumpFP16_InfAndNan)
+{
+    // +Infinity
+    uint16_t data1 = 0x7C00;
+    cce::runtime::fp16_t num1[] = {data1};
+    EXPECT_TRUE(std::isinf(num1[0].toFloat()));
+    EXPECT_GT(num1[0].toFloat(), float(data1));
+
+    // -Infinity
+    uint16_t data2 = 0xFC00;
+    cce::runtime::fp16_t num2[] = {data2};
+    EXPECT_TRUE(std::isinf(num2[0].toFloat()));
+    EXPECT_LT(num2[0].toFloat(), float(data2));
+
+    // NaN
+    uint16_t data3 = 0x7C01;
+    cce::runtime::fp16_t num3[] = {data3};
+    EXPECT_TRUE(std::isnan(num3[0].toFloat()));
+
+    // NaN
+    uint16_t data4 = 0x7FFF;
+    cce::runtime::fp16_t num4[] = {data4};
+    EXPECT_TRUE(std::isnan(num4[0].toFloat()));
+}
