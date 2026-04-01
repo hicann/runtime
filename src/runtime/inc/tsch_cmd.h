@@ -358,8 +358,8 @@ typedef struct {
     uint32_t src_mbuf_handle;                               // 本片出队的mbuf handle
     uint32_t dst_mbuf_handle;                               // 对片申请的mbuf handle
     uint64_t src_mbuf_free_addr;                            // 本片mbuf释放操作寄存器
-    uint64_t dst_mbuf_free_addr;                            // 对片mbuf释放操作寄存器
     uint64_t dst_mbuf_alloc_addr;                           // 对片mbuf申请操作寄存器
+    uint64_t dst_mbuf_free_addr;                            // 对片mbuf释放操作寄存器
     uint64_t dst_qmngr_enqueue_addr;                        // 对片qmngr enqueue操作寄存器地址
     uint64_t dst_qmngr_ow_addr;                             // 对片qmngr overwrite操作寄存器
 
