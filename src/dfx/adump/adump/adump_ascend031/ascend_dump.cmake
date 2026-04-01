@@ -9,8 +9,16 @@
 # -----------------------------------------------------------------------------------------------------------
 
 ####################### libascend_dump.so begin ###########################
+
+set(op_mapping_proto_file
+    "${ADUMP_DIR}/proto/op_mapping.proto"
+)
+protobuf_generate(dump_op_mapping_proto dump_op_mapping_srcs dump_op_mapping_headers ${op_mapping_proto_file} TARGET)
+
 set(ascendDumpSrcList
     ${adumpServerSrcList}
+    ${adumpHostProtoSrcs}
+    ${dump_op_mapping_srcs}
     ${ADUMP_ADUMP_DIR}/adump_ascend031/exception/adx_exception_callback.cpp
     ${ADUMP_ADUMP_DIR}/adump_ascend031/exception/exception_dumper_platform.cpp
     ${ADUMP_ADUMP_DIR}/adump_ascend031/manage/adump_api_platform.cpp
@@ -41,7 +49,7 @@ set(ascendDumpSrcList
 set(ascendDumpHeaderList
     ${adumpServerHeaders}
     ${RUNTIME_DIR}/src/dfx/error_manager
-    ${CMAKE_BINARY_DIR}/proto/ascend_dump_protos
+    ${CMAKE_BINARY_DIR}/proto/dump_op_mapping_proto
     ${CMAKE_BINARY_DIR}/proto/adumpHostProto
     ${ADUMP_ADUMP_DIR}/adump_ascend031/exception/
     ${ADUMP_ADUMP_DIR}/adump_ascend031/manage/
@@ -69,7 +77,7 @@ target_include_directories(ascend_dump PRIVATE
     ${ascendDumpHeaderList}
 )
 
-add_dependencies(ascend_dump ascend_dump_protos)
+add_dependencies(ascend_dump dump_op_mapping_proto)
 add_dependencies(ascend_dump adumpHostProto)
 
 target_compile_definitions(ascend_dump PRIVATE
@@ -94,7 +102,7 @@ target_compile_options(ascend_dump PRIVATE
     -Wextra
     -Wfloat-equal
     -Wformat
-    -fvisibility=hidden
+    -fvisibility=default
     -fvisibility-inlines-hidden
     $<$<CONFIG:Debug>:-ftrapv>
     $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2 -Os>
@@ -141,7 +149,7 @@ target_include_directories(ascend_dump_static PRIVATE
     ${ascendDumpHeaderList}
 )
 
-add_dependencies(ascend_dump_static ascend_dump_protos)
+add_dependencies(ascend_dump_static dump_op_mapping_proto)
 add_dependencies(ascend_dump_static adumpHostProto)
 
 target_compile_definitions(ascend_dump_static PRIVATE
