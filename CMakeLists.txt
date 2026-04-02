@@ -17,8 +17,7 @@ endif()
 
 set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Project top directory")
 include(cmake/func.cmake)
-set_common_params("${RUNTIME_DIR}")
-set_runtime_params()
+set_runtime_params("${RUNTIME_DIR}")
 
 if (ENABLE_COV OR ENABLE_UT)
     set(DEFAULT_BUILD_TYPE "Debug")

@@ -15,9 +15,7 @@ set(RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../" CACHE PATH "Project top dir
 set(PRODUCT_SIDE device)
 
 include(${RUNTIME_DIR}/cmake/func.cmake)
-
-set_common_params("${RUNTIME_DIR}")
-set_runtime_params()
+set_runtime_params("${RUNTIME_DIR}")
 
 # third_party
 include(${RUNTIME_DIR}/cmake/third_party/protobuf.cmake)

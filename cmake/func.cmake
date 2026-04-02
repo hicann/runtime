@@ -458,8 +458,8 @@ function(add_version_info_targets)
     endforeach()
 endfunction()
 
-# 设置公共参数
-macro(set_common_params base_dir)
+# 设置rts参数
+macro(set_runtime_params base_dir)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     set(CMAKE_CXX_STANDARD 17)
 
@@ -516,10 +516,7 @@ macro(set_common_params base_dir)
         # 多仓联编
         set(TOPLEVEL_PROJECT OFF)
     endif()
-endmacro()
 
-# 设置rts参数
-macro(set_runtime_params)
     set(BASE_DIR ${RUNTIME_DIR})
     set(RUNTIME_PYTHON "python3" CACHE PATH "Python Path")
     set(DEVICE_LIBRARY_PATH "runtime/lib/device")
