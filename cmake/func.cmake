@@ -519,7 +519,7 @@ macro(set_runtime_params base_dir)
 
     set(BASE_DIR ${RUNTIME_DIR})
     set(RUNTIME_PYTHON "python3" CACHE PATH "Python Path")
-    set(DEVICE_LIBRARY_PATH "runtime/lib/device")
+    set(DEVICE_LIBRARY_PATH "${CMAKE_HOST_SYSTEM_PROCESSOR}-linux/devlib/device")
 endmacro()
 
 # 通过相对父目录方式添加子目录

@@ -8,7 +8,7 @@
      See LICENSE in the root of the software repository for the full text of the License.
 -->
 <block name="SetEnvCommon" install_own="$username:$usergroup" install_mod="440" install_type="all">
-    <file_info dst_path="real:runtime" install_path="">
+    <file_info dst_path="" install_path="">
         <file value="set_env.sh" install_softlink="$(TARGET_ENV)/bin/setenv.bash"/>
     </file_info>
 </block>

@@ -8,7 +8,7 @@
      See LICENSE in the root of the software repository for the full text of the License.
 -->
 <block name="RuntimeSo" copy_type="delivery" src_path="" dst_path="" install_path="" install_own="$username:$usergroup" install_mod="550" install_type="run;devel">
-    <file_info value="runtime_lib" copy_type="delivery" src_path="" dst_path="lib/" install_path="$(TARGET_ENV)/lib64" install_mod="440">
+    <file_info value="runtime_lib" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/lib64" install_path="$(TARGET_ENV)/lib64" install_mod="440">
         <file value="libacl_rt.so" file_type="shared"/>
         <file value="libacl_rt_impl.so" file_type="shared"/>
         <file value="libacl_tdt_channel.so" file_type="shared"/>
@@ -50,7 +50,7 @@
         <file value="libascend_kms.so" file_type="shared" optional="true"/>
         <file value="libhost_ascend_protobuf.a" file_type="shared" optional="true"/>
     </file_info>
-    <file_info value="runtime_devlib_device" copy_type="delivery" src_path="" dst_path="lib/device" install_path="$(TARGET_ENV)/devlib/device" install_mod="440">
+    <file_info value="runtime_devlib_device" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/devlib/device" install_path="$(TARGET_ENV)/devlib/device" install_mod="440">
         <file value="libc_sec.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libc_sec.so" optional="true"/>
         <file value="libascendalog.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascendalog.so"  optional="true"/>
         <file value="libunified_dlog.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libunified_dlog.so" optional="true"/>
@@ -60,7 +60,7 @@
         <file value="libkernel_load_platform.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libkernel_load_platform.so" optional="true"/>
         <file value="libascend_hal.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascend_hal.so" optional="true"/>
     </file_info>
-    <file_info value="runtime_lib_devlib_aarch" copy_type="delivery" src_path="" dst_path="devlib/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_mod="440" optional="true">
+    <file_info value="runtime_lib_devlib_aarch" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/devlib/linux/aarch64" install_path="$(TARGET_ENV)/devlib/linux/aarch64" install_mod="440" optional="true">
         <file value="libacl_rt.so" file_type="shared"/>
         <file value="libacl_tdt_channel.so" file_type="shared"/>
         <file value="libacl_tdt_queue.so" file_type="shared"/>
@@ -70,7 +70,7 @@
         <file value="libascend_hal.so" file_type="shared"/>
         <file value="libascendcl.so" file_type="shared"/>
     </file_info>
-        <file_info value="runtime_lib_devlib_X86" copy_type="delivery" src_path="" dst_path="devlib/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_mod="440" optional="true">
+        <file_info value="runtime_lib_devlib_X86" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/devlib/linux/x86_64" install_path="$(TARGET_ENV)/devlib/linux/x86_64" install_mod="440" optional="true">
         <file value="libacl_rt.so" file_type="shared"/>
         <file value="libacl_tdt_channel.so" file_type="shared"/>
         <file value="libacl_tdt_queue.so" file_type="shared"/>
@@ -80,7 +80,7 @@
         <file value="libascend_hal.so" file_type="shared"/>
         <file value="libascendcl.so" file_type="shared"/>
     </file_info>
-    <file_info value="runtime_bin" copy_type="delivery" src_path="" dst_path="bin/" install_path="$(TARGET_ENV)/bin" install_mod="550">
+    <file_info value="runtime_bin" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/bin" install_path="$(TARGET_ENV)/bin" install_mod="550">
         <file value="host_queue_schedule" file_type="shared"/>
         <file value="asc_dumper" file_type="shared"/>
     </file_info>

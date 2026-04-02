@@ -364,7 +364,7 @@ if(${PRODUCT_SIDE} STREQUAL host)
 
     if(ENABLE_OPEN_SRC)
         install(TARGETS host_aicpu_scheduler_so
-            DESTINATION runtime/lib COMPONENT npu-runtime
+            DESTINATION ${CMAKE_SYSTEM_PROCESSOR}-linux/lib64 COMPONENT npu-runtime
         )
     else()
         install(TARGETS host_aicpu_scheduler_so

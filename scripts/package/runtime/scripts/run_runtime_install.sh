@@ -15,7 +15,6 @@ is_quiet=n
 in_install_for_all=n
 setenv_flag=n
 docker_root=""
-sourcedir="$PWD/runtime"
 curpath=$(dirname $(readlink -f "$0"))
 common_func_path="${curpath}/common_func.inc"
 runtime_func_path="${curpath}/runtime_func.sh"
@@ -121,10 +120,6 @@ if [ ! -d "$common_parse_dir" ]; then
 fi
 
 new_install() {
-    if [ ! -d "${sourcedir}" ]; then
-        log "INFO" "no need to install runtime files."
-        return 0
-    fi
     output_progress 10
 
     local setenv_option=""
@@ -137,7 +132,7 @@ new_install() {
 
     # 执行安装
     custom_options="--custom-options=--common-parse-dir=$common_parse_dir,--logfile=$logfile,--stage=install,--quiet=$is_quiet,--hetero-arch=$hetero_arch"
-    sh "$curpath/install_common_parser.sh" --package="runtime" --install --username="$username" --usergroup="$usergroup" --set-cann-uninstall \
+    sh "$curpath/install_common_parser.sh" --copy_all --package="runtime" --install --username="$username" --usergroup="$usergroup" --set-cann-uninstall \
         --version=$pkg_version --version-dir=$pkg_version_dir --use-share-info \
         $setenv_option $in_install_for_all --docker-root="$docker_root" --chip="$chip_type" --feature="$feature_type" \
         $custom_options "$common_parse_type" "$input_install_dir" "$curpath/filelist.csv"

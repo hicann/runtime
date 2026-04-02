@@ -58,7 +58,7 @@
         <path value="$(TARGET_ENV)/include/experiment/msprof/toolchain"/>
         <path value="compat"/>
     </dir_info>
-    <file_info copy_type="source" src_path="" dst_path="include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
         <file value="appmon_lib.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_dc.h" install_mod="440" entity="true"/>
@@ -75,7 +75,7 @@
         <file value="ts_api.h" install_mod="440" entity="true"/>
         <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/driver/hal_pkg" install_path="$(TARGET_ENV)/include/driver/hal_pkg" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/driver/hal_pkg" install_path="$(TARGET_ENV)/include/driver/hal_pkg" install_type="all">
         <file value="buff_pkg.h" install_mod="440" entity="true"/>
         <file value="common_pkg.h" install_mod="440" entity="true"/>
         <file value="dms_pkg.h" install_mod="440" entity="true"/>
@@ -83,7 +83,7 @@
         <file value="esched_pkg.h" install_mod="440" entity="true"/>
         <file value="trs_pkg.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/driver" install_path="$(TARGET_ENV)/pkg_inc/driver" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/driver" install_path="$(TARGET_ENV)/pkg_inc/driver" install_type="all">
         <file value="appmon_lib.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_dc.h" install_mod="440" entity="true"/>
@@ -100,7 +100,7 @@
         <file value="ts_api.h" install_mod="440" entity="true"/>
         <file value="event_custom_api_struct.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/driver/hal_pkg" install_path="$(TARGET_ENV)/pkg_inc/driver/hal_pkg" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/driver/hal_pkg" install_path="$(TARGET_ENV)/pkg_inc/driver/hal_pkg" install_type="all">
         <file value="buff_pkg.h" install_mod="440" entity="true"/>
         <file value="common_pkg.h" install_mod="440" entity="true"/>
         <file value="dms_pkg.h" install_mod="440" entity="true"/>
@@ -108,7 +108,7 @@
         <file value="esched_pkg.h" install_mod="440" entity="true"/>
         <file value="trs_pkg.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/external/acl" install_path="$(TARGET_ENV)/include/acl" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/acl" install_path="$(TARGET_ENV)/include/acl" install_type="all">
         <file value="acl.h" install_mod="440" entity="true"/>
         <file value="acl_rt.h" install_mod="440" entity="true"/>
         <file value="acl_rt_allocator.h" install_mod="440" entity="true"/>
@@ -123,24 +123,24 @@
         <file value="acl_dump.h" install_mod="440" entity="true"/>
         <file value="acl_prof.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/external/ge" install_path="$(TARGET_ENV)/include/ge" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/ge" install_path="$(TARGET_ENV)/include/ge" install_type="all">
         <file value="ge_prof.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include" install_path="$(TARGET_ENV)/include" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include" install_path="$(TARGET_ENV)/include" install_type="all">
         <file value="securec.h" install_mod="440" entity="true"/>
         <file value="securectype.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/external/acl/error_codes" install_path="$(TARGET_ENV)/include/acl/error_codes" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/acl/error_codes" install_path="$(TARGET_ENV)/include/acl/error_codes" install_type="all">
         <file value="ge_error_codes.h" install_mod="440" entity="true"/>
         <file value="rt_error_codes.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/dump" install_path="$(TARGET_ENV)/pkg_inc/dump" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/dump" install_path="$(TARGET_ENV)/pkg_inc/dump" install_type="all">
         <file value="adump_device_pub.h" install_mod="440" entity="true"/>
         <file value="adump_pub.h" install_mod="440" entity="true"/>
         <file value="adump_api.h" install_mod="440" entity="true"/>
         <file value="adx_datadump_server.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime" install_type="all">
         <file value="rt_external.h" install_mod="440" entity="true"/>
         <file value="rt_external_stars.h" install_mod="440" entity="true"/>
         <file value="rt_external_base.h" install_mod="440" entity="true"/>
@@ -156,7 +156,7 @@
         <file value="rt_external_stream.h" install_mod="440" entity="true"/>
         <file value="rt_external_dqs.h" install_mod="440" entity="true"/>
     </file_info>
-     <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime" install_type="all">
+     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/runtime/runtime" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime" install_type="all">
         <file value="context.h" install_mod="440" entity="true"/>
         <file value="dev.h" install_mod="440" entity="true"/>
         <file value="event.h" install_mod="440" entity="true"/>
@@ -180,7 +180,7 @@
         <file value="base.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/runtime/runtime/base.h" entity="true"/>
         <file value="config.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/runtime/runtime/rts" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts" install_path="$(TARGET_ENV)/pkg_inc/runtime/runtime/rts" install_type="all">
         <file value="rts_context.h" install_mod="440" entity="true"/>
         <file value="rts_device.h" install_mod="440" entity="true"/>
         <file value="rts_dfx.h" install_mod="440" entity="true"/>
@@ -195,70 +195,70 @@
         <file value="rts.h" install_mod="440" entity="true"/>
         <file value="rts_snapshot.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/profiling" install_path="$(TARGET_ENV)/pkg_inc/profiling" install_type="all">
         <file value="aprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/aprof_pub.h" entity="true"/>
         <file value="devprof_pub.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/devprof_pub.h" entity="true"/>
         <file value="prof_api.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_api.h" entity="true"/>
         <file value="prof_common.h" install_mod="440" install_softlink="$(TARGET_ENV)/include/experiment/msprof/toolchain/prof_common.h" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/toolchain" install_path="$(TARGET_ENV)/pkg_inc/toolchain" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/toolchain" install_path="$(TARGET_ENV)/pkg_inc/toolchain" install_type="all">
         <file value="prof_api.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/trace" install_path="$(TARGET_ENV)/pkg_inc/trace" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/trace" install_path="$(TARGET_ENV)/pkg_inc/trace" install_type="all">
         <file value="atrace_pub.h" install_mod="440" entity="true"/>
         <file value="atrace_types.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/watchdog" install_path="$(TARGET_ENV)/pkg_inc/watchdog" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/watchdog" install_path="$(TARGET_ENV)/pkg_inc/watchdog" install_type="all">
         <file value="awatchdog_types.h" install_mod="440" entity="true"/>
         <file value="awatchdog.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/platform" install_path="$(TARGET_ENV)/include/platform" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/platform" install_path="$(TARGET_ENV)/include/platform" install_type="all">
         <file value="platform_info.h" install_mod="440" entity="true"/>
         <file value="platform_info_def.h" install_mod="440" entity="true"/>
         <file value="platform_infos_def.h" install_mod="440" entity="true"/>
         <file value="soc_spec.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/mmpa" install_path="$(TARGET_ENV)/pkg_inc/mmpa" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/mmpa" install_path="$(TARGET_ENV)/pkg_inc/mmpa" install_type="all">
         <file value="mmpa_api.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/mmpa_api.h"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/mmpa/sub_inc" install_path="$(TARGET_ENV)/pkg_inc/mmpa/sub_inc" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/mmpa/sub_inc" install_path="$(TARGET_ENV)/pkg_inc/mmpa/sub_inc" install_type="all">
         <file value="mmpa_env_define.h" install_mod="440" entity="true"  install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_env_define.h"/>
         <file value="mmpa_typedef_linux.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_typedef_linux.h"/>
         <file value="mmpa_linux.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/mmpa/sub_inc/mmpa_linux.h"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/dfx/base" install_path="$(TARGET_ENV)/include/base" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/base" install_path="$(TARGET_ENV)/include/base" install_type="all">
         <file value="err_msg.h" install_mod="440" entity="true"/>
         <file value="alog_pub.h" install_mod="440" entity="true"/>
         <file value="log_types.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/external/acl/error_codes" install_path="$(TARGET_ENV)/include/ge" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/ge" install_path="$(TARGET_ENV)/include/ge" install_type="all">
         <file value="ge_error_codes.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/base" install_path="$(TARGET_ENV)/pkg_inc/base" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/base" install_path="$(TARGET_ENV)/pkg_inc/base" install_type="all">
         <file value="err_mgr.h" install_mod="440" entity="true"/>
         <file value="dlog_pub.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/slog.h"/>
         <file value="log_types.h" install_mod="440" entity="true" install_softlink="$(TARGET_ENV)/include/toolchain/log_types.h"/>
         <file value="plog.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_path="$(TARGET_ENV)/include/experiment/metadef/common/util/error_manager" install_type="all">
         <file value="error_manager.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu" install_path="$(TARGET_ENV)/pkg_inc/aicpu" install_type="all">
         <file value="aicpu_engine_struct.h" install_mod="440" entity="true"/>
         <file value="aicpu_task_struct.h" install_mod="440" entity="true"/>
         <file value="fwk_adpt_struct.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu/common" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu_sched/common" install_path="$(TARGET_ENV)/pkg_inc/aicpu/common" install_type="all">
         <file value="type_def.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/aicpu_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/aicpu_schedule" install_type="all">
         <file value="aicpu_async_event.h" install_mod="440" entity="true"/>
         <file value="aicpu_context.h" install_mod="440" entity="true"/>
         <file value="aicpu_mc2_maintenance_thread.h" install_mod="440" entity="true"/>
         <file value="aicpusd_info.h" install_mod="440" entity="true"/>
         <file value="aicpusd_interface.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/aicpu_sched/cpu_kernels" install_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_path="$(TARGET_ENV)/pkg_inc/aicpu/cpu_kernels" install_type="all">
         <file value="cpu_attr_value.h" install_mod="440" entity="true"/>
         <file value="cpu_context.h" install_mod="440" entity="true"/>
         <file value="cpu_kernel.h" install_mod="440" entity="true"/>
@@ -269,25 +269,25 @@
         <file value="cpu_tensor_shape.h" install_mod="440" entity="true"/>
         <file value="cpu_types.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/queue_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_path="$(TARGET_ENV)/pkg_inc/aicpu/queue_schedule" install_type="all">
         <file value="dgw_client.h" install_mod="440" entity="true"/>
         <file value="qs_client.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="pkg_inc/tsd" install_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_path="$(TARGET_ENV)/pkg_inc/aicpu/tsd" install_type="all">
         <file value="status.h" install_mod="440" entity="true"/>
         <file value="tsd_client.h" install_mod="440" entity="true"/>
         <file value="tsd.h" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="data/ascendcl_config" install_path="$(TARGET_ENV)/data/ascendcl_config" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/ascendcl_config" install_path="$(TARGET_ENV)/data/ascendcl_config" install_type="all">
         <file value="swFeatureList.json" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="conf/error_manager" install_path="$(TARGET_ENV)/conf/error_manager" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/conf/error_manager" install_path="$(TARGET_ENV)/conf/error_manager" install_type="all">
         <file value="error_code.json" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="" install_path="compat" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="compat" install_path="compat" install_type="all">
         <file value="cann-tsch-compat.tar.gz" install_mod="440" entity="true" optional="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="data/platform_config/cann-dev" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="Ascend950PR_9599.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_9589.ini" install_mod="440" entity="true"/>
         <file value="Ascend950PR_958b.ini" install_mod="440" entity="true"/>
@@ -321,7 +321,7 @@
         <file value="Ascend950DT_950x.ini" install_mod="440" entity="true"/>
         <file value="Ascend950DT_950y.ini" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="data/platform_config/cann" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="Ascend031.ini" install_mod="440" entity="true"/>
         <file value="Ascend035.ini" install_mod="440" entity="true"/>
         <file value="Ascend035A.ini" install_mod="440" entity="true"/>
@@ -352,14 +352,14 @@
         <file value="Ascend910_9392.ini" install_mod="440" entity="true"/>
         <file value="Ascend910B2C.ini" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="data/platform_config/kirin" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
         <file value="KirinX90.ini" install_mod="440" entity="true"/>
         <file value="Kirin9030.ini" install_mod="440" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/conf" install_path="$(TARGET_ENV)/conf" install_type="all">
         <file value="ascend_package_load.ini" install_mod="444" entity="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="conf" install_path="$(TARGET_ENV)/conf" install_type="all">
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/conf" install_path="$(TARGET_ENV)/conf" install_type="all">
         <file value="RuntimeConfig.ini" install_mod="444" entity="true"/>
     </file_info>
 </block>
