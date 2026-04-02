@@ -44,6 +44,7 @@ typedef enum tagChipType {
     CHIP_ASCEND_950 = 15,
     CHIP_CLOUD_V5 = 16,
     CHIP_MC62CM12A = 17,  /* MC62CM12A */
+    CHIP_MC32DM11A = 18,  /* CHIP_MC32DM11A */
     CHIP_END
 } ChipType_t;
 

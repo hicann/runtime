@@ -175,7 +175,8 @@ TSD_StatusT ClientManager::GetPlatformInfo(const uint32_t deviceId)
     if ((chipType == static_cast<uint32_t>(CHIP_ADC)) ||
         (chipType == static_cast<uint32_t>(CHIP_AS31XM1)) ||
         (chipType == static_cast<uint32_t>(CHIP_610LITE)) ||
-        (chipType == static_cast<uint32_t>(CHIP_MC62CM12A))) {
+        (chipType == static_cast<uint32_t>(CHIP_MC62CM12A)) ||
+        (chipType == static_cast<uint32_t>(CHIP_MC32DM11A))) {
         g_platInfo.isAdcEnv = true;
     }
     g_hadGetPlatformInfo = true;
