@@ -75,7 +75,11 @@ int32_t ProfTask::Uinit()
 {
     if (isInited_) {
         WriteDone();
-        analysis::dvvp::transport::UploaderMgr::instance()->DelUploader(params_->job_id);
+        // keep HOST JOB uploader to save hash data in MsprofFinaliz later
+        // DelAllUploader will delete HOST JOB uploader at last
+        if (params_->job_id.compare(PROF_HOST_JOBID) != 0) {
+            analysis::dvvp::transport::UploaderMgr::instance()->DelUploader(params_->job_id);
+        }
         isInited_ = false;
         MSPROF_EVENT("Uninit ProfTask successfully");
     }

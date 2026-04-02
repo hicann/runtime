@@ -92,6 +92,28 @@ TEST_F(HOST_PROF_TASK_TEST, Init) {
     EXPECT_EQ(PROFILING_SUCCESS, task->Init());
 }
 
+TEST_F(HOST_PROF_TASK_TEST, UinitWithHostJobId)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<analysis::dvvp::host::ProfTask> task(new analysis::dvvp::host::ProfTask(_devices, param_));
+
+    MOCKER_CPP(&analysis::dvvp::transport::Uploader::Flush).stubs();
+
+    MOCKER(mmCreateTaskWithThreadAttr).stubs().will(returnValue(EN_OK));
+
+    MOCKER(pthread_create).stubs().then(returnValue(-1));
+
+    MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::DelUploader).stubs().will(returnValue(PROFILING_SUCCESS));
+
+    param_->job_id = PROF_HOST_JOBID;
+    EXPECT_EQ(PROFILING_SUCCESS, task->Init());
+    EXPECT_TRUE(task->isInited_);
+
+    EXPECT_EQ(PROFILING_SUCCESS, task->Uinit());
+    EXPECT_FALSE(task->isInited_);
+}
+
 TEST_F(HOST_PROF_TASK_TEST, isDeviceRunProfiling) {
     GlobalMockObject::verify();
     std::string dumpMode = param_->profiling_mode;
