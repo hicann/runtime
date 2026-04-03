@@ -67,6 +67,9 @@ rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo * const taskInfo)
 {
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Model* model = modelExecuteTaskInfo->model;
+    if ((model == nullptr) || (model->Context_() == nullptr)) {
+        return RT_ERROR_NONE;
+    }
     Device * const dev = model->Context_()->Device_();
     Driver * const deviceDrv = dev->Driver_();
 
@@ -169,11 +172,13 @@ static rtError_t DfxSplitFuncCallDevMemAlloc(Model *model, TaskInfo * const task
 
 rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo * const taskInfo, rtStarsModelExeFuncCallPara_t &funcCallPara)
 {
+    // aclgraph重新分配sq后需要重新构造FuncCallPara，headSqArrMax有可能改变，需要释放后重新申请内存
+    (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
+
     std::vector<uint64_t> headSqArr;
     std::vector<uint64_t> streamSvmAddrArr;
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Model* model = modelExecuteTaskInfo->model;
-    rtError_t ret;
 
     std::list<Stream *> const headStmList = model->GetHeadStreamList_();
     for (Stream * const stm : headStmList) {
@@ -200,7 +205,7 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo * const taskInfo, rtStars
            model->GetFunCallMemSize());
 
     //save data to funcCallHostMem
-    ret = SaveFuncCallDataForModelExecuteTask(taskInfo, headSqArr, streamSvmAddrArr);
+    rtError_t ret = SaveFuncCallDataForModelExecuteTask(taskInfo, headSqArr, streamSvmAddrArr);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "save funcCall data failed, retCode=%#x.", ret);
 
     if (taskInfo->stream->Device_()->IsSupportFeature(
