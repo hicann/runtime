@@ -1446,6 +1446,10 @@ rtError_t Model::PacketQueueInfo(rtAicpuModelInfo_t * const aicpuModelInfoIn)
 
 rtError_t Model::PacketAicpuModelInfo()
 {
+    // 已经完成过load complete的model，不需要再次重复申请aicpu model info内存
+    if (isModelComplete_) {
+        return RT_ERROR_NONE;
+    }
     rtAicpuModelInfo_t infoAicpuModel;
     rtError_t error;
 
