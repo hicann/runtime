@@ -271,6 +271,7 @@ TEST_F(CloudV2StreamTest, TestIsTaskLimitedWithTaskFinished)
     Stream stream(device, 0);
     stream.waitTaskList_.push_back(512);
     TaskInfo task = {};
+    stream.SynchronizeDelayTime(0,2,0);
     bool ret = stream.IsTaskLimited(&task);
     ASSERT_EQ(ret, false);
 }
