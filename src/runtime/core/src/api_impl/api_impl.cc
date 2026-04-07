@@ -3342,14 +3342,14 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
 
 rtError_t ApiImpl::GetDevice(int32_t * const devId)
 {
-    Context * const curCtx = Runtime::Instance()->CurrentContext();
+    Runtime * const rtInstance = Runtime::Instance();
+    Context * const curCtx = rtInstance->CurrentContext();
     const bool flag = ContextManage::CheckContextIsValid(curCtx, true);
     if (!flag) {
-        Runtime *rtInstance = Runtime::Instance();
         if (rtInstance->GetSetDefaultDevIdFlag()) {
             const uint32_t drvDeviceId = rtInstance->GetDefaultDeviceId();
             uint32_t deviceId = 0U;
-            const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
+            const rtError_t error = rtInstance->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get drvDeviceId:%u is err:%#x", drvDeviceId,
                 static_cast<uint32_t>(error));
             *devId = static_cast<int32_t>(deviceId);
@@ -3359,9 +3359,9 @@ rtError_t ApiImpl::GetDevice(int32_t * const devId)
     }
     const ContextProtect cp(curCtx);
 
-    const uint32_t drvDeviceId = curCtx->Device_()->Id_();
     uint32_t deviceId;
-    rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
+    const uint32_t drvDeviceId = curCtx->Device_()->Id_();
+    rtError_t error = rtInstance->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get drvDeviceId:%u is err:%#x", drvDeviceId, static_cast<uint32_t>(error));
     *devId = static_cast<int32_t>(deviceId);
 
