@@ -15,7 +15,7 @@ set(TSD_CLIENT_SRC_FILE
     ${TSD_SRC_PATH}/tsdclient/src/process_mode_manager.cpp
     ${TSD_SRC_PATH}/tsdclient/src/process_mode_msg_parse.cpp
     ${TSD_SRC_PATH}/tsdclient/src/thread_mode_manager.cpp
-    ${TSD_SRC_PATH}/tsdclient/src/tsd_client.cpp
+    ${TSD_SRC_PATH}/interface/tsd_client.cpp
     ${TSD_SRC_PATH}/tsdclient/src/stub/stub_dc.cpp
     ${TSD_SRC_PATH}/tsdclient/src/stub/stub_process_mode_nowin.cpp
 )

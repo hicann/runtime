@@ -35,7 +35,7 @@ if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
 #######################################################################################################################
 # libtsdclient.so windows
 add_library(tsdclient SHARED
-    src/tsd_client.cpp
+    ${BASE_DIR}/interface/tsd_client.cpp
     src/client_manager.cpp
     src/process_mode_manager.cpp
     src/process_mode_base.cpp
@@ -114,7 +114,7 @@ else()
 #######################################################################################################################
 # libtsdclient.so linux
 add_library(tsdclient SHARED
-    src/tsd_client.cpp
+    ${BASE_DIR}/interface/tsd_client.cpp
     src/client_manager.cpp
     src/process_mode_manager.cpp
     src/process_mode_base.cpp
