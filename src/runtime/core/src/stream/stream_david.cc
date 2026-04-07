@@ -487,7 +487,7 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
     (dynamic_cast<TaskResManageDavid *>(taskResMang_))->GetHeadTail(head, tail);
     bool isForceRecycle = GetForceRecycleFlag(flag);
     if (isForceRecycle) {
-        exeStream = dev->GetCtrlStream(dev->PrimaryStream_());
+        exeStream = dev->GetCtrlSQStream(dev->PrimaryStream_());
         if (this == exeStream) {
             isForceRecycle = false;
         }

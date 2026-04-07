@@ -1125,11 +1125,8 @@ rtError_t ApiImplDavid::NotifyReset(Notify * const inNotify)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Stream *curStm = curCtx->DefaultStream_();
+    Stream *curStm = curCtx->GetCtrlSQStream();
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-                                "Notify reset failed, stream is not in current ctx, device_id=%u, stream_id=%d.",
-                                curStm->Device_()->Id_(), curStm->Id_());
 
     const uint32_t notifyId = inNotify->GetNotifyId();
     const rtError_t error = NtyReset(inNotify, curStm);

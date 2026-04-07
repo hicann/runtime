@@ -529,7 +529,7 @@ rtError_t MdlBindTaskSubmit(Model * const mdl, Stream * const streamIn,
     const uint32_t flag)
 {
     TaskInfo *maintainceTask = nullptr;
-    Stream *stm = mdl->Context_()->DefaultStream_();
+    Stream *stm = mdl->Context_()->GetCtrlSQStream();
     const rtModelStreamType_t streamType =
         (flag == static_cast<uint32_t>(RT_HEAD_STREAM)) ? RT_MODEL_HEAD_STREAM : RT_MODEL_WAIT_ACTIVE_STREAM;
     rtError_t error = CheckTaskCanSend(stm);
@@ -585,7 +585,7 @@ rtError_t MdlUnBindTaskSubmit(Model * const mdl, Stream * const streamIn,
     if (context->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         return context->Device_()->GetCtrlSQ().SendModelUnbindMsg(mdl, streamIn, force);
     }
-    Stream * const defaultStream = context->DefaultStream_();
+    Stream * const defaultStream = context->GetCtrlSQStream();
     error = CheckTaskCanSend(defaultStream);
     ERROR_PROC_RETURN_MSG_INNER(error, mdl->ModelPushFrontStream(streamIn);,
                                 "stream_id=%d check failed, retCode=%#x, current unbind stream_id=%d.",

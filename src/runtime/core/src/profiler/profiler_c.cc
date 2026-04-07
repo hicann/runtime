@@ -71,7 +71,7 @@ void ProfStart(Profiler * const profiler, const uint64_t profConfig, const uint3
         || (profCfg->isHwtsLogEn != 0U)) {
         uint32_t pid;
         (void)dev->Driver_()->DeviceGetBareTgid(&pid);
-        Stream *stream = dev->GetCtrlStream(dev->PrimaryStream_());
+        Stream *stream = dev->GetCtrlSQStream(dev->PrimaryStream_());
         if (likely(stream != nullptr)) {
             TaskInfo *tsk = nullptr;
             rtError_t  error = CheckTaskCanSend(stream);
@@ -118,7 +118,7 @@ void ProfStop(Profiler * const profiler, const uint64_t profConfig, const uint32
     if ((profCfg->isRtsProfEn != 0U) ||(profCfg->isTaskBasedProfEn != 0U) || (profCfg->isProfLogEn != 0U)
         || (profCfg->isHwtsLogEn != 0U)) {
         TaskInfo *tsk = nullptr;
-        Stream *stream = dev->GetCtrlStream(dev->PrimaryStream_());
+        Stream *stream = dev->GetCtrlSQStream(dev->PrimaryStream_());
         uint32_t pid;
         (void)dev->Driver_()->DeviceGetBareTgid(&pid);
         if (likely(stream != nullptr)) {

@@ -3431,7 +3431,7 @@ rtError_t Context::SendAndRecvDebugTask(RtDebugSendInfo *const sendInfo, rtDebug
 
 Stream *Context::GetCtrlSQStream() const
 {
-    return device_->GetCtrlStream(DefaultStream_());
+    return device_->GetCtrlSQStream(DefaultStream_());
 }
 
 rtError_t Context::CheckStatus(const Stream * const stm, const bool isBlockDefault)

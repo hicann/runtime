@@ -770,7 +770,7 @@ rtError_t ProcRingBufferTaskDavid(const Device *const dev, const void * const de
     const uint32_t len)
 {
     TaskInfo *tsk = nullptr;
-    Stream *stm = dev->GetCtrlStream(dev->PrimaryStream_());
+    Stream *stm = dev->GetCtrlSQStream(dev->PrimaryStream_());
     NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "stream check failed, stream_id=%d, retCode=%#x.", stm->Id_(),

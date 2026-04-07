@@ -1038,6 +1038,9 @@ rtError_t RawDevice::Start()
 
     error = SetSupportHcomcpuFlag();
     ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Set support hcom cpu flag failed, retCode=%#x.", static_cast<uint32_t>(error));
+    
+    error = InitCtrlSQ();
+    ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Ctrl SQ init failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = GetStarsVersion();
     ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Get Stars version failed, retCode=%#x.", static_cast<uint32_t>(error));
@@ -1050,8 +1053,6 @@ rtError_t RawDevice::Start()
     }
 
     InitResource();
-    error = InitCtrlSQ();
-    ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "Ctrl SQ init failed, retCode=%#x.", static_cast<uint32_t>(error));
 
 #ifndef CFG_DEV_PLATFORM_PC
     if (GetDevProperties().ringbufSize != 0) {
@@ -1679,6 +1680,15 @@ Stream* RawDevice::GetCtrlStream(Stream * const stream) const
     }
 }
 
+Stream* RawDevice::GetCtrlSQStream(Stream * const stream) const
+{
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ) && (ctrlSQ_.get() != nullptr)) {
+        return GetCtrlSQ().GetStream();
+    } else {
+        return stream;
+    }
+}
+
 bool RawDevice::IsCtrlSQStream(Stream * const stream) const
 {
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ) && (ctrlSQ_.get() != nullptr)) {
@@ -1957,8 +1967,8 @@ rtError_t RawDevice::GetStarsVersion()
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_STARS_VERSION)) {
         return RT_ERROR_NONE;
     }
-
-    COND_RETURN_INFO(primaryStream_ == nullptr, RT_ERROR_NONE, "primary stream is null");
+    Stream* stream = GetCtrlStream(PrimaryStream_());
+    COND_RETURN_INFO(stream == nullptr, RT_ERROR_NONE, "primary stream is null");
 
     rtError_t error = RT_ERROR_NONE;
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU)) {
@@ -1968,9 +1978,9 @@ rtError_t RawDevice::GetStarsVersion()
             SetTschVersion(tsfwVersion);
         }
     } else {
-        error = primaryStream_->GetStarsVersion();
+        error = stream->GetStarsVersion();
     }
-    RT_LOG(RT_LOG_INFO, "send alloc get stars version task, stream_id=%d, retCode:%d", primaryStream_->Id_(), error);
+    RT_LOG(RT_LOG_INFO, "send alloc get stars version task, stream_id=%d, retCode:%d", stream->Id_(), error);
     return error;
 #else
     return RT_ERROR_NONE;

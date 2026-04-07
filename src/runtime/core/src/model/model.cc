@@ -640,7 +640,7 @@ rtError_t Model::DelStream(Stream * const streamIn)
 
 rtError_t Model::BindSqPerStream(Stream * const streamIn, const uint32_t flag)
 {
-    Stream *execStream = context_->DefaultStream_();
+    Stream *execStream = context_->GetCtrlSQStream();
     rtError_t error = ModelBindTaskSubmit(execStream, streamIn, flag);
     ERROR_RETURN_MSG_INNER(error, "ModelBindTaskSubmit failed, model_id=%d, stream_id=%d, sq_id=%u.",
         id_, streamIn->Id_(), streamIn->GetSqId());

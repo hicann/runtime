@@ -249,7 +249,7 @@ TEST_F(TaskTestDavid, AllocTaskAndSendIPCNotify)
 TEST_F(TaskTestDavid, AllocTaskAndSendNotifyReset)
 {
     Context *curCtx = Runtime::Instance()->CurrentContext();
-    Stream *defaultStm = curCtx->DefaultStream_();
+    Stream *defaultStm = curCtx->GetCtrlSQStream();
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
@@ -278,7 +278,7 @@ TEST_F(TaskTestDavid, AllocTaskAndSendNotifyReset)
 TEST_F(TaskTestDavid, AllocTaskAndSendNotifyResetAbnormal)
 {
     Context *curCtx = Runtime::Instance()->CurrentContext();
-    Stream *defaultStm = curCtx->DefaultStream_();
+    Stream *defaultStm = curCtx->GetCtrlSQStream();
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
@@ -307,7 +307,7 @@ TEST_F(TaskTestDavid, AllocTaskAndSendNotifyResetAbnormal)
 TEST_F(TaskTestDavid, AllocTaskAndSendIpcNotifyReset)
 {
     Context *curCtx = Runtime::Instance()->CurrentContext();
-    Stream *defaultStm = curCtx->DefaultStream_();
+    Stream *defaultStm = curCtx->GetCtrlSQStream();
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
