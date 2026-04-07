@@ -12,13 +12,10 @@
 message(STATUS "CPACK_CMAKE_SOURCE_DIR = ${CPACK_CMAKE_SOURCE_DIR}")
 message(STATUS "CPACK_CMAKE_CURRENT_SOURCE_DIR = ${CPACK_CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CPACK_CMAKE_BINARY_DIR = ${CPACK_CMAKE_BINARY_DIR}")
-message(STATUS "CPACK_PACKAGE_FILE_NAME = ${CPACK_PACKAGE_FILE_NAME}")
 message(STATUS "CPACK_CMAKE_INSTALL_PREFIX = ${CPACK_CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_COMMAND = ${CMAKE_COMMAND}")
 message(STATUS "CPACK_TEMPORARY_DIRECTORY = ${CPACK_TEMPORARY_DIRECTORY}")
-message(STATUS "CPACK_VERSION_DEST = ${CPACK_VERSION_DEST}")
 message(STATUS "CPACK_VERSION_SRC = ${CPACK_VERSION_SRC}")
-message(STATUS "CPACK_EXTRA_VERSION_FILES = ${CPACK_EXTRA_VERSION_FILES}")
 
 # 设置 makeself 路径
 set(MAKESELF_EXE ${CPACK_MAKESELF_PATH}/makeself.sh)
@@ -56,17 +53,9 @@ endif()
 # 刪除子工程压缩包，避免打到run包中
 file(REMOVE "${STAGING_DIR}/device-npu-runtime.tar.gz")
 
-if(CPACK_REMOVE_LIB_FILES)
-    message("Remove files from ${CPACK_CMAKE_BINARY_DIR}/_CPack_Packages/makeself_staging/lib")
-    file(GLOB ALL_FILES "${CPACK_CMAKE_BINARY_DIR}/_CPack_Packages/makeself_staging/lib/*")
-
-    file(REMOVE_RECURSE "${CPACK_CMAKE_BINARY_DIR}/_CPack_Packages/makeself_staging/lib")
-endif()
-
 # 生成安装配置文件
-set(CSV_OUTPUT ${CPACK_CMAKE_BINARY_DIR}/filelist.csv)
 execute_process(
-    COMMAND python3 ${CPACK_CMAKE_SOURCE_DIR}/scripts/package/package.py --pkg_name ${CPACK_PACKAGE_PARAM_NAME} --chip_name ${CPACK_SOC} --os_arch linux-${CPACK_ARCH} --version_dir ${CPACK_VERSION} --delivery_dir ${CPACK_CMAKE_BINARY_DIR}
+    COMMAND python3 ${CPACK_CMAKE_SOURCE_DIR}/scripts/package/package.py --pkg_name ${CPACK_PACKAGE_PARAM_NAME} --chip_name ${CPACK_SOC} --os_arch linux-${CMAKE_SYSTEM_PROCESSOR} --version_dir ${CPACK_VERSION} --delivery_dir ${CPACK_CMAKE_BINARY_DIR}
     WORKING_DIRECTORY ${CPACK_CMAKE_BINARY_DIR}
     OUTPUT_VARIABLE result
     ERROR_VARIABLE error
@@ -78,81 +67,7 @@ if (NOT code EQUAL 0)
     message(FATAL_ERROR "Filelist generation failed: ${result}")
 else ()
     message(STATUS "Filelist generated successfully: ${result}")
-
-    if (NOT EXISTS ${CSV_OUTPUT})
-        message(FATAL_ERROR "Output file not created: ${CSV_OUTPUT}")
-    endif ()
 endif ()
-
-string(STRIP "${CPACK_PACKAGE_PARAM_NAME}" PKG_NAME)
-
-# --- 1. 默认值处理 ---
-
-# 默认 Scene 目录：share/info/<包名>
-if(NOT DEFINED CPACK_SCENE_DEST)
-    set(FINAL_SCENE_DEST "${STAGING_DIR}/share/info/${PKG_NAME}")
-else()
-    set(FINAL_SCENE_DEST "${CPACK_SCENE_DEST}")
-endif()
-
-# 默认 Script 目录：Scene目录下的 script
-if(NOT DEFINED CPACK_SCRIPT_DEST)
-    set(FINAL_SCRIPT_DEST "${FINAL_SCENE_DEST}/script")
-else()
-    set(FINAL_SCRIPT_DEST "${CPACK_SCRIPT_DEST}")
-endif()
-
-# 默认 Version 源文件：<包名>_version.h
-if(NOT DEFINED CPACK_VERSION_SRC)
-    set(FINAL_VERSION_SRC "${CPACK_CMAKE_BINARY_DIR}/${PKG_NAME}_version.h")
-else()
-    set(FINAL_VERSION_SRC "${CPACK_VERSION_SRC}")
-endif()
-
-# 默认 Version 目标是不是具体文件名：FALSE
-if(NOT DEFINED CPACK_VERSION_DEST)
-    set(FINAL_VERSION_DEST "${FINAL_SCENE_DEST}")
-else()
-    set(FINAL_VERSION_DEST "${CPACK_VERSION_DEST}")
-endif()
-
-# 默认 Version 目标是不是具体文件名：FALSE
-if(NOT DEFINED CPACK_VERSION_IS_FILE)
-    set(FINAL_VERSION_IS_FILE FALSE)
-else()
-    set(FINAL_VERSION_IS_FILE "${CPACK_VERSION_IS_FILE}")
-endif()
-
-# --- 2. 执行拷贝动作（只做事，不判断包名）---
-
-# A. 拷贝 Scene info
-if(EXISTS "${CPACK_CMAKE_BINARY_DIR}/scene.info")
-    configure_file("${CPACK_CMAKE_BINARY_DIR}/scene.info" "${FINAL_SCENE_DEST}/" COPYONLY)
-endif()
-
-# B. 拷贝 Script
-if(CSV_OUTPUT AND EXISTS "${CSV_OUTPUT}")
-    configure_file("${CSV_OUTPUT}" "${FINAL_SCRIPT_DEST}/" COPYONLY)
-endif()
-
-# C. 拷贝 Version 文件
-if(EXISTS "${FINAL_VERSION_SRC}")
-    if(FINAL_VERSION_IS_FILE)
-        configure_file("${FINAL_VERSION_SRC}" "${FINAL_VERSION_DEST}" COPYONLY)
-    else()
-        file(MAKE_DIRECTORY "${FINAL_VERSION_DEST}")
-        configure_file("${FINAL_VERSION_SRC}" "${FINAL_VERSION_DEST}/" COPYONLY)
-    endif()
-endif()
-
-# D. 拷贝额外版本文件
-if(DEFINED CPACK_EXTRA_VERSION_FILES)
-    foreach(EXTRA_FILE ${CPACK_EXTRA_VERSION_FILES})
-        if(EXISTS "${EXTRA_FILE}")
-            configure_file("${EXTRA_FILE}" "${FINAL_VERSION_DEST}/" COPYONLY)
-        endif()
-    endforeach()
-endif()
 
 # 统一修正文件权限
 if(EXISTS "${STAGING_DIR}/${CMAKE_SYSTEM_PROCESSOR}-linux/conf/path.cfg")

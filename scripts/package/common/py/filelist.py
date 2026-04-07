@@ -493,8 +493,15 @@ def generate_filelist(filelist: FileList, filename: str, build_dir: str):
             [file_item_to_string(item) for item in filelist]
         )
     )
+    if not os.path.exists(build_dir):
+        os.makedirs(build_dir)
+
     content = '\n'.join(content_list)
     filepath = os.path.join(build_dir, filename)
+
+    if os.path.exists(filepath):
+        os.chmod(filepath, 0o700)
+
     try:
         with open(filepath, 'w', encoding='utf-8') as file:
             file.write(content)
@@ -502,6 +509,8 @@ def generate_filelist(filelist: FileList, filename: str, build_dir: str):
             file.write('\n')
     except OSError as ex:
         raise GenerateFilelistError(filename) from ex
+
+    os.chmod(filepath, 0o440)
 
 
 def get_transform_nested_path_func(parallel: bool) -> Callable[[FileList], FileList]:

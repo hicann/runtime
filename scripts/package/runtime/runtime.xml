@@ -11,6 +11,7 @@
     <package_info>
         <product_name>cann</product_name>
         <func_name>npu-runtime</func_name>
+        <share_info_name>runtime</share_info_name>
         <suffix>run</suffix>
         <install_script>share/info/runtime/script/install.sh</install_script>
         <help>share/info/runtime/script/help.info</help>

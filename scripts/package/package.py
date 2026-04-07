@@ -283,13 +283,20 @@ def generate_version_header_content(target_conf) -> Iterator[str]:
 
 
 def generate_customized_file(target_conf, ext_name, build_dir):
-    filepath = os.path.join(build_dir, target_conf.get('value'))
+    filepath = os.path.join(build_dir, target_conf['dst_path'], target_conf.get('value'))
+    dirpath = os.path.dirname(filepath)
 
     generator = target_conf.get('generator', 'info')
     if generator == 'version_header':
         content_list = generate_version_header_content(target_conf)
     else:
         content_list = generate_info_content(target_conf, ext_name)
+
+    if not os.path.exists(dirpath):
+        os.makedirs(dirpath)
+
+    if os.path.exists(filepath):
+        os.chmod(filepath, 0o700)
 
     file_content = '\n'.join(content_list)
     try:
@@ -298,6 +305,8 @@ def generate_customized_file(target_conf, ext_name, build_dir):
     except Exception as ex:
         CommLog.cilog_error(f"generate customized file {filepath} failed: {ex}!")
         return FAIL
+
+    os.chmod(filepath, 0o440)
 
     return SUCC
 
@@ -466,7 +475,7 @@ def execute_repack_process(xmlconfig: XmlConfig,
     build_dir = delivery_dir.replace("_CPack_Packages/makeself_staging", "")
     # 生成自定义文件
     for item in xmlconfig.generate_infos:
-        if generate_customized_file(item, package_option.ext_name, build_dir):
+        if generate_customized_file(item, package_option.ext_name, delivery_dir):
             return FAIL
 
     hash_cfg_str = ""
@@ -661,6 +670,13 @@ def gen_file_install_list(xml_config: XmlConfig,
     return file_install_list, []
 
 
+def get_share_info_name(package_attr: dict) -> str:
+    """获取share/info下的目录名。"""
+    if 'share_info_name' in package_attr:
+        return package_attr['share_info_name']
+    return package_attr['func_name']
+
+
 def generate_filelist_file_by_xml_config(xml_config: XmlConfig,
                                          filter_key: List[str],
                                          build_dir: str,
@@ -680,7 +696,13 @@ def generate_filelist_file_by_xml_config(xml_config: XmlConfig,
         ),
         xml_config, filter_key
     )
-    generate_filelist(file_install_list, 'filelist.csv', build_dir)
+    generate_filelist(
+        file_install_list,
+        'filelist.csv',
+        os.path.join(
+            build_dir, 'share', 'info', get_share_info_name(xml_config.package_attr), 'script'
+        )
+    )
     # 先生成再检查，有利于问题定位
     if package_check:
         check_filelist(file_install_list, check_features, check_move)
@@ -784,7 +806,7 @@ def main(pkg_name='', xml_file='', main_args=None):
     # 生成filelist.csv安装列表文件
     try:
         generate_filelist_file_by_xml_config(
-            xml_config, get_filter_key(pkg_name), build_dir,
+            xml_config, get_filter_key(pkg_name), delivery_dir,
             main_args.package_check or xml_config.package_attr.get('package_check')
         )
     except PackageNameEmptyError:
@@ -798,11 +820,6 @@ def main(pkg_name='', xml_file='', main_args=None):
         return FAIL
 
     generate_config_inc(xml_config.package_attr, build_dir)
-
-    if main_args.independent_pkg:
-        src_file_path = os.path.join(TOP_DIR, "build", "filelist.csv")
-        dst_file_path = os.path.join(main_args.pkg_output_dir, "share", "info", main_args.pkg_name, "script")
-        shutil.copy(src_file_path, dst_file_path)
 
     package_option = PackageOption(
         main_args.os_arch, main_args.package_suffix, main_args.not_in_name, main_args.pkg_version, main_args.ext_name,
