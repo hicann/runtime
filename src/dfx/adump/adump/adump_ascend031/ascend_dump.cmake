@@ -8,7 +8,45 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+set(adump_host_proto_files
+    "${ADUMP_DIR}/proto/op_mapping.proto"
+    "${ADUMP_DIR}/proto/dump_task.proto"
+)
+protobuf_generate(adump_host_proto adump_host_proto_srcs adump_host_proto_headers ${adump_host_proto_files} TARGET)
+
 ####################### libascend_dump.so begin ###########################
+
+add_library(adump_proto_obj OBJECT
+    ${adump_host_proto_srcs}
+)
+
+target_include_directories(adump_proto_obj PRIVATE
+    ${CMAKE_BINARY_DIR}/proto/adump_host_proto
+)
+
+target_link_libraries(adump_proto_obj PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    ascend_protobuf
+)
+
+set_target_properties(adump_proto_obj PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_compile_definitions(adump_proto_obj PRIVATE
+    google=ascend_private
+)
+
+target_compile_options(adump_proto_obj PRIVATE
+    -fvisibility=default
+    -fvisibility-inlines-hidden
+    -fPIC
+    $<$<CONFIG:Debug>:-Os>
+    $<$<CONFIG:Release>:-Os>
+)
+
+add_dependencies(adump_proto_obj adump_host_proto)
+
 set(ascendDumpSrcList
     ${adumpServerSrcList}
     ${ADUMP_ADUMP_DIR}/adump_ascend031/exception/adx_exception_callback.cpp
@@ -40,9 +78,8 @@ set(ascendDumpSrcList
 
 set(ascendDumpHeaderList
     ${adumpServerHeaders}
+    ${CMAKE_BINARY_DIR}/proto/adump_host_proto
     ${RUNTIME_DIR}/src/dfx/error_manager
-    ${CMAKE_BINARY_DIR}/proto/ascend_dump_protos
-    ${CMAKE_BINARY_DIR}/proto/adumpHostProto
     ${ADUMP_ADUMP_DIR}/adump_ascend031/exception/
     ${ADUMP_ADUMP_DIR}/adump_ascend031/manage/
     ${ADUMP_DIR}/adcore/
@@ -63,14 +100,12 @@ set(ascendDumpHeaderList
 
 add_library(ascend_dump SHARED
     ${ascendDumpSrcList}
+    $<TARGET_OBJECTS:adump_proto_obj>
 )
 
 target_include_directories(ascend_dump PRIVATE
     ${ascendDumpHeaderList}
 )
-
-add_dependencies(ascend_dump ascend_dump_protos)
-add_dependencies(ascend_dump adumpHostProto)
 
 target_compile_definitions(ascend_dump PRIVATE
     $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,ADX_LIB_HOST,ADX_LIB>
@@ -94,6 +129,7 @@ target_compile_options(ascend_dump PRIVATE
     -Wextra
     -Wfloat-equal
     -Wformat
+    -fPIC
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     $<$<CONFIG:Debug>:-ftrapv>
@@ -133,16 +169,45 @@ install(TARGETS ascend_dump OPTIONAL
 
 ####################### libascend_dump.a begin ###########################
 
+add_library(adump_proto_static_obj OBJECT
+    ${adump_host_proto_srcs}
+)
+
+target_include_directories(adump_proto_static_obj PRIVATE
+    ${CMAKE_BINARY_DIR}/proto/adump_host_proto
+)
+
+target_link_libraries(adump_proto_static_obj PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    ascend_protobuf
+)
+
+set_target_properties(adump_proto_static_obj PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_compile_definitions(adump_proto_static_obj PRIVATE
+    google=ascend_private
+)
+
+target_compile_options(adump_proto_static_obj PRIVATE
+    -fvisibility=default
+    -fvisibility-inlines-hidden
+    -fPIC
+    $<$<CONFIG:Debug>:-O2>
+    $<$<CONFIG:Release>:-O2>
+)
+
+add_dependencies(adump_proto_obj adump_host_proto)
+
 add_library(ascend_dump_static STATIC
     ${ascendDumpSrcList}
+    $<TARGET_OBJECTS:adump_proto_static_obj>
 )
 
 target_include_directories(ascend_dump_static PRIVATE
     ${ascendDumpHeaderList}
 )
-
-add_dependencies(ascend_dump_static ascend_dump_protos)
-add_dependencies(ascend_dump_static adumpHostProto)
 
 target_compile_definitions(ascend_dump_static PRIVATE
     $<IF:$<STREQUAL:${PRODUCT_SIDE},host>,ADX_LIB_HOST,ADX_LIB>
@@ -159,6 +224,7 @@ target_compile_options(ascend_dump_static PRIVATE
     -Werror
     -Wextra
     -Wfloat-equal
+    -fPIC
     -fvisibility=hidden
     -fvisibility-inlines-hidden
     $<$<CONFIG:Debug>:-ftrapv>
