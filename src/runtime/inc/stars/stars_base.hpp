@@ -142,6 +142,8 @@ enum RtModelExecutorFlag {
     MODEL_EXECUTOR_TS = 1,
     MODEL_EXECUTOR_AICPU = 2,
     MODEL_EXECUTOR_RESERVED = 3,
+    MODEL_EXECUTOR_CAPTURE = 5,
+    
 };
 
 }  // namespace runtime

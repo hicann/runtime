@@ -481,14 +481,17 @@ static void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, r
             if (modelMaintainceTaskInfo->model->ModelExecuteType() == EXECUTOR_AICPU) {
                 sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_AICPU;
             } else {
+                if (modelMaintainceTaskInfo->model->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+                    sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_CAPTURE;
+                }
                 sqe->u.modelMaintainceInfo.endgraphNotifyId =
                     static_cast<uint16_t>(modelMaintainceTaskInfo->model->GetEndGraphNotify()->GetNotifyId());
             }
             PrintDavidSqe(davidSqe, "ModelPreProcTask");
             RT_LOG(RT_LOG_INFO, "model maintaince type=%d, deviceId=%u, pre proc streamId=%hu of modelId=%hu,"
-                "endgraphNotifyId=%hu, taskId=%hu", type, taskInfo->stream->Device_()->Id_(),
+                "endgraphNotifyId=%hu, taskId=%hu, executorFlag=%u.", type, taskInfo->stream->Device_()->Id_(),
                 sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId,
-                sqe->u.modelMaintainceInfo.endgraphNotifyId, taskInfo->id);
+                sqe->u.modelMaintainceInfo.endgraphNotifyId, taskInfo->id, sqe->u.modelMaintainceInfo.executorFlag);
             break;
         case MMT_MODEL_LOAD_COMPLETE:
             PrintDavidSqe(davidSqe, "ModelLoadCompleteTask");

@@ -603,7 +603,10 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
 
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_MODEL_ABORT, model, stream, RT_MODEL_HEAD_STREAM, 0U);
     ToConstructDavidSqe(task, &sqe, sqBaseAddr);
-
+    model->modelType_ = RT_MODEL_CAPTURE_MODEL;
+    (void)ModelMaintainceTaskInit(&maintainceTask, MMT_MODEL_PRE_PROC, model, stream, RT_MODEL_HEAD_STREAM, 0U);
+    ToConstructDavidSqe(task, &sqe, sqBaseAddr);
+    model->modelType_ = RT_MODEL_NORMAL;
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_DEL, model, stream, RT_MODEL_HEAD_STREAM, 0U);
     ToConstructDavidSqe(task, &sqe, sqBaseAddr);
     EXPECT_EQ(stream->GetBindFlag(), false);
