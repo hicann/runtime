@@ -1766,12 +1766,11 @@ rtError_t NpuDriver::MemGetInfo(const uint32_t deviceId, bool isHugeOnly, size_t
 {
     struct MemInfo info;
     uint32_t type = GetDevProperties().memInfoType;
-    RT_LOG(RT_LOG_DEBUG, "halMemGetInfo get memType=%u", type);
     
     const drvError_t drvRet = halMemGetInfo(static_cast<DVdevice>(deviceId), type, &info);
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "[drv api] halMemGetInfo failed: device_id=%u, drvRetCode=%d!",
-            deviceId, static_cast<int32_t>(drvRet));
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halMemGetInfo failed: device_id=%u, type=%u, drvRetCode=%d!",
+            deviceId, type, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

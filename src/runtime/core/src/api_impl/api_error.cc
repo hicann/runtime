@@ -1160,7 +1160,7 @@ rtError_t ApiErrorDecorator::StreamSetMode(Stream * const stm, const uint64_t st
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_WARN((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-                     "Not support coprocessor stream flag=%u", curStm->Flags());
+                     "Not support coprocessor stream flag=%u, stream_id=%d", curStm->Flags(), curStm->Id_());
 #ifndef CFG_DEV_PLATFORM_PC
     const rtError_t error = impl_->StreamSetMode(curStm, stmMode);
     ERROR_RETURN(error, "set stream mode failed.");

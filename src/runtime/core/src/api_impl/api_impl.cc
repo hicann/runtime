@@ -1895,7 +1895,7 @@ rtError_t ApiImpl::SetDeviceFailureMode(uint64_t failureMode)
 
 rtError_t ApiImpl::StreamSetMode(Stream * const stm, const uint64_t stmMode)
 {
-    RT_LOG(RT_LOG_DEBUG, "set stream mode entry, mode = %llu.", stmMode);
+    RT_LOG(RT_LOG_DEBUG, "set stream mode entry, stream_id=%d, mode=%llu.", stm->Id_(), stmMode);
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device * const dev = curCtx->Device_();
