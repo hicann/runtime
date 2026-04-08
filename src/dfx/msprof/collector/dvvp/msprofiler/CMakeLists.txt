@@ -69,7 +69,7 @@ target_compile_options(msprofiler_fwk_share PRIVATE
     -fno-strict-aliasing
     -fno-common
     -fvisibility=hidden
-    -fvisibility-inlines-hidden
+    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>
     -Wall
     -Wextra
     -Wfloat-equal
@@ -177,7 +177,7 @@ target_compile_options(msprofiler_fwk_lite_share PRIVATE
     -fno-strict-aliasing
     -fno-common
     -fvisibility=hidden
-    -fvisibility-inlines-hidden
+    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>
     -Wall
     -Wextra
     -Wfloat-equal

@@ -33,7 +33,7 @@ struct CollectionTimeInfo : BaseInfo {
         SET_VALUE(object, clockMonotonicRaw);
     }
 
-    void FromObject(NanoJson::Json &object) override {}
+    void FromObject(NanoJson::Json &object) override { (void)object; }
 };
 
 } // namespace message

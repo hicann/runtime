@@ -861,8 +861,9 @@ NetDevStatsHandler::NetDevStatsHandler(size_t bufSize, uint64_t sampleIntervalNs
     : TimerHandler(PROF_NETDEV_STATS),
       isInited_(false),
       prevTimeStamp_(0),
-      bufSize_(bufSize),
       sampleIntervalNs_(sampleIntervalNs),
+      isDcmiV2Supported_(false),
+      bufSize_(bufSize),
       retFileName_("data/netdev_stats.data"),
       jobId_(jobId),
       jobCtx_(jobCtx) {}

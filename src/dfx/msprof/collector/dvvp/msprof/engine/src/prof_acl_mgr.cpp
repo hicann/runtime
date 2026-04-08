@@ -2457,7 +2457,7 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
     MSPROF_EVENT("Received ProfAclStop request from acl");
     UploaderMgr::instance()->SetAllUploaderTransportStopped();
     std::lock_guard<std::mutex> lk(mtx_);
-    for (auto i = 0; i < devIds.size(); i++) {
+    for (size_t i = 0; i < devIds.size(); i++) {
         uint32_t devId = devIds[i];
         auto iter = devTasks_.find(devId);
         if (iter != devTasks_.end()) {

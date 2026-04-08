@@ -125,7 +125,7 @@ set_target_properties(profapi_share
 target_compile_options(profapi_share PRIVATE
     -fstack-protector-all
     -fvisibility=hidden
-    -fvisibility-inlines-hidden
+    $<$<COMPILE_LANGUAGE:CXX>:-fvisibility-inlines-hidden>
     -fno-common
     -Wall
     $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>
