@@ -62,6 +62,7 @@ extern "C" int32_t ProfAclStop(ProfType type, PROF_CONFIG_CONST_PTR profilerConf
 extern "C" int32_t ProfAclFinalize(ProfType type);
 extern "C" int32_t ProfAclSetConfig(aclprofConfigType type, const char *config, size_t configLength);
 extern "C" int32_t ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData);
+extern "C" int32_t ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData);
 extern "C" int32_t ProfAclSubscribe(ProfType type, uint32_t modelId, const aclprofSubscribeConfig *profSubscribeConfig);
 extern "C" Msprofiler::AclApi::ProfCreateTransportFunc ProfCreateParsertransport();
 extern "C" void ProfRegisterTransport(Msprofiler::AclApi::ProfCreateTransportFunc callback);
@@ -101,6 +102,7 @@ const std::map<std::string, void*> g_map = {
     {"ProfAclFinalize", (void *)ProfAclFinalize},
     {"ProfAclSetConfig", (void *)ProfAclSetConfig},
     {"ProfAclGetCompatibleFeatures", (void *)ProfAclGetCompatibleFeatures},
+    {"ProfAclGetCompatibleFeaturesV2", (void *)ProfAclGetCompatibleFeaturesV2},
     {"ProfAclSubscribe", (void *)ProfAclSubscribe},
     {"ProfAclUnSubscribe", (void *)ProfAclUnSubscribe},
     {"ProfOpSubscribe", (void *)ProfOpSubscribe},

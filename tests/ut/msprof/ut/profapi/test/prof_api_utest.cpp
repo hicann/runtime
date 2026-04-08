@@ -177,6 +177,13 @@ TEST_F(PROF_API_UTTEST, PROF_ACLGETCOMPATIBLEFEATURES)
   EXPECT_EQ(0, ProfAclGetCompatibleFeatures(&size, &dataPtr));
 }
 
+TEST_F(PROF_API_UTTEST, PROF_ACLGETCOMPATIBLEFEATURESV2)
+{
+  size_t size = 0;
+  void* dataPtr = nullptr;
+  EXPECT_EQ(0, ProfAclGetCompatibleFeaturesV2(&size, &dataPtr));
+}
+
 TEST_F(PROF_API_UTTEST, PROF_ACLSUBSCRIBE)
 {
   EXPECT_EQ(0, ProfAclSubscribe(0, 0, nullptr));

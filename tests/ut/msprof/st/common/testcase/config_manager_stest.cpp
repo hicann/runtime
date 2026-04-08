@@ -82,6 +82,7 @@ TEST_F(COMMON_CONFIG_MANAGER_STEST, PlatformGetAicoreEvents)
     EXPECT_EQ(INTERFACE_MEMORYUB, platformInterface->GetMemoryUBMetrics());
     EXPECT_EQ(EMPTY_FREQUENCY, platformInterface->GetScalarMetrics());
     EXPECT_EQ(INTERFACE_L2CACHE, platformInterface->GetL2CacheMetrics());
+    EXPECT_EQ(INTERFACE_MEMORYACCESS, platformInterface->GetMemoryAccessMetrics());
     EXPECT_EQ(PlatformFeature::PLATFORM_FEATURE_INVALID, platformInterface->PmuMetricsToFeature("AbsMetrics"));
     EXPECT_EQ(EMPTY_FREQUENCY, platformInterface->GetMetricsValue(PlatformFeature::PLATFORM_COLLECTOR_TYPES_MAX));
 }

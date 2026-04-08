@@ -185,6 +185,11 @@ int32_t profAclGetCompatibleFeatureStub(size_t *featuresSize, void **featuresDat
     return 0;
 }
 
+int32_t profAclGetCompatibleFeatureV2Stub(size_t *featuresSize, void **featuresData)
+{
+    return 0;
+}
+
 #ifdef PROF_API_STUB
 int ProfApiSutb(void)
 {
@@ -256,6 +261,7 @@ TEST_F(PROF_API_STTEST, PROF_API)
     MOCKER(dlsym).times(10).will(returnValue((void *)profAclSetStampCategoryStub));
     MOCKER(dlsym).times(11).will(returnValue((void *)profAclSetStampPayloadStub));
     MOCKER(dlsym).times(12).will(returnValue((void *)profAclGetCompatibleFeatureStub));
+    MOCKER(dlsym).times(13).will(returnValue((void *)profAclGetCompatibleFeatureV2Stub));
 
     EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));
     EXPECT_EQ(0, MsprofNotifySetDevice(0, 0, true));
@@ -315,6 +321,7 @@ TEST_F(PROF_API_STTEST, PROF_API)
     EXPECT_EQ(0, ProfAclSetStampCategory(nullptr, 0));
     EXPECT_EQ(0, ProfAclSetStampPayload(nullptr, 0, nullptr));
     EXPECT_EQ(0, ProfAclGetCompatibleFeatures(nullptr, nullptr));
+    EXPECT_EQ(0, ProfAclGetCompatibleFeaturesV2(nullptr, nullptr));
 
     EXPECT_EQ(0, profSetProfCommand(nullptr, 0));
     EXPECT_EQ(0, MsprofInit(1, (void*)p1, data1.size()));
