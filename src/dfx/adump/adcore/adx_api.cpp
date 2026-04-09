@@ -63,6 +63,8 @@ static CommHandle AdxHdcConnect(CommHandle &client, uint16_t devId,
 static int32_t AdxCommonGetFile(const CommHandle &handle, const std::string &srcFile)
 {
     IDE_CTRL_VALUE_FAILED(!srcFile.empty(), return IDE_DAEMON_ERROR, "source file input invalid");
+    IDE_CTRL_VALUE_FAILED(FileUtils::CheckNonCrossPath(srcFile), return IDE_DAEMON_ERROR, 
+        "Cross-path access may exist on the path: %s", srcFile.c_str());
     // create dir if not exist
     std::string saveDirName = FileUtils::GetFileDir(srcFile);
     if (!FileUtils::IsFileExist(saveDirName)) {
@@ -223,6 +225,8 @@ int32_t AdxGetDeviceFile(uint16_t devId, IdeString desPath, IdeString logType)
  */
 static int32_t AdxCreateFileAndRecvValue(const CommHandle &handle, std::string &file)
 {
+    IDE_CTRL_VALUE_FAILED(FileUtils::CheckNonCrossPath(file), return IDE_DAEMON_ERROR, 
+        "Cross-path access may exist on the path: %s", file.c_str());
     // create dir if not exist
     std::string saveDirName = FileUtils::GetFileDir(file);
     if (!FileUtils::IsFileExist(saveDirName)) {

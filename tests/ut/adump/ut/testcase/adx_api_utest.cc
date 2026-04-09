@@ -330,6 +330,63 @@ TEST_F(ADX_API_UTEST, AdxGetDeviceFileTimeout)
     EXPECT_EQ(IDE_DAEMON_OK, AdxGetDeviceFile(0x1, "PATH1", "PATH2"));
 }
 
+int g_GetStringMsgDataFilePathStub  = 0;
+static MsgCode GetStringMsgDataFilePathStub(const CommHandle &handle, std::string &value)
+{
+    if(g_GetStringMsgDataFilePathStub == 0) {
+        value = "device/file";
+        g_GetStringMsgDataFilePathStub = 4;
+    } else if (g_GetStringMsgDataFilePathStub == 1) {
+        value = "../device/file";
+        g_GetStringMsgDataFilePathStub = 4;
+    } else if (g_GetStringMsgDataFilePathStub == 2) {
+        value = "device/../file";
+        g_GetStringMsgDataFilePathStub = 4;
+    } else if (g_GetStringMsgDataFilePathStub == 3) {
+        value = "device/..";
+        g_GetStringMsgDataFilePathStub = 4;
+    } else if (g_GetStringMsgDataFilePathStub == 4) {
+        value = "game_over";
+    }
+    return IDE_DAEMON_NONE_ERROR;
+}
+
+TEST_F(ADX_API_UTEST, AdxGetDeviceFile_CheckCrossPathFailed)
+{
+    CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_HDC);
+    handle.type = OptType::COMM_HDC;
+    handle.session = 0x123456789;
+
+    MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AdxMsgProto::GetStringMsgData).stubs().will(invoke(GetStringMsgDataFilePathStub));
+
+    g_GetStringMsgDataFilePathStub = 0;
+    int32_t ret = AdxGetDeviceFile(0x1, "../basePath", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+
+    g_GetStringMsgDataFilePathStub = 0;
+    ret = AdxGetDeviceFile(0x1, "./../basePath", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+
+    g_GetStringMsgDataFilePathStub = 0;
+    ret = AdxGetDeviceFile(0x1, "basePath/..", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+
+    g_GetStringMsgDataFilePathStub = 1;
+    ret = AdxGetDeviceFile(0x1, "basePath", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+
+    g_GetStringMsgDataFilePathStub = 2;
+    ret = AdxGetDeviceFile(0x1, "basePath", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+
+    g_GetStringMsgDataFilePathStub = 3;
+    ret = AdxGetDeviceFile(0x1, "basePath", "LogType");
+    EXPECT_EQ(ret, IDE_DAEMON_OK);
+}
+
+
 TEST_F(ADX_API_UTEST, AdxGetDeviceFileGetFileFailed)
 {
     CommHandle handle = ADX_COMMOPT_INVALID_HANDLE(OptType::COMM_HDC);
@@ -812,5 +869,22 @@ TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeoutSucc)
         .stubs()
         .will(invoke(HdcReadTimeoutDataStub));
     EXPECT_EQ(IDE_DAEMON_OK, AdxRecvDevFileTimeout(handle, desPath, 1000, filename, 1024));
+    free(handle);
+}
+
+TEST_F(ADX_API_UTEST, AdxRecvDevFileTimeout_CheckCrossPathFailed)
+{
+    AdxCommHandle handle = (AdxCommHandle)IdeXmalloc(sizeof(CommHandle));
+    const char *desPath = "/tmp/adcore_utest";
+    char filename[1024] = {0};
+    char *value = "../test";
+    MOCKER(AdxRecvMsg)
+        .stubs()
+        .with(any(), outBoundP(&value, sizeof(value)), any(), any())
+        .will(returnValue(IDE_DAEMON_OK));
+    MOCKER(HdcReadTimeout)
+        .stubs()
+        .will(invoke(HdcReadTimeoutDataStub));
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxRecvDevFileTimeout(handle, desPath, 1000, filename, 1024));
     free(handle);
 }
