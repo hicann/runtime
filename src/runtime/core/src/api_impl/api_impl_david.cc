@@ -1321,7 +1321,7 @@ rtError_t ApiImplDavid::UbDbSend(rtUbDbInfo_t * const dbInfo, Stream * const stm
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Ub send failed, stream is not in current ctx.");
-    return StreamUbDbSend(dbInfo, curStm);
+    return StreamUbDbSend(dbInfo, curStm, RT_UBDMA_SOURCE_API);
 }
 
 rtError_t ApiImplDavid::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm)

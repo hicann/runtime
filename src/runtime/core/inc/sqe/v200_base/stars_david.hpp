@@ -361,7 +361,9 @@ struct RtDavidStarsUbdmaDBmodeSqe {
     uint16_t dieId2 : 1;
 
     /* word8-15 */
-    uint32_t res8[8];
+    uint16_t source;   // use this reserved field to indicate the task source
+    uint16_t res8;
+    uint32_t res9[7];
 };
 
 struct RtDavidStarsUbdmaDirectWqemodeSqe {

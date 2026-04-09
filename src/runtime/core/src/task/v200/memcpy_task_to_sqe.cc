@@ -107,6 +107,7 @@ static void ConstructDavidAsyncUbDbSqe(TaskInfo * const taskInfo, rtDavidSqe_t *
     sqe->header.wrCqe = 0U;
     sqe->mode = RT_DAVID_SQE_DOORBELL_MODE;
     sqe->doorbellNum = UB_DOORBELL_NUM_MIN;
+    sqe->source = RT_UBDMA_SOURCE_MODEL_ASYNC;
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->sqeLength = 0U;
     sqe->jettyId1 = memcpyAsyncTaskInfo->ubDma.jettyId;

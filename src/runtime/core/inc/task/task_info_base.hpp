@@ -413,6 +413,13 @@ enum rtDavidUbDmaSqeMode : uint16_t {
     RT_STARS_SQE_MODE_END              = 2
 };
 
+enum UbDmaSqeSource : uint16_t {
+    RT_UBDMA_SOURCE_DEFAULT     = 0,
+    RT_UBDMA_SOURCE_API         = 1, // 上层调用rtUbDbSend
+    RT_UBDMA_SOURCE_MODEL_ASYNC = 2, // 异步拷贝任务入图
+    RT_UBDMA_SOURCE_MODEL_EXE   = 3  // 异步拷贝任务入图，模型非首次执行之前下发
+};
+
 struct DavidUbDbinfo {
     uint16_t jettyId;
     uint16_t funcId;
@@ -423,6 +430,7 @@ struct DavidUbDbinfo {
 struct UbSendTaskInfo {
     uint8_t wrCqe;
     uint8_t dbNum;
+    uint16_t source;
     std::array<DavidUbDbinfo, UB_DB_SEND_MAX_NUM> info;
 };
 

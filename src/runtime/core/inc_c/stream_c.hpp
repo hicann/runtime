@@ -37,7 +37,7 @@ namespace runtime {
         const rtGetDevMsgType_t getDevMsgType);
     rtError_t SetOverflowSwitchOnStream(Stream * const stm, const uint32_t flags);
     rtError_t SetTagOnStream(Stream * const stm, const uint32_t geOpTag);
-    rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm);
+    rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm, const uint16_t source);
     rtError_t StreamUbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm);
 
     rtError_t StreamNopTask(Stream * const stm);

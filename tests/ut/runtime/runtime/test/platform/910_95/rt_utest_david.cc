@@ -1821,7 +1821,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell)
 
     InitByStream(&task, (Stream *)stream);
     task.id = 0;
-    UbDbSendTaskInit(&task, &dbInfo);
+    UbDbSendTaskInit(&task, &dbInfo, 0);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t sqBaseAddr = 0U;
     rtDavidSqe_t *sqeAddr = sqe;
@@ -1883,7 +1883,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell_DoCompleteSuccess)
     dbInfo.info[1].jettyId = 12;
     dbInfo.info[1].piValue = 30;
     InitByStream(&task, stream);
-    UbDbSendTaskInit(&task, &dbInfo);
+    UbDbSendTaskInit(&task, &dbInfo, 0);
 
     rtLogicCqReport_t cqe = {};
     cqe.errorType = 1U;

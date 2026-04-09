@@ -518,7 +518,7 @@ rtError_t SetTagOnStream(Stream * const stm, const uint32_t geOpTag)
     return error;
 }
 
-rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm)
+rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm, const uint16_t source)
 {
     rtError_t error = RT_ERROR_NONE;
     const int32_t streamId = stm->Id_();
@@ -533,7 +533,7 @@ rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm)
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     SaveTaskCommonInfo(rtUbSendTask, dstStm, pos);
-    (void)UbDbSendTaskInit(rtUbSendTask, dbInfo);
+    (void)UbDbSendTaskInit(rtUbSendTask, dbInfo, source);
     rtUbSendTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     error = DavidSendTask(rtUbSendTask, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(rtUbSendTask);

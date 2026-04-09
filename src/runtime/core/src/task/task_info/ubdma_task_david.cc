@@ -67,6 +67,7 @@ void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, rtDavidSqe_t * const c
     sqe->header.wrCqe = 0U;
     sqe->mode = RT_DAVID_SQE_DOORBELL_MODE;
     sqe->doorbellNum = taskInfo->u.ubSendTask.dbNum;
+    sqe->source = taskInfo->u.ubSendTask.source;
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->sqeLength = 0U;
     sqe->jettyId1 = taskInfo->u.ubSendTask.info[0].jettyId;

@@ -427,7 +427,7 @@ bool IsSupportType(const uint16_t sqeType);
 uint16_t GetAICpuQos(const TaskInfo * const taskInfo);
 uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo * const taskInfo);
 uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo);
-rtError_t UbDbSendTaskInit(TaskInfo *taskInfo, const rtUbDbInfo_t *dbInfo);
+rtError_t UbDbSendTaskInit(TaskInfo *taskInfo, const rtUbDbInfo_t *dbInfo, const uint16_t source);
 void UbDirectSendTaskInit(TaskInfo *taskInfo, rtUbWqeInfo_t *wqeInfo);
 bool IsDavidUbDma(const uint32_t copyTypeFlag);
 rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t destaskId, uint16_t exeStreamId,

@@ -105,7 +105,7 @@ static unordered_map<uint32_t, string> ubdmaTaskErr {
     {6U, "jetty work request flushed!"}
 };
 
-rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t *dbInfo)
+rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t *dbInfo, const uint16_t source)
 {
     TaskCommonInfoInit(taskInfo);
     UbSendTaskInfo *ubSend = &taskInfo->u.ubSendTask;
@@ -113,6 +113,7 @@ rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t *dbInfo)
     taskInfo->typeName = const_cast<char_t*>("UB_DB_SEND");
     ubSend->wrCqe = dbInfo->wrCqe;
     ubSend->dbNum = dbInfo->dbNum;
+    ubSend->source = source;
     for (size_t i = 0; i < ubSend->dbNum; i++) {
         ubSend->info[i].dieId = dbInfo->info[i].dieId;
         ubSend->info[i].jettyId = dbInfo->info[i].jettyId;
