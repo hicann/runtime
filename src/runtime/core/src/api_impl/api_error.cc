@@ -24,6 +24,7 @@
 #include "register_memory.hpp"
 #include "starsv2_base.hpp"
 #include "mem_type.hpp"
+#include "utils.h"
 
 namespace cce {
 namespace runtime {
@@ -6086,8 +6087,7 @@ rtError_t ApiErrorDecorator::MemWaitValue(const void * const devAddr, const uint
 rtError_t ApiErrorDecorator::MemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx)
 {
-    NULL_PTR_RETURN_MSG_OUTER(failIdx, RT_ERROR_INVALID_VALUE);
-    *failIdx = SIZE_MAX;
+    SetFailIndex(failIdx, SIZE_MAX);
     NULL_PTR_RETURN_MSG_OUTER(dsts, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(srcs, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(sizes, RT_ERROR_INVALID_VALUE);
@@ -6120,8 +6120,7 @@ rtError_t ApiErrorDecorator::MemcpyBatchAsync(void** const dsts, const size_t* c
     const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, size_t* const failIdx,
     Stream* const stm)
 {
-    NULL_PTR_RETURN_MSG_OUTER(failIdx, RT_ERROR_INVALID_VALUE);
-    *failIdx = SIZE_MAX;
+    SetFailIndex(failIdx, SIZE_MAX);
     NULL_PTR_RETURN_MSG_OUTER(dsts, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(destMaxs, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(srcs, RT_ERROR_INVALID_VALUE);

@@ -237,8 +237,10 @@
     _(aclError, aclrtCmoWaitBarrier, (aclrtBarrierTaskInfo * taskInfo, aclrtStream stream, uint32_t flag), (taskInfo, stream, flag)) \
     _(aclError, aclrtGetDevicesTopo, (uint32_t deviceId, uint32_t otherDeviceId, uint64_t * value), (deviceId, otherDeviceId, value)) \
     _(aclError, aclrtMemcpyBatch, (void ** dsts, size_t * destMaxs, void ** srcs, size_t * sizes, size_t numBatches, aclrtMemcpyBatchAttr * attrs, size_t * attrsIndexes, size_t numAttrs, size_t * failIndex), (dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex)) \
+    _(aclError, aclrtMemcpyBatchV2, (void ** dsts, size_t * destMaxs, void ** srcs, size_t * sizes, size_t numBatches, aclrtMemcpyBatchAttr * attrs, size_t * attrsIndexes, size_t numAttrs), (dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs)) \
     _(aclError, aclrtIpcMemGetExportKey, (void * devPtr, size_t size, char * key, size_t len, uint64_t flags), (devPtr, size, key, len, flags)) \
     _(aclError, aclrtMemcpyBatchAsync, (void ** dsts, size_t * destMaxs, void ** srcs, size_t * sizes, size_t numBatches, aclrtMemcpyBatchAttr * attrs, size_t * attrsIndexes, size_t numAttrs, size_t * failIndex, aclrtStream stream), (dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex, stream)) \
+    _(aclError, aclrtMemcpyBatchAsyncV2, (void ** dsts, size_t * destMaxs, void ** srcs, size_t * sizes, size_t numBatches, aclrtMemcpyBatchAttr * attrs, size_t * attrsIndexes, size_t numAttrs, aclrtStream stream), (dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, stream)) \
     _(aclError, aclrtIpcMemClose, (const char * key), (key)) \
     _(aclError, aclrtIpcMemImportByKey, (void ** devPtr, const char * key, uint64_t flags), (devPtr, key, flags)) \
     _(aclError, aclrtIpcMemSetImportPid, (const char * key, int32_t * pid, size_t num), (key, pid, num)) \

@@ -23,6 +23,12 @@ std::string GetFilePathByExtension(const std::string &binPath, std::string exten
 const std::string RealPathForFileNotExists(const std::string &inputPath);
 bool GetConfigIniValueDouble(const std::string &userFileName, const std::string &key, double &val);
 uint64_t GetQuickHash(const void *data, const size_t size);
+static inline void SetFailIndex(size_t *failIdx, size_t value)
+{
+    if (failIdx != nullptr) {
+        *failIdx = value;
+    }
+}
 }
 }
 #endif

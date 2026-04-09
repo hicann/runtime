@@ -5880,6 +5880,148 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemcpyBatchAsync_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtMemcpyBatchV2_failed_with_invalid_args)
+{
+    constexpr size_t numBatches = 10UL;
+    void **dsts = reinterpret_cast<void **>(0x04);
+    size_t destMax[numBatches] = {1, 0, 1, 1, 1, 1, 1, 1, 1, 1};
+    void **srcs = reinterpret_cast<void **>(0x04);
+    size_t sizes[numBatches] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    aclrtMemcpyBatchAttr attrs;
+    size_t attrsIndexes = 0;
+    size_t numAttrs = 1;
+
+    auto ret = aclrtMemcpyBatchV2(nullptr, nullptr, nullptr, nullptr, 0, nullptr, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, nullptr, nullptr, nullptr, 0, nullptr, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, nullptr, nullptr, 0, nullptr, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, nullptr, 0, nullptr, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, 0, nullptr, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, 0, &attrs, nullptr, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, 0, &attrs, &attrsIndexes, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    destMax[1] = 1;
+    attrs.rsv[0] = 1;
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsMemcpyBatch(_,_,_,_,_,_,_,_))
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    constexpr uint32_t rsvMaxSize = sizeof(aclrtMemcpyBatchAttr::rsv) / sizeof(uint8_t);
+    for (uint32_t i = 0U; i < rsvMaxSize; i++) {
+        attrs.rsv[i] = 0U;
+    }
+    ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemcpyBatchV2_success)
+{
+    constexpr size_t numBatches = 10UL;
+    void **dsts = reinterpret_cast<void **>(0x04);
+    size_t destMax[numBatches] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    void **srcs = reinterpret_cast<void **>(0x04);
+    size_t sizes[numBatches] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    aclrtMemcpyBatchAttr attrs;
+    size_t attrsIndexes = 0;
+    size_t numAttrs = 1;
+    constexpr uint32_t rsvMaxSize = sizeof(aclrtMemcpyBatchAttr::rsv) / sizeof(uint8_t);
+    for (uint32_t i = 0U; i < rsvMaxSize; i++) {
+        attrs.rsv[i] = 0U;
+    }
+    const auto ret = aclrtMemcpyBatchV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemcpyBatchAsyncV2_failed_with_invalid_args)
+{
+    constexpr size_t numBatches = 5UL;
+    void **dsts = reinterpret_cast<void **>(0x04);
+    size_t destMax[numBatches] = {1, 0, 1, 1, 1};
+    void **srcs = reinterpret_cast<void **>(0x04);
+    size_t sizes[numBatches] = {1, 1, 1, 1, 1};
+    aclrtMemcpyBatchAttr attrs;
+    size_t attrsIndexes = 0;
+    size_t numAttrs = 1;
+    aclrtStream stream = nullptr;
+
+    auto ret = aclrtMemcpyBatchAsyncV2(nullptr, nullptr, nullptr, nullptr, 0, nullptr, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, nullptr, nullptr, nullptr, 0, nullptr, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, nullptr, nullptr, 0, nullptr, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, nullptr, 0, nullptr, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, 0, nullptr, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, 0, &attrs, nullptr, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, 0, &attrs, &attrsIndexes, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    destMax[1] = 1;
+    attrs.rsv[0] = 1;
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsMemcpyBatchAsync(_,_,_,_,_,_,_,_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    constexpr uint32_t rsvMaxSize = sizeof(aclrtMemcpyBatchAttr::rsv) / sizeof(uint8_t);
+    for (uint32_t i = 0U; i < rsvMaxSize; i++) {
+        attrs.rsv[i] = 0U;
+    }
+    ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes, numAttrs, stream);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemcpyBatchAsyncV2_success)
+{
+    constexpr size_t numBatches = 5UL;
+    void **dsts = reinterpret_cast<void **>(0x04);
+    size_t destMax[numBatches] = {1, 1, 1, 1, 1};
+    void **srcs = reinterpret_cast<void **>(0x04);
+    size_t sizes[numBatches] = {1, 1, 1, 1, 1};
+    aclrtMemcpyBatchAttr attrs;
+    size_t attrsIndexes = 0;
+    size_t numAttrs = 1;
+    attrs.dstLoc.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+    attrs.srcLoc.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+    constexpr uint32_t rsvMaxSize = sizeof(aclrtMemcpyBatchAttr::rsv) / sizeof(uint8_t);
+    for (uint32_t i = 0U; i < rsvMaxSize; i++) {
+        attrs.rsv[i] = 0U;
+    }
+    const auto ret = aclrtMemcpyBatchAsyncV2(dsts, destMax, srcs, sizes, numBatches, &attrs, &attrsIndexes,
+        numAttrs, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtIpcMemGetExportKey_failed_with_invalid_args)
 {
     void *devPtr = (void*)0xff;

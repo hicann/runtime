@@ -1634,9 +1634,8 @@ aclError aclrtCmoAsyncWithBarrierImpl(void *src, size_t size, aclrtCmoType cmoTy
     return ACL_SUCCESS;
 }
 
-static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches,
-    aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex,
-    aclrtStream stream, bool async)
+static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
+    size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(dsts);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(destMaxs);
@@ -1644,7 +1643,6 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(sizes);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrs);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrsIndexes);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(failIndex);
 
     if (numBatches == 0UL) {
         ACL_LOG_ERROR("param numBatches must be greater than zero");
@@ -1676,6 +1674,19 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
         }
     }
 
+    return ACL_SUCCESS;
+}
+
+static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches,
+    aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex,
+    aclrtStream stream, bool async, const char *apiName)
+{
+    const aclError ret = ValidateMemcpyBatchParams(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes,
+        numAttrs);
+    if (ret != ACL_SUCCESS) {
+        return ret;
+    }
+
     if (async) {
         const auto rtErr = rtsMemcpyBatchAsync(dsts, destMaxs, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
             attrsIndexes, numAttrs, failIndex, stream);
@@ -1683,7 +1694,7 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
             ACL_LOG_CALL_ERROR("call rtsMemcpyBatchAsync failed, runtime result = %d.", static_cast<int32_t>(rtErr));
             return ACL_GET_ERRCODE_RTS(rtErr);
         }
-        ACL_LOG_INFO("successfully execute aclrtMemcpyBatchAsync");
+        ACL_LOG_INFO("successfully execute %s", apiName);
     } else {
         const auto rtErr = rtsMemcpyBatch(dsts, srcs, sizes, numBatches, reinterpret_cast<rtMemcpyBatchAttr*>(attrs),
             attrsIndexes, numAttrs, failIndex);
@@ -1691,7 +1702,7 @@ static aclError MemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size
             ACL_LOG_CALL_ERROR("call rtsMemcpyBatch failed, runtime result = %d.", static_cast<int32_t>(rtErr));
             return ACL_GET_ERRCODE_RTS(rtErr);
         }
-        ACL_LOG_INFO("successfully execute aclrtMemcpyBatch");
+        ACL_LOG_INFO("successfully execute %s", apiName);
     }
 
     return ACL_SUCCESS;
@@ -1744,8 +1755,18 @@ aclError aclrtMemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size_t
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatch);
     ACL_LOG_INFO("start to execute aclrtMemcpyBatch");
+    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(failIndex);
     return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex,
-        nullptr, false);
+        nullptr, false, "aclrtMemcpyBatch");
+}
+
+aclError aclrtMemcpyBatchV2Impl(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches,
+    aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatchV2);
+    ACL_LOG_INFO("start to execute aclrtMemcpyBatchV2");
+    return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, nullptr,
+        nullptr, false, "aclrtMemcpyBatchV2");
 }
 
 aclError aclrtMemcpyBatchAsyncImpl(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
@@ -1754,8 +1775,18 @@ aclError aclrtMemcpyBatchAsyncImpl(void **dsts, size_t *destMaxs, void **srcs, s
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatchAsync);
     ACL_LOG_INFO("start to execute aclrtMemcpyBatchAsync");
+    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(failIndex);
     return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex,
-        stream, true);
+        stream, true, "aclrtMemcpyBatchAsync");
+}
+
+aclError aclrtMemcpyBatchAsyncV2Impl(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
+    size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, aclrtStream stream)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatchAsyncV2);
+    ACL_LOG_INFO("start to execute aclrtMemcpyBatchAsyncV2");
+    return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, nullptr,
+        stream, true, "aclrtMemcpyBatchAsyncV2");
 }
 
 aclError aclrtIpcMemSetImportPidImpl(const char *key, int32_t *pid, size_t num)

@@ -69,6 +69,7 @@
 #include "kernel_utils.hpp"
 #include "uvm_callback.hpp"
 #include "api_soma.hpp"
+#include "utils.h"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -8529,9 +8530,9 @@ rtError_t ApiImpl::MemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t c
         error = CheckMemCpyAttr(dsts[i], srcs[i], memAttr, dstAttr, srcAttr);
         realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
         realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
-        COND_PROC_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, *failIdx = i,
-            "Failed to verify the %zuth memory pair attributes. retCode=%#x", i, static_cast<uint32_t>(error));
-        COND_PROC_RETURN_OUT_ERROR_MSG_CALL((realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, *failIdx = i,
+        COND_PROC_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, SetFailIndex(failIdx, i),
+            "Failed to verify %zuth memory pair attributes. retCode=%#x", i, static_cast<uint32_t>(error));
+        COND_PROC_RETURN_OUT_ERROR_MSG_CALL((realDstLoc == realSrcLoc), RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i),
             "Only H2D and D2H copy directions are supported. dstLoc type=%d(%s), srcLoc type=%d(%s).", realDstLoc,
             MemLocationTypeToStr(realDstLoc), realSrcLoc, MemLocationTypeToStr(realSrcLoc));
     }
@@ -8581,15 +8582,15 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
     rtMemcpyKind_t kind;
 
     for (size_t i = 0U; i < count; i++) {
-        COND_PROC_RETURN_ERROR_MSG_INNER((sizes[i] > destMaxs[i]), RT_ERROR_INVALID_VALUE, *failIdx = i,
+        COND_PROC_RETURN_ERROR_MSG_INNER((sizes[i] > destMaxs[i]), RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i),
             "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", sizes[i], destMaxs[i]);
 
         COND_PROC_RETURN_ERROR_MSG_INNER((sizes[i] == 0U),
-            RT_ERROR_INVALID_VALUE, *failIdx = i, "sizes's value can not be 0, sizes[%zu]=%zu.", i, sizes[i]);
+            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "sizes's value can not be 0, sizes[%zu]=%zu.", i, sizes[i]);
 
         COND_PROC_RETURN_ERROR_MSG_INNER(
             ((dsts[i] == nullptr) || (srcs[i] == nullptr)),
-            RT_ERROR_INVALID_VALUE, *failIdx = i, "dsts[%zu]'s value or srcs[%zu]'s value is nullptr.", i, i);
+            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "dsts[%zu]'s value or srcs[%zu]'s value is nullptr.", i, i);
 
         if (((attrIdx + 1U) < numAttrs) && (i >= attrsIdxs[attrIdx + 1U])) {
             attrIdx = attrIdx + 1U;
@@ -8600,14 +8601,14 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
         realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
         realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
         COND_PROC_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, error, *failIdx = i,
+            error != RT_ERROR_NONE, error, SetFailIndex(failIdx, i),
             "check attributes[%zu] failed, attributes of srcs[%zu] locationType=%d, dsts[%zu] locationType=%d, "
             "actually srcs[%zu] locationType=%d(%s), dsts[%zu] locationType=%d(%s).",
             i, i, memAttr.srcLoc.type, i, memAttr.dstLoc.type, i, realDstLoc, MemLocationTypeToStr(realDstLoc), i,
             realSrcLoc, MemLocationTypeToStr(realSrcLoc));
 
         COND_PROC_RETURN_ERROR_MSG_INNER((realDstLoc == realSrcLoc),
-            RT_ERROR_INVALID_VALUE, *failIdx = i, "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
+            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
             "srcLoc type=%d(%s).", realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
             MemLocationTypeToStr(realSrcLoc));
 

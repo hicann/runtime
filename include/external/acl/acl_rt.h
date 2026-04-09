@@ -4140,6 +4140,24 @@ ACL_FUNC_VISIBILITY aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, voi
  * @param attrsIndexes [in]  attrs[n] is applied from attrsIndexes[n] to attrsIndexes[n+1] - 1. attrs[numAttrs-1]
  *                           is applied from attrsIndexes[numAttrs-1] to numBatches - 1.
  * @param numAttrs [in]      attrs and attrsIndexes number.
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
+    size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs);
+
+/**
+ * @ingroup AscendCL
+ * @brief Perform a batch of memory copies asynchronous.
+ * @param dsts [in]          dest pointers.
+ * @param destMaxs [in]       array of destination address memory max length
+ * @param srcs [in]          src pointers.
+ * @param sizes [in]         array of memcpy lengths.
+ * @param numBatches [in]    batch number.
+ * @param attrs [in]         array of memcpy attributes.
+ * @param attrsIndexes [in]  attrs[n] is applied from attrsIndexes[n] to attrsIndexes[n+1] - 1. attrs[numAttrs-1]
+ *                           is applied from attrsIndexes[numAttrs-1] to numBatches - 1.
+ * @param numAttrs [in]      attrs and attrsIndexes number.
  * @param failIndex [out]    if all memcpy succeed or error is none memcpy related, set to SIZE_MAX.
  * @param stream [IN]        asynchronized task stream
  * @retval ACL_SUCCESS The function is successfully executed.
@@ -4149,6 +4167,26 @@ ACL_FUNC_VISIBILITY aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, voi
 ACL_FUNC_VISIBILITY aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
     size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex,
     aclrtStream stream);
+
+/**
+ * @ingroup AscendCL
+ * @brief Perform a batch of memory copies asynchronous.
+ * @param dsts [in]          dest pointers.
+ * @param destMaxs [in]       array of destination address memory max length
+ * @param srcs [in]          src pointers.
+ * @param sizes [in]         array of memcpy lengths.
+ * @param numBatches [in]    batch number.
+ * @param attrs [in]         array of memcpy attributes.
+ * @param attrsIndexes [in]  attrs[n] is applied from attrsIndexes[n] to attrsIndexes[n+1] - 1. attrs[numAttrs-1]
+ *                           is applied from attrsIndexes[numAttrs-1] to numBatches - 1.
+ * @param numAttrs [in]      attrs and attrsIndexes number.
+ * @param stream [IN]        asynchronized task stream
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ * @note if the memory is not page-locked, synchronous copying will be performed.
+ */
+ACL_FUNC_VISIBILITY aclError aclrtMemcpyBatchAsyncV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
+    size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, aclrtStream stream);
 
 /**
  * @ingroup AscendCL
