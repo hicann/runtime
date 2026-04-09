@@ -27,6 +27,7 @@
 #include "inner_thread_local.hpp"
 #include "stream_c.hpp"
 #include "stream_state_callback_manager.hpp"
+#include "fusion_task_david.hpp"
 #include <thread>
 #include "raw_device.hpp"
 
@@ -317,37 +318,6 @@ void DavidStream::DebugDotPrintForModelStm()
         RT_LOG(RT_LOG_EVENT, "device_id=%u, stream_id=%d, task_id=%hu, task_type=%s.",
             device_->Id_(), Id_(), nextTask->id, nextTask->typeName);
     }
-}
-
-static std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo)
-{
-    std::string taskName = "FUSION_KERNEL";
-    uint8_t sqeSubType = fusionTaskInfo->sqeSubType;
-
-    std::vector<std::string> subTaskNames;
-    if ((sqeSubType & (1U << RT_FUSION_AICPU)) != 0U) {
-        subTaskNames.push_back("AICPU");
-    }
-    if ((sqeSubType & (1U << RT_FUSION_HCOM_CPU)) != 0U) {
-        subTaskNames.push_back("HCOM_CPU");
-    }
-    if ((sqeSubType & (3U << RT_FUSION_CCU)) != 0U) {
-        subTaskNames.push_back("CCU");
-    }
-    if ((sqeSubType & (1U << RT_FUSION_AICORE)) != 0U) {
-        FusionTaskInfoAicPart* aicPart = &(fusionTaskInfo->aicPart);
-        const Kernel *kernel = aicPart->kernel;
-        std::string aicName = (kernel != nullptr) ? kernel->Name_() : "AICORE";
-        subTaskNames.push_back(aicName);
-    }
-
-    if (!subTaskNames.empty()) {
-        for (size_t i = 0; i < subTaskNames.size(); ++i) {
-            taskName += "_" + subTaskNames[i];
-        }
-    }
-
-    return taskName;
 }
 
 static TraceEvent BuildTraceEventForTask(TaskInfo* task, pid_t pid, uint32_t& taskDur, const uint32_t modelId, const int32_t streamId)

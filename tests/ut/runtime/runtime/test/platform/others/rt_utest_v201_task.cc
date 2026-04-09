@@ -60,6 +60,7 @@
 #include "api_impl_david.hpp"
 #include "aicpu_c.hpp"
 #include "aix_c.hpp"
+#include "fusion_c.hpp"
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
 

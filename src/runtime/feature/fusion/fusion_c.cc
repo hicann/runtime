@@ -10,7 +10,6 @@
 #include "fusion_c.hpp"
 #include "stream_c.hpp"
 #include "context.hpp"
-#include "stars_david.hpp"
 #include "error_message_manage.hpp"
 #include "task_david.hpp"
 #include "thread_local_container.hpp"
@@ -19,6 +18,7 @@
 #include "task_submit.hpp"
 #include "profiler_c.hpp"
 #include "aix_c.hpp"
+#include "task_execute_time.h"
 namespace cce {
 namespace runtime {
 TIMESTAMP_EXTERN(rtFusionLaunch_ArgLoadAll);
@@ -30,6 +30,58 @@ constexpr uint8_t RT_MISSION_INDEX_ONE = 1U;
 constexpr uint8_t RT_MISSION_INDEX_TWO = 2U;
 constexpr uint8_t RT_MISSION_INDEX_THREE = 3U;
 constexpr uint8_t RT_MISSION_INDEX_FOUR = 4U;
+
+void AixKernelTaskInitForFusion(TaskInfo * const taskInfo, const rtAicAivFusionInfo_t * const aicAivInfo,
+    const LaunchTaskCfgInfo_t * const launchTaskCfg)
+{
+    FusionTaskInfo *fusionTaskInfo = &(taskInfo->u.fusionKernelTask);
+    FusionTaskInfoAicPart *aicPart = &(fusionTaskInfo->aicPart);
+
+    GetAicAivTypeForFusion(aicAivInfo->mixType, aicAivInfo->mach, fusionTaskInfo->aicAivType);
+
+    aicPart->dim = aicAivInfo->dimNum;
+    aicPart->kernel = aicAivInfo->kernel;
+
+    aicPart->kernelFlag = static_cast<uint8_t>(launchTaskCfg->dumpflag & 0xFFU);
+    aicPart->qos = launchTaskCfg->qos;
+    aicPart->partId = launchTaskCfg->partId;
+    aicPart->schemMode = launchTaskCfg->schemMode;
+
+    aicPart->dynamicShareMemSize = 0U;
+    aicPart->simtDcuSmSize = RT_SIMT_UB_SIZE;
+    aicPart->groupDim = 0U;
+    aicPart->groupBlockDim = 0U;
+    aicPart->funcAddr = aicAivInfo->funcAddr;
+    aicPart->funcAddr1 = aicAivInfo->funcAddr1;
+    rtArgsSizeInfo_t &argsSize = ThreadLocalContainer::GetArgsSizeInfo();
+    if (argsSize.infoAddr != nullptr) {
+        aicPart->inputArgsSize.infoAddr = argsSize.infoAddr;
+        aicPart->inputArgsSize.atomicIndex = argsSize.atomicIndex;
+        argsSize.infoAddr = nullptr;
+        argsSize.atomicIndex = 0U;
+        RT_LOG(RT_LOG_INFO, "infoAddr=%p, atomicIndex=%u.",
+            aicPart->inputArgsSize.infoAddr, aicPart->inputArgsSize.atomicIndex);
+    } else {
+        aicPart->inputArgsSize.infoAddr = nullptr;
+        aicPart->inputArgsSize.atomicIndex = 0U;
+    }
+    RT_LOG(RT_LOG_INFO, "aicAivType=%hhu, taskRation=%u, kernelFlag=0x%x, qos=%u,"
+        " partId=%u, schemMode=%u.", fusionTaskInfo->aicAivType, aicPart->kernel->GetTaskRation(),
+        aicPart->kernelFlag, aicPart->qos, aicPart->partId,
+        aicPart->schemMode);
+}
+
+void FusionKernelTaskInit(TaskInfo *taskInfo)
+{
+    TaskCommonInfoInit(taskInfo);
+    FusionTaskInfo *fusionTaskInfo = &(taskInfo->u.fusionKernelTask);
+
+    taskInfo->type = TS_TASK_TYPE_FUSION_KERNEL;
+    taskInfo->typeName = const_cast<char_t*>("FUSION_KERNEL");
+    fusionTaskInfo->argHandle = nullptr;
+    fusionTaskInfo->argsInfo = nullptr;
+    return;
+}
 
 static rtError_t CheckFusionDynSizeValid(TaskInfo* taskInfo, const rtFunsionTaskInfo_t * const fusionKernel)
 {

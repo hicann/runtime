@@ -500,9 +500,6 @@ void RegTaskToDavidSqefunc(void);
 const char_t* GetNotifySubType(const uint16_t subType);
 void InitWriteValueSqe(RtDavidStarsWriteValueSqe * const writeValueSqe,
     const rtWriteValueInfo_t * const writeValueInfo);
-void AixKernelTaskInitForFusion(TaskInfo * const taskInfo, const rtAicAivFusionInfo_t * const aicAivInfo,
-    const LaunchTaskCfgInfo_t * const launchTaskCfg);
-void FusionKernelTaskInit(TaskInfo *taskInfo);
 void AicpuMsgVersionTaskInit(TaskInfo *taskInfo);
 
 rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t *attr, LaunchTaskCfgInfo_t *launchTaskCfg);

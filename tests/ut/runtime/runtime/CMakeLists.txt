@@ -124,7 +124,9 @@ set(runtimeut_src_david_series_common_c_list
     ${TOP_DIR}/src/runtime/core/src/launch/aix_c.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_starsv2.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_starsv2.cc
-    ${TOP_DIR}/src/runtime/core/src/launch/fusion_c.cc
+    ${TOP_DIR}/src/runtime/feature/fusion/fusion_c.cc
+    ${TOP_DIR}/src/runtime/feature/fusion/fusion_sqe.cc
+    ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_david.cc
 
     ${TOP_DIR}/src/runtime/core/src/stream/stream_c.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_stream.cc
@@ -1138,33 +1140,35 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/tsd/tsdclient/inc
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/abl/libc_sec/include
-    ${TOP_DIR}/src/runtime/inc
+    ${TOP_DIR}/src/runtime/core/inc
     ${TOP_DIR}/src/runtime/core/inc_c
+    ${TOP_DIR}/src/runtime/feature/fusion
     ${TOP_DIR}/src/runtime/feature/xpu
     ${TOP_DIR}/src/runtime/feature/dps
-    ${TOP_DIR}/src/runtime/inc/context
-    ${TOP_DIR}/src/runtime/inc/spec
-    ${TOP_DIR}/src/runtime/inc/common
-    ${TOP_DIR}/src/runtime/inc/sqe/v200_base
-    ${TOP_DIR}/src/runtime/inc/runtime
-    ${TOP_DIR}/src/runtime/inc/device
-    ${TOP_DIR}/src/runtime/inc/drv
-    ${TOP_DIR}/src/runtime/inc/task
-    ${TOP_DIR}/src/runtime/inc/utils
-    ${TOP_DIR}/src/runtime/inc/engine
-    ${TOP_DIR}/src/runtime/inc/dfx
-    ${TOP_DIR}/src/runtime/inc/kernel
-    ${TOP_DIR}/src/runtime/inc/soc
-    ${TOP_DIR}/src/runtime/inc/stars
-    ${TOP_DIR}/src/runtime/inc/stream
-    ${TOP_DIR}/src/runtime/inc/launch
-    ${TOP_DIR}/src/runtime/inc/model
-    ${TOP_DIR}/src/runtime/inc/event
-    ${TOP_DIR}/src/runtime/inc/arg_loader
-    ${TOP_DIR}/src/runtime/inc/notify
-    ${TOP_DIR}/src/runtime/inc/profiler
-    ${TOP_DIR}/src/runtime/inc/engine/hwts
-    ${TOP_DIR}/src/runtime/inc/dqs
+    ${TOP_DIR}/src/runtime/core/inc/context
+    ${TOP_DIR}/src/runtime/core/inc/spec
+    ${TOP_DIR}/src/runtime/core/inc/common
+    ${TOP_DIR}/src/runtime/inc/sqe
+    ${TOP_DIR}/src/runtime/core/inc/sqe/v200_base
+    ${TOP_DIR}/src/runtime/core/inc/runtime
+    ${TOP_DIR}/src/runtime/core/inc/device
+    ${TOP_DIR}/src/runtime/core/inc/drv
+    ${TOP_DIR}/src/runtime/core/inc/task
+    ${TOP_DIR}/src/runtime/core/inc/utils
+    ${TOP_DIR}/src/runtime/core/inc/engine
+    ${TOP_DIR}/src/runtime/core/inc/dfx
+    ${TOP_DIR}/src/runtime/core/inc/kernel
+    ${TOP_DIR}/src/runtime/core/inc/soc
+    ${TOP_DIR}/src/runtime/core/inc/stars
+    ${TOP_DIR}/src/runtime/core/inc/stream
+    ${TOP_DIR}/src/runtime/core/inc/launch
+    ${TOP_DIR}/src/runtime/core/inc/model
+    ${TOP_DIR}/src/runtime/core/inc/event
+    ${TOP_DIR}/src/runtime/core/inc/arg_loader
+    ${TOP_DIR}/src/runtime/core/inc/notify
+    ${TOP_DIR}/src/runtime/core/inc/profiler
+    ${TOP_DIR}/src/runtime/core/inc/engine/hwts
+    ${TOP_DIR}/src/runtime/core/inc/dqs
     ${TOP_DIR}/src/runtime/api
     ${TOP_DIR}/src/runtime/core/src/api_impl
     ${TOP_DIR}/src/runtime/core/src/engine
@@ -1226,8 +1230,8 @@ set(RUNTIME_TEST_INC_DIR_COMMON
 
 set(RUNTIME_TEST_INC_DIR
     ${RUNTIME_TEST_INC_DIR_COMMON}
-    ${TOP_DIR}/src/runtime/inc/sqe/v200
-    ${TOP_DIR}/src/runtime/inc/cond_isa/v100
+    ${TOP_DIR}/src/runtime/core/inc/sqe/v200
+    ${TOP_DIR}/src/runtime/core/inc/cond_isa/v100
 )
 
 target_include_directories(runtime_utest_intf_pub INTERFACE
@@ -1498,8 +1502,8 @@ target_compile_definitions(runtime_utest_v201_intf_pub INTERFACE
 
 set(RUNTIME_V201_INC_DIR
     ${RUNTIME_TEST_INC_DIR_COMMON}
-    ${TOP_DIR}/src/runtime/inc/sqe/v201
-    ${TOP_DIR}/src/runtime/inc/cond_isa/v201
+    ${TOP_DIR}/src/runtime/core/inc/sqe/v201
+    ${TOP_DIR}/src/runtime/core/inc/cond_isa/v201
     ${TOP_DIR}/src/runtime/feature/dps
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201
     ${TOP_DIR}/src/runtime/feature/dps

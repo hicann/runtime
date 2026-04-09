@@ -12,29 +12,30 @@ include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 
 
 set(RUNTIME_INC_DIR_COMMON_PLATFORM
-    ${RUNTIME_DIR}/src/runtime/inc
-    ${RUNTIME_DIR}/src/runtime/inc/args
-    ${RUNTIME_DIR}/src/runtime/inc/arg_loader
-    ${RUNTIME_DIR}/src/runtime/inc/common
-    ${RUNTIME_DIR}/src/runtime/inc/context
-    ${RUNTIME_DIR}/src/runtime/inc/device
-    ${RUNTIME_DIR}/src/runtime/inc/dfx
-    ${RUNTIME_DIR}/src/runtime/inc/drv
-    ${RUNTIME_DIR}/src/runtime/inc/engine
-    ${RUNTIME_DIR}/src/runtime/inc/engine/hwts
-    ${RUNTIME_DIR}/src/runtime/inc/event
-    ${RUNTIME_DIR}/src/runtime/inc/kernel
-    ${RUNTIME_DIR}/src/runtime/inc/launch
-    ${RUNTIME_DIR}/src/runtime/inc/model
-    ${RUNTIME_DIR}/src/runtime/inc/notify
-    ${RUNTIME_DIR}/src/runtime/inc/profiler
-    ${RUNTIME_DIR}/src/runtime/inc/soc
-    ${RUNTIME_DIR}/src/runtime/inc/spec
+    ${RUNTIME_DIR}/src/runtime/core/inc
+    ${RUNTIME_DIR}/src/runtime/core/inc/args
+    ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
+    ${RUNTIME_DIR}/src/runtime/core/inc/common
+    ${RUNTIME_DIR}/src/runtime/core/inc/context
+    ${RUNTIME_DIR}/src/runtime/core/inc/device
+    ${RUNTIME_DIR}/src/runtime/core/inc/dfx
+    ${RUNTIME_DIR}/src/runtime/core/inc/drv
+    ${RUNTIME_DIR}/src/runtime/core/inc/engine
+    ${RUNTIME_DIR}/src/runtime/core/inc/engine/hwts
+    ${RUNTIME_DIR}/src/runtime/core/inc/event
+    ${RUNTIME_DIR}/src/runtime/core/inc/kernel
+    ${RUNTIME_DIR}/src/runtime/core/inc/launch
+    ${RUNTIME_DIR}/src/runtime/core/inc/model
+    ${RUNTIME_DIR}/src/runtime/core/inc/notify
+    ${RUNTIME_DIR}/src/runtime/core/inc/profiler
+    ${RUNTIME_DIR}/src/runtime/core/inc/soc
+    ${RUNTIME_DIR}/src/runtime/core/inc/spec
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe
     ${RUNTIME_DIR}/src/runtime/inc/sqe
-    ${RUNTIME_DIR}/src/runtime/inc/stars
-    ${RUNTIME_DIR}/src/runtime/inc/stream
-    ${RUNTIME_DIR}/src/runtime/inc/task
-    ${RUNTIME_DIR}/src/runtime/inc/utils
+    ${RUNTIME_DIR}/src/runtime/core/inc/stars
+    ${RUNTIME_DIR}/src/runtime/core/inc/stream
+    ${RUNTIME_DIR}/src/runtime/core/inc/task
+    ${RUNTIME_DIR}/src/runtime/core/inc/utils
     ${RUNTIME_DIR}/src/runtime/api
     ${RUNTIME_CORE_DIR}/src/api_impl
     ${RUNTIME_CORE_DIR}/src/engine
@@ -60,11 +61,11 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
-    ${RUNTIME_DIR}/src/runtime/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100
     ## not open
-    ${RUNTIME_DIR}/src/runtime/inc/dqs
-    ${RUNTIME_DIR}/src/runtime/inc/sqe/v200
-    ${RUNTIME_DIR}/src/runtime/inc/sqe/v200_base
+    ${RUNTIME_DIR}/src/runtime/core/inc/dqs
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200
+    ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200_base
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/

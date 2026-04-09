@@ -7,17 +7,17 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef __CCE_RUNTIME_FUSION_C_HPP__
-#define __CCE_RUNTIME_FUSION_C_HPP__
+#ifndef __CCE_RUNTIME_FUSION_SQE_HPP__
+#define __CCE_RUNTIME_FUSION_SQE_HPP__
 
-#include "task_info.hpp"
+#include "stars_david.hpp"
 
 namespace cce {
 namespace runtime {
 
-    rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusionArgsEx_t *argsInfo);
-    void GetAicAivTypeForFusion(uint8_t mixType, uint32_t machine, uint8_t &aicAivType);
-}  // namespace runtime
-}  // namespace cce
+void ConstructDavidSqeForFusionKernelTask(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr);
 
-#endif // __CCE_RUNTIME_FUSION_C_HPP__
+} // namespace runtime
+} // namespace cce
+
+#endif // __CCE_RUNTIME_FUSION_SQE_HPP__

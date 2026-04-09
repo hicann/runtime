@@ -43,6 +43,7 @@
 #include "device_error_proc_c.hpp"
 #include "arg_manage_david.hpp"
 #include "stream_c.hpp"
+#include "fusion_c.hpp"
 #include "driver.hpp"
 #include "kernel.hpp"
 #undef protected
