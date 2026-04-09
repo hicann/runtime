@@ -10,6 +10,7 @@
 #ifndef PROCMGR_SSTOOWNERMESSAGE_H
 #define PROCMGR_SSTOOWNERMESSAGE_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
