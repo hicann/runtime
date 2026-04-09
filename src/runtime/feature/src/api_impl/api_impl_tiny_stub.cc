@@ -155,21 +155,6 @@ rtError_t ApiImpl::DeviceResourceClean(int32_t devId)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
-{
-    UNUSED(devId);
-    UNUSED(type);
-    UNUSED(stmList);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    UNUSED(devId);
-    UNUSED(mdlList);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::GetBinaryDeviceBaseAddr(const Program * const prog, void **deviceBase)
 {
     UNUSED(prog);

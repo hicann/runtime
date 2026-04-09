@@ -401,14 +401,6 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_TASK_UPDATE_TEST_1)
     .then(returnValue((uint32_t)DEV_RUNNING_DOWN));
 }
 
-TEST_F(CloudV2ApiImplSpecTest, DeviceGetStreamlistTest)
-{
-    ApiImpl apiImpl;
-    rtStreamlist_t myStreamList = {0, {nullptr}};
-    rtError_t error = apiImpl.DeviceGetStreamlist(0, RT_STREAM_TYPE_MAX, &myStreamList);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(CloudV2ApiImplSpecTest, MODEL_BACKUP)
 {
     rtError_t error;

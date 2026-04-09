@@ -107,16 +107,6 @@ rtError_t rtStreamTaskClean(rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->DeviceGetModelList(devId, mdlList);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtDeviceResourceClean(const int32_t devId)
 {
     Api * const apiInstance = Api::Instance();

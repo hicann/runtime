@@ -2331,16 +2331,6 @@ rtError_t ApiDecorator::WriteValuePtr(void * const writeValueInfo, Stream * cons
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);
 }
 
-rtError_t ApiDecorator::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
-{
-    return impl_->DeviceGetStreamlist(devId, type, stmList);
-}
-
-rtError_t ApiDecorator::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    return impl_->DeviceGetModelList(devId, mdlList);
-}
-
 rtError_t ApiDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify ** const retCntNotify, const uint32_t flag)
 {
     return impl_->CntNotifyCreate(deviceId, retCntNotify, flag);

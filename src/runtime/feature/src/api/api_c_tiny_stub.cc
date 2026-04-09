@@ -400,14 +400,6 @@ rtError_t rtStreamTaskClean(rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    (void)devId;
-    (void)mdlList;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtDeviceResourceClean(const int32_t devId)
 {
     (void)devId;

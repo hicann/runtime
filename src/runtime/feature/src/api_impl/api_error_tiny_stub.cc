@@ -20,21 +20,6 @@ rtError_t ApiErrorDecorator::WriteValuePtr(void * const writeValueInfo, Stream *
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
-{
-    UNUSED(devId);
-    UNUSED(type);
-    UNUSED(stmList);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    UNUSED(devId);
-    UNUSED(mdlList);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify ** const retCntNotify,
                                              const uint32_t flag)
 {

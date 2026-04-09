@@ -44,7 +44,7 @@
 
 namespace cce {
 namespace runtime {
-void Context::GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList)
+void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
 {
     std::unique_lock<std::mutex> taskLock(streamLock_);
     if (type == RT_NOTSINKED_STREAM) {
@@ -63,7 +63,7 @@ void Context::GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList)
     }
 }
 
-void Context::GetModelList(rtModelList_t *mdlList)
+void Context::GetModelList(ModelList_t *mdlList)
 {
     modelLock_.Lock();
     for (Model *model : models_) {

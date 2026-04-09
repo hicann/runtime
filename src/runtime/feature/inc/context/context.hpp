@@ -443,8 +443,8 @@ public:
                                  ArgLoaderResult &result, const uint32_t smArgsSize, const Program * const programPtr);
     rtError_t SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const;
     void LaunchKernelRecycle(ArgLoaderResult &result, TaskInfo *&recycleTask, const Program * const prog) const;
-    void GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList);
-    void GetModelList(rtModelList_t *mdlList);
+    void GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList);
+    void GetModelList(ModelList_t *mdlList);
 	rtError_t CheckMemAlign(const void * const addr, const rtDataType_t type) const;
     bool IsStreamInContext(Stream * const stm);
     rtError_t ResourceReset(void);

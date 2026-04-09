@@ -190,10 +190,6 @@ TEST_F(TinyStubTest, api_error_stub)
     rtError_t ret = RT_ERROR_NONE;
     ret = api.WriteValuePtr(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.DeviceGetStreamlist(0, RT_STREAM_TYPE_MAX, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.DeviceGetModelList(0, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.CntNotifyCreate(0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.CntNotifyDestroy(nullptr);
@@ -265,10 +261,6 @@ TEST_F(TinyStubTest, api_impl_stub)
     ApiImpl impl;
     rtError_t ret = RT_ERROR_NONE;
     ret = impl.WriteValuePtr(nullptr, nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.DeviceGetStreamlist(0, RT_STREAM_TYPE_MAX, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.DeviceGetModelList(0, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.CntNotifyCreate(0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

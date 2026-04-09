@@ -10,14 +10,14 @@
 #include "context.hpp"
 namespace cce {
 namespace runtime {
-void Context::GetStreamlist(rtStreamlistType_t type, rtStreamlist_t *stmList)
+void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
 {
     UNUSED(type);
     UNUSED(stmList);
     return;
 }
 
-void Context::GetModelList(rtModelList_t *mdlList)
+void Context::GetModelList(ModelList_t *mdlList)
 {
     UNUSED(mdlList);
     return;

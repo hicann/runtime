@@ -565,16 +565,6 @@ TEST_F(ApiImplTest, decorator_david)
     error = apiDecorator_->WriteValuePtr(nullptr, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    error = apiDecorator_->DeviceGetStreamlist(0, RT_STREAM_TYPE_MAX, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    rtModelList_t myModelList = {0, {nullptr}};
-    error = apiDecorator_->DeviceGetModelList(0, &myModelList);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiDecorator_->DeviceGetModelList(0, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
     error = apiDecorator_->CntNotifyCreate(0, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 

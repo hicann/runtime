@@ -399,8 +399,6 @@ public:
     virtual rtError_t SnapShotProcessRestore() = 0;
     virtual rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args) = 0;
     virtual rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) = 0;
-    virtual rtError_t DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList) = 0;
-    virtual rtError_t DeviceGetModelList(int32_t devId, rtModelList_t *mdlList) = 0;
     virtual rtError_t DeviceGetStreamPriorityRange(int32_t * const leastPriority, int32_t * const greatestPriority) = 0;
     virtual rtError_t GetDeviceInfo(const uint32_t deviceId, const int32_t moduleType, const int32_t infoType,
         int64_t * const val) = 0;

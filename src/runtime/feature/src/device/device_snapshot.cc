@@ -170,7 +170,7 @@ void DeviceSnapshot::OpMemoryInfoInit(void)
 rtError_t DeviceSnapshot::OpMemoryBackup(void)
 {
     OpMemoryInfoInit();
-    auto mdlList = std::make_unique<rtModelList_t>();
+    auto mdlList = std::make_unique<ModelList_t>();
     NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
     ContextManage::DeviceGetModelList(static_cast<int32_t>(device_->Id_()), mdlList.get());
 

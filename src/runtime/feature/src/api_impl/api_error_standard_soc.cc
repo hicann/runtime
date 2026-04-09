@@ -41,38 +41,6 @@ rtError_t ApiErrorDecorator::WriteValuePtr(void * const writeValueInfo, Stream *
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);
 }
 
-rtError_t ApiErrorDecorator::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
-{
-    NULL_PTR_RETURN_MSG_OUTER(stmList, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((type != RT_NOTSINKED_STREAM), RT_ERROR_INVALID_VALUE,
-        "Invalid stream type=%d, valid type range is [0, %d)", type, RT_STREAM_TYPE_MAX);
-    int32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
-        reinterpret_cast<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "devId=%d is invalid, retCode=%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
-    error = CheckDeviceIdIsValid(realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "devId=%d is invalid, drv devId=%d, retCode=%#x", devId, realDeviceId, static_cast<uint32_t>(error));
-
-    return impl_->DeviceGetStreamlist(realDeviceId, type, stmList);
-}
-
-rtError_t ApiErrorDecorator::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
-{
-    NULL_PTR_RETURN_MSG_OUTER(mdlList, RT_ERROR_INVALID_VALUE);
-    int32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
-        reinterpret_cast<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "devId=%d is invalid, retCode=%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
-    error = CheckDeviceIdIsValid(realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "devId=%d is invalid, drv devId=%d, retCode=%#x", devId, realDeviceId, static_cast<uint32_t>(error));
-
-    return impl_->DeviceGetModelList(realDeviceId, mdlList);
-}
-
 rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify ** const retCntNotify,
                                              const uint32_t flag)
 {

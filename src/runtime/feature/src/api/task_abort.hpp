@@ -19,7 +19,6 @@ extern "C" {
 
 rtError_t rtStreamTaskAbort(rtStream_t stm);
 rtError_t rtStreamRecover(rtStream_t stm);
-rtError_t rtGetModelList(int32_t devId, rtModelList_t *mdlList);
 
 #ifdef __cplusplus
 }

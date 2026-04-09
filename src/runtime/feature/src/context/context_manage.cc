@@ -331,7 +331,7 @@ void ContextManage::DeviceSetFaultType(const uint32_t devId, DeviceFaultType dev
     return;
 }
 
-void ContextManage::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, rtStreamlist_t *stmList)
+void ContextManage::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, StreamList_t *stmList)
 {
     RT_LOG(RT_LOG_INFO, "start");
     const ReadProtect rp(&(g_ctxMan.GetSetRwLock()));
@@ -342,7 +342,7 @@ void ContextManage::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, 
     }
 }
 
-void ContextManage::DeviceGetModelList(int32_t devId, rtModelList_t *mdlList)
+void ContextManage::DeviceGetModelList(int32_t devId, ModelList_t *mdlList)
 {
     RT_LOG(RT_LOG_INFO, "start");
     const ReadProtect rp(&(g_ctxMan.GetSetRwLock()));
@@ -470,7 +470,7 @@ rtError_t ContextManage::AclGraphRestore(Device * const dev)
     RT_LOG(RT_LOG_INFO, "Start to restore aclgraph.");
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
     const int32_t deviceId = dev->Id_();
-    auto mdlList = std::make_unique<rtModelList_t>();
+    auto mdlList = std::make_unique<ModelList_t>();
     NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
     DeviceGetModelList(deviceId, mdlList.get());
     COND_RETURN_DEBUG((mdlList->mdlNum == 0U),
@@ -563,7 +563,7 @@ rtError_t ContextManage::SinkTaskMemoryBackup(const int32_t devId)
 
 rtError_t ContextManage::ModelBackup(const int32_t devId)
 {
-    auto mdlList = std::make_unique<rtModelList_t>();
+    auto mdlList = std::make_unique<ModelList_t>();
     NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
     DeviceGetModelList(devId, mdlList.get());
     COND_RETURN_DEBUG((mdlList->mdlNum == 0U),
@@ -592,7 +592,7 @@ rtError_t ContextManage::ModelBackup(const int32_t devId)
 
 rtError_t ContextManage::ModelRestore(const int32_t devId)
 {
-    auto mdlList = std::make_unique<rtModelList_t>();
+    auto mdlList = std::make_unique<ModelList_t>();
     NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
     DeviceGetModelList(devId, mdlList.get());
     COND_RETURN_DEBUG((mdlList->mdlNum == 0U),

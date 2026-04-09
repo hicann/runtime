@@ -353,16 +353,6 @@ typedef struct rtExceptionInfo {
  */
 typedef void *rtStream_t;
 
-/**
- * @ingroup dvrt_base
- * @brief stream list
- */
-#define RT_MAX_STREAM_NUM (2048U)
-typedef struct rtStreamList {
-    uint32_t stmNum;
-    rtStream_t stms[RT_MAX_STREAM_NUM];
-} rtStreamlist_t;
-
 typedef void *rtMemcpyDesc_t;
 
 typedef void (*rtErrorCallback)(rtExceptionType);
@@ -438,15 +428,6 @@ typedef void *rtMemHandle;
  * @brief task group handle.
  */
 typedef void *rtTaskGrp_t;
-
-/**
- * @brief model list
- */
-#define RT_MAX_MODEL_NUM (2048U)
-typedef struct rtModelList {
-    uint32_t mdlNum;
-    rtModel_t mdls[RT_MAX_MODEL_NUM];
-} rtModelList_t;
 
 #define RT_PROF_MAX_DEV_NUM 64
 
