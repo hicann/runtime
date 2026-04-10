@@ -125,6 +125,61 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithConfig)
     (void)system("rm -rf ./Test_DfxDumper_EnableWithConfig");
 }
 
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithEnv)
+{
+    (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithEnv");
+    (void)system("mkdir ./Test_DfxDumper_Fork_EnableWithEnv");
+
+    (void)setenv("ASCEND_WORK_PATH", "./Test_DfxDumper_Fork_EnableWithEnv/ascendWorkPath", 1);
+    KernelDfxDumper::Instance().EnableDfxDumper();
+    EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), true);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // 子进程退出
+        exit(0);
+    } else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+        EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), true);
+    }
+
+    (void)unsetenv("ASCEND_WORK_PATH");
+    (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithEnv");
+}
+
+
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_Fork_EnableWithConfig)
+{
+    (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithConfig");
+    (void)system("mkdir ./Test_DfxDumper_Fork_EnableWithConfig");
+
+    (void)setenv("ASCEND_WORK_PATH", "./Test_DfxDumper_Fork_EnableWithConfig/ascendWorkPath", 1);
+    KernelDfxDumper::Instance().EnableDfxDumper();
+    EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), true);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // 子进程通过配置使能
+        DumpDfxConfig dumpDfxConfig;
+        dumpDfxConfig.dfxTypes.push_back("tensor");
+        dumpDfxConfig.dumpPath = "./Test_DfxDumper_Fork_EnableWithConfig/ascendDumpPath";
+        int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+        EXPECT_EQ(ret, ADUMP_SUCCESS);
+        EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR), true);
+
+        // 子进程退出
+        exit(0);
+    } else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+        EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), true);
+    }
+
+    (void)unsetenv("ASCEND_WORK_PATH");
+    (void)system("rm -rf ./Test_DfxDumper_Fork_EnableWithConfig");
+}
+
 TEST_F(KernelDfxDumperUtest, Test_DfxDumper_InitUnitTask)
 {
     (void)system("rm -rf ./Test_DfxDumper_InitUnitTask");
@@ -210,17 +265,24 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_Failed)
     (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_Failed");
 }
 
+int32_t g_mmGetDiskFreeSpaceStubCount = 0;
 INT32 mmGetDiskFreeSpaceStub(const char* path, mmDiskSize *diskSize)
 {
-    diskSize->availSize = 10;
-    diskSize->freeSize = 2097152;
+    if (g_mmGetDiskFreeSpaceStubCount == 0) {
+        diskSize->availSize = 10;
+        diskSize->freeSize = 10;
+    } else {
+        diskSize->availSize = 10;
+        diskSize->freeSize = 2097152;
+    }
+    g_mmGetDiskFreeSpaceStubCount += 1;
     return EN_OK;
 }
 
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk)
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk_Failed)
 {
-    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk");
-    (void)system("mkdir ./Test_DfxDumper_DumpDfxCallback_RecordDisk");
+    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Failed");
+    (void)system("mkdir ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Failed");
 
     // 落盘任务无效输入数据
     DumpDfxInfo dfxInfo{"", nullptr, 0UL};
@@ -229,44 +291,74 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk)
     // 注册并启动落盘任务
     DumpDfxConfig dumpDfxConfig;
     dumpDfxConfig.dfxTypes.push_back("all");
-    dumpDfxConfig.dumpPath = "./Test_DfxDumper_DumpDfxCallback_RecordDisk/ascendDumpPath";
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_DumpDfxCallback_RecordDisk_Failed/ascendDumpPath";
     int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    // 加入落盘任务成功
+    g_mmGetDiskFreeSpaceStubCount = 0;
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(mmGetDiskFreeSpaceStub));
+    MOCKER(Adx::FileUtils::WriteFile).stubs().will(returnValue(1));
+
     const uint8_t buffer[] = "printf|assert";
     size_t length = sizeof(buffer);
 
-    Path filePath = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    // case1：磁盘空间不足，不能落盘
+    Path filePath1 = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
     ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
         rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, length);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
-    // mmGetDiskFreeSpace桩函数：磁盘空间不足，不能落盘
-    while(!KernelDfxDumper::Instance().dumpDfxInfoQueue_.IsEmpty()) {
-        usleep(100000U);
-    }
-    EXPECT_EQ(filePath.Exist(), false);
 
-    // 正常落盘数据
-    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(mmGetDiskFreeSpaceStub));
-    ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
-        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, length);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-    while(!KernelDfxDumper::Instance().dumpDfxInfoQueue_.IsEmpty()) {
-        usleep(100000U);
-    }
-    EXPECT_EQ(filePath.Exist(), true);
-
-    // 写文件失败
-    MOCKER(Adx::FileUtils::WriteFile).stubs().will(returnValue(1));
+    // case2：写文件失败，不能落盘
     Path filePath2 = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_1.bin");
     ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
         rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 1, buffer, length);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
-    while(!KernelDfxDumper::Instance().dumpDfxInfoQueue_.IsEmpty()) {
+
+    // 等待落盘任务处理完成(UnInit会清空队列)
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
         usleep(100000U);
     }
-    EXPECT_EQ(filePath2.Exist(), false);
 
-    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk");
+    EXPECT_EQ(filePath1.Exist(), false);
+    EXPECT_EQ(filePath2.Exist(), false);
+    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Failed");
+}
+
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_DumpDfxCallback_RecordDisk_Success)
+{
+    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Success");
+    (void)system("mkdir ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Success");
+
+    // 落盘任务无效输入数据
+    DumpDfxInfo dfxInfo{"", nullptr, 0UL};
+    KernelDfxDumper::Instance().RecordDfxInfoToDisk(dfxInfo);
+
+    // 注册并启动落盘任务
+    DumpDfxConfig dumpDfxConfig;
+    dumpDfxConfig.dfxTypes.push_back("all");
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_DumpDfxCallback_RecordDisk_Success/ascendDumpPath";
+    int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    g_mmGetDiskFreeSpaceStubCount = 1;
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(mmGetDiskFreeSpaceStub));
+
+    const uint8_t buffer[] = "printf|assert";
+    size_t length = sizeof(buffer);
+
+    // case1：落盘成功
+    Path filePath = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    ret = KernelDfxDumper::Instance().DumpKernelDfxInfo(
+        rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0, 0, buffer, length);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    // 等待落盘任务处理完成(UnInit会清空队列)
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    EXPECT_EQ(filePath.Exist(), true);
+    (void)system("rm -rf ./Test_DfxDumper_DumpDfxCallback_RecordDisk_Success");
 }

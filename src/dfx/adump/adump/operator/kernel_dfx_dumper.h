@@ -10,7 +10,10 @@
 
 #ifndef KERNEL_DFX_DUMPER_H
 #define KERNEL_DFX_DUMPER_H
+#include <atomic>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 #include "rt_inner_dfx.h"
 #include "bound_queue_memory.h"
@@ -49,11 +52,16 @@ private:
     bool IsEnabled();
     bool IsEnabled(const rtKernelDfxInfoType dfxType);
     std::string GetDfxInfoFilePath(uint32_t coreId, std::string &coreType);
+    static void PrepareFork();
+    static void PostForkParent();
+    static void PostForkChild();
     std::set<rtKernelDfxInfoType> enabledDfxTypes_;
     std::string dumpPath_;
-    bool taskInit_ = false;
-    bool taskRunning_ = false;
-    BoundQueueMemory<DumpDfxInfo> dumpDfxInfoQueue_;
+    std::atomic<bool> taskInit_ = false;
+    std::atomic<bool> taskRunning_ = false;
+    std::thread taskThread_;
+    std::mutex mutex_;
+    std::unique_ptr<BoundQueueMemory<DumpDfxInfo>> dumpDfxInfoQueue_;
 };
 } // namespace Adx
 #endif // KERNEL_DFX_DUMPER_H

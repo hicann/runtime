@@ -23,6 +23,7 @@
 
 namespace Adx {
 static const int32_t WAIT_TASK_INTERVAL_TIME = 500;
+static const int32_t TOTAL_RETRIES = 20U;
 static const std::string KERNEL_DFX_TYPE_ALL = "all";
 static const std::string KERNEL_DFX_TYPE_PRINTF = "printf";
 static const std::string KERNEL_DFX_TYPE_TENSOR = "tensor";
@@ -52,11 +53,12 @@ void DumpKernelDfxInfoCallback(rtKernelDfxInfoType dfxType, uint32_t coreType, u
 
 int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo &dfxInfo)
 {
-    if (dumpDfxInfoQueue_.IsFull()) {
+    IDE_CTRL_VALUE_WARN(taskInit_, return ADUMP_FAILED, "The dfx dump task is not started or has been stopped.");
+    if (dumpDfxInfoQueue_->IsFull()) {
         IDE_LOGE("Cannot push the dfx info into the queue. Memory usage exceeds 85% or queue size exceeds 60!");
         return ADUMP_FAILED;
     } else {
-        if (dumpDfxInfoQueue_.Push(dfxInfo)) {
+        if (dumpDfxInfoQueue_->Push(dfxInfo)) {
             IDE_LOGI("Push the dfx info into the queue success.");
             return ADUMP_SUCCESS;
         } else {
@@ -68,16 +70,20 @@ int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo &dfxInfo)
 
 void KernelDfxDumper::RecordDfxInfo()
 {
-    IDE_LOGI("The dump dfx info task is started.");
+    IDE_LOGI("The dfx dump task is started.");
     taskRunning_ = true;
-    while (taskInit_ || !dumpDfxInfoQueue_.IsEmpty()) {
-        DumpDfxInfo dfxInfo{"", nullptr, 0UL};
-        if (dumpDfxInfoQueue_.Pop(dfxInfo)) {
-            RecordDfxInfoToDisk(dfxInfo);
+    try {
+        while (taskInit_ || (dumpDfxInfoQueue_ && !dumpDfxInfoQueue_->IsEmpty())) {
+            DumpDfxInfo dfxInfo{"", nullptr, 0UL};
+            if (dumpDfxInfoQueue_ && dumpDfxInfoQueue_->Pop(dfxInfo)) {
+                RecordDfxInfoToDisk(dfxInfo);
+            }
         }
+    } catch (...) {
+        IDE_LOGW("The dfx dump task is exit with exception!");
     }
     taskRunning_ = false;
-    IDE_LOGI("The dump dfx info task is exit.");
+    IDE_LOGI("The dfx dump task is exit.");
 }
 
 void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo &dfxInfo)
@@ -109,48 +115,108 @@ void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo &dfxInfo)
 
 int32_t KernelDfxDumper::InitTask()
 {
-    IDE_LOGI("Begin to start the dump dfx info task.");
     if (taskInit_) {
+        IDE_LOGI("The dfx dump task has been started, no need to start again.");
         return IDE_DAEMON_OK;
     }
     // 没有注册使能，不开启任务。在下一次注册使能时再开启任务
     if (!IsEnabled()) {
+        IDE_LOGI("Dfx type has not been registered, no need to start the dfx dump task.");
         return IDE_DAEMON_OK;
     }
 
-    dumpDfxInfoQueue_.Init();
+    IDE_LOGI("Begin to start the dfx dump task.");
+    if (dumpDfxInfoQueue_ == nullptr) {
+        dumpDfxInfoQueue_.reset(new(std::nothrow) BoundQueueMemory<DumpDfxInfo>());
+        if (dumpDfxInfoQueue_ == nullptr) {
+            IDE_LOGE("Failed to new dumpDfxInfoQueue");
+            return IDE_DAEMON_ERROR;
+        }
+    }
+    dumpDfxInfoQueue_->Init();
     taskInit_ = true;
 
-    auto taskBind = std::bind(&KernelDfxDumper::RecordDfxInfo, this);
-    std::thread taskThread(taskBind);
-    taskThread.detach();
+    try {
+        taskThread_ = std::thread(&KernelDfxDumper::RecordDfxInfo, this);
+    } catch (std::exception &ex) {
+        IDE_LOGE("Create the dfx dump task failed, message: %s", ex.what());
+        taskInit_ = false;
+        return IDE_DAEMON_ERROR;
+    }
     return IDE_DAEMON_OK;
 }
 
 int32_t KernelDfxDumper::UnInitTask()
 {
-    IDE_LOGI("Begin to stop the dump dfx info task.");
+    IDE_LOGI("Begin to stop the dfx dump task.");
     taskInit_ = false;
-    while (!dumpDfxInfoQueue_.IsEmpty()) {
+    if (dumpDfxInfoQueue_) {
+        dumpDfxInfoQueue_->Quit();
+    }
+    // 超时等待任务退出，避免任务卡死
+    for (int32_t i = 0; i < TOTAL_RETRIES && taskRunning_; ++i) {
         mmSleep(WAIT_TASK_INTERVAL_TIME);
     }
-    dumpDfxInfoQueue_.Quit();
-    // 等待线程结束
-    while (taskRunning_) {
-        mmSleep(WAIT_TASK_INTERVAL_TIME);
+    if (taskThread_.joinable()) {
+        if (taskRunning_) {
+            IDE_LOGW("The dfx dump task maybe stuck, detach it.");
+            taskThread_.detach();
+        } else {
+            taskThread_.join();
+        }
+        taskThread_ = std::thread();
     }
     return IDE_DAEMON_OK;
 }
 
 void KernelDfxDumper::UnInit()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     UnInitTask();
     dumpPath_.clear();
     enabledDfxTypes_.clear();
+    if (dumpDfxInfoQueue_) {
+        dumpDfxInfoQueue_.reset();
+    }
+}
+
+void KernelDfxDumper::PrepareFork()
+{
+    Instance().mutex_.lock();
+}
+
+void KernelDfxDumper::PostForkParent()
+{
+    Instance().mutex_.unlock();
+}
+
+void KernelDfxDumper::PostForkChild()
+{
+    auto &instance = Instance();
+    instance.taskInit_ = false;
+    instance.taskRunning_ = false;
+    instance.dumpPath_.clear();
+    instance.enabledDfxTypes_.clear();
+    // 释放线程控制权
+    if (instance.taskThread_.joinable()) {
+        instance.taskThread_.detach();
+    }
+    // 释放dumpDfxInfoQueue_控制权
+    if (instance.dumpDfxInfoQueue_) {
+        instance.dumpDfxInfoQueue_.release();
+        instance.dumpDfxInfoQueue_ = nullptr;
+    }
+    instance.mutex_.unlock();
+    IDE_LOGI("KernelDfxDumper has been reset in the child process.");
 }
 
 KernelDfxDumper::KernelDfxDumper()
 {
+    int32_t ret = pthread_atfork(
+        KernelDfxDumper::PrepareFork, KernelDfxDumper::PostForkParent, KernelDfxDumper::PostForkChild);
+    if (ret != 0) {
+        IDE_LOGW("call pthread_atfork failed, ret: %d", ret);
+    }
     EnableDfxDumper();
 }
 
@@ -196,6 +262,7 @@ int32_t KernelDfxDumper::EnableDfxDumper(const DumpDfxConfig config)
     if (config.dfxTypes.empty() || config.dumpPath.empty()) {
         return ADUMP_SUCCESS;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     std::set<rtKernelDfxInfoType> rtDfxTypes;
     GetRegisterDfxTypes(config.dfxTypes, rtDfxTypes);
     for (auto& rtDfxType : rtDfxTypes) {
