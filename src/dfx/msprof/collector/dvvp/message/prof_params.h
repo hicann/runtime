@@ -110,6 +110,7 @@ struct ProfileParams : public BaseInfo {
     std::string msprof_llc_profiling;
     std::string memProfiling;
     int memInterval;
+    std::string appMemProfiling;
     std::string llc_profiling_events;
     int llc_interval;
     std::string ddr_profiling;
@@ -224,7 +225,7 @@ struct ProfileParams : public BaseInfo {
           sys_profiling("off"), sys_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
           pid_profiling("off"), pid_sampling_interval(DEFAULT_PROFILING_INTERVAL_100MS),
           hardware_mem("off"), hardware_mem_sampling_interval(DEFAULT_PROFILING_INTERVAL_20000US),
-          memProfiling("off"), memInterval(DEFAULT_PROFILING_INTERVAL_20MS),
+          memProfiling("off"), memInterval(DEFAULT_PROFILING_INTERVAL_20MS), appMemProfiling("on"),
           llc_interval(DEFAULT_PROFILING_INTERVAL_20MS),
           ddr_interval(DEFAULT_PROFILING_INTERVAL_20MS), ddr_master_id(0),
           hbmInterval(DEFAULT_PROFILING_INTERVAL_20MS),
@@ -425,6 +426,10 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, msprof_llc_profiling); // for msprof self use, on or off
         SET_VALUE(object, llc_profiling_events);
         SET_VALUE(object, llc_interval);
+    }
+
+    void ToObjectPartThree(NanoJson::Json &object)
+    {
         // pcSampling
         SET_VALUE(object, pcSampling);
         // instr profiling
@@ -433,6 +438,7 @@ struct ProfileParams : public BaseInfo {
         // memory
         SET_VALUE(object, memProfiling);
         SET_VALUE(object, memInterval);
+        SET_VALUE(object, appMemProfiling);
         // ddr
         SET_VALUE(object, ddr_profiling);
         SET_VALUE(object, ddr_profiling_events);
@@ -450,10 +456,6 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, host_disk_profiling);
         SET_VALUE(object, host_osrt_profiling);
         SET_VALUE(object, host_disk_freq);
-    }
-
-    void ToObjectPartThree(NanoJson::Json &object)
-    {
         SET_VALUE(object, stars_acsq_task);
         SET_VALUE(object, taskBlock);
         SET_VALUE(object, taskBlockShink);
@@ -607,6 +609,7 @@ struct ProfileParams : public BaseInfo {
         // memory
         FROM_STRING_VALUE(object, memProfiling);
         FROM_INT_VALUE(object, memInterval, DEFAULT_PROFILING_INTERVAL_10MS);
+        FROM_STRING_VALUE(object, appMemProfiling);
         // ddr
         FROM_STRING_VALUE(object, ddr_profiling);
         FROM_STRING_VALUE(object, ddr_profiling_events);

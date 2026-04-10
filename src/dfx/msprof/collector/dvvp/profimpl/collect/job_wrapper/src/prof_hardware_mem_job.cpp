@@ -202,7 +202,7 @@ int32_t ProfAppMemJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->app.empty() ||
+    if (collectionJobCfg_->comParams->params->appMemProfiling.compare(MSVP_PROF_ON) != 0 ||
         collectionJobCfg_->comParams->params->memProfiling.compare(MSVP_PROF_ON) != 0) {
         MSPROF_LOGI("Application Memory not enabled.");
         return PROFILING_FAILED;
