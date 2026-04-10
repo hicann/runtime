@@ -1,6 +1,0 @@
-# aclmdlRI
-
-```
-typedef void *aclmdlRI;
-```
-

@@ -1,6 +1,0 @@
-# aclrtLabel
-
-```
-typedef void *aclrtLabel; 
-```
-

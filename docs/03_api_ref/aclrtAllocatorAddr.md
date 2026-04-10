@@ -1,6 +1,0 @@
-# aclrtAllocatorAddr
-
-```
-typedef void *aclrtAllocatorAddr;
-```
-

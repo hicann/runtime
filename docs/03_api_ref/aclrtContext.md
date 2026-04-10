@@ -1,6 +1,0 @@
-# aclrtContext
-
-```
-typedef void *aclrtContext;
-```
-

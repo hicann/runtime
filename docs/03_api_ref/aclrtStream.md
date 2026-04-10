@@ -1,6 +1,0 @@
-# aclrtStream
-
-```
-typedef void *aclrtStream;
-```
-

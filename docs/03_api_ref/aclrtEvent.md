@@ -1,6 +1,0 @@
-# aclrtEvent
-
-```
-typedef void *aclrtEvent;
-```
-

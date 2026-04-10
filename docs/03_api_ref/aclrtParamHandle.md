@@ -1,6 +1,0 @@
-# aclrtParamHandle
-
-```
-typedef void* aclrtParamHandle;
-```
-

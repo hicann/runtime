@@ -1,6 +1,0 @@
-# aclrtMbuf
-
-```
-typedef void *aclrtMbuf;
-```
-

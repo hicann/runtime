@@ -1,6 +1,0 @@
-# aclrtDrvMemHandle
-
-```
-typedef void* aclrtDrvMemHandle;
-```
-

@@ -1,6 +1,0 @@
-# aclrtCntNotify
-
-```
-typedef void *aclrtCntNotify;
-```
-

@@ -1,6 +1,0 @@
-# acltdtBuf
-
-```
-typedef void *acltdtBuf;
-```
-

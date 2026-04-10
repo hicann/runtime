@@ -1,6 +1,0 @@
-# aclrtArgsHandle
-
-```
-typedef void* aclrtArgsHandle;
-```
-

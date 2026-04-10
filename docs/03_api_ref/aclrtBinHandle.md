@@ -1,6 +1,0 @@
-# aclrtBinHandle
-
-```
-typedef void* aclrtBinHandle;
-```
-
