@@ -24,6 +24,7 @@
                 <!--filteritem type="filepath" name="abcdefg/.*.uvwxyz" desc="Describe the reason for filtering scan results"/-->
                 <!--filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/-->
                 <filteritem type="filepath" name="docs/.*.png" desc="filter docs png"/>
+                <filteritem type="filename" name="pre-smoking-testcase" desc="filter pre-smoking-testcase"/>
 
             </filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
