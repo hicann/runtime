@@ -46,6 +46,7 @@
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
 #include "cmo_barrier_c.hpp"
+#include "barrier_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

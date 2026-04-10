@@ -298,38 +298,6 @@ uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo * const taskInfo)
 }
 #endif
 
-#if F_DESC("CmoTask")
-static void PrintErrorInfoForDavidCmoTask(TaskInfo* taskInfo, const uint32_t devId)
-{
-    const auto dev = taskInfo->stream->Device_();
-    CmoAddrTaskInfo *cmoAddrTaskInfo = &(taskInfo->u.cmoAddrTaskInfo);
-    Stream * const stream = taskInfo->stream;
-    const int32_t streamId = stream->Id_();
-    const uint32_t taskId = taskInfo->id;
-    if (stream->Model_() == nullptr) {
-        return;
-    }
-    constexpr size_t cmoInfoSize = sizeof(rtDavidCmoAddrInfo) / sizeof(uint32_t);
-    std::array<uint32_t, cmoInfoSize> cmoInfo = {0};
-    
-    const rtError_t error = dev->Driver_()->MemCopySync(RtPtrToPtr<void *>(cmoInfo.data()), sizeof(rtDavidCmoAddrInfo),
-        cmoAddrTaskInfo->cmoAddrInfo, sizeof(rtDavidCmoAddrInfo), RT_MEMCPY_DEVICE_TO_HOST);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Memcpy failed, size=%lu(Bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
-            sizeof(rtDavidCmoAddrInfo), static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
-        return;
-    }
-
-    RT_LOG(RT_LOG_ERROR, "Sdma for CmoAddrTask in model stream execute failed, device_id=%u, stream_id=%d, task_id=%u,"
-           "cmoAddrInfo=0x%llx.", devId, streamId, taskId, RtPtrToValue(cmoAddrTaskInfo->cmoAddrInfo));
-    for (size_t i = 0UL; i < cmoInfoSize; i += 8U) {
-        RT_LOG(RT_LOG_ERROR, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", "rtCmoAddrInfo",
-            cmoInfo[i], cmoInfo[i + 1U], cmoInfo[i + 2U], cmoInfo[i + 3U], cmoInfo[i + 4U], cmoInfo[i + 5U],
-            cmoInfo[i + 6U], cmoInfo[i + 7U]);
-    }
-}
-#endif
-
 #if F_DESC("AicpuMsgVersionTask")
 void AicpuMsgVersionTaskInit(TaskInfo *taskInfo)
 {

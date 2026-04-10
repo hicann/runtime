@@ -13,6 +13,7 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "rt_log.h"
+#include "barrier_task.h"
 
 namespace cce {
 namespace runtime {

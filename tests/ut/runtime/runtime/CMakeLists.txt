@@ -35,8 +35,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_multiple_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/notify_record_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
@@ -54,6 +54,8 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -85,6 +87,11 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200_base.cc
+
+    # mechanism dependance
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list
@@ -96,6 +103,7 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/notify_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
 )
 
 set(runtimeut_src_api_list
@@ -1326,6 +1334,7 @@ set(runtimeut_v201_src_task_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/notify_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/memory_corruption_checker.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v201.cc
 )
 
 set(runtimeut_v201_src_list

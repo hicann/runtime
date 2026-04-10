@@ -55,6 +55,7 @@
 #include "stub_task.hpp"
 #include "task_info.hpp"
 #include "printf.hpp"
+#include "cmo_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

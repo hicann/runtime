@@ -59,8 +59,9 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ubdma_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
@@ -89,6 +90,10 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/v200_base/aicpu_sqe_common_proc.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/memory_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
+
+    # mechanism dependance
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
 )
 
 set(libruntime_v200_task_src_files
@@ -101,6 +106,7 @@ set(libruntime_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
 )
 
 set(libruntime_v201_task_src_files
@@ -115,6 +121,7 @@ set(libruntime_v201_task_src_files
     ${RUNTIME_FEATURE_DIR}/dps/dqs_c.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memory_corruption_checker.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v201.cc
 )
 
 set(libruntime_v200_context_src_files

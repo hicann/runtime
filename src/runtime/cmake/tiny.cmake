@@ -31,8 +31,10 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/notify_record_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc

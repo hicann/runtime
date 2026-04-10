@@ -19,6 +19,7 @@
 #include "api.hpp"
 #include "notify_c.hpp"
 #include "ctrl_sq.hpp"
+#include "cmo_task.h"
 
 namespace cce {
 namespace runtime {

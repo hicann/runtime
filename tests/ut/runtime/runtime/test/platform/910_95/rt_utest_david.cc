@@ -46,6 +46,7 @@
 #include "fusion_c.hpp"
 #include "driver.hpp"
 #include "kernel.hpp"
+#include "cmo_task.h"
 #undef protected
 #undef private
 

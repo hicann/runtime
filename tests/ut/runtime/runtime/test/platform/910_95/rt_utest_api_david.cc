@@ -65,6 +65,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "capture_model_utils.hpp"
+#include "cmo_task.h"
 #undef protected
 #undef private
 

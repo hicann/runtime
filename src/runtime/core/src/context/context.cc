@@ -53,6 +53,7 @@
 #include "buffer_allocator.hpp"
 #include "ctrl_sq.hpp"
 #include "raw_device.hpp"
+#include "cmo_task.h"
 
 namespace cce {
 namespace runtime {

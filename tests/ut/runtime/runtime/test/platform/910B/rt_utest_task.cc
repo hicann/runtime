@@ -51,6 +51,8 @@
 #include "stub_task.hpp"
 #include "para_convertor.hpp"
 #include "task_manager.h"
+#include "cmo_task.h"
+#include "task_info_v100.h"
 
 using namespace testing;
 using namespace cce::runtime;

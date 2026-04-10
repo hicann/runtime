@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,65 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "runtime.hpp"
-#include "cmo_task.h"
+#include "task_info_v100.h"
+#include "stars.hpp"
+#include "stream.hpp"
+#include "device.hpp"
+#include "model.hpp"
 
 namespace cce {
 namespace runtime {
-#if F_DESC("CmoTask")
-rtError_t CmoTaskInit(TaskInfo *taskInfo, const rtCmoTaskInfo_t *const cmoTaskInfo, const Stream * const stm,
-                      const uint32_t flag)
-{
-    (void)flag;
-    TaskCommonInfoInit(taskInfo);
-    taskInfo->typeName = "CMO";
-    taskInfo->type = TS_TASK_TYPE_CMO;
-    taskInfo->u.cmoTask.cmoid = 0U;
-    Model *cmoModel = stm->Model_();
-
-    if (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_CMO)) {
-        if (cmoModel == nullptr) {
-            // 1971 CmoTask for prefetch
-            CmoTaskInfo *cmoTsk = &taskInfo->u.cmoTask;
-            // sqe info copy
-            const errno_t error =  memcpy_s(
-                &cmoTsk->cmoSqeInfo, sizeof(rtCmoTaskInfo_t), cmoTaskInfo, sizeof(rtCmoTaskInfo_t));
-            if (error != EOK) {
-                RT_LOG(RT_LOG_ERROR, "copy to CMO Sqe info failed, ret=%d, src size=%zu(bytes), "
-                    "dst size=%zu(bytes)", error, sizeof(rtCmoTaskInfo_t), sizeof(rtCmoTaskInfo_t));
-                return RT_ERROR_SEC_HANDLE;
-            }
-
-            RT_LOG(RT_LOG_DEBUG, "CmoTask Init, opCode=%u, length=%u", cmoTsk->cmoSqeInfo.opCode,
-                cmoTsk->cmoSqeInfo.lengthInner);
-            return RT_ERROR_NONE;
-        } else {
-            RT_LOG(RT_LOG_WARNING, "CMO task stream does not support in model.");
-            return RT_ERROR_FEATURE_NOT_SUPPORT;
-        }
-    } else if (cmoModel == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "CMO task stream is not in model.");
-        return RT_ERROR_MODEL_NULL;
-    } else {
-        // no operation
-    }
-
-    CmoTaskInfo *cmoTsk = &taskInfo->u.cmoTask;
-    // sqe info copy
-    const errno_t error = memcpy_s(&cmoTsk->cmoSqeInfo, sizeof(rtCmoTaskInfo_t), cmoTaskInfo, sizeof(rtCmoTaskInfo_t));
-    if (error != EOK) {
-        RT_LOG(RT_LOG_ERROR, "copy to CMO Sqe info failed, ret=%d, src size=%zu(bytes), dst size=%zu(bytes)",
-            error, sizeof(rtCmoTaskInfo_t), sizeof(rtCmoTaskInfo_t));
-        return RT_ERROR_SEC_HANDLE;
-    }
-
-    const rtError_t ret = cmoModel->CmoIdAlloc(cmoTsk->cmoSqeInfo.logicId, cmoTsk->cmoid);
-    ERROR_RETURN(ret, "Failed to alloc cmo id.");
-
-    RT_LOG(RT_LOG_DEBUG, "CmoTaskInfo: cmoType=%u, logicId=%u, cmoId=%u",
-        cmoTsk->cmoSqeInfo.cmoType, cmoTsk->cmoSqeInfo.logicId, cmoTsk->cmoid);
-    return RT_ERROR_NONE;
-}
 
 void ConstructCmoSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
@@ -122,30 +71,6 @@ void ConstructCmoSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
     sqe->res7 = 0U;
     PrintSqe(command, "CmoTask");
     RT_LOG(RT_LOG_INFO, "CmoTask stream_id=%d task_id=%hu.", taskInfo->stream->Id_(), taskInfo->id);
-}
-
-rtError_t CmoAddrTaskInit(TaskInfo *taskInfo, void *cmoAddrInfo, const rtCmoOpCode_t cmoOpCode)
-{
-    TaskCommonInfoInit(taskInfo);
-    taskInfo->typeName = "CMO";
-    taskInfo->type = TS_TASK_TYPE_CMO;
-    taskInfo->u.cmoTask.cmoid = 0U;
-    Stream * const stream = taskInfo->stream;
-    Model *cmoModel = stream->Model_();
-
-    if (cmoModel == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "CMO Addr task stream is not in model. device_id=%d, stream_id=%d, task_id=%hu.",
-            static_cast<int32_t>(stream->Device_()->Id_()), stream->Id_(), taskInfo->id);
-        return RT_ERROR_MODEL_NULL;
-    }
-
-    CmoAddrTaskInfo *cmoAddrTask = &(taskInfo->u.cmoAddrTaskInfo);
-    cmoAddrTask->cmoAddrInfo = cmoAddrInfo;
-    cmoAddrTask->cmoOpCode = cmoOpCode;
-
-    RT_LOG(RT_LOG_DEBUG, "CmoAddrTask Init, device_id=%d, stream_id=%d, task_id=%hu.",
-        static_cast<int32_t>(stream->Device_()->Id_()), stream->Id_(), taskInfo->id);
-    return RT_ERROR_NONE;
 }
 
 void ConstructCmoSdmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
@@ -240,7 +165,43 @@ void ConstructSqeForCmoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 
     ConstructCmoSqe(taskInfo, command);
 }
-#endif
 
+void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    const auto dev = taskInfo->stream->Device_();
+    CmoAddrTaskInfo *cmoAddrTaskInfo = &(taskInfo->u.cmoAddrTaskInfo);
+    Stream * const stream = taskInfo->stream;
+    const int32_t streamId = stream->Id_();
+    const uint32_t taskId = taskInfo->id;
+    if (stream->Model_() == nullptr) {
+        return;
+    }
+
+    void *hostMemSrc = nullptr;
+    constexpr uint64_t rtCmoAddrInfoSize = sizeof(rtCmoAddrInfo);
+    rtError_t error = dev->Driver_()->HostMemAlloc(&hostMemSrc, rtCmoAddrInfoSize, dev->Id_());
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Malloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
+        return;
+    }
+    error = dev->Driver_()->MemCopySync(hostMemSrc, rtCmoAddrInfoSize,
+        cmoAddrTaskInfo->cmoAddrInfo, rtCmoAddrInfoSize, RT_MEMCPY_DEVICE_TO_HOST);
+    if (error != RT_ERROR_NONE) {
+        (void)dev->Driver_()->HostMemFree(hostMemSrc);
+        RT_LOG(RT_LOG_ERROR, "Memcpy failed, size=%lu(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
+            rtCmoAddrInfoSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+        return;
+    }
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t * const>(hostMemSrc);
+    RT_LOG(RT_LOG_ERROR, "Sdma for CmoAddrTask in model stream execute failed, device_id=%u, stream_id=%d, task_id=%u",
+        devId, streamId, taskId);
+    for (size_t i = 0UL; i < (sizeof(rtCmoAddrInfo) / sizeof(uint32_t)); i += 8U) {
+        RT_LOG(RT_LOG_ERROR, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", "rtCmoAddrInfo",
+            cmd[i], cmd[i + 1U], cmd[i + 2U], cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U],
+            cmd[i + 7U]);
+    }
+    (void)dev->Driver_()->HostMemFree(hostMemSrc);
+}
 }  // namespace runtime
 }  // namespace cce

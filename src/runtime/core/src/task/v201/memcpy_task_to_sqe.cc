@@ -19,25 +19,6 @@
 #include "error_code.h"
 namespace cce {
 namespace runtime {
-
-void ConstructDavidSqeForCmoTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    Stream * const stm = taskInfo->stream;
-    Model *cmoModel = stm->Model_();
-    CmoTaskInfo * const cmoTsk = &(taskInfo->u.cmoTask);
-    if (cmoModel == nullptr) {
-        if ((cmoTsk->cmoSqeInfo.opCode == RT_CMO_PREFETCH) || (cmoTsk->cmoSqeInfo.opCode == RT_CMO_WRITEBACK)) {
-            ConstructDavidCmoSqe(taskInfo, davidSqe, sqBaseAddr);
-        } else {
-            ConstructDavidCmoSdmaSqe(taskInfo, davidSqe, sqBaseAddr);
-        }
-    } else {
-        // CmoTask for model stream.
-        ConstructDavidCmoAddrSqe(taskInfo, davidSqe, sqBaseAddr);
-    }
-}
-
 void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo *const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
 {
     MemcpyAsyncTaskInfo * const memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);

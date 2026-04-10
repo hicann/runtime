@@ -561,6 +561,8 @@ void ConstructDavidCmoSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSq
 void ConstructDavidCmoAddrSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidCmoSdmaSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidMemcpySqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+
+void PrintErrorInfoForDavidCmoTask(TaskInfo* taskInfo, const uint32_t devId);
 }  // namespace runtime
 }  // namespace cce
 #endif  // __CCE_RUNTIME_STARS_DAVID_HPP__

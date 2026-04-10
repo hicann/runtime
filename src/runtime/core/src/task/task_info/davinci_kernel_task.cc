@@ -1484,44 +1484,6 @@ void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
     }
 }
 
-void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId)
-{
-    const auto dev = taskInfo->stream->Device_();
-    CmoAddrTaskInfo *cmoAddrTaskInfo = &(taskInfo->u.cmoAddrTaskInfo);
-    Stream * const stream = taskInfo->stream;
-    const int32_t streamId = stream->Id_();
-    const uint32_t taskId = taskInfo->id;
-    if (stream->Model_() == nullptr) {
-        return;
-    }
-
-    void *hostMemSrc = nullptr;
-    constexpr uint64_t rtCmoAddrInfoSize = sizeof(rtCmoAddrInfo);
-    rtError_t error = dev->Driver_()->HostMemAlloc(&hostMemSrc, rtCmoAddrInfoSize, dev->Id_());
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Malloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
-        return;
-    }
-    error = dev->Driver_()->MemCopySync(hostMemSrc, rtCmoAddrInfoSize,
-        cmoAddrTaskInfo->cmoAddrInfo, rtCmoAddrInfoSize, RT_MEMCPY_DEVICE_TO_HOST);
-    if (error != RT_ERROR_NONE) {
-        (void)dev->Driver_()->HostMemFree(hostMemSrc);
-        RT_LOG(RT_LOG_ERROR, "Memcpy failed, size=%lu(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x",
-            rtCmoAddrInfoSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
-        return;
-    }
-
-    const uint32_t * const cmd = RtPtrToPtr<const uint32_t * const>(hostMemSrc);
-    RT_LOG(RT_LOG_ERROR, "Sdma for CmoAddrTask in model stream execute failed, device_id=%u, stream_id=%d, task_id=%u",
-        devId, streamId, taskId);
-    for (size_t i = 0UL; i < (sizeof(rtCmoAddrInfo) / sizeof(uint32_t)); i += 8U) {
-        RT_LOG(RT_LOG_ERROR, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", "rtCmoAddrInfo",
-            cmd[i], cmd[i + 1U], cmd[i + 2U], cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U],
-            cmd[i + 7U]);
-    }
-    (void)dev->Driver_()->HostMemFree(hostMemSrc);
-}
-
 bool CheckErrPrint(const uint32_t errorCode)
 {
     if ((errorCode != TS_ERROR_END_OF_SEQUENCE)

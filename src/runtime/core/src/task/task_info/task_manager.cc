@@ -9,6 +9,7 @@
  */
 
 #include "task_manager.h"
+#include "task_info_v100.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"

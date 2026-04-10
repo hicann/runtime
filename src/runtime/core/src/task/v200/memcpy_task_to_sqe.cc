@@ -20,24 +20,6 @@
 namespace cce {
 namespace runtime {
 
-void ConstructDavidSqeForCmoTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    Stream * const stm = taskInfo->stream;
-    Model *cmoModel = stm->Model_();
-    CmoTaskInfo * const cmoTsk = &(taskInfo->u.cmoTask);
-    if ((cmoModel != nullptr) && (cmoModel->GetModelType() == RT_MODEL_NORMAL)){
-        // CmoTask for model stream.
-        ConstructDavidCmoAddrSqe(taskInfo, davidSqe, sqBaseAddr);
-    } else {
-        if ((cmoTsk->cmoSqeInfo.opCode == RT_CMO_PREFETCH) || (cmoTsk->cmoSqeInfo.opCode == RT_CMO_WRITEBACK)) {
-            ConstructDavidCmoSqe(taskInfo, davidSqe, sqBaseAddr);
-        } else {
-            ConstructDavidCmoSdmaSqe(taskInfo, davidSqe, sqBaseAddr);
-        }
-    }
-}
-
 static void ConstructDavidPcieDmaSqe(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
@@ -181,5 +163,6 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
         memcpyAsyncTaskInfo->copyType);
 }
+
 }  // namespace runtime
 }  // namespace cce

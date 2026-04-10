@@ -10,12 +10,14 @@
 #ifndef RUNTIME_CMO_TASK_H
 #define RUNTIME_CMO_TASK_H
 
-#include "driver.hpp"
 #include "stars.hpp"
+#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForCmoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+rtError_t CmoTaskInit(TaskInfo *taskInfo, const rtCmoTaskInfo_t *const cmoTaskInfo, const Stream * const stm,
+                      const uint32_t flag);
+rtError_t CmoAddrTaskInit(TaskInfo *taskInfo, void *cmoAddrInfo, const rtCmoOpCode_t cmoOpCode);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_CMO_TASK_H

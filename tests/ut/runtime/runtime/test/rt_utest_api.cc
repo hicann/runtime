@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "rt_utest_api.hpp"
+#include "cmo_task.h"
 
 class ApiTest7 : public testing::Test
 {

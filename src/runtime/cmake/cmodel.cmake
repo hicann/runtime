@@ -31,8 +31,10 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/notify_record_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc
@@ -73,8 +75,9 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ubdma_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
@@ -103,6 +106,10 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/v200_base/aicpu_sqe_common_proc.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/memory_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
+
+    # mechanism dependance
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
 )
 
 set(libruntime_cmodel_v200_task_src_files
@@ -115,6 +122,7 @@ set(libruntime_cmodel_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v200/aicpu_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel
