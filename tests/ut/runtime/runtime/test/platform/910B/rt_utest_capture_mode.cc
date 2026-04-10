@@ -1279,6 +1279,11 @@ TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rawDevice->StoreEndGraphNotifyInfo(streamId, RtPtrToPtr<CaptureModel *>(model1), 100);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    uint32_t modelId;
+    error = rtModelGetId(model1, &modelId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rawDevice->PollEndGraphNotifyInfoByModelId(1000);
+    rawDevice->PollEndGraphNotifyInfoByModelId(modelId);
     rawDevice->PollEndGraphNotifyInfo();
 
     error = rawDevice->StoreEndGraphNotifyInfo(streamId, RtPtrToPtr<CaptureModel *>(model1), 120);

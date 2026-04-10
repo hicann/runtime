@@ -309,6 +309,79 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_Success)
     GlobalMockObject::verify();
 }
 
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_failed)
+{
+    void *srcPtr;
+    void *dstPtr;
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver * rawDrv = new NpuDriver();
+    rtPointerAttributes_t rtAttributes;
+    rtAttributes.deviceID = 0;
+    rtAttributes.memoryType = RT_MEMORY_TYPE_DEVICE;
+    rtAttributes.locationType = RT_MEMORY_LOC_DEVICE;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::PointerGetAttributes)
+        .stubs()
+        .with(outBoundP(&rtAttributes, sizeof(rtAttributes)), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+
+    ret = rtMalloc(&srcPtr, 64, RT_MEMORY_DEFAULT, DEFAULT_MODULEID);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtMalloc(&dstPtr, 64, RT_MEMORY_DEFAULT, DEFAULT_MODULEID);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemcpyAsync(dstPtr, 64, srcPtr, 64, RT_MEMCPY_DEVICE_TO_DEVICE, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemcpyAsync(dstPtr, 64, srcPtr, 64, RT_MEMCPY_DEVICE_TO_DEVICE, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t model;
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numStreams = 1;
+    rtStream_t inputStreams[numStreams];
+    ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 2;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelTaskDisable(inputTasks[0]);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    ret = rtModelTaskDisable(inputTasks[1]);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtFree(srcPtr);
+    rtFree(dstPtr);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}
+
 TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDefault_Success)
 {
     rtContext_t ctx;

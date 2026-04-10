@@ -2483,6 +2483,35 @@ void RawDevice::PollEndGraphNotifyInfo()
     captureModelExeInfoLock_.unlock();
 }
 
+void RawDevice::PollEndGraphNotifyInfoByModelId(const uint32_t modelId)
+{
+    captureModelExeInfoLock_.lock();
+    std::shared_ptr<Stream> exeStream = nullptr;
+    uint32_t streamId = 0U;
+    for (auto it = captureModelExeInfoMap_.begin(); it != captureModelExeInfoMap_.end();) {
+        Model* model;
+        std::tie(streamId, model) = it->first;
+        COND_PROC((model->Id_() != modelId),
+            ++it;
+            continue;);
+        rtError_t ret = GetStreamSqCqManage()->GetStreamSharedPtrById(streamId, exeStream);
+        COND_PROC(((ret != RT_ERROR_NONE) || (exeStream == nullptr)),
+            it = captureModelExeInfoMap_.erase(it);
+            break;);
+
+        std::list<uint32_t>& sqePosList = it->second;
+        bool isAlreadyExecuted = JudgeIsEndGraphNotifyWaitExecuted(exeStream.get(), model, sqePosList);
+        exeStream.reset();
+        if (isAlreadyExecuted) {
+            it = captureModelExeInfoMap_.erase(it);
+        }
+
+        break;
+    }
+
+    captureModelExeInfoLock_.unlock();
+}
+
 rtError_t RawDevice::InitCtrlSQ()
 {
     rtError_t ret = RT_ERROR_NONE;

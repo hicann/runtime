@@ -10,6 +10,7 @@
 
 #include "capture_model_utils.hpp"
 #include "inner_thread_local.hpp"
+#include "raw_device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -173,10 +174,14 @@ rtError_t CheckCaptureModelForUpdate(Stream* stm) {
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
     if (!captureModel->CanUpdate()) {
-        RT_LOG(
-            RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
-            captureModel->GetCaptureModelStatus());
-        return RT_ERROR_MODEL_UPDATE_FAILED;
+        RawDevice* const rawDev = dynamic_cast<RawDevice *>(dev);
+        rawDev->PollEndGraphNotifyInfoByModelId(mdl->Id_());
+        if (!captureModel->CanUpdate()) {
+            RT_LOG(
+                RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
+                captureModel->GetCaptureModelStatus());
+            return RT_ERROR_MODEL_UPDATE_FAILED;    
+        }
     }
     return RT_ERROR_NONE;
 }

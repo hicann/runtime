@@ -788,6 +788,7 @@ public:
     rtError_t DeleteEndGraphNotifyInfo(const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) override;
     rtError_t ClearEndGraphNotifyInfoByModel(Model* captureModel) override;
     void PollEndGraphNotifyInfo();
+    void PollEndGraphNotifyInfoByModelId(const uint32_t modelId);
 
     bool IsSupportStopOnStreamError(void) override
     {

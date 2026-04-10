@@ -9125,6 +9125,16 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
 
     captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_UPDATING);
+
+    rtTaskType taskType = RT_TASK_DEFAULT;
+    error = ConvertTaskType(taskInfo, &taskType);
+    ERROR_PROC_RETURN_MSG_INNER(error,
+        captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT);,
+        "get task type failed, retCode=%#x.", error);
+    COND_PROC(taskType == RT_TASK_DEFAULT, captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT));
+    COND_RETURN_AND_MSG_OUTER((taskType == RT_TASK_DEFAULT), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1001, "current task type can not be RT_TASK_DEFAULT.");
+
     captureModel->ClearShapeInfo(taskInfo->stream->Id_(), taskInfo->id);
     taskInfo->updateFlag = RT_TASK_DISABLE;
     RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
