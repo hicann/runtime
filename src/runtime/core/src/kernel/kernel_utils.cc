@@ -188,18 +188,18 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
 {
     COND_RETURN_AND_MSG_OUTER(
         (taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE && taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "now only support update kernel to kernel.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "now only support update kernel to kernel");
     COND_RETURN_AND_MSG_OUTER((params->taskGrp != nullptr),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "taskGrp must be nullptr.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "taskGrp must be nullptr");
 
     const rtKernelTaskParams* kernelTaskParams = &(params->kernelTaskParams);
     Kernel* const kernel = RtPtrToPtr<Kernel*>(kernelTaskParams->funcHandle);
     COND_RETURN_AND_MSG_OUTER((kernel == nullptr),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "funcHandle cannot be nullptr.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "funcHandle cannot be nullptr");
     COND_RETURN_AND_MSG_OUTER((kernelTaskParams->args == nullptr),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "args cannot be nullptr.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "args cannot be nullptr");
     COND_RETURN_AND_MSG_OUTER((kernelTaskParams->argsSize == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, __func__, "argsSize cannot be 0.");
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1001, "argsSize cannot be 0");
 
     TaskCfg taskCfg = {};
     rtError_t error = ConvertLaunchCfgToTaskCfg(taskCfg, kernelTaskParams->cfg);
