@@ -67,24 +67,24 @@ inline uint64_t ProfGetTid()
 
 #define AICPU_LOG_DEBUG(format, ...)                                                                                \
     if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_debug(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid, ##__VA_ARGS__);                   \
+        dlog_debug(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                 \
     }
 #define AICPU_LOG_INFO(format, ...)                                                                                 \
     if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_info(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid, ##__VA_ARGS__);                    \
+        dlog_info(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                  \
     }
 #define AICPU_LOG_WARN(format, ...)                                                                                 \
     if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
-        dlog_warn(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid, ##__VA_ARGS__);                    \
+        dlog_warn(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                  \
     }
 #define AICPU_LOG_ERROR(format, ...)                                                                                \
     if (&DlogRecord != nullptr) {                                                                                   \
-        dlog_error(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid, ##__VA_ARGS__);                   \
+        dlog_error(static_cast<int32_t>(CCECPU), "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                 \
     }
 #define AICPU_RUN_INFO(format, ...)                                                                                 \
     if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                                  \
         dlog_info(static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)),        \
-                  "[tid:%lu]:" format, ProfGetTid, ##__VA_ARGS__);                                                  \
+                  "[tid:%lu]:" format, ProfGetTid(), ##__VA_ARGS__);                                                \
     }
 
 #define AICPU_LOG_WHEN(cond, log, ...)         \

@@ -199,7 +199,6 @@ namespace AicpuSchedule {
         stopProcessEventFuncPtr_ = nullptr;
         stopProcessEventFuncParam_ = nullptr;
         initFlag_ = false;
-        type_ = 0U;
         aicpusd_info("ClearMc2MantenanceProcess finish. type[%u]", type_);
     }
 
