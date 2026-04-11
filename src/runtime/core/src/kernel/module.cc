@@ -210,21 +210,24 @@ Program *Module::GetProgram() const
 rtError_t Module::CalModuleHash(std::size_t &hash) const
 {
     void *hostMem = nullptr;
-    COND_RETURN_ERROR_MSG_INNER((baseAddrAlign_ == nullptr) || (baseAddrSize_ == 0U), RT_ERROR_INVALID_VALUE,
-        "Cal module hash failed, address size=%u(bytes)", baseAddrSize_);
+    const bool suppSimt = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT);
+    COND_RETURN_ERROR_MSG_INNER((baseAddrAlign_ == nullptr) || (baseAddrSize_ == 0U) ||
+        (suppSimt && (baseAddrSize_ <= PREFETCH_INCREASE_SIZE)), RT_ERROR_INVALID_VALUE,
+        "Cal module hash failed, support simt=%d, address size=%u(bytes)", suppSimt, baseAddrSize_);
+    const uint32_t dataSize = suppSimt ? (baseAddrSize_ - PREFETCH_INCREASE_SIZE) : baseAddrSize_;
     Driver * const deviceDrv = device_->Driver_();
-    rtError_t error = deviceDrv->HostMemAlloc(&hostMem, static_cast<uint64_t>(baseAddrSize_) + 1UL, device_->Id_());
+    rtError_t error = deviceDrv->HostMemAlloc(&hostMem, static_cast<uint64_t>(dataSize) + 1ULL, device_->Id_());
 
     ERROR_RETURN(error, "Malloc host memory for calculate module hash failed, retCode=%#x.",
                  static_cast<uint32_t>(error));
-    error = deviceDrv->MemCopySync(hostMem, static_cast<uint64_t>(baseAddrSize_) + 1UL, baseAddrAlign_,
-        static_cast<uint64_t>(baseAddrSize_), RT_MEMCPY_DEVICE_TO_HOST);
+    error = deviceDrv->MemCopySync(hostMem, static_cast<uint64_t>(dataSize) + 1ULL, baseAddrAlign_,
+        static_cast<uint64_t>(dataSize), RT_MEMCPY_DEVICE_TO_HOST);
 
     COND_PROC_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, (void)deviceDrv->HostMemFree(hostMem);,
         "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_DEVICE_TO_HOST), retCode=%#x.",
-        baseAddrSize_, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
+        dataSize, static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
     // calculate hash
-    const std::string hashStr(RtPtrToPtr<const char_t *>(hostMem), static_cast<uint64_t>(baseAddrSize_));
+    const std::string hashStr(RtPtrToPtr<const char_t *>(hostMem), static_cast<uint64_t>(dataSize));
     hash = std::hash<std::string>{}(hashStr);
     (void)deviceDrv->HostMemFree(hostMem);
     return RT_ERROR_NONE;

@@ -894,6 +894,11 @@ TEST_F(CloudV2DeviceTest, module_alloc_05)
     Kernel *kernel = (Kernel *)malloc(sizeof(Kernel));
     module1->GetPrefetchCnt(kernel, cnt1, cnt2);
 
+    std::size_t hashKeyNum = 0U;
+    error = module1->CalModuleHash(hashKeyNum);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(hashKeyNum, 0U);
+
     module2 = dev->ModuleAlloc(program);
     EXPECT_EQ(module2, module1);
 
