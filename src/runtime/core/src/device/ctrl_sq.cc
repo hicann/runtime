@@ -64,13 +64,14 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam &par
     NULL_PTR_RETURN_MSG(taskInfo, error);
     RT_LOG(RT_LOG_INFO, "taskInfo type, type=%u, taskType=%u.", taskInfo->type, param.taskType);
 
-    (void)ctrlMsgHandlerArr[idx](taskInfo, param);
-    RT_LOG(RT_LOG_INFO, "Ctrl msg create success, msgType=%u.", idx);
+    error = ctrlMsgHandlerArr[idx](taskInfo, param);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
+        "Failed to set up ctrl msg, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
 
     error = device_->SubmitTask(taskInfo, param.sendParam.callback, msgId, param.sendParam.timeout);
-    if (error != RT_ERROR_NONE) {
-         (void)device_->GetTaskFactory()->Recycle(taskInfo);
-    }
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)device_->GetTaskFactory()->Recycle(taskInfo),
+        "Failed to submit task, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
+    
     RT_LOG(RT_LOG_INFO, "Ctrl msg send success, msgType=%u.", idx);
     return error;
 }
@@ -92,15 +93,19 @@ rtError_t CtrlSQ::CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam
 
     SaveTaskCommonInfo(taskInfo, stream_, pos);
     // 根据type找到对应的setupFunc
-    (void)ctrlMsgHandlerArr[idx](taskInfo, param);
-    RT_LOG(RT_LOG_INFO, "Ctrl msg create success, msgType=%u.", idx);
+    error = ctrlMsgHandlerArr[idx](taskInfo, param);
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
+                            TaskUnInitProc(taskInfo);
+                            TaskRollBack(stream_, pos);
+                            stream_->StreamUnLock();,
+                            "Failed to set up ctrl msg, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
 
     error = DavidSendTask(taskInfo, stream_);
-    ERROR_PROC_RETURN_MSG_INNER(error,
-                                TaskUnInitProc(taskInfo);
-                                TaskRollBack(stream_, pos);
-                                stream_->StreamUnLock();,
-                                "Failed to submit task, error=%#x.", static_cast<uint32_t>(error));
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
+                            TaskUnInitProc(taskInfo);
+                            TaskRollBack(stream_, pos);
+                            stream_->StreamUnLock();,
+                            "Failed to submit task, msg_type=%u, error=%#x.", idx, static_cast<uint32_t>(error));
     stream_->StreamUnLock();
     if (msgId != nullptr && taskInfo != nullptr) {
         *msgId = taskInfo->taskSn;

@@ -2209,7 +2209,7 @@ TEST_F(CloudV2ContextTest, context_debugUnRegister_fail2)
     MOCKER(DebugUnRegisterTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = ctx->DebugUnRegister(model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(error, RT_ERROR_NONE);
 
     error = ctx->ModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
