@@ -83,7 +83,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task_launch_config.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/memcpy_sqe_common_proc.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200_base/aicpu_sqe_common_proc.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v200_base/aix_sqe_common_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_sqe.cc
@@ -99,7 +99,7 @@ set(runtimeut_david_src_task_list
     # david & solomon 专用差异化文件
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memcpy_task_to_sqe.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200/aicpu_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v200/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/notify_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
@@ -332,7 +332,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/notify/notify_task_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memcpy_task_to_sqe.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200/aicpu_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v200/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event_starsV2.cc
@@ -1327,7 +1327,7 @@ set(runtimeut_v201_src_task_list
     # v201
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/memcpy_task_to_sqe.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v201/aicpu_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v201/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_checker.cc
     ${TOP_DIR}/src/runtime/feature/dps/dqs_task.cc
     ${TOP_DIR}/src/runtime/feature/dps/dqs_c.cc

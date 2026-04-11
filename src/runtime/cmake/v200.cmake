@@ -87,7 +87,7 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/v200_base/davinci_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/davinci_task_launch_config.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/memcpy_sqe_common_proc.cc
-    ${RUNTIME_CORE_DIR}/src/task/v200_base/aicpu_sqe_common_proc.cc
+    ${RUNTIME_CORE_DIR}/src/task/v200_base/aix_sqe_common_proc.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/memory_task.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
@@ -102,7 +102,7 @@ set(libruntime_v200_task_src_files
     # david & solomon 专用差异化文件
     ${RUNTIME_CORE_DIR}/src/task/v200/task_proc_func_register.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memcpy_task_to_sqe.cc
-    ${RUNTIME_CORE_DIR}/src/task/v200/aicpu_task_to_sqe.cc
+    ${RUNTIME_CORE_DIR}/src/task/v200/aix_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
@@ -117,7 +117,7 @@ set(libruntime_v201_task_src_files
     ${RUNTIME_FEATURE_DIR}/dps/dqs_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memcpy_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/task_checker.cc
-    ${RUNTIME_CORE_DIR}/src/task/v201/aicpu_task_to_sqe.cc
+    ${RUNTIME_CORE_DIR}/src/task/v201/aix_task_to_sqe.cc
     ${RUNTIME_FEATURE_DIR}/dps/dqs_c.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memory_corruption_checker.cc
