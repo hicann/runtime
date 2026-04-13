@@ -115,7 +115,7 @@ void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const comma
 
     sqe->dest_pid = 0U;
     PrintSqe(command, "TaskTimeoutSetTask");
-    RT_LOG(RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish,topic_type=%u,cmd_type=%u",
+    RT_LOG(RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish, topic_type=%u, cmd_type=%u",
            static_cast<uint32_t>(sqe->topic_type), sqe->usr_data.cmd_type);
 }
 

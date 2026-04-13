@@ -53,7 +53,7 @@ void ConstructDavidSqeForUbDirectSendTask(TaskInfo *taskInfo, rtDavidSqe_t * con
         descInfo << "UbDirectSend Part " << (i + 1U); 
         PrintDavidSqe(sqeAddr, descInfo.str().c_str());
     }
-    RT_LOG(RT_LOG_INFO, "UbDirectSendTask stream_id=%d task_id=%hu wqeSize=%u",
+    RT_LOG(RT_LOG_INFO, "UbDirectSendTask stream_id=%d, task_id=%hu, wqeSize=%u.",
         stream->Id_(), taskInfo->id, sqe->wqeSize);
 }
 
@@ -81,7 +81,7 @@ void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, rtDavidSqe_t * const c
         sqe->dieId2 = taskInfo->u.ubSendTask.info[1].dieId;
     }
     PrintDavidSqe(command, "UbDbSend");
-    RT_LOG(RT_LOG_INFO, "UbDbSendTask stream_id=%d taskId=%hu dbNum=%u",
+    RT_LOG(RT_LOG_INFO, "UbDbSendTask stream_id=%d, task_id=%hu, dbNum=%u.",
         stream->Id_(), taskInfo->id, taskInfo->u.ubSendTask.dbNum);
 }
 
