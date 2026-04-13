@@ -548,7 +548,7 @@ uint32_t CovertToFlipTaskId(const TaskInfo* const taskInfo, const uint32_t taskI
     if (taskInfo != nullptr) {
         return GetFlipTaskId(taskInfo->id, taskInfo->flipNum);
     } else {
-        RT_LOG(RT_LOG_WARNING, "taskInfo==nullptr, taskId=%u", taskId);
+        RT_LOG(RT_LOG_WARNING, "taskInfo==nullptr, task_id=%u", taskId);
         return taskId;
     }
 }
