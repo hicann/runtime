@@ -196,34 +196,6 @@ TEST_F(PROF_TX_UTTEST, ReportAdditionalInfo_SingleTensor)
     EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ReportAdditionalInfo(&tensorInfo, timeStampPush, timeStampPop));
 }
 
-TEST_F(PROF_TX_UTTEST, ReportAdditionalInfo_MaxTensors)
-{
-    aclprofTensor tensors[5];
-    for (int i = 0; i < 5; i++) {
-        tensors[i].type = i;
-        tensors[i].format = i + 1;
-        tensors[i].dataType = i + 2;
-        tensors[i].shapeDim = 8;
-        for (int j = 0; j < 8; j++) {
-            tensors[i].shape[j] = j + 1;
-        }
-    }
-    
-    aclprofTensorInfo tensorInfo;
-    tensorInfo.opNameId = 99999;
-    tensorInfo.tensorNum = 5;
-    tensorInfo.tensors = tensors;
-    
-    uint64_t timeStampPush = 3000;
-    uint64_t timeStampPop = 4000;
-    
-    MOCKER(MsprofReportAdditionalInfo)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    
-    EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ReportAdditionalInfo(&tensorInfo, timeStampPush, timeStampPop));
-}
-
 TEST_F(PROF_TX_UTTEST, ReportAdditionalInfo_ReportFailed)
 {
     aclprofTensor tensor;

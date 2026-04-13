@@ -16,8 +16,6 @@
 #include "prof_runtime_plugin.h"
 
 namespace ProfAPI {
-constexpr size_t MAX_TENSOR_NUM = 5;
-
 struct CacheOpInfoBasic {
     uint32_t taskType;
     uint32_t blockdim;

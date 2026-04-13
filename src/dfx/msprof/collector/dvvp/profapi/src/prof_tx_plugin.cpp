@@ -209,7 +209,7 @@ int32_t ProfTxPlugin::ProftxRangePop()
 
 int32_t ProfTxPlugin::CopyTensorData(const aclprofTensorInfo* tensorInfo, uint8_t* dest, uint64_t& destOffset, size_t maxCopySize)
 {
-    for (size_t i = 0; i < tensorInfo->tensorNum && i < MAX_TENSOR_NUM; ++i) {
+    for (size_t i = 0; i < tensorInfo->tensorNum; ++i) {
         aclprofTensor& tensor = tensorInfo->tensors[i];
         MsrofTensorData msTensor;
         msTensor.tensorType = tensor.type;
