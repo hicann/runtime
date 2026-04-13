@@ -168,6 +168,10 @@ set(commom_src_file
     ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_feature_ctrl_open_source.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/common/feature_ctrl_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_sqe_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_aicpu_msg_info_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_aicpu_sqe_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter_factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter.cpp
     ${PROTO_SRCS}
     ${statistic_src_file}
 )
@@ -200,6 +204,10 @@ set(commom_src_file
     ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_hccl_api.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_util.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/common/aicpusd_sqe_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_aicpu_msg_info_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_aicpu_sqe_adapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter_factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/interface/aicpusd_sub_module_interface.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/stub/stub_transfer_dump.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/dfx/aicpusd_cust_dump_process.cpp

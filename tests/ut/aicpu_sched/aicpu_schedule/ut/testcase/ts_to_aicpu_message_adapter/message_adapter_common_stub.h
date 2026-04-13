@@ -46,6 +46,7 @@
 #include "aicpusd_mc2_maintenance_thread_api.h"
 #include "aicpusd_message_queue.h"
 #define private public
+#define protected public
 #include "aicpusd_profiler.h"
 #include "aicpusd_args_parser.h"
 #include "aicpusd_cust_dump_process.h"
@@ -69,13 +70,19 @@
 #include "aicpusd_event_manager.h"
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_threads_process.h"
+#include "ts_msg_adapter.h"
+#include "ts_aicpu_sqe_adapter.h"
+#include "ts_aicpu_msg_info_adapter.h"
+#include "ts_msg_adapter_factory.h"
 #include "securec.h"
 #undef private
+#undef protected
 
 using namespace AicpuSchedule;
 using namespace aicpu;
 inline TsAicpuMsgInfo expMsg_;
 inline TsAicpuSqe expSqe_;
+constexpr int32_t MAX_MSG_LEN = 128;
 // tsDevSendMsgAsync
 inline int32_t SqetsDevSendMsgAsyncStub(unsigned int devId, unsigned int tsId, char *msg, unsigned int msgLen, unsigned handleId)
 {
@@ -116,4 +123,3 @@ inline void ClearMsgAndSqe()
 }
 
 #endif //MESSAGE_ADAPTER_COMMON_STUB_H
-

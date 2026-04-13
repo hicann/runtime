@@ -62,6 +62,7 @@ set(COMMON_C_INCLUDES
     ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/dfx/adump/inc
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
+    ${RUNTIME_DIR}/src/aicpu_sched/aicpu_schedule/common/ts_to_aicpu_msg_adapter
     ${RUNTIME_DIR}/src/aicpu_sched/aicpu_schedule/common
     ${CMAKE_BINARY_DIR}/proto/aicpu_proto/proto
 )
@@ -232,6 +233,10 @@ set(LOCAL_SRC_FILES
     ${SRC_PATH}/common/aicpusd_feature_ctrl_open_source.cpp
     ${SRC_PATH}/common/feature_ctrl_common.cpp
     ${SRC_PATH}/common/aicpusd_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_msg_info_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter_factory.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter.cpp
     ${SRC_PATH}/core/aicpusd_drv_manager.cpp
     ${SRC_PATH}/core/aicpusd_event_manager.cpp
     ${SRC_PATH}/core/aicpusd_event_process.cpp
@@ -280,8 +285,12 @@ set(LOCAL_SRC_FILES
 
     testcase/aicpu_context.cc
     testcase/aicpu_schedule_test.cc
-    testcase/ts_to_aicpu_message_adapter/msg_info_adapter_test.cc
-    testcase/ts_to_aicpu_message_adapter/sqe_message_adapter_test.cc
+    testcase/ts_to_aicpu_message_adapter/msg_info_adapter_process_ctrl_event_test.cc
+    testcase/ts_to_aicpu_message_adapter/sqe_adapter_process_ctrl_event_test.cc
+    testcase/ts_to_aicpu_message_adapter/msg_adapter_factory_test.cpp
+    testcase/ts_to_aicpu_message_adapter/msg_adapter_test.cpp
+    testcase/ts_to_aicpu_message_adapter/msg_info_adapter_test.cpp
+    testcase/ts_to_aicpu_message_adapter/sqe_adapter_test.cpp
     testcase/aicpusd_args_parser_test.cc
     testcase/aicpusd_queue_event_process_test.cc
     testcase/aicpusd_drv_manager_test.cc
@@ -339,6 +348,10 @@ add_executable(aicpu_aicpuschedule_utest_host_cpu
     ${SRC_PATH}/common/aicpusd_feature_ctrl_open_source.cpp
     ${SRC_PATH}/common/feature_ctrl_common.cpp
     ${SRC_PATH}/common/aicpusd_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_msg_info_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter_factory.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter.cpp
     ${SRC_PATH}/core/aicpusd_interface_process.cpp
     ${SRC_PATH}/core/aicpusd_event_manager.cpp
     ${SRC_PATH}/core/aicpusd_event_process.cpp
@@ -399,6 +412,10 @@ target_link_libraries(aicpu_aicpuschedule_utest_host_cpu PRIVATE
 add_executable(aicpu_thread_datadump_utest
     ${SRC_PATH}/datadump/datadump_interface.cpp
     ${SRC_PATH}/common/aicpusd_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_msg_info_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_aicpu_sqe_adapter.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter_factory.cpp
+    ${SRC_PATH}/common/ts_to_aicpu_msg_adapter/ts_msg_adapter.cpp
     ${SRC_PATH}/datadump/datadump_interface_process.cpp
     ${SRC_PATH}/datadump/datadump_event_manager.cpp
     ${SRC_PATH}/datadump/datadump_event_process.cpp
