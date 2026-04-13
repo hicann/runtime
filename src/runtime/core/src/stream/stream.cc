@@ -1572,7 +1572,8 @@ rtError_t Stream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &fin
 
     const uint16_t finishedPos = static_cast<uint16_t>((sqHead + rtsqDepth - 1) % rtsqDepth);
     (void)GetTaskIdByPos(finishedPos, endTaskId); // sqhead-1 is finished pos.
-    RT_LOG(RT_LOG_INFO, "sqHead=%u, nextTaskId=%u, finishedPos=%u, endTaskId=%u", sqHead, nextTaskId, finishedPos, endTaskId);
+    RT_LOG(RT_LOG_INFO, "stream_id=%d, sq_id=%u, sqHead=%u, nextTaskId=%u, finishedPos=%u, endTaskId=%u",
+        streamId_, sqId_, sqHead, nextTaskId, finishedPos, endTaskId);
 
     // In scenarios with multiple SQEs, ffts+, mem wait, determine whether a task has been completed.
     // If the task IDs before and after are the same, it is considered that the task has not been completed.
