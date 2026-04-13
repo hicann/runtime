@@ -1764,7 +1764,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo *taskInfo, const void * const devAddr,
     ret = stream->Device_()->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, devId);
     ERROR_PROC_RETURN_MSG_INNER(ret,
         MemWaitTaskUnInit(taskInfo),
-        "alloc mem failed, device_id=%u, retCode=%#x", devId, static_cast<uint32_t>(ret));
+        "Alloc mem failed, device_id=%u, retCode=%#x", devId, static_cast<uint32_t>(ret));
 
     uint64_t initValue = 0UL;
     (void)stream->Device_()->Driver_()->MemCopySync(addr, sizeof(uint64_t), static_cast<const void *>(&initValue),
@@ -1924,7 +1924,7 @@ void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId)
     event->IpcVaUnLock();
 
     IpcEventDestroy(&event, MAX_INT32_NUM, false);
-    RT_LOG(RT_LOG_INFO, "ipc wait complete device_id=%u, stream_id=%d, task_id=%hu, event_id=%u",
+    RT_LOG(RT_LOG_INFO, "Ipc wait complete device_id=%u, stream_id=%d, task_id=%hu, event_id=%u",
         devId, stream->Id_(), taskInfo->id, curIndex);
 }
 
