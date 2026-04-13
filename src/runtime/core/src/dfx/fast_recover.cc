@@ -66,7 +66,7 @@ rtError_t DeviceTaskSendStop(const int32_t devId, const uint64_t timeRemain)
         ERROR_RETURN(error, "ctx clean fail, retCode=%#x.", error);
         const uint64_t count = ClockGetTimeIntervalUs(startTime);
         COND_RETURN_ERROR(((timeRemain != 0U) && (count >= timeRemain)), RT_ERROR_WAIT_TIMEOUT,
-            "Abort kill timeout, device_id=%u, time=%luus", devId, count);
+            "Abort kill timeout, device_id=%u, time cost= %" PRIu64 "us", devId, count);
     }
     RT_LOG(RT_LOG_INFO, "DeviceStop[%u] end", devId);
     return error;
@@ -104,11 +104,11 @@ rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t
 
             count = ClockGetTimeIntervalUs(startTime);
             COND_RETURN_ERROR(((timeRemain != 0U) && (count >= timeRemain)), RT_ERROR_WAIT_TIMEOUT,
-                "Abort kill timeout, device_id=%u, op=%u, time=%luus", devId, op, count);
+                "Abort kill timeout, device_id=%u, op=%u, time cost=%" PRIu64 "us", devId, op, count);
             (void)mmSleep(1U);
         }
 
-        RT_LOG(RT_LOG_INFO, "DeviceKill[%u] op=%u, time=%luus, end", devId, op, count);
+        RT_LOG(RT_LOG_INFO, "DeviceKill[%u] op=%u, time cost=%" PRIu64 "us, end", devId, op, count);
         return error; // one pid kill once
     }
     return error;
@@ -149,11 +149,11 @@ rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_
 
             count = ClockGetTimeIntervalUs(startTime);
             COND_RETURN_ERROR(((timeRemain != 0U) && (count >= timeRemain)),
-                RT_ERROR_WAIT_TIMEOUT, "Abort query timeout, device_id=%u, op=%u, time=%luus.", devId, op, count);
+                RT_ERROR_WAIT_TIMEOUT, "Abort query timeout, device_id=%u, op=%u, time cost=%" PRIu64 "us.", devId, op, count);
             (void)mmSleep(5U);
         }
 
-        RT_LOG(RT_LOG_INFO, "DeviceQuery[%u] op=%u end, time=%luus.", devId, op, count);
+        RT_LOG(RT_LOG_INFO, "DeviceQuery[%u] op=%u end, time cost=%" PRIu64 "us.", devId, op, count);
         return error; // one pid kill once
     }
     return error;
@@ -193,8 +193,8 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
     }
     count = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(((timeRemain != 0U) && (count >= timeRemain)),
-        RT_ERROR_WAIT_TIMEOUT, "DeviceResume timeout, device_id=%u, time=%lu us", devId, count);
-    RT_LOG(RT_LOG_INFO, "DeviceResume[%u] end, time=%lu us.", devId, count);
+        RT_ERROR_WAIT_TIMEOUT, "DeviceResume timeout, device_id=%u, time cost=%" PRIu64 "us", devId, count);
+    RT_LOG(RT_LOG_INFO, "DeviceResume[%u] end, time cost=%" PRIu64 "us.", devId, count);
     return error;
 }
 
@@ -207,7 +207,7 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
     const uint64_t startTime = ClockGetTimeUs();
     std::function<void()> const abortTimeoutInfo = [&devId, &index, &timeCost]() {
         for (int32_t i = 1U; i <= index; ++i) {
-            RT_LOG(RT_LOG_EVENT, "device_id=%d, step %d: time cost=%llu us", devId, i, (timeCost[i] - timeCost[i-1]));
+            RT_LOG(RT_LOG_EVENT, "device_id=%d, step %d: time cost=%" PRIu64 "us", devId, i, (timeCost[i] - timeCost[i-1]));
         }
     };
     ScopeGuard abortInfo(abortTimeoutInfo);
