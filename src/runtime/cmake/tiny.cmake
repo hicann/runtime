@@ -19,6 +19,8 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_info.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory_task.cc
