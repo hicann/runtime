@@ -53,21 +53,22 @@ public:
         result->kerArgs = argsInfo->args;
         COND_RETURN_WITH_NOLOG((argsInfo->isNoNeedH2DCopy != 0U), RT_ERROR_NONE);
 
-        error = AllocCopyPtr(argsInfo->argsSize, useArgPool, result);
+        const uint32_t size = argsInfo->argsSize;
+        error = AllocCopyPtr(size, useArgPool, result);
         if (error != RT_ERROR_NONE) {
             FreeFail(result);
-            RT_LOG(RT_LOG_ERROR, "Alloc args copy ptr failed, device_id=%u, stream_id=%d.", devId, stmId);
+            RT_LOG(RT_LOG_ERROR, "Alloc args copy ptr failed, size=%u, device_id=%u, stream_id=%d.", size, devId, stmId);
             return error;
         }
-        RT_LOG(RT_LOG_DEBUG, "Alloc args copy ptr success, device_id=%u, stream_id=%d.", devId, stmId);
+        RT_LOG(RT_LOG_DEBUG, "Alloc args copy ptr success, size=%u, device_id=%u, stream_id=%d.", size, devId, stmId);
 
         error = LoadInputOutputArgs(result, argsInfo);
         if (error != RT_ERROR_NONE) {
             FreeFail(result);
-            RT_LOG(RT_LOG_ERROR, "Load args failed, device_id=%u, stream_id=%d.", devId, stmId);
+            RT_LOG(RT_LOG_ERROR, "Load args failed, size=%u, device_id=%u, stream_id=%d.", size, devId, stmId);
             return error;
         }
-        RT_LOG(RT_LOG_INFO, "Load args success, device_id=%u, stream_id=%d.", devId, stmId);
+        RT_LOG(RT_LOG_INFO, "Load args success, size=%u, device_id=%u, stream_id=%d.", size, devId, stmId);
         return RT_ERROR_NONE;
     }
 
