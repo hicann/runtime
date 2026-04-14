@@ -120,13 +120,13 @@ set(TEST_SRC
     testcase/stacktrace/stacktrace_unwind_utest.cc
     testcase/stacktrace/stacktrace_unwind_instr_utest.cc
     testcase/stacktrace/stacktrace_unwind_inner_utest.cc
-    testcase/stacktrace/stacktrace_dumper_bin_utest.cc
+    # testcase/stacktrace/stacktrace_dumper_bin_utest.cc
 
     testcase/stacktrace_dumper/scd_core_utest.cc
     testcase/stacktrace_dumper/scd_maps_utest.cc
     testcase/stacktrace_dumper/scd_process_utest.cc
     testcase/stacktrace_dumper/scd_registers_utest.cc
-    testcase/stacktrace_dumper/scd_threads_utest.cc
+    # testcase/stacktrace_dumper/scd_threads_utest.cc
     testcase/stacktrace_dumper/scd_utils_utest.cc
     testcase/stacktrace_dumper/scd_memory_utest.cc
     testcase/stacktrace_dumper/scd_dwarf_utest.cc

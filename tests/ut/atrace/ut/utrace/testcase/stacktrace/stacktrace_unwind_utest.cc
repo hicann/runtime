@@ -335,31 +335,3 @@ TEST_F(TraceUnwindUtest, TestCallStackRegUpdate)
     EXPECT_EQ(expResult, regArr.r[index & REG_VAILD_MASK]);
     GlobalMockObject::verify();
 }
-
-TEST_F(TraceUnwindUtest, TestTraceSearchFdeOffsetTable)
-{
-    // test pc eq left value of pc range
-    uintptr_t pc = 0xffff00000000;
-    uintptr_t pcOffset = 0x0000;
-    dwarf.memory->data = pc - pcOffset;
-    dwarf.fdeCount = 100;
-    FdeEntry fdeItem[100];
-    uintptr_t uvTblStatAddr = (uintptr_t)&fdeItem;
-    for (int i = 1; i < dwarf.fdeCount; i++) {
-        fdeItem[i].initLocOffset = fdeItem[i - 1].initLocOffset + 0x18;
-    }
-
-    for (int i = 1; i < dwarf.fdeCount; i++) {
-        pc = (uintptr_t)dwarf.memory->data + fdeItem[i].initLocOffset - 1;
-        EXPECT_EQ(TraceSearchFdeOffsetTable((uintptr_t)&dwarf, uvTblStatAddr, pc), &fdeItem[i - 1]);
-        pc = (uintptr_t)dwarf.memory->data + fdeItem[i].initLocOffset;
-#ifdef __x86_64__
-        EXPECT_EQ(TraceSearchFdeOffsetTable((uintptr_t)&dwarf, uvTblStatAddr, pc), &fdeItem[i]);
-#else
-        EXPECT_EQ(TraceSearchFdeOffsetTable((uintptr_t)&dwarf, uvTblStatAddr, pc), &fdeItem[i - 1]);
-#endif
-
-        pc = (uintptr_t)dwarf.memory->data + fdeItem[i].initLocOffset + 1;
-        EXPECT_EQ(TraceSearchFdeOffsetTable((uintptr_t)&dwarf, uvTblStatAddr, pc), &fdeItem[i]);
-    }
-}

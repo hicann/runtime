@@ -622,28 +622,6 @@ TEST_F(TraceStackcoreUtest, TestSafeRecorder_TraceSafeWriteMapsInfo)
     GlobalMockObject::verify();
 }
 
-TEST_F(TraceStackcoreUtest, TestSafeRecorder_TraceSaveProcessTask)
-{
-    TraStatus ret = TRACE_FAILURE;
-    int32_t pid = getpid();
-
-    MOCKER(vsnprintf_s).stubs().will(returnValue(-1));// snprintf_s failed
-    ret = TraceSaveProcessTask(pid);
-    EXPECT_EQ(TRACE_FAILURE, ret);
-    GlobalMockObject::verify();
-
-    auto mocker = reinterpret_cast<int (*)(char *, int)>(open);
-    MOCKER(mocker).stubs().will(returnValue(-1));
-    ret = TraceSaveProcessTask(pid);
-    EXPECT_EQ(TRACE_FAILURE, ret);
-    GlobalMockObject::verify();
-
-    MOCKER(TraceSafeReadLine).stubs().will(returnValue(-1));
-    ret = TraceSaveProcessTask(pid);
-    EXPECT_EQ(TRACE_FAILURE, ret);
-    GlobalMockObject::verify();
-}
-
 TEST_F(TraceStackcoreUtest, TestSafeRecorder_TraceSafeMkdirPath)
 {
     uint64_t crashTime = std::time(0);

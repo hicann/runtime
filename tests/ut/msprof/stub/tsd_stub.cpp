@@ -10,6 +10,7 @@
 #include <map>
 #include "tsd/tsd_client.h"
 #include <unistd.h>
+#include <string>
 
 namespace {
     pid_t pid = 12345;

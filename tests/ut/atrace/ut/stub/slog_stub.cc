@@ -11,6 +11,9 @@
 #include <map>
 #include <unistd.h>
 #include <mutex>
+#include "securec.h"
+#include <string>
+
 std::mutex mtx_;
 int g_log_level = DLOG_INFO;
 

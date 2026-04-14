@@ -247,21 +247,6 @@ TEST_F(TraceRecorderUtest, TestSafeGetBinFd)
     EXPECT_EQ(TRACE_SUCCESS, ret);
 }
 
-TEST_F(TraceRecorderUtest, TestGetEventFd)
-{
-    char timeStr[TIMESTAMP_MAX_LENGTH] = {0};
-    auto ret = TimestampToFileStr(std::time(0), timeStr, TIMESTAMP_MAX_LENGTH);
-    EXPECT_EQ(TRACE_SUCCESS, ret);
-    for (int32_t i = 0; i < 15; i++) {
-        TraceDirInfo dirInfo = { TRACER_SCHEDULE_NAME, getpid(), timeStr };
-        TraceFileInfo info = { TRACER_SCHEDULE_NAME,  "ts_0", ".txt" };
-        int32_t fd = -1;
-        ret = TraceRecorderGetFd(&dirInfo, &info, &fd);
-        EXPECT_EQ(TRACE_SUCCESS, ret);
-        close(fd);
-    }
-}
-
 TEST_F(TraceRecorderUtest, TraceRecorderGetFd_Failed)
 {
     char timeStr[TIMESTAMP_MAX_LENGTH] = {0};

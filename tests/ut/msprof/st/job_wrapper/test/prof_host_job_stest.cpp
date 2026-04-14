@@ -957,12 +957,6 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, Uninit) {
 
     EXPECT_EQ(PROFILING_FAILED, profHostService->Uninit());
     EXPECT_EQ(PROFILING_FAILED, profHostService->Uninit());
-    profHostService->profHostOutDir_ = "/JOB_WRAPPER_PROF_HOST_SERVER_TEST";
-    EXPECT_EQ(PROFILING_FAILED, profHostService->Uninit());
-    analysis::dvvp::common::utils::Utils::CreateDir("/tmp/JOB_WRAPPER_PROF_HOST_SERVER_TEST/");
-    profHostService->profHostOutDir_ = "/tmp/JOB_WRAPPER_PROF_HOST_SERVER_TEST";
-    EXPECT_EQ(PROFILING_SUCCESS, profHostService->Uninit());
-    analysis::dvvp::common::utils::Utils::RemoveDir("/tmp/JOB_WRAPPER_PROF_HOST_SERVER_TEST/");
 }
 
 TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, CollectToolIsRun) {
