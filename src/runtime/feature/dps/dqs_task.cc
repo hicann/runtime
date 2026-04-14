@@ -68,6 +68,10 @@ static rtError_t InitFuncCallParaForDqsEnqueueTask(TaskInfo* taskInfo, RtStarsDq
     offset = offsetof(stars_dqs_ctrl_space_t, output_mbuf_free_addrs); // 这里使用ctrlSpace地址，是共享内存，内核态做了映射
     fcPara.mbufFreePara.mbufFreeAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
 
+    offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
+    offset += offsetof(mbuf_list_op_snapshot_info, real_enqueque_output_mbuf_cnt);
+    fcPara.realEnqueMbufCntAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
     return RT_ERROR_NONE;
 }
 
@@ -163,6 +167,10 @@ static rtError_t InitFuncCallParaForDqsDequeueTask(TaskInfo* taskInfo, RtStarsDq
 
     offset = offsetof(stars_dqs_ctrl_space_t, input_queue_gqm_base_addrs);
     fcPara.gqmAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
+    offset = offset + offsetof(mbuf_list_op_snapshot_info, real_input_mbuf_cnt);
+    fcPara.realInputMbufCntAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
 
     RT_LOG(RT_LOG_INFO,"gqmAddr=%#llx, inputMbufHandleAddr=%#llx", fcPara.gqmAddr, fcPara.inputMbufHandleAddr);
 
@@ -461,6 +469,11 @@ static rtError_t InitFuncCallParaForDqsMbufFreeTask(TaskInfo* const taskInfo, Rt
     fcPara.schedType = ctrlSpacePtr->type;
     fcPara.lastMbufHandleAddr = RtPtrToValue(&ctrlSpacePtr->input_mbuf_cache_list[0].last_used_handle);
     fcPara.sizeofHandleCache = static_cast<uint8_t>(sizeof(input_mbuf_cache_t));
+
+    offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
+    offset = offset + offsetof(mbuf_list_op_snapshot_info, real_free_input_mbuf_cnt);
+    fcPara.realFreeMbufCntAddr = fcPara.ctrlSpaceAddr + static_cast<uint64_t>(offset);
+
     return RT_ERROR_NONE;
 }
 
@@ -1133,6 +1146,10 @@ static rtError_t InitFuncCallParaForDqsPrepareTask(TaskInfo *taskInfo, RtStarsDq
 
     offset = offsetof(stars_dqs_ctrl_space_t, output_head_pool_block_size_list);
     fcPara.csPtrOutputHeadPoolBlockSize = fcPara.ctrlSpacePtr + static_cast<uint64_t>(offset);
+
+    offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
+    offset += offsetof(mbuf_list_op_snapshot_info, real_output_alloc_mbuf_cnt);
+    fcPara.realOutputAllocMbufCntAddr = fcPara.ctrlSpacePtr + static_cast<uint64_t>(offset);
 
     RT_LOG(RT_LOG_INFO, "init dqs prepare function call params, dfxPoolIdx=%#llx, dfxMbufAllocRes=%#llx, "
         "ctrlSpace=%#llx, inputMbufHandle=%#llx, inputHeadPoolBase=%#llx, inputHeadPoolBlkSize=%#llx, "

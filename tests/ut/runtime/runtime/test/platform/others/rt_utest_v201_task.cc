@@ -677,10 +677,12 @@ TEST_F(TaskTestV201, Test_dqs_cond_construct_fc_01)
     EXPECT_EQ(fc1.andi1.opCode, RT_STARS_COND_ISA_OP_CODE_OP_IMM);
 
     RtStarsDqsDequeueFc fc2 = {};
+    fcp1.realEnqueMbufCntAddr = 0x1000;
     ConstructDqsDequeueFc(fc2, fcp1);
     EXPECT_EQ(fc2.llwi1.opCode, RT_STARS_COND_ISA_OP_CODE_LWI);
 
     RtStarsDqsPrepareFcPara funcCallPara1 = {};
+    funcCallPara1.realOutputAllocMbufCntAddr = 0x2000;
     RtStarsDqsPrepareOutFc fc3 = {};
     ConstructDqsPrepareFc(fc3, funcCallPara1);
     EXPECT_EQ(fc3.addi1.opCode, RT_STARS_COND_ISA_OP_CODE_OP_IMM);

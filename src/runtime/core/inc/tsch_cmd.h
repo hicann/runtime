@@ -254,6 +254,13 @@ typedef struct {
 } input_mbuf_cache_t;
 
 typedef struct {
+    uint8_t real_input_mbuf_cnt;
+    uint8_t real_output_alloc_mbuf_cnt;
+    uint8_t real_enqueque_output_mbuf_cnt;
+    uint8_t real_free_input_mbuf_cnt;
+} mbuf_list_op_snapshot_info;
+
+typedef struct {
     uint16_t stream_id;                                                         // stream id
     uint8_t input_queue_num;                                                    // 输入队列数量
     uint8_t output_queue_num;                                                   // 输出队列数量
@@ -293,6 +300,7 @@ typedef struct {
     uint32_t frame_align_timeout_threshold;
     uint64_t default_input_addr[STARS_DQS_MAX_INPUT_QUEUE_NUM];
     uint64_t align_res; // 1 success, 0 fail
+    mbuf_list_op_snapshot_info mbuf_list_op_snapshot;
 } stars_dqs_ctrl_space_t;
 
 typedef struct {

@@ -69,6 +69,10 @@ struct RtStarsGqmInitFc {
 };
 
 struct RtStarsDqsEnqueueFc {
+    RtStarsCondOpLLWI              llwiCntAddr0;
+    RtStarsCondOpLHWI              lhwiCntAddr0;
+    RtStarsCondOpStore             initCnt0;
+
     RtStarsCondOpImm               andi1;
     RtStarsCondOpLLWI              llwi1;
     RtStarsCondOpLHWI              lhwi1;
@@ -108,11 +112,20 @@ struct RtStarsDqsEnqueueFc {
     RtStarsCondOpImmSLLI           srli2;
     RtStarsCondOpLoad              ldr5;
     RtStarsCondOpStore             enquei;
+
+    // 成功计数处理
+    RtStarsCondOpLLWI              llwiCntAddr1;
+    RtStarsCondOpLHWI              lhwiCntAddr1;
+    RtStarsCondOpLoad              ldrCntAddr1;
+    RtStarsCondOpImm               addiCntAddr1;
+    RtStarsCondOpStore             incCnt1;
+
     RtStarsCondOpImm               addi1;
     RtStarsCondOpImm               addi2;
     RtStarsCondOpImm               addi3;
     RtStarsCondOpImm               addi4;
     RtStarsCondOpImm               addi5;
+
     RtStarsSetCsrJumpPc            jumpPc4;
     RtStarsCondOpBranch            blt1;
     RtStarsSetCsrJumpPc            jumpPc5;
@@ -129,6 +142,10 @@ struct RtStarsDqsEnqueueFc {
 };
 
 struct RtStarsDqsDequeueFc {
+    RtStarsCondOpLLWI              llwiCntAddr0;
+    RtStarsCondOpLHWI              lhwiCntAddr0;
+    RtStarsCondOpStore             initCnt0;
+
     RtStarsCondOpLLWI              llwi1;
     RtStarsCondOpLHWI              lhwi1;
     RtStarsCondOpLLWI              llwi2;
@@ -145,11 +162,14 @@ struct RtStarsDqsDequeueFc {
     RtStarsCondOpBranch            bne1;
     RtStarsCondOpStore             swdfx2;
     RtStarsSetCsrJumpPc            jumpPc2;
-
     RtStarsCondOpImmSLLI           srli1;
     RtStarsCondOpBranch            bne2;
-
     RtStarsCondOpStore             store;
+
+    RtStarsCondOpLoad              ldr2;
+    RtStarsCondOpImm               addi1;
+    RtStarsCondOpStore             initCnt1;
+
     RtStarsSetCsrJumpPc            jumpPc3;
     RtStarsCondOpBranch            beq1;               // BEQ: r0 r0, goto nop
 
@@ -164,6 +184,10 @@ struct RtStarsDqsDequeueFc {
 };
 
 struct RtStarsDqsPrepareOutFc {
+    RtStarsCondOpLLWI             llwiCntAddr1;
+    RtStarsCondOpLHWI             lhwiCntAddr1;
+    RtStarsCondOpStore            initCnt1;
+
     // 计算input[0] private info addr
     RtStarsCondOpLLWI             llwi1;
     RtStarsCondOpLHWI             lhwi1;
@@ -182,7 +206,6 @@ struct RtStarsDqsPrepareOutFc {
     RtStarsCondOpLHWI             lhwi5;
     RtStarsCondOpLoad             load3;
     RtStarsCondOpOp               add1;
-
     // Loop1: 申请output mbuf handle，计算output private info addr、异常处理
     // 初始化index和for循环上界
     RtStarsCondOpImm              addi1;
@@ -216,6 +239,10 @@ struct RtStarsDqsPrepareOutFc {
     RtStarsCondOpImmSLLI          slli2;
     RtStarsCondOpOp               add3;
     RtStarsCondOpStore            store3;
+
+    RtStarsCondOpLoad             ldrCntAddr1;
+    RtStarsCondOpImm              addiCnt;
+    RtStarsCondOpStore            incCnt1;
 
     // 计算output[i] privateinfo addr
     RtStarsCondOpLLWI             llwi15;

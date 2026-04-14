@@ -64,6 +64,18 @@ static void ConstructOpAnd(const rtStarsCondIsaRegister_t rs1Reg, const rtStarsC
     ConstructOpOp(rs1Reg, rs2Reg, dstReg, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, opOp);
 }
 
+static void InitMbufOpCnt(const rtStarsCondIsaRegister_t dstReg, uint64_t cntAddr,
+    RtStarsCondOpLLWI &llwiCntAddr, RtStarsCondOpLHWI &lhwiCntAddr, RtStarsCondOpStore &initCnt)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+
+    ConstructLLWI(dstReg, cntAddr, llwiCntAddr);
+    ConstructLHWI(dstReg, cntAddr, lhwiCntAddr);
+    ConstructStore(dstReg, r0, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, initCnt);
+
+    return;
+}
+
 static void ConstructMbufFreeDssDelayPart(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPara &funcCallPara)
 {
     constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
@@ -139,7 +151,12 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     constexpr rtStarsCondIsaRegister_t r6 = RT_STARS_COND_ISA_REGISTER_R6;
     constexpr rtStarsCondIsaRegister_t r7 = RT_STARS_COND_ISA_REGISTER_R7;
     constexpr rtStarsCondIsaRegister_t r8 = RT_STARS_COND_ISA_REGISTER_R8;
+    constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
+    constexpr rtStarsCondIsaRegister_t r10 = RT_STARS_COND_ISA_REGISTER_R10;
     constexpr uint64_t axiUserVaCfgMask = 0x900000009ULL;
+
+    // realFreeMbufCnt = 0
+    InitMbufOpCnt(r1, funcCallPara.realFreeMbufCntAddr, fc.llwiCntAddr1, fc.lhwiCntAddr1, fc.initCnt1);
 
     // r8 = read immd reg va cfg mask
     ConstructLLWI(r8, axiUserVaCfgMask, fc.llwi);
@@ -188,6 +205,13 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     // r6自增1, index ++
     ConstructOpImmAndi(r6, r6, 1, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi4);
 
+    // increment realFreeMbufCntAddr
+    ConstructLLWI(r10, static_cast<uint64_t>(funcCallPara.realFreeMbufCntAddr), fc.llwiCntAddr2);
+    ConstructLHWI(r10, static_cast<uint64_t>(funcCallPara.realFreeMbufCntAddr), fc.lhwiCntAddr2);
+    ConstructLoad(r10, 0U, r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCntAddr1);
+    ConstructOpImmAndi(r9, r9, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCnt1);
+    ConstructStore(r10, r9, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.incCnt1);
+
     // Jump pc 在 Func call 中，跳转指令大于15时，需要借助 CSR寄存器(JUMP_PC)完成跳转
     uint64_t offset = offsetof(RtStarsDqsMbufFreeFc, ldr1);
     offset = offset / sizeof(uint32_t);
@@ -217,6 +241,9 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc &fc, const RtStarsDqsFcPara &func
     constexpr rtStarsCondIsaRegister_t r8 = RT_STARS_COND_ISA_REGISTER_R8;
     constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
     constexpr rtStarsCondIsaRegister_t r10 = RT_STARS_COND_ISA_REGISTER_R10;
+
+    // realEnqueMbufCntAddr = 0
+    InitMbufOpCnt(r1, funcCallPara.realEnqueMbufCntAddr, fc.llwiCntAddr0, fc.lhwiCntAddr0, fc.initCnt0);
 
     // r10 作为output queue num 的下标，从0开始
     ConstructOpImmAndi(r0, r10, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, fc.andi1);
@@ -304,6 +331,13 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc &fc, const RtStarsDqsFcPara &func
     // Qmanager enqueue
     ConstructStore(r7, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.enquei);
 
+    // increment realEnqueMbufCntAddr
+    ConstructLLWI(r5, static_cast<uint64_t>(funcCallPara.realEnqueMbufCntAddr), fc.llwiCntAddr1);
+    ConstructLHWI(r5, static_cast<uint64_t>(funcCallPara.realEnqueMbufCntAddr), fc.lhwiCntAddr1);
+    ConstructLoad(r5, 0U, r7, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCntAddr1);
+    ConstructOpImmAndi(r7, r7, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCntAddr1);
+    ConstructStore(r5, r7, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.incCnt1);
+
     // r1 prodqOwAddr + 8， 下一个prodqOwAddr
     ConstructOpImmAndi(r1, r1, 8, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
 
@@ -369,6 +403,9 @@ void ConstructDqsDequeueFc(RtStarsDqsDequeueFc &fc, const RtStarsDqsFcPara &func
     constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
     RtStarsCondGqmOpFc gqmPopi;
  
+    // realInputMbufCntAddr = 0
+    InitMbufOpCnt(r4, funcCallPara.realInputMbufCntAddr, fc.llwiCntAddr0, fc.lhwiCntAddr0, fc.initCnt0); 
+    
     // load GQM inst into R1
     ConstructGqmPopInstr(gqmPopi.inst);
     ConstructLLWI(r1, static_cast<uint64_t>(gqmPopi.value), fc.llwi1);
@@ -408,6 +445,15 @@ void ConstructDqsDequeueFc(RtStarsDqsDequeueFc &fc, const RtStarsDqsFcPara &func
 
     // write mbuffer into mbuf handle addr
     ConstructStore(r8, r7, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.store);
+
+
+    // r4 is cnt addr
+    ConstructLoad(r4, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr2);
+    // increment count: R5 = R5 + 1
+    ConstructOpImmAndi(r5, r5, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
+    // store updated count back
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.initCnt1);
+
 
     offset = static_cast<uint64_t>(RtPtrToPtr<const uint32_t *>(&fc.end) - RtPtrToPtr<const uint32_t *>(&fc));
     /* go to nop */
@@ -689,6 +735,10 @@ void ConstructDqsPrepareFc(RtStarsDqsPrepareOutFc &fc, const RtStarsDqsPrepareFc
     constexpr rtStarsCondIsaRegister_t r6 = RT_STARS_COND_ISA_REGISTER_R6;
     constexpr rtStarsCondIsaRegister_t r7 = RT_STARS_COND_ISA_REGISTER_R7;
     constexpr rtStarsCondIsaRegister_t r8 = RT_STARS_COND_ISA_REGISTER_R8;
+    constexpr rtStarsCondIsaRegister_t r9 = RT_STARS_COND_ISA_REGISTER_R9;
+
+    // realOutputAllocMbufCnt = 0
+    InitMbufOpCnt(r9, fcPara.realOutputAllocMbufCntAddr, fc.llwiCntAddr1, fc.lhwiCntAddr1, fc.initCnt1); 
 
     /* 计算input_private_info_addr，存入r1 */ 
     ConstructLLWI(r1, fcPara.csPtrInputMbufHandleAddr, fc.llwi1);
@@ -762,6 +812,12 @@ void ConstructDqsPrepareFc(RtStarsDqsPrepareOutFc &fc, const RtStarsDqsPrepareFc
     ConstructOpAdd(r5, r6, r5, fc.add3);
     // 存入mbuf_handle
     ConstructStore(r5, r4, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.store3);
+
+    // 如果mbuf存入output_mbuf_list完成realOutputAllocMbufCnt递增
+    ConstructLoad(r9, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCntAddr1);
+    ConstructOpImmAndi(r5, r5, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCnt);
+    ConstructStore(r9, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.incCnt1);
+
 
     /* 计算output_private_info_addr[i]，存入r4 */
     ConstructLLWI(r5, fcPara.csPtrOutputHeadPoolBlockSize, fc.llwi15);

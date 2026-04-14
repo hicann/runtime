@@ -174,6 +174,10 @@ struct RtStarsDqsFrameAlignFc {
 };
 
 struct RtStarsDqsMbufFreeFc {
+    RtStarsCondOpLLWI              llwiCntAddr1;
+    RtStarsCondOpLHWI              lhwiCntAddr1;
+    RtStarsCondOpStore             initCnt1;
+
     RtStarsCondOpLLWI              llwi;
     RtStarsCondOpLHWI              lhwi;
     RtStarsCondOpImm               andi;
@@ -217,6 +221,13 @@ struct RtStarsDqsMbufFreeFc {
     RtStarsCondOpImm               addi2;
     RtStarsCondOpImm               addi3;
     RtStarsCondOpImm               addi4;
+
+    RtStarsCondOpLLWI              llwiCntAddr2;
+    RtStarsCondOpLHWI              lhwiCntAddr2;
+    RtStarsCondOpLoad              ldrCntAddr1;
+    RtStarsCondOpImm               addiCnt1;
+    RtStarsCondOpStore             incCnt1;
+
     RtStarsSetCsrJumpPc            jumpPc4;
     RtStarsCondOpBranch            blt1;
     RtStarsCondOpNop               end;  // end of func, must be the last instruction
