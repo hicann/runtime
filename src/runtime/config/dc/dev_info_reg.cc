@@ -215,7 +215,7 @@ static const DevProperties CHIP_DC_PROPERTIES = {
     .rtsqDepth = 2048U,
     .maxTaskNumPerStream = 2042U,
     .maxTaskNumPerHugeStream = 0U,
-    .rtsqReservedTaskNum = 0U,
+    .rtsqReservedTaskNum = 6U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DC, CHIP_DC_PROPERTIES);
