@@ -519,6 +519,8 @@ rtError_t ApiErrorDecorator::BinaryGetMetaNum(Program * const binHandle, const r
 {
     NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(numOfMeta, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_OUT_ERROR_MSG_CALL(binHandle->GetKernelRegType() != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE,
+        "The binHandle is invalid. binHandle obtained after registering the AICPU operator is not supported.");
     return impl_->BinaryGetMetaNum(binHandle, type, numOfMeta);
 }
 
@@ -528,6 +530,8 @@ rtError_t ApiErrorDecorator::BinaryGetMetaInfo(Program * const binHandle, const 
     NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(data, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(dataSize, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_OUT_ERROR_MSG_CALL(binHandle->GetKernelRegType() != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE,
+        "The binHandle is invalid. binHandle obtained after registering the AICPU operator is not supported.");
     return impl_->BinaryGetMetaInfo(binHandle, type, numOfMeta, data, dataSize);
 }
 

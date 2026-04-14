@@ -1686,7 +1686,8 @@ rtError_t GetBinaryMetaInfo(const rtElfData * const elfData, const uint16_t type
     
     for (size_t i = 0U; i < numOfMeta; i++) {
         if (dataSize[i] != metaInfo[i].second) {
-            RT_LOG_OUTER_MSG_INVALID_PARAM(dataSize[i], metaInfo[i].second);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, dataSize[i], "dataSize[" + std::to_string(i) + "]",
+                metaInfo[i].second);
             return RT_ERROR_INVALID_VALUE;
         }
 
