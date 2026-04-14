@@ -521,13 +521,13 @@ public:
                                        ArgLoaderResult &result);
     rtError_t UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel, const uint32_t kernelType,
                                 const Stream * const stm) const;
-    rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm) const;
+    rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
     rtError_t UpdateNormalKernelTaskD2HSubmit(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe) const;
-    rtError_t UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm) const;
+    rtError_t UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
     rtError_t UpdateEndGraphTask(Stream * const origCaptureStream, Stream * const exeStream, Notify *ntf) const;
     rtError_t MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) const;
     rtError_t MemWaitValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) const;

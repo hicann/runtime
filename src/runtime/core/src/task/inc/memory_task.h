@@ -35,7 +35,7 @@ rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
                                 const void *&src, void *&des, uint64_t size);
 rtError_t MixKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize);
 rtError_t SqeUpdateH2DTaskInit(TaskInfo * const taskInfo, void *srcAddr, void *dstAddr, const uint64_t cpySize,
-                               void *releaseArgHandle);
+                               void *releaseArgHandle, void *updateArgHandle);
 rtError_t NormalKernelUpdatePrepare(TaskInfo * const updateTask, void ** const hostAddr, const uint64_t allocSize);
 
 /* D2H copy, src = sqeBaseAddr + sqeOffset, dst info = sqId + pos + sqeOffset, convert dst addr by ts-agent */
@@ -72,6 +72,7 @@ rtError_t GetWaitValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* c
 rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* const params);
 
+rtError_t WaitAsyncCopyCompleteForMemcpyTask(TaskInfo* taskInfo);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_MEMORY_TASK_H

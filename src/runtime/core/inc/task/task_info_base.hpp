@@ -234,6 +234,7 @@ struct MemcpyAsyncTaskInfo {
     void *originalDes;
     void *memcpyAddrInfo;
     void *releaseArgHandle;  // old argHandle will be release after update
+    void *updateArgHandle;
     std::vector<std::shared_ptr<void>> *guardMemVec;
     uint64_t size;
     uint32_t copyType;

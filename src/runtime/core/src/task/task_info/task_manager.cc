@@ -1082,6 +1082,8 @@ static void RegWaitAsyncCpCompleteFunc(const std::vector<rtChipType_t> &chipType
         waitAsyncCpCompleteFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &WaitAsyncCopyCompleteForDavinciTask;
         waitAsyncCpCompleteFunc[TS_TASK_TYPE_KERNEL_AICORE] = &WaitAsyncCopyCompleteForDavinciTask;
         waitAsyncCpCompleteFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &WaitAsyncCopyCompleteForDavinciMultipleTask;
+        waitAsyncCpCompleteFunc[TS_TASK_TYPE_MEMCPY] = &WaitAsyncCopyCompleteForMemcpyTask;
+        waitAsyncCpCompleteFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &WaitAsyncCopyCompleteForUpdateTask;
     }
 }
 

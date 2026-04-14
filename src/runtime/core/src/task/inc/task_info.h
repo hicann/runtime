@@ -59,7 +59,7 @@ void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const 
 
 void PrintErrorInfoCommon(TaskInfo *taskInfo, const uint32_t devId);
 rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo * const taskInfo, rtStarsModelExeFuncCallPara_t &funcCallPara);
-
+rtError_t WaitAsyncCopyCompleteForUpdateTask(TaskInfo* taskInfo);
 }
 }
 #endif

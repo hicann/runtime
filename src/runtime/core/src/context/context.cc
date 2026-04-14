@@ -851,7 +851,7 @@ rtError_t Context::UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel *
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm) const
+rtError_t Context::UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -872,7 +872,7 @@ rtError_t Context::UpdateMixKernelTask(TaskInfo * const updateTask, Stream * con
         goto ERROR_RECYCLE;
     }
 
-    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, dstContextAddr, copySize, oldArgHandle);
+    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, dstContextAddr, copySize, oldArgHandle, updateArgHandle);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%llu, retCode=%#x.",
             device_->Id_(), stm->Id_(), copySize, error);
@@ -898,7 +898,7 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t Context::UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe) const
+rtError_t Context::UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe, void * const updateArgHandle) const
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
@@ -918,7 +918,7 @@ rtError_t Context::UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTa
         goto ERROR_RECYCLE;
     }
 
-    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, targetAddrOfUpdatedSqe, allocSize, oldArgHandle);
+    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, targetAddrOfUpdatedSqe, allocSize, oldArgHandle, updateArgHandle);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%llu, retCode=%#x.",
             device_->Id_(), stm->Id_(), allocSize, error);
@@ -944,11 +944,11 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t Context::UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm) const
+rtError_t Context::UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const
 {
     AicTaskInfo *aicTaskInfo = &(updateTask->u.aicTaskInfo);
     void *targetAddrOfUpdatedSqe = aicTaskInfo->sqeDevBuf;
-    return UpdateNormalKernelTaskH2DSubmitComm(updateTask, stm, targetAddrOfUpdatedSqe);
+    return UpdateNormalKernelTaskH2DSubmitComm(updateTask, stm, targetAddrOfUpdatedSqe, updateArgHandle);
 }
 
 rtError_t Context::UpdateNormalKernelTaskD2HSubmit(TaskInfo * const updateTask, Stream * const stm) const
@@ -987,7 +987,7 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t Context::UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm) const
+rtError_t Context::UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const
 {
     if (updateTask->stream->GetSqBaseAddr() == 0ULL) {
         /* 
@@ -1002,10 +1002,10 @@ rtError_t Context::UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTa
     }
 
     void *targetAddrOfUpdatedSqe = RtValueToPtr<void *>(updateTask->stream->GetSqBaseAddr() + (updateTask->pos * sizeof(rtStarsSqe_t)));
-    return UpdateNormalKernelTaskH2DSubmitComm(updateTask, stm, targetAddrOfUpdatedSqe);
+    return UpdateNormalKernelTaskH2DSubmitComm(updateTask, stm, targetAddrOfUpdatedSqe, updateArgHandle);
 }
 
-rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm) const
+rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const
 {
     rtError_t errorReason;
     TaskInfo submitTask = {};
@@ -1018,7 +1018,7 @@ rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Strea
     };
     ScopeGuard taskGuarder(kernTaskRecycle);
 
-    errorReason = SqeUpdateTaskInit(kernTask, updateTask);
+    errorReason = SqeUpdateTaskInit(kernTask, updateTask, updateArgHandle);
     COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
     errorReason = device_->SubmitTask(kernTask, taskGenCallback_);
     COND_RETURN_WITH_NOLOG((errorReason != RT_ERROR_NONE), errorReason);
@@ -1028,11 +1028,11 @@ rtError_t Context::UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Strea
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm) const
+rtError_t Context::UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const
 {
     rtError_t error = RT_ERROR_NONE;
     if (!Runtime::Instance()->ChipIsHaveStars()) {
-        error = UpdateNormalKernelTaskByTS(updateTask, stm);
+        error = UpdateNormalKernelTaskByTS(updateTask, stm, updateArgHandle);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "submit SqeUpdate task failed, device_id=%u, stream_id=%d, retCode=%#x.",
                 device_->Id_(), stm->Id_(), error);
@@ -1040,7 +1040,7 @@ rtError_t Context::UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * 
         return error;
     }
     if (updateTask->stream->IsSoftwareSqEnable()) {
-        error = UpdateNormalKernelTaskForSoftwareSq(updateTask, stm);
+        error = UpdateNormalKernelTaskForSoftwareSq(updateTask, stm, updateArgHandle);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "submit D2H task failed, device_id=%u, stream_id=%d, retCode=%#x.",
                 device_->Id_(), stm->Id_(), error);
@@ -1048,7 +1048,7 @@ rtError_t Context::UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * 
         return error;
     }
 
-    error = UpdateNormalKernelTaskH2DSubmit(updateTask, stm);
+    error = UpdateNormalKernelTaskH2DSubmit(updateTask, stm, updateArgHandle);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "submit H2D task failed, device_id=%u, stream_id=%d, retCode=%#x.",
             device_->Id_(), stm->Id_(), error);
@@ -1073,7 +1073,7 @@ rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream 
     rtError_t error;
     Model *model = updateTask->stream->Model_();
     ArgLoader * const argLoaderObj = Device_()->ArgLoader_();
-
+    void * updateArgHandle = result.handle;
     if (result.handle != nullptr) {
         /* get old argHandle */
         void *oldArgHandle = model->GetArgHandle(static_cast<uint16_t>(updateTask->stream->Id_()), updateTask->id);
@@ -1086,9 +1086,9 @@ rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream 
     }
 
     if (updateTask->u.aicTaskInfo.kernel->GetMixType() != NO_MIX) {
-        error = UpdateMixKernelTask(updateTask, stm);
+        error = UpdateMixKernelTask(updateTask, stm, updateArgHandle);
     } else {
-        error = UpdateNormalKernelTask(updateTask, stm);
+        error = UpdateNormalKernelTask(updateTask, stm, updateArgHandle);
     }
 
     if ((error != RT_ERROR_NONE) && (updateTask->u.aicTaskInfo.oldArgHandle != nullptr)) {

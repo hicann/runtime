@@ -55,6 +55,7 @@
 #include "task_info.hpp"
 #include "printf.hpp"
 #include "cmo_task.h"
+#include "task_info.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -2963,4 +2964,45 @@ TEST_F(TaskTest, ConstructUpdateTaskTest)
     ToCommand(&updateTask, &command);
     TaskUnInitProc(&task);
     TaskUnInitProc(&updateTask);
+}
+
+TEST_F(TaskTest, WaitAsyncCopyCompleteForUpdateTask)
+{
+    TaskInfo task = {};
+    rtError_t error;
+    Stream *taskStream = NULL;
+    NpuDriver drv;
+
+    error = rtStreamCreate((rtStream_t *)&taskStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    InitByStream(&task, taskStream);
+    AicTaskInit(&task, 0, 1, 0, nullptr);
+    EXPECT_EQ(task.u.aicTaskInfo.comm.dim, 1U);
+
+    Handle hdl;
+    RawDevice *device = new RawDevice(0);
+    device->driver_ = &drv;
+    memset_s(&hdl, sizeof(Handle), '\0', sizeof(Handle));
+    CpyHandle cpyHdl;
+    H2DCopyMgr *argAllocator = new (std::nothrow)
+        H2DCopyMgr(device, 10, 1024U, 1024U, BufferAllocator::LINEAR, COPY_POLICY_ASYNC_PCIE_DMA);
+    hdl.kerArgs = argAllocator->AllocDevMem();
+    hdl.argsAlloc = argAllocator;
+    hdl.freeArgs = true;
+    SetArgs(&task, nullptr, 0, &hdl);
+
+    TaskInfo updateTask = {};
+    InitByStream(&updateTask, stream_);
+    SqeUpdateTaskInit(&updateTask, &task, &hdl);
+
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopyAsyncWaitFinish).stubs().will(returnValue(RT_ERROR_NONE));
+    WaitAsyncCopyCompleteForUpdateTask(&updateTask);
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopyAsyncWaitFinishEx).stubs().will(returnValue(RT_ERROR_DRV_MEMORY));
+    WaitAsyncCopyCompleteForUpdateTask(&updateTask);
+    SetArgs(&task, nullptr, 0, nullptr);
+
+    delete argAllocator;
+    delete device;
+    GlobalMockObject::verify();
 }

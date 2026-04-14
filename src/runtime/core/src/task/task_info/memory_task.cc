@@ -1366,7 +1366,7 @@ rtError_t MixKernelUpdatePrepare(TaskInfo * const updateTask, void ** const host
 
 #if F_DESC("SqeUpdateH2DTask")
 rtError_t SqeUpdateH2DTaskInit(TaskInfo * const taskInfo, void *srcAddr,
-                               void *dstAddr, const uint64_t cpySize, void *releaseArgHandle)
+                               void *dstAddr, const uint64_t cpySize, void *releaseArgHandle, void * const updateArgHandle)
 {
     NULL_PTR_RETURN(srcAddr, RT_ERROR_MEMORY_ALLOCATION);
     NULL_PTR_RETURN(dstAddr, RT_ERROR_MEMORY_ALLOCATION);
@@ -1387,6 +1387,7 @@ rtError_t SqeUpdateH2DTaskInit(TaskInfo * const taskInfo, void *srcAddr,
     memcpyAsyncTask->isSqeUpdateH2D = true;
     memcpyAsyncTask->dmaKernelConvertFlag = true;
     memcpyAsyncTask->releaseArgHandle = releaseArgHandle;
+    memcpyAsyncTask->updateArgHandle = updateArgHandle;
 
     RT_LOG(RT_LOG_INFO, "device_id=%d, stream_id=%u", devId, stream->Id_());
 
@@ -2086,7 +2087,7 @@ rtError_t UpdateTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, v
         return error;
     }
  
-    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, sqeDeviceAddr, copySize, nullptr);
+    error = SqeUpdateH2DTaskInit(rtMemcpyAsyncTask, hostAddr, sqeDeviceAddr, copySize, nullptr, nullptr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "device_id=%u, stream_id=%d, allocSize=%llu, retCode=%#x.",
             stm->Device_()->Id_(), stm->Id_(), copySize, error);
@@ -2250,5 +2251,23 @@ rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, rtTaskParams* cons
 
 #endif
 
+rtError_t WaitAsyncCopyCompleteForMemcpyTask(TaskInfo* taskInfo)
+{
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    if (memcpyAsyncTaskInfo->updateArgHandle == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    Handle *argHdl = static_cast<Handle *>(memcpyAsyncTaskInfo->updateArgHandle);
+    if (!(argHdl->freeArgs) || argHdl->argsAlloc == nullptr || argHdl->kerArgs == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    const rtError_t error = argHdl->argsAlloc->H2DMemCopyWaitFinish(argHdl->kerArgs);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "H2DMemCopyWaitFinish for args cpy result failed, retCode=%#x.", static_cast<uint32_t>(error));
+        return error;
+    }
+
+    return RT_ERROR_NONE;
+}
 }  // namespace runtime
 }  // namespace cce
