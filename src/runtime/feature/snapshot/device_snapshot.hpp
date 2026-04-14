@@ -18,16 +18,18 @@ namespace cce {
 namespace runtime {
 
 #define RT_MAX_STREAM_NUM (32 * 1024)
-typedef struct StreamList {
+struct StreamList {
     uint32_t stmNum;
     rtStream_t stms[RT_MAX_STREAM_NUM];
-} StreamList_t;
+};
+using StreamList_t = StreamList;
 
 #define RT_MAX_MODEL_NUM (32 * 1024)
-typedef struct ModelList {
+struct ModelList {
     uint32_t mdlNum;
     rtModel_t mdls[RT_MAX_MODEL_NUM];
-} ModelList_t;
+};
+using ModelList_t = ModelList;
 
 class Device;
 class Stream;

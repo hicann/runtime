@@ -600,7 +600,7 @@ rtError_t ApiErrorDecorator::FuncGetAddr(const Kernel * const funcHandle, void *
     return error;
 }
 
-rtError_t ApiErrorDecorator::FuncGetSize(const Kernel * const funcHandle, size_t *aicSize, size_t *aivSize)
+rtError_t ApiErrorDecorator::FuncGetSize(const Kernel * const funcHandle, size_t * const aicSize, size_t * const aivSize)
 {
     NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(aicSize, RT_ERROR_INVALID_VALUE);

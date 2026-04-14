@@ -2387,10 +2387,10 @@ rtError_t ApiImpl::HostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
     if ((flag & (RT_MEM_HOST_REGISTER_MAPPED | RT_MEM_HOST_REGISTER_IOMEMORY | RT_MEM_HOST_REGISTER_READONLY)) != 0U) {
         uint32_t typeMask = static_cast<uint32_t>(RT_HOST_REGISTER_MAPPED);
         if ((flag & RT_MEM_HOST_REGISTER_IOMEMORY) != 0U) {
-            typeMask |= RT_HOST_REGISTER_IOMEMORY;
+            typeMask |= static_cast<uint32_t>(RT_HOST_REGISTER_IOMEMORY);
         }
         if ((flag & RT_MEM_HOST_REGISTER_READONLY) != 0U) {
-            typeMask |= RT_HOST_REGISTER_READONLY;
+            typeMask |= static_cast<uint32_t>(RT_HOST_REGISTER_READONLY);
         }
         error = dev->Driver_()->HostRegister(ptr, size, static_cast<rtHostRegisterType>(typeMask), pDevice,
             deviceId);
@@ -8718,7 +8718,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
 
-    captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_UPDATING);
+    captureModel->SetCaptureModelStatus(RtCaptureModelStatus::UPDATING);
 
     switch (params->type) {
         case RT_TASK_KERNEL:
@@ -8741,7 +8741,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
-    ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT);,
+    ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);,
         "task set params failed");
     taskInfo->updateFlag = RT_TASK_UPDATE;
     RT_LOG(
@@ -8758,11 +8758,11 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
 
-    if (captureModel->GetCaptureModelStatus() == RT_CAPTURE_MODEL_STATUS_READY) {
+    if (captureModel->GetCaptureModelStatus() == RtCaptureModelStatus::READY) {
         return RT_ERROR_NONE;
     }
 
-    if (captureModel->GetCaptureModelStatus() != RT_CAPTURE_MODEL_STATUS_UPDATING) {
+    if (captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::UPDATING) {
         RT_LOG(
             RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%d", captureModel->Id_(),
             captureModel->GetCaptureModelStatus());
@@ -8771,9 +8771,9 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
 
     rtError_t ret = captureModel->Update();
     if (ret == RT_ERROR_NONE) {
-        captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_READY);
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::READY);
     } else {
-        captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT);
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
     }
     return ret;
 }
@@ -8823,14 +8823,14 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
 
-    captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_UPDATING);
+    captureModel->SetCaptureModelStatus(RtCaptureModelStatus::UPDATING);
 
     rtTaskType taskType = RT_TASK_DEFAULT;
     error = ConvertTaskType(taskInfo, &taskType);
     ERROR_PROC_RETURN_MSG_INNER(error,
-        captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT);,
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);,
         "get task type failed, retCode=%#x.", error);
-    COND_PROC(taskType == RT_TASK_DEFAULT, captureModel->SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_FAULT));
+    COND_PROC(taskType == RT_TASK_DEFAULT, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT));
     COND_RETURN_AND_MSG_OUTER((taskType == RT_TASK_DEFAULT), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1001, "current task type can not be RT_TASK_DEFAULT.");
 

@@ -10,7 +10,6 @@
 #ifndef INC_EXTERNAL_ACL_RT_MEMORY_H_
 #define INC_EXTERNAL_ACL_RT_MEMORY_H_
 
-#include <stdint.h>
 #include <stddef.h>
 #include "acl_base.h"
 #include "acl/acl_rt.h"

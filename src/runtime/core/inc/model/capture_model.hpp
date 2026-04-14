@@ -20,13 +20,13 @@ namespace cce {
 namespace runtime {
 class Event;
 
-enum RtCaptureModelStatus {
-    RT_CAPTURE_MODEL_STATUS_NONE = 0,            // init status
-    RT_CAPTURE_MODEL_STATUS_CAPTURE_ACTIVE,      // capture status
-    RT_CAPTURE_MODEL_STATUS_CAPTURE_INVALIDATED, // capture invalidated status
-    RT_CAPTURE_MODEL_STATUS_UPDATING,            // updating status
-    RT_CAPTURE_MODEL_STATUS_FAULT,               // fault status
-    RT_CAPTURE_MODEL_STATUS_READY,               // capture or updating finish
+enum class RtCaptureModelStatus {
+    NONE = 0,            // init status
+    CAPTURE_ACTIVE,      // capture status
+    CAPTURE_INVALIDATED, // capture invalidated status
+    UPDATING,            // updating status
+    FAULT,               // fault status
+    READY,               // capture or updating finish
 };
 
 struct MsprofShapeHeader {
@@ -68,42 +68,42 @@ public:
 
     void TerminateCapture()
     {
-        if (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_CAPTURE_ACTIVE) {
-            captureModelStatus_ = RT_CAPTURE_MODEL_STATUS_CAPTURE_INVALIDATED;
+        if (captureModelStatus_ == RtCaptureModelStatus::CAPTURE_ACTIVE) {
+            captureModelStatus_ = RtCaptureModelStatus::CAPTURE_INVALIDATED;
         }
     }
 
     bool IsCaptureReady() const
     {
-        return (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_READY);
+        return (captureModelStatus_ == RtCaptureModelStatus::READY);
     }
 
     bool IsCaptureFinish() const
     {
-        return (captureModelStatus_ > RT_CAPTURE_MODEL_STATUS_CAPTURE_INVALIDATED);
+        return (captureModelStatus_ > RtCaptureModelStatus::CAPTURE_INVALIDATED);
     }
 
     bool IsCapturing() const
     {
-        return ((captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_CAPTURE_ACTIVE) ||
-                (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_CAPTURE_INVALIDATED));
+        return ((captureModelStatus_ == RtCaptureModelStatus::CAPTURE_ACTIVE) ||
+                (captureModelStatus_ == RtCaptureModelStatus::CAPTURE_INVALIDATED));
     }
 
     bool IsCaptureInvalid() const
     {
-        return (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_CAPTURE_INVALIDATED);
+        return (captureModelStatus_ == RtCaptureModelStatus::CAPTURE_INVALIDATED);
     }
 
     bool IsUpdating() const
     {
-        return (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_UPDATING);
+        return (captureModelStatus_ == RtCaptureModelStatus::UPDATING);
     }
 
     bool CanUpdate() const
     {
         return ((!IsCaptureModelRunning()) && 
-                (captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_READY ||
-                 captureModelStatus_ == RT_CAPTURE_MODEL_STATUS_UPDATING));
+                (captureModelStatus_ == RtCaptureModelStatus::READY ||
+                 captureModelStatus_ == RtCaptureModelStatus::UPDATING));
     }
 
     void InsertSingleOperStmIdAndCaptureStmId(const int32_t singleOperStmId, const int32_t captureStmId)
@@ -292,7 +292,7 @@ private:
     rtError_t BindStreamToModel(void);
     void ReportCacheTrackData();
 
-    RtCaptureModelStatus captureModelStatus_{RT_CAPTURE_MODEL_STATUS_NONE};
+    RtCaptureModelStatus captureModelStatus_{RtCaptureModelStatus::NONE};
     mutable uint32_t cacheOpInfoSwitch_{0U}; // aclgraph stream status: 0: false, 1:true
     std::map<int32_t, std::map<uint32_t, std::unique_ptr<uint8_t []>>> shapeInfos_;
     std::unordered_map<int32_t, std::unordered_set<int32_t>> singleOperStmIdAndCaptureStmIdMap_;

@@ -13,7 +13,6 @@
 #include "stream.hpp"
 #include "driver.hpp"
 #include "stars.hpp"
-#include "config.h"
 
 namespace cce {
 namespace runtime {

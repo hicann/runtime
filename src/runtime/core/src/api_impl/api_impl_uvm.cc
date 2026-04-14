@@ -73,7 +73,7 @@ rtError_t ApiImpl::MemManagedPrefetchAsync(const void* ptr, size_t size, rtMemMa
     COND_PROC_RETURN_ERROR_MSG_INNER((ret != RT_ERROR_NONE), ret, DELETE_O(params),
         "ConvertUvmLocationStruct failed, retCode=%#x", static_cast<uint32_t>(ret));
 
-    params->ptr = reinterpret_cast<DVdeviceptr>(ptr);
+    params->ptr = RtPtrToPtr<DVdeviceptr>(ptr);
     params->size = size;
     params->flags = flags;
 
@@ -120,7 +120,7 @@ rtError_t ApiImpl::MemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes
     tmpOffset += arrSize;
 
     // copy array prefetchLocs
-    drv_uvm_location* drvUvmLocArr = reinterpret_cast<drv_uvm_location *>(memBuffer + tmpOffset);
+    drv_uvm_location* drvUvmLocArr = RtPtrToPtr<drv_uvm_location *>(memBuffer + tmpOffset);
     for (size_t index = 0; index < numPrefetchLocs; index++) {
         ret = UvmCallback::ConvertUvmLocationStruct(drvUvmLocArr[index], prefetchLocs[index]);
         COND_PROC((ret == RT_ERROR_DRV_NOT_SUPPORT), DELETE_A(memBuffer));

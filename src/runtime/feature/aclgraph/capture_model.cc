@@ -184,7 +184,7 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
         return RT_ERROR_MODEL_CAPTURED;
     }
 
-    if (captureModelStatus_ != RT_CAPTURE_MODEL_STATUS_READY) {
+    if (captureModelStatus_ != RtCaptureModelStatus::READY) {
         RT_LOG(RT_LOG_ERROR, "model is not ready, can't execute, model_id=%u, status=%d", Id_(), captureModelStatus_);
         return RT_ERROR_MODEL_EXE_FAILED;
     }
@@ -265,12 +265,13 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream * const stm)
 
 void CaptureModel::EnterCaptureNotify(const int32_t singleOperStmId, const int32_t captureStmId)
 {
-    SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_CAPTURE_ACTIVE);
+    SetCaptureModelStatus(RtCaptureModelStatus::CAPTURE_ACTIVE);
     InsertSingleOperStmIdAndCaptureStmId(singleOperStmId, captureStmId);
 }
+
 void CaptureModel::ExitCaptureNotify()
 {
-    SetCaptureModelStatus(RT_CAPTURE_MODEL_STATUS_READY);
+    SetCaptureModelStatus(RtCaptureModelStatus::READY);
 
     Device * const dev = Context_()->Device_();
     for (const auto& iter: singleOperStmIdAndCaptureStmIdMap_) {

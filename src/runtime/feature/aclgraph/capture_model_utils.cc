@@ -154,7 +154,7 @@ rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev)
 
     return RT_ERROR_NONE;
 }
-rtError_t CheckCaptureModelForUpdate(Stream* stm) {
+rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
     NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
     Device* dev = stm->Device_();
     static rtError_t isSupportResult = CheckCaptureModelSupportSoftwareSq(dev);

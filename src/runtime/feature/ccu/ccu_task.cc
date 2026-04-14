@@ -18,7 +18,7 @@ void CcuLaunchTaskInit(TaskInfo *taskInfo, rtCcuTaskInfo_t *const ccuInfo)
 {
     TaskCommonInfoInit(taskInfo);
     taskInfo->type = TS_TASK_TYPE_CCU_LAUNCH;
-    taskInfo->typeName = const_cast<char_t*>("CCU");
+    taskInfo->typeName = RtPtrToUnConstPtr<char_t*>("CCU");
 
     CcuLaunchTaskInfo *ccuLaunchTsk = &(taskInfo->u.ccuLaunchTask);
     ccuLaunchTsk->errInfo.err = 0U;

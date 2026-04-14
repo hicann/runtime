@@ -22,7 +22,6 @@
 #include "base.hpp"
 #include "device.hpp"
 #include "runtime/rt_inner_mem.h"
-#include "mem.h"
 #include "model.hpp"
 #include "stream.hpp"
 #include "event.hpp"

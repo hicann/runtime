@@ -24,7 +24,7 @@ bool IsCapturedTask(const Stream * const launchStm, const TaskInfo *submitTask);
 rtError_t GetCaptureStream(Context * const ctx, Stream * const stm, const Event * const evt, Stream ** const captureStm);
 rtError_t CheckCaptureStreamThreadIsMatch(const Stream * const stm);
 rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev);
-rtError_t CheckCaptureModelForUpdate(Stream* stm);
+rtError_t CheckCaptureModelForUpdate(const Stream* stm);
 bool IsSoftwareSqCaptureModel(Model * const mdl);
 }
 }

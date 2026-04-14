@@ -1065,7 +1065,7 @@ void Runtime::ParseHostCpuModelInfo()
 static rtError_t GetDcacheLockMixPath(std::string& binaryPath, string binaryName)
 {
     Dl_info info;
-    if (dladdr(reinterpret_cast<void*>(GetDcacheLockMixPath), &info) != 0 && info.dli_fname != nullptr) {
+    if (dladdr(RtPtrToPtr<void*>(GetDcacheLockMixPath), &info) != 0 && info.dli_fname != nullptr) {
         std::string soPath = info.dli_fname;
         auto pos = soPath.find_last_of('/');
         if (pos != std::string::npos) {
