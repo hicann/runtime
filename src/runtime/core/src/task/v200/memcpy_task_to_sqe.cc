@@ -159,7 +159,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
         ConstructDavidMemcpySqeForOpCode(taskInfo, davidSqe, stream);
     }
 
-    RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask, deviceId=%u, streamId=%d, taskId=%u, copyType=%u",
+    RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask, device_id=%u, stream_id=%d, task_id=%hu, copyType=%u",
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
         memcpyAsyncTaskInfo->copyType);
 }
