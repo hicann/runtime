@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(NANO_LITEOS_CMC_PATH
-    ${RUNTIME_DIR}/build/platform/linglong/liteos/Hi1A71_turing_cmc_package/fpga/vendor
+    ${RUNTIME_DIR}/../build/platform/linglong/liteos/Hi1A71_turing_cmc_package/fpga/vendor
 )
 
 set(NANO_LITEOS_HEADERS_PATH

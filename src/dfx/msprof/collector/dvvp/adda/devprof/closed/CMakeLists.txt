@@ -131,7 +131,7 @@ set(devprofHeader
     ../../../profimpl/inc
     ../../../msprof/msproftx/mstx/inc
     ${CMAKE_BINARY_DIR}/proto/devprof_proto
-    ${PROTOBUF_STATIC_PKG_DIR}/include
+    ${ASCEND_PROTOBUF_STATIC_INCLUDE_DIR}
 )
 
 add_library(devprof STATIC

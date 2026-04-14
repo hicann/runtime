@@ -221,49 +221,51 @@ install(TARGETS profapi_lite_share OPTIONAL
 
 ####################### libprofapi_lite.so ###########################
 ####################### libprofapi.so device side ###########################
-# add_library(profapi_share_device SHARED
-#     src/prof_device_api.cpp
-# )
+if (NOT ENABLE_OPEN_SRC)
+    add_library(profapi_share_device SHARED
+        src/prof_device_api.cpp
+    )
 
-# set_target_properties(profapi_share_device
-#     PROPERTIES
-#     OUTPUT_NAME profapi
-#     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
-# )
+    set_target_properties(profapi_share_device
+        PROPERTIES
+        OUTPUT_NAME profapi
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+    )
 
-# target_compile_options(profapi_share_device PRIVATE
-#     -fstack-protector-all
-#     -fvisibility=hidden
-#     -fvisibility-inlines-hidden
-#     -fno-common
-#     -Wall
-#     -std=c++11
-#     -Wextra
-#     -Wfloat-equal
-#     $<$<CONFIG:Release>:-D_FORTIFY_SOURCE=2 -Os>
-#     $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2 -Os>
-# )
+    target_compile_options(profapi_share_device PRIVATE
+        -fstack-protector-all
+        -fvisibility=hidden
+        -fvisibility-inlines-hidden
+        -fno-common
+        -Wall
+        -std=c++11
+        -Wextra
+        -Wfloat-equal
+        $<$<CONFIG:Release>:-D_FORTIFY_SOURCE=2 -Os>
+        $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2 -Os>
+    )
 
-# target_link_options(profapi_share_device PRIVATE
-#     -Wl,-z,relro,-z,now,-z,noexecstack
-#     -Wl,-Bsymbolic
-#     -Wl,--exclude-libs=ALL
-# )
+    target_link_options(profapi_share_device PRIVATE
+        -Wl,-z,relro,-z,now,-z,noexecstack
+        -Wl,-Bsymbolic
+        -Wl,--exclude-libs=ALL
+    )
 
-# target_include_directories(profapi_share_device PRIVATE
-#     inc
-#     ../common
-#     ../common/logger
-#     ../common/errno
-#     ${RUNTIME_DIR}/abl/msprof/inc/toolchain
-# )
+    target_include_directories(profapi_share_device PRIVATE
+        inc
+        ../common
+        ../common/logger
+        ../common/errno
+        ${RUNTIME_DIR}/abl/msprof/inc/toolchain
+    )
 
-# target_link_libraries(profapi_share_device
-#     $<BUILD_INTERFACE:intf_pub>
-#     $<BUILD_INTERFACE:slog_headers>
-#     $<BUILD_INTERFACE:msprof_headers>
-#     c_sec
-#     unified_dlog
-# )
+    target_link_libraries(profapi_share_device
+        $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:slog_headers>
+        $<BUILD_INTERFACE:msprof_headers>
+        c_sec
+        unified_dlog
+    )
+endif()
 ####################### libprofapi.so device side  ###########################
 endif()

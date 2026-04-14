@@ -7,10 +7,11 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-# add_subdirectory(adda)
-# add_subdirectory(adprof)
+if (NOT ENABLE_OPEN_SRC)
+    add_subdirectory(adda)
+    add_subdirectory(adprof)
+endif()
 add_subdirectory(msprof)
-# add_subdirectory(msprofbin)
 add_subdirectory(profapi)
 add_subdirectory(msprofiler)
 add_subdirectory(profhal)
