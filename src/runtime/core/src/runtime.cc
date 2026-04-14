@@ -5109,7 +5109,6 @@ rtError_t Runtime::GetUserDevIdByDeviceId(const uint32_t deviceId, uint32_t * co
 static void BinaryMemFree(const Device * const device, Program * const prog, uint32_t alignSize)
 {
     Driver * const curDrv = device->Driver_();
-
     if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
         device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
     } else {
@@ -5165,7 +5164,6 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
                static_cast<uint32_t>(error), static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE));
         return error;
     }
-    prog->SetBinBaseAddr(devMem, device->Id_());
 
     // cce instr addr should align to 4K for ARM instr ADRP
     if ((RtPtrToPtr<uintptr_t>(devMem) & 0xFFFULL) != 0ULL) {
@@ -5173,7 +5171,6 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
         const uintptr_t devMemAlign = (((RtPtrToPtr<uintptr_t>(devMem)) >> 12U) + 1UL) << 12U;
         devMem = RtPtrToPtr<void *>(devMemAlign);
     }
-    prog->SetBinAlignBaseAddr(devMem, device->Id_());
 
     if (isPoolMem) {
         error = prog->BinaryPoolMemCopySync(devMem, size, data, device, readonly);
@@ -5181,6 +5178,8 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
         uint32_t adviseSize = devSize + INSTR_ALIGN_SIZE;
         error = prog->BinaryMemCopySync(devMem, adviseSize, size, data, device, readonly);
     }
+    prog->SetBinBaseAddr(devMem, device->Id_());
+    prog->SetBinAlignBaseAddr(devMem, device->Id_());
 
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR,  "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
