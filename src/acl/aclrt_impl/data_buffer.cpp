@@ -28,7 +28,6 @@ size_t aclDataTypeSizeImpl(aclDataType dataType)
         case ACL_INT8:
         case ACL_UINT8:
         case ACL_HIFLOAT8:
-        case ACL_HIFLOAT4:
         case ACL_FLOAT8_E5M2:
         case ACL_FLOAT8_E4M3FN:
         case ACL_FLOAT8_E8M0:
