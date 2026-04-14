@@ -9,25 +9,18 @@
  */
 
 #include "inc/tsd_path_mgr.h"
-#include "inc/tsd_feature_ctrl.h"
-
+#include "tsd_util_func.h"
 namespace tsd {
 namespace {
-
-
 const std::string AICPU_PACKAGE_DECOMPRESSION_PATH = "/usr/lib64/aicpu_kernels/";
-const std::string MEMORY_CONTROL_BASE_PATH = "/sys/fs/cgroup/memory/usermemory/";
 // aicpu kernels so inner dir name
 constexpr const char_t *AICPU_KERNELS_SO_INNER_DIR_NAME = "aicpu_kernels_device/";
 constexpr const char_t *AICPU_EXTEND_KERNELS_SO_INNER_DIR_NAME = "aicpu_extend_syskernels/";
 // version.info file name
 constexpr const char_t *VERSION_INFO_FILE_NAME = "version.info";
-// cust so path for cust_aicpu_sd: CustAiCpuUser
-const std::string CUST_USER_SO_PATH = "/home/CustAiCpuUser";
 constexpr const char_t *HOME_SO_PATH_FOR_THREADMODE = "aicpu_kernels/";
 const std::string HELPER_AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/inuse/";
 const std::string AICPU_OPKERNEL_PATH_HEAD = "/home/HwHiAiUser/aicpu_kernels/";
-const std::string COMPUTE_BIN_NAME = "aicpu_scheduler";
 const std::string AICPU_EXTEND_HASH_CFG_FILE = "aicpuExtend_bin_hash.cfg";
 }  // namespace
 
@@ -39,7 +32,7 @@ std::string TsdPathMgr::BuildKernelSoRootPath(const uint32_t uniqueVfId, const s
         return path.append(std::string(HOME_SO_PATH_FOR_THREADMODE)).append(std::to_string(uniqueVfId)).append("/");
     }
 
-    if (FeatureCtrl::IsHeterogeneousProduct()) {
+    if (IsHeterogeneousProduct()) {
         std::string curPath = HELPER_AICPU_OPKERNEL_PATH_HEAD;
         return curPath.append(std::string(HOME_SO_PATH_FOR_THREADMODE)).append(std::to_string(uniqueVfId)).append("/");
     } else {
@@ -72,27 +65,5 @@ std::string TsdPathMgr::BuildExtendKernelHashCfgPath(const std::string &kernelSo
 std::string TsdPathMgr::AddVersionInfoName(const std::string &kernelSoPath)
 {
     return std::string(kernelSoPath).append(VERSION_INFO_FILE_NAME);
-}
-
-std::string TsdPathMgr::BuildCustAicpuRootPath(const std::string &userId)
-{
-    return userId == "0" ? CUST_USER_SO_PATH : CUST_USER_SO_PATH + userId;
-}
-
-// dev0/vf2/
-std::string TsdPathMgr::BuildVfSubMultiLevelDir(const uint32_t deviceId, const uint32_t vfId)
-{
-    if (FeatureCtrl::IsVfModeCheckedByDeviceId(deviceId)) {
-        return std::string("dev").append(std::to_string(deviceId)).append("/");
-    } else {
-        return std::string("dev").append(std::to_string(deviceId)).append("/vf").append(std::to_string(vfId))
-               .append("/");
-    }
-}
-
-// /sys/fs/cgroup/memory/usermemory/dev0/vf2/
-std::string TsdPathMgr::BuildMemoryConfigRootPath(const uint32_t deviceId, const uint32_t vfId)
-{
-    return std::string(MEMORY_CONTROL_BASE_PATH).append(TsdPathMgr::BuildVfSubMultiLevelDir(deviceId, vfId));
 }
 }  // namespace tsd

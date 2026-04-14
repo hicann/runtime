@@ -10,8 +10,8 @@
 #include <pwd.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "inc/log.h"
-#include "inc/internal_api.h"
+#include "log.h"
+#include "tsd_util_func.h"
 #define private public
 #define protected public
 #include "inc/package_verify.h"

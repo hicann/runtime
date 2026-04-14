@@ -12,7 +12,7 @@
 
 #include <mmpa/mmpa_api.h>
 #include <atomic>
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
 #include "tsd/tsd_client.h"

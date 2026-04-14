@@ -26,15 +26,15 @@ set(TSD_COMMON_SRC_FILE
     ${TSD_SRC_PATH}/common/src/base_package_worker.cpp
     ${TSD_SRC_PATH}/common/src/hdc_client.cpp
     ${TSD_SRC_PATH}/common/src/hdc_common.cpp
-    ${TSD_SRC_PATH}/common/src/internal_api.cpp
+    ${TSD_SRC_PATH}/pub_facility/util_func/tsd_util_func.cpp
     ${TSD_SRC_PATH}/common/src/message_parse_client.cpp
+    ${TSD_SRC_PATH}/common/src/message_parse_server.cpp
     ${TSD_SRC_PATH}/common/src/message_parse_interface.cpp
     ${TSD_SRC_PATH}/common/src/package_process_config.cpp
     ${TSD_SRC_PATH}/common/src/package_verify.cpp
     ${TSD_SRC_PATH}/common/src/package_worker.cpp
     ${TSD_SRC_PATH}/common/src/package_worker_factory.cpp
     ${TSD_SRC_PATH}/common/src/package_worker_utils.cpp
-    ${TSD_SRC_PATH}/common/src/process_util_common.cpp
     ${TSD_SRC_PATH}/common/src/tsd_path_mgr.cpp
     ${TSD_SRC_PATH}/common/src/version_verify.cpp
 )
@@ -52,7 +52,7 @@ set(TSD_UT_TEST_SRC_FILE
     test/version_verify_utest.cpp
     test/package_worker_utils_utest.cpp
     test/path_mgr_utest.cpp
-    test/internal_api_utest.cpp
+    test/tsd_util_func_utest.cpp
     test/main.cpp
     test/common_util_func.cpp
     ../stub/stub_server_reply.cpp
@@ -72,7 +72,7 @@ set(TSD_UT_TEST_SRC_FILE
     ../stub/stub_ProcMgrGrpOwnerClient.cpp
 )
 set(TSD_PROTO_SRC_FILE
-    ${TSD_SRC_PATH}/common/tsd_message.proto
+    ${TSD_SRC_PATH}/pub_facility/proto/tsd_message.proto
 )
 file(GLOB_RECURSE RTOTO_LIST RELATIVE ${CMAKE_CURRENT_LIST_DIR}
     ${TSD_PROTO_SRC_FILE}
@@ -93,6 +93,8 @@ target_include_directories(tsd_client_utest PRIVATE
     ${TSD_SRC_PATH}/tsdclient/inc/
     ${RUNTIME_DIR}/include/
     ${RUNTIME_DIR}/src/tsd/
+    ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
+    ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/

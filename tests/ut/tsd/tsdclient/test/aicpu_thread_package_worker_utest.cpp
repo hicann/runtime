@@ -11,7 +11,6 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "inc/package_worker_utils.h"
-#include "inc/process_util_common.h"
 #define private public
 #define protected public
 #include "inc/aicpu_package_process.h"

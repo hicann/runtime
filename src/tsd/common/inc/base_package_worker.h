@@ -17,9 +17,8 @@
 #include <sstream>
 #include <map>
 #include "tsd/status.h"
-#include "inc/log.h"
-#include "inc/internal_api.h"
-#include "inc/tsd_feature_ctrl.h"
+#include "log.h"
+#include "tsd_util_func.h"
 
 
 namespace tsd {
@@ -52,7 +51,7 @@ public:
                                                                  originPackageSize_(0UL), checkCode_(0UL),
                                                                  decompressTime_()
     {
-        isVfMode_ = FeatureCtrl::IsVfMode(deviceId_, vfId_);
+        isVfMode_ = IsCurrentVfMode(deviceId_, vfId_);
     };
     virtual ~BasePackageWorker() {};
 

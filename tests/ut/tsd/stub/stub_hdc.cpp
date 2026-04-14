@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include "inc/log.h"
+#include "log.h"
 #include <unistd.h>
 
 #include <mutex>

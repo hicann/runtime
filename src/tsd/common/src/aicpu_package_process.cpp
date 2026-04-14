@@ -15,10 +15,10 @@
 #include <fstream>
 #include <sstream>
 #include "securec.h"
-#include "inc/log.h"
-#include "inc/tsd_util.h"
+#include "log.h"
+#include "tsd_scope_guard.h"
 #include "inc/tsd_path_mgr.h"
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "inc/package_worker_utils.h"
 
 

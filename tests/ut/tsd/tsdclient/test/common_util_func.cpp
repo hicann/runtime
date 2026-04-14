@@ -12,7 +12,7 @@
 #include <fstream>
 namespace tsd {
 
-bool CommonUtilFunc::WriteTmpFile(const std::string &filePath, const std::string &fileName)
+bool WriteTmpFile(const std::string &filePath, const std::string &fileName)
 {
     // ut工程只运行在tmp目录下写小文件，用完之后要及时删除
     const std::string dstFile = "/tmp/" + filePath + "/" + fileName;

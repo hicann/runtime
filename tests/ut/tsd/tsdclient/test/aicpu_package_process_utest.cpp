@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "inc/error_code.h"
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "inc/package_worker_utils.h"
 #define private public
 #define protected public

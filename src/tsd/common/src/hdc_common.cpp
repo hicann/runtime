@@ -11,7 +11,7 @@
 #include "inc/hdc_common.h"
 #include <string>
 #include <securec.h>
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 namespace tsd {
     namespace {
         // message head size
@@ -282,7 +282,8 @@ namespace tsd {
             if (logPrintMap_[tid] == 0) {
                 logPrintMap_[tid] = GetCurrentTime();
             } else {
-                if ((GetCurrentTime() - logPrintMap_[tid]) >= HDC_SESSION_CHECK_PRINTLOG_INTERVAL_S * S_TO_NS) {
+                if ((GetCurrentTime() - logPrintMap_[tid]) >=
+                    HDC_SESSION_CHECK_PRINTLOG_INTERVAL_S * S_TO_NS) {
                     TSD_RUN_INFO("get remote session attr, ret[%d], status[%d]", hdcRet, status);
                     logPrintMap_[tid] = GetCurrentTime();
                 }

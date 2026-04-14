@@ -11,7 +11,7 @@
 #ifndef TDT_TSDCLIENT_INC_ENV_INTERNAL_API_H
 #define TDT_TSDCLIENT_INC_ENV_INTERNAL_API_H
 
-#include "inc/log.h"
+#include "log.h"
 #include "mmpa/mmpa_api.h"
 
 namespace tsd {

@@ -13,7 +13,6 @@
 #include "tsd/status.h"
 #define private public
 #define protected public
-#include "inc/process_util_common.h"
 #include "inc/package_process_config.h"
 #include "inc/client_manager.h"
 #include "inc/process_mode_manager.h"
@@ -1105,7 +1104,7 @@ TEST_F(ProcessManagerTest, LoadCannHsPkgToDeviceSuccess)
 
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     std::string hashVal = "12345";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue).stubs().will(returnValue(hashVal));
+    MOCKER(CalFileSha256HashValue).stubs().will(returnValue(hashVal));
     MOCKER_CPP(&ProcessModeManager::InitTsdClient).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
@@ -1159,7 +1158,7 @@ TEST_F(ProcessManagerTest, LoadCannHsPkgToDeviceSendFileFailed)
     MOCKER(drvHdcSendFileV2).stubs().will(returnValue(1));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     std::string hashVal = "12345";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue).stubs().will(returnValue(hashVal));
+    MOCKER(CalFileSha256HashValue).stubs().will(returnValue(hashVal));
     MOCKER_CPP(&ProcessModeManager::InitTsdClient).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
@@ -1183,7 +1182,7 @@ TEST_F(ProcessManagerTest, LoadCannHsPkgToDeviceRspFail)
 
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     std::string hashVal = "123456";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue).stubs().will(returnValue(hashVal));
+    MOCKER(CalFileSha256HashValue).stubs().will(returnValue(hashVal));
     MOCKER_CPP(&ProcessModeManager::InitTsdClient).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
@@ -1208,7 +1207,7 @@ TEST_F(ProcessManagerTest, LoadCannHsPkgToDeviceInitClientFail)
     MOCKER_CPP(&ProcessModeManager::InitTsdClient).stubs().will(returnValue(1U));
     MOCKER_CPP(&ProcessModeManager::IsSupportCommonInterface).stubs().will(returnValue(true));
     std::string hashVal = "123456";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue).stubs().will(returnValue(hashVal));
+    MOCKER(CalFileSha256HashValue).stubs().will(returnValue(hashVal));
     MOCKER_CPP(&ProcessModeManager::InitTsdClient).stubs().will(returnValue(tsd::TSD_OK));
     MOCKER_CPP(&HdcClient::SendMsg, tsd::TSD_StatusT(HdcClient::*)(const uint32_t, const HDCMessage&, const bool))
         .stubs().will(returnValue(tsd::TSD_OK));
@@ -2727,7 +2726,7 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_failed)
         .stubs()
         .will(returnValue(true));
     std::string hashcode = "12345666";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+    MOCKER(CalFileSha256HashValue)
         .stubs()
         .will(returnValue(hashcode));
     MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
@@ -2890,7 +2889,7 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_not_support_load)
         .stubs()
         .will(returnValue(false));
     std::string hashcode = "12345666";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+    MOCKER(CalFileSha256HashValue)
         .stubs()
         .will(returnValue(hashcode));
     MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));
@@ -2925,7 +2924,7 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_hash_code_same)
         .stubs()
         .will(returnValue(true));
     std::string hashcode = "12345666";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+    MOCKER(CalFileSha256HashValue)
         .stubs()
         .will(returnValue(hashcode));
     MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(true));
@@ -2960,7 +2959,7 @@ TEST_F(ProcessManagerTest, LoadPackageToDeviceByConfig_load_finish)
         .stubs()
         .will(returnValue(true));
     std::string hashcode = "12345666";
-    MOCKER_CPP(&ProcessUtilCommon::CalFileSha256HashValue)
+    MOCKER(CalFileSha256HashValue)
         .stubs()
         .will(returnValue(hashcode));
     MOCKER_CPP(&ProcessModeManager::IsCommonSinkHostAndDevicePkgSame).stubs().will(returnValue(false));

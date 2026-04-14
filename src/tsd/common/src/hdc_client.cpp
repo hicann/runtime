@@ -13,9 +13,9 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_hal_define.h"
 #include "mmpa/mmpa_api.h"
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "inc/message_parse_client.h"
-#include "inc/log.h"
+#include "log.h"
 #include "inc/version_verify.h"
 #include "tsd/status.h"
 

@@ -9,9 +9,7 @@
  */
 
 #include "inc/package_worker.h"
-
 #include "inc/tsd_path_mgr.h"
-#include "inc/tsd_feature_ctrl.h"
 
 
 namespace tsd {
@@ -22,7 +20,7 @@ std::shared_ptr<PackageWorker> PackageWorker::GetInstance(const uint32_t devId, 
 {
     // All device use unique obj in physical scenarios
     uint32_t deviceKey = (vfId == 0U) ? 0U : devId;
-    if (FeatureCtrl::IsVfModeCheckedByDeviceId(devId)) {
+    if (IsVfModeCheckedByDeviceId(devId)) {
         deviceKey = devId;
     }
     std::pair<uint32_t, uint32_t> key = std::make_pair(deviceKey, vfId);

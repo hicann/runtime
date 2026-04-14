@@ -10,8 +10,8 @@
 
 #include "inc/client_manager.h"
 #include "driver/ascend_hal.h"
-#include "inc/internal_api.h"
-#include "inc/log.h"
+#include "tsd_util_func.h"
+#include "log.h"
 #include "inc/process_mode_manager.h"
 #include "inc/thread_mode_manager.h"
 #include "driver/dsmi_common_interface.h"

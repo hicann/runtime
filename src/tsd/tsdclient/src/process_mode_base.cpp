@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/log.h"
+#include "log.h"
 #include "inc/process_mode_manager.h"
 #include "env_internal_api.h"
 

@@ -14,33 +14,11 @@
 #include "driver/ascend_inpackage_hal.h"
 
 extern "C" {
-/**
- * @ingroup driver
- * @brief record wait event or notify
- * @attention only called by cp process
- * @param [in] devId  device id
- * @param [out] vf_max_num  maximum number of segmentation
- * @return 0  success, return others fail
- */
 int __attribute__((weak)) halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num);
-drvError_t __attribute__((weak)) halGetChipFromDevice(int device_id, int *chip_id);
-int __attribute__((weak)) halRegisterVmngClient();
-int __attribute__((weak)) halGetDeviceVfList(unsigned int devId, unsigned int *vf_list,
-                                             unsigned int list_len, unsigned int *vf_num);
-drvError_t __attribute__((weak)) halGetVdevNum(uint32_t *num_dev);
-DLLEXPORT __attribute__((weak)) drvError_t halSensorNodeRegister(uint32_t devId, struct halSensorNodeCfg *cfg,
-                                                                 uint64_t *handle);
-DLLEXPORT __attribute__((weak)) drvError_t halSensorNodeUnregister(uint32_t devId, uint64_t handle);
-DLLEXPORT __attribute__((weak)) drvError_t halSensorNodeUpdateState(uint32_t devId, uint64_t handle, int val,
-                                                                    halGeneralEventType_t assertion);
-DLLEXPORT drvError_t __attribute__((weak)) drvUnbindHostPid(struct drvBindHostpidInfo info);
-DLLEXPORT drvError_t __attribute__((weak)) drvBindHostPid(struct drvBindHostpidInfo info);
-DLLEXPORT drvError_t __attribute__((weak)) halTsCmdlistMemMap(unsigned int devId, unsigned int tsId);
 DLLEXPORT __attribute__((weak)) drvError_t drvHdcSendFileV2(int peer_node, int peer_devid, const char *file,
     const char *dst_path, void (*progress_notifier)(struct drvHdcProgInfo *));
 DLLEXPORT __attribute__((weak)) drvError_t drvHdcGetTrustedBasePathV2(int peer_node, int peer_devid, char *base_path,
     unsigned int path_len);
-int __attribute__((weak)) halTsPkgLoad(unsigned int dev_id, TSFW_LOAD_TYPE load_type, unsigned int ex_type);
 drvError_t __attribute__((weak)) halGetSocVersion(uint32_t devId, char *socVersion, uint32_t len);
 }
 #endif  // TSD_WEAK_ASCEND_HAL_H

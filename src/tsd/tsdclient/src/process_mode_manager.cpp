@@ -19,16 +19,15 @@
 #include <dlfcn.h>
 #include "driver/ascend_hal.h"
 #include "error_manager.h"
-#include "inc/log.h"
-#include "inc/tsd_util.h"
+#include "log.h"
+#include "tsd_scope_guard.h"
 #include "inc/weak_log.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "tsd/status.h"
 #include "inc/weak_ascend_hal.h"
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "env_internal_api.h"
 #include "inc/package_process_config.h"
-#include "inc/process_util_common.h"
 #include "platform_info.h"
 
 namespace {
@@ -1369,7 +1368,7 @@ TSD_StatusT ProcessModeManager::LoadCannHsPkgToDevice(const std::string &pkgPure
         return TSD_OK;
     }
 
-    const std::string hostHash = ProcessUtilCommon::CalFileSha256HashValue(orgFile);
+    const std::string hostHash = CalFileSha256HashValue(orgFile);
     SetHostCommonSinkPackHashValue(pkgPureName, hostHash);
     if (IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
         TSD_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());
@@ -2268,7 +2267,7 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
             continue;
         }
 
-        const std::string hostPkgHash = ProcessUtilCommon::CalFileSha256HashValue(orgFile);
+        const std::string hostPkgHash = CalFileSha256HashValue(orgFile);
         SetHostCommonSinkPackHashValue(pkgPureName, hostPkgHash);
         if (IsCommonSinkHostAndDevicePkgSame(pkgPureName)) {
             TSD_RUN_INFO("current package:%s is same as device, skip load", pkgPureName.c_str());

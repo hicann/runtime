@@ -252,7 +252,7 @@ TEST_F(TsdClientTest, TsdFileLoad_TsdFileUnLoad_Runtime_Pkg_Success) {
     const std::string runtimePkgName = "Ascend-runtime_device-minios.tar.gz";
     std::string filepath = "/tmp";
     std::string pathPreFix = std::to_string(getpid());
-    if (CommonUtilFunc::WriteTmpFile(pathPreFix, runtimePkgName)) {
+    if (WriteTmpFile(pathPreFix, runtimePkgName)) {
         tsd::TSD_StatusT ret = TsdFileLoad(0U, filepath.c_str(), filepath.size(), runtimePkgName.c_str(),
             runtimePkgName.size());
         const std::string dstFile = filepath + "/" + runtimePkgName;
@@ -271,7 +271,7 @@ TEST_F(TsdClientTest, TsdFileLoad_TsdFileUnLoad_Dshape_Pkg_Success) {
     const std::string dShapePkgName = "Ascend-opp_rt-minios.aarch64.tar.gz";
     std::string filepath = "/tmp";
     std::string pathPreFix = std::to_string(getpid());
-    if (CommonUtilFunc::WriteTmpFile(pathPreFix, dShapePkgName)) {
+    if (WriteTmpFile(pathPreFix, dShapePkgName)) {
         tsd::TSD_StatusT ret = TsdFileLoad(0U, filepath.c_str(), filepath.size(), dShapePkgName.c_str(),
             dShapePkgName.size());
         const std::string dstFile = filepath + "/" + dShapePkgName;

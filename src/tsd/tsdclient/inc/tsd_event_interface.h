@@ -15,7 +15,7 @@
 #include <string>
 #include "tsd/status.h"
 #include "driver/ascend_hal.h"
-#include "inc/log.h"
+#include "log.h"
 
 namespace tsd {
 // can not use 0 here, conflict with aicpu group

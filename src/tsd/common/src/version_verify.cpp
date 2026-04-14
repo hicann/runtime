@@ -9,7 +9,7 @@
  */
 
 #include "inc/version_verify.h"
-#include "inc/log.h"
+#include "log.h"
 namespace tsd {
 namespace {
     // 如果修改了涉及tsdclient和tsdaemon需要配合的特性，则需要在此map中增加对应的特性信息，防止client或server单独升级导致运行结果不可控

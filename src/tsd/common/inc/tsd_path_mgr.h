@@ -35,14 +35,6 @@ public:
 
     // /usr/lib64/aicpu_kernels/2/aicpu_kernels_device/version.info
     static std::string AddVersionInfoName(const std::string &kernelSoPath);
-
-    static std::string BuildCustAicpuRootPath(const std::string &userId);
-
-    // dev0/vf2/
-    static std::string BuildVfSubMultiLevelDir(const uint32_t deviceId, const uint32_t vfId);
-
-    // /sys/fs/cgroup/memory/usermemory/dev0/vf2/
-    static std::string BuildMemoryConfigRootPath(const uint32_t deviceId, const uint32_t vfId);
 };
 }  // namespace tsd
 

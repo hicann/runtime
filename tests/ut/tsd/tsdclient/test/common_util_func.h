@@ -11,23 +11,6 @@
 #define TSD_UT_COMMON_UTIL_FUNC_H
 #include <string>
 namespace tsd {
-class CommonUtilFunc {
-public:
-    CommonUtilFunc() = default;
-    
-    virtual ~CommonUtilFunc() = default;
-    
-    CommonUtilFunc(const CommonUtilFunc&) = delete;
-
-    CommonUtilFunc(CommonUtilFunc&&) = delete;
-
-    CommonUtilFunc& operator=(const CommonUtilFunc&) = delete;
-    
-    CommonUtilFunc& operator=(CommonUtilFunc&) = delete;
-
-    CommonUtilFunc& operator=(CommonUtilFunc&&) = delete;
-
-    static bool WriteTmpFile(const std::string &filePath, const std::string &fileName);
-};
+    bool WriteTmpFile(const std::string &filePath, const std::string &fileName);
 }
 #endif

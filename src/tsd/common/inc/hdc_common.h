@@ -19,7 +19,7 @@
 #include "tsd/status.h"
 #include "inc/basic_define.h"
 #include "inc/version_verify.h"
-#include "inc/log.h"
+#include "log.h"
 
 namespace tsd {
     // 返回给tsdclient的open/close确认码

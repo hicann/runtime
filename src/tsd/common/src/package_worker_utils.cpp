@@ -13,11 +13,10 @@
 #include <fstream>
 #include <sstream>
 #include "mmpa/mmpa_api.h" 
-#include "inc/log.h"
-#include "inc/internal_api.h"
+#include "log.h"
+#include "tsd_util_func.h"
 #include "inc/package_verify.h"
 #include "inc/tsd_path_mgr.h"
-#include "inc/process_util_common.h"
 
 namespace tsd {
 TSD_StatusT PackageWorkerUtils::VerifyPackage(const std::string &pkgPath)

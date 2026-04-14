@@ -14,9 +14,8 @@
 #include <array>
 #include <vector>
 #include <unordered_set>
-#include "inc/process_util_common.h"
 #include "inc/package_worker.h"
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 
 namespace tsd {
     namespace {
@@ -277,7 +276,7 @@ namespace tsd {
             curConf->set_package_name(iter->first);
             curConf->set_file_dec_dst_dir(static_cast<uint32_t>(iter->second.decDstDir));
         }
-        const std::string hashCode = ProcessUtilCommon::CalFileSha256HashValue(
+        const std::string hashCode = CalFileSha256HashValue(
             GetHostFilePath(COMMON_SINK_PKG_CONFIG_DIR, COMMON_SINK_PKG_CONFIG_NAME));
         hdcMsg.set_package_config_hash_code(hashCode);
         TSD_INFO("set config hash code:%s", hashCode.c_str());

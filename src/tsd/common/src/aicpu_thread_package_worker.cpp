@@ -13,7 +13,7 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include "inc/tsd_path_mgr.h"
 #include "inc/aicpu_package_process.h"
 #include "inc/package_worker_utils.h"

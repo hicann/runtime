@@ -19,12 +19,3 @@ int halGetDeviceVfMax(unsigned int devId, unsigned int *vf_max_num)
     }
     return static_cast<int>(DRV_ERROR_NONE);
 }
-
-int halGetDeviceVfList(unsigned int devId, unsigned int *vf_list, unsigned int list_len, unsigned int *vf_num)
-{
-    (void)devId;
-    (void)vf_list;
-    (void)list_len;
-    (void)vf_num;
-    return static_cast<int>(DRV_ERROR_NONE);
-}

@@ -16,13 +16,13 @@ include(${RUNTIME_DIR}/cmake/third_party/openssl.cmake)
 include(${RUNTIME_DIR}/cmake/intf_pub_linux.cmake)
 
 set(PROTO_LIST
-    ${BASE_DIR}/common/proto/tsd_message.proto
+    ${BASE_DIR}/pub_facility/proto/tsd_message.proto
 )
 
 set(tdt_common_files
     ${BASE_DIR}/common/src/hdc_common.cpp
     ${BASE_DIR}/common/src/message_parse_interface.cpp
-    ${BASE_DIR}/common/src/internal_api.cpp
+    ${BASE_DIR}/pub_facility/util_func/tsd_util_func.cpp
     ${BASE_DIR}/common/src/hdc_client.cpp
     ${BASE_DIR}/common/src/message_parse_client.cpp
     ${BASE_DIR}/common/src/version_verify.cpp
@@ -54,6 +54,8 @@ target_include_directories(tsdclient PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/
     ${RUNTIME_DIR}/include/
+    ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
+    ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/pkg_in/aicpu/queue_schedule
@@ -129,7 +131,6 @@ add_library(tsdclient SHARED
     ${BASE_DIR}/common/src/aicpu_thread_package_worker.cpp
     ${BASE_DIR}/common/src/aicpu_package_process.cpp
     ${BASE_DIR}/common/src/package_process_config.cpp
-    ${BASE_DIR}/common/src/process_util_common.cpp
     ${BASE_DIR}/common/src/tsd_path_mgr.cpp
     $<$<NOT:$<OR:$<STREQUAL:${PRODUCT},ascend610>,$<STREQUAL:${PRODUCT},ascend610Lite>>>:${CMAKE_CURRENT_SOURCE_DIR}/src/stub/stub_dc.cpp>
     ${tdt_common_files}
@@ -144,6 +145,8 @@ target_include_directories(tsdclient PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/
     ${RUNTIME_DIR}/include/
     ${RUNTIME_DIR}/src/tsd/
+    ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
+ 	${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/
@@ -169,10 +172,6 @@ target_compile_definitions(tsdclient PRIVATE
     TSD_HOST_LIB
     NOT_COVERAGE_BY_UT
     google=ascend_private
-    CMSCBB_SUPPORT_RSAPSS=1
-    CFG_FEATURE_PKCS_SIGN
-    CFG_FEATURE_RSA_2048
-    CFG_FEATURE_RSA_4096
 )
 
 target_link_options(tsdclient PRIVATE

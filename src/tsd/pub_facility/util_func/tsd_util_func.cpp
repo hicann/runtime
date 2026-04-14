@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,15 +8,15 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/internal_api.h"
+#include "tsd_util_func.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <csignal>
 #include <cstring>
 #include <dirent.h>
-#include "inc/log.h"
-#include "inc/tsd_feature_ctrl.h"
+#include <openssl/sha.h>
+#include "log.h"
 #ifdef WIN_TSD
 #include <regex>
 #else
@@ -27,18 +27,22 @@
 #include <regex.h>
 #include <climits>
 #include <cstdlib>
+#include <sstream>
+#include <iomanip>
 #include "inc/basic_define.h"
 #include "inc/weak_ascend_hal.h"
 #endif
 
-namespace tsd {
+namespace {
     constexpr int32_t SYSTE_EXECUTE_CMD_ERROR = 127; // 与system实现保持一致
-    /**
-    * @ingroup Trim
-    * @brief 删除string首尾空白
-    * @param [in] str : 字符串变量
-    * @return 处理后的字符串
-    */
+    constexpr const int32_t HX_PRINT_POS = 2;
+    // min number of vDeviceId
+    constexpr const uint32_t VDEVICE_MIN_CPU_NUM = 32U;
+    // max number of vDeviceId
+    constexpr const uint32_t VDEVICE_MAX_CPU_NUM = 64U;
+}
+
+namespace tsd {
     void Trim(std::string& str)
     {
         if (str.empty()) {
@@ -61,13 +65,6 @@ namespace tsd {
         return st.st_size;
     }
 
-    /**
-    * @ingroup ValidateStr
-    * @brief 判断是否符合正则匹配
-    * @param [in] str : 文件名
-    * @param [in] mode : 文件名匹配格式
-    * @return 文件校验值
-    */
     bool ValidateStr(const std::string &str, const std::string &mode)
     {
 #ifdef WIN_TSD
@@ -124,12 +121,6 @@ namespace tsd {
     {
         static bool isFpga = GetFlagFromEnv("DATAMASTER_RUN_MODE", "1");
         return isFpga;
-    }
-
-    bool IsAdcEnv()
-    {
-        static bool isAdc = GetFlagFromEnv("REGISTER_TO_ASCENDMONITOR", "0");
-        return isAdc;
     }
 
     bool CheckRealPath(const std::string &inputPath)
@@ -206,12 +197,7 @@ namespace tsd {
         return status;
 #endif
     }
-    /**
-    * @ingroup TSD
-    * @brief PackSystem: 封装system API
-    * @param [in] ：cmdLine-需要执行的命令行
-    * @param [out] :  成功---0,  错误--其他错误码
-    */
+
     int32_t PackSystem(const char_t * const cmdLine)
     {
 #ifdef WIN_TSD
@@ -229,6 +215,15 @@ namespace tsd {
 #endif
     }
 
+    static bool IsTinyRuntime()
+    {
+#ifdef TINY_RUNTIME
+        return true;
+#else
+        return false;
+#endif
+    }
+
     /**
     * int strerror_r(int errnum, char buf[.buflen], size_t buflen); POSIX
     * char *strerror_r(int errnum, char buf[.buflen], size_t buflen); GNU
@@ -241,7 +236,7 @@ namespace tsd {
 #else
         char_t errBuf[errnoLen] = { };
         auto errorMsg = strerror_r(errno, &errBuf[0], errnoLen);
-        if (FeatureCtrl::IsTinyRuntime()) {
+        if (IsTinyRuntime()) {
             if (errorMsg == 0) {
                 errBuf[errnoLen - 1U] = '\0';
                 return std::string(errBuf);
@@ -256,34 +251,9 @@ namespace tsd {
 #endif
     }
 
-    static inline bool IsBetweenValue(const char_t chValue, const char_t minCh, const char_t maxCh)
-    {
-        return ((static_cast<uint8_t>(chValue) >= static_cast<uint8_t>(minCh)) &&
-                (static_cast<uint8_t>(chValue) <= static_cast<uint8_t>(maxCh)));
-    }
-    static inline char_t CalCharValue(const char_t chValue, const char_t minCh, const uint8_t incValue)
-    {
-        return static_cast<char_t>(static_cast<uint8_t>(chValue) - static_cast<uint8_t>(minCh) + (incValue));
-    }
-    const uint8_t A_IN_HEX = 10;
-    char_t TsdCh2Hex(const char_t c)
-    {
-        char_t ret = static_cast<char_t>(0);
-        if (IsBetweenValue(c, '0', '9')) {
-            ret = CalCharValue(c, '0', 0);
-        } else if (IsBetweenValue(c, 'a', 'f')) {
-            ret = CalCharValue(c, 'a', A_IN_HEX);
-        } else if (IsBetweenValue(c, 'A', 'F')) {
-            ret = CalCharValue(c, 'A', A_IN_HEX);
-        } else {
-            TSD_ERROR("Error! Input is not a hex value!");
-        }
-        return ret;
-    }
-
     uint32_t CalcUniqueVfId(const uint32_t deviceId, const uint32_t vfId)
     {
-        if (FeatureCtrl::IsVfModeCheckedByDeviceId(deviceId)) {
+        if (IsVfModeCheckedByDeviceId(deviceId)) {
             return deviceId;
         }
 
@@ -300,17 +270,6 @@ namespace tsd {
             }
         }
         return (maxNumSpDev * deviceId) + vfId;
-    }
-
-    bool TransStrToull(const std::string &para, uint64_t &value)
-    {
-        try {
-            value = std::stoull(para);
-        } catch (...) {
-            return false;
-        }
-
-        return true;
     }
 
     bool TransStrToInt(const std::string &para, int32_t &value)
@@ -370,5 +329,47 @@ namespace tsd {
 
         closedir(dir);
         return true;
+    }
+
+    std::string CalFileSha256HashValue(const std::string &filePath)
+    {
+        std::ifstream curFile(filePath, std::ios::binary);
+        if (!curFile) {
+            TSD_RUN_WARN("open file:%s not success, reason:%s", filePath.c_str(), SafeStrerror().c_str());
+            return "";
+        }
+
+        std::stringstream fileBuffer;
+        fileBuffer << curFile.rdbuf();
+        std::string fileBinaryValue = fileBuffer.str();
+        unsigned char hashValue[SHA256_DIGEST_LENGTH];
+#ifndef tsd_UT
+        SHA256(PtrToPtr<const char, const unsigned char>(fileBinaryValue.c_str()), fileBinaryValue.size(), hashValue);
+#endif
+        std::stringstream sha256Str;
+        sha256Str << std::hex << std::setfill('0');
+        for (auto i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+            sha256Str << std::setw(HX_PRINT_POS) << static_cast<int32_t>(hashValue[i]);
+        }
+        curFile.close();
+        return sha256Str.str();
+    }
+
+    bool IsCurrentVfMode(const uint32_t deviceId, const uint32_t vfId)
+    {
+        if ((IsVfModeCheckedByDeviceId(deviceId)) || (vfId > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool IsVfModeCheckedByDeviceId(const uint32_t deviceId)
+    {
+        if ((deviceId >= VDEVICE_MIN_CPU_NUM) && (deviceId < VDEVICE_MAX_CPU_NUM)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
