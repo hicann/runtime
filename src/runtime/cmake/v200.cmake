@@ -380,6 +380,7 @@ set(libruntime_v201_src_files
     ${libruntime_v200_callback_files}
     ${xpu_tprt_api_file}
     ${RUNTIME_CORE_DIR}/src/plugin_manage/v100/plugin_old_arch.cc
+    ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     $<$<NOT:$<STREQUAL:${PRODUCT},ascend031>>:${libruntime_v200_src_files_exclude_for_tiny}>
 )
 #---------------------------------------------------------------------------------------

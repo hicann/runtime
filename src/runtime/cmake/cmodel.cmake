@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------------------------------------
-# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -264,6 +264,7 @@ set(libruntime_cmodel_api_src_files
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
 

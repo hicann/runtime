@@ -55,7 +55,7 @@ set(runtimeut_common_src_task_list
 set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
     ${TOP_DIR}/src/runtime/core/src/task/v100/davinci_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
@@ -248,7 +248,6 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/kernel/elf.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/module.cc
-    ${TOP_DIR}/src/runtime/core/src/kernel/v100/program_plat.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/feature/soma/soma.cc
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
@@ -270,7 +269,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/device/ini_parse_utils.cc
     ${TOP_DIR}/src/runtime/core/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/core/src/plugin_manage/runtime_keeper.cc
-    ${TOP_DIR}/src/runtime/core/src/plugin_manage/v100/plugin_old_arch.cc
+    ${TOP_DIR}/src/runtime/core/src/plugin_manage/v200/plugin_old_arch.cc
     ${TOP_DIR}/src/runtime/core/src/utils/capability.cc
     ${TOP_DIR}/src/runtime/core/src/task/ctrl_res_pool.cpp
     ${TOP_DIR}/src/runtime/core/src/utils/osal.cc
@@ -310,14 +309,43 @@ set(runtimeut_910b_src_list
     ${runtimeut_src_common_list}
     ${runtimeut_platform_list}
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
-    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100_xpu.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_creator.cc
  	${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/json_parse.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program_common.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel_utils.cc
-    ${TOP_DIR}/src/runtime/core/src/runtime_v100/runtime_adapt.cc
+    ${TOP_DIR}/src/runtime/api/api_c_xpu.cc
+    ${TOP_DIR}/src/runtime/core/src/runtime_v200/runtime_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_manager_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_kernel_task.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/task_xpu_recycle.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_context.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_sqcq_manage_xpu.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_res_manage/v200/task_res_da.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/stream_xpu_c.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_device.cc
+    ${TOP_DIR}/src/runtime/core/src/pool/h2h_copy_mgr.cc
+    ${TOP_DIR}/src/runtime/driver/xpu_driver.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/arg_loader_xpu.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_david.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/arg_manage_xpu.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/xpu_aicpu_c.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/program_plat.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/json_parse.cc
+    ${TOP_DIR}/src/runtime/feature/xpu/runtime_xpu_adapt.cc
+    ${TOP_DIR}/src/tprt/c/tprt_api.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_cqhandle.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_device.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_log.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_sqhandle.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_worker.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_timer.cc
+    ${TOP_DIR}/src/tprt/feature/src/tprt_profiling.cc
 )
 ###################################################################################################
 add_library(runtime_ut_910b_static_lib STATIC ${runtimeut_910b_src_list})
@@ -325,6 +353,11 @@ add_library(runtime_ut_910b_static_lib STATIC ${runtimeut_910b_src_list})
 target_compile_definitions(runtime_ut_910b_static_lib PUBLIC
     TEMP_PERFORMANCE
     TEMP_PERFORMANCE_NOT_OUTPUT
+)
+
+target_include_directories(runtime_ut_910b_static_lib PRIVATE
+    ${TOP_DIR}/src/tprt/inc/external
+    ${TOP_DIR}/src/tprt/feature/inc
 )
 
 target_link_libraries(runtime_ut_910b_static_lib PRIVATE $<BUILD_INTERFACE:runtime_ut_910b_intf_pub>)
@@ -644,6 +677,46 @@ target_compile_definitions(runtime_utest_api_910B PUBLIC
 )
 
 target_link_libraries(runtime_utest_api_910B PRIVATE
+    $<BUILD_INTERFACE:runtime_ut_910b_intf_pub>
+    -Wl,--whole-archive
+     runtime_ut_910b_static_lib
+     runtimeut_910b_stub_static_lib
+    -Wl,--no-whole-archive
+)
+###################################################################################################
+add_executable(runtime_utest_xpu_910B
+    ${runtime_raw_device_adpt_common_list}
+    ${TOP_DIR}/src/runtime/driver/npu_driver.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_mem.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_queue.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
+    ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
+    ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    stub/hal_stub.cc
+    stub/xpu_stub.cc
+    stub/rt_utest_api_common_defination.cc
+    main.cc
+    rt_utest_xpu_api_impl.cc
+    rt_utest_xpu_aicpu_c_stub.cc
+    rt_utest_task_proc_func_register_xpu.cc
+)
+
+target_include_directories(runtime_utest_xpu_910B PRIVATE
+    ${TOP_DIR}/tests/ut/runtime/runtime
+    ${TOP_DIR}/src/tprt/inc/external
+    ${TOP_DIR}/src/tprt/feature/inc
+    stub
+)
+
+target_compile_definitions(runtime_utest_xpu_910B PUBLIC
+    TEMP_PERFORMANCE
+    TEMP_PERFORMANCE_NOT_OUTPUT
+)
+
+target_link_libraries(runtime_utest_xpu_910B PRIVATE
     $<BUILD_INTERFACE:runtime_ut_910b_intf_pub>
     -Wl,--whole-archive
      runtime_ut_910b_static_lib

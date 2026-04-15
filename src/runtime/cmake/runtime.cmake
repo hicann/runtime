@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------------------------------------
-# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance_task.cc
 
     ${RUNTIME_CORE_DIR}/src/task/v100/davinci_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/v100/task_proc_func_register.cc
+    ${RUNTIME_CORE_DIR}/src/task/v100/task_proc_func_register_xpu.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/memory_corruption_checker.cc
@@ -182,9 +182,32 @@ set(libruntime_api_src_files_optional
 #------------------------- runtime v100 -------------------------
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
-    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100_xpu.cc
     ${RUNTIME_FEATURE_DIR}/xpu/api_decorator_xpu.cc
 )
+
+set(xpu_tprt_src_file
+    ${RUNTIME_FEATURE_DIR}/xpu/task_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/task_manager_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_kernel_task.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/task_xpu_recycle.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_context.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_sqcq_manage_xpu.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_res_manage/v200/task_res_da.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/stream_xpu_c.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_device.cc
+    ${RUNTIME_CORE_DIR}/src/pool/h2h_copy_mgr.cc
+    ${RUNTIME_DIR}/src/runtime/driver/xpu_driver.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/arg_loader_xpu.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_david.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/arg_manage_xpu.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_aicpu_c.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/program_plat.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/runtime_xpu_adapt.cc
+)
+
 set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
@@ -231,7 +254,6 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
@@ -252,7 +274,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
     ${RUNTIME_CORE_DIR}/src/runtime.cc
-    ${RUNTIME_CORE_DIR}/src/runtime_v100/runtime_adapt.cc
+    ${RUNTIME_CORE_DIR}/src/runtime_v200/runtime_adapt.cc
     ${RUNTIME_CORE_DIR}/src/utils/capability.cc
     ${RUNTIME_CORE_DIR}/src/utils/osal.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/scheduler.cc
@@ -296,9 +318,10 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_state_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_state_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/event/event_state_callback_manager.cc
-    ${RUNTIME_CORE_DIR}/src/plugin_manage/v100/plugin_old_arch.cc
+    ${RUNTIME_CORE_DIR}/src/plugin_manage/v200/plugin_old_arch.cc
     ${libruntime_src_files_optional}
     ${xpu_tprt_api_file}
+    ${xpu_tprt_src_file}
 )
 
 set(RUNTIME_INC_DIR_OPEN
@@ -619,6 +642,7 @@ macro(add_runtime_v100_library target_name)
             $<$<AND:$<NOT:$<STREQUAL:${PRODUCT},ascend610>>,$<NOT:$<STREQUAL:${PRODUCT},ascend610Lite>>>:atrace_share>
             json
             platform
+            xpu_tprt
             runtime_common
             -Wl,--as-needed
             -Wl,-Bsymbolic

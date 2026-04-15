@@ -25,6 +25,7 @@ add_executable(runtime_utest_cloud
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     main.cc
     rt_utest_model_api.cc

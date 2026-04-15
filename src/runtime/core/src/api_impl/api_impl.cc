@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@
 #include "api_soma.hpp"
 #include "utils.h"
 #include "platform_manager_v2.h"
+#include "xpu_aicpu_c.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -1204,12 +1205,19 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
 
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device * const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
 
     Stream *curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Kernel launch with handle failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+
+    if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
+        return XpuLaunchKernelV2(kernel, blockDim, argsWithType, stm, taskCfg);
+    }
+
     if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
         RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;

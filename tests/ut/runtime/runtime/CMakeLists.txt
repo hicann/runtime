@@ -751,6 +751,7 @@ add_executable(runtime_utest
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_ctrl_stream.cc
@@ -823,7 +824,7 @@ add_executable(runtime_utest_camodel
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
-
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_device.cc
@@ -854,6 +855,7 @@ add_executable(runtime_camodel_utest_v200
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_camodel_v200.cc
@@ -884,6 +886,7 @@ add_executable(runtime_utest_model
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_label.cc
@@ -916,6 +919,7 @@ add_executable(runtime_utest_engine
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_engine.cc
@@ -950,6 +954,7 @@ add_executable(runtime_utest_api
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_api_common_defination.cc
@@ -996,6 +1001,7 @@ add_executable(runtime_utest_api_ext_others
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/platform/others/rt_utest_api_dfx.cc
@@ -1032,6 +1038,7 @@ add_executable(runtime_utest_task_normal
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_task.cc
@@ -1062,6 +1069,7 @@ add_executable(runtime_utest_dfx
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_pctrace.cc
@@ -1106,6 +1114,7 @@ set(runtimeut_src_tiny_list_all
     ${TOP_DIR}/src/runtime/core/src/memory/mem_type.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/program_plat.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
 )
 
 list(REMOVE_ITEM runtimeut_src_tiny_list_all
@@ -1567,6 +1576,7 @@ add_executable(runtime_utest_api_normal
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_api_common_defination.cc
@@ -1599,6 +1609,7 @@ add_executable(runtime_utest_api_others
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_api_common_defination.cc
@@ -1648,6 +1659,7 @@ set(RUNTIME_TARGET
     runtime_utest_api_others
     runtime_utest_api_normal
     runtime_utest_api_910B
+    runtime_utest_xpu_910B
     runtime_utest_api
     runtime_utest_cloud
     runtime_utest_adc
