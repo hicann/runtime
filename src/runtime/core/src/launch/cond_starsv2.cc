@@ -15,6 +15,7 @@
 #include "profiler_c.hpp"
 #include "memory_task.h"
 #include "stream_david.hpp"
+#include "stream_task.h"
 
 namespace cce {
 namespace runtime {

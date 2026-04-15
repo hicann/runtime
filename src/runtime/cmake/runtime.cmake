@@ -32,6 +32,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dump_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_execute_time.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc

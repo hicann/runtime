@@ -32,6 +32,7 @@
 #include "davinci_kernel_task.h"
 #include "profiler.hpp"
 #include "rdma_task.h"
+#include "stream_task.h"
 #include "thread_local_container.hpp"
 #undef private
 #undef protected

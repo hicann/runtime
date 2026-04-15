@@ -32,6 +32,7 @@
 #undef private
 #undef protected
 #include "ffts_task.h"
+#include "stream_task.h"
 #include "context.hpp"
 #include "securec.h"
 #include "api.hpp"
@@ -40,6 +41,7 @@
 #include "capture_model_utils.hpp"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"
+
 using namespace testing;
 using namespace cce::runtime;
 

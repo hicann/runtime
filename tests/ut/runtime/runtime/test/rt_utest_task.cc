@@ -55,6 +55,7 @@
 #include "task_info.hpp"
 #include "printf.hpp"
 #include "cmo_task.h"
+#include "stream_task.h"
 #include "task_info.h"
 
 using namespace testing;

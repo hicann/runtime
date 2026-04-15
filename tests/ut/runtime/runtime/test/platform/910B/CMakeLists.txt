@@ -35,6 +35,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_multiple_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc

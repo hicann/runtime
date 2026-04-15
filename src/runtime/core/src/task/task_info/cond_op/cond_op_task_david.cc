@@ -69,32 +69,6 @@ void ConstructDavidSqeForStreamSwitchTask(TaskInfo * const taskInfo, rtDavidSqe_
     return;
 }
 
-void ConstructDavidSqeForStreamActiveTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
-{
-    StreamActiveTaskInfo * const streamActiveTask = &(taskInfo->u.streamactiveTask);
-    Stream * const stream = taskInfo->stream;
-    UNUSED(sqBaseAddr);
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidStarsFunctionCallSqe &sqe = davidSqe->fuctionCallSqe;
-
-    sqe.header.type = RT_DAVID_SQE_TYPE_COND;
-    sqe.condsSubType = CONDS_SUB_TYPE_STREAM_ACTIVE;
-
-    sqe.kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-    sqe.sqeLength = 0U;
-    sqe.csc = 1U;
-
-    const uint64_t funcAddr = RtPtrToValue(streamActiveTask->funcCallSvmMem);
-    const uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsStreamActiveFc));
-
-    // func call size is rs2[19:0]*4Byte
-    ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), sqe);
-
-    PrintDavidSqe(davidSqe, "StreamActiveTask");
-    RT_LOG(RT_LOG_INFO, "StreamActiveTask, deviceId=%u, streamId=%d, taskId=%hu, activeStreamId=%u.",
-        stream->Device_()->Id_(), stream->Id_(), taskInfo->id, streamActiveTask->activeStreamId);
-}
-
 void ConstructDavidSqeForLabelSetTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);

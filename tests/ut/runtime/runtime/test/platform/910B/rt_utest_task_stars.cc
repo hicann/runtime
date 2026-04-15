@@ -22,6 +22,7 @@
 #undef private
 #include "ffts_task.h"
 #include "rdma_task.h"
+#include "stream_task.h"
 #include "context.hpp"
 #include "runtime.hpp"
 #include "uma_arg_loader.hpp"

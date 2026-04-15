@@ -47,6 +47,7 @@
 #include "dvpp_c.hpp"
 #include "cmo_barrier_c.hpp"
 #include "barrier_task.h"
+#include "stream_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

@@ -12,21 +12,31 @@
 
 #include "driver.hpp"
 #include "stars.hpp"
+#include "task_info.hpp"
+#include "hwts.hpp"
 
 namespace cce {
 namespace runtime {
+rtError_t CreateStreamTaskInit(TaskInfo * const taskInfo, const uint32_t flag);
 void ToCommandBodyForCreateStreamTask(TaskInfo * const taskInfo, rtCommand_t *const command);
-void ToCmdBodyForActiveAicpuStreamTask(TaskInfo* const taskInfo, rtCommand_t *const command);
-void ToCmdBodyForSetStreamModeTask(TaskInfo* taskInfo, rtCommand_t *const command);
-void ToCommandBodyForStreamActiveTask(TaskInfo* taskInfo, rtCommand_t * const command);
-void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
-void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void SetResultForCreateStreamTask(TaskInfo * const taskInfo, const void *const data, const uint32_t dataSize);
-void PrintErrorInfoForStreamActiveTask(TaskInfo* taskInfo, const uint32_t devId);
-void StreamActiveTaskUnInit(TaskInfo * const taskInfo);
+rtError_t SqLockUnlockTaskInit(TaskInfo* taskInfo, const bool isLock);
+
+rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStarsStreamActiveFcPara_t &fcPara,
+    const rtChipType_t chipType);
+rtError_t StreamActiveTaskInit(TaskInfo* taskInfo, const Stream * const stm);
 rtError_t ReConstructStreamActiveTaskFc(TaskInfo* taskInfo);
+void ToCommandBodyForStreamActiveTask(TaskInfo* taskInfo, rtCommand_t * const command);
+void StreamActiveTaskUnInit(TaskInfo * const taskInfo);
+void PrintErrorInfoForStreamActiveTask(TaskInfo* taskInfo, const uint32_t devId);
+rtError_t ActiveAicpuStreamTaskInit(TaskInfo* taskInfo, const uint64_t argsParam, const uint32_t argsSizeLen,
+                                    const uint64_t func, const uint32_t kernelTypeId);
+void ToCmdBodyForActiveAicpuStreamTask(TaskInfo* const taskInfo, rtCommand_t *const command);
+
+rtError_t OverflowSwitchSetTaskInit(TaskInfo *taskInfo, Stream * const stm, const uint32_t flags);
+rtError_t StreamTagSetTaskInit(TaskInfo *taskInfo, Stream * const stm, const uint32_t geOpTag);
+
+rtError_t SetStreamModeTaskInit(TaskInfo *taskInfo, const uint64_t mode);
+void ToCmdBodyForSetStreamModeTask(TaskInfo* taskInfo, rtCommand_t *const command);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_STREAM_TASK_H

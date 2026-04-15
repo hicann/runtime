@@ -20,6 +20,7 @@
 #include "notify_c.hpp"
 #include "ctrl_sq.hpp"
 #include "cmo_task.h"
+#include "stream_task.h"
 
 namespace cce {
 namespace runtime {

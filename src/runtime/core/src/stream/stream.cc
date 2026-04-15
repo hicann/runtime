@@ -28,6 +28,7 @@
 #include "stream_state_callback_manager.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
+#include "stream_task.h"
 #include "error_code.h"
 #include "capture_model.hpp"
 #include "task_david.hpp"

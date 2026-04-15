@@ -17,6 +17,12 @@ namespace runtime {
 void ConstructSqeForBarrierTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForCmoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId);
+
+void SetResultForCreateStreamTask(TaskInfo * const taskInfo, const void *const data, const uint32_t dataSize);
+void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
+void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 }  // namespace runtime
 }  // namespace cce
 #endif  // TASK_INFO_V100_H

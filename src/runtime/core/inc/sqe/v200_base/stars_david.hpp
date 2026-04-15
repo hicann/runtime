@@ -539,6 +539,8 @@ void ConstructDavidSqeForUbDirectSendTask(TaskInfo *taskInfo, rtDavidSqe_t * con
 void ConstructDavidSqeForUbDbSendTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForLabelSetTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForStreamActiveTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForOverflowSwitchSetTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForStreamTagSetTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForStreamSwitchTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForStreamLabelSwitchByIndexTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForAicpuInfoLoadTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);

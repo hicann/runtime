@@ -582,27 +582,6 @@ static void ConstructDavidSqeForStarsCommonTask(TaskInfo * const taskInfo, rtDav
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
 }
 
-static void ConstructDavidSqeForOverflowSwitchSetTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidPlaceHolderSqe * const sqe = &(davidSqe->phSqe);
-    OverflowSwitchSetTaskInfo * const overflowSwiSet = &(taskInfo->u.overflowSwitchSetTask);
-    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
-    sqe->header.preP = 1U;
-    sqe->taskType = TS_TASK_TYPE_SET_OVERFLOW_SWITCH;
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-
-    sqe->u.streamOverflowSwitchInfo.streamId = static_cast<uint16_t>(overflowSwiSet->targetStm->Id_());
-    sqe->u.streamOverflowSwitchInfo.isSwitchOn = overflowSwiSet->switchFlag ? 1U : 0U;
-
-    PrintDavidSqe(davidSqe, "OverflowSwitchSetTask");
-    RT_LOG(RT_LOG_INFO, "OverflowSwitchSetTask target, device_id=%u, stream_id=%d, target_stream_id=%d, task_id=%hu,"
-        "task_sn=%u, switch %s.", taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), overflowSwiSet->targetStm->Id_(),
-        taskInfo->id, taskInfo->taskSn, overflowSwiSet->switchFlag ? "on" : "off");
-}
-
 static void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
     uint64_t sqBaseAddr)
 {
@@ -627,27 +606,6 @@ static void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rt
     RT_LOG(RT_LOG_INFO, "NpuGetFloatStatusTask finish, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
         "debugFlag=%hhu.", taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn,
         sqe.debugFlag);
-}
-static void ConstructDavidSqeForStreamTagSetTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    StreamTagSetTaskInfo * const stmTagSetTsk = &(taskInfo->u.stmTagSetTask);
-    RtDavidPlaceHolderSqe * const sqe = &(davidSqe->phSqe);
-    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
-    sqe->header.preP = 1U;
-    sqe->taskType = TS_TASK_TYPE_SET_STREAM_GE_OP_TAG;
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-
-    sqe->u.streamSetTagInfo.streamId = static_cast<uint16_t>(stmTagSetTsk->targetStm->Id_());
-    sqe->u.streamSetTagInfo.geOpTag = stmTagSetTsk->geOpTag;
-
-    PrintDavidSqe(davidSqe, "StreamTagSetTask");
-    RT_LOG(RT_LOG_INFO, "StreamTagSetTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, target_stream_id=%d, "
-        "sqe_stream_id=%hu, geOpTag=%u.", taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(),
-        taskInfo->id, taskInfo->taskSn, stmTagSetTsk->targetStm->Id_(), sqe->header.rtStreamId,
-        stmTagSetTsk->geOpTag);
 }
 
 static void ConstructDavidSqeForNpuClrFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,

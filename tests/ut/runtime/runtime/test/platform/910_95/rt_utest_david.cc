@@ -47,6 +47,7 @@
 #include "driver.hpp"
 #include "kernel.hpp"
 #include "cmo_task.h"
+#include "stream_task.h"
 #undef protected
 #undef private
 

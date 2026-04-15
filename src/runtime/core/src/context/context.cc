@@ -32,6 +32,7 @@
 #include "inner_thread_local.hpp"
 #include "dvpp_grp.hpp"
 #include "task_info.hpp"
+#include "stream_task.h"
 #include "task_submit.hpp"
 #include "task_to_sqe.hpp"
 #include "stream_state_callback_manager.hpp"

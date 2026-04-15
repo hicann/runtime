@@ -50,6 +50,7 @@
 #include "debug_task.h"
 #include "memcpy_c.hpp"
 #include "barrier_task.h"
+#include "stream_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

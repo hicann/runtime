@@ -12,6 +12,7 @@
 #include "context/context.hpp"
 #include "stream.hpp"
 #include "task/task_info.hpp"
+#include "stream_task.h"
 #include "error_message_manage.hpp"
 #include "rt_log.h"
 #include "task/task.hpp"

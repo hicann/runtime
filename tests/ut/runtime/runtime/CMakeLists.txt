@@ -56,6 +56,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -88,10 +89,12 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v200_base.cc
 
     # mechanism dependance
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list
