@@ -454,7 +454,7 @@ public:
     rtError_t RegProfCtrlCallback(const uint32_t moduleId, const rtProfCtrlHandle callback) override;
     rtError_t RegStreamStateCallback(const char_t *regName, void *callback, void *args,
         StreamStateCallback type) override;
-    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *modelName, void *callback) override;
+    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *moduleName, void *callback) override;
     // IPC API
     rtError_t IpcSetMemoryName(const void * const ptr, const uint64_t byteCount, char_t * const name,
         const uint32_t len, const uint64_t flags) override;
