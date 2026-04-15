@@ -11,7 +11,7 @@
 
 export SLOG_PRINT_TO_STDOUT=1
 export ASCEND_SLOG_PRINT_TO_STDOUT=1
-export ASCEND_GLOBAL_LOG_LEVEL=1
+export ASCEND_GLOBAL_LOG_LEVEL=2
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARAM_FILE="${SCRIPT_DIR}/../pre-smoking-testcase"

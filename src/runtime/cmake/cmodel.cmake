@@ -304,12 +304,12 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_list.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
-    ${RUNTIME_CORE_DIR}/src/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/model/model_rebuild.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
-    ${RUNTIME_CORE_DIR}/src/model/v100/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
@@ -417,12 +417,12 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v200/npu_driver.cc
-    ${RUNTIME_CORE_DIR}/src/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/model/model_rebuild.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
-    ${RUNTIME_CORE_DIR}/src/model/v200/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/v200/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc
@@ -496,7 +496,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/event/event_c.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_starsv2.cc
-    ${RUNTIME_CORE_DIR}/src/model/model_c.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_c.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify_c.cc
     ${RUNTIME_CORE_DIR}/src/profiler/profiler_c.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc

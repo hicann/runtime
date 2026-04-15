@@ -150,7 +150,7 @@ set(runtimeut_src_david_series_common_c_list
     ${TOP_DIR}/src/runtime/core/src/launch/cmo_barrier_starsv2.cc
     ${TOP_DIR}/src/runtime/core/src/notify/notify_c.cc
     ${TOP_DIR}/src/runtime/core/src/event/event_c.cc
-    ${TOP_DIR}/src/runtime/core/src/model/model_c.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_c.cc
     ${TOP_DIR}/src/runtime/core/src/profiler/profiler_c.cc
 )
 
@@ -419,9 +419,9 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_msg.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
-    ${TOP_DIR}/src/runtime/core/src/model/model.cc
-    ${TOP_DIR}/src/runtime/core/src/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/core/src/model/v100/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
+    ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_model_adapt_v100.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc
@@ -577,9 +577,9 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_msg.cc
     ${TOP_DIR}/src/runtime/driver/v200/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
-    ${TOP_DIR}/src/runtime/core/src/model/model.cc
-    ${TOP_DIR}/src/runtime/core/src/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/core/src/model/v200/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
+    ${TOP_DIR}/src/runtime/feature/model/v200/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_adapt_v200.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_model_adapt_v200.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc
@@ -1401,9 +1401,9 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_msg.cc
     ${TOP_DIR}/src/runtime/driver/v201/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
-    ${TOP_DIR}/src/runtime/core/src/model/model.cc
-    ${TOP_DIR}/src/runtime/core/src/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/core/src/model/v200/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
+    ${TOP_DIR}/src/runtime/feature/model/v200/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_adapt_v200.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/capture_model_adapt_v200.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc

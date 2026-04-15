@@ -241,10 +241,10 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_list.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
-    ${RUNTIME_CORE_DIR}/src/model/model.cc
+    ${RUNTIME_FEATURE_DIR}/model/model.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
-    ${RUNTIME_CORE_DIR}/src/model/model_rebuild.cc
-    ${RUNTIME_CORE_DIR}/src/model/v100/capture_adapt.cc
+    ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
+    ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc

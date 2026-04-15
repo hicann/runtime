@@ -237,9 +237,9 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_msg.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
-    ${TOP_DIR}/src/runtime/core/src/model/model.cc
-    ${TOP_DIR}/src/runtime/core/src/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/core/src/model/v100/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/model/model.cc
+    ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
+    ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_model_adapt_v100.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/args/args_handle_allocator.cc
