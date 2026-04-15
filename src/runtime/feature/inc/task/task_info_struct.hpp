@@ -488,6 +488,7 @@ struct SqeUpdateTaskInfo {
     uint16_t desStreamId;
     uint16_t desTaskId;
     uint8_t schemMode;
+    void *updateArgHandle;
 };
 
 }

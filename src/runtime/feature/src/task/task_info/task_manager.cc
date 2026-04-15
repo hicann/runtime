@@ -1066,6 +1066,8 @@ static void RegWaitAsyncCpCompleteFunc(void)
     g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &WaitAsyncCopyCompleteForDavinciTask;
     g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_KERNEL_AICORE] = &WaitAsyncCopyCompleteForDavinciTask;
     g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &WaitAsyncCopyCompleteForDavinciMultipleTask;
+    g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_MEMCPY] = &WaitAsyncCopyCompleteForMemcpyTask;
+    g_waitAsyncCpCompleteFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &WaitAsyncCopyCompleteForUpdateTask;
 }
 
 static void RegSetResultFunc(void)

@@ -445,7 +445,7 @@ public:
     void LaunchKernelRecycle(ArgLoaderResult &result, TaskInfo *&recycleTask, const Program * const prog) const;
     void GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList);
     void GetModelList(ModelList_t *mdlList);
-	rtError_t CheckMemAlign(const void * const addr, const rtDataType_t type) const;
+    rtError_t CheckMemAlign(const void * const addr, const rtDataType_t type) const;
     bool IsStreamInContext(Stream * const stm);
     rtError_t ResourceReset(void);
  
@@ -519,13 +519,13 @@ public:
                                        ArgLoaderResult &result, const uint32_t smArgsSize);
     rtError_t UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel, const uint32_t kernelType,
                                 const Stream * const stm) const;
-    rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm) const;
+    rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskH2DSubmit(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
     rtError_t UpdateNormalKernelTaskD2HSubmit(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm) const;
-    rtError_t UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe) const;
-    rtError_t UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm) const;
+    rtError_t UpdateNormalKernelTaskByTS(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskH2DSubmitComm(TaskInfo * const updateTask, Stream * const stm, void * const targetAddrOfUpdatedSqe, void * const updateArgHandle) const;
+    rtError_t UpdateNormalKernelTaskForSoftwareSq(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
     rtError_t UpdateEndGraphTask(Stream * const origCaptureStream, Stream * const exeStream, Notify *ntf) const;
     rtError_t MemWriteValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) const;
     rtError_t MemWaitValue(const void * const devAddr, const uint64_t value, const uint32_t flag, Stream * const stm) const;

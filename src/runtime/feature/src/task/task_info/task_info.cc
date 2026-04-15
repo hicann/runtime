@@ -879,7 +879,7 @@ void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command)
     return;
 }
 
-rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask)
+rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask, void * const updateArgHandle)
 {
     TaskCommonInfoInit(taskInfo);
     taskInfo->type = TS_TASK_TYPE_TASK_SQE_UPDATE;
@@ -894,6 +894,25 @@ rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask)
     taskInfo->u.sqeUpdateTask.desStreamId = updateTask->stream->Id_();
     taskInfo->u.sqeUpdateTask.desTaskId = updateTask->id;
     taskInfo->u.sqeUpdateTask.schemMode = aicTaskInfo->schemMode;
+    taskInfo->u.sqeUpdateTask.updateArgHandle = updateArgHandle;
+    return RT_ERROR_NONE;
+}
+
+rtError_t WaitAsyncCopyCompleteForUpdateTask(TaskInfo* taskInfo)
+{
+    SqeUpdateTaskInfo *sqeUpdateTask = &(taskInfo->u.sqeUpdateTask);
+    if (sqeUpdateTask->updateArgHandle == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    Handle *argHdl = static_cast<Handle *>(sqeUpdateTask->updateArgHandle);
+    if (!(argHdl->freeArgs) || argHdl->argsAlloc == nullptr || argHdl->kerArgs == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    const rtError_t error = argHdl->argsAlloc->H2DMemCopyWaitFinish(argHdl->kerArgs);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "H2DMemCopyWaitFinish for args cpy result failed, retCode=%#x.", static_cast<uint32_t>(error));
+        return error;
+    }
     return RT_ERROR_NONE;
 }
 
