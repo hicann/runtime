@@ -60,7 +60,7 @@ Dump初始化。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -113,7 +113,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -418,7 +418,7 @@ Dump数据回调函数注册接口。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -501,7 +501,7 @@ const char* acldumpGetPath(acldumpType dumpType)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| dumpType | 输入 | Dump类型。类型定义请参见[acldumpType](24_数据类型及其操作接口.md#acldumpType)。 |
+| dumpType | 输入 | Dump类型。类型定义请参见[acldumpType](25_数据类型及其操作接口.md#acldumpType)。 |
 
 ### 返回值说明
 
@@ -562,7 +562,7 @@ Dump去初始化。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 参考资源
 
@@ -608,7 +608,7 @@ aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -653,7 +653,7 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 

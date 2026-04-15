@@ -41,12 +41,12 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| context | 输出 | Context的指针。类型定义请参见[aclrtContext](24_数据类型及其操作接口.md#aclrtContext)。 |
+| context | 输出 | Context的指针。类型定义请参见[aclrtContext](25_数据类型及其操作接口.md#aclrtContext)。 |
 | deviceId | 输入 | 在指定的Device下创建Context。<br>用户调用[aclrtGetDeviceCount](04_Device管理.md#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -88,11 +88,11 @@ aclError aclrtDestroyContext(aclrtContext context)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| context | 输入 | 需销毁的Context。类型定义请参见[aclrtContext](24_数据类型及其操作接口.md#aclrtContext)。 |
+| context | 输入 | 需销毁的Context。类型定义请参见[aclrtContext](25_数据类型及其操作接口.md#aclrtContext)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -127,11 +127,11 @@ aclError aclrtSetCurrentContext(aclrtContext context)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| context | 输入 | 指定线程当前的Context。类型定义请参见[aclrtContext](24_数据类型及其操作接口.md#aclrtContext)。 |
+| context | 输入 | 指定线程当前的Context。类型定义请参见[aclrtContext](25_数据类型及其操作接口.md#aclrtContext)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -179,11 +179,11 @@ aclError aclrtGetCurrentContext(aclrtContext *context)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| context | 输出 | 线程当前Context的指针。类型定义请参见[aclrtContext](24_数据类型及其操作接口.md#aclrtContext)。 |
+| context | 输出 | 线程当前Context的指针。类型定义请参见[aclrtContext](25_数据类型及其操作接口.md#aclrtContext)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -220,12 +220,12 @@ aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](24_数据类型及其操作接口.md#aclSysParamOpt)。 |
+| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](25_数据类型及其操作接口.md#aclSysParamOpt)。 |
 | value | 输入 | 系统参数值。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -262,12 +262,12 @@ aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](24_数据类型及其操作接口.md#aclSysParamOpt)。 |
+| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](25_数据类型及其操作接口.md#aclSysParamOpt)。 |
 | value | 输出 | 存放系统参数值的内存的指针。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -302,11 +302,11 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输出 | 获取到的默认Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输出 | 获取到的默认Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -347,7 +347,7 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -386,4 +386,4 @@ aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。

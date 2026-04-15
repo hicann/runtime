@@ -47,11 +47,11 @@ aclError acltdtAllocBuf(size_t size, uint32_t type, acltdtBuf *buf)
 | --- | :---: | --- |
 | size | 输入 | 用于指定数据区的内存大小，单位Byte，不能超过4G。 |
 | type | 输入 | 共享Buffer内存类型，支持设置如下枚举值。<br>typedef enum {<br>   ACL_TDT_NORMAL_MEM = 0,<br>   ACL_TDT_DVPP_MEM<br>} acltdtAllocBufType;<br>当前仅支持设置ACL_TDT_NORMAL_MEM。 |
-| buf | 输出 | 申请成功，输出共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输出 | 申请成功，输出共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -86,11 +86,11 @@ aclError acltdtFreeBuf(acltdtBuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 指定要释放的mbuf。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输入 | 指定要释放的mbuf。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -127,13 +127,13 @@ aclError acltdtGetBufData(const acltdtBuf buf, void **dataPtr, size_t *size)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | dataPtr | 输出 | 数据区指针（Device侧地址）。 |
 | size | 输出 | 数据区的长度，单位为Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -168,14 +168,14 @@ aclError acltdtSetBufUserData(acltdtBuf buf, const void *dataPtr, size_t size, s
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输出 | 共享Buffer指针。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输出 | 共享Buffer指针。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 | dataPtr | 输入 | 存放用户数据的内存地址指针。 |
 | size | 输入 | 用户数据的长度，单位为Byte。<br>数据长度小于或等于96Byte。 |
 | offset | 输入 | 地址偏移，单位为Byte。<br>偏移量小于或等于96Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -210,14 +210,14 @@ aclError acltdtGetBufUserData(const acltdtBuf buf, void *dataPtr, size_t size, s
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | dataPtr | 输入 | 存放用户数据的内存地址指针。 |
 | size | 输入 | 用户数据的长度，单位为Byte。<br>数据长度小于或等于96Byte。 |
 | offset | 输入 | 地址偏移，单位为Byte。<br>偏移量小于或等于96Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -254,12 +254,12 @@ aclError acltdtSetBufDataLen(acltdtBuf buf, size_t len)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | len | 输入 | 有效数据的长度，单位为Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -296,12 +296,12 @@ aclError acltdtGetBufDataLen(acltdtBuf buf, size_t *len)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| buf | 输入 | 共享Buffer指针。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | len | 输出 | 有效数据的长度，单位为Byte。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -336,12 +336,12 @@ aclError acltdtCopyBufRef(const acltdtBuf buf, acltdtBuf *newBuf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
-| newBuf | 输出 | 返回一个新的共享Buffer，指向相同的数据区。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输入 | 共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| newBuf | 输出 | 返回一个新的共享Buffer，指向相同的数据区。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -376,12 +376,12 @@ aclError acltdtAppendBufChain(acltdtBuf headBuf, acltdtBuf buf)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
-| buf | 输入 | 待添加的共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输入 | 待添加的共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -416,12 +416,12 @@ aclError acltdtGetBufChainNum(acltdtBuf headBuf, uint32_t *num)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | num | 输出 | 共享Buffer链中的共享Buffer数量。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -456,10 +456,10 @@ aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
+| headBuf | 输入 | 共享Buffer链头部的第一个共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。<br>须通过[acltdtAllocBuf](#acltdtAllocBuf)或[acltdtCopyBufRef](#acltdtCopyBufRef)接口申请获得。 |
 | index | 输入 | 共享Buffer链中的共享Buffer序号（从0开始计数）。 |
-| buf | 输出 | 输出第index个共享Buffer。类型定义请参见[acltdtBuf](24_数据类型及其操作接口.md#acltdtBuf)。 |
+| buf | 输出 | 输出第index个共享Buffer。类型定义请参见[acltdtBuf](25_数据类型及其操作接口.md#acltdtBuf)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。

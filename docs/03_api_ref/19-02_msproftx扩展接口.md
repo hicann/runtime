@@ -17,7 +17,7 @@
 ## 扩展接口使用说明
 
 -   **调用接口要求**：msproftx功能相关接口须在[aclprofStart](19-01_Profiling数据采集接口.md#aclprofStart)接口与[aclprofStop](19-01_Profiling数据采集接口.md#aclprofStop)接口之间调用。其中配对使用的接口有：[aclprofCreateStamp](#aclprofCreateStamp)/[aclprofDestroyStamp](#aclprofDestroyStamp)、[aclprofPush](#aclprofPush)/[aclprofPop](#aclprofPop)、[aclprofRangeStart](#aclprofRangeStart)/[aclprofRangeStop](#aclprofRangeStop)。
--   **接口调用顺序**：**[aclprofStart](19-01_Profiling数据采集接口.md#aclprofStart)接口**\(指定Device 0和Device 1\)--\>[aclprofCreateStamp](#aclprofCreateStamp)接口--\>[aclprofSetStampTraceMessage](#aclprofSetStampTraceMessage)接口--\>[aclprofMark](#aclprofMark)接口--\>\([aclprofPush](#aclprofPush)接口--\>[aclprofPop](#aclprofPop)接口\)或\([aclprofRangeStart](#aclprofRangeStart)接口--\>[aclprofRangeStop](#aclprofRangeStop)接口\)--\>[aclprofDestroyStamp](#aclprofDestroyStamp)接口--\>**[aclprofStop](19-01_Profiling数据采集接口.md#aclprofStop)接口**\(与[aclprofStart](19-01_Profiling数据采集接口.md#aclprofStart)接口的[aclprofConfig](24_数据类型及其操作接口.md#aclprofConfig)数据保持一致\)。
+-   **接口调用顺序**：**[aclprofStart](19-01_Profiling数据采集接口.md#aclprofStart)接口**\(指定Device 0和Device 1\)--\>[aclprofCreateStamp](#aclprofCreateStamp)接口--\>[aclprofSetStampTraceMessage](#aclprofSetStampTraceMessage)接口--\>[aclprofMark](#aclprofMark)接口--\>\([aclprofPush](#aclprofPush)接口--\>[aclprofPop](#aclprofPop)接口\)或\([aclprofRangeStart](#aclprofRangeStart)接口--\>[aclprofRangeStop](#aclprofRangeStop)接口\)--\>[aclprofDestroyStamp](#aclprofDestroyStamp)接口--\>**[aclprofStop](19-01_Profiling数据采集接口.md#aclprofStop)接口**\(与[aclprofStart](19-01_Profiling数据采集接口.md#aclprofStart)接口的[aclprofConfig](25_数据类型及其操作接口.md#aclprofConfig)数据保持一致\)。
 
 ---
 
@@ -91,7 +91,7 @@ aclError aclprofSetStampTraceMessage(void *stamp, const char *msg, uint32_t msgL
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -136,7 +136,7 @@ msproftx标记瞬时事件。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -177,13 +177,13 @@ aclprofMarkEx打点接口。
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| msg | 输入 | 打点信息字符串指针。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| msg | 输入 | 打点信息字符串指针。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 | msgLen | 输入 | 字符串长度。最大支持127字符。 |
-| stream | 输入 | 指定Stream。<br>取值详见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定Stream。<br>取值详见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -224,7 +224,7 @@ msproftx用于记录事件发生的时间跨度的开始时间。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -264,7 +264,7 @@ msproftx用于记录事件发生的时间跨度的结束时间。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -312,7 +312,7 @@ msproftx用于记录事件发生的时间跨度的开始时间。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -359,7 +359,7 @@ msproftx用于记录事件发生的时间跨度的结束时间。
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -402,11 +402,11 @@ aclError aclprofRangePushEx(aclprofEventAttributes *attr)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| attr | 输入 | 需要上报的Tensor信息，结构体详见[aclprofEventAttributes](24_数据类型及其操作接口.md#aclprofEventAttributes)。 |
+| attr | 输入 | 需要上报的Tensor信息，结构体详见[aclprofEventAttributes](25_数据类型及其操作接口.md#aclprofEventAttributes)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -444,7 +444,7 @@ aclError aclprofRangePop()
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 

@@ -123,12 +123,12 @@ aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | handle | 输入 | 指定通道。<br>需提前调用[acltdtCreateChannel](#acltdtCreateChannel)接口或[acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity)接口创建acltdtChannelHandle类型的数据。 |
-| dataset | 输入 | 向Device发送的数据的指针。类型定义请参见[acltdtDataset](24_数据类型及其操作接口.md#acltdtDataset)。 |
+| dataset | 输入 | 向Device发送的数据的指针。类型定义请参见[acltdtDataset](25_数据类型及其操作接口.md#acltdtDataset)。 |
 | timeout | 输入 | 等待超时时间。<br>该参数取值范围如下：<br>  - -1：阻塞方式，一直等待直到数据发送完成。<br>  - 0：非阻塞方式，当通道满时，直接返回通道满这个错误，这时由用户自行设定重试间隔。<br>  - >0：配置具体的超时时间，单位为毫秒。通道满时，等待达到超时时间后返回报错。超时时间受操作系统影响，一般偏差在操作系统的一个时间片内，例如，操作系统的一个时间片为4ms，用户设置的超时时间为1ms，则实际的超时时间在1ms到5ms范围内。在CPU负载高场景下，超时时间仍可能存在波动。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -164,12 +164,12 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *d
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | handle | 输入 | 指定通道。<br>需提前调用[acltdtCreateChannel](#acltdtCreateChannel)接口或[acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity)接口创建acltdtChannelHandle类型的数据。 |
-| dataset | 输出 | 接收到的Device数据的指针。类型定义请参见[acltdtDataset](24_数据类型及其操作接口.md#acltdtDataset)。 |
+| dataset | 输出 | 接收到的Device数据的指针。类型定义请参见[acltdtDataset](25_数据类型及其操作接口.md#acltdtDataset)。 |
 | timeout | 输入 | 等待超时时间。<br>该参数取值范围如下：<br>  - -1：阻塞方式，一直等待直到数据接收完成。<br>  - 0：非阻塞方式，当通道空时，直接返回通道空这个错误，这时由用户自行设定重试间隔。<br>  - >0：配置具体的超时时间，单位为毫秒。通道空时，等待达到超时时间后返回报错。超时时间受操作系统影响，一般偏差在操作系统的一个时间片内，例如，操作系统的一个时间片为4ms，用户设置的超时时间为1ms，则实际的超时时间在1ms到5ms范围内。在CPU负载高场景下，超时时间仍可能存在波动。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -208,7 +208,7 @@ aclError acltdtStopChannel(acltdtChannelHandle *handle)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -247,7 +247,7 @@ aclError acltdtDestroyChannel(acltdtChannelHandle *handle)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -287,7 +287,7 @@ aclError acltdtQueryChannelSize(const acltdtChannelHandle *handle, size_t *size)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -324,13 +324,13 @@ aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *slic
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| dataItem | 输入 | acltdtDataItem类型的指针。acltdtDataItem用于标识一个业务上的Tensor。类型定义请参见[acltdtDataItem](24_数据类型及其操作接口.md#acltdtDataItem)。<br>需提前调用[acltdtCreateDataItem](24_数据类型及其操作接口.md#acltdtCreateDataItem)接口创建acltdtDataItem类型的数据。 |
+| dataItem | 输入 | acltdtDataItem类型的指针。acltdtDataItem用于标识一个业务上的Tensor。类型定义请参见[acltdtDataItem](25_数据类型及其操作接口.md#acltdtDataItem)。<br>需提前调用[acltdtCreateDataItem](25_数据类型及其操作接口.md#acltdtCreateDataItem)接口创建acltdtDataItem类型的数据。 |
 | sliceNum | 输出 | 单个Tensor被切片的数量。 |
 | sliceId | 输出 | 被切片Tensor的数据段索引。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -369,4 +369,4 @@ aclError acltdtCleanChannel(acltdtChannelHandle *handle)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。

@@ -38,11 +38,11 @@ aclError aclrtCreateLabel(aclrtLabel *label)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| label | 输出 | 标签的指针。类型定义请参见[aclrtLabel](24_数据类型及其操作接口.md#aclrtLabel)。 |
+| label | 输出 | 标签的指针。类型定义请参见[aclrtLabel](25_数据类型及其操作接口.md#aclrtLabel)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -77,12 +77,12 @@ aclError aclrtSetLabel(aclrtLabel label, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| label | 输入 | 标签。类型定义请参见[aclrtLabel](24_数据类型及其操作接口.md#aclrtLabel)。<br>通过aclrtCreateLabel接口创建的标签作为此处的输入。 |
-| stream | 输入 | 需设置标签的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持通过[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口绑定过模型运行实例的Stream。 |
+| label | 输入 | 标签。类型定义请参见[aclrtLabel](25_数据类型及其操作接口.md#aclrtLabel)。<br>通过aclrtCreateLabel接口创建的标签作为此处的输入。 |
+| stream | 输入 | 需设置标签的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持通过[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口绑定过模型运行实例的Stream。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -117,11 +117,11 @@ aclError aclrtDestroyLabel(aclrtLabel label)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| label | 输入 | 通过[aclrtCreateLabel](#aclrtCreateLabel)接口创建的标签。类型定义请参见[aclrtLabel](24_数据类型及其操作接口.md#aclrtLabel)。 |
+| label | 输入 | 通过[aclrtCreateLabel](#aclrtCreateLabel)接口创建的标签。类型定义请参见[aclrtLabel](25_数据类型及其操作接口.md#aclrtLabel)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -156,13 +156,13 @@ aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num, aclrtLabelList *la
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| labels | 输入 | 标签数组。类型定义请参见[aclrtLabel](24_数据类型及其操作接口.md#aclrtLabel)。<br>数组中的标签需通过[aclrtCreateLabel](#aclrtCreateLabel)接口创建。 |
+| labels | 输入 | 标签数组。类型定义请参见[aclrtLabel](25_数据类型及其操作接口.md#aclrtLabel)。<br>数组中的标签需通过[aclrtCreateLabel](#aclrtCreateLabel)接口创建。 |
 | num | 输入 | 标签数组长度，取值(0, 65535]。 |
-| labelList | 输出 | 标签列表。类型定义请参见[aclrtLabelList](24_数据类型及其操作接口.md#aclrtLabelList)。 |
+| labelList | 输出 | 标签列表。类型定义请参见[aclrtLabelList](25_数据类型及其操作接口.md#aclrtLabelList)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -197,11 +197,11 @@ aclError aclrtDestroyLabelList(aclrtLabelList labelList)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| labelList | 输入 | 通过接口创建的标签列表。类型定义请参见[aclrtLabelList](24_数据类型及其操作接口.md#aclrtLabelList)。 |
+| labelList | 输入 | 通过接口创建的标签列表。类型定义请参见[aclrtLabelList](25_数据类型及其操作接口.md#aclrtLabelList)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -238,9 +238,9 @@ aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList la
 | --- | :---: | --- |
 | ptr | 输入 | 标签索引。<br>存放目标标签索引值的Device内存地址，索引值的数据类型uint32，长度4字节，索引值从0开始。<br>当目标标签索引大于labelList数组的最大索引值时，跳转到最大标签。 |
 | maxValue | 输入 | 标签列表中的标签个数。 |
-| labelList | 输入 | 标签列表。类型定义请参见[aclrtLabelList](24_数据类型及其操作接口.md#aclrtLabelList)。<br>通过[aclrtCreateLabelList](#aclrtCreateLabelList)接口创建的标签列表作为此处的输入。 |
-| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| labelList | 输入 | 标签列表。类型定义请参见[aclrtLabelList](25_数据类型及其操作接口.md#aclrtLabelList)。<br>通过[aclrtCreateLabelList](#aclrtCreateLabelList)接口创建的标签列表作为此处的输入。 |
+| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。

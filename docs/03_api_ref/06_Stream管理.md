@@ -22,7 +22,6 @@
 - [`aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)`](#aclrtActiveStream)：激活Stream。异步接口。
 - [`aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValue, aclrtCompareDataType dataType, aclrtStream trueStream, aclrtStream falseStream, aclrtStream stream)`](#aclrtSwitchStream)：根据条件在Stream之间跳转。异步接口。
 - [`aclError aclrtRegStreamStateCallback(const char *regName, aclrtStreamStateCallback callback, void *args)`](#aclrtRegStreamStateCallback)：注册Stream状态回调函数，不支持重复注册。
-- [aclrtStreamStop](#aclrtStreamStop)
 - [`aclError aclrtStreamStop(aclrtStream stream)`](#acIrtStreamStop)：仅停止指定Stream上的正在执行的任务，不清理任务。
 - [`aclError aclrtPersistentTaskClean(aclrtStream stream)`](#aclrtPersistentTaskClean)：清理ACL\_STREAM\_PERSISTENT类型的Stream上的任务，适用于在不删除该类型Stream的情况下重新下发任务的场景。
 - [`aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)`](#aclrtStreamGetPriority)：查询指定Stream的优先级。
@@ -59,11 +58,11 @@ aclError aclrtCreateStream(aclrtStream *stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -104,22 +103,22 @@ aclError aclrtCreateStreamV2(aclrtStream *stream, const aclrtStreamConfigHandle 
 
 本接口需要配合其它接口一起使用，创建Stream，接口调用顺序如下：
 
-1.  调用[aclrtCreateStreamConfigHandle](24_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建Stream配置对象。
+1.  调用[aclrtCreateStreamConfigHandle](25_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建Stream配置对象。
 2.  多次调用[aclrtSetStreamConfigOpt](#aclrtSetStreamConfigOpt)接口设置配置对象中每个属性的值。
 3.  调用aclrtCreateStreamV2接口创建Stream。
-4.  Stream使用完成后，调用[aclrtDestroyStreamConfigHandle](24_数据类型及其操作接口.md#aclrtDestroyStreamConfigHandle)接口销毁Stream配置对象，调用[aclrtDestroyStream](#aclrtDestroyStream)接口销毁Stream。
+4.  Stream使用完成后，调用[aclrtDestroyStreamConfigHandle](25_数据类型及其操作接口.md#aclrtDestroyStreamConfigHandle)接口销毁Stream配置对象，调用[aclrtDestroyStream](#aclrtDestroyStream)接口销毁Stream。
 
 ### 参数说明
 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
-| handle | 输入 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](24_数据类型及其操作接口.md#aclrtStreamConfigHandle)。<br>与[aclrtSetStreamConfigOpt](#aclrtSetStreamConfigOpt)中的handle保持一致。 |
+| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| handle | 输入 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](25_数据类型及其操作接口.md#aclrtStreamConfigHandle)。<br>与[aclrtSetStreamConfigOpt](#aclrtSetStreamConfigOpt)中的handle保持一致。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -151,24 +150,24 @@ aclError aclrtSetStreamConfigOpt(aclrtStreamConfigHandle *handle, aclrtStreamCon
 
 本接口需要配合其它接口一起使用，创建Stream，接口调用顺序如下：
 
-1.  调用[aclrtCreateStreamConfigHandle](24_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建Stream配置对象。
+1.  调用[aclrtCreateStreamConfigHandle](25_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建Stream配置对象。
 2.  多次调用aclrtSetStreamConfigOpt接口设置配置对象中每个属性的值。
 3.  调用[aclrtCreateStreamV2](#aclrtCreateStreamV2)接口创建Stream。
-4.  Stream使用完成后，调用[aclrtDestroyStreamConfigHandle](24_数据类型及其操作接口.md#aclrtDestroyStreamConfigHandle)接口销毁Stream配置对象，调用[aclrtDestroyStream](#aclrtDestroyStream)接口销毁Stream。
+4.  Stream使用完成后，调用[aclrtDestroyStreamConfigHandle](25_数据类型及其操作接口.md#aclrtDestroyStreamConfigHandle)接口销毁Stream配置对象，调用[aclrtDestroyStream](#aclrtDestroyStream)接口销毁Stream。
 
 ### 参数说明
 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| handle | 输出 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](24_数据类型及其操作接口.md#aclrtStreamConfigHandle)。<br>需提前调用[aclrtCreateStreamConfigHandle](24_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建该对象。 |
-| attr | 输入 | 指定需设置的属性。类型定义请参见[aclrtStreamConfigAttr](24_数据类型及其操作接口.md#aclrtStreamConfigAttr)。 |
+| handle | 输出 | Stream配置对象的指针。类型定义请参见[aclrtStreamConfigHandle](25_数据类型及其操作接口.md#aclrtStreamConfigHandle)。<br>需提前调用[aclrtCreateStreamConfigHandle](25_数据类型及其操作接口.md#aclrtCreateStreamConfigHandle)接口创建该对象。 |
+| attr | 输入 | 指定需设置的属性。类型定义请参见[aclrtStreamConfigAttr](25_数据类型及其操作接口.md#aclrtStreamConfigAttr)。 |
 | attrValue | 输入 | 指向属性值的指针，attr对应的属性取值。<br>如果属性值本身是指针，则传入该指针的地址。 |
 | valueSize | 输入 | attrValue部分的数据长度。<br>用户可使用C/C++标准库的函数sizeof(*attrValue)查询数据长度。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -205,7 +204,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 | priority | 输入 | 优先级。<br>该参数为预留参数，暂不使用。 |
 | flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏位或。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过aclrtCreateStream接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
 
@@ -263,7 +262,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -298,11 +297,11 @@ aclError aclrtDestroyStream(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 待销毁的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 待销毁的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -343,11 +342,11 @@ aclError aclrtDestroyStreamForce(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 待销毁的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 待销毁的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -386,12 +385,12 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 | flag | 输入 | 溢出检测开关，取值范围如下：<br><br>  - 0：关闭<br>  - 1：打开 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -431,12 +430,12 @@ aclError aclrtGetStreamOverflowSwitch(aclrtStream stream, uint32_t *flag)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 | flag | 输出 | 溢出检测开关，取值范围如下：<br><br>  - 0：关闭<br>  - 1：打开 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -471,12 +470,12 @@ aclError aclrtSetStreamFailureMode(aclrtStream stream, uint64_t mode)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
+| stream | 输入 | 待操作Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
 | mode | 输入 | 当一个Stream上下发了多个任务时，可通过本参数指定任务调度模式，以便控制某个任务失败后是否继续执行下一个任务。<br>取值范围如下：<br><br>  - ACL_CONTINUE_ON_FAILURE：默认值，某个任务失败后，继续执行下一个任务；<br>  - ACL_STOP_ON_FAILURE：某个任务失败后，停止执行后续任务，通常称作遇错即停。触发遇错即停之后，不支持再下发新任务。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -520,12 +519,12 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | Stream的指针。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
-| status | 输出 | Stream上的任务状态。类型定义请参见[aclrtStreamStatus](24_数据类型及其操作接口.md#aclrtStreamStatus)。 |
+| stream | 输入 | Stream的指针。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| status | 输出 | Stream上的任务状态。类型定义请参见[aclrtStreamStatus](25_数据类型及其操作接口.md#aclrtStreamStatus)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -560,11 +559,11 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定需要完成所有任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定需要完成所有任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -599,12 +598,12 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定需要完成所有任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定需要完成所有任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 | timeout | 输入 | 接口的超时时间。<br>取值说明如下：<br><br>  - -1：表示永久等待，和接口[aclrtSynchronizeStream](#aclrtSynchronizeStream)功能一样；<br>  - >0：配置具体的超时时间，单位是毫秒。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -639,11 +638,11 @@ aclError aclrtStreamAbort(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定待停止任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定待停止任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -685,12 +684,12 @@ aclError aclrtStreamGetId(aclrtStream stream, int32_t *streamId)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定要查询的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的ID。 |
+| stream | 输入 | 指定要查询的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的ID。 |
 | streamId | 输出 | Stream ID。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -729,7 +728,7 @@ aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -764,13 +763,13 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
-| stmAttrType | 输入 | 属性类型。类型定义请参见[aclrtStreamAttr](24_数据类型及其操作接口.md#aclrtStreamAttr)。 |
-| value | 输入 | 属性值。类型定义请参见[aclrtStreamAttrValue](24_数据类型及其操作接口.md#aclrtStreamAttrValue)。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
+| stmAttrType | 输入 | 属性类型。类型定义请参见[aclrtStreamAttr](25_数据类型及其操作接口.md#aclrtStreamAttr)。 |
+| value | 输入 | 属性值。类型定义请参见[aclrtStreamAttrValue](25_数据类型及其操作接口.md#aclrtStreamAttrValue)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -810,13 +809,13 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
-| stmAttrType | 输入 | 属性类型。类型定义请参见[aclrtStreamAttr](24_数据类型及其操作接口.md#aclrtStreamAttr)。 |
-| value | 输出 | 属性值。类型定义请参见[aclrtStreamAttrValue](24_数据类型及其操作接口.md#aclrtStreamAttrValue)。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>各产品型号对默认Stream（即该参数传入NULL）的支持情况不同，如下：<br>Ascend 950PR/Ascend 950DT，支持<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持 |
+| stmAttrType | 输入 | 属性类型。类型定义请参见[aclrtStreamAttr](25_数据类型及其操作接口.md#aclrtStreamAttr)。 |
+| value | 输出 | 属性值。类型定义请参见[aclrtStreamAttrValue](25_数据类型及其操作接口.md#aclrtStreamAttrValue)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -853,12 +852,12 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| activeStream | 输入 | 待激活的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口。 |
-| stream | 输入 | 执行激活任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口。 |
+| activeStream | 输入 | 待激活的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口。 |
+| stream | 输入 | 执行激活任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>此处只支持与模型绑定过的Stream，绑定模型与Stream需调用[aclmdlRIBindStream](15_模型运行实例管理.md#aclmdlRIBindStream)接口。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -896,16 +895,16 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | leftValue | 输入 | 左值数据的Device内存地址。 |
-| cond | 输入 | 左值数据与右值数据的比较条件。类型定义请参见[aclrtCondition](24_数据类型及其操作接口.md#aclrtCondition)。 |
+| cond | 输入 | 左值数据与右值数据的比较条件。类型定义请参见[aclrtCondition](25_数据类型及其操作接口.md#aclrtCondition)。 |
 | rightValue | 输入 | 右值数据的Device内存地址。 |
-| dataType | 输入 | 左值数据、右值数据的数据类型。类型定义请参见[aclrtCompareDataType](24_数据类型及其操作接口.md#aclrtCompareDataType)。 |
-| trueStream | 输入 | 根据cond处指定的条件，条件成立时，则执行trueStream上的任务。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
-| falseStream | 输入 | 预留参数，当前固定传NULL。<br>取值详见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
-| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| dataType | 输入 | 左值数据、右值数据的数据类型。类型定义请参见[aclrtCompareDataType](25_数据类型及其操作接口.md#aclrtCompareDataType)。 |
+| trueStream | 输入 | 根据cond处指定的条件，条件成立时，则执行trueStream上的任务。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| falseStream | 输入 | 预留参数，当前固定传NULL。<br>取值详见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 执行跳转任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -943,24 +942,12 @@ aclError aclrtRegStreamStateCallback(const char *regName, aclrtStreamStateCallba
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | regName | 输入 | 注册唯一名称，不能为空，输入保证字符串以\0结尾。 |
-| callback | 输入 | 回调函数。若callback不为NULL，则表示注册回调函数；若为NULL，则表示取消注册回调函数。<br>回调函数的函数原型为：<br>typedef enum {<br>   ACL_RT_STREAM_STATE_CREATE_POST = 1,  // 调用create接口（例如aclrtCreateStream）之后<br>   ACL_RT_STREAM_STATE_DESTROY_PRE,  // 调用destroy接口（例如aclrtDestroyStream）之前<br>} aclrtStreamState;<br>typedef void (*aclrtStreamStateCallback)([aclrtStream](24_数据类型及其操作接口.md#aclrtStream) stm, aclrtStreamState state, void *args); |
+| callback | 输入 | 回调函数。若callback不为NULL，则表示注册回调函数；若为NULL，则表示取消注册回调函数。<br>回调函数的函数原型为：<br>typedef enum {<br>   ACL_RT_STREAM_STATE_CREATE_POST = 1,  // 调用create接口（例如aclrtCreateStream）之后<br>   ACL_RT_STREAM_STATE_DESTROY_PRE,  // 调用destroy接口（例如aclrtDestroyStream）之前<br>} aclrtStreamState;<br>typedef void (*aclrtStreamStateCallback)([aclrtStream](25_数据类型及其操作接口.md#aclrtStream) stm, aclrtStreamState state, void *args); |
 | args | 输入 | 待传递给回调函数的用户数据的指针。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
-
-
-<br>
-<br>
-<br>
-
-
-
-# aclrtStreamStop
-
-> 文档暂缺
-
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -995,11 +982,11 @@ aclError aclrtStreamStop(aclrtStream stream)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定待停止任务的Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定待停止任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 ### 约束说明
 
@@ -1042,11 +1029,11 @@ ACL\_STREAM\_PERSISTENT类型的Stream需调用[aclrtCreateStreamWithConfig](#ac
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -1081,12 +1068,12 @@ aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的优先级。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的优先级。 |
 | priority | 输出 | 优先级，数字越小代表优先级越高。<br>关于优先级的取值范围请参见[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口中的priority参数说明。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -1121,9 +1108,9 @@ aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](24_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的flag。 |
+| stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>若此处传入NULL，则获取的是默认Stream的flag。 |
 | flags | 输出 | 指向查询到的flag值的指针。<br>关于flag值的说明请参见[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口中的flag参数说明。若创建Stream时配置了多个flag，返回值为各flag按位或运算后的结果，例如配置了0x01U和0x02U，则返回0x03U；若创建Stream是没有配置flag，则返回0。<br>对于默认Stream，不同产品型号的flag值可能存在差异，应以本接口查询到的值为准。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。

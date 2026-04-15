@@ -1,6 +1,18 @@
-# 22. Stream有序内存分配
+# 11-10 Stream有序内存分配
 
 本章节描述 CANN Runtime 的 Stream 有序内存分配（SOMA）接口，用于内存池的创建、配置及异步内存分配与释放。
+
+
+
+- [`aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *poolProps)`](#aclrtMemPoolCreate)：创建内存池。
+- [`aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)`](#aclrtMemPoolDestroy)：销毁通过[aclrtMemPoolCreate](#aclrtMemPoolCreate)接口创建的内存池。
+- [`aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)`](#aclrtMemPoolSetAttr)：设置属性值。
+- [`aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)`](#aclrtMemPoolGetAttr)：获取指定属性的值。
+- [`aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, aclrtStream stream)`](#aclrtMemPoolMallocAsync)：从内存池中申请指定大小的内存。异步接口。
+- [`aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)`](#aclrtMemPoolFreeAsync)：销毁通过[aclrtMemPoolMallocAsync](#aclrtMemPoolMallocAsync)接口申请的内存，仅将内存归还给内存池，而不是实际释放物理内存。异步接口。
+- [`aclError aclrtMemPoolTrimTo(aclrtMemPool memPool, size_t minBytesToKeep)`](#aclrtMemPoolTrimTo)：收缩内存池，保留指定大小的内存。
+
+
 
 ## Stream有序内存分配使用说明
 
@@ -94,7 +106,7 @@ int main() {
 
 ![](figures/Device-Context-Stream之间的关系-4.png)
 
-默认当内存池中空闲的物理内存超过指定阈值（该阈值可通过aclrtMemPoolSetAttr接口配置，默认值为0）时，在下一次Stream同步（例如调用aclrtSynchronizeStream接口）时，系统将尝试真正释放空闲的物理内存。
+默认当内存池中空闲的物理内存超过指定阈值（该阈值可通过aclrtMemPoolSetAttr接口配置，默认值为0）时，在下一次Stream同步（例如调用aclrtSynchronizeStream接口）时，系统将尝试真正释放空闲的物理内存。Runtime还提供了aclrtMemPoolTrimTo接口，用户可以直接调用该接口，主动收缩内存池，释放空闲的物理内存。如果用户既通过aclrtMemPoolSetAttr接口配置了内存池中要保留的内存大小阈值（对应ACL_RT_MEM_POOL_ATTR_RELEASE_THREAHOLD配置项），又通过aclrtMemPoolTrimTo接口中的minBytesToKeep参数配置了要保留的物理内存大小，那么后者具有更高的优先级。
 
 目前支持在一个Stream中复用内存，也支持在两个Stream之间复用内存：
 
@@ -208,13 +220,6 @@ int main() {
 
 ---
 
-- [`aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *poolProps)`](#aclrtMemPoolCreate)：创建内存池。
-- [`aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)`](#aclrtMemPoolDestroy)：销毁通过[aclrtMemPoolCreate](#aclrtMemPoolCreate)接口创建的内存池。
-- [`aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)`](#aclrtMemPoolSetAttr)：设置属性值。
-- [`aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)`](#aclrtMemPoolGetAttr)：获取指定属性的值。
-- [aclrtMemPoolMallocAsync](#aclrtMemPoolMallocAsync)
-- [aclrtMemPoolFreeAsync](#aclrtMemPoolFreeAsync)
-- [aclrtMemPoolTrimTo](#aclrtMemPoolTrimTo)
 
 
 <a id="aclrtMemPoolCreate"></a>
@@ -245,12 +250,12 @@ aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *pool
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| memPool | 输出 | 内存池实例。类型定义请参见[aclrtMemPool](24_数据类型及其操作接口.md#aclrtMemPool)。 |
-| poolProps | 输入 | 内存池配置。类型定义请参见[aclrtMemPoolProps](24_数据类型及其操作接口.md#aclrtMemPoolProps)。 |
+| memPool | 输出 | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
+| poolProps | 输入 | 内存池配置。类型定义请参见[aclrtMemPoolProps](25_数据类型及其操作接口.md#aclrtMemPoolProps)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -287,11 +292,11 @@ aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](24_数据类型及其操作接口.md#aclrtMemPool)。 |
+| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -330,13 +335,13 @@ aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](24_数据类型及其操作接口.md#aclrtMemPool)。 |
-| attr | 输入 | 指定属性。类型定义请参见[aclrtMemPoolAttr](24_数据类型及其操作接口.md#aclrtMemPoolAttr)。 |
+| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
+| attr | 输入 | 指定属性。类型定义请参见[aclrtMemPoolAttr](25_数据类型及其操作接口.md#aclrtMemPoolAttr)。 |
 | value | 输入 | 指向写入属性值地址的指针，写入的数据，其类型需要与attr处指定属性的类型相同。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -375,13 +380,13 @@ aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](24_数据类型及其操作接口.md#aclrtMemPool)。 |
-| attr | 输入 | 指定属性。类型定义请参见[aclrtMemPoolAttr](24_数据类型及其操作接口.md#aclrtMemPoolAttr)。 |
+| memPool | 输入 | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
+| attr | 输入 | 指定属性。类型定义请参见[aclrtMemPoolAttr](25_数据类型及其操作接口.md#aclrtMemPoolAttr)。 |
 | value | 输出 | 指向输出属性值地址的指针，该指针指向的类型需与attr处指定属性的类型相同。 |
 
 ### 返回值说明
 
-返回0表示成功，返回其他值表示失败，请参见[aclError](24_数据类型及其操作接口.md#aclError)。
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -389,11 +394,43 @@ aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <br>
 
 
+
+<a id="aclrtMemPoolMallocAsync"></a>
 
 # aclrtMemPoolMallocAsync
 
-> 文档暂缺
+```c
+aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, aclrtStream stream)
+```
 
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
+### 产品支持情况
+
+
+| 产品                                        | 是否支持 |
+| ------------------------------------------- | :------: |
+| Ascend 950PR/Ascend 950DT                   |    ☓     |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 |    ☓     |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 |    √     |
+
+### 功能说明
+
+从内存池中申请指定大小的内存。异步接口。
+
+### 参数说明
+
+
+| 参数名  | 输入/输出 | 说明                                                         |
+| ------- | :-------: | ------------------------------------------------------------ |
+| ptr     |   输出    | 指向待分配内存地址的指针。                                   |
+| size    |   输入    | 待分配的内存大小，单位Byte。                                 |
+| memPool |   输入    | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
+| stream  |   输入    | 指定执行内存申请任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 
 <br>
@@ -401,20 +438,128 @@ aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <br>
 
 
+
+<a id="aclrtMemPoolFreeAsync"></a>
 
 # aclrtMemPoolFreeAsync
 
-> 文档暂缺
+```c
+aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
+### 产品支持情况
 
 
+| 产品                                        | 是否支持 |
+| ------------------------------------------- | :------: |
+| Ascend 950PR/Ascend 950DT                   |    ☓     |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 |    ☓     |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 |    √     |
+
+### 功能说明
+
+销毁通过[aclrtMemPoolMallocAsync](#aclrtMemPoolMallocAsync)接口申请的内存，仅将内存归还给内存池，而不是实际释放物理内存。异步接口。
+
+### 参数说明
+
+
+| 参数名  | 输入/输出 | 说明                                                         |
+| ------- | :-------: | ------------------------------------------------------------ |
+| ptr     |   输入    | 指向待释放内存地址的指针。                                   |
+| memPool |   输入    | 指定执行内存释放任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
 
 <br>
 <br>
 <br>
 
 
+
+<a id="aclrtMemPoolFreeAsync"></a>
+
+# aclrtMemPoolFreeAsync
+
+```c
+aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
+### 产品支持情况
+
+
+| 产品                                        | 是否支持 |
+| ------------------------------------------- | :------: |
+| Ascend 950PR/Ascend 950DT                   |    ☓     |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 |    ☓     |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 |    √     |
+
+### 功能说明
+
+销毁通过[aclrtMemPoolMallocAsync](#aclrtMemPoolMallocAsync)接口申请的内存，仅将内存归还给内存池，而不是实际释放物理内存。异步接口。
+
+### 参数说明
+
+
+| 参数名  | 输入/输出 | 说明                                                         |
+| ------- | :-------: | ------------------------------------------------------------ |
+| ptr     |   输入    | 指向待释放内存地址的指针。                                   |
+| memPool |   输入    | 指定执行内存释放任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+<br>
+<br>
+<br>
+
+
+
+<a id="aclrtMemPoolTrimTo"></a>
 
 # aclrtMemPoolTrimTo
 
-> 文档暂缺
+```c
+aclError aclrtMemPoolTrimTo(aclrtMemPool memPool, size_t minBytesToKeep)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于商用产品中。**
+
+### 产品支持情况
+
+
+| 产品                                        | 是否支持 |
+| ------------------------------------------- | :------: |
+| Ascend 950PR/Ascend 950DT                   |    ☓     |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 |    ☓     |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 |    √     |
+
+### 功能说明
+
+收缩内存池，保留指定大小的内存。
+
+在调用[aclrtMemPoolFreeAsync](#aclrtMemPoolFreeAsync)接口释放内存时，内存仅归还给内存池，而不会实际释放物理内存，这可能导致内存持续被占用，进而使得[aclrtMemPoolMallocAsync](#aclrtMemPoolMallocAsync)接口无法申请新的内存。此时，可以调用aclrtMemPoolTrimTo接口主动收缩内存池，释放未使用的物理内存，而不影响当前正在使用的物理内存。
+
+### 参数说明
+
+
+| 参数名         | 输入/输出 | 说明                                                         |
+| -------------- | :-------: | ------------------------------------------------------------ |
+| memPool        |   输入    | 内存池实例。类型定义请参见[aclrtMemPool](25_数据类型及其操作接口.md#aclrtMemPool)。 |
+| minBytesToKeep |   输入    | 收缩内存池后，内存池中要保留的物理内存大小，单位Byte。       |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+<br>
+<br>
+<br>
+
 
