@@ -391,3 +391,256 @@ TEST_F(TsdClientTest, NotifyPmToStartTsdaemon_Success) {
     auto result = NotifyPmToStartTsdaemon(0U);
     EXPECT_EQ(result, TSD_PARAMETER_INVALID);
 }
+
+TEST_F(TsdClientTest, TsdCloseEx_Success)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdCloseEx(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdInitFlowGw_Nullptr_Failed)
+{
+    tsd::TSD_StatusT ret = TsdInitFlowGw(0U, nullptr);
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+}
+
+TEST_F(TsdClientTest, GetHdcConctStatus_Nullptr_Success)
+{
+    tsd::TSD_StatusT ret = GetHdcConctStatus(0U, nullptr);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdSetAttr_Nullptr_Failed)
+{
+    tsd::TSD_StatusT ret = TsdSetAttr(nullptr, "test");
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+    ret = TsdSetAttr("test", nullptr);
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+}
+
+TEST_F(TsdClientTest, TsdCapabilityGet_InvalidType_Failed)
+{
+    StubServerMsgProcDef::RegisterTsdOpenMsgDefaultCallBack();
+    tsd::TSD_StatusT ret = TsdOpen(0U, 0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    uint64_t value = 0UL;
+    ret = TsdCapabilityGet(0U, TSD_CAPABILITY_BUT, value);
+    EXPECT_EQ(ret, tsd::TSD_CLT_OPEN_FAILED);
+    ret = TsdClose(0U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdProcessOpen_Nullptr_Failed)
+{
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, nullptr);
+    EXPECT_EQ(ret, tsd::TSD_INTERNAL_ERROR);
+}
+
+TEST_F(TsdClientTest, TsdProcessClose_Success)
+{
+    StubServerMsgProcDef::RegisterTsdProcessOpenQueryCloseMsgDefaultCallBack();
+    ProcOpenArgs openArgs;
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
+    ProcEnvParam envParam;
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
+    openArgs.envParaList = &envParam;
+    openArgs.envCnt = 1UL;
+    std::string extPam("levevl=5");
+    ProcExtParam extmm;
+    extmm.paramInfo = extPam.c_str();
+    extmm.paramLen = extPam.size();
+    openArgs.extParamList = &extmm;
+    openArgs.extParamCnt = 1;
+    pid_t subpid = 0;
+    openArgs.subPid = &subpid;
+    openArgs.procType = TSD_SUB_PROC_UDF;
+    std::string filepathprefix = "/home";
+    openArgs.filePath = filepathprefix.c_str();
+    openArgs.pathLen = filepathprefix.length();
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgs);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdProcessClose(0U, subpid);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdFileUnLoad_Success)
+{
+    StubServerMsgProcDef::RegisterTsdFileLoadAndUnLoadMsgDefaultCallBack();
+    const std::string runtimePkgName = "Ascend-runtime_device-minios.tar.gz";
+    std::string filepath = "/tmp";
+    std::string pathPreFix = std::to_string(getpid());
+    if (WriteTmpFile(pathPreFix, runtimePkgName)) {
+        tsd::TSD_StatusT ret = TsdFileLoad(0U, filepath.c_str(), filepath.size(), runtimePkgName.c_str(),
+            runtimePkgName.size());
+        const std::string dstFile = filepath + "/" + runtimePkgName;
+        remove(dstFile.c_str());
+        const std::string fileDir = filepath + "/" + pathPreFix;
+        remove(fileDir.c_str());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+        ret = TsdFileUnLoad(0U, filepath.c_str(), filepath.size());
+        EXPECT_EQ(ret, tsd::TSD_OK);
+    }
+}
+
+TEST_F(TsdClientTest, TsdGetProcStatus_Success)
+{
+    StubServerMsgProcDef::RegisterTsdProcessOpenQueryCloseMsgDefaultCallBack();
+    ProcOpenArgs openArgs;
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
+    ProcEnvParam envParam;
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
+    openArgs.envParaList = &envParam;
+    openArgs.envCnt = 1UL;
+    std::string extPam("levevl=5");
+    ProcExtParam extmm;
+    extmm.paramInfo = extPam.c_str();
+    extmm.paramLen = extPam.size();
+    openArgs.extParamList = &extmm;
+    openArgs.extParamCnt = 1;
+    pid_t subpid = 0;
+    openArgs.subPid = &subpid;
+    openArgs.procType = TSD_SUB_PROC_UDF;
+    std::string filepathprefix = "/home";
+    openArgs.filePath = filepathprefix.c_str();
+    openArgs.pathLen = filepathprefix.length();
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgs);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ProcStatusInfo curStat;
+    ret = TsdGetProcStatus(0U, &curStat, 1U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = TsdProcessClose(0U, subpid);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, ProcessCloseSubProcList_Success)
+{
+    StubServerMsgProcDef::RegisterTsdProcessListOpenQueryCloseMsgDefaultCallBack();
+    ProcOpenArgs openArgsUdf;
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
+    ProcEnvParam envParam;
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
+    openArgsUdf.envParaList = &envParam;
+    openArgsUdf.envCnt = 1UL;
+    std::string extPamUdf("levevl=Udf");
+    ProcExtParam extmmUdf;
+    extmmUdf.paramInfo = extPamUdf.c_str();
+    extmmUdf.paramLen = extPamUdf.size();
+    openArgsUdf.extParamList = &extmmUdf;
+    openArgsUdf.extParamCnt = 1;
+    pid_t subPidUdf = 0;
+    openArgsUdf.subPid = &subPidUdf;
+    openArgsUdf.procType = TSD_SUB_PROC_UDF;
+    std::string filepathprefix = "/home";
+    openArgsUdf.filePath = filepathprefix.c_str();
+    openArgsUdf.pathLen = filepathprefix.length();
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgsUdf);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+
+    ProcOpenArgs openArgsNpu;
+    openArgsNpu.envParaList = &envParam;
+    openArgsNpu.envCnt = 1UL;
+    std::string extPamNpu("levevl=Npu");
+    ProcExtParam extmmNpu;
+    extmmNpu.paramInfo = extPamNpu.c_str();
+    extmmNpu.paramLen = extPamNpu.size();
+    openArgsNpu.extParamList = &extmmNpu;
+    openArgsNpu.extParamCnt = 1;
+    pid_t subPidNpu = 0;
+    openArgsNpu.subPid = &subPidNpu;
+    openArgsNpu.procType = TSD_SUB_PROC_NPU;
+    openArgsNpu.filePath = filepathprefix.c_str();
+    openArgsNpu.pathLen = filepathprefix.length();
+    ret = TsdProcessOpen(0U, &openArgsNpu);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+
+    ProcStatusParam curStatArray[2U];
+    curStatArray[0U].pid = subPidUdf;
+    curStatArray[1U].pid = subPidNpu;
+    ret = ProcessCloseSubProcList(0U, &(curStatArray[0]), 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdGetProcListStatus_Success)
+{
+    StubServerMsgProcDef::RegisterTsdProcessListOpenQueryCloseMsgDefaultCallBack();
+    ProcOpenArgs openArgsUdf;
+    std::string envName("UDP_PATH");
+    std::string envValue("/home/HwHiAiUser");
+    ProcEnvParam envParam;
+    envParam.envName = envName.c_str();
+    envParam.nameLen = envName.size();
+    envParam.envValue = envValue.c_str();
+    envParam.valueLen = envValue.size();
+    openArgsUdf.envParaList = &envParam;
+    openArgsUdf.envCnt = 1UL;
+    std::string extPamUdf("levevl=Udf");
+    ProcExtParam extmmUdf;
+    extmmUdf.paramInfo = extPamUdf.c_str();
+    extmmUdf.paramLen = extPamUdf.size();
+    openArgsUdf.extParamList = &extmmUdf;
+    openArgsUdf.extParamCnt = 1;
+    pid_t subPidUdf = 0;
+    openArgsUdf.subPid = &subPidUdf;
+    openArgsUdf.procType = TSD_SUB_PROC_UDF;
+    std::string filepathprefix = "/home";
+    openArgsUdf.filePath = filepathprefix.c_str();
+    openArgsUdf.pathLen = filepathprefix.length();
+    tsd::TSD_StatusT ret = TsdProcessOpen(0U, &openArgsUdf);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+
+    ProcOpenArgs openArgsNpu;
+    openArgsNpu.envParaList = &envParam;
+    openArgsNpu.envCnt = 1UL;
+    std::string extPamNpu("levevl=Npu");
+    ProcExtParam extmmNpu;
+    extmmNpu.paramInfo = extPamNpu.c_str();
+    extmmNpu.paramLen = extPamNpu.size();
+    openArgsNpu.extParamList = &extmmNpu;
+    openArgsNpu.extParamCnt = 1;
+    pid_t subPidNpu = 0;
+    openArgsNpu.subPid = &subPidNpu;
+    openArgsNpu.procType = TSD_SUB_PROC_NPU;
+    openArgsNpu.filePath = filepathprefix.c_str();
+    openArgsNpu.pathLen = filepathprefix.length();
+    ret = TsdProcessOpen(0U, &openArgsNpu);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+
+    ProcStatusParam curStatArray[2U];
+    curStatArray[0U].pid = subPidUdf;
+    curStatArray[1U].pid = subPidNpu;
+    ret = TsdGetProcListStatus(0U, &(curStatArray[0]), 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+    ret = ProcessCloseSubProcList(0U, &(curStatArray[0]), 2U);
+    EXPECT_EQ(ret, tsd::TSD_OK);
+}
+
+TEST_F(TsdClientTest, TsdCloseNetService_Success)
+{
+    StubServerMsgProcDef::RegisterTsdProcessOpenQueryCloseMsgDefaultCallBack();
+    NetServiceOpenArgs args;
+    ProcExtParam extParamList;
+    args.extParamCnt = 1U;
+    std::string extPam("levevl=5");
+    extParamList.paramInfo = extPam.c_str();
+    extParamList.paramLen = extPam.size();
+    args.extParamList = &extParamList;
+    const tsd::TSD_StatusT result = TsdOpenNetService(0U, &args);
+    EXPECT_EQ(result, tsd::TSD_OK);
+    const tsd::TSD_StatusT closeResult = TsdCloseNetService(0U);
+    EXPECT_NE(closeResult, tsd::TSD_OK);
+}

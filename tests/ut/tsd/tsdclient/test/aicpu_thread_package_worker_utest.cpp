@@ -117,6 +117,7 @@ TEST_F(AicpuThreadPackageWorkerTest, LoadPackageSucc)
     MOCKER_CPP(&PackageWorkerUtils::VerifyPackage).stubs().will(returnValue(TSD_OK));
     MOCKER(PackSystem).stubs().will(returnValue(0));
     auto ret = inst.LoadPackage(path, name);
+    
     EXPECT_EQ(ret, TSD_OK);
 }
 
