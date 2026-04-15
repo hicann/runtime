@@ -16,17 +16,6 @@ namespace cce {
 namespace runtime {
 rtError_t GetSocInfoFromRuntimeByName(const char_t * const socName, rtSocInfo_t &info)
 {
-    if ((strncmp(socName, "Ascend910_9391", strlen("Ascend910_9391")) == 0 ||
-        strncmp(socName, "Ascend910_9381", strlen("Ascend910_9381")) == 0 ||
-        strncmp(socName, "Ascend910_9392", strlen("Ascend910_9392")) == 0 ||
-        strncmp(socName, "Ascend910_9382", strlen("Ascend910_9382")) == 0 ||
-        strncmp(socName, "Ascend910_9372", strlen("Ascend910_9372")) == 0 ||
-        strncmp(socName, "Ascend910_9362", strlen("Ascend910_9362")) == 0) &&
-        (strlen(socName) == strlen("Ascend910_9391"))) {
-        info.socName = "Ascend910_B4";
-        info.chipType = CHIP_910_B_93;
-        return RT_ERROR_NONE;
-    }
     return DevInfoManage::Instance().GetSocInfo(socName, info);
 }
 

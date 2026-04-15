@@ -22,6 +22,12 @@ static constexpr rtSocInfo_t SOC_910B_INFO[] = {
     {CHIP_910_B_93, "Ascend910B4"},  // hardversion 910_93 same as 910B4
     {CHIP_910_B_93, "Ascend910B2C"},
     {CHIP_910_B_93, "Ascend910B4-1"},
+    {CHIP_910_B_93, "Ascend910_9362"},
+    {CHIP_910_B_93, "Ascend910_9372"},
+    {CHIP_910_B_93, "Ascend910_9381"},
+    {CHIP_910_B_93, "Ascend910_9382"},
+    {CHIP_910_B_93, "Ascend910_9391"},
+    {CHIP_910_B_93, "Ascend910_9392"},
 };
 
 BATCH_REGISTER_SOC_INFO(SOC_910B_INFO, (sizeof(SOC_910B_INFO) / sizeof(rtSocInfo_t)));
