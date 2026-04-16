@@ -5269,8 +5269,7 @@ static rtError_t HandlePersistentStreamFeature(const rtChipType_t chipType, int6
     bool isChipSupport = IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH);
     *val = isChipSupport ? 
         static_cast<int64_t>(RT_CAPABILITY_SUPPORT) : static_cast<int64_t>(RT_CAPABILITY_NOT_SUPPORT);
-    if (haveDevice) {
-        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    if (haveDevice && curCtx != nullptr) {
         Device * const dev = curCtx->Device_();
         bool isTsSupport = dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE);
         *val = isChipSupport && isTsSupport && !isUBFlag ? 
