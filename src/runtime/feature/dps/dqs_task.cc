@@ -1043,15 +1043,54 @@ void ConstructSqeForDqsConditionCopyTask(TaskInfo * const taskInfo, rtDavidSqe_t
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id);
 }
 
+static void ResetMbufListOpSnapshot(const rtStarsCondIsaRegister_t dstReg, uint64_t mbufListOpSnapshotAddr, RtDavidStarsDqsSchedEndSqe &sqe)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+
+    ConstructLLWI(dstReg, mbufListOpSnapshotAddr, sqe.llwiMbufOpSnapshotAddr);
+    ConstructLHWI(dstReg, mbufListOpSnapshotAddr, sqe.lhwiMbufOpSnapshotAddr);
+    ConstructStore(dstReg, r0, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, sqe.resetSnapShot);
+
+    return;
+}
+
+static void ConstructDqsSchedEndInstr(const uint16_t sqId, const uint64_t mbufListOpSnapshotAddr, RtDavidStarsDqsSchedEndSqe &sqe)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R1;
+
+    // 调度完成，对快照统计信息做重置
+    ResetMbufListOpSnapshot(r1, mbufListOpSnapshotAddr, sqe);
+
+    ConstructLHWI(r2, sqId, sqe.lhwi);
+    ConstructLLWI(r2, sqId, sqe.llwi);
+    ConstructGotoR(r2, r0, sqe.gotor);
+
+    // NOP
+    for (RtStarsCondOpNop &nop : sqe.nop) {
+        ConstructNop(nop);
+    }
+}
+
 void ConstructSqeForDqsSchedEndTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     RtDavidStarsDqsSchedEndSqe &sqe = davidSqe->dqsSchedEndSqe;
     DqsSchedEndTaskInfo *const dqsSchedEndTask = &(taskInfo->u.dqsSchedEndTask);
-    const Stream *const stream = dqsSchedEndTask->stream;
+    Stream *stream = dqsSchedEndTask->stream;
     const uint16_t sqId = stream->GetSqId();
-    ConstructDqsSchedEndInstr(sqId, sqe);
-    const Stream *const stm = taskInfo->stream;
+
+    StreamWithDqs *stm = dynamic_cast<StreamWithDqs *>(stream);
+    COND_RETURN_VOID(stm == nullptr, "stm is not stream with dqs.");
+    stars_dqs_ctrl_space_t *ctrlSpacePtr = stm->GetDqsCtrlSpace();
+    COND_RETURN_VOID(ctrlSpacePtr == nullptr, "ctrl space is nullptr.");
+
+    const uint64_t ctrlSpacePtrVal = RtPtrToValue(ctrlSpacePtr);
+    const uint64_t offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
+    const uint64_t mbufListOpSnapshotAddr = ctrlSpacePtrVal + static_cast<uint64_t>(offset);
+    ConstructDqsSchedEndInstr(sqId, mbufListOpSnapshotAddr, sqe);
+
     InitDqsFunctionCallSqe(sqe, stm->GetStarsWrCqeFlag(), stm->Id_(), taskInfo->id, CONDS_SUB_TYPE_DQS_SCHED_END);
     PrintDavidSqe(davidSqe, "DqsSchedEnd");
     RT_LOG(RT_LOG_INFO, "DqsSchedEnd, deviceId=%u, streamId=%d, taskId=%hu, sqId=%u", 

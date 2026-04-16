@@ -441,11 +441,16 @@ struct RtDavidStarsDqsSchedEndSqe {
     uint8_t kernelCredit;
     uint8_t reserved3 : 5;
     uint8_t sqeLength : 3;  // use reserved filed
- 
+
+    // 用于确定性调度mbuf统计快照信息重置
+    RtStarsCondOpLHWI          lhwiMbufOpSnapshotAddr;
+    RtStarsCondOpLLWI          llwiMbufOpSnapshotAddr;
+    RtStarsCondOpStore         resetSnapShot;
+
     RtStarsCondOpLLWI          llwi;
     RtStarsCondOpLHWI          lhwi;
     RtStarsCondOpStreamGotoR   gotor;
-    RtStarsCondOpNop           nop[8];
+    RtStarsCondOpNop           nop[4];
 };
 
 union rtDavidSqe_t {

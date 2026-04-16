@@ -29,20 +29,6 @@ void ConstructDqsInterChipPreProcFc(RtStarsDqsInterChipPreProcFc &fc, const RtSt
 void ConstructDqsInterChipPostProcFc(RtStarsDqsInterChipPostProcFc &fc, const RtStarsDqsInterChipPostProcPara &funcCallPara);
 void ConstructDqsAdspcFc(RtStarsDqsAdspcFc &fc, const RtStarsDqsAdspcFcPara &fcPara);
 
-template<typename T>
-void ConstructDqsSchedEndInstr(const uint16_t sqId, T &sqe)
-{
-    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
-    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
- 
-    ConstructLHWI(r1, sqId, sqe.lhwi);
-    ConstructLLWI(r1, sqId, sqe.llwi);
-    ConstructGotoR(r1, r0, sqe.gotor);
-    // NOP
-    for (RtStarsCondOpNop &nop : sqe.nop) {
-        ConstructNop(nop);
-    }
-}
 } // namespace runtime
 } // namespace cce
 #endif //__CCE_RUNTIME_STARS_DQS_COND_ISA_HELPER_HPP__
