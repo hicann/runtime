@@ -84,7 +84,7 @@ target_link_libraries(adprof PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend910_96esl>:urma_common>
 )
 
-if ((PRODUCT IN_LIST ascend950_PRODUCT_LIST) OR (PRODUCT IN_LIST ASCEND910_96_PRODUCT_LIST))
+if ((PRODUCT IN_LIST ASCEND950_PRODUCT_LIST) OR (PRODUCT IN_LIST ASCEND910_96_PRODUCT_LIST))
     target_link_directories(adprof PRIVATE
         ${CMAKE_INSTALL_PREFIX}/lib
     )
