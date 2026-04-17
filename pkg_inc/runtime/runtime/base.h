@@ -13,7 +13,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "toolchain/prof_api.h"
+#include "profiling/prof_api.h"
 
 #if defined(__cplusplus)
 extern "C" {
