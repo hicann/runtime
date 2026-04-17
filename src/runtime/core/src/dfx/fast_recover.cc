@@ -184,7 +184,9 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
         ERROR_RETURN(error, "ctx resume fail, retCode=%#x.", error);
         dev->SetDeviceStatus(RT_ERROR_NONE);
         dev->SetHasTaskError(false);
+        dev->SetDeviceRas(false);
         dev->SetMonitorExitFlag(false);
+        (void)Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
     }
     for (Context *const ctx : ContextDataManage::Instance().GetSetObj()) {
         COND_PROC((ctx->Device_()->Id_() != static_cast<uint32_t>(devId)), continue);
