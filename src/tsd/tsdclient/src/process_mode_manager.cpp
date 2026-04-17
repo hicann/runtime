@@ -400,6 +400,7 @@ TSD_StatusT ProcessModeManager::SendMsgAndHostPackage(const int32_t peerNode, co
     }
 
     if (SendAICPUPackageSimple(peerNode, orgFile, dstFile, useCannPath) != TSD_OK) {
+        REPORT_INPUT_ERROR("E39006", std::vector<std::string>(), std::vector<std::string>());
         return TSD_INTERNAL_ERROR;
     }
 
