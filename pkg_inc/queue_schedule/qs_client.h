@@ -92,12 +92,14 @@ struct BQSUnbindQueueMbufPoolItem {
 };
 
 struct BindQueueInterChipInfo{
+    uint16_t stream_id;                        // 跨片调度stream_id
     /* 本片 */
     uint16_t srcChipSubQid;                    // 本片消费者队列qid，用于订阅本片生产者队列入队数据
     uint16_t srcMbufPoolId;                    // pool id
     uint32_t srcMbufDataPoolBlkSize;           // 实际分配对齐后的blksize，非原始的blksize
     uint32_t srcMbufDataPoolBlkRealSize;       // 原始的blksize
     uint32_t srcMbufHeadPoolBlkSize;           // 实际分配对齐后的blksize，非原始的blksize
+    uint32_t srcMbufHeadPoolBlkRealSize;       // 原始的head池blksize
     uint32_t srcMbufDataPoolOffset;            // mbuf的data block的偏移
     uint32_t srcMbufHeadPoolOffset;            // mbuf的head block的偏移
     uint64_t srcMbufDataPoolBaseAddr;          // data pool池的基地址
@@ -109,6 +111,7 @@ struct BindQueueInterChipInfo{
     uint32_t dstMbufDataPoolBlkSize;           // 实际分配对齐后的blksize，非原始的blksize
     uint32_t dstMbufDataPoolBlkRealSize;       // 原始的blksize
     uint32_t dstMbufHeadPoolBlkSize;           // 实际分配对齐后的blksize，非原始的blksize
+    uint32_t dstMbufHeadPoolBlkRealSize;       // 原始的head池blksize
     uint32_t dstMbufDataPoolOffset;            // mbuf的data block的偏移
     uint32_t dstMbufHeadPoolOffset;            // mbuf的head block的偏移
     uint64_t dstMbufDataPoolBaseAddr;          // data pool池的基地址
