@@ -9,9 +9,13 @@
  */
 
 #include "task_fail_callback_manager.hpp"
+#include "kernel_utils.hpp"
 
 namespace cce {
 namespace runtime {
+namespace {
+constexpr uint32_t MS_RECOVERY_TIMEOUT_THRESHOLD = 500U;
+} // namespace
 
 void TriggerMemoryCorruptionCheck(rtExceptionInfo_t *const exceptionInfo, const Device *dev, uint32_t realDeviceId,
     rtBinHandle binHandle, rtExceptionArgsInfo_t *kernelInfo)
@@ -42,6 +46,12 @@ void TaskFailCallBackNotify(rtExceptionInfo_t *const exceptionInfo)
 
     Device *dev = Runtime::Instance()->GetDevice(realDeviceId, 0, false);
     COND_RETURN_VOID(dev == nullptr, "dev is nullptr");
+
+    uint32_t timeout = 0U;
+    const rtError_t error = GetOpExecuteMsTimeout(&timeout);;
+    if ((error == RT_ERROR_NONE) && (timeout >= MS_RECOVERY_TIMEOUT_THRESHOLD)) {
+        (void)dev->ParseSimdPrintInfoWithLock();
+    }
 
     auto& exceptionRegMap = dev->GetExceptionRegMap();
     std::pair<uint32_t, uint32_t> key = {exceptionInfo->streamid, exceptionInfo->taskid};

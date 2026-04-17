@@ -778,11 +778,11 @@ public:
         return deviceSnapshot_;
     }
     rtError_t ParsePrintInfo() override;
-    rtError_t ParseSimtPrintInfo() override;
-    rtError_t ParseSimdPrintInfo() override;
+    rtError_t ParseSimdPrintInfoWithLock() override;
     void WaitForParsePrintf() override;
     void WakeUpPrintf() override;
-    rtError_t GetPrintFifoAddress(uint64_t * const addr, const uint32_t model) override;
+    rtError_t GetPrintSimdAddress(uint64_t *const addr) override;
+    rtError_t GetPrintFifoAddrAndCreateThread(uint64_t * const addr, const uint32_t model) override;
 
     rtError_t StoreEndGraphNotifyInfo(const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) override;
     rtError_t DeleteEndGraphNotifyInfo(const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos) override;
@@ -911,6 +911,9 @@ private:
     rtError_t InitCtrlSQ();
     rtError_t InitQosCfg();
     rtError_t GetQosInfoByIpc();
+
+    rtError_t ParseSimtPrintInfo();
+    rtError_t ParseSimdPrintInfo();
 
     Stream *primaryStream_;
     Stream *tsFftsDsaStream_;

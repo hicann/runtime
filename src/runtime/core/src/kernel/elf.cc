@@ -26,7 +26,18 @@ const std::string ELF_SECTION_ASCEND_META = ".ascend.meta";
 const std::string ELF_SECTION_ASCEND_STACK_SIZE_RECORD  = ".ascend.stack.size.record";
 const std::string ELF_SECTION_MIX_KERNEL_AIV = "_mix_aiv";
 const std::string ELF_SECTION_MIX_KERNEL_AIC = "_mix_aic";
+
+bool IsAssertOnly(const uint32_t metaFlag)
+{
+    if ((metaFlag & KERNEL_ASSERT_PRINT_FIFO_ADDR_BIT) == 0U) {
+        return false;
+    }
+    if (((metaFlag & KERNEL_PRINT_FIFO_ADDR_BIT) != 0U) || ((metaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0U)) {
+        return false;
+    }
+    return true;
 }
+} // namespace
 
 namespace cce {
 namespace runtime {
@@ -349,7 +360,7 @@ rtError_t RefreshSymbolAddress(rtElfData *elfData)
     uint64_t sourceAddr = 0;
     if (((elfData->ascendMetaFlag & KERNEL_PRINT_FIFO_ADDR_BIT) != 0) && (elfData->symbolAddr.g_sysPrintFifoSpace != nullptr)) {
         uint64_t *addr = elfData->symbolAddr.g_sysPrintFifoSpace;
-        const rtError_t error = curCtx->Device_()->GetPrintFifoAddress(&sourceAddr, PRINT_SIMD);
+        const rtError_t error = curCtx->Device_()->GetPrintFifoAddrAndCreateThread(&sourceAddr, PRINT_SIMD);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get printf fifo space address failed!");
         *addr = sourceAddr;
         RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace = %p, addr = %p", *addr, addr);
@@ -375,12 +386,18 @@ rtError_t RefreshSymbolAddress(rtElfData *elfData)
     }
     if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) && (elfData->symbolAddr.g_sysSimtPrintFifoSpace != nullptr)) {
         uint64_t *addr = elfData->symbolAddr.g_sysSimtPrintFifoSpace;
-        const rtError_t error = curCtx->Device_()->GetPrintFifoAddress(&sourceAddr, PRINT_SIMT);
+        const rtError_t error = curCtx->Device_()->GetPrintFifoAddrAndCreateThread(&sourceAddr, PRINT_SIMT);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get simt printf fifo space address failed!");
         *addr = sourceAddr;
         RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysSimtPrintFifoSpace = %p, addr = %p", *addr, addr);
     }
-
+    if (IsAssertOnly(elfData->ascendMetaFlag) && (elfData->symbolAddr.g_sysPrintFifoSpace != nullptr)) {
+        uint64_t *addr = elfData->symbolAddr.g_sysPrintFifoSpace;
+        const rtError_t error = curCtx->Device_()->GetPrintSimdAddress(&sourceAddr);
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get printf fifo space address failed!");
+        *addr = sourceAddr;
+        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace=%p, addr=%p", *addr, addr);
+    }
     return RT_ERROR_NONE;
 }
 
@@ -406,6 +423,11 @@ void SetSymbolAddress(const char_t *stringTab, const Elf_Internal_Sym * const ps
                 // 维侧空间地址
                 elfData->symbolAddr.g_sysPrintFifoSpace = addr;
                 RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysPrintFifoSpace = %p", addr);
+            }
+            if (((elfData->ascendMetaFlag & KERNEL_ASSERT_PRINT_FIFO_ADDR_BIT) != 0U) && (symbol ==  "g_sysPrintFifoSpace")) {
+                // assert和printf共用一个空间
+                elfData->symbolAddr.g_sysPrintFifoSpace = addr;
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, assert g_sysPrintFifoSpace addr = %p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_FFTS_ADDR_BIT) != 0) && (symbol ==  "g_sysFftsAddr")) {
                 // FFTS 硬同步地址
@@ -480,29 +502,13 @@ static void ElfParseKernelArgNum(const uint8_t * const buf, ElfKernelInfo *tlvIn
     tlvInfo->userArgsNum = argNum;
 }
 
-static void setMetaFlag(rtElfData * const elfData, uint32_t type)
+static void SetMetaFlag(rtElfData * const elfData, uint32_t type)
 {
-    uint32_t bit = 0U;
-    switch (type) {
-        case KERNEL_PRINT_FIFO_ADDR:
-            bit = KERNEL_PRINT_FIFO_ADDR_BIT;
-            RT_LOG(RT_LOG_INFO, "Enable simd print fifo addr flag");
-            break;
-        case KERNEL_FFTS_ADDR:
-            bit = KERNEL_FFTS_ADDR_BIT;
-            RT_LOG(RT_LOG_INFO, "Enable ffts addr flag");
-            break;
-        case KERNEL_SYSTEM_RUN_CFG_ADDR:
-            bit = KERNEL_SYSTEM_RUN_CFG_ADDR_BIT;
-            RT_LOG(RT_LOG_INFO, "Enable system run cfg addr flag");
-            break;
-        case KERNEL_SIMT_PRINT_FIFO_ADDR:
-            bit = KERNEL_SIMT_PRINT_FIFO_ADDR_BIT;
-            RT_LOG(RT_LOG_INFO, "Enable simt print fifo addr flag");
-            break;
-        default:
-            break;
-    }
+    // 校验保证位操作在合法范围，32位表示u32左移位数上限
+    COND_RETURN_VOID((type == 0U || type > 32U), "Invalid elf binary addr type=%u!", type);
+
+    RT_LOG(RT_LOG_INFO, "Set elf binary addr type=%u", type);
+    const uint32_t bit = (1U << (type - 1));
     elfData->ascendMetaFlag |= bit;
 }
 
@@ -517,7 +523,7 @@ static void ElfParseBinaryTlvInfo(rtElfData * const elfData, uint16_t tlvType, c
         case RT_BINARY_TYPE_RUNTIME_IMPLICIT_INFO:
             addrInfo = RtPtrToPtr<const ElfBinaryAddrInfo *>(buf);
             type = addrInfo->type;
-            setMetaFlag(elfData, type);
+            SetMetaFlag(elfData, type);
             break;
         default:
             break;

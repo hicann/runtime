@@ -1111,7 +1111,7 @@ TEST_F(ELFTest, SymbolAddress)
     const uint64_t numSyms = 4;
     rtElfData    *elfData;
     elfData = new rtElfData;
-    elfData->ascendMetaFlag = 0xF;
+    elfData->ascendMetaFlag = 0x1F;
     elfData->elf_header.e_shnum = 1;
     elfData->obj_ptr_origin = nullptr;
 
@@ -1185,6 +1185,10 @@ TEST_F(ELFTest, SymbolAddress)
     error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 4 * 1024 * 1024);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
+    error = RefreshSymbolAddress(elfData);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    elfData->ascendMetaFlag = 0x10;
     error = RefreshSymbolAddress(elfData);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

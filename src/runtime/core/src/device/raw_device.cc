@@ -2235,6 +2235,12 @@ rtError_t RawDevice::ParseSimdPrintInfo()
     return RT_ERROR_NONE;
 }
 
+rtError_t RawDevice::ParseSimdPrintInfoWithLock()
+{
+    std::unique_lock<std::mutex> l(printfMtx_);
+    return ParseSimdPrintInfo();
+}
+
 rtError_t RawDevice::ParsePrintInfo()
 {
     std::unique_lock<std::mutex> l(printfMtx_);
@@ -2273,24 +2279,37 @@ void RawDevice::WaitForParsePrintf()
     RT_LOG(RT_LOG_DEBUG, "Wait for the last print thread, suss, print count=%llu!", curParseCounter);
 }
 
+rtError_t RawDevice::GetPrintSimdAddress(uint64_t *const addr)
+{
+    std::unique_lock<std::mutex> l(printfMtx_);
+    rtError_t ret = RT_ERROR_NONE;
+    if (printfAddr_ == nullptr) {
+        ret = InitPrintInfo();
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device_id=%u, ret=%u.", 
+            deviceId_, ret);
+    }
+    simdEnable_ = true;
+    *addr = RtPtrToPtr<uint64_t>(printfAddr_);
+    return ret;
+}
 
-rtError_t RawDevice::GetPrintFifoAddress(uint64_t * const addr, const uint32_t model)
+rtError_t RawDevice::GetPrintFifoAddrAndCreateThread(uint64_t * const addr, const uint32_t model)
 {
     std::unique_lock<std::mutex> l(printfMtx_);
     rtError_t ret = RT_ERROR_NONE;
     if (model == PRINT_SIMD) {
-        simdEnable_ = true;
         if (printfAddr_ == nullptr) {
             ret = InitPrintInfo();
             COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device_id=%u, ret=%u.", 
                 deviceId_, ret);
-            ret = engine_->CreatePrintfThread();
-            COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%y, ret=%u.", 
-                deviceId_, ret);
         }
+        // 内部会判空保证不重复创建线程
+        ret = engine_->CreatePrintfThread();
+        COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%y, ret=%u.", 
+            deviceId_, ret);
+        simdEnable_ = true;
         *addr = RtPtrToPtr<uint64_t>(printfAddr_);
     } else if (model == PRINT_SIMT) {
-        simtEnable_ = true;
         if (simtPrintfAddr_ == nullptr) {
             ret = InitSimtPrintInfo();
             COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitSimtPrintInfo failed, device_id=%u, ret=%u.", 
@@ -2299,6 +2318,7 @@ rtError_t RawDevice::GetPrintFifoAddress(uint64_t * const addr, const uint32_t m
             COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "CreatePrintfThread failed, device_id=%u, ret=%u.",
                 deviceId_, ret);
         }
+        simtEnable_ = true;
         *addr = RtPtrToPtr<uint64_t>(simtPrintfAddr_);
     } else {
         ret = RT_ERROR_INVALID_VALUE;

@@ -232,5 +232,50 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
     return RT_ERROR_NONE;
 }
 
+rtError_t GetOpExecuteMsTimeout(uint32_t *const timeout)
+{
+    *timeout = 0U;
+    float64_t timeoutUs = 0.0F;
+    Runtime *const rtInstance = Runtime::Instance();
+    NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
+
+    const RtTimeoutConfig &timeoutCfg = rtInstance->GetTimeoutConfig();
+    const float64_t kernelCreditScaleUS = rtInstance->GetKernelCreditScaleUS();
+    const uint32_t defaultKernelCredit = rtInstance->GetDefaultKernelCredit();
+    const float64_t maxKernelCredit = static_cast<float64_t>(rtInstance->GetMaxKernelCredit());
+
+    // Get different ChipType of kernel credit scale and default kernel credit.
+    const rtChipType_t chipType = rtInstance->GetChipType();
+    if (defaultKernelCredit == 0U || (kernelCreditScaleUS < std::numeric_limits<double>::epsilon())) {
+        RT_LOG(RT_LOG_WARNING, "Unsupported chip type, chipType=%d.", chipType);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    // Calculate timeout based on different conditions.
+    if (timeoutCfg.isCfgOpExcTaskTimeout) {
+        const float64_t timeoutTmpUs = static_cast<float64_t>(timeoutCfg.opExcTaskTimeout);
+        if ((timeoutCfg.opExcTaskTimeout == 0U) || (timeoutTmpUs > kernelCreditScaleUS * maxKernelCredit)) {
+            // If timeout is 0 or timeouttmp > the maximum timeout period, it is considered as the maximum timeout
+            // period.​
+            timeoutUs = kernelCreditScaleUS * maxKernelCredit;
+        } else {
+            // Round up to get the hardware effective time.
+            const uint64_t kernelCreditTmp = static_cast<uint64_t>((timeoutTmpUs + kernelCreditScaleUS - 1) / kernelCreditScaleUS);
+            timeoutUs = kernelCreditScaleUS * static_cast<float64_t>(kernelCreditTmp);
+        }
+    } else {
+        // ​​If timeout is not set, use AIC default timeout.​
+        timeoutUs = kernelCreditScaleUS * static_cast<float64_t>(defaultKernelCredit);
+    }
+
+    if ((timeoutCfg.isOpTimeoutMs) && (timeoutCfg.isCfgOpExcTaskTimeout) &&
+        (timeoutCfg.opExcTaskTimeout == 0UL)) {
+        *timeout = UINT32_MAX; // never timeout
+    } else {
+        *timeout = static_cast<uint32_t>(ceil(timeoutUs / static_cast<float64_t>(RT_TIMEOUT_MS_TO_US)));
+    }
+    RT_LOG(RT_LOG_INFO, "get OP execute timeout=%u ms.", *timeout);
+    return RT_ERROR_NONE;
+}
 }
 }

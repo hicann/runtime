@@ -355,15 +355,11 @@ struct RtKernelCombine
     uint32_t kernelIdx;
 };
 
-constexpr uint32_t KERNEL_PRINT_FIFO_ADDR_BIT = 1U;
-constexpr uint32_t KERNEL_FFTS_ADDR_BIT = 2U;
-constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR_BIT = 4U;
-constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR_BIT = 8U;
-
-constexpr uint32_t KERNEL_PRINT_FIFO_ADDR = 1U;
-constexpr uint32_t KERNEL_FFTS_ADDR = 2U;
-constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR = 3U;
-constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR = 4U;
+constexpr uint32_t KERNEL_PRINT_FIFO_ADDR_BIT = 0x1U;
+constexpr uint32_t KERNEL_FFTS_ADDR_BIT = 0x2U;
+constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR_BIT = 0x4U;
+constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR_BIT = 0x8U;
+constexpr uint32_t KERNEL_ASSERT_PRINT_FIFO_ADDR_BIT = 0x10U;
 
 struct rtElfSymbolAddr {
     uint64_t *g_sysFftsAddr = nullptr;
