@@ -116,11 +116,11 @@ set(libruntime_v201_task_src_files
 
     # v201 专用差异化文件
     ${RUNTIME_CORE_DIR}/src/task/v201/task_proc_func_register.cc
-    ${RUNTIME_FEATURE_DIR}/dps/dqs_task.cc
+    ${RUNTIME_FEATURE_DIR}/dqs/dqs_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memcpy_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/aix_task_to_sqe.cc
-    ${RUNTIME_FEATURE_DIR}/dps/dqs_c.cc
+    ${RUNTIME_FEATURE_DIR}/dqs/dqs_c.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/notify_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v201.cc
@@ -161,7 +161,7 @@ set(libruntime_v201_stream_src_files
     ${RUNTIME_CORE_DIR}/src/stream/stream_c.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_david.cc
-    ${RUNTIME_FEATURE_DIR}/dps/stream_with_dqs.cc
+    ${RUNTIME_FEATURE_DIR}/dqs/stream_with_dqs.cc
     ${RUNTIME_CORE_DIR}/src/stream/v201/stream_creator_c.cc
 )
 
@@ -370,7 +370,7 @@ set(libruntime_v201_src_files
     ${RUNTIME_CORE_DIR}/src/api_impl/v201/api_impl_v200_adapt.cc
     ${RUNTIME_CORE_DIR}/src/common/ioctl/v201/ioctl_utils.cc
     ${RUNTIME_DIR}/src/runtime/driver/v201/npu_driver.cc
-    ${RUNTIME_FEATURE_DIR}/dps/stars_dqs_cond_isa_helper.cc
+    ${RUNTIME_FEATURE_DIR}/dqs/stars_dqs_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
@@ -404,7 +404,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_DIR}/src/runtime/core/inc/device
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx
     ${RUNTIME_DIR}/src/runtime/core/inc/dqs
-    ${RUNTIME_FEATURE_DIR}/dps
+    ${RUNTIME_FEATURE_DIR}/dqs
     ${RUNTIME_DIR}/src/runtime/core/inc/drv
     ${RUNTIME_DIR}/src/runtime/core/inc/engine
     ${RUNTIME_DIR}/src/runtime/core/inc/engine/hwts
@@ -432,7 +432,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_CORE_DIR}/src/stream
     ${RUNTIME_CORE_DIR}/src/task/inc
     ${RUNTIME_FEATURE_DIR}/ffts
-    ${RUNTIME_FEATURE_DIR}/dps
+    ${RUNTIME_FEATURE_DIR}/dqs
     ${RUNTIME_CORE_DIR}/src/profiler
     ${RUNTIME_CORE_DIR}/src/pool
     ${RUNTIME_CORE_DIR}/src/ttlv
@@ -482,9 +482,9 @@ set(RUNTIME_INC_DIR_V201
     ${RUNTIME_INC_DIR_COMMON_V200}
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v201
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v201
-    ${RUNTIME_FEATURE_DIR}/dps
+    ${RUNTIME_FEATURE_DIR}/dqs
     ${RUNTIME_CORE_DIR}/src/stream/v201
-    ${RUNTIME_FEATURE_DIR}/dps
+    ${RUNTIME_FEATURE_DIR}/dqs
     ${RUNTIME_CORE_DIR}/src/common/ioctl/v201
 )
 
