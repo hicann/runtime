@@ -22,7 +22,7 @@ include(GNUInstallDirs)
 # ==========================================================================================================
 # 1. Paths & Directories Setup
 # ==========================================================================================================
-set(PROTOBUF_LIB_CACHE_DIR ${CANN_3RD_LIB_PATH}/lib_cache/protobuf-25.1/)
+set(PROTOBUF_LIB_CACHE_DIR ${CANN_3RD_LIB_PATH}/lib_cache/protobuf-25.1)
 set(PROTOBUF_SRC_DIR ${CMAKE_BINARY_DIR}/protobuf-src)
 set(PROTOBUF_DL_DIR ${CMAKE_BINARY_DIR}/downloads)
 set(PROTOBUF_STATIC_PKG_DIR ${CMAKE_BINARY_DIR}/protobuf_static)
@@ -157,7 +157,7 @@ if(NEED_BUILD_PROTOBUF)
             BUILD_COMMAND ""
             INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory ${PROTOBUF_HOST_DIR}/include
                     COMMAND bash -c "cd ${PROTOBUF_SRC_DIR}/src && find google -name '*.h' -o -name '*.inc' | xargs -i cp --parents {} ${PROTOBUF_HOST_DIR}/include/"
-                    COMMAND bash -c "cd ${CMAKE_BINARY_DIR}/abseil_build-prefix/src/abseil_build && find absl -name '*.h' -o -name '*.inc' | xargs -i cp --parents {} ${PROTOBUF_HOST_DIR}/include/"
+                    COMMAND bash -c "cd ${ABS_INSTALL_DIR} && find absl -name '*.h' -o -name '*.inc' | xargs -i cp --parents {} ${PROTOBUF_HOST_DIR}/include/"
                     COMMAND bash -c "sed -i 's/#define ABSL_OPTION_USE_STD_STRING_VIEW 2/#define ABSL_OPTION_USE_STD_STRING_VIEW 0/g' ${PROTOBUF_HOST_DIR}/include/absl/base/options.h"
             EXCLUDE_FROM_ALL TRUE
         )
@@ -215,7 +215,7 @@ else()
             -DCMAKE_CXX_FLAGS=${HOST_PROTOBUF_SHARED_CXXFLAGS}
             -DCMAKE_INSTALL_PREFIX=${PROTOBUF_SHARED_PKG_DIR}
             -Dprotobuf_BUILD_PROTOC_BINARIES=OFF
-            -DABSL_ROOT_DIR=${CMAKE_BINARY_DIR}/abseil_build-prefix/src/abseil_build
+            -DABSL_ROOT_DIR=${ABS_INSTALL_DIR}
             <SOURCE_DIR>
         BUILD_COMMAND $(MAKE)
         INSTALL_COMMAND $(MAKE) install
@@ -247,7 +247,7 @@ else()
             -DCMAKE_INSTALL_PREFIX=${PROTOBUF_HOST_DIR}
             -Dprotobuf_BUILD_TESTS=OFF
             -Dprotobuf_WITH_ZLIB=OFF
-            -DABSL_ROOT_DIR=${CMAKE_BINARY_DIR}/abseil_build-prefix/src/abseil_build
+            -DABSL_ROOT_DIR=${ABS_INSTALL_DIR}
             <SOURCE_DIR>
         BUILD_COMMAND $(MAKE) protoc
         INSTALL_COMMAND ${CMAKE_COMMAND}
@@ -301,7 +301,7 @@ else()
             -DCMAKE_INSTALL_PREFIX=${PROTOBUF_STATIC_PKG_DIR}
             -Dprotobuf_BUILD_PROTOC_BINARIES=OFF
             -DABSL_COMPILE_OBJ=TRUE
-            -DABSL_ROOT_DIR=${CMAKE_BINARY_DIR}/abseil_build-prefix/src/abseil_build
+            -DABSL_ROOT_DIR=${ABS_INSTALL_DIR}
             <SOURCE_DIR>
         BUILD_COMMAND $(MAKE)
         INSTALL_COMMAND $(MAKE) install
@@ -355,7 +355,7 @@ else()
             -DCMAKE_INSTALL_PREFIX=${PROTOBUF_HOST_STATIC_PKG_DIR}
             -Dprotobuf_BUILD_PROTOC_BINARIES=OFF
             -DABSL_COMPILE_OBJ=TRUE
-            -DABSL_ROOT_DIR=${CMAKE_BINARY_DIR}/abseil_build-prefix/src/abseil_build
+            -DABSL_ROOT_DIR=${ABS_INSTALL_DIR}
             <SOURCE_DIR>
         BUILD_COMMAND $(MAKE)
         INSTALL_COMMAND $(MAKE) install
