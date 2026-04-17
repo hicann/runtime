@@ -148,7 +148,7 @@ checkopts() {
   done
 }
 
-# check if changed files only include docs/, example/ or README.md
+# check if changed files only include docs/, example/, .claude/, .opencode/ or markdown files
 # usage: check_changed_files "file1 file2 file3"
 check_changed_files() {
   local changed_files="$1"
@@ -174,6 +174,16 @@ check_changed_files() {
       continue
     fi
 
+    # check if file is AGENTS.md (case insensitive)
+    if echo "$file" | grep -qi "^AGENTS\.md$"; then
+      continue
+    fi
+
+    # check if file is a markdown file at root level (case insensitive)
+    if echo "$file" | grep -qi "^[A-Z_]*\.md$"; then
+      continue
+    fi
+
     # check if file is in docs/ directory
     if echo "$file" | grep -q "^docs/"; then
       continue
@@ -184,13 +194,23 @@ check_changed_files() {
       continue
     fi
 
-    # if any file doesn't match the above patterns, don't skip build
+    # check if file is in .claude/ directory
+    if echo "$file" | grep -q "^\.claude/"; then
+      continue
+    fi
+
+    # check if file is in .opencode/ directory
+    if echo "$file" | grep -q "^\.opencode/"; then
+      continue
+    fi
+
+    # if any file doesn't match above patterns, don't skip build
     skip_build=false
     break
   done
 
   if [ "$skip_build" = true ]; then
-    echo "[INFO] Changed files only contain docs/, example/, README.md or CONTRIBUTING.md, skipping test."
+    echo "[INFO] Changed files only contain docs/, example/, .claude/, .opencode/ or markdown files, skipping build."
     echo "[INFO] Changed files: $changed_files"
     return 0
   fi
