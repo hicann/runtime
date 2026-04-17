@@ -505,3 +505,28 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithMixOnlyAiv)
     EXPECT_EQ(aicSize, 0);
     EXPECT_EQ(aivSize, 10);
 }
+
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSchedMode)
+{
+    ElfProgram program(Program::MACH_AI_VECTOR);
+    uint64_t tilingKey = 0;
+    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+
+    kernel.SetSchedMode(RT_SCHEM_MODE_NORMAL);
+    int64_t attrValue = 0;
+    ApiImpl apiImpl;
+    rtError_t error = apiImpl.FunctionGetAttribute(
+        static_cast<rtFuncHandle>(&kernel),
+        RT_FUNCTION_ATTR_KERNEL_SCHED_MODE,
+        &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue, 0);
+
+    kernel.SetSchedMode(RT_SCHEM_MODE_BATCH);
+    error = apiImpl.FunctionGetAttribute(
+        static_cast<rtFuncHandle>(&kernel),
+        RT_FUNCTION_ATTR_KERNEL_SCHED_MODE,
+        &attrValue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue, 1);
+}

@@ -825,6 +825,7 @@ typedef int32_t (*aclrtDeviceTaskAbortCallback)(int32_t deviceId, aclrtDeviceTas
 typedef enum {
     ACL_FUNC_ATTR_KERNEL_TYPE = 1,
     ACL_FUNC_ATTR_KERNEL_RATIO = 2,
+    ACL_FUNC_ATTR_KERNEL_SCHED_MODE = 3,
 } aclrtFuncAttribute;
 
 typedef enum {

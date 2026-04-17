@@ -8583,6 +8583,10 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
             RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);
             break;
         }
+        case RT_FUNCTION_ATTR_KERNEL_SCHED_MODE: {
+            *attrValue = static_cast<int64_t>(kernel->GetSchedMode());
+            break;
+        }
         default: {
             RT_LOG(RT_LOG_WARNING, "Invalid attrType attrType=%d", attrType);
             break;
