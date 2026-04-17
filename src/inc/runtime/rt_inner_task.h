@@ -135,6 +135,16 @@ RTS_API rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params);
  */
 RTS_API rtError_t rtModelTaskDisable(rtTask_t task);
 
+/**
+ * @ingroup rt_task
+ * @brief cache extended info for the last task, specifically for debugging
+ * @param [in] extendInfoPtr: pointer to the extended task information buffer
+ * @param [in] infoSize: size of the buffer
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize);
+
 #if defined(__cplusplus)
 }
 #endif

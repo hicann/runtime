@@ -293,6 +293,7 @@
     _(aclError, aclrtSnapShotCallbackRegister, (aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void * args), (stage, callback, args)) \
     _(aclError, aclrtSnapShotCallbackUnregister, (aclrtSnapShotStage stage, aclrtSnapShotCallBack callback), (stage, callback)) \
     _(aclError, aclrtCacheLastTaskOpInfo, (const void * const infoPtr, const size_t infoSize), (infoPtr, infoSize)) \
+    _(aclError, aclrtCacheLastTaskExtendInfo, (const char* const extendInfoPtr, const size_t infoSize), (extendInfoPtr, infoSize)) \
     _(aclError, aclrtGetFunctionAttribute, (aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t * attrValue), (funcHandle, attrType, attrValue)) \
     _(aclError, aclrtFunctionGetBinary, (const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle), (funcHandle, binHandle)) \
     _(aclError, aclrtIpcGetEventHandle, (aclrtEvent event, aclrtIpcEventHandle * handle), (event, handle)) \

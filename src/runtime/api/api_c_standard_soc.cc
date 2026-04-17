@@ -1257,6 +1257,23 @@ rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSiz
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    const rtChipType_t chipType = rtInstance->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
+        RT_LOG(RT_LOG_WARNING, "Chip type(%d) does not support rtCacheLastTaskExtendInfo api.", chipType);
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->CacheLastTaskExtendInfo(extendInfoPtr, infoSize);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtEventWorkModeSet(uint8_t mode)
 {
     const Runtime * const rtInstance = Runtime::Instance();

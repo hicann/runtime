@@ -13,6 +13,7 @@
 #include "capture_model.hpp"
 #include "arg_loader.hpp"
 #include "error_message_manage.hpp"
+#include "task/task_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -117,7 +118,7 @@ rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* cons
     const TaskGroup* taskGroup = captureModel->GetTaskGroup(stm->Id_(), taskInfo->id);
     params->taskGrp = static_cast<void*>(RtPtrToUnConstPtr<TaskGroup*>(taskGroup));
     size_t infoSize = 0;
-    params->opInfoPtr = captureModel->GetShapeInfo(stm->Id_(), taskInfo->id, infoSize);
+    params->opInfoPtr = captureModel->GetShapeInfo(stm->Id_(), GetTaskId(taskInfo), infoSize);
     params->opInfoSize = infoSize;
 
     RT_LOG(
@@ -223,10 +224,10 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
 
     if (params->opInfoPtr != nullptr && params->opInfoSize != 0) {
         taskInfo->taskTrackTimeStamp = MsprofSysCycleTime();
-        error = captureModel->SetShapeInfo(stm, taskInfo->id, params->opInfoPtr, params->opInfoSize);
-        ERROR_RETURN(error, "update shape info failed, stream_id=%d, task_id=%u.", stm->Id_(), taskInfo->id);
+        error = captureModel->SetShapeInfo(stm, GetTaskId(taskInfo), params->opInfoPtr, params->opInfoSize);
+        ERROR_RETURN(error, "update shape info failed, stream_id=%d, task_id=%u.", stm->Id_(), GetTaskId(taskInfo));
     } else {
-        captureModel->ClearShapeInfo(stm->Id_(), taskInfo->id);
+        captureModel->ClearShapeInfo(stm->Id_(), GetTaskId(taskInfo));
     }
 
     return RT_ERROR_NONE;

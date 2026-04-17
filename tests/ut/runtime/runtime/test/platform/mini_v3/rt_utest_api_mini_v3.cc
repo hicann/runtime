@@ -152,3 +152,14 @@ TEST_F(ApiMINIV3Test, rtCacheLastTaskOpInfo_test)
     error = rtCacheLastTaskOpInfo(rawInfo, infoSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
+
+TEST_F(ApiMINIV3Test, rtCacheLastTaskExtendInfo_test)
+{
+    rtError_t error;
+
+    const char extendInfo[] = "{\"taskType\":\"communication\"}";
+    size_t infoSize = sizeof(extendInfo) - 1U;
+
+    error = rtCacheLastTaskExtendInfo(extendInfo, infoSize);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}

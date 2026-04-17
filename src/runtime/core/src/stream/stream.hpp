@@ -115,6 +115,7 @@ struct TraceArgs {
     int taskRation = 0;
     int schemMode = static_cast<int>(RT_SCHEM_MODE_END);
     int activeStreamId = -1;
+    std::string extendInfo;
 };
 
 struct TraceEvent {
@@ -1115,6 +1116,7 @@ public:
     virtual void DebugDotPrintForModelStm();
     std::string TraceEventToJson(const TraceEvent &record) const;
     std::string GetTaskTypeForMixKernel(const uint8_t mixType, const std::string &originTaskType) const;
+    void FillTaskExtendInfo(const TaskInfo* task, TraceEvent& record) const;
     virtual void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm);
 
     void MarkOrigCaptureStream(const bool flag)

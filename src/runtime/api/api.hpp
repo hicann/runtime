@@ -816,6 +816,8 @@ public:
     virtual rtError_t GetStreamCacheOpInfoSwitch(const Stream * const stm, uint32_t * const cacheOpInfoSwitch) = 0;
     virtual rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize) = 0;
 
+    virtual rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) = 0;
+
     virtual rtError_t LaunchHostFunc(Stream * const stm, rtCallback_t const callBackFunc, void * const fnData) = 0;
 
     // event mode

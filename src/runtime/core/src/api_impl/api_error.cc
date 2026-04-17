@@ -6161,6 +6161,20 @@ rtError_t ApiErrorDecorator::CacheLastTaskOpInfo(const void * const infoPtr, con
     return impl_->CacheLastTaskOpInfo(infoPtr, infoSize);
 }
 
+rtError_t ApiErrorDecorator::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    NULL_PTR_RETURN_MSG_OUTER(extendInfoPtr, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((infoSize == 0U), RT_ERROR_INVALID_VALUE, infoSize, "not equal to 0");
+    constexpr size_t maxExtendInfoSize = 4096U;
+    if (infoSize > maxExtendInfoSize) {
+        RT_LOG(
+            RT_LOG_WARNING, "extend info size=%zu exceeds max size=%zu, only the first %zu bytes will be cached.",
+            infoSize, maxExtendInfoSize, maxExtendInfoSize);
+    }
+    const size_t validSize = (infoSize > maxExtendInfoSize) ? maxExtendInfoSize : infoSize;
+    return impl_->CacheLastTaskExtendInfo(extendInfoPtr, validSize);
+}
+
 rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
     NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);

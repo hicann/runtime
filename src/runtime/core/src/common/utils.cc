@@ -9,6 +9,8 @@
  */
 #include <fstream>
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 #include "base.hpp"
 #include "utils.h"
 
@@ -226,6 +228,45 @@ uint64_t GetQuickHash(const void *data, const size_t size)
     }
 
     return hash;
+}
+
+std::string EscapeJsonString(const std::string& value)
+{
+    std::ostringstream oss;
+    for (unsigned char ch : value) {
+        switch (ch) {
+            case '\\':
+                oss << "\\\\";
+                break;
+            case '"':
+                oss << "\\\"";
+                break;
+            case '\b':
+                oss << "\\b";
+                break;
+            case '\f':
+                oss << "\\f";
+                break;
+            case '\n':
+                oss << "\\n";
+                break;
+            case '\r':
+                oss << "\\r";
+                break;
+            case '\t':
+                oss << "\\t";
+                break;
+            default:
+                if (ch < 0x20U) {
+                    oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<uint32_t>(ch)
+                        << std::dec << std::setfill(' ');
+                } else {
+                    oss << static_cast<char>(ch);
+                }
+                break;
+        }
+    }
+    return oss.str();
 }
 }
 }

@@ -841,5 +841,7 @@ uint32_t GetProfTaskId(const TaskInfo * const taskInfo)
     return taskInfo->taskSn;
 }
 
+uint32_t GetTaskId(const TaskInfo* const taskInfo) { return taskInfo->taskSn; }
+
 }  // namespace runtime
 }  // namespace cce

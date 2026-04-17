@@ -42,6 +42,7 @@
 #include <thread>
 #include "ctrl_sq.hpp"
 #include <cstring>
+#include "utils.h"
 
 namespace cce {
 namespace runtime {
@@ -4690,6 +4691,9 @@ std::string Stream::TraceEventToJson(const TraceEvent &record) const
     oss << "\"Stream Id\":" << record.args.streamId << ",";
     oss << "\"Task Id\":" << record.args.taskId << ",";
     oss << "\"Task Type\":\"" << record.args.taskType << "\"";
+    if (!record.args.extendInfo.empty()) {
+        oss << ",\"ExtendInfo\":\"" << EscapeJsonString(record.args.extendInfo) << "\"";
+    }
     if (record.args.taskType.rfind("STREAM_ACTIVE", 0) == 0) {
         oss << ",\"Active Stream Id\":" << record.args.activeStreamId;
     }
@@ -4720,6 +4724,21 @@ std::string Stream::GetTaskTypeForMixKernel(const uint8_t mixType, const std::st
             
         default:
             return originTaskType;
+    }
+}
+
+void Stream::FillTaskExtendInfo(const TaskInfo* task, TraceEvent& record) const
+{
+    record.args.extendInfo.clear();
+    Model* mdl = Model_();
+    if (mdl == nullptr) {
+        return;
+    }
+
+    std::string extendInfo;
+    const rtError_t ret = mdl->GetTaskExtendInfo(Id_(), GetTaskId(task), extendInfo);
+    if (ret == RT_ERROR_NONE) {
+        record.args.extendInfo = std::move(extendInfo);
     }
 }
 
@@ -4803,6 +4822,8 @@ void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t
         record.args.streamId = streamId_;
         record.args.taskId = task->id;
         record.args.taskType = taskType;
+        FillTaskExtendInfo(task, record);
+
         recordArray.emplace_back(record);
     }
 

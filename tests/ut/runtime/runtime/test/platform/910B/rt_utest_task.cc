@@ -52,6 +52,12 @@
 #include "task_manager.h"
 #include "cmo_task.h"
 #include "task_info_v100.h"
+#include "api_impl.hpp"
+#include "stream.hpp"
+#include "stream_sqcq_manage.hpp"
+#include "inner_thread_local.hpp"
+#include <fstream>
+#include <cstdio>
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1506,6 +1512,109 @@ TEST_F(CloudV2TaskTest, RegTaskFunc_concurrent_registration)
     for (auto &thread : threads) {
         thread.join();
     }
-    
+
     EXPECT_EQ(successCount.load(), threadCount);
+}
+
+TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_debug_json_success)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtModel_t model;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Stream* const stm = static_cast<Stream*>(stream);
+    Model* const mdl = static_cast<Model*>(model);
+    stm->SetModel(mdl);
+    stm->SetLatestModlId(mdl->Id_());
+
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    task.id = 7U;
+    task.type = TS_TASK_TYPE_KERNEL_AICPU;
+    task.u.aicpuTaskInfo.kernel = nullptr;
+    task.typeName = "AICPU";
+
+    const char extendInfo[] = "{\"taskType\":\"communication\"}";
+    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), task.id);
+
+    error = rtCacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&task));
+    stm->SetBindFlag(true);
+    (void)stm->StarsAddTaskToStream(&task, 1U);
+
+    const std::string path = "/tmp/rt_cache_last_task_extend_info_910b.json";
+    std::ofstream outputFile(path);
+    EXPECT_EQ(outputFile.is_open(), true);
+    stm->DebugJsonPrintForModelStm(outputFile, 0U, true);
+    outputFile.close();
+
+    std::ifstream inputFile(path);
+    EXPECT_EQ(inputFile.is_open(), true);
+    const std::string content((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+    inputFile.close();
+    (void)std::remove(path.c_str());
+
+    const std::string expectedExtendInfo = "\"ExtendInfo\":\"{\\\"taskType\\\":\\\"communication\\\"}\"";
+    EXPECT_NE(content.find(expectedExtendInfo), std::string::npos);
+
+    TraceEvent record = {};
+    stm->FillTaskExtendInfo(&task, record);
+    EXPECT_EQ(record.args.extendInfo, std::string(extendInfo, sizeof(extendInfo) - 1U));
+
+    mdl->ClearTaskExtendInfo(stm->Id_(), task.id);
+    record.args.extendInfo.clear();
+    stm->FillTaskExtendInfo(&task, record);
+    EXPECT_TRUE(record.args.extendInfo.empty());
+
+    stm->SetBindFlag(false);
+    stm->DelModel(mdl);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_api_impl_abnormal)
+{
+    rtError_t error;
+    ApiImpl impl;
+    rtStream_t stream = nullptr;
+    rtModel_t model = nullptr;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Stream* const stm = static_cast<Stream*>(stream);
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+
+    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), 1U);
+    const char extendInfo[] = "extend";
+
+    MOCKER_CPP(&StreamSqCqManage::GetStreamById).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(impl.CacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U), RT_ERROR_INVALID_VALUE);
+
+    GlobalMockObject::verify();
+
+    stm->SetContext(nullptr);
+    EXPECT_EQ(impl.CacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U), RT_ERROR_STREAM_CONTEXT);
+    stm->SetContext(curCtx);
+
+    EXPECT_EQ(impl.CacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U), RT_ERROR_MODEL_NULL);
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Model* const mdl = static_cast<Model*>(model);
+    stm->SetModel(mdl);
+    stm->SetLatestModlId(mdl->Id_());
+    EXPECT_EQ(impl.CacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U), RT_ERROR_NONE);
+
+    stm->DelModel(mdl);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

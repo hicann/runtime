@@ -935,6 +935,14 @@ rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSiz
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 
+VISIBILITY_DEFAULT
+rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    (void)extendInfoPtr;
+    (void)infoSize;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t rtSetXpuDevice(rtXpuDevType devType, const uint32_t devId)
 {
     UNUSED(devType);

@@ -413,6 +413,7 @@ void ReportErrorInfoForModelExecuteTask(TaskInfo * const taskInfo, const uint32_
 void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId);
 bool IsDvppTask(const uint16_t sqeType);
 uint32_t GetProfTaskId(const TaskInfo * const taskInfo);
+uint32_t GetTaskId(const TaskInfo* const taskInfo);
 int32_t GetTaskIdBitWidth();
 const char_t* TaskIdDesc();
 const char_t* TaskIdCamelbackNaming();

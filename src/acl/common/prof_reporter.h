@@ -304,6 +304,7 @@ namespace acl {
         AclrtDeviceGetP2PAtomicCapabilities,
         AclrtMemcpyBatchV2,
         AclrtMemcpyBatchAsyncV2,
+        AclrtCacheLastTaskExtendInfo,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

@@ -9,6 +9,8 @@
  */
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
+#include <cstdio>
 
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
@@ -64,6 +66,7 @@
 #include "aix_c.hpp"
 #include "memory_task.h"
 #include "inner_kernel.h"
+#include "inner_thread_local.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -81,6 +84,19 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
         }
     }
     return DRV_ERROR_NONE;
+}
+
+static TaskInfo BuildDebugJsonAicpuTask(Stream* const stm)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    task.id = 9U;
+    task.taskSn = task.id;
+    task.sqeNum = 1U;
+    task.type = TS_TASK_TYPE_KERNEL_AICPU;
+    task.u.aicpuTaskInfo.kernel = nullptr;
+    task.typeName = "AICPU";
+    return task;
 }
 
 class TaskTestDavid : public testing::Test
@@ -1771,4 +1787,68 @@ TEST_F(TaskTestDavid, StreamSetupTryAlloc)
     TaskInfo taskInfo = {0};
     uint8_t sqeMem[RT_STARS_SQE_LEN] = {0};
     ConstructStarsSqeForNotifyRecordTask(&taskInfo, sqeMem);
+}
+
+TEST_F(TaskTestDavid, rtCacheLastTaskExtendInfo_debug_json_success_950)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtModel_t model;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Stream* const stm = static_cast<Stream*>(stream);
+    Model* const mdl = static_cast<Model*>(model);
+    stm->SetModel(mdl);
+    stm->SetLatestModlId(mdl->Id_());
+
+    TaskInfo task = BuildDebugJsonAicpuTask(stm);
+
+    const char extendInfo[] = "{\"taskType\":\"communication\"}";
+    SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), task.taskSn);
+
+    error = rtCacheLastTaskExtendInfo(extendInfo, sizeof(extendInfo) - 1U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stm->SetBindFlag(true);
+    stm->SetSoftWareSqEnable();
+    stm->delayRecycleTaskid_.push_back(task.id);
+
+    MOCKER(GetTaskInfo)
+        .stubs()
+        .with(mockcpp::any(), eq(static_cast<uint32_t>(stm->Id_())), eq(static_cast<uint32_t>(task.id)), eq(false))
+        .will(returnValue(&task));
+
+    const std::string path = "/tmp/rt_cache_last_task_extend_info_950.json";
+    std::ofstream outputFile(path);
+    EXPECT_EQ(outputFile.is_open(), true);
+    stm->DebugJsonPrintForModelStm(outputFile, 0U, true);
+    outputFile.close();
+
+    std::ifstream inputFile(path);
+    EXPECT_EQ(inputFile.is_open(), true);
+    const std::string content((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+    inputFile.close();
+    (void)std::remove(path.c_str());
+
+    const std::string expectedExtendInfo = "\"ExtendInfo\":\"{\\\"taskType\\\":\\\"communication\\\"}\"";
+    EXPECT_NE(content.find(expectedExtendInfo), std::string::npos);
+
+    TraceEvent record = {};
+    stm->FillTaskExtendInfo(&task, record);
+    EXPECT_EQ(record.args.extendInfo, std::string(extendInfo, sizeof(extendInfo) - 1U));
+
+    mdl->ClearTaskExtendInfo(stm->Id_(), task.taskSn);
+    record.args.extendInfo.clear();
+    stm->FillTaskExtendInfo(&task, record);
+    EXPECT_TRUE(record.args.extendInfo.empty());
+
+    stm->SetBindFlag(false);
+    stm->DelModel(mdl);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

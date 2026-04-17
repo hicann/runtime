@@ -29,6 +29,7 @@
 #include "utils.h"
 #include "memory_task.h"
 #include "ctrl_sq.hpp"
+#include "inner_thread_local.hpp"
 
 namespace cce {
 namespace runtime {
@@ -2081,5 +2082,48 @@ rtError_t Model::ModelDestroyCallback()
     }
     return RT_ERROR_NONE;
 }
+
+rtError_t Model::CacheLastTaskExtendInfo(const Stream* const stm, const char* infoPtr, const size_t infoSize)
+{
+    const uint32_t taskId = InnerThreadLocalContainer::GetLastTaskId();
+
+    const std::lock_guard<std::mutex> lock(extendInfosMutex_);
+    this->extendInfos_[stm->Id_()][taskId].assign(infoPtr, infoSize);
+
+    return RT_ERROR_NONE;
 }
+
+rtError_t Model::GetTaskExtendInfo(int32_t streamId, uint32_t taskId, std::string& info) const
+{
+    const std::lock_guard<std::mutex> lock(extendInfosMutex_);
+    auto itStream = this->extendInfos_.find(streamId);
+    if (itStream == this->extendInfos_.end()) {
+        RT_LOG(RT_LOG_DEBUG, "Task extend info stream not found, stream_id=%d, task_id=%u.", streamId, taskId);
+        info.clear();
+        return RT_ERROR_NOT_FOUND;
+    }
+
+    auto itTask = itStream->second.find(taskId);
+    if (itTask == itStream->second.end()) {
+        RT_LOG(RT_LOG_DEBUG, "Task extend info task not found, stream_id=%d, task_id=%u.", streamId, taskId);
+        info.clear();
+        return RT_ERROR_NOT_FOUND;
+    }
+
+    info = itTask->second;
+    return RT_ERROR_NONE;
 }
+
+void Model::ClearTaskExtendInfo(const int32_t streamId, const uint32_t taskId)
+{
+    const std::lock_guard<std::mutex> lock(extendInfosMutex_);
+    auto itStream = this->extendInfos_.find(streamId);
+    if (itStream != this->extendInfos_.end()) {
+        (void)itStream->second.erase(taskId);
+        if (itStream->second.empty()) {
+            (void)this->extendInfos_.erase(itStream);
+        }
+    }
+}
+} // namespace runtime
+} // namespace cce

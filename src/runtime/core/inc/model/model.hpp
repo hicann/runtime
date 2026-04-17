@@ -11,9 +11,12 @@
 #define __CCE_RUNTIME_MODEL_HPP__
 
 #include <list>
+#include <memory>
 #include <vector>
 #include <map>
 #include <set>
+#include <mutex>
+#include <utility>
 #include "base.hpp"
 #include "driver.hpp"
 #include "device.hpp"
@@ -208,6 +211,9 @@ public:
     rtError_t ModelGetStreams(Stream **streams, uint32_t *numStreams) const;
     rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, const void *ptr);
     rtError_t ModelDestroyUnregisterCallback(const rtCallback_t fn);
+    rtError_t CacheLastTaskExtendInfo(const Stream* const stm, const char* infoPtr, size_t infoSize);
+    rtError_t GetTaskExtendInfo(int32_t streamId, uint32_t taskId, std::string& info) const;
+    void ClearTaskExtendInfo(const int32_t streamId, const uint32_t taskId);
 
     void SetModelExecutorType(uint32_t executorFlag)
     {
@@ -579,6 +585,8 @@ private:
     bool isHasD2d_ = false;
     bool isHasH2d_ = false;
     bool isHaveProcJettyInfo_ = false;
+    mutable std::mutex extendInfosMutex_;
+    std::map<int32_t, std::map<uint32_t, std::string>> extendInfos_;
     std::set<MdlDestroyCallbackInfo> mdlDestroyCallbackSet_;
     std::mutex mdlDestroyCallbackMutex_;
 };

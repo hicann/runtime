@@ -5203,6 +5203,20 @@ ACL_FUNC_VISIBILITY aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr
 
 /**
  * @ingroup AscendCL
+ * @brief cache extended info for the last task for debugging
+ *
+ * @param [in]  extendInfoPtr  pointer to the extended task information buffer
+ * @param [in]  infoSize       size of the buffer
+ *
+ * @note At most 4096 bytes are cached. If infoSize is greater than 4096, only the first 4096 bytes are used.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure.
+ */
+ACL_FUNC_VISIBILITY aclError aclrtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize);
+
+/**
+ * @ingroup AscendCL
  * @brief get function attribute by attribute type.
  *
  * @param [in]  funcHandle function handle
@@ -5357,4 +5371,3 @@ ACL_FUNC_VISIBILITY aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs
 #endif
 
 #endif // INC_EXTERNAL_ACL_ACL_RT_H_
-

@@ -1315,6 +1315,14 @@ rtError_t ApiProfileDecorator::CacheLastTaskOpInfo(const void * const infoPtr, c
     return error;
 }
 
+rtError_t ApiProfileDecorator::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    CallApiBegin(RT_PROF_API_CACHE_LAST_TASK_EXTEND_INFO);
+    const rtError_t error = impl_->CacheLastTaskExtendInfo(extendInfoPtr, infoSize);
+    CallApiEnd(error);
+    return error;
+}
+
 rtError_t ApiProfileDecorator::IpcGetEventHandle(IpcEvent * const evt, rtIpcEventHandle_t *handle)
 {
     CallApiBegin(RT_PROF_API_GET_EVENT_HANDLE);

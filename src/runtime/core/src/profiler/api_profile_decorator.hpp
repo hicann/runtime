@@ -258,6 +258,8 @@ public:
     rtError_t SetCmoDesc(rtCmoDesc_t cmoDesc, void *srcAddr, size_t srcLen) override;
     rtError_t GetPrimaryCtxState(const int32_t devId, uint32_t *flags, int32_t *active) override;
     rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize) override;
+    rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) override;
+
 private:
     void CallApiBegin(const uint16_t profileType, const uint64_t dataSize = 0,
         const uint16_t cpyDirection = 0) const;

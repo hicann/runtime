@@ -265,6 +265,7 @@ namespace acl {
         {AclProfType::AclrtFreeWithDevSync,                     "aclrtFreeWithDevSync"},
         {AclProfType::AclrtFreeHostWithDevSync,                 "aclrtFreeHostWithDevSync"},
         {AclProfType::AclrtCacheLastTaskOpInfo,                 "aclrtCacheLastTaskOpInfo"},
+        {AclProfType::AclrtCacheLastTaskExtendInfo,             "aclrtCacheLastTaskExtendInfo"},
         {AclProfType::AclrtGetFunctionAttribute,                "aclrtGetFunctionAttribute"},
         {AclProfType::AclrtIpcGetEventHandle,                   "aclrtIpcGetEventHandle"},
         {AclProfType::AclrtIpcOpenEventHandle,                  "aclrtIpcOpenEventHandle"},

@@ -732,6 +732,7 @@ private:
 
     // aclgraph caching shape for profiling
     rtError_t CacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize) override;
+    rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) override;
     rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) override;
     rtError_t FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle) override;
 

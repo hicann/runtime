@@ -1327,6 +1327,13 @@ rtError_t aclStub::rtCacheLastTaskOpInfo(const void * const infoPtr, const size_
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    (void)extendInfoPtr;
+    (void)infoSize;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)
 {
     (void)funcHandle;
@@ -3658,6 +3665,11 @@ rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t *captureMdl)
 rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize)
 {
     return MockFunctionTest::aclStubInstance().rtCacheLastTaskOpInfo(infoPtr, infoSize);
+}
+
+rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    return MockFunctionTest::aclStubInstance().rtCacheLastTaskExtendInfo(extendInfoPtr, infoSize);
 }
 
 rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue)

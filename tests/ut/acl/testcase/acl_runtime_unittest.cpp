@@ -7167,6 +7167,25 @@ TEST_F(UTEST_ACL_Runtime, aclrtCacheLastTaskOpInfo)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtCacheLastTaskExtendInfo)
+{
+    char extendInfo[] = "test_extend_info_data";
+    size_t infoSize = sizeof(extendInfo) - 1U;
+
+    auto ret = aclrtCacheLastTaskExtendInfo(extendInfo, infoSize);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCacheLastTaskExtendInfo(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclrtCacheLastTaskExtendInfo(extendInfo, infoSize);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtCacheLastTaskExtendInfo(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclrtCacheLastTaskExtendInfo(extendInfo, infoSize);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetFunctionAttribute)
 {
     aclrtFuncAttribute attrType = ACL_FUNC_ATTR_KERNEL_TYPE;

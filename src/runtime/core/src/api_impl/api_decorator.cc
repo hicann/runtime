@@ -2473,6 +2473,11 @@ rtError_t ApiDecorator::CacheLastTaskOpInfo(const void * const infoPtr, const si
     return impl_->CacheLastTaskOpInfo(infoPtr, infoSize);
 }
 
+rtError_t ApiDecorator::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    return impl_->CacheLastTaskExtendInfo(extendInfoPtr, infoSize);
+}
+
 rtError_t ApiDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)
 {
     return impl_->MemRetainAllocationHandle(virPtr, handle);

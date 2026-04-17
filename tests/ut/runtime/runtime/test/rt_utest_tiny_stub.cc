@@ -191,6 +191,8 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtMemManagedGetAttrs(nullptr, 0, nullptr, 0, nullptr, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtCacheLastTaskExtendInfo(nullptr, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, api_error_stub)

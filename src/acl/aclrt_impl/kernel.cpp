@@ -690,6 +690,24 @@ aclError aclrtCacheLastTaskOpInfoImpl(const void * const infoPtr, const size_t i
     return ACL_SUCCESS;
 }
 
+aclError aclrtCacheLastTaskExtendInfoImpl(const char* const extendInfoPtr, const size_t infoSize)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtCacheLastTaskExtendInfo);
+    ACL_LOG_INFO("start to execute aclrtCacheLastTaskExtendInfo");
+
+    const rtError_t rtErr = rtCacheLastTaskExtendInfo(extendInfoPtr, infoSize);
+    if (rtErr != RT_ERROR_NONE) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtCacheLastTaskExtendInfo unSupported, runtime result = %d", rtErr);
+        } else {
+            ACL_LOG_CALL_ERROR("call rtCacheLastTaskExtendInfo failed, runtime result = %d.", rtErr);
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    ACL_LOG_INFO("successfully execute aclrtCacheLastTaskExtendInfo");
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t *attrValue)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionAttribute);

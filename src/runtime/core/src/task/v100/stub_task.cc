@@ -199,6 +199,8 @@ uint32_t GetProfTaskId(const TaskInfo * const taskInfo)
     return GetFlipTaskId(static_cast<uint32_t>(taskInfo->id), taskInfo->flipNum);
 }
 
+uint32_t GetTaskId(const TaskInfo* const taskInfo) { return taskInfo->id; }
+
 void RecycleThreadDoForStarsV2(Device *deviceInfo)
 {
     UNUSED(deviceInfo);

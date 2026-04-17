@@ -329,6 +329,7 @@ public:
     virtual rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus *const status, rtModel_t *captureMdl);
     virtual rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t *captureMdl);
     virtual rtError_t rtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoSize);
+    virtual rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize);
     virtual rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue);
     virtual rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle);
 
@@ -809,6 +810,7 @@ public:
                                                    rtModel_t *captureMdl));
     MOCK_METHOD2(rtStreamEndCapture, rtError_t(rtStream_t stm, rtModel_t *captureMdl));
     MOCK_METHOD2(rtCacheLastTaskOpInfo, rtError_t(const void * const infoPtr, const size_t infoSize));
+    MOCK_METHOD2(rtCacheLastTaskExtendInfo, rtError_t(const char* const extendInfoPtr, const size_t infoSize));
     MOCK_METHOD3(rtFunctionGetAttribute, rtError_t(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue));
     MOCK_METHOD2(rtFunctionGetBinary, rtError_t(const rtFuncHandle funcHandle, rtBinHandle *binHandle));
     MOCK_METHOD1(rtModelDebugDotPrint, rtError_t(rtModel_t mdl));

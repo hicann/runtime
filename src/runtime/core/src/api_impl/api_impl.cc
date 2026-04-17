@@ -11,6 +11,7 @@
 #include "internal_error_define.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
+#include "spec/base_info.hpp"
 #include "stars_common_task.h"
 #include "cmo_barrier_c.hpp"
 #include "api_impl.hpp"
@@ -4199,6 +4200,35 @@ rtError_t ApiImpl::ModelSetSchGroupId(Model * const mdl, const int16_t schGrpId)
         "SetSchGroupId failed, model is not in current ctx.");
     mdl->SetSchGroupId(schGrpId);
     return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
+{
+    const uint32_t lastStreamId = InnerThreadLocalContainer::GetLastStreamId();
+    RT_LOG(RT_LOG_DEBUG, "CacheLastTaskExtendInfo Received data: infoSize=%zu, stream_id=%u", infoSize, lastStreamId);
+
+    Context* const curContext = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curContext, RT_ERROR_CONTEXT_NULL);
+
+    Device* const dev = curContext->Device_();
+    StreamSqCqManage* const streamSqCqManagePtr = dev->GetStreamSqCqManage();
+    NULL_PTR_RETURN_MSG_OUTER(streamSqCqManagePtr, RT_ERROR_INVALID_VALUE);
+
+    Stream* stm = nullptr;
+    rtError_t error = streamSqCqManagePtr->GetStreamById(lastStreamId, &stm);
+    COND_RETURN_ERROR_MSG_INNER(
+        ((error != RT_ERROR_NONE) || (stm == nullptr)), error,
+        "Query stream failed, dev_id=%u, stream_id=%u, retCode=%#x.", dev->Id_(), lastStreamId,
+        static_cast<uint32_t>(error));
+
+    COND_RETURN_ERROR_MSG_INNER(
+        stm->Context_() != curContext, RT_ERROR_STREAM_CONTEXT, "Stream is not in current ctx, stream_id=%u.",
+        lastStreamId);
+
+    Model* model = stm->Model_();
+    NULL_PTR_RETURN_MSG_OUTER(model, RT_ERROR_MODEL_NULL);
+
+    return model->CacheLastTaskExtendInfo(stm, extendInfoPtr, infoSize);
 }
 
 rtError_t ApiImpl::GetModelTaskUpdateIsSupport(const int32_t deviceId, int32_t * const val)
@@ -8839,7 +8869,7 @@ rtError_t ApiImpl::TaskGetType(rtTask_t task, rtTaskType *type)
 rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
 {
     TaskInfo* const taskInfo = static_cast<TaskInfo *>(task);
- 	rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
+    rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
     ERROR_RETURN(error, "check capture model failed");
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
@@ -8856,10 +8886,12 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     COND_RETURN_AND_MSG_OUTER((taskType == RT_TASK_DEFAULT), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1001, "current task type can not be RT_TASK_DEFAULT.");
 
-    captureModel->ClearShapeInfo(taskInfo->stream->Id_(), taskInfo->id);
+    captureModel->ClearShapeInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
+    captureModel->ClearTaskExtendInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
     taskInfo->updateFlag = RT_TASK_DISABLE;
-    RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
- 	        taskInfo->stream->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
+    RT_LOG(
+        RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d", taskInfo->stream->Id_(),
+        GetTaskId(taskInfo), taskInfo->typeName, taskInfo->type);
     return RT_ERROR_NONE;
 }
 

@@ -827,3 +827,50 @@ TEST_F(CloudV2ApiAbnormalTest, GetAtomicCapabilities_ApiProfileLogDecorator)
 
     EXPECT_EQ(api.GetP2PAtomicCapabilities(caps, ops, 1, 0, 1), RT_ERROR_NONE);
 }
+
+TEST_F(CloudV2ApiAbnormalTest, CacheLastTaskExtendInfo_ApiDecorator_Forwarding)
+{
+    ApiImpl impl;
+    ApiDecorator api(&impl);
+    char extendInfo[] = "extend_info";
+    const size_t infoSize = sizeof(extendInfo) - 1U;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CacheLastTaskExtendInfo).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(extendInfo, infoSize), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiAbnormalTest, CacheLastTaskExtendInfo_ApiErrorDecorator)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    char extendInfo[] = "extend_info";
+    const size_t infoSize = sizeof(extendInfo) - 1U;
+
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(nullptr, infoSize), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(extendInfo, 0U), RT_ERROR_INVALID_VALUE);
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CacheLastTaskExtendInfo)
+        .stubs()
+        .with(mockcpp::any(), eq(static_cast<size_t>(4096U)))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(extendInfo, 5000U), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CacheLastTaskExtendInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(extendInfo, infoSize), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiAbnormalTest, CacheLastTaskExtendInfo_ApiProfileDecorator)
+{
+    ApiImpl impl;
+    Profiler profiler(nullptr);
+    ApiProfileDecorator api(&impl, &profiler);
+    char extendInfo[] = "extend_info";
+    const size_t infoSize = sizeof(extendInfo) - 1U;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CacheLastTaskExtendInfo).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.CacheLastTaskExtendInfo(extendInfo, infoSize), RT_ERROR_NONE);
+}
