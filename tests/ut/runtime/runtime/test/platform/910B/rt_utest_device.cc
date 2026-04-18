@@ -2238,10 +2238,13 @@ TEST_F(CloudV2DeviceTest, AddAddrKernelNameMapTableTest)
     mapInfo.addr = 0;
     mapInfo.kernelName = "testKernel";
     dev.AddAddrKernelNameMapTable(mapInfo);
-    string ret = dev.LookupKernelNameByAddr(1);
+    string ret = dev.LookupKernelNameByAddr(0);
     EXPECT_EQ(ret, "not found kernel name");
-    ret = dev.LookupKernelNameByAddr(0);
-    EXPECT_EQ(ret, "testKernel");
+    mapInfo.addr = 1;
+    mapInfo.kernelName = "testKernel2";
+    dev.AddAddrKernelNameMapTable(mapInfo);
+    ret = dev.LookupKernelNameByAddr(1);
+    EXPECT_EQ(ret, "testKernel2");
 }
 
 TEST_F(CloudV2DeviceTest, AddAddrBinHandleTableTest)
@@ -2249,10 +2252,11 @@ TEST_F(CloudV2DeviceTest, AddAddrBinHandleTableTest)
     RawDevice dev(0);
     dev.Init();
     dev.AddAddrBinHandleMapTable(0, (void *)0x10);
-    auto ret = dev.LookupBinHandleByAddr(1);
+    auto ret = dev.LookupBinHandleByAddr(0);
     EXPECT_EQ(ret, nullptr);
-    ret = dev.LookupBinHandleByAddr(0);
-    EXPECT_EQ(ret, (void *)0x10);
+    dev.AddAddrBinHandleMapTable(1, (void *)0x20);
+    ret = dev.LookupBinHandleByAddr(1);
+    EXPECT_EQ(ret, (void *)0x20);
 }
 
 uint32_t g_printType = 0;

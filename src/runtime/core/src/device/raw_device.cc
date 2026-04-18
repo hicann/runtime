@@ -1981,6 +1981,7 @@ rtError_t RawDevice::AddAddrKernelNameMapTable(rtAddrKernelName_t &mapInfo)
         RT_LOG(RT_LOG_DEBUG, "platform does not support.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
+    COND_PROC(mapInfo.addr == 0U, return RT_ERROR_NONE);
     const std::unique_lock<std::mutex> lk(addrKernelNameMap_.mapMutex);
     const std::pair<std::map<uint64_t, std::string>::iterator, bool> ret =
         addrKernelNameMap_.mapInfo.insert(std::pair<uint64_t, std::string>(mapInfo.addr, mapInfo.kernelName));
@@ -2004,6 +2005,7 @@ std::string RawDevice::LookupKernelNameByAddr(const uint64_t addr)
 
 void RawDevice::AddAddrBinHandleMapTable(const uint64_t addr, void *const handle)
 {
+    COND_PROC(addr == 0U, return);
     const std::unique_lock<std::mutex> lk(addrBinHandleMap_.mtx);
     addrBinHandleMap_.map[addr] = handle;
     RT_LOG(RT_LOG_DEBUG, "insert deviceid:%u success, addr:0x%llx, handle:0x%llx.", deviceId_, addr, handle);
