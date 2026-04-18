@@ -70,6 +70,12 @@ static void ArgReleaseForAicTaskUnInit(TaskInfo *taskInfo)
         (void)(dev->Driver_())->DevMemFree(aicTaskInfo->sqeDevBuf, dev->Id_());
         aicTaskInfo->sqeDevBuf = nullptr;
     }
+
+    if (aicTaskInfo->launchParam.placeHoderPtr != nullptr) {
+        delete [](aicTaskInfo->launchParam.placeHoderPtr);
+        aicTaskInfo->launchParam.placeHoderPtr = nullptr;
+        aicTaskInfo->launchParam.placeHoderNum = 0U;
+    }
 }
 
 static void ArgReleaseForAicpuTaskUnInit(TaskInfo *taskInfo)

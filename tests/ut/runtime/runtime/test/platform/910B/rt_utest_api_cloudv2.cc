@@ -1336,6 +1336,9 @@ TEST_F(RtApiTest, model_json_print_stream_active)
     error = rtModelDebugJsonPrint(model, "test.json", 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtModelDebugJsonPrint(model, "test.json", 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

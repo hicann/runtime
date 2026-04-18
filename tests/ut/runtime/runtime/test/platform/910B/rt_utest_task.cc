@@ -1553,7 +1553,7 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_debug_json_success)
     const std::string path = "/tmp/rt_cache_last_task_extend_info_910b.json";
     std::ofstream outputFile(path);
     EXPECT_EQ(outputFile.is_open(), true);
-    stm->DebugJsonPrintForModelStm(outputFile, 0U, true);
+    stm->DebugJsonPrintForModelStm(outputFile, 0U, true, 0U);
     outputFile.close();
 
     std::ifstream inputFile(path);

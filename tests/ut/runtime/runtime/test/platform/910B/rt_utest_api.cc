@@ -3166,28 +3166,25 @@ TEST_F(CloudV2ApiTest, apiImpl_context_debugUnRegister_succ)
 
 TEST_F(CloudV2ApiTest, apiImpl_datadump_loadinfo)
 {
-    rtError_t error;
-    rtModel_t  model;
+    rtModel_t  model, m;
     int32_t devId;
-    Context *ctx;
     rtStream_t stream;
     rtDevBinary_t devBin;
     void      *binHandle_;
     char       function_;
     uint32_t   binary_[32];
-    void *args[] = {&error, NULL};
     devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
     devBin.version = 1;
     devBin.length = sizeof(binary_);
     devBin.data = binary_;
     uint32_t   datdumpinfo[32];
 
-    error = rtGetDevice(&devId);
+    rtError_t error = rtGetDevice(&devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RefObject<Context*> *refObject = NULL;
     refObject = (RefObject<Context*> *)((Runtime *)Runtime::Instance())->PrimaryContextRetain(devId);
-    ctx = refObject->GetVal();
+    Context *ctx = refObject->GetVal();
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3206,12 +3203,24 @@ TEST_F(CloudV2ApiTest, apiImpl_datadump_loadinfo)
     error = rtDatadumpInfoLoad(datdumpinfo, sizeof(datdumpinfo));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    std::vector<uint64_t> arg(3, 0x1234567890);
     rtArgsEx_t argsInfo = {};
-    argsInfo.args = args;
-    argsInfo.argsSize = sizeof(args);
+    argsInfo.args = arg.data();
+    argsInfo.argsSize = 3 * sizeof(arg[0]);
+    argsInfo.tilingAddrOffset = 1U;
+    argsInfo.tilingDataOffset = 2U;
+    argsInfo.hasTiling = true;
+
+    error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtKernelLaunchWithFlag(&function_, 1, &argsInfo, NULL, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtStreamEndCapture(stream, &m);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelDestroy(m);
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

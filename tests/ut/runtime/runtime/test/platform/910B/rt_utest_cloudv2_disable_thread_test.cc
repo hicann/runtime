@@ -812,6 +812,9 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_cascade)
     error = rtModelDebugJsonPrint(model, "test.json", 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
+    error = rtModelDebugJsonPrint(model, "test.json", 1);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+
     error = rtModelDebugJsonPrint(model, "./testpath/test.json", 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -1039,7 +1042,7 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_AicpuTask)
     ((Stream *)stream1)->SetBindFlag(true);
     ((Stream *)stream1)->StarsAddTaskToStream(&task, 1);
     std::ofstream outputFile("graph_dump.json");
-    ((Stream *)stream1)->DebugJsonPrintForModelStm(outputFile, 0, true);
+    ((Stream *)stream1)->DebugJsonPrintForModelStm(outputFile, 0, true, 1);
     ((Stream *)stream1)->SetBindFlag(false);
     outputFile.close();
 

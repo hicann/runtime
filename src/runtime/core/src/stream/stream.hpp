@@ -62,6 +62,8 @@ constexpr uint32_t DEFAULT_TASK_E2E_DURATION = 10U;
 namespace cce {
 namespace runtime {
 constexpr uint64_t ABORT_STREAM_TIMEOUT = (60UL * 1000 * 1000);  // us
+constexpr uint32_t DEBUG_JSON_PRINT_VERBOSE = 0x1U;
+
 class Event;
 class Context;
 class Device;
@@ -116,6 +118,8 @@ struct TraceArgs {
     int schemMode = static_cast<int>(RT_SCHEM_MODE_END);
     int activeStreamId = -1;
     std::string extendInfo;
+    std::string kernelArgs;
+    uint32_t argsSize = 0U;
 };
 
 struct TraceEvent {
@@ -643,6 +647,7 @@ public:
     rtError_t GetLastFinishTaskId(const uint32_t taskId, uint32_t &currId, int32_t timeout);
     virtual bool IsWaitFinish(const uint32_t finishedTaskId, const uint32_t submittedTaskId);
     void ReportErrorMessage(const uint32_t errCode, const std::string &errMsg);
+    void SetTraceKernelArgs(const AicTaskInfo *const aicTaskInfo, const uint16_t taskId, TraceArgs &args) const;
 
     bool IsDebugRegister(void) const
     {
@@ -1117,7 +1122,8 @@ public:
     std::string TraceEventToJson(const TraceEvent &record) const;
     std::string GetTaskTypeForMixKernel(const uint8_t mixType, const std::string &originTaskType) const;
     void FillTaskExtendInfo(const TaskInfo* task, TraceEvent& record) const;
-    virtual void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm);
+    virtual void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm,
+        const uint32_t flags);
 
     void MarkOrigCaptureStream(const bool flag)
     {
@@ -1449,6 +1455,8 @@ public:
     rtError_t StreamGetTasks(void **tasks, uint32_t* numTasks);
     rtError_t RestoreForSoftwareSq();
 private:
+    void ConstructTraceEventFromTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const;
+
     // submit create stream task
     rtError_t SubmitCreateStreamTask();
     virtual rtError_t GetSynchronizeError(rtError_t error);

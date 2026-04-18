@@ -49,7 +49,6 @@ rtError_t Model::ModelDebugDotPrint(void) const
 
 rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags) const
 {
-    (void)flags;
     const uint32_t deviceId = context_->Device_()->Id_();
     RT_LOG(RT_LOG_EVENT, "model json print begin, device_id=%u, model_id=%d.", deviceId, id_);
 
@@ -64,7 +63,7 @@ rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags)
         streamCnt++;
         isLastStream = (streamCnt == streams_.size()) ? true : false;
         stm->DebugDotPrintForModelStm();
-        stm->DebugJsonPrintForModelStm(outputFile, Id_(), isLastStream);
+        stm->DebugJsonPrintForModelStm(outputFile, Id_(), isLastStream, flags);
     }
     outputFile << "]";
     outputFile.close();

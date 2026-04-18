@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <iomanip>
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "cond_c.hpp"
@@ -47,6 +48,20 @@
 namespace cce {
 namespace runtime {
 namespace {
+void CheckAndPrintPlaceHolder(const LaunchParam &launchParam, const uint32_t offset, std::stringstream &ss)
+{
+    for (uint16_t i = 0; i < launchParam.placeHoderNum; i++) {
+        if (offset == launchParam.placeHoderPtr[i].addrOffset) {
+            ss << "(placeHolderAddr" << i << ")";
+            return;
+        }
+        if (offset == launchParam.placeHoderPtr[i].dataOffset) {
+            ss << "(placeHolderData" << i << ")";
+            return;
+        }
+    }
+}
+
 bool NeedReBuildSqe(const TaskInfo *const task)
 {
     const tsTaskType_t type = task->type;
@@ -4698,13 +4713,17 @@ std::string Stream::TraceEventToJson(const TraceEvent &record) const
         oss << ",\"Active Stream Id\":" << record.args.activeStreamId;
     }
     if (record.args.numBlocks != -1) {
-        oss << ",\"numBlocks\":" << record.args.numBlocks;
+        oss << ",\"Numblocks\":" << record.args.numBlocks;
     }
     if (record.args.taskType.rfind("KERNEL_MIX", 0) == 0) {
         oss << ",\"Task Ration\":" << record.args.taskRation;
     }
     if (record.args.schemMode != static_cast<int>(RT_SCHEM_MODE_END)) {
-        oss << ",\"schemMode\":" << record.args.schemMode;
+        oss << ",\"Schem Mode\":" << record.args.schemMode;
+    }
+    if (record.args.argsSize != 0U) {
+        oss << ",\"Kernel Args\":\"" << record.args.kernelArgs << "\"";
+        oss << ",\"Kernel Args Size\":" << record.args.argsSize;
     }
     oss << "}";
     oss << "}";
@@ -4742,86 +4761,118 @@ void Stream::FillTaskExtendInfo(const TaskInfo* task, TraceEvent& record) const
     }
 }
 
-void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm)
+void Stream::SetTraceKernelArgs(const AicTaskInfo *const aicTaskInfo, const uint16_t taskId, TraceArgs &args) const
+{
+    RT_LOG(RT_LOG_DEBUG, "Start to set trace kernel agrs, device_id=%u, stream_id=%d, taskId=%u.",
+        device_->Id_(), Id_(), taskId);
+    const void *const deviceAddr = aicTaskInfo->comm.args;
+    const uint32_t argsSize = aicTaskInfo->comm.argsSize;
+    COND_RETURN_VOID(((deviceAddr == nullptr) || (argsSize == 0U)),
+        "Can't find kernel args! streamId=%d, taskId=%u", Id_(), taskId);
+
+    std::vector<uint8_t> hostData(argsSize + 1U, 0U);
+    const rtError_t error = device_->Driver_()->MemCopySync(&hostData[0U], static_cast<uint64_t>(argsSize + 1U),
+        deviceAddr, static_cast<uint64_t>(argsSize), RT_MEMCPY_DEVICE_TO_HOST);
+    COND_RETURN_VOID((error != RT_ERROR_NONE), "Call d2h memcpy failed! ret=%d", error);
+
+    const uint32_t totalLen = argsSize / static_cast<uint32_t>(sizeof(uint64_t));
+    std::stringstream ss;
+    for (uint32_t i = 0U; i < totalLen ; ++i) {
+        CheckAndPrintPlaceHolder(aicTaskInfo->launchParam, i *  static_cast<uint32_t>(sizeof(uint64_t)), ss);
+        // 每个u64数值按16进制，16位打印完整，用0补齐
+        ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << *(RtPtrToPtr<uint64_t *>(&hostData[0U]) + i);
+        if (i + 1 < totalLen) {
+            ss << " ";
+        }
+    }
+    args.argsSize = argsSize;
+    args.kernelArgs = ss.str();
+}
+
+void Stream::ConstructTraceEventFromTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const
+{
+    std::string taskName;
+    std::string taskType = (task->typeName != nullptr) ? task->typeName : "Unknown";
+    if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
+        AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
+        record.args.numBlocks = static_cast<int>(aicTaskInfo->comm.dim);
+        const Kernel *kernel = aicTaskInfo->kernel;
+        record.args.taskRation = kernel->GetTaskRation();
+        record.args.schemMode = static_cast<int>(GetSchemMode(aicTaskInfo));
+        taskType = GetTaskTypeForMixKernel(kernel->GetMixType(), taskType);
+        taskName = kernel->Name_();
+        if ((flags & DEBUG_JSON_PRINT_VERBOSE) != 0U) {
+            SetTraceKernelArgs(aicTaskInfo, task->id, record.args);
+        }
+    } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
+        record.args.numBlocks = static_cast<int>(aicpuTaskInfo->comm.dim);
+        const Kernel *kernel = aicpuTaskInfo->kernel;
+        std::string kernelName = (kernel != nullptr) ? kernel->GetCpuOpType() : "AICPU_KERNEL";
+        taskName = (!kernelName.empty()) ? kernelName : "AICPU_KERNEL";
+    } else if (task->type == TS_TASK_TYPE_STREAM_ACTIVE) { 
+        StreamActiveTaskInfo *streamActiveTaskInfo = &(task->u.streamactiveTask);
+        record.args.activeStreamId = static_cast<int>(streamActiveTaskInfo->activeStreamId);
+        taskName = task->typeName;
+    } else {
+        taskName = task->typeName;
+    }
+    int32_t eventId = INVALID_EVENT_ID;
+    uint32_t notifyId = MAX_UINT32_NUM;
+    uint64_t devAddr = MAX_UINT64_NUM;
+    GetTaskEventIdOrNotifyId(task, eventId, notifyId, devAddr);
+    if (eventId != INVALID_EVENT_ID) {
+        record.name = taskName + "_" + std::to_string(eventId);
+    } else if (notifyId != MAX_UINT32_NUM) {
+        record.name = taskName + "_" + std::to_string(notifyId);
+    } else if (devAddr != MAX_UINT64_NUM) {
+        record.name = taskName + "_" + std::to_string(devAddr);
+    } else {
+        record.name = taskName;
+    }
+    record.args.taskType = taskType;
+    return;
+}
+
+void Stream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm,
+    const uint32_t flags)
 {
     if (!GetBindFlag()) {
         RT_LOG(RT_LOG_DEBUG, "non-model stream, device_id=%u, stream_id=%d.", device_->Id_(), Id_());
         return;
     }
-    std::vector<uint16_t>::iterator it;
     std::vector<TraceEvent> recordArray;
     pid_t pid = getpid();
     uint32_t taskDur = 0U;
-    for (it = delayRecycleTaskid_.begin(); it != delayRecycleTaskid_.end(); ++it) {
-        TraceEvent record;
+    for (auto it = delayRecycleTaskid_.begin(); it != delayRecycleTaskid_.end(); ++it) {
+        TraceEvent record = {};
         const uint16_t taskId = *it;
         TaskInfo *task = device_->GetTaskFactory()->GetTask(Id_(), taskId);
         if (task == nullptr) {
             continue;
         }
 
-        std::string taskName;
-        std::string taskType = (task->typeName != nullptr) ? task->typeName : "Unknown";
-        const Kernel *kernel = nullptr;
-        if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
-            std::string kernelNameStr = "";
-            AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
-            record.args.numBlocks = static_cast<int>(aicTaskInfo->comm.dim);
-            kernel = aicTaskInfo->kernel;
-            record.args.taskRation = kernel->GetTaskRation();
-            record.args.schemMode = static_cast<int>(GetSchemMode(aicTaskInfo));
-            taskType = GetTaskTypeForMixKernel(kernel->GetMixType(), taskType);
-            kernelNameStr = (kernel != nullptr) ? kernel->Name_() : "AICORE_KERNEL";
-            taskName = kernelNameStr;
-        } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
-            AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
-            record.args.numBlocks = static_cast<int>(aicpuTaskInfo->comm.dim);
-            kernel = aicpuTaskInfo->kernel;
-            std::string kernelName = (kernel != nullptr) ? kernel->GetCpuOpType() : "AICPU_KERNEL";
-            taskName = (!kernelName.empty()) ? kernelName : "AICPU_KERNEL";
-        } else if (task->type == TS_TASK_TYPE_STREAM_ACTIVE) { 
-            StreamActiveTaskInfo *streamActiveTaskInfo = &(task->u.streamactiveTask);
-            record.args.activeStreamId = static_cast<int>(streamActiveTaskInfo->activeStreamId);
-            taskName = task->typeName;
-        } else {
-            taskName = task->typeName;
-        }
-
-        int32_t eventId = INVALID_EVENT_ID;
-        uint32_t notifyId = MAX_UINT32_NUM;
-        uint64_t devAddr = MAX_UINT64_NUM;
-        GetTaskEventIdOrNotifyId(task, eventId, notifyId, devAddr);
-        if (eventId != INVALID_EVENT_ID) {
-            record.name = taskName + "_" + std::to_string(eventId);
-        } else if (notifyId != MAX_UINT32_NUM) {
-            record.name = taskName + "_" + std::to_string(notifyId);
-        } else if (devAddr != MAX_UINT64_NUM) {
-            record.name = taskName + "_" + std::to_string(devAddr);
-        } else {
-            record.name = taskName;
-        }
-
+        ConstructTraceEventFromTask(task, flags, record);
         record.pid = std::to_string(pid) + " aclGraph";
         record.tid = "stream" + std::to_string(streamId_);
         record.ts = taskDur;
-        if (taskType == "NOP") {
+        if (record.args.taskType == "NOP") {
             record.dur = NOP_TASK_DURATION;
             taskDur += NOP_TASK_E2E_DURATION;
-        } else if (taskType.find("RECORD") != std::string::npos) {
+        } else if (record.args.taskType.find("RECORD") != std::string::npos) {
             record.dur = RECORD_TASK_DURATION;
             taskDur += RECORD_TASK_E2E_DURATION;
-        } else if (taskType.find("WAIT") != std::string::npos) {
+        } else if (record.args.taskType.find("WAIT") != std::string::npos) {
             record.dur = WAIT_TASK_DURATION;
             taskDur += WAIT_TASK_E2E_DURATION;
         } else {
             record.dur = DEFAULT_TASK_DURATION;
             taskDur += DEFAULT_TASK_E2E_DURATION;
         }
-        record.ph =  "X";	
+        record.ph = "X";
         record.args.modelId = modelId;
         record.args.streamId = streamId_;
         record.args.taskId = task->id;
-        record.args.taskType = taskType;
         FillTaskExtendInfo(task, record);
 
         recordArray.emplace_back(record);

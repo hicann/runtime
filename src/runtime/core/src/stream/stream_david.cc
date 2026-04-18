@@ -336,37 +336,20 @@ void DavidStream::DebugDotPrintForModelStm()
     }
 }
 
-static TraceEvent BuildTraceEventWithTaskName(
-    const std::string& taskName, TaskInfo* task, const pid_t pid, uint32_t& taskDur, const uint32_t modelId,
-    const int32_t streamId, Stream* stream)
-{
-    TraceEvent record;
-    record.name = taskName;
-    record.pid = std::to_string(pid) + " aclGraph";
-    record.tid = "stream" + std::to_string(streamId);
-    record.ts = taskDur;
-    taskDur += 10;    // ts表示每个节点的显示位置，表明了流内任务的先后顺序，按照10递增
-    record.dur = 9.5; // 表示节点的显示宽度，固定为9.5
-    record.ph = "X";
-    record.args.modelId = modelId;
-    record.args.streamId = streamId;
-    record.args.taskId = task->id;
-    stream->FillTaskExtendInfo(task, record);
-    return record;
-}
-
-static TraceEvent BuildTraceEventForTask(
-    TaskInfo* task, pid_t pid, uint32_t& taskDur, const uint32_t modelId, const int32_t streamId, Stream* stream)
+void DavidStream::BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record)
 {
     std::string taskName;
     const Kernel *kernel = nullptr;
-    
+
     // 获取任务名称
     if ((task->type == TS_TASK_TYPE_KERNEL_AICORE) || (task->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
         AicTaskInfo *aicTaskInfo = &(task->u.aicTaskInfo);
         kernel = aicTaskInfo->kernel;
         std::string kernelNameStr = (kernel != nullptr) ? kernel->Name_() : "AICORE_KERNEL";
         taskName = kernelNameStr;
+        if ((flags & DEBUG_JSON_PRINT_VERBOSE) != 0U) {
+            SetTraceKernelArgs(aicTaskInfo, task->id, record.args);
+        }
     } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
         AicpuTaskInfo *aicpuTaskInfo = &(task->u.aicpuTaskInfo);
         kernel = aicpuTaskInfo->kernel;
@@ -401,11 +384,13 @@ static TraceEvent BuildTraceEventForTask(
     } else  {
         // no op
     }
-
-    return BuildTraceEventWithTaskName(taskName, task, pid, taskDur, modelId, streamId, stream);
+    record.name = taskName;
+    record.args.taskId = task->id;
+    FillTaskExtendInfo(task, record);
 }
 
-void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm)
+void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm,
+    const uint32_t flags)
 {
     if (!GetBindFlag()) {
         RT_LOG(RT_LOG_DEBUG, "Model debug json print unmatch, bindFlag=%d, device_id=%u, stream_id=%d.", 
@@ -436,7 +421,16 @@ void DavidStream::DebugJsonPrintForModelStm(std::ofstream& outputFile, const uin
             (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
         
         // 构建并添加TraceEvent记录
-        TraceEvent record = BuildTraceEventForTask(nextTask, pid, taskDur, modelId, streamId_, this);
+        TraceEvent record = {};
+        BuildTraceEventForTask(nextTask, flags, record);
+        record.pid = std::to_string(pid) + " aclGraph";
+        record.tid = "stream" + std::to_string(streamId_);
+        record.ts = taskDur;
+        taskDur += 10;  // ts表示每个节点的显示位置，表明了流内任务的先后顺序，按照10递增
+        record.dur = 9.5;   // 表示节点的显示宽度，固定为9.5
+        record.ph = "X";
+        record.args.modelId = modelId;
+        record.args.streamId = streamId_;
         recordArray.emplace_back(record);
     }
 

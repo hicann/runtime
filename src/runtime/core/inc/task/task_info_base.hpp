@@ -99,8 +99,16 @@ struct DavinciTaskInfoCommon {
     uint8_t kernelFlag;
 };
 
+struct LaunchParam {
+    // tiling和host input的offset放在一起
+    rtHostInputInfo_t *placeHoderPtr;
+    uint16_t placeHoderNum;
+    uint8_t reserved[6U]; // 预留6字节
+};
+
 struct AicTaskInfo {
     DavinciTaskInfoCommon comm;
+    LaunchParam launchParam;
     void *descBuf;
     void *descAlignBuf;
     void *sqeDevBuf;     // used to update sqe for capture

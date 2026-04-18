@@ -118,6 +118,49 @@ rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
 {
     return ((memAddr % REDUCE16_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
 }
+
+void SetLaunchParams(const Stream *const stm, const rtArgsEx_t *const argsInfo, TaskInfo &task)
+{
+    // 非capture模式下，不需要设置
+    if (stm->GetCaptureStatus() == RT_STREAM_CAPTURE_STATUS_NONE) {
+        return;
+    }
+    // 非aicore任务，不需要设置
+    if ((task.type != TS_TASK_TYPE_KERNEL_AICORE) && (task.type != TS_TASK_TYPE_KERNEL_AIVEC)) {
+        return;
+    }
+    LaunchParam &launchParam = task.u.aicTaskInfo.launchParam;
+    // 若当前task已存在placeHoderPtr，应该先释放后置null
+    if (launchParam.placeHoderPtr != nullptr) {
+        delete [](launchParam.placeHoderPtr);
+        launchParam.placeHoderPtr = nullptr;
+        launchParam.placeHoderNum = 0U;
+    }
+    uint16_t placeHoderNum = argsInfo->hostInputInfoNum;
+    if (argsInfo->hasTiling) {
+        placeHoderNum++;
+    }
+    // 没有host input/tiling data的offset需要保存
+    if (placeHoderNum == 0U) {
+        return;
+    }
+
+    launchParam.placeHoderPtr = new (std::nothrow) rtHostInputInfo_t[placeHoderNum];
+    if (launchParam.placeHoderPtr == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "New rtHostInputInfo_t failed, size=%u.", placeHoderNum);
+        return;
+    }
+    launchParam.placeHoderNum = placeHoderNum;
+    size_t idx = 0;
+    for (;idx < static_cast<size_t>(argsInfo->hostInputInfoNum); ++idx) {
+        launchParam.placeHoderPtr[idx].addrOffset = argsInfo->hostInputInfoPtr[idx].addrOffset;
+        launchParam.placeHoderPtr[idx].dataOffset = argsInfo->hostInputInfoPtr[idx].dataOffset;
+    }
+    if (argsInfo->hasTiling) {
+        launchParam.placeHoderPtr[idx].addrOffset = argsInfo->tilingAddrOffset;
+        launchParam.placeHoderPtr[idx].dataOffset = argsInfo->tilingDataOffset;
+    }
+}
 } // namespace
 
 static rtError_t LaunchAicpuKernelForCpuSoImpl(const rtKernelLaunchNames_t * const launchNames,
@@ -1114,6 +1157,7 @@ rtError_t Context::LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream 
 rtError_t Context::LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const rtArgsEx_t *&argsInfo,
     ArgLoaderResult &result, const Program * const programPtr)
 {
+    SetLaunchParams(stm, argsInfo, *submitTask);
     if (submitTask->isUpdateSinkSqe == 1U) {
         return LaunchUpdateKernelSubmit(submitTask, stm, argsInfo, result);
     }

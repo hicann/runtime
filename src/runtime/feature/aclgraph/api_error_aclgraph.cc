@@ -91,7 +91,6 @@ rtError_t ApiErrorDecorator::ModelDebugJsonPrint(const Model * const mdl, const 
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(path, RT_ERROR_INVALID_VALUE);
-
     return impl_->ModelDebugJsonPrint(mdl, path, flags);
 }
 

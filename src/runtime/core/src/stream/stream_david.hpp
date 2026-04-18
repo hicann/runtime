@@ -42,7 +42,8 @@ public:
     rtError_t ResClear(uint64_t timeout = 0) override;
     uint32_t StarsGetMaxTryCount() const override;
     void DebugDotPrintForModelStm() override;
-    void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm) override;
+    void DebugJsonPrintForModelStm(std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm,
+        const uint32_t flags) override;
     uint32_t GetDelayRecycleTaskSqeNum(void) const override;
     rtError_t QueryWaitTask(bool &isWaitFlag, const uint32_t taskId) override;
     rtError_t JudgeTaskFinish(uint16_t taskPos, bool &isFinished) override;
@@ -100,6 +101,8 @@ protected:
     bool isHasArgPool_{false};
 
 private:
+    void BuildTraceEventForTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record);
+
     uint64_t sqAddr_{0ULL};
     std::mutex cntNotifyInfoLock_;
     uint32_t cntNotifyId_{MAX_UINT32_NUM};
