@@ -36,7 +36,8 @@ enum class ErrorCode
     EE1011,
     EE2002,
     WE0001,
-    EE1012
+    EE1012,
+    EE1017
 };
 std::vector<std::string> GetParamNames(ErrorCode code);
 void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, const char *func,

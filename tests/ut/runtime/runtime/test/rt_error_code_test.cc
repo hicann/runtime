@@ -93,6 +93,9 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
     std::vector<std::string> values1011 = {"rtMemCpy", "0", "size", "size is not 0"};
     PrintErrMsgToLog(ErrorCode::EE1011, "file", 1000, "func", values1011);
 
+    std::vector<std::string> values1017 = {"rtMemCpy", "size", "size is not 0"};
+    PrintErrMsgToLog(ErrorCode::EE1017, "file", 1000, "func", values1017);
+
     std::vector<std::string> values1012 = {"NotifyWait", "0", "current deviceId", "The current device cannot deliver Notify Wait"};
     PrintErrMsgToLog(ErrorCode::EE1012, "file", 1000, "func", values1012);
  
@@ -117,6 +120,7 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1009, "10", "model invalid");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, "rtModelExecute", "stream");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011, "rtMemCpy", "0", "size", "size is not 0");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, "rtMemCpy", "size", "size is not 0");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, "1, 2, 2", "SetVisible", "not repeat");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::WE0001, "set the saturation mode", "only the Inf/NaN mode can be set and the saturation mode");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1012, "NotifyWait", "0", "current deviceId", "The current device cannot deliver Notify Wait");

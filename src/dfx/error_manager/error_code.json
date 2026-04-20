@@ -511,6 +511,17 @@
     },
     {
       "errClass": "RTS Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EE1017",
+      "ErrMessage": "%s failed. Parameter %s is invalid. Reason: %s.",
+      "Arglist": "func, param, reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "RTS Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
       "ErrCode": "EE2002",
       "ErrMessage": "Value %s for environment variable %s is invalid. Expected value: %s.",

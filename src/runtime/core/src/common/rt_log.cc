@@ -92,6 +92,8 @@ std::vector<std::string> GetParamNames(ErrorCode code) {
             return {"func", "object"};
         case ErrorCode::EE1011: 
             return {"func", "value", "param", "reason"};
+        case ErrorCode::EE1017:
+            return {"func", "param", "reason"};
         case ErrorCode::EE1012: 
             return {"func", "value", "param", "reason"};
         case ErrorCode::EE2002:
@@ -176,6 +178,11 @@ void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, c
             RecordErrorLog(file, line, func,
                 "%s failed. Value %s for parameter %s is invalid. Reason: %s. ErrorCode=EE1011." "\n",
                 values[0].c_str(), values[1].c_str(), values[2].c_str(), values[3].c_str());
+            break;
+        case ErrorCode::EE1017:
+            RecordErrorLog(file, line, func,
+                "%s failed. Parameter %s is invalid. Reason: %s. ErrorCode=EE1017." "\n",
+                values[0].c_str(), values[1].c_str(), values[2].c_str());
             break;
         case ErrorCode::EE1012:
             RecordErrorLog(file, line, func,

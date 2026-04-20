@@ -8751,6 +8751,9 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
             error = GetWaitValueTaskParams(taskInfo, params);
             break;
         default:
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, "rtModelTaskGetParams", "task->type",
+                "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
+                " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
             RT_LOG(
                 RT_LOG_ERROR,
                 "now this task doesn't support get params, stream_id=%d, task_id=%hu, typeName=%s, task type=%d",
