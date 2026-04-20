@@ -3208,10 +3208,13 @@ rtError_t ApiImpl::GetDevice(int32_t * const devId)
     }
     const ContextProtect cp(curCtx);
 
-    uint32_t deviceId;
-    const uint32_t drvDeviceId = curCtx->Device_()->Id_();
-    rtError_t error = rtInstance->GetUserDevIdByDeviceId(drvDeviceId, &deviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get drvDeviceId:%u is err:%#x", drvDeviceId, static_cast<uint32_t>(error));
+    uint32_t deviceId = curCtx->UserDeviceId();
+    rtError_t error = RT_ERROR_NONE;
+    COND_PROC(deviceId == MAX_UINT32_NUM,
+        error = rtInstance->GetUserDevIdByDeviceId(curCtx->Device_()->Id_(), &deviceId));
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get drvDeviceId:%u is err:%#x",
+        curCtx->Device_()->Id_(), static_cast<uint32_t>(error));
+
     *devId = static_cast<int32_t>(deviceId);
 
     return RT_ERROR_NONE;

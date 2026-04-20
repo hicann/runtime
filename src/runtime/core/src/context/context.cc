@@ -238,8 +238,13 @@ Context::Context(Device * const ctxDevice, const bool primaryCtx)
       infMode_(true),
       failureError_(RT_ERROR_NONE),
       lastErr_(ACL_RT_SUCCESS),
-      callBackThreadExist_(false)
+      callBackThreadExist_(false),
+      userDeviceId_(MAX_UINT32_NUM)
 {
+    Runtime * const rtInstance = Runtime::Instance();
+    if (rtInstance != nullptr && device_ != nullptr) {
+        (void)rtInstance->GetUserDevIdByDeviceId(device_->Id_(), &userDeviceId_);
+    }
 }
 
 Context::~Context()

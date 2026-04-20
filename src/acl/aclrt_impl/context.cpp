@@ -115,18 +115,17 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
     else {
         rtErr = rtGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
     }
-    if (rtErr == ACL_ERROR_RT_SYSPARAMOPT_NOT_SET) {
-        ACL_LOG_WARN("option %d is not set, runtime errorCode is %d",
-            static_cast<int32_t>(opt),  static_cast<int32_t>(rtErr));
-        return ACL_GET_ERRCODE_RTS(rtErr);
-    }
+
     if (rtErr != RT_ERROR_NONE) {
+        if (rtErr == ACL_ERROR_RT_SYSPARAMOPT_NOT_SET) {
+            ACL_LOG_WARN("option %d is not set, runtime errorCode is %d",
+                static_cast<int32_t>(opt),  static_cast<int32_t>(rtErr));
+            return ACL_GET_ERRCODE_RTS(rtErr);
+        }
         ACL_LOG_CALL_ERROR("get sys param failed, runtime result = %d, opt = %d.",
                            static_cast<int32_t>(rtErr), static_cast<int32_t>(opt));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
-    ACL_LOG_INFO("successfully execute GetSysParamOpt, opt = %d, value = %ld",
-                 static_cast<int32_t>(opt), *value);
     return ACL_SUCCESS;
 }
 

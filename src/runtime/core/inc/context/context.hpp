@@ -298,6 +298,11 @@ public:
         return isPrimary_;
     }
 
+    uint32_t UserDeviceId() const
+    {
+        return userDeviceId_;
+    }
+
     rtTaskGenCallback TaskGenCallback_() const
     {
         return taskGenCallback_;
@@ -607,6 +612,7 @@ private:
     uint64_t callBackThreadId_;
     TsStreamFailureMode ctxMode_ = CONTINUE_ON_FAILURE;
     std::mutex errMsgLock_;
+    uint32_t userDeviceId_; // user device id
 #ifndef CFG_DEV_PLATFORM_PC
     std::vector<error_message::ErrorItem> errMsg_;
 #endif
