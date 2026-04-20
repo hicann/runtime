@@ -41,6 +41,12 @@ enum rtEventState_t {
     RECORDED,
 };
 
+enum EventOwner : uint8_t {
+    EVENT_UNKNOWN,
+    EVENT_USER,
+    EVENT_INNER,
+};
+
 struct RecordTaskInfo {
     int32_t streamId;
     uint32_t taskId;
@@ -160,6 +166,14 @@ public:
     void SetRecord(bool flag)
     {
         return hasRecord_.Set(flag);
+    }
+    void SetEventOwner(EventOwner owner)
+    {
+        eventOwner_ = owner;
+    }
+    EventOwner EventOwner_() const
+    {
+        return eventOwner_;
     }
     bool HasReset() const
     {
@@ -289,6 +303,7 @@ private:
     std::mutex waitStmMutex_;
     std::unordered_map<int32_t, uint32_t> idMap_;
     std::unordered_map<uint32_t, Notifier *> notifierMap_;
+    EventOwner eventOwner_{EventOwner::EVENT_UNKNOWN};
 };
 }
 }

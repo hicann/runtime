@@ -8505,6 +8505,7 @@ rtError_t ApiImpl::StarsLaunchEventProc(Stream * const stm, const rtCallback_t c
     Event *curEvent = nullptr;
     ret = CallbackLaunchWithEvent(callBackFunc, fnData, stm, true, &curEvent, threadId);
     ERROR_RETURN(ret, "Call CallbackLaunch failed for block callback, ret=%#x.", ret);
+    curEvent->SetEventOwner(EventOwner::EVENT_INNER);
     ret = stm->WaitEvent(curEvent, 0U);
     ERROR_RETURN(ret, "Call WaitEvent failed for block callback, ret=%#x.", ret);
     ret = curEvent->Reset(stm);
@@ -8717,6 +8718,13 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     rtError_t error = CheckCaptureModelSupportSoftwareSq(stm->Device_());
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
+    if (taskInfo->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
+        RT_LOG(RT_LOG_ERROR,
+            "streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=%d.",
+            taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName, static_cast<int32_t>(taskInfo->taskOwner));
+        return RT_ERROR_INVALID_VALUE;
+    }
+
     (void)memset_s(params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
     error = ConvertTaskType(taskInfo, &params->type);
     ERROR_RETURN(error, "get task type failed, retCode=%d.", error);
@@ -8760,7 +8768,6 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
                 stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
             error = RT_ERROR_INVALID_VALUE;
     }
-
     return error;
 }
 

@@ -962,7 +962,8 @@ TEST_F(StarsTaskTest, EventResetTask_DoCompleteSuccess)
 
     TaskInfo task = {};
     InitByStream(&task, stream);
-    EventResetTaskInit(&task, nullptr, false, -1);
+    Event event(dev_, 0, ctx_);
+    EventResetTaskInit(&task, &event, false, -1);
 
     uint32_t errorcode = 10;
     SetResult(&task, (const uint32_t *)&errorcode, 1);

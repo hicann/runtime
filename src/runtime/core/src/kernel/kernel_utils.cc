@@ -66,7 +66,15 @@ rtError_t ConvertTaskType(const TaskInfo * const task, rtTaskType *type)
         RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);
         return RT_ERROR_INVALID_VALUE;
     }
+
     rtTaskType taskType = rtTaskType::RT_TASK_DEFAULT;
+    if (task->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
+        *type = taskType;
+        RT_LOG(RT_LOG_INFO, "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=%d, convert to rtTaskType=%d.",
+            task->stream->Id_(), task->id, task->type, task->typeName, static_cast<int32_t>(task->taskOwner), *type);
+        return RT_ERROR_NONE;
+    }
+
     switch(task->type) {
         case TS_TASK_TYPE_KERNEL_AICORE: 
         case TS_TASK_TYPE_KERNEL_AIVEC:

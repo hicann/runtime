@@ -668,6 +668,7 @@ add_executable(runtime_utest_api_910B
     rt_utest_uvm.cc
     rt_utest_api_soma.cc
     rt_utest_soma.cc
+    rt_utest_api_impl_task_source.cc
 )
 
 target_include_directories(runtime_utest_api_910B PRIVATE

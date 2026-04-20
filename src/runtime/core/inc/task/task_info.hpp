@@ -23,6 +23,11 @@ enum TaskUpdateFlag : uint8_t {
     RT_TASK_DISABLE
 };
 
+enum TaskOwner : uint8_t {
+    RT_TASK_USER,
+    RT_TASK_INNER,
+};
+
 /**
  * @ingroup
  * @brief the struct define of task
@@ -59,7 +64,8 @@ typedef struct tagTaskInfoStru {
     uint8_t isRingbufferGet : 1;
     uint8_t isUpdateSinkSqe : 1;
     uint8_t isNoRingbuffer : 1;
-    uint8_t resv : 5;
+    uint8_t taskOwner : 1; // 默认是user，使用此标记需排查实际owner
+    uint8_t resv : 4;
     uint8_t sqeNum : 7;
     uint8_t needPostProc : 1;
     /*-------------------------tmp begine---------------------------------------*/

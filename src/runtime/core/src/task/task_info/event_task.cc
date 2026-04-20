@@ -282,6 +282,7 @@ void ConstructSqeForEventRecordTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
 rtError_t EventResetTaskInit(TaskInfo * const taskInfo, Event *const eventPtr,
                              const bool isNotifyFlag, const int32_t eventIndex)
 {
+    NULL_PTR_RETURN(eventPtr, RT_ERROR_INVALID_VALUE);
     EventResetTaskInfo *eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
     TaskCommonInfoInit(taskInfo);
 
@@ -291,6 +292,9 @@ rtError_t EventResetTaskInit(TaskInfo * const taskInfo, Event *const eventPtr,
     eventResetTaskInfo->isNotify = isNotifyFlag;
     eventResetTaskInfo->eventid = eventIndex;
     eventResetTaskInfo->event = eventPtr;
+    taskInfo->taskOwner =
+        (eventPtr->EventOwner_() == EventOwner::EVENT_INNER) ?
+        static_cast<uint8_t>(TaskOwner::RT_TASK_INNER) : taskInfo->taskOwner;
     return RT_ERROR_NONE;
 }
 
@@ -483,6 +487,7 @@ void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo * const taskInfo, const ui
 rtError_t EventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventRec, const int32_t eventIndex,
                             const uint32_t timeout, const uint8_t waitFlag)
 {
+    NULL_PTR_RETURN(eventRec, RT_ERROR_INVALID_VALUE);
     EventWaitTaskInfo *eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
     TaskCommonInfoInit(taskInfo);
 
@@ -492,6 +497,9 @@ rtError_t EventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventRec, co
     eventWaitTaskInfo->eventId = eventIndex;
     eventWaitTaskInfo->timeout = timeout;
     eventWaitTaskInfo->eventWaitFlag = waitFlag;
+    taskInfo->taskOwner =
+        (eventRec->EventOwner_() == EventOwner::EVENT_INNER) ?
+        static_cast<uint8_t>(TaskOwner::RT_TASK_INNER) : taskInfo->taskOwner;
 
     return RT_ERROR_NONE;
 }
