@@ -152,7 +152,7 @@ int main()
     aclrtDestroyStream(stream);
     aclrtResetDeviceForce(0);
     aclFinalize();
-
+    printf("Sample Run Successfully.\n");
     return 0;
 }
 
