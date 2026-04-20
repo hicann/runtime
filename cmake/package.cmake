@@ -22,12 +22,12 @@ else()
 endif()
 
 set(SCRIPTS_FILES
-    ${RUNTIME_DIR}/scripts/package/common/sh/check_version_required.awk
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_func.inc
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_interface.sh
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_interface.csh
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_interface.fish
-    ${RUNTIME_DIR}/scripts/package/common/sh/version_compatiable.inc
+    ${CANN_CMAKE_DIR}/scripts/install/check_version_required.awk
+    ${CANN_CMAKE_DIR}/scripts/install/common_func.inc
+    ${CANN_CMAKE_DIR}/scripts/install/common_interface.sh
+    ${CANN_CMAKE_DIR}/scripts/install/common_interface.csh
+    ${CANN_CMAKE_DIR}/scripts/install/common_interface.fish
+    ${CANN_CMAKE_DIR}/scripts/install/version_compatiable.inc
     ${RUNTIME_DIR}/scripts/package/runtime/scripts/cleanup.sh
     ${RUNTIME_DIR}/scripts/package/runtime/scripts/help.info
     ${RUNTIME_DIR}/scripts/package/runtime/scripts/install.sh
@@ -50,19 +50,19 @@ install(FILES ${SCRIPTS_FILES}
     WORLD_READ WORLD_EXECUTE
 )
 set(COMMON_FILES
-    ${RUNTIME_DIR}/scripts/package/common/sh/install_common_parser.sh
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_func_v2.inc
-    ${RUNTIME_DIR}/scripts/package/common/sh/common_installer.inc
-    ${RUNTIME_DIR}/scripts/package/common/sh/script_operator.inc
-    ${RUNTIME_DIR}/scripts/package/common/sh/version_cfg.inc
+    ${CANN_CMAKE_DIR}/scripts/install/install_common_parser.sh
+    ${CANN_CMAKE_DIR}/scripts/install/common_func_v2.inc
+    ${CANN_CMAKE_DIR}/scripts/install/common_installer.inc
+    ${CANN_CMAKE_DIR}/scripts/install/script_operator.inc
+    ${CANN_CMAKE_DIR}/scripts/install/version_cfg.inc
 )
 
 set(PACKAGE_FILES
     ${COMMON_FILES}
-    ${RUNTIME_DIR}/scripts/package/common/sh/multi_version.inc
+    ${CANN_CMAKE_DIR}/scripts/install/multi_version.inc
 )
 set(CONF_FILES
-    ${RUNTIME_DIR}/scripts/package/common/cfg/path.cfg
+    ${CANN_CMAKE_DIR}/scripts/package/cfg/path.cfg
     ${RUNTIME_DIR}/scripts/package/common/cfg/ascend_package_load.ini
     ${RUNTIME_DIR}/scripts/package/common/cfg/RuntimeConfig.ini
 )

@@ -157,7 +157,7 @@ Runtime在编译时，依赖的第三方开源软件列表如下：
 | openssl | 3.0.9 | [openssl-openssl-3.0.9.tar.gz](https://gitcode.com/cann-src-third-party/openssl/releases/download/openssl-3.0.9/openssl-openssl-3.0.9.tar.gz) |
 | protobuf | 25.1 | [protobuf-25.1.tar.gz](https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz) |
 | makeself | 2.5.0 | [makeself-release-2.5.0-patch1.tar.gz](https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz) |
-| cann-cmake | master-001 | [cmake-master-001.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-001.tar.gz) |
+| cann-cmake | master-002 | [cmake-master-002.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-002.tar.gz) |
 
 > [!NOTE]注意
 > 如果您从其他地址下载，请确保版本号一致。
