@@ -426,7 +426,7 @@ void MockerRegister(const rtDebugMemoryParam_t* const param)
     uint32_t regNum = param->memLen / param->elementSize;
     for (uint32_t i = 0; i < regNum; ++i) {
         regAddr = param->srcAddr + i;
-        memcpy_s(dstAddr + i * param->elementSize, param->memLen, &regAddr, sizeof(uint64_t));
+        memcpy_s(dstAddr + i * param->elementSize, param->elementSize, &regAddr, param->elementSize);
     }
 }
 

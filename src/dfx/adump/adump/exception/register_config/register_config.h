@@ -58,6 +58,10 @@ enum class RegisterType {
     BIF,
     L1,
     MTE_AIV,
+    AIC,
+    AIV,
+    AIC_DBG,
+    AIV_DBG
 };
 
 class RegisterInterface {
@@ -89,6 +93,10 @@ private:
     uint64_t GetAddr(uint64_t type, uint64_t regAddrHigh, uint64_t regAddrLow) const;
     void GenAddrByStep(RegisterType regType, const std::vector<RegisterStepTable> &regStepTab);
     void InitErrorRegisterMap();
+    void GenAICDbgAddr();
+    void GenAIVDbgAddr();
+    void GenAICOffsetAddr();
+    void GenAIVOffsetAddr();
 };
 
 class RegisterManager {

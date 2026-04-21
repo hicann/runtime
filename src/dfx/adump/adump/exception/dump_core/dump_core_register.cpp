@@ -84,10 +84,7 @@ void DumpCore::DumpDebugRegisterImpl(
                         "coreType: %hhu, coreId: %hu, addr: 0x%llx, ret: %d",
                         coreType, coreId, regInfo.addr, err);
                     regInfo.validFlag = REG_DATA_INVALID;
-                } else {
-                    std::string value = FormatRegisterData(regInfo.value, regInfo.regSize);
-                    ss << " 0x" << std::hex << regInfo.addr << ": " << value << ",";
-                }
+                } 
             } else {
                 regInfo.validFlag = REG_DATA_INVALID;
             }
