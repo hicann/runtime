@@ -1760,9 +1760,6 @@ TEST_F(DavidApiTest, test_some_invalid_input_for_device_api_in_david)
     error = rtGetDevMsg(RT_GET_DEV_ERROR_MSG, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtGetRuntimeVersion(NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
     error = rtGetDeviceCapability(0, 0, 0, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 

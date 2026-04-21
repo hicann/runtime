@@ -272,17 +272,6 @@ RTS_API rtError_t rtEventElapsedTime(float32_t *timeInterval, rtEvent_t startEve
 RTS_API rtError_t rtEventGetTimeStamp(uint64_t *timeStamp, rtEvent_t evt);
 
 /**
- * @ingroup dvrt_event
- * @brief name an event
- * @param [in] evt  event to be named
- * @param [in] name  identification name
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input of event, name
- * @return RT_ERROR_DRV_ERR for driver error
- */
-RTS_API rtError_t rtNameEvent(rtEvent_t evt, const char_t *name);
-
-/**
  * @ingroup
  * @brief get fault event .
  * @param [in] deviceId device id

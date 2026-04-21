@@ -126,17 +126,6 @@ RTS_API rtError_t rtGetAiCpuCount(uint32_t *aiCpuCnt);
 
 /**
  * @ingroup
- * @brief get runtime version. The version is returned as (1000 major + 10 minor). For example, RUNTIME 9.2 would be
- *        represented by 9020.
- * @param [out] runtimeVersion
- * @return RT_ERROR_NONE for ok
- * @return RT_ERROR_INVALID_VALUE for error input
- */
-RTS_API rtError_t rtGetRuntimeVersion(uint32_t *runtimeVersion);
-
-
-/**
- * @ingroup
  * @brief get device feature ability by device id, such as task schedule ability.
  * @param [in] deviceId
  * @param [in] moduleType

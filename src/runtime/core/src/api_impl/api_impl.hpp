@@ -378,7 +378,6 @@ public:
 
     // resource name
     rtError_t NameStream(Stream * const stm, const char_t * const name) override;
-    rtError_t NameEvent(Event * const evt, const char_t * const name) override;
 
     rtError_t ProfilerStart(const uint64_t profConfig, const int32_t numsDev, uint32_t *const deviceList,
         const uint32_t cacheFlag, const uint64_t profSwitchHi) override;

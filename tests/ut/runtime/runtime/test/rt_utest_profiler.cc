@@ -401,65 +401,6 @@ TEST_F(ProfilerTest, StreamMode)
     delete device;
 }
 
-TEST_F(ProfilerTest, NameResource)
-{
-    rtError_t error;
-    rtStream_t stream;
-    rtEvent_t event;
-    uint16_t name_length;
-    char stream_name[16];
-    char event_name[16];
-
-    Api *api_ = ((Runtime *)Runtime::Instance())->api_;
-    ((Runtime *)Runtime::Instance())->api_ = ((Runtime *)Runtime::Instance())->profiler_->apiProfileDecorator_;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtNameStream(stream, "ssstttrrreeeaaam");
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameStream(NULL, "stream1");
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameStream(stream, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameStream(stream, "stream1");
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtEventCreate(&event);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtNameEvent(event, "eeevvveeennnttt1");
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameEvent(event, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameEvent(event, NULL);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameEvent(event, "event1");
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    Event *eventPtr = (Event*)event;
-    if (eventPtr->Name_())
-    {
-        name_length = strlen(eventPtr->Name_());
-        strncpy_s(event_name, 16, eventPtr->Name_(), name_length);
-        EXPECT_EQ(strcmp(event_name, "event1"), 0);
-    }
-
-    ((Runtime *)Runtime::Instance())->api_ = api_;
-
-    error = rtEventDestroy(event);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(ProfilerTest, FftsPlusTaskLaunch)
 {
     rtError_t error;
@@ -2075,23 +2016,6 @@ TEST_F(ProfilerTest, NameStream_ProfilerLog)
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     error = profiler->apiProfileLogDecorator_->NameStream(nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    delete stream;
-    delete device;
-}
-
-TEST_F(ProfilerTest, NameEvent_ProfilerLog)
-{
-    rtError_t error;
-
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-    Stream * stream = new Stream(device, 0);
-    uint64_t mode = 0LLU;
-    Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
-
-    error = profiler->apiProfileLogDecorator_->NameEvent(nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete stream;

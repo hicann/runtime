@@ -811,20 +811,6 @@ rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * con
     return impl_->NameStream(stm, name);
 }
 
-rtError_t ApiProfileDecorator::NameEvent(Event * const evt, const char_t * const name)
-{
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-
-    const size_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_EVENT_NAME_LEN));
-    if (nameLen >= static_cast<uint64_t>(M_PROF_EVENT_NAME_LEN)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Event name too long, range[0, %u.", M_PROF_EVENT_NAME_LEN);
-        return RT_ERROR_PROF_NAME;
-    }
-    evt->SetName(name);
-    return impl_->NameEvent(evt, name);
-}
-
 rtError_t ApiProfileDecorator::ModelCreate(Model ** const mdl, const uint32_t flag)
 {
     CallApiBegin(RT_PROF_API_MODEL_CREATE);

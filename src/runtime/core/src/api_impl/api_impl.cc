@@ -3809,13 +3809,6 @@ rtError_t ApiImpl::NameStream(Stream * const stm, const char_t * const name)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::NameEvent(Event * const evt, const char_t * const name)
-{
-    UNUSED(evt);
-    UNUSED(name);
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImpl::ProfilerStart(const uint64_t profConfig, const int32_t numsDev,
     uint32_t * const deviceList, const uint32_t cacheFlag, const uint64_t profSwitchHi)
 {

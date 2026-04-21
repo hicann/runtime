@@ -103,16 +103,6 @@ public:
     rtError_t CaptureResetProcess(Stream * const stm);
     virtual bool IsEventInModel();
     // simple tools for access private.
-    void SetName(const char_t *name)
-    {
-        if (name != nullptr) {
-            (void)name_.assign(name);
-        }
-    }
-    const char_t *Name_() const
-    {
-        return name_.c_str();
-    }
     uint64_t Timeline_() const {
         return timeline_;
     }
@@ -292,7 +282,6 @@ private:
     bool             isIdAllocFromDrv_;
     Atomic<bool>     isSync_;
     Atomic<bool>     hasRecord_;
-    std::string      name_;
     Atomic<bool>     hasReset_;
     bool             isDestroySync_;
     Event            *captureEvent_{nullptr};   // only for single-operator event

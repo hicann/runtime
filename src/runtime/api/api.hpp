@@ -470,7 +470,6 @@ public:
 
     // resource name
     virtual rtError_t NameStream(Stream * const stm, const char_t * const name) = 0;
-    virtual rtError_t NameEvent(Event * const evt, const char_t * const name) = 0;
 
     virtual rtError_t ProfilerStart(const uint64_t profConfig, const int32_t numsDev,
         uint32_t * const deviceList, const uint32_t cacheFlag, const uint64_t profSwitchHi = 0) = 0;

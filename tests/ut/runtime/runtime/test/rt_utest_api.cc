@@ -1454,12 +1454,6 @@ TEST_F(ApiTest, api_error_test)
     error = rtNameStream(&stream_, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = rtNameEvent(event, name);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtNameEvent(&event1, name);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
     error = rtMemGetInfo(NULL, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
@@ -1492,12 +1486,6 @@ TEST_F(ApiTest, api_error_test_coverage)
         .stubs()
         .will(returnValue(RT_ERROR_INVALID_VALUE));
     error = api.NameStream(stream, name);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::NameEvent)
-        .stubs()
-        .will(returnValue(RT_ERROR_INVALID_VALUE));
-    error = api.NameEvent(event, name);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     size_t *free;
@@ -4434,16 +4422,6 @@ TEST_F(ApiTest, RegDeviceStateCallback_no_reg)
     EXPECT_EQ(g_logDeviceStateOpen[1], false);
     EXPECT_EQ(g_profilingDeviceStateOpen[0], false);
     EXPECT_EQ(g_profilingDeviceStateOpen[1], false);
-}
-
-TEST_F(ApiTest, get_runtime_version)
-{
-    uint32_t runtimeVersion;
-    rtError_t error;
-
-    error = rtGetRuntimeVersion(&runtimeVersion);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(runtimeVersion, 1001);
 }
 
 TEST_F(ApiTest, debug_register_for_stream)

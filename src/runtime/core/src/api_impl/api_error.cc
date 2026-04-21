@@ -2902,14 +2902,6 @@ rtError_t ApiErrorDecorator::NameStream(Stream * const stm, const char_t * const
     return impl_->NameStream(curStm, name);
 }
 
-rtError_t ApiErrorDecorator::NameEvent(Event * const evt, const char_t * const name)
-{
-    NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-
-    return impl_->NameEvent(evt, name);
-}
-
 rtError_t ApiErrorDecorator::ProfilerStart(const uint64_t profConfig, const int32_t numsDev,
     uint32_t * const deviceList, const uint32_t cacheFlag, const uint64_t profSwitchHi)
 {

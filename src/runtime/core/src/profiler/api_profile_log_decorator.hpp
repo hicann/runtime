@@ -153,7 +153,6 @@ public:
 
     // resource name
     rtError_t NameStream(Stream * const stm, const char_t * const name) override;
-    rtError_t NameEvent(Event * const evt, const char_t * const name) override;
 
     // model API
     rtError_t ModelCreate(Model ** const mdl, const uint32_t flag) override;

@@ -1360,17 +1360,6 @@ rtError_t rtNameStream(rtStream_t stm, const char_t *name)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtNameEvent(rtEvent_t evt, const char_t *name)
-{
-    Event * const namedEvent = static_cast<Event *>(evt);
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->NameEvent(namedEvent, name);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtSetProfDirEx(const char_t *profDir, const char_t *address, const char_t *jobCtx)
 {
     UNUSED(profDir);
@@ -2424,13 +2413,6 @@ rtError_t rtSetDeviceWithoutTsd(int32_t devId)
     return ACL_RT_SUCCESS;
 }
 
-VISIBILITY_DEFAULT
-rtError_t rtGetRuntimeVersion(uint32_t *runtimeVersion)
-{
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(runtimeVersion, RT_ERROR_INVALID_VALUE);
-    *runtimeVersion = RUNTIME_PUBLIC_VERSION;
-    return ACL_RT_SUCCESS;
-}
 
 VISIBILITY_DEFAULT
 rtError_t rtGetFaultEvent(const int32_t deviceId, rtDmsEventFilter *filter, rtDmsFaultEvent *dmsEvent,
