@@ -3237,6 +3237,9 @@ rtError_t Runtime::PrimaryContextRelease(const uint32_t devId, const bool isForc
             if (ctx->DefaultStream_() != nullptr) {
                 ctx->DefaultStream_()->SetContext(nullptr);
             }
+            if (ctx->GetCtrlSQStream() != nullptr) {
+                ctx->GetCtrlSQStream()->SetContext(nullptr);
+            }        
         }
         if (ContextManage::EraseContextFromSet(ctx) != RT_ERROR_CONTEXT_NULL) {
             if (ctx->ContextOutUse() == 0ULL) {
