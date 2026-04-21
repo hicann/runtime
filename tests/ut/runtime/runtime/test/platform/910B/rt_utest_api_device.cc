@@ -124,10 +124,13 @@ TEST_F(CloudV2ApiDeviceTest, AddAddrKernelNameMapTableTest)
     mapInfo.addr = 0;
     mapInfo.kernelName = "testKernel";
     dev.AddAddrKernelNameMapTable(mapInfo);
-    string ret = dev.LookupKernelNameByAddr(1);
+    string ret = dev.LookupKernelNameByAddr(0);
     EXPECT_EQ(ret, "not found kernel name");
-    ret = dev.LookupKernelNameByAddr(0);
-    EXPECT_EQ(ret, "testKernel");
+    mapInfo.addr = 1;
+    mapInfo.kernelName = "testKernel2";
+    dev.AddAddrKernelNameMapTable(mapInfo);
+    ret = dev.LookupKernelNameByAddr(1);
+    EXPECT_EQ(ret, "testKernel2");
 }
 
 TEST_F(CloudV2ApiDeviceTest, StreamMemPoolSetAttr_failed)
