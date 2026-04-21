@@ -51,13 +51,11 @@ target_link_libraries(xpu_tprt PRIVATE
     $<BUILD_INTERFACE:msprof_headers>
     -Wl,--no-as-needed
     c_sec
-    profapi_share
-    mmpa
-    unified_dlog
     -Wl,--as-needed
 )
  
 target_compile_definitions(xpu_tprt PRIVATE
+    LOG_CPP
     google=ascend_private
     )
 
