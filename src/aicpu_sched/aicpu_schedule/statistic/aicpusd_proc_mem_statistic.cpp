@@ -96,7 +96,7 @@ namespace AicpuSchedule {
     {
         std::ifstream inFile(xsMemCfgFile_);
         if (!inFile) {
-            aicpusd_info("open xsMem file not success, pid=%d, errno=%d, strerror=%s", static_cast<int32_t>(curPid_),
+            aicpusd_info("open xsMem file not success, pid=%d, errno=%d, reason=%s", static_cast<int32_t>(curPid_),
                          errno, strerror(errno));
             return false;
         }

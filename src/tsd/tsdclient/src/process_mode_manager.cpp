@@ -2258,7 +2258,7 @@ TSD_StatusT ProcessModeManager::LoadPackageToDeviceByConfig()
         std::string dstFile = dstDirPreFix;
         TSD_RUN_INFO("begin to load package:%s to device:%u", pkgPureName.c_str(), logicDeviceId_);
         if ((!iter->second.loadAsPerSocFlag) && (!SupportLoadPkg(pkgPureName))) {
-            TSD_RUN_INFO("current package package:%s does not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
+            TSD_RUN_INFO("current package:%s does not need to load to device:%u", pkgPureName.c_str(), logicDeviceId_);
             continue;
         }
         if (pkgConInst->GetPkgHostAndDeviceDstPath(iter->first, orgFile, dstFile, procSign_.tgid) != TSD_OK) {
