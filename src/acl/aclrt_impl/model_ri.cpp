@@ -122,7 +122,11 @@ aclError aclmdlRIUpdateImpl(aclmdlRI modelRI)
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIUpdate);
     const rtError_t rtErr = rtModelUpdate(static_cast<rtModel_t>(modelRI));
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("model update failed, runtime result=%d", rtErr);
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("model update failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("model update failed, runtime result=%d", rtErr);
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclmdlRIUpdate");
