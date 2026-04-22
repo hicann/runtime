@@ -17,6 +17,7 @@
 #include "device.hpp"
 #include "task_info.h"
 #include "error_code.h"
+#include "task_execute_time.h"
 namespace cce {
 namespace runtime {
 
@@ -65,7 +66,7 @@ void ConstructDavidMemcpySqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davi
     if (stream->IsDebugRegister() && (!stream->GetBindFlag())) {
         sqe->header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
     }
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+    sqe->kernelCredit = GetSdmaKernelCredit();
 
     sqe->srcStreamId = 0x1FU; // get sid and ssid from sq, leave 0 here
     sqe->u.strideMode0.dstStreamId =  0x1FU;

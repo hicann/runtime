@@ -235,7 +235,11 @@ uint16_t GetMteErrWaitCount();
 void MteErrorProc(const TaskInfo * const errTaskPtr, const Device * const dev,
     const int32_t errorCode, bool &hasSpecialErrorCode);
 void SetDeviceFaultTypeByErrorType(const Device * const dev, const rtErrorType errorType, bool &hasSpecialErrorCode);
-}
+void ConvertErrorCodeForFastReport(StarsOpExceptionInfo *report);
+void GetFastRingBufferErrorMap(std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>> &errorMap);
+void InitFastRingBuffer(void* fastRingBufferAddr);
+
+} // namespace runtime
 }
 #endif // CCE_RUNTIME_DEVICE_ERROR_PROC_HPP
 

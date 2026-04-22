@@ -1234,40 +1234,13 @@ rtError_t DeviceErrorProc::ReportRingBuffer(uint16_t *errorStreamId)
     return RT_ERROR_TASK_MONITOR;
 }
 
-// alloc contiguour host mem and dispatch to tsfw
-rtError_t DeviceErrorProc::CreateFastRingbuffer()
-{
-    NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
-    rtError_t error = Runtime::Instance()->InitOpExecTimeout(device_);
-    ERROR_RETURN(error, "failed to get op execute timeout, ret=%#x.", error);
-    COND_RETURN_WITH_NOLOG(!Runtime::Instance()->IsSupportOpTimeoutMs(), RT_ERROR_NONE);
-    const std::lock_guard<std::mutex> mutexLock(mutex_);
-    COND_RETURN_WITH_NOLOG(fastRingBufferAddr_ != nullptr, RT_ERROR_NONE);
-
-    void *hostMem = nullptr;
-    Driver * const devDrv = device_->Driver_();
-    error = devDrv->AllocFastRingBufferAndDispatch(&hostMem, fastRingBufferSize_, device_->Id_());
-    ERROR_RETURN(error, "Failed to alloc fast ringbuffer memory, size=%zu(bytes).", fastRingBufferSize_);
-    (void)memset_s(hostMem, fastRingBufferSize_, 0, fastRingBufferSize_);
-    fastRingBufferAddr_ = hostMem;
-    RT_LOG(RT_LOG_INFO, "Create fast ringbuffer successfully, size=%zu(bytes).", fastRingBufferSize_);
-    return RT_ERROR_NONE;
-}
-
-void ConvertErrorCodeForFastReport(StarsOpExceptionInfo *report)
+void ConvertErrorCodeForFastReport(StarsOpExceptionInfo* report)
 {
     const uint32_t sqeType = report->sqeType;
     const uint32_t errorCode = report->errorCode;
     // 定义映射表 [任务类型][原错误码] -> 新错误码
-    static const std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>> errorMap = {
-        {RT_STARS_SQE_TYPE_FFTS, {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICORE_EXCEPTION},
-                                  {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICORE_TIMEOUT},
-                                  {TS_ERROR_TASK_TRAP, TS_ERROR_AICORE_TRAP_EXCEPTION}}},
-        {RT_STARS_SQE_TYPE_AICPU, {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICPU_EXCEPTION},
-                                   {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICPU_TIMEOUT}}},
-        {RT_STARS_SQE_TYPE_SDMA, {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_SDMA_ERROR},
-                                  {TS_ERROR_TASK_TIMEOUT, TS_ERROR_SDMA_TIMEOUT}}}
-    };
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>> errorMap;
+    GetFastRingBufferErrorMap(errorMap);
 
     auto taskIt = errorMap.find(sqeType);
     if (taskIt != errorMap.end()) {
@@ -1276,49 +1249,6 @@ void ConvertErrorCodeForFastReport(StarsOpExceptionInfo *report)
             report->errorCode = errorIt->second;
         }
     }
-}
-
-// fast ringbuffer(4k): DevRingBufferCtlInfo + RingBufferElementInfo + StarsOpExceptionInfo
-void DeviceErrorProc::ProcessReportFastRingBuffer()
-{
-    COND_RETURN_VOID(device_ == nullptr, "device_ can not be nullptr.");
-    if (fastRingBufferAddr_ == nullptr) {
-        return; // not support fast ringbuffer
-    }
-
-    DevRingBufferCtlInfo *ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *>(fastRingBufferAddr_);
-    COND_PROC((ctrlInfo->magic != RINGBUFFER_MAGIC), return); // no error return
-    StarsOpExceptionInfo report;
-    {
-        const std::lock_guard<std::mutex> lk(fastRingbufferMutex_);
-        COND_PROC((ctrlInfo->magic != RINGBUFFER_MAGIC), return); // no error return
-        StarsOpExceptionInfo *starsReport = RtValueToPtr<StarsOpExceptionInfo *>(RtPtrToValue(fastRingBufferAddr_) +
-        sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo));
-        report = *starsReport;
-        __sync_synchronize(); // 最后置标记位, 防止指令重排
-        ctrlInfo->magic = 0U; // 释放fast ring buffer, 以下不要使用
-    }
-    ConvertErrorCodeForFastReport(&report);
-    TaskInfo *tsk = device_->GetTaskFactory()->GetTask(static_cast<int32_t>(report.streamId), report.taskId);
-    RT_LOG(RT_LOG_ERROR, "fast ring buffer report error, "
-        "device_id=%u, stream_id=%u, task_id=%u, sqe_type=%u, error_code=%#x, kernel_name=%s.",
-        device_->Id_(), report.streamId, report.taskId, report.sqeType, report.errorCode,
-        GetTaskKernelName(tsk).c_str());
-    COND_RETURN_VOID(tsk == nullptr, "stream_id=%u, task_id=%u, task has been recycled.",
-        report.streamId, report.taskId);
-    tsk->stream->SetErrCode(report.errorCode);
-    tsk->stream->EnterFailureAbort();
-    TaskFailCallBack(report.streamId, report.taskId, tsk->tid, report.errorCode, device_);
-    return;
-}
-
-void DeviceErrorProc::ProcClearFastRingBuffer() const
-{
-    if (fastRingBufferAddr_ == nullptr) {
-        return;
-    }
-    DevRingBufferCtlInfo *ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *>(fastRingBufferAddr_);
-    ctrlInfo->magic = 0U;
 }
 
 rtError_t DeviceErrorProc::ProcCleanRingbuffer()
@@ -2173,6 +2103,27 @@ rtError_t DeviceErrorProc::ProcessStarsOneElementInRingBuffer(const DevRingBuffe
             RT_LOG(RT_LOG_WARNING, "Failed to find function to process the error information.");
         }
     }
+    return RT_ERROR_NONE;
+}
+
+// alloc contiguour host mem and dispatch to tsfw
+rtError_t DeviceErrorProc::CreateFastRingbuffer()
+{
+    NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
+    rtError_t error = Runtime::Instance()->InitOpExecTimeout(device_);
+    ERROR_RETURN(error, "failed to get op execute timeout, ret=%#x.", error);
+    COND_RETURN_WITH_NOLOG(!Runtime::Instance()->IsSupportOpTimeoutMs(), RT_ERROR_NONE);
+    const std::lock_guard<std::mutex> mutexLock(mutex_);
+    COND_RETURN_WITH_NOLOG(fastRingBufferAddr_ != nullptr, RT_ERROR_NONE);
+
+    void* hostMem = nullptr;
+    Driver* const devDrv = device_->Driver_();
+    error = devDrv->AllocFastRingBufferAndDispatch(&hostMem, fastRingBufferSize_, device_->Id_());
+    ERROR_RETURN(error, "Failed to alloc fast ringbuffer memory, size=%zu(bytes).", fastRingBufferSize_);
+    (void)memset_s(hostMem, fastRingBufferSize_, 0, fastRingBufferSize_);
+    fastRingBufferAddr_ = hostMem;
+    InitFastRingBuffer(fastRingBufferAddr_);
+    RT_LOG(RT_LOG_INFO, "Create fast ringbuffer successfully, size=%zu(bytes).", fastRingBufferSize_);
     return RT_ERROR_NONE;
 }
 

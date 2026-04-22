@@ -843,7 +843,7 @@ static void ConstructDavidSqeForAicpuMsgVersionTask(TaskInfo * const taskInfo, r
     sqe->qos = stm->Device_()->GetTsdQos();
     sqe->res2 = 0U;
     sqe->sqeIndex = 0U; // useless
-    sqe->kernelCredit = RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT;
+    sqe->kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
 
     sqe->usrData.pid = 0U;
     sqe->usrData.cmdType = static_cast<uint8_t>(TS_AICPU_MSG_VERSION);

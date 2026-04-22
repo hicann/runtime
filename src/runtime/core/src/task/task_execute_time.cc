@@ -13,7 +13,6 @@
 #include "stars.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
-
 namespace cce {
 namespace runtime {
 uint16_t TransKernelCreditCreditByChip(const uint16_t kernelCredit)
@@ -113,5 +112,30 @@ uint16_t GetAicpuKernelCredit(uint64_t timeout)
     }
     return TransKernelCreditCreditByChip(kernelCredit);
 }
+
+uint16_t GetCCUCredit(uint16_t customTimeout)
+{
+    if (customTimeout == 0) {
+        return RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
+    }
+
+    // convert s to us
+    uint64_t sTimeout = 0U;
+    sTimeout = static_cast<uint64_t>(customTimeout) * 1000 * 1000;
+    const float64_t kernelCreditScale = Runtime::Instance()->GetKernelCreditScaleUS();
+    const float64_t maxTimeoutThreshold = RT_STARS_MAX_KERNEL_CREDIT * kernelCreditScale;
+
+    if (sTimeout > maxTimeoutThreshold) {
+        return RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
+    }
+
+    uint16_t kernelCredit = 0U;
+    TransExeTimeoutCfgToKernelCredit(sTimeout, kernelCredit);
+    RT_LOG(
+        RT_LOG_DEBUG, "custom timeout=%" PRIu64 "us, kernelCredit=%u, kernelCreditScale=%.4lf .", sTimeout,
+        kernelCredit, kernelCreditScale);
+    return TransKernelCreditCreditByChip(kernelCredit);
+}
+
 }  // namespace runtime
 }  // namespace cce

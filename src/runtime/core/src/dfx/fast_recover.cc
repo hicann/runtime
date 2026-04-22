@@ -182,6 +182,7 @@ rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain)
         ERROR_RETURN(error, "ctx reset cntnotify fail, retCode=%#x.", error);
         error = dev->Driver_()->ResumeSqSend(static_cast<uint32_t>(devId), dev->DevGetTsId());
         ERROR_RETURN(error, "ctx resume fail, retCode=%#x.", error);
+        dev->ProcClearFastRingBuffer();
         dev->SetDeviceStatus(RT_ERROR_NONE);
         dev->SetHasTaskError(false);
         dev->SetDeviceRas(false);

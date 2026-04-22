@@ -10,10 +10,14 @@
 #include "device_error_proc.hpp"
 #include "device_error_proc_c.hpp"
 #include "runtime.hpp"
+#include "context.hpp"
+#include "task_recycle.hpp"
+
  
 namespace cce {
 namespace runtime {
- 
+constexpr uint32_t FAST_RING_BUFFER_DEPTH = 2U;
+
 void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> &funcMap)
 {
     static const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc> davidFuncMap = {
@@ -72,5 +76,98 @@ void SetDeviceFaultTypeByErrorType(const Device * const dev, const rtErrorType e
         (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::HBM_UCE_ERROR);
     }
 }
+
+// fast ringbuffer(4k): DevRingBufferCtlInfo + RingBufferElementInfo + StarsOpExceptionInfo
+void DeviceErrorProc::ProcessReportFastRingBuffer()
+{
+    COND_RETURN_VOID(device_ == nullptr, "device_ can not be nullptr.");
+    if (fastRingBufferAddr_ == nullptr) {
+        return; // not support fast ringbuffer
+    }
+
+    const std::lock_guard<std::mutex> lk(fastRingbufferMutex_);
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(fastRingBufferAddr_);
+    COND_PROC((ctrlInfo->magic != RINGBUFFER_MAGIC), return ); // no error return
+    COND_PROC((ctrlInfo->head == ctrlInfo->tail), return );    // Empty Fast RingBuffer.no error return
+    uint32_t head = ctrlInfo->head;
+    const uint32_t tail = ctrlInfo->tail;
+    const uint32_t depth = ctrlInfo->ringBufferLen;
+    if (depth != FAST_RING_BUFFER_DEPTH) {
+        RT_LOG(RT_LOG_ERROR, "fast ring buffer error: depth is not set properly.");
+        return;
+    }
+    if (head >= depth || tail >= depth) {
+        RT_LOG(
+            RT_LOG_ERROR, "fast ring buffer error: head or tail is bigger than depth. depth=[%u], head=[%u], tail=[%u]",
+            depth, head, tail);
+        return;
+    }
+    while (head != tail) {
+        RT_LOG(RT_LOG_DEBUG, "fast ring buffer depth=[%u], head=[%u], tail=[%u].", depth, head, tail);
+        StarsOpExceptionInfo* report = RtValueToPtr<StarsOpExceptionInfo*>(
+            RtPtrToValue(fastRingBufferAddr_) + sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo) +
+            head * sizeof(StarsOpExceptionInfo));
+        ConvertErrorCodeForFastReport(report);
+        TaskInfo* tsk =
+            GetTaskInfo(device_, static_cast<uint32_t>(report->streamId), static_cast<uint32_t>(report->sqHead), true);
+        RT_LOG(
+            RT_LOG_ERROR,
+            "fast ring buffer report error, "
+            "device_id=%u, stream_id=%u, task_id=%u, sq_head=%u, sqe_type=%u, error_code=%#x, kernel_name=%s.",
+            device_->Id_(), report->streamId, report->taskId, report->sqHead, report->sqeType, report->errorCode,
+            GetTaskKernelName(tsk).c_str());
+        if (tsk == nullptr) {
+            RT_LOG(RT_LOG_ERROR, "stream_id=%u, task_id=%u, task has been recycled.", report->streamId, report->taskId);
+            head = (head + 1U) % depth;
+            ctrlInfo->head = head;
+            continue;
+        }
+        tsk->stream->SetErrCode(report->errorCode);
+        tsk->stream->EnterFailureAbort();
+        TaskFailCallBack(report->streamId, report->taskId, tsk->tid, report->errorCode, device_);
+        head = (head + 1U) % depth;
+        ctrlInfo->head = head;
+    }
+    return;
+}
+
+void GetFastRingBufferErrorMap(std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>>& errorMap)
+{
+    // 定义映射表 [任务类型][原错误码] -> 新错误码
+    errorMap = {
+        {RT_DAVID_SQE_TYPE_AIC,
+         {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICORE_EXCEPTION}, {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICORE_TIMEOUT}}},
+        {RT_DAVID_SQE_TYPE_AIV,
+         {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICORE_EXCEPTION}, {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICORE_TIMEOUT}}},
+        {RT_DAVID_SQE_TYPE_AICPU_H,
+         {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICPU_EXCEPTION}, {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICPU_TIMEOUT}}},
+        {RT_DAVID_SQE_TYPE_AICPU_D,
+         {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_AICPU_EXCEPTION}, {TS_ERROR_TASK_TIMEOUT, TS_ERROR_AICPU_TIMEOUT}}},
+        {RT_DAVID_SQE_TYPE_SDMA,
+         {{TS_ERROR_TASK_EXCEPTION, TS_ERROR_SDMA_ERROR}, {TS_ERROR_TASK_TIMEOUT, TS_ERROR_SDMA_TIMEOUT}}}};
+}
+
+void DeviceErrorProc::ProcClearFastRingBuffer() const
+{
+    if (fastRingBufferAddr_ == nullptr) {
+        return;
+    }
+    DevRingBufferCtlInfo *ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *>(fastRingBufferAddr_);
+    ctrlInfo->head = ctrlInfo->tail;
+}
+
+void InitFastRingBuffer(void* fastRingBufferAddr)
+{
+    if (fastRingBufferAddr == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "fast ring buffer error: FastRingBufferAddr is nullptr.");
+        return;
+    }
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(fastRingBufferAddr);
+    ctrlInfo->magic = 0U;
+    ctrlInfo->head = 0U;
+    ctrlInfo->tail = 0U;
+    ctrlInfo->ringBufferLen = FAST_RING_BUFFER_DEPTH; // fast ring buffer circular queue: only one element can be used
+}
+
 }  // namespace runtime
 }  // namespace cce

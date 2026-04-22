@@ -18,6 +18,7 @@ namespace runtime {
     uint16_t GetAicoreKernelCredit(const uint64_t customTimeoutUs);
     uint16_t GetSdmaKernelCredit();
     uint16_t GetAicpuKernelCredit(uint64_t timeout);
+    uint16_t GetCCUCredit(uint16_t timeout);
 }
 }
 

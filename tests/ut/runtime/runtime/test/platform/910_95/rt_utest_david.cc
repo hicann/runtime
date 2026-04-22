@@ -51,6 +51,7 @@
 #include "model_c.hpp"
 #include "device_error_proc_c.hpp"
 #include "arg_manage_david.hpp"
+#include "task_execute_time.h"
 #include "stream_c.hpp"
 #include "fusion_c.hpp"
 #include "driver.hpp"
@@ -58,6 +59,9 @@
 #include "cmo_task.h"
 #include "stream_task.h"
 #include "rt_unwrap.h"
+#include "task/task_info.hpp"
+#include "device/device_error_inner_data.hpp"
+#include "task_scheduler_error.h"
 #undef protected
 #undef private
 
@@ -4739,4 +4743,137 @@ TEST_F(DavidTaskTest, rtDeviceGetP2PAtomicCapabilities_ub)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     VerifyDavidAtomicCapabilities(capabilities, 21);
+}
+
+TEST_F(DavidTaskTest, GetCCUCredit_timeout_zero)
+{
+    uint16_t credit = GetCCUCredit(0);
+    EXPECT_EQ(credit, RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT);
+}
+
+TEST_F(DavidTaskTest, GetCCUCredit_timeout_exceed_threshold)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    rtInstance->timeoutConfig_.isInit = true;
+    rtInstance->timeoutConfig_.interval = 1.0;
+    uint16_t credit = GetCCUCredit(UINT16_MAX);
+    EXPECT_EQ(credit, RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT);
+}
+
+TEST_F(DavidTaskTest, GetCCUCredit_normal_timeout)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    rtInstance->timeoutConfig_.isInit = true;
+    // 2^20 = 1048576
+    rtInstance->timeoutConfig_.interval = 1048576;
+    uint16_t credit = GetCCUCredit(2);
+    EXPECT_NE(credit, RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT);
+    EXPECT_NE(credit, 0);
+}
+
+TEST_F(DavidTaskTest, GetFastRingBufferErrorMap_check_mapping)
+{
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, uint32_t>> errorMap;
+    GetFastRingBufferErrorMap(errorMap);
+    
+    EXPECT_TRUE(errorMap.find(RT_DAVID_SQE_TYPE_AIC) != errorMap.end());
+    EXPECT_TRUE(errorMap[RT_DAVID_SQE_TYPE_AIC].find(TS_ERROR_TASK_EXCEPTION) != errorMap[RT_DAVID_SQE_TYPE_AIC].end());
+    EXPECT_EQ(errorMap[RT_DAVID_SQE_TYPE_AIC][TS_ERROR_TASK_EXCEPTION], TS_ERROR_AICORE_EXCEPTION);
+    
+    EXPECT_TRUE(errorMap.find(RT_DAVID_SQE_TYPE_AIV) != errorMap.end());
+    EXPECT_TRUE(errorMap[RT_DAVID_SQE_TYPE_AIV].find(TS_ERROR_TASK_EXCEPTION) != errorMap[RT_DAVID_SQE_TYPE_AIV].end());
+    EXPECT_EQ(errorMap[RT_DAVID_SQE_TYPE_AIV][TS_ERROR_TASK_EXCEPTION], TS_ERROR_AICORE_EXCEPTION);
+    
+    EXPECT_TRUE(errorMap.find(RT_DAVID_SQE_TYPE_AICPU_H) != errorMap.end());
+    EXPECT_TRUE(errorMap[RT_DAVID_SQE_TYPE_AICPU_H].find(TS_ERROR_TASK_EXCEPTION) != errorMap[RT_DAVID_SQE_TYPE_AICPU_H].end());
+    EXPECT_EQ(errorMap[RT_DAVID_SQE_TYPE_AICPU_H][TS_ERROR_TASK_EXCEPTION], TS_ERROR_AICPU_EXCEPTION);
+    
+    EXPECT_TRUE(errorMap.find(RT_DAVID_SQE_TYPE_AICPU_D) != errorMap.end());
+    EXPECT_TRUE(errorMap[RT_DAVID_SQE_TYPE_AICPU_D].find(TS_ERROR_TASK_EXCEPTION) != errorMap[RT_DAVID_SQE_TYPE_AICPU_D].end());
+    EXPECT_EQ(errorMap[RT_DAVID_SQE_TYPE_AICPU_D][TS_ERROR_TASK_EXCEPTION], TS_ERROR_AICPU_EXCEPTION);
+    
+    EXPECT_TRUE(errorMap.find(RT_DAVID_SQE_TYPE_SDMA) != errorMap.end());
+    EXPECT_TRUE(errorMap[RT_DAVID_SQE_TYPE_SDMA].find(TS_ERROR_TASK_EXCEPTION) != errorMap[RT_DAVID_SQE_TYPE_SDMA].end());
+    EXPECT_EQ(errorMap[RT_DAVID_SQE_TYPE_SDMA][TS_ERROR_TASK_EXCEPTION], TS_ERROR_SDMA_ERROR);
+}
+
+TEST_F(DavidTaskTest, InitFastRingBuffer_basic)
+{
+    std::unique_ptr<char[]> buffer(new (std::nothrow) char[100]);
+    memset_s(buffer.get(), 100, 0, 100);
+    
+    InitFastRingBuffer(buffer.get());
+    
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(buffer.get());
+    EXPECT_EQ(ctrlInfo->magic, 0U);
+    EXPECT_EQ(ctrlInfo->head, 0U);
+    EXPECT_EQ(ctrlInfo->tail, 0U);
+    EXPECT_EQ(ctrlInfo->ringBufferLen, 2U);
+}
+
+TEST_F(DavidTaskTest, ProcessReportFastRingBuffer_device_nullptr)
+{
+    DeviceErrorProc* errorProc = new DeviceErrorProc(nullptr);
+    errorProc->ProcessReportFastRingBuffer();
+    delete errorProc;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, ProcessReportFastRingBuffer_addr_nullptr)
+{
+    DeviceErrorProc* errorProc = new DeviceErrorProc(dev_);
+    errorProc->fastRingBufferAddr_ = nullptr;
+    errorProc->ProcessReportFastRingBuffer();
+    delete errorProc;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, ProcessReportFastRingBuffer_with_valid_task)
+{
+    DeviceErrorProc* errorProc = new DeviceErrorProc(dev_);
+    std::unique_ptr<char[]> buffer(new (std::nothrow) char[4096]);
+    memset_s(buffer.get(), 4096, 0, 4096);
+    
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(buffer.get());
+    ctrlInfo->magic = RINGBUFFER_MAGIC;
+    ctrlInfo->head = 0U;
+    ctrlInfo->tail = 1U;
+    ctrlInfo->ringBufferLen = 2U;
+    
+    StarsOpExceptionInfo* starsReport = RtValueToPtr<StarsOpExceptionInfo*>(
+        RtPtrToValue(buffer.get()) + sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo));
+    starsReport->sqeType = RT_DAVID_SQE_TYPE_AIC;
+    starsReport->streamId = 0U;
+    starsReport->sqHead = 0U;
+    starsReport->taskId = 0U;
+    starsReport->errorCode = TS_ERROR_TASK_EXCEPTION;
+    
+    TaskInfo taskInfo;
+    memset_s(&taskInfo, sizeof(TaskInfo), 0, sizeof(TaskInfo));
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    taskInfo.tid = 1U;
+    InitByStream(&taskInfo, stream_);
+    
+    errorProc->fastRingBufferAddr_ = buffer.get();
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER(TaskFailCallBack).stubs().will(ignoreReturnValue());
+    errorProc->ProcessReportFastRingBuffer();
+    
+    EXPECT_EQ(taskInfo.stream->GetErrCode(), TS_ERROR_AICORE_EXCEPTION);
+    
+    errorProc->fastRingBufferAddr_ = nullptr;
+    delete errorProc;
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, ClearFastRingBuffer_basic)
+{
+    std::unique_ptr<char[]> buffer(new (std::nothrow) char[100]);
+    memset_s(buffer.get(), 100, 0, 100);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(dev_);
+    errorProc->fastRingBufferAddr_ = buffer.get();
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(buffer.get());
+    ctrlInfo->tail = 1U;
+    errorProc->ProcClearFastRingBuffer();
+    EXPECT_EQ(ctrlInfo->head, 1U);
 }

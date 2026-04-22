@@ -11,6 +11,7 @@
 #include "ccu_sqe.hpp"
 #include "stream.hpp"
 #include "error_message_manage.hpp"
+#include "task_execute_time.h"
 
 namespace cce {
 namespace runtime {
@@ -28,7 +29,7 @@ void ConstructDavidSqeForCcuLaunchTask(TaskInfo *taskInfo, rtDavidSqe_t * const 
     sqe->resv.ccuResvDesc2.missionId = tskinfo->missionId;
     sqe->resv.ccuResvDesc2.dieId = tskinfo->dieId;
     sqe->resv.ccuResvDesc2.ccuSize = tskinfo->ccu_size;
-    sqe->kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
+    sqe->kernelCredit = static_cast<uint8_t>(GetCCUCredit(tskinfo->timeout));
     sqe->timeout = tskinfo->timeout;
     sqe->sqeLength = 1U;
     sqe->instStartId = tskinfo->instStartId;

@@ -51,7 +51,7 @@ protected:
 
     static void TearDownTestCase()
     {
-        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        Runtime* rtInstance = (Runtime*)Runtime::Instance();
         rtInstance->SetChipType(originType_);
         GlobalContainer::SetRtChipType(originType_);
         rtInstance->SetDisableThread(false);
@@ -115,17 +115,20 @@ rtChipType_t ArgManageUbTest::originType_ = CHIP_DAVID;
 TEST_F(ArgManageUbTest, ub_arg_loader_alloc)
 {
     Driver *drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+
     rtError_t ret = RT_ERROR_NONE;
 
     // alloc dev arg loader mem
     uint32_t argsSize = 1024;
     DavidArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
     ret = device_->UbArgLoaderPtr()->AllocCopyPtr(argsSize, &result);
+
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    UbHandle *argHandle = static_cast<UbHandle *>(result.handle);
+    UbHandle* argHandle = static_cast<UbHandle*>(result.handle);
     EXPECT_NE(argHandle, nullptr);
     EXPECT_NE(argHandle->argsAlloc, nullptr);
     ret = device_->UbArgLoaderPtr()->Release(result.handle);
+
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     // alloc dynamic loader mem
@@ -458,7 +461,7 @@ protected:
 
     static void TearDownTestCase()
     {
-        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        Runtime* rtInstance = (Runtime*)Runtime::Instance();
         rtInstance->SetChipType(originType_);
         GlobalContainer::SetRtChipType(originType_);
         rtInstance->SetDisableThread(false);

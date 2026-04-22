@@ -1548,18 +1548,35 @@ void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId)
     }
 }
 
-std::string GetTaskKernelName(const TaskInfo *task)
+std::string GetTaskKernelName(const TaskInfo* task)
 {
-    if ((task == nullptr) ||
-        ((task->type != TS_TASK_TYPE_KERNEL_AICORE) && (task->type != TS_TASK_TYPE_KERNEL_AIVEC))) {
+    if (task == nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "Task is null");
         return "none";
     }
+    RT_LOG(RT_LOG_DEBUG, "Task type is [%d]", task->type);
     std::string kernelNameStr = "";
-    const AicTaskInfo *aicTaskInfo = &task->u.aicTaskInfo;
-    if ((aicTaskInfo != nullptr) && (aicTaskInfo->kernel != nullptr)) {
-        kernelNameStr = aicTaskInfo->kernel->Name_();
+    if (task->type == TS_TASK_TYPE_KERNEL_AICORE || task->type == TS_TASK_TYPE_KERNEL_AIVEC) {
+        const AicTaskInfo* aicTaskInfo = &(task->u.aicTaskInfo);
+        if ((aicTaskInfo != nullptr) && (aicTaskInfo->kernel != nullptr)) {
+            kernelNameStr = aicTaskInfo->kernel->Name_();
+        }
     }
-    return kernelNameStr.empty() ? ("none") : kernelNameStr;
+
+    if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
+        const AicpuTaskInfo* aicpuTaskInfo = &(task->u.aicpuTaskInfo);
+        if ((aicpuTaskInfo != nullptr) && (aicpuTaskInfo->kernel != nullptr)) {
+            kernelNameStr = aicpuTaskInfo->kernel->GetCpuOpType();
+        }
+    }
+
+    if (task->type == TS_TASK_TYPE_FUSION_KERNEL) {
+        const FusionTaskInfo* fusionKernelTask = &(task->u.fusionKernelTask);
+        if ((fusionKernelTask != nullptr) && (fusionKernelTask->aicPart.kernel != nullptr)) {
+            kernelNameStr = fusionKernelTask->aicPart.kernel->Name_();
+        }
+    }
+    return kernelNameStr.empty() ? "none" : kernelNameStr.c_str();
 }
 
 #endif
