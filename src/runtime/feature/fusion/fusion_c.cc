@@ -252,7 +252,7 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
     // when fusion type is "ccu + aic" or "ccu + ccu", ccu sqe' size must be occupied 4*64B=256B.
     sqeLen += 4U;
 
-    RT_LOG(RT_LOG_EVENT, "ccu task info: sqeSubType=%hhu, taskNum=%u.", sqeSubType,
+    RT_LOG(RT_LOG_INFO, "ccu task info: sqeSubType=%hhu, taskNum=%u.", sqeSubType,
         ccuInfo->taskNum);
     return RT_ERROR_NONE;
 }

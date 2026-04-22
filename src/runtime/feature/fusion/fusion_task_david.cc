@@ -71,15 +71,16 @@ static rtError_t GetArgsInfoForFusionKernelTask(TaskInfo* taskInfo)
     const uint32_t argsTimes = (totalLen % ARGS_PER_STRING_MAX_LEN > 0) ?
         static_cast<uint32_t>((totalLen / ARGS_PER_STRING_MAX_LEN) + 1) :
         static_cast<uint32_t>(totalLen / ARGS_PER_STRING_MAX_LEN);
-    for (size_t j = 1UL; j <= argsTimes; j++) {
+    for (uint32_t j = 1U; j <= argsTimes; j++) {
         std::stringstream ss;
-        size_t i = 0U;
-        uint32_t curLen = totalLen > (j * ARGS_PER_STRING_MAX_LEN) ? (j * ARGS_PER_STRING_MAX_LEN) : totalLen;
-        for (i = (j - 1) * ARGS_PER_STRING_MAX_LEN; i < curLen; ++i) {
+        uint32_t i = 0U;
+        const uint32_t curLen = totalLen > (j * ARGS_PER_STRING_MAX_LEN) ? (j * ARGS_PER_STRING_MAX_LEN) : totalLen;
+        for (i = (j - 1U) * ARGS_PER_STRING_MAX_LEN; i < curLen - 1U; ++i) {
             ss << RtPtrToPtr<uint64_t *, uint64_t>(*(RtPtrToPtr<uint64_t *, void *>(hostMem) + i)) << ", ";
         }
-        RT_LOG(RT_LOG_ERROR, "[FUSION_KERNEL_INFO] args(%u to %u) after execute:%s ",
-            (j - 1) * ARGS_PER_STRING_MAX_LEN, curLen, ss.str().c_str());
+        ss << RtPtrToPtr<uint64_t *, uint64_t>(*(RtPtrToPtr<uint64_t *, void *>(hostMem) + i));
+        RT_LOG(RT_LOG_ERROR, "[FUSION_KERNEL_INFO] args(%u to %u) after execute:%s.",
+            (j - 1U) * ARGS_PER_STRING_MAX_LEN, curLen - 1U, ss.str().c_str());
     }
     RT_LOG(RT_LOG_ERROR, "fusion kernel print %u Times totalLen=(%u*8), argsSize=%u", argsTimes, totalLen,
         fusionKernelTask->argsSize);
