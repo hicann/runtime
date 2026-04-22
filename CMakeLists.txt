@@ -81,7 +81,6 @@ if(ENABLE_DEVICE)
     # 对于libc_sec，只有makefile，需要传递编译器路径
     set(CMAKE_CXX_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-g++")
     set(CMAKE_C_COMPILER_ "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-gcc")
-    set(CMAKE_C_AR "${TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-ar")
     ExternalProject_Add(device
         SOURCE_DIR ${RUNTIME_DIR}/cmake/device
         BINARY_DIR ${CMAKE_BINARY_DIR}/device_build
@@ -92,7 +91,6 @@ if(ENABLE_DEVICE)
             -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/device_install
             -DCMAKE_TOOLCHAIN_FILE=${RUNTIME_DIR}/cmake/aarch64-hcc-toolchain.cmake
             -DCANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}
-            -DCMAKE_C_AR=${CMAKE_C_AR}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER_}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER_}
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}

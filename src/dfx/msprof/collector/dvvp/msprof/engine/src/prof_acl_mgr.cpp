@@ -1042,6 +1042,7 @@ int32_t ProfAclMgr::ProcessHelperHostConfig(const char * config, size_t configLe
 int32_t ProfAclMgr::ProfStartAscendProfHalTask(const uint64_t dataTypeConfig, const uint32_t devNums,
     CONST_UINT32_T_PTR devIdList) const
 {
+    (void)dataTypeConfig;
     int32_t ret;
     if (Platform::instance()->PlatformIsNeedHelperServer() &&
         ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_V4_1_0) {
