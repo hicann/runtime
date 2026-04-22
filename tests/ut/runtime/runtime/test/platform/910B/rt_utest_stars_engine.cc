@@ -40,6 +40,7 @@
 #include "task_execute_time.h"
 #include "model.hpp"
 #include "stub_task.hpp"
+#include "model_execute_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

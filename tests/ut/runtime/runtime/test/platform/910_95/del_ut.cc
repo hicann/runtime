@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "model_execute_task.h"
 
 TEST_F(ApiDavidTest, AllocTaskInfoForCapture_UpdateTask)
 {

@@ -9,6 +9,8 @@
  */
 
 #include "stream_david.hpp"
+#include "model_execute_task.h"
+#include "model_graph_task.h"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "driver.hpp"
@@ -33,7 +35,6 @@
 #include "timeout_set_task.h"
 #include "ringbuffer_maintain_task.h"
 #include "model_update_task.h"
-#include "end_graph_task.h"
 #include "model_to_aicpu_task.h"
 #include "maintenance_task.h"
 #include "davinci_kernel_task.h"
@@ -48,30 +49,6 @@
 #include <vector>
 namespace cce {
 namespace runtime {
-rtError_t DavidModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
-    Model *const modelPtr, Stream *const opStreamPtr, const rtModelStreamType_t modelStreamType,
-    const uint32_t firstTaskIndex)
-{
-    ModelMaintainceTaskInfo *modelMaintainceTaskInfo = &(taskInfo->u.modelMaintainceTaskInfo);
-    TaskCommonInfoInit(taskInfo);
-
-    taskInfo->type = TS_TASK_TYPE_MODEL_MAINTAINCE;
-    taskInfo->typeName = "MODEL_MAINTAINCE";
-
-    modelMaintainceTaskInfo->type = mType;
-    modelMaintainceTaskInfo->opStream = opStreamPtr;
-    modelMaintainceTaskInfo->model = modelPtr;
-    modelMaintainceTaskInfo->streamType = modelStreamType;
-    modelMaintainceTaskInfo->firstTaskId = firstTaskIndex;
-    modelMaintainceTaskInfo->execTimesSvmOffset = 0x0U;
-
-    if (mType == MMT_STREAM_ADD) {
-        uint16_t * const execTimesSvm = modelMaintainceTaskInfo->opStream->GetExecutedTimesSvm();
-        modelMaintainceTaskInfo->execTimesSvmOffset =
-            RtPtrToValue<uint16_t *>(execTimesSvm);
-    }
-    return RT_ERROR_NONE;
-}
 
 #if F_DESC("SetResultAdapt")
 static void SetStarsResultCommonForDavid(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq)

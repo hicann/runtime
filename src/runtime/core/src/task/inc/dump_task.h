@@ -34,6 +34,13 @@ void ToCommandBodyForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtCommand_t 
 void ToCmdBodyForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtCommand_t *const command);
 
 void SetStarsResultForDataDumpLoadInfoTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
+
+rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void *const aicpuInfo, const uint32_t len);
+void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t *const command);
+void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
+
+rtError_t NopTaskInit(TaskInfo* taskInfo);
+void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_DUMP_TASK_H

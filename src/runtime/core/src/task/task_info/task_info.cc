@@ -9,6 +9,7 @@
  */
 
 #include "stream.hpp"
+#include "model_execute_task.h"
 #include "runtime.hpp"
 #include "driver.hpp"
 #include "thread_local_container.hpp"
@@ -367,84 +368,6 @@ rtError_t NotifyResetTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex,
 
 #endif
 
-rtError_t NopTaskInit(TaskInfo* taskInfo)
-{
-    TaskCommonInfoInit(taskInfo);
-    taskInfo->type = TS_TASK_TYPE_NOP;
-    taskInfo->typeName = "NOP";
-    return RT_ERROR_NONE;
-}
-
-#if F_DESC("AicpuInfoLoadTask")
-rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void *const aicpuInfo, const uint32_t len)
-{
-    TaskCommonInfoInit(taskInfo);
-    taskInfo->type = TS_TASK_TYPE_AICPU_INFO_LOAD;
-    taskInfo->typeName = "AICPU_LOADINFO";
-    taskInfo->u.aicpuInfoLoadTask.aicpuInfo = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(aicpuInfo));
-    taskInfo->u.aicpuInfoLoadTask.length = len;
-    RT_LOG(RT_LOG_DEBUG, "aicpu task load info,stream_id=%d,task_id=%hu,length=%u,task_type=%d(%s)",
-           taskInfo->stream->Id_(), taskInfo->id, len,
-           static_cast<int32_t>(taskInfo->type), taskInfo->typeName);
-
-    return RT_ERROR_NONE;
-}
-
-void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t *const command)
-{
-    command->u.aicpuInfoLoadTask.aicpuInfoPtr = taskInfo->u.aicpuInfoLoadTask.aicpuInfo;
-    command->u.aicpuInfoLoadTask.length = taskInfo->u.aicpuInfoLoadTask.length;
-}
-
-void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
-{
-    Stream * const stm = taskInfo->stream;
-    RtStarsPhSqe *const sqe = &(command->phSqe);
-    sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
-    sqe->ie = 0U;
-    sqe->pre_p = 1U;
-    sqe->post_p = 0U;
-    sqe->wr_cqe = stm->GetStarsWrCqeFlag();
-    sqe->res0 = 0U;
-    sqe->task_type = 0U;
-
-    sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
-    sqe->task_id = taskInfo->id;
-    sqe->task_type = TS_TASK_TYPE_AICPU_INFO_LOAD;
-    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    sqe->u.ai_cpu_load_info.aicpufoPtr = taskInfo->u.aicpuInfoLoadTask.aicpuInfo;
-    sqe->u.ai_cpu_load_info.length = taskInfo->u.aicpuInfoLoadTask.length;
-    sqe->u.ai_cpu_load_info.stream_id = static_cast<uint16_t>(stm->Id_());
-    sqe->u.ai_cpu_load_info.task_id = taskInfo->id;
-    sqe->u.ai_cpu_load_info.reserved[0] = 0U;
-    sqe->u.ai_cpu_load_info.reserved[1] = 0U;
-
-    PrintSqe(command, "AicpuInfoLoadTask");
-    RT_LOG(RT_LOG_INFO, "AicpuInfoLoadTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
-}
-
-void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId)
-{
-    UNUSED(devId);
-    const uint32_t errorCode = taskInfo->errorCode;
-    if (unlikely(errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
-        taskInfo->stream->SetErrCode(errorCode);
-        RT_LOG(RT_LOG_ERROR, "Ai Cpu Load Info retCode=%#x, [%s].",
-               errorCode, GetTsErrCodeDesc(errorCode));
-    }
-}
-
-void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq)
-{
-    if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
-        Stream *const reportStream = GetReportStream(taskInfo->stream);
-        taskInfo->errorCode = logicCq.errorCode;
-        STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU, "aicpu task happen error, retCode=%#x.",
-            taskInfo->errorCode);
-    }
-}
-#endif
-
 #if F_DESC("GetDevMsgTask")
 rtError_t GetDevMsgTaskInit(TaskInfo* taskInfo, const void * const devMemAddr,
                             const uint32_t devMemSize,
@@ -511,30 +434,6 @@ void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const comma
 
     PrintSqe(command, "GetDevMsgTask");
     RT_LOG(RT_LOG_INFO, "stream_id:%d, task_id:%u.", stm->Id_(), static_cast<uint32_t>(taskInfo->id));
-}
-
-#endif
-
-#if F_DESC("AddModelExitTask")
-rtError_t AddModelExitTaskInit(TaskInfo* taskInfo, const uint32_t modelId)
-{
-    TaskCommonInfoInit(taskInfo);
-    Stream *stm = taskInfo->stream;
-    taskInfo->typeName = "MODEL_EXIT_GRAPH";
-    taskInfo->type = TS_TASK_TYPE_MODEL_EXIT_GRAPH;
-    taskInfo->u.addModelExitTask.modelId = modelId;
-    taskInfo->u.addModelExitTask.streamId = static_cast<uint32_t>(stm->Id_());
-    RT_LOG(RT_LOG_DEBUG, "Create model exit task,mode_id=%u,task_id=%u,task_type=%d(%s),stream_id=%d.",
-        modelId, static_cast<uint32_t>(taskInfo->id), static_cast<int32_t>(taskInfo->type),
-        taskInfo->typeName, static_cast<uint32_t>(taskInfo->stream->Id_()));
-    return RT_ERROR_NONE;
-}
-
-void ToCmdBodyForAddModelExitTask(TaskInfo* taskInfo, rtCommand_t *const command)
-{
-    command->u.modelExitTask.modelId = taskInfo->u.addModelExitTask.modelId;
-    command->u.modelExitTask.streamId = taskInfo->u.addModelExitTask.streamId;
-    command->taskInfoFlag |= static_cast<uint8_t>(ENDGRAPH_INFO_FLAG);
 }
 
 #endif
@@ -880,14 +779,6 @@ void ToCmdBodyForFlipTask(TaskInfo *const taskInfo, rtCommand_t *const command)
     command->u.flipTask.flipNumReport = taskInfo->u.flipTask.flipNumReport;
 }
 
-void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command)
-{
-    UNUSED(taskInfo);
-    UNUSED(command);
-
-    return;
-}
-
 rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask, void * const updateArgHandle)
 {
     TaskCommonInfoInit(taskInfo);
@@ -940,25 +831,6 @@ void ToCommandBodyForSqeUpdateTask(TaskInfo* taskInfo, rtCommand_t *const comman
     return;
 }
 
-void ToCommandBodyForModelUpdateTask(TaskInfo* taskInfo, rtCommand_t *const command)
-{
-    MdlUpdateTaskInfo *mdlUpdateTaskInfo = &(taskInfo->u.mdlUpdateTask);
-    command->u.modelUpdateTask.destaskId = static_cast<uint16_t>(mdlUpdateTaskInfo->destaskId);
-    command->u.modelUpdateTask.desStreamId = mdlUpdateTaskInfo->desStreamId;
-    command->u.modelUpdateTask.tilingKeyOffset = mdlUpdateTaskInfo->tilingKeyOffset;
-    command->u.modelUpdateTask.tilingTabOffset = mdlUpdateTaskInfo->tilingTabOffset;
-    command->u.modelUpdateTask.blockDimOffset = mdlUpdateTaskInfo->blockDimOffset;
-    command->u.modelUpdateTask.tilingTabLen = mdlUpdateTaskInfo->tilingTabLen;
-
-    Stream *const stm = taskInfo->stream;
-    RT_LOG(RT_LOG_DEBUG,
-        "task_id=%u, stream_id=%u, taskId=%u, streamId=%u, [offset]tilingKey=%llu, blockDim=%llu, tilingTab=%llu.",
-        taskInfo->id, static_cast<uint16_t>(stm->Id_()), mdlUpdateTaskInfo->destaskId, mdlUpdateTaskInfo->desStreamId,
-        mdlUpdateTaskInfo->tilingKeyOffset, mdlUpdateTaskInfo->blockDimOffset, mdlUpdateTaskInfo->tilingTabOffset);
-
-    return;
-}
-
 void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     FlipTaskInfo *flipTaskInfo = &(taskInfo->u.flipTask);
@@ -980,23 +852,6 @@ void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
            sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, flipTaskInfo->flipNumReport);
 }
 #endif
-
-void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
-{
-    Stream *const stm = taskInfo->stream;
-    RtStarsPhSqe *const sqe = &(command->phSqe);
-    sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
-    sqe->ie = 0U;
-    sqe->pre_p = 0U;
-    sqe->post_p = 0U;
-    sqe->wr_cqe = 0U;
-    sqe->res0 = 0U;
-    sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
-    sqe->task_id = taskInfo->id;
-    sqe->task_type = TS_TASK_TYPE_NOP;
-    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    PrintSqe(command, "NoOperationTask");
-}
 
 #if F_DESC("UpdateAddressTaskInit")
 // Construct the update address sqe.

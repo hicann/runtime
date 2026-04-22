@@ -69,6 +69,7 @@
 #include "stars_cond_isa_helper.hpp"
 #include "capture_model_utils.hpp"
 #include "cmo_task.h"
+#include "model_execute_task.h"
 #undef protected
 #undef private
 

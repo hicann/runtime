@@ -211,5 +211,55 @@ void ToCmdBodyForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtCommand_t *c
 }
 #endif
 
+#if F_DESC("NopTask")
+rtError_t NopTaskInit(TaskInfo* taskInfo)
+{
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_NOP;
+    taskInfo->typeName = "NOP";
+    return RT_ERROR_NONE;
+}
+
+void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command)
+{
+    UNUSED(taskInfo);
+    UNUSED(command);
+
+    return;
+}
+#endif
+
+#if F_DESC("AicpuInfoLoadTask")
+rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void *const aicpuInfo, const uint32_t len)
+{
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_AICPU_INFO_LOAD;
+    taskInfo->typeName = "AICPU_LOADINFO";
+    taskInfo->u.aicpuInfoLoadTask.aicpuInfo = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(aicpuInfo));
+    taskInfo->u.aicpuInfoLoadTask.length = len;
+    RT_LOG(RT_LOG_DEBUG, "aicpu task load info,stream_id=%d,task_id=%hu,length=%u,task_type=%d(%s)",
+           taskInfo->stream->Id_(), taskInfo->id, len,
+           static_cast<int32_t>(taskInfo->type), taskInfo->typeName);
+
+    return RT_ERROR_NONE;
+}
+
+void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t *const command)
+{
+    command->u.aicpuInfoLoadTask.aicpuInfoPtr = taskInfo->u.aicpuInfoLoadTask.aicpuInfo;
+    command->u.aicpuInfoLoadTask.length = taskInfo->u.aicpuInfoLoadTask.length;
+}
+
+void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq)
+{
+    if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
+        Stream *const reportStream = GetReportStream(taskInfo->stream);
+        taskInfo->errorCode = logicCq.errorCode;
+        STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU, "aicpu task happen error, retCode=%#x.",
+            taskInfo->errorCode);
+    }
+}
+#endif
+
 }  // namespace runtime
 }  // namespace cce

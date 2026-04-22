@@ -36,6 +36,7 @@
 #include "rt_stars_define.h"
 #include "thread_local_container.hpp"
 #include "../../rt_utest_config_define.hpp"
+#include "model_execute_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

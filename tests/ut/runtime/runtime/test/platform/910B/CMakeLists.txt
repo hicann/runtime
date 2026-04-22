@@ -23,7 +23,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_info.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_info.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
@@ -36,24 +36,19 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_multiple_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/notify_record_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/end_graph_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance_task.cc
 )
@@ -64,6 +59,16 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/memory_corruption_checker.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(runtimeut_src_api_list

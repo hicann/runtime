@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "ctrl_msg.hpp"
+#include "model_maintaince_task.h"
+#include "model_to_aicpu_task.h"
+#include "dump_task.h"
 #include "ctrl_sq.hpp"
 #include "task_info.hpp"
 #include "stream_task.h"

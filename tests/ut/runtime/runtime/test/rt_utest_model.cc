@@ -28,6 +28,8 @@
 #undef private
 #include "model_c.hpp"
 #include "rt_unwrap.h"
+#include "model_maintaince_task.h"
+#include "model_execute_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

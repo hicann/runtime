@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -27,6 +27,9 @@
 #include "stub_task.hpp"
 #include "task_info.h"
 #include "utils.h"
+#include "model_maintaince_task.h"
+#include "model_execute_task.h"
+#include "model_to_aicpu_task.h"
 #include "memory_task.h"
 #include "ctrl_sq.hpp"
 #include "inner_thread_local.hpp"

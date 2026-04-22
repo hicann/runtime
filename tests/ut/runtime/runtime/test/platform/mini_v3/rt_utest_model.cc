@@ -54,6 +54,7 @@
 #include "runtime/rts/rts_device.h"
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
+#include "model_maintaince_task.h"
 #undef protected
 #undef private
 

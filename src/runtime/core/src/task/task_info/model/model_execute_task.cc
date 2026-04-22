@@ -21,7 +21,7 @@
 #include "error_code.h"
 #include "error_message_manage.hpp"
 #include "task_info.hpp"
-#include "task_info.h"
+#include "model_execute_task.h"
 #include "stub_task.hpp"
 
 namespace cce {
@@ -414,24 +414,6 @@ void SetStarsResultForModelExecuteTask(TaskInfo * const taskInfo, const rtLogicC
     return;
 }
 
-void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize)
-{
-    UNUSED(dataSize);
-    ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
-    const uint32_t *const tsData = static_cast<const uint32_t *>(data);
-    const uint32_t payLoad = *tsData;
-    const uint32_t highTaskId = *(tsData + 1U);
-    const uint32_t streamIdEx = *(tsData + 2U);
-    taskInfo->errorCode = (payLoad & 0xFFFU);
-    modelExecuteTaskInfo->errorTaskId = ((payLoad >> 22U) & 0x3FFU) | (highTaskId << 10U);
-    modelExecuteTaskInfo->errorStreamId =
-        ((payLoad >> 12U) & 0x3FFU) | (streamIdEx << (static_cast<uint32_t>(RT_STREAM_ID_OFFSET)));
-
-    RT_LOG(RT_LOG_DEBUG, "Payload=%u, highTaskId=%u, errorCode=0x%x, errorTaskId=%u, errorStreamId=%u.",
-        payLoad, highTaskId, taskInfo->errorCode, modelExecuteTaskInfo->errorTaskId,
-        modelExecuteTaskInfo->errorStreamId);
-}
-
 void ToCommandBodyForModelExecuteTask(TaskInfo * const taskInfo, rtCommand_t * const command)
 {
     ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
@@ -447,36 +429,6 @@ void ToCommandBodyForModelExecuteTask(TaskInfo * const taskInfo, rtCommand_t * c
         static_cast<uint32_t>(command->u.modelExecuteTask.SMMU_subStreamID));
     command->u.modelExecuteTask.tcr = stream->Device_()->GetTCR_();
     command->u.modelExecuteTask.sch_group_id = modelExecuteTaskInfo->model->GetSchGroupId();
-}
-
-void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command)
-{
-    ModelExecuteTaskInfo *modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
-    Stream * const stream = taskInfo->stream;
-
-    RtStarsFunctionCallSqe &sqe = command->fuctionCallSqe;
-    sqe.kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    sqe.csc = 1U;
-    sqe.sqeHeader.l1_lock = 0U;
-    sqe.sqeHeader.l1_unlock = 0U;
-    sqe.sqeHeader.type = RT_STARS_SQE_TYPE_COND;
-    sqe.sqeHeader.wr_cqe = stream->GetStarsWrCqeFlag();
-    sqe.sqeHeader.block_dim = 0U;
-    sqe.sqeHeader.rt_stream_id = static_cast<uint16_t>(stream->Id_());
-    sqe.sqeHeader.task_id = taskInfo->id;
-    sqe.sqeHeader.post_p = 1U;
-    sqe.conds_sub_type = CONDS_SUB_TYPE_MODEL_EXEC;
-    sqe.reserved1 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
-
-    const uint64_t funcAddr = modelExecuteTaskInfo->model->GetFuncCallSvmMem();
-    constexpr uint64_t funcCallSize = static_cast<uint64_t>(sizeof(RtStarsModelExeFuncCall));
-
-    // func call size is rs2[19:0]*4Byte
-    ConstructFunctionCallInstr(funcAddr, (funcCallSize / 4UL), sqe);
-
-    PrintSqe(command, "ModelExecuteTask");
-    RT_LOG(RT_LOG_INFO, "ModelExecuteTask stream_id=%d task_id=%hu, model_id=%hu.",
-        stream->Id_(), taskInfo->id, sqe.reserved1);
 }
 
 void PrintErrorModelExecuteTaskFuncCall(TaskInfo *const task)

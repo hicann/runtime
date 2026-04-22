@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "context.hpp"
+#include "model_graph_task.h"
+#include "dump_task.h"
 #include <cinttypes>
 #include <queue>
 #include <thread>

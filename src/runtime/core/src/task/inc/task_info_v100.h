@@ -46,6 +46,17 @@ void MemcpyAsyncTaskUnInit(TaskInfo * const taskInfo);
 void DoCompleteSuccessForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t devId);
 void ConstructSqeForMemWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+
+void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
+void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize);
+void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
+void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId);
+void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
+
 }  // namespace runtime
 }  // namespace cce
 #endif  // TASK_INFO_V100_H

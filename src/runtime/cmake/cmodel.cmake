@@ -16,7 +16,8 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_info.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_info.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event_task.cc
@@ -42,12 +43,16 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/notify_record_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/end_graph_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance_task.cc
 
     ${RUNTIME_CORE_DIR}/src/task/v100/davinci_task.cc
@@ -64,7 +69,8 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_info.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_info.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event_task.cc
@@ -91,14 +97,17 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ubdma_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/notify_record_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_david.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/notify/notify_task_david.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/end_graph_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_dvpp.cc
     ${RUNTIME_CORE_DIR}/src/task/task_submit/v200/task_david.cc
@@ -125,6 +134,11 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(libruntime_cmodel_v200_task_src_files

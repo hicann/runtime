@@ -20,7 +20,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_info.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_info.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
@@ -42,7 +42,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/end_graph_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance_task.cc
 )
@@ -61,6 +61,11 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -76,8 +81,8 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/david_event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ubdma_task_david.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/notify/notify_task_david.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
@@ -97,6 +102,10 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
 
     # mechanism dependance
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
@@ -107,6 +116,11 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list
@@ -348,7 +362,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ubdma_task_david.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_david.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/notify/notify_task_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc

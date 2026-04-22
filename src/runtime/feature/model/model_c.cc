@@ -19,6 +19,12 @@
 #include "stream_c.hpp"
 #include "ctrl_sq.hpp"
 #include "dump_task.h"
+#include "model_maintaince_task.h"
+#include "model_execute_task.h"
+#include "model_to_aicpu_task.h"
+#include "model_graph_task.h"
+#include "model_update_task.h"
+#include "stars_david.hpp"
 
 namespace cce {
 namespace runtime {

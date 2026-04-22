@@ -68,6 +68,8 @@
 #include "memory_task.h"
 #include "inner_kernel.h"
 #include "inner_thread_local.hpp"
+#include "model_maintaince_task.h"
+#include "model_to_aicpu_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

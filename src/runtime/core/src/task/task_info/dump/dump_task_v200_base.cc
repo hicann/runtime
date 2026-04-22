@@ -11,6 +11,7 @@
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "stream_david.hpp"
+#include "dump_task.h"
 
 namespace cce {
 namespace runtime {
@@ -114,6 +115,39 @@ void ConstructDavidSqeForDataDumpLoadInfoTask(TaskInfo *taskInfo, rtDavidSqe_t *
     PrintDavidSqe(davidSqe, "DataDumpLoadInfoTask");
     RT_LOG(RT_LOG_INFO, "DataDumpLoadInfoTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
+}
+
+void ConstructDavidSqeForAicpuInfoLoadTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
+{
+    UNUSED(sqBaseAddr);
+    Stream * const stm = taskInfo->stream;
+    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
+    RtDavidPlaceHolderSqe *const sqe = &(davidSqe->phSqe);
+    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
+    sqe->header.preP = 1U;
+
+    sqe->taskType = TS_TASK_TYPE_AICPU_INFO_LOAD;
+    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+    sqe->u.aiCpuLoadInfo.aicpufoPtr = taskInfo->u.aicpuInfoLoadTask.aicpuInfo;
+    sqe->u.aiCpuLoadInfo.length = taskInfo->u.aicpuInfoLoadTask.length;
+    sqe->u.aiCpuLoadInfo.streamId = static_cast<uint16_t>(stm->Id_());
+    sqe->u.aiCpuLoadInfo.taskId = taskInfo->id;
+    sqe->u.aiCpuLoadInfo.reserved[0] = 0U;
+    sqe->u.aiCpuLoadInfo.reserved[1] = 0U;
+
+    PrintDavidSqe(davidSqe, "AicpuInfoLoadTask");
+    RT_LOG(RT_LOG_INFO, "AicpuInfoLoadTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
+}
+
+void ConstructDavidSqeForNopTask(TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
+{
+    UNUSED(sqBaseAddr);
+    ConstructDavidSqeForHeadCommon(taskInfo, command);
+    RtDavidPlaceHolderSqe *const sqe = &(command->phSqe);
+    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
+    sqe->taskType = TS_TASK_TYPE_NOP;
+    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
+    PrintDavidSqe(command, "NoOperationTask");
 }
 
 }  // namespace runtime

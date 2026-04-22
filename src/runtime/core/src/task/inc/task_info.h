@@ -52,7 +52,6 @@ void PrintErrorInfoForModelExecuteTask(TaskInfo * const taskInfo, const uint32_t
 void PrintErrorModelExecuteTaskFuncCall(TaskInfo *const task);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
 void SetStarsResultForModelExecuteTask(TaskInfo * const taskInfo, const rtLogicCqReport_t &logicCq);
-void SetStarsResultForAicpuInfoLoadTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
 void PCTraceTaskUnInit(TaskInfo * const taskInfo);
 void ModelExecuteTaskUnInit(TaskInfo * const taskInfo);
 void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize);

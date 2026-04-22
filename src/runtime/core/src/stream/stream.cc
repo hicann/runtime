@@ -9,6 +9,7 @@
  */
 #include <iomanip>
 #include "stream.hpp"
+#include "model_update_task.h"
 #include "stream_sqcq_manage.hpp"
 #include "cond_c.hpp"
 #include "runtime.hpp"

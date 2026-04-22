@@ -48,6 +48,7 @@
 #include "cond_op_stream_task.h"
 #include "stream_task.h"
 #include "memcpy_c.hpp"
+#include "model_execute_task.h"
 using namespace testing;
 using namespace cce::runtime;
 

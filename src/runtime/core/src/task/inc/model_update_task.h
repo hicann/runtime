@@ -10,14 +10,15 @@
 #ifndef RUNTIME_MODEL_UPDATE_TASK_H
 #define RUNTIME_MODEL_UPDATE_TASK_H
 
-#include "driver.hpp"
-#include "stars.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
+rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t destaskId, uint16_t exeStreamId,
+                              void *devCopyMem, uint32_t tilingTabLen, rtMdlTaskUpdateInfo_t *para);
 rtError_t SetMixDescBufOffset(const TaskInfo * const taskInfo, const uint16_t desStreamId,
     const uint16_t destaskId, uint64_t * const descBufOffset);
+void ToCommandBodyForModelUpdateTask(TaskInfo * const taskInfo, rtCommand_t * const command);
 }  // namespace runtime
 }  // namespace cce
 #endif  // RUNTIME_MODEL_UPDATE_TASK_H

@@ -183,7 +183,6 @@ uint32_t GetReportCount(const rtPkgDesc pkgStat[], const uint8_t profEnabled);
 bool CheckPackageState(const TaskInfo *taskInfo);
 uint32_t GetFlipTaskId(uint32_t taskId, uint16_t flipNum);
 TaskInfo *GetRealReportFaultTask(TaskInfo *taskInfo, const void *info);
-TaskInfo *GetRealReportFaultTaskForModelExecuteTask(TaskInfo* const taskInfo);
 void PushBackErrInfo(TaskInfo* taskInfo, const void *errInfo, uint32_t len);
 void TaskFailCallBack(const uint32_t streamId, const uint32_t taskId,
                     const uint32_t threadId, const uint32_t retCode,
@@ -283,22 +282,7 @@ rtError_t CreateL2AddrTaskInit(TaskInfo * const taskInfo, const uint64_t ptePtrA
 rtError_t KernelFusionTaskInit(TaskInfo * const taskInfo, const FusionFlag fusFlag);
 rtError_t PCTraceTaskInit(TaskInfo * const taskInfo, const uint16_t enableTaskIndex,
                           const uint16_t coreDims, std::shared_ptr<PCTrace> pcTracePtr);
-rtError_t ModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
-                                  Model *const modelPtr, Stream *const opStreamPtr,
-                                  const rtModelStreamType_t modelStreamType,
-                                  const uint32_t firstTaskIndex);
-rtError_t DavidModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
-    Model *const modelPtr, Stream *const opStreamPtr, const rtModelStreamType_t modelStreamType,
-    const uint32_t firstTaskIndex);
-rtError_t ModelExecuteTaskInit(TaskInfo * const taskInfo, Model *const modelPtr, const uint32_t modelIndex,
-                               const uint32_t firstTaskIndex);
 // task init func
-rtError_t AddEndGraphTaskInit(TaskInfo* taskInfo, const uint32_t modelId, const uint32_t exeFlag,
-                              const uint64_t argParam, const uint64_t endGraphName,
-                              const uint8_t flags);
-rtError_t AddModelExitTaskInit(TaskInfo* taskInfo, const uint32_t modelId);
-rtError_t ModelToAicpuTaskInit(TaskInfo* taskInfo, const uint32_t modelIndex, const uint32_t controlType,
-                               const uint32_t exeFlag, const uint64_t modelPtr);
 rtError_t CallbackLaunchTaskInit(TaskInfo* taskInfo, const rtCallback_t callBackFunction, void *const functionData,
                                  const bool isBlockFlag, const int32_t evtId);
 rtError_t NpuGetFloatStaTaskInit(TaskInfo *taskInfo, void * const outputAddrPtr,
@@ -321,7 +305,6 @@ rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, con
     const CountNotifyWaitInfo * const cntNtfyInfo, void * const inNotify, const bool isCountNotify = false);
 rtError_t NotifyResetTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex,
     const SingleBitNotifyRecordInfo * const singleInfo, void * const notify);
-rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void *const aicpuInfo, const uint32_t len);
 rtError_t TimeoutSetTaskInit(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
 rtError_t GetDevMsgTaskInit(TaskInfo* taskInfo, const void *const devMemAddr,
     const uint32_t devMemSize, const rtGetDevMsgType_t messageType);
@@ -345,7 +328,6 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos);
 void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos);
 
 void DoCompleteSuccess(TaskInfo* taskInfo, const uint32_t devId);
-rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo *const taskInfo);
 void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfo(TaskInfo *taskInfo, const uint32_t devId);
 uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo);
@@ -367,7 +349,6 @@ void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtLogicCqReport
 void DoCompleteSuccessForStarsVersionTask(TaskInfo* taskInfo, const uint32_t devId);
 void TryToFreeEventIdAndDestroyEvent(Event **eventPtr, int32_t freeId, bool isNeedDestroy, bool isCaptureDestroy = false);
 rtError_t DestroyEventSync(Event *evt);
-rtError_t NopTaskInit(TaskInfo* taskInfo);
 rtError_t UpdateAddressTaskInit(TaskInfo* taskInfo, uint64_t devAddr, uint64_t len);
 rtError_t SqeUpdateTaskInit(TaskInfo* taskInfo, TaskInfo * const updateTask, void * const updateArgHandle = nullptr);
 uint32_t GetSendSqeNumForDavinciMultipleTask(const TaskInfo * const taskInfo);
@@ -382,12 +363,6 @@ uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo);
 rtError_t UbDbSendTaskInit(TaskInfo *taskInfo, const rtUbDbInfo_t *dbInfo, const uint16_t source);
 void UbDirectSendTaskInit(TaskInfo *taskInfo, rtUbWqeInfo_t *wqeInfo);
 bool IsDavidUbDma(const uint32_t copyTypeFlag);
-rtError_t ModelTaskUpdateInit(TaskInfo *taskInfo, uint16_t desStreamId, uint32_t destaskId, uint16_t exeStreamId,
-                              void *devCopyMem, uint32_t tilingTabLen, rtMdlTaskUpdateInfo_t *para);
-rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo * const taskInfo);
-rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo * const taskInfo);
-void ReportErrorInfoForModelExecuteTask(TaskInfo * const taskInfo, const uint32_t devId);
-void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId);
 bool IsDvppTask(const uint16_t sqeType);
 uint32_t GetProfTaskId(const TaskInfo * const taskInfo);
 uint32_t GetTaskId(const TaskInfo* const taskInfo);

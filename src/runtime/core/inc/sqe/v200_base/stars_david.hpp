@@ -554,7 +554,15 @@ void ConstructDavidSqeForStreamTagSetTask(TaskInfo * const taskInfo, rtDavidSqe_
 void ConstructDavidSqeForStreamSwitchTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForStreamLabelSwitchByIndexTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForAicpuInfoLoadTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForModelExecuteTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForModelUpdateTask(TaskInfo * const taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);
+rtError_t DavidModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
+    Model *const modelPtr, Stream *const opStreamPtr, const rtModelStreamType_t modelStreamType,
+    const uint32_t firstTaskIndex);
+void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
+    uint64_t sqBaseAddr);
+void ConstructDavidSqeForModelToAicpuTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForNopTask(TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForNotifyWaitTask(TaskInfo *taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForNotifyRecordTask(TaskInfo *taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);

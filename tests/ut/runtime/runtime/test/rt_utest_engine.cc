@@ -40,6 +40,7 @@
 #include "mmpa_api.h"
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
+#include "model_execute_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

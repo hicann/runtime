@@ -12,44 +12,28 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "base.hpp"
+#include "task_info.hpp"
+#include "model_update_task.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelTaskUpdate")
-void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+void ToCommandBodyForModelUpdateTask(TaskInfo* taskInfo, rtCommand_t *const command)
 {
     MdlUpdateTaskInfo *mdlUpdateTaskInfo = &(taskInfo->u.mdlUpdateTask);
-    Stream * const stm = taskInfo->stream;
+    command->u.modelUpdateTask.destaskId = static_cast<uint16_t>(mdlUpdateTaskInfo->destaskId);
+    command->u.modelUpdateTask.desStreamId = mdlUpdateTaskInfo->desStreamId;
+    command->u.modelUpdateTask.tilingKeyOffset = mdlUpdateTaskInfo->tilingKeyOffset;
+    command->u.modelUpdateTask.tilingTabOffset = mdlUpdateTaskInfo->tilingTabOffset;
+    command->u.modelUpdateTask.blockDimOffset = mdlUpdateTaskInfo->blockDimOffset;
+    command->u.modelUpdateTask.tilingTabLen = mdlUpdateTaskInfo->tilingTabLen;
 
-    RtStarsPhSqe *const sqe = &(command->phSqe);
-    sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
-    sqe->ie = 0U;
-    sqe->pre_p = 1U;
-    sqe->post_p = 0U;
-    sqe->wr_cqe = 1U;
-    sqe->res0 = 0U;
-    sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
-    sqe->task_id = taskInfo->id;
-    sqe->task_type = TS_TASK_TYPE_MODEL_TASK_UPDATE;
-    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    sqe->u.mdTaskUpdateInfo.descBufOffset = mdlUpdateTaskInfo->descBufOffset;
-    sqe->u.mdTaskUpdateInfo.blockDimOffset = mdlUpdateTaskInfo->blockDimOffset;
-    sqe->u.mdTaskUpdateInfo.tilingTabLen = mdlUpdateTaskInfo->tilingTabLen;
-    sqe->u.mdTaskUpdateInfo.tilingKeyOffset = mdlUpdateTaskInfo->tilingKeyOffset;
-    sqe->u.mdTaskUpdateInfo.tilingTabOffset = mdlUpdateTaskInfo->tilingTabOffset;
-    sqe->u.mdTaskUpdateInfo.destaskId = mdlUpdateTaskInfo->destaskId;
-    sqe->u.mdTaskUpdateInfo.desStreamId = mdlUpdateTaskInfo->desStreamId;
-    sqe->u.mdTaskUpdateInfo.exeStreamId = mdlUpdateTaskInfo->exeStreamId;
-
-    RT_LOG(RT_LOG_INFO, "[Offset]descBuf=%llu,tilingKey=%llu,blockDim=%llu,tilingTab=%llu.",
-        mdlUpdateTaskInfo->descBufOffset, mdlUpdateTaskInfo->tilingKeyOffset,
-        mdlUpdateTaskInfo->blockDimOffset, mdlUpdateTaskInfo->tilingTabOffset);
-
-    PrintSqe(command, "ModelUpdateTask");
-    RT_LOG(RT_LOG_INFO, "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,"
-        "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_type=%u",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type);
+    Stream *const stm = taskInfo->stream;
+    RT_LOG(RT_LOG_DEBUG,
+        "task_id=%u, stream_id=%u, taskId=%u, streamId=%u, [offset]tilingKey=%llu, blockDim=%llu, tilingTab=%llu.",
+        taskInfo->id, static_cast<uint16_t>(stm->Id_()), mdlUpdateTaskInfo->destaskId, mdlUpdateTaskInfo->desStreamId,
+        mdlUpdateTaskInfo->tilingKeyOffset, mdlUpdateTaskInfo->blockDimOffset, mdlUpdateTaskInfo->tilingTabOffset);
 
     return;
 }

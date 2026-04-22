@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "stream_c.hpp"
+#include "dump_task.h"
 #include "memcpy_c.hpp"
 #include "task_david.hpp"
 #include "stream_factory.hpp"

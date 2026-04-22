@@ -10,12 +10,14 @@
 #ifndef RUNTIME_MODEL_MAINTAINCE_TASK_H
 #define RUNTIME_MODEL_MAINTAINCE_TASK_H
 
-#include "driver.hpp"
-#include "stars.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
+rtError_t ModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
+                                  Model *const modelPtr, Stream *const opStreamPtr,
+                                  const rtModelStreamType_t modelStreamType,
+                                  const uint32_t firstTaskIndex);
 void ToCommandBodyForModelMaintainceTask(TaskInfo * const taskInfo, rtCommand_t * const command);
 void DoCompleteSuccessForModelMaintainceTask(TaskInfo * const taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelMaintainceTask(TaskInfo * const taskInfo, const uint32_t devId);

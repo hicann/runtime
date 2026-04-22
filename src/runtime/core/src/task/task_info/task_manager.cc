@@ -10,6 +10,8 @@
 
 #include "task_manager.h"
 #include "task_info_v100.h"
+#include "model_execute_task.h"
+#include "model_graph_task.h"
 #include "profiling_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -37,7 +39,6 @@
 #include "timeout_set_task.h"
 #include "ringbuffer_maintain_task.h"
 #include "model_update_task.h"
-#include "end_graph_task.h"
 #include "model_to_aicpu_task.h"
 #include "maintenance_task.h"
 #include "davinci_kernel_task.h"

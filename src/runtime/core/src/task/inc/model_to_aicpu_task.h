@@ -10,12 +10,12 @@
 #ifndef RUNTIME_MODEL_TO_AICPU_TASK_H
 #define RUNTIME_MODEL_TO_AICPU_TASK_H
 
-#include "driver.hpp"
-#include "stars.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+rtError_t ModelToAicpuTaskInit(TaskInfo* taskInfo, const uint32_t modelIndex, const uint32_t controlType,
+                               const uint32_t exeFlag, const uint64_t modelPtr);
 void ToCmdBodyForModelToAicpuTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void DoCompleteSuccForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelToAicpuTask(TaskInfo* taskInfo, const uint32_t devId);

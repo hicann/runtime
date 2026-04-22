@@ -13,6 +13,7 @@
 #include "task_info_v100.h"
 #include "stars.hpp"
 #include "error_code.h"
+#include "dump_task.h"
 
 namespace cce {
 namespace runtime {
@@ -162,6 +163,63 @@ void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_
         stm->Id_(), static_cast<uint32_t>(taskInfo->id));
 }
 #endif
+
+#if F_DESC("AicpuInfoLoadTask")
+void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+{
+    Stream * const stm = taskInfo->stream;
+    RtStarsPhSqe *const sqe = &(command->phSqe);
+    sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+    sqe->ie = 0U;
+    sqe->pre_p = 1U;
+    sqe->post_p = 0U;
+    sqe->wr_cqe = stm->GetStarsWrCqeFlag();
+    sqe->res0 = 0U;
+    sqe->task_type = 0U;
+
+    sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
+    sqe->task_id = taskInfo->id;
+    sqe->task_type = TS_TASK_TYPE_AICPU_INFO_LOAD;
+    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
+    sqe->u.ai_cpu_load_info.aicpufoPtr = taskInfo->u.aicpuInfoLoadTask.aicpuInfo;
+    sqe->u.ai_cpu_load_info.length = taskInfo->u.aicpuInfoLoadTask.length;
+    sqe->u.ai_cpu_load_info.stream_id = static_cast<uint16_t>(stm->Id_());
+    sqe->u.ai_cpu_load_info.task_id = taskInfo->id;
+    sqe->u.ai_cpu_load_info.reserved[0] = 0U;
+    sqe->u.ai_cpu_load_info.reserved[1] = 0U;
+
+    PrintSqe(command, "AicpuInfoLoadTask");
+    RT_LOG(RT_LOG_INFO, "AicpuInfoLoadTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
+}
+
+void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    UNUSED(devId);
+    const uint32_t errorCode = taskInfo->errorCode;
+    if (unlikely(errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
+        taskInfo->stream->SetErrCode(errorCode);
+        RT_LOG(RT_LOG_ERROR, "Ai Cpu Load Info retCode=%#x, [%s].",
+               errorCode, GetTsErrCodeDesc(errorCode));
+    }
+}
+#endif
+
+void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+{
+    Stream *const stm = taskInfo->stream;
+    RtStarsPhSqe *const sqe = &(command->phSqe);
+    sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+    sqe->ie = 0U;
+    sqe->pre_p = 0U;
+    sqe->post_p = 0U;
+    sqe->wr_cqe = 0U;
+    sqe->res0 = 0U;
+    sqe->rt_streamID = static_cast<uint16_t>(stm->Id_());
+    sqe->task_id = taskInfo->id;
+    sqe->task_type = TS_TASK_TYPE_NOP;
+    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
+    PrintSqe(command, "NoOperationTask");
+}
 
 }  // namespace runtime
 }  // namespace cce
