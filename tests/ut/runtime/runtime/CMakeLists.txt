@@ -1672,6 +1672,22 @@ target_link_libraries(runtime_utest_api_others PRIVATE
 
 include(CMakePackageConfigHelpers)
 
+set(RUNTIME_TARGET_V201
+    runtime_utest_task_v201
+)
+
+set(RUNTIME_TARGET_DAVID
+    runtime_utest_api_david
+    runtime_utest_task_david
+    runtime_utest_xpu
+)
+
+set(RUNTIME_TARGET_910B
+    runtime_utest_task_910B
+    runtime_utest_api_910B
+    runtime_utest_xpu_910B
+)
+
 set(RUNTIME_TARGET
     runtime_utest_dfx
     runtime_utest_model
@@ -1697,5 +1713,18 @@ set(RUNTIME_TARGET
     runtime_utest_adc
     runtime_utest_mini_v3
 )
+
+set(RUNTIME_TARGET_COMMON ${RUNTIME_TARGET})
+list(REMOVE_ITEM RUNTIME_TARGET_COMMON
+    ${RUNTIME_TARGET_V201}
+    ${RUNTIME_TARGET_DAVID}
+    ${RUNTIME_TARGET_910B}
+)
+
+add_custom_target(runtime_ut_v201 DEPENDS ${RUNTIME_TARGET_V201})
+add_custom_target(runtime_ut_david DEPENDS ${RUNTIME_TARGET_DAVID})
+add_custom_target(runtime_ut_910b DEPENDS ${RUNTIME_TARGET_910B})
+add_custom_target(runtime_ut_common DEPENDS ${RUNTIME_TARGET_COMMON})
+add_custom_target(runtime_ut_all DEPENDS ${RUNTIME_TARGET})
 add_custom_target(runtime_ut DEPENDS ${RUNTIME_TARGET})
 include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
