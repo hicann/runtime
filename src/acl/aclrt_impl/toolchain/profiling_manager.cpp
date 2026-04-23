@@ -292,6 +292,7 @@ namespace acl {
         {AclProfType::AclmdlRIDestroyUnregisterCallback,        "aclmdlRIDestroyUnregisterCallback"},
         {AclProfType::AclmdlRITaskGetParams,                    "aclmdlRITaskGetParams"},
         {AclProfType::AclmdlRITaskSetParams,                    "aclmdlRITaskSetParams"},
+        {AclProfType::aclmdlRIKernelTaskGetAttribute,           "aclmdlRIKernelTaskGetAttribute"},
         {AclProfType::AclmdlRIUpdate,                           "aclmdlRIUpdate"},
         {AclProfType::AclmdlRITaskDisable,                      "aclmdlRITaskDisable"},
         {AclProfType::AclrtMemManagedAdvise,                    "aclrtMemManagedAdvise"},

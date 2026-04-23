@@ -6245,6 +6245,13 @@ rtError_t ApiErrorDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const pa
     return impl_->TaskSetParams(task, params);
 }
 
+rtError_t ApiErrorDecorator::KernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    NULL_PTR_RETURN_MSG_OUTER(task, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(attrValue, RT_ERROR_INVALID_VALUE);
+    return impl_->KernelTaskGetAttribute(task, attrId, attrValue);
+}
+
 rtError_t ApiErrorDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type < RT_KERNEL_DFX_INFO_DEFAULT || type > RT_KERNEL_DFX_INFO_BLOCK_INFO),

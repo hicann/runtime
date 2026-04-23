@@ -833,6 +833,7 @@ public:
     // task
     virtual rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) = 0;
     virtual rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params) = 0;
+    virtual rtError_t KernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue) = 0;
 
     virtual rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) = 0;
 };

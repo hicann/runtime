@@ -2469,6 +2469,14 @@ rtError_t aclStub::rtModelTaskSetParams(rtTask_t task, rtTaskParams* params)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    (void)task;
+    (void)attrId;
+    (void)attrValue;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtModelTaskDisable(rtTask_t task)
 {
     (void)task;
@@ -4414,6 +4422,11 @@ rtError_t rtModelTaskGetParams(rtTask_t task, rtTaskParams* params)
 rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params)
 {
     return MockFunctionTest::aclStubInstance().rtModelTaskSetParams(task, params);
+}
+
+rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    return MockFunctionTest::aclStubInstance().rtModelKernelTaskGetAttribute(task, attrId, attrValue);
 }
 
 rtError_t rtModelTaskDisable(rtTask_t task)

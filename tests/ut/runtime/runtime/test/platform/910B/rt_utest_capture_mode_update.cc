@@ -195,6 +195,226 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetParams_Success)
     GlobalMockObject::verify();
 }
 
+void CreateKernelTaskModel(rtContext_t& ctx, rtStream_t& stream, rtModel_t& model, char& function, rtTask_t& kernelTask)
+{
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+
+    void* args[] = {&ret, NULL};
+    ret = rtKernelLaunch(&function, 1, (void*)args, sizeof(args), NULL, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t stmNum = 1;
+    rtStream_t inputStreams[stmNum];
+    ret = rtModelGetStreams(model, inputStreams, &stmNum);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 2;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    kernelTask = inputTasks[0];
+}
+
+void ReleaseModelResource(rtContext_t& ctx, rtStream_t& stream, rtModel_t& model)
+{
+    rtError_t ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute001)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_KERNEL);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttr_t attr = {RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE, 1};
+    rtKernelLaunchCfg_t cfg = {&attr, 1};
+    params.kernelTaskParams.cfg = &cfg;
+    ret = rtModelTaskSetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue.schemMode, 1);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute002)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttr_t attr = {RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE, 2};
+    rtKernelLaunchCfg_t cfg = {&attr, 1};
+    params.kernelTaskParams.cfg = &cfg;
+    ret = rtModelTaskSetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue.dynUBufSize, 2);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute003)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_DATA_DUMP, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttr_t attr = {RT_LAUNCH_KERNEL_ATTR_DATA_DUMP, 1};
+    rtKernelLaunchCfg_t cfg = {&attr, 1};
+    params.kernelTaskParams.cfg = &cfg;
+    ret = rtModelTaskSetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_DATA_DUMP, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue.isDataDump, 1);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute004)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_TIMEOUT, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttr_t attr = {RT_LAUNCH_KERNEL_ATTR_TIMEOUT, 100};
+    rtKernelLaunchCfg_t cfg = {&attr, 1};
+    params.kernelTaskParams.cfg = &cfg;
+    ret = rtModelTaskSetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_TIMEOUT, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue.timeout, 100);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute005)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttr_t attr;
+    attr.id = RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US;
+    attr.value.timeoutUs = {100, 0};
+    rtKernelLaunchCfg_t cfg = {&attr, 1};
+    params.kernelTaskParams.cfg = &cfg;
+    ret = rtModelTaskSetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US, &attrValue);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(attrValue.timeoutUs.timeoutLow, 100);
+    EXPECT_EQ(attrValue.timeoutUs.timeoutHigh, 0);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute006)
+{
+    rtContext_t ctx;
+    rtStream_t stream;
+    rtModel_t model;
+    rtTask_t kernelTask;
+    CreateKernelTaskModel(ctx, stream, model, function_, kernelTask);
+
+    rtTaskParams params;
+    rtError_t ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE, &attrValue);
+    EXPECT_EQ(ret, 107000);
+    ret = rtModelKernelTaskGetAttribute(kernelTask, RT_LAUNCH_KERNEL_ATTR_MAX, &attrValue);
+    EXPECT_EQ(ret, 107000);
+
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
 TEST_F(CloudV2CaptureModelUpdateTest, rtModelUpdate_Success)
 {
     rtContext_t ctx;

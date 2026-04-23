@@ -48,7 +48,7 @@ void TaskFailCallBackNotify(rtExceptionInfo_t *const exceptionInfo)
     COND_RETURN_VOID(dev == nullptr, "dev is nullptr");
 
     uint32_t timeout = 0U;
-    const rtError_t error = GetOpExecuteMsTimeout(&timeout);;
+    const rtError_t error = GetOpExecuteMsTimeout(&timeout);
     if ((error == RT_ERROR_NONE) && (timeout >= MS_RECOVERY_TIMEOUT_THRESHOLD)) {
         (void)dev->ParseSimdPrintInfoWithLock();
     }

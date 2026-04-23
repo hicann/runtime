@@ -75,6 +75,18 @@ RTS_API rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params)
 }
 
 VISIBILITY_DEFAULT
+RTS_API rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->KernelTaskGetAttribute(task, attrId, attrValue);
+    COND_RETURN_WITH_NOLOG(
+        (error == RT_ERROR_FEATURE_NOT_SUPPORT || error == RT_ERROR_DRV_NOT_SUPPORT), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtModelTaskDisable(rtTask_t task)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();

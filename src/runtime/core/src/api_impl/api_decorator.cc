@@ -2518,6 +2518,11 @@ rtError_t ApiDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     return impl_->TaskSetParams(task, params);
 }
 
+rtError_t ApiDecorator::KernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    return impl_->KernelTaskGetAttribute(task, attrId, attrValue);
+}
+
 rtError_t ApiDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func)
 {
     return impl_->SetKernelDfxInfoCallback(type, func);

@@ -177,6 +177,7 @@
     _(aclError, aclrtLaunchKernelWithConfig, (aclrtFuncHandle funcHandle, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg * cfg, aclrtArgsHandle argsHandle, void * reserve), (funcHandle, numBlocks, stream, cfg, argsHandle, reserve)) \
     _(aclError, aclmdlRITaskGetParams, (aclmdlRITask task, aclmdlRITaskParams* params), (task, params)) \
     _(aclError, aclmdlRITaskSetParams, (aclmdlRITask task, aclmdlRITaskParams* params), (task, params)) \
+    _(aclError, aclmdlRIKernelTaskGetAttribute, (aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue *attrValue), (task, attrId, attrValue)) \
     _(aclError, aclmdlRIUpdate, (aclmdlRI modelRI), (modelRI)) \
     _(aclError, aclrtKernelArgsFinalize, (aclrtArgsHandle argsHandle), (argsHandle)) \
     _(aclError, aclrtValueWrite, (void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream), (devAddr, value, flag, stream)) \
