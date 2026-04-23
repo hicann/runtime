@@ -87,17 +87,17 @@ private:
         std::vector<RegInfo>& regData) const;
     void DumpV4Register(uint8_t coreType, uint16_t coreId);
     void DumpV4DebugRegister(
-        uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables,
+        uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
         std::vector<RegInfoWide>& regData) const;
     void DumpV4ErrorRegister(
         uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
         std::vector<RegInfoWide>& regData) const;
     bool DumpReadDebugAICoreRegister(
-        uint8_t coreType, uint16_t coreId, const RegisterTable& table, std::vector<uint8_t>& data) const;
+        uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table, std::vector<uint8_t>& data) const;
     std::string FormatRegisterData(const uint8_t* valAddr, uint8_t valSize) const;
     template <typename T>
     void DumpDebugRegisterImpl(
-        uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const;
+        uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const;
     template <typename T>
     void DumpErrorRegisterImpl(
         uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,

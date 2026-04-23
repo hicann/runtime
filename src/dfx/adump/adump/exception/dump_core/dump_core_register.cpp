@@ -46,10 +46,20 @@ std::string DumpCore::FormatRegisterData(const uint8_t* valAddr, uint8_t valSize
 }
 
 bool DumpCore::DumpReadDebugAICoreRegister(
-    uint8_t coreType, uint16_t coreId, const RegisterTable& table, std::vector<uint8_t>& data) const
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table, std::vector<uint8_t>& data) const
 {
     data.resize(table.num * table.byteWidth);
-    rtDebugMemoryParam_t param = {coreType, 0, coreId, RT_MEM_TYPE_REGISTER, 0, 0, 0, 0, 0};
+    rtDebugMemoryType_t memType;
+    if (regType == RegisterType::AIC || regType == RegisterType::AIV) {
+        memType = RT_MEM_TYPE_REGISTER_DIRECT;
+    } else if (regType == RegisterType::AIC_DBG || regType == RegisterType::AIV_DBG) {
+        memType = RT_MEM_TYPE_REGISTER;
+    } else {
+        IDE_LOGE(
+            "Wrong regType. regType: %d", regType);
+        return false;
+    }
+    rtDebugMemoryParam_t param = {coreType, 0, coreId, memType, 0, 0, 0, 0, 0};
     param.srcAddr = table.startAddr;
     param.dstAddr = reinterpret_cast<uint64_t>(data.data());
     param.memLen = table.num * table.byteWidth;
@@ -67,12 +77,12 @@ bool DumpCore::DumpReadDebugAICoreRegister(
 
 template <typename T>
 void DumpCore::DumpDebugRegisterImpl(
-    uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables, std::vector<T>& regData) const
 {
     std::stringstream ss;
     for (const RegisterTable& table : tables) {
         std::vector<uint8_t> data;
-        bool dataValid = DumpReadDebugAICoreRegister(coreType, coreId, table, data);
+        bool dataValid = DumpReadDebugAICoreRegister(coreType, coreId, regType, table, data);
         errno_t err = EOK;
         const uint8_t* dataPtr = data.data();
         for (uint32_t i = 0; i < table.num; ++i) {
@@ -154,7 +164,13 @@ void DumpCore::DumpV2Register(uint8_t coreType, uint16_t coreId)
 void DumpCore::DumpV2DebugRegister(
     uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables, std::vector<RegInfo>& regData) const
 {
-    DumpDebugRegisterImpl(coreType, coreId, tables, regData);
+    RegisterType regType;
+    if (coreType == CORE_TYPE_AIC) {
+        regType = RegisterType::AIC_DBG;
+    } else {
+        regType = RegisterType::AIV_DBG;
+    }
+    DumpDebugRegisterImpl(coreType, coreId, regType, tables, regData);
 }
 
 void DumpCore::DumpV2ErrorRegister(
@@ -171,7 +187,7 @@ void DumpCore::DumpV4Register(uint8_t coreType, uint16_t coreId)
     std::shared_ptr<RegisterInterface> reg = RegisterManager::GetInstance().GetRegister();
     IDE_CTRL_VALUE_FAILED(reg != nullptr, return, "Get register failed, null register.");
     for (const auto& regType : reg->GetRegisterTypes(coreType)) {
-        DumpV4DebugRegister(coreType, coreId, reg->GetRegisterTable(regType), regData);
+        DumpV4DebugRegister(coreType, coreId, regType, reg->GetRegisterTable(regType), regData);
     }
     DumpV4ErrorRegister(coreType, coreId, reg->GetErrorRegisterTable(), regData);
 
@@ -184,10 +200,10 @@ void DumpCore::DumpV4Register(uint8_t coreType, uint16_t coreId)
 }
 
 void DumpCore::DumpV4DebugRegister(
-    uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables,
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
     std::vector<RegInfoWide>& regData) const
 {
-    DumpDebugRegisterImpl(coreType, coreId, tables, regData);
+    DumpDebugRegisterImpl(coreType, coreId, regType, tables, regData);
 }
 
 void DumpCore::DumpV4ErrorRegister(
