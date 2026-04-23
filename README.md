@@ -2,6 +2,7 @@
 
 ## 🔥Latest News
 
+- [2026/04] 新增支持Ascend 950PR/Ascend 950DT芯片。
 - [2025/12] runtime项目首次上线。
 
 ## 概述
