@@ -67,7 +67,7 @@ public:
         return newVal != REF_UPDATING;
     }
 
-    // The return value indicates whether the reference count is decremented, diffrent from other api.
+    // The return value indicates whether the reference count is decremented, different from other api.
     bool TryDecRef(bool &needReset)
     {
         uint64_t oldVal;

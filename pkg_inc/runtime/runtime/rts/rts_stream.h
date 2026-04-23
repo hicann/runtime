@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 #define RT_STREAM_DESTORY_FLAG_DEFAULT 0x0ULL
-#define RT_STREAM_DESTORY_FLAG_FORCE 0x1ULL  //Force destory: The stream will be destroyed without waiting for all tasks on the stream to be completed.
+#define RT_STREAM_DESTORY_FLAG_FORCE 0x1ULL  //Force destroy: The stream will be destroyed without waiting for all tasks on the stream to be completed.
 
 // Stream Mode 
 #define RT_STREAM_FAILURE_MODE_CONTINUE_ON_FAILURE  (0x0U)  // 默认值，task出错时，处理完异常后继续执行流上的任务 
@@ -98,9 +98,9 @@ RTS_API rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, 
 
 /**
  * @ingroup rts_stream
- * @brief destory a stream
+ * @brief destroy a stream
  * @param [in] stm   stream handle
- * @param [in] flags   destory flags
+ * @param [in] flags   destroy flags
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */

@@ -283,9 +283,9 @@ RTS_API rtError_t rtGetMaxStreamAndTask(uint32_t streamType, uint32_t *maxStrCou
 
 /**
  * @ingroup dvrt_stream
- * @brief inquire avaliable stream count
+ * @brief inquire available stream count
  * @param [in] streamType   Stream Type
- * @param [out] streamCount  avaliable streamCount
+ * @param [out] streamCount  available streamCount
  * @return RT_ERROR_NONE for complete
  * @return RT_ERROR_INVALID_VALUE for error input
  */
@@ -293,8 +293,8 @@ RTS_API rtError_t rtGetAvailStreamNum(const uint32_t streamType, uint32_t * cons
 
 /**
  * @ingroup dvrt_stream
- * @brief inquire avaliable event count
- * @param [out] eventCount  avaliable event Count
+ * @brief inquire available event count
+ * @param [out] eventCount  available event Count
  * @return RT_ERROR_NONE for complete
  * @return RT_ERROR_INVALID_VALUE for error input
  */

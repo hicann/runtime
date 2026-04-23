@@ -56,7 +56,7 @@ aclError aclrtDestroyContextImpl(aclrtContext context)
 
     const rtError_t rtErr = rtCtxDestroyEx(static_cast<rtContext_t>(context));
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("destory context failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
+        ACL_LOG_CALL_ERROR("destroy context failed, runtime errorCode is %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_INFO("successfully execute aclrtDestroyContext");

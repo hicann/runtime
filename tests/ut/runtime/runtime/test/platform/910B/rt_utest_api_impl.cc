@@ -1944,7 +1944,7 @@ TEST_F(CloudV2ApiImplTest, OpenEventHandle_Test)
 
 static void rtModelDestroyCallBackUt(void *args)
 {
-    std::cout << "model destory call back" << std::endl;
+    std::cout << "model destroy call back" << std::endl;
 }
 
 TEST_F(CloudV2ApiImplTest, ModelDestroyRegisterCallbackApiDecorator)

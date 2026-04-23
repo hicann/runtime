@@ -651,7 +651,7 @@ TEST_F(StreamTest, stream_tearDown_fail)
 
     MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().then(returnValue(1));
     error = rtStreamDestroy(stream);
-    std::cout<<"stream destory success."<<std::endl;    
+    std::cout<<"stream destroy success."<<std::endl;
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
 }
 

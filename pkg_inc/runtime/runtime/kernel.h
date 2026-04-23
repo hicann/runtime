@@ -821,7 +821,7 @@ RTS_API rtError_t rtAicpuKernelLaunchExWithArgs(const uint32_t kernelType, const
 
 /**
  * @ingroup rt_kernel
- * @brief L1 fusion dump addr transfered to device
+ * @brief L1 fusion dump addr transferred to device
  * @param [in] mdl    handle info
  * @param [in] addr     ddr address of L1 Fusion Dump
  * @param [in] dumpSize memory size
@@ -949,7 +949,7 @@ RTS_API rtError_t rtLaunch(const void *stubFunc);
 
 /**
  * @ingroup rt_kernel
- * @brief implicitly transfered data to device.
+ * @brief implicitly transferred data to device.
  *        lifecycle end after next kernel task finish
  * @param [in] ptr   host memory
  * @param [in] size   host memory size

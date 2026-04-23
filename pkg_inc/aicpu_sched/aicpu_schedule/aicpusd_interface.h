@@ -33,7 +33,7 @@ enum __attribute__((visibility("default"))) ErrorCode : int32_t {
 __attribute__((visibility("default"))) int32_t AICPUModelLoad(void *ptr);
 
 /**
- * @brief it is used to destory the model.
+ * @brief it is used to destroy the model.
  * @param [in] modelId : The id of model will be destroy.
  * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
  */

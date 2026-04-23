@@ -175,7 +175,7 @@ RTS_API rtError_t rtsLabelSwitchListCreate(rtLabel_t *labels, size_t num, void *
 
 /**
  * @ingroup rts_label
- * @brief destory label switch list
+ * @brief destroy label switch list
  * @param [in] labelList   label switch list to destroy
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input

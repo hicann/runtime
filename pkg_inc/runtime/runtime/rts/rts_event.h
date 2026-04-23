@@ -175,8 +175,8 @@ RTS_API rtError_t rtsEventReset(rtEvent_t evt, rtStream_t stm);
 
 /**
  * @ingroup dvrt_stream
- * @brief inquire avaliable event count
- * @param [out] eventCount  avaliable event Count
+ * @brief inquire available event count
+ * @param [out] eventCount  available event Count
  * @return ACL_RT_SUCCESS for complete
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */

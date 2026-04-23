@@ -284,7 +284,7 @@ ACL_FUNC_VISIBILITY aclError aclDestroyDataBuffer(const aclDataBuffer *dataBuffe
  * @brief update new data of aclDataBuffer
  *
  * @param dataBuffer [OUT]    pointer to aclDataBuffer
- * @li The old data need to be released by the user, otherwise it may occur memory leak leakage
+ * @li The old data need to be released by the user, otherwise it may occur memory leak
  *  call aclGetDataBufferAddr interface to get old data address
  *  call aclrtFree interface to release memory
  *

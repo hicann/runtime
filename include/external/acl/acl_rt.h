@@ -1313,7 +1313,7 @@ ACL_FUNC_VISIBILITY aclError aclrtDestroyContext(aclrtContext context);
  * set the thread's Context, the last one prevails.
  *
  * @par Restriction
- * @li If the cevice corresponding to the context set for the thread
+ * @li If the device corresponding to the context set for the thread
  * has been reset, you cannot set the context as the context of the thread,
  * otherwise a business exception will result.
  * @li It is recommended to use the context created in a thread.
@@ -3030,7 +3030,7 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunction(const aclrtBinHandle binHand
  * @ingroup AscendCL
  * @brief Kernel Launch to device
  * @param [in] funcHandle  function handle
- * @param [in] numBlocks  block dimentions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsData  args data
  * @param [in] argsSize  args size
  * @param [in] stream   stream handle
@@ -3619,8 +3619,8 @@ ACL_FUNC_VISIBILITY aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId
 
 /**
  * @ingroup AscendCL
- * @brief get avaliable event count
- * @param [out] eventCount  avaliable event count
+ * @brief get available event count
+ * @param [out] eventCount  available event count
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
@@ -3865,7 +3865,7 @@ ACL_FUNC_VISIBILITY aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num
 
 /**
  * @ingroup AscendCL
- * @brief destory label list
+ * @brief destroy label list
  * @param labelList [in]  label list to destroy
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
@@ -4769,7 +4769,7 @@ ACL_FUNC_VISIBILITY aclError aclrtProfTrace(void *userdata, int32_t length, aclr
  * @ingroup AscendCL
  * @brief Kernel Launch to device
  * @param [in] funcHandle  function handle
- * @param [in] numBlocks  block dimentions
+ * @param [in] numBlocks  block dimensions
  * @param [in] argsData  args data
  * @param [in] argsSize  args size
  * @param [in] cfg  configuration information
@@ -4786,7 +4786,7 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uin
  * @ingroup AscendCL
  * @brief Launch kernel with host args
  * @param [in] funcHandle  function handle
- * @param [in] numBlocks  block dimentions
+ * @param [in] numBlocks  block dimensions
  * @param [in] stream  stream handle
  * @param [in] cfg  configuration information
  * @param [in] hostArgs  host args data

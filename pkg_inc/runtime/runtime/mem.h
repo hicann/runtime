@@ -1192,8 +1192,8 @@ RTS_API rtError_t rtUnmapMem(void* devPtr);
 * 1. Only support ONLINE scene.
 * 2. Support va->pa:
 *    D2H,
-*    D2D(sigle device, diffrent device with same host, diffrent device with diffrent host),
-*    H2H(same host, diffrent host(support latter))
+*    D2D(sigle device, different device with same host, different device with different host),
+*    H2H(same host, different host(support latter))
 * 3. rtMemSetAccess: ptr and size must be same with rtMemMap, rtMemGetAccess: ptr and size is in range of set
 * 4. after rtMemMap, if handle has owner(witch location pa handle is created or use witch device pa handle is imported)
 *    the owner location has readwrite prop automatic, not need to set again

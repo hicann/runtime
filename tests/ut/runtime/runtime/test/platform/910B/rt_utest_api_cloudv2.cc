@@ -1217,7 +1217,7 @@ TEST_F(RtApiTest, pin_memory_attribute)
 bool g_modelDestroyCallBack = false;
 static void rtModelDestroyCallBackUt(void *args)
 {
-    std::cout << "model destory call back" << std::endl;
+    std::cout << "model destroy call back" << std::endl;
     g_modelDestroyCallBack = true;
 }
 

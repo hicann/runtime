@@ -666,7 +666,7 @@ void AdxDumpRecord::RecordDumpInfo()
         SharedPtr<MsgProto> dataInfo = data.msg;
         DumpChunk *dumpChunk = reinterpret_cast<DumpChunk*>(dataInfo->data);
         if (dumpChunk == nullptr) {
-            IDE_LOGW("transfered dumpChunk is nullptr");
+            IDE_LOGW("transferred dumpChunk is nullptr");
             continue;
         }
 

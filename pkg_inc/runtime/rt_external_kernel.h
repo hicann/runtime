@@ -199,7 +199,7 @@ RTS_API rtError_t rtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **
 
 /**
  * @ingroup rt_kernel
- * @brief L1 fusion dump addr transfered to device
+ * @brief L1 fusion dump addr transferred to device
  * @param [in] mdl    handle info
  * @param [in] addr     ddr address of L1 Fusion Dump
  * @param [in] dumpSize memory size
