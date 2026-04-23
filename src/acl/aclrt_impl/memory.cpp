@@ -1517,7 +1517,7 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void *dataPtr, size_t size
     uint64_t bufSize = 0U;
     void *tmpDataPtr = nullptr;
     ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
-    ACL_CHECK_LESS_UINT(size, static_cast<size_t>(bufSize));
+    ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL(tmpDataPtr);
     const auto ret = memcpy_s(dataPtr, size, (static_cast<uint8_t *>(tmpDataPtr) + offset), size);
     if (ret != EOK) {
@@ -1538,7 +1538,7 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void *dataPtr, size_t size
     uint64_t bufSize = 0U;
     void *tmpDataPtr = nullptr;
     ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
-    ACL_CHECK_LESS_UINT(size, static_cast<size_t>(bufSize));
+    ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL(tmpDataPtr);
     const auto ret = memcpy_s((static_cast<uint8_t *>(tmpDataPtr) + offset),
                               (static_cast<size_t>(bufSize) - offset),
