@@ -228,7 +228,7 @@ MsgCode AdxMsgProto::RecvFile(const CommHandle &handle, int32_t fd)
     int32_t length = 0;
     while (true) {
         int32_t ret = AdxCommOptManager::Instance().Read(handle, (IdeRecvBuffT)&msg,
-            length, COMM_OPT_NOBLOCK);
+            length, handle.timeout);
             IDE_CTRL_VALUE_FAILED(ret == IDE_DAEMON_OK && msg != nullptr, return IDE_DAEMON_CHANNEL_ERROR,
                 "hand shake failed ret %d, read failed or timeout", ret);
         if (msg->msgType == MsgType::MSG_CTRL) { // check the message is ctrl or not

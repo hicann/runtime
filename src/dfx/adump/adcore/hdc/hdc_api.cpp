@@ -344,6 +344,7 @@ static int32_t HdcRecvData(HDC_SESSION session, struct drvHdcMsg *pmsg, int32_t 
             return IDE_DAEMON_SOCK_CLOSE;
         }
         if (error == DRV_ERROR_WAIT_TIMEOUT) {
+            IDE_LOGW("wait timeout %u", timeout);
             return DRV_ERROR_WAIT_TIMEOUT;
         }
         IDE_LOGE("Hdc Receive, error %d", error);

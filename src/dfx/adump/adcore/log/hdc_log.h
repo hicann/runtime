@@ -45,7 +45,8 @@ inline void AdxLogFlush()
 #define IDE_LOGD(format, ...) do {             \
 } while (0)
 
-#define IDE_LOGI(format, ...) do {             \
+#define IDE_LOGI(format, ...) do {                                                                                  \
+    syslog(LOG_INFO, "[tid:%ld] %s:%d: " format "\n", syscall(SYS_gettid), __FILE__, __LINE__, ##__VA_ARGS__);   \
 } while (0)
 
 #define IDE_LOGW(format, ...) do {                                                                                  \

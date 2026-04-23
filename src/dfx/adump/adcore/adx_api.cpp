@@ -128,6 +128,7 @@ int32_t AdxGetDeviceFileTimeout(uint16_t devId, IdeString desPath, IdeString log
                                             logType, strlen(logType) + 1);
     IDE_CTRL_VALUE_FAILED(code == IDE_DAEMON_NONE_ERROR, goto GET_ERROR, "send file hand shake failed");
     do {
+        // recv file name
         code = AdxMsgProto::GetStringMsgData(handle, value);
         IDE_CTRL_VALUE_FAILED(code == IDE_DAEMON_NONE_ERROR, goto GET_ERROR, "get file shake response failed, ret=%d",
             static_cast<int32_t>(code));
@@ -148,8 +149,9 @@ int32_t AdxGetDeviceFileTimeout(uint16_t devId, IdeString desPath, IdeString log
         err = AdxCommonGetFile(handle, value);
         if (err != IDE_DAEMON_OK) {
             IDE_LOGE("get file process failed");
-            continue;
+            break;
         }
+        IDE_LOGI("receive file file data successfully");
         (void)mmChmod(value.c_str(), M_IRUSR); // readonly, 400
     } while (true);
 

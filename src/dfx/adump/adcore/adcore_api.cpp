@@ -153,6 +153,7 @@ int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString s
         return IDE_DAEMON_ERROR;
     }
 
+    // send file name
     int32_t ret = Adx::AdxMsgProto::SendMsgData(*handle, type, MsgStatus::MSG_STATUS_NONE_ERROR,
         static_cast<IdeSendBuffT>(desPath), strlen(desPath) + 1U);
     if (ret != IDE_DAEMON_NONE_ERROR) {
@@ -164,6 +165,7 @@ int32_t AdxSendFileByHandle(AdxCommConHandle handle, CmdClassT type, AdxString s
         return IDE_DAEMON_ERROR;
     }
 
+    // send file data
     if (flag == SEND_FILE_TYPE_REAL_FILE) {
         ret = Adx::AdxMsgProto::SendEventFile(*handle, type, 0, fd);
     } else {
