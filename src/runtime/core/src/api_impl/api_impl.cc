@@ -372,7 +372,7 @@ rtError_t ApiImpl::MetadataRegister(Program * const prog, const char_t * const m
     const std::string strMetadata(metadata);
     const auto pos = strMetadata.find(',');
     if (pos == std::string::npos) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "No ',' is found in metadata=%s.", metadata);
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "No ',' is found in metadata=%s.", metadata);
         RT_LOG(RT_LOG_ERROR, "Register binary metadata failed.");
         return RT_ERROR_METADATA;
     } else {
@@ -1521,7 +1521,7 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
     } else {
         if (curStm->IsCapturing()) {
             if ((!(evt->IsNewMode())) && (evt->GetEventFlag() != RT_EVENT_EXTERNAL)) {
-                RT_LOG(RT_LOG_WARNING,  "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
+                RT_LOG(RT_LOG_WARNING, "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
                 " supported, except for the RT_EVENT_EXTERNAL type, mode=%d, flag=%" PRIu64 "", evt->IsNewMode(),
                  evt->GetEventFlag());
                 return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -1531,7 +1531,7 @@ rtError_t ApiImpl::StreamWaitEvent(Stream * const stm, Event * const evt, const 
                 // 2.Be a capture stream
                 // 3.Event was created using the rtCreateEventExWithFlag interface
                 // 4. A record was added the single-operator stream
-                RT_LOG(RT_LOG_ERROR,  "The record corresponding to the event not be captured, mode=%d", evt->IsNewMode());
+                RT_LOG(RT_LOG_ERROR, "The record corresponding to the event not be captured, mode=%d", evt->IsNewMode());
                 return RT_ERROR_STREAM_CAPTURE_ISOLATION;
             }
         }
@@ -2059,7 +2059,7 @@ rtError_t ApiImpl::EventReset(Event * const evt, Stream * const stm)
         }
     } else {
         if ((curStm != curCtx->DefaultStream_()) && (evt->ToBeCaptured(curStm))) {
-            RT_LOG(RT_LOG_WARNING,  "Not support call rtEventCreate or rtEventCreateWithFlag without external flag");
+            RT_LOG(RT_LOG_WARNING, "Not support call rtEventCreate or rtEventCreateWithFlag without external flag");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }

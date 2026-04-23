@@ -5190,7 +5190,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     prog->SetBinAlignBaseAddr(devMem, device->Id_());
 
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR,  "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
+        RT_LOG(RT_LOG_ERROR, "Memcpy failed, size=%u(bytes), type=%d(RT_MEMCPY_HOST_TO_DEVICE), retCode=%#x",
             size, static_cast<int32_t>(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
         BinaryMemFree(device, prog, alignSize);
         return error;
@@ -5530,7 +5530,7 @@ rtError_t Runtime::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferTy
                                 uint32_t *binSize) const
 {
     Program * const programHdl = static_cast<Program *>(binHandle);
-    RT_LOG(RT_LOG_INFO, "Start to get bin buffer, bin handle %p,  program id=%u, buffer type %d",
+    RT_LOG(RT_LOG_INFO, "Start to get bin buffer, bin handle %p, program id=%u, buffer type %d",
            binHandle, programHdl->Id_(), type);
     *binSize = programHdl->GetBinarySize();
     if (type == RT_BIN_HOST_ADDR) {

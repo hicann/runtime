@@ -72,7 +72,7 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     }
 
     if (((groupDim != 0U) && (groupBlockDim == 0U)) || ((groupDim == 0U) && (groupBlockDim != 0U))) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "groupDim=%u and groupBlockDim=%u must both be zero or non-zero.",
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "groupDim=%u and groupBlockDim=%u must both be zero or non-zero.",
             groupDim, groupBlockDim);
         return RT_ERROR_INVALID_VALUE;
     }

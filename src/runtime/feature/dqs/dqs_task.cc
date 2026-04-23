@@ -513,7 +513,7 @@ void PrintErrorInfoForDqsBatchDequeueTask(TaskInfo* taskInfo, const uint32_t dev
     const auto dev = taskInfo->stream->Device_();
     (void)dev->Driver_()->MemCopySync(dfx, sizeof(dfx),
         taskInfo->u.dqsBatchDequeueTask.dfxPtr, sizeof(dfx), RT_MEMCPY_DEVICE_TO_HOST);
-    RT_LOG(RT_LOG_ERROR, "dqs dqsBatchDequeueTask error,  pop result=%u, stream_id=%d, task_id=%u,  pop_result=%u, hadle_value=%u",
+    RT_LOG(RT_LOG_ERROR, "dqs dqsBatchDequeueTask error, pop result=%u, stream_id=%d, task_id=%u, pop_result=%u, hadle_value=%u",
         devId, taskInfo->stream->Id_(), taskInfo->id, dfx[0U], dfx[1U]);
 
     return;

@@ -125,7 +125,7 @@ void ConstructDavidSqeForNotifyRecordTask(TaskInfo *taskInfo, rtDavidSqe_t *cons
     }
 
     PrintDavidSqe(command, "NotifyRecordTask");
-    RT_LOG(RT_LOG_INFO, "notify_record: device_id=%u, stream_id=%d, task_id=%u,  task_sn=%u, sq_id=%u, notify_id=%u, "
+    RT_LOG(RT_LOG_INFO, "notify_record: device_id=%u, stream_id=%d, task_id=%u, task_sn=%u, sq_id=%u, notify_id=%u, "
         "cntFlag=%u, clrFlag=%u, waitModeBit=%u, recordModeBit=%u, bitmap=%u, cntValue=%u, subType=%s, timeout=%us.",
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(),
         sqe->notifyId, sqe->cntFlag, sqe->clrFlag, sqe->waitModeBit, sqe->recordModeBit, sqe->bitmap, sqe->cntValue,

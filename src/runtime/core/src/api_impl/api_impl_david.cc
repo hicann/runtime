@@ -528,7 +528,7 @@ rtError_t ApiImplDavid::EventReset(Event * const evt, Stream * const stm)
         }
     } else {
         if ((curStm != curCtx->DefaultStream_()) && (evt->ToBeCaptured(curStm))) {
-            RT_LOG(RT_LOG_WARNING,  "Not support call rtEventCreate or rtEventCreateWithFlag without external flag");
+            RT_LOG(RT_LOG_WARNING, "Not support call rtEventCreate or rtEventCreateWithFlag without external flag");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
@@ -599,7 +599,7 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
     } else {
         if (curStm->IsCapturing()) { 
             if ((!(evt->IsNewMode())) && (evt->GetEventFlag() != RT_EVENT_EXTERNAL)) { 
-                RT_LOG(RT_LOG_WARNING,  "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
+                RT_LOG(RT_LOG_WARNING, "Event created via the API rtEventCreate and rtEventCreateWithFlag are not"
                 " supported, except for the RT_EVENT_EXTERNAL type, mode=%d, flag=%" PRIu64 "", evt->IsNewMode(),
                  evt->GetEventFlag());
                 return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -609,7 +609,7 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
                 // 2.Be a capture stream
                 // 3.Event was created using the rtCreateEventExWithFlag interface
                 // 4. A record was added the single-operator stream
-                RT_LOG(RT_LOG_ERROR,  "The record corresponding to the event not be captured, mode=%d",
+                RT_LOG(RT_LOG_ERROR, "The record corresponding to the event not be captured, mode=%d",
                     evt->IsNewMode());
                 return RT_ERROR_STREAM_CAPTURE_ISOLATION;
             }

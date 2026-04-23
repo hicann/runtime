@@ -2989,7 +2989,7 @@ rtError_t Context::StartOnlineProf(Stream * const stm, const uint32_t sampleNum)
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((sampleNum == 0U) || (sampleNum > MAX_ONLINEPROF_NUM), RT_ERROR_INVALID_VALUE, 
         sampleNum, "(0, " + std::to_string(MAX_ONLINEPROF_NUM) + "]");
     if ((stm->Device_())->DevGetOnlineProfStart()) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,  "StreamId=%d online profiling has already been set on the device.",
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "StreamId=%d online profiling has already been set on the device.",
             streamId);
         return RT_ERROR_PROF_START;
     }
