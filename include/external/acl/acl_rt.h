@@ -1939,7 +1939,7 @@ ACL_FUNC_VISIBILITY aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint3
 
 /**
  * @ingroup AscendCL
- * @brief return device pointer of mapped host memory registered by aclrtHostRegisterV2
+ * @brief return device pointer of mapped host memory registered by aclrtHostRegister or aclrtHostRegisterV2
  *
  * @param pHost [IN]      requested host pointer mapping
  * @param pDevice [OUT]   return device pointer for mapped memory
