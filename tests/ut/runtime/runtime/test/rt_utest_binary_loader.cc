@@ -555,6 +555,18 @@ TEST_F(BinaryLoaderTest, TestParseKernelJsonFile)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(BinaryLoaderTest, TestParseKernelJsonFile_1)
+{
+    std::string file = "../tests/ut/runtime/runtime/test/data/GatherV3_9e31943a1a48bf81ddff1fc6379e0be3_high_performance.json";
+    BinaryLoader binaryLoader(file.c_str(), nullptr);
+    binaryLoader.binRealPath_ = file.c_str();
+    ElfProgram program;
+    program.elfData_->containsAscendMeta = false;
+    program.isSupportMix_ = true;
+    rtError_t ret = binaryLoader.ParseKernelJsonFile(&program);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
 TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceSuccess)
 {
     MOCKER_CPP(&Runtime::BinaryLoad).stubs().will(returnValue(RT_ERROR_NONE));

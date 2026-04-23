@@ -61,27 +61,31 @@ void GetCpuKernelFromJson(const nlohmann::json &jsonObj, std::vector<CpuKernelIn
         kernelInfo.hasOpKernelLib = false;
 
         auto opInfo = value["opInfo"];
-        if (opInfo.contains("functionName")) {
-            kernelInfo.funcName = opInfo["functionName"].get<std::string>();
-        } else {
-            // 当前识别TF算子可以没有functionName
-            RT_LOG(RT_LOG_WARNING, "functionName does not exist, key=%s.");
-        }
-        if (opInfo.contains("kernelSo")) {
-            kernelInfo.kernelSo = opInfo["kernelSo"].get<std::string>();
-        } else {
-            RT_LOG(RT_LOG_WARNING, "kernelSo does not exist.");
-        }
+        try {
+            if (opInfo.contains("functionName")) {
+                kernelInfo.funcName = opInfo["functionName"].get<std::string>();
+            } else {
+                // 当前识别TF算子可以没有functionName
+                RT_LOG(RT_LOG_WARNING, "functionName does not exist, key=%s.");
+            }
+            if (opInfo.contains("kernelSo")) {
+                kernelInfo.kernelSo = opInfo["kernelSo"].get<std::string>();
+            } else {
+                RT_LOG(RT_LOG_WARNING, "kernelSo does not exist.");
+            }
 
-        if (opInfo.contains("opKernelLib")) {
-            kernelInfo.hasOpKernelLib = true;
-            kernelInfo.opKernelLib = opInfo["opKernelLib"].get<std::string>();
-        }
-        if (opInfo.contains("userDefined") && (opInfo["userDefined"].get<std::string>() == "True")) {
-            kernelInfo.isUserDefined = true;
-        }
+            if (opInfo.contains("opKernelLib")) {
+                kernelInfo.hasOpKernelLib = true;
+                kernelInfo.opKernelLib = opInfo["opKernelLib"].get<std::string>();
+            }
+            if (opInfo.contains("userDefined") && (opInfo["userDefined"].get<std::string>() == "True")) {
+                kernelInfo.isUserDefined = true;
+            }
 
-        kernelInfos.push_back(kernelInfo);
+            kernelInfos.push_back(kernelInfo);
+        } catch (nlohmann::json::exception &e) {
+            RT_LOG(RT_LOG_ERROR, "Parse kenerl json file failed, because %s.", e.what());
+        }
     }
     return;
 }

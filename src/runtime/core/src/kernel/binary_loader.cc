@@ -91,8 +91,13 @@ static uint32_t ParseMagic(const nlohmann::json &kernelJson)
         return 0U;
     }
 
-    const auto &magicStr = kernelJson["magic"].get<std::string>();
-    return ConvertMagic(magicStr);
+    try {
+        const auto &magicStr = kernelJson["magic"].get<std::string>();
+        return ConvertMagic(magicStr);
+    } catch (nlohmann::json::exception &e) {
+        RT_LOG(RT_LOG_ERROR, "Invalid magic in json file, because %s.", e.what());
+        return 0U;
+    }
 }
 
 static void ParseInterCrossSync(const nlohmann::json &kernelJson, ElfProgram * const prog)
@@ -108,10 +113,15 @@ static rtError_t ParseDebugOptions(const nlohmann::json &kernelJson)
     if (kernelJson.find("debugOptions") == kernelJson.end()) {
         return RT_ERROR_NONE;
     }
-    const auto &debugOptions = kernelJson["debugOptions"].get<std::string>();
-    if (debugOptions.find("printf") != std::string::npos) {
-        RT_LOG(RT_LOG_ERROR, "kernel debug option 'printf' does not support, debugOptions=[%s]", debugOptions.c_str());
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    try {
+        const auto &debugOptions = kernelJson["debugOptions"].get<std::string>();
+        if (debugOptions.find("printf") != std::string::npos) {
+            RT_LOG(RT_LOG_ERROR, "kernel debug option 'printf' does not support, debugOptions=[%s]", debugOptions.c_str());
+            return RT_ERROR_FEATURE_NOT_SUPPORT;
+        }
+    } catch (nlohmann::json::exception &e) {
+        RT_LOG(RT_LOG_ERROR, "Invalid debugOptions in json file, because %s.", e.what());
+        return RT_ERROR_INVALID_VALUE;
     }
     return RT_ERROR_NONE;
 }

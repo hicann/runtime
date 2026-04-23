@@ -205,7 +205,7 @@ rtError_t ConstructCcuSubSqe(const TaskInfo * const taskInfo, rtDavidSqe_t * con
         }
         // 32B sqe 是单数
         if (isOddNum) {
-            error = ConstructCcuSubSqeFor32B(&(ccuInfo->ccuTaskInfo[taskNum]), davidSqe, taskInfo, sqeIndex, 0,
+            error = ConstructCcuSubSqeFor32B(&(ccuInfo->ccuTaskInfo[taskNum32B]), davidSqe, taskInfo, sqeIndex, 0,
                                              taskCnt, sqBaseAddr);
             ERROR_RETURN(error, "ConstructCcuSubSqeFor32B failed.");
         }
