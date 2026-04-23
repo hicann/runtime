@@ -3407,8 +3407,8 @@ rtError_t Stream::UpdateAllPersistentTask()
             SQE_NUM_PER_STARS_TASK_MAX, workTask->id, workTask->type, workTask->typeName);
         if (workTask->updateFlag == RT_TASK_UPDATE || workTask->updateFlag == RT_TASK_KEEP) {
             COND_RETURN_ERROR(
-                (totalSendSqeNum + sendSqeNum) >= STREAM_SQ_MAX_DEPTH, RT_ERROR_INVALID_VALUE,
-                "tatal sqe num more than max num %d.", STREAM_SQ_MAX_DEPTH);
+                (totalSendSqeNum + sendSqeNum) >= STREAM_SQ_MAX_DEPTH, RT_ERROR_STREAM_FULL,
+                "total sqe num more than max num %d.", STREAM_SQ_MAX_DEPTH);
         }
         switch (workTask->updateFlag) {
             case RT_TASK_UPDATE:
