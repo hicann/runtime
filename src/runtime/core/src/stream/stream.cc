@@ -3402,12 +3402,12 @@ rtError_t Stream::UpdateAllPersistentTask()
         const uint32_t sendSqeNum = GetSendSqeNum(workTask);
         COND_RETURN_ERROR(
             sendSqeNum > SQE_NUM_PER_STARS_TASK_MAX, RT_ERROR_INVALID_VALUE,
-            "sendSqeNum %u more than max num %d. task_id=%hu, task_type=%d(%s).", sendSqeNum,
+            "sendSqeNum %u more than max num %u. task_id=%hu, task_type=%d(%s).", sendSqeNum,
             SQE_NUM_PER_STARS_TASK_MAX, workTask->id, workTask->type, workTask->typeName);
         if (workTask->updateFlag == RT_TASK_UPDATE || workTask->updateFlag == RT_TASK_KEEP) {
             COND_RETURN_ERROR(
-                (totalSendSqeNum + sendSqeNum) >= STREAM_SQ_MAX_DEPTH, RT_ERROR_INVALID_VALUE,
-                "tatal sqe num more than max num %d.", STREAM_SQ_MAX_DEPTH);
+                (totalSendSqeNum + sendSqeNum) >= STREAM_SQ_MAX_DEPTH, RT_ERROR_STREAM_FULL,
+                "Total stream tasks exceed %u due to many VALUE_WAIT tasks.", STREAM_SQ_MAX_DEPTH);
         }
         switch (workTask->updateFlag) {
             case RT_TASK_UPDATE:
