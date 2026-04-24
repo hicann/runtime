@@ -324,6 +324,62 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {VEC_ERR_DVG_ECC_MBERR_T0, "Multi-bit ECC error when the VEC accesses the DVG stack."},
 };
 
+static const std::unordered_map<uint32_t, std::string> ubRasEventIdAndDesc = {
+    {UB_POISON_ERROR_EVENT_ID, "node type=UB, sensor type=RAS State, event state=bus error, probably caused by software"},
+};
+
+static uint32_t GetRasCodeFromEvent(const rtDmsFaultEvent &event)
+{
+    uint32_t rasCode = 0;
+    rasCode |= static_cast<uint32_t>(event.rasCode[0]) << 24;
+    rasCode |= static_cast<uint32_t>(event.rasCode[1]) << 16;
+    rasCode |= static_cast<uint32_t>(event.rasCode[2]) << 8;
+    rasCode |= static_cast<uint32_t>(event.rasCode[3]);
+    return rasCode;
+}
+
+static bool PrintRasEvents(const Device * const dev, const rtDmsFaultEvent * const faultEventInfo, const uint32_t eventCount)
+{
+    for (uint32_t faultIndex = 0; faultIndex < eventCount; faultIndex++) {
+        const rtDmsFaultEvent &event = faultEventInfo[faultIndex];
+        uint32_t eventId = event.eventId;
+        auto it = ubRasEventIdAndDesc.find(eventId);
+        if (it != ubRasEventIdAndDesc.end()) {
+            RT_LOG(RT_LOG_ERROR, "RAS event detected: event_id=0x%x, ras_code=0x%x, description=%s", 
+                eventId, GetRasCodeFromEvent(event), it->second.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+void CheckAndPrintRasInfo(const Device * const dev)
+{
+    if (dev == nullptr) {
+        return;
+    }
+    
+    constexpr uint32_t maxFaultNum = 128U;
+    rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
+    COND_RETURN_VOID((faultEventInfo == nullptr), "new rtDmsFaultEvent failed.");
+    const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
+    const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
+    ScopeGuard faultEventInfoRelease(releaseFunc);
+    
+    const uint32_t maxQueryCount = 20U;
+    const uint32_t queryIntervalMs = 10U;
+
+    for (uint32_t queryCount = 0U; queryCount < maxQueryCount; ++queryCount) {
+        (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
+        uint32_t eventCount = 0U;
+        rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
+        if ((error == RT_ERROR_NONE) && PrintRasEvents(dev, faultEventInfo, eventCount)) {
+            return;
+        }
+        (void)mmSleep(queryIntervalMs);
+    }
+}
+
 uint32_t GetRingbufferElementNum()
 {
     return RINGBUFFER_LEN_DAVID;
@@ -439,6 +495,7 @@ static void SetDeviceFaultTypeByAixErrClass(const Device * const dev, const Star
                 RT_LOG(RT_LOG_ERROR, "mte error, stream_id=%hu, task_id=%hu, errorCode=%u.",
                     info->u.coreErrorInfo.comm.streamId, info->u.coreErrorInfo.comm.taskId, errTaskPtr->mte_error);
             }
+            CheckAndPrintRasInfo(dev);
             break;
         }
         case AixErrClass::AIX_HW_L_ERROR:
@@ -462,6 +519,7 @@ static void SetDeviceFaultTypeByAixErrClass(const Device * const dev, const Star
             break;
         case AixErrClass::AIX_LINK_ERROR:
             AixLinkErrProc(dev, info, errTaskPtr);
+            CheckAndPrintRasInfo(dev);
             break;
         default:
             break;

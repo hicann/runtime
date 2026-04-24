@@ -1175,6 +1175,68 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_common_task)
     EXPECT_EQ(sqe1.commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_VPC);
 }
 
+static rtError_t StubGetDeviceFaultEventsWithRasEvent(const uint32_t deviceId, rtDmsFaultEvent * const faultEventInfo,
+    uint32_t &eventCount, const uint32_t maxFaultNum)
+{
+    if (faultEventInfo == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    eventCount = 1U;
+    faultEventInfo[0].eventId = UB_POISON_ERROR_EVENT_ID;
+    faultEventInfo[0].rasCode[0] = 0x12;
+    faultEventInfo[0].rasCode[1] = 0x34;
+    faultEventInfo[0].rasCode[2] = 0x56;
+    faultEventInfo[0].rasCode[3] = 0x78;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t StubGetDeviceFaultEventsWithoutRasEvent(const uint32_t deviceId, rtDmsFaultEvent * const faultEventInfo,
+    uint32_t &eventCount, const uint32_t maxFaultNum)
+{
+    if (faultEventInfo == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    eventCount = 1U;
+    faultEventInfo[0].eventId = 0x12345678U;
+    faultEventInfo[0].rasCode[0] = 0x12;
+    faultEventInfo[0].rasCode[1] = 0x34;
+    faultEventInfo[0].rasCode[2] = 0x56;
+    faultEventInfo[0].rasCode[3] = 0x78;
+    return RT_ERROR_NONE;
+}
+
+TEST_F(DavidTaskTest, CheckAndPrintRasInfo_nullptr)
+{
+    CheckAndPrintRasInfo(nullptr);
+}
+
+TEST_F(DavidTaskTest, CheckAndPrintRasInfo_with_ras_event)
+{
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsWithRasEvent));
+    CheckAndPrintRasInfo(dev_);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidTaskTest, CheckAndPrintRasInfo_without_ras_event)
+{
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsWithoutRasEvent));
+    CheckAndPrintRasInfo(dev_);
+    GlobalMockObject::verify();
+}
+
+static rtError_t StubGetDeviceFaultEventsError(const uint32_t deviceId, rtDmsFaultEvent * const faultEventInfo,
+    uint32_t &eventCount, const uint32_t maxFaultNum)
+{
+    return RT_ERROR_DRV_ERR;
+}
+
+TEST_F(DavidTaskTest, CheckAndPrintRasInfo_get_fault_events_error)
+{
+    MOCKER(GetDeviceFaultEvents).stubs().will(invoke(StubGetDeviceFaultEventsError));
+    CheckAndPrintRasInfo(dev_);
+    GlobalMockObject::verify();
+}
+
 TEST_F(DavidTaskTest, construct_davidsqe_for_model_to_aicpu)
 {
     TaskInfo task = {};
