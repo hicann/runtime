@@ -20,13 +20,13 @@ bool GetConfigIniValueInt32(const std::string &userFileName, const std::string &
 {
     const std::string fileName = RealPath(userFileName);
     if (fileName.empty()) {
-        RT_LOG(RT_LOG_INFO, "file is not exist or can not access, path=[%s]", userFileName.c_str());
+        RT_LOG(RT_LOG_INFO, "file does not exist or cannot be accessed, path=[%s]", userFileName.c_str());
         return false;
     }
 
     std::ifstream ifs(fileName, std::ifstream::in);
     if (!ifs.is_open()) {
-        RT_LOG(RT_LOG_INFO, "file %s is not exist or can not access.", fileName.c_str());
+        RT_LOG(RT_LOG_INFO, "file %s does not exist or cannot be accessed.", fileName.c_str());
         return false;
     }
 
@@ -170,7 +170,7 @@ bool GetConfigIniValueDouble(const std::string &userFileName, const std::string 
 {
     const std::string fileName = RealPath(userFileName);
     if (fileName.empty()) {
-        RT_LOG(RT_LOG_INFO, "file does not exist or can not access, path=[%s]", userFileName.c_str());
+        RT_LOG(RT_LOG_INFO, "file does not exist or cannot be accessed, path=[%s]", userFileName.c_str());
         return false;
     }
 

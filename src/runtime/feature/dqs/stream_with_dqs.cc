@@ -297,7 +297,7 @@ rtError_t StreamWithDqs::SetCtrlSpaceOutputQueInfo(const rtDqsSchedCfg_t * const
 
         const stars_queue_bind_mbuf_pool_item_t * const item = GetMbufPoolInfoByPid(qid, result);
         COND_RETURN_ERROR(item == nullptr, RT_ERROR_INVALID_VALUE,
-            "mbuf pool info of qid[%u] is not exist. please check config flow.", qid);
+            "mbuf pool info of qid[%u] does not exist. please check config flow.", qid);
 
         dqsCtrlSpace_->output_mbuf_pool_ids[i] = item->mbuf_pool_id;
         dqsCtrlSpace_->output_head_pool_base_addrs[i] = item->mbuf_head_pool_base_addr + item->mbuf_head_pool_offset;

@@ -3426,7 +3426,7 @@ rtError_t Context::StreamAbort(Stream * const stm)
         if (APP_ABORT_TERMINATE_FINISH == status) {
             break;
         }
-        RT_LOG(RT_LOG_DEBUG, "QuerySq stream_id=%d, sq_id=%u, status=%u",  stm->Id_(), stm->GetSqId(), status);
+        RT_LOG(RT_LOG_DEBUG, "QuerySq stream_id=%d, sq_id=%u, status=%u", stm->Id_(), stm->GetSqId(), status);
         endCnt = mmGetTickCount();
         endTime =
             static_cast<uint64_t>(endCnt.tv_sec) * RT_MS_PER_S + static_cast<uint64_t>(endCnt.tv_nsec) / RT_MS_TO_NS;

@@ -28,7 +28,7 @@ MemoryPoolManager::~MemoryPoolManager() noexcept
 {
     driver_ = nullptr;
     device_ = nullptr;
-    RT_LOG(RT_LOG_DEBUG, "~MemoryPoolManager release device memory, size=%u.",  pools_.size());
+    RT_LOG(RT_LOG_DEBUG, "~MemoryPoolManager release device memory, size=%u.", pools_.size());
     TIMESTAMP_BEGIN(ReleaseMemoryPoolManager);
     for (auto pool : pools_) {
         if (pool != nullptr) {

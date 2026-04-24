@@ -874,7 +874,7 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(const char_t * const opNa
 
     const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
     ERROR_RETURN(error, "Launch cpu kernel ex failed, coreDim=%u,"
-        " argsSize=%u(bytes), hostInputLen=%hu, flag=%u, kernelType=%u.",  coreDim, argsInfo->argsSize,
+        " argsSize=%u(bytes), hostInputLen=%hu, flag=%u, kernelType=%u.", coreDim, argsInfo->argsSize,
         argsInfo->hostInputInfoNum, flag, kernelType);
     return error;
 }
@@ -5752,7 +5752,7 @@ rtError_t ApiErrorDecorator::DevMalloc(void ** const devPtr, const uint64_t size
         NULL_PTR_RETURN_MSG_OUTER(cfg->attrs, RT_ERROR_INVALID_VALUE);
     }
     const rtError_t error = impl_->DevMalloc(devPtr, size, policy, advise, cfg);
-    RT_LOG(RT_LOG_INFO, "device malloc, size=%" PRIu64 "(bytes),  start ptr=0x%llx, end ptr=0x%llx",
+    RT_LOG(RT_LOG_INFO, "device malloc, size=%" PRIu64 "(bytes), start ptr=0x%llx, end ptr=0x%llx",
         size, RtPtrToValue(*devPtr), (RtPtrToValue(*devPtr) + size));
     return error;
 }

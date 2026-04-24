@@ -63,12 +63,12 @@ rtError_t CbSubscribe::CheckForInsert(const uint64_t threadId, Stream * const st
 {
     if (CheckExistInStreamMap(stm)) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR,
-            "Stream is already exist in stream map, streamId=%d, devId=%u, threadId=%" PRIu64,
+            "Stream already exists in stream map, streamId=%d, devId=%u, threadId=%" PRIu64,
             stm->Id_(), stm->Device_()->Id_(), threadId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     if (CheckExistInThreadMap(threadId, stm, threadIdIter, devIdTsIdIter, streamIter)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream is already exist in thread map, streamId=%d, threadId=%" PRIu64,
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream already exists in thread map, streamId=%d, threadId=%" PRIu64,
             stm->Id_(), threadId);
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
@@ -175,7 +175,7 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream * const stm)
     if (!CheckExistInStreamMap(stm)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream is not exist in stream map, streamId=%d, threadId=%" PRIu64,
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream does not exist in stream map, streamId=%d, threadId=%" PRIu64,
             streamId, threadId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
@@ -183,7 +183,7 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream * const stm)
     if (!CheckExistInThreadMap(threadId, stm, it, it2, it3)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream is not exist in thread map,streamId=%d, threadId=%" PRIu64,
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream does not exist in thread map, streamId=%d, threadId=%" PRIu64,
             streamId, threadId);
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
@@ -244,14 +244,14 @@ rtError_t CbSubscribe::Delete(Stream * const stm)
     if (!CheckExistInStreamMap(stm, itStream)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream is not exist in stream map,streamId=%d", streamId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream does not exist in stream map, streamId=%d", streamId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     threadId = itStream->second.threadId;
     if (!CheckExistInThreadMap(threadId, stm, it, it2, it3)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream is not exist in thread map, streamId=%d, threadId=%" PRIu64,
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream does not exist in thread map, streamId=%d, threadId=%" PRIu64,
             streamId, threadId);
         return RT_ERROR_SUBSCRIBE_THREAD;
     }

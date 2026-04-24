@@ -1098,7 +1098,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
 
     auto iter = featureNameMap.find(static_cast<drvFeature_t>(featureType));
     if (iter == featureNameMap.end()) {
-        RT_LOG(RT_LOG_INFO, "featureType %d is not exist", featureType);
+        RT_LOG(RT_LOG_INFO, "featureType %d does not exist", featureType);
         return false;
     }
 

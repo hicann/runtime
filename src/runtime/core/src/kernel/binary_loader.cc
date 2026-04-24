@@ -258,7 +258,7 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram * const prog) const
     rtError_t error = GetJsonObj(binRealPath_, jsonFileRealPath, kernelJsonObj);
     if (error != RT_ERROR_NONE) {
         if (!prog->ContainsAscendMeta()) {
-            RT_LOG(RT_LOG_ERROR, "binary no metainfo and kernel json is not exists. bin=[%s]", binRealPath_.c_str());
+            RT_LOG(RT_LOG_ERROR, "binary no metainfo and kernel json does not exist. bin=[%s]", binRealPath_.c_str());
             return error;
         }
         return RT_ERROR_NONE;

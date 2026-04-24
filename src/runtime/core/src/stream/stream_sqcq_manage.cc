@@ -665,7 +665,7 @@ void StreamSqCqManage::SetStreamIdToStream(const uint32_t streamId, Stream * con
     RT_LOG(RT_LOG_DEBUG, "stream_id=%d.", static_cast<int32_t>(streamId));
     const auto it = streams_.find(streamId);
     if (it != streams_.end()) {
-        RT_LOG(RT_LOG_WARNING, "streamId=%u exist.", streamId);
+        RT_LOG(RT_LOG_WARNING, "streamId=%u exists.", streamId);
     }
 
     streams_[streamId] = stm;

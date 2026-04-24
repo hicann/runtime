@@ -1798,7 +1798,7 @@ static void AicoreErrorProc(const Device * const dev, rtErrorInfo * const errorI
         errorInfo->tryRepair = 1U;
     } else {
         errorInfo->tryRepair = 0U;
-        RT_LOG(RT_LOG_INFO, "Aicore recover cnt is not zero or other fault event exist, recoverCnt=%u.", recoverCnt);
+        RT_LOG(RT_LOG_INFO, "Aicore recover cnt is not zero or other fault event exists, recoverCnt=%u.", recoverCnt);
     }
 
     return;

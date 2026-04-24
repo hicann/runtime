@@ -2643,7 +2643,7 @@ rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const v
     if (addrCfg != nullptr) {
         Device* device = curStm->Device_();
         NULL_PTR_RETURN_MSG_OUTER(device, RT_ERROR_INVALID_VALUE);
-        RT_LOG(RT_LOG_INFO, "device_id=%u, tsch version=%u",  device->Id_(), device->GetTschVersion());
+        RT_LOG(RT_LOG_INFO, "device_id=%u, tsch version=%u", device->Id_(), device->GetTschVersion());
         if (!device->CheckFeatureSupport(TS_FEATURE_D2D_ADDR_ASYNC)) {
             RT_LOG(RT_LOG_WARNING, "current ts version does not support d2d addr MemcpyAsync");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -5701,7 +5701,7 @@ rtError_t ApiImpl::NpuClearFloatDebugStatus(const uint32_t checkMode, Stream * c
         COND_RETURN_ERROR(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
         Device* device = stm->Device_();
         NULL_PTR_RETURN_MSG_OUTER(device, RT_ERROR_INVALID_VALUE);
-        RT_LOG(RT_LOG_INFO, "device_id=%u, tschversion=%u",  device->Id_(), device->GetTschVersion());
+        RT_LOG(RT_LOG_INFO, "device_id=%u, tschversion=%u", device->Id_(), device->GetTschVersion());
         if (!(device->CheckFeatureSupport(TS_FEATURE_OVER_FLOW_DEBUG))) {
             RT_LOG(RT_LOG_WARNING, "current ts version does not support NpuClearFloatDebugStatus");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -5737,7 +5737,7 @@ rtError_t ApiImpl::NpuGetFloatDebugStatus(void * const outputAddrPtr, const uint
         COND_RETURN_ERROR(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
         Device* device = stm->Device_();
         NULL_PTR_RETURN_MSG_OUTER(device, RT_ERROR_INVALID_VALUE);
-        RT_LOG(RT_LOG_INFO, "device_id=%u, tschversion=%u",  device->Id_(), device->GetTschVersion());
+        RT_LOG(RT_LOG_INFO, "device_id=%u, tschversion=%u", device->Id_(), device->GetTschVersion());
         if (!device->CheckFeatureSupport(TS_FEATURE_OVER_FLOW_DEBUG)) {
             RT_LOG(RT_LOG_WARNING, "current ts version does not support NpuGetFloatDebugStatus");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -8646,7 +8646,7 @@ rtError_t ApiImpl:: MemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 {
     RT_LOG(RT_LOG_INFO, "Start to MemGetAddressRange");
     rtError_t error = NpuDriver::MemGetAddressRange(ptr, pbase, psize);
-    ERROR_RETURN(error, "Call MemGetAddressRange failed,  ptr=%p", ptr);
+    ERROR_RETURN(error, "Call MemGetAddressRange failed, ptr=%p", ptr);
     return error;
 }
 

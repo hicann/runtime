@@ -216,7 +216,7 @@ void Event::InsertToNotifierMap(uint32_t streamId, uint16_t taskId, Notifier *va
     uint32_t key = (streamId << 16U) | static_cast<uint32_t>(taskId);
     const auto it = notifierMap_.find(key);
     if (it != notifierMap_.end()) {
-        RT_LOG(RT_LOG_ERROR, "device_id=%u, stream_id=%u, task_id=%hu notifier already exist.", device_->Id_(),
+        RT_LOG(RT_LOG_ERROR, "device_id=%u, stream_id=%u, task_id=%hu notifier already exists.", device_->Id_(),
             streamId, taskId);
         return;
     } else {

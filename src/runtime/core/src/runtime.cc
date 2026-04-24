@@ -3120,7 +3120,7 @@ RefObject<Context *> *Runtime::PrimaryContextRetain(const uint32_t devId)
         }
 
         const uint64_t refObjValue = refObj.GetRef();
-        RT_LOG(RT_LOG_INFO, "Context inc ref, devId =%u, ts_id=%u, count=%#llx",devId,  i, refObjValue);
+        RT_LOG(RT_LOG_INFO, "Context inc ref, devId=%u, ts_id=%u, count=%#llx", devId, i, refObjValue);
         ctx = refObj.GetVal();
         NULL_PTR_GOTO_MSG_INNER(ctx, CTX_DEC, err, RT_ERROR_CONTEXT_NULL);
         continue;
@@ -6031,7 +6031,7 @@ rtError_t Runtime::SaveModule(void)
             Program *prog = refObj->GetVal(false);
             COND_PROC(prog == nullptr, continue);
             
-            RT_LOG(RT_LOG_DEBUG, "prog ctx cnt=%u, prog id=%u",   prog->GetCtxMap().size(), prog->Id_());
+            RT_LOG(RT_LOG_DEBUG, "prog ctx cnt=%u, prog id=%u", prog->GetCtxMap().size(), prog->Id_());
             ret = SaveModelDataInfoToList(prog);
             COND_PROC(ret != RT_ERROR_NONE, return ret);
         }

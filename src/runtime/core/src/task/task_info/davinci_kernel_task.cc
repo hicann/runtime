@@ -1508,7 +1508,7 @@ void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId)
     const tsTaskType_t type = taskInfo->type;
 
     if ((type == TS_TASK_TYPE_KERNEL_AICPU) && (errorCode == AE_STATUS_TASK_ABORT)) {
-        RT_LOG(RT_LOG_ERROR, "aicpu errcode=0x%x",  errorCode);
+        RT_LOG(RT_LOG_ERROR, "aicpu errcode=0x%x", errorCode);
         return;
     }
 

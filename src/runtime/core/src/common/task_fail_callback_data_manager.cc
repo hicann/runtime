@@ -23,7 +23,7 @@ TaskFailCallBackManager &TaskFailCallBackManager::Instance()
 void TaskFailCallBackManager::Notify(rtExceptionInfo_t *const exceptionInfo)
 {
     RT_LOG(RT_LOG_INFO,
-        "notify  stream_id=%u, task_id=%u, retcode:%u.",
+        "notify stream_id=%u, task_id=%u, retcode:%u.",
         exceptionInfo->streamid,
         exceptionInfo->taskid,
         exceptionInfo->retcode);

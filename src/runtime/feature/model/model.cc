@@ -817,7 +817,7 @@ rtError_t Model::LoadComplete()
 
 rtError_t Model::SendAicpuModelLoadMsg(Stream *stream) const
 {
-    RT_LOG(RT_LOG_DEBUG, "packet model info for aicpu engine, model_id=%u, stream_id=%d.",  Id_(), stream->Id_());
+    RT_LOG(RT_LOG_DEBUG, "packet model info for aicpu engine, model_id=%u, stream_id=%d.", Id_(), stream->Id_());
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo *aicpuTask = stream->AllocTask(&submitTask, TS_TASK_TYPE_MODEL_TO_AICPU, errorReason);
