@@ -18,6 +18,12 @@
 #include <atomic>
 #include <condition_variable>
 #include "stub_server_reply.h"
+#include "stub_driver.h"
+
+namespace tsd {
+std::atomic_bool g_drvHdcGetMsgBufferReturnNull{false};
+std::atomic_bool g_drvHdcGetMsgBufferLengthMismatch{false};
+}
 
 
 extern "C" DVresult drvMemInitSvmDevice(pid_t hostpid);
@@ -94,8 +100,28 @@ hdcError_t drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int len)
     return DRV_ERROR_NONE;
 }
 
+void SetHdcGetMsgBufferReturnNull(bool flag)
+{
+    tsd::g_drvHdcGetMsgBufferReturnNull.store(flag);
+}
+
+void SetHdcGetMsgBufferLengthMismatch(bool flag)
+{
+    tsd::g_drvHdcGetMsgBufferLengthMismatch.store(flag);
+}
+
 hdcError_t drvHdcGetMsgBuffer(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen)
 {
+    if (tsd::g_drvHdcGetMsgBufferReturnNull.load()) {
+        *pBuf = nullptr;
+        *pLen = 0;
+        return DRV_ERROR_NONE;
+    }
+    if (tsd::g_drvHdcGetMsgBufferLengthMismatch.load()) {
+        *pBuf = msg->bufList[0].pBuf;
+        *pLen = 100;
+        return DRV_ERROR_NONE;
+    }
     *pBuf = msg->bufList[0].pBuf;
     *pLen = msg->bufList[0].len;
     return DRV_ERROR_NONE;

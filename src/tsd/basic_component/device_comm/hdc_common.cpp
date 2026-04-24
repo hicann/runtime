@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/hdc_common.h"
+#include "hdc_common.h"
 #include <string>
 #include <securec.h>
 #include "tsd_util_func.h"
@@ -43,13 +43,6 @@ namespace tsd {
 
         // halHdcSend接口超时时间
         constexpr uint32_t HDC_CLIENT_SEND_WAIT_TIMEOUT_MS = 150000U; // 150s
-#ifndef tsd_UT
-        // 校验hdc session状态日志打印间隔
-        constexpr uint32_t HDC_SESSION_CHECK_PRINTLOG_INTERVAL_S = 1800U; // 30min
-#else
-        // 校验hdc session状态日志打印间隔ut
-        constexpr uint32_t HDC_SESSION_CHECK_PRINTLOG_INTERVAL_S = 1U; // 1s
-#endif
     }
 
     HdcCommon::HdcCommon()
@@ -91,7 +84,7 @@ namespace tsd {
     * return Status成功TSD_OK，失败：其他错误码
     */
     TSD_StatusT HdcCommon::SendNormalShortMsg(const HDCMessage &msg, const uint32_t size,
-                                              HDC_SESSION const session, const bool isClose)
+                                              HDC_SESSION const session)
     {
         if (size == 0U) {
             TSD_ERROR("SendNormalShortMsg cannot send msg when size = 0");
@@ -123,14 +116,11 @@ namespace tsd {
         *(PtrToPtr<char_t, uint32_t>(serializedMsg) + HDC_MSG_SEG_COUNT_OFFSET) = 1U;
         *(PtrToPtr<char_t, uint32_t>(serializedMsg) + HDC_MSG_SIZE_OFFSET) = 0U;
         (void)msg.SerializePartialToArray(serializedMsg + HDC_MSG_SHORT_HEAD_SIZE, static_cast<int32_t>(size));
-        const TSD_StatusT result = SendHdcDefaultMsg(session, serializedMsg, serialMsgSizeCur, isClose);
+        const TSD_StatusT result = SendHdcDefaultMsg(session, serializedMsg, serialMsgSizeCur);
         if (result != TSD_OK) {
             TSD_CHECK_EQ_RETURN_RUNWARN_LOG(result == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED,
                                             TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED, "halHdcSend return socket close");
-            if (isClose && (result == DRV_ERROR_SEND_MESG)) {
-                TSD_INFO("Send ret[%u]", result);
-                return result;
-            }
+
             TSD_CHECK_NO_RETURN(result == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED,
                                 "Send failed ret[%u]", result);
             return TSD_HDC_SEND_MSG_ERROR;
@@ -145,35 +135,11 @@ namespace tsd {
     * @param   [int] session : 会话
     * return Status成功TSD_OK，失败：其他错误码
     */
-    TSD_StatusT HdcCommon::SendNormalMsg(const HDCMessage& msg, HDC_SESSION const session, const bool isClose)
+    TSD_StatusT HdcCommon::SendNormalMsg(const HDCMessage& msg, HDC_SESSION const session)
     {
         // 上层调用会打日志，比如扩缩
         const uint32_t size = static_cast<uint32_t>(msg.ByteSizeLong());  // msg length
-        return SendNormalShortMsg(msg, size, session, isClose);
-    }
-
-    /**
-    * @ingroup HdcCommon
-    * @brief   SendMsg 发送消息
-    * @param   [in] sessionId : 发送连接唯一标识
-    * @param   [in] msg : 消息体
-    * return Status成功TSD_OK，失败：其他错误码
-    */
-    TSD_StatusT HdcCommon::SendMsg(const uint32_t sessionId, const HDCMessage& msg, const bool isClose)
-    {
-        HDC_SESSION session = nullptr;
-        const TSD_StatusT ret = GetHdcSession(sessionId, session);
-        if (ret != TSD_OK) {
-            TSD_RUN_WARN("GetHdcSession not success ret[%d]", ret);
-            return TSD_HDC_SEND_MSG_ERROR;
-        }
-        // check client and server feature_list
-        std::shared_ptr<VersionVerify> inspector = nullptr;
-        (void)GetVersionVerify(sessionId, inspector);
-        TSD_CHECK_NULLPTR(inspector, TSD_HDC_RECV_MSG_ERROR, "VersionVerify does not exist.");
-        TSD_CHECK(inspector->SpecialFeatureCheck(msg.type()), TSD_HDC_RECV_MSG_ERROR,
-                  "client and server feature_list is inconsistent, you need to update your software.");
-        return SendNormalMsg(msg, session, isClose);
+        return SendNormalShortMsg(msg, size, session);
     }
 
     /**
@@ -185,7 +151,7 @@ namespace tsd {
     * return Status成功TSD_OK，失败：其他错误码
     */
     TSD_StatusT HdcCommon::SendHdcDefaultMsg(HDC_SESSION const session, char_t * const hdcMsgBuf,
-                                             const uint32_t size, const bool isClose)
+                                             const uint32_t size)
     {
         drvHdcMsg* drvMsg = nullptr;
         hdcError_t drvRet = drvHdcAllocMsg(session, &drvMsg, static_cast<int32_t>(HDC_DEFAULT_BUFF_COUNT));
@@ -203,25 +169,17 @@ namespace tsd {
             return TSD_HDC_SEND_ERROR;
         }
 
-        if (GetClientFlag()) {
+        {
             const std::lock_guard<std::mutex> lk(hdcSessionMutex_);
             drvRet = halHdcSend(session, drvMsg, static_cast<uint64_t>(HDC_FLAG_WAIT_TIMEOUT),
-                                HDC_CLIENT_SEND_WAIT_TIMEOUT_MS);
-        } else {
-            drvRet = halHdcSend(session, drvMsg, HDC_DEFAULT_FLAG_VALUE, 0U);
+                HDC_CLIENT_SEND_WAIT_TIMEOUT_MS);
         }
         if (drvRet != DRV_ERROR_NONE) {
             const hdcError_t drvRetTmp = drvHdcFreeMsg(drvMsg);
-            TSD_CHECK_NO_RETURN(drvRetTmp == DRV_ERROR_NONE,
-                                "drvHdcFreeMsg failed ret[%d]", drvRetTmp);
+            TSD_CHECK_NO_RETURN(drvRetTmp == DRV_ERROR_NONE, "drvHdcFreeMsg failed ret[%d]", drvRetTmp);
             TSD_CHECK_EQ_RETURN_RUNWARN_LOG(drvRet == DRV_ERROR_SOCKET_CLOSE,
                 TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED, "halHdcSend return socket close");
-            if (isClose && (drvRet == DRV_ERROR_SEND_MESG)) {
-                TSD_INFO("halHdcSend ret[%d]", drvRet);
-                return drvRet;
-            }
-            TSD_CHECK_NO_RETURN(drvRet == DRV_ERROR_SOCKET_CLOSE,
-                                "halHdcSend failed ret[%d]", drvRet);
+            TSD_CHECK_NO_RETURN(drvRet == DRV_ERROR_SOCKET_CLOSE, "halHdcSend failed ret[%d]", drvRet);
             return TSD_HDC_SEND_ERROR;
         }
 
@@ -240,16 +198,8 @@ namespace tsd {
     * @param   [out] msg :消息
     * return Status成功TSD_OK，失败：其他错误码
     */
-    TSD_StatusT HdcCommon::RecvMsg(const uint32_t sessionId, HDCMessage& msg, const uint32_t timeout,
-                                   const bool waitFlag)
+    TSD_StatusT HdcCommon::RecvMsg(HDC_SESSION session, HDCMessage& msg, const uint32_t timeout)
     {
-        HDC_SESSION session = nullptr;
-        TSD_StatusT ret = GetHdcSession(sessionId, session);
-        if (ret != TSD_OK) {
-            TSD_RUN_WARN("[TsdEVENT] GetHdcSession not success ret[%d]", ret);
-            return TSD_HDC_RECV_MSG_ERROR;
-        }
-
         drvHdcMsg* hdcMsg = nullptr;
         hdcError_t drvRet = drvHdcAllocMsg(session, &hdcMsg, static_cast<int32_t>(HDC_DEFAULT_BUFF_COUNT));
         if (hdcMsg == nullptr) {
@@ -259,7 +209,7 @@ namespace tsd {
         char_t *tempBuf = nullptr;
         uint32_t bufferLengthOut = 0U;
         // 此处是hiaiengine中hdc代码移植过来，去除了长消息发送功能
-        ret = RecvHdcDefaultMsg(session, hdcMsg, tempBuf, bufferLengthOut, timeout, waitFlag);
+        const TSD_StatusT ret = RecvHdcDefaultMsg(session, hdcMsg, tempBuf, bufferLengthOut, timeout);
         if ((ret != TSD_OK) || (tempBuf == nullptr) || (bufferLengthOut < HDC_MSG_SHORT_HEAD_SIZE)) {
             TSD_WARN("Receive not success ret[%d], bufferLengthOut[%u]", ret, bufferLengthOut);
         } else {
@@ -274,23 +224,6 @@ namespace tsd {
         return  ret;
     }
 
-    void HdcCommon::CheckHdcSessionPrintLog(const drvError_t hdcRet, const int32_t status)
-    {
-        const int32_t tid = mmGetTid();
-        if (tid >= 0) {
-            const std::lock_guard<std::mutex> lk(logPrintMapMutex_);
-            if (logPrintMap_[tid] == 0) {
-                logPrintMap_[tid] = GetCurrentTime();
-            } else {
-                if ((GetCurrentTime() - logPrintMap_[tid]) >=
-                    HDC_SESSION_CHECK_PRINTLOG_INTERVAL_S * S_TO_NS) {
-                    TSD_RUN_INFO("get remote session attr, ret[%d], status[%d]", hdcRet, status);
-                    logPrintMap_[tid] = GetCurrentTime();
-                }
-            }
-        }
-    }
-
     /**
     * @ingroup HdcCommon
     * @brief   Receive 接收
@@ -302,38 +235,19 @@ namespace tsd {
     * return Status成功TSD_OK，失败：其他错误码
     */
     TSD_StatusT HdcCommon::RecvHdcDefaultMsg(const HDC_SESSION& session, drvHdcMsg* drvMsg, char_t*& buffer,
-                                             uint32_t& bufferLengthOut, const uint32_t timeout, const bool waitFlag)
+                                             uint32_t& bufferLengthOut, const uint32_t timeout)
     {
         int32_t recvBufCounter = 0;
         int32_t receivedLenEachTime = 0;
         hdcError_t drvRet = DRV_ERROR_NONE;
-        if (GetClientFlag()) {
+        {
             const std::lock_guard<std::mutex> lk(hdcSessionMutex_);
             drvRet = halHdcRecv(session, drvMsg, static_cast<int32_t>(GetMsgMaxSize()),
                 static_cast<uint64_t>(HDC_FLAG_WAIT_TIMEOUT), &recvBufCounter, timeout);
-        } else {
-            if (waitFlag) {
-                drvRet = halHdcRecv(session, drvMsg, static_cast<int32_t>(GetMsgMaxSize()),
-                    HDC_DEFAULT_FLAG_VALUE, &recvBufCounter, 0U);
-            } else {
-                int32_t status = HDC_SESSION_STATUS_CONNECT;
-                do {
-                    drvRet = halHdcRecv(session, drvMsg, static_cast<int32_t>(GetMsgMaxSize()),
-                        static_cast<uint64_t>(HDC_FLAG_NOWAIT), &recvBufCounter, timeout);
-                    if (drvRet == DRV_ERROR_NON_BLOCK) {
-                        const drvError_t hdcRet = halHdcGetSessionAttr(session, HDC_SESSION_ATTR_STATUS, &status);
-                        if ((hdcRet == DRV_ERROR_NONE) && (status == HDC_SESSION_STATUS_CLOSE)) {
-                            TSD_RUN_INFO("get remote session attr close");
-                            return TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED;
-                        } else {
-                            CheckHdcSessionPrintLog(hdcRet, status);
-                        }
-                    }
-                } while (drvRet == DRV_ERROR_NON_BLOCK);
-            }
         }
+        
         if (drvRet != DRV_ERROR_NONE) {
-            if (GetClientFlag() && !isAdcEnv_) {
+            if (!isAdcEnv_) {
                 const std::lock_guard<std::mutex> lk(hdcSessionMutex_);
                 int32_t value = 0;
                 const auto ret = halHdcGetSessionAttr(session, HDC_SESSION_ATTR_DFX, &value);
@@ -385,5 +299,16 @@ namespace tsd {
         } catch (...) {
             return std::shared_ptr<VersionVerify>();
         }
+    }
+
+    TSD_StatusT HdcCommon::GetHdcAttrStatus(HDC_SESSION session, int32_t &hdcSessStat)
+    {
+        const std::lock_guard<std::mutex> lk(hdcSessionMutex_);
+        const hdcError_t drvRet = halHdcGetSessionAttr(session, HDC_SESSION_ATTR_STATUS, &hdcSessStat);
+        if (drvRet != DRV_ERROR_NONE) {
+            TSD_ERROR("halHdcGetSessionAttr failed ret[%d]", drvRet);
+            return TSD_HDC_SESSION_STATUS_GET_FAILED;
+        }
+        return TSD_OK;
     }
 }  // namespace tsd

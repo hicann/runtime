@@ -38,11 +38,14 @@ void StubServerMsgImpl::CovertProtoMsgToHdcMsg(struct drvHdcMsg *msg, const HDCM
 {
     const uint32_t msgSize = static_cast<uint32_t>(rspMsg.ByteSizeLong());
     buf->bufferLen = msgSize + 12U;
-    buf->segCnt = 0;
-    buf->type = 0;
+    buf->segCnt = 1;
+    buf->type = static_cast<uint32_t>(rspMsg.type());
     char *dstPtr = &(buf->buffer[0]);
-    rspMsg.SerializePartialToArray(dstPtr, static_cast<int32_t>(msgSize));
-    msg->bufList[0].pBuf = reinterpret_cast<char *>(buf);
+    *(reinterpret_cast<uint32_t *>(dstPtr)) = buf->bufferLen;
+    *(reinterpret_cast<uint32_t *>(dstPtr + 4U)) = 1U;
+    *(reinterpret_cast<uint32_t *>(dstPtr + 8U)) = 0U;
+    rspMsg.SerializePartialToArray(dstPtr + 12U, static_cast<int32_t>(msgSize));
+    msg->bufList[0].pBuf = dstPtr;
     msg->bufList[0].len = static_cast<int32_t>(buf->bufferLen);
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TDT_HOST_INNER_INC_HDC_CLIENT_H
-#define TDT_HOST_INNER_INC_HDC_CLIENT_H
+#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H
+#define TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H
 
 #include <map>
 #include <list>
@@ -17,13 +17,13 @@
 #include <memory>
 
 #include "proto/tsd_message.pb.h"
-#include "inc/hdc_common.h"
+#include "hdc_common.h"
 #include "inc/message_parse_client.h"
 
 namespace tsd {
     constexpr uint32_t HDC_CLIENT_WAIT_TIMEOUT_MS = 30000U; // 30s
     constexpr uint32_t OPEN_PKT_DEL_WAIT_TIMEOUT_MS = 120000U; // 120s
-    class HdcClient : public HdcCommon {
+    class HdcClient {
     public:
         /**
         * @ingroup HdcClient
@@ -65,17 +65,10 @@ namespace tsd {
 
         /**
         * @ingroup HdcCommon
-        * @brief 虚函数 GetDeviceId 获得设备ID
-        * return 设备ID
-        */
-        uint32_t GetDeviceId() const override;
-
-        /**
-        * @ingroup HdcCommon
         * @brief   纯虚函数 GetHdcServiceType 获得 HdcServiceType
         * return HdcServiceType
         */
-        HDCServiceType GetHdcServiceType() const override;
+        HDCServiceType GetHdcServiceType() const;
 
         /**
         * @ingroup HdcClient
@@ -92,7 +85,7 @@ namespace tsd {
         */
         TSD_StatusT CheckHdcConnection(const uint32_t& sessionId);
 
-        TSD_StatusT GetVersionVerify(const uint32_t sessionId, std::shared_ptr<VersionVerify> &inspector) override;
+        TSD_StatusT GetVersionVerify(const uint32_t sessionId, std::shared_ptr<VersionVerify> &inspector);
 
         /**
         * @ingroup HdcClient
@@ -105,7 +98,11 @@ namespace tsd {
         * @ingroup HdcClient
         * @brief 析构函数
         */
-        ~HdcClient() override;
+        ~HdcClient();
+
+        TSD_StatusT SendMsg(const uint32_t sessionId,const HDCMessage& msg);
+
+        TSD_StatusT RecvMsg(const uint32_t sessionId, HDCMessage& msg, const uint32_t timeout);
 
     private:
         /**
@@ -123,7 +120,7 @@ namespace tsd {
          * @param [out] session : session 会话
          * @return TSD_OK:成功 或者其他错误码
          */
-        TSD_StatusT GetHdcSession(const uint32_t sessionId,  HDC_SESSION& session) override;
+        TSD_StatusT GetHdcSession(const uint32_t sessionId,  HDC_SESSION& session);
 
         /**
          * @ingroup HdcClient
@@ -143,14 +140,7 @@ namespace tsd {
         */
         void DestroyClient();
 
-        /**
-        * @ingroup HdcClient
-        * @brief 获取client标签
-        */
-        bool GetClientFlag() const override
-        {
-            return true;
-        }
+        uint32_t GetDeviceId() const;
 
         HdcClient(const HdcClient&) = delete;
         HdcClient(HdcClient&&) = delete;
@@ -186,6 +176,8 @@ namespace tsd {
         bool isClientClose_;
 
         uint32_t hostPid_; // used for device confirm relation between sessionId and hostPid
+
+        HdcCommon hdcCommon_;
     };
 }
-#endif  // TDT_HOST_INNER_INC_HDC_CLIENT_H
+#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H

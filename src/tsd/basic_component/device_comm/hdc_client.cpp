@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/hdc_client.h"
+#include "hdc_client.h"
 #include <thread>
 #include "driver/ascend_hal.h"
 #include "driver/ascend_hal_define.h"
@@ -43,13 +43,13 @@ namespace tsd {
     * @brief HdcClient构造函数
     */
     HdcClient::HdcClient(const uint32_t devId, const HDCServiceType hdcType)
-        : HdcCommon(),
-          hdcClient_(nullptr),
+        : hdcClient_(nullptr),
           deviceId_(devId),
           type_(hdcType),
           index_(KeyCompose(devId, hdcType)),
           isClientClose_(true),
-          hostPid_(0U)
+          hostPid_(0U),
+          hdcCommon_()
     {
         sessionIdNumVec_.reserve(static_cast<size_t>(HDC_CLIENT_DEFAULT_MAX_SESSION_NUM));
         for (uint32_t i = HDC_CLIENT_DEFAULT_MAX_SESSION_NUM; i >= 1U; i--) {
@@ -121,12 +121,12 @@ namespace tsd {
         hostPid_ = clientPid;
         TSD_StatusT tdtRet = InitPre();
         TSD_CHECK(tdtRet == TSD_OK, tdtRet, "hdc client init pre failed");
-        tdtRet = InitMsgSize();
+        tdtRet = hdcCommon_.InitMsgSize();
         if (tdtRet != TSD_OK) {
             TSD_ERROR("initMsgSize() fail");
             return TSD_HDC_CLIENT_INIT_ERROR;
         }
-        isAdcEnv_ = isAdcEnv;
+        hdcCommon_.SetAdcEnv(isAdcEnv);
         return tdtRet;
     }
 
@@ -140,7 +140,7 @@ namespace tsd {
         HDCMessage hdcMsg;
         TSD_StatusT recvResult = TSD_OK;
         if (IsFpgaEnv()) {
-            recvResult = RecvMsg(sessionId, hdcMsg, FPGA_HDC_CLIENT_WAIT_TIMEOUT_MS, true);
+            recvResult = RecvMsg(sessionId, hdcMsg, FPGA_HDC_CLIENT_WAIT_TIMEOUT_MS);
         } else {
             uint32_t normalTimeout = HDC_CLIENT_WAIT_TIMEOUT_MS + OPEN_PKT_DEL_WAIT_TIMEOUT_MS;
             if (timeout != 0U) {
@@ -148,7 +148,7 @@ namespace tsd {
             }
 
             TSD_INFO("recv timeout is:%u ms", normalTimeout);
-            recvResult = RecvMsg(sessionId, hdcMsg, normalTimeout, true);
+            recvResult = RecvMsg(sessionId, hdcMsg, normalTimeout);
         }
         if (recvResult != TSD_OK) {
             if (ignoreRecvErr) {
@@ -220,7 +220,7 @@ namespace tsd {
             sessionId = sessionIdNumVec_.back();
             sessionIdNumVec_.pop_back();
             hdcClientSessionMap_[sessionId] = session;
-            hdcClientVerifyMap_[sessionId] = MakeVersionVerifyNoThrow();
+            hdcClientVerifyMap_[sessionId] = hdcCommon_.MakeVersionVerifyNoThrow();
         }
         TSD_INFO("[HdcClient] deviceId: %u connect session and drvHdcSetSessionReference success, sessionId=%u",
             deviceId_, sessionId);
@@ -250,9 +250,9 @@ namespace tsd {
         }
         TSD_StatusT recvResult = TSD_OK;
         if (IsFpgaEnv()) {
-            recvResult = RecvMsg(sessionId, hdcMsg, FPGA_WAITFOR_INTERVAL, true);
+            recvResult = RecvMsg(sessionId, hdcMsg, FPGA_WAITFOR_INTERVAL);
         } else {
-            recvResult = RecvMsg(sessionId, hdcMsg, WAITFOR_INTERVAL, true);
+            recvResult = RecvMsg(sessionId, hdcMsg, WAITFOR_INTERVAL);
         }
 
         if (recvResult != TSD_OK) {
@@ -324,12 +324,8 @@ namespace tsd {
         if (halVersion > HDC_SOCKET_STATUS_GET_VERSION) {
             const std::lock_guard<std::recursive_mutex> lkSessionMap(mutextForClientSessionMap_);
             for (auto iter = hdcClientSessionMap_.cbegin(); iter != hdcClientSessionMap_.cend(); iter++) {
-                {
-                    const std::lock_guard<std::mutex> lk(hdcSessionMutex_);
-                    ret = halHdcGetSessionAttr(iter->second, HDC_SESSION_ATTR_STATUS, &hdcSessStat);
-                }
-                if (ret != DRV_ERROR_NONE) {
-                    TSD_ERROR("halHdcGetSessionStatus failed, ret[%d].", ret);
+                TSD_StatusT getStatusRet = hdcCommon_.GetHdcAttrStatus(iter->second, hdcSessStat);
+                if (getStatusRet != TSD_OK) {
                     return TSD_HDC_SESSION_STATUS_GET_FAILED;
                 }
                 if (hdcSessStat == HDC_SESSION_STATUS_CLOSE) {
@@ -435,6 +431,33 @@ namespace tsd {
         return type_;
     }
 
+    TSD_StatusT HdcClient::SendMsg(const uint32_t sessionId,const HDCMessage& msg)
+    {
+        HDC_SESSION session = nullptr;
+        const TSD_StatusT ret = GetHdcSession(sessionId, session);
+        if (ret != TSD_OK) {
+            TSD_RUN_WARN("GetHdcSession not success ret[%d]", ret);
+            return TSD_HDC_SEND_MSG_ERROR;
+        }
+        std::shared_ptr<VersionVerify> inspector = nullptr;
+        (void)GetVersionVerify(sessionId, inspector);
+        TSD_CHECK_NULLPTR(inspector, TSD_HDC_RECV_MSG_ERROR, "VersionVerify does not exist.");
+        TSD_CHECK(inspector->SpecialFeatureCheck(msg.type()), TSD_HDC_RECV_MSG_ERROR,
+                  "client and server feature_list is inconsistent, you need to update your software.");
+        return hdcCommon_.SendNormalMsg(msg, session);
+    }
+
+    TSD_StatusT HdcClient::RecvMsg(const uint32_t sessionId, HDCMessage& msg, const uint32_t timeout)
+    {
+        HDC_SESSION session = nullptr;
+        TSD_StatusT ret = GetHdcSession(sessionId, session);
+        if (ret != TSD_OK) {
+            TSD_RUN_WARN("[TsdEVENT] GetHdcSession not success ret[%d]", ret);
+            return TSD_HDC_RECV_MSG_ERROR;
+        }
+
+        return hdcCommon_.RecvMsg(session, msg, timeout);
+    }
     /**
     * @ingroup HdcClient
     * @brief 析构函数

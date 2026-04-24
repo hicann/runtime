@@ -12,7 +12,7 @@
 #include "tsd/tsd_client.h"
 #include "inc/client_manager.h"
 #include "tsd/status.h"
-#include "inc/hdc_client.h"
+#include "hdc_client.h"
 #define private public
 #define protected public
 #include "inc/process_mode_manager.h"

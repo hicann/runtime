@@ -12,7 +12,7 @@
 #define INNER_INC_PROCESS_MODE_MANAGER_H
 
 #include "inc/client_manager.h"
-#include "inc/hdc_client.h"
+#include "hdc_client.h"
 #include "proto/tsd_message.pb.h"
 
 namespace tsd {

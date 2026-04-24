@@ -20,10 +20,10 @@ set(PROTO_LIST
 )
 
 set(tdt_common_files
-    ${BASE_DIR}/common/src/hdc_common.cpp
+    ${BASE_DIR}/basic_component/device_comm/hdc_common.cpp
     ${BASE_DIR}/common/src/message_parse_interface.cpp
     ${BASE_DIR}/pub_facility/util_func/tsd_util_func.cpp
-    ${BASE_DIR}/common/src/hdc_client.cpp
+    ${BASE_DIR}/basic_component/device_comm/hdc_client.cpp
     ${BASE_DIR}/common/src/message_parse_client.cpp
     ${BASE_DIR}/common/src/version_verify.cpp
 )
@@ -57,6 +57,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
     ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/pub_facility/env_manager/
+    ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/pkg_in/aicpu/queue_schedule
@@ -149,6 +150,7 @@ target_include_directories(tsdclient PRIVATE
     ${RUNTIME_DIR}/src/tsd/pub_facility/tsdlog/
     ${RUNTIME_DIR}/src/tsd/pub_facility/util_func/
     ${RUNTIME_DIR}/src/tsd/pub_facility/env_manager/
+    ${RUNTIME_DIR}/src/tsd/basic_component/device_comm/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/
     ${RUNTIME_DIR}/src/tsd/client/common/inc/stub/
     ${RUNTIME_DIR}/src/inc/

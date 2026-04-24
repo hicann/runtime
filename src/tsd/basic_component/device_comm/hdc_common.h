@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef COMMON_COMMON_INC_HDC_COMMON_H
-#define COMMON_COMMON_INC_HDC_COMMON_H
+#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
+#define TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
 
 #include <functional>
 #include <mutex>
@@ -34,14 +34,15 @@ namespace tsd {
 
     class HdcCommon {
     public:
-        /**
+        
+       /**
         * @ingroup HdcCommon
-        * @brief   SendMsg 发送消息
-        * @param   [in] : sessionId
-        * @param   [in] msg:消息
+        * @brief   SendNormalMsg 发送普通消息
+        * @param   [in] msg : 普通消息
+        * @param   [int] session : 会话
         * return Status成功TSD_OK，失败：其他错误码
         */
-        TSD_StatusT SendMsg(const uint32_t sessionId, const HDCMessage& msg, const bool isClose = false);
+        TSD_StatusT SendNormalMsg(const HDCMessage& msg, HDC_SESSION const session);
 
         /**
          * @ingroup HdcCommon
@@ -52,40 +53,16 @@ namespace tsd {
 
         /**
         * @ingroup HdcCommon
-        * @brief   纯虚函数 GetHdcSession 获得HDC会话
-        * @param   [in] sessionId : sessionId
-        * @param   [out] session : 会话
-        * return Status成功TSD_OK，失败：其他错误码
-        */
-        virtual TSD_StatusT GetHdcSession(const uint32_t sessionId, HDC_SESSION& session) = 0;
-
-    protected:
-        /**
-        * @ingroup HdcCommon
         * @brief   RecvMsg 接收消息
         * @param   [in] session : deviceId
         * @param   [out] msg :消息
         * @param   [in] timeout : 超时时间
         * return Status成功TSD_OK，失败：其他错误码
         */
-        TSD_StatusT RecvMsg(const uint32_t sessionId, HDCMessage& msg, const uint32_t timeout = 0U,
-                            const bool waitFlag = true);
+        TSD_StatusT RecvMsg(HDC_SESSION session, HDCMessage& msg, const uint32_t timeout = 0U);
 
-        /**
-        * @ingroup HdcCommon
-        * @brief 虚函数 GetDeviceId 获得设备ID
-        * return 设备ID
-        */
-        virtual uint32_t GetDeviceId() const = 0;
+        TSD_StatusT GetHdcAttrStatus(HDC_SESSION session, int32_t &hdcSessStat);
 
-        /**
-        * @ingroup HdcCommon
-        * @brief   纯虚函数 GetHdcServiceType 获得 HdcServiceType
-        * return HdcServiceType
-        */
-        virtual HDCServiceType GetHdcServiceType() const = 0;
-
-    protected:
         HdcCommon();
         virtual ~HdcCommon() = default;
         HdcCommon(const HdcCommon&) = delete;
@@ -110,25 +87,10 @@ namespace tsd {
             return msgMaxSize_;
         }
 
-        /**
-        * @ingroup HdcCommon
-        * @brief   SendNormalMsg 发送普通消息
-        * @param   [in] msg : 普通消息
-        * @param   [int] session : 会话
-        * return Status成功TSD_OK，失败：其他错误码
-        */
-        TSD_StatusT SendNormalMsg(const HDCMessage& msg, HDC_SESSION const session, const bool isClose);
-
-        virtual TSD_StatusT GetVersionVerify(const uint32_t sessionId, std::shared_ptr<VersionVerify> &inspector) = 0;
-
-        std::mutex hdcSessionMutex_;
-
-        std::map<uint32_t, uint64_t> logPrintMap_;
-
-        std::mutex logPrintMapMutex_;
-
-        bool isAdcEnv_;
-
+        void SetAdcEnv(const bool isAdcEnv)
+        {
+            isAdcEnv_ = isAdcEnv;
+        }
     private:
         /**
         * @ingroup HdcCommon
@@ -139,7 +101,7 @@ namespace tsd {
         * return Status成功TSD_OK，失败：其他错误码
         */
         TSD_StatusT SendNormalShortMsg(const HDCMessage& msg, const uint32_t size,
-                                    HDC_SESSION const session, const bool isClose);
+                                    HDC_SESSION const session);
 
         /**
         * @ingroup HdcCommon
@@ -150,15 +112,8 @@ namespace tsd {
         * return Status成功TSD_OK，失败：其他错误码
         */
         TSD_StatusT SendHdcDefaultMsg(HDC_SESSION const session, char_t * const hdcMsgBuf,
-                                      const uint32_t size, const bool isClose);
+                                      const uint32_t size);
 
-        /**
-        * @ingroup HdcCommon
-        * @brief   print log
-        * @param   [in] hdcRet : hdc错误码
-        * @param   [int] status : hdc session status
-        */
-        void CheckHdcSessionPrintLog(const drvError_t hdcRet, const int32_t status);
 
         /**
         * @ingroup HdcCommon
@@ -171,21 +126,14 @@ namespace tsd {
         * return Status成功TSD_OK，失败：其他错误码
         */
         TSD_StatusT RecvHdcDefaultMsg(const HDC_SESSION& session, drvHdcMsg* drvMsg, char_t*& buffer,
-                                      uint32_t& bufferLengthOut, const uint32_t timeout, const bool waitFlag);
-
-        /**
-        * @ingroup HdcCommon
-        * @brief   GetClientFlag 获取client标签
-        * return true：是client，false：不是client
-        */
-        virtual bool GetClientFlag() const = 0;
+                                      uint32_t& bufferLengthOut, const uint32_t timeout);
 
     private:
-        std::mutex idMutex_;
-        std::mutex idMcMutex_;
+        std::mutex hdcSessionMutex_;
+        bool isAdcEnv_;
         uint32_t msgMaxSize_;
         uint32_t msgShortHeadDataMaxSize_;
         uint32_t msgLongHeadDataMaxSize_;
     };
 }
-#endif  // COMMON_COMMON_INC_HDC_COMMON_H
+#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
