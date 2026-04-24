@@ -1,0 +1,445 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "初始化与去初始化",
+      "name_en": "Initialization",
+      "apis": [
+        "aclInit", "aclFinalize", "aclFinalizeReference",
+        "aclInitCallbackRegister", "aclInitCallbackUnRegister",
+        "aclFinalizeCallbackRegister", "aclFinalizeCallbackUnRegister"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "设备管理",
+      "name_en": "Device Management",
+      "apis": [
+        "aclrtSetDevice", "aclrtResetDevice", "aclrtResetDeviceForce",
+        "aclrtGetDevice", "aclrtGetRunMode", "aclrtSetTsDevice",
+        "aclrtGetDeviceCount", "aclrtGetDeviceUtilizationRate",
+        "aclrtQueryDeviceStatus", "aclrtGetSocName",
+        "aclrtSetDeviceSatMode", "aclrtGetDeviceSatMode",
+        "aclrtGetOverflowStatus", "aclrtResetOverflowStatus",
+        "aclrtSynchronizeDevice", "aclrtSynchronizeDeviceWithTimeout",
+        "aclrtGetDeviceInfo", "aclrtDeviceGetStreamPriorityRange",
+        "aclrtGetDeviceCapability", "aclrtGetDevicesTopo",
+        "aclrtRegDeviceStateCallback",
+        "aclrtGetLogicDevIdByUserDevId", "aclrtGetUserDevIdByLogicDevId",
+        "aclrtGetLogicDevIdByPhyDevId", "aclrtGetPhyDevIdByLogicDevId",
+        "aclrtDeviceGetUuid", "aclrtDeviceGetBareTgid"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "上下文管理",
+      "name_en": "Context Management",
+      "apis": [
+        "aclrtCreateContext", "aclrtDestroyContext",
+        "aclrtSetCurrentContext", "aclrtGetCurrentContext",
+        "aclrtCtxSetSysParamOpt", "aclrtCtxGetSysParamOpt",
+        "aclrtCtxGetCurrentDefaultStream", "aclrtGetPrimaryCtxState",
+        "aclrtCtxGetFloatOverflowAddr"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "流管理",
+      "name_en": "Stream Management",
+      "apis": [
+        "aclrtCreateStream", "aclrtCreateStreamV2",
+        "aclrtSetStreamConfigOpt", "aclrtCreateStreamWithConfig",
+        "aclrtDestroyStream", "aclrtDestroyStreamForce",
+        "aclrtSetStreamOverflowSwitch", "aclrtGetStreamOverflowSwitch",
+        "aclrtSetStreamFailureMode", "aclrtStreamQuery",
+        "aclrtSynchronizeStream", "aclrtSynchronizeStreamWithTimeout",
+        "aclrtStreamAbort", "aclrtStreamGetId",
+        "aclrtGetStreamAvailableNum", "aclrtSetStreamAttribute",
+        "aclrtGetStreamAttribute", "aclrtActiveStream",
+        "aclrtSwitchStream", "aclrtRegStreamStateCallback",
+        "aclrtStreamStop", "aclrtPersistentTaskClean",
+        "aclrtStreamGetPriority", "aclrtStreamGetFlags",
+        "aclrtStreamWaitEvent", "aclrtStreamWaitEventWithTimeout",
+        "aclrtCreateStreamConfigHandle", "aclrtDestroyStreamConfigHandle"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "事件管理",
+      "name_en": "Event Management",
+      "apis": [
+        "aclrtCreateEvent", "aclrtCreateEventWithFlag",
+        "aclrtCreateEventExWithFlag", "aclrtDestroyEvent",
+        "aclrtRecordEvent", "aclrtResetEvent",
+        "aclrtQueryEvent", "aclrtQueryEventStatus",
+        "aclrtQueryEventWaitStatus", "aclrtSynchronizeEvent",
+        "aclrtSynchronizeEventWithTimeout", "aclrtEventElapsedTime",
+        "aclrtEventGetTimestamp", "aclrtGetEventId",
+        "aclrtGetEventAvailNum", "aclrtSetOpWaitTimeout"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "IPC 事件",
+      "name_en": "IPC Event",
+      "apis": [
+        "aclrtIpcGetEventHandle", "aclrtIpcOpenEventHandle"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "内存管理",
+      "name_en": "Memory Management",
+      "apis": [
+        "aclrtMalloc", "aclrtMallocAlign32", "aclrtMallocCached",
+        "aclrtMallocWithCfg", "aclrtMallocForTaskScheduler",
+        "aclrtFree", "aclrtFreeWithDevSync",
+        "aclrtMallocHost", "aclrtMallocHostWithCfg",
+        "aclrtFreeHost", "aclrtFreeHostWithDevSync",
+        "aclrtMemcpy", "aclrtMemcpyAsync",
+        "aclrtMemcpyAsyncWithCondition", "aclrtMemcpyBatch",
+        "aclrtMemcpyBatchAsync", "aclrtMemcpy2d", "aclrtMemcpy2dAsync",
+        "aclrtGetMemcpyDescSize", "aclrtSetMemcpyDesc",
+        "aclrtMemcpyAsyncWithDesc", "aclrtMemcpyAsyncWithOffset",
+        "aclrtMemset", "aclrtMemsetAsync",
+        "aclrtMemFlush", "aclrtMemInvalidate",
+        "aclrtCmoAsync", "aclrtCmoAsyncWithBarrier",
+        "aclrtCmoWaitBarrier", "aclrtCmoGetDescSize",
+        "aclrtCmoSetDesc", "aclrtCmoAsyncWithDesc",
+        "aclrtHostRegister", "aclrtHostRegisterV2",
+        "aclrtHostUnregister", "aclrtHostGetDevicePointer",
+        "aclrtHostMemMapCapabilities",
+        "aclrtPointerGetAttributes", "aclrtCheckMemType",
+        "aclrtGetMemInfo",
+        "aclrtMemAllocManaged",
+        "aclrtMemP2PMap",
+        "aclrtMallocBatchWithCfg",
+        "aclrtDevMallocHost",
+        "aclrtDevFreeHost",
+        "aclrtDvppMalloc"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "虚拟内存管理",
+      "name_en": "Virtual Memory Management",
+      "apis": [
+        "aclrtMallocPhysical", "aclrtFreePhysical",
+        "aclrtReserveMemAddress", "aclrtReserveMemAddressNoUCMemory",
+        "aclrtReleaseMemAddress", "aclrtMapMem", "aclrtUnmapMem",
+        "aclrtMemExportToShareableHandle", "aclrtMemSetPidToShareableHandle",
+        "aclrtMemImportFromShareableHandle",
+        "aclrtMemExportToShareableHandleV2", "aclrtMemSetPidToShareableHandleV2",
+        "aclrtMemImportFromShareableHandleV2",
+        "aclrtMemGetAllocationGranularity", "aclrtMemSetAccess",
+        "aclrtMemGetAccess", "aclrtMemRetainAllocationHandle",
+        "aclrtMemGetAllocationPropertiesFromHandle", "aclrtMemGetAddressRange"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "IPC 内存",
+      "name_en": "IPC Memory",
+      "apis": [
+        "aclrtIpcMemGetExportKey", "aclrtIpcMemSetImportPid",
+        "aclrtIpcMemImportPidInterServer", "aclrtIpcMemImportByKey",
+        "aclrtIpcMemSetAttr", "aclrtIpcMemClose"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "流序内存分配器",
+      "name_en": "Stream Ordered Memory Allocator",
+      "apis": [
+        "aclrtMemPoolCreate", "aclrtMemPoolDestroy",
+        "aclrtMemPoolSetAttr", "aclrtMemPoolGetAttr"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "对等设备内存访问",
+      "name_en": "Peer Device Memory Access",
+      "apis": [
+        "aclrtDeviceCanAccessPeer", "aclrtDeviceEnablePeerAccess",
+        "aclrtDeviceDisablePeerAccess", "aclrtDevicePeerAccessStatus"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "执行控制",
+      "name_en": "Execution Control",
+      "apis": [
+        "aclrtLaunchKernel", "aclrtLaunchKernelV2",
+        "aclrtLaunchKernelWithConfig", "aclrtLaunchKernelWithHostArgs",
+        "aclrtLaunchHostFunc", "aclrtLaunchCallback",
+        "aclrtSubscribeReport", "aclrtProcessReport", "aclrtUnSubscribeReport",
+        "aclrtSubscribeHostFunc", "aclrtProcessHostFunc", "aclrtUnSubscribeHostFunc",
+        "aclrtGetOpTimeoutInterval", "aclrtSetOpExecuteTimeOut",
+        "aclrtSetOpExecuteTimeOutV2", "aclrtSetOpExecuteTimeOutWithMs",
+        "aclrtGetOpExecuteTimeOut", "aclrtGetThreadLastTaskId",
+        "aclrtReduceAsync", "aclrtRandomNumAsync", "aclrtTaskUpdateAsync"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Kernel 加载与库管理",
+      "name_en": "Kernel Loading",
+      "apis": [
+        "aclrtBinaryLoadFromFile", "aclrtBinaryLoadFromData",
+        "aclrtBinaryLoad", "aclrtBinaryUnLoad",
+        "aclrtCreateBinary", "aclrtDestroyBinary",
+        "aclrtBinaryGetFunction", "aclrtBinaryGetFunctionByEntry",
+        "aclrtBinaryGetDevAddress", "aclrtGetFunctionAddr",
+        "aclrtGetFunctionSize", "aclrtGetFunctionName",
+        "aclrtGetFunctionAttribute", "aclrtGetHardwareSyncAddr",
+        "aclrtRegisterCpuFunc", "aclrtCheckArchCompatibility",
+        "aclrtKernelArgsInit", "aclrtKernelArgsInitByUserMem",
+        "aclrtKernelArgsGetMemSize", "aclrtKernelArgsGetHandleMemSize",
+        "aclrtKernelArgsAppend", "aclrtKernelArgsAppendPlaceHolder",
+        "aclrtKernelArgsGetPlaceHolderBuffer", "aclrtKernelArgsParaUpdate",
+        "aclrtKernelArgsFinalize",
+        "aclrtBinarySetExceptionCallback",
+        "aclrtGetArgsFromExceptionInfo", "aclrtGetFuncHandleFromExceptionInfo"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "错误处理",
+      "name_en": "Error Handling",
+      "apis": [
+        "aclGetRecentErrMsg", "aclrtPeekAtLastError", "aclrtGetLastError",
+        "aclrtGetErrorVerbose", "aclrtSetExceptionInfoCallback",
+        "aclrtGetTaskIdFromExceptionInfo", "aclrtGetStreamIdFromExceptionInfo",
+        "aclrtGetThreadIdFromExceptionInfo", "aclrtGetDeviceIdFromExceptionInfo",
+        "aclrtGetErrorCodeFromExceptionInfo",
+        "aclrtGetMemUceInfo", "aclrtMemUceRepair",
+        "aclrtDeviceTaskAbort", "aclrtSetDeviceTaskAbortCallback",
+        "aclRecoverAllHcclTasks", "aclrtRepairError"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "版本管理",
+      "name_en": "Version Management",
+      "apis": [
+        "aclrtGetVersion", "aclsysGetCANNVersion",
+        "aclsysGetVersionNum", "aclsysGetVersionStr",
+        "aclsysGetVesionNum", "aclsysGetVesionStr",
+        "aclCANNPackageName", "aclCANNPackageVersion"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Profiling 控制与数据采集",
+      "name_en": "Profiler Control",
+      "apis": [
+        "aclprofInit", "aclprofFinalize", "aclprofSetConfig",
+        "aclprofStart", "aclprofStop",
+        "aclprofCreateConfig", "aclprofDestroyConfig",
+        "aclprofCreateStepInfo", "aclprofDestroyStepInfo",
+        "aclprofGetStepTimestamp", "aclprofStepTag",
+        "aclprofCreateStamp", "aclprofSetStampTraceMessage",
+        "aclprofMark", "aclprofMarkEx",
+        "aclprofPush", "aclprofPop",
+        "aclprofRangeStart", "aclprofRangeStop",
+        "aclprofDestroyStamp",
+        "aclprofCreateSubscribeConfig", "aclprofDestroySubscribeConfig",
+        "aclprofModelSubscribe", "aclprofModelUnSubscribe",
+        "aclprofGetOpDescSize", "aclprofGetOpNum",
+        "aclprofGetOpTypeLen", "aclprofGetOpType",
+        "aclprofGetOpNameLen", "aclprofGetOpName",
+        "aclprofGetOpStart", "aclprofGetOpEnd",
+        "aclprofGetOpDuration", "aclprofGetModelId"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "模型运行实例管理",
+      "name_en": "Model Runtime Instance",
+      "apis": [
+        "aclmdlRICaptureBegin", "aclmdlRICaptureEnd",
+        "aclmdlRICaptureGetInfo", "aclmdlRICaptureThreadExchangeMode",
+        "aclmdlRICaptureTaskGrpBegin", "aclmdlRICaptureTaskGrpEnd",
+        "aclmdlRICaptureTaskUpdateBegin", "aclmdlRICaptureTaskUpdateEnd",
+        "aclmdlRIBuildBegin", "aclmdlRIBuildEnd",
+        "aclmdlRIBindStream", "aclmdlRIUnbindStream", "aclmdlRIEndTask",
+        "aclmdlRIExecute", "aclmdlRIExecuteAsync",
+        "aclmdlRIDestroy", "aclmdlRIAbort",
+        "aclmdlRISetName", "aclmdlRIGetName",
+        "aclmdlRIDebugPrint", "aclmdlRIDebugJsonPrint",
+        "aclmdlRIGetStreams", "aclmdlRIGetTasksByStream",
+        "aclmdlRITaskGetSeqId", "aclmdlRITaskGetType",
+        "aclmdlRIDestroyRegisterCallback", "aclmdlRIDestroyUnregisterCallback"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Dump 配置",
+      "name_en": "Dump Configuration",
+      "apis": [
+        "aclmdlInitDump", "aclmdlSetDump", "aclmdlFinalizeDump",
+        "acldumpRegCallback", "acldumpUnregCallback",
+        "acldumpGetPath", "aclopStartDumpArgs", "aclopStopDumpArgs"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "运行时配置",
+      "name_en": "Runtime Configuration",
+      "apis": [
+        "aclrtSetSysParamOpt", "aclrtGetSysParamOpt",
+        "aclrtGetDeviceResLimit", "aclrtSetDeviceResLimit",
+        "aclrtResetDeviceResLimit",
+        "aclrtGetStreamResLimit", "aclrtSetStreamResLimit",
+        "aclrtResetStreamResLimit",
+        "aclrtUseStreamResInCurrentThread", "aclrtUnuseStreamResInCurrentThread",
+        "aclrtGetResInCurrentThread"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Notify 管理 ★",
+      "name_en": "Notify Management",
+      "apis": [
+        "aclrtCreateNotify", "aclrtDestroyNotify",
+        "aclrtRecordNotify", "aclrtWaitAndResetNotify",
+        "aclrtGetNotifyId", "aclrtNotifyBatchReset",
+        "aclrtNotifyGetExportKey", "aclrtNotifySetImportPid",
+        "aclrtNotifySetImportPidInterServer", "aclrtNotifyImportByKey"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "CntNotify 管理 ★",
+      "name_en": "Count Notify Management",
+      "apis": [
+        "aclrtCntNotifyCreate", "aclrtCntNotifyRecord",
+        "aclrtCntNotifyWaitWithTimeout", "aclrtCntNotifyReset",
+        "aclrtCntNotifyGetId", "aclrtCntNotifyDestroy"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Label 管理 ★",
+      "name_en": "Label Management",
+      "apis": [
+        "aclrtCreateLabel", "aclrtSetLabel", "aclrtDestroyLabel",
+        "aclrtCreateLabelList", "aclrtDestroyLabelList",
+        "aclrtSwitchLabelByIndex"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "硬件同步原语 ★",
+      "name_en": "Hardware Sync Primitives",
+      "apis": [
+        "aclrtValueWrite", "aclrtValueWait"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "TDT Channel 数据传输 ★",
+      "name_en": "TDT Channel",
+      "apis": [
+        "acltdtCreateChannel", "acltdtCreateChannelWithCapacity",
+        "acltdtSendTensor", "acltdtReceiveTensor",
+        "acltdtStopChannel", "acltdtDestroyChannel",
+        "acltdtQueryChannelSize", "acltdtGetSliceInfoFromItem",
+        "acltdtCleanChannel",
+        "acltdtCreateDataItem", "acltdtDestroyDataItem",
+        "acltdtGetDataAddrFromItem", "acltdtGetDataSizeFromItem",
+        "acltdtGetDataTypeFromItem", "acltdtGetDimNumFromItem",
+        "acltdtGetDimsFromItem", "acltdtGetTensorTypeFromItem",
+        "acltdtCreateDataset", "acltdtDestroyDataset",
+        "acltdtGetDataItem", "acltdtGetDatasetSize",
+        "acltdtGetDatasetName", "acltdtAddDataItem"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "TDT Queue 共享队列 ★",
+      "name_en": "TDT Queue",
+      "apis": [
+        "acltdtCreateQueue", "acltdtDestroyQueue",
+        "acltdtEnqueue", "acltdtDequeue",
+        "acltdtEnqueueData", "acltdtDequeueData",
+        "acltdtBindQueueRoutes", "acltdtUnbindQueueRoutes",
+        "acltdtQueryQueueRoutes",
+        "acltdtGrantQueue", "acltdtAttachQueue",
+        "acltdtCreateQueueAttr", "acltdtDestroyQueueAttr",
+        "acltdtSetQueueAttr", "acltdtGetQueueAttr",
+        "acltdtCreateQueueRoute", "acltdtDestroyQueueRoute",
+        "acltdtGetQueueRoute", "acltdtAddQueueRoute",
+        "acltdtGetQueueRouteParam",
+        "acltdtCreateQueueRouteList", "acltdtDestroyQueueRouteList",
+        "acltdtGetQueueRouteNum",
+        "acltdtCreateQueueRouteQueryInfo", "acltdtDestroyQueueRouteQueryInfo",
+        "acltdtSetQueueRouteQueryInfo"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "共享 Buffer 管理 ★",
+      "name_en": "Shared Buffer Management",
+      "apis": [
+        "acltdtAllocBuf", "acltdtFreeBuf", "acltdtGetBufData",
+        "acltdtSetBufUserData", "acltdtGetBufUserData",
+        "acltdtSetBufDataLen", "acltdtGetBufDataLen",
+        "acltdtCopyBufRef", "acltdtAppendBufChain",
+        "acltdtGetBufChainNum", "acltdtGetBufFromChain",
+        "aclrtAllocBuf", "aclrtFreeBuf", "aclrtGetBufData",
+        "aclrtSetBufUserData", "aclrtGetBufUserData",
+        "aclrtGetBufDataLen", "aclrtSetBufDataLen",
+        "aclrtCopyBufRef", "aclrtAppendBufChain",
+        "aclrtGetBufFromChain", "aclrtGetBufChainNum"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "快照管理 ★",
+      "name_en": "Snapshot Management",
+      "apis": [
+        "aclrtSnapShotProcessLock", "aclrtSnapShotProcessBackup",
+        "aclrtSnapShotProcessRestore", "aclrtSnapShotProcessUnlock",
+        "aclrtSnapShotCallbackRegister", "aclrtSnapShotCallbackUnregister"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "算力 Group 管理 ★",
+      "name_en": "Compute Group Management",
+      "apis": [
+        "aclrtSetGroup", "aclrtGetGroupCount",
+        "aclrtGetAllGroupInfo", "aclrtGetGroupInfoDetail",
+        "aclrtCreateGroupInfo", "aclrtDestroyGroupInfo"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "自定义内存分配器 ★",
+      "name_en": "Custom Memory Allocator",
+      "apis": [
+        "aclrtAllocatorCreateDesc", "aclrtAllocatorDestroyDesc",
+        "aclrtAllocatorSetAllocFuncToDesc", "aclrtAllocatorSetAllocAdviseFuncToDesc",
+        "aclrtAllocatorSetFreeFuncToDesc", "aclrtAllocatorSetGetAddrFromBlockFuncToDesc",
+        "aclrtAllocatorSetObjToDesc",
+        "aclrtAllocatorRegister", "aclrtAllocatorGetByStream",
+        "aclrtAllocatorUnregister"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "数据类型与工具函数 ★",
+      "name_en": "Data Types & Utilities",
+      "apis": [
+        "aclDataTypeSize", "aclFloat16ToFloat", "aclFloatToFloat16",
+        "aclCreateDataBuffer", "aclDestroyDataBuffer",
+        "aclUpdateDataBuffer", "aclGetDataBufferAddr",
+        "aclGetDataBufferSizeV2",
+        "aclAppLog", "aclGetCannAttributeList", "aclGetCannAttribute",
+        "aclGetDeviceCapability",
+        "aclrtCacheLastTaskOpInfo", "aclrtProfTrace", "aclrtCompareDataType"
+      ]
+    }
+  ]
+}
