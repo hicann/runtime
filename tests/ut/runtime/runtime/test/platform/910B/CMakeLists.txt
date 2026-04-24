@@ -25,7 +25,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/event_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/rdma_task.cc
@@ -44,7 +45,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/notify_record_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc

@@ -12,7 +12,7 @@
 #include "task.hpp"
 #include "profiler.hpp"
 #include "stream_factory.hpp"
-#include "notify_record_task.h"
+#include "task_info_v100.h"
 
 namespace cce {
 namespace runtime {

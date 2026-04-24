@@ -22,6 +22,7 @@
 #include "context.hpp"
 #include "npu_driver.hpp"
 #include "thread_local_container.hpp"
+#include "notify_task.h"
 #undef protected
 #undef private
 

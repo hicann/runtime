@@ -22,6 +22,7 @@
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"
 #include "uvm_callback.hpp"
+#include "notify_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

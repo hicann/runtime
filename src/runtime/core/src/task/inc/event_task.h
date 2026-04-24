@@ -16,24 +16,30 @@
 
 namespace cce {
 namespace runtime {
+rtError_t EventRecordTaskInit(TaskInfo * const taskInfo, Event *const eventPtr,
+                              const bool isNotifyRecordFlag, const int32_t newEventId);
 void EventRecordTaskUnInit(TaskInfo *const taskInfo);
-void SetResultForEventRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
 void SetStarsResultForEventRecordTask(TaskInfo *const taskInfo, const rtLogicCqReport_t &logicCq);
 void ToCommandBodyForEventRecordTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 void DoCompleteSuccessForEventRecordTask(TaskInfo *const taskInfo, const uint32_t devId);
-void ConstructSqeForEventRecordTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
+
+rtError_t EventResetTaskInit(TaskInfo * const taskInfo, Event *const eventPtr,
+                             const bool isNotifyFlag, const int32_t eventIndex);
 void EventResetTaskUnInit(TaskInfo *const taskInfo);
 void ToCommandBodyForEventResetTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 void DoCompleteSuccessForEventResetTask(TaskInfo *const taskInfo, const uint32_t devId);
-void ConstructSqeForEventResetTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
+rtError_t RemoteEventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventRec,
+                                  const int32_t srcDeviceId, const int32_t eventIndex);
+
 void RemoteEventWaitTaskUnInit(TaskInfo *const taskInfo);
 void ToCommandBodyForRemoteEventWaitTask(TaskInfo *const taskInfo, rtCommand_t *const command);
-void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
+rtError_t EventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventRec, const int32_t eventIndex,
+                            const uint32_t timeout, const uint8_t waitFlag);
 void ToCommandBodyForEventWaitTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 void DoCompleteSuccessForEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
-void ConstructSqeForEventWaitTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
 void PrintErrorInfoForEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
 void SetStarsResultForEventWaitTask(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);
+
 rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);

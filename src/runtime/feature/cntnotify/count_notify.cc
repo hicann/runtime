@@ -18,6 +18,7 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "task_submit.hpp"
+#include "notify_task.h"
 #include "task_david.hpp"
 #include "stream_david.hpp"
 #include "profiler_c.hpp"

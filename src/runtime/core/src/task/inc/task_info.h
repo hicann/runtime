@@ -20,7 +20,7 @@ void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * c
 void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
+
 void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
 void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
@@ -36,7 +36,7 @@ void ToCommandBodyForPCTraceTask(TaskInfo * const taskInfo, rtCommand_t *const c
 void ToCommandBodyForModelExecuteTask(TaskInfo * const taskInfo, rtCommand_t * const command);
 void ToCmdBodyForAddModelExitTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void ToCmdBodyForCallbackLaunchTask(TaskInfo* taskInfo, rtCommand_t *const command);
-void ToCommandBodyForNotifyWaitTask(TaskInfo *taskInfo, rtCommand_t *const command);
+
 void ToCommandBodyForGetDevMsgTask(TaskInfo* taskInfo, rtCommand_t * const command);
 void ToCmdBodyForFlipTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 void ToCommandBodyForModelUpdateTask(TaskInfo* taskInfo, rtCommand_t *const command);
@@ -44,13 +44,13 @@ void ToCommandBodyForSqeUpdateTask(TaskInfo* taskInfo, rtCommand_t *const comman
 void ToCommandBodyForAicpuInfoLoadTask(TaskInfo* taskInfo, rtCommand_t *const command);
 void ToCommandForNopTask(TaskInfo *const taskInfo, rtCommand_t *const command);
 void DoCompleteSuccessForModelExecuteTask(TaskInfo * const taskInfo, const uint32_t devId);
-void DoCompleteSuccessForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId);
+
 void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForIpcRecordTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForIpcWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelExecuteTask(TaskInfo * const taskInfo, const uint32_t devId);
 void PrintErrorModelExecuteTaskFuncCall(TaskInfo *const task);
-void PrintErrorInfoForNotifyWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
+
 void SetStarsResultForModelExecuteTask(TaskInfo * const taskInfo, const rtLogicCqReport_t &logicCq);
 void PCTraceTaskUnInit(TaskInfo * const taskInfo);
 void ModelExecuteTaskUnInit(TaskInfo * const taskInfo);

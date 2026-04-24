@@ -57,6 +57,16 @@ void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const co
 void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId);
 void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
+void SetResultForEventRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
+void ConstructSqeForEventRecordTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForEventResetTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
+void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
+void ConstructSqeForEventWaitTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
+
+void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
+void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
+void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
+
 }  // namespace runtime
 }  // namespace cce
 #endif  // TASK_INFO_V100_H

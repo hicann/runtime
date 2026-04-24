@@ -19,6 +19,7 @@
 #include "inner_thread_local.hpp"
 #include "task_submit.hpp"
 #include "ctrl_sq.hpp"
+#include "notify_task.h"
 
 namespace cce {
 namespace runtime {

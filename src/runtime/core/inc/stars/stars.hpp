@@ -548,7 +548,6 @@ struct rtStarsCqe_t {
 
 void ToConstructSqe(TaskInfo *taskInfo, rtStarsSqe_t *const command);
 uint32_t GetSendSqeNum(TaskInfo * const taskInfo);
-rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &addr);
 void PrintSqe(const rtStarsSqe_t * const sqe, const char *desc);
 void ConstructPcieDmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 

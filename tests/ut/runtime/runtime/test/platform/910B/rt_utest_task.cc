@@ -55,6 +55,8 @@
 #include "task_manager.h"
 #include "cmo_task.h"
 #include "task_info_v100.h"
+#include "event_task.h"
+#include "notify_task.h"
 #include "api_impl.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"

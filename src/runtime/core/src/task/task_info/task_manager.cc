@@ -35,7 +35,7 @@
 #include "dump_task.h"
 #include "barrier_task.h"
 #include "model_maintaince_task.h"
-#include "notify_record_task.h"
+#include "notify_task.h"
 #include "timeout_set_task.h"
 #include "ringbuffer_maintain_task.h"
 #include "model_update_task.h"

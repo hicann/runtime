@@ -29,6 +29,8 @@
 #include "cond_op_label_task.h"
 #include "model_execute_task.h"
 #include "model_maintaince_task.h"
+#include "event_task.h"
+#include "notify_task.h"
 #include "context.hpp"
 #include "runtime.hpp"
 #include "uma_arg_loader.hpp"

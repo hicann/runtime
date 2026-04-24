@@ -44,7 +44,7 @@
 #include <algorithm>
 #endif
 #include "heterogenous.h"
-#include "notify_record_task.h"
+#include "notify_task.h"
 #include "capture_model.hpp"
 #include "capture_model_utils.hpp"
 #include "stars_common_task.h"

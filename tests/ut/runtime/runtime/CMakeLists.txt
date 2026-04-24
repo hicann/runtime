@@ -22,7 +22,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/event_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/rdma_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
@@ -38,7 +39,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/notify_record_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
@@ -79,9 +81,9 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_recycle/v200/task_recycle_send_sync.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/david_event_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/david_event_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ubdma_task_david.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/notify/notify_task_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_ub.cc
@@ -129,7 +131,7 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_checker.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200/notify_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
@@ -363,7 +365,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ubdma_task_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/notify/notify_task_david.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/aix_task_to_sqe.cc
@@ -372,7 +374,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event_starsV2.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_pool.cc
     ${TOP_DIR}/src/runtime/core/src/pool/event_expanding.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200/notify_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200.cc
 )
 
 set(runtimeut_src_tiny_include_list
@@ -1379,7 +1381,7 @@ set(runtimeut_v201_src_task_list
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_task.cc
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_c.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v201/api_impl_v200_adapt.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v201/notify_task_to_sqe.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v201.cc

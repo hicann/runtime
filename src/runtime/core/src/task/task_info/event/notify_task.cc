@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -12,17 +12,33 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "notify.hpp"
-#include "notify_record_task.h"
+#include "notify_task.h"
+#include "task_info.hpp"
+#include "task_fail_callback_manager.hpp"
+#include "device/device_error_proc.hpp"
+#include "task_manager.h"
+#include "error_code.h"
+#include "rdma_task.h"
+#include "model_execute_task.h"
+#include "stub_task.hpp"
 
 namespace cce {
 namespace runtime {
+
+namespace {
+bool IsSdmaMteErrorCode(const int32_t errCode)
+{
+    return (errCode == TS_ERROR_SDMA_LINK_ERROR) || (errCode == TS_ERROR_SDMA_POISON_ERROR) ||
+           (errCode == TS_ERROR_SDMA_DDRC_ERROR) || (errCode == AICPU_HCCL_OP_SDMA_LINK_FAILED);
+}
+} // namespace
 
 constexpr uint64_t RT_MC62CM12A_STARS_P_BASE_ADDR = 0x5A0000000ULL;       // P die
 constexpr uint64_t RT_MC62CM12A_STARS_F_BASE_ADDR = 0x208A0000000ULL;     // F die
 constexpr uint64_t STARS_MC62CM12A_NOTIFY_BASE_ADDR = 0x10000000ULL;
 constexpr uint32_t STARS_MC62CM12A_NOTIFY_NUM_OF_SINGLE_TABLE_P = 512U;  // P die
 constexpr uint32_t STARS_MC62CM12A_NOTIFY_NUM_OF_SINGLE_TABLE_F = 256U;   // F die
-constexpr uint32_t STARS_MC62CM12A_NOTIFY_TABLE_SEPARATE_NUM = 16U;       // P/F DIE  
+constexpr uint32_t STARS_MC62CM12A_NOTIFY_TABLE_SEPARATE_NUM = 16U;       // P/F DIE
 constexpr uint32_t STARS_MC62CM12A_NOTIFY_TABLE_OFFSET   = 0x200000U;     // P/F DIE
 constexpr uint32_t STARS_MC62CM12A_NOTIFY_ID_4K_SEPARATE = 0x1000U;       // P/F DIE
 constexpr uint32_t STARS_MC62CM12A_NOTIFY_OFFSET   =  0x20U;
@@ -82,6 +98,21 @@ void DoCompleteSuccessForNotifyRecordTask(TaskInfo *taskInfo, const uint32_t dev
     }
 }
 
+rtError_t NotifyResetTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex,
+    const SingleBitNotifyRecordInfo * const singleInfo, void * const notify)
+{
+    COND_RETURN_ERROR((notify == nullptr), RT_ERROR_NOTIFY_NULL, "notify is nullptr.");
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_NOTIFY_RECORD;
+    taskInfo->typeName = "NOTIFY_RESET";
+    NotifyRecordTaskInfo *notifyReset = &(taskInfo->u.notifyrecordTask);
+    notifyReset->notifyId = notifyIndex;
+    notifyReset->isCountNotify = false;
+    notifyReset->uPtr.notify = static_cast<Notify *>(notify);
+    notifyReset->uInfo.singleBitNtfyInfo = *singleInfo;
+    return RT_ERROR_NONE;
+}
+
 void ToCommandBodyForNotifyRecordTask(TaskInfo *taskInfo, rtCommand_t *const command)
 {
     command->u.notifyrecordTask.notifyId = static_cast<uint16_t>(taskInfo->u.notifyrecordTask.notifyId);
@@ -101,28 +132,7 @@ void ToCommandBodyForNotifyRecordTask(TaskInfo *taskInfo, rtCommand_t *const com
     AtraceSubmitLog(TYPE_NOTIFY_RECORD, param);
 }
 
-void ConstructNotifySqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
-{
-    Stream* const stream = taskInfo->stream;
-    RtStarsNotifySqe *const sqe = &(command->notifySqe);
-    sqe->header.type = RT_STARS_SQE_TYPE_NOTIFY_RECORD;
-    sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.wr_cqe = stream->GetStarsWrCqeFlag();
-    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-
-    sqe->header.rt_stream_id = static_cast<uint16_t>(stream->Id_());
-    sqe->notify_id = taskInfo->u.notifyrecordTask.notifyId;
-    sqe->header.task_id = taskInfo->id;
-
-    sqe->res2 = 0U;
-    sqe->res3 = 0U;
-
-    PrintSqe(command, "NotifyRecordTask");
-}
-
-rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &baseAddr)
+static rtError_t GetIpcNotifyBaseAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &baseAddr)
 {
     Driver *const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
@@ -240,7 +250,7 @@ rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &ad
     uint64_t notifyTableId = static_cast<uint64_t>(notifyId / taskInfo->stream->Device_()->GetDevProperties().starsNotifyTableSize);
     uint64_t notifyNum = static_cast<uint64_t>(notifyId & taskInfo->stream->Device_()->GetDevProperties().ipcNotifyNumMask);
     uint64_t baseAddr = static_cast<uint64_t>(taskInfo->stream->Device_()->GetDevProperties().notifyBase);
-    
+
     if (taskInfo->stream->Device_()->GetDevProperties().starsResourceAddrCalculateMethod == 
         StarsResourceAddrCalculateMethod::STARS_RESOURCE_ADDR_CALCULATE_BY_DEVICE_INFO) {
         const rtError_t error = GetIpcNotifyBaseAddrForNotifyRecordTask(taskInfo, baseAddr);
@@ -250,111 +260,158 @@ rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo *taskInfo, uint64_t &ad
     addr = baseAddr + (notifyTableId * STARS_NOTIFY_TABLE_OFFSET) + (notifyNum * STARS_NOTIFY_OFFSET);
     return RT_ERROR_NONE;
 }
+#endif
 
-void ConstructIpcSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
+#if F_DESC("NotifyWaitTask")
+rtError_t NotifyWaitTaskInit(TaskInfo *taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum,
+    const CountNotifyWaitInfo * const cntNtfyInfo, void * const inNotify, const bool isCountNotify)
 {
-    NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
-    Stream* const stream = taskInfo->stream;
-    RtStarsWriteValueSqe *const sqe = &(command->writeValueSqe);
-    sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
-    sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.wr_cqe = stream->GetStarsWrCqeFlag();
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->type = TS_TASK_TYPE_NOTIFY_WAIT;
+    taskInfo->typeName = "NOTIFY_WAIT";
 
-    sqe->header.rt_stream_id = static_cast<uint16_t>(stream->Id_());
-    sqe->header.task_id = taskInfo->id;
-    sqe->va = 0U;
-
-    sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
-    sqe->awsize = RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT;
-    sqe->snoop = 0U;
-    sqe->awcache = stream->Device_()->IsAddrFlatDev() ? 0xFU : 0U;
-    sqe->awprot = 0U;
-
-    sqe->res3 = notifyRecord->phyId;
-    sqe->res4 = static_cast<uint32_t>(notifyRecord->uInfo.singleBitNtfyInfo.isPod);
-    sqe->res5 = 0U;
-    sqe->res6 = 0U;
-    sqe->res7 = 0U;
-    sqe->write_value_part0 = 1U;
-    sqe->write_value_part1 = 0U;
-    sqe->write_value_part2 = 0U;
-    sqe->write_value_part3 = 0U;
-    sqe->write_value_part4 = 0U;
-    sqe->write_value_part5 = 0U;
-    sqe->write_value_part6 = 0U;
-    sqe->write_value_part7 = 0U;
-
-    uint64_t addr = 0UL;
-    const uint32_t devId = stream->Device_()->Id_();
-    if (notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId == devId) {
-        addr = notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr;
-        notifyRecord->uInfo.singleBitNtfyInfo.isPcie = notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie;
-    } else {
-        const rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(taskInfo, addr);
-        if (error != RT_ERROR_NONE) {
-            sqe->header.type = RT_STARS_SQE_TYPE_INVALID;
-            RT_LOG(RT_LOG_ERROR, "Failed to get address, retCode=%#x!", error);
-            return;
+    NotifyWaitTaskInfo* notifyWaitTask = &(taskInfo->u.notifywaitTask);
+    notifyWaitTask->notifyId = notifyIndex;
+    notifyWaitTask->timeout = timeOutNum;
+    notifyWaitTask->timestamp = 0UL;
+    notifyWaitTask->isEndGraphNotify = false;
+    notifyWaitTask->captureModel = nullptr;
+    notifyWaitTask->isCountNotify = isCountNotify;
+    if (isCountNotify) {
+        if (inNotify == nullptr) {
+            return RT_ERROR_NOTIFY_NULL;
         }
-        notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr = addr;
-        notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId = devId;
-        notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie = notifyRecord->uInfo.singleBitNtfyInfo.isPcie;
-		if (notifyRecord->uPtr.notify != nullptr) {
-            notifyRecord->uPtr.notify->SetNotifylastBaseAddr(addr);
-            notifyRecord->uPtr.notify->SetNotifylastLocalId(devId);
-            notifyRecord->uPtr.notify->SetNotifylastIsPcie(notifyRecord->uInfo.singleBitNtfyInfo.isPcie);
+        notifyWaitTask->u.countNotify = static_cast<CountNotify *>(inNotify);
+        notifyWaitTask->cntNtfyInfo = *cntNtfyInfo;
+    } else {
+        notifyWaitTask->u.notify = static_cast<Notify *>(inNotify);
+    }
+    return RT_ERROR_NONE;
+}
+
+void MapNotifyErrorCodeForFastRecovery(TaskInfo *taskInfo, const uint32_t devId)
+{
+    Stream * const stream = taskInfo->stream;
+    if (taskInfo->errorCode == AICPU_HCCL_OP_RETRY_FAILED) {
+        taskInfo->errorCode = TS_ERROR_AICPU_HCCL_OP_RETRY_FAILED;
+    } else if (taskInfo->errorCode == AICPU_HCCL_OP_UB_DDRC_FAILED) {
+        if(HasMteErr(stream->Device_()) && IsEventIdAndRasCodeMatch(stream->Device_()->Id_(), g_ubNonMemPoisonRasList) && !HasMemUceErr(stream->Device_()->Id_(), g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
+            taskInfo->errorCode = TS_ERROR_LOCAL_MEM_ERROR;
+            (RtPtrToUnConstPtr<Device *>(stream->Device_()))->SetDeviceFaultType(DeviceFaultType::HBM_UCE_ERROR);
+            RT_LOG(RT_LOG_ERROR,
+                "hccl aicpu task error is local mem error, device_id=%u, stream_id=%d, task_id=%hu, taskInfo->errorCode=%u",
+                devId, stream->Id_(), taskInfo->id, taskInfo->errorCode);
         }
-        RT_LOG(RT_LOG_INFO, "lastLocalId=%u lastBaseAddr=0x%llx", devId, addr);
+    } else if (taskInfo->errorCode == AICPU_HCCL_OP_UB_POISON_FAILED) {
+        if (!HasMteErr(stream->Device_()) && !HasMemUceErr(stream->Device_()->Id_(), g_hcclRemoteMulBitEccEventIdBlkList)) {
+            taskInfo->errorCode = TS_ERROR_REMOTE_MEM_ERROR;
+            RT_LOG(RT_LOG_ERROR,
+                "hccl aicpu task error is remote mem error, device_id=%u, stream_id=%d, task_id=%hu, taskInfo->errorCode=%u",
+                devId, stream->Id_(), taskInfo->id, taskInfo->errorCode);
+        }
+    } else if (taskInfo->errorCode == AICPU_HCCL_OP_UB_LINK_FAILED) {
+        if (!HasBlacklistEventOnDevice(devId, g_ccuTimeoutEventIdBlkList)) {
+            taskInfo->errorCode = TS_ERROR_LINK_ERROR;
+            (RtPtrToUnConstPtr<Device *>(stream->Device_()))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
+            RT_LOG(RT_LOG_ERROR,
+                "hccl aicpu task error is link error, device_id=%u, stream_id=%d, task_id=%hu, taskInfo->errorCode=%u",
+                devId, stream->Id_(), taskInfo->id, taskInfo->errorCode);
+        }
     }
-
-    if (notifyRecord->uInfo.singleBitNtfyInfo.isPcie) {
-        sqe->sub_type = RT_STARS_WRITE_VALUE_SUB_TYPE_NOTIFY_RECORD_IPC_PCIE;
-    } else {
-        sqe->sub_type = RT_STARS_WRITE_VALUE_SUB_TYPE_NOTIFY_RECORD_IPC_NO_PCIE;
-    }
-
-    sqe->write_addr_low = static_cast<uint32_t>(addr & MASK_32_BIT);
-    sqe->write_addr_high = static_cast<uint32_t>((addr >> UINT32_BIT_NUM) & MASK_17_BIT);
-
-    PrintSqe(command, "NotifyRecordTask_Ipc");
 }
 
-void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
+static void ReportNotifyErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId)
 {
-    NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
-    if (notifyRecord->uInfo.singleBitNtfyInfo.isIpc == true) {
-        ConstructIpcSqeForNotifyRecordTask(taskInfo, command);
+    Stream * const stream = taskInfo->stream;
+    if (IsSdmaMteErrorCode(static_cast<int32_t>(taskInfo->errorCode))) {
+        if (HasMteErr(stream->Device_())) {
+            taskInfo->errorCode = TS_ERROR_SDMA_POISON_ERROR;
+        } else if (!HasMemUceErr(stream->Device_()->Id_())) {
+            taskInfo->errorCode = TS_ERROR_SDMA_LINK_ERROR;
+        } else {
+            taskInfo->errorCode = TS_ERROR_SDMA_ERROR;
+        }
     } else {
-        ConstructNotifySqeForNotifyRecordTask(taskInfo, command);
+        MapNotifyErrorCodeForFastRecovery(taskInfo, devId);
     }
-
-    Stream* const stream = taskInfo->stream;
-    AtraceParams param = { stream->Device_()->Id_(), static_cast<uint32_t>(stream->Id_()), taskInfo->id,
-        GetCurrentTid(), stream->Device_()->GetAtraceHandle(), {}};
-    uintptr_t notifyLowEightAddr = 0;
-    if (notifyRecord->uPtr.notify != nullptr) {
-        notifyLowEightAddr = (RtPtrToPtr<uintptr_t, Notify *>(notifyRecord->uPtr.notify)) & 0xFFU;
-    }
-    param.u.notifyRecordParams = {notifyRecord->notifyId, notifyRecord->deviceId,
-        static_cast<uint16_t>(notifyRecord->uInfo.singleBitNtfyInfo.isIpc), false, notifyLowEightAddr};
-    AtraceSubmitLog(TYPE_NOTIFY_RECORD, param);
-    RT_LOG(RT_LOG_INFO,
-           "notify_record:notify_id=%u,stream_id=%d,task_id=%hu,sq_id=%u,"
-           " device_id=%u,is_ipc=%u,logical remote_device=%u,phy remote_device=%u.",
-           notifyRecord->notifyId, stream->Id_(), taskInfo->id, stream->GetSqId(),
-           stream->Device_()->Id_(), static_cast<uint32_t>(notifyRecord->uInfo.singleBitNtfyInfo.isIpc),
-           notifyRecord->deviceId, notifyRecord->phyId);
+    const uint32_t errorCode = taskInfo->errorCode;
+    RT_LOG(RT_LOG_ERROR, "Kernel task happen error, retCode=%#x, [%s].",
+        errorCode, GetTsErrCodeDesc(errorCode));
+    stream->SetErrCode(errorCode);
+    PrintErrorInfoForNotifyWaitTask(taskInfo, devId);
+    TaskFailCallBack(static_cast<uint32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
+        taskInfo->tid, errorCode, stream->Device_());
 }
 
-void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize)
+void DoCompleteSuccessForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId)
 {
-    UNUSED(taskInfo);
-    UNUSED(dataSize);
-    UNUSED(data);
+    if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
+        if ((!taskInfo->u.notifywaitTask.isCountNotify) && (taskInfo->u.notifywaitTask.u.notify != nullptr) &&
+            (taskInfo->u.notifywaitTask.u.notify->GetEndGraphModel() != nullptr)) {
+            ReportModelEndGraphErrorForNotifyWaitTask(taskInfo, devId);
+        } else {
+            ReportNotifyErrorForNotifyWaitTask(taskInfo, devId);
+        }
+    }
+
+    if (Runtime::Instance()->ChipIsHaveStars() && (!(taskInfo->bindFlag))) {
+        Stream* const stream = taskInfo->stream;
+        RT_LOG(RT_LOG_INFO, "[DFX_SYNC] notify wait finish. notify_id=%u, stream_id=%d, task_id=%hu, sq_id=%u,"
+            " device_id=%u", taskInfo->u.notifywaitTask.notifyId, stream->Id_(), taskInfo->id,
+            stream->GetSqId(), stream->Device_()->Id_());
+        PrintDfxInfoForRdmaPiValueModifyTask(taskInfo, devId);
+    }
+
+    if ((taskInfo->u.notifywaitTask.isEndGraphNotify) &&
+        (taskInfo->u.notifywaitTask.captureModel != nullptr)) {
+        taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(taskInfo->stream->Id_(),
+            taskInfo->u.notifywaitTask.captureModel, taskInfo->pos);
+    }
 }
 
+void PrintErrorInfoForNotifyWaitTask(TaskInfo *const taskInfo, const uint32_t devId)
+{
+    const uint32_t taskId = taskInfo->id;
+    const int32_t streamId = taskInfo->stream->Id_();
+    Stream *const reportStream = GetReportStream(taskInfo->stream);
+    STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_HCCL,
+        "Notify wait execute failed, device_id=%u, stream_id=%d, %s=%u, flip_num=%hu, "
+        "notify_id=%u, isCountNotify=%u.", devId, streamId, TaskIdDesc(), taskId, taskInfo->flipNum,
+        taskInfo->u.notifywaitTask.notifyId, taskInfo->u.notifywaitTask.isCountNotify);
+}
+
+void ToCommandBodyForNotifyWaitTask(TaskInfo *taskInfo, rtCommand_t *const command)
+{
+    command->u.notifywaitTask.notifyid = static_cast<uint16_t>(taskInfo->u.notifywaitTask.notifyId);
+    command->u.notifywaitTask.timeout = static_cast<uint32_t>(taskInfo->u.notifywaitTask.timeout);
+    command->taskInfoFlag = taskInfo->stream->GetTaskRevFlag(taskInfo->bindFlag);
+}
+
+TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void *info)
+{
+    Notify* const notify = taskInfo->u.notifywaitTask.u.notify;
+    if (unlikely(notify == nullptr)) {
+        return nullptr;
+    }
+
+    if (notify->GetEndGraphModel() != nullptr) {
+        rtStarsCqeSwStatus_t sw_status;
+        sw_status.value = *(static_cast<const uint32_t *>(info));
+        uint16_t streamId = sw_status.model_exec.stream_id;
+        uint16_t taskId = sw_status.model_exec.task_id;
+        Device *const dev = taskInfo->stream->Device_();
+        if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) && 
+            (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
+            streamId = notify->GetEndGraphModel()->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
+            taskId = sw_status.model_exec_ex.task_id;
+        }
+
+        TaskInfo *taskPtr = GetTaskInfo(dev, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId), true);
+        
+        return taskPtr;
+    }
+    return nullptr;
+}
 #endif
 
 }  // namespace runtime

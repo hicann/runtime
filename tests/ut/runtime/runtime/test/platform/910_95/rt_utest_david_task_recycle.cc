@@ -36,6 +36,7 @@
 #include "osal.hpp"
 #include "api.hpp"
 #include "task_info.h"
+#include "notify_task.h"
 #include "memory_task.h"
 #include "thread_local_container.hpp"
 #include "device_error_info.hpp"

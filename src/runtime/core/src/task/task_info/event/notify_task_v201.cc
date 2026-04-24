@@ -14,6 +14,8 @@
 #include "error_code.h"
 #include "device.hpp"
 #include "task_manager.h"
+#include "notify_task.h"
+
 namespace cce {
 namespace runtime {
 

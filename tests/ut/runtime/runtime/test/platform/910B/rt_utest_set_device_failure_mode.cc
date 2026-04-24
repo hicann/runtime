@@ -31,6 +31,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "davinci_kernel_task.h"
 #include "model_execute_task.h"
+#include "notify_task.h"
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
 #undef private

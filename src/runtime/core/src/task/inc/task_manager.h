@@ -31,7 +31,6 @@ Stream* GetReportStream(Stream *stream);
 void PrintErrorSqe(const rtStarsSqe_t * const sqe, const char_t *desc);
 uint64_t CombineTo64Bit(uint32_t high, uint32_t low);
 void SetStarsResultCommon(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);
-TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void *info);
 void TaskFuncReg(void);
 void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes);
 

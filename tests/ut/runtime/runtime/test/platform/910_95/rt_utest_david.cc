@@ -58,6 +58,7 @@
 #include "kernel.hpp"
 #include "cmo_task.h"
 #include "stream_task.h"
+#include "notify_task.h"
 #include "rt_unwrap.h"
 #include "task/task_info.hpp"
 #include "device/device_error_inner_data.hpp"

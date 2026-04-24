@@ -33,6 +33,7 @@
 #include "capture_model_utils.hpp"
 #include "../../rt_utest_config_define.hpp"
 #include "model_execute_task.h"
+#include "notify_task.h"
 using namespace testing;
 using namespace cce::runtime;
 

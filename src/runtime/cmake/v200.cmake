@@ -47,8 +47,8 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/david_event_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/david_event_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce_task.cc
@@ -72,12 +72,12 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/ubdma_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/notify_record_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/notify/notify_task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
@@ -100,6 +100,8 @@ set(david_series_common_task_src_file
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
     # mechanism dependance
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v100.cc
@@ -122,7 +124,7 @@ set(libruntime_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v200/task_proc_func_register.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/aix_task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_checker.cc
-    ${RUNTIME_CORE_DIR}/src/task/v200/notify_task_to_sqe.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
@@ -137,7 +139,7 @@ set(libruntime_v201_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v201/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/aix_task_to_sqe.cc
     ${RUNTIME_FEATURE_DIR}/dqs/dqs_c.cc
-    ${RUNTIME_CORE_DIR}/src/task/v201/notify_task_to_sqe.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v201.cc
     ${RUNTIME_CORE_DIR}/src/task/v201/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v201.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v201.cc

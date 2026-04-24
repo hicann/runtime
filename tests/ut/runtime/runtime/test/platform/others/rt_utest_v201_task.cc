@@ -63,6 +63,7 @@
 #include "fusion_c.hpp"
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
+#include "notify_task.h"
 
 using namespace testing;
 using namespace cce::runtime;

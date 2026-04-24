@@ -66,6 +66,7 @@
 #include "fusion_c.hpp"
 #include "aix_c.hpp"
 #include "memory_task.h"
+#include "notify_task.h"
 #include "inner_kernel.h"
 #include "inner_thread_local.hpp"
 #include "model_maintaince_task.h"
