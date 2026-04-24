@@ -163,7 +163,7 @@ namespace aicpu {
             EXPECT_EQ(AE_STATUS_SUCCESS, ret);
             string soFile(PATH_MAX+1, '1');
             ret = singleSoManager.CheckSoFile("test", soFile);
-            EXPECT_EQ(AE_STATUS_SUCCESS, ret);
+            EXPECT_EQ(AE_STATUS_OPEN_SO_FAILED, ret);
         }
 
         TEST_F(SoManagerUTest, SingleSoManager_CheckSoFile_02)

@@ -104,7 +104,7 @@ aeStatus_t SingleSoManager::CheckSoFile(const std::string &guardDirName, const s
 
     if (soFile.length() >= static_cast<std::string::size_type>(PATH_MAX)) {
         AE_ERR_LOG(AE_MODULE_ID, "soFile file length[%zu] must less than PATH_MAX[%u]", soFile.length(), PATH_MAX);
-        return AE_STATUS_SUCCESS;
+        return AE_STATUS_OPEN_SO_FAILED;
     }
 
     std::unique_ptr<char_t []> path(new (std::nothrow) char_t[PATH_MAX]);
