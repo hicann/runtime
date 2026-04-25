@@ -33,6 +33,7 @@ using ProtoBufStringMapMap = ascend_private::protobuf::Map<ProtoBufString, Proto
 PlatFormInfosImplPtr g_platformInfosImplInstance;
 
 bool PlatFormInfos::Init() {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   platform_infos_impl_ = make_shared<PlatFormInfosImpl>();
   if (platform_infos_impl_ == nullptr) {
     return false;
@@ -74,6 +75,7 @@ static void GetMapMapInfoFromProtoBuf(ProtoBufStringMapMap *protoMap,
 #endif
 
 map<string, vector<string>> PlatFormInfos::GetAICoreIntrinsicDtype() {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return map<string, vector<string>>();
   }
@@ -81,6 +83,7 @@ map<string, vector<string>> PlatFormInfos::GetAICoreIntrinsicDtype() {
 }
 
 map<string, vector<string>> PlatFormInfos::GetVectorCoreIntrinsicDtype() {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return map<string, vector<string>>();
   }
@@ -95,7 +98,7 @@ bool PlatFormInfos::GetPlatformRes(const string &label, const string &key, strin
 }
 
 bool PlatFormInfos::GetPlatformResWithLock(const string &label, const string &key, string &val) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return true;
   }
@@ -110,7 +113,7 @@ bool PlatFormInfos::GetPlatformRes(const std::string &label, std::map<std::strin
 }
 
 bool PlatFormInfos::GetPlatformResWithLock(const std::string &label, std::map<std::string, std::string> &res) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return true;
   }
@@ -118,7 +121,7 @@ bool PlatFormInfos::GetPlatformResWithLock(const std::string &label, std::map<st
 }
 
 bool PlatFormInfos::GetPlatformResWithLock(std::map<std::string, std::map<std::string, std::string>> &res) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return true;
   }
@@ -126,6 +129,7 @@ bool PlatFormInfos::GetPlatformResWithLock(std::map<std::string, std::map<std::s
 }
 
 void PlatFormInfos::SetAICoreIntrinsicDtype(map<string, vector<string>> &intrinsic_dtypes) {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return;
   }
@@ -133,6 +137,7 @@ void PlatFormInfos::SetAICoreIntrinsicDtype(map<string, vector<string>> &intrins
 }
 
 void PlatFormInfos::SetVectorCoreIntrinsicDtype(map<string, vector<string>> &intrinsic_dtypes) {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return;
   }
@@ -140,6 +145,7 @@ void PlatFormInfos::SetVectorCoreIntrinsicDtype(map<string, vector<string>> &int
 }
 
 void PlatFormInfos::SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map) {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return;
   }
@@ -163,7 +169,7 @@ void PlatFormInfos::SetCoreNumByCoreType(const std::string &core_type) {
       core_type_str = "ai_core_cnt";
     }
 
-    std::lock_guard<std::mutex> lock_guard(plt_mutex);
+    std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     try {
       (void)GetPlatformRes("SoCInfo", core_type_str, core_num_str);
       core_num_ = core_num_str.empty() ? 0 : std::stoi(core_num_str.c_str());
@@ -181,19 +187,19 @@ void PlatFormInfos::SetCoreNumByCoreType(const std::string &core_type) {
 }
 
 void PlatFormInfos::SetCoreNum(const uint32_t &core_num) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   PF_LOGD("Set PlatFormInfos::core_num_ to %u.", core_num);
   core_num_ = core_num;
 }
 
 uint32_t PlatFormInfos::GetCoreNum() const {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   PF_LOGD("Get PlatformInfos::core_num_=[%u].", core_num_);
   return core_num_;
 }
 
 uint32_t PlatFormInfos::GetCoreNumWithLock() const {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   PF_LOGD("Get PlatformInfos::core_num_=[%u].", core_num_);
   return core_num_;
 }
@@ -208,7 +214,7 @@ uint32_t PlatFormInfos::GetCoreNumByType(const std::string &core_type)
         core_type_str = "ai_core_cnt";
     }
 
-    std::lock_guard<std::mutex> lock_guard(plt_mutex);
+    std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     std::string core_num_str;
     uint32_t core_num = 0;
     try {
@@ -268,6 +274,7 @@ void PlatFormInfos:: GetLocalMemBw(const LocalMemType &mem_type, uint64_t &bw_si
 }
 
 std::map<std::string, std::vector<std::string>>  PlatFormInfos::GetFixPipeDtypeMap() {
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return map<string, vector<string>>();
   }
@@ -282,7 +289,7 @@ void PlatFormInfos::SetPlatformRes(const std::string &label, std::map<std::strin
 }
 
 void PlatFormInfos::SetPlatformResWithLock(const std::string &label, std::map<std::string, std::string> &res) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   if (platform_infos_impl_ == nullptr) {
     return;
   }
@@ -290,7 +297,7 @@ void PlatFormInfos::SetPlatformResWithLock(const std::string &label, std::map<st
 }
 
 bool PlatFormInfos::InitByInstance() {
-    std::lock_guard<std::mutex> lock_guard(plt_mutex);
+    std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ != nullptr) {
         return true;
     }
@@ -375,6 +382,7 @@ bool PlatFormInfos::LoadFromBuffer(const char *bufPtr, const size_t bufLen) {
   GetMapMapInfoFromProtoBuf(platformDefInfos.mutable_platform_res_map(), platformResMap);
   GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_fixpipe_dtype_map(), fixPipeDtypeMap);
 
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   platform_infos_impl_->SetAICoreIntrinsicDtype(aiCoreInstrinsicDtypesMap);
   platform_infos_impl_->SetVectorCoreIntrinsicDtype(aiVectorInstrinsicDtypesMap);
   for (auto iter = platformResMap.begin(); iter != platformResMap.end(); ++iter) {
@@ -387,6 +395,7 @@ bool PlatFormInfos::LoadFromBuffer(const char *bufPtr, const size_t bufLen) {
 }
 
 bool OptionalInfos::Init() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   optional_infos_impl_ = make_shared<OptionalInfosImpl>();
   if (optional_infos_impl_ == nullptr) {
     return false;
@@ -395,6 +404,7 @@ bool OptionalInfos::Init() {
 }
 
 string OptionalInfos::GetSocVersion() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return "";
   }
@@ -402,6 +412,7 @@ string OptionalInfos::GetSocVersion() {
 }
 
 string OptionalInfos::GetCoreType() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return "";
   }
@@ -409,6 +420,7 @@ string OptionalInfos::GetCoreType() {
 }
 
 uint32_t OptionalInfos::GetAICoreNum() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return 0;
   }
@@ -416,6 +428,7 @@ uint32_t OptionalInfos::GetAICoreNum() {
 }
 
 string OptionalInfos::GetL1FusionFlag() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return "";
   }
@@ -423,6 +436,7 @@ string OptionalInfos::GetL1FusionFlag() {
 }
 
 void OptionalInfos::SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map) {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }
@@ -430,12 +444,14 @@ void OptionalInfos::SetFixPipeDtypeMap(const std::map<std::string, std::vector<s
 }
 
 std::map<std::string, std::vector<std::string>> OptionalInfos::GetFixPipeDtypeMap() {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return std::map<std::string, std::vector<std::string>>();
   }
   return optional_infos_impl_->GetFixPipeDtypeMap();
 }
 void OptionalInfos::SetSocVersion(string soc_version) {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }
@@ -443,7 +459,7 @@ void OptionalInfos::SetSocVersion(string soc_version) {
 }
 
 void OptionalInfos::SetSocVersionWithLock(string soc_version) {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }
@@ -451,6 +467,7 @@ void OptionalInfos::SetSocVersionWithLock(string soc_version) {
 }
 
 void OptionalInfos::SetCoreType(string core_type) {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }
@@ -458,6 +475,7 @@ void OptionalInfos::SetCoreType(string core_type) {
 }
 
 void OptionalInfos::SetAICoreNum(uint32_t ai_core_num) {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }
@@ -465,6 +483,7 @@ void OptionalInfos::SetAICoreNum(uint32_t ai_core_num) {
 }
 
 void OptionalInfos::SetL1FusionFlag(string l1_fusion_flag) {
+  std::lock_guard<std::mutex> lock_guard(opt_info_mutex);
   if (optional_infos_impl_ == nullptr) {
     return;
   }

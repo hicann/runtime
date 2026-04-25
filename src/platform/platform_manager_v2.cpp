@@ -278,15 +278,14 @@ uint32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe:
   if (realSocVersion == SOC_VERSION_ASCEND910) {
     realSocVersion = SOC_VERSION_ASCEND910A;
   }
-  {
-    std::lock_guard<std::mutex> lock_guard(soc_lock_);
-    if (soc_file_status_.count(realSocVersion) == 0) {
-      if (InitPlatformInfos(realSocVersion) != PLATFORM_SUCCESS) {
-        return PLATFORM_FAILED;
-      }
+
+  std::lock_guard<std::mutex> lock_guard(soc_lock_);
+  if (soc_file_status_.count(realSocVersion) == 0) {
+    if (InitPlatformInfos(realSocVersion) != PLATFORM_SUCCESS) {
+      return PLATFORM_FAILED;
     }
-    soc_file_status_[realSocVersion] = true;
   }
+  soc_file_status_[realSocVersion] = true;
   auto iter = platform_infos_map_.find(realSocVersion);
   if (iter == platform_infos_map_.end()) {
     PF_LOGE("Cannot find platform_info by SoCVersion %s.", realSocVersion.c_str());

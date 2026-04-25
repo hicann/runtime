@@ -13,7 +13,8 @@
 #include "platform_infos_impl.h"
 
 namespace fe {
-std::mutex plt_mutex;
+std::mutex plt_info_mutex;
+std::mutex opt_info_mutex;
 
 PlatformInfosUtils::PlatformInfosUtils()
 {}
@@ -27,7 +28,7 @@ PlatformInfosUtils &PlatformInfosUtils::GetInstance() {
 }
 
 void PlatformInfosUtils::Clone(PlatFormInfos &dest_platform_infos, const PlatFormInfos &platform_infos) const {
-  std::lock_guard<std::mutex> lock_guard(plt_mutex);
+  std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
   PF_LOGD("Using platFormInfos Clone function.");
   if(&dest_platform_infos != &platform_infos) {
     dest_platform_infos.core_num_ = platform_infos.core_num_;

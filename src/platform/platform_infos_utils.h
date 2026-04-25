@@ -15,7 +15,8 @@
 #include "platform/platform_infos_def.h"
 
 namespace fe {
-extern std::mutex plt_mutex;
+extern std::mutex plt_info_mutex;
+extern std::mutex opt_info_mutex;
 
 class PlatformInfosUtils {
   public:

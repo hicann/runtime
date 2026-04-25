@@ -847,7 +847,7 @@ uint32_t PlatformInfoManager::AssemblePlatformInfoVector(std::map<std::string, s
 
 void PlatformInfoManager::FillupFixPipeInfo(PlatFormInfos &platform_infos) {
   std::string is_support_fixpipe_str;
-  if (!platform_infos.GetPlatformRes("AICoreSpec", "support_fixpipe", is_support_fixpipe_str) ||
+  if (!platform_infos.GetPlatformResWithLock("AICoreSpec", "support_fixpipe", is_support_fixpipe_str) ||
       !static_cast<bool>(std::atoi(is_support_fixpipe_str.c_str()))) {
     return;
   }
@@ -1005,6 +1005,7 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
   if (realSocVersion == SOC_VERSION_ASCEND910) {
     realSocVersion = SOC_VERSION_ASCEND910A;
   }
+  std::lock_guard<std::mutex> lock_guard(pc_lock_);
   auto iter = platform_info_map_.find(realSocVersion);
   if (iter == platform_info_map_.end()) {
     PF_LOGE("Cannot find platform_info by SoCVersion %s.", realSocVersion.c_str());
@@ -1047,6 +1048,7 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
   if (realSocVersion == SOC_VERSION_ASCEND910) {
     realSocVersion = SOC_VERSION_ASCEND910A;
   }
+  std::lock_guard<std::mutex> lock_guard(pc_lock_);
   auto iter = platform_infos_map_.find(realSocVersion);
   if (iter == platform_infos_map_.end()) {
     PF_LOGE("Cannot find platform_info by SoCVersion %s.", realSocVersion.c_str());
@@ -1054,7 +1056,6 @@ __attribute__((visibility("default"))) uint32_t PlatformInfoManager::GetPlatform
   }
   platform_info = iter->second;
   opti_compilation_info = opti_compilation_infos_;
-  std::lock_guard<std::mutex> lock_guard(pc_lock_);
   opti_compilation_info.SetFixPipeDtypeMap(platform_info.GetFixPipeDtypeMap());
   return PLATFORM_SUCCESS;
 }
