@@ -6669,6 +6669,28 @@ rtError_t ApiImpl::GetStreamOverflowSwitch(Stream * const stm, uint32_t * const 
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority)
+{
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream * const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+
+    return targetStm->Device_()->Driver_()->SetStreamPriorityValue(targetStm, streamPriority);
+}
+
+rtError_t ApiImpl::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
+{
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream * const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
+    NULL_STREAM_PTR_RETURN_MSG(targetStm);
+
+    return targetStm->Device_()->Driver_()->GetStreamPriorityValue(targetStm, streamPriority);
+}
+
 rtError_t ApiImpl::DvppGroupCreate(DvppGrp **grp, const uint32_t flags)
 {
     RT_LOG(RT_LOG_DEBUG, "flags=%#x.", flags);

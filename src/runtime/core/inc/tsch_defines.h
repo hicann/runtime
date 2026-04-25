@@ -493,6 +493,8 @@ enum OPERATION_TYPE {
     OP_QUERY_OP_EXEC_TIMEOUT_INTERVAL,
     OP_STOP_STREAM,
     OP_QUERY_OVERFLOW,
+    OP_UPDATE_STREAM_PRIORITY,
+    OP_QUERY_STREAM_PRIORITY,
     OP_INVALID
 };
 #pragma pack(push)
@@ -611,6 +613,12 @@ typedef struct {
 } ts_query_stream_overflow_status;
 
 typedef struct {
+    volatile uint32_t sqId;
+    volatile uint32_t tsId;
+    volatile uint32_t priority;
+} ts_update_and_query_stream_priority_t;
+
+typedef struct {
     volatile uint32_t type;
     union {
         ts_kill_task_info_t kill_task_info;
@@ -631,6 +639,7 @@ typedef struct {
         ts_query_dcache_lock_ack_info_t query_dcache_lock_ack_info;
         ts_query_op_exec_timeout_ack_info_t query_op_exec_timeout_ack_info;
         ts_query_stream_overflow_status query_stream_overflow_status;
+        ts_update_and_query_stream_priority_t update_and_query_stream_priority;
     } u; // 40 bytes
 } ts_ctrl_msg_body_t; // 44 bytes
 #pragma pack(pop)

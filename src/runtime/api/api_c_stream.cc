@@ -432,6 +432,10 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
             error = apiInstance->SetStreamCacheOpInfoSwitch(exeStream, attrValue->cacheOpInfoSwitch);
             break;
         }
+        case RT_STREAM_ATTR_PRIORITY: {
+            error = apiInstance->SetStreamPriorityValue(exeStream, attrValue->streamPriority);
+            break;
+        }
         default: 
             RT_LOG_OUTER_MSG_INVALID_PARAM(stmAttrId,
                "[" + std::to_string(RT_STREAM_ATTR_FAILURE_MODE) + ", " + std::to_string(RT_STREAM_ATTR_MAX) + ")");
@@ -472,6 +476,10 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
         }
         case RT_STREAM_ATTR_CACHE_OP_INFO: {
             error = apiInstance->GetStreamCacheOpInfoSwitch(exeStream, &attrValue->cacheOpInfoSwitch);
+            break;
+        }
+        case RT_STREAM_ATTR_PRIORITY: {
+            error = apiInstance->GetStreamPriorityValue(exeStream, &attrValue->streamPriority);
             break;
         }
         default: 
@@ -739,3 +747,5 @@ rtError_t rtsGetResInCurrentThread(const rtDevResLimitType_t type, uint32_t *con
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
+

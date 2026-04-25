@@ -405,7 +405,8 @@ public:
     rtError_t GetDeviceSatModeForStream(Stream * const stm, rtFloatOverflowMode_t * const floatOverflowMode) override;
     rtError_t SetStreamOverflowSwitch(Stream * const stm, const uint32_t flags) override;
     rtError_t GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags) override;
-
+    rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) override;
+    rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) override;
     // model
     rtError_t ModelCreate(Model ** const mdl, const uint32_t flag) override;
     rtError_t ModelSetExtId(Model * const mdl, const uint32_t extId) override;

@@ -4918,6 +4918,19 @@ rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_
     return impl_->GetStreamOverflowSwitch(stm, flags);
 }
 
+rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority)
+{
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE); 
+    return impl_->SetStreamPriorityValue(stm, streamPriority);
+}
+
+rtError_t ApiErrorDecorator::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
+{
+    NULL_PTR_RETURN_MSG_OUTER(streamPriority, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
+    return impl_->GetStreamPriorityValue(stm, streamPriority);
+}
+
 rtError_t ApiErrorDecorator::DvppGroupCreate(DvppGrp **grp, const uint32_t flags)
 {
     /* 1910b tiny not support dvpp accelerator */

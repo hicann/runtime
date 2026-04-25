@@ -687,6 +687,8 @@ public:
     rtError_t GetChipIdDieId(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId,
                              int64_t &chipId, int64_t &dieId) override;
     rtError_t GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t * const val) override;
+    rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) override;
+    rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) override;
 private:
     rtError_t ManagedMemAllocInner(void **const dptr, const uint64_t size, const ManagedMemFlag flag,
         const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME);

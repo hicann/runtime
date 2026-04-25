@@ -614,6 +614,9 @@ public:
     virtual rtError_t StreamMemPoolDestroy(const uint32_t deviceId, const uint64_t poolId) = 0;
     virtual rtError_t StreamMemPoolTrim(const uint32_t deviceId, const uint64_t poolId, uint64_t *size, uint64_t poolUsedSize, uint64_t poolFreeSize) = 0;
 
+    virtual rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) = 0;
+    virtual rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) = 0;
+
 protected:
     // CallBack
     rtKernelReportCallback callBack_;

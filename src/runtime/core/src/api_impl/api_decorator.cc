@@ -1755,6 +1755,16 @@ rtError_t ApiDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_t * c
     return impl_->GetStreamOverflowSwitch(stm, flags);
 }
 
+rtError_t ApiDecorator::SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority)
+{
+    return impl_->SetStreamPriorityValue(stm, streamPriority);
+}
+
+rtError_t ApiDecorator::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
+{
+    return impl_->GetStreamPriorityValue(stm, streamPriority);
+}
+
 rtError_t ApiDecorator::DvppGroupCreate(DvppGrp **grp, const uint32_t flags)
 {
     return impl_->DvppGroupCreate(grp, flags);

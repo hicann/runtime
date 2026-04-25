@@ -2469,6 +2469,10 @@ TEST_F(StreamTest, stream_get_attribute1)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     int32_t version = device->GetTschVersion();
     device->SetTschVersion(TS_VERSION_SET_STREAM_MODE);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+    .stubs()
+    .will(returnValue(true));
  
     Stream *stream = nullptr;
     error = rtsStreamGetAttribute(stream, RT_STREAM_ATTR_MAX, nullptr);
@@ -2501,6 +2505,14 @@ TEST_F(StreamTest, stream_get_attribute1)
     stmModeRet = {0};
     error = rtsStreamGetAttribute(stm, RT_STREAM_ATTR_USER_CUSTOM_TAG, &stmModeRet);
     EXPECT_EQ(stmModeRet.userCustomTag, 0);
+
+    setvalue = {0};
+    setvalue.streamPriority = 2; // 修改流优先级的值
+    error = rtsStreamSetAttribute(stm, RT_STREAM_ATTR_PRIORITY, &setvalue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stmModeRet = {0};
+    error = rtsStreamGetAttribute(stm, RT_STREAM_ATTR_PRIORITY, &stmModeRet);
+    EXPECT_EQ(stmModeRet.streamPriority, 0);
  
     error = rtStreamDestroy(stm);
     device->SetTschVersion(version);

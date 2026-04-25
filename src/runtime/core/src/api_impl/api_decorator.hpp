@@ -441,7 +441,8 @@ public:
     rtError_t GetDeviceSatModeForStream(Stream * const stm, rtFloatOverflowMode_t * const floatOverflowMode) override;
     rtError_t SetStreamOverflowSwitch(Stream * const stm, const uint32_t flags) override;
     rtError_t GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags) override;
-
+    rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) override;
+    rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) override;
     rtError_t SetExceptCallback(const rtErrorCallback callback) override;
     rtError_t SetTaskAbortCallBack(const char_t *regName, void *callback, void *args,
         TaskAbortCallbackType type) override;

@@ -544,6 +544,8 @@ public:
         rtFloatOverflowMode_t * const floatOverflowMode) = 0;
     virtual rtError_t SetStreamOverflowSwitch(Stream * const stm, const uint32_t flags) = 0;
     virtual rtError_t GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags) = 0;
+    virtual rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) = 0;
+    virtual rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) = 0;
     virtual rtError_t SetExceptCallback(const rtErrorCallback callback) = 0;
     virtual rtError_t SetTaskAbortCallBack(const char_t *regName, void *callback, void *args,
         TaskAbortCallbackType type) = 0;

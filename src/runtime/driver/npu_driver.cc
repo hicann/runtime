@@ -1590,5 +1590,62 @@ rtError_t NpuDriver::GetTopologyType(const uint32_t devId, const uint32_t remote
     }
     return RT_ERROR_NONE;
 }
+rtError_t NpuDriver::SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority)
+{
+    ts_ctrl_msg_body_t streamPriorityIn = {};
+    ts_ctrl_msg_body_t streamPriorityAck = {};
+    size_t ackCount = sizeof(ts_ctrl_msg_body_t);
+
+    streamPriorityIn.type = OP_UPDATE_STREAM_PRIORITY;
+    uint32_t tsId = stm->Device_()->DevGetTsId();
+    uint32_t sqId = stm->GetSqId();
+    streamPriorityIn.u.update_and_query_stream_priority.sqId = sqId;
+    streamPriorityIn.u.update_and_query_stream_priority.tsId = tsId;
+    streamPriorityIn.u.update_and_query_stream_priority.priority = streamPriority;
+    uint32_t deviceId = stm->Device_()->Id_();
+    struct tsdrv_ctrl_msg para;
+    para.tsid = tsId;
+    para.msg_len = sizeof(ts_ctrl_msg_body_t);
+    para.msg = static_cast<void*>(&streamPriorityIn);
+
+    COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halTsdrvCtl does not exist.");
+    RT_LOG(RT_LOG_INFO, "device_id=%u, sq_id=%u, ts_id=%u.", deviceId, sqId, tsId);
+    const drvError_t drvRet = halTsdrvCtl(deviceId, TSDRV_CTL_CMD_CTRL_MSG,
+        static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg), static_cast<void*>(&streamPriorityAck), &ackCount);
+    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
+        "device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId, static_cast<int32_t>(drvRet));
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
+{
+    ts_ctrl_msg_body_t streamPriorityIn = {};
+    ts_ctrl_msg_body_t streamPriorityAck = {};
+    size_t ackCount = sizeof(ts_ctrl_msg_body_t);
+
+    streamPriorityIn.type = OP_QUERY_STREAM_PRIORITY;
+    uint32_t tsId = stm->Device_()->DevGetTsId();
+    uint32_t sqId = stm->GetSqId();
+    streamPriorityIn.u.update_and_query_stream_priority.sqId = sqId;
+    streamPriorityIn.u.update_and_query_stream_priority.tsId = tsId;
+    uint32_t deviceId = stm->Device_()->Id_();
+    struct tsdrv_ctrl_msg para;
+    para.tsid = tsId;
+    para.msg_len = sizeof(ts_ctrl_msg_body_t);
+    para.msg = static_cast<void*>(&streamPriorityIn);
+
+    COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halTsdrvCtl does not exist.");
+    RT_LOG(RT_LOG_INFO, "device_id=%u, sqId=%u", deviceId, sqId);
+    const drvError_t drvRet = halTsdrvCtl(deviceId, TSDRV_CTL_CMD_CTRL_MSG,
+        static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg), static_cast<void*>(&streamPriorityAck), &ackCount);
+    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
+        "device_id=%u, ts_id=%u, sqId=%u, drvRetCode=%d.", deviceId, tsId, sqId, static_cast<int32_t>(drvRet));
+    *streamPriority = streamPriorityAck.u.update_and_query_stream_priority.priority;
+
+    return RT_ERROR_NONE;
+}
 }  // namespace runtime
 }  // namespace cce
