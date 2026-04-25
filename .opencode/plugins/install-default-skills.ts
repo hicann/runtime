@@ -52,10 +52,17 @@ export const InstallSkillsPlugin: Plugin = async ({ $, directory }) => {
         exists: fs.existsSync(skill.path),
         hash: getFileHash(skill.path)
       }))
-      // 检测是否为Windows系统
-      const isWindows = process.platform === 'win32'
-      if (isWindows) {
-        process.stdout.write(`💡 提示：如果需要安装或更新默认skill，请输入指令"安装默认skill"\n\n`)
+      // 检测是否有 bash 环境（Windows 通常没有 bash）
+      const hasBash = (() => {
+        try {
+          require('child_process').execSync('bash --version', { stdio: 'ignore' })
+          return true
+        } catch {
+          return false
+        }
+      })()
+      if (!hasBash) {
+        process.stdout.write(`💡 提示：当前环境缺少 bash，请输入指令"安装默认skill"手动安装\n\n`)
         return
       }
       const scriptPath = path.join(rootDir, ".claude", "skills", "default-skills", "scripts", "install-default-skills.sh")
@@ -94,9 +101,13 @@ export const InstallSkillsPlugin: Plugin = async ({ $, directory }) => {
     } catch (error) {
       log(`Command failed: ${error.message}`)
       if (error.stderr) log(`stderr from error: ${error.stderr}`)
-      // 创建错误标记文件，供用户后续查看
       const errorMarkerPath = path.join(rootDir, ".opencode_skills_error")
-      const detail = error.stderr ? `${error.message}\n${error.stderr}` : error.message
+      let detail = ""
+      if (error.message && error.message.includes("timed out")) {
+        detail = `网络连接超时，无法访问远程仓库。请检查网络连接后重试。\n${error.message}`
+      } else {
+        detail = error.stderr ? `${error.message}\n${error.stderr}` : error.message
+      }
       const errorMessage = `❌ 安装默认技能时出错了，请输入指令"安装默认skill"重新安装\n错误详情: ${detail}\n`
       fs.writeFileSync(errorMarkerPath, errorMessage)
 
