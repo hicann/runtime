@@ -2859,6 +2859,43 @@ TEST_F(DavidTaskTest, ProcessStarsSdmaErrorInfo03)
     delete errorProc;
 }
 
+TEST_F(DavidTaskTest, aicore_timeout_task_dev_error_proc)
+{
+    rtSetDevice(1);
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.starsV2CoreTimeoutDfxInfo.comm.chipId = 1;
+    errorInfo.u.starsV2CoreTimeoutDfxInfo.comm.dieId = 0;
+    errorInfo.u.starsV2CoreTimeoutDfxInfo.comm.streamId = 6;
+    errorInfo.u.starsV2CoreTimeoutDfxInfo.comm.taskId = 6;
+    errorInfo.u.starsV2CoreTimeoutDfxInfo.comm.coreNum = 5;
+
+    for (uint16_t i = 0; i < 5; i++) {
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].currentPc = 0x3000 + i;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].coreId = 30 + i;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].subError = 0 + i;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].coreType = 0;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].streamId = 8;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].sqHead = 8;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].taskSn = 300 + i;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].rsv = 0;
+    }
+
+    const uint64_t errorNumber = 11ULL;
+    rtError_t error = ProcessStarsV2CoreTimeoutDfxInfo(nullptr, errorNumber, device, errorProc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+    error = ProcessStarsV2CoreTimeoutDfxInfo(&errorInfo, errorNumber, device, errorProc);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
 void TaskFailCallBackForCcuTaskStub(rtExceptionInfo_t *exceptionInfo)
 {
     EXPECT_EQ(exceptionInfo->expandInfo.u.ccuInfo.ccuMissionNum, 1U);

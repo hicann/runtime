@@ -103,6 +103,7 @@ typedef enum {
     TS_FEATURE_AICORE_NEVER_TIMEOUT = 46,
     TS_FEATURE_MEM_WAIT_PROF = 47,
     TS_FEATURE_QUERY_STREAM_OVERFLOW_STATUS = 48, // support query overflow bit
+    TS_FEATURE_AICORE_TIMEOUT_DFX = 49,
 } rtTschFeature;
 
 typedef enum {

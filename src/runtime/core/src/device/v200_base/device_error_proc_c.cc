@@ -832,6 +832,51 @@ rtError_t ProcessDavidStarsWaitTimeoutErrorInfo(const StarsDeviceErrorInfo * con
     return RT_ERROR_NONE;
 }
 
+rtError_t ProcessStarsV2CoreTimeoutDfxInfo(const StarsDeviceErrorInfo *const info,
+    const uint64_t errorNumber, const Device *const dev, const DeviceErrorProc *const insPtr)
+{
+    UNUSED(insPtr);
+    if ((info == nullptr) || (dev == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "input param info or dev is null.");
+        return RT_ERROR_NONE;
+    }
+    StarsErrorCommonInfo common = info->u.starsV2CoreTimeoutDfxInfo.comm;
+    const uint32_t devId = dev->Id_();
+    const uint16_t streamId = common.streamId;
+    const uint16_t taskId = common.taskId;
+    RT_LOG(RT_LOG_ERROR,
+        "kernel task timeout due to no available cores, device_id=%u, stream_id=%hu, task_id=%hu, "
+        "serial number is %" PRIu64 ", non-idle core_num=%hu.",
+        devId, streamId, taskId, errorNumber, common.coreNum);
+
+    TaskInfo *errTaskPtr = GetTaskInfo(dev, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId), true);
+    if (errTaskPtr != nullptr) {
+        errTaskPtr->isRingbufferGet = true;
+    }
+
+    if (!(RtPtrToUnConstPtr<Device *>(dev))->CheckFeatureSupport(TS_FEATURE_AICORE_TIMEOUT_DFX)) {
+        RT_LOG(RT_LOG_WARNING, "feature not support because tsch version too low.");
+        return RT_ERROR_NONE;
+    }
+    if (common.coreNum > (RT_STARS_V2_AICORE_NUM + RT_STARS_V2_AIVECTOR_NUM)) {
+        RT_LOG(RT_LOG_ERROR, "invalid coreNum: %u.", common.coreNum);
+        return RT_ERROR_NONE;
+    }
+    // only print the core info where subError!=0(current_pc0==current_pc1)
+    for (uint16_t coreIdx = 0U; coreIdx < common.coreNum; coreIdx++) {
+        StarsV2OneCoreTimeoutDfxInfo coreInfo = info->u.starsV2CoreTimeoutDfxInfo.coreInfo[coreIdx];
+        if (coreInfo.subError != 0U) {
+            RT_LOG(RT_LOG_ERROR,
+                "aicore task timeout dfx, show core info where subError!=0(core is currently stuck), "
+                "device_id=%u, core_id=%hu, core_type=%hu(%s), stream_id=%hu, sq_head=%hu, task_sn=%u, "
+                "sub_error=%hu, current_pc=%#" PRIx64 ".",
+                devId, coreInfo.coreId, coreInfo.coreType, ((coreInfo.coreType == 0) ? "AIC" : "AIV"),
+                coreInfo.streamId, coreInfo.sqHead, coreInfo.taskSn, coreInfo.subError, coreInfo.currentPc);
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t ProcRingBufferTaskDavid(const Device *const dev, const void * const devMem, const bool delFlag,
     const uint32_t len)
 {

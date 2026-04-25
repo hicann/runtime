@@ -37,6 +37,8 @@ namespace {
     constexpr uint32_t MAX_AIV_ID = 64U;
     constexpr uint32_t MAX_DEV_ID = 16U;
     constexpr uint32_t MAX_TASK_NUM_ONE_CORE = 2U;
+    constexpr uint32_t RT_STARS_V2_AICORE_NUM = 36U;
+    constexpr uint32_t RT_STARS_V2_AIVECTOR_NUM = 72U;
 }
 
 namespace cce {
@@ -259,6 +261,22 @@ struct StarsCoreTimeoutDfxInfo {
     StarsOneTimeoutCoreDfxInfo coreInfo[MAX_CORE_NUM];
 };
 
+struct StarsV2OneCoreTimeoutDfxInfo {
+    uint64_t currentPc;
+    uint16_t coreId;
+    uint16_t subError;
+    uint16_t coreType;
+    uint16_t streamId;
+    uint32_t taskSn;
+    uint16_t sqHead;
+    uint16_t rsv;
+};
+
+struct StarsV2CoreTimeoutDfxInfo {
+    StarsErrorCommonInfo comm;
+    StarsV2OneCoreTimeoutDfxInfo coreInfo[RT_STARS_V2_AICORE_NUM + RT_STARS_V2_AIVECTOR_NUM];
+};
+
 struct StarsSqeErrorInfo {
     uint16_t streamId;
     uint16_t sqId;
@@ -389,6 +407,7 @@ struct StarsDeviceErrorInfo {
         StarsFusionKernelErrorInfo   fusionKernelErrorInfo;
         StarsCcuErrorInfo            ccuErrorInfo;
         StarsCoreTimeoutDfxInfo      coreTimeoutDfxInfo;
+        StarsV2CoreTimeoutDfxInfo    starsV2CoreTimeoutDfxInfo;
     }u;
 };
 

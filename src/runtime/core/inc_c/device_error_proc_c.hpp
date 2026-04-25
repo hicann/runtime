@@ -39,6 +39,8 @@ rtError_t ProcessDavidStarsCcuErrorInfo(const StarsDeviceErrorInfo * const info,
     const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr);
 rtError_t ProcessStarsSdmaErrorInfo(const StarsDeviceErrorInfo * const info,
     const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr);
+rtError_t ProcessStarsV2CoreTimeoutDfxInfo(const StarsDeviceErrorInfo * const info,
+    const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr);
 }  // namespace runtime
 }  // namespace cce
 

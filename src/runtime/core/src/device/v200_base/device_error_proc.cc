@@ -29,7 +29,8 @@ void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInf
         {DVPP_ERROR, &DeviceErrorProc::ProcessStarsDvppErrorInfo},
         {SQE_ERROR, &DeviceErrorProc::ProcessStarsSqeErrorInfo},
         {FUSION_KERNEL_ERROR, &ProcessDavidStarsFusionKernelErrorInfo},
-        {CCU_ERROR, &ProcessDavidStarsCcuErrorInfo}
+        {CCU_ERROR, &ProcessDavidStarsCcuErrorInfo},
+        {AICORE_TIMEOUT_DFX, &ProcessStarsV2CoreTimeoutDfxInfo}
     };
     funcMap = davidFuncMap;
     return;
