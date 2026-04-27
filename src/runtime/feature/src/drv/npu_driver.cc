@@ -590,8 +590,8 @@ rtError_t NpuDriver::OpenIpcMem(const char_t * const name, uint64_t * const vptr
 
 rtError_t NpuDriver::GetPhyDevIdByIpcMemName(const char *name, uint32_t *const phyDevId)
 {
-    COND_RETURN_WARN(
-        &halShmemInfoGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halShmemInfoGet does not exist.");
+    COND_RETURN_AND_MSG_OUTER(&halShmemInfoGet == nullptr, RT_ERROR_DRV_NOT_SUPPORT, ErrorCode::EE1015,
+        "GetPhyDevIdByIpcMemName", "The driver interface halShmemInfoGet does not exist.");
     struct ShmemGetInfo info {};
     const drvError_t drvRet = halShmemInfoGet(name, &info);
     if (drvRet != DRV_ERROR_NONE) {

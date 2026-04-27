@@ -89,6 +89,9 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
  
     std::vector<std::string> values1011 = {"rtMemCpy", "0", "size", "size is not 0"};
     PrintErrMsgToLog(ErrorCode::EE1011, "file", 1000, "func", values1011);
+
+    std::vector<std::string> values1015 = {"GetPhyDevIdByIpcMemName", "The driver interface halShmemInfoGet does not exist."};
+    PrintErrMsgToLog(ErrorCode::EE1015, "file", 1000, "func", values1015);
  
     std::vector<std::string> values9 = {"1, 2, 2", "SetVisible", "not repeat"};
     PrintErrMsgToLog(ErrorCode::EE2002, "file", 1000, "func", values9);
