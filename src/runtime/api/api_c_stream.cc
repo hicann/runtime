@@ -10,12 +10,14 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "osal.hpp"
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
 #include "global_state_manager.hpp"
+#include <vector>
 #define INVALID_UINT32 (0xFFFFFFFFU)
 
 using namespace cce::runtime;
@@ -79,6 +81,8 @@ rtError_t rtStreamCreateWithFlags(rtStream_t *stm, int32_t priority, uint32_t fl
     TIMESTAMP_END(rtStreamCreate);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Stream *realStream = RtPtrToPtr<Stream *>(*stm);
+    *stm = ExportEmbeddedHandle<rtStream_t>(realStream);
     return ACL_RT_SUCCESS;
 }
 
@@ -89,7 +93,7 @@ rtError_t rtStreamDestroy(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     TIMESTAMP_BEGIN(rtStreamDestroy);
     const rtError_t error = apiInstance->StreamDestroy(exeStream, false);
     TIMESTAMP_END(rtStreamDestroy);
@@ -104,7 +108,7 @@ rtError_t rtStreamDestroyForce(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     TIMESTAMP_BEGIN(rtStreamDestroyForce);
     const rtError_t error = apiInstance->StreamDestroy(exeStream, true);
     TIMESTAMP_END(rtStreamDestroyForce);
@@ -116,8 +120,8 @@ VISIBILITY_DEFAULT
 rtError_t rtStreamWaitEvent(rtStream_t stm, rtEvent_t evt)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
-    Event * const waitEvent = static_cast<Event *>(evt);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, waitEvent);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(Runtime::Instance());
@@ -143,7 +147,7 @@ rtError_t rtStreamSynchronize(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtStreamSynchronize);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->StreamSynchronize(exeStream);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_END_OF_SEQUENCE, ACL_ERROR_RT_END_OF_SEQUENCE); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_MODEL_ABORT_NORMAL, ACL_ERROR_RT_MODEL_ABORT_NORMAL); // special state
@@ -164,7 +168,7 @@ rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stm, int32_t timeout)
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtStreamSynchronizeWithTimeout);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->StreamSynchronize(exeStream, timeout);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_END_OF_SEQUENCE, ACL_ERROR_RT_END_OF_SEQUENCE); // special state
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_MODEL_ABORT_NORMAL, ACL_ERROR_RT_MODEL_ABORT_NORMAL); // special state
@@ -188,7 +192,7 @@ rtError_t rtStreamQuery(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->StreamQuery(exeStream);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_STREAM_NOT_COMPLETE, ACL_ERROR_RT_STREAM_NOT_COMPLETE); // special state
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -200,7 +204,7 @@ rtError_t rtGetStreamId(rtStream_t stm, int32_t *streamId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->GetStreamId(exeStream, streamId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -211,7 +215,7 @@ rtError_t rtStreamGetPriority(const rtStream_t stm, uint32_t *priority)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->StreamGetPriority(exeStream, priority);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -222,7 +226,7 @@ rtError_t rtStreamGetFlags(const rtStream_t stm, uint32_t *flags)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->StreamGetFlags(exeStream, flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -233,7 +237,7 @@ rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->GetSqId(exeStream, sqId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -244,7 +248,7 @@ rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicC
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->GetCqId(exeStream, cqId, logicCqId);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -284,7 +288,7 @@ rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId)
 VISIBILITY_DEFAULT
 rtError_t rtStreamSetMode(rtStream_t stm, const uint64_t stmMode)
 {
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_STREAM_DOT_SET_MODE)) {
@@ -302,7 +306,7 @@ rtError_t rtStreamSetMode(rtStream_t stm, const uint64_t stmMode)
 VISIBILITY_DEFAULT
 rtError_t rtStreamGetMode(rtStream_t const stm, uint64_t * const stmMode)
 {
-    const Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->StreamGetMode(exeStream, stmMode);
@@ -317,8 +321,10 @@ rtError_t rtStreamSwitchEx(void *ptr, rtCondition_t condition, void *valuePtr, r
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamSwitchEx(ptr, condition, valuePtr, static_cast<Stream *>(trueStream),
-        static_cast<Stream *>(stm), dataType);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(trueStream, Stream, trueExeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamSwitchEx(ptr, condition, valuePtr, trueExeStream,
+        exeStream, dataType);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return ACL_RT_SUCCESS;
@@ -331,8 +337,15 @@ rtError_t rtStreamSwitchN(void *ptr, uint32_t size, void *valuePtr, rtStream_t *
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamSwitchN(ptr, size, valuePtr, RtPtrToPtr<Stream **>(trueStreamPtr),
-        elementSize, static_cast<Stream *>(stm), dataType);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(trueStreamPtr, RT_ERROR_INVALID_VALUE);
+    std::vector<Stream *> realTrueStreams(elementSize);
+    for (uint32_t i = 0U; i < elementSize; ++i) {
+        RT_VALIDATE_AND_UNWRAP_OBJECT(trueStreamPtr[i], Stream, trueExeStream);
+        realTrueStreams[i] = trueExeStream;
+    }
+    const rtError_t error = apiInstance->StreamSwitchN(ptr, size, valuePtr, realTrueStreams.data(),
+        elementSize, exeStream, dataType);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -343,7 +356,9 @@ rtError_t rtStreamActive(rtStream_t activeStream, rtStream_t stm)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamActive(static_cast<Stream *>(activeStream), static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(activeStream, Stream, activeExeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamActive(activeExeStream, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -368,8 +383,8 @@ rtError_t rtStreamWaitEventWithTimeout(rtStream_t stm, rtEvent_t evt, uint32_t t
     GLOBAL_STATE_WAIT_IF_LOCKED();
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
-    Event * const waitEvent = static_cast<Event *>(evt);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(evt, Event, waitEvent);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
@@ -401,7 +416,7 @@ rtError_t rtsStreamSetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
     switch (stmAttrId) {
         case RT_STREAM_ATTR_FAILURE_MODE: {
@@ -455,7 +470,7 @@ rtError_t rtsStreamGetAttribute(rtStream_t stm, rtStreamAttr stmAttrId, rtStream
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-	Stream * const exeStream = static_cast<Stream *>(stm);
+	RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
     switch (stmAttrId) {
         case RT_STREAM_ATTR_FAILURE_MODE: {
@@ -504,7 +519,7 @@ RTS_API rtError_t rtSetStreamOverflowSwitch(rtStream_t stm, uint32_t flags)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const targetStm = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, targetStm);
     const rtError_t ret = apiInstance->SetStreamOverflowSwitch(targetStm, flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -515,7 +530,7 @@ RTS_API rtError_t rtGetStreamOverflowSwitch(rtStream_t stm, uint32_t *flags)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const targetStm = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, targetStm);
     const rtError_t ret = apiInstance->GetStreamOverflowSwitch(targetStm, flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
@@ -533,6 +548,8 @@ RTS_API rtError_t rtStreamCreateByGrp(rtStream_t *stm, int32_t priority, uint32_
         RtPtrToPtr<DvppGrp *>(grp));
     TIMESTAMP_END(rtStreamCreateByGrp);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    Stream *realStream = RtPtrToPtr<Stream *>(*stm);
+    *stm = ExportEmbeddedHandle<rtStream_t>(realStream);
     return ACL_RT_SUCCESS;
 }
 
@@ -548,7 +565,7 @@ rtError_t rtGetStreamTag(rtStream_t stm, uint32_t *geOpTag)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t error = apiInstance->GetStreamTag(streamPtr, geOpTag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -560,7 +577,8 @@ rtError_t rtSetStreamSqLock(rtStream_t stm)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetStreamSqLockUnlock(static_cast<Stream *>(stm), true);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->SetStreamSqLockUnlock(exeStream, true);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -571,7 +589,8 @@ rtError_t rtSetStreamSqUnlock(rtStream_t stm)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetStreamSqLockUnlock(static_cast<Stream *>(stm), false);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->SetStreamSqLockUnlock(exeStream, false);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -583,7 +602,8 @@ rtError_t rtStreamAbort(rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    const rtError_t error = apiInstance->StreamAbort(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamAbort(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -660,8 +680,8 @@ rtError_t rtsStreamEndTaskGrp(rtStream_t stm, rtTaskGrp_t *handle)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamEndTaskGrp(
-        static_cast<Stream *>(stm), RtPtrToPtr<TaskGroup **>(handle));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamEndTaskGrp(exeStream, RtPtrToPtr<TaskGroup **>(handle));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -681,7 +701,7 @@ rtError_t rtsStreamEndTaskUpdate(rtStream_t stm)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->StreamEndTaskUpdate(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -692,7 +712,8 @@ rtError_t rtsSetStreamResLimit(rtStream_t stm, const rtDevResLimitType_t type, c
 {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetStreamResLimit(static_cast<Stream *>(stm), type, value);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->SetStreamResLimit(exeStream, type, value);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -702,7 +723,8 @@ rtError_t rtsResetStreamResLimit(rtStream_t stm)
 {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ResetStreamResLimit(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->ResetStreamResLimit(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -712,7 +734,8 @@ rtError_t rtsGetStreamResLimit(const rtStream_t stm, const rtDevResLimitType_t t
 {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetStreamResLimit(static_cast<const Stream *>(stm), type, value);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->GetStreamResLimit(exeStream, type, value);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -721,7 +744,8 @@ VISIBILITY_DEFAULT
 rtError_t rtsUseStreamResInCurrentThread(const rtStream_t stm) {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->UseStreamResInCurrentThread(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->UseStreamResInCurrentThread(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -730,7 +754,8 @@ VISIBILITY_DEFAULT
 rtError_t rtsNotUseStreamResInCurrentThread(const rtStream_t stm) {
     Api *const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->NotUseStreamResInCurrentThread(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->NotUseStreamResInCurrentThread(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

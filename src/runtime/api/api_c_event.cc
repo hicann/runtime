@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "notify.hpp"
@@ -53,6 +54,8 @@ rtError_t rtsEventCreate(rtEvent_t *evt, uint64_t flag)
     const rtError_t error = apiInstance->EventCreate(RtPtrToPtr<Event **>(evt), flag);
     TIMESTAMP_END(rtsEventCreate);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Event *realEvent = RtPtrToPtr<Event *>(*evt);
+    *evt = ExportEmbeddedHandle<rtEvent_t>(realEvent);
     return ACL_RT_SUCCESS;
 }
 
@@ -68,6 +71,8 @@ rtError_t rtsEventCreateEx(rtEvent_t *evt, uint64_t flag)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->EventCreateEx(RtPtrToPtr<Event **>(evt), flag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Event *realEvent = RtPtrToPtr<Event *>(*evt);
+    *evt = ExportEmbeddedHandle<rtEvent_t>(realEvent);
     return ACL_RT_SUCCESS;
 }
 
@@ -151,6 +156,8 @@ rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag)
     const rtError_t error = apiInstance->NotifyCreate(deviceId, RtPtrToPtr<Notify **>(notify), flag);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Notify *realNotify = RtPtrToPtr<Notify *>(*notify);
+    *notify = ExportEmbeddedHandle<rtNotify_t>(realNotify);
     return ACL_RT_SUCCESS;
 }
 
@@ -218,7 +225,7 @@ rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t *key,  uint32_t len, u
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Notify * const notifyPtr = static_cast<Notify *>(notify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     const rtError_t error = apiInstance->IpcSetNotifyName(notifyPtr, key, len, flag);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

@@ -30,6 +30,7 @@
 #include "memory_task.h"
 #include "common/internal_error_define.hpp"
 #include "stars_david.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -178,8 +179,8 @@ TEST_F(IpcEventStarsV2Test, RecordStarsV2_Success) {
     MOCKER_CPP(&IpcEvent::GetIpcRecordIndex).stubs().will(invoke(MockGetIpcRecordIndex));
     MOCKER(MemWriteValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
 
-    IpcEvent* ipcEvent = reinterpret_cast<IpcEvent*>(event);
-    error = ipcEvent->IpcEventRecordStarsV2(reinterpret_cast<Stream*>(stream));
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
+    error = ipcEvent->IpcEventRecordStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     rtStreamDestroy(stream);
@@ -200,7 +201,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_Success) {
     error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
     ASSERT_EQ(error, ACL_RT_SUCCESS);
 
-    IpcEvent* ipcEvent = reinterpret_cast<IpcEvent*>(event);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
     IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
     handleVa->currentIndex = 0;
     handleVa->deviceMemRef[0] = 1;
@@ -213,7 +214,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_Success) {
     MOCKER_CPP(&IpcEvent::IpcVaLock).stubs().will(invoke(IpcVaLockStub));
     MOCKER_CPP(&IpcEvent::IpcVaUnLock).stubs().will(invoke(IpcVaUnLockStub));
 
-    error = ipcEvent->IpcEventWaitStarsV2(reinterpret_cast<Stream*>(stream));
+    error = ipcEvent->IpcEventWaitStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     rtStreamDestroy(stream);
@@ -234,7 +235,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_AllocFail) {
     error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
     ASSERT_EQ(error, ACL_RT_SUCCESS);
 
-    IpcEvent* ipcEvent = reinterpret_cast<IpcEvent*>(event);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
     IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
     handleVa->currentIndex = 0;
     handleVa->deviceMemRef[0] = 1;
@@ -247,7 +248,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_AllocFail) {
     MOCKER_CPP(&IpcEvent::IpcVaLock).stubs().will(invoke(IpcVaLockStub));
     MOCKER_CPP(&IpcEvent::IpcVaUnLock).stubs().will(invoke(IpcVaUnLockStub));
 
-    error = ipcEvent->IpcEventWaitStarsV2(reinterpret_cast<Stream*>(stream));
+    error = ipcEvent->IpcEventWaitStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_NE(error, ACL_RT_SUCCESS);
 
     rtStreamDestroy(stream);
@@ -268,7 +269,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_RefCountZero_EarlyReturn) {
     error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
     ASSERT_EQ(error, ACL_RT_SUCCESS);
 
-    IpcEvent* ipcEvent = reinterpret_cast<IpcEvent*>(event);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
     IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
     handleVa->currentIndex = 0;
     handleVa->deviceMemRef[0] = 0;
@@ -276,7 +277,7 @@ TEST_F(IpcEventStarsV2Test, WaitStarsV2_RefCountZero_EarlyReturn) {
     MOCKER_CPP(&IpcEvent::IpcVaLock).stubs().will(invoke(IpcVaLockStub));
     MOCKER_CPP(&IpcEvent::IpcVaUnLock).stubs().will(invoke(IpcVaUnLockStub));
 
-    error = ipcEvent->IpcEventWaitStarsV2(reinterpret_cast<Stream*>(stream));
+    error = ipcEvent->IpcEventWaitStarsV2(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     rtStreamDestroy(stream);
@@ -296,7 +297,7 @@ TEST_F(IpcEventStarsV2Test, RecordTaskUnInit_NormalPath) {
     rtEvent_t event;
     rtError_t error = rtEventCreateExWithFlag(&event, RT_EVENT_IPC);
     ASSERT_EQ(error, ACL_RT_SUCCESS);
-    IpcEvent* ipcEvent = reinterpret_cast<IpcEvent*>(event);
+    IpcEvent* ipcEvent = static_cast<IpcEvent *>(rt_ut::UnwrapOrNull<Event>(event));
 
     IpcHandleVa* handleVa = ipcEvent->ipcHandleVa_;
     uint16_t testIndex = 0;

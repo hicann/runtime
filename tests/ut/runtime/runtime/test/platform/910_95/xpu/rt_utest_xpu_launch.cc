@@ -39,6 +39,7 @@
 #undef protected
 #undef private
 #include "xpu_stub.h"
+#include "rt_unwrap.h"
 
 using namespace cce::runtime;
 class XpuLaunchTest : public testing::Test {
@@ -163,7 +164,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Success_01)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;
@@ -218,7 +219,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Success_argSize_MoreThan4K)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;
@@ -272,7 +273,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Failed_01)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -326,7 +327,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NonCpu)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -380,7 +381,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_DumpEnable)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -435,7 +436,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_LoadArgsInfo_Dev_Fail)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     delete kernel;
@@ -488,7 +489,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_LoadArgsInfo_Fail)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     delete kernel;
@@ -541,7 +542,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_XpuAllocTaskInfo_Fail)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -594,7 +595,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_XpuSendTask_Fail)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -653,7 +654,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Success)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;
@@ -700,7 +701,7 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Fail)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, rt_ut::UnwrapOrNull<Stream>(stream), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;

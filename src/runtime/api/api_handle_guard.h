@@ -21,6 +21,10 @@ rtError_t ValidateModelHandleForApi(rtModel_t handle, Model *&outRealObj, const 
 rtError_t ValidateLabelHandleForApi(rtLabel_t handle, Label *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateLabelHandleArrayForApi(rtLabel_t *handles, size_t count, std::vector<Label *> &outRealObjs,
     const char_t *callerFuncName);
+rtError_t ValidateStreamHandleForApi(rtStream_t handle, Stream *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateEventHandleForApi(rtEvent_t handle, Event *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateNotifyHandleForApi(rtNotify_t handle, Notify *&outRealObj, const char_t *callerFuncName);
+rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify *&outRealObj, const char_t *callerFuncName); 
 
 template <typename HandleT, typename ObjectT>
 HandleT ExportEmbeddedHandle(ObjectT *realObj)

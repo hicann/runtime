@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "rt_unwrap.h"
 
 class FftsPlusTaskLaunchTest : public testing::Test
 {
@@ -111,7 +112,7 @@ TEST_F(FftsPlusTaskLaunchTest, FftsPlusTaskLaunchApi)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Context::FftsPlusTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    impl.FftsPlusTaskLaunch(&fftsPlusTaskInfo, static_cast<Stream *>(stream), 0);
+    impl.FftsPlusTaskLaunch(&fftsPlusTaskInfo, rt_ut::UnwrapOrNull<Stream>(stream), 0);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);

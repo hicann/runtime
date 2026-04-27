@@ -198,8 +198,10 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromData_CpuKernel_Success)
 
 TEST_F(BinaryLoaderTest, BinaryLoadSuccess)
 {
-    std::filesystem::path  currentPath = std::filesystem::current_path().parent_path();
-    std::string path = currentPath.string() + "/tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    std::string path = "tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    if (!std::filesystem::exists(path)) {
+        path = "../tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    }
     rtLoadBinaryConfig_t cfg;
     rtLoadBinaryOption_t option;
     option.optionId = RT_LOAD_BINARY_OPT_CPU_KERNEL_MODE;
@@ -251,8 +253,10 @@ TEST_F(BinaryLoaderTest, BinaryLoadSuccess)
 
 TEST_F(BinaryLoaderTest, BinaryLoadAndSetProgramInvalid)
 {
-    std::filesystem::path  currentPath = std::filesystem::current_path().parent_path();
-    std::string path = currentPath.string() + "/tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    std::string path = "tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    if (!std::filesystem::exists(path)) {
+        path = "../tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    }
     rtLoadBinaryConfig_t cfg;
     rtLoadBinaryOption_t option;
     option.optionId = RT_LOAD_BINARY_OPT_CPU_KERNEL_MODE;
@@ -365,7 +369,10 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromFile_CpuKernel_Mode1_Fail_01)
 
 TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromFile_CpuKernel_Mode1_Fail_02)
 {
-    char *path = "../tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    std::string path = "tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    if (!std::filesystem::exists(path)) {
+        path = "../tests/ut/runtime/runtime/test/data/libcust_aicpu_kernels.json";
+    }
     MOCKER_CPP(&BinaryLoader::ReadBinaryFile).stubs().will(returnValue(RT_ERROR_NONE));
     PlainProgram * prog = nullptr;
     MOCKER_CPP(&Program::ProcCpuKernelH2DMem).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
@@ -378,7 +385,7 @@ TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromFile_CpuKernel_Mode1_Fail_02)
     cfg.options = &option;
 
     void *handle = nullptr;
-    rtError_t ret = rtsBinaryLoadFromFile(path, &cfg, &handle);
+    rtError_t ret = rtsBinaryLoadFromFile(path.c_str(), &cfg, &handle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtsBinaryUnload(handle);
     EXPECT_EQ(ret, RT_ERROR_NONE);

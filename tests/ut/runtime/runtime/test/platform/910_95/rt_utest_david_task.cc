@@ -171,7 +171,7 @@ protected:
 
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         stream_->SetSqMemAttr(false);
         ((RawDevice *)(stream_->Device_()))->PrimaryStream_()->SetSqBaseAddr(0U);
@@ -228,12 +228,12 @@ TEST_F(TaskTestDavid, TestNtyWaitNtyRecord)
     MOCKER(NotifyWaitTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER(NotifyRecordTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    ret = NtyWait((Notify *)notify, (Stream *)stream, 0U);
+    ret = NtyWait(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream), 0U);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
-    ret = NtyRecord((Notify *)notify, (Stream *)stream);
+    ret = NtyRecord(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
-    ((Notify *)notify)->isIpcNotify_ = true;
-    ret = NtyRecord((Notify *)notify, (Stream *)stream);
+    (rt_ut::UnwrapOrNull<Notify>(notify))->isIpcNotify_ = true;
+    ret = NtyRecord(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     ret = rtNotifyDestroy(notify);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -252,12 +252,12 @@ TEST_F(TaskTestDavid, AllocTaskAndSendIPCNotify)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(halSqTaskSend).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    ((Stream *)stream)->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
-    ((Notify *)notify)->isIpcNotify_ = true;
-    ret = NtyRecord((Notify *)notify, (Stream *)stream);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+    (rt_ut::UnwrapOrNull<Notify>(notify))->isIpcNotify_ = true;
+    ret = NtyRecord(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_NE(ret, RT_ERROR_NONE);
     MOCKER(GetIpcSqeWriteAddrForNotifyRecordTask).stubs().will(returnValue(1));
-    ret = NtyRecord((Notify *)notify, (Stream *)stream);
+    ret = NtyRecord(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_NE(ret, RT_ERROR_NONE);
 
     ret = rtNotifyDestroy(notify);
@@ -340,7 +340,7 @@ TEST_F(TaskTestDavid, AllocTaskAndSendIpcNotifyReset)
 
     MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
-    ((Notify *)notify)->isIpcNotify_ = true;
+    (rt_ut::UnwrapOrNull<Notify>(notify))->isIpcNotify_ = true;
 
     ret = rtNotifyReset(notify);
     EXPECT_EQ(ret, ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT);
@@ -364,9 +364,9 @@ TEST_F(TaskTestDavid, TestCondStreamActive)
     ret = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    Stream *stm1 = (Stream *)stream1;
+    Stream *stm1 = rt_ut::UnwrapOrNull<Stream>(stream1);
     stm1->flags_ = RT_STREAM_DEFAULT;
-    Stream *stm2 = (Stream *)stream2;
+    Stream *stm2 = rt_ut::UnwrapOrNull<Stream>(stream2);
     stm2->flags_ = RT_STREAM_AICPU;
     ret = CondStreamActive(stm2, stm1);
     EXPECT_EQ(ret, RT_ERROR_MODEL_NULL);
@@ -383,7 +383,7 @@ TEST_F(TaskTestDavid, TestMemcpy2DAsync)
     rtStream_t stream;
     rtError_t ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Device *dev = stm->Device_();
     uint64_t size = 0ULL;
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -403,7 +403,7 @@ TEST_F(TaskTestDavid, TestMemcpy2DAsyncFail)
     rtStream_t stream;
     rtError_t ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Device *dev = stm->Device_();
     uint64_t size = 0ULL;
     MOCKER(MemcpyAsyncTaskInitV2).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
@@ -419,7 +419,7 @@ TEST_F(TaskTestDavid, TestMemcopyAsyncFail)
     rtStream_t stream;
     rtError_t ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Device *dev = stm->Device_();
     uint64_t size = 0ULL;
     rtTaskCfgInfo_t cfgInfo = {};
@@ -441,8 +441,10 @@ TEST_F(TaskTestDavid, TestMdlEndGraphForAicpuStream)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelCreate(&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+
     Model *mdl = rt_ut::UnwrapOrNull<Model>(model);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+
     mdl->executorFlag_ = EXECUTOR_AICPU;
     stm->flags_ = RT_STREAM_AICPU;
     MOCKER(ProcAicpuTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -463,8 +465,9 @@ TEST_F(TaskTestDavid, TestModelSubmitExecuteTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelCreate(&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+
     Model *mdl = rt_ut::UnwrapOrNull<Model>(model);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     mdl->executorFlag_ = EXECUTOR_AICPU;
 
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
@@ -485,8 +488,9 @@ TEST_F(TaskTestDavid, TestModelUbSubmitExecuteTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelCreate(&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = (Stream *)stream;
+
     Model *mdl = rt_ut::UnwrapOrNull<Model>(model);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     mdl->executorFlag_ = EXECUTOR_AICPU;
     mdl->SetFirstExecute(false);
     MOCKER(StreamUbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1184,7 +1188,7 @@ TEST_F(TaskTestDavid, Test_CheckTaskCanSend)
     rtStream_t stream;
     rtError_t ret = RT_ERROR_NONE;
     ret = rtStreamCreate(&stream, 0);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     TaskResManage *oldTaskResMang = stm->taskResMang_;
     stm->taskResMang_ = nullptr;
@@ -1269,7 +1273,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbDdrcDavinciTask)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
 
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
@@ -1313,7 +1317,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbPoisonDavinciTask)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
 
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
@@ -1337,7 +1341,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclLinkDavinciTask)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
 
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
@@ -1396,24 +1400,24 @@ TEST_F(TaskTestDavid, SubmitUpdateDavidKernelTask)
     EXPECT_EQ(error, RT_ERROR_NONE);
     TaskInfo *pTask = nullptr;
     uint32_t pos = UINT32_MAX;
-    TaskResManageDavid *taskResMng = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMng = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     error = taskResMng->AllocTaskInfoAndPos(2U, pos, &pTask);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtFunsionTaskInfo_t fusionInfo = {};
     fusionInfo.subTaskNum = 0;
-    pTask->stream = static_cast<Stream *>(stream);
+    pTask->stream = rt_ut::UnwrapOrNull<Stream>(stream);
     pTask->u.fusionKernelTask.sqeLen = 2U;
     pTask->u.fusionKernelTask.fusionKernelInfo = static_cast<void *>(&fusionInfo);
     pTask->type = TS_TASK_TYPE_FUSION_KERNEL;
 
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemcpyAsyncTaskCommonInit).stubs().will(returnValue(RT_ERROR_NONE));
-    error = UpdateDavidKernelTaskSubmit(pTask, static_cast<Stream *>(stream), 2U);
+    error = UpdateDavidKernelTaskSubmit(pTask, rt_ut::UnwrapOrNull<Stream>(stream), 2U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     taskResMng->ResetTaskRes();
-    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1435,7 +1439,7 @@ TEST_F(TaskTestDavid, TestNonSeparateSendAndRecycleCase)
     rtStream_t stream;
     rtError_t ret = RT_ERROR_NONE;
     ret = rtStreamCreate(&stream, 0);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(false));
 }
@@ -1448,7 +1452,7 @@ TEST_F(TaskTestDavid, TestSeparateSendAndRecycleSuccess) {
 
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    stm = (Stream *)stream;
+    stm = rt_ut::UnwrapOrNull<Stream>(stream);
     dev = stm->Device_();
 
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
@@ -1467,7 +1471,7 @@ TEST_F(TaskTestDavid, TestSeparateSendAndRecycleSuccess3) {
 
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    stm = (Stream *)stream;
+    stm = rt_ut::UnwrapOrNull<Stream>(stream);
     dev = stm->Device_();
 
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
@@ -1486,7 +1490,7 @@ TEST_F(TaskTestDavid, TestSyncTaskSuccess) {
  
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    stm = (Stream *)stream;
+    stm = rt_ut::UnwrapOrNull<Stream>(stream);
     dev = stm->Device_();
  
     bool isNeedStreamSync = true;
@@ -1504,42 +1508,54 @@ TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo)
 {
     TaskInfo *taskInfo = nullptr;
     Device *dev;
-    rtError_t res;
-    rtStream_t stream;
  
     MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
         .stubs()
         .will(returnValue(true));
-    res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
+    Stream *realStream = stream_;
+    ASSERT_NE(realStream, nullptr);
+    AutoSplitSqContext *autoSplitCtx = new (std::nothrow) AutoSplitSqContext();
+    ASSERT_NE(autoSplitCtx, nullptr);
+    realStream->SetAutoSplitSq(true);
+    realStream->SetAutoSplitCtx(autoSplitCtx);
+
     uint32_t pos = 0xFFFFU;
-    Stream *dstStm = static_cast<Stream *>(stream);
-    rtError_t error = AllocTaskInfoForCapture(&taskInfo, static_cast<Stream *>(stream), pos, dstStm, 1U, true);
+    Stream *dstStm = realStream;
+    rtError_t error = AllocTaskInfoForCapture(&taskInfo, realStream, pos, dstStm, 1U, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtStreamDestroy(stream);
+    realStream->SetAutoSplitCtx(nullptr);
+    realStream->SetAutoSplitSq(false);
+    delete autoSplitCtx;
 }
 
 TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo2)
 {
     TaskInfo *taskInfo = nullptr;
     Device *dev;
-    rtError_t res;
-    rtStream_t stream;
 
     MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
         .stubs()
         .will(returnValue(true));
-    res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
+    Stream *realStream = stream_;
+    ASSERT_NE(realStream, nullptr);
+    AutoSplitSqContext *autoSplitCtx = new (std::nothrow) AutoSplitSqContext();
+    ASSERT_NE(autoSplitCtx, nullptr);
+    realStream->SetAutoSplitSq(true);
+    realStream->SetAutoSplitCtx(autoSplitCtx);
+
     uint32_t pos = 0xFFFFU;
-    Stream *dstStm = static_cast<Stream *>(stream);
-    rtError_t error = AllocTaskInfoForCapture(&taskInfo, static_cast<Stream *>(stream), pos, dstStm, 3270U, true);
+    Stream *dstStm = realStream;
+    rtError_t error = AllocTaskInfoForCapture(&taskInfo, realStream, pos, dstStm, 3270U, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    rtStreamDestroy(stream);
+    realStream->SetAutoSplitCtx(nullptr);
+    realStream->SetAutoSplitSq(false);
+    delete autoSplitCtx;
 }
 
 TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull)
@@ -1551,17 +1567,17 @@ TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull)
     rtError_t ret;
  
     ret = rtStreamCreate(&stream, 0);
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(true));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
     uint32_t pos = 0;
     uint32_t sqeNum = 1;
-    rtError_t error = AllocTaskInfo(&taskInfo, (Stream*)stream, pos, sqeNum);
+    rtError_t error = AllocTaskInfo(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream), pos, sqeNum);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    taskResMang->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMang->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
 }
 
@@ -1574,17 +1590,17 @@ TEST_F(TaskTestDavid, TestTaskInfoAllocationWithQueueFull2)
     rtError_t ret;
  
     ret = rtStreamCreate(&stream, 0);
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL)).then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(false));
     MOCKER_CPP(&Runtime::AllocTaskSn).stubs().will(ignoreReturnValue());
 
     uint32_t pos = 0;
     uint32_t sqeNum = 1;
-    rtError_t error = AllocTaskInfo(&taskInfo, (Stream*)stream, pos, sqeNum);
+    rtError_t error = AllocTaskInfo(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream), pos, sqeNum);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    taskResMang->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMang->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
 }
 
@@ -1641,7 +1657,7 @@ TEST_F(TaskTestDavid, CaptureModeExecute)
     captureMdl1->CaptureModelExecuteFinish();
     uint32_t releaseNum;
     captureMdl1->ReleaseSqCq(releaseNum);
-    captureMdl1->BuildSqCq(static_cast<Stream *>(streamExe));
+    captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1689,9 +1705,9 @@ TEST_F(TaskTestDavid, AllocCaptureTask)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint32_t pos = 0xFFFFU;
-    Stream *dstStm = static_cast<Stream *>(stream1);
+    Stream *dstStm = rt_ut::UnwrapOrNull<Stream>(stream1);
     TaskInfo *taskInfo = nullptr;
-    error = AllocTaskInfoForCapture(&taskInfo, static_cast<Stream *>(stream1), pos, dstStm, 1U, true);
+    error = AllocTaskInfoForCapture(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream1), pos, dstStm, 1U, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)dev->GetTaskFactory()->Recycle(taskInfo);
@@ -1745,8 +1761,8 @@ TEST_F(TaskTestDavid, AllocCaptureStreamNotify)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint32_t pos = 0xFFFFU;
-    Stream *dstStm = static_cast<Stream *>(stream1);
-    Stream* captureStream = (static_cast<Stream *>(stream1))->GetCaptureStream();
+    Stream *dstStm = rt_ut::UnwrapOrNull<Stream>(stream1);
+    Stream* captureStream = (rt_ut::UnwrapOrNull<Stream>(stream1))->GetCaptureStream();
     TaskInfo *taskInfo2 = nullptr;
     error = AllocTaskInfoForCapture(&taskInfo2, static_cast<Stream *>(captureStream), pos, dstStm, 1U, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1805,8 +1821,8 @@ TEST_F(TaskTestDavid, rtCacheLastTaskExtendInfo_debug_json_success_950)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream* const stm = static_cast<Stream*>(stream);
     Model * const mdl = rt_ut::UnwrapOrNull<Model>(model);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     stm->SetModel(mdl);
     stm->SetLatestModlId(mdl->Id_());
 

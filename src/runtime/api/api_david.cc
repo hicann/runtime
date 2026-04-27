@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "base.hpp"
 #include "error_message_manage.hpp"
 #include "errcode_manage.hpp"
@@ -16,6 +17,7 @@
 #include "inner.hpp"
 #include "osal.hpp"
 #include "notify.hpp"
+#include "count_notify.hpp"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 
@@ -32,6 +34,8 @@ rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * const cntNot
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->CntNotifyCreate(deviceId, RtPtrToPtr<CountNotify **>(cntNotify));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    CountNotify *realCountNotify = RtPtrToPtr<CountNotify *>(*cntNotify);
+    *cntNotify = ExportEmbeddedHandle<rtCntNotify_t>(realCountNotify);
     return error;
 }
 
@@ -42,6 +46,8 @@ rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_t * cons
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->CntNotifyCreate(deviceId, RtPtrToPtr<CountNotify **>(cntNotify), flags);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    CountNotify *realCountNotify = RtPtrToPtr<CountNotify *>(*cntNotify);
+    *cntNotify = ExportEmbeddedHandle<rtCntNotify_t>(realCountNotify);
     return error;
 }
 
@@ -51,8 +57,8 @@ rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t const st
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyRecord(notifyPtr, exeStream, info);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -65,8 +71,8 @@ rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rtStream_t
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyWaitWithTimeout(notifyPtr, exeStream, info);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -78,8 +84,8 @@ rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t const stm
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyReset(notifyPtr, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -91,7 +97,7 @@ rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
     const rtError_t error = apiInstance->CntNotifyDestroy(notifyPtr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -104,7 +110,7 @@ rtError_t rtGetCntNotifyAddress(rtCntNotify_t const inCntNotify, uint64_t * cons
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
     const rtError_t error = apiInstance->GetCntNotifyAddress(notifyPtr, cntNotifyAddress, regType);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -116,7 +122,7 @@ rtError_t rtGetCntNotifyId(rtCntNotify_t inCntNotify, uint32_t * const notifyId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(inCntNotify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
     const rtError_t error = apiInstance->GetCntNotifyId(notifyPtr, notifyId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
@@ -141,8 +147,8 @@ rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotif
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(cntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyRecord(notifyPtr,
         exeStream, RtPtrToPtr<rtCntNtyRecordInfo_t *>(info));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -155,8 +161,8 @@ rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm,
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(cntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyWaitWithTimeout(notifyPtr,
         exeStream, RtPtrToPtr<rtCntNtyWaitInfo_t *>(info));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -168,8 +174,8 @@ rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(cntNotify);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->CntNotifyReset(notifyPtr, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return error;
@@ -180,7 +186,7 @@ rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    CountNotify * const notifyPtr = static_cast<CountNotify *>(cntNotify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
     const rtError_t error = apiInstance->GetCntNotifyId(notifyPtr, notifyId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return error;
@@ -189,7 +195,7 @@ rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId)
 VISIBILITY_DEFAULT
 rtError_t rtUbDbSend(rtUbDbInfo_t *dbInfo,  rtStream_t stm)
 {
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->UbDbSend(dbInfo, exeStream);
@@ -200,7 +206,7 @@ rtError_t rtUbDbSend(rtUbDbInfo_t *dbInfo,  rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtUbDirectSend(rtUbWqeInfo_t *wqeInfo, rtStream_t stm)
 {
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->UbDirectSend(wqeInfo, exeStream);
@@ -213,7 +219,8 @@ rtError_t rtFusionLaunch(void * const fusionInfo, rtStream_t const stm, rtFusion
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->FusionLaunch(fusionInfo, static_cast<Stream *>(stm), argsInfo);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->FusionLaunch(fusionInfo, exeStream, argsInfo);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -223,7 +230,8 @@ rtError_t rtCCULaunch(rtCcuTaskInfo_t *taskInfo,  rtStream_t const stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->CCULaunch(taskInfo, static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->CCULaunch(taskInfo, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return error;

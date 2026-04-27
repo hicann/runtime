@@ -11,6 +11,7 @@
 #include "api.hpp"
 #include "api_soma.hpp"
 #include "base.hpp"
+#include "api_handle_guard.h"
 #include "error_message_manage.hpp"
 #include "errcode_manage.hpp"
 #include "error_code.h"
@@ -100,7 +101,7 @@ rtError_t rtMemPoolMallocAsync(void **devPtr, const uint64_t size, const rtMemPo
     ApiSoma * const apiInstance = ApiSoma::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
  
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(exeStream);
     TIMESTAMP_BEGIN(rtMemPoolMallocAsync);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
@@ -118,7 +119,7 @@ VISIBILITY_DEFAULT
 rtError_t rtMemPoolFreeAsync(void *ptr, rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     ApiSoma * const apiInstance = ApiSoma::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     

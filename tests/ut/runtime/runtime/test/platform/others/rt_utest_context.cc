@@ -41,6 +41,7 @@
 #undef protected
 #undef private
 #include "ffts_task.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -96,7 +97,7 @@ TEST_F(ChipContextTest, PrimaryContextRetain_test)
     Runtime::Instance()->timeoutConfig_.opExcTaskTimeout = 1000;
     rtInstance->SetChipType(CHIP_ADC);
     GlobalContainer::SetRtChipType(CHIP_ADC);
-    device->primaryStream_ = (Stream *)stm;
+    device->primaryStream_ = rt_ut::UnwrapOrNull<Stream>(stm);
     (void)device->UpdateTimeoutConfig();
 
     rtInstance->SetChipType(chipType);

@@ -29,6 +29,7 @@
 #include "osal.hpp"
 #include "api.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -76,7 +77,7 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgs)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    bool ret = taskResMng->CreateTaskRes(static_cast<Stream *>(stream));
+    bool ret = taskResMng->CreateTaskRes(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, true);
     MOCKER(memcpy_s).stubs().will(returnValue(0));
     rtHostInputInfo_t hostInputInfo = {};
@@ -88,9 +89,9 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgs)
     uint32_t taskResId;
     ret = taskResMng->AllocTaskResId(taskResId);
     void *kerArgs = static_cast<void *>(args);
-    error = taskResMng->LoadInputOutputArgs(static_cast<Stream *>(stream), kerArgs, taskResId, 4, (void *)args, &argsInfo);
+    error = taskResMng->LoadInputOutputArgs(rt_ut::UnwrapOrNull<Stream>(stream), kerArgs, taskResId, 4, (void *)args, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
     delete taskResMng;
 }
@@ -101,7 +102,7 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgsWithAicpuArgs)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    bool ret = taskResMng->CreateTaskRes(static_cast<Stream *>(stream));
+    bool ret = taskResMng->CreateTaskRes(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, true);
     MOCKER(memcpy_s).stubs().will(returnValue(0));
     rtHostInputInfo_t hostInputInfo = {};
@@ -113,9 +114,9 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgsWithAicpuArgs)
     uint32_t taskResId;
     ret = taskResMng->AllocTaskResId(taskResId);
     void *kerArgs = static_cast<void *>(args);
-    error = taskResMng->LoadInputOutputArgs(static_cast<Stream *>(stream), kerArgs, taskResId, 4, (void *)args, &argsInfo);
+    error = taskResMng->LoadInputOutputArgs(rt_ut::UnwrapOrNull<Stream>(stream), kerArgs, taskResId, 4, (void *)args, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
     delete taskResMng;
 }
@@ -219,7 +220,7 @@ TEST_F(TaskResManageTest, streamSyncFailed)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
-    error = ((Stream*)stream)->Synchronize(true, 1);
+    error = (rt_ut::UnwrapOrNull<Stream>(stream))->Synchronize(true, 1);
     GlobalMockObject::verify();
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -237,17 +238,17 @@ TEST_F(TaskResManageTest, FastErrorProcess1)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    MOCKER_CPP_VIRTUAL(((Stream *)stream)->Device_(), &Device::GetDevStatus)
+    MOCKER_CPP_VIRTUAL((rt_ut::UnwrapOrNull<Stream>(stream))->Device_(), &Device::GetDevStatus)
     .stubs()
     .will(returnValue(RT_ERROR_NONE))
     .then(returnValue(RT_ERROR_LOST_HEARTBEAT));
 
-    ((Stream *)stream)->SetLimitFlag(true);
-    Engine* engine = (Engine*)(((RawDevice*)(((Stream *)stream)->Device_()))->Engine_());
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLimitFlag(true);
+    Engine* engine = (Engine*)(((RawDevice*)((rt_ut::UnwrapOrNull<Stream>(stream))->Device_()))->Engine_());
     MOCKER_CPP_VIRTUAL(engine, &Engine::TryRecycleTask).stubs().with(mockcpp::any()).will(returnValue(RT_ERROR_NONE));
     error = rtEventRecord(event, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_LOST_HEARTBEAT);
-    ((Stream *)stream)->SetLimitFlag(false);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLimitFlag(false);
 
     GlobalMockObject::verify();
 
@@ -267,10 +268,10 @@ TEST_F(TaskResManageTest, FastErrorProcess2)
     error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    ((Stream *)stream)->abortStatus_ = RT_ERROR_STREAM_ABORT;
+    (rt_ut::UnwrapOrNull<Stream>(stream))->abortStatus_ = RT_ERROR_STREAM_ABORT;
     error = rtEventRecord(event, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_ABORT);
-    ((Stream *)stream)->abortStatus_ = RT_ERROR_NONE;
+    (rt_ut::UnwrapOrNull<Stream>(stream))->abortStatus_ = RT_ERROR_NONE;
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -309,7 +310,7 @@ TEST_F(TaskResManageTest, FastErrorProcess4)
     error = rtEventCreateExWithFlag(&event, RT_EVENT_WITH_FLAG);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    MOCKER_CPP_VIRTUAL(((Stream *)stream), &Stream::PrintStmDfxAndCheckDevice).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL((rt_ut::UnwrapOrNull<Stream>(stream)), &Stream::PrintStmDfxAndCheckDevice).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     MOCKER(halSqTaskSend).stubs().will(returnValue(DRV_ERROR_IOCRL_FAIL));
     error = rtEventRecord(event, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);

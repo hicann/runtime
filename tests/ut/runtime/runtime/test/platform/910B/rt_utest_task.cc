@@ -73,15 +73,17 @@ protected:
     {
         GlobalMockObject::verify();
         (void)rtSetDevice(0);
-        rtError_t error1 = rtStreamCreate((rtStream_t *)&stream_, 0);
-        rtError_t error2 = rtEventCreate((rtEvent_t *)&event_);
+        rtError_t error1 = rtStreamCreate(&streamHandle_, 0);
+        rtError_t error2 = rtEventCreate(&eventHandle_);
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+        event_ = rt_ut::UnwrapOrNull<Event>(eventHandle_);
         std::cout << "CloudV2TaskTest start: " << error1 << ", " << error2 << std::endl;
     }
 
     static void TearDownTestCase()
     {
-        rtError_t error1 = rtStreamDestroy(stream_);
-        rtError_t error2 = rtEventDestroy(event_);
+        rtError_t error1 = rtStreamDestroy(streamHandle_);
+        rtError_t error2 = rtEventDestroy(eventHandle_);
         std::cout << "CloudV2TaskTest: " << error1 << ", " << error2 << std::endl;
         rtDeviceReset(0);
     }
@@ -97,10 +99,14 @@ protected:
 
     static Stream *stream_;
     static Event *event_;
+    static rtStream_t streamHandle_;
+    static rtEvent_t eventHandle_;
 };
 
 Stream *CloudV2TaskTest::stream_ = NULL;
 Event *CloudV2TaskTest::event_ = NULL;
+rtStream_t CloudV2TaskTest::streamHandle_ = NULL;
+rtEvent_t CloudV2TaskTest::eventHandle_ = NULL;
 
 drvError_t drvDeviceGetTransWay_cloud_v2_stub_1(void *src, void *dst, uint8_t *trans_type)
 {
@@ -144,7 +150,7 @@ TEST_F(CloudV2TaskTest, stream_IsReclaimAsync)
     TaskInfo tsk = {};
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     tsk.type = TS_TASK_TYPE_FFTS_PLUS;
     stream_var->IsReclaimAsync(&tsk);
     tsk.type = TS_TASK_TYPE_NOTIFY_WAIT;
@@ -205,7 +211,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_1)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe;
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     ToConstructSqe(&task, &sqe);
     TaskUnInitProc(&task);
@@ -226,7 +232,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_2)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe;
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     ToConstructSqe(&task, &sqe);
     TaskUnInitProc(&task);
@@ -246,7 +252,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_3)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe;
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     ToConstructSqe(&task, &sqe);
     TaskUnInitProc(&task);
@@ -266,7 +272,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_4)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe;
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     ToConstructSqe(&task, &sqe);
     TaskUnInitProc(&task);
@@ -311,7 +317,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_l2_cache)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe;
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     ToConstructSqe(&task, &sqe);
     TaskUnInitProc(&task);
@@ -331,7 +337,7 @@ TEST_F(CloudV2TaskTest, stars_eventreset_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     EventResetTaskInit(&task, &evt, false, event_id);
     evt.EventIdCountAdd((task.u.eventResetTaskInfo).eventid);
     ToConstructSqe(&task, &sqe);
@@ -367,7 +373,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy_async_sqe_addr_d2d)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV1(&task, src, count);
     ToConstructSqe(&task, &sqe);
 
@@ -389,7 +395,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy_async_dsa_sqe_d2h)
     rtError_t error;
 
     rtStarsSqe_t command;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     MemcpyAsyncD2HTaskInit(&task, src, cnt, dsaStreamId, dsaTaskId);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
     ToConstructSqe(&task, &command);
@@ -415,7 +421,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy2d_async_sqe_addr_h2d)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
     ToConstructSqe(&task, &sqe);
 
@@ -439,7 +445,7 @@ TEST_F(CloudV2TaskTest, memcpy2d_async_sqe_d2d)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
     ToConstructSqe(&task, &sqe);
 
@@ -463,7 +469,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy2d_async_sqe_addr_d2h)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
     ToConstructSqe(&task, &sqe);
 
@@ -486,7 +492,7 @@ TEST_F(CloudV2TaskTest, label_switch_by_index_sqe)
     uint32_t labelInfoPtr[16] = {};
     rtStarsSqe_t sqe[2];
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     error = StreamLabelSwitchByIndexTaskInit(&task, (void *)&ptr, max, (void *)labelInfoPtr);
     ToConstructSqe(&task, (rtStarsSqe_t *)sqe);
     Complete(&task, 0);
@@ -503,7 +509,7 @@ TEST_F(CloudV2TaskTest, stars_ipc_notify_record_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
 
@@ -667,7 +673,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqe)
     EXPECT_NE(task, nullptr);
 
     rtStarsSqe_t sqe[2];
-    InitByStream(task, (Stream *)stream);
+    InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0U);
 
     ToConstructSqe(task, sqe);
@@ -742,7 +748,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqeDvpp_RuntimeNotFree)
     EXPECT_NE(task, nullptr);
     rtStarsSqe_t sqe;
 
-    InitByStream(task, (Stream *)stream);
+    InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0x40U);
 
     ToConstructSqe(task, &sqe);
@@ -788,7 +794,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqeDvpp_RuntimeFree)
     EXPECT_NE(task, nullptr);
     rtStarsSqe_t sqe;
 
-    InitByStream(task, (Stream *)stream);
+    InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0x0U);
 
     ToConstructSqe(task, &sqe);
@@ -1536,8 +1542,9 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_debug_json_success)
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream* const stm = static_cast<Stream*>(stream);
     Model * const mdl = rt_ut::UnwrapOrNull<Model>(model);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+
     stm->SetModel(mdl);
     stm->SetLatestModlId(mdl->Id_());
 
@@ -1598,7 +1605,7 @@ TEST_F(CloudV2TaskTest, rtCacheLastTaskExtendInfo_api_impl_abnormal)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream* const stm = static_cast<Stream*>(stream);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Context* const curCtx = Runtime::Instance()->CurrentContext();
 
     SET_THREAD_TASKID_AND_STREAMID(stm->Id_(), 1U);

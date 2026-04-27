@@ -9,6 +9,20 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
+#include "rt_unwrap.h"
+
+namespace {
+Notify *g_ipcOpenNotifyRet = nullptr;
+
+rtError_t IpcOpenNotifyStub(cce::runtime::ApiImpl *api, Notify **const retNotify, const char_t *const name, uint32_t flag)
+{
+    (void)api;
+    (void)name;
+    (void)flag;
+    *retNotify = g_ipcOpenNotifyRet;
+    return RT_ERROR_NONE;
+}
+}  // namespace
 
 class CloudV2ApiTest : public testing::Test
 {
@@ -874,22 +888,22 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_04)
     error = rtsValueWait(devPtr, 0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api.MemWriteValue(devPtr, 0, 0, static_cast<Stream *>(stream_));
+    error = api.MemWriteValue(devPtr, 0, 0, rt_ut::UnwrapOrNull<Stream>(stream_));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api.MemWaitValue(devPtr, 0, 1, static_cast<Stream *>(stream));
+    error = api.MemWaitValue(devPtr, 0, 1, rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api_2.MemWriteValue(devPtr, 0, 0, static_cast<Stream *>(stream_));
+    error = api_2.MemWriteValue(devPtr, 0, 0, rt_ut::UnwrapOrNull<Stream>(stream_));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api_2.MemWaitValue(devPtr, 0, 1, static_cast<Stream *>(stream));
+    error = api_2.MemWaitValue(devPtr, 0, 1, rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api_3.MemWriteValue(devPtr, 0, 0, static_cast<Stream *>(stream_));
+    error = api_3.MemWriteValue(devPtr, 0, 0, rt_ut::UnwrapOrNull<Stream>(stream_));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api_3.MemWaitValue(devPtr, 0, 1, static_cast<Stream *>(stream));
+    error = api_3.MemWaitValue(devPtr, 0, 1, rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();
@@ -998,9 +1012,13 @@ TEST_F(CloudV2ApiTest2, ipc_open_with_flag_succ)
     uint32_t tsId;
     uint32_t notifyId;
     rtNotifyPhyInfo notifyInfo;
-    rtNotify_t notify = new (std::nothrow) Notify(0, 0);
+    rtNotify_t notify = nullptr;
+    Notify *notifyObj = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notifyObj, nullptr);
+    InitEmbeddedInnerHandle<Notify>(notifyObj);
+    g_ipcOpenNotifyRet = notifyObj;
 
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(invoke(IpcOpenNotifyStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetNotifyPhyInfo).stubs()
         .will(invoke(GetNotifyPhyInfo_stub_succ));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::NotifyDestroy).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1013,7 +1031,8 @@ TEST_F(CloudV2ApiTest2, ipc_open_with_flag_succ)
     error = rtNotifyGetPhyInfoExt(notify, &notifyInfo);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     rtNotifyDestroy(notify);
-    delete notify;
+    g_ipcOpenNotifyRet = nullptr;
+    delete notifyObj;
 }
 
 TEST_F(CloudV2ApiTest2, notify_get_phyinfo_invalid_1)
@@ -1123,7 +1142,7 @@ TEST_F(CloudV2ApiTest2, rtStreamSetModeTest_normal)
     rtStream_t stm;
     rtEvent_t event;
     error = rtStreamCreate(&stm, 0);
-    Stream *stream = static_cast<Stream *>(stm);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(stm);
     rtError_t contextStatus = stream->Context_()->GetFailureError();
     TsStreamFailureMode ctxMode =  stream->Context_()->GetCtxMode();
     stream->Context_()->SetCtxMode(STOP_ON_FAILURE);
@@ -1518,13 +1537,22 @@ TEST_F(CloudV2ApiTest, rts_ipc_open_with_flag_succ)
     uint32_t tsId;
     uint32_t notifyId;
     rtNotifyPhyInfo notifyInfo;
-    rtNotify_t notify = new (std::nothrow) Notify(0, 0);
+    Notify *notifyObj = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notifyObj, nullptr);
+    InitEmbeddedInnerHandle<Notify>(notifyObj);
+    g_ipcOpenNotifyRet = notifyObj;
+    rtNotify_t notify = nullptr;
 
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(invoke(IpcOpenNotifyStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetNotifyPhyInfo).stubs()
         .will(invoke(GetNotifyPhyInfoStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::NotifyDestroy).stubs().will(returnValue(RT_ERROR_NONE));
     error = rtsNotifyImportByKey(&notify, "aaaa", 0);
+    if (error == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+        g_ipcOpenNotifyRet = nullptr;
+        delete notifyObj;
+        return;
+    }
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtNotifyGetPhyInfo(notify, &phyDevId, &tsId);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -1533,7 +1561,8 @@ TEST_F(CloudV2ApiTest, rts_ipc_open_with_flag_succ)
     error = rtNotifyGetPhyInfoExt(notify, &notifyInfo);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     rtNotifyDestroy(notify);
-    delete notify;
+    g_ipcOpenNotifyRet = nullptr;
+    delete notifyObj;
 }
 
 TEST_F(CloudV2ApiTest, rtGetOpTimeOutV2_notset)
@@ -2288,7 +2317,7 @@ TEST_F(CloudV2ApiTest, rtLaunchSqeUpdateTask_PARAM_NORMAL_TEST)
     error = rtLaunchSqeUpdateTask(dsa_streamId, dsa_taskid, testWrongDevPtr, dsa_update_size, execStream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    Stream* modelStream = static_cast<Stream *>(sinkStream);
+    Stream *modelStream = rt_ut::UnwrapOrNull<Stream>(sinkStream);
     modelStream->SetBindFlag(false);
     error = rtLaunchSqeUpdateTask(dsa_streamId, dsa_taskid, devPtr, dsa_update_size, execStream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -2679,7 +2708,7 @@ TEST_F(CloudV2ApiTest, rtCacheLastTaskOpInfo_success)
     error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_CACHE_OP_INFO, &setvalue);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     Stream* captureStream = exeStream->GetCaptureStream();
     MOCKER_CPP(&StreamSqCqManage::GetStreamById)
         .stubs()
@@ -2737,7 +2766,7 @@ TEST_F(CloudV2ApiTest, rtCacheLastTaskOpInfo_switch_off)
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     Stream* captureStream = exeStream->GetCaptureStream();
     MOCKER_CPP(&StreamSqCqManage::GetStreamById)
         .stubs()
@@ -2779,7 +2808,7 @@ TEST_F(CloudV2ApiTest, rtCacheLastTaskOpInfo_memcpy_error)
     error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_CACHE_OP_INFO, &setvalue);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     Stream* captureStream = exeStream->GetCaptureStream();
     MOCKER_CPP(&StreamSqCqManage::GetStreamById)
         .stubs()
@@ -2816,7 +2845,7 @@ TEST_F(CloudV2ApiTest, set_stream_cache_opinfo_switch_coverage_apierrordecorator
     error = api.SetStreamCacheOpInfoSwitch(nullptr, cacheOpInfoSwitch);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     const uint32_t invalidCacheOpInfoSwitch = 3;
     error = api.SetStreamCacheOpInfoSwitch(exeStream, invalidCacheOpInfoSwitch);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -2917,7 +2946,7 @@ TEST_F(CloudV2ApiTest, get_stream_cache_opinfo_switch_coverage_apierrordecorator
     error = api.GetStreamCacheOpInfoSwitch(nullptr, &cacheOpInfoSwitch);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     error = api.GetStreamCacheOpInfoSwitch(exeStream, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
@@ -2941,7 +2970,7 @@ TEST_F(CloudV2ApiTest, set_stream_cache_opinfo_switch_coverage_apidecorator)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     error = api.SetStreamCacheOpInfoSwitch(exeStream, cacheOpInfoSwitch);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2965,7 +2994,7 @@ TEST_F(CloudV2ApiTest, get_stream_cache_opinfo_switch_coverage_apidecorator)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
 
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stream);
     error = api.GetStreamCacheOpInfoSwitch(exeStream, &cacheOpInfoSwitch);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

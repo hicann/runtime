@@ -78,15 +78,17 @@ protected:
     static void SetUpTestCase()
     {
         (void)rtSetDevice(0);
-        rtError_t error1 = rtStreamCreate((rtStream_t *)&stream_, 0);
-        rtError_t error2 = rtEventCreate((rtEvent_t *)&event_);
+        rtError_t error1 = rtStreamCreate(&streamHandle_, 0);
+        rtError_t error2 = rtEventCreate(&eventHandle_);
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+        event_ = rt_ut::UnwrapOrNull<Event>(eventHandle_);
         std::cout << "task test start: " << error1 << ", " << error2 << std::endl;
     }
 
     static void TearDownTestCase()
     {
-        rtError_t error1 = rtStreamDestroy(stream_);
-        rtError_t error2 = rtEventDestroy(event_);
+        rtError_t error1 = rtStreamDestroy(streamHandle_);
+        rtError_t error2 = rtEventDestroy(eventHandle_);
         std::cout << "task test end" << error1 << ", " << error2 << std::endl;
         rtDeviceReset(0);
     }
@@ -100,10 +102,14 @@ protected:
 
     static Stream *stream_;
     static Event *event_;
+    static rtStream_t streamHandle_;
+    static rtEvent_t eventHandle_;
 };
 
 Stream *TaskTest::stream_ = NULL;
 Event *TaskTest::event_ = NULL;
+rtStream_t TaskTest::streamHandle_ = NULL;
+rtEvent_t TaskTest::eventHandle_ = NULL;
 
 drvError_t drvDeviceGetTransWay_stub_1(void *src, void *dst, uint8_t *trans_type)
 {
@@ -234,7 +240,7 @@ TEST_F(TaskTest, notify_wait_task_fail_print)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
 
     uint32_t errorcode = 10;
@@ -262,7 +268,7 @@ TEST_F(TaskTest, notify_wait_task_set_task_tag)
     error = rtSetTaskTag(taskTag);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     Runtime *rtInstance = ((Runtime *)Runtime::Instance());
     rtInstance->SetNpuCollectFlag(true);
     SetTaskTag(&task);
@@ -310,7 +316,7 @@ TEST_F(TaskTest, model_execute_task_print)
 
     MOCKER_CPP(&Stream::IsPendingListEmpty).stubs().will(returnValue(false));
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     ModelExecuteTaskInit(&task, NULL, 0, 1);
 
     uint32_t errorcode[3] = {10, 1, 0};
@@ -328,7 +334,7 @@ TEST_F(TaskTest, davinci_kernel_task_print)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicpuTaskInit(&task, 1, 1);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICPU);
     uint32_t errorcode[3] = {10, 1, 0};
@@ -415,7 +421,7 @@ TEST_F(TaskTest, davinci_kernel_task_print_mixCtx)
     task.u.aicTaskInfo.kernel = kernel;
     kernel->SetMixType(MIX_AIC);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
 
     task.u.aicTaskInfo.comm.args = (void *)0x1;
@@ -457,7 +463,7 @@ TEST_F(TaskTest, davinci_mix_kernel_task_print)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CVMIX, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     rtStreamDestroy(stream);
@@ -472,7 +478,7 @@ TEST_F(TaskTest, stream_IsNeedPostProc_true)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->isHasPcieBar_ = true;
     tsk.stream = stream_var;
     stream_var->IsNeedPostProc(&tsk);
@@ -492,7 +498,7 @@ TEST_F(TaskTest, stream_IsNeedPostProc_false)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     tsk.stream = stream_var;
     tsk.type = TS_TASK_TYPE_FFTS_PLUS;
     stream_var->IsNeedPostProc(&tsk);
@@ -507,7 +513,7 @@ TEST_F(TaskTest, davinci_kernel_aic_task_print)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
 
@@ -527,7 +533,7 @@ TEST_F(TaskTest, davinci_kernel_aic_task_print1)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
 
     uint32_t errorcode[3] = {10, 1, 0};
@@ -546,7 +552,7 @@ TEST_F(TaskTest, davinci_kernel_task_print2)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
 
@@ -593,7 +599,7 @@ TEST_F(TaskTest, davinci_kernel_task_print3)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     uint32_t errorcode[3] = {10, 1, 0};
@@ -613,7 +619,7 @@ TEST_F(TaskTest, davinci_kernel_task_print4)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
 
@@ -646,7 +652,7 @@ TEST_F(TaskTest, davinci_kernel_task_print5)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
 
     const uint32_t argsSize = sizeof(uint32_t) + sizeof(uint64_t);
@@ -669,7 +675,7 @@ TEST_F(TaskTest, davinci_kernel_task_print6)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
 
     const uint32_t argsSize = sizeof(uint32_t) * 3 + sizeof(uint64_t);
@@ -761,7 +767,7 @@ TEST_F(TaskTest, base_task_print0)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AddEndGraphTaskInit(&task, 0, 0, 0, 0, 0);
     PrintErrorInfo(&task, 0);
 
@@ -781,9 +787,9 @@ TEST_F(TaskTest, base_task_lock_unlock)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     SqLockUnlockTaskInit(&task, true);
-    InitByStream(&task1, (Stream *)stream);
+    InitByStream(&task1, rt_ut::UnwrapOrNull<Stream>(stream));
     SqLockUnlockTaskInit(&task1, false);
 
     rtStarsSqe_t sqe;
@@ -807,7 +813,7 @@ TEST_F(TaskTest, model_update_task_to_command_test)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     ToCommand(&task, &command);
     Complete(&task, 0);
@@ -831,7 +837,7 @@ TEST_F(TaskTest, commamdBodyForLabel)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     ToCommand(&task, &command);
     EXPECT_EQ(command.u.labelGotoTask.labelId, 1U);
@@ -850,7 +856,7 @@ TEST_F(TaskTest, base_aicpu_info_load_task)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     char aicpu_info[16] = "aicpu info";
     AicpuInfoLoadTaskInit(&task, aicpu_info, 16);
 
@@ -874,7 +880,7 @@ TEST_F(TaskTest, base_task_nop)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     NopTaskInit(&task);
 
     rtStarsSqe_t sqe;
@@ -913,10 +919,10 @@ TEST_F(TaskTest, davinci_kernel_task_ref_module)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Device *dev = ((Stream *)stream)->Device_();
+    Device *dev = (rt_ut::UnwrapOrNull<Stream>(stream))->Device_();
     {
         TaskInfo task = {};
-        InitByStream(&task, (Stream *)stream);
+        InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
         AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
         TaskUnInitProc(&task);
     }
@@ -929,7 +935,7 @@ TEST_F(TaskTest, stars_aicpu_sqe)
     rtError_t error;
 
     rtStarsSqe_t command;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicpuTaskInit(&task, 1, 1);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICPU);
     RtStarsAicpuKernelSqe *const sqe = &(command.aicpuSqe);
@@ -959,7 +965,7 @@ TEST_F(TaskTest, stars_eventrecord_sqe)
     evt.device_ = stream_->Device_();
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     EventRecordTaskInit(&task, &evt, false, evt.EventId_());
     ToConstructSqe(&task, &sqe);
     Complete(&task, 0);
@@ -984,7 +990,7 @@ TEST_F(TaskTest, stars_eventwait_sqe)
     uint32_t event_id = 0;
 
     rtStarsSqe_t command;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     EventWaitTaskInit(&task, &evt, event_id, 0, 0);
     EXPECT_EQ(task.type, TS_TASK_TYPE_STREAM_WAIT_EVENT);
     ToConstructSqe(&task, &command);
@@ -1010,7 +1016,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
     ToConstructSqe(&task, &sqe);
     MemcpyAsyncTaskInitV3(&task, RT_MEMCPY_HOST_TO_DEVICE_EX, src, dst, count, 0, NULL);
@@ -1039,7 +1045,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d_error)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
     ToConstructSqe(&task, &sqe);
 
@@ -1063,7 +1069,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error)
     Driver *drv;
     drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     MemcpyAsyncD2HTaskInit(&task, src, count, 2U, 3U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
     ToConstructSqe(&task, &sqe);
@@ -1095,7 +1101,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error_not_dsa)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncD2HTaskInit(&task, src, count, 2U, 3U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
     ToConstructSqe(&task, &sqe);
@@ -1142,7 +1148,7 @@ TEST_F(TaskTest, stars_reduce_async_sqe)
     for (int iKind = (int)RT_MEMCPY_SDMA_AUTOMATIC_ADD; iKind < (int)RT_RECUDE_KIND_END; iKind++) {
         for (int jType = 0; jType < (int)RT_DATA_TYPE_END; jType++) {
             pTask = &(tasks[(iKind - (int)RT_MEMCPY_SDMA_AUTOMATIC_ADD) * (RT_DATA_TYPE_END) + jType]);
-            InitByStream(pTask, (Stream *)stream);
+            InitByStream(pTask, rt_ut::UnwrapOrNull<Stream>(stream));
             MemcpyAsyncTaskInitV3(pTask, (rtRecudeKind_t)iKind, src, dst, count, 0, NULL);
             pTask->u.memcpyAsyncTaskInfo.copyDataType = (rtDataType_t)jType;
             ToConstructSqe(pTask, &sqe);
@@ -1162,7 +1168,7 @@ TEST_F(TaskTest, stars_notify_record_sqe_notify_null)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
@@ -1182,7 +1188,7 @@ TEST_F(TaskTest, stars_notify_wait_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
     ToConstructSqe(&task, &sqe);
     Complete(&task, 0);
@@ -1201,8 +1207,8 @@ TEST_F(TaskTest, stars_stream_activate_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
-    StreamActiveTaskInit(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
+    StreamActiveTaskInit(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     ToConstructSqe(&task, &sqe);
     Complete(&task, 0);
     rtStarsStreamActiveFcPara_t fcPara = {};
@@ -1221,7 +1227,7 @@ TEST_F(TaskTest, stars_ph_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     DataDumpLoadInfoTaskInit(&task, 0, 0, RT_KERNEL_DEFAULT);
     ToConstructSqe(&task, &sqe);
     Complete(&task, 0);
@@ -1234,7 +1240,7 @@ TEST_F(TaskTest, stars_callback_launch)
     rtError_t error;
     rtCommand_t command;
     rtStarsSqe_t starsSqe;
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     CallbackLaunchTaskInit(&task, nullptr, nullptr, true, -1);
     EXPECT_EQ(task.type, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
     ToConstructSqe(&task, &starsSqe);
@@ -1242,7 +1248,7 @@ TEST_F(TaskTest, stars_callback_launch)
     ToConstructSqe(&task, &starsSqe);
     RtStarsHostfuncCallbackSqe *sqe = &(starsSqe.callbackSqe);
 
-    MOCKER_CPP_VIRTUAL((NpuDriver *)((Stream *)stream_->Device_()->Driver_()), &NpuDriver::GetRunMode)
+    MOCKER_CPP_VIRTUAL((NpuDriver *)(stream_->Device_()->Driver_()), &NpuDriver::GetRunMode)
         .stubs()
         .will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
 
@@ -1323,7 +1329,7 @@ TEST_F(TaskTest, INIT_TEST)
     rtError_t error;
     rtCommand_t command;
     TaskInfo task = {};
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     error = RemoteEventWaitTaskInit(&task, nullptr, 0, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ToCommand(&task, &command);
@@ -1409,8 +1415,10 @@ TEST_F(TaskTest, do_complete_success)
     TaskInfo task = {};
     rtError_t error;
     Stream *taskStream = NULL;
-    error = rtStreamCreate((rtStream_t *)&taskStream, 0);
+    rtStream_t taskStreamHandle = NULL;
+    error = rtStreamCreate(&taskStreamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    taskStream = rt_ut::UnwrapOrNull<Stream>(taskStreamHandle);
     InitByStream(&task, taskStream);
     EventResetTaskInit(&task, nullptr, false, -1);
 
@@ -1425,10 +1433,12 @@ TEST_F(TaskTest, kernel_task_async_copy_wait)
     TaskInfo task = {};
     rtError_t error;
     Stream *taskStream = NULL;
+    rtStream_t taskStreamHandle = NULL;
     NpuDriver drv;
 
-    error = rtStreamCreate((rtStream_t *)&taskStream, 0);
+    error = rtStreamCreate(&taskStreamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    taskStream = rt_ut::UnwrapOrNull<Stream>(taskStreamHandle);
 
     InitByStream(&task, taskStream);
     AicTaskInit(&task, 0, 1, 0, nullptr);
@@ -1483,10 +1493,12 @@ TEST_F(TaskTest, kernel_task_no_complete)
     TaskInfo task = {};
     rtError_t error;
     Stream *taskStream = NULL;
+    rtStream_t taskStreamHandle = NULL;
     NpuDriver drv;
 
-    error = rtStreamCreate((rtStream_t *)&taskStream, 0);
+    error = rtStreamCreate(&taskStreamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    taskStream = rt_ut::UnwrapOrNull<Stream>(taskStreamHandle);
 
     InitByStream(&task, taskStream);
     AicTaskInit(&task, 0, 1, 0, nullptr);
@@ -1516,7 +1528,7 @@ TEST_F(TaskTest, PreCheckTaskErr)
 
     TaskInfo davinciKernelTask = {};
     davinciKernelTask.errorCode = TS_ERROR_REPEAT_NOTIFY_WAIT;
-    InitByStream(&davinciKernelTask, (Stream *)stream);
+    InitByStream(&davinciKernelTask, rt_ut::UnwrapOrNull<Stream>(stream));
     AicpuTaskInit(&davinciKernelTask, (uint16_t)1, (uint32_t)0);
     PreCheckTaskErr(&davinciKernelTask, devId);
     AicTaskInit(&davinciKernelTask, Program::MACH_AI_VECTOR, (uint16_t)1, (uint32_t)0, nullptr);
@@ -2025,7 +2037,7 @@ TEST_F(TaskTest, Task_base)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     CreateL2AddrTaskInit(&task, 0x1);
     uint32_t errorcode = 10;
     SetResult(&task, (const uint32_t *)&errorcode, 1);
@@ -2498,7 +2510,7 @@ TEST_F(TaskTest, SetSerialId)
     Stream *stream = new Stream(device, 0);
     stream->streamId_ = 100;
     TaskInfo davinciKernelTask_ = {};
-    InitByStream(&davinciKernelTask_, (Stream *)stream);
+    InitByStream(&davinciKernelTask_, stream);
     davinciKernelTask_.id = 65533;
     AicTaskInit(&davinciKernelTask_, 0, 1, 0, nullptr);
 
@@ -2532,7 +2544,7 @@ TEST_F(TaskTest, RemoteWaitTask)
     ret = rtGetEventID(event, &evtId);
     TaskInfo remoteWaitTask = {};
     InitByStream(&remoteWaitTask, stream_);
-    Event *evt = (Event *)(event);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
     ret = RemoteEventWaitTaskInit(&remoteWaitTask, evt, 0, evtId);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     rtCommand_t cmd = {};
@@ -2579,8 +2591,7 @@ TEST_F(TaskTest, Subscribe)
     cbSubscribe->DeleteAll();
     cbSubscribe->DeleteAll();
 
-    rtEvent_t event;
-    Event *evt1 = (Event *)(event);
+    Event *evt1 = event_;
     cbSubscribeInfo subscribeInfo1 = {threadId, stm, sqId, cqId, groupId, evt1};
     cbSubscribe->subscribeMapByStreamId_[key] = subscribeInfo1;
     // CbSubscribe::GetSqIdByStreamId
@@ -2934,7 +2945,7 @@ TEST_F(TaskTest, davinci_kernel_task_abort)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     uint32_t errorcode[3] = {10, 1, 0};
@@ -2960,7 +2971,7 @@ TEST_F(TaskTest, stars_ipc_notify_record_sqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
     ToConstructSqe(&task, &sqe);
@@ -2993,7 +3004,7 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     rtInstance->isRk3588Cpu_ = true;
     error = MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
@@ -3042,8 +3053,8 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3_offline)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    InitByStream(&task, (Stream *)stream);
-    ((RawDevice *)(((Stream *)stream)->device_))->driver_ = drv;
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
+    ((RawDevice *)((rt_ut::UnwrapOrNull<Stream>(stream))->device_))->driver_ = drv;
 
     rtInstance->isRk3588Cpu_ = true;
     error = MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);

@@ -64,6 +64,7 @@
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
 #include "notify_task.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -204,8 +205,9 @@ protected:
 
         MOCKER_CPP(&IoctlUtil::IoctlByCmd).defaults().will(invoke(IoctlByCmdMockRes));
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, RT_STREAM_DQS_CTRL);
-        EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        ASSERT_EQ(res, RT_ERROR_NONE);
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+        ASSERT_NE(stream_, nullptr);
 
         stream_->SetSqMemAttr(false);
         TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -219,15 +221,22 @@ protected:
     {
         MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
         MOCKER_CPP(&IoctlUtil::CloseFd).stubs().will(invoke(TmpCloseFd));
-        while (stream_->GetPendingNum() > 0) {
-            stream_->pendingNum_.Sub(1U);
+        if (stream_ != nullptr) {
+            while (stream_->GetPendingNum() > 0) {
+                stream_->pendingNum_.Sub(1U);
+            }
         }
-        while (engine_->GetPendingNum() > 0) {
-            engine_->pendingNum_.Set(0U);
+        if (engine_ != nullptr) {
+            while (engine_->GetPendingNum() > 0) {
+                engine_->pendingNum_.Set(0U);
+            }
         }
-        rtStreamDestroy(streamHandle_);
+        if (streamHandle_ != 0) {
+            rtStreamDestroy(streamHandle_);
+        }
         stream_ = nullptr;
         engine_ = nullptr;
+        streamHandle_ = 0;
         ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
         ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
         rtDeviceReset(0);
@@ -1427,7 +1436,8 @@ TEST_F(TaskTestV201, LaunchKernelV2_AICPU)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    Stream *launchStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, launchStream, &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;
@@ -1468,7 +1478,8 @@ TEST_F(TaskTestV201, LaunchKernelV2_NonCPU)
 
     ApiImplDavid impl;
     MOCKER_CPP_VIRTUAL(impl, &ApiImplDavid::NopTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    Stream *launchStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, launchStream, &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
@@ -1506,7 +1517,8 @@ TEST_F(TaskTestV201, LaunchKernelV2_Handle)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    Stream *launchStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, launchStream, &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete kernel;
@@ -1545,7 +1557,8 @@ TEST_F(TaskTestV201, LaunchKernelV2_RT_ARGS_MAX)
     taskCfg.attrs = attrs;
 
     ApiImplDavid impl;
-    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, RtPtrToPtr<Stream *>(stream), &taskCfg);
+    Stream *launchStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    error = impl.LaunchKernelV2(kernel, 1, &argsWithType, launchStream, &taskCfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     delete kernel;
@@ -1610,9 +1623,9 @@ TEST_F(TaskTestV201, Test_IpcRecordTask)
     uint32_t pos = 0;
     MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(), outBound(pos), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
     MOCKER(halSqTaskSend).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    ((Stream *)stream)->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
-    ((Notify *)notify)->isIpcNotify_ = true;
-    ret = NtyRecord((Notify *)notify, (Stream *)stream);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+    (rt_ut::UnwrapOrNull<Notify>(notify))->isIpcNotify_ = true;
+    ret = NtyRecord(rt_ut::UnwrapOrNull<Notify>(notify), rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_NE(ret, RT_ERROR_DRV_INPUT);
 
     ret = rtNotifyDestroy(notify);

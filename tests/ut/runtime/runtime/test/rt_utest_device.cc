@@ -33,6 +33,7 @@
 #include "device_sq_cq_pool.hpp"
 #include "sq_addr_memory_pool.hpp"
 #include "platform/platform_info.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1577,7 +1578,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_0)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     TaskInfo fftsPlusTask = {};
-    InitByStream(&fftsPlusTask, (Stream *)stream);
+    InitByStream(&fftsPlusTask, rt_ut::UnwrapOrNull<Stream>(stream));
     fftsPlusTask.id = 0;
 
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
@@ -1599,7 +1600,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_0)
         info->errorType = FFTS_PLUS_AICORE_ERROR;
         errorInfo->u.coreErrorInfo.comm.type = FFTS_PLUS_AICORE_ERROR;
         errorInfo->u.coreErrorInfo.comm.coreNum = 1;
-        errorInfo->u.coreErrorInfo.comm.streamId = ((Stream *)stream)->Id_();
+        errorInfo->u.coreErrorInfo.comm.streamId = (rt_ut::UnwrapOrNull<Stream>(stream))->Id_();
         errorInfo->u.coreErrorInfo.comm.taskId = fftsPlusTask.id;
         errorInfo->u.coreErrorInfo.info[0].coreId = 1;
         errorInfo->u.coreErrorInfo.info[0].fsmCxtId = 0x6;
@@ -1609,7 +1610,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_0)
         info->errorType = FFTS_PLUS_AIVECTOR_ERROR;
         errorInfo->u.coreErrorInfo.comm.type = FFTS_PLUS_AIVECTOR_ERROR;
         errorInfo->u.coreErrorInfo.comm.coreNum = 1;
-        errorInfo->u.coreErrorInfo.comm.streamId = ((Stream *)stream)->Id_();
+        errorInfo->u.coreErrorInfo.comm.streamId = (rt_ut::UnwrapOrNull<Stream>(stream))->Id_();
         errorInfo->u.coreErrorInfo.comm.taskId = fftsPlusTask.id;
         errorInfo->u.coreErrorInfo.info[0].coreId = 1;
         errorInfo->u.coreErrorInfo.info[0].fsmCxtId = 0x6;
@@ -1633,7 +1634,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_1)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     TaskInfo fftsPlusTask = {};
-    InitByStream(&fftsPlusTask, (Stream *)stream);
+    InitByStream(&fftsPlusTask, rt_ut::UnwrapOrNull<Stream>(stream));
     fftsPlusTask.id = 0;
 
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
@@ -1655,7 +1656,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_1)
         info->errorType = FFTS_PLUS_SDMA_ERROR;
         errorInfo->u.sdmaErrorInfo.comm.type = FFTS_PLUS_SDMA_ERROR;
         errorInfo->u.sdmaErrorInfo.comm.coreNum = 1;
-        errorInfo->u.sdmaErrorInfo.comm.streamId = ((Stream *)stream)->Id_();
+        errorInfo->u.sdmaErrorInfo.comm.streamId = (rt_ut::UnwrapOrNull<Stream>(stream))->Id_();
         errorInfo->u.sdmaErrorInfo.comm.taskId = fftsPlusTask.id;
         errorInfo->u.sdmaErrorInfo.sdma.fftsPlusInfo[0].sdmaChannelId = 1;
         errorInfo->u.sdmaErrorInfo.sdma.fftsPlusInfo[0].sdmaCxtid = 0x6;
@@ -1665,7 +1666,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_1)
         info->errorType = FFTS_PLUS_AICPU_ERROR;
         errorInfo->u.aicpuErrorInfo.comm.type = FFTS_PLUS_AICPU_ERROR;
         errorInfo->u.aicpuErrorInfo.comm.coreNum = 1;
-        errorInfo->u.aicpuErrorInfo.comm.streamId = ((Stream *)stream)->Id_();
+        errorInfo->u.aicpuErrorInfo.comm.streamId = (rt_ut::UnwrapOrNull<Stream>(stream))->Id_();
         errorInfo->u.aicpuErrorInfo.comm.taskId = fftsPlusTask.id;
         errorInfo->u.aicpuErrorInfo.aicpu.info[0].aicpuCxtid = 0x6;
         errorInfo->u.aicpuErrorInfo.aicpu.info[0].aicpuThreadid = 0x6;
@@ -1688,7 +1689,7 @@ TEST_F(DeviceTest, STARS_CORE_FFTSPLUS_2)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     TaskInfo fftsPlusTask = {};
-    InitByStream(&fftsPlusTask, (Stream *)stream);
+    InitByStream(&fftsPlusTask, rt_ut::UnwrapOrNull<Stream>(stream));
     fftsPlusTask.id = 0;
 
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);

@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "runtime_keeper.h"
@@ -24,7 +25,8 @@ static rtError_t DqsTaskLaunch(const rtStream_t stm, const rtDqsTaskCfg_t * cons
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->LaunchDqsTask(RtPtrToPtr<Stream *>(stm), taskCfg);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t ret = apiInstance->LaunchDqsTask(exeStream, taskCfg);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
 
     return ACL_RT_SUCCESS;

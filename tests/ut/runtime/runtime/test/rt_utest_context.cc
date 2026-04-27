@@ -45,6 +45,7 @@
 #include "async_hwts_engine.hpp"
 #include "runtime_keeper.h"
 #include "memory_task.h"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 #include "ffts_task.h"
@@ -139,7 +140,7 @@ TEST_F(ContextTest, NpuGetFloatStatus_abnormal_001)
     usleep(100000);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * stm = static_cast<Stream *>(liteStream);
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
 
 
     TaskResManage taskResMng;
@@ -191,7 +192,7 @@ TEST_F(ContextTest, NpuClearFloatStatus_abnormal_001)
     usleep(100000);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * stm = static_cast<Stream *>(liteStream);
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
 
     TaskResManage taskResMng;
     stm->taskResMang_ = &taskResMng;
@@ -243,7 +244,7 @@ TEST_F(ContextTest, launch_update_sqe_anormal_001)
     usleep(100000);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * stm = static_cast<Stream *>(liteStream);
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
 
     TaskResManage taskResMng;
     stm->taskResMang_ = &taskResMng;
@@ -295,7 +296,7 @@ TEST_F(ContextTest, launch_update_sqe_anormal_002)
     usleep(100000);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * stm = static_cast<Stream *>(liteStream);
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
 
     TaskResManage taskResMng;
     stm->taskResMang_ = &taskResMng;
@@ -421,7 +422,7 @@ TEST_F(ContextTest, SYNCHRONIZE_TEST)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -463,7 +464,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_test_timeout)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -506,7 +507,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_ctxFailureMode)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -549,7 +550,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_deviceTaskAbort)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -596,7 +597,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_test_error)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -635,7 +636,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_DeviceAbort)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = CONTINUE_ON_FAILURE;
     ctx->streams_.push_back(stmPtr);
@@ -674,7 +675,7 @@ TEST_F(ContextTest, TaskReclaimforSyncDevice_DeviceAbortStopOnfaliure)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     ctx->streams_.push_back(stmPtr);
@@ -704,7 +705,7 @@ TEST_F(ContextTest, StarsLaunchDvppRRProcess_Test)
     ctx = refObject->GetVal();
     error = rtStreamCreate(&stm, 0);
     usleep(200000);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -738,7 +739,7 @@ TEST_F(ContextTest, SetStreamOverflowSwitch_Test)
     ctx = refObject->GetVal();
     error = rtStreamCreate(&stm, 0);
     usleep(100000);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -779,7 +780,7 @@ TEST_F(ContextTest, ModelAddEndGraph_Test)
     error = ctx->ModelCreate(&model);
     error = rtStreamCreate(&stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -2595,7 +2596,7 @@ TEST_F(ContextTest, ReduceAsync_error_01)
 
     error = rtStreamCreate(&streamA, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream = (Stream *)streamA;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamA);
     MOCKER_CPP_VIRTUAL(*stream, &Stream::Setup)
         .stubs()
         .will(invoke(utest_ctx_stream_setup_sub));
@@ -2732,7 +2733,8 @@ TEST_F(ContextTest, context_streamswitch)
     error = rtModelBindStream(model, streamB, RT_INVALID_FLAG);//1
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = CondStreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target, (Stream*)streamB,  (Stream*)streamA, RT_SWITCH_INT64);
+    error = CondStreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target,
+        rt_ut::UnwrapOrNull<Stream>(streamB), rt_ut::UnwrapOrNull<Stream>(streamA), RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -2796,7 +2798,7 @@ TEST_F(ContextTest, context_streamactive)
     error = rtModelBindStream(model, streamB, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = CondStreamActive((Stream*)streamB,  (Stream*)streamA);
+    error = CondStreamActive(rt_ut::UnwrapOrNull<Stream>(streamB), rt_ut::UnwrapOrNull<Stream>(streamA));
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -3202,7 +3204,7 @@ TEST_F(ContextTest, NONFAIL_SYNCHRONIZE_TEST)
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
     stmPtr->failureMode_ = CONTINUE_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
@@ -3240,7 +3242,7 @@ TEST_F(ContextTest, GetSatStatusForStars_test)
     EXPECT_EQ(rtStreamCreate(&stm, 0), RT_ERROR_NONE);
 
     MOCKER(cce::runtime::MemcopyAsync).stubs().will(returnValue(1));
-    error = ctx->GetSatStatusForStars(0, (Stream *)stm);
+    error = ctx->GetSatStatusForStars(0, rt_ut::UnwrapOrNull<Stream>(stm));
     EXPECT_EQ(error, 1);
 
     error = rtStreamDestroy(stm);

@@ -14,6 +14,10 @@
 #include "error_message_manage.hpp"
 #include "label.hpp"
 #include "model.hpp"
+#include "count_notify.hpp"
+#include "event.hpp"
+#include "notify.hpp"
+#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
@@ -54,6 +58,46 @@ rtError_t ValidateLabelHandleArrayForApi(rtLabel_t *handles, size_t count, std::
     const char_t *callerFuncName)
 {
     const rtError_t ret = GetValidatedObjectArray<Label>(handles, count, outRealObjs);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateStreamHandleForApi(rtStream_t handle, Stream *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<Stream>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateEventHandleForApi(rtEvent_t handle, Event *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<Event>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateNotifyHandleForApi(rtNotify_t handle, Notify *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<Notify>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<CountNotify>(handle, outRealObj);
     if (ret == RT_ERROR_NONE) {
         return RT_ERROR_NONE;
     } else {

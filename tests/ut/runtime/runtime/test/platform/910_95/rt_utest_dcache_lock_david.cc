@@ -52,6 +52,7 @@
 #include "stream_c.hpp"
 #include "npu_driver_dcache_lock.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -143,7 +144,7 @@ protected:
 
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
         davidSqe_ = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));

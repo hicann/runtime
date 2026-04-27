@@ -381,24 +381,26 @@ TEST_F(ProfilerTest, LabelDestroy)
 
 TEST_F(ProfilerTest, StreamMode)
 {
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-
-    Stream * stream = new Stream(device, 0);
+    rtStream_t streamHandle = nullptr;
+    rtError_t error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     ApiImpl *apiImpl_ = new ApiImpl();
     uint64_t mode = 0;
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamSetMode).stubs().will(returnValue(RT_ERROR_NONE));
-    profiler->apiProfileDecorator_->StreamSetMode(stream, 0);
+    error = profiler->apiProfileDecorator_->StreamSetMode(stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamGetMode).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileDecorator_->StreamGetMode(stream, &mode);
+    error = profiler->apiProfileDecorator_->StreamGetMode(stream, &mode);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
-    delete stream;
-    delete device;
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerTest, FftsPlusTaskLaunch)
@@ -418,17 +420,19 @@ TEST_F(ProfilerTest, UnSubscribeReport)
     rtError_t error;
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     ApiImpl *apiImpl_ = new ApiImpl();
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-    Stream * stream = new Stream(device, 0);
+    rtStream_t streamHandle = nullptr;
+    error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UnSubscribeReport).stubs().will(returnValue(RT_ERROR_NONE));
     error = profiler->apiProfileDecorator_->UnSubscribeReport((uint64_t)pthread_self(), stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
-    delete stream;
-    delete device;
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerTest, FunctionRegister)
@@ -630,9 +634,11 @@ TEST_F(ProfilerTest, KernelLaunch_2)
 
 TEST_F(ProfilerTest, KernelLaunchWithHandle_FlowCtrl)
 {
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-    Stream *stream = new Stream(device, 0);
+    rtStream_t streamHandle = nullptr;
+    rtError_t error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
     stream->SetFlowCtrlFlag();
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
@@ -644,22 +650,24 @@ TEST_F(ProfilerTest, KernelLaunchWithHandle_FlowCtrl)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, stream, nullptr);
+    error = profiler->apiProfileDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = profiler->apiProfileLogDecorator_->KernelLaunchWithHandle(nullptr, 0, 1, &argsInfo, stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
-    delete stream;
-    delete device;
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerTest, KernelLaunch_FlowCtrl)
 {
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-    Stream *stream = new Stream(device, 0);
+    rtStream_t streamHandle = nullptr;
+    rtError_t error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
     stream->SetFlowCtrlFlag();
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->SetApiProfEnable(true);
@@ -670,14 +678,14 @@ TEST_F(ProfilerTest, KernelLaunch_FlowCtrl)
     argsInfo.hostInputInfoNum = 4;
     profiler->SetProfLogEnable(true);
     MOCKER_CPP_VIRTUAL(api, &ApiImpl::KernelLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, stream, 0);
+    error = profiler->apiProfileDecorator_->KernelLaunch(nullptr, 1, &argsInfo, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileLogDecorator_->KernelLaunch(nullptr, 1, &argsInfo,stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete api;
-    delete stream;
-    delete device;
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerTest, Stars_Launch)
@@ -705,9 +713,6 @@ TEST_F(ProfilerTest, LaunchKernelV3)
     argsInfo.argsSize = 1025;
     argsInfo.hostInputInfoNum = 4;
 
-    RawDevice * device = new RawDevice(0);
-    device->Init();
-    Stream * stream = new Stream(device, 0);
     Api *oldApi_ = const_cast<Api *>(Runtime::runtime_->api_);
     ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
     error = apiDecorator_->LaunchKernelV3(nullptr, &argsInfo, nullptr, nullptr);
@@ -747,8 +752,6 @@ TEST_F(ProfilerTest, LaunchKernelV3)
     delete profiler;
     delete apiDecorator_;
     delete apiImpl_;
-    delete stream;
-    delete device;
 }
 
 class ProfilerLogTest : public testing::Test
@@ -1369,21 +1372,17 @@ TEST_F(ProfilerTest, tsprofilerstart2_profiler)
 TEST_F(ProfilerTest, tsprofilerstart3_profiler)
 {
     GlobalMockObject::verify();
-    int32_t devId;
     rtError_t error;
-    Context *ctx;
+    Context *ctx = nullptr;
+    error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = ((Runtime *)Runtime::Instance())->Api_()->ContextGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(ctx, nullptr);
+    RawDevice *device = static_cast<RawDevice *>(ctx->device_);
+    ASSERT_NE(device, nullptr);
+    ASSERT_NE(device->Driver_(), nullptr);
 
-    error = rtGetDevice(&devId);
-    RawDevice *device = new RawDevice(0);
-    EXPECT_NE(device, nullptr);
-
-    uint64_t tempMem[8];
-    device->Init();
-    Stream *stream = new Stream(device, 0);
-    EXPECT_NE(stream, nullptr);
-
-    device->primaryStream_ = stream;
-    stream->taskResMang_ = (TaskResManage *)&tempMem;
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->TsProfilerStart(0xFF, 0, device);
     EXPECT_EQ(profiler->profCfg_.isRtsProfEn, 0);
@@ -1397,10 +1396,6 @@ TEST_F(ProfilerTest, tsprofilerstart3_profiler)
     profiler->TsProfilerStop(0xFF, 0, device, false);
     ((Runtime *)Runtime::Instance())->chipType_ = preVal;
     GlobalContainer::SetRtChipType(preVal);
-    stream->taskResMang_  = nullptr;
-    device->primaryStream_ = nullptr;
-    delete stream;
-    delete device;
     GlobalMockObject::verify();
 }
 
@@ -1421,21 +1416,17 @@ TEST_F(ProfilerTest, tsprofilerstop2_profiler)
 TEST_F(ProfilerTest, tsprofilerstop3_profiler)
 {
     GlobalMockObject::verify();
-    int32_t devId;
     rtError_t error;
-    Context *ctx;
+    Context *ctx = nullptr;
+    error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = ((Runtime *)Runtime::Instance())->Api_()->ContextGetCurrent(&ctx);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(ctx, nullptr);
+    RawDevice *device = static_cast<RawDevice *>(ctx->device_);
+    ASSERT_NE(device, nullptr);
+    ASSERT_NE(device->Driver_(), nullptr);
 
-    error = rtGetDevice(&devId);
-    RawDevice *device = new RawDevice(0);
-    EXPECT_NE(device, nullptr);
-
-    uint64_t tempMem[8];
-    device->Init();
-    Stream *stream = new Stream(device, 0);
-    EXPECT_NE(stream, nullptr);
-
-    device->primaryStream_ = stream;
-    stream->taskResMang_ = (TaskResManage *)&tempMem;
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->TsProfilerStop(0xFF, 0, device);
     EXPECT_EQ(profiler->profCfg_.isRtsProfEn, 0);
@@ -1448,10 +1439,6 @@ TEST_F(ProfilerTest, tsprofilerstop3_profiler)
 
     ((Runtime *)Runtime::Instance())->chipType_ = preVal;
     GlobalContainer::SetRtChipType(preVal);
-    stream->taskResMang_  = nullptr;
-    device->primaryStream_ = nullptr;
-    delete stream;
-    delete device;
     GlobalMockObject::verify();
 }
 
@@ -1570,12 +1557,13 @@ TEST_F(ProfilerTest, RDMASend_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RDMASend).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->RDMASend(0, 0, (Stream *)stream);
+    rtError_t error = profiler->apiProfileLogDecorator_->RDMASend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1588,12 +1576,13 @@ TEST_F(ProfilerTest, RdmaDbSend_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RdmaDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->RdmaDbSend(0, 0, (Stream *)stream);
+    rtError_t error = profiler->apiProfileLogDecorator_->RdmaDbSend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1606,16 +1595,17 @@ TEST_F(ProfilerTest, StreamDestroy_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->StreamSynchronize((Stream *)stream, 0);
+    rtError_t error = profiler->apiProfileLogDecorator_->StreamSynchronize(stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamDestroy).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->StreamDestroy((Stream *)stream, false);
+    error = profiler->apiProfileLogDecorator_->StreamDestroy(stream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1628,9 +1618,12 @@ TEST_F(ProfilerTest, EventCreate_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Event * evt = new Event();
     Event * evt2 = new Event();
+    InitEmbeddedInnerHandle<Event>(evt);
+    InitEmbeddedInnerHandle<Event>(evt2);
     uint32_t evtId = 0;
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
@@ -1644,7 +1637,7 @@ TEST_F(ProfilerTest, EventCreate_ProfileLog)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventRecord).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->EventRecord(evt, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->EventRecord(evt, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventDestroy).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1666,12 +1659,13 @@ TEST_F(ProfilerTest, RDMASend_Profiler)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RDMASend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->RDMASend(0, 0, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->RDMASend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1685,12 +1679,13 @@ TEST_F(ProfilerTest, RdmaDbSend_Profiler)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RdmaDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->RdmaDbSend(0, 0, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->RdmaDbSend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1759,10 +1754,11 @@ TEST_F(ProfilerTest, ModelBindStream_ProfilerLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelBindStream).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelBindStream(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream, 0);
+    error = profiler->apiProfileLogDecorator_->ModelBindStream(rt_ut::UnwrapOrNull<Model>(model), stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1782,11 +1778,12 @@ TEST_F(ProfilerTest, ModelUnbindStream_ProfilerLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelUnbindStream).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelUnbindStream(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->ModelUnbindStream(rt_ut::UnwrapOrNull<Model>(model), stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1805,12 +1802,13 @@ TEST_F(ProfilerTest, ModelExecute_ProfilerLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelExecute).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelExecute(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream, 0);
+    error = profiler->apiProfileLogDecorator_->ModelExecute(rt_ut::UnwrapOrNull<Model>(model), stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1828,6 +1826,7 @@ TEST_F(ProfilerTest, StreamWaitEvent_ProfilerLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     error = rtEventCreate(&event);
 
@@ -1835,7 +1834,8 @@ TEST_F(ProfilerTest, StreamWaitEvent_ProfilerLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->StreamWaitEvent((Stream *)stream, (Event *)event, 0);
+    error = profiler->apiProfileLogDecorator_->StreamWaitEvent(stream,
+        rt_ut::UnwrapOrNull<Event>(event), 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtEventDestroy(event);
@@ -2215,12 +2215,13 @@ TEST_F(ProfilerTest, UbDbSend)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->UbDbSend(&dbInfo, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->UbDbSend(&dbInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2234,12 +2235,13 @@ TEST_F(ProfilerTest, UbDbSend_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->UbDbSend(&dbInfo, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->UbDbSend(&dbInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2253,12 +2255,13 @@ TEST_F(ProfilerTest, UbDirectSend)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDirectSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->UbDirectSend(&wqeInfo, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->UbDirectSend(&wqeInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2272,12 +2275,13 @@ TEST_F(ProfilerTest, UbDirectSend_ProfileLog)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDirectSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->UbDirectSend(&wqeInfo, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->UbDirectSend(&wqeInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2314,11 +2318,12 @@ TEST_F(ProfilerTest, fusion_kernel_launch_profile)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
     Api *oldApi_ = const_cast<Api *>(Runtime::runtime_->api_);
     ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = apiDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     Profiler *profiler = new Profiler(oldApi_);
     profiler->Init();
@@ -2326,13 +2331,13 @@ TEST_F(ProfilerTest, fusion_kernel_launch_profile)
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::FusionLaunch).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = profiler->apiProfileDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     profiler->SetProfLogEnable(true);
-    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     profiler->SetProfLogEnable(false);
-    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     delete profiler;

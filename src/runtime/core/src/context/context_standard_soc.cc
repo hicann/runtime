@@ -50,7 +50,7 @@ void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
     if (type == RT_NOTSINKED_STREAM) {
         for (Stream *stream : streams_) {
             if (!stream->GetBindFlag() && stmList->stmNum < RT_MAX_STREAM_NUM) {
-                stmList->stms[(stmList->stmNum)++] = static_cast<rtStream_t>(stream);
+                stmList->stms[(stmList->stmNum)++] = reinterpret_cast<rtStream_t>(stream->GetInnerHandle());
             }
         }
     }
@@ -59,7 +59,7 @@ void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
     }
     Stream *defaultStream = DefaultStream_();
     if (stmList->stmNum < RT_MAX_STREAM_NUM) {
-        stmList->stms[(stmList->stmNum)++] = static_cast<rtStream_t>(defaultStream);
+        stmList->stms[(stmList->stmNum)++] = reinterpret_cast<rtStream_t>(defaultStream->GetInnerHandle());
     }
 }
 

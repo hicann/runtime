@@ -13,6 +13,7 @@
 #include <string>
 #include "context.hpp"
 #include "device.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -20,6 +21,14 @@ class CountNotify : public NoCopy {
 public:
     CountNotify(const uint32_t devId, const uint32_t taskSchId);
     ~CountNotify() noexcept override;
+    rtInnerObject *GetInnerHandle()
+    {
+        return &handle_;
+    }
+    const rtInnerObject *GetInnerHandle() const
+    {
+        return &handle_;
+    }
     rtError_t GetCntNotifyAddress(uint64_t &addr, rtNotifyType_t regType);
     rtError_t Record(Stream * const streamIn, const rtCntNtyRecordInfo_t * const info);
     rtError_t Setup();
@@ -41,6 +50,7 @@ public:
     }
 
 private:
+    rtInnerObject handle_ {};
     uint32_t notifyid_{MAX_UINT32_NUM};
     uint32_t phyId_{0U};
     Driver *driver_{nullptr};

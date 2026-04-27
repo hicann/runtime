@@ -21,6 +21,7 @@
 #include "cmodel_driver.h"
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #include "uvm_callback.hpp"
 #include "notify_task.h"
 
@@ -132,7 +133,7 @@ TEST_F(CloudV2NpuDriverTest, MemcpyAsyncCallback)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     UvmCallback::MemcpyAsyncCallback(nullptr);
     rtMemcpyCallbackParam *memcpyCallbackParam = new rtMemcpyCallbackParam;
     memcpyCallbackParam->dst = (void*)0x42;
@@ -228,7 +229,7 @@ TEST_F(CloudV2NpuDriverTest, Test_GetIpcSqeWriteAddrForNotifyRecordTask)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     TaskInfo task1 = {};
-    task1.stream = (Stream *)stream;
+    task1.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     Notify *notify = new Notify(0, 0);
     notify->srvId_ = 20U;
     NotifyRecordTaskInfo *notifyRecord = &(task1.u.notifyrecordTask);

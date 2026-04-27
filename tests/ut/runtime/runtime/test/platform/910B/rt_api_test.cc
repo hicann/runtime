@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -247,7 +248,7 @@ TEST(RdmaPiValueModifyTaskTest, PrintDfxInfoForRdmaPiValueModifyTaskSuccess)
     rtStream_t stream = nullptr;
     rtError_t ret = rtStreamCreate(&stream, 0);
     ASSERT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel *captureModel = new CaptureModel();
     ASSERT_NE(captureModel, nullptr);
@@ -257,22 +258,19 @@ TEST(RdmaPiValueModifyTaskTest, PrintDfxInfoForRdmaPiValueModifyTaskSuccess)
 
     TaskInfo piValueModifyTask = {};
     piValueModifyTask.type = TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY;
-    piValueModifyTask.u.rdmaPiValueModifyInfo.funCallMemAddr = reinterpret_cast<void *>(0x12345000UL);
-    piValueModifyTask.u.rdmaPiValueModifyInfo.funCallMemAddrAlign = reinterpret_cast<void *>(0x12346000UL);
-    piValueModifyTask.u.rdmaPiValueModifyInfo.dfxAddr = reinterpret_cast<void *>(0x12347000UL);
+    piValueModifyTask.stream = stm;
+    void *funCallMemAddr = malloc(sizeof(uint64_t));
+    void *funCallMemAddrAlign = malloc(sizeof(uint64_t));
+    void *dfxAddr = malloc(sizeof(uint64_t));
+    piValueModifyTask.u.rdmaPiValueModifyInfo.funCallMemAddr = funCallMemAddr;
+    piValueModifyTask.u.rdmaPiValueModifyInfo.funCallMemAddrAlign = funCallMemAddrAlign;
+    piValueModifyTask.u.rdmaPiValueModifyInfo.dfxAddr = dfxAddr;
     piValueModifyTask.u.rdmaPiValueModifyInfo.rdmaSubContextCount = 1;
 
     std::vector<uint64_t> rdmaPiValueInfo{1};
     MOCKER(CheckLogLevel).stubs().will(returnValue(1));
-    MOCKER_CPP(&TaskFactory::GetTask)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(&piValueModifyTask));
-    MOCKER_CPP_VIRTUAL(stm->Device_()->Driver_(), &Driver::MemCopySync)
-        .stubs()
-        .with(outBoundP(static_cast<void *>(rdmaPiValueInfo.data()), sizeof(uint64_t)),
-              mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(&piValueModifyTask));
+    MOCKER_CPP_VIRTUAL(stm->Device_()->Driver_(), &Driver::MemCopySync).stubs().with(outBoundP(static_cast<void *>(rdmaPiValueInfo.data()), sizeof(uint64_t)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
 
     Notify notify(0, 0);
     notify.endGraphModel_ = captureModel;

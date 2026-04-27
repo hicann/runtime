@@ -13,6 +13,7 @@
 #include <string>
 #include "context.hpp"
 #include "device.hpp"
+#include "runtime_handle_guard.h"
 
 #define RT_NOTIFY_GET_EVENT_ID(key) ((key) & 0x3FFU)
 #define RT_NOTIFY_FLAG_SHR_ID_SHADOW (0x1U << 6)
@@ -28,6 +29,14 @@ class Notify : public NoCopy {
 public:
     Notify(const uint32_t devId, const uint32_t taskSchId);
     ~Notify() noexcept override;
+    rtInnerObject *GetInnerHandle()
+    {
+        return &handle_;
+    }
+    const rtInnerObject *GetInnerHandle() const
+    {
+        return &handle_;
+    }
     rtError_t GetNotifyAddress(Stream * const streamIn, uint64_t &addr);
     rtError_t Record(Stream * const streamIn);
     rtError_t Setup();
@@ -147,6 +156,7 @@ public:
     rtError_t AllocId();
     rtError_t FreeId();
 private:
+    rtInnerObject handle_ {};
     rtError_t RevisedWait(Stream * const streamIn, const uint32_t timeout = 0);
     uint32_t notifyid_;
     uint32_t phyId_;

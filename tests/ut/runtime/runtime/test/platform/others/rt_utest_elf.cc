@@ -786,6 +786,7 @@ TEST_F(ChipELFTest, ELF_Process_Object_14)
     GlobalContainer::SetRtChipType(CHIP_DC);
 
     elfData = new rtElfData;
+    elfData->obj_size = sizeof(bindata);
     bool isSupportMix = false;
     kernels = ProcessObject((char_t *)bindata, elfData, 0, &isSupportMix);
     EXPECT_EQ(elfData->kernel_num, 8);

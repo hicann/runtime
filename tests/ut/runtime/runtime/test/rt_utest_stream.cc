@@ -42,7 +42,6 @@
 #include "capture_model_utils.hpp"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"
-
 using namespace testing;
 using namespace cce::runtime;
 
@@ -206,7 +205,7 @@ TEST_F(StreamTest, stream_wait_event_no_record)
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = stream.WaitEvent((Event*)event);
+    error = stream.WaitEvent(rt_ut::UnwrapOrNull<Event>(event));
     EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
 
     error = rtEventDestroy(event);
@@ -277,7 +276,7 @@ TEST_F(StreamTest, stream_get_id_other_device)
     error = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream = (Stream *)streamHandle;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     Context *tmp_ctx = stream->context_;
     stream->context_ = NULL;
@@ -516,7 +515,7 @@ TEST_F(StreamTest, stream_sync_fail)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Stream::IsPersistentTaskFull).stubs().will(returnValue(true));
-    ((Stream *)stream)->GetTaskRevFlag(true);
+    rt_ut::UnwrapOrNull<Stream>(stream)->GetTaskRevFlag(true);
 
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -525,7 +524,7 @@ TEST_F(StreamTest, stream_sync_fail)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelBindStream(model, stream, 0);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     stream_var->SetErrCode(1);
     stream_var->SetNeedSyncFlag(false);
@@ -576,7 +575,7 @@ TEST_F(StreamTest, end_of_sequence)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     stream_var->SetErrCode(0x95);
 
@@ -601,17 +600,17 @@ TEST_F(StreamTest, SubscribeReport_CB)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    ((Stream *)stream)->GetCbRptCqid();
-    ((Stream *)stream)->IsHostFuncCbReg();
+    rt_ut::UnwrapOrNull<Stream>(stream)->GetCbRptCqid();
+    rt_ut::UnwrapOrNull<Stream>(stream)->IsHostFuncCbReg();
 
     error = rtSubscribeReport((uint64_t)pthread_self(), stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    ((Runtime *)Runtime::Instance())->GetCqIdByStreamId(((Stream *)stream)->Device_()->Id_(),
-        ((Stream *)stream)->Id_(), &cqId);
+    ((Runtime *)Runtime::Instance())->GetCqIdByStreamId(rt_ut::UnwrapOrNull<Stream>(stream)->Device_()->Id_(),
+        rt_ut::UnwrapOrNull<Stream>(stream)->Id_(), &cqId);
 
-    ((Runtime *)Runtime::Instance())->GetSqIdByStreamId(((Stream *)stream)->Device_()->Id_(),
-        ((Stream *)stream)->Id_(), &sqId);
+    ((Runtime *)Runtime::Instance())->GetSqIdByStreamId(rt_ut::UnwrapOrNull<Stream>(stream)->Device_()->Id_(),
+        rt_ut::UnwrapOrNull<Stream>(stream)->Id_(), &sqId);
 
     error = rtProcessReport(0);
 
@@ -644,7 +643,7 @@ TEST_F(StreamTest, stream_tearDown_fail)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     stream_var->delayRecycleTaskid_.push_back(0);
     std::cout<<"stream create success."<<std::endl;
@@ -675,7 +674,7 @@ TEST_F(StreamTest, stream_tearDownforce_test)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(1);
     stream_var->delayRecycleTaskid_.push_back(0);
     MOCKER_CPP_VIRTUAL(ctxPtr->device_, &Device::GetDevRunningState).stubs().then(returnValue(1));
@@ -2130,7 +2129,7 @@ TEST_F(StreamTest, stream_taskGrp_status)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     error = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::BUTT);
     EXPECT_EQ(error, RT_ERROR_STREAM_TASKGRP_STATUS);
 
@@ -2482,7 +2481,7 @@ TEST_F(StreamTest, stream_get_attribute1)
  
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    stream = static_cast<Stream *>(stm);
+    stream = rt_ut::UnwrapOrNull<Stream>(stm);
  
     setvalue.failureMode = RT_STREAM_FAILURE_MODE_CONTINUE_ON_FAILURE; // 假设这是一个有效的失败模式值
     error = rtsStreamSetAttribute(stm, RT_STREAM_ATTR_FAILURE_MODE, &setvalue);
@@ -2528,7 +2527,7 @@ TEST_F(StreamTest, stream_update_stream_sqcq) {
     std::shared_ptr<RawDevice> dev = std::make_shared<RawDevice>(0);
     dev->Init();
     manage.device_ = dev.get();
-    Stream *streamPtr = static_cast<Stream *>(stream);
+    Stream *streamPtr = rt_ut::UnwrapOrNull<Stream>(stream);
     manage.UpdateStreamSqCq(streamPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     streamPtr->SetSqBaseAddr(1);

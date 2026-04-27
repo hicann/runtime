@@ -52,6 +52,7 @@ rtError_t CoprocessorStream::Setup()
     cqId_ = tmpCqId;
     RT_LOG(RT_LOG_INFO, "Coprocessor stream setup end, stream_id=%d, sqId=%u, cqId=%u, deviceId=%u",
            streamId_, sqId_, cqId_, device_->Id_());
+    InitEmbeddedInnerHandle<Stream>(this);
     return RT_ERROR_NONE;
 }
 

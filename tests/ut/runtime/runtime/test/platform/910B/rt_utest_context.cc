@@ -38,6 +38,7 @@
 #include "task.hpp"
 #include "task_res.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #include "async_hwts_engine.hpp"
 #include "runtime_keeper.h"
 #include "memory_task.h"
@@ -158,7 +159,7 @@ TEST_F(CloudV2ContextTest, SYNCHRONIZE_TEST)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -200,7 +201,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_test_timeout)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -243,7 +244,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_ctxFailureMode)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -286,7 +287,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_deviceTaskAbort)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -333,7 +334,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_test_error)
     ctx->defaultStream_ = stream;
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -373,7 +374,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_DeviceAbort)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = CONTINUE_ON_FAILURE;
     ctx->streams_.push_back(stmPtr);
@@ -412,7 +413,7 @@ TEST_F(CloudV2ContextTest, TaskReclaimforSyncDevice_DeviceAbortStopOnfaliure)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     ctx->streams_.push_back(stmPtr);
@@ -445,7 +446,7 @@ TEST_F(CloudV2ContextTest, ModelAddEndGraph_Test)
     error = ctx->ModelCreate(&model);
     error = rtStreamCreate(&stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stmPtr->failureMode_ = STOP_ON_FAILURE;
     stmPtr->flags_ = 0;
@@ -2488,7 +2489,7 @@ TEST_F(CloudV2ContextTest, NONFAIL_SYNCHRONIZE_TEST)
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stmPtr = static_cast<Stream *>(stm);
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stm);
     stmPtr->failureMode_ = CONTINUE_ON_FAILURE;
     stmPtr->flags_ = 0;
     ctx->streams_.push_back(stmPtr);
@@ -2526,7 +2527,7 @@ TEST_F(CloudV2ContextTest, GetSatStatusForStars_test)
     EXPECT_EQ(rtStreamCreate(&stm, 0), RT_ERROR_NONE);
 
     MOCKER(MemcopyAsync).stubs().will(returnValue(1));
-    error = ctx->GetSatStatusForStars(0, (Stream *)stm);
+    error = ctx->GetSatStatusForStars(0, rt_ut::UnwrapOrNull<Stream>(stm));
     EXPECT_EQ(error, 1);
 
     error = rtStreamDestroy(stm);

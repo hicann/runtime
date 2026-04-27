@@ -37,6 +37,7 @@
 #include <utility>  // For std::pair and std::make_pair.
 #include "mmpa_api.h"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -88,7 +89,7 @@ protected:
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
     }
 
     virtual void TearDown()

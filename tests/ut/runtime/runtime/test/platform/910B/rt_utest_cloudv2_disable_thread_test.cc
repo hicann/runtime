@@ -55,6 +55,7 @@
 #include "runtime/rts/rts_device.h"
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -216,7 +217,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     // 确保Event内存被释放
-    Event *eventObj = static_cast<Event *>(event);
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     uint32_t evtId = 0U;
     (void)eventObj->GetEventID(&evtId);
     TryToFreeEventIdAndDestroyEvent(&eventObj, evtId, false);
@@ -290,7 +291,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_external2)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     // 确保Event内存被释放
-    Event *eventObj = static_cast<Event *>(event);
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     uint32_t evtId = 0U;
     (void)eventObj->GetEventID(&evtId);
     TryToFreeEventIdAndDestroyEvent(&eventObj, evtId, false);
@@ -309,7 +310,7 @@ TEST_F(ApiCloudV2DisableThreadTest, kernel_launch_success_dfx)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     stm->SetLimitFlag(true);
     stm->SetRecycleFlag(false);
 
@@ -334,7 +335,7 @@ TEST_F(ApiCloudV2DisableThreadTest, kernel_launch_sq_task_send_error)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     Device* dev = stm->Device_();
     MOCKER_CPP_VIRTUAL(dev, &Device::GetDevRunningState)
     .stubs()
@@ -437,7 +438,7 @@ TEST_F(ApiCloudV2DisableThreadTest, capture_event_not_support)
     
     error = rtEventCreateWithFlag(&event1, RT_EVENT_WITH_FLAG);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Event *evt = (Event*)event1;
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event1);
     evt->isNewMode_ = true;
     evt->hasRecord_.Set(true);
 
@@ -1039,11 +1040,11 @@ TEST_F(ApiCloudV2DisableThreadTest, ModelDebugJsonPrint_AicpuTask)
     aicpuTask->kernel = nullptr;
 
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&task));
-    ((Stream *)stream1)->SetBindFlag(true);
-    ((Stream *)stream1)->StarsAddTaskToStream(&task, 1);
+    (rt_ut::UnwrapOrNull<Stream>(stream1))->SetBindFlag(true);
+    (rt_ut::UnwrapOrNull<Stream>(stream1))->StarsAddTaskToStream(&task, 1);
     std::ofstream outputFile("graph_dump.json");
-    ((Stream *)stream1)->DebugJsonPrintForModelStm(outputFile, 0, true, 1);
-    ((Stream *)stream1)->SetBindFlag(false);
+    (rt_ut::UnwrapOrNull<Stream>(stream1))->DebugJsonPrintForModelStm(outputFile, 0, true, 1);
+    (rt_ut::UnwrapOrNull<Stream>(stream1))->SetBindFlag(false);
     outputFile.close();
 
     error = rtStreamSynchronize(stream2);
@@ -1258,7 +1259,7 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_2)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     Model *model2 = new Model();
-    ((Stream *)stream1)->ResetUpdateTaskGroup();
+    (rt_ut::UnwrapOrNull<Stream>(stream1))->ResetUpdateTaskGroup();
 
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, stream1);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID );

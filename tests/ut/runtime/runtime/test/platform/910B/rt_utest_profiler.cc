@@ -50,12 +50,10 @@ int32_t MsprofReporterCallbackStub(uint32_t moduleId, uint32_t type, void *data,
     std::cout << "MsprofCtrlCallbackStub moduleId=" << moduleId << ", type=" << type << ", len=" << len << std::endl;
     return MSPROF_ERROR_NONE;
 }
-
 void SetEnvVarOn()
 {
     setenv(ENV_VAR_NAME, PROF_SWITCH_ON, 1);
 }
-
 void SetEnvVarOff()
 {
     setenv(ENV_VAR_NAME, PROF_SWITCH_OFF, 1);
@@ -1544,7 +1542,7 @@ TEST_F(ProfilerTest, RDMASend_ProfileLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RDMASend).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->RDMASend(0, 0, (Stream *)stream);
+    rtError_t error = profiler->apiProfileLogDecorator_->RDMASend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1562,7 +1560,7 @@ TEST_F(ProfilerTest, RdmaDbSend_ProfileLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RdmaDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->RdmaDbSend(0, 0, (Stream *)stream);
+    rtError_t error = profiler->apiProfileLogDecorator_->RdmaDbSend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1580,11 +1578,11 @@ TEST_F(ProfilerTest, StreamDestroy_ProfileLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamSynchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = profiler->apiProfileLogDecorator_->StreamSynchronize((Stream *)stream, 0);
+    rtError_t error = profiler->apiProfileLogDecorator_->StreamSynchronize(stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamDestroy).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->StreamDestroy((Stream *)stream, false);
+    error = profiler->apiProfileLogDecorator_->StreamDestroy(stream, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1613,7 +1611,7 @@ TEST_F(ProfilerTest, EventCreate_ProfileLog)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventRecord).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->EventRecord(evt, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->EventRecord(evt, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::EventDestroy).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1640,7 +1638,7 @@ TEST_F(ProfilerTest, RDMASend_Profiler)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RDMASend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->RDMASend(0, 0, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->RDMASend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1659,7 +1657,7 @@ TEST_F(ProfilerTest, RdmaDbSend_Profiler)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RdmaDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->RdmaDbSend(0, 0, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->RdmaDbSend(0, 0, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete apiImpl_;
@@ -1709,7 +1707,8 @@ TEST_F(ProfilerTest, ModelBindStream_ProfilerLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelBindStream).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelBindStream(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream, 0);
+
+    error = profiler->apiProfileLogDecorator_->ModelBindStream(rt_ut::UnwrapOrNull<Model>(model), stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1733,7 +1732,8 @@ TEST_F(ProfilerTest, ModelUnbindStream_ProfilerLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelUnbindStream).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelUnbindStream(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream);
+
+    error = profiler->apiProfileLogDecorator_->ModelUnbindStream(rt_ut::UnwrapOrNull<Model>(model), stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1757,7 +1757,8 @@ TEST_F(ProfilerTest, ModelExecute_ProfilerLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ModelExecute).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->ModelExecute(rt_ut::UnwrapOrNull<Model>(model), (Stream *)stream, 0);
+
+    error = profiler->apiProfileLogDecorator_->ModelExecute(rt_ut::UnwrapOrNull<Model>(model), stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(model);
@@ -1782,7 +1783,8 @@ TEST_F(ProfilerTest, StreamWaitEvent_ProfilerLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::StreamWaitEvent).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->StreamWaitEvent((Stream *)stream, (Event *)event, 0);
+    error = profiler->apiProfileLogDecorator_->StreamWaitEvent(stream,
+                                                               rt_ut::UnwrapOrNull<Event>(event), 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtEventDestroy(event);
@@ -2167,7 +2169,7 @@ TEST_F(ProfilerTest, UbDbSend)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->UbDbSend(&dbInfo, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->UbDbSend(&dbInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2186,7 +2188,7 @@ TEST_F(ProfilerTest, UbDbSend_ProfileLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDbSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->UbDbSend(&dbInfo, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->UbDbSend(&dbInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2205,7 +2207,7 @@ TEST_F(ProfilerTest, UbDirectSend)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDirectSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileDecorator_->UbDirectSend(&wqeInfo, (Stream *)stream);
+    error = profiler->apiProfileDecorator_->UbDirectSend(&wqeInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2224,7 +2226,7 @@ TEST_F(ProfilerTest, UbDirectSend_ProfileLog)
 
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDirectSend).stubs().will(returnValue(RT_ERROR_NONE));
-    error = profiler->apiProfileLogDecorator_->UbDirectSend(&wqeInfo, (Stream *)stream);
+    error = profiler->apiProfileLogDecorator_->UbDirectSend(&wqeInfo, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiImpl_;
     delete stream;
@@ -2265,7 +2267,7 @@ TEST_F(ProfilerTest, fusion_kernel_launch_profile)
 
     Api *oldApi_ = const_cast<Api *>(Runtime::runtime_->api_);
     ApiDecorator *apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = apiDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     Profiler *profiler = new Profiler(oldApi_);
     profiler->Init();
@@ -2273,13 +2275,13 @@ TEST_F(ProfilerTest, fusion_kernel_launch_profile)
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::FusionLaunch).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = profiler->apiProfileDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     profiler->SetProfLogEnable(true);
-    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     profiler->SetProfLogEnable(false);
-    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, (Stream *)stream, &argsInfo);
+    error = profiler->apiProfileLogDecorator_->FusionLaunch(&fusionInfo, stream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     delete profiler;

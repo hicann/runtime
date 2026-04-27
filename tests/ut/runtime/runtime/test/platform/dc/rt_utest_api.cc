@@ -19,6 +19,7 @@
 #include "context.hpp"
 #include "api_error.hpp"
 #include "api_impl.hpp"
+#include "rt_unwrap.h"
 
 using namespace cce::runtime;
 class ApiTest : public testing::Test {
@@ -144,7 +145,7 @@ TEST_F(ApiTest, StreamRecoverNotSupport)
     rtError_t error = RT_ERROR_NONE;
     
     error = rtStreamCreate(&stream, 0);
-    stream_ = (Stream *)stream;
+    stream_ = rt_ut::UnwrapOrNull<Stream>(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = apiErrorDec.StreamRecover(stream_);

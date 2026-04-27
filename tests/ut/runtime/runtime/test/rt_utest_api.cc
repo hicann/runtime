@@ -11,6 +11,7 @@
 #include "cmo_task.h"
 #include "profiling_task.h"
 #include "rt_utest_config_define.hpp"
+#include "rt_unwrap.h"
 
 class ApiTest7 : public testing::Test
 {
@@ -267,7 +268,7 @@ TEST_F(ApiTest, rtEventDestroySync_test2)
     rtEvent_t event;
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
@@ -296,7 +297,7 @@ TEST_F(ApiTest, rtEventDestroySync_test4)
     rtEvent_t event;
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Event::IsEventTaskEmpty).stubs().will(returnValue(false)).then(returnValue(true));
@@ -1247,7 +1248,7 @@ TEST_F(ApiTest, context_sync_failMode_stream_failed)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    stream = static_cast<Stream *>(stm);
+    stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
     stream->failureMode_ = STOP_ON_FAILURE;
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
@@ -1272,7 +1273,7 @@ TEST_F(ApiTest, context_sync_stream_failed)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    stream = static_cast<Stream *>(stm);
+    stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
         .stubs()
@@ -2399,7 +2400,8 @@ TEST_F(ApiTest, model_switch_stream_ex_impl)
     error = rtStreamSwitchEx((void *)devMem,  RT_EQUAL, (void *)devMem_target, streamB, streamA, RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = api.StreamSwitchEx((void *)devMem,  RT_EQUAL, (void *)devMem_target, (Stream*)streamB,  (Stream*)streamA, RT_SWITCH_INT64);
+    error = api.StreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target,
+        rt_ut::UnwrapOrNull<Stream>(streamB), rt_ut::UnwrapOrNull<Stream>(streamA), RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -2461,7 +2463,8 @@ TEST_F(ApiTest, model_switch_stream_ex_log)
     error = rtStreamSwitchEx((void *)devMem,  RT_EQUAL, (void *)devMem_target, streamB, streamA, RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = apiErrorDeco_->StreamSwitchEx((void *)devMem,  RT_EQUAL, (void *)devMem_target, (Stream*)streamB,  (Stream*)streamA, RT_SWITCH_INT64);
+    error = apiErrorDeco_->StreamSwitchEx((void *)devMem, RT_EQUAL, (void *)devMem_target,
+        rt_ut::UnwrapOrNull<Stream>(streamB), rt_ut::UnwrapOrNull<Stream>(streamA), RT_SWITCH_INT64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, streamA);
@@ -2586,7 +2589,7 @@ TEST_F(ApiTest, model_active_stream_error)
     error = rtsActiveStream(streamB, streamA);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    error = api.StreamActive((Stream*)streamB, (Stream*)streamA);
+    error = api.StreamActive(rt_ut::UnwrapOrNull<Stream>(streamB), rt_ut::UnwrapOrNull<Stream>(streamA));
     EXPECT_NE(error, RT_ERROR_NONE);
     error = rtModelExecute(model, exeStream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3226,7 +3229,7 @@ TEST_F(ApiTest, CPU_KERNEL_LAUNCH_DUMP)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream0 = (Stream *)stream;
+    Stream *stream0 = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *context0 = (Context *)stream0->Context_();
     stream0->SetContext((Context *)NULL);
 
@@ -3256,7 +3259,7 @@ TEST_F(ApiTest, CPU_KERNEL_LAUNCH_310M_TEST)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream0 = (Stream *)stream;
+    Stream *stream0 = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *context0 = (Context *)stream0->Context_();
     stream0->SetContext((Context *)NULL);
 
@@ -3455,7 +3458,7 @@ TEST_F(ApiTest, rtLabelCreateEx)
 
     error = rtLabelDestroy(labelEx);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
 
     error = rtModelDestroy(model);
@@ -5656,7 +5659,7 @@ TEST_F(ApiTest, FftsPlusTaskLaunchApi)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Context::FftsPlusTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
-    impl.FftsPlusTaskLaunch(&fftsPlusTaskInfo, static_cast<Stream *>(stream), 0);
+    impl.FftsPlusTaskLaunch(&fftsPlusTaskInfo, rt_ut::UnwrapOrNull<Stream>(stream), 0);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -5734,7 +5737,7 @@ TEST_F(ApiTest, api_register_all_kernel)
     Program *reg_unreg_prog;
     MOCKER_CPP(&Runtime::CheckKernelsName).stubs().will(returnValue(RT_ERROR_NONE));
 
-    Stream *stream = static_cast<Stream *>(stream_);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(stream_);
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.KernelLaunchWithHandle((void*)reg_unreg_prog, 333, 1, NULL, stream, "info");
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -5788,7 +5791,7 @@ TEST_F(ApiTest, api_mem_and_buf_test)
     rtError_t error;
     Api *api = Api::Instance();
     ApiDecorator apiDec(api);
-    Stream *stream = static_cast<Stream *>(stream_);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(stream_);
     char grpName[] = "group";
 
     error = apiDec.KernelLaunchEx("", (void *)1, 1, 0, stream);
@@ -8181,7 +8184,7 @@ TEST_F(ApiTest, LAUNCH_NPU_SAVE)
     rtStream_t stream;
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER_CPP_VIRTUAL(stm->Device_()->Driver_(), &Driver::MemCopySync)
        .stubs()

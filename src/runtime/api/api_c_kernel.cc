@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "rts/rts.h"
@@ -54,6 +55,7 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlock
     RtArgsWithType argsWithType = {};
     rtArgsEx_t argsInfo = {};
     rtCpuKernelArgs_t cpuArgsInfo = {};
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     if (regType == RT_KERNEL_REG_TYPE_NON_CPU) {
         argsInfo.args = hostArgs;
         argsInfo.argsSize = argsSize;
@@ -75,7 +77,7 @@ rtError_t rtsLaunchKernelWithHostArgs(rtFuncHandle funcHandle, uint32_t numBlock
     }
 
     const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
-        RtPtrToPtr<Stream *>(stm), cfg);
+        exeStream, cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -100,8 +102,9 @@ rtError_t rtsLaunchCpuKernel(const rtFuncHandle funcHandle, uint32_t numBlocks, 
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_CPU_EX;
     argsWithType.args.cpuArgsInfo = argsInfo;
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
-        RtPtrToPtr<Stream *>(stm), cfg);
+        exeStream, cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -123,8 +126,9 @@ rtError_t rtsLaunchKernelWithConfig(rtFuncHandle funcHandle, uint32_t numBlocks,
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_HANDLE;
     argsWithType.args.argHandle = RtPtrToPtr<RtArgsHandle *>(argsHandle);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, &argsWithType,
-        static_cast<Stream *>(stm), cfg);
+        exeStream, cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -164,8 +168,9 @@ rtError_t rtsLaunchKernelWithDevArgs(rtFuncHandle funcHandle, uint32_t numBlocks
         argsWithType.args.cpuArgsInfo = &cpuArgsInfo;
     }
 
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t ret = apiInstance->LaunchKernelV2(RtPtrToPtr<Kernel *>(funcHandle), numBlocks, &argsWithType,
-        static_cast<Stream *>(stm), cfg);
+        exeStream, cfg);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -189,8 +194,9 @@ rtError_t rtLaunchDvppTask(const void *sqe, uint32_t sqeLen, rtStream_t stm, rtD
     TIMESTAMP_BEGIN(rtLaunchDvppTask);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
-    const rtError_t error = apiInstance->LaunchDvppTask(sqe, sqeLen, RtPtrToPtr<Stream *>(stm), cfg);
+    const rtError_t error = apiInstance->LaunchDvppTask(sqe, sqeLen, exeStream, cfg);
 
     (void)AwdStopThreadWatchdog(watchDogHandle);
     TIMESTAMP_END(rtLaunchDvppTask);
@@ -211,7 +217,8 @@ rtError_t rtsLaunchRandomNumTask(const rtRandomNumTaskInfo_t *taskInfo, const rt
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
-    const rtError_t error = apiInstance->LaunchRandomNumTask(taskInfo, static_cast<Stream *>(stm), reserve);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->LaunchRandomNumTask(taskInfo, exeStream, reserve);
     (void)AwdStopThreadWatchdog(watchDogHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

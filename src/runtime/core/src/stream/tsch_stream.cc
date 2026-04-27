@@ -47,6 +47,7 @@ rtError_t TschStream::Setup()
     RT_LOG(RT_LOG_INFO, "stream setup end, stream_id=%d, type=%d, IsTaskSink=%d, sqId=%u, cqId=%u, deviceId=%u "
            "streamResId=%u", streamId_, type_, static_cast<int32_t>(IsTaskSink()), sqId_, cqId_, device_->Id_(),
            streamResId);
+    InitEmbeddedInnerHandle<Stream>(this);
     return RT_ERROR_NONE;
 }
 

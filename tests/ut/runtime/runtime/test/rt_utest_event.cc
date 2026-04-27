@@ -27,6 +27,7 @@
 #undef private
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -186,7 +187,7 @@ TEST_F(EventTest, TestInsertToNotifierMapAndDeleteFromNotifierMap)
     rtEvent_t event;
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Notifier *notifier;

@@ -669,7 +669,11 @@ void PoolRegistry::RemoveSeqMap(rtStream_t stm)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    Stream *stream = static_cast<Stream *>(stm);
+    Stream *stream = nullptr;
+    if (GetValidatedObject<Stream>(stm, stream) != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "RemoveSeqMap skip invalid stream handle.");
+        return;
+    }
     int32_t streamId = stream->Id_();
     streamSeqId_.erase(streamId);
     for (auto it = sequenceMap_.begin(); it != sequenceMap_.end();) {

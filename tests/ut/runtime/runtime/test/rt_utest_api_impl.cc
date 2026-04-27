@@ -210,17 +210,17 @@ TEST_F(ApiImplTest, notify_record_ctx_null)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamCreate(&stream, 0);
-    stream_ = (Stream *)stream;
+    stream_ = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context *)NULL));
 
-    error = apiImpl.NotifyRecord((Notify *)notify, stream_);
+    error = apiImpl.NotifyRecord(rt_ut::UnwrapOrNull<Notify>(notify), stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = apiImpl.NotifyWait((Notify *)notify, stream_);
+    error = apiImpl.NotifyWait(rt_ut::UnwrapOrNull<Notify>(notify), stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = apiImpl.NotifyDestroy((Notify *)notify);
+    error = apiImpl.NotifyDestroy(rt_ut::UnwrapOrNull<Notify>(notify));
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 #endif
@@ -411,7 +411,7 @@ TEST_F(ApiImplTest, CPU_KERNEL_LAUNCH_DUMP)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream0 = (Stream *)stream;
+    Stream *stream0 = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *context0 = (Context *)stream0->Context_();
     stream0->SetContext((Context *)NULL);
 

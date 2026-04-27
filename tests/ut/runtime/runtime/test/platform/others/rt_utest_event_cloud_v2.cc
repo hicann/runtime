@@ -27,6 +27,7 @@
 #undef private
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -307,9 +308,9 @@ TEST_F(EventTest910, UpdateTimelineWithNoTask)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
     int32_t streamId = stm->Id_();
-    event = (Event *)eventPtr;
+    event = rt_ut::UnwrapOrNull<Event>(eventPtr);
 
     RecordTaskInfo latestRecord = {streamId, 0, RECORDING};
     event->UpdateLatestRecord(latestRecord, 0);
@@ -329,7 +330,7 @@ TEST_F(EventTest910, UpdateTimelineWithNoTask)
     event->UpdateTimeline();
 
     GlobalMockObject::verify();
-    error = rtEventDestroy(event);
+    error = rtEventDestroy(eventPtr);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -346,8 +347,8 @@ TEST_F(EventTest910, TestWaitSendCheck)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
-    event = (Event *)eventPtr;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    event = rt_ut::UnwrapOrNull<Event>(eventPtr);
 
     stm->bindFlag_.Set(true);
     int32_t eventId = 0;
@@ -373,9 +374,9 @@ TEST_F(EventTest910, UpdateTimelineWithRecordTask)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtEventRecord(eventPtr, stream);
-    Stream * stm = (Stream *)stream;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
     int32_t streamId = stm->Id_();
-    event = (Event *)eventPtr;
+    event = rt_ut::UnwrapOrNull<Event>(eventPtr);
 
     RecordTaskInfo latestRecord = {streamId, 1, RECORDING};
     event->UpdateLatestRecord(latestRecord, 0);
@@ -395,7 +396,7 @@ TEST_F(EventTest910, UpdateTimelineWithRecordTask)
     event->UpdateTimeline();
 
     GlobalMockObject::verify();
-    error = rtEventDestroy(event);
+    error = rtEventDestroy(eventPtr);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -472,7 +473,7 @@ TEST_F(EventTest910, event_TimeStamp_arg)
 
     error = rtEventCreate(&start);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Event *eventObj = (Event*) start;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(start);
     eventObj->hasRecord_.Set(true);
     eventObj->timestamp_ = UINT64_MAX;
     eventObj->timeline_ = UINT64_MAX;
@@ -498,7 +499,7 @@ TEST_F(EventTest910, event_sync_01)
 
     error = rtStreamWaitEvent(stream, event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Event *evt= (Event*) event;
+    Event *evt= rt_ut::UnwrapOrNull<Event>(event);
     MOCKER_CPP_VIRTUAL(evt, &Event::WaitTask).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
     error = rtEventSynchronize(event);
     EXPECT_EQ(error, ACL_ERROR_RT_EVENT_SYNC_TIMEOUT);

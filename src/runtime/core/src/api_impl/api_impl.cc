@@ -15,6 +15,7 @@
 #include "stars_common_task.h"
 #include "cmo_barrier_c.hpp"
 #include "api_impl.hpp"
+#include "runtime_handle_guard.h"
 #include "base.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -1910,12 +1911,12 @@ rtError_t ApiImpl::EventCreate(Event ** const evt, const uint64_t flag)
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *evt == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
     dev->PushEvent(*evt);
 
-    if (flag == RT_EVENT_DEFAULT) { // default flag not alloc id in create.
-        return RT_ERROR_NONE;
+    if (flag != RT_EVENT_DEFAULT) {
+        const rtError_t error = (*evt)->GenEventId();
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);,
+            "Gen event id failed, device_id=%u, tsId=%u, retCode=%#x", dev->Id_(), dev->DevGetTsId(), error);
     }
-    const rtError_t error = (*evt)->GenEventId();
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);,
-        "Gen event id failed, device_id=%u, tsId=%u, retCode=%#x", dev->Id_(), dev->DevGetTsId(), error);
+    InitEmbeddedInnerHandle<Event>(*evt);
     return RT_ERROR_NONE;
 }
 
@@ -1936,6 +1937,7 @@ rtError_t ApiImpl::EventCreateEx(Event ** const evt, const uint64_t flag)
         *evt = new (std::nothrow) Event(dev, flag, curCtx, false, true);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *evt == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
     }
+    InitEmbeddedInnerHandle<Event>(*evt);
     dev->PushEvent(*evt);
     return RT_ERROR_NONE;
 }

@@ -18,6 +18,7 @@
 #include "context.hpp"
 #include "device.hpp"
 #include "task.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -58,6 +59,14 @@ public:
     Event();
     Event(Device *device, uint64_t eventFlag, Context *ctx, bool isSync = false, bool isNewMode = false);
     ~Event() noexcept override;
+    rtInnerObject *GetInnerHandle()
+    {
+        return &handle_;
+    }
+    const rtInnerObject *GetInnerHandle() const
+    {
+        return &handle_;
+    }
 
     // interface for api_imp
     virtual rtError_t GenEventId();
@@ -275,6 +284,7 @@ protected:
     Context          *context_;
 
 private:
+    rtInnerObject handle_ {};
     int32_t          freeEventId_;
     uint64_t         timeline_;
     bool             isNotify_;

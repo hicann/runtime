@@ -18,6 +18,7 @@
 #include "device_error_info.hpp"
 #include "davinci_kernel_task.h"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -59,7 +60,7 @@ TEST_F(CloudV2AicpuErrMsgTest, SetStarsResultForDavinciTask)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
 
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;

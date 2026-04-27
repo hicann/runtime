@@ -124,7 +124,7 @@ protected:
 
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         stream_->SetSqMemAttr(false);
         TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -187,11 +187,11 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_aicpu)
     TaskInfo taskInfo = {};
     TaskInfo *task = &taskInfo;
     taskInfo.type = TS_TASK_TYPE_NOTIFY_RECORD;
-    taskInfo.stream = (Stream *)stream;
-    res = SubmitTaskDavid(task, (Stream *)stream, -1);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_EQ(res, RT_ERROR_NONE);
     taskInfo.type = TS_TASK_TYPE_MODEL_END_GRAPH;
-    res = SubmitTaskDavid(task, (Stream *)stream, -1);
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_NE(res, RT_ERROR_NONE);
     rtModel_t rtModel;
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::CmoIdAlloc).stubs().will(returnValue(RT_ERROR_NONE));
@@ -199,11 +199,11 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_aicpu)
     res = rtModelCreate(&rtModel, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
     Model *realModel = rt_ut::UnwrapOrNull<Model>(rtModel);
-    ((Stream *)stream)->SetModel(realModel);
-    ((Stream *)stream)->SetLatestModlId(realModel->Id_());
-    res = SubmitTaskDavid(task, (Stream *)stream, -1);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->DelModel(realModel);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->DelModel(realModel);
     res = rtModelDestroy(rtModel);
     EXPECT_EQ(res, RT_ERROR_NONE);
     rtStreamDestroy(stream);
@@ -236,11 +236,11 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_full)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    taskInfo.stream = (Stream *)stream;
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task->type = TS_TASK_TYPE_NOTIFY_RECORD;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
-    res = SubmitTaskDavid(task, static_cast<Stream *>(stream), -1);
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_NE(res, RT_ERROR_NONE);
     taskResMang->ResetTaskRes();
     rtStreamDestroy(stream);
@@ -253,16 +253,16 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_full_check)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    taskInfo.stream = (Stream *)stream;
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task->type = TS_TASK_TYPE_NOTIFY_RECORD;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL)).then(returnValue(RT_ERROR_DRV_ERR));
-    ((Stream *)stream)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    MOCKER_CPP_VIRTUAL(((Stream *)stream_)->Device_(), &Device::GetDevStatus)
+    (rt_ut::UnwrapOrNull<Stream>(stream))->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    MOCKER_CPP_VIRTUAL(stream_->Device_(), &Device::GetDevStatus)
     .stubs()
     .will(returnValue(RT_ERROR_NONE))
     .then(returnValue(RT_ERROR_DRV_ERR)); 
-    res = SubmitTaskDavid(task, static_cast<Stream *>(stream), -1);
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_EQ(res, RT_ERROR_DRV_ERR);
     taskResMang->ResetTaskRes();
     rtStreamDestroy(stream);
@@ -275,12 +275,12 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_full_failmode)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    taskInfo.stream = (Stream *)stream;
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task->type = TS_TASK_TYPE_NOTIFY_RECORD;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL));
-    static_cast<Stream *>(stream)->SetFailureMode(ABORT_ON_FAILURE);
-    res = SubmitTaskDavid(task, static_cast<Stream *>(stream), -1);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetFailureMode(ABORT_ON_FAILURE);
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_NE(res, RT_ERROR_NONE);
     taskResMang->ResetTaskRes();
     rtStreamDestroy(stream);
@@ -293,12 +293,12 @@ TEST_F(DavidTaskSendTest, AllocTaskAndSendDavid_sqaddr)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    taskInfo.stream = (Stream *)stream;
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task->type = TS_TASK_TYPE_NOTIFY_RECORD;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     TaskInfo addr[2] = {};
-    ((DavidStream *)stream)->sqAddr_ = reinterpret_cast<uint64_t>(reinterpret_cast<void *>(addr));
-    res = SubmitTaskDavid(task, static_cast<Stream *>(stream), -1);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->sqAddr_ = reinterpret_cast<uint64_t>(reinterpret_cast<void *>(addr));
+    res = SubmitTaskDavid(task, rt_ut::UnwrapOrNull<Stream>(stream), -1);
     EXPECT_EQ(res, RT_ERROR_NONE);
     taskResMang->ResetTaskRes();
     rtStreamDestroy(stream);

@@ -109,7 +109,7 @@ TEST_F(CloudV2CaptureModelTest, SUBMIT_RDMA_PI_VALUE_MODIFY_TASK)
     int32_t deviceDescAlignBuf = 1;
     Context *curCtx = static_cast<Context *>(ctx);
     MOCKER_CPP_VIRTUAL(curCtx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    ret = SubmitRdmaPiValueModifyTask(static_cast<Stream *>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
+    ret = SubmitRdmaPiValueModifyTask(rt_ut::UnwrapOrNull<Stream>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -142,7 +142,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_INFO)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel* captureModel = new CaptureModel();
     curCtx->models_.push_back(captureModel);
@@ -207,7 +207,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_DEBUG_INFO)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel* captureModel = new CaptureModel();
     curCtx->models_.push_back(captureModel);
@@ -263,7 +263,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_INFO_FAIL)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     Model* captureModel = new Model();
     captureModel->modelType_ = RT_MODEL_CAPTURE_MODEL;
@@ -306,7 +306,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_DEBUG_INFO_NONE)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel* captureModel = new CaptureModel();
     curCtx->models_.push_back(captureModel);
@@ -352,7 +352,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_DEBUG_ZERO)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel* captureModel = new CaptureModel();
     curCtx->models_.push_back(captureModel);
@@ -402,7 +402,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_DEBUG_INFO_COPY_FAIL)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
 
     CaptureModel* captureModel = new CaptureModel();
     curCtx->models_.push_back(captureModel);
@@ -449,7 +449,7 @@ TEST_F(CloudV2CaptureModelTest, RDMA_PI_VALUE_MODIFY_TASK_INIT_FAILED)
     rtStream_t stream;
     auto ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
     std::vector<uint64_t> rdmaPiValueDeviceAddrVec{1};
@@ -472,7 +472,7 @@ TEST_F(CloudV2CaptureModelTest, RDMA_PI_VALUE_MODIFY_TASK_INIT_FAILED_2)
     rtStream_t stream;
     auto ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
     std::vector<uint64_t> rdmaPiValueDeviceAddrVec{1};
@@ -491,7 +491,7 @@ TEST_F(CloudV2CaptureModelTest, RDMA_PI_VALUE_MODIFY_TASK_INIT_FAILED_3)
     rtStream_t stream;
     auto ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
     std::vector<uint64_t> rdmaPiValueDeviceAddrVec{1};
@@ -511,7 +511,7 @@ TEST_F(CloudV2CaptureModelTest, RDMA_PI_VALUE_MODIFY_TASK_INIT_FAILED_4)
     rtStream_t stream;
     auto ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stm = static_cast<Stream *>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     TaskInfo taskInfo = {};
     taskInfo.stream = stm;
     std::vector<uint64_t> rdmaPiValueDeviceAddrVec{1};
@@ -1066,7 +1066,7 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
     captureMdl1->CaptureModelExecuteFinish();
     uint32_t releaseNum;
     captureMdl1->ReleaseSqCq(releaseNum);
-    captureMdl1->BuildSqCq(static_cast<Stream *>(streamExe));
+    captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1096,21 +1096,21 @@ TEST_F(CloudV2CaptureModelTest, capture_activestream)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    streamActiveTask->activeStream = static_cast<Stream *>(stream);
-    task.stream = static_cast<Stream *>(stream);
+    streamActiveTask->activeStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    task.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     streamActiveTask->activeStreamSqId = 0;
 
     MOCKER(InitFuncCallParaForStreamActiveTask).stubs().will(returnValue(0));
     cmodel.MarkStreamActiveTask(&task);
-    cmodel.context_ = static_cast<Stream *>(stream)->context_;
+    cmodel.context_ = rt_ut::UnwrapOrNull<Stream>(stream)->context_;
     cmodel.UpdateStreamActiveTaskFuncCallMem();
 
     MOCKER(ReConstructStreamActiveTaskFc).stubs().will(returnValue(1));
     cmodel.UpdateStreamActiveTaskFuncCallMem();
 
-    static_cast<Stream *>(stream)->StarsCheckSqeFull(1);
-    static_cast<Stream *>(stream)->StarsSqTailAdd();
-    static_cast<Stream *>(stream)->StarsSqHeadSet(0);
+    rt_ut::UnwrapOrNull<Stream>(stream)->StarsCheckSqeFull(1);
+    rt_ut::UnwrapOrNull<Stream>(stream)->StarsSqTailAdd();
+    rt_ut::UnwrapOrNull<Stream>(stream)->StarsSqHeadSet(0);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1246,8 +1246,8 @@ TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
     Device* device = rtInstance->DeviceRetain(0, 0);
     RawDevice* rawDevice = RtPtrToPtr<RawDevice *>(device);
 
-    RtPtrToPtr<Stream *>(streamExe)->taskPosTail_.Set(5000);
-    uint32_t streamId = (RtPtrToPtr<Stream *>(streamExe))->Id_();
+    rt_ut::UnwrapOrNull<Stream>(streamExe)->taskPosTail_.Set(5000);
+    uint32_t streamId = (rt_ut::UnwrapOrNull<Stream>(streamExe))->Id_();
     error = rawDevice->StoreEndGraphNotifyInfo(streamId,
         static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model1)), 10);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1282,10 +1282,10 @@ TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(head_stub))
         .will(returnValue(RT_ERROR_NONE));
-    RtPtrToPtr<Stream *>(streamExe)->taskPosTail_.Set(15);
+    rt_ut::UnwrapOrNull<Stream>(streamExe)->taskPosTail_.Set(15);
     rawDevice->PollEndGraphNotifyInfo();
 
-    RtPtrToPtr<Stream *>(streamExe)->taskPosTail_.Set(5);
+    rt_ut::UnwrapOrNull<Stream>(streamExe)->taskPosTail_.Set(5);
     error = rawDevice->StoreEndGraphNotifyInfo(streamId,
         static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model1)), 10);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1305,7 +1305,7 @@ TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
     error = rawDevice->StoreEndGraphNotifyInfo(streamId,
         static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model1)), 49);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    RtPtrToPtr<Stream *>(streamExe)->taskPosTail_.Set(50);
+    rt_ut::UnwrapOrNull<Stream>(streamExe)->taskPosTail_.Set(50);
     rawDevice->PollEndGraphNotifyInfo();
 
     error = rawDevice->DeleteEndGraphNotifyInfo(streamId,
@@ -1374,10 +1374,10 @@ TEST_F(CloudV2CaptureModelTest, cascade_stream)
     MOCKER_CPP_VIRTUAL(curCtx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
 
     MOCKER_CPP(&Stream::AddCaptureSqeNum).stubs().will(invoke(StubAddCaptureSqeNum));
-    ret = SubmitRdmaPiValueModifyTask(static_cast<Stream *>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
+    ret = SubmitRdmaPiValueModifyTask(rt_ut::UnwrapOrNull<Stream>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = SubmitRdmaPiValueModifyTask(static_cast<Stream *>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
+    ret = SubmitRdmaPiValueModifyTask(rt_ut::UnwrapOrNull<Stream>(stream), &fftsPlusTaskInfo, &deviceDescAlignBuf);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtModel_t model;
@@ -1388,7 +1388,7 @@ TEST_F(CloudV2CaptureModelTest, cascade_stream)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     MOCKER_CPP(&Model::DelStream).stubs().will(returnValue(RT_ERROR_NONE));
-    ret = curCtx->ModelDelStream(rt_ut::UnwrapOrNull<Model>(model), (Stream *)streamExe);
+    ret = curCtx->ModelDelStream(rt_ut::UnwrapOrNull<Model>(model), rt_ut::UnwrapOrNull<Stream>(streamExe));
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(model));
@@ -1623,7 +1623,7 @@ TaskInfo *createTaskInfo()
 
     TaskInfo *taskInfo = (TaskInfo *)malloc(sizeof(TaskInfo));
     taskInfo->id = 0;
-    taskInfo->stream = static_cast<Stream *>(stream);
+    taskInfo->stream = rt_ut::UnwrapOrNull<Stream>(stream);
 
     return taskInfo;
 }
@@ -1746,7 +1746,7 @@ TEST_F(CloudV2CaptureModelTest, task_get_seq_id)
 
     rtStream_t stream;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo->stream = stm;
 
     Model model(RT_MODEL_CAPTURE_MODEL);

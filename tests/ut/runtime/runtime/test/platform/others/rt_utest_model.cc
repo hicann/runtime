@@ -125,18 +125,18 @@ TEST_F(ChipModelTest, TestSynchronizeExecuteTimeout)
     const bool flag = Runtime::Instance()->GetDisableThread();
     Runtime::Instance()->SetDisableThread(true);
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    Stream *stream_var = static_cast<Stream *>(rtStream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(rtStream);
     MOCKER_CPP_VIRTUAL(stream_var, &Stream::Synchronize)
         .stubs()
         .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
     model->SetModelExecutorType(EXECUTOR_TS);
 
-    error = model->SynchronizeExecute((Stream *)rtStream);
+    error = model->SynchronizeExecute(rt_ut::UnwrapOrNull<Stream>(rtStream));
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
 
     rtInstance->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
-    error = model->SynchronizeExecute((Stream *)rtStream);
+    error = model->SynchronizeExecute(rt_ut::UnwrapOrNull<Stream>(rtStream));
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
 
     error = rtModelDestroy(rtModel);

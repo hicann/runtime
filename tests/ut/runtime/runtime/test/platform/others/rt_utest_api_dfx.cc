@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -136,7 +137,7 @@ Driver* ApiCloudDisableThreadDfxTest::driver_ = nullptr;
 
 TEST_F(ApiCloudDisableThreadDfxTest, kernel_launch_with_handle_task_full)
 {
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     stm->SetLimitFlag(true);
     stm->SetRecycleFlag(false);
     Context* context = stm->Context_();
@@ -156,7 +157,7 @@ TEST_F(ApiCloudDisableThreadDfxTest, streamCreateFail1)
     MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId)
         .stubs()
         .will(returnValue(static_cast<TaskInfo *>(nullptr)));
-    MOCKER_CPP_VIRTUAL(((Stream *)stream_)->Device_(), &Device::GetDevStatus)
+    MOCKER_CPP_VIRTUAL((rt_ut::UnwrapOrNull<Stream>(stream_))->Device_(), &Device::GetDevStatus)
     .stubs()
     .will(returnValue(RT_ERROR_NONE))
     .then(returnValue(RT_ERROR_LOST_HEARTBEAT));

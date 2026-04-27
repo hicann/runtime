@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "driver/ascend_hal.h"
@@ -593,7 +594,7 @@ RTS_API rtError_t rtGetDeviceSatModeForStream(rtStream_t stm, rtFloatOverflowMod
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const targetStm = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, targetStm);
     const rtError_t ret = apiInstance->GetDeviceSatModeForStream(targetStm, floatOverflowMode);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;

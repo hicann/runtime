@@ -9,6 +9,7 @@
  */
 
 #include "count_notify.hpp"
+#include "runtime_handle_guard.h"
 #include "device.hpp"
 #include "osal.hpp"
 #include "runtime.hpp"
@@ -32,6 +33,7 @@ CountNotify::CountNotify(const uint32_t devId, const uint32_t taskSchId)
 
 CountNotify::~CountNotify() noexcept
 {
+    ResetEmbeddedInnerHandle<CountNotify>(this);
     if (driver_ == nullptr) {
         return;
     }
@@ -64,6 +66,7 @@ rtError_t CountNotify::Setup()
         deviceId_, static_cast<uint32_t>(error));
 
     notifyid_ = curNotifyId;
+    InitEmbeddedInnerHandle<CountNotify>(this);
     return RT_ERROR_NONE;
 }
 

@@ -50,6 +50,7 @@
 #include "fast_recover.hpp"
 #include "rts.h"
 #include "heterogenous.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -206,7 +207,7 @@ TEST_F(ApiImplTest, PROCESS_REPORT)
     rtStreamCreate(&stream, 0);
     rtSubscribeReport(123, stream);
     MOCKER_CPP(&Stream::IsHostFuncCbReg).stubs().will(returnValue(true));
-    Stream * stm = (Stream *)stream;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
     stm->IsHostFuncCbReg();
     rtCallback_t stub_func = (rtCallback_t)0x12345;
     rtCallbackLaunch(stub_func, nullptr, stream, true);
@@ -397,7 +398,7 @@ TEST_F(ApiImplTest, apiimpl_stream_test)
     rtStream_t rt_stream;
 
     rtStreamCreate(&rt_stream, 0);
-    Stream *stream = (Stream *)rt_stream;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(rt_stream);
     Context *context = (Context *)stream->Context_();
     sleep(1);
     error = rtStreamQuery(rt_stream);
@@ -427,7 +428,7 @@ TEST_F(ApiImplTest, apiimpl_stream_test)
     GlobalContainer::SetRtChipType(chipType);
     rtInstance->UpdateDevProperties(chipType, originSocVersion);
 
-    error = rtStreamDestroy(stream);
+    error = rtStreamDestroy(rt_stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -469,22 +470,22 @@ TEST_F(ApiImplTest, stream_create_with_priority_out_of_range)
     ApiImpl impl;
 	ApiErrorDecorator api(&impl);
     rtError_t error;
-	rtStream_t stream_ = nullptr;
+    Stream *stream = nullptr;
 	int32_t priority = -1;
 
-	error = api.StreamCreate((Stream**)&stream_, priority, 0, nullptr);
+	error = api.StreamCreate(&stream, priority, 0, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamDestroy(stream_);
+    error = rtStreamDestroy(reinterpret_cast<rtStream_t>(stream->GetInnerHandle()));
     EXPECT_EQ(error, RT_ERROR_NONE);
-    stream_ = nullptr;
+    stream = nullptr;
 
     priority = 8;
 
-    error = api.StreamCreate((Stream**)&stream_, priority, 0, nullptr);
+    error = api.StreamCreate(&stream, priority, 0, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamDestroy(stream_);
+    error = rtStreamDestroy(reinterpret_cast<rtStream_t>(stream->GetInnerHandle()));
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -806,7 +807,7 @@ TEST_F(ApiImplTest, stub_david_test_SendTopicMsgVersionToAicpuDavid)
     bool isFinished = false;
     uint32_t taskId = 0U;
     uint32_t streamId = 0U;
-    ((Stream *)stream)->JudgeTaskFinish(0, isFinished);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->JudgeTaskFinish(0, isFinished);
 
     Runtime *rtInstance = (Runtime *) Runtime::Instance();
     rtChipType_t originChipType = rtInstance->GetChipType();

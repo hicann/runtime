@@ -10,6 +10,7 @@
 #include <iomanip>
 #include "stream.hpp"
 #include "model_update_task.h"
+#include "runtime_handle_guard.h"
 #include "stream_sqcq_manage.hpp"
 #include "cond_c.hpp"
 #include "runtime.hpp"
@@ -171,6 +172,7 @@ Stream::Stream(const Context * const stmCtx, const uint32_t prio,
 
 Stream::~Stream()
 {
+    ResetEmbeddedInnerHandle<Stream>(this);
     if (device_ != nullptr) {
         if ((device_->GetDevStatus() != RT_ERROR_NONE) && (this->GetBindFlag())) {
             RT_LOG(RT_LOG_WARNING, "Device fault and the model binds this stream, device_id=%u, stream_id=%d, "
@@ -658,6 +660,7 @@ rtError_t Stream::Setup()
     if ((flags_ & RT_STREAM_FORBIDDEN_DEFAULT) != 0U) {
         streamId_ = static_cast<int32_t>(MAX_INT32_NUM);
         RT_LOG(RT_LOG_DEBUG, "create a forbidden stream, stream_id=%u", streamId_);
+        InitEmbeddedInnerHandle<Stream>(this);
         StreamStateCallbackManager::Instance().Notify(this, true);
         return RT_ERROR_NONE;
     }
@@ -665,6 +668,7 @@ rtError_t Stream::Setup()
         error = Runtime::Instance()->AllocAiCpuStreamId(streamId_);
         ERROR_RETURN_MSG_INNER(error, "Failed to alloc aicpu stream id, retCode=%#x, stream_id=%d.",
             static_cast<uint32_t>(error), streamId_);
+        InitEmbeddedInnerHandle<Stream>(this);
         StreamStateCallbackManager::Instance().Notify(this, true);
         return RT_ERROR_NONE; // AiCpuStream not participate in scheduling
     }
@@ -773,6 +777,7 @@ rtError_t Stream::Setup()
 
     RT_LOG(RT_LOG_INFO, "stream setup end, stream_id=%d, IsTaskSink=%d, sqId=%u, cqId=%u, deviceId=%u, streamResId=%u",
            streamId_, static_cast<int32_t>(IsTaskSink()), sqId_, cqId_, device_->Id_(), streamResId);
+    InitEmbeddedInnerHandle<Stream>(this);
     StreamStateCallbackManager::Instance().Notify(this, true);
     return RT_ERROR_NONE;
 }
@@ -861,6 +866,7 @@ rtError_t Stream::SetupWithoutBindSq()
     RT_LOG(RT_LOG_INFO, "stream setup end, stream_id=%d, IsTaskSink=%d, sqId=%u, cqId=%u, deviceId=%u, streamResId=%u, sqAddr=0x%llx",
            streamId_, static_cast<int32_t>(IsTaskSink()), sqId_, cqId_, device_->Id_(), streamResId, sqAddr_);
 
+    InitEmbeddedInnerHandle<Stream>(this);
     StreamStateCallbackManager::Instance().Notify(this, true);
     return RT_ERROR_NONE;
 }
@@ -994,6 +1000,7 @@ rtError_t Stream::SetupForAutoSplit()
     SetMaxTaskId(isDisableThread);
     isFlowCtrl = false;
     BufferAllocator::OpenHugeBuff();
+    InitEmbeddedInnerHandle<Stream>(this);
 
     RT_LOG(RT_LOG_INFO, "stream setup for auto split end, master_stream_id=%d, cur_stream_id=%d, sq_id=%u, cq_id=%u, deviceId=%u, sqeBufferSize=%u",
            GetExposedStreamId(), Id_(), sqId_, cqId_, device_->Id_(), sqeBufferSize_);

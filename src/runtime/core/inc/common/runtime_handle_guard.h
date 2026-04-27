@@ -11,6 +11,7 @@ See LICENSE in the root of the software repository for the full text of the Lice
 #define RUNTIME_HANDLE_GUARD_H
 
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 #include "base.hpp"
@@ -40,7 +41,7 @@ class Label;
 class Stream;
 class Event;
 class Notify;
-class CntNotify;
+class CountNotify;
 
 // Register all magic constants
 REGISTER_RT_MAGIC(Model,     RT_MODEL_MAGIC)
@@ -48,7 +49,7 @@ REGISTER_RT_MAGIC(Label,     RT_LABEL_MAGIC)
 REGISTER_RT_MAGIC(Stream,    RT_STREAM_MAGIC)
 REGISTER_RT_MAGIC(Event,     RT_EVENT_MAGIC)
 REGISTER_RT_MAGIC(Notify,    RT_NOTIFY_MAGIC)
-REGISTER_RT_MAGIC(CntNotify, RT_CNTNOTIFY_MAGIC)
+REGISTER_RT_MAGIC(CountNotify, RT_CNTNOTIFY_MAGIC)
 
 /**
  * @ingroup

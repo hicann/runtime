@@ -38,6 +38,7 @@
 #include "subscribe.hpp"
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -162,7 +163,7 @@ TEST_F(ApiDCDisableThreadTest, hwts_veresion_task_to_command_test)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     ToCommand(&task, &command);
     Complete(&task, 0);
@@ -186,7 +187,7 @@ TEST_F(ApiDCDisableThreadTest, hwts_veresion_task_fail_to_command_test)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
     ToCommand(&task, &command);
     uint32_t errorcode[3] = {0};

@@ -143,7 +143,7 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    bool ret = taskResMng->CreateTaskRes(static_cast<Stream *>(stream));
+    bool ret = taskResMng->CreateTaskRes(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(ret, true);
 
     uint32_t pos = UINT32_MAX;
@@ -256,7 +256,7 @@ TEST_F(DavidTaskRecycleTest, TestTaskRes)
     getTask = taskResMng->GetTaskInfo(pos);
     EXPECT_EQ(getTask, nullptr);
 
-    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
+    taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
     rtStreamDestroy(stream);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
     delete taskResMng;
@@ -281,15 +281,15 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHead)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
 
     uint32_t pos = UINT32_MAX;
     TaskInfo *task = nullptr;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
 
     for (uint32_t i = 0; i < 1; i++) {
         error = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
-        task->stream = static_cast<Stream *>(stream);
+        task->stream = rt_ut::UnwrapOrNull<Stream>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
         EXPECT_EQ(error, RT_ERROR_NONE);
@@ -306,7 +306,7 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHead)
 
     MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqReportV2).stubs().will(returnValue(RT_ERROR_LOST_HEARTBEAT));
 
-    error = SyncTask(static_cast<Stream *>(stream), 0, 50);
+    error = SyncTask(rt_ut::UnwrapOrNull<Stream>(stream), 0, 50);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStreamDestroy(stream);
@@ -332,15 +332,15 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHeadV2)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
 
     uint32_t pos = UINT32_MAX;
     TaskInfo *task = nullptr;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
 
     for (uint32_t i = 0; i < 1; i++) {
         error = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
-        task->stream = static_cast<Stream *>(stream);
+        task->stream = rt_ut::UnwrapOrNull<Stream>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
         EXPECT_EQ(error, RT_ERROR_NONE);
@@ -357,7 +357,7 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHeadV2)
 
     MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqReportV2).stubs().will(returnValue(RT_ERROR_REPORT_TIMEOUT));
 
-    error = SyncTask(static_cast<Stream *>(stream), 0, 50);
+    error = SyncTask(rt_ut::UnwrapOrNull<Stream>(stream), 0, 50);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStreamDestroy(stream);
@@ -390,8 +390,8 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroup)
     ret = rtStreamCreateByGrp(&stream, 0, 0, grp);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ((DvppGrp *)grp)->getContext()->Device_()->GetStreamSqCqManage()->sqIdToStreamIdMap_[0] =
-        static_cast<Stream *>(stream)->Id_();
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+        rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     Driver *driver;
     driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL((NpuDriver *)(driver), &NpuDriver::LogicCqReportV2).stubs().will(invoke(Sub_LogicCqReportV2));
@@ -416,17 +416,17 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCq)
 
     ret = rtStreamCreateByGrp(&stream, 0, 0, grp);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     ((DvppGrp *)grp)->getContext()->Device_()->GetStreamSqCqManage()->sqIdToStreamIdMap_[0] =
-        static_cast<Stream *>(stream)->Id_();
+        rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
 
     uint32_t pos = UINT32_MAX;
     TaskInfo *task = nullptr;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
 
     for (uint32_t i = 0; i < 1; i++) {
         ret = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
-        task->stream = static_cast<Stream *>(stream);
+        task->stream = rt_ut::UnwrapOrNull<Stream>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
         EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -435,7 +435,7 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCq)
 
     task->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
 
-    g_cqReport.streamId = static_cast<Stream *>(stream)->Id_();
+    g_cqReport.streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
     g_cqReport.taskId = pos;
 
     Driver *driver;
@@ -463,18 +463,18 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCqVPC)
 
     ret = rtStreamCreateByGrp(&stream, 0, 0, grp);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
 
     ((DvppGrp *)grp)->getContext()->Device_()->GetStreamSqCqManage()->sqIdToStreamIdMap_[0] =
-        static_cast<Stream *>(stream)->Id_();
+        rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
 
     uint32_t pos = UINT32_MAX;
     TaskInfo *task = nullptr;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
 
     for (uint32_t i = 0; i < 1; i++) {
         ret = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
-        task->stream = static_cast<Stream *>(stream);
+        task->stream = rt_ut::UnwrapOrNull<Stream>(stream);
         task->sqeNum = 1U;
         task->type = TS_TASK_TYPE_KERNEL_AICORE;
         EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -483,7 +483,7 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCqVPC)
 
     task->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
 
-    g_cqReport.streamId = static_cast<Stream *>(stream)->Id_();
+    g_cqReport.streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
     g_cqReport.taskId = pos;
     g_cqReport.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     g_cqReport.sqeType = RT_STARS_SQE_TYPE_VPC;
@@ -500,7 +500,7 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCqVPC)
     ret = rtDvppWaitGroupReport(grp, DvppGrpCallbackFunc, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_STREAM_SYNC_TIMEOUT);
 
-    TaskReclaimByStream(static_cast<Stream *>(stream), false);
+    TaskReclaimByStream(rt_ut::UnwrapOrNull<Stream>(stream), false);
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
 
@@ -529,14 +529,14 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqReport)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     TaskInfo taskInfo = {0};
-    taskInfo.stream = static_cast<Stream *>(stream);
-    static_cast<Stream *>(stream)->SetSyncRemainTime(1);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSyncRemainTime(1);
     rtLogicCqReport_t report = {0};
     report.errorType = RT_STARS_EXIST_ERROR;
     device->SetHasTaskError(true);
-    static_cast<Stream *>(stream)->SetFailureMode(STOP_ON_FAILURE);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetFailureMode(STOP_ON_FAILURE);
     MOCKER_CPP(&Stream::GetError).stubs().will(returnValue(RT_ERROR_MODEL_ABORT_NORMAL));
     ProcLogicCqReport(device, report, &taskInfo);
     GlobalMockObject::verify();
@@ -564,9 +564,9 @@ TEST_F(DavidTaskRecycleTest, TryRecycleTaskV2)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
-    static_cast<Stream *>(stream)->SetRecycleFlag(true);
-    static_cast<Stream *>(stream)->SetNeedRecvCqeFlag(true);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetRecycleFlag(true);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetNeedRecvCqeFlag(true);
 
     Driver *driver;
     driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
@@ -580,7 +580,7 @@ TEST_F(DavidTaskRecycleTest, TryRecycleTaskV2)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead))
         .will(returnValue(RT_ERROR_NONE));
 
-    error = TryRecycleTask(static_cast<Stream *>(stream));
+    error = TryRecycleTask(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
@@ -607,11 +607,12 @@ TEST_F(DavidTaskRecycleTest, TryRecycleTaskAbort)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
-    static_cast<Stream *>(stream)->SetRecycleFlag(true);
-    static_cast<Stream *>(stream)->SetNeedRecvCqeFlag(true);
-    ((Stream *)stream)->Device_()->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
-    static_cast<Stream *>(stream)->SetAbortStatus(RT_ERROR_STREAM_ABORT);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->SetSqMemAttr(false);
+    streamObj->SetRecycleFlag(true);
+    streamObj->SetNeedRecvCqeFlag(true);
+    streamObj->Device_()->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
+    streamObj->SetAbortStatus(RT_ERROR_STREAM_ABORT);
     Driver *driver;
     driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqReportV2)
@@ -624,7 +625,7 @@ TEST_F(DavidTaskRecycleTest, TryRecycleTaskAbort)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead))
         .will(returnValue(RT_ERROR_NONE));
 
-    error = TryRecycleTask(static_cast<Stream *>(stream));
+    error = TryRecycleTask(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(error, RT_ERROR_DEVICE_TASK_ABORT);
 
     error = rtStreamDestroy(stream);
@@ -652,15 +653,16 @@ TEST_F(DavidTaskRecycleTest, TaskReclaimByStreamV2)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
-    static_cast<Stream *>(stream)->SetFailureMode(ABORT_ON_FAILURE);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetFailureMode(ABORT_ON_FAILURE);
 
-    static_cast<Stream *>(stream)->flags_ = RT_STREAM_PERSISTENT;
-    error = TaskReclaimByStream(static_cast<Stream *>(stream), false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->flags_ = RT_STREAM_PERSISTENT;
+    error = TaskReclaimByStream(rt_ut::UnwrapOrNull<Stream>(stream), false);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
-    static_cast<Stream *>(stream)->flags_ = 0;
+    rt_ut::UnwrapOrNull<Stream>(stream)->flags_ = 0;
 
-    error = TaskReclaimByStream(static_cast<Stream *>(stream), false);
+    error = TaskReclaimByStream(rt_ut::UnwrapOrNull<Stream>(stream), false);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -687,13 +689,13 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     TaskInfo taskInfo = {0};
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
 
     uint16_t delPos = 0;
-    MOCKER_CPP_VIRTUAL((DavidStream *)(stream), &DavidStream::StarsGetPublicTaskHead)
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream), &Stream::StarsGetPublicTaskHead)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&delPos))
         .will(returnValue(RT_ERROR_NONE));
@@ -701,16 +703,16 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask)
     TryReclaimToTask(&taskInfo);
 
     // check cqe
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     taskResMang->taskResATail_.Set(1);
     taskResMang->taskRes_[0].taskInfo.id = 0;
     taskResMang->taskRes_[0].taskInfo.isCqeNeedConcern = true;
-    taskResMang->taskRes_[0].taskInfo.stream = static_cast<Stream *>(stream);
+    taskResMang->taskRes_[0].taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     TryReclaimToTask(&taskInfo);
     taskResMang->taskRes_[0].taskInfo.isCqeNeedConcern = false;
 
     // DavidUpdatePublicQueue fail
-    MOCKER_CPP_VIRTUAL((DavidStream *)(stream), &DavidStream::DavidUpdatePublicQueue)
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream), &Stream::DavidUpdatePublicQueue)
         .stubs()
         .will(returnValue(RT_ERROR_STREAM_INVALID));
     TryReclaimToTask(&taskInfo);
@@ -740,13 +742,13 @@ TEST_F(DavidTaskRecycleTest, FinishedTaskReclaim)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
-    static_cast<Stream *>(stream)->SetRecycleEndTaskId(0);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetRecycleEndTaskId(0);
 
-    error = FinishedTaskReclaim(static_cast<Stream *>(stream), true, 64, 129);
+    error = FinishedTaskReclaim(rt_ut::UnwrapOrNull<Stream>(stream), true, 64, 129);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = FinishedTaskReclaim(static_cast<Stream *>(stream), true, 129, 64);
+    error = FinishedTaskReclaim(rt_ut::UnwrapOrNull<Stream>(stream), true, 129, 64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
@@ -819,8 +821,10 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_01)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     stream->device_ = device;
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqEnable)
@@ -839,7 +843,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_01)
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     ret = StarsResumeRtsq(&report, &reportTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -849,8 +853,10 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_02)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     stream->device_ = device;
     stream->SetAbortStatus(RT_ERROR_STREAM_ABORT);
 
@@ -870,7 +876,7 @@ TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_02)
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     ret = StarsResumeRtsq(&report, &reportTask);
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -883,14 +889,20 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForNotifyWaitTask)
     rtModel_t modelHandle = nullptr;
     Stream *stream;
     Notify *notify;
+    rtStream_t streamHandle = nullptr;
+    rtNotify_t notifyHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     ret = rtModelCreate(&modelHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
-    ret = rtNotifyCreate(0, (rtNotify_t *)&notify);
+    ret = rtNotifyCreate(0, &notifyHandle);
+
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    notify = rt_ut::UnwrapOrNull<Notify>(notifyHandle);
     notify->SetEndGraphModel(model);
 
     TaskInfo taskInfo = {0};
@@ -901,9 +913,9 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForNotifyWaitTask)
 
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
-    ret = rtNotifyDestroy(notify);
+    ret = rtNotifyDestroy(notifyHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -915,18 +927,24 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForNotifyWaitTaskForAiCpu)
 {
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    Model *model;
-    rtModel_t modelHandle = nullptr;
-    Stream *stream;
-    Notify *notify;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    Model *model = nullptr;
+    Stream *stream = nullptr;
+    Notify *notify = nullptr;
+    rtStream_t streamHandle = nullptr;
+    rtNotify_t notifyHandle = nullptr;
+    rtModel_t modelHandle = nullptr;
+
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelCreate(&modelHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
-    ret = rtNotifyCreate(0, (rtNotify_t *)&notify);
+
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ret = rtNotifyCreate(0, &notifyHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    notify = rt_ut::UnwrapOrNull<Notify>(notifyHandle);
     notify->SetEndGraphModel(model);
 
     TaskInfo taskInfo = {0};
@@ -936,24 +954,23 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForNotifyWaitTaskForAiCpu)
 
     taskInfo.stream->Device_()->SetDeviceRas(true);
     faultEventFlag = 2;
-
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
     taskInfo.errorCode = AICPU_HCCL_OP_UB_POISON_FAILED;
     taskInfo.stream->Device_()->SetDeviceRas(false);
     faultEventFlag = 7;
-
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
     taskInfo.errorCode = CCU_TASK_LINK_ERROR;
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
-    ret = rtNotifyDestroy(notify);
+    ret = rtNotifyDestroy(notifyHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
@@ -964,8 +981,10 @@ TEST_F(DavidTaskRecycleTest, PrintErrorInfo)
     Model *model;
     Stream *stream;
     Notify *notify;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
     taskInfo.stream = stream;
@@ -981,7 +1000,7 @@ TEST_F(DavidTaskRecycleTest, PrintErrorInfo)
 
     PrintErrorInfo(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -991,8 +1010,10 @@ TEST_F(DavidTaskRecycleTest, CCUTask)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
@@ -1006,7 +1027,7 @@ TEST_F(DavidTaskRecycleTest, CCUTask)
     SetStarsResult(&taskInfo, wait_cqe);
     Complete(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1017,8 +1038,10 @@ TEST_F(DavidTaskRecycleTest, CCUTaskHBMError)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
@@ -1043,7 +1066,7 @@ TEST_F(DavidTaskRecycleTest, CCUTaskHBMError)
     Complete(&taskInfo, 0);
     faultEventFlag = 0;
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1053,8 +1076,10 @@ TEST_F(DavidTaskRecycleTest, FusionTaskAbort)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
@@ -1068,7 +1093,7 @@ TEST_F(DavidTaskRecycleTest, FusionTaskAbort)
     SetStarsResult(&taskInfo, wait_cqe);
     Complete(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1078,8 +1103,10 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForMemcpyAsyncTask)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     MOCKER(PrintErrorInfoForMemcpyAsyncTask).stubs();
 
@@ -1089,7 +1116,7 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForMemcpyAsyncTask)
     taskInfo.type = TS_TASK_TYPE_MEMCPY;
     Complete(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1099,8 +1126,10 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForMemcpyAsyncTaskForSDMALinkError
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     
     MOCKER(PrintErrorInfoForMemcpyAsyncTask).stubs();
 
@@ -1111,7 +1140,7 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForMemcpyAsyncTaskForSDMALinkError
     taskInfo.mte_error = TS_ERROR_SDMA_LINK_ERROR;
     Complete(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1122,8 +1151,10 @@ TEST_F(DavidTaskRecycleTest, PrintErrorInfoForStreamLabelSwitchByIndexTask)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = TS_ERROR_TASK_TIMEOUT;
@@ -1134,7 +1165,7 @@ TEST_F(DavidTaskRecycleTest, PrintErrorInfoForStreamLabelSwitchByIndexTask)
 
     PrintErrorInfoForStreamLabelSwitchByIndexTask(&taskInfo, 0);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1158,7 +1189,8 @@ TEST_F(DavidTaskRecycleTest, RecycleModeLabel)
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->SetSqMemAttr(false);
     rtModel_t model;
     rtLabel_t label;
     error = rtModelCreate(&model, 0);
@@ -1170,23 +1202,23 @@ TEST_F(DavidTaskRecycleTest, RecycleModeLabel)
     Model *realModel = rt_ut::UnwrapOrNull<Model>(model);
     Label *realLabel = rt_ut::UnwrapOrNull<Label>(label);
     realLabel->SetLabelDevAddr((void *)(&val));
-    ((Stream *)stream)->models_.insert(realModel);
-    ((Stream *)stream)->SetLatestModlId(realModel->Id_());
-    static_cast<Stream *>(stream)->InsertLabelList(realLabel);
+    streamObj->models_.insert(realModel);
+    streamObj->SetLatestModlId(realModel->Id_());
+    streamObj->InsertLabelList(realLabel);
 
     uint32_t pos = UINT32_MAX;
     TaskInfo *task = nullptr;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(streamObj->taskResMang_));
     error = taskResMang->AllocTaskInfoAndPos(1U, pos, &task);
-    task->stream = static_cast<Stream *>(stream);
+    task->stream = streamObj;
     task->sqeNum = 1U;
     task->type = TS_TASK_TYPE_LABEL_SET;
     task->u.labelSetTask.labelId = realLabel->Id_();
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(pos, 0);
 
-    RecycleModelBindStreamAllTask(static_cast<Stream *>(stream), true);
-    ((Stream *)stream)->models_.erase(realModel);
+    RecycleModelBindStreamAllTask(streamObj, true);
+    streamObj->models_.erase(realModel);
 
     error = rtLabelDestroy(label);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1256,12 +1288,14 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed)
     rtError_t error;
     Device *dev = nullptr;
     Stream *stm = nullptr;
+    rtStream_t stmHandle = nullptr;
  
     dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     EXPECT_NE(dev, nullptr);
  
-    error = rtStreamCreate((rtStream_t *)&stm, 0);
+    error = rtStreamCreate(&stmHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
  
     const uint32_t sqId = stm->GetSqId();
     const uint32_t tsId = dev->DevGetTsId();
@@ -1278,7 +1312,7 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed)
     error = dev->Driver_()->GetSqEnable(dev->Id_(), tsId, sqId, sqEnable);
     EXPECT_EQ(error, RT_ERROR_NONE);
     sqHead == sqTail;
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
  
@@ -1289,12 +1323,14 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed2)
     rtError_t error;
     Device *dev = nullptr;
     Stream *stm = nullptr;
+    rtStream_t stmHandle = nullptr;
  
     dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     EXPECT_NE(dev, nullptr);
  
-    error = rtStreamCreate((rtStream_t *)&stm, 0);
+    error = rtStreamCreate(&stmHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
  
     const uint32_t sqId = stm->GetSqId();
     const uint32_t tsId = dev->DevGetTsId();
@@ -1312,7 +1348,7 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_GetSqEnableFailed2)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(false))
         .will(returnValue(RT_ERROR_NONE));
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1322,12 +1358,14 @@ TEST_F(DavidTaskRecycleTest, test_recycle_task_abort_on_failure)
     rtError_t error;
     Device *dev = nullptr;
     Stream *stm = nullptr;
+    rtStream_t stmHandle = nullptr;
  
     dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     EXPECT_NE(dev, nullptr);
  
-    error = rtStreamCreate((rtStream_t *)&stm, 0);
+    error = rtStreamCreate(&stmHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
  
     stm->SetFailureMode(ABORT_ON_FAILURE);
     stm->isForceRecycle_ = false;
@@ -1339,7 +1377,7 @@ TEST_F(DavidTaskRecycleTest, test_recycle_task_abort_on_failure)
     error = RecycleTaskBySqHeadForRecyleThread(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1348,15 +1386,17 @@ TEST_F(DavidTaskRecycleTest, test_stream_already_force_recycled) {
     rtError_t error;
     Device *dev = nullptr;
     Stream *stm = nullptr;
+    rtStream_t stmHandle = nullptr;
  
     dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     EXPECT_NE(dev, nullptr);
  
-    error = rtStreamCreate((rtStream_t *)&stm, 0);
+    error = rtStreamCreate(&stmHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
  
     stm->isForceRecycle_ = true;
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1365,12 +1405,14 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_SqHeadEqualsSqTail) {
     rtError_t error;
     Device *dev = nullptr;
     Stream *stm = nullptr;
+    rtStream_t stmHandle = nullptr;
  
     dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     EXPECT_NE(dev, nullptr);
  
-    error = rtStreamCreate((rtStream_t *)&stm, 0);
+    error = rtStreamCreate(&stmHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
  
     const uint32_t sqId = stm->GetSqId();
     const uint32_t tsId = dev->DevGetTsId();
@@ -1393,7 +1435,7 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_SqHeadEqualsSqTail) {
     sqHead = 0U;
     sqTail = 0U;
  
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1402,7 +1444,7 @@ TEST_F(DavidTaskRecycleTest, TestNormalTaskReclaim) {
     rtStream_t stm = nullptr;
     Device *device_ = nullptr;
     device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    rtStreamCreate((rtStream_t *)&stm, 0);
+    rtStreamCreate(&stm, 0);
     StarsEngine engine(device_);
     bool isExistCqe = true;
     bool isNeedRecvCqe = true;
@@ -1411,7 +1453,7 @@ TEST_F(DavidTaskRecycleTest, TestNormalTaskReclaim) {
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
     
-    TaskReclaimForSeparatedStm((Stream *)stm);
+    TaskReclaimForSeparatedStm(rt_ut::UnwrapOrNull<Stream>(stm));
 
     ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
     rtStreamDestroy(stm);
@@ -1421,7 +1463,7 @@ TEST_F(DavidTaskRecycleTest, TestNormalTaskReclaim2) {
     rtStream_t stm = nullptr;
     Device *device_ = nullptr;
     device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-    rtStreamCreate((rtStream_t *)&stm, 0);
+    rtStreamCreate(&stm, 0);
     StarsEngine engine(device_);
     bool isExistCqe = true;
     bool isNeedRecvCqe = true;
@@ -1430,7 +1472,7 @@ TEST_F(DavidTaskRecycleTest, TestNormalTaskReclaim2) {
     .stubs()
     .will(ignoreReturnValue());
 
-    TaskReclaimForSeparatedStm((Stream *)stm);
+    TaskReclaimForSeparatedStm(rt_ut::UnwrapOrNull<Stream>(stm));
 
     ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
     rtStreamDestroy(stm);
@@ -1442,8 +1484,8 @@ TEST_F(DavidTaskRecycleTest, DavidTaskRecycleTest2) {
     Device * const dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
     rtStream_t stm = nullptr;
-    rtStreamCreate((rtStream_t *)&stm, 0);
-    TaskReclaimForSeparatedStm((Stream *)stm);
+    rtStreamCreate(&stm, 0);
+    TaskReclaimForSeparatedStm(rt_ut::UnwrapOrNull<Stream>(stm));
     RecycleThreadDoForStarsV2(dev);
     EXPECT_NO_THROW(RecycleThreadDoForStarsV2(dev));
     rtStreamDestroy(stm);
@@ -1468,13 +1510,13 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask_DelWorkTaskIsNull) {
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     TaskInfo taskInfo = {0};
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
 
     uint16_t delPos = 0;
-    MOCKER_CPP_VIRTUAL((DavidStream *)(stream), &DavidStream::StarsGetPublicTaskHead)
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream), &Stream::StarsGetPublicTaskHead)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&delPos))
         .will(returnValue(RT_ERROR_NONE));
@@ -1506,13 +1548,13 @@ TEST_F(DavidTaskRecycleTest, TryReclaimToTask_EarlyBreak) {
     rtStream_t stream = nullptr;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    static_cast<Stream *>(stream)->SetSqMemAttr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream)->SetSqMemAttr(false);
     TaskInfo taskInfo = {0};
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.type = TS_TASK_TYPE_MODEL_EXECUTE;
 
     uint16_t delPos = 0;
-    MOCKER_CPP_VIRTUAL((DavidStream *)(stream), &DavidStream::StarsGetPublicTaskHead)
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream), &Stream::StarsGetPublicTaskHead)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&delPos))
         .will(returnValue(RT_ERROR_NONE));
@@ -1530,8 +1572,10 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_ShouldSubmitRecycleTask_When
     Device *dev = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     ASSERT_NE(dev, nullptr);
     Stream *stm = nullptr;
-    rtError_t error = rtStreamCreate((rtStream_t *)&stm, 0);
+    rtStream_t stmHandle = nullptr;
+    rtError_t error = rtStreamCreate(&stmHandle, 0);
     ASSERT_EQ(error, RT_ERROR_NONE);
+    stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
     const uint32_t sqId = stm->GetSqId();
     const uint32_t tsId = dev->DevGetTsId();
     uint16_t sqHead = 10U;
@@ -1549,7 +1593,7 @@ TEST_F(DavidTaskRecycleTest, RefreshForceRecyleFlag_ShouldSubmitRecycleTask_When
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqEnable))
         .will(returnValue(RT_ERROR_NONE));
-    error = rtStreamDestroy(stm);
+    error = rtStreamDestroy(stmHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1575,7 +1619,7 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
         .will(returnValue(&task));
     MOCKER_CPP(&Engine::ReportHeartBreakProcV2).stubs().will(returnValue(RT_ERROR_NONE));
 
-    g_cqReport.streamId = static_cast<Stream *>(stream)->Id_();
+    g_cqReport.streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
     g_cqReport.taskId = 0U;
     g_cqReport.errorType = RT_STARS_CQE_ERR_TYPE_SQE_ERROR;
     g_cqReport.sqeType = RT_DAVID_SQE_TYPE_JPEGD;
@@ -1584,7 +1628,7 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
     driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL((NpuDriver *)(driver), &NpuDriver::LogicCqReportV2).stubs().will(invoke(Sub_LogicCqReportV2));
 
-    ProcLogicCqUntilEmpty(static_cast<Stream *>(stream));
+    ProcLogicCqUntilEmpty(rt_ut::UnwrapOrNull<Stream>(stream));
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);

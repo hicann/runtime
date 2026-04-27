@@ -35,6 +35,7 @@
 #include <functional>
 #include "npu_driver_dcache_lock.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 
@@ -560,7 +561,7 @@ TEST_F(CloudV2DcacheLockFillFftsMixSqeForDavinciTaskTest, FillFftsMixSqeForDavin
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_FFTS_PLUS;
     taskInfo.bindFlag = true;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};

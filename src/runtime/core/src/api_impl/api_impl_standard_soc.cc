@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
+#include "runtime_handle_guard.h"
 #include "base.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -442,6 +443,7 @@ rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t *handle, IpcEvent** con
     const rtError_t error = (*event)->IpcOpenEventHandle(handle);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*event);,
         "IpcOpenEventHandle failed, retCode=%#x", error);
+    InitEmbeddedInnerHandle<Event>(*event);
     return RT_ERROR_NONE;
 }
 

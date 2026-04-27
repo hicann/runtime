@@ -38,6 +38,7 @@
 #include "npu_driver.hpp"
 #include "task_submit.hpp"
 #include "capture_model_utils.hpp"
+#include "rt_unwrap.h"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"
 using namespace testing;
@@ -191,7 +192,7 @@ TEST_F(CloudV2StreamTest, stream_get_attribute2)
 
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
-    stream = static_cast<Stream *>(stm);
+    stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
     setvalue.failureMode = RT_STREAM_FAILURE_MODE_CONTINUE_ON_FAILURE; // 假设这是一个有效的失败模式值
     error = rtsStreamSetAttribute(stm, RT_STREAM_ATTR_FAILURE_MODE, &setvalue);

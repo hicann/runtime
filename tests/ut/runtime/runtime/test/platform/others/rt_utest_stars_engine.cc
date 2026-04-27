@@ -37,6 +37,7 @@
 #include "thread_local_container.hpp"
 #include "../../rt_utest_config_define.hpp"
 #include "model_execute_task.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -114,12 +115,12 @@ protected:
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         grp_ = new DvppGrp(device_, 0);
         rtDvppGrp_t grp_t = (rtDvppGrp_t *)grp_;
         rtError_t ret = rtStreamCreateByGrp(&streamHandleDvpp_, 0, 0, grp_t);
-        streamDvpp_ = (Stream *)streamHandleDvpp_;
+        streamDvpp_ = rt_ut::UnwrapOrNull<Stream>(streamHandleDvpp_);
         streamDvpp_->SetLimitFlag(true);
         EXPECT_EQ(res, RT_ERROR_NONE);
     }

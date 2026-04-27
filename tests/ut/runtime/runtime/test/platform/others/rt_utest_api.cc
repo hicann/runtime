@@ -11,6 +11,25 @@
 #include "profiling_task.h"
 #include "../../data/elf.h"
 #include "../../rt_utest_config_define.hpp"
+#include "rt_unwrap.h"
+
+static rtError_t IpcOpenNotifyStubSucc(cce::runtime::ApiImpl *api, Notify ** const retNotify,
+                                       const char_t * const name, uint32_t flag)
+{
+    (void)api;
+    (void)name;
+    (void)flag;
+    if (retNotify == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    Notify *realNotify = new (std::nothrow) Notify(0, 0);
+    if (realNotify == nullptr) {
+        return RT_ERROR_NOTIFY_NEW;
+    }
+    InitEmbeddedInnerHandle<Notify>(realNotify);
+    *retNotify = realNotify;
+    return RT_ERROR_NONE;
+}
 
 TEST_F(ApiTest, util_test)
 {
@@ -884,14 +903,14 @@ TEST_F(ApiTest, stream_sync)
     error = rtStreamWaitEvent(stream_, event);
     EXPECT_EQ(error, RT_ERROR_NONE);
     
-    TsStreamFailureMode old = ((Stream *)stream_)->Context_()->GetCtxMode();
-    ((Stream *)stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((Stream *)stream_)->Device_()->SetIsRingbufferGetErr(true);
+    TsStreamFailureMode old = (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->GetCtxMode();
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Device_()->SetIsRingbufferGetErr(true);
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    ((Stream *)stream_)->Device_()->SetIsRingbufferGetErr(false);
-    ((Stream *)stream_)->Context_()->SetCtxMode(old);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Device_()->SetIsRingbufferGetErr(false);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetCtxMode(old);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1230,15 +1249,15 @@ TEST_F(ApiTest, send_task_fail)
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    TsStreamFailureMode old = ((Stream *)stream_)->Context_()->GetCtxMode();
-    ((Stream *)stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((Stream *)stream_)->Context_()->SetFailureError(TS_ERROR_AIVEC_OVERFLOW);
-    ((Stream *)stream_)->failureMode_ = ABORT_ON_FAILURE;
+    TsStreamFailureMode old = (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->GetCtxMode();
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetFailureError(TS_ERROR_AIVEC_OVERFLOW);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->failureMode_ = ABORT_ON_FAILURE;
     error = rtEventRecord(event, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ((Stream *)stream_)->failureMode_ = CONTINUE_ON_FAILURE;
-    ((Stream *)stream_)->Context_()->SetFailureError(0);
-    ((Stream *)stream_)->Context_()->SetCtxMode(old);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->failureMode_ = CONTINUE_ON_FAILURE;
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetFailureError(0);
+    (rt_ut::UnwrapOrNull<Stream>(stream_))->Context_()->SetCtxMode(old);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1317,17 +1336,15 @@ TEST_F(ApiTest, rtStreamTaskClean_02)
     rtChipType_t originType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    uint32_t devId = 0U;
     RawDevice *device = new RawDevice(0);
     device->Init();
     Stream *stm = new Stream(device, 0);
-
+    InitEmbeddedInnerHandle<Stream>(stm);
     stm->SetBindFlag(true);
-    error = rtStreamTaskClean(stm);
+    error = rtStreamTaskClean(reinterpret_cast<rtStream_t>(stm->GetInnerHandle()));
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
     rtInstance->SetChipType(originType);
     GlobalContainer::SetRtChipType(originType);
-
     delete stm;
     delete device;
 }
@@ -1339,12 +1356,12 @@ TEST_F(ApiTest, rtStreamSynchronizeWithTimeout)
     rtStream_t stream;
     error = rtStreamCreate(&stream, 5);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
 
     error = rtStreamSynchronizeWithTimeout(stream, 100);
     EXPECT_NE(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1363,7 +1380,7 @@ TEST_F(ApiTest, rtStreamSynchronize_ctx_switch)
     rtCtxGetCurrent(&oldCtx);
     rtContext_t ctx;
     rtCtxCreate(&ctx, 0, 1);
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
     error = rtStreamSynchronize(stream);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -1384,7 +1401,7 @@ TEST_F(ApiTest, rtStreamSynchronize)
     error = rtStreamCreate(&stream, 5);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
 
     error = rtStreamSynchronize(stream);
@@ -1761,17 +1778,15 @@ TEST_F(ApiTest, rtsPersistentTaskClean_001)
     rtChipType_t originType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    uint32_t devId = 0U;
     RawDevice *device = new RawDevice(0);
     device->Init();
     Stream *stm = new Stream(device, 0);
-
+    InitEmbeddedInnerHandle<Stream>(stm);
     stm->SetBindFlag(true);
-    error = rtsPersistentTaskClean(stm);
+    error = rtsPersistentTaskClean(reinterpret_cast<rtStream_t>(stm->GetInnerHandle()));
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
     rtInstance->SetChipType(originType);
     GlobalContainer::SetRtChipType(originType);
-
     delete stm;
     delete device;
 }
@@ -3345,9 +3360,11 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_3)
     PCTrace* pctraceHandle = new PCTrace();
     RawDevice *stubDevice = new RawDevice(0);
     stubDevice->Init();
+    Stream *realStream = rt_ut::UnwrapOrNull<Stream>(stream_);
+    ASSERT_NE(realStream, nullptr);
 
     TaskInfo *pctraceTask = (const_cast<TaskFactory *>(stubDevice->GetTaskFactory()))->Alloc(
-        (cce::runtime::Stream*)stream_, TS_TASK_TYPE_PCTRACE_ENABLE, error);
+        realStream, TS_TASK_TYPE_PCTRACE_ENABLE, error);
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module *)NULL));
@@ -3999,13 +4016,13 @@ TEST_F(ApiTest, kernel_launch_ex_dump)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream0 = (Stream *)stream;
+    Stream *stream0 = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *context0 = (Context *)stream0->Context_();
     stream0->SetContext((Context *)NULL);
 
     error = rtKernelLaunchEx((void *)1, 1, 2, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     stream0->SetContext(context0);
 
@@ -4247,7 +4264,7 @@ TEST_F(ApiTest, memcpy2d_async_success_d2d)
     rtStream_t stm;
     error = rtStreamCreate(&stm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    Stream * const exeStream = rt_ut::UnwrapOrNull<Stream>(stm);
 
     error = impl.MemCopy2DAsync(destPtr, 150, srcPtr, 150, 0, 0, exeStream, RT_MEMCPY_DEVICE_TO_DEVICE);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -4598,7 +4615,7 @@ TEST_F(ApiTest, mem_wait_record_task_02)
  
     error = rtsValueWait(devPtr, 0, 0, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -4643,7 +4660,9 @@ TEST_F(ApiTest, memcpy_batch_async)
 
 TEST_F(ApiTest, ipc_set_notify_pid3)
 {
-    rtNotify_t notify = nullptr;
+    Notify notifyObj(0, 0);
+    InitEmbeddedInnerHandle<Notify>(&notifyObj);
+    rtNotify_t notify = reinterpret_cast<rtNotify_t>(notifyObj.GetInnerHandle());
     rtError_t error;
     int32_t pid[]={1};
     int num = 1;
@@ -4652,7 +4671,7 @@ TEST_F(ApiTest, ipc_set_notify_pid3)
     rtChipType_t chipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
-    error = rtsNotifySetImportPid(notify, pid,num);
+    error = rtsNotifySetImportPid(notify, nullptr, num);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     rtInstance->SetChipType(chipType);
@@ -4668,24 +4687,32 @@ TEST_F(ApiTest, rts_ipc_open_with_flag_succ)
     uint32_t notifyId;
     rtNotifyPhyInfo notifyInfo;
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    rtChipType_t originType = rtInstance->GetChipType();
  
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::IpcOpenNotify).stubs().will(invoke(IpcOpenNotifyStubSucc));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetNotifyPhyInfo).stubs().will(invoke(GetNotifyPhyInfoStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::NotifyDestroy).stubs().will(returnValue(RT_ERROR_NONE));
  
-    rtNotify_t notify2 = new (std::nothrow) Notify(0, 0);
+    rtNotify_t notify2 = nullptr;
     rtInstance->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
     error = rtsNotifyImportByKey(&notify2, "aaaa", 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    if (error != ACL_RT_SUCCESS) {
+        rtInstance->SetChipType(originType);
+        GlobalContainer::SetRtChipType(originType);
+        return;
+    }
     error = rtNotifyGetPhyInfo(notify2, &phyDevId, &tsId);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(phyDevId, 1);
     EXPECT_EQ(tsId, 2);
     error = rtNotifyGetPhyInfoExt(notify2, &notifyInfo);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtNotifyDestroy(notify2);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    delete notify2;
+    rtInstance->SetChipType(originType);
+    GlobalContainer::SetRtChipType(originType);
 }
  
 TEST_F(ApiTest, rtMallocPysical)
@@ -4854,7 +4881,8 @@ TEST_F(ApiTest, rtsLabelSwitchByIndex)
  
     error = rtLabelGotoEx(label[2], stream[0]);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), (Stream *)stream[0]);
+
+    error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), rt_ut::UnwrapOrNull<Stream>(stream[0]));
     EXPECT_EQ(error, RT_ERROR_NONE);
  
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[0]);
@@ -5040,11 +5068,12 @@ TEST_F(ApiTest, rtLabelSwitchByIndex)
     error = rtLabelSwitchByIndex((void *)memPtr.devAddr, labelMax, (void *)labelPtr.devAddr, stream[0]);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->LabelSwitchByIndex((void *)memPtr.devAddr, labelMax,
-                                                               (void *)labelPtr.devAddr, (Stream *)stream[0]);
+                                                               (void *)labelPtr.devAddr, rt_ut::UnwrapOrNull<Stream>(stream[0]));
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtLabelGotoEx(label[2], stream[0]);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), (Stream *)stream[0]);
+
+    error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), rt_ut::UnwrapOrNull<Stream>(stream[0]));
     EXPECT_EQ(error, RT_ERROR_NONE);
  
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[0]);
@@ -6168,7 +6197,7 @@ TEST_F(ApiTest, rtLabelCreateEx)
  
     error = rtLabelDestroy(labelEx);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
 
     error = rtModelDestroy(model);
@@ -6470,7 +6499,7 @@ TEST_F(ApiTest, rtLaunchSqeUpdateTask_FEATURE_NOT_SUPPORT)
  
     error = rtLaunchSqeUpdateTask(streamId, taskId, reinterpret_cast<void *>(src_addr), cnt, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -6876,7 +6905,7 @@ TEST_F(ApiTest, rts_callback_subscribe_interface)
  
     error = rtsUnSubscribeReport(1, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -7110,4 +7139,55 @@ TEST_F(ApiTest, rtGetOpTimeOutInterval)
     rtInstance->SetChipType(oriChipType);
     GlobalContainer::SetRtChipType(oriChipType);
     rtInstance->SetSocVersion(socVersion);
+}
+TEST_F(ApiTest, rtSetOpExecuteTimeOutV2)
+{
+    rtError_t error;
+    uint64_t timeout = 100 * 1000 * 100UL; // 100s
+    uint64_t actualTimeout = 0UL;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    rtChipType_t oriChipType = rtInstance->GetChipType();
+    rtInstance->SetChipType(CHIP_610LITE);
+    GlobalContainer::SetRtChipType(CHIP_610LITE);
+    std::string socVersion = rtInstance->GetSocVersion();
+    rtInstance->SetSocVersion("Ascend910B1");
+    rtInstance->InitChipTypeAndSocVersion();
+    error= rtSetOpExecuteTimeOutV2(timeout, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID); // nullptr
+    Runtime::Instance()->timeoutConfig_.isInit = false;
+    error= rtSetOpExecuteTimeOutV2(timeout, &actualTimeout);
+    EXPECT_EQ(error, ACL_ERROR_RT_DEV_SETUP_ERROR); // not set device
+
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0); // set device
+    Runtime::Instance()->timeoutConfig_.isInit = false;
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs().will(returnValue(false));
+    ((Runtime *)Runtime::Instance())->InitOpExecTimeout(device);
+    error= rtSetOpExecuteTimeOutV2(timeout, &actualTimeout);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtInstance->SetChipType(oriChipType);
+    GlobalContainer::SetRtChipType(oriChipType);
+    rtInstance->SetSocVersion(socVersion);
+}
+
+TEST_F(ApiTest, CheckMemCpyAttr_NumaCoverage) 
+{
+    ApiImpl api;  
+    char d_obj = 0;
+    char s_obj = 0;
+    void* dst_ptr = &d_obj;
+    void* src_ptr = &s_obj;
+    rtMemcpyBatchAttr memAttr{}; 
+    rtPtrAttributes_t dstAttr_actual{};
+    rtPtrAttributes_t srcAttr_actual{};
+    memAttr.dstLoc.type = RT_MEMORY_LOC_HOST_NUMA;
+    memAttr.dstLoc.id = 1;
+    memAttr.srcLoc.type = RT_MEMORY_LOC_HOST_NUMA;
+    memAttr.srcLoc.id =1;
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
+    rtError_t error = api.CheckMemCpyAttr(dst_ptr, src_ptr, memAttr, dstAttr_actual, srcAttr_actual);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
 }

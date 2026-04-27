@@ -34,6 +34,7 @@
 #include "rdma_task.h"
 #include "thread_local_container.hpp"
 #include "stars_david.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 using namespace testing;
@@ -119,7 +120,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask1)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -160,7 +161,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask2)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -201,7 +202,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask3)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -242,7 +243,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask4)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -300,7 +301,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask5)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernelPtr;
 
     rtDavidSqe_t command = {};
@@ -341,7 +342,7 @@ TEST_F(CustomerStackSize, ConstructDavidAICoreSqeForDavinciTask1)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -382,7 +383,7 @@ TEST_F(CustomerStackSize, ConstructDavidAICoreSqeForDavinciTask2)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -423,7 +424,7 @@ TEST_F(CustomerStackSize, ConstructDavidAivSqeForDavinciTask1)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AIVEC;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};
@@ -464,7 +465,7 @@ TEST_F(CustomerStackSize, ConstructDavidAivSqeForDavinciTask2)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AIVEC;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream *>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtDavidSqe_t command = {};

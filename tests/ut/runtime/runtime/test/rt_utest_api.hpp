@@ -220,7 +220,7 @@ protected:
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         rtInstance->SetChipType(originType_);
         GlobalContainer::SetRtChipType(originType_);
-        Stream *stream_var = static_cast<Stream *>(stream_);
+        Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream_);
         stream_var->pendingNum_.Set(0);
         rtError_t error1 = rtStreamDestroy(stream_);
         rtError_t error2 = rtEventDestroy(event_);

@@ -40,6 +40,7 @@
 #include "mmpa_api.h"
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -75,7 +76,7 @@ protected:
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         /* sleep 10ms，advoid stream_create task not processed in no-disable-thread scene, */
         /* in some case which may change the disable-thread flag. */
         usleep(10 * 1000);

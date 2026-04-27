@@ -383,8 +383,8 @@ TEST_F(RtApiTest, capture_api_20)
     error = rtCtxGetCurrent(&current);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * streamEx = static_cast<Stream *>(stream);
     Model * modelEx = rt_ut::UnwrapOrNull<Model>(model);
+    Stream *streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context * ctx = static_cast<Context *>(current);
     error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -418,8 +418,8 @@ TEST_F(RtApiTest, capture_api_21)
     error = rtCtxGetCurrent(&current);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * streamEx = static_cast<Stream *>(stream);
     Model * modelEx = rt_ut::UnwrapOrNull<Model>(model);
+    Stream *streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context * ctx = static_cast<Context *>(current);
     error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_MODEL_CAPTURE_STATUS);
@@ -453,8 +453,8 @@ TEST_F(RtApiTest, capture_api_22)
     error = rtCtxGetCurrent(&current);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream * streamEx = static_cast<Stream *>(stream);
     Model * modelEx = rt_ut::UnwrapOrNull<Model>(captureMdl);
+    Stream *streamEx = rt_ut::UnwrapOrNull<Stream>(stream);
     Context * ctx = static_cast<Context *>(current);
     error = ctx->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_STREAM_CAPTURED);
@@ -957,7 +957,7 @@ TEST_F(RtApiTest, capture_api_mutil_thread)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
 
-    Stream *s = RtPtrToPtr<Stream*>(stream);
+    Stream *s = rt_ut::UnwrapOrNull<Stream>(stream);
     s->SetBeginCaptureThreadId(0);
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_CAPTURE_WRONG_THREAD);
@@ -987,7 +987,7 @@ TEST_F(RtApiTest, capture_api_mutil_thread_2)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
 
-    Stream *s = RtPtrToPtr<Stream*>(stream);
+    Stream *s = rt_ut::UnwrapOrNull<Stream>(stream);
     s->SetBeginCaptureThreadId(0);
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1290,7 +1290,7 @@ TEST_F(RtApiTest, model_json_print_record_wait)
 
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     error = rtModelDebugJsonPrint(model, "test.json", 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

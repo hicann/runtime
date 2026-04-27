@@ -24,6 +24,7 @@
 #include "profiler_struct.hpp"
 #include "thread_local_container.hpp"
 #include "toolchain/prof_api.h"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 #include "model_c.hpp"
@@ -331,7 +332,7 @@ TEST_F(ModelTest, TestMallocExecuteTask)
 
     Model *model = rt_ut::UnwrapOrNull<Model>(rtModel);
     MOCKER(ModelExecuteTaskInit).stubs().will(returnValue(RT_ERROR_DRV_ERR));
-    error = model->SubmitExecuteTask((Stream *)rtStream);
+    error = model->SubmitExecuteTask(rt_ut::UnwrapOrNull<Stream>(rtStream));
     EXPECT_EQ(error, RT_ERROR_MODEL_EXECUTOR);
 
     error = rtModelDestroy(rtModel);
@@ -473,7 +474,7 @@ TEST_F(ModelTest, TestPacketAicpuModelInfoWithStreamNotNull)
 
     Model *model = rt_ut::UnwrapOrNull<Model>(rtModel);
 
-    model->BindStream((Stream*) rtStream, 0);
+    model->BindStream(rt_ut::UnwrapOrNull<Stream>(rtStream), 0);
     MOCKER_CPP(&Model::PacketAllStreamInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
     error = model->PacketAicpuModelInfo();
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
@@ -500,7 +501,7 @@ TEST_F(ModelTest, TestPacketAicpuModelInfoWithPackAicpuTaskError)
     Model *model = rt_ut::UnwrapOrNull<Model>(rtModel);
     rtCommand_t command = {};
     command.type = static_cast<uint16_t>(TS_TASK_TYPE_ACTIVE_AICPU_STREAM);
-    model->SaveAicpuStreamTask((Stream *)rtStream, &command);
+    model->SaveAicpuStreamTask(rt_ut::UnwrapOrNull<Stream>(rtStream), &command);
     MOCKER_CPP(&Model::PacketAicpuTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
 
     error = model->PacketAicpuModelInfo();
@@ -595,7 +596,7 @@ TEST_F(ModelTest, CacheTaskTrackReport)
 
     error = rtModelLoadComplete(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     // synchronize execute
     error = rtModelExecute(model, syncStream, 0);
@@ -724,7 +725,7 @@ TEST_F(ModelTest, model_stream_unbind_task_pool)
     rt_ut::UnwrapOrNull<Model>(model)->SetNeedSubmitTask(true);
 
     //MOCKER_CPP_VIRTUAL( (*(((Context **)&ctx)))->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     rt_ut::UnwrapOrNull<Model>(model)->UnbindStream(stream_var, false);
 
     error = rtStreamDestroy(stream);
@@ -927,8 +928,7 @@ TEST_F(ModelTest, model_stream_unbind_stream_fail_01)
     error = rtModelBindStream(model, stream, 0);
 
     rt_ut::UnwrapOrNull<Model>(model)->SetNeedSubmitTask(true);
-
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     error = rtModelDestroy(model);
 
@@ -960,7 +960,7 @@ TEST_F(ModelTest, model_stream_unbind_stream_fail_02)
 
     rt_ut::UnwrapOrNull<Model>(model)->SetNeedSubmitTask(true);
 
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     //Model model;
     rt_ut::UnwrapOrNull<Model>(model)->UnbindStream(nullptr, false);
@@ -991,7 +991,7 @@ TEST_F(ModelTest, model_stream_unbind_stream_fail_03)
 
     GlobalMockObject::verify();
 
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rt_ut::UnwrapOrNull<Model>(model)->UnbindStream(stream_var, false);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
@@ -1045,7 +1045,7 @@ TEST_F(ModelTest, save_aicpu_stream_task)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     command.taskID = 1;
 
@@ -1132,8 +1132,9 @@ TEST_F(ModelTest, model_head_stream)
 
     error = rtModelBindStream(model, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
     Model *tmpMdl = rt_ut::UnwrapOrNull<Model>(model);
-    uint16_t num = tmpMdl->IsModelHeadStream(static_cast<Stream*>(stream));
+    uint16_t num = tmpMdl->IsModelHeadStream(rt_ut::UnwrapOrNull<Stream>(stream));
     EXPECT_EQ(num, 1);
 
     error = rtModelUnbindStream(model, stream);
@@ -1189,7 +1190,7 @@ TEST_F(ModelTest, model_stream_get_head_stream)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Model *tmpMdl = rt_ut::UnwrapOrNull<Model>(model);
 
-    EXPECT_EQ(tmpMdl->IsModelHeadStream(static_cast<Stream*>(stream)), 1);
+    EXPECT_EQ(tmpMdl->IsModelHeadStream(rt_ut::UnwrapOrNull<Stream>(stream)), 1);
 
     error = rtModelUnbindStream(model, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1316,7 +1317,7 @@ TEST_F(ModelTest, model_disable_sq)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
 
     error = rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

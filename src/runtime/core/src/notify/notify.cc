@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "notify.hpp"
+#include "runtime_handle_guard.h"
 
 #include "device.hpp"
 #include "osal.hpp"
@@ -35,6 +36,7 @@ Notify::Notify(const uint32_t devId, const uint32_t taskSchId)
 
 Notify::~Notify() noexcept
 {
+    ResetEmbeddedInnerHandle<Notify>(this);
     if (dev_ != nullptr) {
         dev_->RemoveNotify(this);
     }
@@ -111,6 +113,7 @@ rtError_t Notify::Setup()
     dev_ = dev;
     dev_->PushNotify(this);
     notifyid_ = curNotifyId;
+    InitEmbeddedInnerHandle<Notify>(this);
     return RT_ERROR_NONE;
 }
 
@@ -422,6 +425,8 @@ rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t fla
 
     error = driver_->EnableP2PNotify(localDevId_, phyId_, flag);
     ERROR_RETURN_MSG_INNER(error, "Failed to EnableP2PNotify, retCode=%#x!", static_cast<uint32_t>(error));
+
+    InitEmbeddedInnerHandle<Notify>(this);
 
     if (isPod == 0U) {
         isPod_ = false;

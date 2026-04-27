@@ -47,6 +47,7 @@
 #include "task_recycle.hpp"
 #include "stream_david.hpp"
 #include "subscribe.hpp"
+#include "rt_unwrap.h"
 #include "task_david.hpp"
 #include "model_c.hpp"
 #include "device_error_proc_c.hpp"
@@ -184,7 +185,7 @@ protected:
             .stubs()
             .will(invoke(Sub_LogicCqReportV2));
         rtStreamCreate(&streamHandle_, 0);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -267,7 +268,7 @@ protected:
         dev_ = rtInstance->DeviceRetain(0, 0);
         dev_->SetChipType(CHIP_DAVID);
         rtStreamCreate(&streamHandle_, 0);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
@@ -319,7 +320,7 @@ protected:
         dev_ = rtInstance->DeviceRetain(0, 0);
         dev_->SetChipType(CHIP_DAVID);
         rtStreamCreate(&streamHandle_, 0);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
@@ -375,7 +376,7 @@ protected:
             .stubs()
             .will(invoke(Sub_LogicCqReportV2));
         rtStreamCreate(&streamHandle_, 0);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -595,10 +596,14 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
     Model *model;
     rtModel_t modelHandle = nullptr;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamCreate(&streamHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
     ret = rtModelCreate(&modelHandle, 0);
+
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
 
@@ -636,7 +641,7 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_model_maintaince)
     stream->SetLatestModlId(model->Id_());
     (void)CmoAddrTaskInit(&maintainceTask, (void *)&addr, RT_CMO_INVALID);
     stream->DelModel(model);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1901,21 +1906,22 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    InitByStream(&task, streamObj);
     task.id = 0;
     UbDbSendTaskInit(&task, &dbInfo, 0);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t sqBaseAddr = 0U;
     rtDavidSqe_t *sqeAddr = sqe;
     uint16_t pos = task.id;
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = streamObj->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    streamObj->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(newSqAddr + (pos << SHIFT_SIX_SIZE));
     ToConstructDavidSqe(&task, sqe, sqBaseAddr);
     ToConstructDavidSqe(&task, sqeAddr, newSqAddr);
     Complete(&task, 0);
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    streamObj->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1944,14 +1950,16 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell_DoCompleteSuccess)
 {
     rtError_t error;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
     error = rtRegTaskFailCallbackByModule("taskFailCallBackForDoorBell", TaskFailCallBackForDoorBell);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamCreate((rtStream_t *)&stream, 0);
+    error = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo task = {};
     rtUbDbInfo_t dbInfo;
@@ -1972,7 +1980,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_doorbell_DoCompleteSuccess)
     SetStarsResult(&task, cqe);
     Complete(&task, 0);
 
-    rtStreamDestroy(stream);
+    rtStreamDestroy(streamHandle);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2952,9 +2960,12 @@ TEST_F(DavidTaskTest, MapFusionCcuErrorCodeForFastRecovery)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamCreate(&streamHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
@@ -2996,7 +3007,7 @@ TEST_F(DavidTaskTest, MapFusionCcuErrorCodeForFastRecovery)
     ProcessDavidStarsCcuErrorInfo(&errorInfo, 0, taskInfo.stream->Device_(), nullptr);
     EXPECT_EQ(taskInfo.mte_error, TS_ERROR_LINK_ERROR);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -3006,9 +3017,11 @@ TEST_F(DavidTaskTest, MapCcuErrorCodeForFastRecovery)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo taskInfo = {0};
     taskInfo.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
@@ -3050,7 +3063,7 @@ TEST_F(DavidTaskTest, MapCcuErrorCodeForFastRecovery)
     ProcessDavidStarsCcuErrorInfo(&errorInfo, 0, taskInfo.stream->Device_(), nullptr);
     EXPECT_EQ(taskInfo.mte_error, TS_ERROR_LINK_ERROR);
 
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -3067,7 +3080,8 @@ TEST_F(DavidTaskTest, base_task_ubdma_direct)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    InitByStream(&task, streamObj);
     TaskCommonInfoInit(&task);
     DirectSendTaskInfo *directSend = &(task.u.directSendTask);
     task.type = TS_TASK_TYPE_DIRECT_SEND;
@@ -3106,7 +3120,8 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForModelUpdateTask)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    InitByStream(&task, streamObj);
     uint16_t desStreamId = 0;
     uint16_t destaskId = 0;
     uint16_t exeStreamId = 0;
@@ -3122,14 +3137,14 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForModelUpdateTask)
     task.id = 0;
     rtDavidSqe_t *sqeAddr = sqe;
     uint16_t pos = task.id;
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = streamObj->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    streamObj->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(newSqAddr + (pos << SHIFT_SIX_SIZE));
     ToConstructDavidSqe(&task, sqeAddr, newSqAddr);
     EXPECT_EQ(sqe->phSqe.taskType, TS_TASK_TYPE_MODEL_TASK_UPDATE);
     Complete(&task, 0);
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    streamObj->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3150,7 +3165,8 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForAicpuInfoLoadTask)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    InitByStream(&task, streamObj);
     const void *const aicpuInfo = nullptr;
     uint32_t length = 0;
     rtError_t ret = AicpuInfoLoadTaskInit(&task, aicpuInfo, length);
@@ -3161,13 +3177,13 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForAicpuInfoLoadTask)
     task.id = 0;
     rtDavidSqe_t *sqeAddr = sqe;
     uint16_t pos = task.id;
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = streamObj->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    streamObj->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(newSqAddr + (pos << SHIFT_SIX_SIZE));
     ToConstructDavidSqe(&task, sqeAddr, newSqAddr);
     Complete(&task, 0);
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    streamObj->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3188,7 +3204,8 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForNopTask)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    InitByStream(&task, (Stream *)stream);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    InitByStream(&task, streamObj);
     rtError_t ret = NopTaskInit(&task);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
     uint64_t sqBaseAddr = 0U;
@@ -3197,14 +3214,14 @@ TEST_F(DavidTaskTest, toConstructDavidSqeForNopTask)
     task.id = 0;
     rtDavidSqe_t *sqeAddr = sqe;
     uint16_t pos = task.id;
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = streamObj->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    streamObj->SetSqBaseAddr(newSqAddr);
 
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(newSqAddr + (pos << SHIFT_SIX_SIZE));
     ToConstructDavidSqe(&task, sqeAddr, newSqAddr);
     Complete(&task, 0);
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    streamObj->SetSqBaseAddr(oldSqAddr);
     rtStreamDestroy(stream);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3277,14 +3294,16 @@ TEST_F(DavidTaskTest, base_task_ubdma_direct_DoCompleteSuccess)
 {
     rtError_t error;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
     error = rtRegTaskFailCallbackByModule("taskFailCallBackForDirectWqe", TaskFailCallBackForDirectWqe);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamCreate((rtStream_t *)&stream, 0);
+    error = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
 
     TaskInfo task = {};
     rtUbWqeInfo_t wqeInfo;
@@ -3305,7 +3324,7 @@ TEST_F(DavidTaskTest, base_task_ubdma_direct_DoCompleteSuccess)
 
     free(wqeInfo.wqe);
     wqeInfo.wqe = nullptr;
-    rtStreamDestroy(stream);
+    rtStreamDestroy(streamHandle);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -3340,12 +3359,14 @@ TEST_F(DavidTaskTest1, memcpy_async_to_ConstructDavidAsyncDmaSqe)
 {
     rtError_t error;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
     TaskInfo memcpyTask = {};
     error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate((rtStream_t *)&stream, 0);
+    error = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     Driver *drv;
     drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     ((RawDevice *)(stream->device_))->driver_ = drv;
@@ -3362,7 +3383,7 @@ TEST_F(DavidTaskTest1, memcpy_async_to_ConstructDavidAsyncDmaSqe)
     uint64_t sqBaseAddr = 0U;
     ToConstructDavidSqe(&memcpyTask, sqe, sqBaseAddr);
     TaskUnInitProc(&memcpyTask);
-    rtStreamDestroy(stream);
+    rtStreamDestroy(streamHandle);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -3371,11 +3392,13 @@ TEST_F(DavidTaskTest1, memcpy_async_to_ConstructDavidAsyncUbDbSqe)
 {
     rtError_t error;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
     TaskInfo memcpyTask = {};
     error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamCreate((rtStream_t *)&stream, 0);
+    error = rtStreamCreate(&streamHandle, 0);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     stream->SetBindFlag(true);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Driver *drv;
@@ -3394,7 +3417,7 @@ TEST_F(DavidTaskTest1, memcpy_async_to_ConstructDavidAsyncUbDbSqe)
     uint64_t sqBaseAddr = 0U;
     ToConstructDavidSqe(&memcpyTask, sqe, sqBaseAddr);
     TaskUnInitProc(&memcpyTask);
-    rtStreamDestroy(stream);
+    rtStreamDestroy(streamHandle);
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -3803,9 +3826,12 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr)
     Model *model;
     rtModel_t modelHandle = nullptr;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     ret = rtModelCreate(&modelHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
@@ -3822,7 +3848,7 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr)
     (void)CmoAddrTaskInit(&cmoAddrTask, (void *)addr, RT_CMO_INVALID);
     PrintErrorInfo(&cmoAddrTask, 0);
     stream->DelModel(model);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -3834,10 +3860,14 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr_error)
     Model *model;
     rtModel_t modelHandle = nullptr;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     ret = rtModelCreate(&modelHandle, 0);
+
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
 
@@ -3849,7 +3879,7 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr_error)
     uint8_t addr[64];
     (void)CmoAddrTaskInit(&cmoAddrTask, (void *)addr, RT_CMO_INVALID);
     PrintErrorInfo(&cmoAddrTask, 0);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -3861,9 +3891,12 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr_error2)
     Model *model;
     rtModel_t modelHandle = nullptr;
     Stream *stream;
+    rtStream_t streamHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     ret = rtModelCreate(&modelHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
@@ -3880,7 +3913,7 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_cmo_addr_error2)
     (void)CmoAddrTaskInit(&cmoAddrTask, (void *)addr, RT_CMO_INVALID);
     PrintErrorInfo(&cmoAddrTask, 0);
     stream->DelModel(model);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -4206,7 +4239,7 @@ TEST_F(DavidTaskTest2, set_stars_result_for_aicpu_task_on_end_of_seq)
 TEST_F(DavidTaskTest1, construct_davidsqe_for_stream_active)
 {
     TaskInfo streamActiveTask = {};
-    InitByStream(&streamActiveTask, (Stream *)stream_);
+    InitByStream(&streamActiveTask, stream_);
 
     rtError_t ret = RT_ERROR_NONE;
     uint32_t addr = 0x111;
@@ -4257,21 +4290,22 @@ TEST_F(DavidApiTest, test_memcpy_async_ptr_for_david)
     rtError_t error;
     rtStream_t stream;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
-    ((Stream *)stream)->SetSqMemAttr(false);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->SetSqMemAttr(false);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)(malloc(sizeof(rtDavidSqe_t)));
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = streamObj->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    streamObj->SetSqBaseAddr(newSqAddr);
     MOCKER(MemcpyAsyncTaskInitV1).stubs().will(invoke(MemcpyAsyncTaskInitV1Stub));
 
     void *addr = (void *)0x100;
     ApiImplDavid apiImpl;
-    ((Stream *)stream)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((Stream *)stream)->Context_()->SetFailureError(RT_ERROR_CONTEXT_ABORT_ON_FAILURE);
-    ((Stream *)stream)->SetFailureMode(STOP_ON_FAILURE);
-    error = apiImpl.MemcpyAsyncPtr(addr, 64, RT_MEMCPY_ADDR_DEVICE_TO_DEVICE, (Stream *)stream, 0);
+    streamObj->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    streamObj->Context_()->SetFailureError(RT_ERROR_CONTEXT_ABORT_ON_FAILURE);
+    streamObj->SetFailureMode(STOP_ON_FAILURE);
+    error = apiImpl.MemcpyAsyncPtr(addr, 64, RT_MEMCPY_ADDR_DEVICE_TO_DEVICE, streamObj, 0);
     EXPECT_EQ(error, RT_ERROR_CONTEXT_ABORT_ON_FAILURE);
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    streamObj->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
@@ -4284,7 +4318,7 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david0)
     rtEventStatus_t status;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
 
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
 
     NpuDriver drv;
@@ -4326,7 +4360,7 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david00)
     rtEventStatus_t status;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
 
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
 
     NpuDriver drv;
@@ -4371,14 +4405,15 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david1)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
 
     error = rtEventCreateWithFlag(&event, RT_EVENT_WITH_FLAG);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    ((Event *)event)->SetRecord(true);
-    ((Event *)event)->Context_()->SetCtxMode(CONTINUE_ON_FAILURE);
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
+    eventObj->SetRecord(true);
+    eventObj->Context_()->SetCtxMode(CONTINUE_ON_FAILURE);
     error = rtEventQueryStatus(event, &status);
     if (status == RT_EVENT_RECORDED) {
         EXPECT_EQ(status, RT_EVENT_RECORDED);
@@ -4386,7 +4421,7 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david1)
         EXPECT_EQ(status, RT_EVENT_INIT);
     }
 
-    ((Event *)event)->SetRecord(false);
+    eventObj->SetRecord(false);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -4403,7 +4438,7 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david2)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetSqHead).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
@@ -4424,7 +4459,7 @@ TEST_F(DavidApiTest, test_judge_head_tail_pos_for_david3)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetSqHead).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
@@ -4451,7 +4486,7 @@ TEST_F(DavidApiTest, test_query_wait_task_for_david0)
     bool isWaitFlag = false;
     EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
 
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
 
     error = davidStream->GetLastTaskIdFromRtsq(taskId);
@@ -4497,7 +4532,7 @@ TEST_F(DavidApiTest, test_query_wait_task_for_david1)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
 
     struct halSqCqQueryInfo queryInfoIn = {};
@@ -4540,7 +4575,7 @@ TEST_F(DavidApiTest, test_query_wait_task_for_david2)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    DavidStream *davidStream = (DavidStream *)stream;
+    Stream *davidStream = rt_ut::UnwrapOrNull<Stream>(stream);
     davidStream->SetSqMemAttr(false);
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetSqHead).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
@@ -4634,7 +4669,8 @@ TEST_F(DavidTaskTest, CheckTaskCanSend_device_down)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
     EXPECT_EQ(res, RT_ERROR_NONE);
 
-    Engine *engine = ((RawDevice *)(((Stream *)stream)->Device_()))->Engine_();
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    Engine *engine = ((RawDevice *)(streamObj->Device_()))->Engine_();
     engine->GetDevice()->SetDevStatus(RT_ERROR_LOST_HEARTBEAT);
     rtError_t error = rtCmoTaskLaunch(&cmoTask, nullptr, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_LOST_HEARTBEAT);
@@ -4652,7 +4688,8 @@ TEST_F(DavidTaskTest, CheckTaskCanSend_abortStatus_abnormal)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
     EXPECT_EQ(res, RT_ERROR_NONE);
 
-    ((Stream *)stream)->Device_()->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->Device_()->SetDeviceStatus(RT_ERROR_DEVICE_TASK_ABORT);
     rtError_t error = rtCmoTaskLaunch(&cmoTask, stream, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_DEVICE_TASK_ABORT);
     rtStreamDestroy(stream);
@@ -4695,9 +4732,10 @@ TEST_F(DavidTaskTest, test_enter_failure0)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
     EXPECT_EQ(res, RT_ERROR_NONE);
 
-    ((DavidStream *)stream)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((DavidStream *)stream)->EnterFailureAbort();
-    EXPECT_EQ(((DavidStream *)stream)->GetFailureMode(), 2);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    streamObj->EnterFailureAbort();
+    EXPECT_EQ(streamObj->GetFailureMode(), 2);
     rtStreamDestroy(stream);
 }
 
@@ -4707,10 +4745,11 @@ TEST_F(DavidTaskTest, test_enter_failure1)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
     EXPECT_EQ(res, RT_ERROR_NONE);
 
-    ((DavidStream *)stream)->Context_()->SetCtxMode(CONTINUE_ON_FAILURE);
-    ((DavidStream *)stream)->SetContext(nullptr);
-    ((DavidStream *)stream)->EnterFailureAbort();
-    EXPECT_EQ(((DavidStream *)stream)->GetFailureMode(), 0);
+    Stream *streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    streamObj->Context_()->SetCtxMode(CONTINUE_ON_FAILURE);
+    streamObj->SetContext(nullptr);
+    streamObj->EnterFailureAbort();
+    EXPECT_EQ(streamObj->GetFailureMode(), 0);
     rtStreamDestroy(stream);
 }
 

@@ -16,6 +16,7 @@
 #include "runtime.hpp"
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #include "rts_snapshot.h"
 #include "global_state_manager.hpp"
 #include "api_decorator.hpp"
@@ -283,7 +284,7 @@ TEST_F(SnapshotTest, StreamTaskClean)
     error = rtStreamCreateWithFlags(&stream, 0U, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    Stream* str = static_cast<Stream*>(stream);
+    Stream *str = rt_ut::UnwrapOrNull<Stream>(stream);
     str->bindFlag_.Set(true);
     error = str->StreamTaskClean();
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -432,7 +433,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore3)
     rtStream_t stream;
     error = rtStreamCreateWithFlags(&stream, 0U, RT_STREAM_PERSISTENT);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream* stm = static_cast<Stream*>(stream);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     stm->sqAddr_ = 1;
     captureModel->ModelPushFrontStream(stm);
 

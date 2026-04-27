@@ -27,6 +27,7 @@
 #include "sq_addr_memory_pool.hpp"
 #include "task_info.hpp"
 #include "event.h"
+#include "runtime_handle_guard.h"
 
 constexpr size_t PTE_LENGTH = 16U;
 
@@ -179,6 +180,14 @@ public:
     Stream(const Context * const stmCtx, const uint32_t prio);
     Stream(const Context * const stmCtx, const uint32_t prio, const uint32_t stmFlags);
     ~Stream() override;
+    rtInnerObject *GetInnerHandle()
+    {
+        return &handle_;
+    }
+    const rtInnerObject *GetInnerHandle() const
+    {
+        return &handle_;
+    }
 
     // init stream
     virtual rtError_t Setup();
@@ -1457,6 +1466,7 @@ public:
 private:
     void ConstructTraceEventFromTask(TaskInfo *const task, const uint32_t flags, TraceEvent &record) const;
 
+    rtInnerObject handle_ {};
     // submit create stream task
     rtError_t SubmitCreateStreamTask();
     virtual rtError_t GetSynchronizeError(rtError_t error);

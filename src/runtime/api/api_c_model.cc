@@ -10,6 +10,7 @@
 
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "rts/rts.h"
@@ -53,8 +54,9 @@ rtError_t rtModelExecuteSync(rtModel_t mdl, rtStream_t stm, uint32_t flag, int32
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->ModelExecute(realModel,
-        RtPtrToPtr<Stream *>(stm), flag, timeout);
+        exeStream, flag, timeout);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -75,7 +77,7 @@ rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
-    Stream *bindStream = RtPtrToPtr<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, bindStream);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((bindStream != nullptr) &&
         ((bindStream->Flags() & RT_STREAM_PERSISTENT) == 0), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1001, "Non-persistent stream cannot be bound to a model.");
@@ -99,9 +101,10 @@ rtError_t rtsEndGraph(rtModel_t mdl, rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
-    rtError_t error = apiInstance->SetStreamSqLockUnlock(RtPtrToPtr<Stream *>(stm), false);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    rtError_t error = apiInstance->SetStreamSqLockUnlock(exeStream, false);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    error = apiInstance->ModelEndGraph(realModel, RtPtrToPtr<Stream *>(stm), 0U);
+    error = apiInstance->ModelEndGraph(realModel, exeStream, 0U);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -144,7 +147,8 @@ rtError_t rtsModelExecuteAsync(rtModel_t mdl, rtStream_t stm)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
-    const rtError_t error = apiInstance->ModelExecuteAsync(realModel, RtPtrToPtr<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->ModelExecuteAsync(realModel, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

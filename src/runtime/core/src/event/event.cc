@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "event.hpp"
+#include "runtime_handle_guard.h"
 #include "device.hpp"
 #include "osal.hpp"
 #include "runtime.hpp"
@@ -52,6 +53,7 @@ Event::Event(Device * device, uint64_t eventFlag, Context *ctx, bool isSync, boo
 
 Event::~Event() noexcept
 {
+    ResetEmbeddedInnerHandle<Event>(this);
     if (eventId_ != INVALID_EVENT_ID && isIdAllocFromDrv_) {
         device_->FreeEventIdFromDrv(eventId_, eventFlag_, GetDestroySync());
     }

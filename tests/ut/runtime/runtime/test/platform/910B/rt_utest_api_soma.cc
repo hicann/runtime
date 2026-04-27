@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
+#include "rt_unwrap.h"
 
 class CloudV2ApiTestSOMA : public testing::Test
 {
@@ -859,8 +860,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_single_reuse)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    const int32_t stmId1 = static_cast<Stream *>(stream1)->Id_();
-    const int32_t stmId2 = static_cast<Stream *>(stream2)->Id_();
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
 
     RawDevice *device = new RawDevice(0);
     device->Init();
@@ -936,8 +937,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_event_reuse)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    const int32_t stmId1 = static_cast<Stream *>(stream1)->Id_();
-    const int32_t stmId2 = static_cast<Stream *>(stream2)->Id_();
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
 
     RawDevice *device = new RawDevice(0);
     device->Init();
@@ -1013,8 +1014,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_event_reuse_fail)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    const int32_t stmId1 = static_cast<Stream *>(stream1)->Id_();
-    const int32_t stmId2 = static_cast<Stream *>(stream2)->Id_();
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
 
     RawDevice *device = new RawDevice(0);
     device->Init();
@@ -1083,8 +1084,8 @@ TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_opport_reuse)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamCreate(&stream2, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    const int32_t stmId1 = static_cast<Stream *>(stream1)->Id_();
-    const int32_t stmId2 = static_cast<Stream *>(stream2)->Id_();
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
 
     RawDevice *device = new RawDevice(0);
     device->Init();

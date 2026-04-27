@@ -27,6 +27,7 @@
 #undef private
 #include "stream_sqcq_manage.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -165,7 +166,7 @@ TEST_F(EventTest910B, querytest)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
     stm->taskPosTail_.Set(2);
@@ -188,7 +189,7 @@ TEST_F(EventTest910B, querytest1)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    Stream * stm = (Stream *)stream;
+    Stream * stm = rt_ut::UnwrapOrNull<Stream>(stream);
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
     stm->taskPosTail_.Set(2);
@@ -257,7 +258,7 @@ TEST_F(EventTest910B, QueryEventTask_TimeLine)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     rtEventStatus_t status1 = RT_EVENT_RECORDED;
-    MOCKER_CPP_VIRTUAL(static_cast<Stream *>(stream), &Stream::JudgeHeadTailPos)
+    MOCKER_CPP_VIRTUAL(rt_ut::UnwrapOrNull<Stream>(stream), &Stream::JudgeHeadTailPos)
         .stubs()
         .with(outBoundP(&status1, sizeof(status1)), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
@@ -266,8 +267,8 @@ TEST_F(EventTest910B, QueryEventTask_TimeLine)
     MOCKER_CPP_VIRTUAL(dev, &Device::TaskReclaim).stubs()
         .will(returnValue(RT_ERROR_NONE));
     
-    Stream * const streamPtr = static_cast<Stream *>(stream);
-    Event * const eventPtr = static_cast<Event *>(event);
+    Stream * const streamPtr = rt_ut::UnwrapOrNull<Stream>(stream);
+    Event * const eventPtr = rt_ut::UnwrapOrNull<Event>(event);
     eventPtr->latestRecord_.state = RECORDING;
     eventPtr->latestRecord_.streamId = streamPtr->Id_();
     eventPtr->latestRecord_.taskId = 0;
@@ -278,7 +279,7 @@ TEST_F(EventTest910B, QueryEventTask_TimeLine)
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    Stream *stm = (Stream*)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     stm->pendingNum_.Sub(stm->pendingNum_.Value());
 
     MOCKER_CPP(&Engine::ProcessTask)
@@ -299,7 +300,7 @@ TEST_F(EventTest910B, TestInsertToNotifierMapWithDisableThread)
     rtEvent_t event;
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
     eventObj->InsertToNotifierMap(0, 0, nullptr);
     eventObj->DeleteFromNotifierMap(0, 0);
@@ -316,7 +317,7 @@ TEST_F(EventTest910B, TestWaitForBusy)
     bool isDisableThread = ((Runtime *)Runtime::Instance())->GetDisableThread();
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Event::IsEventTaskEmpty).stubs().will(returnValue(false)).then(returnValue(true));
@@ -361,8 +362,8 @@ TEST_F(EventTest910B, TestWaitForBusy_device_down)
     MOCKER_CPP(&Event::GetFailureStatus).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
     ((Runtime *)Runtime::Instance())->SetDisableThread(true);
 
-    Event *eventObj = (Event*) event;
-    Stream *stm = (Stream*)stream;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Device* dev = stm->Device_();
     MOCKER_CPP_VIRTUAL(dev, &Device::GetDevRunningState)
         .stubs()
@@ -512,8 +513,8 @@ TEST_F(EventTest910B, TestEventSynchronizeWithEventInModel)
     error = rtEventRecord(event, stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    Event* evt = (Event*)event;
-    Stream* stm = (Stream*)stream;
+    Event* evt = rt_ut::UnwrapOrNull<Event>(event);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
     std::shared_ptr<Stream> stmSharedPtr = stm->GetSharedPtr();
     MOCKER_CPP(&StreamSqCqManage::GetStreamSharedPtrById)
         .stubs()

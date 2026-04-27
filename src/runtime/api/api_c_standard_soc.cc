@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "base.hpp"
 #include "prof_ctrl_callback_manager.hpp"
 #include "error_message_manage.hpp"
@@ -52,7 +53,8 @@ rtError_t rtWriteValue(rtWriteValueInfo_t * const info, rtStream_t const stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->WriteValue(info, static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->WriteValue(info, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return error;
@@ -64,8 +66,9 @@ rtError_t rtWriteValuePtr(void * const writeValueInfo, rtStream_t const stm, voi
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = 
-        apiInstance->WriteValuePtr(writeValueInfo, static_cast<Stream *>(stm), pointedAddr);
+        apiInstance->WriteValuePtr(writeValueInfo, exeStream, pointedAddr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -76,7 +79,8 @@ rtError_t rtStreamTaskAbort(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamTaskAbort(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamTaskAbort(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -86,7 +90,8 @@ rtError_t rtStreamRecover(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamRecover(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamRecover(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -96,7 +101,8 @@ rtError_t rtStreamTaskClean(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamTaskClean(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamTaskClean(exeStream);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -135,7 +141,7 @@ rtError_t rtFftsPlusTaskLaunch(rtFftsPlusTaskInfo_t *fftsPlusTaskInfo, rtStream_
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
     TIMESTAMP_BEGIN(rtFftsPlusTaskLaunch);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->FftsPlusTaskLaunch(fftsPlusTaskInfo, streamPtr, 0U);
@@ -159,7 +165,7 @@ rtError_t rtFftsPlusTaskLaunchWithFlag(rtFftsPlusTaskInfo_t *fftsPlusTaskInfo, r
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
     TIMESTAMP_BEGIN(rtFftsPlusTaskLaunchWithFlag);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t ret = apiInstance->FftsPlusTaskLaunch(fftsPlusTaskInfo, streamPtr, flag);
@@ -173,7 +179,7 @@ VISIBILITY_DEFAULT
 rtError_t rtRDMASend(uint32_t sqIndex, uint32_t wqeIndex, rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const Runtime * const rtInstance = Runtime::Instance();
@@ -192,7 +198,7 @@ VISIBILITY_DEFAULT
 rtError_t rtRDMADBSend(uint32_t dbIndex, uint64_t dbInfo, rtStream_t stm)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const Runtime * const rt = Runtime::Instance();
@@ -264,7 +270,7 @@ rtError_t rtIpcSetNotifyName(rtNotify_t notify, char_t* name, uint32_t len)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Notify * const notifyPtr = static_cast<Notify *>(notify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     const rtError_t error = apiInstance->IpcSetNotifyName(notifyPtr, name, len, RT_NOTIFY_FLAG_DEFAULT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -286,6 +292,8 @@ rtError_t rtIpcOpenNotify(rtNotify_t *notify, const char_t *name)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->IpcOpenNotify(RtPtrToPtr<Notify **>(notify), name);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Notify *realNotify = RtPtrToPtr<Notify *>(*notify);
+    *notify = ExportEmbeddedHandle<rtNotify_t>(realNotify);
     return ACL_RT_SUCCESS;
 }
 
@@ -305,6 +313,8 @@ rtError_t rtIpcOpenNotifyWithFlag(rtNotify_t *notify, const char_t *name, uint32
     const rtError_t error = apiInstance->IpcOpenNotify(RtPtrToPtr<Notify **>(notify), name, flag);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Notify *realNotify = RtPtrToPtr<Notify *>(*notify);
+    *notify = ExportEmbeddedHandle<rtNotify_t>(realNotify);
     return ACL_RT_SUCCESS;
 }
 
@@ -322,7 +332,7 @@ rtError_t rtLaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, u
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
     const rtError_t error = apiInstance->LaunchSqeUpdateTask(streamId, taskId, src, cnt, exeStream);
@@ -377,15 +387,17 @@ rtError_t rtsLaunchReduceAsyncTask(const rtReduceInfo_t *reduceInfo, const rtStr
         void *overflowAddr = nullptr;
         ret = apiInstance->CtxGetOverflowAddr(&overflowAddr);
         ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+        RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
         ret = apiInstance->ReduceAsyncV2(reduceInfo->dst, reduceInfo->src, reduceInfo->count, reduceInfo->kind,
-            reduceInfo->type, static_cast<Stream *>(stm), overflowAddr);
+            reduceInfo->type, exeStream, overflowAddr);
         ERROR_RETURN_WITH_EXT_ERRCODE(ret);
 
         return ACL_RT_SUCCESS;
     }
 
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     ret = apiInstance->ReduceAsync(reduceInfo->dst, reduceInfo->src, reduceInfo->count,
-        reduceInfo->kind, reduceInfo->type, static_cast<Stream *>(stm), nullptr);
+        reduceInfo->kind, reduceInfo->type, exeStream, nullptr);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
 
     return ACL_RT_SUCCESS;
@@ -402,7 +414,7 @@ rtError_t rtsLaunchUpdateTask(rtStream_t destStm, uint32_t destTaskId, rtStream_
     switch (updateType) {
         case RT_UPDATE_DSA_TASK: {
             PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(destStm, RT_ERROR_INVALID_VALUE);
-            Stream *const destStream = RtPtrToPtr<Stream *>(destStm);
+            RT_VALIDATE_AND_UNWRAP_OBJECT(destStm, Stream, destStream);
 
             const Runtime * const rtInstance = Runtime::Instance();
             NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -414,7 +426,7 @@ rtError_t rtsLaunchUpdateTask(rtStream_t destStm, uint32_t destTaskId, rtStream_
             Api * const apiInstance = Api::Instance();
             NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
-            Stream * const exeStream = RtPtrToPtr<Stream *>(stm);
+            RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
             const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
             (void)AwdStartThreadWatchdog(watchDogHandle);
             error = apiInstance->LaunchSqeUpdateTask(static_cast<uint32_t>(destStream->Id_()), destTaskId, cfg->val.dsaTaskAttr.srcAddr, cfg->val.dsaTaskAttr.size, exeStream, true);
@@ -519,7 +531,7 @@ rtError_t rtCmoAddrTaskLaunch(void *cmoAddrInfo, uint64_t destMax, rtCmoOpCode_t
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     TIMESTAMP_BEGIN(CmoAddrTaskLaunch);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -537,8 +549,9 @@ rtError_t rtModelTaskUpdate(rtStream_t desStm, uint32_t desTaskId, rtStream_t si
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ModelTaskUpdate(static_cast<Stream *>(desStm), desTaskId,
-                                                         static_cast<Stream *>(sinkStm), para);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(desStm, Stream, desStream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(sinkStm, Stream, sinkStream);
+    const rtError_t error = apiInstance->ModelTaskUpdate(desStream, desTaskId, sinkStream, para);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -559,7 +572,7 @@ rtError_t rtReduceAsyncV2(void *dst, uint64_t destMax, const void *src, uint64_t
         REPORT_FUNC_ERROR_REASON(RT_ERROR_FEATURE_NOT_SUPPORT);
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
@@ -648,7 +661,8 @@ rtError_t rtStreamAddToModel(rtStream_t stm, rtModel_t captureMdl)
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(captureMdl, Model, realModel);
-    const rtError_t error = apiInstance->StreamAddToModel(static_cast<Stream *>(stm), realModel);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamAddToModel(streamPtr, realModel);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -681,7 +695,8 @@ rtError_t rtStreamBeginCapture(rtStream_t stm, const rtStreamCaptureMode mode)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamBeginCapture(static_cast<Stream *>(stm), mode);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamBeginCapture(streamPtr, mode);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -701,7 +716,8 @@ rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t *captureMdl)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamEndCapture(static_cast<Stream *>(stm),
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamEndCapture(streamPtr,
                                                           RtPtrToPtr<Model **>(captureMdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     *captureMdl = ExportEmbeddedHandle<rtModel_t>(RtPtrToPtr<Model *>(*captureMdl));
@@ -724,7 +740,8 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamGetCaptureInfo(static_cast<Stream *>(stm), status,
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamGetCaptureInfo(streamPtr, status,
                                                               RtPtrToPtr<Model **>(captureMdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     StoreOptionalEmbeddedHandle<rtModel_t>(
@@ -777,7 +794,7 @@ rtError_t rtCmoTaskLaunch(rtCmoTaskInfo_t *taskInfo, rtStream_t stm, uint32_t fl
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     TIMESTAMP_BEGIN(CmoTaskLaunch);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -797,7 +814,7 @@ rtError_t rtReduceAsync(void *dst, uint64_t destMax, const void *src, uint64_t c
 {
     UNUSED(destMax);
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
@@ -812,7 +829,7 @@ rtError_t rtReduceAsyncWithCfg(void *dst, uint64_t destMax, const void *src, uin
 {
     UNUSED(destMax);
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
@@ -831,7 +848,7 @@ rtError_t rtReduceAsyncWithCfgV2(void *dst, uint64_t destMax, const void *src, u
 {
     UNUSED(destMax);
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
@@ -903,7 +920,7 @@ rtError_t rtMemcpyD2DAddrAsync(void *dst, uint64_t dstMax, uint64_t dstOffset, c
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
     }
 
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
     rtD2DAddrCfgInfo_t addrCfgInfo = {};
     addrCfgInfo.dstOffset = dstOffset;
@@ -1000,7 +1017,7 @@ rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *ts
     if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING)) {
         PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(phyDevId, RT_ERROR_INVALID_VALUE);
         PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(tsId, RT_ERROR_INVALID_VALUE);
-        Notify * const notifyPtr = static_cast<Notify *>(notify);
+        RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
         rtNotifyPhyInfo notifyInfo;
         const rtError_t error = apiInstance->GetNotifyPhyInfo(notifyPtr, &notifyInfo);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1053,7 +1070,7 @@ rtError_t rtNpuGetFloatStatus(void * outputAddrPtr, uint64_t outputSize, uint32_
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
     TIMESTAMP_BEGIN(rtNpuGetFloatStatus);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t ret = apiInstance->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, streamPtr);
     TIMESTAMP_END(rtNpuGetFloatStatus);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1072,7 +1089,7 @@ rtError_t rtNpuClearFloatStatus(uint32_t checkMode, rtStream_t stm)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
 
     TIMESTAMP_BEGIN(rtNpuClearFloatStatus);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t ret = apiInstance->NpuClearFloatStatus(checkMode, streamPtr);
     TIMESTAMP_END(rtNpuClearFloatStatus);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -1091,7 +1108,8 @@ RTS_API rtError_t rtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **
 
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetDevArgsAddr(static_cast<Stream *>(stm), argsInfo, devArgsAddr, argsHandle);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->GetDevArgsAddr(streamPtr, argsInfo, devArgsAddr, argsHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return ACL_RT_SUCCESS;
@@ -1126,7 +1144,7 @@ rtError_t rtSetStreamTag(rtStream_t stm, uint32_t geOpTag)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const streamPtr = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t error = apiInstance->SetStreamTag(streamPtr, geOpTag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -1166,7 +1184,8 @@ rtError_t rtsStreamBeginTaskGrp(rtStream_t stm)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamBeginTaskGrp(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamBeginTaskGrp(streamPtr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1186,7 +1205,7 @@ rtError_t rtsStreamBeginTaskUpdate(rtStream_t stm, rtTaskGrp_t handle)
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     TaskGroup * const taskGrpHandle = static_cast<TaskGroup *>(handle);
     const rtError_t error = apiInstance->StreamBeginTaskUpdate(exeStream, taskGrpHandle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1200,7 +1219,7 @@ rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(serverPids, RT_ERROR_INVALID_VALUE);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(num == 0UL, RT_ERROR_INVALID_VALUE, num, "not equal to 0");
         
-    Notify * const notifyPtr = static_cast<Notify *>(notify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     for (size_t i = 0; i < num; i++) {
         COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004,
             __func__, "serverPids[" + std::to_string(i) + "].pid" );
@@ -1220,7 +1239,8 @@ rtError_t rtsPersistentTaskClean(rtStream_t stm)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamTaskClean(static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamTaskClean(exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1305,8 +1325,8 @@ rtError_t rtIpcGetEventHandle(rtEvent_t event, rtIpcEventHandle_t *handle)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    IpcEvent * const eventPtr = static_cast<IpcEvent *>(event);
-    const rtError_t error = apiInstance->IpcGetEventHandle(eventPtr, handle);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(event, Event, eventPtr);
+    const rtError_t error = apiInstance->IpcGetEventHandle(static_cast<IpcEvent *>(eventPtr), handle);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return error;
@@ -1328,6 +1348,8 @@ rtError_t rtIpcOpenEventHandle(rtIpcEventHandle_t handle, rtEvent_t *event)
     rtIpcEventHandle_t *eventHandle = &handle;
     const rtError_t error = apiInstance->IpcOpenEventHandle(eventHandle, RtPtrToPtr<IpcEvent **>(event));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    IpcEvent *realEvent = RtPtrToPtr<IpcEvent *>(*event);
+    *event = ExportEmbeddedHandle<rtEvent_t>(realEvent);
     RT_LOG(RT_LOG_INFO, "rtIpcOpenEventHandle end");
     return error;
 }
@@ -1471,7 +1493,7 @@ rtError_t rtsNotifySetImportPid(rtNotify_t notify, int32_t pid[], int num)
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Notify * const notifyPtr = static_cast<Notify *>(notify);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(notifyPtr, RT_ERROR_INVALID_VALUE);
     const rtError_t error = apiInstance->SetIpcNotifyPid(notifyPtr->GetIpcName().c_str(), pid, num);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
@@ -1495,8 +1517,18 @@ rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
-    const rtError_t error = apiInstance->ModelGetStreams(realModel, RtPtrToPtr<Stream **>(streams), numStreams);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(numStreams, RT_ERROR_INVALID_VALUE);
+    if (streams == nullptr) {
+        const rtError_t error = apiInstance->ModelGetStreams(realModel, nullptr, numStreams);
+        ERROR_RETURN_WITH_EXT_ERRCODE(error);
+        return ACL_RT_SUCCESS;
+    }
+    std::vector<Stream *> streamVec(*numStreams, nullptr);
+    const rtError_t error = apiInstance->ModelGetStreams(realModel, streamVec.data(), numStreams);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    for (uint32_t i = 0U; i < *numStreams; ++i) {
+        streams[i] = ExportEmbeddedHandle<rtStream_t>(streamVec[i]);
+    }
     return ACL_RT_SUCCESS;
 }
 
@@ -1516,7 +1548,8 @@ rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numT
     
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->StreamGetTasks(static_cast<Stream *>(stm), static_cast<void **>(tasks),
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamGetTasks(streamPtr, static_cast<void **>(tasks),
                                                         numTasks);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "base.hpp"
 #include "osal.hpp"
 #include "global_state_manager.hpp"
@@ -70,7 +71,7 @@ rtError_t rtMemManagedPrefetchAsync(const void* ptr, size_t size, rtMemManagedLo
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream* const streamPtr = static_cast<Stream*>(stream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, streamPtr);
     const rtError_t error = apiInstance->MemManagedPrefetchAsync(ptr, size, location, flags, streamPtr);
     COND_RETURN_WITH_NOLOG(((error == RT_ERROR_FEATURE_NOT_SUPPORT) || (error == RT_ERROR_DRV_NOT_SUPPORT)),
         ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -85,7 +86,7 @@ rtError_t rtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream* const streamPtr = static_cast<Stream*>(stream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, streamPtr);
     const rtError_t error = apiInstance->MemManagedPrefetchBatchAsync(ptrs, sizes, count, prefetchLocs, prefetchLocIdxs,
         numPrefetchLocs, flags, streamPtr);
     COND_RETURN_WITH_NOLOG(((error == RT_ERROR_FEATURE_NOT_SUPPORT) || (error == RT_ERROR_DRV_NOT_SUPPORT)),

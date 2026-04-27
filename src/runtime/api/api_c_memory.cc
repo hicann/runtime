@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "osal.hpp"
 #include "thread_local_container.hpp"
 #include "global_state_manager.hpp"
@@ -127,7 +128,7 @@ rtError_t rtsMemcpy2DAsync(rtMemcpy2DParams_t *params, rtMemcpyConfig_t *config,
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
 
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -326,7 +327,7 @@ rtError_t rtsMemcpyAsync(void *dst, uint64_t destMax, const void *src, uint64_t 
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const exeStream = static_cast<Stream *>(stm);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     TIMESTAMP_BEGIN(rtsMemcpyAsync);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -392,7 +393,7 @@ rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcp
     }
     Api * const api = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
-    Stream * const exeStream = static_cast<Stream *>(stream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, exeStream);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     TIMESTAMP_BEGIN(rtsMemcpyAsyncWithDesc);
     (void)AwdStartThreadWatchdog(watchDogHandle);
@@ -517,7 +518,7 @@ rtError_t rtsMemset(void *devPtr, uint64_t destMax, uint32_t val, uint64_t cnt)
 VISIBILITY_DEFAULT
 rtError_t rtsMemsetAsync(void *ptr, uint64_t destMax, uint32_t val, uint64_t cnt, rtStream_t stm)
 {
-    return rtMemsetAsync(ptr, destMax, val, cnt, static_cast<Stream *>(stm));
+    return rtMemsetAsync(ptr, destMax, val, cnt, stm);
 }
 
 VISIBILITY_DEFAULT
@@ -566,7 +567,8 @@ rtError_t rtsValueWrite(const void * const devAddr, const uint64_t value, const 
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->MemWriteValue(devAddr, value, flag, static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->MemWriteValue(devAddr, value, flag, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -585,7 +587,8 @@ rtError_t rtsValueWait(const void * const devAddr, const uint64_t value, const u
 
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->MemWaitValue(devAddr, value, flag, static_cast<Stream *>(stm));
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->MemWaitValue(devAddr, value, flag, exeStream);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -764,7 +767,7 @@ rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t
     }
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    Stream * const streamPtr = static_cast<Stream *>(stream);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, streamPtr);
     TIMESTAMP_BEGIN(rtsMemcpyBatchAsync);
     const auto watchDogHandle = ThreadLocalContainer::GetOrCreateWatchDogHandle();
     (void)AwdStartThreadWatchdog(watchDogHandle);

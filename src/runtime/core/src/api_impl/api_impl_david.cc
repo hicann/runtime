@@ -10,6 +10,7 @@
 
 #include "api_impl_david.hpp"
 #include "ccu_stream.hpp"
+#include "runtime_handle_guard.h"
 #include "context.hpp"
 #include "stream_c.hpp"
 #include "aix_c.hpp"
@@ -412,15 +413,13 @@ rtError_t ApiImplDavid::EventCreate(Event ** const evt, const uint64_t flag)
 
     *evt = new (std::nothrow) DavidEvent(dev, flag, curCtx);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *evt == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
-
-    if (flag == RT_EVENT_DEFAULT) { // default flag not alloc id in create.
-        return RT_ERROR_NONE;
+    if (flag != RT_EVENT_DEFAULT) {
+        const rtError_t error = (*evt)->GenEventId();
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);,
+            "Gen event id failed, device_id=%u, tsId=%u, retCode=%#x",
+            dev->Id_(), dev->DevGetTsId(), static_cast<uint32_t>(error));
     }
-
-    const rtError_t error = (*evt)->GenEventId();
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);,
-        "Gen event id failed, device_id=%u, tsId=%u, retCode=%#x",
-        dev->Id_(), dev->DevGetTsId(), static_cast<uint32_t>(error));
+    InitEmbeddedInnerHandle<Event>(*evt);
     return RT_ERROR_NONE;
 }
 
@@ -441,6 +440,8 @@ rtError_t ApiImplDavid::EventCreateEx(Event ** const evt, const uint64_t flag)
         *evt = new (std::nothrow) DavidEvent(dev, flag, curCtx, true);
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *evt == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
     }
+
+    InitEmbeddedInnerHandle<Event>(*evt);
     return RT_ERROR_NONE;
 }
 

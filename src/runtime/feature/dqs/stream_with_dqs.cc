@@ -55,6 +55,8 @@ rtError_t StreamWithDqs::Setup()
     error = EschedManage(true);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
+    InitEmbeddedInnerHandle<Stream>(this);
+
     RT_LOG(RT_LOG_INFO, "stream setup end, stream_id=%d, sq_id=%u, cq_id=%u, device_id=%u, isHasArgPool_=%d.",
            streamId_, sqId_, cqId_, device_->Id_(), isHasArgPool_);
 

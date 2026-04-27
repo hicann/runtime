@@ -41,6 +41,7 @@
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
 #include "model_execute_task.h"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -81,7 +82,7 @@ protected:
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         /* sleep 10ms，advoid stream_create task not processed in no-disable-thread scene, */
         /* in some case which may change the disable-thread flag. */
         usleep(10 * 1000);
@@ -215,7 +216,7 @@ TEST_F(EngineTest, ReportExceptProcNotSupport)
     rtStream_t streamHandle;
     rtError_t res = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    Stream *stream = (Stream *)streamHandle;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     task.stream = stream;
     uint32_t payload = TS_ERROR_TASK_TYPE_NOT_SUPPORT;
     std::unique_ptr<HwtsEngine> engine = std::make_unique<AsyncHwtsEngine>(device_);
@@ -231,7 +232,7 @@ TEST_F(EngineTest, ReportExceptProcNotSupport_01)
     rtStream_t streamHandle;
     rtError_t res = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    Stream *stream = (Stream *)streamHandle;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     task.stream = stream;
     uint32_t payload = TS_ERROR_DEBUG_AI_CORE_EXCEPTION;
     std::unique_ptr<HwtsEngine> engine = std::make_unique<AsyncHwtsEngine>(device_);
@@ -306,7 +307,7 @@ TEST_F(EngineTest, engine_report_last_error1)
     rtStream_t streamHandle;
     rtError_t res = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    Stream *stream = (Stream *)streamHandle;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     EngineLogObserver observer;
 
     TaskFactory *taskFactory = const_cast<TaskFactory *>(device_->GetTaskFactory());
@@ -1570,7 +1571,7 @@ protected:
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
     }
 
     virtual void TearDown()

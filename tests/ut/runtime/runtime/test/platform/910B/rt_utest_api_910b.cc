@@ -915,14 +915,14 @@ TEST_F(CloudV2ApiTest910b, stream_sync)
     error = rtStreamWaitEvent(stream_, event);
     EXPECT_EQ(error, RT_ERROR_NONE);
     
-    TsStreamFailureMode old = ((Stream *)stream_)->Context_()->GetCtxMode();
-    ((Stream *)stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((Stream *)stream_)->Device_()->SetIsRingbufferGetErr(true);
+    TsStreamFailureMode old = rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->GetCtxMode();
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Device_()->SetIsRingbufferGetErr(true);
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    ((Stream *)stream_)->Device_()->SetIsRingbufferGetErr(false);
-    ((Stream *)stream_)->Context_()->SetCtxMode(old);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Device_()->SetIsRingbufferGetErr(false);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetCtxMode(old);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1155,15 +1155,15 @@ TEST_F(CloudV2ApiTest910b, send_task_fail)
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    TsStreamFailureMode old = ((Stream *)stream_)->Context_()->GetCtxMode();
-    ((Stream *)stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
-    ((Stream *)stream_)->Context_()->SetFailureError(TS_ERROR_AIVEC_OVERFLOW);
-    ((Stream *)stream_)->failureMode_ = ABORT_ON_FAILURE;
+    TsStreamFailureMode old = rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->GetCtxMode();
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetCtxMode(STOP_ON_FAILURE);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetFailureError(TS_ERROR_AIVEC_OVERFLOW);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->failureMode_ = ABORT_ON_FAILURE;
     error = rtEventRecord(event, NULL);
     EXPECT_EQ(error, TS_ERROR_AIVEC_OVERFLOW);
-    ((Stream *)stream_)->failureMode_ = CONTINUE_ON_FAILURE;
-    ((Stream *)stream_)->Context_()->SetFailureError(0);
-    ((Stream *)stream_)->Context_()->SetCtxMode(old);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->failureMode_ = CONTINUE_ON_FAILURE;
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetFailureError(0);
+    rt_ut::UnwrapOrNull<Stream>(stream_)->Context_()->SetCtxMode(old);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1208,12 +1208,12 @@ TEST_F(CloudV2ApiTest910b, rtStreamSynchronizeWithTimeout)
     error = rtStreamCreate(&stream, 5);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
 
     error = rtStreamSynchronizeWithTimeout(stream, 100);
     EXPECT_NE(error, RT_ERROR_NONE);
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = rt_ut::UnwrapOrNull<Stream>(stream);
     stream_var->pendingNum_.Set(0);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1232,7 +1232,7 @@ TEST_F(CloudV2ApiTest910b, rtStreamSynchronize_ctx_switch)
     rtCtxGetCurrent(&oldCtx);
     rtContext_t ctx;
     rtCtxCreate(&ctx, 0, 1);
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
     error = rtStreamSynchronize(stream);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -1253,7 +1253,7 @@ TEST_F(CloudV2ApiTest910b, rtStreamSynchronize)
     error = rtStreamCreate(&stream, 5);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream_var_t = static_cast<Stream *>(stream);
+    Stream *stream_var_t = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_END_OF_SEQUENCE));
 
     error = rtStreamSynchronize(stream);

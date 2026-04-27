@@ -52,6 +52,7 @@
 #include "event_c.hpp"
 #include "api_impl_david.hpp"
 #include "api_error.hpp"
+#include "rt_unwrap.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -139,7 +140,7 @@ protected:
 
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         stream_->SetSqMemAttr(false);
 
@@ -376,16 +377,18 @@ TEST_F(DavidStreamTest, auto_split_stream_destroy)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->SetAutoSplitSq(true);
+    Stream *realStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(realStream, nullptr);
+    realStream->SetAutoSplitSq(true);
     AutoSplitSqContext *autoSplitCtx_ = new (std::nothrow) AutoSplitSqContext();
     autoSplitCtx_->masterStream = nullptr;
     autoSplitCtx_->curStreamSqeCount = 0U;
-    ((Stream *)stream)->SetIsSlaveStream(false);
-    ((Stream *)stream)->SetAutoSplitCtx(autoSplitCtx_);
-    ((Stream *)stream)->SetSqBaseAddr(100);
-    ((Stream *)stream)->streamSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[1U]();
+    realStream->SetIsSlaveStream(false);
+    realStream->SetAutoSplitCtx(autoSplitCtx_);
+    realStream->SetSqBaseAddr(100);
+    realStream->streamSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[1U]();
     Stream *stream2 = nullptr;
-    ((Stream *)stream)->Context_()->CreateAutoSplitSlaveStream(((Stream *)stream), &stream2);
+    realStream->Context_()->CreateAutoSplitSlaveStream(realStream, &stream2);
     autoSplitCtx_->slaveStreams.push_back((Stream *)stream2);
     rtStreamDestroy(stream);
 }
@@ -411,26 +414,28 @@ TEST_F(DavidStreamTest, auto_split_task_clean)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->SetAutoSplitSq(true);
+    Stream *realStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(realStream, nullptr);
+    realStream->SetAutoSplitSq(true);
     AutoSplitSqContext *autoSplitCtx_ = new (std::nothrow) AutoSplitSqContext();
-    ((Stream *)stream)->SetIsSlaveStream(false);
-    ((Stream *)stream)->SetAutoSplitCtx(autoSplitCtx_);
-    ((Stream *)stream)->SetSqBaseAddr(100);
+    realStream->SetIsSlaveStream(false);
+    realStream->SetAutoSplitCtx(autoSplitCtx_);
+    realStream->SetSqBaseAddr(100);
     autoSplitCtx_->masterStream = nullptr;
     autoSplitCtx_->curStreamSqeCount = 0U;
-    ((Stream *)stream)->streamSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[1U]();
+    realStream->streamSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[1U]();
     rtModel_t rtModel;
     rtError_t error = rtModelCreate(&rtModel, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtModelBindStream(rtModel, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream *stream2 = nullptr;
-    ((Stream *)stream)->Context_()->CreateAutoSplitSlaveStream(((Stream *)stream), &stream2);
+    realStream->Context_()->CreateAutoSplitSlaveStream(realStream, &stream2);
     autoSplitCtx_->slaveStreams.push_back((Stream *)stream2);
-    MOCKER_CPP_VIRTUAL(((Stream *)stream)->Context_(), &Context::TearDownStream)
+    MOCKER_CPP_VIRTUAL(realStream->Context_(), &Context::TearDownStream)
         .stubs()
         .will(returnValue(0));
-    error= ((DavidStream *)stream)->StreamTaskClean();
+    error = static_cast<DavidStream *>(realStream)->StreamTaskClean();
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtModelUnbindStream(rtModel, stream);
     rtStreamDestroy(stream);
@@ -458,8 +463,8 @@ TEST_F(DavidStreamTest, setup_normal_delete)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::DevMemAlloc).stubs().will(returnValue(0));
-    ((Stream *)stream)->GetDvppRRTaskAddr();
-    ((Stream *)stream)->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_USER);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->GetDvppRRTaskAddr();
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_USER);
     rtStreamDestroy(stream);
 }
 
@@ -468,8 +473,8 @@ TEST_F(DavidStreamTest, setup_normal_modelexe)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->GetDvppRRTaskAddr();
-    ((Stream *)stream)->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_USER);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->GetDvppRRTaskAddr();
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_USER);
     rtStreamDestroy(stream);
 }
 
@@ -478,9 +483,10 @@ TEST_F(DavidStreamTest, setup_cnt_free_fail)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((DavidStream *)stream)->cntNotifyId_ = MAX_UINT32_NUM;
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
+    davidStream->cntNotifyId_ = MAX_UINT32_NUM;
     int32_t cntNotifyId;
-    res = ((DavidStream *)stream)->ApplyCntNotifyId(cntNotifyId);
+    res = davidStream->ApplyCntNotifyId(cntNotifyId);
     EXPECT_EQ(res, RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::NotifyIdFree).stubs().will(returnValue(1));
     rtStreamDestroy(stream);
@@ -491,30 +497,31 @@ TEST_F(DavidStreamTest, public_queue)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->taskPublicBuffSize_ = 0U;
-    res = ((DavidStream *)stream)->DavidUpdatePublicQueue();
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
+    (rt_ut::UnwrapOrNull<Stream>(stream))->taskPublicBuffSize_ = 0U;
+    res = davidStream->DavidUpdatePublicQueue();
     EXPECT_NE(res, RT_ERROR_NONE);
-    ((Stream*)stream)->taskPublicBuffSize_ = 4096U;
-    res = ((DavidStream *)stream)->DavidUpdatePublicQueue();
+    (rt_ut::UnwrapOrNull<Stream>(stream))->taskPublicBuffSize_ = 4096U;
+    res = davidStream->DavidUpdatePublicQueue();
     EXPECT_NE(res, RT_ERROR_NONE);
-    ((DavidStream *)stream)->publicQueueHead_ = 0;
-    ((DavidStream *)stream)->publicQueueTail_ = 1;
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    davidStream->publicQueueHead_ = 0;
+    davidStream->publicQueueTail_ = 1;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     taskResMang->taskResATail_.Set(10);
-    ((Stream *)stream)->taskPublicBuff_[0] = 6;
+    (rt_ut::UnwrapOrNull<Stream>(stream))->taskPublicBuff_[0] = 6;
     uint16_t endRecylePos = 5;
     uint16_t delTaskPos;
-    res = ((DavidStream *)stream)->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
+    res = davidStream->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
     EXPECT_NE(res, RT_ERROR_NONE);
     endRecylePos = 15;
-    ((Stream *)stream)->taskPublicBuff_[0] = 11;
-    res = ((DavidStream *)stream)->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->taskPublicBuff_[0] = 11;
+    res = davidStream->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    ((Stream *)stream)->taskPublicBuff_[0] = 5;
-    res = ((DavidStream *)stream)->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->taskPublicBuff_[0] = 5;
+    res = davidStream->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
     EXPECT_NE(res, RT_ERROR_NONE);
     endRecylePos = 10;
-    res = ((DavidStream *)stream)->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
+    res = davidStream->StarsGetPublicTaskHead(nullptr, false, endRecylePos, &delTaskPos);
     EXPECT_NE(res, RT_ERROR_NONE);
     taskResMang->taskResATail_.Set(0);
     rtStreamDestroy(stream);
@@ -567,6 +574,7 @@ TEST_F(DavidStreamTest, DavidrtStreamTaskAbort_01)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
 
     MOCKER_CPP(&Context::IsStreamAbortSupported)
         .stubs()
@@ -578,7 +586,7 @@ TEST_F(DavidStreamTest, DavidrtStreamTaskAbort_01)
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::TaskAbortByType).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::QueryAbortStatusByType).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = ((DavidStream *)stream)->StreamAbort();
+    rtError_t error = davidStream->StreamAbort();
     EXPECT_EQ(error, RT_ERROR_WAIT_TIMEOUT);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -617,8 +625,9 @@ TEST_F(DavidStreamTest, DavidrtStreamStop_01)
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
 
-    ((DavidStream *)stream)->SetBindFlag(true);
+    davidStream->SetBindFlag(true);
     rtError_t error = rtsStreamStop(stream);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
     error = rtStreamDestroy(stream);
@@ -654,12 +663,14 @@ TEST_F(DavidStreamTest, DavidrtStreamStop_03)
 {
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
     ApiImpl impl;
     ApiDecorator apiDecorator(&impl);
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::StreamClear)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
-    rtError_t error = apiDecorator.StreamStop(((DavidStream *)stream));
+    rtError_t error = apiDecorator.StreamStop(davidStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -773,7 +784,7 @@ TEST_F(DavidStreamTest, davidstream_IsReclaimAsync)
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    DavidStream *stream_var = static_cast<DavidStream *>(stream);
+    DavidStream *stream_var = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(stream));
 
     tsk.type = TS_TASK_TYPE_NOTIFY_WAIT;
     bool ret = stream_var->IsReclaimAsync(&tsk);
@@ -823,6 +834,16 @@ TEST_F(DavidStreamTest, TestCreateStreamAndGet)
 
 TEST_F(DavidStreamTest, TestCreateAutoSplitStreamAndGet)
 {
+    MOCKER_CPP(&Stream::AllocExecutedTimesSvm).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::DevMemAlloc)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::GetSqRegVirtualAddrBySqid)
+        .stubs()
+        .will(returnValue(0));
+    MOCKER_CPP_VIRTUAL((NpuDriver *)device_->Driver_(), &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(0));
     MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
         .stubs()
         .will(returnValue(true));
@@ -923,7 +944,7 @@ TEST_F(DavidStreamTest, ExpandStreamRecycleModelBindStreamAllTask)
 {
     DavidStream *stream = (DavidStream *)stream_;
 
-    Stream *stream_var = static_cast<Stream *>(stream);
+    Stream *stream_var = stream_;
     stream_var->pendingNum_.Set(0);
     stream_var->delayRecycleTaskid_.push_back(0);
     std::cout<<"stream create success."<<std::endl;

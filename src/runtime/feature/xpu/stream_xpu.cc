@@ -19,6 +19,7 @@
 #include "xpu_context.hpp"
 #include "thread_local_container.hpp"
 #include "task_xpu_recycle.hpp"
+#include "runtime_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -92,6 +93,7 @@ rtError_t XpuStream::Setup(void)
         "Alloc sq cq failed, stream_id=%d, retCode=%#x.",
         streamId_,
         static_cast<uint32_t>(error));
+    InitEmbeddedInnerHandle<Stream>(this);
     return RT_ERROR_NONE;
 }
 

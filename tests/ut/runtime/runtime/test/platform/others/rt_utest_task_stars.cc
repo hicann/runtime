@@ -53,23 +53,33 @@ protected:
     {
         oriChipType = GlobalContainer::GetRtChipType();
         int32_t devId = -1;
-        rtSetDevice(0);
-        rtGetDevice(&devId);
+        ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+        ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
         dev_ = ((Runtime *)Runtime::Instance())->DeviceRetain(devId, 0);
         old = dev_->GetChipType();
 
-        rtStreamCreate((rtStream_t*)&stream_, 0);
+        const rtError_t streamRet = rtStreamCreate(&streamHandle_, 0);
+        ASSERT_EQ(streamRet, RT_ERROR_NONE);
+        if (streamRet == RT_ERROR_NONE) {
+            stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+            ASSERT_NE(stream_, nullptr);
+        } else {
+            stream_ = nullptr;
+        }
         ctx_ = Runtime::Instance()->CurrentContext();
         std::cout<<"RtsStApi test start start. old chiptype="<<old<<std::endl;
     }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtStreamDestroy(stream_);
+        if (streamHandle_ != nullptr) {
+            rtStreamDestroy(streamHandle_);
+        }
         dev_->SetChipType(old);
         ((Runtime *)Runtime::Instance())->DeviceRelease(dev_);
         rtDeviceReset(0);
         stream_ = nullptr;
+        streamHandle_ = nullptr;
         dev_ = nullptr;
         GlobalContainer::SetRtChipType(oriChipType);
         std::cout<<"RtsStApi test start end"<<std::endl;
@@ -78,6 +88,7 @@ protected:
 protected:
     rtChipType_t oriChipType;
     Stream *stream_ = nullptr;
+    rtStream_t streamHandle_ = nullptr;
     Device *dev_ = nullptr;
     Context *ctx_ = nullptr;
     rtChipType_t old;
@@ -93,17 +104,22 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
 
     rtError_t ret;
     Model* model;
-    rtModel_t modelHandle = nullptr;
     Stream* stream;
     Notify* notify;
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    rtNotify_t notifyHandle = nullptr;
 
-    ret = rtStreamCreate((rtStream_t*)&stream, 0);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamCreate(&streamHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
     ret = rtModelCreate(&modelHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     model = rt_ut::UnwrapOrNull<Model>(modelHandle);
-    ret = rtNotifyCreate(0, (rtNotify_t *)&notify);
+    ret = rtNotifyCreate(0, &notifyHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    notify = rt_ut::UnwrapOrNull<Notify>(notifyHandle);
     notify->SetEndGraphModel(model);
 
     TaskInfo task = {};
@@ -121,8 +137,10 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
     wait_cqe.errorType = 1U;
     wait_cqe.errorCode = 1U;
 
-    TaskInfo* errTask = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_KERNEL_AICORE, ret);
-    dev_->GetTaskFactory()->SetSerialId(stream_, errTask);
+    TaskFactory *taskFactory = stream->Device_()->GetTaskFactory();
+    ASSERT_NE(taskFactory, nullptr);
+    TaskInfo *errTask = taskFactory->Alloc(stream, TS_TASK_TYPE_KERNEL_AICORE, ret);
+    taskFactory->SetSerialId(stream, errTask);
     AicTaskInit(errTask, 0, 1, 0, nullptr);
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
@@ -141,9 +159,9 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
     cqe.errorType = 1U;
     SetStarsResult(&execTask, cqe);
 
-    ret = rtNotifyDestroy(notify);
+    ret = rtNotifyDestroy(notifyHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtModelDestroy(modelHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);

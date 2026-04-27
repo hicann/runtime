@@ -2079,7 +2079,7 @@ TEST_F(NewCloudV2ApiTest, notify_address_otherChipCloud)
     error = notify->Setup();
     EXPECT_EQ(error, RT_ERROR_NONE);
     notify->CreateIpcNotify("test_ipc", 8);
-    error = rtGetNotifyAddress(static_cast<rtNotify_t>(notify), &address);
+    error = rtGetNotifyAddress(reinterpret_cast<rtNotify_t>(notify->GetInnerHandle()), &address);
     delete notify;
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

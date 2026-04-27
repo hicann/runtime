@@ -36,6 +36,7 @@
 #include <utility>  // For std::pair and std::make_pair.
 #include "rt_stars_define.h"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #include "task_res.hpp"
 #include "task_execute_time.h"
 #include "model.hpp"
@@ -101,12 +102,12 @@ protected:
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         grp_ = new DvppGrp(device_, 0);
         rtDvppGrp_t grp_t = (rtDvppGrp_t *)grp_;
         rtError_t ret = rtStreamCreateByGrp(&streamHandleDvpp_, 0, 0, grp_t);
-        streamDvpp_ = (Stream *)streamHandleDvpp_;
+        streamDvpp_ = rt_ut::UnwrapOrNull<Stream>(streamHandleDvpp_);
         streamDvpp_->SetLimitFlag(true);
         EXPECT_EQ(res, RT_ERROR_NONE);
     }
@@ -1539,7 +1540,7 @@ TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_taskRecycle)
     rtStream_t streamHandle;
     error = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stream = (Stream *)streamHandle;
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     stream->pendingNum_.Set(1U);
     device_->SetMonitorExitFlag(false);
     MOCKER_CPP(&StarsEngine::TaskReclaimByStreamId)
@@ -1549,7 +1550,7 @@ TEST_F(CloudV2StarsEngineTest, MonitorTaskReclaim_taskRecycle)
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream->pendingNum_.Set(0U);
     device_->SetMonitorExitFlag(oldMonitorFlag);
-    error = rtStreamDestroy(stream);
+    error = rtStreamDestroy(streamHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -1573,9 +1574,10 @@ TEST_F(CloudV2StarsEngineTest, StarsResumeRtsq_01)
     rtError_t ret;
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     StarsEngine engine(device);
-    Stream *stream;
-    ret = rtStreamCreate((rtStream_t *)&stream, 0);
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
     stream->device_ = device;
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqEnable)
@@ -1601,7 +1603,7 @@ TEST_F(CloudV2StarsEngineTest, StarsResumeRtsq_01)
     report.errorCode = TS_ERROR_END_OF_SEQUENCE;
     ret = engine.StarsResumeRtsq(report, 0U, stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ret = rtStreamDestroy(stream);
+    ret = rtStreamDestroy(streamHandle);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
@@ -1802,4 +1804,3 @@ TEST_F(CloudV2StarsEngineTest, MonitorForWatchDog_02)
     engine.MonitorForWatchDog(device_);
     delete errorProc;
 }
-

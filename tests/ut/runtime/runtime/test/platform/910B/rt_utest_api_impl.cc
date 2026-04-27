@@ -103,6 +103,7 @@ TEST_F(CloudV2ApiImplTest, capture_api_01)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Stream * stream = new Stream(static_cast<Context *>(current), 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     stream->SetContext(static_cast<Context *>(current));
 
     error = rtCtxSetCurrent(static_cast<Context *>(current));
@@ -136,6 +137,7 @@ TEST_F(CloudV2ApiImplTest, capture_api_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Stream * stream = new Stream(static_cast<Context *>(current), 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     stream->SetContext(static_cast<Context *>(current));
 
     error = rtCtxSetCurrent(static_cast<Context *>(current));
@@ -192,6 +194,7 @@ TEST_F(CloudV2ApiImplTest, capture_api_04)
     RawDevice * device = new RawDevice(0);
     device->Init();
     Stream * addStream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(addStream);
 
     rtContext_t current = NULL;
     error = rtCtxGetCurrent(&current);
@@ -265,6 +268,7 @@ TEST_F(CloudV2ApiImplTest, LaunchRandomNumTask_Test_01)
     rtError_t error = rtCtxGetCurrent(&current);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream * stm = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stm);
     Context * ctx = static_cast<Context *>(current);
     stm->SetContext(ctx);
     rtRandomNumTaskInfo_t taskInfo = {};
@@ -501,8 +505,8 @@ TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
 
     Stream *stream = new Stream((Device *)device, 0);
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    InitEmbeddedInnerHandle<Stream>(stream);
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
@@ -841,7 +845,7 @@ TEST_F(CloudV2ApiImplTest, CPU_KERNEL_LAUNCH_DUMP)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Stream *stream0 = (Stream *)stream;
+    Stream *stream0 = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *context0 = (Context *)stream0->Context_();
     stream0->SetContext((Context *)NULL);
 
@@ -922,8 +926,8 @@ TEST_F(CloudV2ApiImplTest, GetDevErrMsg)
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
 
     Stream *stream = new Stream((Device *)device, 0);
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    InitEmbeddedInnerHandle<Stream>(stream);
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TTLV::Decode).stubs().will(returnValue(RT_ERROR_NONE));
     Context context(device, false);
@@ -956,12 +960,12 @@ TEST_F(CloudV2ApiImplTest, GetDevRunningStreamSnapshotMsg)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
     Stream *stream = new Stream((Device *)device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(invoke(GetDevMsgSubmitTaskStub1));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -996,11 +1000,11 @@ TEST_F(CloudV2ApiImplTest, GetDevRunningStreamSnapshotMsg_failed)
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
 
     Stream *stream = new Stream((Device *)device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1081,6 +1085,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test0)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
     Stream *stream = new Stream((Device *)device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     rtGetDevMsgCtrlInfo_t addr;
     MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
@@ -1090,8 +1095,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test0)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(sizeof(rtGetDevMsgCtrlInfo_t)));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1111,6 +1115,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test1)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
     Stream *stream = new Stream((Device *)device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     rtGetDevMsgCtrlInfo_t addr;
     MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
@@ -1119,8 +1124,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test1)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(sizeof(rtGetDevMsgCtrlInfo_t)));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1140,6 +1144,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test2)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
     Stream *stream = new Stream((Device *)device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     rtGetDevMsgCtrlInfo_t addr;
     MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStub));
@@ -1149,8 +1154,7 @@ TEST_F(CloudV2ApiImplTest, GetStreamTimeoutSnapshotMsg_test2)
     MOCKER_CPP_VIRTUAL(device, &Device::GetSnapshotLen).stubs().will(returnValue(0U));
     MOCKER_CPP_VIRTUAL(device, &Device::PrintStreamTimeoutSnapshotInfo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
-    Stream *stream_var_t = static_cast<Stream *>(stream);
-    MOCKER_CPP_VIRTUAL(stream_var_t, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     {
         Context context(device, false);
@@ -1457,6 +1461,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test1)
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream *stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     error = api.LaunchDvppTask(nullptr, 0, stream, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -1527,6 +1532,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test2)
     cfg.attrs = attrs;
     cfg.numAttrs = 1;
     Stream *stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     error = api.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
     EXPECT_NE(error, RT_ERROR_NONE);
     argsWithType.type = RT_ARGS_MAX;
@@ -1592,6 +1598,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test3)
     cfg.attrs = attrs;
     cfg.numAttrs = 1;
     Stream *stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     error = api.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
     EXPECT_NE(error, RT_ERROR_NONE);
     argsWithType.type = RT_ARGS_MAX;
@@ -1621,6 +1628,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test4)
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream *stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     error = api.LaunchDvppTask(nullptr, 0, stream, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
@@ -1708,6 +1716,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     cfg.attrs = attrs;
     cfg.numAttrs = 1;
     Stream *stream = new Stream(device, 0);
+    InitEmbeddedInnerHandle<Stream>(stream);
     error = api.LaunchKernelV2(k1, 1, &argsWithType, stream, &cfg);
     EXPECT_NE(error, RT_ERROR_NONE);
     argsWithType.type = RT_ARGS_MAX;

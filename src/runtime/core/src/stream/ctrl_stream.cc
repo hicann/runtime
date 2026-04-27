@@ -41,6 +41,7 @@ rtError_t CtrlStream::Setup()
     sqId_ = sqId;
     cqId_ = cqId;
     SetLogicalCqId(logicCqId);
+    InitEmbeddedInnerHandle<Stream>(this);
     return RT_ERROR_NONE;
 }
 

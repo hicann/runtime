@@ -33,6 +33,7 @@
 #include "rdma_task.h"
 #include "thread_local_container.hpp"
 #include "inner_kernel.h"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 
@@ -148,7 +149,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -190,7 +191,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask2)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -224,7 +225,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask3)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     Context *ctxPtr = (Context *)ctx;
-    Stream *stmPtr = (Stream *)stream;
+    Stream *stmPtr = rt_ut::UnwrapOrNull<Stream>(stream);
     std::list<Stream *> streamList;
     streamList.push_back(stmPtr);
     const mmTimespec startTime = mmGetTickCount();
@@ -237,7 +238,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask3)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -270,7 +271,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructFftsMixSqeForDavinciTask4)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -321,7 +322,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -361,7 +362,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask2)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -401,7 +402,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask3)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
@@ -434,7 +435,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask4)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = false;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};

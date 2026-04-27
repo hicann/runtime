@@ -14,6 +14,7 @@
 #include "device.hpp"
 #include "event.hpp"
 #include "context.hpp"
+#include "rt_unwrap.h"
 
 using namespace cce::runtime;
 namespace {
@@ -49,7 +50,7 @@ TEST_F(TaskLaunchTest, rtEventDestroySync_test4)
     rtEvent_t event;
 
     error = rtEventCreate(&event);
-    Event *eventObj = (Event*) event;
+    Event *eventObj = rt_ut::UnwrapOrNull<Event>(event);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP(&Event::IsEventTaskEmpty).stubs().will(returnValue(false)).then(returnValue(true));

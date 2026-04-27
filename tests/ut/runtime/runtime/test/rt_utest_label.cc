@@ -32,6 +32,7 @@
 #include "cond_op_stream_task.h"
 #include "device/device_error_proc.hpp"
 #include "raw_device.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 
@@ -123,7 +124,7 @@ TEST_F(LabelTest, label_switch)
 
     Model *model = new Model();
     error = rtStreamCreate(&stream, 0);
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *ctx = (Context *)stm->Context_();
     Label *label = new Label(model);
     stm->SetModel(model);
@@ -137,7 +138,7 @@ TEST_F(LabelTest, label_switch)
 
     error = label->Switch(nullptr, RT_GREATER_OR_EQUAL, 0, stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamSynchronize(stm);
+    error = rtStreamSynchronize(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete label;
     delete model;
@@ -156,7 +157,7 @@ TEST_F(LabelTest, label_StreamGoto)
     error = rtStreamCreate(&stream, 0);
     usleep(100000);   // wait for create_stream task done
     TaskResManage *trm = new (std::nothrow) TaskResManage();
-    Stream *stm = (Stream *)stream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
     Context *ctx = (Context *)stm->Context_();
     Label *label = new Label(model);
     trm->taskPoolNum_ = 1;

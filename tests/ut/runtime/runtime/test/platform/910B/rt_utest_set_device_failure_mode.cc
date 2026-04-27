@@ -34,6 +34,7 @@
 #include "notify_task.h"
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #undef private
 #undef protected
 
@@ -117,7 +118,7 @@ TEST_F(CloudV2SetDeviceFailureModeTest, set_mode_create_stream)
     rtStream_t newStream;
     ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
     EXPECT_EQ(stream->GetFailureMode(), failureMode);
     ret = rtStreamDestroy(newStream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -132,7 +133,7 @@ TEST_F(CloudV2SetDeviceFailureModeTest, res_clear)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
     stream->isSupportASyncRecycle_ = true;
     ret = stream->ResClear();
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -149,7 +150,7 @@ TEST_F(CloudV2SetDeviceFailureModeTest, res_clear_timeout)
     rtStream_t newStream;
     auto ret = rtStreamCreate(&newStream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    Stream *stream = static_cast<Stream *>(newStream);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(newStream);
     stream->isSupportASyncRecycle_ = true;
     stream->pendingNum_.Set(1);
 
@@ -240,7 +241,7 @@ protected:
         engine_ = ((RawDevice *)device_)->engine_;
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
     }
 
     virtual void TearDown()
@@ -338,8 +339,8 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, dfx_case)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
 
-    InitByStream(&taskInfo, (Stream *)stream);
-    ((RawDevice *)(((Stream *)stream)->device_))->driver_ = driver_;
+    InitByStream(&taskInfo, rt_ut::UnwrapOrNull<Stream>(stream));
+    ((RawDevice *)((rt_ut::UnwrapOrNull<Stream>(stream))->device_))->driver_ = driver_;
     uint8_t* funcCallSvmMem = new uint8_t[modelExecuteTaskInfo->model->GetFunCallMemSize()];
     modelExecuteTaskInfo->model->SetFuncCallSvmMem(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(funcCallSvmMem)));
     PrintErrorModelExecuteTaskFuncCall(&taskInfo);
@@ -364,7 +365,7 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, ffts_plus)
     taskInfo.errorCode = RT_ERROR_WAIT_TIMEOUT;
     taskInfo.type = TS_TASK_TYPE_FFTS_PLUS;
     taskInfo.bindFlag = true;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
 
     MOCKER(PrintErrorInfo).stubs();
     MOCKER(DoCompleteSuccForFftsPlusTask).stubs();
@@ -399,7 +400,7 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, ffts_plus_1)
     Model *model = new Model();
     notify.SetEndGraphModel(model);
     taskInfo.u.notifywaitTask.u.notify = &notify;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     MOCKER_CPP(&Context::ModelIsExistInContext).stubs().will(returnValue(true));
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
     EXPECT_EQ(notify.GetEndGraphModel(), model);
@@ -415,14 +416,16 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, model_exe_result_for_softw
 {
     rtContext_t ctx;
     rtError_t ret = RT_ERROR_NONE;
-    RawDevice *dev = new RawDevice(1);
-    dev->Init();
+    rtStream_t streamHandle = nullptr;
 
     ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    Stream *stream = new Stream(dev, 0);
-    stream->SetContext(static_cast<Context *>(ctx));
+    ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+    RawDevice *dev = static_cast<RawDevice *>(stream->Device_());
 
     TaskInfo taskInfo = {};
     taskInfo.bindFlag = true;
@@ -433,7 +436,7 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, model_exe_result_for_softw
     Model *model = new Model();
     notify.SetEndGraphModel(model);
     taskInfo.u.notifywaitTask.u.notify = &notify;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = stream;
     MOCKER_CPP(&Context::ModelIsExistInContext).stubs().will(returnValue(true));
 
     rtStarsCqeSwStatus_t swStatus = {};
@@ -465,10 +468,10 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, model_exe_result_for_softw
 
     GlobalMockObject::verify();
 
-    delete stream;
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtCtxDestroy(ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete dev;
 }
 
 TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, socket_close)
@@ -487,14 +490,14 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, socket_close)
     taskInfo.errorCode = RT_ERROR_WAIT_TIMEOUT;
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     taskInfo.bindFlag = true;
-    taskInfo.stream = static_cast<Stream*>(stream);
+    taskInfo.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo.drvErr = RT_ERROR_SOCKET_CLOSE;
 
     MOCKER(PrintErrorInfo).stubs();
     MOCKER(DoCompleteSuccForFftsPlusTask).stubs();
     MOCKER(GetRealReportFaultTaskForModelExecuteTask).stubs().with(outBoundP(&taskInfo)).will(returnValue(&taskInfo));
     ReportErrorInfoForModelExecuteTask(&taskInfo, 0);
-    EXPECT_EQ((static_cast<Stream*>(stream)->GetDrvErr()), RT_ERROR_SOCKET_CLOSE);
+    EXPECT_EQ((rt_ut::UnwrapOrNull<Stream>(stream)->GetDrvErr()), RT_ERROR_SOCKET_CLOSE);
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -652,8 +655,8 @@ TEST_F(CloudV2CaptureModelProfilerTest, REPORT_STREAM_INFO)
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    captureModel->streams_.push_back(static_cast<Stream*>(stream));
-    profiler->InsertStream(static_cast<Stream*>(stream));
+    captureModel->streams_.push_back(rt_ut::UnwrapOrNull<Stream>(stream));
+    profiler->InsertStream(rt_ut::UnwrapOrNull<Stream>(stream));
     // task track
     profiler->ReportCacheTrack(0);
     rt->isHaveDevice_ = tmp;

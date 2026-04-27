@@ -68,7 +68,7 @@ void StreamStateCallbackManager::Notify(Stream * const stm, const bool isCreate)
         }
         notifyMap.insert(callbackMap_.cbegin(), callbackMap_.cend());
     }
-    rtStream_t stream = static_cast<rtStream_t>(stm);
+    rtStream_t stream = reinterpret_cast<rtStream_t>(stm->GetInnerHandle());
     for (const auto &info : notifyMap) {
         RT_LOG(RT_LOG_DEBUG, "notify [%s] stream state start.", info.first.c_str());
         const StreamStateCallback type = info.second.type;

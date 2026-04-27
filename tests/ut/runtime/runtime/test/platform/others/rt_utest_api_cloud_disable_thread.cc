@@ -54,6 +54,7 @@
 #include "runtime/rts/rts_device.h"
 #include "runtime/rts/rts_stream.h"
 #include "api_c.h"
+#include "rt_unwrap.h"
 #undef protected
 #undef private
 
@@ -300,7 +301,7 @@ TEST_F(ApiCloudDisableThreadTest, kernel_launch_success_dfx)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     stm->SetLimitFlag(true);
     stm->SetRecycleFlag(false);
 
@@ -325,7 +326,7 @@ TEST_F(ApiCloudDisableThreadTest, kernel_launch_sq_task_send_error)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     Device* dev = stm->Device_();
     MOCKER_CPP_VIRTUAL(dev, &Device::GetDevRunningState)
     .stubs()
@@ -353,7 +354,7 @@ TEST_F(ApiCloudDisableThreadTest, kernel_launch_stream_full)
     void *stubFunc;
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    Stream *stm = (Stream*)stream_;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream_);
     MOCKER_CPP(&Stream::AddTaskToStream)
     .stubs()
     .will(returnValue(RT_ERROR_STREAM_FULL));

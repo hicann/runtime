@@ -144,7 +144,7 @@ protected:
     
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
 
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -154,7 +154,7 @@ protected:
         grp_ = new DvppGrp(device_, 0);
         rtDvppGrp_t grp_t = (rtDvppGrp_t *)grp_;
         rtError_t ret = rtStreamCreateByGrp(&streamHandleDvpp_, 0, 0, grp_t);
-        streamDvpp_ = (Stream *)streamHandleDvpp_;
+        streamDvpp_ = rt_ut::UnwrapOrNull<Stream>(streamHandleDvpp_);
         streamDvpp_->SetLimitFlag(true);
         EXPECT_EQ(res, RT_ERROR_NONE);
 
@@ -237,15 +237,15 @@ TEST_F(UbStreamTest, LaunchKernel_1)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, stream_);
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamSynchronize(stream_);
+    error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
-    error = rtKernelLaunch(&function_, 2, (void *)args, sizeof(args), nullptr, stream_);
+    error = rtKernelLaunch(&function_, 2, (void *)args, sizeof(args), nullptr, streamHandle_);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
     stream_->SetSqBaseAddr(oldSqAddr);
     Context *curCtx = Runtime::Instance()->CurrentContext();
@@ -4075,15 +4075,15 @@ TEST_F(UbStreamTest, LaunchKernelWithHandle)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, stream_, &taskCfgInfo);
+    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, streamHandle_, &taskCfgInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamSynchronize(stream_);
+    error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, nullptr, &taskCfgInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
-    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, stream_, &taskCfgInfo);
+    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, streamHandle_, &taskCfgInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
     stream_->SetSqBaseAddr(oldSqAddr);
     Context *curCtx = Runtime::Instance()->CurrentContext();
@@ -4132,7 +4132,7 @@ TEST_F(UbStreamTest, LaunchKernelWithHandle_Error1)
     taskCfgInfo.qos = 1;
     taskCfgInfo.partId = 1;
 
-    error = rtKernelLaunchWithHandleV2(m_handle, 355, 1, &argsInfo, nullptr, stream_, &taskCfgInfo);
+    error = rtKernelLaunchWithHandleV2(m_handle, 355, 1, &argsInfo, nullptr, streamHandle_, &taskCfgInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
 
     error = rtDevBinaryUnRegister(m_handle);
@@ -4151,9 +4151,9 @@ TEST_F(UbStreamTest, LaunchKernelEx)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, stream_);
+    error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtStreamSynchronize(stream_);
+    error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     stream_->flags_ = RT_STREAM_AICPU;
@@ -4162,7 +4162,7 @@ TEST_F(UbStreamTest, LaunchKernelEx)
     Model *realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
     stream_->SetLatestModlId(realModel->Id_());
-    error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, stream_);
+    error = rtKernelLaunchEx(&argsInfo, sizeof(argsInfo), 2, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->flags_ = RT_STREAM_PERSISTENT;
 
@@ -4735,16 +4735,16 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     uint32_t blockDim = 32;
     rtStream_t stream;
     error = rtStreamCreate(&stream, 0);
-    ((Stream *)stream)->SetSqMemAttr(false);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqMemAttr(false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Context *curCtx = Runtime::Instance()->CurrentContext();
     Stream *defaultStm = curCtx->DefaultStream_();
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
-    uint64_t oldSqAddr1 = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr1 = (rt_ut::UnwrapOrNull<Stream>(stream))->GetSqBaseAddr();
     uint64_t oldSqAddr2 = defaultStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
     defaultStm->SetSqBaseAddr(newSqAddr);
 
     error = rtLaunchKernelByFuncHandle(func_handle, blockDim, argsHandle, stream);
@@ -4767,13 +4767,13 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     kernel->SetKernelType_(Program::MACH_AI_VECTOR);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
 
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     taskResMang->ResetTaskRes();
     MOCKER_CPP(&Program::IsDeviceSoAndNameValid).stubs().will(returnValue(false));
     error = rtLaunchKernelByFuncHandleV2(func_handle, blockDim, argsHandle, stream, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_HANDLE);
 
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr1);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr1);
     defaultStm->SetSqBaseAddr(oldSqAddr2);
 
     taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(defaultStm)->taskResMang_));
@@ -4866,13 +4866,13 @@ protected:
     
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
 
         grp_ = new DvppGrp(device_, 0);
         rtDvppGrp_t grp_t = (rtDvppGrp_t *)grp_;
         rtError_t ret = rtStreamCreateByGrp(&streamHandleDvpp_, 0, 0, grp_t);
-        streamDvpp_ = (Stream *)streamHandleDvpp_;
+        streamDvpp_ = rt_ut::UnwrapOrNull<Stream>(streamHandleDvpp_);
         streamDvpp_->SetLimitFlag(true);
         EXPECT_EQ(res, RT_ERROR_NONE);
 
@@ -4947,7 +4947,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite)
     rtStream_t liteStream;
     error = rtStreamCreateWithFlags(&liteStream, 0, RT_STREAM_FAST_LAUNCH);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stm = (Stream*)liteStream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
     stm->SetSqMemAttr(false);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
     uint64_t oldSqAddr = stm->GetSqBaseAddr();
@@ -4955,13 +4955,13 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite)
     stm->SetSqBaseAddr(newSqAddr);
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, stm);
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, liteStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint32_t sqId = 0U;
     error = rtStreamGetSqid(liteStream, &sqId);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(liteStream)->taskResMang_ ));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(liteStream)->taskResMang_ ));
     MOCKER_CPP_VIRTUAL(device_->Driver_(),
             &Driver::GetSqHead).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
             .will(returnValue(RT_ERROR_NONE));
@@ -4985,7 +4985,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite_Sync)
     rtStream_t liteStream;
     error = rtStreamCreateWithFlags(&liteStream, 0, RT_STREAM_FAST_LAUNCH|RT_STREAM_FAST_SYNC);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stm = (Stream*)liteStream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
     stm->SetSqMemAttr(false);
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
@@ -4993,7 +4993,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite_Sync)
     uint64_t oldSqAddr = stm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stm->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, stm);
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, liteStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint32_t sqId = 0U;
@@ -5004,7 +5004,7 @@ TEST_F(UbStreamTest1, LaunchKernel_Lite_Sync)
     EXPECT_EQ(error, RT_ERROR_NONE);
     stm->SetSqBaseAddr(oldSqAddr);
 
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(liteStream)->taskResMang_ ));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(liteStream)->taskResMang_ ));
     MOCKER_CPP_VIRTUAL(device_->Driver_(),
             &Driver::GetSqHead).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
             .will(returnValue(RT_ERROR_NONE));
@@ -5023,7 +5023,7 @@ TEST_F(UbStreamTest1, AIC_SQE)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
 
@@ -5041,7 +5041,7 @@ TEST_F(UbStreamTest1, AIV_SQE)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
 
@@ -5066,7 +5066,7 @@ TEST_F(UbStreamTest1, MIX_AIC_SQE)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
@@ -5094,7 +5094,7 @@ TEST_F(UbStreamTest1, MIX_AIV_SQE)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
@@ -5122,7 +5122,7 @@ TEST_F(UbStreamTest1, MIX_AIC_AIV_MAIN_AIC_SQE)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
@@ -5139,7 +5139,7 @@ TEST_F(UbStreamTest1, MIX_AIC_AIV_MAIN_AIC_SQE)
 TEST_F(UbStreamTest1, CallBakLaunch_SQE_OFFLINE)
 {
     TaskInfo task = {};
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     CallbackLaunchTaskInit(&task, nullptr, nullptr, 1, 1);
 
     NpuDriver * rawDrv = new NpuDriver();
@@ -5169,7 +5169,7 @@ TEST_F(UbStreamTest1, CallBakLaunch_SQE_OFFLINE)
 TEST_F(UbStreamTest1, CallBakLaunch_SQE_ONLINE)
 {
     TaskInfo task = {};
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
     CallbackLaunchTaskInit(&task, nullptr, nullptr, 1, 1);
 
     NpuDriver * rawDrv = new NpuDriver();
@@ -5189,7 +5189,7 @@ TEST_F(UbStreamTest1, CallBakLaunch_SQE_ONLINE)
 TEST_F(UbStreamTest1, DieFriendly_SQE)
 {
     TaskInfo task = {};
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
 
     LaunchTaskCfgInfo_t launchTaskCfg = {};
     launchTaskCfg.blockDim = 1U;
@@ -5226,7 +5226,7 @@ TEST_F(UbStreamTest1, PiMix_SQE)
 
     TaskInfo task = {};
     AicTaskInfo *aicTaskInfo = &(task.u.aicTaskInfo);
-    InitByStream(&task, (Stream *)stream_);
+    InitByStream(&task, stream_);
 
     LaunchTaskCfgInfo_t launchTaskCfg = {};
     launchTaskCfg.blockDim = 1U;
@@ -5336,7 +5336,7 @@ protected:
     
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, RT_STREAM_FAST_LAUNCH|RT_STREAM_FAST_SYNC);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -5415,7 +5415,7 @@ TEST_F(UbStreamTestLite, LaunchKernel_Lite)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, stream_);
+    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), nullptr, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -9244,10 +9244,10 @@ TEST_F(UbStreamTestLite, LaunchKernelWithHandle_Lite)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, stream_, &taskCfgInfo);
+    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, streamHandle_, &taskCfgInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
     argsInfo.argsSize = 1025;
-    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, stream_, &taskCfgInfo);
+    error = rtKernelLaunchWithHandleV2(m_handle, tilingKey, 1, &argsInfo, nullptr, streamHandle_, &taskCfgInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -9277,7 +9277,7 @@ TEST_F(UbStreamTestLite, LaunchCpuKernel_Lite)
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
     error = rtCpuKernelLaunchWithFlag(reinterpret_cast<const void *>(soName.c_str()),
-        reinterpret_cast<const void *>(kernelName.c_str()), 1, &argsInfo, nullptr, stream_, 2);
+        reinterpret_cast<const void *>(kernelName.c_str()), 1, &argsInfo, nullptr, streamHandle_, 2);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -9305,7 +9305,7 @@ TEST_F(UbStreamTestLite, LaunchCpuKernelExWithArgs_Lite)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtAicpuKernelLaunchExWithArgs(2, kernelName.c_str(), 1, &argsInfo0, &desc, stream_, 2);
+    error = rtAicpuKernelLaunchExWithArgs(2, kernelName.c_str(), 1, &argsInfo0, &desc, streamHandle_, 2);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
@@ -9873,11 +9873,11 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     rtStream_t stream;
     error = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_FAST_LAUNCH|RT_STREAM_FAST_SYNC);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ((Stream *)stream)->SetSqMemAttr(false);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqMemAttr(false);
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
-    uint64_t oldSqAddr = ((Stream *)stream)->GetSqBaseAddr();
+    uint64_t oldSqAddr = (rt_ut::UnwrapOrNull<Stream>(stream))->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    ((Stream *)stream)->SetSqBaseAddr(newSqAddr);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(newSqAddr);
     error = rtLaunchKernelByFuncHandle(func_handle, blockDim, argsHandle, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -9919,13 +9919,14 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
 
     attrs[1].id = RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE;
     attrs[1].value.dynUBufSize = 256U * 1024U;
-    ((Stream *)stream)->SetSqBaseAddr(oldSqAddr);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetSqBaseAddr(oldSqAddr);
+
 
     error = rtBinaryUnLoad(bin_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtDestroyLaunchArgs(argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     taskResMang->ResetTaskRes();
     uint32_t sqId = 0U;
     error = rtStreamGetSqid(stream, &sqId);
@@ -9952,7 +9953,7 @@ TEST_F(UbStreamTest, fusion_launch_api_test_not_support)
     rtInstance->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
 
-    rtError_t error = rtFusionLaunch(nullptr, stream_, nullptr);
+    rtError_t error = rtFusionLaunch(nullptr, streamHandle_, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     rtInstance->SetChipType(chipType);
@@ -9993,7 +9994,7 @@ TEST_F(UbStreamTest, KernelLaunchWithFlag)
     taskCfgInfo.qos = 1;
     taskCfgInfo.partId = 1;
 
-    error = rtKernelLaunchWithFlagV2(&function_, 1, &argsInfo, NULL, (void *)stream_, 0, &taskCfgInfo);
+    error = rtKernelLaunchWithFlagV2(&function_, 1, &argsInfo, NULL, (void *)streamHandle_, 0, &taskCfgInfo);
     error = rtDevBinaryUnRegister(binHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -10065,7 +10066,7 @@ protected:
     
         rtError_t res = rtStreamCreate(&streamHandle_, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = (Stream *)streamHandle_;
+        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
         stream_->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -10075,7 +10076,7 @@ protected:
         grp_ = new DvppGrp(device_, 0);
         rtDvppGrp_t grp_t = (rtDvppGrp_t *)grp_;
         rtError_t ret = rtStreamCreateByGrp(&streamHandleDvpp_, 0, 0, grp_t);
-        streamDvpp_ = (Stream *)streamHandleDvpp_;
+        streamDvpp_ = rt_ut::UnwrapOrNull<Stream>(streamHandleDvpp_);
         streamDvpp_->SetLimitFlag(true);
         EXPECT_EQ(res, RT_ERROR_NONE);
 
@@ -13983,10 +13984,10 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     uint64_t oldSqAddr1 = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtStreamSynchronize(stream_);
+    error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStream_t stream = 0;
@@ -13994,7 +13995,7 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     EXPECT_EQ(error, RT_ERROR_NONE);
     TaskInfo *pTask = nullptr;
     uint32_t pos = UINT32_MAX;
-    TaskResManageDavid *taskResMng = ((TaskResManageDavid *)(static_cast<Stream *>(stream)->taskResMang_));
+    TaskResManageDavid *taskResMng = ((TaskResManageDavid *)(rt_ut::UnwrapOrNull<Stream>(stream)->taskResMang_));
     error = taskResMng->AllocTaskInfoAndPos(2U, pos, &pTask);
     EXPECT_EQ(error, RT_ERROR_NONE);
     const void *stubFunc = (void *)0x02;
@@ -14003,7 +14004,7 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     PlainProgram stubProg(Program::MACH_AI_CORE);
     Program *program = &stubProg;
     kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
-    pTask->stream = (Stream *)stream;
+    pTask->stream = rt_ut::UnwrapOrNull<Stream>(stream);
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.sqeLen = 2U;
     pTask->u.fusionKernelTask.aicPart.kernel = kernel;
@@ -14019,50 +14020,52 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
 
     stream_->SetSqBaseAddr(0);
     stream_->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
     pTask->isUpdateSinkSqe = 1U;
+
     Model *realModel = rt_ut::UnwrapOrNull<Model>(model);
     stream_->SetModel(realModel);
-    ((Stream *)stream)->SetModel(realModel);
-    ((Stream *)stream)->SetLatestModlId(realModel->Id_());
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetModel(realModel);
+    (rt_ut::UnwrapOrNull<Stream>(stream))->SetLatestModlId(realModel->Id_());
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
+
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_MODEL);
     stream_->models_.clear();
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.sqeLen = 3U;
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.aicPart.kernel->mixType_ = MIX_AIC_AIV_MAIN_AIC;
     pTask->u.fusionKernelTask.sqeLen = 2U;
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
 
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.aicPart.kernel->mixType_ = NO_MIX;
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, &argsInfo);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     stream_->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     rtModelDestroy(model);
     taskResMng->ResetTaskRes();
-    taskResMng->ReleaseTaskResource(static_cast<Stream *>(stream));
-    ((Stream *)stream)->models_.clear();
+    taskResMng->ReleaseTaskResource(rt_ut::UnwrapOrNull<Stream>(stream));
+    (rt_ut::UnwrapOrNull<Stream>(stream))->models_.clear();
     rtStreamDestroy(stream);
     delete kernel;
 
     rtStream_t liteStream;
     error = rtStreamCreateWithFlags(&liteStream, 0, RT_STREAM_FAST_LAUNCH);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stm = (Stream*)liteStream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
     stm->SetSqMemAttr(false);
     uint64_t oldSqAddr2 = stm->GetSqBaseAddr();
     stm->SetSqBaseAddr(newSqAddr);
 
     fusionInfo.subTask[0].type = RT_FUSION_AICPU;
     attrs[1].value.dumpflag = RT_KERNEL_DEFAULT;
-    error = rtFusionLaunch((void *)(&fusionInfo), stm, &argsInfo);
+    error = rtFusionLaunch((void *)(&fusionInfo), liteStream, &argsInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(liteStream);
@@ -14111,7 +14114,7 @@ TEST_F(UbStreamTest3, multi_ccu_subtasks_for_fusion_kernel_launch_double_die)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    rtError_t error = rtFusionLaunch((void *)(&fusionInfo), stream_, nullptr);
+    rtError_t error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -14138,18 +14141,18 @@ TEST_F(UbStreamTest3, multi_ccu_subtasks_for_fusion_kernel_launch_single_die)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
-    rtError_t error = rtFusionLaunch((void *)(&fusionInfo), stream_, nullptr);
+    rtError_t error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     fusionInfo.subTask[0].task.ccuInfo.ccuTaskInfo[1].dieId = 1U;
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, nullptr);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtFusionLaunch((void *)(&fusionInfo), nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
-    error = rtFusionLaunch((void *)(&fusionInfo), stream_, nullptr);
+    error = rtFusionLaunch((void *)(&fusionInfo), streamHandle_, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 
     Driver *drv = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
@@ -14157,7 +14160,7 @@ TEST_F(UbStreamTest3, multi_ccu_subtasks_for_fusion_kernel_launch_single_die)
     MOCKER_CPP_VIRTUAL(drv,
         &Driver::GetSqHead).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(taskResMang->GetTaskPosTail()))
         .will(returnValue(RT_ERROR_NONE));
-    error = rtStreamSynchronize(stream_);
+    error = rtStreamSynchronize(streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);

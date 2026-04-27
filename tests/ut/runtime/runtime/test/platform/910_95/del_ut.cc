@@ -16,17 +16,17 @@ TEST_F(ApiDavidTest, AllocTaskInfoForCapture_UpdateTask)
     rtStream_t stream;
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-    error = ((Stream *)stream)->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
+    error = (rt_ut::UnwrapOrNull<Stream>(stream))->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *dstStm = (Stream *)stream;
+    Stream *dstStm = rt_ut::UnwrapOrNull<Stream>(stream);
     uint32_t pos = 0;
 
-    error = AllocTaskInfoForCapture(&task, (Stream *)stream, pos, dstStm);
+    error = AllocTaskInfoForCapture(&task, rt_ut::UnwrapOrNull<Stream>(stream), pos, dstStm);
     EXPECT_EQ(error, RT_ERROR_TASK_NOT_SUPPORT);
-    error = AllocTaskInfoForCapture(&task, (Stream *)stream, pos, dstStm, 1, true);
+    error = AllocTaskInfoForCapture(&task, rt_ut::UnwrapOrNull<Stream>(stream), pos, dstStm, 1, true);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    error = ((Stream *)stream)->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
+    error = (rt_ut::UnwrapOrNull<Stream>(stream))->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -100,7 +100,7 @@ TEST_F(ApiDCDisableThreadTest, kernel_launch_normal_test)
     rtStream_t liteStream;
     error = rtStreamCreateWithFlags(&liteStream, 0, RT_STREAM_FAST_LAUNCH);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Stream *stm = (Stream*)liteStream;
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(liteStream);
     EXPECT_EQ(stm->isHasPcieBar_, false);
 
     error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, liteStream);

@@ -88,6 +88,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
     ${TOP_DIR}/src/runtime/api/api_c_mbuf.cc
+    ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/inner.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
@@ -394,6 +395,7 @@ add_library(runtime_ut_910b_intf_pub INTERFACE)
 target_compile_definitions(runtime_ut_910b_intf_pub INTERFACE
     __RUNTIME_PRODUCT_DRV_MINI__
     _GLIBCXX_USE_CXX11_ABI=0
+    RT_UT_TEST
     FEATURE_NOTIFY
     FEATURE_PCTRACE
     FEATURE_DEBUG
