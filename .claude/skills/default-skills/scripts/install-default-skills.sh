@@ -87,3 +87,25 @@ for skill in "${DEFAULT_SKILLS[@]}"; do
 done
 
 echo "All skills installed successfully."
+
+# 注入项目规则文件引用
+PROJECT_ROOT="$(cd "$SKILLS_DIR/.." && pwd)"
+RULES_FILE="$PROJECT_ROOT/.claude/runtime-code-review-rules.md"
+
+if [ -f "$RULES_FILE" ]; then
+    echo "Injecting project rules reference to gitcode-pr..."
+    
+    # 在 review.md 的步骤 2 后添加规则文件引用
+    REVIEW_MD="$SKILLS_DIR/gitcode-pr/commands/review.md"
+    
+    if [ -f "$REVIEW_MD" ]; then
+        # 创建临时文件，插入规则引用
+        sed -i '/^### 步骤 2: 获取项目规范上下文$/a\
+\
+**项目审查规则文件**：\
+- `.claude/runtime-code-review-rules.md` - Runtime 代码审查规则，包含功能正确性、格式规范、日志合理性、安全性、公共 API 兼容性、文档、软件架构、构建规范、UT 规范等维度' "$REVIEW_MD"
+        echo "Injected rules reference to review.md"
+    fi
+fi
+
+echo "Installation complete."
