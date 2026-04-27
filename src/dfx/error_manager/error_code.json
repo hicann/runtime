@@ -1820,6 +1820,17 @@
     },
     {
       "errClass": "RTS Errors",
+      "errTitle": "Package_Error_Incorrect_Driver_Version",
+      "ErrCode": "EE1015",
+      "ErrMessage": "%s failed. Reason: The driver version capacity is insufficient. %s",
+      "Arglist": "func, reason",
+      "suggestion": {
+      "Possible Cause": "N/A",
+      "Solution": "Upgrade the driver software version."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
       "ErrCode": "EE2002",
       "ErrMessage": "Value %s for environment variable %s is invalid. Expected value: %s.",

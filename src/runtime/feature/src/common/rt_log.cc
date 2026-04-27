@@ -92,6 +92,8 @@ std::vector<std::string> GetParamNames(ErrorCode code) {
             return {"func", "object"};
         case ErrorCode::EE1011: 
             return {"func", "value", "param", "reason"};
+        case ErrorCode::EE1015: 
+            return {"func", "reason"};
         case ErrorCode::EE2002:
             return {"value", "env", "expect"};
         default:
@@ -172,6 +174,12 @@ void PrintErrMsgToLog(ErrorCode errCode, const char *file, const int32_t line, c
             RecordErrorLog(file, line, func,
                 "%s failed. Value %s for parameter %s is invalid. Reason: %s. ErrorCode=EE1011." "\n",
                 values[0].c_str(), values[1].c_str(), values[2].c_str(), values[3].c_str());
+            break;
+        // Package_Error_Incorrect_Driver_Version
+        case ErrorCode::EE1015:
+            RecordErrorLog(file, line, func,
+                "%s failed. Reason: The driver version capacity is insufficient. %s ErrorCode=EE1015." "\n",
+                values[0].c_str(), values[1].c_str());
             break;
         // Config_Error_Invalid_Environment_Variable
         case ErrorCode::EE2002:
