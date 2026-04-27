@@ -17,33 +17,10 @@
 
 namespace cce {
 namespace runtime {
-Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, const char_t * const kernelInfoExtern,
-    Program * const prog, const uint32_t funcOffset1, const uint32_t funcOffset2, const uint8_t mixType,
-    const uint32_t taskRation, const uint32_t funcType)
-    : program_(prog), kernelType_(0), stubFun_(stubFunc), name_(kernelName), tilingKey_(0ULL),
-      offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
-      pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType), taskRation_(taskRation),
-      funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
-      kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U)
-{
-    if (kernelInfoExtern != nullptr) {
-        kernelInfoExt_ = std::string(kernelInfoExtern);
-    }
-
-    if (taskRation_ == NONE_TASK_RATION) {
-        DevProperties prop;
-        rtError_t ret = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), prop);
-        if (ret == RT_ERROR_NONE) {
-            taskRation_ = prop.defaultTaskRatio;
-        }
-        RT_LOG(RT_LOG_DEBUG, "GetDevProperties ret=%p.", ret);
-    }
-}
-
-Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, const uint64_t key,
-    Program * const prog, const uint32_t funcOffset1, const uint32_t funcOffset2, const uint8_t mixType,
-    const uint32_t taskRation, const uint32_t funcType)
-    : program_(prog), kernelType_(0), stubFun_(stubFunc), name_(kernelName), tilingKey_(key),
+Kernel::Kernel(const char_t * const kernelName, const uint64_t key, Program * const prog,
+    rtKernelAttrType kernelAttrType, const uint32_t funcOffset1, const uint32_t funcOffset2,
+    const uint8_t mixType, const uint32_t taskRation, const uint32_t funcType)
+    : program_(prog), kernelAttrType_(kernelAttrType), stubFun_(nullptr), name_(kernelName), tilingKey_(key),
       offset1_(funcOffset1), offset2_(funcOffset2), length1_(0U), length2_(0U),
       pctraceFlag_(0U), nameOffset_(0U), mixType_(mixType),
       taskRation_(taskRation), funcType_(funcType), dfxAddr_(nullptr), dfxSize_(0), elfDataFlag_(0), nameId_(0U),
@@ -60,7 +37,7 @@ Kernel::Kernel(const void * const stubFunc, const char_t * const kernelName, con
 }
 
 Kernel::Kernel(const std::string &cpuKernelSo, const std::string &cpuFunctionName, const std::string &cpuOpType)
-    : program_(nullptr), kernelType_(0), stubFun_(nullptr), name_(cpuOpType), kernelInfoExt_(""), tilingKey_(0ULL), offset1_(0U), offset2_(0U),
+    : program_(nullptr), aicpuKernelType_(0), stubFun_(nullptr), name_(cpuOpType), kernelInfoExt_(""), tilingKey_(0ULL), offset1_(0U), offset2_(0U),
 	  length1_(0U), length2_(0U), pctraceFlag_(0U), nameOffset_(0U), mixType_(0U), taskRation_(0U), funcType_(0U), userParaNum_(0U),
       systemParaNum_(0U), dfxAddr_(nullptr), dfxSize_(0U), elfDataFlag_(0),
       nameId_(0U), kernelVfType_(0U), shareMemSize_(0U), prefetchCnt1_(0U), prefetchCnt2_(0U),
@@ -112,12 +89,15 @@ KernelTable::KernelTable():kernelArr_(nullptr), rtKernelArrPos_(0UL), kernelArrA
 
 KernelTable::~KernelTable()
 {
+    kernelMapLock_.Lock();
     for (uint32_t i = 0U; i < rtKernelArrPos_; i++) {
-        const Kernel * const delKernel = kernelArr_[i].kernel;
-        delete delKernel;
+         const Kernel * const delKernel = kernelArr_[i].kernel;
+         delete delKernel;
     }
+
     delete [] kernelArr_;
     kernelArr_ = nullptr;
+    kernelMapLock_.Unlock();
 }
 
 void KernelTable::HalfSearch(const uint32_t searchLen, const void * const stub,
@@ -206,7 +186,7 @@ rtError_t KernelTable::Add(Kernel *&addKernel)
     rtError_t error = RT_ERROR_NONE;
     rtHalfSearchResult_t halfSearchResult;
     const void *stub = addKernel->Stub_();
-    const std::string kernelName = addKernel->Name_();
+    const std::string stubName = addKernel->StubName_();
     const char_t *kernelInfoExt = addKernel->KernelInfoExt_();
 
     kernelMapLock_.Lock();
@@ -218,7 +198,7 @@ rtError_t KernelTable::Add(Kernel *&addKernel)
         error = ArrayInsert(halfSearchResult.matchIndex, stub, addKernel);
         COND_PROC_RETURN_ERROR(error != 0, static_cast<uint32_t>(error), kernelMapLock_.Unlock(),
             "KernelTable ArrayInsert failed, retCode=%#x.", static_cast<uint32_t>(error));
-        invKernelMap_[kernelName] = stub;
+        invKernelMap_[stubName] = stub;
         kernelInfoExtMap_[kernelInfoExt] = addKernel;
         const Program *prog = addKernel->Program_();
         (void)programStubMultiMap_.insert({prog, stub});
@@ -232,7 +212,7 @@ rtError_t KernelTable::Add(Kernel *&addKernel)
     }
     kernelMapLock_.Unlock();
 
-    RT_LOG(RT_LOG_DEBUG, "KernelTable add kernel %s success.", kernelName.c_str());
+    RT_LOG(RT_LOG_DEBUG, "KernelTable add kernel %s success.", stubName.c_str());
     return error;
 }
 
@@ -334,7 +314,7 @@ void KernelTable::ResetAllKernelNameId()
     kernelMapLock_.Unlock();
 }
 
-rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr, uint32_t machine,
+rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr,
     uint32_t &icachePrefetchCnt1, uint32_t &icachePrefetchCnt2, uint8_t &mixType)
 {
     // 32KB, K=1024. aicore can prefetch 32KB at most.
@@ -345,10 +325,6 @@ rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr, uin
     constexpr uint32_t aicpuIcachePrefetchSizeMax = 0U;
     icachePrefetchCnt2 = 0U;
 
-    if (machine == Program::MACH_AI_MIX_KERNEL) {
-        machine = kernelPtr->KernelType_();
-    }
-
     uint32_t restSize1 = 0U;
     uint32_t restSize2 = 0U;
     kernelPtr->GetKernelLength(restSize1, restSize2);
@@ -356,32 +332,24 @@ rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr, uin
 
     uint32_t prefetchMaxSize1 = 0U;
     uint32_t prefetchMaxSize2 = 0U;
-    if (mixType == static_cast<uint8_t>(MIX_AIC)) {
-        prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-    } else if (mixType == static_cast<uint8_t>(MIX_AIV)) {
-        prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
-    } else if (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC) ||
-               mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV)) {
-        prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-        prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
-    } else {
-        switch (machine) {
-            case Program::MACH_AI_CPU:
-                prefetchMaxSize1 = aicpuIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_CORE:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_CVMIX:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_VECTOR:
-                prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
-                break;
-            default:
-                RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, machine=%u.", machine);
-                return RT_ERROR_INVALID_VALUE;
-        }
+    switch (kernelPtr->GetKernelAttrType()) {
+        case RT_KERNEL_ATTR_TYPE_AICPU:
+            prefetchMaxSize1 = aicpuIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_AICORE:
+        case RT_KERNEL_ATTR_TYPE_CUBE:
+            prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_VECTOR:
+            prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_MIX:
+            prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
+            prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
+            break;
+        default:
+            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=%d.", kernelPtr->GetKernelAttrType());
+            return RT_ERROR_INVALID_VALUE;
     }
     // Icache_prefetch_cnt:aic aiv prefetch instruction length, the unit is 2KB, K=1024
     constexpr uint32_t prefetchUnits = 2048U;

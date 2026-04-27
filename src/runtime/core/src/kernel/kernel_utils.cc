@@ -149,19 +149,19 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
     uint32_t prefetchCnt1 = 0U;
     uint32_t prefetchCnt2 = 0U;
     Program* prog = kernel->Program_();
-    rtError_t error = GetPrefetchCntAndMixTypeWithKernel(kernel, prog->Machine(), prefetchCnt1, prefetchCnt2, mixType);
+    rtError_t error = GetPrefetchCntAndMixTypeWithKernel(kernel, prefetchCnt1, prefetchCnt2, mixType);
     ERROR_RETURN(
         error, "failed to get prefetch cnt, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.", error, dev->Id_(),
         stm->Id_(), taskInfo->id);
-    uint32_t kernelType = kernel->KernelType_();
+    rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
     ArgLoaderResult result = {};
-    error = dev->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
+    error = dev->ArgLoader_()->Load(argsInfo, stm, &result);
     ERROR_RETURN(
         error, "failed to load args, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.", error, dev->Id_(),
         stm->Id_(), taskInfo->id);
 
     bool isNeedAllocSqeDevBuf = false;
-    AicTaskInit(taskInfo, kernelType, static_cast<uint16_t>(blockDim), 0, taskCfg, isNeedAllocSqeDevBuf);
+    AicTaskInit(taskInfo, kernelAttrType, static_cast<uint16_t>(blockDim), 0, taskCfg, isNeedAllocSqeDevBuf);
     AicTaskInfo* aicTask = &(taskInfo->u.aicTaskInfo);
     aicTask->kernel = kernel;
     aicTask->progHandle = prog;
@@ -182,10 +182,10 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
 
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%u, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, arg_size=%u, "
+        "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, arg_size=%u, "
         "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu.",
-        dev->Id_(), stm->Id_(), taskInfo->id, kernelType, kernel->Name_().c_str(), argsInfo->argsSize, blockDim,
+        dev->Id_(), stm->Id_(), taskInfo->id, kernelAttrType, kernel->Name_().c_str(), argsInfo->argsSize, blockDim,
         kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
         aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex);

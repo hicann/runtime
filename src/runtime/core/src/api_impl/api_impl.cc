@@ -306,15 +306,15 @@ rtError_t ApiImpl::DevBinaryRegister(const rtDevBinary_t * const bin, Program **
 {
     Program *programPtr = nullptr;
 
-    const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
+    rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "register program failed, retCode=%#x", error);
         return error;
-    } else {
-        *prog = programPtr;
-        return RT_ERROR_NONE;
     }
+    *prog = programPtr;
+    return RT_ERROR_NONE;
 }
+
 rtError_t ApiImpl::GetNotifyAddress(Notify *const notify, uint64_t * const notifyAddress)
 {
     uint64_t addr;
@@ -332,23 +332,18 @@ rtError_t ApiImpl::GetNotifyAddress(Notify *const notify, uint64_t * const notif
     *notifyAddress = addr;
     return RT_ERROR_NONE;
 }
+
 rtError_t ApiImpl::RegisterAllKernel(const rtDevBinary_t * const bin, Program ** const prog)
 {
     Program *programPtr = nullptr;
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-
     const rtError_t error = Runtime::Instance()->ProgramRegister(bin, &programPtr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "register program failed, reCode=%#x", error);
         return error;
-    } else {
-        *prog = programPtr;
-        if ((programPtr->Machine() == Program::MACH_AI_MIX_KERNEL) &&
-            (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2))) {
-            return Runtime::Instance()->AllKernelRegisterV2(programPtr, false);
-        }
-        return Runtime::Instance()->AllKernelRegister(programPtr, false);
     }
+
+    *prog = programPtr;
+    return Runtime::Instance()->AllKernelRegister(programPtr);
 }
 
 rtError_t ApiImpl::BinaryRegisterToFastMemory(Program * const prog)
@@ -395,13 +390,7 @@ rtError_t ApiImpl::FunctionRegister(Program * const prog, const void * const stu
     const void * const kernelInfoExt, const uint32_t funcMode)
 {
     RT_LOG(RT_LOG_DEBUG, "register function, type=%u, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
-        prog->Machine(), stubFunc, funcMode, (stubName != nullptr) ? stubName : "(none)", kernelInfoExt);
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if ((prog->Machine() == Program::MACH_AI_MIX_KERNEL) &&
-        (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2))) {
-        return Runtime::Instance()->KernelRegisterV2(prog, stubFunc, stubName,
-            static_cast<const char_t *>(kernelInfoExt), funcMode);
-    }
+        prog->GetDefaultKernelAttrType(), stubFunc, funcMode, (stubName != nullptr) ? stubName : "(none)", kernelInfoExt);
     return Runtime::Instance()->KernelRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
 }
 
@@ -617,7 +606,7 @@ rtError_t ApiImpl::CpuKernelLaunchEx(const Kernel * const kernel, const uint32_t
     NULL_STREAM_PTR_RETURN_MSG(curStm);
     COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         "Cpu kernel launch ex failed, stream is not in current ctx, stream_id=%d.", curStm->Id_())
-    if (kernel->KernelType_() == static_cast<uint32_t>(KERNEL_TYPE_AICPU_KFC)) {
+    if (kernel->GetAicpuKernelType_() == static_cast<uint32_t>(KERNEL_TYPE_AICPU_KFC)) {
         Device * const dev = curCtx->Device_();
         COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
         if (!CheckSupportMC2Feature(dev)) {
@@ -632,7 +621,7 @@ rtError_t ApiImpl::CpuKernelLaunchEx(const Kernel * const kernel, const uint32_t
         "Cpu kernel launch ex with args failed, check and start tsd open aicpu sd error.");
 
     return StreamLaunchCpuKernelExWithArgs(coreDim, &argsInfo->baseArgs, &taskCfg, curStm, flag,
-        kernel->KernelType_(), kernel, argsInfo->cpuParamHeadOffset);
+        kernel->GetAicpuKernelType_(), kernel, argsInfo->cpuParamHeadOffset);
 }
 
 rtError_t ApiImpl::CpuKernelLaunchExWithArgs(const char_t * const opName, const uint32_t coreDim,
@@ -860,7 +849,7 @@ rtError_t ApiImpl::BinaryLoad(const rtDevBinary_t * const bin, Program ** const 
         return error;
     }
 
-    error = Runtime::Instance()->AllKernelRegister(programPtr, true);
+    error = Runtime::Instance()->AllKernelRegister(programPtr);
     if (error != RT_ERROR_NONE) {
         delete programPtr;
         RT_LOG(RT_LOG_WARNING, "AllKernelRegister failed, reCode=%#x", error);
@@ -883,7 +872,7 @@ rtError_t ApiImpl::BinaryLoad(const rtDevBinary_t * const bin, Program ** const 
 rtError_t ApiImpl::BinaryGetFunction(const Program * const prog, const uint64_t tilingKey,
                                      Kernel ** const funcHandle)
 {
-    RT_LOG(RT_LOG_DEBUG, "BinaryGetFunction prog=0x%x, tilingKey=%llu", prog, tilingKey);
+    RT_LOG(RT_LOG_DEBUG, "BinaryGetFunction prog=0x%llx, tilingKey=%llu", prog, tilingKey);
     Kernel *kerneltmp = nullptr;
     *funcHandle = nullptr;
     Context * const curCtx = CurrentContext();
@@ -891,15 +880,14 @@ rtError_t ApiImpl::BinaryGetFunction(const Program * const prog, const uint64_t 
 
     const rtError_t error = Runtime::Instance()->BinaryGetFunction(prog, tilingKey, &kerneltmp);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "BinaryGetFunction failed, tilingKey=%" PRIu64 ", retCode=%#x",
-            tilingKey, static_cast<uint32_t>(error));
+        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "BinaryGetFunction failed, programId=%u, "
+            "tilingKey=%" PRIu64 ", retCode=%#x", prog->Id_(), tilingKey, static_cast<uint32_t>(error));
         return RT_ERROR_INVALID_VALUE;
     }
 
-    kerneltmp->SetKernelType_(prog->Machine());
-
     *funcHandle = kerneltmp;
-    RT_LOG(RT_LOG_DEBUG, "prog hdl=0x%x, tilingKey=%llu, funcHandle=0x%x.", prog, tilingKey, kerneltmp);
+    RT_LOG(RT_LOG_DEBUG, "prog=0x%llx, programId=%u, tilingKey=%llu, funcHandle=0x%llx.",
+        prog, prog->Id_(), tilingKey, kerneltmp);
     return RT_ERROR_NONE;
 }
 
@@ -1082,10 +1070,8 @@ rtError_t ApiImpl::BinaryLoadFromData(const void * const data, const uint64_t le
 // check if kernel is for vector core
 static bool CheckVectorKernel(const Kernel * const kernel)
 {
-    const uint32_t machine = kernel->Program_()->Machine();
     // 1. common aiv kernel
-    if ((machine == Program::MACH_AI_VECTOR) ||
-        ((machine == Program::MACH_AI_MIX_KERNEL) && (kernel->KernelType_() == Program::MACH_AI_VECTOR))) {
+    if (kernel->GetKernelAttrType() == RT_KERNEL_ATTR_TYPE_VECTOR) {
         return true;
     }
     // 2. mix aiv only kernel

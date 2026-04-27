@@ -33,6 +33,7 @@
 #include "rdma_task.h"
 #include "capture_model_utils.hpp"
 #include "thread_local_container.hpp"
+#include "../../data/elf.h"
 #undef private
 #undef protected
 
@@ -60,10 +61,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         ret = rtDevBinaryRegister(&devBin, &binHandle_);
         EXPECT_EQ(ret, RT_ERROR_NONE);
         ret = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);

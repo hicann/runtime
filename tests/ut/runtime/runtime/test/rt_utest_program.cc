@@ -80,8 +80,8 @@ TEST_F(ProgramTest, Program_Process_ELF)
         error = program->Register(binary.data, binary.length);
         EXPECT_EQ(error, RT_ERROR_NONE);
 
-        uint32_t elfMachine = program->Machine();
-        printf("machine244:%d\n",elfMachine);
+        rtKernelAttrType kernelAttrType = program->GetDefaultKernelAttrType();
+        printf("machine244:%d\n",kernelAttrType);
 
         char kernelName[] = "_Z15executor_conv2dPDhj";
         printf("kernelName:%s\n",kernelName);
@@ -180,7 +180,7 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel)
         Program* program = new ElfProgram();
         program->SetIsNewBinaryLoadFlow(true);
         int32_t fun1;
-        Kernel * kernel2 = new Kernel(&fun1, "f1", "", program, 10);
+        Kernel * kernel2 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
         TilingTabl *tilingTab2 = nullptr;
         uint32_t kernelLen2 = 0U;
         program->kernelNameMap_["test1"] = kernel2;
@@ -204,8 +204,8 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel)
         error = program->Register(binary.data, binary.length);
         EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-        uint32_t elfMachine = program->Machine();
-        printf("machine244:%d\n",elfMachine);
+        rtKernelAttrType kernelAttrType = program->GetDefaultKernelAttrType();
+        printf("machine244:%d\n",kernelAttrType);
 
         char kernelName[] = "_Z15executor_conv2dPDhj";
         printf("kernelName:%s\n",kernelName);
@@ -281,8 +281,8 @@ TEST_F(ProgramTest, Program_Process_ELF_No_Kernel_For_David)
         error = program->Register(binary.data, binary.length);
         EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-        uint32_t elfMachine = program->Machine();
-        printf("machine244:%d\n",elfMachine);
+        rtKernelAttrType kernelAttrType = program->GetDefaultKernelAttrType();
+        printf("machine244:%d\n",kernelAttrType);
 
         char kernelName[] = "_Z15executor_conv2dPDhj";
         printf("kernelName:%s\n",kernelName);
@@ -329,7 +329,7 @@ TEST_F(ProgramTest, Program_build_tiling_tbl_For_David)
         Module *mdl = new Module(device);
         program->KernelTable_ = new (std::nothrow) rtKernelArray_t[1U];
         int32_t fun1;
-        Kernel * kernel2 = new Kernel(&fun1, "f1", "", program, 10);
+        Kernel * kernel2 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
         program->KernelTable_->kernel = kernel2;
  
         TilingTablForDavid *tilingTabForDavid2 = nullptr;
@@ -377,8 +377,8 @@ TEST_F(ProgramTest, Program_Process_ELF_Output_Error)
         error = program->Register(binary.data, binary.length);
         EXPECT_EQ(error, RT_ERROR_NONE);
 
-        uint32_t elfMachine = program->Machine();
-        printf("machine244:%d\n",elfMachine);
+        rtKernelAttrType kernelAttrType = program->GetDefaultKernelAttrType();
+        printf("machine244:%d\n",kernelAttrType);
 
         const void * kernelName = "_Z15executor_conv2dPDhj";
         uint32_t length = 0;
@@ -437,8 +437,8 @@ TEST_F(ProgramTest, Program_Process_ELF_Name_Error)
         error = program->Register(binary.data, binary.length);
         EXPECT_EQ(error, RT_ERROR_NONE);
 
-        uint32_t elfMachine = program->Machine();
-        printf("machine244:%d\n",elfMachine);
+        rtKernelAttrType kernelAttrType = program->GetDefaultKernelAttrType();
+        printf("machine244:%d\n",kernelAttrType);
 
         char kernelName[] = "onv";
         printf("kernelName:%s\n",kernelName);
@@ -689,7 +689,7 @@ TEST_F(ProgramTest, LOAD_EXTRACT_TEST)
     binary.data = (void*)bindata;
     binary.length = MAX_LENGTH;
 
-    PlainProgram* program = new PlainProgram(1);
+    PlainProgram* program = new PlainProgram(RT_KERNEL_ATTR_TYPE_AICPU);
     error = program->Register(binary.data, binary.length);
 
     error = program->LoadExtract(output, size);
@@ -704,15 +704,15 @@ TEST_F(ProgramTest, MIX_KERNEL_TEST_1)
     uint32_t error;
     uint64_t tilingValue = 0ULL;
 
-    ElfProgram* program = new ElfProgram(1);
-    Kernel *kernelPtr = new (std::nothrow) Kernel(nullptr, "abc", tilingValue, program, 0, 0, NO_MIX);
+    ElfProgram* program = new ElfProgram(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("abc", tilingValue, program, RT_KERNEL_ATTR_TYPE_AICORE, 0, 0, NO_MIX);
 
     EXPECT_NE(kernelPtr, nullptr);
 
-    error = program->MixKernelAdd(kernelPtr);
+    error = program->KernelNameMapAdd(kernelPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = program->MixKernelAdd(kernelPtr);
+    error = program->KernelNameMapAdd(kernelPtr);
     EXPECT_EQ(error, RT_ERROR_KERNEL_DUPLICATE);
 
     const Kernel *getKernel = program->GetKernelByName("abc");
@@ -721,46 +721,6 @@ TEST_F(ProgramTest, MIX_KERNEL_TEST_1)
     getKernel = program->GetKernelByName("abcd");
     EXPECT_EQ(getKernel, nullptr);
 
-    delete program;
-}
-
-TEST_F(ProgramTest, KERNEL_CONTENT_FAIL)
-{
-    uint32_t error;
-    uint64_t tilingValue = 0ULL;
-    rtKernelContent info = {UINT32_MAX, 0, false, 0};
-    ElfProgram* program = new ElfProgram();
-    program->KernelContent(nullptr, &info);
-    EXPECT_EQ(info.offset, UINT32_MAX);
-    delete program->elfData_;
-    program->elfData_ = nullptr;
-    program->KernelContent(nullptr, &info);
-    EXPECT_EQ(info.offset, 0U);
-    program->KernelContent(nullptr, nullptr);
-
-    delete program;
-}
-
-TEST_F(ProgramTest, KERNEL_CONTENT_TEST)
-{
-    uint32_t error;
-    uint64_t tilingValue = 0ULL;
-    rtKernelContent info = {UINT32_MAX, 0, false, 0};
-    ElfProgram* program = new ElfProgram();
-    char symbol[]="conv";
-    const std::string opName ="conv";
-    program->elfData_->kernel_num = 1U;
-    program->kernels_ = new (std::nothrow) RtKernel[program->elfData_->kernel_num];
-    program->kernels_->name = new char[10U];
-    strcpy(program->kernels_->name, "conv");
-    program->kernels_->length = 0U;
-    program->kernels_->offset = 2U;
-    program->kernels_->kernelVfType = 0U;
-    program->kernels_->shareMemSize = 0U;
- 
-    program->KernelContent(symbol, &info);
-    EXPECT_EQ(info.offset, 2U);
- 
     delete program;
 }
 
@@ -801,7 +761,7 @@ TEST_F(ProgramTest, Program_build_tiling_tbl_For_David_NewFlow)
     Module* mdl = new Module(device);
     program->KernelTable_ = new (std::nothrow) rtKernelArray_t[1U];
     int32_t fun1;
-    Kernel* kernel2 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel* kernel2 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     program->KernelTable_->kernel = kernel2;
     program->KernelTable_->TilingKey = 1U;
 

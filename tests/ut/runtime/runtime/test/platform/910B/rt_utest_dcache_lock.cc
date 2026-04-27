@@ -232,7 +232,7 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_05)
     MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
     dev->stackAddrIsDcache_ = true;
 
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     MOCKER_CPP(&RawDevice::RegisterDcacheLockOp)
         .stubs()
         .with(outBound((Program *)&program))
@@ -265,7 +265,7 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_06)
     MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
     dev->stackAddrIsDcache_ = true;
 
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     MOCKER_CPP(&RawDevice::RegisterDcacheLockOp)
         .stubs()
         .with(outBound((Program *)&program))
@@ -301,7 +301,7 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_07)
     MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
     dev->stackAddrIsDcache_ = true;
     Stream *stm;
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     MOCKER_CPP(&RawDevice::RegisterDcacheLockOp)
         .stubs()
         .with(outBound((Program *)&program))
@@ -436,7 +436,7 @@ TEST_F(CloudV2DcacheDeviceTest, RegisterDcacheLockOp_02)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     std::vector<char> dcacheLockMixOpData{'a'};
     rtInstance->dcacheLockMixOpData_ = dcacheLockMixOpData;
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *programPtr = &program;
     MOCKER_CPP(&Runtime::ProgramRegister)
         .stubs()
@@ -456,7 +456,7 @@ TEST_F(CloudV2DcacheDeviceTest, RegisterDcacheLockOp_03)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     std::vector<char> dcacheLockMixOpData{'a'};
     rtInstance->dcacheLockMixOpData_ = dcacheLockMixOpData;
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *programPtr = &program;
     MOCKER_CPP(&Runtime::ProgramRegister)
         .stubs()
@@ -554,9 +554,9 @@ TEST_F(CloudV2DcacheLockFillFftsMixSqeForDavinciTaskTest, FillFftsMixSqeForDavin
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     program.isDcacheLockOp_ = true;
-    Kernel kernel(NULL, "", 355, &program, 10);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
 
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_FFTS_PLUS;

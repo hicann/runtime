@@ -508,16 +508,16 @@ protected:
 TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
 {
     rtError_t ret = RT_ERROR_NONE;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "GetPrefetchCnt_program_kernel", tilingKey, program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("GetPrefetchCnt_program_kernel", tilingKey, program, RT_KERNEL_ATTR_TYPE_AICPU, 2048, 1024, 0, 0, 0);
     kernel.SetKernelLength1(10240); // 10k < 16k
     kernel.SetKernelLength2(18432); // 16k < 18k < 32k
-    // MACH_AI_CPU
+    // RT_KERNEL_ATTR_TYPE_AICPU
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
-    ret = GetPrefetchCnt(program, &kernel);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 0);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
@@ -526,8 +526,8 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC));
-    program->SetMachine(Program::MACH_AI_MIX_KERNEL);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 5);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 8);
@@ -536,8 +536,8 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIC));
-    program->SetMachine(Program::MACH_AI_CVMIX);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_CUBE);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 5);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
@@ -546,8 +546,8 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIV));
-    program->SetMachine(Program::MACH_AI_CVMIX);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 5);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
@@ -556,18 +556,18 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV));
-    program->SetMachine(Program::MACH_AI_CVMIX);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 5);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
 
-    // MACH_AI_VECTOR + MIX_AIC_AIV_MAIN_AIV
+    // RT_KERNEL_ATTR_TYPE_VECTOR + MIX_AIC_AIV_MAIN_AIV
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV));
-    program->SetMachine(Program::MACH_AI_VECTOR);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 5);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
@@ -576,8 +576,8 @@ TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
     kernel.SetPrefetchCnt1_(0);
     kernel.SetPrefetchCnt2_(0);
     kernel.SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV));
-    program->SetMachine(Program::MACH_INVALID_CPU);
-    ret = GetPrefetchCnt(program, &kernel);
+    kernel.SetKernelAttrType(static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID));
+    ret = GetPrefetchCnt(&kernel);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(kernel.PrefetchCnt1_(), 0);
     EXPECT_EQ(kernel.PrefetchCnt2_(), 0);
@@ -1263,10 +1263,11 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_davinci)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
     uint64_t sqBaseAddr = 0U;
     rtDavidSqe_t *sqeAddr = sqe;
@@ -1276,17 +1277,17 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_davinci)
     stream_->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(stream_->GetSqBaseAddr() + (pos << SHIFT_SIX_SIZE));
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;
     ToConstructDavidSqe(&task, sqeAddr, stream_->GetSqBaseAddr());
     EXPECT_EQ(sqe->aicpuControlSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     ToConstructDavidSqe(&task, sqeAddr, stream_->GetSqBaseAddr());
     EXPECT_EQ(sqe->aicpuControlSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     TaskUnInitProc(&task);
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -1303,16 +1304,17 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aic_mix_task)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
     kernel->SetPrefetchCnt1_(0x2);
     kernel->SetPrefetchCnt2_(0x4);
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;
@@ -1322,14 +1324,14 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aic_mix_task)
     EXPECT_EQ(sqe.aicAivSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
     EXPECT_EQ(sqe.aicAivSqe.aicIcachePrefetchCnt, 0x2);
 
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     kernel->SetMixType(MIX_AIV);
     ToConstructDavidSqe(&task, &sqe, 0U);
     EXPECT_EQ(sqe.aicAivSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
     EXPECT_EQ(sqe.aicAivSqe.aivIcachePrefetchCnt, 0x2);
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     kernel->SetMixType(MIX_AIC_AIV_MAIN_AIC);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     ToConstructDavidSqe(&task, &sqe, 0U);
@@ -1348,16 +1350,17 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aicaiv_nomix_
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
     kernel->SetPrefetchCnt1_(0x2);
     kernel->SetPrefetchCnt2_(0x4);
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;
@@ -1365,14 +1368,14 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aicaiv_nomix_
     EXPECT_EQ(sqe.aicAivSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
     EXPECT_EQ(sqe.aicAivSqe.aicIcachePrefetchCnt, 0x2);
 
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     ToConstructDavidSqe(&task, &sqe, 0U);
     EXPECT_EQ(sqe.aicAivSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
     EXPECT_EQ(sqe.aicAivSqe.aivIcachePrefetchCnt, 0x2);
     ((Runtime *)Runtime::Instance())->SetBiuperfProfFlag(true);
     ((Runtime *)Runtime::Instance())->SetL2CacheProfFlag(true);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 2, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 2, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     ToConstructDavidSqe(&task, &sqe, 0U);
     TaskUnInitProc(&task);
@@ -1388,13 +1391,14 @@ TEST_F(DavidTaskTest, config_schem_mode_on_construct_davidsqe_for_aic_mix_task)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;
@@ -1413,13 +1417,13 @@ TEST_F(DavidTaskTest, config_schem_mode_on_construct_davidsqe_for_aic_mix_task)
     ToConstructDavidSqe(&task, &sqe, 0U);
     EXPECT_EQ(sqe.aicAivSqe.schem, RT_SCHEM_MODE_BATCH);
     // AIV场景优先级配置
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     kernel->SetMixType(MIX_AIV);
     ToConstructDavidSqe(&task, &sqe, 0U);
     EXPECT_EQ(sqe.aicAivSqe.schem, RT_SCHEM_MODE_BATCH);
     // MIX_MAIN_AIC场景优先级配置
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     kernel->SetMixType(MIX_AIC_AIV_MAIN_AIC);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     ToConstructDavidSqe(&task, &sqe, 0U);
@@ -2326,10 +2330,11 @@ TEST_F(DavidTaskTest, aic_task_sw_rror_proc1_for_fusion_search_kernel)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     DeviceErrorProc *errorProc = new DeviceErrorProc(dev_);
     StarsDeviceErrorInfo errorInfo = {};
@@ -3244,7 +3249,7 @@ TEST_F(DavidTaskTest, AixKernelTaskInitForFusion_test)
     EXPECT_EQ(task.u.fusionKernelTask.aicAivType, 1U);
 
     info.mixType = NO_MIX;
-    info.mach = Program::MACH_AI_VECTOR;
+    info.kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
     AixKernelTaskInitForFusion(&task, &info, &cfg);
     EXPECT_EQ(task.u.fusionKernelTask.aicAivType, 1U);
 }
@@ -3553,9 +3558,10 @@ TEST_F(DavidTaskTest1, construct_davidsqe_for_fusion_kernel_launch_1)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     rtError_t error;
     rtDavidSqe_t sqe[5];
@@ -3805,7 +3811,7 @@ TEST_F(DavidTaskTest1, load_args_for_aicore_task)
     argsInfo.isNoNeedH2DCopy = 1U;
     argsInfo.args = &arg;
     argsInfo.argsSize = sizeof(arg);
-    AicTaskInit(&kernTask, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&kernTask, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(kernTask.type, TS_TASK_TYPE_KERNEL_AICORE);
     kernTask.u.aicTaskInfo.argsInfo = &argsInfo;
     stream_->isHasPcieBar_ = true;

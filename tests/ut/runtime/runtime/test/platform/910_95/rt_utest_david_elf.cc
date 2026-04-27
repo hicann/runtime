@@ -77,8 +77,7 @@ TEST_F(ELFTest, ELF_Process_Object_13)
 
     elfData = new rtElfData;
 
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if (nullptr == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -160,9 +159,7 @@ TEST_F(ELFTest, ELF_Process_Object_SIMT_ERROR1)
     RtKernel *kernels;
 
     elfData = new rtElfData;
-
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if (nullptr == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -227,9 +224,7 @@ TEST_F(ELFTest, ELF_Process_Object_SIMT_ERROR2)
     RtKernel *kernels;
 
     elfData = new rtElfData;
-
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if (nullptr == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -305,10 +300,8 @@ TEST_F(ELFTest, ELF_Process_UpdateKernelsMinStackSizeInfo_Failed)
     RtKernel *kernels;
 
     elfData = new rtElfData;
-
-    bool isSupportMix = false;
     MOCKER(UpdateKernelsMinStackSizeInfo).stubs().will(returnValue(1));
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if (nullptr == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -605,9 +598,8 @@ unsigned char static_kernel_data[] = {
     rtInstance->SetChipType(CHIP_DAVID);
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
     MOCKER(ConvertTaskRation).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-    kernels = ProcessObject((char_t *)static_kernel_data, elfData, 0, &isSupportMix);
+    kernels = ProcessObject((char_t *)static_kernel_data, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {

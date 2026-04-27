@@ -213,6 +213,13 @@ enum class DeviceSatStatusImpl : uint8_t {
     DEVICE_SAT_STATUS_STREAM_LEVEL // 饱和模式的状态是存储在stream上的
 };
 
+enum class DeviceCvArchType : uint8_t {
+    CV_ARCH_INVALID    = 0U,   /* The compilation state dose not involve the CV architecture */
+    CV_ARCH_INTERGRATION = 1U,
+    CV_ARCH_SEPARATION = 2U,
+    CV_ARCH_MAX = 3U
+};
+
 struct DevProperties final {
     std::string engineType;
     bool isStars;
@@ -326,6 +333,7 @@ struct DevProperties final {
     uint32_t maxTaskNumPerStream;
     uint32_t maxTaskNumPerHugeStream;
     uint32_t rtsqReservedTaskNum;
+    DeviceCvArchType cvArchType;
 };
 }
 }

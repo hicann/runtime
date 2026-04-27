@@ -190,10 +190,9 @@ rtError_t UmaArgLoader::LoadInputOutputArgsHuge(const Stream * const stm, void *
 
 
 rtError_t UmaArgLoader::LoadInputOutputArgs(const Stream * const stm, void *&kerArgs, H2DCopyMgr * const umaArgAllocator,
-                                            bool &copyArgs, const uint32_t kernelType, const uint32_t size,
+                                            bool &copyArgs, const uint32_t size,
                                             const void * const args, const rtArgsEx_t * const argsInfo) const
 {
-    UNUSED(kernelType);
     rtError_t error = RT_ERROR_NONE;
     if ((stm->NonSupportModelCompile()) || (stm->GetModelNum() == 0U) || (argsInfo->isNoNeedH2DCopy == 0U)) {
         const bool isLogError = stm->Device_()->GetDevProperties().isNeedlogErrorLevel;
@@ -218,10 +217,9 @@ rtError_t UmaArgLoader::LoadInputOutputArgs(const Stream * const stm, void *&ker
 }
 
 rtError_t UmaArgLoader::LoadInputOutputArgsForMix(const Stream * const stm, void *kerArgs, H2DCopyMgr * const umaArgAllocator,
-                                                  bool &copyArgs, const uint32_t kernelType, const uint32_t size,
+                                                  bool &copyArgs, const uint32_t size,
                                                   const void * const args, const rtArgsEx_t * const argsInfo) const
 {
-    UNUSED(kernelType);
     rtError_t error = RT_ERROR_NONE;
     if ((stm->GetModelNum() == 0U) || (argsInfo->isNoNeedH2DCopy == 0U)) {
         RT_LOG(RT_LOG_INFO, "args loader load for mix");
@@ -279,7 +277,7 @@ rtError_t UmaArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * cons
     return RT_ERROR_NONE;
 }
 
-rtError_t UmaArgLoader::LoadForMix(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+rtError_t UmaArgLoader::LoadForMix(const rtArgsEx_t * const argsInfo,
                                    Stream * const stm, ArgLoaderResult * const result, bool &mixOpt)
 {
     Handle *argHandle = nullptr;
@@ -303,7 +301,7 @@ rtError_t UmaArgLoader::LoadForMix(const uint32_t kernelType, const rtArgsEx_t *
 
     if (argsInfo->isNoNeedH2DCopy == 0U) {
         RT_LOG(RT_LOG_INFO, "args loader load for mix");
-        error = LoadInputOutputArgsForMix(stm, kerArgs, umaArgAllocator, copyArgs, kernelType, size, args,
+        error = LoadInputOutputArgsForMix(stm, kerArgs, umaArgAllocator, copyArgs, size, args,
             argsInfo);
         ERROR_GOTO_MSG_INNER(error, RECYCLE, "load args(size=%u) failed, retCode=%#x.", size, static_cast<uint32_t>(error));
     }
@@ -324,7 +322,7 @@ RECYCLE:
     return error;
 }
 TIMESTAMP_EXTERN(LoadInputOutputArgsHuge);
-rtError_t UmaArgLoader::Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+rtError_t UmaArgLoader::Load(const rtArgsEx_t * const argsInfo,
                              Stream * const stm, ArgLoaderResult * const result)
 {
     Handle *argHandle = nullptr;
@@ -348,13 +346,13 @@ rtError_t UmaArgLoader::Load(const uint32_t kernelType, const rtArgsEx_t * const
             error = LoadInputOutputArgsHuge(stm, kerArgs, umaArgAllocator, copyArgs, size, args, argsInfo);
             TIMESTAMP_END(LoadInputOutputArgsHuge);
         } else {
-            error = LoadInputOutputArgs(stm, kerArgs, umaArgAllocator, copyArgs, kernelType, size, args,
+            error = LoadInputOutputArgs(stm, kerArgs, umaArgAllocator, copyArgs, size, args,
                 argsInfo);
             if ((error == RT_ERROR_MEMORY_ALLOCATION) && (umaArgAllocator == argPcieBarAllocator_) &&
                 device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_ALLOC_DEFAULT)) {
                 umaArgAllocator = ((size > itemSize_) && (maxArgAllocator_ != nullptr)) ?
                     maxArgAllocator_ : argAllocator_;
-                error = LoadInputOutputArgs(stm, kerArgs, umaArgAllocator, copyArgs, kernelType, size, args,
+                error = LoadInputOutputArgs(stm, kerArgs, umaArgAllocator, copyArgs, size, args,
                                             argsInfo);
                 RT_LOG(RT_LOG_DEBUG, "alloc pcie bar failed, rollback.");                            
             }

@@ -60,9 +60,10 @@ static rtError_t XpuStreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, cons
     AicpuTaskInfo *aicpuTask = &(kernelTask->u.aicpuTaskInfo);
     aicpuTask->kernel = newKernel;
     aicpuTask->aicpuFlags = flag;
-    aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernel->KernelType_());
+    aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernel->GetAicpuKernelType_());
     aicpuTask->timeout = ConvertAicpuTimeout(argsInfo, taskCfg, flag);
-    RT_LOG(RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, argsSize=%u.", kernel->KernelType_(),
+    RT_LOG(RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, argsSize=%u.",
+           kernel->GetAicpuKernelType_(),
            flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, argsInfo->argsSize);
     error = XpuSendTask(kernelTask, stm);
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d submit task failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));

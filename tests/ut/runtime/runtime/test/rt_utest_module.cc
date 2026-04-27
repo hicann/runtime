@@ -53,7 +53,7 @@ class TestProgram : public Program
 public:
     TestProgram()
     {
-        machine_ = Program::MACH_AI_CORE;
+        machine_ = RT_KERNEL_ATTR_TYPE_AICORE;
         offset_ = 0;
         loadSize_ = 100;
         extractResult_ = RT_ERROR_NONE;

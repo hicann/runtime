@@ -1465,10 +1465,10 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test1)
     error = api.LaunchDvppTask(nullptr, 0, stream, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -1497,10 +1497,10 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test2)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -1553,10 +1553,10 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test3)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -1632,10 +1632,10 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test4)
     error = api.LaunchDvppTask(nullptr, 0, stream, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -1664,10 +1664,10 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;

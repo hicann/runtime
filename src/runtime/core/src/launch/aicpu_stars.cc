@@ -40,7 +40,7 @@ rtError_t InternalLaunchWithKernelAndArgs(const Kernel* const kernel, const uint
     ArgLoader* const devArgLdr = curCtx->Device_()->ArgLoader_();
     const rtAicpuArgsEx_t* argsInfo = &cpuKernelArgs->baseArgs;
     const size_t cpuParamHeadOffset = cpuKernelArgs->cpuParamHeadOffset;
-    const uint32_t kernelType = kernel->KernelType_();
+    const uint32_t kernelType = kernel->GetAicpuKernelType_();
     AicpuTaskInit(kernelTask, static_cast<uint16_t>(coreDim), flag);
     kernelTask->u.aicpuTaskInfo.headParamOffset = static_cast<uint32_t>(cpuParamHeadOffset);
     Kernel* newKernel = new(std::nothrow) Kernel(kernel->GetCpuKernelSo(), kernel->GetCpuFuncName(),

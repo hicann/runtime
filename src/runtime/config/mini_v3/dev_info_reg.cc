@@ -52,7 +52,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MINI_V3_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_STREAM_ABORT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_NO_FUNC_TYPE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_UPDATE_NO_MIX,
     RtOptionalFeatureType::RT_FEATURE_DFX_FLOAT_OVERFLOW_DEBUG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SET_RUNTIME_CAPABLITY,
@@ -197,6 +196,7 @@ static const DevProperties CHIP_MINI_V3_PROPERTIES = {
     .maxTaskNumPerStream = 2010U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 38U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
 };
 REGISTER_DEV_PROPERTIES(CHIP_MINI_V3, CHIP_MINI_V3_PROPERTIES);
 }

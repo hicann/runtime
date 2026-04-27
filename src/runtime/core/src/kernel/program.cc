@@ -43,19 +43,19 @@ struct BatchProcCpuOpFromBufArgs {
 };
 #pragma pack(pop)
 
-Program::Program(const uint32_t progMachine)
+Program::Program(const rtKernelAttrType kernelAttrType)
     : NoCopy(),
       KernelTable_(nullptr),
       kernelCount_(0U),
       kernelPos_(0U),
-      isSupportMix_(false),
       binary_(nullptr),
       binarySize_(0UL),
-      machine_(progMachine),
+      machine_(0UL),
       kernelNames_(),
       progId_(UINT32_MAX),
       progType_(PLAIN_PROGRAM),
-      progMemType_(PROGRAM_MEM_DDR)
+      progMemType_(PROGRAM_MEM_DDR),
+      defaultBinaryType_(kernelAttrType)
 {
     kernelNameMap_.clear();
     for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
@@ -296,7 +296,7 @@ rtError_t Program::AllKernelAdd(Kernel *&addKernel, bool &isRepeated)
     return error;
 }
 
-rtError_t Program::MixKernelAdd(Kernel *&addKernel)
+rtError_t Program::KernelNameMapAdd(Kernel *&addKernel)
 {
     kernelMapLock_.Lock();
     const auto iter = kernelNameMap_.find(addKernel->Name_());
@@ -314,7 +314,7 @@ rtError_t Program::MixKernelAdd(Kernel *&addKernel)
     return RT_ERROR_NONE;
 }
 
-rtError_t Program::MixKernelRemove(Kernel *&delKernel)
+rtError_t Program::KernelNameMapRemove(Kernel *&delKernel)
 {
     kernelMapLock_.Lock();
     const auto iter = kernelNameMap_.find(delKernel->Name_());
@@ -391,8 +391,8 @@ void Program::DependencyRegister(Program * const prog)
 
 void Program::LoadDependencies(Context * const ctxItem)
 {
-    const uint32_t machineType = Machine();
-    if (machineType == Program::MACH_AI_CPU) {
+    rtKernelAttrType kernelAttrType = GetDefaultKernelAttrType();
+    if (kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU) {
         for (Program * const prog : dependencies_) {
             Module *moduleItem = RtPtrToPtr<Module *>(ctxItem->GetModule(prog));
             COND_LOG_DEBUG(moduleItem == nullptr, "get module failed, progId_=%u", prog->progId_);
@@ -700,12 +700,13 @@ rtError_t Program::FreeKernelLiteralNameDevMem(const Device *const device)
     return RT_ERROR_NONE;
 }
 
-PlainProgram::PlainProgram(uint32_t const machine) : Program(machine)
+PlainProgram::PlainProgram(const rtKernelAttrType kernelAttrType) : Program(kernelAttrType)
 {
     SetType(Program::PLAIN_PROGRAM);
 }
 
-PlainProgram::PlainProgram(const KernelRegisterType kernelRegType, const uint32_t machine) : Program(machine)
+PlainProgram::PlainProgram(const KernelRegisterType kernelRegType,
+    const rtKernelAttrType kernelAttrType) : Program(kernelAttrType)
 {
     SetKernelRegType(kernelRegType);
 }
@@ -723,18 +724,6 @@ uint32_t PlainProgram::SymbolOffset(const void * const symbol, uint32_t &length)
     } else {
         length = static_cast<uint32_t>(binarySize_ - symOffset);
         return static_cast<uint32_t>(symOffset);
-    }
-}
-
-void PlainProgram::KernelContent(const void * const symbol,  rtKernelContent *info)
-{
-    const auto symOffset = RtPtrToPtr<uintptr_t>(symbol);
-    if (symOffset >= binarySize_) {
-        info->length = 0U;
-        info->offset = UINT32_MAX;
-    } else {
-        info->length = static_cast<uint32_t>(binarySize_ - symOffset);
-        info->offset = static_cast<uint32_t>(symOffset);
     }
 }
 
@@ -781,13 +770,6 @@ rtError_t PlainProgram::RefreshSymbolAddr()
     return RT_ERROR_NONE;
 }
 
-void PlainProgram::AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput)
-{
-    UNUSED(kernelInput);
-    UNUSED(kernelOutput);
-    return;
-}
-
 rtError_t PlainProgram::BinaryGetMetaNum(const rtBinaryMetaType type, size_t *numOfMeta)
 {
     UNUSED(type);
@@ -829,7 +811,7 @@ rtError_t Program::RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInf
             continue;
         }
 
-        Kernel *kernel = new (std::nothrow) Kernel(nullptr, key.c_str(), defaultTilingKey, this, 0U, 0U);
+        Kernel *kernel = new (std::nothrow) Kernel(key.c_str(), defaultTilingKey, this, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
         if (unlikely(kernel == nullptr)) {
             RT_LOG(RT_LOG_WARNING, "kernel new failed, continue");
             continue;
@@ -859,8 +841,7 @@ rtError_t Program::RegisterSingleCpuKernel(const char *const funcName, const cha
         return RT_ERROR_NONE;
     }
 
-    constexpr uint64_t defaultTilingKey = 0ULL;  // cpu kernel不使用tiling key，所以默认填值0
-    Kernel *kernel = new (std::nothrow) Kernel(nullptr, kernelName, defaultTilingKey, this, 0U, 0U);
+    Kernel *kernel = new (std::nothrow) Kernel(kernelName, 0U, this, RT_KERNEL_ATTR_TYPE_AICPU, 0U);
     COND_PROC_RETURN_ERROR(kernel == nullptr, RT_ERROR_MEMORY_ALLOCATION, kernelMapLock_.Unlock();,
             "kernel new failed, return.");
 
@@ -874,7 +855,7 @@ rtError_t Program::RegisterSingleCpuKernel(const char *const funcName, const cha
     kernel->SetUserParaNum(USER_ARGS_MAX_NUM);
     kernel->SetIsNeedSetFftsAddrInArg(false);
     kernel->SetIsSupportOverFlow(false);
-    kernel->SetKernelType_(static_cast<uint32_t>(KERNEL_TYPE_AICPU_CUSTOM));
+    kernel->SetAicpuKernelType_(static_cast<uint32_t>(KERNEL_TYPE_AICPU_CUSTOM));
     kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
  
     // Aicpu算子注册时，把KernelName, soname存储至device侧，并把devAddr记录至kernel，从而args区无须填入kernelName, soname
@@ -892,7 +873,7 @@ rtError_t Program::RegisterSingleCpuKernel(const char *const funcName, const cha
     return RT_ERROR_NONE;
 }
 
-ElfProgram::ElfProgram(const uint32_t machine) : Program(machine)
+ElfProgram::ElfProgram(const rtKernelAttrType kernelAttrType) : Program(kernelAttrType)
 {
     kernels_ = nullptr;
     SetType(Program::ELF_PROGRAM);
@@ -930,14 +911,20 @@ rtError_t ElfProgram::ParserBinary()
     static const std::string property("exclusive");
 
     elfData_->obj_size = binarySize_;
-    kernels_ = ProcessObject(RtPtrToPtr<char_t *>(binary_), elfData_, Machine(), &isSupportMix_);
+    kernels_ = ProcessObject(RtPtrToPtr<char_t *>(binary_), elfData_);
     NULL_PTR_RETURN_MSG_OUTER(kernels_, RT_ERROR_INVALID_VALUE);
 
     const Runtime * const rtInstance = Runtime::Instance();
     const rtChipType_t chipType = rtInstance->GetChipType();
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_AICPU_MACHINE)) {
-        machine_ = (elfData_->elf_header.e_machine == 183U) ? MACH_AI_CPU : MACH_AI_CORE; // 183:aicpu machine
+        if (elfData_->elf_header.e_machine == 183U) { // 183:aicpu machine
+            SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
+        } else {
+            SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
+        }
     }
+
+    SetMachine(elfData_->elf_header.e_machine);
 
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_16K_STACK)) {
         SetStackSize(elfData_->stackSize);
@@ -969,33 +956,6 @@ uint32_t ElfProgram::SymbolOffset(const void * const symbol, uint32_t &length)
         }
     }
     return UINT32_MAX;
-}
-
-void ElfProgram::KernelContent(const void * const symbol, rtKernelContent *info)
-{
-    if (info == nullptr) {
-        return;
-    }
-    info->offset = UINT32_MAX;
-    if (elfData_ == nullptr) {
-        info->offset = 0;
-        return;
-    }
-    if (symbol == nullptr) {
-        return;
-    }
-
-    for (uint32_t idx = 0U; idx < elfData_->kernel_num; idx++) {
-        if (kernels_ != nullptr) {
-            if (strcmp(kernels_[idx].name, static_cast<const char_t *>(symbol)) == 0) {
-                info->length = static_cast<uint32_t>(kernels_[idx].length);
-                info->offset= static_cast<uint32_t>(kernels_[idx].offset);
-                info->kernelVfType = kernels_[idx].kernelVfType;
-                info->shareMemSize = kernels_[idx].shareMemSize;
-                return;
-            }
-        }
-    }
 }
 
 bool ElfProgram::HasMixKernel()
@@ -1069,36 +1029,6 @@ bool ElfProgram::IsReadOnly()
 }
 
 /**
- * 1. Get mixType
- * 2. Remove mix_aic or mix_aiv from kernel name. Keep the tilingKey (e.g. _0123123).
- */
-std::string ElfProgram::AdjustKernelNameAndGetMixType(const RtKernel * const kernel, uint8_t &mixType) const
-{
-    std::string kernelName = kernel->name;
-    const std::string mixAicName = "_mix_aic";
-    const std::string mixAivName = "_mix_aiv";
-    const auto aicPos = kernelName.rfind(mixAicName);
-    const auto aivPos = kernelName.rfind(mixAivName);
-
-    const bool isAic = (aicPos != std::string::npos);
-    const bool isAiv = (aivPos != std::string::npos);
-    if (isAic && isAiv) { // this case seems impossible
-        mixType = static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC);
-        (void)kernelName.erase(aicPos, mixAicName.length());
-        (void)kernelName.erase(kernelName.rfind(mixAivName), mixAivName.length());
-    } else if (isAic) {
-        mixType = static_cast<uint8_t>(MIX_AIC);
-        (void)kernelName.erase(aicPos, mixAicName.length());
-    } else if (isAiv) {
-        mixType = static_cast<uint8_t>(MIX_AIV);
-        (void)kernelName.erase(aivPos, mixAivName.length());
-    } else {
-        RT_LOG(RT_LOG_DEBUG, "Not contains aic or aiv");
-    }
-    return kernelName;
-}
-
-/**
  * Parse tiling key from kernel name. Make sure mix_aic/mix_aiv has been removed from the kernel name.
  * if there is no valid tiling key, will return RT_ERROR_INVALID_VALUE
  */
@@ -1107,11 +1037,11 @@ rtError_t ElfProgram::ParseTilingKey(const std::string &kernelName, uint64_t &ti
     const auto pos = kernelName.rfind('_');
     const std::string tilingKeyStr = kernelName.substr(pos + 1U);
     if (tilingKeyStr.empty()) {
-        return RT_ERROR_INVALID_VALUE;
+        return RT_ERROR_NONE;
     }
 
     if (!IsStringNumeric(tilingKeyStr)) {
-        return RT_ERROR_INVALID_VALUE;
+        return RT_ERROR_NONE;
     }
 
     const rtError_t ret = Runtime::Instance()->GetTilingValue(tilingKeyStr, tilingKey);
@@ -1123,13 +1053,14 @@ rtError_t ElfProgram::ParseTilingKey(const std::string &kernelName, uint64_t &ti
 
 static void SwapMixKernelOffsetAndLength(Kernel * const kernelTmp, const RtKernel * const kernel)
 {
+    const RtKernelMetaInfo * const metaInfo = &(kernel->metaInfo);
     // swap offset
     kernelTmp->SetOffset2(kernelTmp->Offset_());
     kernelTmp->SetOffset(static_cast<uint32_t>(kernel->offset));
 
     // swap minStackSize
     kernelTmp->SetMinStackSize2(kernelTmp->GetMinStackSize1());
-    kernelTmp->SetMinStackSize1(kernel->minStackSize);
+    kernelTmp->SetMinStackSize1(metaInfo->minStackSize);
 
     // swap length
     uint32_t kernelLen1;
@@ -1139,144 +1070,23 @@ static void SwapMixKernelOffsetAndLength(Kernel * const kernelTmp, const RtKerne
     kernelTmp->SetKernelLength2(kernelLen1);
 }
 
-// Search kernel from registered kernels. If the mixType is different, combine offset2 to make a mix kernel.
-bool ElfProgram::FindAndProcMixKernel(const RtKernel * const kernel, const std::string &kernelName,
-                                      const uint8_t mixType, const uint32_t mixProcVersion)
+void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj)
 {
-    if (!IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX)) {
-        return false;
-    }
-
-    Kernel *kernelTmp = const_cast<Kernel*>(GetKernelByName(kernelName.c_str()));
-    if (kernelTmp == nullptr) {     // cann not found the previous mix kernel to combine with
-        return false;
-    }
-
-    if ((kernelTmp->Offset2_() != 0ULL) || (kernelTmp->GetMixType() == mixType)) {
-        RT_LOG(RT_LOG_WARNING, "found the previous mix kernel but conflict. found kernel name=[%s], mixType=%hu, "
-            "offset2=%u, current kernel name=[%s], mixType=%hu", kernelTmp->Name_().c_str(), mixType,
-            kernelTmp->Offset2_(), kernel->name, mixType);
-        return false;
-    }
-
-    const uint16_t kernelTmpMixType = kernelTmp->GetMixType();
-    if (unlikely(kernelTmp->GetMixType() == static_cast<uint8_t>(MIX_AIV))) {
-        // make sure offset1 is always mix_aic and offset2 is mix_aiv.
-        SwapMixKernelOffsetAndLength(kernelTmp, kernel);
-    } else {
-        // this is the major case.
-        kernelTmp->SetOffset2(static_cast<uint32_t>(kernel->offset));
-        kernelTmp->SetKernelLength2(static_cast<uint32_t>(kernel->length));
-        kernelTmp->SetMinStackSize2(kernel->minStackSize);
-        kernelTmp->SetKernelVfType_(kernel->kernelVfType);
-        kernelTmp->SetShareMemSize_(kernel->shareMemSize);
-    }
-    kernelTmp->SetMixMinStackSize();
-
-    uint8_t type;
-    if (mixProcVersion == MIX_KERNEL_PROC_V1) { // old and traditional mix kernels, only judge by name
-        type = static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC);
-    } else {    // mix kernels, judge by functionType and kernel name
-        type = (kernel->funcType == static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN)) ?
-        static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC) : static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV);
-    }
-    kernelTmp->SetMixType(type);
-    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelTmp);
-    kernelTmp->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
-
-    RT_LOG(RT_LOG_INFO, "proc mix kernel register, kernel name=[%s], offset1=%u, offset2=%u, mixType1=%hu, "
-        "mixType2=%hu, final mixType=%hu version=%u, kernelVfType=%u, shareMemSize=%u", kernel->name,
-        kernelTmp->Offset_(), kernelTmp->Offset2_(), kernelTmpMixType, 
-        mixType, kernelTmp->GetMixType(), mixProcVersion, kernelTmp->KernelVfType_(), kernelTmp->ShareMemSize_());
-    return true;
-}
-
-rtError_t SetKernelTypeByMetaInfo(uint32_t funcType, Kernel *kernelOutput)
-{
-    switch (funcType) {
-        case KERNEL_FUNCTION_TYPE_AICORE:
-        case KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN:
-        case KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN:
-            kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
-            break;
-        case KERNEL_FUNCTION_TYPE_AIC:
-        case KERNEL_FUNCTION_TYPE_AIC_ROLLBACK:
-            kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_CUBE);
-            break;
-        case KERNEL_FUNCTION_TYPE_AIV:
-        case KERNEL_FUNCTION_TYPE_AIV_ROLLBACK:
-            kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
-            break;
-        default:
-            // 走到这里表示没配置functype
-            return RT_ERROR_INVALID_VALUE;
-            break;
-    }
-
-    return RT_ERROR_NONE;
-}
-
-void ElfProgram::AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput)
-{
-    std::string kernelName;
-    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
-    /* 这里只刷新算子第一次注册时的类型，肯定是非mix，mix算子的type在第二次刷新offset2时刷。
-     * 1、首先严格按照算子名中的_mix_aic/_mic_aiv进行匹配是哪种非mix算子
-     * 2、根据metainfo刷新，只关注枚举2、3，枚举4/5/6/7对应的kernel name肯定会带_mix_aic/_mic_aiv，在第一点中能匹配
-     * 3、根据magic字段匹配
-     */
-
-    kernelName = AdjustKernelNameAndGetMixType(kernelInput, mixType);
-    if (mixType == static_cast<uint8_t>(MIX_AIC)) {
-        kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_CUBE);
-        return;
-    } else if (mixType == static_cast<uint8_t>(MIX_AIV)) {
-        kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
-        return;
-    }
-
-    if (kernelInput->funcType != KERNEL_FUNCTION_TYPE_INVALID) {
-        rtError_t error = SetKernelTypeByMetaInfo(kernelInput->funcType, kernelOutput);
-        COND_RETURN_NORMAL(error == RT_ERROR_NONE, "funcType=%u", kernelInput->funcType);
-    }
-
-    uint32_t magic = GetElfMagic();
-    if (magic == RT_DEV_BINARY_MAGIC_ELF) {
-        kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
-    } else if (magic == RT_DEV_BINARY_MAGIC_ELF_AICUBE) {
-        kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_CUBE);
-    } else if (magic == RT_DEV_BINARY_MAGIC_ELF_AIVEC) {
-        kernelOutput->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
-    }
-
-    RT_LOG(RT_LOG_DEBUG, "adapt function type mixType=%hu, funtype=%u, magic=%u",
-        mixType, kernelInput->funcType, magic);
-    return;
-}
-
-void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj, const uint32_t kernelType)
-{
-    AdaptKernelAttrType(kernel, kernelObj);
+    const RtKernelMetaInfo * const metaInfo = &(kernel->metaInfo);
     const uint32_t nameOffset = AppendKernelName(kernel->name);
     kernelObj->SetNameOffset(nameOffset);
-    kernelObj->SetDfxSize(kernel->dfxSize);
-    kernelObj->SetDfxAddr(kernel->dfxAddr);
-    kernelObj->SetElfDataFlag(kernel->elfDataFlag);
+    kernelObj->SetDfxSize(metaInfo->dfxSize);
+    kernelObj->SetDfxAddr(metaInfo->dfxAddr);
+    kernelObj->SetElfDataFlag(metaInfo->elfDataFlag);
     kernelObj->SetKernelLength1(static_cast<uint32_t>(kernel->length));
-    kernelObj->SetMinStackSize1(kernel->minStackSize);
-    kernelObj->SetUserParaNum(kernel->userArgsNum);
-    kernelObj->SetKernelVfType_(kernel->kernelVfType);
-    kernelObj->SetShareMemSize_(kernel->shareMemSize);
-    kernelObj->SetSchedMode(kernel->schedMode);
-
-    // only kernel with metainfo contains these info
-    if (Machine() == Program::MACH_AI_MIX_KERNEL) {
-        kernelObj->SetFuncType(kernel->funcType);
-        kernelObj->SetKernelType_(kernelType);
-        kernelObj->SetTaskRation(kernel->taskRation);
-    } else {
-        kernelObj->SetKernelType_(Machine());
-    }
+    kernelObj->SetMinStackSize1(metaInfo->minStackSize);
+    kernelObj->SetUserParaNum(metaInfo->userArgsNum);
+    kernelObj->SetKernelVfType_(metaInfo->kernelVfType);
+    kernelObj->SetShareMemSize_(metaInfo->shareMemSize);
+    kernelObj->SetSchedMode(metaInfo->schedMode);
+    kernelObj->SetFunctionEntryType(metaInfo->funcEntryType);
+    kernelObj->SetFuncType(metaInfo->funcType);
+    kernelObj->SetTaskRation(metaInfo->taskRation);
 
     uint16_t sysParamNum = 0U;
     if (kernelObj->IsSupportOverFlow()) {
@@ -1285,172 +1095,47 @@ void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * cons
     const Runtime * const runtime = Runtime::Instance();
     NULL_PTR_RETURN_DIRECTLY(runtime);
     if ((IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) &&
-        !IsMetaFlagSupprotFfts() && (IsSupportInterCoreSync() || (kernel->crossCoreSync == FUNC_USE_SYNC) ||
+        !IsMetaFlagSupprotFfts() && (IsSupportInterCoreSync() || (metaInfo->crossCoreSync == FUNC_USE_SYNC) ||
         (kernelObj->GetMixType() != NO_MIX))) {
         kernelObj->SetIsNeedSetFftsAddrInArg(true);
         sysParamNum++;
     }
     kernelObj->SetSystemParaNum(sysParamNum);
-    RT_LOG(RT_LOG_INFO, "kernel_name=%s, kernelType=%u, userParamNum=%hu, sysParamNum=%hu, IsNeedSetFftsAddrInArg=%u, "
-        "isSupportOverFlow=%u, elfDataFlag=%d",
-        kernel->name, kernelObj->KernelType_(), kernelObj->GetUserParaNum(), kernelObj->GetSystemParaNum(),
-        kernelObj->IsNeedSetFftsAddrInArg(), kernelObj->IsSupportOverFlow(), kernelObj->ElfDataFlag());
-
+    RT_LOG(RT_LOG_INFO, "kernel_name=%s, kernelAttrType=%d, userParamNum=%hu, sysParamNum=%hu, "
+        "IsNeedSetFftsAddrInArg=%u, isSupportOverFlow=%u, elfDataFlag=%d",
+        kernel->name, kernelObj->GetKernelAttrType(), kernelObj->GetUserParaNum(),
+        kernelObj->GetSystemParaNum(), kernelObj->IsNeedSetFftsAddrInArg(), kernelObj->IsSupportOverFlow(),
+        kernelObj->ElfDataFlag());
     return;
-}
-
-void ElfProgram::DegenerateMixType(uint8_t &mixType) const
-{
-    if (!IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX_DEGENERATE)) {
-        return;
-    }
-    if ((mixType == static_cast<uint8_t>(MIX_AIC)) || (mixType == static_cast<uint8_t>(MIX_AIV))) {
-        if (GetDegenerateFlag()) {
-            RT_LOG(RT_LOG_DEBUG, "The current mixType is %d, degenerate to NO_MIX", mixType);
-            mixType = static_cast<uint8_t>(NO_MIX);
-        }
-    }
-}
-
-rtError_t ElfProgram::CreateNewKernel(const RtKernel * const kernel, const std::string &kernelName,
-                                      const uint8_t mixType, const uint64_t tilingKey, Kernel *&kernelObj)
-{
-    kernelObj = new (std::nothrow) Kernel(nullptr, kernelName.c_str(), tilingKey, this,
-        static_cast<uint32_t>(kernel->offset), 0U, mixType);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, kernelObj == nullptr, RT_ERROR_KERNEL_NEW,
-        "Kernel register failed, allocate new Kernel failed.");
-
-    RT_LOG(RT_LOG_INFO, "new kernel size %zu, original kernel_name=%s, register kernel_name=%s, tilingKey=%" PRIu64
-        ", machine=%u, funcType=%u, mixType=%hu, taskRation=%u, offset=%u, dfxAddr=%#" PRIu64
-        ", dfxSize=%u",
-        sizeof(Kernel), kernel->name, kernelName.c_str(), tilingKey, Machine(), kernel->funcType, mixType,
-        kernel->taskRation, static_cast<uint32_t>(kernel->offset),
-        static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(kernel->dfxAddr)), kernel->dfxSize);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ElfProgram::KernelAdd(Kernel *kernelPtr, const rtError_t tilingKeyParseRet)
-{
-    // add to program kernel map, key is kernel name
-    rtError_t error = MixKernelAdd(kernelPtr);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-
-    // If tilingKey is invalid, just skip.
-    COND_RETURN_WITH_NOLOG((tilingKeyParseRet != RT_ERROR_NONE), RT_ERROR_NONE);
-
-    /* kernelTable_ will maintain kernel and the function PutProgram() will release memory. */
-    if (KernelTable_ == nullptr) {
-        KernelTable_ = new (std::nothrow) rtKernelArray_t[GetKernelsCount()];
-        COND_PROC_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, KernelTable_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-            (void)MixKernelRemove(kernelPtr), "new rtKernelArray_t fail, kernelCount=%u.", GetKernelsCount());
-    }
-
-    // If tiling key is valid, then register kernel to program kernel map. Insert key is tilingKey.
-    bool isRepeated = false;
-    error = AllKernelAdd(kernelPtr, isRepeated);
-    if (error != RT_ERROR_NONE) {
-        (void)MixKernelRemove(kernelPtr);
-        return error;
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t ElfProgram::UnifiedOneKernelRegister(const RtKernel * const kernel)
-{
-    std::string kernelName;
-    Kernel *kernelObj;
-    uint32_t kernelType = 0U;
-    uint64_t tilingKey = 0ULL;
-    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
-
-    if (machine_ == Program::MACH_AI_MIX_KERNEL) { /* Use metainfo, such as funcType, taskRation... */
-        if (Runtime::Instance()->CheckMixKernelType(kernel) != RT_ERROR_NONE) {
-            return RT_ERROR_INVALID_VALUE;
-        }
-        if (Runtime::Instance()->GetMixTypeAndKernelType(kernel, mixType, kernelType) != RT_ERROR_NONE) {
-            return RT_ERROR_INVALID_VALUE;
-        }
-
-        // Remove mix_aic or mix_aiv from kernel name. Keep the tilingKey (e.g. _0123123).
-        uint32_t mixProcVersion = MIX_KERNEL_PROC_V2;
-        if (kernel->funcType == static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_AICORE)) {
-            kernelName = AdjustKernelNameAndGetMixType(kernel, mixType);
-            mixProcVersion = MIX_KERNEL_PROC_V1;
-        } else {
-            kernelName = Runtime::Instance()->AdjustKernelName(kernel, mixType);
-        }
-
-        if (kernelName.empty()) {
-            return RT_ERROR_INVALID_VALUE;
-        }
-
-        if (FindAndProcMixKernel(kernel, kernelName, mixType, mixProcVersion)) {
-            return RT_ERROR_NONE;
-        }
-    } else { /* No metainfo, this is the traditional kernel register way. */
-        // Remove mix_aic or mix_aiv from kernel name. Get mixType
-        kernelName = AdjustKernelNameAndGetMixType(kernel, mixType);
-        if (kernelName.empty()) {
-            return RT_ERROR_INVALID_VALUE;
-        }
-
-        // Degenerate to NO_MIX by flag(__CCE_KernelMetaData)
-        DegenerateMixType(mixType);
-
-        if (FindAndProcMixKernel(kernel, kernelName, mixType, MIX_KERNEL_PROC_V1)) {
-            return RT_ERROR_NONE;
-        }
-    }
-
-    // 1. not support function entry info but support old tilingKey process
-    rtError_t tilingKeyParseRet = ParseTilingKey(kernelName, tilingKey);
-    // 2. support function entry info
-    if (kernel->funcEntryType == KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY) {
-        RT_LOG(RT_LOG_INFO, "support function entry mode.");
-        tilingKey = kernel->functionEntry;
-        tilingKeyParseRet = RT_ERROR_NONE;
-    }
-    rtError_t ret = CreateNewKernel(kernel, kernelName, mixType, tilingKey, kernelObj);
-    if (ret != RT_ERROR_NONE) {
-        return ret;
-    }
-
-    // set other attrs
-    SetKernelAttribute(kernel, kernelObj, kernelType);
-    (void)GetPrefetchCnt(static_cast<Program *>(this), kernelObj);
-
-    // 3. not support tilingKey and not support function entry
-    if (kernel->funcEntryType == KernelFunctionEntryType::KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY) {
-        // add to program kernel map, key is kernel name
-        const rtError_t error = MixKernelAdd(kernelObj);
-        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        return RT_ERROR_NONE;
-    }
-
-    ret = KernelAdd(kernelObj, tilingKeyParseRet);
-    if (ret != RT_ERROR_NONE) {
-        delete kernelObj;
-        kernelObj = nullptr;
-        RT_LOG(RT_LOG_ERROR, "create new kernel failed, kernel name=[%s]", kernel->name);
-        return ret;
-    }
-    return RT_ERROR_NONE;
 }
 
 rtError_t ElfProgram::UnifiedKernelRegister()
 {
-    if ((kernels_ == nullptr) || (GetKernelsCount() == 0U)) {
-        RT_LOG(RT_LOG_INFO, "kernels is empty, kernelCount=%u", GetKernelsCount());
-        return RT_ERROR_NONE;
+    rtError_t error = RegisterAllKernelCommon();
+    ERROR_RETURN(error, "register all kernel failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    const std::map<std::string, Kernel *>& kernelNameMap = GetKernelNameMap();
+    for (auto iter = kernelNameMap.begin(); iter != kernelNameMap.end(); ++iter) {
+        Kernel* kernelObj = iter->second;
+        /* not support tilingKey and not support function entry */
+        if (kernelObj->GetFunctionEntryType() == KernelFunctionEntryType::KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY) {
+            continue;
+        }
+
+        /* kernelTable_ will maintain kernel and the function PutProgram() will release memory. */
+        if (KernelTable_ == nullptr) {
+            KernelTable_ = new (std::nothrow) rtKernelArray_t[GetKernelsCount()];
+            COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, KernelTable_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+                "new rtKernelArray_t fail, kernelCount=%u.", GetKernelsCount());
+        }
+
+        /* add kernel to KernelTable */
+        bool isRepeated = false;
+        error = AllKernelAdd(kernelObj, isRepeated);
+        ERROR_RETURN(error, "add kernel to tilingKey table failed, kernel_name=%s, tilingKey=%llu.",
+            kernelObj->Name_().c_str(), kernelObj->TilingKey());
     }
 
-    for (uint32_t idx = 0U; idx < GetKernelsCount(); idx++) {
-        const rtError_t error = UnifiedOneKernelRegister(&kernels_[idx]);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "kernel register failed, kernel name=[%s]", kernels_[idx].name);
-            return error;
-        }
-    }
     return RT_ERROR_NONE;
 }
 
@@ -1784,5 +1469,299 @@ rtError_t Program::BinaryPoolMemCopySync(void * const devMem, const uint32_t siz
     return RT_ERROR_NONE;
 }
 
+/* 剥离掉kernelName的_mix_aic/_mix_aiv的后缀 */
+std::string ElfProgram::AdjustKernelName(const std::string kernelName) const
+{
+    std::string tripKernelName = kernelName;
+    const std::string mixAicName = "_mix_aic";
+    const std::string mixAivName = "_mix_aiv";
+
+    const auto mixAicPos = tripKernelName.rfind(mixAicName);
+    if (mixAicPos != std::string::npos) {
+        (void)tripKernelName.erase(mixAicPos, mixAicName.length());
+        return tripKernelName;
+    }
+
+    const auto mixAivPos = tripKernelName.rfind(mixAivName);
+    if (mixAivPos != std::string::npos) {
+        (void)tripKernelName.erase(mixAivPos, mixAivName.length());
+        return tripKernelName;
+    }
+
+    return tripKernelName;
 }
+
+/* the relation of kernelName/func type/kernel type/mix type:
+   kernelName    funcType            coreCrossSync    kernelType                    mixType
+   add           AICORE              NO               RT_KERNEL_ATTR_TYPE_AICORE    NO_MIX
+   add           AIC                 NO               RT_KERNEL_ATTR_TYPE_CUBE      NO_MIX
+   add           AIV                 NO               RT_KERNEL_ATTR_TYPE_VECTOR    NO_MIX
+   add           AIC                 YES              RT_KERNEL_ATTR_TYPE_CUBE      MIX_AIC
+   add           AIV                 YES              RT_KERNEL_ATTR_TYPE_VECTOR    MIX_AIV
+   add_mic_aic   AIC_MAIN            /                RT_KERNEL_ATTR_TYPE_MIX       MIX_AIC_AIV_MAIN_AIC
+   add_mic_aiv   AIC_MAIN            /                RT_KERNEL_ATTR_TYPE_MIX       MIX_AIC_AIV_MAIN_AIC
+   add_mic_aic   AIV_MAIN            /                RT_KERNEL_ATTR_TYPE_MIX       MIX_AIC_AIV_MAIN_AIV
+   add_mic_aiv   AIV_MAIN            /                RT_KERNEL_ATTR_TYPE_MIX       MIX_AIC_AIV_MAIN_AIV
+   add_mic_aic   AIC_ROLLBACK        NO               RT_KERNEL_ATTR_TYPE_CUBE      NO_MIX
+   add_mic_aiv   AIV_ROLLBACK        NO               RT_KERNEL_ATTR_TYPE_VECTOR    NO_MIX
+   add_mic_aic   AIC_ROLLBACK        YES              RT_KERNEL_ATTR_TYPE_CUBE      MIX_AIC
+   add_mic_aiv   AIV_ROLLBACK        YES              RT_KERNEL_ATTR_TYPE_VECTOR    MIX_AIV
+ */
+rtError_t ElfProgram::GetKernelTypeAndMixTypeByMetaInfo(const RtKernel * const elfkernelInfo,
+    rtKernelAttrType &kernelAttrType, uint8_t &mixType)
+{
+    const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
+    uint32_t funcType = metaInfo->funcType;
+    uint32_t crossCoreSync = metaInfo->crossCoreSync;
+    std::string kernelName = elfkernelInfo->name;
+    const std::string mixAicName = "_mix_aic";
+    const std::string mixAivName = "_mix_aiv";
+    rtError_t result = RT_ERROR_NONE;
+    mixType = static_cast<uint8_t>(NO_MIX);
+
+    switch (funcType) {
+        case KERNEL_FUNCTION_TYPE_AICORE:
+            kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
+            if (kernelName.rfind(mixAicName) != std::string::npos) {
+                mixType = static_cast<uint8_t>(MIX_AIC);
+            } else if (kernelName.rfind(mixAivName) != std::string::npos) {
+                mixType = static_cast<uint8_t>(MIX_AIV);
+            }
+            break;
+        case KERNEL_FUNCTION_TYPE_AIC:
+        case KERNEL_FUNCTION_TYPE_AIC_ROLLBACK:
+            kernelAttrType = RT_KERNEL_ATTR_TYPE_CUBE;
+            if (crossCoreSync == FUNC_USE_SYNC) {
+                mixType = static_cast<uint8_t>(MIX_AIC);
+            }
+            break;
+        case KERNEL_FUNCTION_TYPE_AIV:
+        case KERNEL_FUNCTION_TYPE_AIV_ROLLBACK:
+            kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
+            if (crossCoreSync == FUNC_USE_SYNC) {
+                mixType = static_cast<uint8_t>(MIX_AIV);
+            }
+            break;
+        case KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN:
+        case KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN:
+            if (kernelName.rfind(mixAicName) != std::string::npos) {
+                kernelAttrType = RT_KERNEL_ATTR_TYPE_CUBE;
+                mixType = static_cast<uint8_t>(MIX_AIC);
+            } else if (kernelName.rfind(mixAivName) != std::string::npos) {
+                kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
+                mixType = static_cast<uint8_t>(MIX_AIV);
+            } else {
+                result = RT_ERROR_INVALID_VALUE;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    if (result != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Get kernel type and mix type failed, kerneName=%s, funcType=%lu, crossCoreSync=%lu.",
+            elfkernelInfo->name, funcType, crossCoreSync);
+    }
+
+    return result;
 }
+
+void ElfProgram::GetKernelTypeAndMixTypeByName(const std::string kernelName,
+    rtKernelAttrType &kernelAttrType, uint8_t &mixType)
+{
+    const std::string mixAicName = "_mix_aic";
+    const std::string mixAivName = "_mix_aiv";
+
+    const auto mixAicPos = kernelName.rfind(mixAicName);
+    if (mixAicPos != std::string::npos) {
+        kernelAttrType = RT_KERNEL_ATTR_TYPE_CUBE;
+        mixType = static_cast<uint8_t>(MIX_AIC);
+        return;
+    }
+
+    const auto mixAivPos = kernelName.rfind(mixAivName);
+    if (mixAivPos != std::string::npos) {
+        kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
+        mixType = static_cast<uint8_t>(MIX_AIV);
+        return;
+    }
+
+    return;
+}
+
+rtError_t ElfProgram::GetKernelTypeAndMixType(const RtKernel * const elfkernelInfo,
+    rtKernelAttrType &kernelAttrType, uint8_t &mixType)
+{
+    const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
+    kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
+    mixType = static_cast<uint8_t>(NO_MIX);
+    rtError_t error = GetKernelTypeAndMixTypeByMetaInfo(elfkernelInfo, kernelAttrType, mixType);
+    ERROR_RETURN(error, "Ger kernel type and mix type failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    COND_RETURN_INFO((kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
+        "Get kernel type success, kerneName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu",
+        elfkernelInfo->name, metaInfo->funcType, kernelAttrType, mixType);
+
+    GetKernelTypeAndMixTypeByName(elfkernelInfo->name, kernelAttrType, mixType);
+    COND_RETURN_INFO((kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
+        "Get kernel type success, kerneName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu",
+        elfkernelInfo->name, metaInfo->funcType, kernelAttrType, mixType);
+
+    kernelAttrType = GetDefaultKernelAttrType();
+
+    RT_LOG(RT_LOG_INFO, "Get kernel type success, kerneName=%s, funcType=%u, kernelAttrType=%d, mixType=%hhu",
+        elfkernelInfo->name, metaInfo->funcType, kernelAttrType, mixType);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ElfProgram::BuildNewKernel(const std::string tripKernelName, const RtKernel * const elfkernelInfo,
+    Kernel * &kernel)
+{
+    kernel = nullptr;
+    const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
+    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
+    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
+    uint64_t tilingKey = 0UL;
+
+    /* 获取kernelType和mixType */
+    rtError_t error = GetKernelTypeAndMixType(elfkernelInfo, kernelAttrType, mixType);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    // 1. not support function entry info but support old tilingKey process
+    (void)ParseTilingKey(tripKernelName, tilingKey);
+    // 2. support function entry info
+    if (metaInfo->funcEntryType == KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY) {
+        RT_LOG(RT_LOG_INFO, "support function entry mode.");
+        tilingKey = metaInfo->functionEntry;
+    }
+
+    Kernel *kernelObj = new (std::nothrow) Kernel(tripKernelName.c_str(), tilingKey, this, kernelAttrType,
+        static_cast<uint32_t>(elfkernelInfo->offset), 0U, mixType);
+    COND_RETURN_ERROR((kernelObj == nullptr), RT_ERROR_KERNEL_NEW, "allocate new Kernel failed");
+
+    // set other attrs
+    SetKernelAttribute(elfkernelInfo, kernelObj);
+    (void)GetPrefetchCnt(kernelObj);
+
+    RT_LOG(RT_LOG_INFO, "new kernel size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
+        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%d, mixType=%hu, taskRation=%u, "
+        "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u",
+        sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
+        metaInfo->funcType, kernelAttrType, mixType, metaInfo->taskRation,
+        static_cast<uint32_t>(elfkernelInfo->offset),
+        static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)), metaInfo->dfxSize);
+    kernel = kernelObj;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ElfProgram::MergeKernel(const RtKernel * const elfkernelInfo, Kernel *oldKernel)
+{
+    const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
+    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
+    rtKernelAttrType oldKernelAttrType = oldKernel->GetKernelAttrType();
+    uint8_t oldMixType = oldKernel->GetMixType();
+    uint8_t mixType = static_cast<uint8_t>(NO_MIX);
+
+    /* 获取kernelType和mixType */
+    rtError_t error = GetKernelTypeAndMixType(elfkernelInfo, kernelAttrType, mixType);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    /* kernelName is same, check mix type and kernelAttrType
+       1. old kernel offset2 must be 0
+       2. mixType is cannot be no_mix, mix type must be mix_aic/mix_aiv
+     */
+    if ((oldKernel->Offset2_() != 0ULL) || (oldMixType == mixType) || (mixType == static_cast<uint8_t>(NO_MIX))) {
+        RT_LOG(RT_LOG_ERROR, "found the previous mix kernel but conflict. "
+            "found kernel name=[%s], kernelAttrType=%d, mixType=%hu, offset2=%u, "
+            "current kernel name=[%s], kernelAttrType=%d, mixType=%hu",
+            oldKernel->Name_().c_str(), oldKernelAttrType, oldMixType, oldKernel->Offset2_(),
+            elfkernelInfo->name, kernelAttrType, mixType);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    const uint16_t kernelTmpMixType = oldKernel->GetMixType();
+    if (unlikely(oldMixType == static_cast<uint8_t>(MIX_AIV))) {
+        // make sure offset1 is always mix_aic and offset2 is mix_aiv.
+        SwapMixKernelOffsetAndLength(oldKernel, elfkernelInfo);
+    } else {
+        // this is the major case.
+        oldKernel->SetOffset2(static_cast<uint32_t>(elfkernelInfo->offset));
+        oldKernel->SetKernelLength2(static_cast<uint32_t>(elfkernelInfo->length));
+        oldKernel->SetMinStackSize2(metaInfo->minStackSize);
+
+        // kernelVfType && shareMemSize is used for smit, need set value with aiv kernel
+        oldKernel->SetKernelVfType_(metaInfo->kernelVfType);
+        oldKernel->SetShareMemSize_(metaInfo->shareMemSize);
+    }
+    oldKernel->SetMixMinStackSize();
+
+    const auto rtInstance = Runtime::Instance();
+    DevProperties properties;
+    auto error1 = GET_DEV_PROPERTIES(rtInstance->GetChipType(), properties);
+    if ((error1 == RT_ERROR_NONE) && (properties.cvArchType != DeviceCvArchType::CV_ARCH_SEPARATION)) {
+        // case 1: cv is not separated
+        oldKernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
+        oldKernel->SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC));
+    } else if ((oldKernel->GetFuncType() == KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN) ||
+               (oldKernel->GetFuncType() == KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN)) {
+        // case 2: cv is separated, judge by functionType
+        uint8_t mergeMixType = (metaInfo->funcType == static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN)) ?
+            static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC) : static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV);
+        oldKernel->SetMixType(mergeMixType);
+        oldKernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+    } else {
+        // case 3: cv is separated, old and traditional mix kernels, only judge by name
+        oldKernel->SetMixType(static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC));
+        oldKernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
+    }
+
+    (void)GetPrefetchCnt(oldKernel);
+
+    RT_LOG(RT_LOG_INFO, "proc mix kernel register, programId=%u, kernel name=[%s], offset1=%u, offset2=%u, "
+        "mixType1=%hu, mixType2=%hu, final mixType=%hu, final kernelAttrType=%d, kernelVfType=%u, shareMemSize=%u",
+        Id_(), oldKernel->Name_().c_str(), oldKernel->Offset_(), oldKernel->Offset2_(), kernelTmpMixType,
+        mixType, oldKernel->GetMixType(), oldKernel->GetKernelAttrType(),
+        oldKernel->KernelVfType_(), oldKernel->ShareMemSize_());
+    return RT_ERROR_NONE;
+}
+
+rtError_t ElfProgram::RegisterAllKernelCommon(void)
+{
+    if ((kernels_ == nullptr) || (GetKernelsCount() == 0U)) {
+        RT_LOG(RT_LOG_INFO, "kernels is empty, kernelCount=%u", GetKernelsCount());
+        return RT_ERROR_NONE;
+    }
+
+    for (uint32_t idx = 0U; idx < GetKernelsCount(); idx++) {
+        const RtKernel * const elfKernelInfo = &kernels_[idx];
+
+        /* 去掉kernelName的_mix_aic/_mix_aiv的后缀 */
+        rtError_t error;
+        const std::string tripKernelName = AdjustKernelName(elfKernelInfo->name);
+        COND_RETURN_ERROR(tripKernelName.empty(), RT_ERROR_INVALID_VALUE, "KernelName cannot be empty.");
+
+        Kernel *kernelTmp = const_cast<Kernel*>(GetKernelByName(tripKernelName.c_str()));
+        if (kernelTmp != nullptr) {
+            error = MergeKernel(elfKernelInfo, kernelTmp);
+            ERROR_RETURN(error, "merge kernel failed, kerneName=%s. retCode=%#x.",
+                tripKernelName.c_str(), static_cast<uint32_t>(error));
+            continue;
+        }
+
+        Kernel *kernelObj = nullptr;
+        error = BuildNewKernel(tripKernelName, elfKernelInfo, kernelObj);
+        COND_RETURN_ERROR((kernelObj == nullptr), error,
+            "Kernel register failed, build new Kernel failed, kerneName=%s.", elfKernelInfo->name);
+
+        error = KernelNameMapAdd(kernelObj);
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            DELETE_O(kernelObj);,
+            "Add kernel failed, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+    return RT_ERROR_NONE;
+}
+
+}  // namespace runtime
+}  // namespace cce

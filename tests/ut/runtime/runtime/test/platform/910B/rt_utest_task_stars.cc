@@ -572,7 +572,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
 
     TaskInfo *errTask = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_KERNEL_AICORE, ret);
     dev_->GetTaskFactory()->SetSerialId(stream_, errTask);
-    AicTaskInit(errTask, 0, 1, 0, nullptr);
+    AicTaskInit(errTask, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;
@@ -1637,7 +1637,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
 
     TaskInfo *errTask = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_KERNEL_AICORE, ret);
     dev_->GetTaskFactory()->SetSerialId(stream_, errTask);
-    AicTaskInit(errTask, 0, 1, 0, nullptr);
+    AicTaskInit(errTask, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;
@@ -1667,10 +1667,10 @@ TEST_F(StarsTaskTest, SQE_SET_SchedMode)
 {
     TaskInfo taskInfo{};
     AicTaskInfo aicTaskInfo;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
 
     k1->SetMixType(NO_MIX);
 
@@ -1707,10 +1707,10 @@ TEST_F(StarsTaskTest, SchedMode_CheckBlockDim)
 {
     TaskInfo taskInfo{};
     AicTaskInfo aicTaskInfo;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
 
     k1->SetMixType(NO_MIX);
     k1->SetSchedMode(RT_SCHEM_MODE_BATCH);
@@ -1734,13 +1734,13 @@ TEST_F(StarsTaskTest, SchedMode_CheckBlockDim)
     ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
 
     // sqeType
-    taskInfo.u.aicTaskInfo.machine = 2;
+    k1->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
 
-    taskInfo.u.aicTaskInfo.machine = 3;
+    k1->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
     ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
 
-    taskInfo.u.aicTaskInfo.machine = 4;
+    k1->SetKernelAttrType(static_cast<rtKernelAttrType>(static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)));
     ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
 
     rtFftsPlusMixAicAivCtx_t fftsCtx;

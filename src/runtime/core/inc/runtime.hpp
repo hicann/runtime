@@ -87,8 +87,8 @@ constexpr float64_t RT_STARS_OP_TIMEOUT_THRESHOLD = 100000.0F;  // 小于100ms�
 
 enum RtMixType : std::uint8_t {
     NO_MIX = 0,
-    MIX_AIC = 1,
-    MIX_AIV = 2,
+    MIX_AIC = 1,            /* faked mix, c:v=1:0 */
+    MIX_AIV = 2,            /* faked mix, c:v=0:1 */
     MIX_AIC_AIV_MAIN_AIC = 3,
     MIX_AIC_AIV_MAIN_AIV = 4
 };
@@ -231,6 +231,8 @@ public:
     }
 
     rtError_t MallocProgramAndReg(const rtDevBinary_t *const bin, Program **const newProg) const;
+    rtKernelAttrType Magic2KernelAttrType(const uint32_t magic) const;
+    rtKernelAttrType GetDefaultKernelAttrType(void) const;
     rtError_t MallocProgramAndRegMixKernel(
         const void *data, const uint64_t length, Program **const newProg) const;
     rtError_t ProgramRegister(const rtDevBinary_t *bin, Program **result);
@@ -239,11 +241,10 @@ public:
     void PutProgram(const Program *const programPtr, bool isUnRegisterApi = false);
     rtError_t KernelRegister(Program *prog, const void *stubFunc, const char_t *stubName,
                              const void * const kernelInfoExt, const uint32_t funcMode = 0U);
-    rtError_t KernelRegisterV2(Program *prog, const void *stubFunc, const char_t *stubName,
-                               const char_t *kernelInfoExt, const uint32_t funcMode = 0U);
-    rtError_t AllKernelRegister(Program * const prog, const bool isHostApiReg) const;
-    rtError_t AllKernelRegisterV2(Program * const prog, const bool isHostApiReg = false);
+    rtError_t AllKernelRegister(Program * const prog) const;
     rtError_t MixKernelRegister(Program * const prog);
+    rtError_t RegisterKernelByStubFunc(ElfProgram *elfProg, const void *stubFunc, const char_t *stubName,
+        const void * const kernelInfoExt, const uint32_t funcMode, const char_t *kernelName);
     const Kernel *KernelLookup(const void * const stub);
     const void *StubFuncLookup(const char_t * const name);
     rtError_t LookupAddrByFun(const void * const stubFunc, Context * const ctx, void ** const addr);
@@ -525,11 +526,8 @@ public:
     rtError_t UnRegKernelLaunchFillFunc(const char* symbol) override;
     rtError_t ExeCallbackFillFunc(std::string symbol, void *cfgAddr, uint32_t size);
     rtError_t GetKernelBinByFileName(const char_t *const binFileName, char_t **const buffer, uint32_t *length) const;
-    rtError_t CheckMixKernelType(const RtKernel * const kernel) const;
-    rtError_t GetMixTypeAndKernelType(const RtKernel * const kernel, uint8_t &mixType, uint32_t &kernelType);
     rtError_t GetTilingValue(const std::string &kernelInfoExt, uint64_t &tilingValue) const;
     std::string GetTilingKeyFromKernel(const std::string &kernelName, uint8_t &mixType) const;
-    std::string AdjustKernelName(const RtKernel * const kernel, uint8_t mixType) const;
     void ReportSoftwareSqEnableToMsprof(void) const;
 
     void StreamSyncEschedLock(void);
@@ -858,26 +856,8 @@ private:
     void NotifyProcWhenNewDevice(const uint32_t devId);
     void NotifyProcWhenReleaseDevice(const uint32_t devId) const;
     void MsProfNotifyWhenSetDevice(const uint32_t devId) const;
-    void InitKernel(
-        Program * const prog, const void * const kernelInfoExt, const uint8_t mixType, Kernel *kernelPtr);
-    void BuildMixKernel(Program * const prog, const void * const kernelInfoExt, Kernel *kernelPtr, const uint8_t idx,
-        bool isAic) const;
     void InitAtrace(Device* dev, TraHandle &curAtraceHandle) const;
     void KernelSetDfx(Program * const prog, const void * const kernelInfoExt, Kernel *kernelPtr) const;
-    rtError_t JudgeOffsetByMixType(Program * const prog, const void * const kernelInfoExt, uint8_t &mixType,
-                                   rtKernelContent *info1, rtKernelContent *info2);
-    rtError_t GetOffsetByCustomKernelType(Program *prog, const uint32_t kernelType,
-        const void * const kernelInfoExt, rtKernelContent *info1, rtKernelContent *info2) const;
-    rtError_t CheckSetKernelAndMixType(
-        const RtKernel * const kernel, uint8_t& mixType, uint32_t& kernelType, std::string& kernelName);
-    rtError_t CheckSetKernelAndMixTypeV2(const RtKernel * const kernel, uint8_t& mixType,
-        uint32_t& kernelType, uint64_t& tilingValue, std::string& kernelName);
-    bool IsFoundKernelByTilingKey(Program * const prog, const RtKernel * const kernel,
-        const uint64_t tilingValue, const uint8_t mixType);
-    rtError_t AllocAndAddKernel(Program *prog, Kernel **kernelPtr, const RtKernelCombine& kernelCombine,
-        const void * const kernelInfoExt, const char_t *stubName, const uint32_t funcModeInner);
-    rtError_t AllocAndAddKernelV2(Program *prog, Kernel **kernelPtr, const RtKernelCombine& kernelCombine,
-        const std::string& kernelName);
     void PrimaryContextCallBack(const Context * const ctx, const uint32_t devId);
     void PrimaryContextCallBackAfterTeardown(const uint32_t devId) const;
     void ProcContexRelease(Context *const ctx, const uint32_t devId, const bool isForceReset);
@@ -917,8 +897,6 @@ private:
     rtError_t isOperateAllDevice(int32_t * const numsDev, bool &flag);
     rtError_t CheckStaticKernelName(const RtKernel * const kernels, const uint32_t kernelCount,
                                     const bool isHostApiRegister, bool &staticKernel) const;
-    rtError_t CheckKernelsName(const RtKernel * const kernels, const uint32_t kernelCount,
-                               const bool isHostApiRegister, bool &staticKernel) const;
     rtError_t GetVisibleDevices();
     bool IsNeedChangeDeviceId(const uint32_t userDevId, const bool isDeviceSetResetOp) const;
     void ReadStreamSyncModeFromConfigIni(void);

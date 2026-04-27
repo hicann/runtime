@@ -67,21 +67,13 @@ struct CpuKernelInfo {
 
 class Program : public NoCopy {
 public:
-    static constexpr uint32_t MACH_AI_CORE     = 0U;
-    static constexpr uint32_t MACH_AI_CPU      = 1U;
-    static constexpr uint32_t MACH_AI_VECTOR   = 2U;
-    static constexpr uint32_t MACH_AI_CVMIX    = 3U;
-    static constexpr uint32_t MACH_INVALID_CPU = 4U;
-
-    static constexpr uint32_t MACH_AI_MIX_KERNEL = 255U;  /* all kernel mix in one program */
-
     static constexpr uint32_t PLAIN_PROGRAM    = 0U;
     static constexpr uint32_t ELF_PROGRAM      = 1U;
 
     static constexpr uint32_t PROGRAM_MEM_DDR  = 0U;
     static constexpr uint32_t PROGRAM_MEM_FAST = 1U;
 
-    explicit Program(const uint32_t progMachine = MACH_AI_CORE);
+    explicit Program(const rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE);
     ~Program() override;
 
     // derenference for force free
@@ -151,11 +143,6 @@ public:
         metadata_ = metadata;
     }
 
-    uint32_t Machine() const
-    {
-        return machine_;
-    }
-
     void SetMachine(const uint32_t machine)
     {
         machine_ = machine;
@@ -199,11 +186,6 @@ public:
     const std::string &GetBinPath() const
     {
         return binPath_;
-    }
-
-    bool GetSupportMix() const
-    {
-        return isSupportMix_;
     }
 
     void SetStackSize(uint64_t stackSize)
@@ -275,6 +257,21 @@ public:
         return funcNameDevAddrMap_[deviceId];
     }
 
+    const std::map<std::string, Kernel *>& GetKernelNameMap(void) const
+    {
+        return kernelNameMap_;
+    }
+
+    void SetDefaultKernelAttrType(rtKernelAttrType type)
+    {
+        defaultBinaryType_ = type;
+    }
+
+    rtKernelAttrType GetDefaultKernelAttrType(void) const
+    {
+        return defaultBinaryType_;
+    }
+
     rtError_t Register(const void *data, const uint64_t length, const bool isLoadFromFile = false);
     // register only cpu kernel by json
     rtError_t RegisterCpuKernel(const std::vector<CpuKernelInfo> &kernelInfos);
@@ -290,8 +287,8 @@ public:
     rtError_t AllKernelAdd(Kernel *&addKernel, bool &isRepeated);
     Kernel *AllKernelLookup(const uint64_t tilingKey, const bool getProgFlag = true);
     const Kernel *GetKernelByTillingKey(const uint64_t tilingKey);
-    rtError_t MixKernelAdd(Kernel *&addKernel);
-    rtError_t MixKernelRemove(Kernel *&delKernel);
+    rtError_t KernelNameMapAdd(Kernel *&addKernel);
+    rtError_t KernelNameMapRemove(Kernel *&delKernel);
     const Kernel *GetKernelByName(const char_t *kernelName);
 
     void DependencyRegister(Program * const prog);
@@ -302,8 +299,6 @@ public:
 
     const std::string &GetKernelNamesBuffer() const;
     virtual uint32_t SymbolOffset(const void * const symbol, uint32_t &length) = 0;
-    virtual void KernelContent(const void *symbol, rtKernelContent *info) = 0;
-
     virtual uint32_t LoadSize() = 0;
     virtual bool IsReadOnly() = 0;
     virtual rtError_t LoadExtract(void *output, uint32_t size) = 0;
@@ -314,7 +309,6 @@ public:
     virtual rtError_t BinaryGetMetaNum(const rtBinaryMetaType type, size_t *numOfMeta) = 0;
     virtual rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, const size_t numOfMeta, void **data,
                                         const size_t *dataSize) = 0;
-    virtual void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) = 0;
     virtual rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                           void *data, const uint32_t length) = 0;
 
@@ -348,7 +342,6 @@ public:
     rtKernelArray_t *KernelTable_;
     uint32_t kernelCount_;
     uint32_t kernelPos_;
-    bool isSupportMix_;
     void *binary_;
     uint64_t binarySize_;
     uint32_t machine_;
@@ -365,7 +358,7 @@ private:
     uint32_t progType_;
     uint32_t progMemType_;
     bool unRegisteringFlag_ = false;
-
+    rtKernelAttrType defaultBinaryType_;
     std::vector<Program *> dependencies_;
     std::map<Module **, Context *> mapUsedCtx_;
     SpinLock mapLock_;
@@ -393,11 +386,10 @@ private:
 
 class PlainProgram : public Program {
 public:
-    explicit PlainProgram(const uint32_t machine = MACH_AI_CORE);
-    explicit PlainProgram(const KernelRegisterType kernelRegType, const uint32_t machine = MACH_AI_CPU);
+    explicit PlainProgram(const rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE);
+    explicit PlainProgram(const KernelRegisterType kernelRegType, const rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICPU);
     ~PlainProgram() override;
     uint32_t SymbolOffset(const void * const symbol, uint32_t &length) override;
-    void KernelContent(const void * const symbol, rtKernelContent *info) override;
     uint32_t LoadSize() override;
     bool IsReadOnly() override;
     rtError_t LoadExtract(void * const output, const uint32_t size) override;
@@ -410,15 +402,13 @@ public:
                                 const size_t *dataSize) override;
     rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                   void *data, const uint32_t length) override;
-    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
 };
 
 class ElfProgram : public Program {
 public:
-    explicit ElfProgram(const uint32_t machine = MACH_AI_CORE);
+    explicit ElfProgram(const rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE);
     ~ElfProgram() override;
     uint32_t SymbolOffset(const void * const symbol, uint32_t &length) override;
-    void KernelContent(const void * const symbol, rtKernelContent *info) override;
     uint32_t LoadSize() override;
     bool IsReadOnly() override;
     rtError_t LoadExtract(void * const output, const uint32_t size) override;
@@ -433,8 +423,11 @@ public:
                                   void *data, const uint32_t length) override;
 
     rtError_t UnifiedKernelRegister();
-    void DegenerateMixType(uint8_t &mixType) const;
-    void AdaptKernelAttrType(const RtKernel * const kernelInput, Kernel *kernelOutput) override;
+    rtError_t RegisterAllKernelCommon(void);
+    std::string AdjustKernelName(const std::string kernelName) const;
+    rtError_t BuildNewKernel(const std::string tripKernelName, const RtKernel * const elfkernelInfo,
+        Kernel * &kernel);
+    rtError_t MergeKernel(const RtKernel * const elfkernelInfo, Kernel *oldKernel);
 
     bool IsMetaFlagSupprotFfts() const
     {
@@ -455,16 +448,6 @@ public:
         return elfData_->kernel_num;
     }
 
-    bool GetDegenerateFlag() const
-    {
-        return elfData_->degenerateFlag;
-    }
-
-    bool ContainsAscendMeta() const
-    {
-        return elfData_->containsAscendMeta;
-    }
-
     uint32_t GetElfMagic() const
     {
         return magic_;
@@ -479,19 +462,18 @@ protected:
     rtError_t ParserBinary() override;
 
 private:
-    bool FindAndProcMixKernel(const RtKernel * const kernel, const std::string &kernelName, const uint8_t mixType,
-                              const uint32_t mixProcVersion);
-    void SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj, const uint32_t kernelType);
-    std::string AdjustKernelNameAndGetMixType(const RtKernel * const kernel, uint8_t &mixType) const;
+    void SetKernelAttribute(const RtKernel * const kernel, Kernel * const kernelObj);
     rtError_t ParseTilingKey(const std::string &kernelName, uint64_t &tilingKey) const;
-    rtError_t CreateNewKernel(const RtKernel * const kernel, const std::string &kernelName, const uint8_t mixType,
-                              const uint64_t tilingKey, Kernel *&kernelObj);
-    rtError_t KernelAdd(Kernel *kernelPtr, const rtError_t tilingKeyParseRet);
-    rtError_t UnifiedOneKernelRegister(const RtKernel * const kernel);
+    rtError_t GetKernelTypeAndMixTypeByMetaInfo(const RtKernel * const elfkernelInfo,
+        rtKernelAttrType &kernelAttrType, uint8_t &mixType);
+    void GetKernelTypeAndMixTypeByName(const std::string kernelName,
+        rtKernelAttrType &kernelAttrType, uint8_t &mixType);
+    rtError_t GetKernelTypeAndMixType(const RtKernel * const elfkernelInfo,
+        rtKernelAttrType &kernelAttrType, uint8_t &mixType);
 
     rtElfData *elfData_;
     RtKernel *kernels_;
-    uint32_t magic_;
+    uint32_t magic_{0U};
 };
 }
 }

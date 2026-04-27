@@ -184,6 +184,7 @@ static const DevProperties CHIP_ADC_PROPERTIES = {
     .maxTaskNumPerStream = 1018U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 0U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
 };
 REGISTER_DEV_PROPERTIES(CHIP_ADC, CHIP_ADC_PROPERTIES);
 }

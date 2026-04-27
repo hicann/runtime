@@ -46,10 +46,11 @@ TEST_F(ChipKernelTest, kernel_create_for_solomon)
     rtChipType_t curChipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_CLOUD_V5);
     GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    k1->SetStub_(&fun1);
 
     EXPECT_EQ(k1->Name_(), "f1");
     EXPECT_EQ(k1->Stub_(), &fun1);
@@ -65,10 +66,11 @@ TEST_F(ChipKernelTest, kernel_create_for_second_solomon)
     rtChipType_t curChipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_CLOUD_V5);
     GlobalContainer::SetRtChipType(CHIP_CLOUD_V5);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", 1, program, 10);
+    Kernel * k1 = new Kernel("f1", 1, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    k1->SetStub_(&fun1);
 
     EXPECT_EQ(k1->Name_(), "f1");
     EXPECT_EQ(k1->Stub_(), &fun1);

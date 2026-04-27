@@ -289,7 +289,7 @@ TEST_F(AicpuErrMsgTest, RecordErrMsg_test)
     rtError_t errCode = RT_ERROR_NONE;
     TaskInfo * const kernTask = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
     EXPECT_NE(kernTask, nullptr);
-    AicTaskInit(kernTask, (uint32_t)0, (uint16_t)1, (uint32_t)0, nullptr);
+    AicTaskInit(kernTask, RT_KERNEL_ATTR_TYPE_AICORE, (uint16_t)1, (uint32_t)0, nullptr);
     EXPECT_EQ(kernTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     uint8_t bufTmp[256 + 1] = {0};
@@ -316,7 +316,7 @@ TEST_F(AicpuErrMsgTest, FaultForAiCore1)
     EXPECT_NE(device, nullptr);
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
 
@@ -332,9 +332,10 @@ TEST_F(AicpuErrMsgTest, FaultForAiCore1)
     rtError_t errCode = RT_ERROR_NONE;
     TaskInfo * const kernTask = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
 
-    AicTaskInit(kernTask, (uint32_t)0, (uint16_t)1, (uint32_t)0, nullptr);
+    AicTaskInit(kernTask, RT_KERNEL_ATTR_TYPE_AICORE, (uint16_t)1, (uint32_t)0, nullptr);
     EXPECT_EQ(kernTask->type, TS_TASK_TYPE_KERNEL_AICORE);
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     kernTask->u.aicTaskInfo.kernel = kernel;
 
     MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::GetPriCtxByDeviceId).stubs().will(returnValue((Context *)(0x02)));

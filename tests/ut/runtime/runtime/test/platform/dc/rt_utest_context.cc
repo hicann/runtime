@@ -431,7 +431,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     m_prog = (Program *)m_handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, m_prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, m_prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &arg;

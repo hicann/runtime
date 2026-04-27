@@ -131,7 +131,7 @@ TEST_F(ArgLoaderTest, uma_arg_loader)
     argsInfo.argsSize = sizeof(args);
     for (uint32_t i = 0; i < 10; i++)
     {
-        error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &results[i]);
+        error = loader->Load(&argsInfo, (Stream *)device->PrimaryStream_(), &results[i]);
         EXPECT_EQ(error, RT_ERROR_NONE);
     }
 
@@ -178,13 +178,13 @@ TEST_F(ArgLoaderTest, uma_arg_loader_mix_illegal_size)
     argsInfo.args = &args;
     argsInfo.argsSize = 40900U;
     bool mixOpt = false;
-    error = loader->LoadForMix(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
+    error = loader->LoadForMix(&argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     MOCKER_CPP(&H2DCopyMgr::AllocDevMem, void* (H2DCopyMgr::*)(const bool)).stubs().will(returnValue((void *)NULL));
 
     argsInfo.argsSize = 128U;
-    error = loader->LoadForMix(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
+    error = loader->LoadForMix(&argsInfo, (Stream *)device->PrimaryStream_(), &results, mixOpt);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     delete loader;
@@ -231,10 +231,10 @@ TEST_F(ArgLoaderTest, uma_arg_loader_with_sm)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result);
+    error = loader->Load(&argsInfo, (Stream *)device->PrimaryStream_(), &result);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result2);
+    error = loader->Load(&argsInfo, (Stream *)device->PrimaryStream_(), &result2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = loader->Release(result.handle);
@@ -617,7 +617,7 @@ TEST_F(ArgLoaderTest, uma_arg_loader_with_sm_fail)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(NULL, &argsInfo, (Stream *)device->PrimaryStream_(), &result);
+    error = loader->Load(&argsInfo, (Stream *)device->PrimaryStream_(), &result);
     EXPECT_EQ(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
 
@@ -861,7 +861,7 @@ TEST_F(ArgLoaderTest, uma_arg_loader_with_memcpy_fail)
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
-    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, stream, &result);
+    error = loader->Load(&argsInfo, stream, &result);
     EXPECT_NE(error, RT_ERROR_SEC_HANDLE);
 
     delete loader;

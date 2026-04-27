@@ -12,6 +12,7 @@
 #include "profiling_task.h"
 #include "rt_utest_config_define.hpp"
 #include "rt_unwrap.h"
+#include "data/elf.h"
 
 class ApiTest7 : public testing::Test
 {
@@ -71,10 +72,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 1);
@@ -5735,7 +5736,6 @@ TEST_F(ApiTest, api_register_all_kernel)
 
 
     Program *reg_unreg_prog;
-    MOCKER_CPP(&Runtime::CheckKernelsName).stubs().will(returnValue(RT_ERROR_NONE));
 
     Stream *stream = rt_ut::UnwrapOrNull<Stream>(stream_);
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelLaunchWithHandle).stubs().will(returnValue(RT_ERROR_NONE));
@@ -7075,7 +7075,7 @@ TEST_F(ApiTest, BIN_LOAD_MIX_KERNEL_TEST_2)
     apiInstance->BinaryLoadWithoutTilingKey((void *)&data[0], 0, &prog);
     EXPECT_EQ(prog, nullptr);
 
-    prog = new (std::nothrow) ElfProgram(Program::MACH_AI_MIX_KERNEL);
+    prog = new (std::nothrow) ElfProgram(RT_KERNEL_ATTR_TYPE_AICORE);
     rtError_t error = profiler->apiProfileDecorator_->BinaryGetFunctionByName(prog, "abc", &kernel);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
@@ -7559,10 +7559,10 @@ TEST_F(ApiTest, rtsDvppLaunch_test_02)
 TEST_F(ApiTest, create_args_test_01)
 {
     rtError_t error;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 2;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -7626,10 +7626,10 @@ TEST_F(ApiTest, create_args_test_01)
 TEST_F(ApiTest, create_args_test_03)
 {
     rtError_t error;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 20;
     k1->systemParaNum_ = 2;
     k1->isSupportOverFlow_ = true;
@@ -8215,20 +8215,20 @@ TEST_F(ApiTest, register_all_kernel)
     devBin.version = 1;
     devBin.length = sizeof(binary);
     devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_MIX_KERNEL);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    program->SetMachine(Program::MACH_AI_MIX_KERNEL);
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
 
     MOCKER_CPP(&Runtime::ProgramRegister)
         .stubs()
         .with(mockcpp::any(), outBoundP(&program, sizeof(program)))
         .will(returnValue(RT_ERROR_NONE));
 
-    MOCKER_CPP(&Runtime::AllKernelRegisterV2).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::AllKernelRegister).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.RegisterAllKernel(&devBin ,&program);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Runtime::KernelRegisterV2).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::KernelRegister).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.FunctionRegister(program, "stubFunc", "stubName", nullptr, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

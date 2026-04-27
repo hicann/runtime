@@ -93,11 +93,12 @@ TEST_F(XpuLaunchTest, XpuCheckTaskCanSend_Success_01)
     TaskInfo taskInfo = TaskInfo{};
     TaskInfo *taskInfoPtr = &taskInfo;
     taskInfoPtr->u.aicpuTaskInfo = AicpuTaskInfo{};
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
     TaskCfg taskCfg{};
     taskCfg.base.dumpflag = 0;
@@ -138,13 +139,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Success_01)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -192,13 +194,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Success_argSize_MoreThan4K)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -247,13 +250,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_Failed_01)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_NON_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -301,13 +305,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NonCpu)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -355,13 +360,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_DumpEnable)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -409,13 +415,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_LoadArgsInfo_Dev_Fail)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -463,13 +470,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_LoadArgsInfo_Fail)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -516,13 +524,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_XpuAllocTaskInfo_Fail)
     .stubs()
     .will(returnValue(RT_ERROR_NONE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -569,13 +578,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_XpuSendTask_Fail)
     .stubs()
     .will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -624,13 +634,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Success)
     rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     kernel->SetKernelLiteralNameDevAddr(nullptr, (void *)(&AicpuFuncSuccessMock), 0);
     rtStream_t stream;
     rtsStreamCreate(&stream, nullptr);
@@ -671,13 +682,14 @@ TEST_F(XpuLaunchTest, XpuLaunchKernelV2_NoMocker_Fail)
     rtError_t error = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     kernel->SetKernelLiteralNameDevAddr(nullptr, (void *)(&AicpuFuncFailMock), 0);
     rtStream_t stream;
     rtsStreamCreate(&stream, nullptr);

@@ -823,7 +823,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     dev->GetDeviceSnapShot()->RecordArgsAddrAndSize(&task1);
     TaskInfo task2 = {};
     InitByStream(&task2, rt_ut::UnwrapOrNull<Stream>(sinkStm));
-    AicTaskInit(&task2, 0, 1, 0, nullptr);
+    AicTaskInit(&task2, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
     task2.u.aicTaskInfo.comm.args = &args[1];
     task2.u.aicTaskInfo.comm.argsSize = 8;
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task2);
@@ -832,13 +832,14 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     const char *stubName = "abc";
     TaskInfo task3 = {};
     InitByStream(&task3, rt_ut::UnwrapOrNull<Stream>(sinkStm));
-    AicTaskInit(&task3, Program::MACH_AI_CORE, 1, 1, nullptr);
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    AicTaskInit(&task3, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
-    task3.u.aicTaskInfo.kernel = kernel;
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetMixType(MIX_AIV);
+    task3.u.aicTaskInfo.kernel = kernel;
     task3.u.aicTaskInfo.mixOpt= true;
     task3.u.aicTaskInfo.comm.args = &args[3];
     task3.u.aicTaskInfo.comm.argsSize = 8;

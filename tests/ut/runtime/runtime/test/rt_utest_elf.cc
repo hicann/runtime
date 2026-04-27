@@ -89,9 +89,8 @@ TEST_F(ELFTest, ELF_Process_Object_01)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
 
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num, 1);
 
     if(NULL != elfData->section_headers)
@@ -134,8 +133,7 @@ TEST_F(ELFTest, ELF_Process_Object_02)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if(NULL != elfData->section_headers)
     {
         delete [] elfData->section_headers;
@@ -148,7 +146,7 @@ TEST_F(ELFTest, ELF_Process_Object_02)
     }
     delete [] kernels;
     kernels = NULL;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
 
     EXPECT_EQ(elfData->kernel_num,1);
 
@@ -193,8 +191,7 @@ TEST_F(ELFTest, ELF_Process_Object_03)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num, 1);
     if(NULL == kernels)
     {
@@ -241,8 +238,7 @@ TEST_F(ELFTest, ELF_Process_Object_04)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num, 0);
 
     if(NULL == kernels)
@@ -290,8 +286,7 @@ TEST_F(ELFTest, ELF_Process_Object_05)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -330,8 +325,7 @@ TEST_F(ELFTest, ELF_Process_Object_06)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -370,8 +364,7 @@ TEST_F(ELFTest, ELF_Process_Object_07)
     RtKernel    *kernels;
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
 
     if(NULL != elfData->section_headers)
@@ -612,8 +605,7 @@ TEST_F(ELFTest, ELF_Process_Object_Error)
     {
         memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
     }
-    bool isSupportMix = false;
-    out = ProcessObject(obj_buf, elfData, 0, &isSupportMix);
+    out = ProcessObject(obj_buf, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
     if (NULL != elfData)
     {
@@ -685,8 +677,7 @@ TEST_F(ELFTest, ELF_Process_Object_08)
     section_headers->sh_size = 0;
     elfData->section_headers = section_headers;
 
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
     delete [] kernels[0].name;
     if(NULL != elfData->section_headers)
@@ -745,8 +736,7 @@ TEST_F(ELFTest, ELF_Process_Object_09)
 
     MOCKER(malloc).stubs().will(invoke(malloc_stub_elf));
 
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {
@@ -795,8 +785,7 @@ TEST_F(ELFTest, ELF_Process_Object_10)
     Elf_Internal_Shdr *section_headers = new Elf_Internal_Shdr;
     section_headers->sh_size = 0;
     elfData->section_headers = section_headers;
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {
@@ -846,9 +835,7 @@ TEST_F(ELFTest, ELF_Process_Object_11)
     Elf_Internal_Shdr *section_headers = new Elf_Internal_Shdr;
     section_headers->sh_size = 0;
     elfData->section_headers = section_headers;
-
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
     if(NULL != elfData->section_headers)
     {
@@ -892,8 +879,7 @@ TEST_F(ELFTest, ELF_Process_Object_12)
     elfData = new rtElfData;
     memset(elfData, '\0', sizeof(rtElfData));
 
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
 
     EXPECT_NE(elfData->so_name, (char *)NULL);
 
@@ -933,8 +919,7 @@ TEST_F(ELFTest, ELF_Process_Object_15)
 
     elfData = new rtElfData;
 
-    bool isSupportMix = false;
-    kernels = ProcessObject(bindata, elfData, false, &isSupportMix);
+    kernels = ProcessObject(bindata, elfData);
     if(nullptr  == kernels) {
         printf("SUCC no kernel!\n");
     } else {
@@ -999,7 +984,7 @@ TEST_F(ELFTest, ELF_CONVERT_TASK_RATION_05)
     uint32_t taskRation = 2;
     ElfKernelInfo elfKernelInfo = {5U, 0U, {1U, 0U}};
     rtError_t  error = ConvertTaskRation(&elfKernelInfo, taskRation);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ELFTest, ELF_CONVERT_TASK_RATION_06)
@@ -1008,42 +993,6 @@ TEST_F(ELFTest, ELF_CONVERT_TASK_RATION_06)
     ElfKernelInfo elfKernelInfo = {4U, 0U, {1U, 3U}};
     rtError_t  error = ConvertTaskRation(&elfKernelInfo, taskRation);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-}
-
-TEST_F(ELFTest, ELF_GET_MIX_STATUS_01)
-{
-    uint32_t funcType = 1U;
-    uint32_t crossCoreSync = 0U;
-
-    bool isMix = GetMixStatus(funcType, crossCoreSync);
-    EXPECT_EQ(isMix, false);
-}
-
-TEST_F(ELFTest, ELF_GET_MIX_STATUS_02)
-{
-    uint32_t funcType = 2U;
-    uint32_t crossCoreSync = 1U;
-
-    bool isMix = GetMixStatus(funcType, crossCoreSync);
-    EXPECT_EQ(isMix, true);
-}
-
-TEST_F(ELFTest, ELF_GET_MIX_STATUS_03)
-{
-    uint32_t funcType = 3U;
-    uint32_t crossCoreSync = 1U;
-
-    bool isMix = GetMixStatus(funcType, crossCoreSync);
-    EXPECT_EQ(isMix, true);
-}
-
-TEST_F(ELFTest, ELF_GET_MIX_STATUS_04)
-{
-    uint32_t funcType = 8U;
-    uint32_t crossCoreSync = 1U;
-
-    bool isMix = GetMixStatus(funcType, crossCoreSync);
-    EXPECT_EQ(isMix, false);
 }
 
 TEST_F(ELFTest, ParseElfStackInfoHeader)
@@ -1071,17 +1020,16 @@ TEST_F(ELFTest, UpdateKernelsInfo)
 {
     rtElfData elfData = {};
     elfData.kernel_num = 1;
-    bool isSupportMix = true;
 
     RtKernel newKernels;
     newKernels.name = new (std::nothrow) char[5];
     strcpy_s(newKernels.name, 5, "test");
     newKernels.offset = 0;
     newKernels.length = 1;
-    newKernels.funcType = 1;
-    newKernels.crossCoreSync = 1;
-    newKernels.taskRation = 1;
-    newKernels.dfxSize = 1;
+    newKernels.metaInfo.funcType = 1;
+    newKernels.metaInfo.crossCoreSync = 1;
+    newKernels.metaInfo.taskRation = 1;
+    newKernels.metaInfo.dfxSize = 1;
 
     ElfKernelInfo * kernelInfo = new (std::nothrow) ElfKernelInfo();
     if (kernelInfo == nullptr) {
@@ -1098,7 +1046,7 @@ TEST_F(ELFTest, UpdateKernelsInfo)
     std::string kernelName = "test-update-kernels-info";
     kernelInfoMap[kernelName] = kernelInfo;
 
-    rtError_t rtn = UpdateKernelsInfo(kernelInfoMap, &newKernels, &elfData, &isSupportMix);
+    rtError_t rtn = UpdateKernelsInfo(kernelInfoMap, &newKernels, &elfData);
     EXPECT_EQ(rtn, RT_ERROR_NONE);
     delete [] newKernels.name;
     delete kernelInfo;

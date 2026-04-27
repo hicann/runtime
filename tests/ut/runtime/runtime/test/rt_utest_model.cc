@@ -31,6 +31,7 @@
 #include "rt_unwrap.h"
 #include "model_maintaince_task.h"
 #include "model_execute_task.h"
+#include "data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -754,10 +755,10 @@ TEST_F(ModelTest, datadumploadinfo)
     char       function_;
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     error = rtStreamCreate(&stream, 0);
@@ -813,10 +814,10 @@ TEST_F(ModelTest, datadumploadinfo_2)
     char       function_;
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
     devBin.version = 2;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     error = rtStreamCreate(&stream, 0);

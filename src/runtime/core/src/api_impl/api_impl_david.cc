@@ -132,7 +132,7 @@ rtError_t ApiImplDavid::CpuKernelLaunchExAll(const Kernel * const kernel, const 
         flag |= taskCfg->base.dumpflag;
     }
 
-    const uint32_t kernelType = kernel->KernelType_();
+    const uint32_t kernelType = kernel->GetAicpuKernelType_();
     if ((kernelType != KERNEL_TYPE_FWK) &&
         (kernelType != KERNEL_TYPE_AICPU) &&
         (kernelType != KERNEL_TYPE_AICPU_CUSTOM) &&

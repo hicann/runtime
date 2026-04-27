@@ -147,13 +147,6 @@ protected:
         for (uint32_t i = 0; i < sizeof(binary_) / sizeof(uint32_t); i++) {
             binary_[i] = i;
         }
-        rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
-        rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
-        rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);
     }
 
     virtual void TearDown()
@@ -178,12 +171,10 @@ public:
     Stream *stream_ = nullptr;
     Engine *engine_ = nullptr;
     rtStream_t streamHandle_ = 0;
-    static void *binHandle_;
     static char function_;
     static uint32_t binary_[32];
 };
 
-void *DavidStreamTest::binHandle_ = nullptr;
 char DavidStreamTest::function_ = 'a';
 uint32_t DavidStreamTest::binary_[32] = {};
 

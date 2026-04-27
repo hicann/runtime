@@ -2373,24 +2373,33 @@ TEST_F(ApiTest, kernel_launch)
     rtError_t error;
     void *args[] = {&error, NULL};
     void *stubFunc;
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     error = rtKernelLaunch(&error, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, NULL, 0, NULL, stream_);
+    error = rtKernelLaunch(&function, 1, NULL, 0, NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 0, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 0, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtGetFunctionByName("foo", &stubFunc);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(stubFunc, (void*)&function_);
+    EXPECT_EQ(stubFunc, (void*)&function);
 
     error = rtGetFunctionByName("fooooo", &stubFunc);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -2400,12 +2409,24 @@ TEST_F(ApiTest, kernel_launch)
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 TEST_F(ApiTest, kernel_launch_cloud)
 {
     rtError_t error;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
@@ -2418,7 +2439,7 @@ TEST_F(ApiTest, kernel_launch_cloud)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream);
@@ -2429,6 +2450,7 @@ TEST_F(ApiTest, kernel_launch_cloud)
 
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 
@@ -2436,6 +2458,17 @@ TEST_F(ApiTest, kernel_launch_fusion_not_mini)
 {
     rtError_t error;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
@@ -2447,13 +2480,13 @@ TEST_F(ApiTest, kernel_launch_fusion_not_mini)
     error = rtKernelFusionStart(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, NULL);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, NULL);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtKernelFusionEnd(NULL);
@@ -2464,6 +2497,7 @@ TEST_F(ApiTest, kernel_launch_fusion_not_mini)
 
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 //changed
@@ -2472,6 +2506,17 @@ TEST_F(ApiTest, kernel_launch_l2_preload_mem_unaligned)
     rtError_t error;
     rtL2Ctrl_t ctrl;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     memset_s(&ctrl, sizeof(rtSmDesc_t), 0, sizeof(rtSmDesc_t));
 
@@ -2483,8 +2528,9 @@ TEST_F(ApiTest, kernel_launch_l2_preload_mem_unaligned)
     }
     ctrl.data[2].L2_mirror_addr = 0x41;
     ctrl.size = 128;
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &ctrl, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), &ctrl, stream_);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 
@@ -2492,6 +2538,17 @@ TEST_F(ApiTest, kernel_trans_arg)
 {
     rtError_t error;
     void *arg = NULL;
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     error = rtKernelConfigTransArg(NULL, 128, 0, &arg);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -2505,6 +2562,17 @@ TEST_F(ApiTest, kernel_trans_arg_cmodel)
 {
     rtError_t error;
     void *arg = NULL;
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     error = rtKernelConfigTransArg(NULL, 128, 0, &arg);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -2513,11 +2581,12 @@ TEST_F(ApiTest, kernel_trans_arg_cmodel)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     void *args[] = {arg, NULL, NULL};
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 
@@ -2525,9 +2594,21 @@ TEST_F(ApiTest, kernel_launch_with_default_stream)
 {
     rtError_t error;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, NULL);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 
@@ -3343,10 +3424,19 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_1)
 {
     rtError_t error;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
@@ -3366,14 +3456,27 @@ TEST_F(ApiTest, LAUNCH_KERNEL_TEST_3)
     TaskInfo *pctraceTask = (const_cast<TaskFactory *>(stubDevice->GetTaskFactory()))->Alloc(
         realStream, TS_TASK_TYPE_PCTRACE_ENABLE, error);
 
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
+
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module *)NULL));
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, ACL_ERROR_RT_MEMORY_ALLOCATION);
 
     error = rtStreamSynchronize(stream_);
     (const_cast<TaskFactory *>(stubDevice->GetTaskFactory()))->Recycle(pctraceTask);
+    rtDevBinaryUnRegister(binHdl);
     delete pctraceHandle;
     delete stubDevice;
 }
@@ -3666,18 +3769,29 @@ TEST_F(ApiTest, kernel_launch_1)
 {
     rtError_t error;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
-    MOCKER(memcpy_s).stubs().will(returnValue(EOK));
 
     error = rtKernelLaunch(&error, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, NULL, 0, NULL, stream_);
+    error = rtKernelLaunch(&function, 1, NULL, 0, NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
     MOCKER_CPP(&PCTrace::FreePCTraceMemory).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    error = rtKernelLaunch(&function_, 0, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 0, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 
@@ -3723,19 +3837,27 @@ TEST_F(ApiTest, kernel_launch_with_dump)
     rtError_t error;
     void *dumpBaseVAddr = NULL;
     void *args[] = {&error, NULL};
-
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(NULL));
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     error = rtKernelConfigDump(RT_DATA_DUMP_KIND_DUMP, 100, 3, &dumpBaseVAddr, ApiTest::stream_);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
     GlobalMockObject::reset();
 }
 
@@ -3746,20 +3868,29 @@ TEST_F(ApiTest, kernel_launch_with_dump_error)
     void *dumpBaseVAddr = NULL;
     void *args[] = {&error, NULL};
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(NULL));
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     error = rtKernelConfigDump(RT_DATA_DUMP_KIND_DUMP, 100, 3, &dumpBaseVAddr, ApiTest::stream_);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module *)NULL));
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
     GlobalMockObject::reset();
 }
 
@@ -3786,6 +3917,17 @@ TEST_F(ApiTest, kernel_launch_set_kernel_task_id)
     rtError_t error;
     rtL2Ctrl_t ctrl;
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
     memset_s(&ctrl, sizeof(rtSmDesc_t), 0, sizeof(rtSmDesc_t));
     ctrl.size = 128;
@@ -3802,7 +3944,7 @@ TEST_F(ApiTest, kernel_launch_set_kernel_task_id)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     ctrl.size = 128;
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), &ctrl, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), &ctrl, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, stream_);
@@ -3810,6 +3952,7 @@ TEST_F(ApiTest, kernel_launch_set_kernel_task_id)
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 }
 
 TEST_F(ApiTest, label_create_error)
@@ -3951,22 +4094,31 @@ TEST_F(ApiTest, kernel_launch_with_onlineprof2)
     rtError_t error;
     ProfilefDataInfo ProfilefData_t = {0};
     void *args[] = {&error, NULL};
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
 
-    MOCKER(halMemAlloc)
-        .stubs()
-        .will(returnValue(DRV_ERROR_INVALID_VALUE));
-
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     error = rtStartOnlineProf(stream_, 1);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
 
     error = rtGetOnlineProfData(stream_, &ProfilefData_t, 1);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStopOnlineProf(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3979,16 +4131,24 @@ TEST_F(ApiTest, kernel_launch_with_onlineprof_dulstart)
     ProfilefDataInfo ProfilefData_t = {0};
     void *args[] = {&error, NULL};
 
-    MOCKER(memcpy_s)
-        .stubs()
-        .will(returnValue(NULL));
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
     error = rtStartOnlineProf(stream_, 1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStartOnlineProf(stream_, 1);
     EXPECT_NE(error, ACL_RT_SUCCESS);
 
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream_);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream_);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtStreamSynchronize(stream_);
@@ -4813,6 +4973,18 @@ TEST_F(ApiTest, rtsLabelSwitchByIndex)
         uint32_t *devAddr = nullptr;
     } memUnit;
  
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
+
     Api *oldApi_ = const_cast<Api *>(Runtime::runtime_->api_);
     Profiler *profiler = new Profiler(oldApi_);
     profiler->Init();
@@ -4846,12 +5018,12 @@ TEST_F(ApiTest, rtsLabelSwitchByIndex)
     void *args[] = {&error, NULL};
     error = rtsLabelSet(label[0], stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[1]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtsLabelSet(label[1], stream[1]);
     ;
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[1]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
  
     const uint32_t ptrMemSize = 4;
@@ -4885,7 +5057,7 @@ TEST_F(ApiTest, rtsLabelSwitchByIndex)
     error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), rt_ut::UnwrapOrNull<Stream>(stream[0]));
     EXPECT_EQ(error, RT_ERROR_NONE);
  
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[0]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[0]);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtLabelSet(label[2], stream[0]);
     ;
@@ -4925,6 +5097,7 @@ TEST_F(ApiTest, rtsLabelSwitchByIndex)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtsLabelSwitchListDestroy(labelList);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
     delete profiler;
 }
  
@@ -5001,6 +5174,18 @@ TEST_F(ApiTest, rtLabelSwitchByIndex)
         uint32_t *devAddr = nullptr;
     } memUnit;
  
+    char function;
+    void *binHdl = nullptr;
+    rtDevBinary_t master_bin;
+    master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    master_bin.version = 2;
+    master_bin.data = (void*)elf_o;
+    master_bin.length = elf_o_len;
+    rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHdl);
+    EXPECT_EQ(error3, RT_ERROR_NONE);
+    rtError_t error4 = rtFunctionRegister(binHdl, &function, "foo", nullptr, 0);
+    EXPECT_EQ(error4, RT_ERROR_NONE);
+
     Api *oldApi_ = const_cast<Api *>(Runtime::runtime_->api_);
     Profiler *profiler = new Profiler(oldApi_);
     profiler->Init();
@@ -5034,11 +5219,11 @@ TEST_F(ApiTest, rtLabelSwitchByIndex)
     void *args[] = {&error, NULL};
     error = rtLabelSet(label[0], stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[1]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtLabelSet(label[1], stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[1]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[1]);
     EXPECT_EQ(error, RT_ERROR_NONE);
  
     const uint32_t ptrMemSize = 4;
@@ -5076,7 +5261,7 @@ TEST_F(ApiTest, rtLabelSwitchByIndex)
     error = profiler->apiProfileDecorator_->LabelGotoEx(rt_ut::UnwrapOrNull<Label>(label[2]), rt_ut::UnwrapOrNull<Stream>(stream[0]));
     EXPECT_EQ(error, RT_ERROR_NONE);
  
-    error = rtKernelLaunch(&function_, 1, (void *)args, sizeof(args), NULL, stream[0]);
+    error = rtKernelLaunch(&function, 1, (void *)args, sizeof(args), NULL, stream[0]);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtLabelSet(label[2], stream[0]);
     ;
@@ -5114,6 +5299,7 @@ TEST_F(ApiTest, rtLabelSwitchByIndex)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(streamExe);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    rtDevBinaryUnRegister(binHdl);
     delete profiler;
 }
  

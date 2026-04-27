@@ -21,10 +21,10 @@ public:
 
     rtError_t Init() override;
     rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) override;
-    rtError_t Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+    rtError_t Load(const rtArgsEx_t * const argsInfo,
                    Stream * const stm, ArgLoaderResult * const result) override;
     rtError_t PureLoad(const uint32_t size, const void * const args, ArgLoaderResult * const result) override;
-    rtError_t LoadForMix(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+    rtError_t LoadForMix(const rtArgsEx_t * const argsInfo,
                          Stream * const stm, ArgLoaderResult * const result, bool &mixOpt) override;
     rtError_t Release(void * const argHandle) override;
     rtError_t LoadCpuKernelArgs(const rtArgsEx_t * const argsInfo, Stream * const stm,
@@ -78,10 +78,10 @@ private:
                                             const void * const args, const rtArgsEx_t * const argsInfo) const;
 
     rtError_t LoadInputOutputArgs(const Stream * const stm, void *&kerArgs, H2DCopyMgr * const umaArgAllocator,
-                                  bool &copyArgs, const uint32_t kernelType, const uint32_t size, const void * const args,
+                                  bool &copyArgs, const uint32_t size, const void * const args,
                                   const rtArgsEx_t * const argsInfo) const;
     rtError_t LoadInputOutputArgsForMix(const Stream * const stm, void *kerArgs, H2DCopyMgr * const umaArgAllocator,
-                                        bool &copyArgs, const uint32_t kernelType, const uint32_t size, const void * const args,
+                                        bool &copyArgs, const uint32_t size, const void * const args,
                                         const rtArgsEx_t * const argsInfo) const;
     void FindKernelInfoName(std::string &name, std::unordered_map<std::string, void *> &nameMap, const void *addr) const;
 

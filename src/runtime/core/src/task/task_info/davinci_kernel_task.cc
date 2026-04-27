@@ -54,14 +54,14 @@ static void DavinciTaskInitCommon(DavinciTaskInfoCommon *comm, const uint16_t di
     return;
 }
 
-static void AicTaskInitCommon(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum, const uint32_t flag,
+static void AicTaskInitCommon(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum, const uint32_t flag,
     const bool isNeedAllocSqeDevBuf)
 {
     TaskCommonInfoInit(taskInfo);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     DavinciTaskInitCommon(&(aicTaskInfo->comm), dimNum, flag, taskInfo->isUpdateSinkSqe);
 
-    if (mach == Program::MACH_AI_VECTOR) {
+    if (kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) {
         taskInfo->type = TS_TASK_TYPE_KERNEL_AIVEC;
         taskInfo->typeName = const_cast<char_t*>("KERNEL_AIVEC");
     } else {
@@ -70,7 +70,6 @@ static void AicTaskInitCommon(TaskInfo *taskInfo, const uint32_t mach, const uin
     }
 
     aicTaskInfo->argsInfo = nullptr;
-    aicTaskInfo->machine = static_cast<uint8_t>(mach);
     aicTaskInfo->tilingKey = 0ULL;
 
     aicTaskInfo->smDescData = 0U;
@@ -135,10 +134,10 @@ void AicpuTaskInit(TaskInfo *taskInfo, const uint16_t dimNum, const uint32_t fla
     return;
 }
 
-void AicTaskInit(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum,
+void AicTaskInit(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum,
     const uint32_t flag, const TaskCfg * const taskcfg, const bool isNeedAllocSqeDevBuf)
 {
-    AicTaskInitCommon(taskInfo, mach, dimNum, flag, isNeedAllocSqeDevBuf);
+    AicTaskInitCommon(taskInfo, kernelAttrType, dimNum, flag, isNeedAllocSqeDevBuf);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
 
     if (taskcfg == nullptr) {
@@ -177,10 +176,10 @@ void AicTaskInit(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum,
     return;
 }
 
-void AicTaskInitV2(TaskInfo *taskInfo, const uint32_t mach, const uint16_t dimNum,
+void AicTaskInitV2(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum,
     const uint32_t flag, const LaunchTaskCfgInfo_t * const launchTaskCfg)
 {
-    AicTaskInitCommon(taskInfo, mach, dimNum, flag, false);
+    AicTaskInitCommon(taskInfo, kernelAttrType, dimNum, flag, false);
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
 
     if (launchTaskCfg != nullptr) {
@@ -381,7 +380,7 @@ void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t *const command)
 }
 
 void TransDavinciTaskToVectorCore(const uint32_t flags, uint64_t addr2, uint64_t &addr1,
-    uint8_t &mixType, uint32_t &kernelType, const bool isLaunchVec)
+    uint8_t &mixType, rtKernelAttrType &kernelAttrType, const bool isLaunchVec)
 {
     if (((flags & RT_STREAM_VECTOR_CORE_USE) == 0U) && (!isLaunchVec)) {
         return;
@@ -391,7 +390,7 @@ void TransDavinciTaskToVectorCore(const uint32_t flags, uint64_t addr2, uint64_t
     */
     addr1 = addr2;
     mixType = static_cast<uint8_t>(NO_MIX);
-    kernelType = static_cast<uint32_t>(Program::MACH_AI_VECTOR);
+    kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
 }
 
 void SetResultForDavinciTask(TaskInfo* taskInfo, const void *const data, const uint32_t dataSize)
@@ -419,34 +418,19 @@ void SetPcTrace(TaskInfo *taskInfo, std::shared_ptr<PCTrace> pcTracePtr)
     taskInfo->pcTrace = std::move(pcTracePtr);
 }
 
-static void SetFftsTypeByFuncType(const uint32_t funcType, RtFftsPlusKernelSqe * const sqe)
+static void ConstructFFTSPlusFFTSType(const rtKernelAttrType kernelAttrType, RtFftsPlusKernelSqe * const sqe)
 {
-    switch (funcType) {
-        case KERNEL_FUNCTION_TYPE_AIC:
-        case KERNEL_FUNCTION_TYPE_AIC_ROLLBACK:
-            sqe->fftsType = TS_FFTS_TYPE_AIC_ONLY;
-            break;
-        case KERNEL_FUNCTION_TYPE_AIV:
-        case KERNEL_FUNCTION_TYPE_AIV_ROLLBACK:
+    switch (kernelAttrType) {
+        case RT_KERNEL_ATTR_TYPE_VECTOR:
             sqe->fftsType = TS_FFTS_TYPE_AIV_ONLY;
             break;
-        default:
-            sqe->fftsType = TS_FFTS_TYPE_AIC_ONLY;
-            break;
-    }
-}
-
-static void ConstructFFTSPlusFFTSType(const uint32_t machine, const uint32_t type, RtFftsPlusKernelSqe * const sqe)
-{
-    switch (machine) {
-        case Program::MACH_AI_VECTOR:
-            sqe->fftsType = TS_FFTS_TYPE_AIV_ONLY;
-            break;
-        case Program::MACH_AI_CVMIX:
-            sqe->fftsType = TS_FFTS_TYPE_AIC_AIV_MIX;
-            break;
-        case Program::MACH_AI_MIX_KERNEL:
-            SetFftsTypeByFuncType(type, sqe);
+        case RT_KERNEL_ATTR_TYPE_AICORE:
+            if ((IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(),
+                                         RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_MACHINE_CVMIX))) {
+                sqe->fftsType = TS_FFTS_TYPE_AIC_AIV_MIX;
+            } else {
+                sqe->fftsType = TS_FFTS_TYPE_AIC_ONLY;
+            }
             break;
         default:
             sqe->fftsType = TS_FFTS_TYPE_AIC_ONLY;
@@ -936,7 +920,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
         }
     }
     sqe->header.task_id = taskInfo->id;
-    ConstructFFTSPlusFFTSType(aicTaskInfo->machine, funcType, sqe);
+    ConstructFFTSPlusFFTSType(aicTaskInfo->kernel->GetKernelAttrType(), sqe);
     sqe->header.wr_cqe = stm->GetStarsWrCqeFlag();
     sqe->header.block_dim = aicTaskInfo->comm.dim;
     sqe->header.rt_stream_id = static_cast<uint16_t>(stm->Id_());
@@ -948,11 +932,11 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     sqe->kernel_credit = GetAicoreKernelCredit(aicTaskInfo->timeout);
     
     RT_LOG(RT_LOG_INFO, "bindFlag=%d, biuperfProfFla=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
-        "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, machine=%u, "
+        "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%d, "
         "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
         Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode, taskInfo->type, aicTaskInfo->comm.kernelFlag,
-        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, aicTaskInfo->machine,
+        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, aicTaskInfo->kernel->GetKernelAttrType(),
         minStackSize, stackSize, stackPhyBase);
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC)) {

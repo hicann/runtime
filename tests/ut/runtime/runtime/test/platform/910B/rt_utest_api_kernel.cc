@@ -113,7 +113,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAddr)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
@@ -123,9 +123,9 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAddr)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSize)
 {
-    ElfProgram program(Program::MACH_AI_VECTOR);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t aicSize = 0;
     size_t aivSize = 0;
@@ -158,7 +158,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetName)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
     rtError_t error = rtsFuncGetName(&kernel, 128, name);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -169,7 +169,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetNameFail)
     ApiImpl apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     char_t name[128];
     rtError_t error = apiImpl.FuncGetName(&kernel,128, name);
@@ -180,7 +180,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetNameMaxLenFail)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
     rtError_t error = rtsFuncGetName(&kernel, 1, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -283,7 +283,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAddrWithProgramNull)
     ApiImpl apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, nullptr, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
@@ -372,13 +372,13 @@ TEST_F(CloudV2ApiKernelTest, MemcpyBatchAsync)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
 {
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     int64_t attrValue = 0;
     rtError_t error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -400,9 +400,9 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
 {
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     kernel.SetMixType(NO_MIX);
     kernel.SetTaskRation(0);
 
@@ -440,9 +440,9 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
 
 TEST_F(CloudV2ApiKernelTest, TestFunctionGetBinary)
 {
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     rtBinHandle binHandle = nullptr;
 
     int64_t attrValue = 0;
@@ -467,8 +467,8 @@ TEST_F(CloudV2ApiKernelTest, TestFunctionGetBinary)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
 {
-    ElfProgram program(Program::MACH_AI_VECTOR);
-    Kernel kernelAicObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
+    Kernel kernelAicObj("testKernelName", 1, &program, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 0, 0, 0, 0);
     kernelAicObj.SetKernelLength1(10);
 
     size_t aicSize = 0;
@@ -480,9 +480,9 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAivWithKernelType)
 {
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
-    Kernel kernelObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
-    kernelObj.SetKernelType_(Program::MACH_AI_VECTOR);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
+    Kernel kernelObj("testKernelName", 1, &program, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 0, 0, 0, 0);
+    kernelObj.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     kernelObj.SetKernelLength1(10);
 
     size_t aicSize = 0;
@@ -494,8 +494,8 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAivWithKernelType)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithMixOnlyAiv)
 {
-    ElfProgram program(Program::MACH_AI_CORE);
-    Kernel kernelObj(nullptr, "testKernelName", 1, &program, 2048, 0, 0, 0, 0);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernelObj("testKernelName", 1, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 0, 0, 0, 0);
     kernelObj.SetMixType(MIX_AIV);
     kernelObj.SetKernelLength1(10);
 
@@ -508,9 +508,9 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithMixOnlyAiv)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSchedMode)
 {
-    ElfProgram program(Program::MACH_AI_VECTOR);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 1024, 0, 0, 0);
 
     kernel.SetSchedMode(RT_SCHEM_MODE_NORMAL);
     int64_t attrValue = 0;

@@ -33,6 +33,7 @@
 #include "toolchain/prof_api.h"
 #include "thread_local_container.hpp"
 #include "onlineprof.hpp"
+#include "../../data/elf.h"
 #undef protected
 #undef private
 
@@ -252,10 +253,10 @@ TEST_F(ProfilerTest, GetKenerlName)
 
     memset_s(&devBin, sizeof(rtDevBinary_t), 0, sizeof(rtDevBinary_t));
 
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 0;
-    devBin.data = binary;
-    devBin.length = sizeof(binary);
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
 
     error = rtDevBinaryRegister(&devBin, &bin_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -264,7 +265,7 @@ TEST_F(ProfilerTest, GetKenerlName)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     kernel = rt->KernelLookup(&stub_func);
-    EXPECT_EQ("__foo__", kernel->Name_());
+    EXPECT_EQ("__foo__", kernel->StubName_());
 
     error = rtDevBinaryUnRegister(bin_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -872,10 +873,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error2 = rtDevBinaryRegister(&devBin, &binHandle_);
         rtError_t error3 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);
     }
@@ -1431,7 +1432,7 @@ TEST_F(ProfilerTest, DevBinaryRegister_ProfileLog)
     devBin.length = sizeof(binary);
     devBin.data = binary;
 
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
@@ -2299,7 +2300,7 @@ TEST_F(ProfilerTest, RegisterAllKernel)
     devBin.version = 1;
     devBin.length = sizeof(binary);
     devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     ApiImpl* apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::RegisterAllKernel).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2333,7 +2334,7 @@ TEST_F(ProfilerTest, BinaryLoad)
     devBin.version = 1;
     devBin.length = sizeof(binary);
     devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     ApiImpl* apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::BinaryLoad).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2355,16 +2356,15 @@ TEST_F(ProfilerTest, BinaryLoad_02)
     devBin.version = 1;
     devBin.length = sizeof(binary);
     devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     ApiImpl* apiImpl_ = new ApiImpl();
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
     profiler->SetApiProfEnable(true);
     NpuDriver drv;
 
-    MOCKER_CPP_VIRTUAL(drv,&NpuDriver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     auto error = profiler->apiProfileDecorator_->BinaryLoad(&devBin, &program);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     profiler->SetApiProfEnable(false);
     delete apiImpl_;
 }
@@ -2377,7 +2377,7 @@ TEST_F(ProfilerTest, BinaryLoad_03)
     devBin.version = 1;
     devBin.length = sizeof(binary);
     devBin.data = binary;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     ApiImpl* apiImpl_ = new ApiImpl();
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;

@@ -795,7 +795,7 @@ TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 TIMESTAMP_EXTERN(rtKernelLaunch_CpuArgLoad);
 
 rtError_t Context::LaunchKernelPrepare(
-    Kernel *&registeredKernel, Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
+    Kernel *&registeredKernel, Program *&prog, rtKernelAttrType &kernelAttrType, Module *&mdl, const void * const stubFunc,
     uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
     uint32_t &prefetchCnt1, uint32_t &prefetchCnt2)
 {
@@ -819,12 +819,13 @@ rtError_t Context::LaunchKernelPrepare(
     // 如果tiling key为默认值，则依赖tilingKey的信息做默认值初始化
     if (tilingKey == DEFAULT_TILING_KEY) {
         prog = nullptr;
-        kernelType = Program::MACH_AI_CORE;
+        kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
         if (device_->GetDevProperties().enabledTSNum == ENABLED_TS_NUM_2) {
             const uint32_t tsId = device_->DevGetTsId();
-            COND_RETURN_ERROR_MSG_INNER(((kernelType == Program::MACH_AI_CORE) && (tsId == 1U)) ||
-                ((kernelType == Program::MACH_AI_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
-                "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelType, tsId);
+            COND_RETURN_ERROR_MSG_INNER((((kernelAttrType == RT_KERNEL_ATTR_TYPE_AICORE) ||
+                (kernelAttrType == RT_KERNEL_ATTR_TYPE_CUBE)) && (tsId == 1U)) ||
+                ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
+                "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelAttrType, tsId);
         }
         addr1 = 0ULL;
         addr2 = 0ULL;
@@ -844,24 +845,22 @@ rtError_t Context::LaunchKernelPrepare(
     COND_RETURN_ERROR_MSG_INNER((progHandle != nullptr) && (prog != RtPtrToPtr<Program *, void *>(progHandle)),
         RT_ERROR_PROGRAM_BASE, "Kernel prog is not belong to the launch prog.");
 
-    kernelType = prog->Machine();
-    if (kernelType == Program::MACH_AI_MIX_KERNEL) {
-        kernelType = registeredKernel->KernelType_();
-    }
-    COND_RETURN_ERROR_MSG_INNER(kernelType == Program::MACH_INVALID_CPU,
+    kernelAttrType = registeredKernel->GetKernelAttrType();
+    COND_RETURN_ERROR_MSG_INNER(kernelAttrType == RT_KERNEL_ATTR_TYPE_INVALID,
         RT_ERROR_PROGRAM_MACHINE_TYPE,
-        "Launch kernel failed, machine failed! invalid type, current kernelType=%u,"
-        " valid kernelType range is [%u, %u].",
-        kernelType, Program::MACH_AI_CORE, Program::MACH_AI_CVMIX);
-    COND_RETURN_ERROR_MSG_INNER(kernelType == Program::MACH_AI_CPU,
+        "Launch kernel failed, kernelAttrType failed! invalid type, current kernelAttrType=%d,"
+        " valid kernelAttrType range is [%u, %u].",
+        kernelAttrType, RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_ATTR_TYPE_MIX);
+    COND_RETURN_ERROR_MSG_INNER(kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU,
         RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Launch kernel failed, not support CCE Aicpu kernel task, type=%u.", kernelType);
+        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%d.", kernelAttrType);
 
     if (device_->GetDevProperties().enabledTSNum == ENABLED_TS_NUM_2) {
         const uint32_t tsId = device_->DevGetTsId();
-        COND_RETURN_ERROR_MSG_INNER(((kernelType == Program::MACH_AI_CORE) && (tsId == 1U)) ||
-            ((kernelType == Program::MACH_AI_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
-            "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelType, tsId);
+        COND_RETURN_ERROR_MSG_INNER((((kernelAttrType == RT_KERNEL_ATTR_TYPE_AICORE) ||
+            (kernelAttrType == RT_KERNEL_ATTR_TYPE_CUBE)) && (tsId == 1U)) ||
+            ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
+            "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelAttrType, tsId);
     }
     mdl = GetModule(prog);
     TIMESTAMP_END(rtKernelLaunch_GetModule);
@@ -874,7 +873,7 @@ rtError_t Context::LaunchKernelPrepare(
     return error;
 }
 
-rtError_t Context::UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel, const uint32_t kernelType,
+rtError_t Context::UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel,
                                      const Stream * const stm) const
 {
     COND_RETURN_ERROR(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
@@ -896,13 +895,13 @@ rtError_t Context::UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel *
 
     if ((updateTask->u.aicTaskInfo.kernel->GetMixType() != kernel->GetMixType()) ||
         (updateTask->u.aicTaskInfo.kernel->GetFuncType() != kernel->GetFuncType()) ||
-        (updateTask->u.aicTaskInfo.machine != static_cast<uint8_t>(kernelType))) {
+        (updateTask->u.aicTaskInfo.kernel->GetKernelAttrType() != kernel->GetKernelAttrType())) {
         RT_LOG(RT_LOG_ERROR, "check kernel type failed, device_id=%u, stream_id=%d, task_id=%hu, "
-            "old mixType=%u, funcType=%u, machine=%u, "
-            "new mixType=%u, funcType=%u, machine=%u.",
+            "old mixType=%u, funcType=%u, kernelAttrType=%d, "
+            "new mixType=%u, funcType=%u, kernelAttrType=%d.",
             device_->Id_(), updateTask->stream->Id_(), updateTask->id, updateTask->u.aicTaskInfo.kernel->GetMixType(),
-            updateTask->u.aicTaskInfo.kernel->GetFuncType(), updateTask->u.aicTaskInfo.machine,
-            kernel->GetMixType(), kernel->GetFuncType(), kernelType);
+            updateTask->u.aicTaskInfo.kernel->GetFuncType(), updateTask->u.aicTaskInfo.kernel->GetKernelAttrType(),
+            kernel->GetMixType(), kernel->GetFuncType(), kernel->GetKernelAttrType());
         return RT_ERROR_KERNEL_TYPE;
     }
 
@@ -1209,7 +1208,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     Stream *stm, const uint32_t flag, const TaskCfg * const taskcfg, const bool isLaunchVec)
 {
     rtError_t error;
-    uint32_t kernelType = 0U;
+    rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
     ArgLoaderResult result = {};
     bool copyFlag = true;
 
@@ -1235,7 +1234,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(registeredKernel, prog, kernelType, launchMdl, stubFunc,
+    error = LaunchKernelPrepare(registeredKernel, prog, kernelAttrType, launchMdl, stubFunc,
         addr1, addr2, nullptr, 0, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
@@ -1247,7 +1246,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     }
 
     if (kernTask->isUpdateSinkSqe == 1U) {
-        error = UpdateTaskPrepare(kernTask, registeredKernel, kernelType, stm);
+        error = UpdateTaskPrepare(kernTask, registeredKernel, stm);
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
             "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.",
             stm->Id_(), kernTask->id, error);
@@ -1257,7 +1256,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - static_cast<uint32_t>(CONTEXT_ALIGN_LEN))) &&
         !stm->NonSupportModelCompile() && !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadForMix);
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Mix Failed to load args , stream_id=%d,"
                              " retCode=%#x.", stm->Id_(), error);
@@ -1266,7 +1265,7 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoad);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
+        error = device_->ArgLoader_()->Load(argsInfo, stm, &result);
         TIMESTAMP_END(rtKernelLaunch_ArgLoad);
         ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to load args, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), error);
@@ -1275,15 +1274,15 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
         // do nothing
     }
     if (noMixFlag) {
-        TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelType, isLaunchVec);
+        TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelAttrType, isLaunchVec);
     }
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE,
-        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelType=%u, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelType, error);
+        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
+        stm->Id_(), kernTask->id, kernelAttrType, error);
 
     COND_PROC(((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))), isNeedAllocSqeDevBuf = true);
-    AicTaskInit(kernTask, kernelType, static_cast<uint16_t>(coreDim), flag, taskcfg, isNeedAllocSqeDevBuf);
+    AicTaskInit(kernTask, kernelAttrType, static_cast<uint16_t>(coreDim), flag, taskcfg, isNeedAllocSqeDevBuf);
 
     aicTask = &kernTask->u.aicTaskInfo;
     if (copyFlag) {
@@ -1301,11 +1300,11 @@ rtError_t Context::LaunchKernel(const void * const stubFunc, const uint32_t core
     registeredKernel->SetPrefetchCnt1_(prefetchCnt1);
     registeredKernel->SetPrefetchCnt2_(prefetchCnt2);
 
-    RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, "
+    RT_LOG(RT_LOG_INFO, "device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, "
         "arg_size=%u, taskRation=%u, funcType=%u, coreDim=%u, mixType=%hhu, addr1=0x%llx, addr2=0x%llx, "
         "stubFunc=%p, flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
         "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
-        device_->Id_(), stm->Id_(), kernTask->id, kernelType, registeredKernel->Name_().c_str(), argsInfo->argsSize,
+        device_->Id_(), stm->Id_(), kernTask->id, kernelAttrType, registeredKernel->Name_().c_str(), argsInfo->argsSize,
         registeredKernel->GetTaskRation(), registeredKernel->GetFuncType(), coreDim, mixType, addr1, addr2,
         stubFunc, flag, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
         aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
@@ -1325,7 +1324,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     const rtTaskCfgInfo_t * const cfgInfo, const bool isLaunchVec)
 {
     rtError_t error;
-    uint32_t kernelType = 0U;
+    rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
     ArgLoaderResult result = {};
     bool copyFlag = true;
     uint8_t mixType = NO_MIX;
@@ -1355,7 +1354,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d."
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = LaunchKernelPrepare(registeredKernel, prog, kernelType, launchMdl, nullptr,
+    error = LaunchKernelPrepare(registeredKernel, prog, kernelAttrType, launchMdl, nullptr,
         addr1, addr2, progHandle, tilingKey, prefetchCnt1, prefetchCnt2);
     COND_PROC_RETURN_ERROR_MSG_INNER((error == RT_ERROR_MEMORY_ADDRESS_UNALIGNED) || (error == RT_ERROR_KERNEL_NULL),
         error, LaunchKernelRecycle(result, kernTask, nullptr);, "kernel launch kernel prepare failed.");
@@ -1369,7 +1368,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     }
 
     if (kernTask->isUpdateSinkSqe == 1U) {
-        error = UpdateTaskPrepare(kernTask, registeredKernel, kernelType, stm);
+        error = UpdateTaskPrepare(kernTask, registeredKernel, stm);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE,
             "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.",
             stm->Id_(), kernTask->id, error);
@@ -1379,7 +1378,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
        (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
        !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAllForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAllForMix);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args, stream_id=%d,"
                              " retCode=%#x.", stm->Id_(), error);
@@ -1389,7 +1388,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
                (kernTask->isUpdateSinkSqe == 1U)) {
         // 只要不预留pcie,都走公共load流程
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAll);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
+        error = device_->ArgLoader_()->Load(argsInfo, stm, &result);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAll);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to load args, stream_id=%d,"
         " retCode=%#x.", stm->Id_(), error);
@@ -1398,13 +1397,13 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
         // do nothing
     }
     if (noMixFlag) {
-        TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelType, isLaunchVec);
+        TransDavinciTaskToVectorCore(stm->Flags(), addr2, addr1, mixType, kernelAttrType, isLaunchVec);
     }
 
     error = CheckMixKernelValid(mixType, addr2);
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE,
-        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelType=%u, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelType, error);
+        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
+        stm->Id_(), kernTask->id, kernelAttrType, error);
 
     if (cfgInfo != nullptr) {
         taskCfg.isBaseValid = 1U;
@@ -1412,7 +1411,7 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
     }
     COND_PROC(((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))), isNeedAllocSqeDevBuf = true);
 
-    AicTaskInit(kernTask, kernelType, static_cast<uint16_t>(coreDim), flag, &taskCfg, isNeedAllocSqeDevBuf);
+    AicTaskInit(kernTask, kernelAttrType, static_cast<uint16_t>(coreDim), flag, &taskCfg, isNeedAllocSqeDevBuf);
 
     aicTask = &kernTask->u.aicTaskInfo;
     if (copyFlag) {
@@ -1437,11 +1436,11 @@ rtError_t Context::LaunchKernelWithHandle(void * const progHandle, const uint64_
         registeredKernel->SetPrefetchCnt2_(prefetchCnt2);
     }
 
-    RT_LOG(RT_LOG_INFO, "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, "
+    RT_LOG(RT_LOG_INFO, "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, "
            "arg_size=%u, coreDim=%u, mixType=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
            "flag=%lu, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
            "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
-           device_->Id_(), stm->Id_(), kernTask->id, kernelType,
+           device_->Id_(), stm->Id_(), kernTask->id, kernelAttrType,
            (tilingKey == DEFAULT_TILING_KEY) ? "" : registeredKernel->Name_().c_str(),
            argsInfo->argsSize, coreDim, mixType, taskRation, funcType, addr1, addr2,
            flag, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
@@ -1478,7 +1477,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
 
     error = kernel->GetFunctionDevAddr(kernelPc1, kernelPc2);
     ERROR_RETURN_MSG_INNER(error, "Launch kernel failed, get function address failed.");
-    uint32_t kernelType = kernel->KernelType_();
+    rtKernelAttrType kernelAttrType = kernel->GetKernelAttrType();
     AicTaskInfo *aicTask = nullptr;
     bool copyFlag = true;
     bool mixOpt = false;
@@ -1491,13 +1490,13 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
     COND_RETURN_ERROR_MSG_INNER(kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d."
         " retCode=%#x.", stm->Id_(), errorReason);
 
-    error = GetPrefetchCntAndMixTypeWithKernel(kernel, prog->Machine(), prefetchCnt1, prefetchCnt2, mixType);
+    error = GetPrefetchCntAndMixTypeWithKernel(kernel, prefetchCnt1, prefetchCnt2, mixType);
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX)) {
                 mixType = static_cast<uint8_t>(NO_MIX);
     }
 
     if (kernTask->isUpdateSinkSqe == 1U) {
-        error = UpdateTaskPrepare(kernTask, kernel, kernelType, stm);
+        error = UpdateTaskPrepare(kernTask, kernel, stm);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE,
             "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.",
             stm->Id_(), kernTask->id, error);
@@ -1507,7 +1506,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
         (argsInfo->argsSize <= (PCIE_BAR_COPY_SIZE - CONTEXT_ALIGN_LEN)) && !stm->NonSupportModelCompile() &&
         !(stm->IsTaskGrouping()) && (kernTask->isUpdateSinkSqe == 0U)) {
         TIMESTAMP_BEGIN(rtKernelLaunch_ArgLoadAllForMix);
-        error = device_->ArgLoader_()->LoadForMix(kernelType, argsInfo, stm, &result, mixOpt);
+        error = device_->ArgLoader_()->LoadForMix(argsInfo, stm, &result, mixOpt);
         TIMESTAMP_END(rtKernelLaunch_ArgLoadAllForMix);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Mix Failed to load args, stream_id=%d,"
                               " retCode=%#x.", stm->Id_(), error);
@@ -1516,7 +1515,7 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
                (!stm->isHasPcieBar_) || IsCapturedTask(stm, kernTask)) ||
                (kernTask->isUpdateSinkSqe == 1U)) {
         TIMESTAMP_BEGIN(rtLaunchKernel_ArgLoadAll);
-        error = device_->ArgLoader_()->Load(kernelType, argsInfo, stm, &result);
+        error = device_->ArgLoader_()->Load(argsInfo, stm, &result);
         TIMESTAMP_END(rtLaunchKernel_ArgLoadAll);
         ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to load args, stream_id=%d, retCode=%#x.",
                              stm->Id_(), error);
@@ -1525,19 +1524,19 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
         // do nothing
     }
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_CANNOT_MIX)) {
-        TransDavinciTaskToVectorCore(stm->Flags(), kernelPc2, kernelPc1, mixType, kernelType, isLaunchVec);
+        TransDavinciTaskToVectorCore(stm->Flags(), kernelPc2, kernelPc1, mixType, kernelAttrType, isLaunchVec);
     }
     error = CheckMixKernelValid(mixType, kernelPc2);
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE,
-        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelType=%u, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelType, error);
+        "Mix kernel check failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
+        stm->Id_(), kernTask->id, kernelAttrType, error);
 
     COND_PROC(((kernTask->isUpdateSinkSqe == 1U) && (!(kernTask->stream->IsSoftwareSqEnable()))), isNeedAllocSqeDevBuf = true);
 
-    AicTaskInit(kernTask, kernelType, static_cast<uint16_t>(coreDim), 0, taskcfg, isNeedAllocSqeDevBuf);
+    AicTaskInit(kernTask, kernelAttrType, static_cast<uint16_t>(coreDim), 0, taskcfg, isNeedAllocSqeDevBuf);
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE,
-        "Init kernel task failed, stream_id=%d, task_id=%hu, kernelType=%u, retCode=%#x.",
-        stm->Id_(), kernTask->id, kernelType, error);
+        "Init kernel task failed, stream_id=%d, task_id=%hu, kernelAttrType=%d, retCode=%#x.",
+        stm->Id_(), kernTask->id, kernelAttrType, error);
 
     aicTask = &kernTask->u.aicTaskInfo;
     if (copyFlag) {
@@ -1552,11 +1551,11 @@ rtError_t Context::LaunchKernel(Kernel * const kernel, const uint32_t coreDim, c
     kernel->SetPrefetchCnt1_(prefetchCnt1);
     kernel->SetPrefetchCnt2_(prefetchCnt2);
 
-    RT_LOG(RT_LOG_INFO, "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelType=%u, kernel_name=%s, arg_size=%u, "
+    RT_LOG(RT_LOG_INFO, "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, arg_size=%u, "
         "coreDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
         "prefetchCnt1=%u, prefetchCnt2=%u, isNoNeedH2DCopy=%u.",
-        device_->Id_(), stm->Id_(), kernTask->id, kernelType, kernel->Name_().c_str(),
+        device_->Id_(), stm->Id_(), kernTask->id, kernelAttrType, kernel->Name_().c_str(),
         argsInfo->argsSize, coreDim, kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2,
         mixType, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
         aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
@@ -1844,7 +1843,7 @@ rtError_t Context::GetDevArgsAddr(Stream * const stm, const rtArgsEx_t * const a
     void ** const argsHandle) const
 {
     ArgLoaderResult result = {};
-    const rtError_t error = stm->Device_()->ArgLoader_()->Load(0U, argsInfo, stm, &result);
+    const rtError_t error = stm->Device_()->ArgLoader_()->Load(argsInfo, stm, &result);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Failed to load args, stream_id=%d,"
     " retCode=%#x.", stm->Id_(), error);
 

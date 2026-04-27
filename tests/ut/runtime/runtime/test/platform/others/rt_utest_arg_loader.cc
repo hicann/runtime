@@ -168,7 +168,7 @@ TEST_F(ChipArgLoaderTest, uma_arg_loader_rollback)
 
     MOCKER_CPP(&H2DCopyMgr::AllocDevMem, void* (H2DCopyMgr::*)(const bool)).stubs().will(returnValue((void *)NULL));
 
-    error = loader->Load(Program::MACH_AI_CORE, &argsInfo, stream, &result);
+    error = loader->Load(&argsInfo, stream, &result);
     EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 
     rtInstance->SetChipType(oriChipType);

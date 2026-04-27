@@ -61,10 +61,11 @@ TEST_F(FillFftsPlusMixSqeSubtaskTest, main_aic)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     taskInfo.kernel = kernel;
     kernel->SetMixType(MIX_AIC_AIV_MAIN_AIV);
 
@@ -80,10 +81,11 @@ TEST_F(FillFftsPlusMixSqeSubtaskTest, default_case)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     taskInfo.kernel = kernel;
     kernel->SetMixType(NO_MIX);
 

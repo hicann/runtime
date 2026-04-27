@@ -159,8 +159,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL,
     RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_AICORE_MIX,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RtOptionalFeatureType::RT_FEATURE_DFX_FLOAT_OVERFLOW_DEBUG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
@@ -170,7 +168,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DOT_GET_GROUP_AIC_NUM,
     RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX_DEGENERATE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
@@ -363,6 +360,7 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .maxTaskNumPerStream = 2014U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DAVID, CHIP_DAVID_PROPERTIES);

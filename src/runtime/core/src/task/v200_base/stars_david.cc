@@ -326,7 +326,7 @@ static void ConstructDavidAICpuSqeByHandleForDavinciMultipleTask(TaskInfo * cons
     params.kernelNameAddr = kernelNameAddr;
     params.argsInfo = aicpuTaskByHandle.argsInfo;
     params.isUnderstudyOp = aicpuTaskByHandle.isUnderstudyOp;
-    params.kernelType = hdl->KernelType_();
+    params.kernelType = hdl->GetAicpuKernelType_();
     params.blockDim = aicpuTaskByHandle.blockDim;
 
     CommonConstructDavidAICpuSqe(taskInfo, command, sqBaseAddr, &params);
