@@ -725,7 +725,6 @@ target_link_libraries(runtimeut_src_static_lib PRIVATE $<BUILD_INTERFACE:runtime
 set(stub_src_list
     stub/atrace_stub.cc
     stub/awatch_dog_stub.cc
-    stub/cond_launch_stub.cc
     stub/error_manager_stub.cc
     stub/log_stub.cc
     stub/prof_stub.cc

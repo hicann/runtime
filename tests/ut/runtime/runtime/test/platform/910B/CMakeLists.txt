@@ -379,7 +379,6 @@ target_link_libraries(runtime_ut_910b_static_lib PRIVATE $<BUILD_INTERFACE:runti
 set(runtimeut_910b_stub_list
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/atrace_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/awatch_dog_stub.cc
-    ${TOP_DIR}/tests/ut/runtime/runtime/stub/cond_launch_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/error_manager_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/log_stub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/stub/prof_stub.cc
