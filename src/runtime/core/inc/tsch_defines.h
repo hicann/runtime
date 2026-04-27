@@ -615,7 +615,9 @@ typedef struct {
 typedef struct {
     volatile uint32_t sqId;
     volatile uint32_t tsId;
+    volatile uint32_t stream_id;
     volatile uint32_t priority;
+    volatile uint32_t resv[4];
 } ts_update_and_query_stream_priority_t;
 
 typedef struct {

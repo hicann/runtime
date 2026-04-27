@@ -1630,6 +1630,9 @@ rtError_t NpuDriver::GetStreamPriorityValue(Stream * const stm, uint32_t * const
     uint32_t sqId = stm->GetSqId();
     streamPriorityIn.u.update_and_query_stream_priority.sqId = sqId;
     streamPriorityIn.u.update_and_query_stream_priority.tsId = tsId;
+    for (int i = 0; i < 4; i++) {
+        streamPriorityIn.u.update_and_query_stream_priority.resv[i] = 0;
+    }
     uint32_t deviceId = stm->Device_()->Id_();
     struct tsdrv_ctrl_msg para;
     para.tsid = tsId;
