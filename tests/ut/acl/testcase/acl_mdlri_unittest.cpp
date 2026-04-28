@@ -313,6 +313,11 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskGetParams)
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
     ret = aclmdlRITaskGetParams(task, &params);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskGetParams(_,_))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclmdlRITaskGetParams(task, &params);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskSetParams)
@@ -326,6 +331,11 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskSetParams)
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
     ret = aclmdlRITaskSetParams(task, &params);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskSetParams(_,_))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclmdlRITaskSetParams(task, &params);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskDisable)
@@ -338,6 +348,11 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskDisable)
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
     ret = aclmdlRITaskDisable(task);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskDisable(_))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclmdlRITaskDisable(task);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRIUpdate)
@@ -350,4 +365,9 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRIUpdate)
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
     ret = aclmdlRIUpdate(modelRI);
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelUpdate(_))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    ret = aclmdlRIUpdate(modelRI);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }

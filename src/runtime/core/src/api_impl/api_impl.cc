@@ -8764,7 +8764,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
 {
     TaskInfo* const taskInfo = static_cast<TaskInfo *>(task);
     rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
-    ERROR_RETURN(error, "check capture model failed");
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
@@ -8869,7 +8869,7 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
 {
     TaskInfo* const taskInfo = static_cast<TaskInfo *>(task);
     rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
-    ERROR_RETURN(error, "check capture model failed");
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
     NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);

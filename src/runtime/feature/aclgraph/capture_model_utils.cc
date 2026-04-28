@@ -136,19 +136,16 @@ rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev)
     if (!(dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE))) {
         const rtChipType_t chipType = Runtime::Instance()->GetChipType();
         RT_LOG(RT_LOG_WARNING, "chipType=%d does not support", chipType);
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     if (!(dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
         RT_LOG(RT_LOG_WARNING, "tsfw does not support");
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     if (!(NpuDriver::CheckIsSupportFeature(dev->Id_(), FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND))) {
         RT_LOG(RT_LOG_WARNING, "drv does not support");
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
         return RT_ERROR_DRV_NOT_SUPPORT;
     }
 
