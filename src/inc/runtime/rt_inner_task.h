@@ -128,6 +128,19 @@ RTS_API rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params);
 
 /**
  * @ingroup rt_task
+ * @brief Get kernel task launch config info
+ * @details Get the launch config info for the specified kernel task
+ * @note  This API only supports AclGraph
+ * @param task [in] task handle
+ * @param attrId [in] the id for config info
+ * @param attrValue [out] Output config value corresponding to the attrId
+ * @retval RT_ERROR_NONE for ok
+ * @retval OtherValues Failure
+ */
+RTS_API rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue);
+
+/**
+ * @ingroup rt_task
  * @brief Set the task to disabled
  * @param [in, out] task: task handle
  * @return RT_ERROR_NONE for ok

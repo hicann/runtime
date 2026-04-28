@@ -287,6 +287,20 @@ aclError aclmdlRITaskSetParamsImpl(aclmdlRITask task, aclmdlRITaskParams* params
     return ACL_SUCCESS;
 }
 
+aclError aclmdlRIKernelTaskGetAttributeImpl(aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue *attrValue)
+{
+    ACL_PROFILING_REG(acl::AclProfType::aclmdlRIKernelTaskGetAttribute);
+    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(task);
+    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrValue);
+    const auto rtErr = rtModelKernelTaskGetAttribute(static_cast<rtTask_t>(task), static_cast<rtLaunchKernelAttrId>(attrId),
+        reinterpret_cast<rtLaunchKernelAttrVal_t*>(attrValue));
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("Get kernel task attribute failed, runtime result = %d", rtErr);
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclrtKernelArgsInitImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHandle)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsInit");

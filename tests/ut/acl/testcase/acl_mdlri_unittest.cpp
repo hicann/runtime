@@ -338,6 +338,20 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskSetParams)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRIKernelTaskGetAttribute)
+{
+    aclmdlRITask task = (aclmdlRITask)0x01;
+    aclrtLaunchKernelAttrId attrId = ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE;
+    aclrtLaunchKernelAttrValue attrValue;
+    auto ret = aclmdlRIKernelTaskGetAttribute(task, attrId, &attrValue);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelKernelTaskGetAttribute(_,_,_))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    ret = aclmdlRIKernelTaskGetAttribute(task, attrId, &attrValue);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskDisable)
 {
     aclmdlRITask task = (aclmdlRITask)0x01;

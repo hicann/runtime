@@ -8801,6 +8801,12 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::KernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue)
+{
+    const TaskInfo* const taskInfo = static_cast<const TaskInfo *>(task);
+    return GetKernelAttribute(taskInfo, attrId, attrValue);
+}
+
 rtError_t ApiImpl::ModelUpdate(Model* mdl)
 {
     const Stream* stm = mdl->StreamList_().back();

@@ -241,7 +241,90 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const param
     return RT_ERROR_NONE;
 }
 
-rtError_t GetOpExecuteMsTimeout(uint32_t *const timeout)
+//              API     TaskInfo    返回情况
+// 永不超时       0        全F          0
+// 默认超时     不配置      0         实际超时
+// 其他超时     其他值    其他值       实际超时
+static rtError_t ConvertTimeoutByAttrId(uint64_t timeout, rtLaunchKernelAttrId attrId,
+    rtLaunchKernelAttrVal_t *attrValue)
+{
+    uint64_t realTimeout;  // us
+    RT_LOG(RT_LOG_INFO, "timeout(us) in config=%llu", timeout);
+    if (timeout == MAX_UINT64_NUM) {
+        realTimeout = 0ULL;
+    } else {
+        uint32_t opTimeout = 0U;
+        rtError_t error = GetOpExecuteMsTimeout(&opTimeout, &timeout);
+        ERROR_RETURN(error, "cannot get system timeout");
+        // 0: 用户未配置, 默认超时； 非0: 当前实际超时
+        realTimeout = (timeout == 0ULL) ? static_cast<uint64_t>(opTimeout) * RT_TIMEOUT_MS_TO_US : timeout;
+    }
+
+    if (attrId == RT_LAUNCH_KERNEL_ATTR_TIMEOUT) {
+        attrValue->timeout = static_cast<uint16_t>(realTimeout / RT_TIMEOUT_S_TO_US);
+    } else {
+        constexpr uint8_t timeOffset = 32U;
+        attrValue->timeoutUs.timeoutLow = static_cast<uint32_t>(realTimeout);
+        attrValue->timeoutUs.timeoutHigh = static_cast<uint32_t>(realTimeout >> timeOffset);
+    }
+    RT_LOG(RT_LOG_INFO, "the real timeout(us)=%llu", realTimeout);
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetKernelAttribute(const TaskInfo* const taskInfo, rtLaunchKernelAttrId attrId,
+    rtLaunchKernelAttrVal_t *attrValue)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+        ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)),
+        RT_ERROR_INVALID_VALUE, taskInfo->type,
+        std::to_string(TS_TASK_TYPE_KERNEL_AICORE) + " or " + std::to_string(TS_TASK_TYPE_KERNEL_AIVEC));
+
+    RT_LOG(RT_LOG_INFO, "get kernel attrId=%d", attrId);
+    const AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    rtError_t ret = RT_ERROR_NONE;
+    switch (attrId) {
+        case RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE:
+            // RT_SCHEM_MODE_END表示未通过API配置此属性
+            if (aicTaskInfo->schemMode == RT_SCHEM_MODE_END) {
+                // kernel为空则返回默认Mode(0)
+                attrValue->schemMode = (aicTaskInfo->kernel == nullptr) ? 0U : aicTaskInfo->kernel->GetSchedMode();
+            } else {
+                attrValue->schemMode = aicTaskInfo->schemMode;
+            }
+            RT_LOG(RT_LOG_INFO, "config schemMode=%u, current schemMode=%u",
+                aicTaskInfo->schemMode, attrValue->schemMode);
+            break;
+        case RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE:
+            attrValue->dynUBufSize = aicTaskInfo->dynamicShareMemSize;
+            break;
+        case RT_LAUNCH_KERNEL_ATTR_DATA_DUMP:
+            // 设置的时候，在taskcfg里面将1(enable)转成了RT_KERNEL_DUMPFLAG，0(disable)转成了RT_KERNEL_DEFAULT
+            attrValue->isDataDump = ((aicTaskInfo->comm.kernelFlag & RT_KERNEL_DUMPFLAG) != 0U) ? 1U : 0U;
+            break;
+        case RT_LAUNCH_KERNEL_ATTR_TIMEOUT:
+        case RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US:
+            ret = ConvertTimeoutByAttrId(aicTaskInfo->timeout, attrId, attrValue);
+            break;
+        case RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE:
+        case RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET:
+        case RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH:
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, attrId, "attrId",
+                "not equal (" + std::to_string(RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE) + ", " +
+                std::to_string(RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET) + ", " +
+                std::to_string(RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH) + ")");
+            ret = RT_ERROR_INVALID_VALUE;
+            break;
+        default:
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, attrId, "attrId",
+                "[ " + std::to_string(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE) + ", " +
+                std::to_string(RT_LAUNCH_KERNEL_ATTR_MAX) + ")");
+            ret = RT_ERROR_INVALID_VALUE;
+            break;
+    }
+    return ret;
+}
+
+rtError_t GetOpExecuteMsTimeout(uint32_t *const timeout, uint64_t *customTimeout)
 {
     *timeout = 0U;
     float64_t timeoutUs = 0.0F;
@@ -258,6 +341,14 @@ rtError_t GetOpExecuteMsTimeout(uint32_t *const timeout)
     if (defaultKernelCredit == 0U || (kernelCreditScaleUS < std::numeric_limits<double>::epsilon())) {
         RT_LOG(RT_LOG_WARNING, "Unsupported chip type, chipType=%d.", chipType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    if ((customTimeout != nullptr) && (*customTimeout != 0)) {
+        timeoutUs = kernelCreditScaleUS * static_cast<float64_t>(maxKernelCredit);
+        uint64_t maxTimeout = static_cast<uint64_t>(ceil(timeoutUs));
+        // 实际时间 = min(用户配置, 系统最大值)
+        *customTimeout = (*customTimeout > maxTimeout) ? maxTimeout : *customTimeout;
+        return RT_ERROR_NONE;
     }
 
     // Calculate timeout based on different conditions.

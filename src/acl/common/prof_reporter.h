@@ -293,6 +293,7 @@ namespace acl {
         AclmdlRIDestroyUnregisterCallback,
         AclmdlRITaskGetParams,
         AclmdlRITaskSetParams,
+        aclmdlRIKernelTaskGetAttribute,
         AclmdlRIUpdate,
         AclmdlRITaskDisable,
         AclrtMemManagedGetAttr,

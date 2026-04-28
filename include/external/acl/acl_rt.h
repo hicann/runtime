@@ -3452,6 +3452,19 @@ ACL_FUNC_VISIBILITY aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITa
 
 /**
  * @ingroup AscendCL
+ * @brief Get kernel task launch config info
+ * @details Get the launch config info for the specified kernel task
+ * @note  This API only supports AclGraph 
+ * @param task [in] task handle
+ * @param attrId [in] the id for config info
+ * @param attrValue [out] Output config value corresponding to the attrId
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue *attrValue);
+
+/**
+ * @ingroup AscendCL
  * @brief update model
  * @param modelRI [in] model runtime instance
  * @retval ACL_SUCCESS The function is successfully executed.
