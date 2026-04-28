@@ -16,6 +16,8 @@
 namespace cce {
 namespace runtime {
 
+class Device;
+
 // 单核数据排布 blockData: | blockInfo | readInfo | tlv1 | tlv2 | tlv3 ... | writeInfo |
 // 整体排布：| blockData1 | blockData2 | ... | bloackData75 |
 
@@ -28,7 +30,8 @@ struct BlockInfo {
     uint16_t flag = 0;        // flag value, 0:simd-aic, 1:simd-aiv, 2:simt
     uint32_t rsv = 0;         // DUMP EXC FLAG
     uint64_t dumpAddr = 0;    // 起始printf的地址
-    uint32_t resv[6] = {0U};
+    uint64_t dbgAddr = 0;     // debug bus addr
+    uint32_t resv[4] = {0U};
 };
 
 enum class DumpType : uint32_t  {
@@ -103,7 +106,7 @@ constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AIC = 0U;
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AIV = 1U;
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT = 2U;
 
-rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv);
+rtError_t InitPrintf(void *addr, const size_t blockSize, const Device * const dev);
 rtError_t InitSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv);
 rtError_t ParsePrintf(void *addr, const size_t blockSize, Driver *curDrv);
 rtError_t ParseSimtPrintf(void *addr, const size_t blockSize, Driver *curDrv, const Device * const dev);

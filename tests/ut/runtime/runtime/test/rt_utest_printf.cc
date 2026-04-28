@@ -1391,3 +1391,86 @@ TEST_F(PrintfTest, DumpFP16_InfAndNan)
     cce::runtime::fp16_t num4[] = {data4};
     EXPECT_TRUE(std::isnan(num4[0].toFloat()));
 }
+
+TEST_F(PrintfTest, TestInitPrintf_MaxResMapTypeTooSmall)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER(halGetMaxResMapType).stubs().will(returnValue(0x05));
+
+    auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> hostData(blockSize * totalCoreNum, 0);
+
+    error = InitPrintf(hostData.data(), blockSize, dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(hostData.data());
+    EXPECT_EQ(blockInfo->dbgAddr, 0U);
+
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestInitPrintf_HalResMapFailed)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER(halGetMaxResMapType).stubs().will(returnValue(0x20));
+    MOCKER(halResMap).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> hostData(blockSize * totalCoreNum, 0);
+
+    error = InitPrintf(hostData.data(), blockSize, dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(hostData.data());
+    EXPECT_EQ(blockInfo->dbgAddr, 0U);
+
+    GlobalMockObject::verify();
+    rtDeviceReset(0);
+}
+
+TEST_F(PrintfTest, TestInitPrintf_DebugAddrSuccess)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    RawDevice *dev = (RawDevice *)rtInstance->GetDevice(0U, 0U);
+    dev->simdEnable_ = true;
+    error = dev->ParseSimdPrintInfo();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    const size_t blockSize = 1024 * 1024;
+    std::vector<uint8_t> hostData(blockSize * totalCoreNum, 0);
+
+    error = InitPrintf(hostData.data(), blockSize, dev);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    BlockInfo *blockInfo = RtPtrToPtr<BlockInfo *>(hostData.data());
+    EXPECT_NE(blockInfo->dbgAddr, 0x1000U);
+    EXPECT_EQ(blockInfo->dbgAddr, 0U);
+
+    rtDeviceReset(0);
+}

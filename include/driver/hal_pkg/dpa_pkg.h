@@ -25,6 +25,7 @@ enum res_map_type {
 	RES_HSCB_AICORE,
 	RES_L2BUFF,
 	RES_C2C,
+    RES_DBG_ADDR = 0x10,
 	RES_MAP_TYPE_MAX
 };
 

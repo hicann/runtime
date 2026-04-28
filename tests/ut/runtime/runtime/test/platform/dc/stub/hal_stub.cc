@@ -1231,6 +1231,20 @@ drvError_t halResAddrMap(unsigned int devId, struct res_addr_info *res_info, uns
     return DRV_ERROR_NONE;
 }
 
+drvError_t halResMap(unsigned int devId, struct res_map_info *res_info, unsigned long *va, unsigned int *len) {
+    if (va != nullptr) {
+        *va = 0x1000;
+    }
+    if (len != nullptr) {
+        *len = 0x100;
+    }
+    return DRV_ERROR_NONE;
+}
+
+unsigned int halGetMaxResMapType(void) {
+    return 0x10;
+}
+
 int32_t checkProcessStatusFlag = 0;
 drvError_t halCheckProcessStatus(DVdevice device, processType_t processType, processStatus_t status, bool *isMatched) {
     if (checkProcessStatusFlag == 1) {

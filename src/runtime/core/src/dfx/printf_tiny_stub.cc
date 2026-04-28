@@ -12,11 +12,11 @@
 
 namespace cce {
 namespace runtime {
-rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
+rtError_t InitPrintf(void *addr, const size_t blockSize, const Device * const dev)
 {
     UNUSED(addr);
     UNUSED(blockSize);
-    UNUSED(curDrv);
+    UNUSED(dev);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

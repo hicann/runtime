@@ -23,6 +23,8 @@
 #include "hifloat.h"
 #include "external/graph/types.h"
 #include "runtime/rt_inner_dfx.h"
+#include "npu_driver.hpp"
+#include "device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1005,9 +1007,46 @@ void PrintBlockInfo(const uint8_t *blockData, const uint32_t blockId, const uint
 }
 } // namespace
 
-rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
+uint64_t GetDebugAddrForCore(uint32_t deviceId, uint16_t coreId)
 {
-    NULL_PTR_RETURN(curDrv, RT_ERROR_DRV_NULL);
+    if (&halGetMaxResMapType == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "[drv api] halGetMaxResMapType does not exist, device_id=%u", deviceId);
+        return 0;
+    }
+
+    uint32_t const maxResMapType = halGetMaxResMapType();
+    if (maxResMapType < RES_DBG_ADDR) {
+        RT_LOG(RT_LOG_WARNING,
+            "[drv api] halGetMaxResMapType returned %u, less than RES_DBG_ADDR(0x10), device_id=%u",
+            maxResMapType, deviceId);
+        return 0;
+    }
+
+    struct res_map_info resInfo;
+    resInfo.target_proc_type = PROCESS_CP1;
+    resInfo.res_type = RES_DBG_ADDR;
+    resInfo.res_id = static_cast<unsigned int>(coreId);
+    resInfo.flag = 0U;
+    resInfo.rsv[0] = 0U;
+
+    uint64_t dbgVa = 0;
+    uint32_t dbgLen = 0;
+    const drvError_t drvRet = halResMap(deviceId, &resInfo, &dbgVa, &dbgLen);
+    if (drvRet != DRV_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "halResMap failed for core %u, device_id=%u, drvRetCode=%d",
+            coreId, deviceId, static_cast<int32_t>(drvRet));
+        return 0;
+    }
+    RT_LOG(RT_LOG_INFO, "halResMap success for core %u, device_id=%u, va=0x%llx, len=%u",
+        coreId, deviceId, dbgVa, dbgLen);
+    return dbgVa;
+}
+
+rtError_t InitPrintf(void *addr, const size_t blockSize, const Device * const dev)
+{
+    NULL_PTR_RETURN(dev, RT_ERROR_DRV_NULL);
+    Driver *const curDrv = dev->Driver_();
+    uint32_t const deviceId = dev->Id_();
     auto props = curDrv->GetDevProperties();
     const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
     const uint64_t totalLen = blockSize * totalCoreNum;
@@ -1022,6 +1061,8 @@ rtError_t InitPrintf(void *addr, const size_t blockSize, Driver *curDrv)
         blockInfo->remainLen = static_cast<uint32_t>(blockSize - sizeof(BlockInfo) - sizeof(BlockReadInfo) - sizeof(BlockWriteInfo));
         blockInfo->magic = MAGIC_NUM;
         blockInfo->dumpAddr = RtPtrToValue(addr) + blockSize * i + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+
+        blockInfo->dbgAddr = GetDebugAddrForCore(deviceId, static_cast<uint16_t>(i));
 
         BlockReadInfo *readInfo = RtPtrToPtr<BlockReadInfo *>(blockAddr + sizeof(BlockInfo));
         readInfo->dumpType = DumpType::DUMP_BUFO;

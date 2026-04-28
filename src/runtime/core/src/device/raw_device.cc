@@ -2172,7 +2172,7 @@ rtError_t RawDevice::InitPrintInfo()
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device_id=%u, ret=%u.", deviceId_, ret);
 
     // 如果初始化失败，需要free后返回
-    ret = InitPrintf(printfAddr_, printblockLen_, driver_);
+    ret = InitPrintf(printfAddr_, printblockLen_, this);
     if (ret != RT_ERROR_NONE) {
         (void)driver_->DevMemFree(printfAddr_, deviceId_);
         printfAddr_ = nullptr;

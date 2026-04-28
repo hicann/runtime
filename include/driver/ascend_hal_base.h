@@ -5556,6 +5556,14 @@ DLLEXPORT DV_ONLINE drvError_t halResUnmap(unsigned int devId, struct res_map_in
 
 /**
  * @ingroup driver
+ * @brief  get max res map type supported by driver.
+ * @attention null
+ * @return   max res map type value
+ */
+DLLEXPORT DV_ONLINE unsigned int halGetMaxResMapType(void);
+
+/**
+ * @ingroup driver
  * @brief read or write value to resource reg
  * @attention null
  * @param [in]  dev_id  : device physical id

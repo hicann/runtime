@@ -130,6 +130,9 @@ drvError_t __attribute__((weak)) halSqTaskArgsAsyncCopy(uint32_t devId, struct h
 drvError_t __attribute__((weak)) halResAddrMap(unsigned int devId, struct res_addr_info *res_info,
     unsigned long *va, unsigned int *len);
 drvError_t __attribute__((weak)) halResAddrUnmap(unsigned int devId, struct res_addr_info *res_info);
+drvError_t __attribute__((weak)) halResMap(unsigned int devId, struct res_map_info *res_info,
+    unsigned long *va, unsigned int *len);
+unsigned int __attribute__((weak)) halGetMaxResMapType(void);
 
 drvError_t __attribute__((weak)) halHostUnregisterEx(void *srcPtr, UINT32 devid, UINT32 flag);
 drvError_t __attribute__((weak)) halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type,
