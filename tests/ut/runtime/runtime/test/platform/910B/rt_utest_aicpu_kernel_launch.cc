@@ -29,7 +29,7 @@ using namespace cce::runtime;
 
 namespace {
 uint64_t stubArgs = 0x1234567890;
-PlainProgram stubProgram(Program::MACH_AI_CPU);
+PlainProgram stubProgram(RT_KERNEL_ATTR_TYPE_AICPU);
 int32_t stubFun = 0;
 std::queue<rtError_t> expectedSubmitTaskResults = {};
 
@@ -191,7 +191,7 @@ TEST_F(CloudV2AicpuKernelLaunchTest, CPU_KERNEL_LAUNCH_EX_WITH_ARGS_TEST_00)
         1, &argsInfo, nullptr, stream, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    Kernel* k1 = new(std::nothrow) Kernel(&stubFun, "f1", "", &stubProgram, 1);
+    Kernel* k1 = new(std::nothrow) Kernel("", 0UL, &stubProgram, RT_KERNEL_ATTR_TYPE_AICPU, 1);
     error = StreamLaunchCpuKernelExWithArgs(1, &argsInfo, nullptr, stream, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU, k1, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -238,7 +238,7 @@ TEST_F(CloudV2AicpuKernelLaunchTest, CPU_KERNEL_LAUNCH_EX_WITH_ARGS_TEST_01)
         1, &argsInfo, nullptr, stream, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    Kernel* k2 = new(std::nothrow) Kernel(&stubFun, "f2", "", &stubProgram, 1);
+    Kernel* k2 = new(std::nothrow) Kernel("", 0UL, &stubProgram, RT_KERNEL_ATTR_TYPE_AICPU, 1);
     error = StreamLaunchCpuKernelExWithArgs(1, &argsInfo, nullptr, stream, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU, k2, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -279,7 +279,7 @@ TEST_F(CloudV2AicpuKernelLaunchTest, CPU_KERNEL_LAUNCH_EX_WITH_ARGS_TEST_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     argsInfo.kernelNameAddrOffset = 1;
-    Kernel* k3 = new(std::nothrow) Kernel(&stubFun, "f3", "", &stubProgram, 1);
+    Kernel* k3 = new(std::nothrow) Kernel("", 0UL, &stubProgram, RT_KERNEL_ATTR_TYPE_AICPU, 1);
     error = StreamLaunchCpuKernelExWithArgs(1, &argsInfo, nullptr, stream, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU, k3, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

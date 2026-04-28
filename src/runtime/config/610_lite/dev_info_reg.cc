@@ -183,6 +183,7 @@ static const DevProperties CHIP_610LITE_PROPERTIES = {
     .maxTaskNumPerStream = 1024U,
     .maxTaskNumPerHugeStream = 8192U,
     .rtsqReservedTaskNum = 0U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_610LITE, CHIP_610LITE_PROPERTIES);

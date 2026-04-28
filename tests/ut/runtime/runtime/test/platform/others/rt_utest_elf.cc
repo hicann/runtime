@@ -60,37 +60,6 @@ protected:
     }
 };
 
-TEST_F(ChipELFTest, ELF_UPDATE_FUNC_TYPE_BY_PROG_TYPE)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    rtChipType_t chipType = rtInstance->GetChipType();
-
-    ElfKernelInfo kernelInfo;
-    kernelInfo.funcType = KERNEL_FUNCTION_TYPE_INVALID;
-    bool isUpdate = false;
-    uint32_t progType = Program::MACH_AI_CPU;
-
-    isUpdate = true;
-    rtInstance->SetChipType(CHIP_DAVID);
-    GlobalContainer::SetRtChipType(CHIP_DAVID);
-    UpdateFuncTypeByProgType(&kernelInfo, progType, &isUpdate);
-    EXPECT_EQ(kernelInfo.funcType, KERNEL_FUNCTION_TYPE_INVALID);
-    EXPECT_EQ(isUpdate, false);
-
-    isUpdate = true;
-    progType = Program::MACH_AI_CORE;
-    UpdateFuncTypeByProgType(&kernelInfo, progType, &isUpdate);
-    EXPECT_EQ(kernelInfo.funcType, KERNEL_FUNCTION_TYPE_AIC);
-    EXPECT_EQ(isUpdate, true);
-
-    progType = Program::MACH_AI_VECTOR;
-    UpdateFuncTypeByProgType(&kernelInfo, progType, &isUpdate);
-    EXPECT_EQ(kernelInfo.funcType, KERNEL_FUNCTION_TYPE_AIV);
-    EXPECT_EQ(isUpdate, true);
-    rtInstance->SetChipType(chipType);
-    GlobalContainer::SetRtChipType(chipType);
-}
-
 TEST_F(ChipELFTest, UpdateKernelsInfoMiniV3)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
@@ -100,17 +69,16 @@ TEST_F(ChipELFTest, UpdateKernelsInfoMiniV3)
 
     rtElfData elfData = {};
     elfData.kernel_num = 1;
-    bool isSupportMix = true;
 
     RtKernel newKernels;
     newKernels.name = new (std::nothrow) char[5];
     strcpy_s(newKernels.name, 5, "test");
     newKernels.offset = 0;
     newKernels.length = 1;
-    newKernels.funcType = 1;
-    newKernels.crossCoreSync = 1;
-    newKernels.taskRation = 1;
-    newKernels.dfxSize = 1;
+    newKernels.metaInfo.funcType = 1;
+    newKernels.metaInfo.crossCoreSync = 1;
+    newKernels.metaInfo.taskRation = 1;
+    newKernels.metaInfo.dfxSize = 1;
 
     ElfKernelInfo * kernelInfo = new (std::nothrow) ElfKernelInfo();
     if (kernelInfo == nullptr) {
@@ -127,7 +95,7 @@ TEST_F(ChipELFTest, UpdateKernelsInfoMiniV3)
     std::string kernelName = "test";
     kernelInfoMap[kernelName] = kernelInfo;
 
-    rtError_t rtn = UpdateKernelsInfo(kernelInfoMap, &newKernels, &elfData, &isSupportMix);
+    rtError_t rtn = UpdateKernelsInfo(kernelInfoMap, &newKernels, &elfData);
     EXPECT_EQ(rtn, RT_ERROR_NONE);
     delete [] newKernels.name;
     delete kernelInfo;
@@ -786,8 +754,7 @@ TEST_F(ChipELFTest, ELF_Process_Object_14)
     GlobalContainer::SetRtChipType(CHIP_DC);
 
     elfData = new rtElfData;
-    bool isSupportMix = false;
-    kernels = ProcessObject((char_t *)bindata, elfData, 0, &isSupportMix);
+    kernels = ProcessObject((char_t *)bindata, elfData);
     EXPECT_EQ(elfData->kernel_num, 8);
     if(NULL != elfData->section_headers)
     {

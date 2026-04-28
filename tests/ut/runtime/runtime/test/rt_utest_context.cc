@@ -53,6 +53,7 @@
 #include "memcpy_c.hpp"
 #include "barrier_task.h"
 #include "stream_task.h"
+#include "data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -871,13 +872,13 @@ public:
         return RT_ERROR_NONE;
     }
 
-    rtError_t Load(uint32_t kernelType, const rtArgsEx_t *argsInfo, Stream *stream,
+    rtError_t Load(const rtArgsEx_t *argsInfo, Stream *stream,
         ArgLoaderResult *result) override
     {
         return RT_ERROR_INVALID_VALUE;
     }
 
-    rtError_t LoadForMix(uint32_t kernelType, const rtArgsEx_t *argsInfo, Stream *stream,
+    rtError_t LoadForMix(const rtArgsEx_t *argsInfo, Stream *stream,
         ArgLoaderResult *result, bool &mixOpt) override
     {
         return RT_ERROR_INVALID_VALUE;
@@ -929,12 +930,10 @@ TEST_F(ContextTest, aicpu_kernel_launch)
     uint32_t funStub = 0;
     Context *ctx = NULL;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN_AICPU;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -956,7 +955,7 @@ TEST_F(ContextTest, aicpu_kernel_launch)
     rtDeviceReset(1);
     rtSetDevice(0);
     error = rtKernelLaunch(&funStub, 1, (void *)binary, sizeof(binary), NULL, NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDeviceSynchronize();
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1753,7 +1752,7 @@ unsigned char dynamic_kernel_data_mix_1_2_data[] = {
 
     error = rtRegisterAllKernel(&master_bin, &m_handle);
     m_prog = (Program *)m_handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, m_prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, m_prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     uint64_t arg = 0x1234567890;
     rtArgsEx_t argsInfo = {};
     argsInfo.args = &arg;
@@ -2179,12 +2178,11 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace)
 
     error = rtStreamCreate(&stream_, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN_AICPU;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2194,7 +2192,7 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace)
     RawDevice * rawDevice = (RawDevice *)((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     rawDevice->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x100)));
     error = rtKernelLaunch(&funStub, 1, (void *)binary, sizeof(binary), NULL, NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     rawDevice->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x0)));
     error = rtStreamSynchronize(stream_);
@@ -2220,12 +2218,11 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace_failed)
 
     error = rtStreamCreate(&stream_, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN_AICPU;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2233,7 +2230,7 @@ TEST_F(ContextTest, aicpu_kernel_launch_with_pctrace_failed)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtKernelLaunch(&funStub, 1, (void *)binary, sizeof(binary), NULL, NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2257,12 +2254,11 @@ TEST_F(ContextTest, rtDevBinaryUnRegister_after_RuntimeKeeper_Destroy)
 
     error = rtStreamCreate(&stream_, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN_AICPU;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2270,7 +2266,7 @@ TEST_F(ContextTest, rtDevBinaryUnRegister_after_RuntimeKeeper_Destroy)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtKernelLaunch(&funStub, 1, (void *)binary, sizeof(binary), NULL, NULL);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamSynchronize(stream_);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2301,12 +2297,11 @@ TEST_F(ContextTest, kernel_launch_module_load_failed)
 
     error = rtStreamCreate(&stream_, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN_AICPU;
-    devBin.version = 1;
-    devBin.length = sizeof(binary);
-    devBin.data = binary;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2336,10 +2331,10 @@ protected:
         uint32_t binary[32];
         rtDevBinary_t devBin;
 
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary);
-        devBin.data = binary;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
 
         rtError_t error1, error2;
         error1 = rtDevBinaryRegister(&devBin, &binHandle_);
@@ -4335,10 +4330,11 @@ TEST_F(ContextTest, MixKernelUpdate_test_1)
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo taskInfo = {};
     taskInfo.stream = updateStream;
@@ -4416,10 +4412,11 @@ TEST_F(ContextTest, MixKernelUpdate_test_2)
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo taskInfo = {};
     taskInfo.stream = updateStream;
@@ -4519,10 +4516,11 @@ TEST_F(ContextTest, MixKernelUpdate_test_3)
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo taskInfo = {};
     taskInfo.stream = updateStream;
@@ -4600,10 +4598,11 @@ TEST_F(ContextTest, MixKernelUpdate_test_4)
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo taskInfo = {};
     taskInfo.stream = updateStream;
@@ -4670,14 +4669,15 @@ TEST_F(ContextTest, UpdateTaskPrepare_test_1)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    Device* deviceStub = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+Device* deviceStub = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo taskInfo = {};
     taskInfo.stream = updateStream;
@@ -4691,7 +4691,7 @@ TEST_F(ContextTest, UpdateTaskPrepare_test_1)
     updateTask.u.aicTaskInfo.kernel = kernel;
     updateTask.u.aicTaskInfo.kernel->mixType_ = MIX_AIC;
 
-    error = ctx->UpdateTaskPrepare(&updateTask, nullptr, 0, updateStream);
+    error = ctx->UpdateTaskPrepare(&updateTask, nullptr, updateStream);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
     ((Runtime *)Runtime::Instance())->DeviceRelease(deviceStub);
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);

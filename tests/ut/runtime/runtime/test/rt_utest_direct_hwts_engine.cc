@@ -435,10 +435,11 @@ TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_002)
     const void *stubFunc = (void *)0x03;
     const char *stubName = "efgexample";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     task.u.aicTaskInfo.kernel = kernel;
 
     std::unique_ptr<HwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device);

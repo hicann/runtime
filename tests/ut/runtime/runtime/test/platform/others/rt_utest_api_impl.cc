@@ -623,10 +623,10 @@ TEST_F(ApiImplTest, rts_api_impl_test5)
     argsWithType.type = RT_ARGS_MAX;
     rtError_t error = apiError.CheckArgsWithType(&argsWithType);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;

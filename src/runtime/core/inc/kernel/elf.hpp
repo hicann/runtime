@@ -317,42 +317,27 @@ struct Elf64_External_Dyn {
     } dUn;
 };
 
-struct RtKernel final {
-    char_t *name;         // kernem name
-    int32_t offset;      //  The offset of current kernel in object
-    int32_t length;      //  The length of current kernel
-    void *stubAddr;  //  The address of stub function of current kernel
+struct RtKernelMetaInfo {
     uint32_t funcType;  // The function type of kernel
     uint32_t crossCoreSync;  // cross core sync
     uint32_t  taskRation; // The taskRation of aic : aiv
     const void *dfxAddr;
     uint16_t dfxSize;
-    uint8_t reserved; // 填补空间以保持四字节对齐
+    uint16_t userArgsNum;
     uint32_t kernelVfType;
     uint32_t shareMemSize;
     int32_t elfDataFlag;
-    uint16_t userArgsNum;
     uint32_t minStackSize;
     uint64_t functionEntry;         // the same as tiling key
     KernelFunctionEntryType funcEntryType;
     uint32_t schedMode;
 };
 
-struct rtKernelContent {
-    uint32_t length;
-    uint32_t offset;
-    uint32_t kernelVfType;
-    uint32_t shareMemSize;
-};
-
-struct RtKernelCombine
-{
-    const struct RtKernel* kernel;
-    const void *stubFunc;
-    uint8_t mixType;
-    uint32_t kernelType;
-    uint64_t tilingKey;
-    uint32_t kernelIdx;
+struct RtKernel final {
+    char_t *name;         // kernem name
+    int32_t offset;       //  The offset of current kernel in object
+    int32_t length;       //  The length of current kernel
+    RtKernelMetaInfo metaInfo;
 };
 
 constexpr uint32_t KERNEL_PRINT_FIFO_ADDR_BIT = 0x1U;
@@ -379,15 +364,13 @@ struct rtElfData {
     uint32_t kernel_num;
     uint32_t func_num;
     const char_t *so_name;
-    bool degenerateFlag;
     uint64_t stackSize;
     bool dataFlag = false;
-    bool containsAscendMeta; // if contains valid ascend.meta data
     uint32_t ascendMetaFlag = 0;
     rtElfSymbolAddr symbolAddr;
 };
 
-RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData, const uint32_t progType, bool* isSupportMix);
+RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData);
 RtKernel *GetKernels(rtElfData * const elfData);
 uint64_t ByteGetLittleEndian(const uint8_t field[], const int32_t size);
 uint64_t ByteGetBigEndian(const uint8_t field[], const int32_t size);
@@ -399,18 +382,15 @@ std::unique_ptr<Elf_Internal_Sym[]> Get64bitElfSymbols(const rtElfData * const e
 std::unique_ptr<char_t[]> GetStringTableCopy(const char_t * const src, const uint64_t size);
 
 void GetKernelTlvInfo(const uint8_t *buf, uint32_t bufLen, ElfKernelInfo *tlvInfo);
-void UpdateFuncTypeByProgType(ElfKernelInfo * const kernelInfo, const uint32_t progType, bool *isUpdate);
-rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap);
+rtError_t SetKernelFunctionEntry(RtKernel * const kernels, const ElfKernelInfo * const elfKernelInfo);
 
 rtError_t ConvertTaskRation(ElfKernelInfo *elfKernelInfo, uint32_t& taskRation);
-bool GetMixStatus(uint32_t funcType, uint32_t crossCoreSync);
 void ParseElfStackInfoHeader(rtElfData * const elfData);
 void ParseElfStackInfoFromSection(rtElfData * const elfData, const uint8_t *buf, uint32_t bufLen);
 void ParseElfBinaryMetaInfo(rtElfData * const elfData, const uint8_t *buf, uint64_t bufLen, const std::string &stringTab);
 rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMap,
-                            RtKernel * const kernels, rtElfData * const elfData, bool* isSupportMix);
-rtError_t UpdateKernelsMinStackSizeInfo(
-    const std::map<std::string, ElfKernelInfo *> &kernelInfoMap, RtKernel *kernels, uint32_t kernelNum);
+                            RtKernel * const kernels, rtElfData * const elfData);
+rtError_t UpdateKernelsMinStackSizeInfo(RtKernel * const kernels, const ElfKernelInfo * const elfKernelInfo);
 rtError_t RefreshSymbolAddress(rtElfData *elfData);
 void SetSymbolAddress(const char_t *stringTab, const Elf_Internal_Sym * const psym,
     const uint64_t numSyms, rtElfData * const elfData);

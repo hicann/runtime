@@ -1295,9 +1295,10 @@ TEST_F(TaskTestV201, Test_Construct_Fusion_Sqe)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     rtError_t error;
     rtDavidSqe_t sqe[5];
@@ -1401,13 +1402,14 @@ TEST_F(TaskTestV201, LaunchKernelV2_AICPU)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER_CPP(&ApiImplDavid::CpuKernelLaunchExAll).stubs().will(returnValue(RT_ERROR_NONE));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     rtError_t error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1441,11 +1443,12 @@ TEST_F(TaskTestV201, LaunchKernelV2_NonCPU)
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER(StreamLaunchKernelV2).stubs().will(returnValue(RT_ERROR_NONE));
     
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_NON_CPU);
     rtStream_t stream;
     rtError_t error = rtsStreamCreate(&stream, nullptr);
@@ -1480,13 +1483,14 @@ TEST_F(TaskTestV201, LaunchKernelV2_Handle)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER_CPP(&ApiImplDavid::LaunchKernelByHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     rtError_t error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1519,13 +1523,14 @@ TEST_F(TaskTestV201, LaunchKernelV2_RT_ARGS_MAX)
 {
     Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
     MOCKER_CPP(&ApiImplDavid::LaunchKernelByHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel * kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel * kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
-    kernel->SetKernelType_(KERNEL_TYPE_AICPU);
+    kernel->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
     rtStream_t stream;
     rtError_t error = rtsStreamCreate(&stream, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1564,10 +1569,11 @@ TEST_F(TaskTestV201, Test_Construct_Simt_Sqe)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     kernel->SetShareMemSize_(8192);
@@ -1580,7 +1586,7 @@ TEST_F(TaskTestV201, Test_Construct_Simt_Sqe)
     stream_->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<rtDavidSqe_t *>(stream_->GetSqBaseAddr() + (pos << SHIFT_SIX_SIZE));
 
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;

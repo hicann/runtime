@@ -247,17 +247,17 @@ void TaskTriggerEvent(TaskInfo * const taskInfo);
 rtError_t FillKernelLaunchPara(const rtKernelLaunchNames_t * const launchNames,
                                TaskInfo* taskInfo, ArgLoader * const devArgLdr);
 void AicpuTaskInit(TaskInfo *taskInfo, const uint16_t dimNum, const uint32_t flag);
-void AicTaskInit(TaskInfo *taskInfo, const uint32_t mach,
+void AicTaskInit(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType,
                  const uint16_t dimNum, const uint32_t flag,
                  const TaskCfg * const taskcfg, const bool isNeedAllocSqeDevBuf = false);
-void AicTaskInitV2(TaskInfo *taskInfo, const uint32_t mach,
+void AicTaskInitV2(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType,
     const uint16_t dimNum, const uint32_t flag,
     const LaunchTaskCfgInfo_t * const launchTaskCfg);
 rtError_t CheckMixKernelValid(const uint8_t mixType, const uint64_t func2);
 
 rtError_t DavinciMultipleTaskInit(TaskInfo* taskInfo, const void *const multipleTaskInfo, const uint32_t flag);
 void TransDavinciTaskToVectorCore(const uint32_t flags, uint64_t addr2, uint64_t &addr1,
-    uint8_t &mixType, uint32_t &kernelType, const bool isLaunchVec);
+    uint8_t &mixType, rtKernelAttrType &kernelAttrType, const bool isLaunchVec);
 rtError_t MemcpyAsyncTaskInitV1(TaskInfo * const taskInfo, void *memcpyAddrInfo, const uint64_t cpySize);
 rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, const uint64_t dstPitch,
                                 const void *const srcAddr, const uint64_t srcPitch, const uint64_t width,

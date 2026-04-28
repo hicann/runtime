@@ -76,8 +76,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DOT_GET_GROUP_AIC_NUM,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_AICORE_MIX,
     RtOptionalFeatureType::RT_FEATURE_DFX_FLOAT_OVERFLOW_DEBUG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SET_RUNTIME_CAPABLITY,
@@ -85,7 +83,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_DATA_READ_ONLY,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX_DEGENERATE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
@@ -223,6 +220,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .maxTaskNumPerStream = 2014U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);

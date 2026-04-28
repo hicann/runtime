@@ -133,11 +133,10 @@ TEST_F(CloudV2RuntimeTest, ut_AllKernelRegister_mix_degenerate)
     ElfProgram prog;
     char *name = new (std::nothrow) char[20];
     strcpy(name, "abc_123_mix_aic");
-    RtKernel kernel = {name, 10, 10, nullptr};
+    RtKernel kernel = {name, 10, 10, {}};
     prog.elfData_->kernel_num = 1;
-    prog.elfData_->degenerateFlag = true;
     prog.kernels_ = &kernel;
-    rtError_t ret = rtInstance->AllKernelRegister(&prog, false);
+    rtError_t ret = rtInstance->AllKernelRegister(&prog);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     prog.kernels_ = nullptr;
@@ -153,11 +152,6 @@ TEST_F(CloudV2RuntimeTest, ut_KernelRegister_mix_degenerate)
 
     ElfProgram prog;
     prog.elfData_->kernel_num = 1;
-    prog.elfData_->degenerateFlag = true;
-    MOCKER_CPP(&Runtime::JudgeOffsetByMixType)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(mixType), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
     rtError_t ret = error = rtInstance->KernelRegister(&prog, (const void *)stubFunc, "repeat_mix_aic", "repeat_mix_aic", 196608);
 }
 
@@ -178,7 +172,7 @@ TEST_F(CloudV2RuntimeTest, ut_AllKernelRegister_2)
     error = rtInstance->ProgramRegister(&bin, &program);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtInstance->AllKernelRegister(program, false);
+    error = rtInstance->AllKernelRegister(program);
 
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -200,7 +194,7 @@ TEST_F(CloudV2RuntimeTest, ut_AllKernelRegister_3)
     error = rtInstance->ProgramRegister(&bin, &program);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtInstance->AllKernelRegister(program, true);
+    error = rtInstance->AllKernelRegister(program);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -417,11 +411,6 @@ TEST_F(CloudV2RuntimeTest, ut_KernelRegister_mix_aic)
 
     ElfProgram prog;
     prog.elfData_->kernel_num = 1;
-    prog.elfData_->degenerateFlag = true;
-    MOCKER_CPP(&Runtime::JudgeOffsetByMixType)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(mixType), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
     error = rtInstance->KernelRegister(&prog, (const void *)stubFunc, "repeat_mix_aic", "repeat_mix_aic", 196608);
 }
 
@@ -434,11 +423,6 @@ TEST_F(CloudV2RuntimeTest, ut_KernelRegister_mix_aic2)
 
     ElfProgram prog;
     prog.elfData_->kernel_num = 1;
-    prog.elfData_->degenerateFlag = true;
-    MOCKER_CPP(&Runtime::JudgeOffsetByMixType)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), outBound(mixType), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
     error = rtInstance->KernelRegister(&prog, (const void *)stubFunc, "repeat_mix_aic", "repeat_mix_aic", 196608);
     ContextManage::TryToRecycleCtxMdlPool();
 }

@@ -76,8 +76,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC32DM11A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST,
     RtOptionalFeatureType::RT_FEATURE_TASK_FUSION_DOT_ONLY_AICPUAIC,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_ASYNC_DOT_BY_PLACEHOLDER,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_AICORE_MIX,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RtOptionalFeatureType::RT_FEATURE_TASK_IPC_NOTIFY_ADDR_DOT_BY_TSID,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_EX_BY_FUNC_HANDLE,
@@ -214,6 +212,7 @@ static const DevProperties CHIP_MC32DM11A_PROPERTIES = {
     .maxTaskNumPerStream = 4054U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_MC32DM11A, CHIP_MC32DM11A_PROPERTIES);

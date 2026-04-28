@@ -63,9 +63,9 @@ public:
 
     virtual rtError_t Init() = 0;
     virtual rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) = 0; // for David, not use smArgs
-    virtual rtError_t Load(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+    virtual rtError_t Load(const rtArgsEx_t * const argsInfo,
                            Stream * const stm, ArgLoaderResult * const result) = 0;
-    virtual rtError_t LoadForMix(const uint32_t kernelType, const rtArgsEx_t * const argsInfo,
+    virtual rtError_t LoadForMix(const rtArgsEx_t * const argsInfo,
                                  Stream * const stm, ArgLoaderResult * const result, bool &mixOpt) = 0;
     virtual rtError_t PureLoad(const uint32_t size, const void * const args, ArgLoaderResult * const result) = 0;
     virtual rtError_t Release(void * const argHandle) = 0;

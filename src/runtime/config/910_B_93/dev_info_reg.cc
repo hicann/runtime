@@ -117,8 +117,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL,
     RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
     RtOptionalFeatureType::RT_FEATURE_STREAM_EXTENSION,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_AICORE_MIX,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RtOptionalFeatureType::RT_FEATURE_DFX_FLOAT_OVERFLOW_DEBUG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
@@ -127,7 +125,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V2_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST,
     RtOptionalFeatureType::RT_FEATURE_IPC_EVENT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_16K_STACK,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX_DEGENERATE,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
@@ -291,6 +288,7 @@ static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .maxTaskNumPerStream = 2013U,
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
+    .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_CLOUD_V2_PROPERTIES);

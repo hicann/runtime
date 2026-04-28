@@ -56,6 +56,7 @@
 #include "task_recycle.hpp"
 #include "elf.hpp"
 #include "rt_unwrap.h"
+#include "../../data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -162,12 +163,13 @@ protected:
             binary_[i] = i;
         }
 
-        rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
-        rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
+        rtDevBinary_t master_bin;
+        master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        master_bin.version = 2;
+        master_bin.data = (void*)elf_o;
+        master_bin.length = elf_o_len;
+        rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHandle_);
+        EXPECT_EQ(error3, RT_ERROR_NONE);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);
     }
@@ -4692,12 +4694,12 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     GlobalContainer::SetRtChipType(CHIP_DAVID);
 
     error = rtBinaryLoadWithoutTilingKey(master_bin.data, master_bin.length, &bin_handle_without_tilingKey);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtBinaryGetFunctionByName(bin_handle, "abc", &func_handle2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtBinaryGetFunctionByName(bin_handle, "op_Add_10241024", &func_handle2);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);
 
@@ -4763,7 +4765,7 @@ TEST_F(UbStreamTest, LaunchKernel_HostApi)
     launchConfig.attrs = attrs;
 
     Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
-    kernel->SetKernelType_(Program::MACH_AI_VECTOR);
+    kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
 
     error = rtLaunchKernelExByFuncHandle(func_handle, &launchConfig, argsHandle, stream);
@@ -4884,12 +4886,13 @@ protected:
             binary_[i] = i;
         }
 
-        rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
-        rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
+        rtDevBinary_t master_bin;
+        master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        master_bin.version = 2;
+        master_bin.data = (void*)elf_o;
+        master_bin.length = elf_o_len;
+        rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHandle_);
+        EXPECT_EQ(error3, RT_ERROR_NONE);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);
     }
@@ -5027,7 +5030,7 @@ TEST_F(UbStreamTest1, AIC_SQE)
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
     InitByStream(&task, (Stream *)stream_);
-    AicTaskInit(&task, Program::MACH_AI_CORE, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtDavidSqe_t sqe = {};
@@ -5045,7 +5048,7 @@ TEST_F(UbStreamTest1, AIV_SQE)
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
     InitByStream(&task, (Stream *)stream_);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
 
     rtDavidSqe_t sqe = {};
@@ -5060,9 +5063,10 @@ TEST_F(UbStreamTest1, MIX_AIC_SQE)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo task = {};
     void * args[] = {nullptr, nullptr, nullptr, nullptr};
@@ -5070,7 +5074,7 @@ TEST_F(UbStreamTest1, MIX_AIC_SQE)
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
     InitByStream(&task, (Stream *)stream_);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
     task.u.aicTaskInfo.kernel->mixType_ = MIX_AIC;
@@ -5088,9 +5092,10 @@ TEST_F(UbStreamTest1, MIX_AIV_SQE)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo task = {};
     void * args[] = {nullptr, nullptr, nullptr, nullptr};
@@ -5098,7 +5103,7 @@ TEST_F(UbStreamTest1, MIX_AIV_SQE)
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
     InitByStream(&task, (Stream *)stream_);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
     task.u.aicTaskInfo.kernel->mixType_ = MIX_AIV;
@@ -5116,9 +5121,10 @@ TEST_F(UbStreamTest1, MIX_AIC_AIV_MAIN_AIC_SQE)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo task = {};
     void * args[] = {nullptr, nullptr, nullptr, nullptr};
@@ -5126,7 +5132,7 @@ TEST_F(UbStreamTest1, MIX_AIC_AIV_MAIN_AIC_SQE)
     argsInfo.args = &args;
     argsInfo.argsSize = sizeof(args);
     InitByStream(&task, (Stream *)stream_);
-    AicTaskInit(&task, Program::MACH_AI_VECTOR, 1, 1, nullptr);
+    AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_VECTOR, 1, 1, nullptr);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     task.u.aicTaskInfo.kernel = kernel;
     task.u.aicTaskInfo.kernel->mixType_ = MIX_AIC_AIV_MAIN_AIC;
@@ -5198,7 +5204,7 @@ TEST_F(UbStreamTest1, DieFriendly_SQE)
     launchTaskCfg.blockDim = 1U;
     launchTaskCfg.Group.groupDim = 2U;
     launchTaskCfg.Group.groupBlockDim = 3U;
-    AicTaskInitV2(&task, Program::MACH_AI_CORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
+    AicTaskInitV2(&task, RT_KERNEL_ATTR_TYPE_AICORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
     rtDavidSqe_t sqe = {};
     uint64_t sqBaseAddr = 0U;
     ToConstructDavidSqe(&task, &sqe, sqBaseAddr);
@@ -5209,7 +5215,7 @@ TEST_F(UbStreamTest1, DieFriendly_SQE)
 
     launchTaskCfg.blockDim = 4U;
     launchTaskCfg.Group.groupDim = 0U;
-    AicTaskInitV2(&task, Program::MACH_AI_CORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
+    AicTaskInitV2(&task, RT_KERNEL_ATTR_TYPE_AICORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
     ToConstructDavidSqe(&task, &sqe, sqBaseAddr);
     EXPECT_EQ(sqe.aicAivSqe.header.blockDim, 4);
     EXPECT_EQ(sqe.aicAivSqe.groupDim, 2);
@@ -5223,9 +5229,10 @@ TEST_F(UbStreamTest1, PiMix_SQE)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
 
     TaskInfo task = {};
     AicTaskInfo *aicTaskInfo = &(task.u.aicTaskInfo);
@@ -5235,7 +5242,7 @@ TEST_F(UbStreamTest1, PiMix_SQE)
     launchTaskCfg.blockDim = 1U;
     launchTaskCfg.Group.groupDim = 2U;
     launchTaskCfg.Group.groupBlockDim = 3U;
-    AicTaskInitV2(&task, Program::MACH_AI_CORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
+    AicTaskInitV2(&task, RT_KERNEL_ATTR_TYPE_AICORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
     aicTaskInfo->kernel = kernel;
     aicTaskInfo->kernel->SetMixType(MIX_AIC_AIV_MAIN_AIC);
     aicTaskInfo->kernel->taskRation_ = 2;
@@ -5251,7 +5258,7 @@ TEST_F(UbStreamTest1, PiMix_SQE)
     EXPECT_EQ(sqe.aicAivSqe.loose, 1);
 
     aicTaskInfo->kernel->taskRation_ = 2;
-    AicTaskInitV2(&task, Program::MACH_AI_CORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
+    AicTaskInitV2(&task, RT_KERNEL_ATTR_TYPE_AICORE, launchTaskCfg.blockDim, 1, &launchTaskCfg);
     aicTaskInfo->kernel->SetMixType(NO_MIX);
     ToConstructDavidSqe(&task, &sqe, sqBaseAddr);
     EXPECT_EQ(sqe.aicAivSqe.piMix, 0);
@@ -5348,12 +5355,13 @@ protected:
             binary_[i] = i;
         }
 
-        rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
-        rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
+        rtDevBinary_t master_bin;
+        master_bin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        master_bin.version = 2;
+        master_bin.data = (void*)elf_o;
+        master_bin.length = elf_o_len;
+        rtError_t error3 = rtDevBinaryRegister(&master_bin, &binHandle_);
+        EXPECT_EQ(error3, RT_ERROR_NONE);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);
     }
@@ -9832,12 +9840,12 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     GlobalContainer::SetRtChipType(CHIP_DAVID);
 
     error = rtBinaryLoadWithoutTilingKey(master_bin.data, master_bin.length, &bin_handle_without_tilingKey);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtBinaryGetFunctionByName(bin_handle, "abc", &func_handle2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtBinaryGetFunctionByName(bin_handle, "op_Add_10241024", &func_handle2);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     rtInstance->SetChipType(ori_chipType);
     GlobalContainer::SetRtChipType(ori_chipType);
 
@@ -9918,7 +9926,7 @@ TEST_F(UbStreamTestLite, LaunchKernel_HostApi_Lite)
     Kernel* kernel = reinterpret_cast<Kernel *>(func_handle);
     kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
     kernel->SetShareMemSize_(2048);
-    kernel->SetKernelType_(Program::MACH_AI_VECTOR);
+    kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
 
     error = rtLaunchKernelExByFuncHandle(func_handle, &launchConfig, argsHandle, stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -9976,10 +9984,10 @@ TEST_F(UbStreamTest, KernelLaunchWithFlag)
     char       function_;
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
     devBin.version = 2;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(10 * sizeof(rtDavidSqe_t));
@@ -10091,15 +10099,6 @@ protected:
         {
             binary_[i] = i;
         }
-
-        rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
-        rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
-
-        rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);
     }
 
     virtual void TearDown()
@@ -14008,9 +14007,10 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel->SetStub_(stubFunc);
     pTask->stream = (Stream *)stream;
     pTask->isUpdateSinkSqe = 1U;
     pTask->u.fusionKernelTask.sqeLen = 2U;

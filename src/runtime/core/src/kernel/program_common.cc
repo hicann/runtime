@@ -22,7 +22,7 @@ void SetCpuKernelAttr(Kernel *kernel, const CpuKernelInfo &kernelInfo, const std
     kernel->SetUserParaNum(USER_ARGS_MAX_NUM);
     kernel->SetIsNeedSetFftsAddrInArg(false);
     kernel->SetIsSupportOverFlow(false);
-    kernel->SetKernelType_(static_cast<uint32_t>(kernelType));
+    kernel->SetAicpuKernelType_(static_cast<uint32_t>(kernelType));
     kernel->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
     if (!kernelInfo.hasOpKernelLib) {
         RT_LOG(RT_LOG_ERROR, "opKernelLib does not exist, return");
@@ -45,7 +45,7 @@ void SetCpuKernelAttr(Kernel *kernel, const CpuKernelInfo &kernelInfo, const std
         RT_LOG(RT_LOG_ERROR, "opKernelLib does not exist, default KERNEL_TYPE_RESERVED");
     }
 
-    kernel->SetKernelType_(static_cast<uint32_t>(kernelType));
+    kernel->SetAicpuKernelType_(static_cast<uint32_t>(kernelType));
     return;
 }
 

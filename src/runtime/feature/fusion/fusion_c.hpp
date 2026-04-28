@@ -16,7 +16,7 @@ namespace cce {
 namespace runtime {
 
 rtError_t LaunchFusionKernel(Stream* stm, void* const fusionKernelInfo, rtFusionArgsEx_t* argsInfo);
-void GetAicAivTypeForFusion(uint8_t mixType, uint32_t machine, uint8_t& aicAivType);
+void GetAicAivTypeForFusion(uint8_t mixType, rtKernelAttrType kernelAttrType, uint8_t &aicAivType);
 void AixKernelTaskInitForFusion(
     TaskInfo* const taskInfo, const rtAicAivFusionInfo_t* const aicAivInfo,
     const LaunchTaskCfgInfo_t* const launchTaskCfg);

@@ -89,7 +89,7 @@ TEST_F(ApiKernelTest, TestFuncGetAddr)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
@@ -152,7 +152,7 @@ TEST_F(ApiKernelTest, TestFuncGetName)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
     rtError_t error = rtsFuncGetName(&kernel, 128, name);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -163,7 +163,7 @@ TEST_F(ApiKernelTest, TestFuncGetNameFail)
     ApiImpl apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     MOCKER(memcpy_s).stubs().will(returnValue(1));
     char_t name[128];
     rtError_t error = apiImpl.FuncGetName(&kernel,128, name);
@@ -174,7 +174,7 @@ TEST_F(ApiKernelTest, TestFuncGetNameMaxLenFail)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
     rtError_t error = rtsFuncGetName(&kernel, 1, name);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -284,7 +284,7 @@ TEST_F(ApiImplKernelTest, TestFuncGetAddr)
     ApiImpl apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
@@ -331,7 +331,7 @@ TEST_F(ApiImplKernelTest, TestFuncGetAddrWithProgramNull)
     ApiImpl apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, nullptr, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
@@ -422,11 +422,11 @@ TEST_F(ApiKernelTest, TestFuncGetAttribute)
 {
     ElfProgram program;
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     int64_t attrValue = 0;
     rtError_t error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtFunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -442,9 +442,9 @@ TEST_F(ApiKernelTest, TestFuncGetAttribute)
 
 TEST_F(ApiKernelTest, TestFuncGetSchedMode)
 {
-    ElfProgram program(Program::MACH_AI_VECTOR);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
     uint64_t tilingKey = 0;
-    Kernel kernel(nullptr, "testKernelName", tilingKey, &program, 2048, 1024, 0, 0, 0);
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 1024, 0, 0, 0);
 
     kernel.SetSchedMode(RT_SCHEM_MODE_NORMAL);
     int64_t attrValue = 0;

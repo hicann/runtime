@@ -80,7 +80,7 @@ TEST_F(XpuKernelTest, rtsBinaryLoadFromFile_JsonAndSo_fail)
 
 TEST_F(XpuKernelTest, rtsXpuSetKernelLiteralNameDevAddr_kernel_null)
 {
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
 
     rtError_t error = program->XpuSetKernelLiteralNameDevAddr(nullptr, 0);
@@ -104,11 +104,12 @@ TEST_F(XpuKernelTest, rtsXpuSetKernelLiteralNameDevAddr_funcPc_null)
     MOCKER(mmDlclose)
     .stubs()
     .will(returnValue(EN_OK));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
 
     rtError_t error = program->XpuSetKernelLiteralNameDevAddr(kernel, 0);
     delete kernel;
@@ -132,11 +133,12 @@ TEST_F(XpuKernelTest, rtsXpuSetKernelLiteralNameDevAddr_binhandle_null)
     MOCKER(mmDlclose)
     .stubs()
     .will(returnValue(EN_OK));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
 
     rtError_t error = program->XpuSetKernelLiteralNameDevAddr(kernel, 0);
     delete kernel;
@@ -160,11 +162,12 @@ TEST_F(XpuKernelTest, rtsXpuSetKernelLiteralNameDevAddr_funcPc_not_null)
     MOCKER(mmDlclose)
     .stubs()
     .will(returnValue(EN_OK));
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     const char* stub = "";
     void* stubFunc = nullptr;
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stub, static_cast<uint64_t>(0), program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
 
     rtError_t error = program->XpuSetKernelLiteralNameDevAddr(kernel, 0);
     delete kernel;

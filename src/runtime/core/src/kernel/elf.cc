@@ -20,7 +20,6 @@ namespace {
 constexpr int32_t ELF_SUCCESS = 0;
 constexpr int32_t ELF_FAIL = 1;
 const std::string ELF_SECTION_DATA = ".data";
-const std::string ELF_SECTION_CCE_KERNEL_META_DATA = "__CCE_KernelMetaData";
 const std::string ELF_SECTION_PREFIX_ASCEND_META = ".ascend.meta.";
 const std::string ELF_SECTION_ASCEND_META = ".ascend.meta";
 const std::string ELF_SECTION_ASCEND_STACK_SIZE_RECORD  = ".ascend.stack.size.record";
@@ -644,36 +643,6 @@ void GetKernelTlvInfo(const uint8_t *buf, uint32_t bufLen, ElfKernelInfo *tlvInf
     return;
 }
 
-bool GetMixStatus(uint32_t funcType, uint32_t crossCoreSync)
-{
-    bool isSupportMix = false;
-    switch (funcType) {
-        case KERNEL_FUNCTION_TYPE_AICORE:
-            isSupportMix = false;
-            break;
-        case KERNEL_FUNCTION_TYPE_AIC:
-        case KERNEL_FUNCTION_TYPE_AIC_ROLLBACK:
-            if (crossCoreSync == FUNC_USE_SYNC) {
-                isSupportMix = true;
-            }
-            break;
-        case KERNEL_FUNCTION_TYPE_AIV:
-        case KERNEL_FUNCTION_TYPE_AIV_ROLLBACK:
-            if (crossCoreSync == FUNC_USE_SYNC) {
-                isSupportMix = true;
-            }
-            break;
-        case KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN:
-        case KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN:
-            isSupportMix = true;
-            break;
-        default:
-            isSupportMix = false;
-            break;
-    }
-    return isSupportMix;
-}
-
 void ParseElfStackInfoHeader(rtElfData * const elfData)
 {
     const uint64_t elfVersion = elfData->elf_header.e_version;
@@ -756,31 +725,20 @@ void ParseElfStackInfoFromSection(rtElfData * const elfData, const uint8_t *buf,
     return;
 }
 
-void UpdateFuncTypeByProgType(ElfKernelInfo * const kernelInfo, const uint32_t progType, bool *isUpdate)
-{
-    if (*isUpdate == false) {
-        return;
-    }
-
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_INCLUDE_STACK_SIZE)) {
-        *isUpdate = false;
-        return;
-    }
-
-    switch (progType) {
-        case Program::MACH_AI_CORE:
-            kernelInfo->funcType = KERNEL_FUNCTION_TYPE_AIC;
-            break;
-        case Program::MACH_AI_VECTOR:
-            kernelInfo->funcType = KERNEL_FUNCTION_TYPE_AIV;
-            break;
-        default:
-            break;
-    }
-    if (kernelInfo->funcType == KERNEL_FUNCTION_TYPE_INVALID) {
-        *isUpdate = false;
-    }
+static void KernelMetaInfoInit(RtKernelMetaInfo * const kernelMetaInfo) {
+    kernelMetaInfo->funcType = static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_INVALID);
+    kernelMetaInfo->crossCoreSync = static_cast<uint32_t>(FUNC_NO_USE_SYNC);
+    kernelMetaInfo->taskRation = DEFAULT_TASK_RATION;
+    kernelMetaInfo->kernelVfType = 0U;
+    kernelMetaInfo->shareMemSize = 0U;
+    kernelMetaInfo->dfxAddr = nullptr;
+    kernelMetaInfo->dfxSize = 0U;
+    kernelMetaInfo->elfDataFlag = 0;
+    kernelMetaInfo->functionEntry = 0UL;
+    kernelMetaInfo->funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_TILING_KEY;
+    kernelMetaInfo->schedMode = static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL);
+    kernelMetaInfo->userArgsNum = USER_ARGS_MAX_NUM;
+    kernelMetaInfo->minStackSize = 0U;
 }
 
 static void kernelInfoInit(rtElfData * const elfData, Elf_Internal_Shdr *section, ElfKernelInfo * const kernelInfo) {
@@ -800,8 +758,7 @@ static void kernelInfoInit(rtElfData * const elfData, Elf_Internal_Shdr *section
 }
 
 static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *section,
-                          std::map<std::string, ElfKernelInfo *> &kernelInfoMap,
-                          bool *isSupportMix, bool *isUpdate, const uint32_t progType)
+                          std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
 {
     std::unique_ptr<char_t[]> strTab = nullptr;
 
@@ -830,12 +787,7 @@ static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *se
         RT_LOG(RT_LOG_INFO, "dataFlag=%u", elfData->dataFlag);
     }
     RT_LOG(RT_LOG_INFO, "section name = %s.", stringTab.c_str());
-    if (stringTab.compare(ELF_SECTION_CCE_KERNEL_META_DATA) == 0) {
-        uint32_t *degenerateFlag = RtPtrToPtr<uint32_t *>(RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) +
-            section->sh_offset);
-        elfData->degenerateFlag = static_cast<bool>(*degenerateFlag);
-        RT_LOG(RT_LOG_DEBUG, "Get degenerate symbol value is %u", *degenerateFlag);
-    } else if (stringTab.find(ELF_SECTION_PREFIX_ASCEND_META) != std::string::npos) {
+    if (stringTab.find(ELF_SECTION_PREFIX_ASCEND_META) != std::string::npos) {
         std::string kernelName;
         const size_t kernelNameLen = stringTab.size() - ELF_SECTION_PREFIX_ASCEND_META.size();
         if (unlikely((kernelNameLen >= static_cast<size_t>(NAME_MAX_LENGTH))) || (kernelNameLen == 0U)) {
@@ -853,34 +805,16 @@ static void ParseKernelMetaData(rtElfData * const elfData, Elf_Internal_Shdr *se
         GetKernelTlvInfo((RtPtrToPtr<uint8_t *>(elfData->obj_ptr_origin) + section->sh_offset),
             static_cast<uint32_t>(section->sh_size), kernelInfo);
 
-        const bool mixStatus = GetMixStatus(kernelInfo->funcType, kernelInfo->crossCoreSync);
-        const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-        if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_MIX) || mixStatus) {
-            *isSupportMix = true;
-        } else {
-            *isSupportMix = false;
-        }
-        if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_AICORE_MIX)
-            && (kernelInfo->funcType == KERNEL_FUNCTION_TYPE_AICORE)) {
-            *isSupportMix = false;
-        }
-        *isUpdate = *isSupportMix;
-        *isUpdate = (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_TYPE_UPDATE_NO_MIX)) ?
-            true : *isUpdate;
-        if (kernelInfo->funcType == static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_INVALID)) {
-            *isSupportMix = false;
-            UpdateFuncTypeByProgType(kernelInfo, progType, isUpdate);
-        }
         (void)kernelName.assign(stringTab.substr(ELF_SECTION_PREFIX_ASCEND_META.size()));
         if (kernelInfo->kernelVfType == 0U) {
             kernelInfo->shareMemSize = 0U;
         }
         kernelInfoMap[kernelName] = kernelInfo;
-        RT_LOG(RT_LOG_INFO, "kernel_name=%s, ration[0]=%u, ration[1]=%u, isSupportMix=%d, isUpdate=%d, "
+        RT_LOG(RT_LOG_INFO, "kernel_name=%s, ration[0]=%u, ration[1]=%u, "
             "dfxAddr=0x%llx, dfxSize=%u, "
             "funcType=%u, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, "
             "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
-            kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1], *isSupportMix, *isUpdate, 
+            kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1],
             RtPtrToValue(kernelInfo->dfxAddr), kernelInfo->dfxSize,
             kernelInfo->funcType, kernelInfo->crossCoreSync,
             kernelInfo->kernelVfType, kernelInfo->shareMemSize, kernelInfo->minStackSize,
@@ -902,26 +836,6 @@ static void KernelInfoMapRelease(std::map<std::string, ElfKernelInfo *>& kernelI
         const ElfKernelInfo * const kernelInfo = iter->second;
         delete kernelInfo;
     }
-}
-
-static rtError_t SetTaskRationAndResult(uint32_t funcType, std::vector<uint32_t>& funcTypeList,
-    uint32_t resRation, uint32_t* taskRation)
-{
-    bool found = false;
-    rtError_t result = RT_ERROR_NONE;
-    for (auto it = funcTypeList.begin(); it != funcTypeList.end(); ++it) {
-        if (*it  == funcType) {
-            found = true;
-            *taskRation = resRation;
-            break;
-        }
-    }
-    if (!found) {
-        RT_LOG(RT_LOG_ERROR, "error funcType=%u", funcType);
-        result = RT_ERROR_INVALID_VALUE;
-    }
-    funcTypeList.clear();
-    return result;
 }
 
 uint32_t GetRatioEnum(ElfKernelInfo * elfKernelInfo)
@@ -950,13 +864,6 @@ rtError_t ConvertTaskRation(ElfKernelInfo * elfKernelInfo, uint32_t& taskRation)
         RT_LOG(RT_LOG_ERROR, "elfKernelInfo is null");
         return RT_ERROR_INVALID_VALUE;
     }
-    if (elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIC ||
-        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIV ||
-        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIC_ROLLBACK ||
-        elfKernelInfo->funcType == KERNEL_FUNCTION_TYPE_AIV_ROLLBACK) {
-        taskRation = 0U;
-        return RT_ERROR_NONE;
-    }
 
     std::vector<uint32_t> targetFuncTypeList;
     rtError_t result = RT_ERROR_NONE;
@@ -964,25 +871,19 @@ rtError_t ConvertTaskRation(ElfKernelInfo * elfKernelInfo, uint32_t& taskRation)
     RT_LOG(RT_LOG_DEBUG, "functionType=%u, ratioValue=%u", elfKernelInfo->funcType, ratioEnum);
     switch (ratioEnum) {
         case RATION_TYPE_ONE_RATIO_TWO:
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN);
-            result = SetTaskRationAndResult(elfKernelInfo->funcType, targetFuncTypeList, 2U, &taskRation);
+            taskRation = 2U;
             break;
         case RATION_TYPE_TWO_RATIO_ONE:
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN);
-            result = SetTaskRationAndResult(elfKernelInfo->funcType, targetFuncTypeList, 2U, &taskRation);
+            taskRation = 2U;
             break;
         case RATION_TYPE_ONE_RATIO_ONE:
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN);
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN);
-            result = SetTaskRationAndResult(elfKernelInfo->funcType, targetFuncTypeList, 1U, &taskRation);
+            taskRation = 1U;
             break;
         case RATION_TYPE_ONE_RATIO_ZERO:
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN);
-            result = SetTaskRationAndResult(elfKernelInfo->funcType, targetFuncTypeList, 0U, &taskRation);
+            taskRation = 0U;
             break;
         case RATION_TYPE_ZERO_RATIO_ONE:
-            targetFuncTypeList.push_back(KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN);
-            result = SetTaskRationAndResult(elfKernelInfo->funcType, targetFuncTypeList, 0U, &taskRation);
+            taskRation = 0U;
             break;
         default:
             result = RT_ERROR_INVALID_VALUE;
@@ -991,19 +892,67 @@ rtError_t ConvertTaskRation(ElfKernelInfo * elfKernelInfo, uint32_t& taskRation)
     return result;
 }
 
+rtError_t UpdateKernelsMinStackSizeInfo(RtKernel * const kernels, const ElfKernelInfo * const elfKernelInfo)
+{
+    const Runtime * const rtInstance = Runtime::Instance();
+    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+        RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE)) {
+        return RT_ERROR_NONE;
+    }
+
+    const uint32_t customerStackSize = rtInstance->GetDeviceCustomerStackSize();
+    RtKernelMetaInfo * const metaInfo = &(kernels->metaInfo);
+
+    metaInfo->minStackSize = elfKernelInfo->minStackSize;
+    if (metaInfo->minStackSize > customerStackSize) {
+        RT_LOG(RT_LOG_ERROR,
+            "kernel_name:%s min stack size is %u, larger than current process default size %u. "
+            "Please modify aclInit json, and reboot process.",
+            kernels->name,
+            metaInfo->minStackSize,
+            customerStackSize);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t SetKernelFunctionEntry(RtKernel * const kernels, const ElfKernelInfo * const elfKernelInfo)
+{
+    RtKernelMetaInfo * const metaInfo = &(kernels->metaInfo);
+    if (!elfKernelInfo->isSupportFuncEntry) {
+        metaInfo->funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_TILING_KEY;
+        return RT_ERROR_NONE;
+    }
+    const uint8_t functionEntryFlag = elfKernelInfo->functionEntryFlag;
+    if (functionEntryFlag == 0U) {
+        metaInfo->functionEntry = elfKernelInfo->functionEntry;
+        metaInfo->funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY;
+    } else if (functionEntryFlag == KERNEL_FUNCTION_ENTRY_DISABLE) {
+        metaInfo->funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY;
+    } else {
+        RT_LOG(RT_LOG_ERROR, "kernel function meta info error! kernel name=%s, functionEntryFlag=%u",
+            kernels->name, functionEntryFlag);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    return RT_ERROR_NONE;
+}
+
+static rtError_t SetKernelSchedMode(RtKernel * const kernels, const ElfKernelInfo * const elfKernelInfo)
+{
+    COND_RETURN_ERROR(elfKernelInfo->schedMode >= RT_SCHEM_MODE_END, RT_ERROR_INVALID_VALUE,
+            "unsupport schedMode: %u, valid range is [0, %d)", elfKernelInfo->schedMode, RT_SCHEM_MODE_END);
+    RtKernelMetaInfo * const metaInfo = &(kernels->metaInfo);
+    metaInfo->schedMode = elfKernelInfo->schedMode;
+    return RT_ERROR_NONE;
+}
+
 rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMap,
-                            RtKernel * const kernels, rtElfData * const elfData, bool* isSupportMix)
+                            RtKernel * const kernels, rtElfData * const elfData)
 {
     const uint32_t kernelNum = elfData->kernel_num;
     const uint32_t mapSize = kernelInfoMap.size();
     if (mapSize == 0U) {
         return RT_ERROR_NONE;
-    }
-
-    if (mapSize != kernelNum) {
-        RT_LOG(RT_LOG_INFO, "kernel num is not match, kernelNum=%u, mapSize is %u. change isSupportMix to false",
-               kernelNum, mapSize);
-        *isSupportMix = false;
     }
 
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
@@ -1016,65 +965,51 @@ rtError_t UpdateKernelsInfo(std::map<std::string, ElfKernelInfo *>& kernelInfoMa
             continue;
         }
 
-        if ((iter->second->funcType == KERNEL_FUNCTION_TYPE_INVALID) ||
-            (iter->second->funcType >= KERNEL_FUNCTION_TYPE_MAX)) {
-            RT_LOG(RT_LOG_ERROR, "kernel type and cross core sync info check failed, funcType=%u, crossCoreSync=%u.",
-                iter->second->funcType, iter->second->crossCoreSync);
-            return RT_ERROR_INVALID_VALUE;
-        }
-
-        kernels[index].dfxAddr = iter->second->dfxAddr;
-        kernels[index].dfxSize = iter->second->dfxSize;
-        kernels[index].elfDataFlag = iter->second->elfDataFlag;
-        kernels[index].funcType = iter->second->funcType;
-        kernels[index].userArgsNum = iter->second->userArgsNum;
-        kernels[index].crossCoreSync = iter->second->crossCoreSync;
+        RtKernelMetaInfo * const metaInfo = &(kernels[index].metaInfo);
+        metaInfo->dfxAddr = iter->second->dfxAddr;
+        metaInfo->dfxSize = iter->second->dfxSize;
+        metaInfo->elfDataFlag = iter->second->elfDataFlag;
+        metaInfo->funcType = iter->second->funcType;
+        metaInfo->userArgsNum = iter->second->userArgsNum;
+        metaInfo->crossCoreSync = iter->second->crossCoreSync;
         // default task ratio for task ration MIX_AIC_AIV_MAIN_AIC/MIX_AIC_AIV_MAIN_AIV
-        kernels[index].taskRation = DEFAULT_TASK_RATION;
-        kernels[index].kernelVfType = iter->second->kernelVfType;
-        kernels[index].shareMemSize = iter->second->shareMemSize;
-        kernels[index].minStackSize = iter->second->minStackSize;
-        RT_LOG(RT_LOG_INFO, "update dfx and funcType info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u",
-                kernels[index].name, kernels[index].dfxAddr, kernels[index].dfxSize, kernels[index].funcType);
-        // section no taskRation
-        if ((iter->second->taskRation[0] == 0U) && (iter->second->taskRation[1] == 0U) &&
+        metaInfo->taskRation = DEFAULT_TASK_RATION;
+        metaInfo->kernelVfType = iter->second->kernelVfType;
+        metaInfo->shareMemSize = iter->second->shareMemSize;
+
+        /* update minStackSize */
+        rtError_t error = UpdateKernelsMinStackSizeInfo(&(kernels[index]), iter->second);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+        /* update funcEntry */
+        error = SetKernelFunctionEntry(&(kernels[index]), iter->second);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+        /* update schedMode */
+        error = SetKernelSchedMode(&(kernels[index]), iter->second);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+        RT_LOG(RT_LOG_INFO, "update meta info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u, "
+            "elfDataFlag=%d, userArgsNum=%hu, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, "
+            "minStackSize=%u, funcEntryType=%u, functionEntry=%lu, schedMode=%u, "
+            "taskRation_0=%hu, taskRation_1=%hu.",
+            kernels[index].name, metaInfo->dfxAddr, metaInfo->dfxSize, metaInfo->funcType,
+            metaInfo->elfDataFlag, metaInfo->userArgsNum, metaInfo->crossCoreSync,
+            metaInfo->kernelVfType, metaInfo->shareMemSize, metaInfo->minStackSize,
+            metaInfo->funcEntryType, metaInfo->functionEntry, metaInfo->schedMode,
+            iter->second->taskRation[0], iter->second->taskRation[1]);
+
+        // section no taskRation && not support mix ratio
+        if (((iter->second->taskRation[0] == 0U) && (iter->second->taskRation[1] == 0U)) ||
             (!isSupportKernelTaskRation)) {
             continue;
         }
-        rtError_t error = ConvertTaskRation(iter->second, kernels[index].taskRation);
-        if (error != RT_ERROR_NONE) {
-            return error;
-        }
+        error = ConvertTaskRation(iter->second, metaInfo->taskRation);
+        ERROR_RETURN(error, "parse ratio failed, kernel_name=%s, funcType=%u, "
+            "taskRation_0=%hu, taskRation_1=%hu.",
+            kernels[index].name, metaInfo->funcType, iter->second->taskRation[0], iter->second->taskRation[1]);
     }
 
-    elfData->containsAscendMeta = (mapSize != kernelNum) ? false : true;
-    return RT_ERROR_NONE;
-}
-
-rtError_t UpdateKernelsMinStackSizeInfo(
-    const std::map<std::string, ElfKernelInfo *> &kernelInfoMap, RtKernel *kernels, uint32_t kernelNum)
-{
-    const Runtime *const rtInstance = Runtime::Instance();
-    const uint32_t customerStackSize = rtInstance->GetDeviceCustomerStackSize();
-    RT_LOG(RT_LOG_DEBUG, "kernelNum=%u, mapSize=%u.", kernelNum, kernelInfoMap.size());
-    for (uint32_t index = 0U; index < kernelNum; index++) {
-        const auto iter = kernelInfoMap.find(std::string(kernels[index].name));
-        if (iter == kernelInfoMap.end()) {
-            continue;
-        }
-
-        kernels[index].minStackSize = iter->second->minStackSize;
-        if (kernels[index].minStackSize > customerStackSize) {
-            RT_LOG(RT_LOG_ERROR,
-                "kernel_name:%s min stack size is %u, larger than current process default size %u. "
-                "Please modify aclInit json, and reboot process.",
-                kernels[index].name,
-                kernels[index].minStackSize,
-                customerStackSize);
-            return RT_ERROR_INVALID_VALUE;
-        }
-        RT_LOG(RT_LOG_INFO, "kernel_name=%s, minStackSize=%u.", kernels[index].name, kernels[index].minStackSize);
-    }
     return RT_ERROR_NONE;
 }
 
@@ -1183,7 +1118,9 @@ RtKernel *GetKernels(rtElfData * const elfData)
             COND_LOG(rc != EOK, "strncpy_s failed, size=%zu, strTabSize=%u, retCode=%d.", len + 1U, strTabSize, rc);
             kernels[kernelNum].offset = static_cast<int32_t>(psym->st_value);
             kernels[kernelNum].length = static_cast<int32_t>(psym->st_size);
-            kernels[kernelNum].userArgsNum = USER_ARGS_MAX_NUM;
+
+            /* metaInfo init */
+            KernelMetaInfoInit(&(kernels[kernelNum].metaInfo));
             RT_LOG(RT_LOG_DEBUG, "kernel_name=%s, offset=%d, length=%u, stackSize=%llu,",
                 stringTab + psym->st_name, kernels[kernelNum].offset, psym->st_size, elfData->stackSize);
             kernelNum++;
@@ -1280,46 +1217,8 @@ static int32_t GetStringTable(const rtElfData * const elfData, std::unique_ptr<c
     return ELF_SUCCESS;
 }
 
-rtError_t SetKernelFunctionEntry(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
-{
-    for (uint32_t i = 0; i < kernelsNum; ++i) {
-        const auto it = kernelInfoMap.find(std::string(kernels[i].name));
-        if ((it == kernelInfoMap.end()) || (!it->second->isSupportFuncEntry)) {
-            kernels[i].funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_TILING_KEY;
-            continue;
-        } 
-        const uint8_t functionEntryFlag = it->second->functionEntryFlag;
-        if (functionEntryFlag == 0U) {
-            kernels[i].functionEntry = it->second->functionEntry;
-            kernels[i].funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_FUNCTION_ENTRY;
-        } else if (functionEntryFlag == KERNEL_FUNCTION_ENTRY_DISABLE) {
-            kernels[i].funcEntryType = KernelFunctionEntryType::KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY;
-        } else {
-            RT_LOG(RT_LOG_ERROR, "kernel function meta info error! kernel name=%s, functionEntryFlag=%u",
-                kernels[i].name, functionEntryFlag);
-            return RT_ERROR_INVALID_VALUE;
-        }
-    }
-    return RT_ERROR_NONE;
-}
-
-static rtError_t SetKernelSchedMode(RtKernel * const kernels, uint32_t kernelsNum, const std::map<std::string, ElfKernelInfo *> &kernelInfoMap)
-{
-    for (uint32_t i = 0; i < kernelsNum; ++i) {
-        const auto it = kernelInfoMap.find(std::string(kernels[i].name));
-        if (it == kernelInfoMap.end()) {
-            continue;
-        }
-        COND_RETURN_ERROR(it->second->schedMode >= RT_SCHEM_MODE_END, RT_ERROR_INVALID_VALUE,
-            "unsupport schedMode: %u, valid range is [0, %d)", it->second->schedMode, RT_SCHEM_MODE_END);
-        kernels[i].schedMode = it->second->schedMode;
-        RT_LOG(RT_LOG_INFO, "kernel_name=%s, schedMode=%u.", kernels[i].name, kernels[i].schedMode);
-    }
-    return RT_ERROR_NONE;
-}
-
 /* Dump the symbol table.  */
-static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t progType, bool *isSupportMix)
+static RtKernel *ProcessSymbolTable(rtElfData * const elfData)
 {
     Elf_Internal_Shdr *section = nullptr;
 
@@ -1327,7 +1226,6 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
     std::unique_ptr<char_t[]> strTbl = nullptr;
     uint64_t strTblSize = 0UL;
     char_t *stringTbl = nullptr;
-    bool isUpdate = false;
 
     const char_t *dynamicStrings = nullptr;
     uint64_t dynamicStringsLength = 0UL;
@@ -1374,7 +1272,7 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
 
         if ((section->sh_type == static_cast<uint32_t>(SHT_PROGBITS)) ||
             (section->sh_type == static_cast<uint32_t>(SHT_NOTE))) {
-            ParseKernelMetaData(elfData, section, kernelInfoMap, isSupportMix, &isUpdate, progType);
+            ParseKernelMetaData(elfData, section, kernelInfoMap);
         }
         section++;
     }
@@ -1390,35 +1288,13 @@ static RtKernel *ProcessSymbolTable(rtElfData * const elfData, const uint32_t pr
 
     RtKernel * const kernels = GetKernels(elfData);
     if (kernels != nullptr) {
-        const bool isMixKernel = (progType == Program::MACH_AI_MIX_KERNEL) ? true : false;
         std::function<void()> const errReleaseKernels = [&kernels, &elfData, &kernelInfoMap]() {
             KernelNameFree(kernels, elfData->kernel_num);
             delete[] kernels;
             KernelInfoMapRelease(kernelInfoMap);
         };
         ScopeGuard kernelsGuard(errReleaseKernels);
-        if (isMixKernel || isUpdate) {
-            if (UpdateKernelsInfo(kernelInfoMap, kernels, elfData, isSupportMix) != RT_ERROR_NONE) {
-                return nullptr;
-            }
-        }
-
-        if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE)) {
-            const auto error = UpdateKernelsMinStackSizeInfo(kernelInfoMap, kernels, elfData->kernel_num);
-            if (error != RT_ERROR_NONE) {
-                return nullptr;
-            }
-        }
-
-        rtError_t error = SetKernelFunctionEntry(kernels, elfData->kernel_num, kernelInfoMap);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "set kernel function entry failed, ret=%d.", error);
-            return nullptr;
-        }
-
-        error = SetKernelSchedMode(kernels, elfData->kernel_num, kernelInfoMap);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "set kernel schedMode failed, ret=%d.", error);
+        if (UpdateKernelsInfo(kernelInfoMap, kernels, elfData) != RT_ERROR_NONE) {
             return nullptr;
         }
         kernelsGuard.ReleaseGuard();
@@ -1515,7 +1391,7 @@ static void ProcessSymbolTableGetOffset(rtElfData *elfData, uint32_t* offset)
     return;
 }
 
-RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData, const uint32_t progType, bool* isSupportMix)
+RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData)
 {
     if (objBuf == nullptr) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
@@ -1534,7 +1410,7 @@ RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData, const 
         return nullptr;
     }
 
-    RtKernel * const kernels = ProcessSymbolTable(elfData, progType, isSupportMix);
+    RtKernel * const kernels = ProcessSymbolTable(elfData);
     return kernels;
 }
 

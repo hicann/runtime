@@ -32,7 +32,7 @@ TIMESTAMP_EXTERN(rtKernelLaunch_SubmitTask);
 TIMESTAMP_EXTERN(rtKernelLaunch_PutProgram);
 TIMESTAMP_EXTERN(rtKernelLaunch_ALLKernelLookup);
 
-rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registeredKernel, Program *&prog, uint32_t &kernelType,
+rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registeredKernel, Program *&prog, rtKernelAttrType &kernelAttrType,
     Module *&mdl, const void * const stubFunc, uint64_t &addr1, uint64_t &addr2, void * const progHandle,
     const uint64_t tilingKey)
 {
@@ -56,7 +56,7 @@ rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registere
 
     if (tilingKey == DEFAULT_TILING_KEY) {
         prog = nullptr;
-        kernelType = Program::MACH_AI_CORE;
+        kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
         addr1 = 0ULL;
         addr2 = 0ULL;
         return RT_ERROR_NONE;
@@ -72,14 +72,10 @@ rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registere
     COND_RETURN_ERROR_MSG_INNER((progHandle != nullptr) && (prog != RtPtrToPtr<Program *, void *>(progHandle)),
         RT_ERROR_PROGRAM_BASE, "Kernel prog is not belong to the launch prog.");
 
-    kernelType = prog->Machine();
-    if (kernelType == Program::MACH_AI_MIX_KERNEL) {
-        kernelType = registeredKernel->KernelType_();
-    }
-
-    COND_RETURN_ERROR_MSG_INNER(kernelType == Program::MACH_AI_CPU,
+    kernelAttrType = registeredKernel->GetKernelAttrType();
+    COND_RETURN_ERROR_MSG_INNER(kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU,
         RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Launch kernel failed, not support CCE Aicpu kernel task, type=%u.", kernelType);
+        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%d.", kernelAttrType);
 
     mdl = stm->Context_()->GetModule(prog);
     TIMESTAMP_END(rtKernelLaunch_GetModule);

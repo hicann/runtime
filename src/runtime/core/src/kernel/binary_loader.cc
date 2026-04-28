@@ -43,32 +43,6 @@ BinaryLoader::BinaryLoader(const void * const data, const uint64_t length,
     this->binaryBuffer_ = const_cast<void *>(data);
 }
 
-static uint32_t Magic2Machine(const uint32_t magic)
-{
-    uint32_t machine = Program::MACH_INVALID_CPU;
-    switch (magic) {
-        case RT_DEV_BINARY_MAGIC_ELF: {
-            if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_MACHINE_CVMIX)) {
-                machine = Program::MACH_AI_CVMIX;
-            } else {
-                machine = Program::MACH_AI_CORE;
-            }
-            break;
-        }
-        case RT_DEV_BINARY_MAGIC_ELF_AICUBE:
-            machine = Program::MACH_AI_CORE;
-            break;
-        case RT_DEV_BINARY_MAGIC_ELF_AIVEC:
-            machine = Program::MACH_AI_VECTOR;
-            break;
-        default:
-            RT_LOG(RT_LOG_ERROR, "Invalid magic: %#x should be {%#x, %#x, %#x}", magic, RT_DEV_BINARY_MAGIC_ELF,
-                RT_DEV_BINARY_MAGIC_ELF_AICUBE, RT_DEV_BINARY_MAGIC_ELF_AIVEC);
-            break;
-    }
-    return machine;
-}
-
 static uint32_t ConvertMagic(const std::string &magicStr)
 {
     if (magicStr == "RT_DEV_BINARY_MAGIC_ELF") {
@@ -247,10 +221,7 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram * const prog) const
     std::string jsonFileRealPath;
     rtError_t error = GetJsonObj(binRealPath_, jsonFileRealPath, kernelJsonObj);
     if (error != RT_ERROR_NONE) {
-        if (!prog->ContainsAscendMeta()) {
-            RT_LOG(RT_LOG_ERROR, "binary no metainfo and kernel json is not exists. bin=[%s]", binRealPath_.c_str());
-            return error;
-        }
+        RT_LOG(RT_LOG_WARNING, "kernel json is not exists. bin=[%s]", binRealPath_.c_str());
         return RT_ERROR_NONE;
     }
 
@@ -259,19 +230,30 @@ rtError_t BinaryLoader::ParseKernelJsonFile(ElfProgram * const prog) const
     error = ParseDebugOptions(kernelJsonObj);
     ERROR_RETURN(error, "Parse degbug options failed, json=[%s]", jsonFileRealPath.c_str());
 
-    prog->SetElfMagic(magic_);
-    if (!prog->ContainsAscendMeta()) {
-        const uint32_t magic = ParseMagic(kernelJsonObj);
-        const uint32_t machine = Magic2Machine(magic);
-        if ((magic == 0U) || (machine == Program::MACH_INVALID_CPU)) {
-            RT_LOG(RT_LOG_ERROR, "Binary no metainfo and magic in kernel json is invalid, json=[%s]",
-                jsonFileRealPath.c_str());
-            return RT_ERROR_INVALID_VALUE;
+    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
+    /* jsonMagic > optionMagic > defaultMagic */
+    const uint32_t jsonMagic = ParseMagic(kernelJsonObj);
+    if (jsonMagic != 0U) {
+        kernelAttrType = Runtime::Instance()->Magic2KernelAttrType(jsonMagic);
+        if (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)) {
+            prog->SetElfMagic(jsonMagic);
+            prog->SetDefaultKernelAttrType(kernelAttrType);
+            RT_LOG(RT_LOG_INFO, "Load binary from file, jsonMagic=%u, kernelAttrType=%d", jsonMagic, kernelAttrType);
+            return RT_ERROR_NONE;
         }
-        RT_LOG(RT_LOG_DEBUG, "Load binary from file, magic=%#x, machine=%u", magic, machine);
-        prog->SetMachine(machine);
-        prog->SetElfMagic(magic);
     }
+
+    const uint32_t optionMagic = magic_;
+    if (optionMagic == 0U) {
+        kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
+        prog->SetDefaultKernelAttrType(kernelAttrType);
+        RT_LOG(RT_LOG_INFO, "Load binary from file, kernelAttrType=%d", kernelAttrType);
+        return RT_ERROR_NONE;
+    }
+
+    RT_LOG(RT_LOG_INFO, "Load binary from file, optionMagic=%u, kernelAttrType=%d", optionMagic, kernelAttrType);
+
+    prog->SetElfMagic(optionMagic);
     return RT_ERROR_NONE;
 }
 
@@ -282,8 +264,17 @@ ElfProgram* BinaryLoader::LoadFromFile()
         RT_LOG(RT_LOG_ERROR, "Read binary file failed");
         return nullptr;
     }
-    // MACH_AI_MIX_KERNEL meanings all kinds of kernel in one .o file, each kernel's machine type is defined in metainfo
-    ElfProgram *prog = new (std::nothrow) ElfProgram(Program::MACH_AI_MIX_KERNEL);
+
+    rtKernelAttrType kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
+    // If user give the specified magic param, use to set the kernelAttrType.
+    if (magic_ != 0) {
+        kernelAttrType = Runtime::Instance()->Magic2KernelAttrType(magic_);
+        if (kernelAttrType == static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)) {
+            kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
+        }
+    }
+
+    ElfProgram *prog = new (std::nothrow) ElfProgram(kernelAttrType);
     if (prog == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Malloc new ElfProgram failed");
         char_t *buffer = RtPtrToPtr<char_t *, void *>(binaryBuffer_);
@@ -331,7 +322,7 @@ PlainProgram* BinaryLoader::LoadCpuKernelFromFile()
 
 PlainProgram* BinaryLoader::LoadCpuKernelFromData()
 {
-    PlainProgram *prog = new (std::nothrow) PlainProgram(RT_KERNEL_REG_TYPE_CPU, Program::MACH_AI_CPU);
+    PlainProgram *prog = new (std::nothrow) PlainProgram(RT_KERNEL_REG_TYPE_CPU, RT_KERNEL_ATTR_TYPE_AICPU);
     if (prog == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Malloc new PlainProgram failed");
         return nullptr;
@@ -343,21 +334,26 @@ PlainProgram* BinaryLoader::LoadCpuKernelFromData()
 
 ElfProgram* BinaryLoader::LoadFromData() const
 {
-    // MACH_AI_MIX_KERNEL meanings all kinds of kernel in one .o file, each kernel's machine type is defined in metainfo
-    uint32_t machine = Program::MACH_AI_MIX_KERNEL;
-    // If user give the specified magic param, use to set the machine.
+    rtKernelAttrType kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
+    // If user give the specified magic param, use to set the kernelAttrType.
     if (magic_ != 0) {
-        machine = Magic2Machine(magic_);
-        if (machine == Program::MACH_INVALID_CPU) {
-            return nullptr;
+        kernelAttrType = Runtime::Instance()->Magic2KernelAttrType(magic_);
+        if (kernelAttrType == static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)) {
+            kernelAttrType = Runtime::Instance()->GetDefaultKernelAttrType();
         }
     }
-    ElfProgram *prog = new (std::nothrow) ElfProgram(machine);
+
+    ElfProgram *prog = new (std::nothrow) ElfProgram(kernelAttrType);
     if (prog == nullptr) {
         RT_LOG(RT_LOG_ERROR, "malloc new ElfProgram failed");
         return nullptr;
     }
-    RT_LOG(RT_LOG_INFO, "New ElfProgram ok, Runtime_alloc_size %zu", sizeof(ElfProgram));
+    RT_LOG(RT_LOG_INFO, "New ElfProgram ok, magic=%u, kernelAttrType=%d, Runtime_alloc_size=%zu",
+        magic_, kernelAttrType, sizeof(ElfProgram));
+
+    if (magic_ != 0) {
+        prog->SetElfMagic(magic_);
+    }
 
     const rtError_t ret = prog->Register(binaryBuffer_, static_cast<uint64_t>(binarySize_));
     if (ret != RT_ERROR_NONE) {
@@ -366,21 +362,6 @@ ElfProgram* BinaryLoader::LoadFromData() const
         return nullptr;
     }
 
-    if ((!prog->ContainsAscendMeta()) && (magic_ == 0U)) {
-        RT_LOG(RT_LOG_ERROR, "Binary format is illegal, should contain metainfo section!");
-        delete prog;
-        return nullptr;
-    }
-
-    /* alse @see Runtime::MallocProgramAndReg 
-       CLOUD_V2 metainfo feature, if kernel has valid metainfo, will register kernel in new way with the metainfo,
-       such as funcType, taskRation...
-    */
-    COND_PROC(((prog->ContainsAscendMeta()) && (prog->Machine() != Program::MACH_AI_MIX_KERNEL) &&
-        !IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_MACHINE_CVMIX)),
-        prog->SetMachine(Program::MACH_AI_MIX_KERNEL);)
-
-    prog->SetElfMagic(magic_);
     return prog;
 }
 
@@ -395,7 +376,7 @@ ElfProgram* BinaryLoader::LoadProgram()
 
 PlainProgram* BinaryLoader::ParseJsonAndRegisterCpuKernel()
 {
-    PlainProgram *prog = new (std::nothrow) PlainProgram(RT_KERNEL_REG_TYPE_CPU, Program::MACH_AI_CPU);
+    PlainProgram *prog = new (std::nothrow) PlainProgram(RT_KERNEL_REG_TYPE_CPU, RT_KERNEL_ATTR_TYPE_AICPU);
     if (prog == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Malloc new PlainProgram failed");
         return nullptr;

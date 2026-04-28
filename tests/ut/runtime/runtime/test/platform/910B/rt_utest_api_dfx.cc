@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include "thread_local_container.hpp"
 #include "runtime/rt_inner_dfx.h"
+#include "../../data/elf.h"
 #undef protected
 #undef private
 
@@ -75,10 +76,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", nullptr, 0);

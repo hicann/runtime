@@ -67,6 +67,7 @@
 #include "stars_cond_isa_helper.hpp"
 #include "capture_model_utils.hpp"
 #include "cmo_task.h"
+#include "../../data/elf.h"
 #undef protected
 #undef private
 
@@ -8160,10 +8161,10 @@ TEST_F(ApiDavidTest, TestLaunchNonKernelByHandle)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8241,10 +8242,10 @@ TEST_F(ApiDavidTest, TestLaunchAicpuKernelByHandle)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8270,7 +8271,7 @@ TEST_F(ApiDavidTest, TestLaunchAicpuKernelByHandle)
     taskCfg.extend.timeout = 1000U;
     taskCfg.isBaseValid = 1U;
     taskCfg.base.dumpflag = 0U;
-    k1->SetKernelType_(KERNEL_TYPE_AICPU);
+    k1->SetAicpuKernelType_(KERNEL_TYPE_AICPU);
 
     ApiImplDavid impl;
     error = impl.LaunchKernelByHandle(k1, 1U, argsInfo, stream, taskCfg);
@@ -8312,10 +8313,10 @@ TEST_F(ApiDavidTest, TestLaunchKernelV2)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8482,10 +8483,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_MIX);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_MIX, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8508,10 +8509,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
     char       function_ = 'a';
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     error = rtDevBinaryRegister(&devBin, &binHandle_);
@@ -8556,6 +8557,9 @@ TEST_F(ApiDavidTest, StreamLaunchKernel_aclgraph_update)
     error = impl.KernelLaunch(&function_, 1 /* coredim */, &wwargsInfo, stream, 0, nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtDevBinaryUnRegister(binHandle_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     delete stream;
     delete capStream;
     delete mdl;
@@ -8592,10 +8596,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_MIX);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_MIX, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8720,10 +8724,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_taskMismatch)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_MIX);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_MIX, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8820,10 +8824,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_TaskSubmitFail
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_MIX);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_MIX, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -8921,10 +8925,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_allocTaskFail)
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_MIX);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_MIX, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;
@@ -9046,10 +9050,10 @@ TEST_F(ApiDavidTest, StreamLaunchKernelWithHandle_aclgraph_update_CaptureStreamE
     Context * ctx = static_cast<Context *>(current);
     stream->SetContext(ctx);
  
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel *k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     k1->userParaNum_ = 0;
     k1->systemParaNum_ = 0;
     k1->isSupportOverFlow_ = false;

@@ -173,9 +173,14 @@ TEST_F(EngineTest, EngineSendingWait)
     task.type = TS_TASK_TYPE_KERNEL_AICORE;
     uint16_t taskId = 0;
     task.stream = stream_;
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+    task.u.aicTaskInfo.kernel = kernel;
     MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(true)).then(returnValue(false));
     err = engine_->SendTask(&task, taskId);
     EXPECT_EQ(err, RT_ERROR_NONE);
+    delete kernel;
 }
 
 TEST_F(EngineTest, AddTaskToStream)
@@ -310,7 +315,7 @@ TEST_F(EngineTest, engine_report_last_error1)
 
     TaskFactory *taskFactory = const_cast<TaskFactory *>(device_->GetTaskFactory());
     TaskInfo *task = taskFactory->Alloc(stream, TS_TASK_TYPE_KERNEL_AICORE, res);
-    AicTaskInit(task, (uint32_t)0, (uint64_t)0x02, (uint16_t)1, nullptr);
+    AicTaskInit(task, RT_KERNEL_ATTR_TYPE_AICORE, (uint64_t)0x02, (uint16_t)1, nullptr);
     EXPECT_EQ(task->type, TS_TASK_TYPE_KERNEL_AICORE);
     task->tid = 256;
     task->stream = stream;
@@ -426,7 +431,7 @@ TEST_F(EngineTest, engine_GetKernelNameForAiCoreorAiv)
     const void *stubFunc = (void *)0x03;
     const char *stubName = "efg";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
 
@@ -436,7 +441,8 @@ TEST_F(EngineTest, engine_GetKernelNameForAiCoreorAiv)
     MOCKER_CPP(&Runtime::PutProgram)
         .stubs()
         .will(ignoreReturnValue());
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("efg", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
     std::unique_ptr<DirectHwtsEngine> aicpuErrObj = std::make_unique<DirectHwtsEngine>(device_);
@@ -445,7 +451,7 @@ TEST_F(EngineTest, engine_GetKernelNameForAiCoreorAiv)
     rtError_t errCode = RT_ERROR_NONE;
     TaskInfo * const kernTask = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
 
-    AicTaskInit(kernTask, (uint32_t)3, (uint16_t)1, (uint64_t)0, nullptr);
+    AicTaskInit(kernTask, RT_KERNEL_ATTR_TYPE_CUBE, (uint16_t)1, (uint64_t)0, nullptr);
     EXPECT_EQ(kernTask->type, TS_TASK_TYPE_KERNEL_AICORE);
     kernTask->u.aicTaskInfo.kernel = kernel;
     std::string kernelNameStr = aicpuErrObj->GetKernelNameForAiCoreorAiv(stm->Id_(), kernTask->id);
@@ -1231,7 +1237,7 @@ TEST_F(EngineTest, ProcessOverFlowReport_TS_TASK_TYPE_KERNEL_AICORE_1)
     const void *stubFunc = (void *)0x03;
     const char *stubName = "efg";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
 
@@ -1241,7 +1247,8 @@ TEST_F(EngineTest, ProcessOverFlowReport_TS_TASK_TYPE_KERNEL_AICORE_1)
     MOCKER_CPP(&Runtime::PutProgram)
         .stubs()
         .will(ignoreReturnValue());
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
     Stream *stream = new Stream(device, 0);
@@ -1285,7 +1292,7 @@ TEST_F(EngineTest, ProcessOverFlowReport_TS_TASK_TYPE_KERNEL_AICORE_2)
     const void *stubFunc = (void *)0x03;
     const char *stubName = "efgexample";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
 
@@ -1295,7 +1302,8 @@ TEST_F(EngineTest, ProcessOverFlowReport_TS_TASK_TYPE_KERNEL_AICORE_2)
     MOCKER_CPP(&Runtime::PutProgram)
         .stubs()
         .will(ignoreReturnValue());
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
 
     Stream *stream = new Stream(device, 0);

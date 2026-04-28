@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "profiling_task.h"
+#include "../../data/elf.h"
 
 class CloudV2ApiTest910b : public testing::Test
 {
@@ -39,10 +40,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);

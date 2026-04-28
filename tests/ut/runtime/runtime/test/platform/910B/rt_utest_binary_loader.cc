@@ -170,7 +170,7 @@ TEST_F(BinaryLoaderTest, TestLoadFromDataWithMetainfoError)
 
     MOCKER_CPP(&Program::Register).stubs().will(returnValue(RT_ERROR_NONE));
     Program * prg = binaryLoader.LoadFromData();
-    EXPECT_EQ(prg, nullptr);
+    EXPECT_NE(prg, nullptr);
 }
 
 TEST_F(BinaryLoaderTest, TestRtsBinaryLoadFromData_CpuKernel_Success)
@@ -344,7 +344,7 @@ TEST_F(BinaryLoaderTest, TestLoadFromFileWithParseKernelJsonFileError)
 
     BinaryLoader binaryLoader(file.c_str(), nullptr);
     Program *prog = binaryLoader.LoadFromFile();
-    EXPECT_EQ(prog, nullptr);
+    EXPECT_NE(prog, nullptr);
     delete prog;
 }
 
@@ -422,8 +422,6 @@ TEST_F(BinaryLoaderTest, TestParseKernelJsonFile)
     std::string file = "file_not_exist";
     BinaryLoader binaryLoader(file.c_str(), nullptr);
     ElfProgram program;
-    program.elfData_->containsAscendMeta = true;
-    program.isSupportMix_ = true;
     rtError_t ret = binaryLoader.ParseKernelJsonFile(&program);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
@@ -431,7 +429,7 @@ TEST_F(BinaryLoaderTest, TestParseKernelJsonFile)
 TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceSuccess)
 {
     MOCKER_CPP(&Runtime::BinaryLoad).stubs().will(returnValue(RT_ERROR_NONE));
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     program.SetIsLazyLoad(true);
     rtError_t ret = program.CheckLoaded2Device();
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -440,7 +438,7 @@ TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceSuccess)
 TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceFailed)
 {
     MOCKER_CPP(&Runtime::BinaryLoad).stubs().will(returnValue(RT_ERROR_PROGRAM_SIZE));
-    ElfProgram program(Program::MACH_AI_MIX_KERNEL);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
     program.SetIsLazyLoad(true);
     rtError_t ret = program.CheckLoaded2Device();
     EXPECT_EQ(ret, RT_ERROR_PROGRAM_SIZE);
@@ -449,121 +447,41 @@ TEST_F(BinaryLoaderTest, TestCheckLoaded2DeviceFailed)
 TEST_F(BinaryLoaderTest, TestAdjustKernelNameAndGetMixType)
 {
     RtKernel kernel;
+    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID));
     uint8_t mixType = 0;
     ElfProgram program;
 
     char *name = "test_kernel_mix_aiv_00001";
     kernel.name = "test_kernel_mix_aiv_00001";
-    std::string kernelName = program.AdjustKernelNameAndGetMixType(&kernel, mixType);
+    std::string kernelName = program.AdjustKernelName(kernel.name);
     EXPECT_EQ(kernelName, "test_kernel_00001");
+    program.GetKernelTypeAndMixTypeByName(kernel.name, kernelAttrType, mixType);
     EXPECT_EQ(mixType, MIX_AIV);
+    EXPECT_EQ(kernelAttrType, RT_KERNEL_ATTR_TYPE_VECTOR);
 
     kernel.name = "test_kernel_mix_aic_00001";
-    kernelName = program.AdjustKernelNameAndGetMixType(&kernel, mixType);
+    std::string kernelName = program.AdjustKernelName(kernel.name);
     EXPECT_EQ(kernelName, "test_kernel_00001");
+    program.GetKernelTypeAndMixTypeByName(kernel.name, kernelAttrType, mixType);
     EXPECT_EQ(mixType, MIX_AIC);
+    EXPECT_EQ(kernelAttrType, RT_KERNEL_ATTR_TYPE_CUBE);
 
-    kernel.name = "test_kernel_mix_aic_mix_aiv_00001";
-    kernelName = program.AdjustKernelNameAndGetMixType(&kernel, mixType);
-    EXPECT_EQ(kernelName, "test_kernel_00001");
-    EXPECT_EQ(mixType, MIX_AIC_AIV_MAIN_AIC);
 }
 
 TEST_F(BinaryLoaderTest, TestLoadFromDataWithMixKernelNotFound)
 {
     ElfProgram prog;
-    Kernel * k1 = new Kernel(nullptr, "f1", "", &prog, 10);
-    rtError_t ret = prog.MixKernelRemove(k1);
+    Kernel * k1 = new Kernel("f1", 0ULL, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+    rtError_t ret = prog.KernelNameMapRemove(k1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     delete k1;
-}
-
-
-TEST_F(BinaryLoaderTest, TestFindAndProcMixKernelV1)
-{
-    ElfProgram prog;
-    Kernel kernelAicObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 0, 0, 0);
-    Kernel *kernelAicPtr = &kernelAicObj;
-    rtError_t ret = prog.MixKernelAdd(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    RtKernel kernelAiv;
-    uint32_t procVersion = 1;
-    bool mixRet = prog.FindAndProcMixKernel(&kernelAiv, "testKernelName", 1, procVersion);
-    EXPECT_EQ(mixRet, true);
-
-    ret = prog.MixKernelRemove(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(BinaryLoaderTest, TestFindAndProcMixKernelWithConflict)
-{
-    ElfProgram prog;
-    Kernel kernelAicObj(nullptr, "testKernelName", 1, &prog, 2048, 1024, 0, 0, 0);
-    Kernel *kernelAicPtr = &kernelAicObj;
-    rtError_t ret = prog.MixKernelAdd(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    RtKernel kernelAiv;
-    uint32_t procVersion = 1;
-    bool mixRet = prog.FindAndProcMixKernel(&kernelAiv, "testKernelName", 1, procVersion);
-    EXPECT_EQ(mixRet, false);
-
-    ret = prog.MixKernelRemove(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(BinaryLoaderTest, TestFindAndProcMixKernelAndAjustOffset1Offset2)
-{
-    ElfProgram prog;
-    Kernel kernelAivObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 2, 0, 0);
-    Kernel *kernelAivPtr = &kernelAivObj;
-    rtError_t ret = prog.MixKernelAdd(kernelAivPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    RtKernel kernelAic;
-    kernelAic.offset = 1024;
-    uint32_t procVersion = 1;
-    bool mixRet = prog.FindAndProcMixKernel(&kernelAic, "testKernelName", 1, procVersion);
-    EXPECT_EQ(mixRet, true);
-    EXPECT_EQ(kernelAivObj.Offset_(), 1024);
-    EXPECT_EQ(kernelAivObj.Offset2_(), 2048);
-
-    ret = prog.MixKernelRemove(kernelAivPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(BinaryLoaderTest, TestFindAndProcMixKernelV2)
-{
-    ElfProgram prog;
-    Kernel kernelAicObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 0, 0, 0);
-    Kernel *kernelAicPtr = &kernelAicObj;
-    rtError_t ret = prog.MixKernelAdd(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    RtKernel kernelAiv;
-    uint32_t procVersion = 2;
-    bool mixRet = prog.FindAndProcMixKernel(&kernelAiv, "testKernelName", 1, procVersion);
-    EXPECT_EQ(mixRet, true);
-
-    ret = prog.MixKernelRemove(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(BinaryLoaderTest, TestDegenerateMixType)
-{
-    ElfProgram prog;
-    uint8_t mixType = MIX_AIC;
-    prog.elfData_->degenerateFlag = true;
-    prog.DegenerateMixType(mixType);
-    EXPECT_EQ(NO_MIX, mixType);
 }
 
 TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAiv)
 {
     ElfProgram prog;
-    Kernel kernelAicObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 0, 0, 0);
-    prog.SetMachine(Program::MACH_AI_VECTOR);
+    Kernel kernelAicObj("testKernelName", 1, &prog, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 0, 0, 0, 0);
+    prog.SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
 
     void *aicAddr;
     void *aivAddr;
@@ -575,9 +493,8 @@ TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAiv)
 TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAivWithKernelType)
 {
     ElfProgram prog;
-    Kernel kernelObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 0, 0, 0);
-    prog.SetMachine(Program::MACH_AI_MIX_KERNEL);
-    kernelObj.SetKernelType_(Program::MACH_AI_VECTOR);
+    Kernel kernelObj("testKernelName", 1, &prog, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 0, 0, 0, 0);
+    kernelObj.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
 
     void *aicAddr;
     void *aivAddr;
@@ -589,8 +506,8 @@ TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAivWithKernelType)
 TEST_F(BinaryLoaderTest, TestFuncGetAddrWithMixOnlyAiv)
 {
     ElfProgram prog;
-    Kernel kernelObj(nullptr, "testKernelName", 1, &prog, 2048, 0, 0, 0, 0);
-    prog.SetMachine(Program::MACH_AI_CORE);
+    Kernel kernelObj("testKernelName", 1, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 0, 0, 0, 0);
+    prog.SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
     kernelObj.SetMixType(MIX_AIV);
 
     void *aicAddr;

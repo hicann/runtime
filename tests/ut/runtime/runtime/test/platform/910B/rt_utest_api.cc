@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
+#include "../../data/elf.h"
 
 class CloudV2ApiTest : public testing::Test
 {
@@ -38,10 +39,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);
@@ -266,7 +267,7 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -354,7 +355,7 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -428,7 +429,7 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error1)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -502,7 +503,7 @@ TEST_F(CloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_error2)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355ULL, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -695,10 +696,10 @@ TEST_F(CloudV2ApiTest, LAUNCH_KERNEL_WITH_TYPE)
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     error = rtDevBinaryRegister(&devBin, &binHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -710,6 +711,9 @@ TEST_F(CloudV2ApiTest, LAUNCH_KERNEL_WITH_TYPE)
 
     stub_func = (void *)0x12345;
     error = rtFunctionRegister(binHandle_, stub_func, "stub_func1", "foo", (3 << 16)); // mix aic && aiv
+
+    error = rtDevBinaryUnRegister(binHandle_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiTest, GetDevArgsAddr)
@@ -1222,10 +1226,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);
@@ -3176,10 +3180,10 @@ TEST_F(CloudV2ApiTest, apiImpl_datadump_loadinfo)
     void      *binHandle_;
     char       function_;
     uint32_t   binary_[32];
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     rtError_t error = rtGetDevice(&devId);
@@ -3221,6 +3225,9 @@ TEST_F(CloudV2ApiTest, apiImpl_datadump_loadinfo)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtStreamEndCapture(stream, &m);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtDevBinaryUnRegister(binHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelDestroy(m);

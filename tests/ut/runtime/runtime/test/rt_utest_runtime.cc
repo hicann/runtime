@@ -113,47 +113,6 @@ TEST_F(RuntimeTest, binanry_reg_cube_null_data)
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
-
-void stubFunc(void)
-{}
-TEST_F(RuntimeTest, function_reg_repeat)
-{
-    rtError_t error;
-    Program *program;
-    rtDevBinary_t bin;
-    void *code[] = {NULL, NULL, NULL, NULL};
-    int32_t func;
-    const Kernel * kernel;
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    bin.magic = 0;
-    bin.version = 1;
-    bin.data = code;
-    bin.length = sizeof(code);
-    error = rtInstance->ProgramRegister(&bin, &program);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
-    bin.magic = RT_DEV_BINARY_MAGIC_ELF_AICPU;
-    error = rtInstance->ProgramRegister(&bin, &program);
-
-    bin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    error = rtInstance->ProgramRegister(&bin, &program);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtInstance->KernelRegister(program, NULL, "repeat2", NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtInstance->KernelRegister(program, (const void *)stubFunc, "repeat", NULL, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    kernel = rtInstance->kernelTable_.Lookup((const void *)stubFunc);
-    EXPECT_STREQ(kernel->name_.c_str(), "repeat");
-    EXPECT_EQ(kernel, (Kernel*)kernel);
-
-    rtInstance->PutProgram(program);
-}
-
 using ConstructFunc = Runtime *(*)();
 using DesConstructFunc = void (*)(Runtime *);
 
@@ -207,80 +166,6 @@ TEST_F(RuntimeTest, CheckHaveDevice)
     ret = rtInstance->CheckHaveDevice();
 }
 
-TEST_F(RuntimeTest, ut_JudgeOffsetByMixType_mix)
-{
-    rtError_t error;
-    Program *program = nullptr;
-    rtDevBinary_t bin;
-    uint8_t mixType = 0;
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    MOCKER(drvMemAllocL2buffAddr).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-
-    bin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    bin.version = 1;
-    bin.data = &bin;
-    bin.length = sizeof(bin);
-    error = rtInstance->ProgramRegister(&bin, &program);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtKernelContent kernelInfo1;
-    rtKernelContent kernelInfo2;
-
-    error = rtInstance->JudgeOffsetByMixType(program, "abc", mixType, &kernelInfo1, &kernelInfo2);
-    EXPECT_NE(error, RT_ERROR_NONE);
-}
-
-TEST_F(RuntimeTest, ut_JudgeOffsetByMixType)
-{
-    rtError_t error;
-    Program *program = nullptr;
-    rtDevBinary_t bin;
-    uint8_t mixType = 0;
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    bin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    bin.version = 1;
-    bin.data = &bin;
-    bin.length = sizeof(bin);
-    error = rtInstance->ProgramRegister(&bin, &program);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtKernelContent kernelInfo1;
-    rtKernelContent kernelInfo2;
-
-    MOCKER_CPP_VIRTUAL(program, &Program::HasMixKernel).stubs().will(returnValue(true));
-    error = rtInstance->JudgeOffsetByMixType(program, "abc", mixType, &kernelInfo1, &kernelInfo2);
-    EXPECT_NE(error, RT_ERROR_NONE);
-}
-
-TEST_F(RuntimeTest, ut_GetOffsetByCustomKernelType_mix)
-{
-    rtError_t error;
-    Program *program = nullptr;
-    rtDevBinary_t bin;
-
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    MOCKER(drvMemAllocL2buffAddr).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-
-    bin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    bin.version = 1;
-    bin.data = &bin;
-    bin.length = sizeof(bin);
-    error = rtInstance->ProgramRegister(&bin, &program);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtKernelContent kernelInfo1;
-    rtKernelContent kernelInfo2;
-    uint32_t mixType = 9U;
-
-    error = rtInstance->GetOffsetByCustomKernelType(program, mixType, "abc", &kernelInfo1, &kernelInfo2);
-    EXPECT_EQ(error, RT_ERROR_KERNEL_OFFSET);
-
-}
-
 TEST_F(RuntimeTest, CheckHaveDeviceNotSupport)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
@@ -300,10 +185,10 @@ TEST_F(RuntimeTest, ut_AllKernelRegister_GetKernelsCount_2)
     ElfProgram prog;
     char *name = new (std::nothrow) char[10];
     strcpy(name, "a_200");
-    RtKernel kernel = {name, 10, 10, nullptr};
+    RtKernel kernel = {name, 10, 10, {}};
     prog.elfData_->kernel_num = 1;
     prog.kernels_ = &kernel;
-    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog, false);
+    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog);
     EXPECT_EQ(error, RT_ERROR_NONE);
     prog.kernels_ = nullptr;
     prog.elfData_->kernel_num = 0;
@@ -315,11 +200,11 @@ TEST_F(RuntimeTest, ut_AllKernelRegister_GetKernelsCount_invalid01)
     ElfProgram prog;
     char *name = new (std::nothrow) char[10];
     strcpy(name, "a200");
-    RtKernel kernel = {name, 10, 10, nullptr};
+    RtKernel kernel = {name, 10, 10, {}};
     prog.elfData_->kernel_num = 1;
     prog.kernels_ = &kernel;
-    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog, false);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     prog.kernels_ = nullptr;
     prog.elfData_->kernel_num = 0;
     delete[] name;
@@ -330,11 +215,11 @@ TEST_F(RuntimeTest, ut_AllKernelRegister_GetKernelsCount_invalid02)
     ElfProgram prog;
     char *name = new (std::nothrow) char[100];
     strcpy(name, "a_4444444444444444444444444444444444444444444444444444444444");
-    RtKernel kernel = {name, 10, 10, nullptr};
+    RtKernel kernel = {name, 10, 10, {}};
     prog.elfData_->kernel_num = 1;
     prog.kernels_ = &kernel;
-    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog, false);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     prog.kernels_ = nullptr;
     prog.elfData_->kernel_num = 0;
     delete[] name;
@@ -345,11 +230,11 @@ TEST_F(RuntimeTest, ut_AllKernelRegister_GetKernelsCount_invalid03)
     ElfProgram prog;
     char *name = new (std::nothrow) char[3];
     strcpy(name, "a_");
-    RtKernel kernel = {name, 10, 10, nullptr};
+    RtKernel kernel = {name, 10, 10, {}};
     prog.elfData_->kernel_num = 1;
     prog.kernels_ = &kernel;
-    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog, false);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    rtError_t error = Runtime::Instance()->AllKernelRegister(&prog);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     prog.kernels_ = nullptr;
     prog.elfData_->kernel_num = 0;
     delete[] name;
@@ -371,36 +256,8 @@ TEST_F(RuntimeTest, ut_AllKernelRegister)
     error = rtInstance->ProgramRegister(&bin, &program);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtInstance->AllKernelRegister(program, false);
+    error = rtInstance->AllKernelRegister(program);
     EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(RuntimeTest, ut_CheckKernelsName)
-{
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RtKernel kernels = {};
-    bool staticKernel = false;
-    kernels.name = new (std::nothrow) char[256];
-    strcpy(kernels.name, "Diag_10f221e28fd08dee9977262d2fb6c36e_high_performance_mix_aic_mix_aiv__kernel0");
-    rtError_t error = rtInstance->CheckKernelsName(&kernels, 1, true, staticKernel);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    strcpy(kernels.name, "Diag_10f221e28fd08dee9977262d2fb6c36e_high_performance_mix_aiv_mix_aic__kernel0");
-    error = rtInstance->CheckKernelsName(&kernels, 1, true, staticKernel);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    strcpy(kernels.name, "Diag_10f221e28fd08dee9977262d2fb6c36e_high_performance__kernel0_mix_aic");
-    error = rtInstance->CheckKernelsName(&kernels, 1, true, staticKernel);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    strcpy(kernels.name, "Diag_10f221e28fd08dee9977262d2fb6c36e_high_performance_0");
-    error = rtInstance->CheckKernelsName(&kernels, 1, true, staticKernel);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    strcpy(kernels.name, "12345_9_mix_aic");
-    error = rtInstance->CheckKernelsName(&kernels, 1, true, staticKernel);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    delete [] kernels.name;
 }
 
 TEST_F(RuntimeTest, ut_GetTilingKeyFromKernel)
@@ -752,128 +609,6 @@ TEST_F(RuntimeTest, GetKernelBinByFileName_test)
     rtError_t ret = rtInstance->GetKernelBinByFileName(binFileName, &buffer, &length);
     ret = rtInstance->FreeKernelBin(buffer);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-TEST_F(RuntimeTest, MIX_KERNEL_test_1)
-{
-    const int NAME_MAX_LENGTH = 256U;
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RtKernel kernel = {};
-    kernel.name =  new (std::nothrow) char[NAME_MAX_LENGTH];
-
-    uint8_t mixType;
-    uint32_t kernelType;
-
-
-    /* aicore */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add", strlen("add"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AICORE;
-    kernel.crossCoreSync = FUNC_NO_USE_SYNC;
-
-    rtError_t ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(mixType, NO_MIX);
-    EXPECT_EQ(kernelType, 0);
-
-    /* aic */
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AIC;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(mixType, MIX_AIC);
-    EXPECT_EQ(kernelType, 0);
-
-    /* aiv */
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AIV;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(mixType, MIX_AIV);
-    EXPECT_EQ(kernelType, 2);
-
-    /* aic_main/aiv_main */
-    kernel.funcType = KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN;
-
-    ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aic", strlen("add_mix_aic"));
-    ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(mixType, MIX_AIC);
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aiv", strlen("add_mix_aiv"));
-    ret = rtInstance->GetMixTypeAndKernelType(&kernel, mixType, kernelType);
-    EXPECT_EQ(mixType, MIX_AIV);
-    delete [] kernel.name;
-}
-
-TEST_F(RuntimeTest, MIX_KERNEL_test_2)
-{
-    const int NAME_MAX_LENGTH = 256U;
-    Runtime *rtInstance = (Runtime *)Runtime::Instance();
-    RtKernel kernel = {};
-    kernel.name =  new (std::nothrow) char[NAME_MAX_LENGTH];
-    uint8_t mixType;
-    uint32_t kernelType;
-
-    /* aicore */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add", strlen("add"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AICORE;
-    kernel.crossCoreSync = FUNC_NO_USE_SYNC;
-
-    std::string kernelName = rtInstance->AdjustKernelName(&kernel, NO_MIX);
-    bool isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, true);
-
-    kernel.funcType = KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN;
-    kernelName = rtInstance->AdjustKernelName(&kernel, MIX_AIC);
-    isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, false);
-
-    /* mix aic */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aic", strlen("add_mix_aic"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    kernelName = rtInstance->AdjustKernelName(&kernel, MIX_AIC);
-    isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, true);
-
-    /* mix aiv */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aiv", strlen("add_mix_aiv"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_MIX_AIV_MAIN;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    kernelName = rtInstance->AdjustKernelName(&kernel, MIX_AIV);
-    isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, true);
-
-    /* mix aic rollback */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aic", strlen("add_mix_aic"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AIC_ROLLBACK;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    kernelName = rtInstance->AdjustKernelName(&kernel, MIX_AIC);
-    isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, true);
-
-    /* mix aiv rollback */
-    memset_s(kernel.name, NAME_MAX_LENGTH, 0, NAME_MAX_LENGTH);
-    memcpy_s(kernel.name, NAME_MAX_LENGTH, "add_mix_aiv", strlen("add_mix_aiv"));
-    kernel.funcType = KERNEL_FUNCTION_TYPE_AIV_ROLLBACK;
-    kernel.crossCoreSync = FUNC_USE_SYNC;
-
-    kernelName = rtInstance->AdjustKernelName(&kernel, MIX_AIV);
-    isSame = kernelName.compare("add") == 0;
-    EXPECT_EQ(isSame, true);
-    delete [] kernel.name;
 }
 
 TEST_F(RuntimeTest, feature_version_1)

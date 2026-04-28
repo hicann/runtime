@@ -127,7 +127,7 @@ TEST_F(DeviceTest, module_alloc_02)
     const char * kernelName = "test";
     (void)program->AppendKernelName(kernelName);
 
-    program->machine_ = Program::MACH_AI_CPU;
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
     module1 = dev->ModuleAlloc(program);
     EXPECT_NE(module1, (Module*)NULL);
     uint32_t cnt = 0U;
@@ -172,7 +172,7 @@ TEST_F(DeviceTest, module_alloc_02_test_001)
     const char * kernelName = "test";
     (void)program->AppendKernelName(kernelName);
 
-    program->machine_ = Program::MACH_AI_CPU;
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
     module1 = dev->ModuleAlloc(program);
     EXPECT_NE(module1, (Module*)NULL);
 
@@ -181,25 +181,25 @@ TEST_F(DeviceTest, module_alloc_02_test_001)
     uint32_t cnt2 = 0U;
     Kernel *kernel = (Kernel *)malloc(sizeof(Kernel));
 
-    module1->GetProgram()->SetMachine(Program::MACH_AI_MIX_KERNEL);
+    module1->GetProgram()->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
     module1->GetPrefetchCnt(kernel, cnt);
 
     rtError_t errNum = RT_ERROR_NONE;
     kernel->SetMixType(NO_MIX);
-    module1->GetProgram()->SetMachine(Program::MACH_INVALID_CPU);
+    module1->GetProgram()->SetDefaultKernelAttrType(static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID));
     errNum = module1->GetPrefetchCnt(kernel, cnt1, cnt2);
     EXPECT_EQ(errNum, RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(cnt1, 0);
     EXPECT_EQ(cnt2, 0);
-    module1->GetProgram()->SetMachine(Program::MACH_AI_CPU);
+    module1->GetProgram()->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
     module1->GetPrefetchCnt(kernel, cnt1, cnt2);
     EXPECT_EQ(cnt1, 0);
     EXPECT_EQ(cnt2, 0);
-    module1->GetProgram()->SetMachine(Program::MACH_AI_CVMIX);
+    module1->GetProgram()->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_MIX);
     module1->GetPrefetchCnt(kernel, cnt);
-    module1->GetProgram()->SetMachine(Program::MACH_AI_VECTOR);
+    module1->GetProgram()->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     module1->GetPrefetchCnt(kernel, cnt);
-    module1->GetProgram()->SetMachine(Program::MACH_AI_CPU);
+    module1->GetProgram()->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
 
     uint64_t x = 0x11;
     uint64_t y = 0x22;
@@ -250,7 +250,7 @@ TEST_F(DeviceTest, module_alloc_03)
     const char * kernelName = "test";
     (void)program->AppendKernelName(kernelName);
 
-    program->machine_ = Program::MACH_AI_VECTOR;
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     module1 = dev->ModuleAlloc(program);
     EXPECT_NE(module1, (Module*)NULL);
     program->SetProgMemType(Program::PROGRAM_MEM_FAST);
@@ -289,7 +289,7 @@ TEST_F(DeviceTest, module_alloc_04)
     const char *kernelName = "test";
     (void)program->AppendKernelName(kernelName);
 
-    program->machine_ = Program::MACH_AI_CPU;
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_AICPU);
     module1 = dev->ModuleAlloc(program);
     EXPECT_NE(module1, (Module*)NULL);
     uint32_t cnt1 = 0U;
@@ -342,7 +342,7 @@ TEST_F(DeviceTest, module_alloc_05)
     const char *kernelName = "test";
     (void)program->AppendKernelName(kernelName);
 
-    program->machine_ = Program::MACH_AI_VECTOR;
+    program->SetDefaultKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
     module1 = dev->ModuleAlloc(program);
     EXPECT_NE(module1, (Module*)NULL);
     uint32_t cnt1 = 0U;
@@ -1111,12 +1111,12 @@ TEST_F(DeviceTest, STARS_AicoreTimeoutDfx)
     stm->streamId_ = 1;
     rtError_t errCode = RT_ERROR_NONE;
     TaskInfo * const tsk = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_KERNEL_AICORE, errCode);
-    AicTaskInit(tsk, 1, 1, 0U, nullptr);
+    AicTaskInit(tsk, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0U, nullptr);
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "efgexample";
     Kernel *kernel = NULL;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     program->kernelNames_ = {'e', 'f', 'g', 'h', '\0'};
 
@@ -1126,7 +1126,8 @@ TEST_F(DeviceTest, STARS_AicoreTimeoutDfx)
     MOCKER_CPP(&Runtime::GetProgram)
         .stubs()
         .will(ignoreReturnValue());
-    kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     ((Runtime *)Runtime::Instance())->kernelTable_.Add(kernel);
     AicTaskInfo *aicTaskInfo = &(tsk->u.aicTaskInfo);
     aicTaskInfo->kernel = kernel;
@@ -1173,10 +1174,11 @@ TEST_F(DeviceTest, STARS_AicoreTimeoutDfx1)
 
     const void *stubFunc = (void *)0x03;
     const char *stubName = "abcd";
-    PlainProgram stubProg(Program::MACH_AI_CORE);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
     Program *program = &stubProg;
     program->kernelNames_ = {'a', 'b', 'c', '\0'};
-    Kernel *kernel = new (std::nothrow) Kernel(stubFunc, stubName, "", program, 0);
+    Kernel *kernel = new (std::nothrow) Kernel("", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 0);
+    kernel->SetStub_(stubFunc);
     taskInfo.u.aicTaskInfo.kernel = kernel;
     taskInfo.u.aicTaskInfo.kernel->mixType_ = 1;
     DeviceErrorProc *errorProc = new DeviceErrorProc(device);

@@ -28,6 +28,7 @@
 #undef private
 #include "model_c.hpp"
 #include "rt_unwrap.h"
+#include "data/elf.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -751,10 +752,10 @@ TEST_F(ModelTest, datadumploadinfo)
     char       function_;
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-    devBin.version = 1;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+    devBin.version = 2;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     error = rtStreamCreate(&stream, 0);
@@ -785,6 +786,9 @@ TEST_F(ModelTest, datadumploadinfo)
     error = rtKernelLaunchWithFlag(&function_, 1, &argsInfo, NULL, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    error = rtDevBinaryUnRegister(binHandle_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -810,10 +814,10 @@ TEST_F(ModelTest, datadumploadinfo_2)
     char       function_;
     uint32_t   binary_[32];
     void *args[] = {&error, NULL};
-    devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
+    devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
     devBin.version = 2;
-    devBin.length = sizeof(binary_);
-    devBin.data = binary_;
+    devBin.data = (void*)elf_o;
+    devBin.length = elf_o_len;
     uint32_t   datdumpinfo[32];
 
     error = rtStreamCreate(&stream, 0);

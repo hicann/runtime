@@ -37,7 +37,7 @@ void AixKernelTaskInitForFusion(TaskInfo * const taskInfo, const rtAicAivFusionI
     FusionTaskInfo *fusionTaskInfo = &(taskInfo->u.fusionKernelTask);
     FusionTaskInfoAicPart *aicPart = &(fusionTaskInfo->aicPart);
 
-    GetAicAivTypeForFusion(aicAivInfo->mixType, aicAivInfo->mach, fusionTaskInfo->aicAivType);
+    GetAicAivTypeForFusion(aicAivInfo->mixType, aicAivInfo->kernelAttrType, fusionTaskInfo->aicAivType);
 
     aicPart->dim = aicAivInfo->dimNum;
     aicPart->kernel = aicAivInfo->kernel;
@@ -134,28 +134,28 @@ static rtError_t PreProcAicAivTaskForFusion(rtFusionSubTaskInfo_t *const fusionT
     }
 
     const uint32_t coreDim = launchTaskCfg->blockDim;
-    uint32_t kernelType = 0U;
+    rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
     uint8_t mixType = NO_MIX;
     uint64_t addr1 = 0ULL;
     uint64_t addr2 = 0ULL;
     Module *launchMdl = nullptr;
     Kernel *registeredKernel = nullptr;
 
-    error = StreamLaunchKernelPrepare(stm, registeredKernel, prog, kernelType, launchMdl, stubFunc,
+    error = StreamLaunchKernelPrepare(stm, registeredKernel, prog, kernelAttrType, launchMdl, stubFunc,
                                 addr1, addr2, progHandle, tilingKey);
     COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "kernel launch prepare failed,"
         "stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 
     mixType = registeredKernel->GetMixType();
-    aicAivInfo->mach = kernelType;
+    aicAivInfo->kernelAttrType = kernelAttrType;
     aicAivInfo->dimNum = coreDim;
     aicAivInfo->mixType = mixType;
     aicAivInfo->funcAddr = addr1;
     aicAivInfo->funcAddr1 = addr2;
     aicAivInfo->kernel = registeredKernel;
     aicAivInfo->program = (prog != nullptr) ? prog : RtPtrToPtr<Program *>(progHandle);
-    RT_LOG(RT_LOG_INFO, "kernel info: stream_id=%d, kernelType=%u, kernel_name=%s,"
-        "mixType=%u, taskRation=%u, tilingKey=%llu.", stm->Id_(), kernelType,
+    RT_LOG(RT_LOG_INFO, "kernel info: stream_id=%d, kernelAttrType=%d, kernel_name=%s,"
+        "mixType=%u, taskRation=%u, tilingKey=%llu.", stm->Id_(), kernelAttrType,
         registeredKernel->Name_().c_str(), mixType, registeredKernel->GetTaskRation(),
         tilingKey);
     return RT_ERROR_NONE;
@@ -405,7 +405,7 @@ static rtError_t CheckUpdateFusionTaskInfo(const TaskInfo * const updateTask, ui
     return RT_ERROR_NONE;
 }
 
-void GetAicAivTypeForFusion(uint8_t mixType, uint32_t machine, uint8_t &aicAivType)
+void GetAicAivTypeForFusion(uint8_t mixType, rtKernelAttrType kernelAttrType, uint8_t &aicAivType)
 {
     if (mixType != static_cast<uint8_t>(NO_MIX)) {
         if ((mixType == static_cast<uint8_t>(MIX_AIC)) || (mixType == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC))) {
@@ -414,7 +414,7 @@ void GetAicAivTypeForFusion(uint8_t mixType, uint32_t machine, uint8_t &aicAivTy
             aicAivType = 1U;
         }
     } else {
-        if (machine == Program::MACH_AI_VECTOR) {
+        if (kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) {
             aicAivType = 1U;
         } else {
             aicAivType = 0U;
@@ -462,7 +462,7 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     ScopeGuard tskErrRecycle(errRecycle);
     if (taskInfo->isUpdateSinkSqe == 1U) {
         uint8_t aicAivType = 0U;
-        GetAicAivTypeForFusion(aicAivInfo.mixType, aicAivInfo.mach, aicAivType);
+        GetAicAivTypeForFusion(aicAivInfo.mixType, aicAivInfo.kernelAttrType, aicAivType);
         error = CheckUpdateFusionTaskInfo(taskInfo, sqeLen, sqeSubType, aicAivInfo.kernel, aicAivType, stm);
         ERROR_RETURN_MSG_INNER(error, "stream_id=%d, kernelType=%u, retCode=%#x.", stm->Id_(), aicAivType,
                                static_cast<uint32_t>(error));

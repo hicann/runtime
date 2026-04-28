@@ -144,7 +144,13 @@ TEST_F(CloudV2StarsEngineTest, StateDown)
     rtError_t error = RT_ERROR_NONE;
     TaskInfo task0 = {};
     task0.stream = stream_;
-    AicTaskInit(&task0, 0, 1, 0, nullptr);
+
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+
+    AicTaskInit(&task0, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
+    task0.u.aicTaskInfo.kernel = kernel;
     EXPECT_EQ(task0.type, TS_TASK_TYPE_KERNEL_AICORE);
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     const bool flag = rtInstance->GetDisableThread();
@@ -155,6 +161,7 @@ TEST_F(CloudV2StarsEngineTest, StateDown)
     device_->SetDevStatus(RT_ERROR_NONE);
 
     rtInstance->SetDisableThread(flag);
+    delete kernel;
 }
 
 TEST_F(CloudV2StarsEngineTest, SubmitNormalTask_01)
@@ -162,13 +169,21 @@ TEST_F(CloudV2StarsEngineTest, SubmitNormalTask_01)
     rtError_t error = RT_ERROR_NONE;
     TaskInfo task0 = {};
     task0.stream = stream_;
-    AicTaskInit(&task0, 0, 1, 0, nullptr);
+
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+
+    AicTaskInit(&task0, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
+    task0.u.aicTaskInfo.kernel = kernel;
     EXPECT_EQ(task0.type, TS_TASK_TYPE_KERNEL_AICORE);
 
     MOCKER(WaitAsyncCopyComplete).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = engine_->SubmitTask(&task0);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete kernel;
 }
 
 TEST_F(CloudV2StarsEngineTest, timeout1)
@@ -1611,13 +1626,20 @@ TEST_F(CloudV2StarsEngineTest, WaitTask3)
     rtError_t ret;
     TaskInfo task0 = {};
     task0.stream = stream_;
-    AicTaskInit(&task0, Program::MACH_AI_CORE, 1, 0, nullptr);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+
+    AicTaskInit(&task0, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
+    task0.u.aicTaskInfo.kernel = kernel;
     ret = engine_->SubmitTask(&task0);
 
     MOCKER_CPP_VIRTUAL(engine_, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL));
     stream_->Context_()->SetFailureError(0);
     ret = stream_->StarsWaitForTask(10, true, -1);
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
+
+    delete kernel;
 }
 
 TEST_F(CloudV2StarsEngineTest, WaitTask4)
@@ -1626,13 +1648,20 @@ TEST_F(CloudV2StarsEngineTest, WaitTask4)
     rtError_t ret;
     TaskInfo task0 = {};
     task0.stream = stream_;
-    AicTaskInit(&task0, Program::MACH_AI_CORE, 1, 0, nullptr);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+
+    AicTaskInit(&task0, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
+    task0.u.aicTaskInfo.kernel = kernel;
     ret = engine_->SubmitTask(&task0);
 
     MOCKER_CPP_VIRTUAL(engine_, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL));
     stream_->Context_()->SetFailureError(0);
     ret = stream_->StarsWaitForTask(10, true, -1);
     EXPECT_EQ(ret, RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL);
+
+    delete kernel;
 }
 
 TEST_F(CloudV2StarsEngineTest, WaitTask5)
@@ -1641,13 +1670,19 @@ TEST_F(CloudV2StarsEngineTest, WaitTask5)
     rtError_t ret;
     TaskInfo task0 = {};
     task0.stream = stream_;
-    AicTaskInit(&task0, Program::MACH_AI_CORE, 1, 0, nullptr);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program *program = &stubProg;
+    Kernel *kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+    AicTaskInit(&task0, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
+    task0.u.aicTaskInfo.kernel = kernel;
     ret = engine_->SubmitTask(&task0);
 
     MOCKER_CPP_VIRTUAL(engine_, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
     stream_->Context_()->SetFailureError(0);
     ret = stream_->StarsWaitForTask(10, true, -1);
     EXPECT_EQ(ret, RT_ERROR_STREAM_SYNC_TIMEOUT);
+
+    delete kernel;
 }
 
 TEST_F(CloudV2StarsEngineTest, ClearSerId)

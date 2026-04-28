@@ -123,7 +123,6 @@ struct AicTaskInfo {
     uint16_t groupDim;
     uint16_t groupBlockDim;
     uint8_t kernelTaskMode;
-    uint8_t machine;
     uint8_t qos;
     uint8_t partId;
     uint8_t schemMode;
@@ -155,7 +154,7 @@ struct AicpuTaskInfo {
 };
 
 struct rtAicAivFusionInfo_t {
-    uint32_t mach;
+    rtKernelAttrType kernelAttrType;
     uint16_t dimNum;
     uint8_t mixType;
     uint8_t resv;

@@ -17,7 +17,7 @@
 namespace cce {
 namespace runtime {
     rtError_t StreamLaunchKernelPrepare(const Stream * const stm, Kernel *&registeredKernel, Program *&prog,
-        uint32_t &kernelType, Module *&mdl, const void * const stubFunc, uint64_t &addr1, uint64_t &addr2,
+        rtKernelAttrType &kernelAttrType, Module *&mdl, const void * const stubFunc, uint64_t &addr1, uint64_t &addr2,
         void * const progHandle, const uint64_t tilingKey);
     void StreamLaunchKernelRecycle(DavidArgLoaderResult &result, TaskInfo *&recycleTask, const Program * const prog, Stream *stm);
 

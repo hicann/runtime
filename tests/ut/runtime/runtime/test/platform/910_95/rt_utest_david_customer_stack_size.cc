@@ -111,8 +111,8 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask1)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMixType(MIX_AIC_AIV_MAIN_AIC);
@@ -152,8 +152,8 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask2)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K);
     kernel.SetMixType(MIX_AIC_AIV_MAIN_AIC);
@@ -193,8 +193,8 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask3)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K);
     kernel.SetMixType(MIX_AIC);
@@ -234,8 +234,8 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask4)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMixType(MIX_AIV);
@@ -275,8 +275,8 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask5)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram prog(0);
-    Kernel kernelPtr(NULL, "", 355, &prog, 10);
+    ElfProgram prog(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernelPtr("", 355, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernelPtr.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernelPtr.SetMinStackSize2(KERNEL_STACK_SIZE_32K + 1024);
     kernelPtr.SetMixType(MIX_AIV);
@@ -289,7 +289,7 @@ TEST_F(CustomerStackSize, ConstructDavidMixSqeForDavinciTask5)
     RtKernel rtKernel = {0};
     prog.kernels_ = &rtKernel;
     prog.elfData_->kernel_num = 1;
-    rtKernel.funcType = KERNEL_FUNCTION_TYPE_AIC;
+    rtKernel.metaInfo.funcType = KERNEL_FUNCTION_TYPE_AIC;
     rtKernel.name = "abc";
     prog.kernelNameMap_["abc"] = &kernelPtr;
     rtInstance->MixKernelRegister(&prog);
@@ -333,8 +333,8 @@ TEST_F(CustomerStackSize, ConstructDavidAICoreSqeForDavinciTask1)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMixType(NO_MIX);
@@ -374,8 +374,8 @@ TEST_F(CustomerStackSize, ConstructDavidAICoreSqeForDavinciTask2)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K);
     kernel.SetMixType(NO_MIX);
@@ -415,8 +415,8 @@ TEST_F(CustomerStackSize, ConstructDavidAivSqeForDavinciTask1)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K + 1024);
     kernel.SetMixType(NO_MIX);
@@ -456,8 +456,8 @@ TEST_F(CustomerStackSize, ConstructDavidAivSqeForDavinciTask2)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     kernel.SetMinStackSize1(KERNEL_STACK_SIZE_32K);
     kernel.SetMinStackSize2(KERNEL_STACK_SIZE_32K);
     kernel.SetMixType(NO_MIX);
@@ -575,6 +575,6 @@ TEST_F(CustomerStackSize, UpdateKernelsMinStackSizeInfo)
     std::map<std::string, ElfKernelInfo *> kernelInfoMap = {{"stackSizeTest", &elfKernelInfo}};
     RtKernel kernel;
     kernel.name = "stackSizeTest";
-    auto error = UpdateKernelsMinStackSizeInfo(kernelInfoMap, &kernel, 1);
+    auto error = UpdateKernelsMinStackSizeInfo(&kernel, &elfKernelInfo);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }

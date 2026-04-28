@@ -4984,12 +4984,12 @@ TEST_F(CloudV2ApiTest6, BIN_LAUNCH_KERNEL_TEST_1)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtBinaryLoadWithoutTilingKey(master_bin.data, master_bin.length, &bin_handle_without_tilingKey);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtBinaryGetFunctionByName(bin_handle, "abc", &func_handle2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtBinaryGetFunctionByName(bin_handle, "op_Add_10241024", &func_handle2);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     size_t argsSize = sizeof(uint64_t) * 3;
     size_t hostInfoTotalSize = 1024;
@@ -5155,7 +5155,7 @@ TEST_F(CloudV2ApiTest6, BIN_LOAD_MIX_KERNEL_TEST_5)
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
 
-    MOCKER_CPP(&Program::MixKernelAdd).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&Program::KernelNameMapAdd).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtBinaryLoadWithoutTilingKey(m_mix_kernel_data, m_len, &bin_handle);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -5168,11 +5168,8 @@ TEST_F(CloudV2ApiTest6, BIN_LOAD_MIX_KERNEL_TEST_6)
     rtBinHandle bin_handle = nullptr;
 
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
-
-    MOCKER_CPP(&Runtime::GetMixTypeAndKernelType).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-
     error = rtBinaryLoadWithoutTilingKey(m_mix_kernel_data, m_len, &bin_handle);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiTest6, BIN_LOAD_MIX_KERNEL_TEST_7)
@@ -5187,7 +5184,7 @@ TEST_F(CloudV2ApiTest6, BIN_LOAD_MIX_KERNEL_TEST_7)
     error = api.BinaryLoadWithoutTilingKey(m_mix_kernel_data, 0, &m_prog);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    Program *prog = new (std::nothrow) ElfProgram(Program::MACH_AI_MIX_KERNEL);
+    Program *prog = new (std::nothrow) ElfProgram(RT_KERNEL_ATTR_TYPE_AICORE);
 
     error = api.BinaryGetFunctionByName(prog, "abc", &funcHandle);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);

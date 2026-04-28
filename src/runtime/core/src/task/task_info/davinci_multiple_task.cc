@@ -265,7 +265,7 @@ void ConstructAICpuSqeByHandleForDavinciMultipleTask(TaskInfo * const taskInfo, 
     params.kernelNameAddr = kernelNameAddr;
     params.argsInfo = aicpuTaskByHandle.argsInfo;
     params.isUnderstudyOp = aicpuTaskByHandle.isUnderstudyOp;
-    params.kernelType = hdl->KernelType_();
+    params.kernelType = hdl->GetAicpuKernelType_();
     params.blockDim = aicpuTaskByHandle.blockDim;
 
     CommonConstructAICpuSqe(taskInfo, command, &params);

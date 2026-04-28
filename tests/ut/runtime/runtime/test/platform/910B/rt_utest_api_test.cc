@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "platform_manager_v2.h"
+#include "../../data/elf.h"
 
 class NewCloudV2ApiTest : public testing::Test
 {
@@ -38,10 +39,10 @@ protected:
         }
 
         rtDevBinary_t devBin;
-        devBin.magic = RT_DEV_BINARY_MAGIC_PLAIN;
-        devBin.version = 1;
-        devBin.length = sizeof(binary_);
-        devBin.data = binary_;
+        devBin.magic = RT_DEV_BINARY_MAGIC_ELF;
+        devBin.version = 2;
+        devBin.data = (void*)elf_o;
+        devBin.length = elf_o_len;
         rtError_t error3 = rtDevBinaryRegister(&devBin, &binHandle_);
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);
@@ -153,7 +154,7 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_KernelExpandCopy_error)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -234,7 +235,7 @@ TEST_F(NewCloudV2ApiTest, LAUNCH_ALL_KERNEL_TEST_2_V2_KernelExpandCopy_error)
 
     // constructing dynamic shape kernel
     prog = (Program *)handle;
-    Kernel *kernelPtr = new (std::nothrow) Kernel(NULL, "", 355, prog, 10);
+    Kernel *kernelPtr = new (std::nothrow) Kernel("", 355, prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     if (NULL == kernelPtr)
     {
         error = rtStreamSynchronize(NULL);
@@ -847,7 +848,6 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_STATIC_TEST_1_ERROR)
     uint32_t regifuncMode = 0U;
 
     std::cout<<"call rtFunctionRegister in:"<<error<<std::endl;
-    MOCKER((int(*)(int, const char*))&Runtime::CheckMixKernelType).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtFunctionRegister(bin_handle, stubFunc, funcName, (void *)opName, regifuncMode);
     std::cout<<"call rtFunctionRegister out:"<<error<<std::endl;
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
@@ -881,7 +881,6 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_STATIC_TEST_2_ERROR)
     uint32_t regifuncMode = 0U;
 
     std::cout<<"call rtFunctionRegister in:"<<error<<std::endl;
-    MOCKER((int(*)(int, const char*))&Runtime::GetMixTypeAndKernelType).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtFunctionRegister(bin_handle, stubFunc, funcName, (void *)opName, regifuncMode);
     std::cout<<"call rtFunctionRegister out:"<<error<<std::endl;
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
@@ -916,7 +915,6 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_STATIC_TEST_3_ERROR)
 
     std::cout<<"call rtFunctionRegister in:"<<error<<std::endl;
     std::string strEmpty;
-    MOCKER((std::string(*)(int, const char*))&Runtime::AdjustKernelName).stubs().will(returnValue(strEmpty));
     error = rtFunctionRegister(bin_handle, stubFunc, funcName, (void *)opName, regifuncMode);
     std::cout<<"call rtFunctionRegister out:"<<error<<std::endl;
     EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
@@ -1924,9 +1922,8 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_DYNAMIC_TEST_MIX_1_2_ERROR_1)
     master_bin.data =  (void *)dynamic_kernel_data_mix_1_2_data;
     master_bin.length = m_len;
 
-    MOCKER((int(*)(int, const char*))&Runtime::CheckMixKernelType).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtRegisterAllKernel(&master_bin, &m_handle);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1947,9 +1944,8 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_DYNAMIC_TEST_MIX_1_2_ERROR_2)
     master_bin.data =  (void *)dynamic_kernel_data_mix_1_2_data;
     master_bin.length = m_len;
 
-    MOCKER((int(*)(int, const char*))&Runtime::GetMixTypeAndKernelType).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtRegisterAllKernel(&master_bin, &m_handle);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1971,9 +1967,8 @@ TEST_F(NewCloudV2ApiTest, BIN_LOAD_DYNAMIC_TEST_MIX_1_2_ERROR_3)
     master_bin.length = m_len;
 
     std::string strEmpty;
-    MOCKER((std::string(*)(int, const char*))&Runtime::AdjustKernelName).stubs().will(returnValue(strEmpty));
     error = rtRegisterAllKernel(&master_bin, &m_handle);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2342,10 +2337,10 @@ TEST_F(NewCloudV2ApiTest, create_args_test_02)
 {
     Runtime *rtInstance = (Runtime *)Runtime::Instance();
     rtError_t error;
-    PlainProgram stubProg(Program::MACH_AI_CPU);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program *program = &stubProg;
     int32_t fun1;
-    Kernel * k1 = new Kernel(&fun1, "f1", "", program, 10);
+    Kernel * k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     // only support CLOUDV2
     k1->userParaNum_ = 3;
     k1->systemParaNum_ = 2;

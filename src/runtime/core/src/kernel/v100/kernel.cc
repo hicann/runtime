@@ -14,9 +14,8 @@
 namespace cce {
 namespace runtime {
 
-rtError_t GetPrefetchCnt(const Program *prog, Kernel * const kernel)
+rtError_t GetPrefetchCnt(Kernel * const kernel)
 {
-    UNUSED(prog);
     UNUSED(kernel);
     return RT_ERROR_NONE;
 }

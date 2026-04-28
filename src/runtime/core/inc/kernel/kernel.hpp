@@ -25,6 +25,7 @@
 namespace cce {
 namespace runtime {
 constexpr uint32_t KERNEL_ARRAY_SIZE_PER_ALLOC = 2048U;
+constexpr uint32_t RT_KERNEL_ATTR_TYPE_INVALID = 0x7FFFFFFF;
 
 // 算子注册的类型分为CPU算子和非CPU算子
 // 对于AIC/AIV/MIX都默认为非CPU算子，即：RT_KERNEL_REG_TYPE_NON_CPU
@@ -38,12 +39,9 @@ class Program;
 
 class Kernel {
 public:
-    Kernel(const void * const stubFunc, const char_t * const kernelName, const char_t * const kernelInfoExtern,
-        Program * const prog, const uint32_t funcOffset1, const uint32_t funcOffset2 = 0U,
+    Kernel(const char_t * const kernelName, const uint64_t key, Program * const prog,
+        rtKernelAttrType kernelAttrType, const uint32_t funcOffset1, const uint32_t funcOffset2 = 0U,
         const uint8_t mixType = 0U, const uint32_t taskRation = NONE_TASK_RATION, const uint32_t funcType = 0);
-    Kernel(const void * const stubFunc, const char_t * const kernelName, const uint64_t key, Program * const prog,
-        const uint32_t funcOffset1, const uint32_t funcOffset2 = 0U, const uint8_t mixType = 0U,
-        const uint32_t taskRation = NONE_TASK_RATION, const uint32_t funcType = 0);
     Kernel(const std::string &cpuKernelSo, const std::string &cpuFunctionName, const std::string &cpuOpType);
 
     Kernel(const Kernel &) = delete;
@@ -100,14 +98,24 @@ public:
         return name_;
     }
 
-    void SetKernelType_(const uint32_t kernelType)
+    void SetStubName_(const char_t *stubName)
     {
-        kernelType_ = kernelType;
+        stubName_ = std::string(stubName);
     }
 
-    uint32_t KernelType_() const
+    const std::string &StubName_() const
     {
-        return kernelType_;
+        return stubName_;
+    }
+
+    void SetAicpuKernelType_(const uint32_t type)
+    {
+        aicpuKernelType_ = type;
+    }
+
+    uint32_t GetAicpuKernelType_() const
+    {
+        return aicpuKernelType_;
     }
 
     void SetKernelAttrType(const rtKernelAttrType kernelAttrType)
@@ -170,6 +178,11 @@ public:
     uint64_t TilingKey() const
     {
         return tilingKey_;
+    }
+
+    void SetStub_(const void *stub)
+    {
+        stubFun_ = stub;
     }
 
     const void *Stub_() const
@@ -398,12 +411,23 @@ public:
     {
         return schedMode_;
     }
+
+    void SetFunctionEntryType(KernelFunctionEntryType type)
+    {
+        funcEntryType_ = type;
+    }
+
+    KernelFunctionEntryType GetFunctionEntryType(void)
+    {
+        return funcEntryType_;
+    }
 private:
     Program *program_;
-    uint32_t kernelType_;
-    rtKernelAttrType kernelAttrType_ = static_cast<rtKernelAttrType>(0x7FFFFFFF); //当前是kernel launch劫持用的，后续可以用于sqe填写
+    uint32_t aicpuKernelType_ = static_cast<uint32_t>(KERNEL_TYPE_RESERVED);
+    rtKernelAttrType kernelAttrType_ = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID); //当前是kernel launch劫持用的，后续可以用于sqe填写
     const void *stubFun_;
     std::string name_;
+    std::string stubName_;
     std::string kernelInfoExt_;
     uint64_t tilingKey_;
     uint32_t offset1_;
@@ -433,6 +457,7 @@ private:
     uint32_t prefetchCnt2_;
     uint32_t schedMode_{static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL)};
     KernelRegisterType kernelRegisterType_ = KernelRegisterType::RT_KERNEL_REG_TYPE_NON_CPU;
+    KernelFunctionEntryType funcEntryType_ = KernelFunctionEntryType::KERNEL_TYPE_TILING_KEY;
 
     // user for cpu Kernel
     std::string cpuOpType_;
@@ -506,9 +531,9 @@ private:
     uint32_t kernelArrAllocTimes_;
 };
 
-rtError_t GetPrefetchCnt(const Program *prog, Kernel * const kernel);
+rtError_t GetPrefetchCnt(Kernel * const kernel);
 
-rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr, uint32_t machine,
+rtError_t GetPrefetchCntAndMixTypeWithKernel(const Kernel * const kernelPtr,
     uint32_t &icachePrefetchCnt1, uint32_t &icachePrefetchCnt2, uint8_t &mixType);
 }
 }

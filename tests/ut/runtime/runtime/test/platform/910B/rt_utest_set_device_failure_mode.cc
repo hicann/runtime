@@ -536,8 +536,8 @@ TEST_F(CloudV2CaptureModelProfilerTest, TASK_TYPE_MIX_AIC)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
     kernel.SetMixType(MIX_AIC);
 
@@ -559,8 +559,8 @@ TEST_F(CloudV2CaptureModelProfilerTest, TASK_TYPE_MIX_AIV)
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
 
-    ElfProgram program(0);
-    Kernel kernel(NULL, "", 355, &program, 10);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("", 355, &program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
     taskInfo.u.aicTaskInfo.kernel = &kernel;
     kernel.SetMixType(MIX_AIV);
 

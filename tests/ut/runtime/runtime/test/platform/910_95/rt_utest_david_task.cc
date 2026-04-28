@@ -1374,15 +1374,15 @@ TEST_F(TaskTestDavid, TaskGroupCheck)
 TEST_F(TaskTestDavid, UpdateTaskKernelTypeGet)
 {
     uint8_t kernelType = 0;
-    GetAicAivTypeForFusion(NO_MIX, Program::MACH_AI_VECTOR, kernelType);
+    GetAicAivTypeForFusion(NO_MIX, RT_KERNEL_ATTR_TYPE_VECTOR, kernelType);
     EXPECT_EQ(kernelType, 1);
-    GetAicAivTypeForFusion(NO_MIX, Program::MACH_AI_CORE, kernelType);
+    GetAicAivTypeForFusion(NO_MIX, RT_KERNEL_ATTR_TYPE_AICORE, kernelType);
     EXPECT_EQ(kernelType, 0);
-    GetAicAivTypeForFusion(MIX_AIC, Program::MACH_AI_CORE, kernelType);
+    GetAicAivTypeForFusion(MIX_AIC, RT_KERNEL_ATTR_TYPE_AICORE, kernelType);
     EXPECT_EQ(kernelType, 0);
-    GetAicAivTypeForFusion(MIX_AIC_AIV_MAIN_AIC, Program::MACH_AI_CORE, kernelType);
+    GetAicAivTypeForFusion(MIX_AIC_AIV_MAIN_AIC, RT_KERNEL_ATTR_TYPE_AICORE, kernelType);
     EXPECT_EQ(kernelType, 0);
-    GetAicAivTypeForFusion(MIX_AIV, Program::MACH_AI_CORE, kernelType);
+    GetAicAivTypeForFusion(MIX_AIV, RT_KERNEL_ATTR_TYPE_AICORE, kernelType);
     EXPECT_EQ(kernelType, 1);
 }
 

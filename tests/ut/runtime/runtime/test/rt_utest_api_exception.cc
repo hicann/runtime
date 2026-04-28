@@ -56,7 +56,7 @@ TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
     // bin_handle析构会释放内存
     Kernel *kernel = new Kernel("kernel.so", "kernel_func", "op_type");
     kernel->SetCpuOpType("test");
-    bin_handle.MixKernelAdd(kernel);
+    bin_handle.KernelNameMapAdd(kernel);
     rtError_t error;
 
     (void)rtSetDevice(0);

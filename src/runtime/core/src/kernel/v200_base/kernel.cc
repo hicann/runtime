@@ -15,14 +15,10 @@
 namespace cce {
 namespace runtime {
 
-rtError_t GetPrefetchCnt(const Program *prog, Kernel * const kernel)
+rtError_t GetPrefetchCnt(Kernel * const kernel)
 {
-    uint32_t machine = prog->Machine();
-    if (machine == Program::MACH_AI_CPU) {
+    if (kernel->GetKernelAttrType() == RT_KERNEL_ATTR_TYPE_AICPU) {
         return RT_ERROR_NONE;
-    }
-    if (machine == Program::MACH_AI_MIX_KERNEL) {
-        machine = kernel->KernelType_();
     }
 
     uint32_t icachePrefetchCnt1 = 0U;
@@ -40,32 +36,21 @@ rtError_t GetPrefetchCnt(const Program *prog, Kernel * const kernel)
     uint32_t prefetchMaxSize2 = 0U;
 
     const uint8_t mixtype = kernel->GetMixType();
-    switch (mixtype) {
-        case static_cast<uint8_t>(MIX_AIC):
+    switch (kernel->GetKernelAttrType()) {
+        case RT_KERNEL_ATTR_TYPE_AICORE:
+        case RT_KERNEL_ATTR_TYPE_CUBE:
             prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
             break;
-        case static_cast<uint8_t>(MIX_AIV):
+        case RT_KERNEL_ATTR_TYPE_VECTOR:
             prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
             break;
-        case static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC):
+        case RT_KERNEL_ATTR_TYPE_MIX:
             prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
             prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
             break;
         default:
-        switch (machine) {
-            case Program::MACH_AI_CORE:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_CVMIX:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_VECTOR:
-                prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
-                break;
-            default:
-                RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, machine=%u.", machine);
-                return RT_ERROR_INVALID_VALUE;
-        }
+            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=%d.", kernel->GetKernelAttrType());
+            return RT_ERROR_INVALID_VALUE;
     }
 
     // Icache_prefetch_cnt:aic aiv prefetch instruction length, the unit is 2KB, K=1024

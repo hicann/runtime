@@ -121,7 +121,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
 
     TaskInfo* errTask = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_KERNEL_AICORE, ret);
     dev_->GetTaskFactory()->SetSerialId(stream_, errTask);
-    AicTaskInit(errTask, 0, 1, 0, nullptr);
+    AicTaskInit(errTask, RT_KERNEL_ATTR_TYPE_AICORE, 1, 0, nullptr);
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;

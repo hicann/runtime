@@ -79,8 +79,8 @@ rtError_t Module::Load(Program * const prog)
     bool isPoolMem = true;
     NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NULL);
 
-    const uint32_t machineType = prog->Machine();
-    if (machineType == Program::MACH_AI_CPU) {
+    const rtKernelAttrType kernelAttrType = prog->GetDefaultKernelAttrType();
+    if (kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU) {
         size = prog->GetBinarySize();
         data = prog->GetBinary();
 
@@ -243,7 +243,9 @@ rtError_t Module::GetFunction(const Kernel * const kernelIn, uint64_t * const fu
 {
     *function1 = RtPtrToPtr<uintptr_t, void *>(baseAddrAlign_) + kernelIn->Offset_();
     *function2 = 0UL;
-    if (kernelIn->Offset2_() != 0UL) {
+    // 只有 MIX_AIC_AIV_MAIN_AIC/MIX_AIC_AIV_MAIN_AIV 场景才会出现两个offset都存在的情况
+    // 但是可能编译时aiv在前，aic在后，导致offset2 == 0，属于正常场景。
+    if ((kernelIn->GetMixType() == MIX_AIC_AIV_MAIN_AIC) || (kernelIn->GetMixType() == MIX_AIC_AIV_MAIN_AIV)) {
         *function2 = RtPtrToPtr<uintptr_t, void *>(baseAddrAlign_) + kernelIn->Offset2_();
     }
 
@@ -260,33 +262,27 @@ rtError_t Module::GetPrefetchCnt(const Kernel * const kernelIn, uint32_t &icache
     constexpr uint32_t aivectorIcachePrefetchSizeMax = 16384U;
     constexpr uint32_t prefetchUnits = 2048U;
 
-    Program* program = GetProgram();
-    NULL_PTR_RETURN(program, RT_ERROR_PROGRAM_NULL);
-    uint32_t machine = program->Machine();
     uint32_t restSize = 0U;
     uint32_t prefetchMaxSize = 0U;
 
     restSize = baseAddrSize_ - kernelIn->Offset_();
 
-    if (machine == Program::MACH_AI_MIX_KERNEL) {
-        machine = kernelIn->KernelType_();
-    }
-
-    switch (machine) {
-        case Program::MACH_AI_CPU :
+    switch (kernelIn->GetKernelAttrType()) {
+        case RT_KERNEL_ATTR_TYPE_AICPU:
             prefetchMaxSize = aicpuIcachePrefetchSizeMax;
             break;
-        case Program::MACH_AI_CORE:
+        case RT_KERNEL_ATTR_TYPE_AICORE:
+        case RT_KERNEL_ATTR_TYPE_CUBE:
             prefetchMaxSize = aicoreIcachePrefetchSizeMax;
             break;
-        case Program::MACH_AI_CVMIX:
-            prefetchMaxSize = aicoreIcachePrefetchSizeMax;
-            break;
-        case Program::MACH_AI_VECTOR:
+        case RT_KERNEL_ATTR_TYPE_VECTOR:
             prefetchMaxSize = aivectorIcachePrefetchSizeMax;
             break;
+        case RT_KERNEL_ATTR_TYPE_MIX:
+            prefetchMaxSize = aicoreIcachePrefetchSizeMax;
+            break;
         default:
-            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, machine=%u.", machine);
+            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=%d.", kernelIn->GetKernelAttrType());
             return RT_ERROR_INVALID_VALUE;
     }
 
@@ -313,46 +309,37 @@ rtError_t Module::GetPrefetchCnt(const Kernel * const kernelIn, uint32_t &icache
     constexpr uint32_t prefetchUnits = 2048U;
     icachePrefetchCnt2 = 0U;
 
-    Program* program = GetProgram();
-    NULL_PTR_RETURN(program, RT_ERROR_PROGRAM_NULL);
-    uint32_t machine = program->Machine();
     uint32_t restSize1 = 0U;
     uint32_t restSize2 = 0U;
     uint32_t prefetchMaxSize1 = 0U;
     uint32_t prefetchMaxSize2 = 0U;
 
     restSize1 = baseAddrSize_ - kernelIn->Offset_();
-    if (machine == Program::MACH_AI_MIX_KERNEL) {
-        machine = kernelIn->KernelType_();
-    }
     const uint8_t mixtype = kernelIn->GetMixType();
-    if (mixtype == static_cast<uint8_t>(MIX_AIC)) {
-        prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-    } else if (mixtype == static_cast<uint8_t>(MIX_AIV)) {
-        prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
-    } else if (mixtype == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC)) {
+    if (mixtype == static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIC)) {
         restSize2 = static_cast<uint32_t>(static_cast<uint64_t>(baseAddrSize_) - kernelIn->Offset2_());
-        prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-        prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
-    } else {
-        switch (machine) {
-            case Program::MACH_AI_CPU :
-                prefetchMaxSize1 = aicpuIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_CORE:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_CVMIX:
-                prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
-                break;
-            case Program::MACH_AI_VECTOR:
-                prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
-                break;
-            default:
-                RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, machine=%u.", machine);
-                return RT_ERROR_INVALID_VALUE;
-        }
     }
+
+    switch (kernelIn->GetKernelAttrType()) {
+        case RT_KERNEL_ATTR_TYPE_AICPU:
+            prefetchMaxSize1 = aicpuIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_AICORE:
+        case RT_KERNEL_ATTR_TYPE_CUBE:
+            prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_VECTOR:
+            prefetchMaxSize1 = aivectorIcachePrefetchSizeMax;
+            break;
+        case RT_KERNEL_ATTR_TYPE_MIX:
+            prefetchMaxSize1 = aicoreIcachePrefetchSizeMax;
+            prefetchMaxSize2 = aivectorIcachePrefetchSizeMax;
+            break;
+        default:
+            RT_LOG(RT_LOG_ERROR, "get prefetch cnt failed, kernelAttrType=%d.", kernelIn->GetKernelAttrType());
+            return RT_ERROR_INVALID_VALUE;
+    }
+
     // Icache_prefetch_cnt:aic aiv prefetch instruction length, the unit is 2KB, K=1024
     const uint32_t restSizeCnt1 = restSize1 / prefetchUnits;
     const uint32_t prefetchMaxSizeCnt1 = prefetchMaxSize1 / prefetchUnits;

@@ -444,10 +444,10 @@ public:
         return streams_;
     }
 
-    rtError_t LaunchKernelPrepare(Kernel *&registeredKernel,
-        Program *&prog, uint32_t &kernelType, Module *&mdl, const void * const stubFunc,
-        uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey, uint32_t &prefetchCnt1,
-        uint32_t &prefetchCnt2);
+    rtError_t LaunchKernelPrepare(
+        Kernel *&registeredKernel, Program *&prog, rtKernelAttrType &kernelAttrType, Module *&mdl, const void * const stubFunc,
+        uint64_t &addr1, uint64_t &addr2, void * const progHandle, const uint64_t tilingKey,
+        uint32_t &prefetchCnt1, uint32_t &prefetchCnt2);
     rtError_t LaunchKernelSubmit(TaskInfo *&submitTask, Stream *&stm, const rtArgsEx_t *&argsInfo,
                                  ArgLoaderResult &result, const Program * const programPtr);
     rtError_t SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const;
@@ -526,7 +526,7 @@ public:
 
     rtError_t LaunchUpdateKernelSubmit(TaskInfo * const updateTask, Stream * const stm, const rtArgsEx_t * const argsInfo,
                                        ArgLoaderResult &result);
-    rtError_t UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel, const uint32_t kernelType,
+    rtError_t UpdateTaskPrepare(TaskInfo * const updateTask, const Kernel * const kernel,
                                 const Stream * const stm) const;
     rtError_t UpdateMixKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
     rtError_t UpdateNormalKernelTask(TaskInfo * const updateTask, Stream * const stm, void * const updateArgHandle) const;
