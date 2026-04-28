@@ -2567,6 +2567,7 @@ rtError_t Context::ModelCreate(Model ** const result, ModelType type)
     rtError_t error = RT_ERROR_NONE;
     const bool isHostSupport = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH);
     const bool isTsSupport = device_->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE);
+    const bool isDrvSupport = NpuDriver::CheckIsSupportFeature(device_->Id_(), FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND);
     Model *newModel = (type == RT_MODEL_CAPTURE_MODEL) ?
         new (std::nothrow) CaptureModel() :
         new (std::nothrow) Model();
@@ -2576,7 +2577,8 @@ rtError_t Context::ModelCreate(Model ** const result, ModelType type)
     error = newModel->Setup(this);
     ERROR_GOTO(error, ERROR_RECYCLE, "Setup model failed, retCode=%#x.", error);
 
-    if (type == RT_MODEL_NORMAL && isHostSupport && isTsSupport && !(Runtime::Instance()->GetConnectUbFlag())) {
+    if (type == RT_MODEL_NORMAL && isHostSupport && isTsSupport &&
+            isDrvSupport && !(Runtime::Instance()->GetConnectUbFlag())) {
         newModel->SetAutoSplitSq(true);
     }
     modelLock_.Lock();
