@@ -640,6 +640,8 @@ typedef enum {
     ACL_DEV_ATTR_MAINBOARD_ID = 407U,           // mainborad id
 
     ACL_DEV_ATTR_IS_VIRTUAL = 501U,             // whether it is in compute power splitting mode
+
+    ACL_DEV_ATTR_NPU_ARCH = 601U,               // npu arch
 } aclrtDevAttr;
 
 typedef enum {

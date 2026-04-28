@@ -19,6 +19,7 @@ struct RtIniAttributes {
     uint32_t normalStreamDepth = 0U; // ini SoCInfo.normal_stream_depth
     uint32_t hugeStreamNum = 0U;     // ini SoCInfo.huge_stream_num
     uint32_t hugeStreamDepth = 0U;   // ini SoCInfo.huge_stream_depth
+    int64_t npuArch = 0;             // ini version.NpuArch, 0 means invalid or uninitialized
 };
 
 struct DevProperties;

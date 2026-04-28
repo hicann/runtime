@@ -4742,6 +4742,28 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_npu_arch_failed_with_invalid_args)
+{
+    uint32_t deviceId = 0;
+    auto ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_NPU_ARCH, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsDeviceGetInfo(_,_,_))
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    int64_t value = 0;
+    ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_NPU_ARCH, &value);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_npu_arch_success)
+{
+    uint32_t deviceId = 0;
+    int64_t value = 0;
+    const auto ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_NPU_ARCH, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetStreamPriorityRange_success)
 {
     int32_t leastPriority = 0;

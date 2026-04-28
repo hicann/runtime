@@ -271,6 +271,8 @@ void Runtime::UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, 
         props.maxTaskNumPerStream = iniAttrs.normalStreamDepth;
     }
 
+    props.npuArch = iniAttrs.npuArch;
+
     SET_DEV_PROPERTIES(chipTypeValue, props);
 }
 

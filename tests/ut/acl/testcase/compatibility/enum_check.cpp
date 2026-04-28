@@ -944,6 +944,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
   value = (aclrtDevAttr)501U;
   EXPECT_EQ(value, ACL_DEV_ATTR_IS_VIRTUAL);
 
+  value = (aclrtDevAttr)601U;
+  EXPECT_EQ(value, ACL_DEV_ATTR_NPU_ARCH);
+
   EXPECT_EQ(sizeof(aclrtDevAttr), 4);
 }
 

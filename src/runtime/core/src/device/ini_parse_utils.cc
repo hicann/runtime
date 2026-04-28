@@ -33,13 +33,18 @@ constexpr StreamFieldConfig kStreamFieldConfigs[] = {
     {"huge_stream_num", &RtIniAttributes::hugeStreamNum},
     {"huge_stream_depth", &RtIniAttributes::hugeStreamDepth},
 };
+
+constexpr const char *SOC_INFO_SECTION = "SoCInfo";
+constexpr const char *VERSION_SECTION = "version";
+constexpr const char *NPU_ARCH_FIELD = "NpuArch";
 } // namespace
 
-static int32_t ReadIniUint32(const std::string& socVersion, const char* fieldName, uint32_t& value)
+static int32_t ReadIniUint32(
+    const std::string& socVersion, const char* sectionName, const char* fieldName, uint32_t& value)
 {
     value = 0U;
     std::string strValue;
-    const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(socVersion, "SoCInfo", fieldName, strValue);
+    const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(socVersion, sectionName, fieldName, strValue);
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
@@ -59,11 +64,32 @@ static int32_t ReadIniUint32(const std::string& socVersion, const char* fieldNam
     return RT_ERROR_NONE;
 }
 
+static int32_t ReadIniInt64(
+    const std::string& socVersion, const char* sectionName, const char* fieldName, int64_t& value)
+{
+    value = 0;
+    std::string strValue;
+    const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(socVersion, sectionName, fieldName, strValue);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+
+    try {
+        value = std::stoll(strValue);
+        return RT_ERROR_NONE;
+    } catch (...) {
+        RT_LOG(
+            RT_LOG_WARNING, "ini field[%s.%s] value[%s] is invalid, keep default value.", sectionName, fieldName,
+            strValue.c_str());
+    }
+    return RT_ERROR_NONE;
+}
+
 static void GetStreamSpecFromIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
 {
     for (const auto& fieldConfig : kStreamFieldConfigs) {
         uint32_t value = 0U;
-        const int32_t ret = ReadIniUint32(socVersion, fieldConfig.fieldName, value);
+        const int32_t ret = ReadIniUint32(socVersion, SOC_INFO_SECTION, fieldConfig.fieldName, value);
         if (ret == RT_ERROR_NOT_FOUND) {
             continue;
         }
@@ -83,6 +109,27 @@ static void GetStreamSpecFromIniFile(const std::string& socVersion, RtIniAttribu
         iniAttrs.normalStreamNum, iniAttrs.normalStreamDepth, iniAttrs.hugeStreamNum, iniAttrs.hugeStreamDepth);
 }
 
+static void GetArchInfoFromIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
+{
+    int64_t npuArch = 0;
+    const int32_t ret = ReadIniInt64(socVersion, VERSION_SECTION, NPU_ARCH_FIELD, npuArch);
+    if (ret == RT_ERROR_NOT_FOUND) {
+        RT_LOG(RT_LOG_WARNING,
+            "GetSocSpec not found for socVersion[%s], section[%s], field[%s], keep default npuArch.",
+            socVersion.c_str(), VERSION_SECTION, NPU_ARCH_FIELD);
+        return;
+    }
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_WARNING, "GetSocSpec failed for socVersion[%s], ret=%d, skip version ini parse.",
+            socVersion.c_str(), ret);
+        return;
+    }
+
+    iniAttrs.npuArch = npuArch;
+    RT_LOG(RT_LOG_INFO, "iniAttrs: socVersion=%s, npuArch=%ld.", socVersion.c_str(), iniAttrs.npuArch);
+}
+
 void ParseIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
 {
     if (socVersion.empty()) {
@@ -91,6 +138,7 @@ void ParseIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
     }
 
     GetStreamSpecFromIniFile(socVersion, iniAttrs);
+    GetArchInfoFromIniFile(socVersion, iniAttrs);
 }
 
 } // namespace runtime

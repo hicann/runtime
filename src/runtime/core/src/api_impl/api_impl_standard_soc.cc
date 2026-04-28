@@ -32,6 +32,7 @@
 #include "driver/ascend_hal.h"
 #include "task_submit.hpp"
 #include "platform/platform_info.h"
+#include "platform_manager_v2.h"
 #include "stream_factory.hpp"
 #include "device/device_error_proc.hpp"
 #include "stream_state_callback_manager.hpp"
@@ -311,6 +312,9 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
         case RT_DEV_ATTR_L2_CACHE_SIZE:
             error = GetDeviceInfoFromPlatformInfo(userDeviceId, "SoCInfo", "l2_size", val);
             break;
+        case RT_DEV_ATTR_NPU_ARCH:
+            error = GetDeviceNpuArch(deviceId, val);
+            break;
         case RT_DEV_ATTR_IS_VIRTUAL:
             unsigned int split_mode;
             drvError_t drvError;
@@ -338,6 +342,22 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
     }
 
     return error;
+}
+
+rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val)
+{
+    (void)deviceId;
+    Runtime *const rt = Runtime::Instance();
+    NULL_PTR_RETURN_MSG(rt, RT_ERROR_INSTANCE_NULL);
+    DevProperties props;
+    const rtError_t ret = GET_DEV_PROPERTIES(rt->GetChipType(), props);
+    COND_RETURN_ERROR_MSG_INNER(
+        ret != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Get NPU arch failed, chipType=%d.",
+        static_cast<int32_t>(rt->GetChipType()));
+    COND_RETURN_ERROR_MSG_INNER(
+        props.npuArch <= 0, RT_ERROR_INVALID_VALUE, "Get NPU arch failed, NPU arch is not initialized.");
+    *val = props.npuArch;
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)

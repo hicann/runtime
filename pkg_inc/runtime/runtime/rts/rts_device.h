@@ -50,6 +50,8 @@ typedef enum {
 
     RT_DEV_ATTR_IS_VIRTUAL = 501U,              // is_virtual
 
+    RT_DEV_ATTR_NPU_ARCH = 601U,                // npu arch
+
     RT_DEV_ATTR_MAX
 } rtDevAttr;
 

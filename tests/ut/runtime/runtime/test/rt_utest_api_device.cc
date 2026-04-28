@@ -21,6 +21,7 @@
 #include "profiler.hpp"
 #include "thread_local_container.hpp"
 #include "platform/platform_info.h"
+#include "platform_manager_v2.h"
 #undef private
 
 
@@ -89,12 +90,39 @@ drvError_t halGetDeviceSplitMode_rts4(unsigned int dev_id, unsigned int *split_m
     return DRV_ERROR_NONE;
 }
 
-TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
+class ScopedNpuArchProps {
+public:
+    explicit ScopedNpuArchProps(const int64_t npuArch)
+    {
+        rt_ = Runtime::Instance();
+        EXPECT_NE(rt_, nullptr);
+        if (rt_ == nullptr) {
+            return;
+        }
+        EXPECT_EQ(GET_DEV_PROPERTIES(rt_->GetChipType(), origProps_), RT_ERROR_NONE);
+        testProps_ = origProps_;
+        testProps_.npuArch = npuArch;
+        SET_DEV_PROPERTIES(rt_->GetChipType(), testProps_);
+        valid_ = true;
+    }
+
+    ~ScopedNpuArchProps()
+    {
+        if (valid_) {
+            SET_DEV_PROPERTIES(rt_->GetChipType(), origProps_);
+        }
+    }
+
+private:
+    Runtime *rt_{nullptr};
+    DevProperties origProps_{};
+    DevProperties testProps_{};
+    bool valid_{false};
+};
+
+void CheckDeviceInfoCommonAttrs(int32_t devid, int64_t &val)
 {
-    rtError_t error;
-    int32_t devid = 0;
-    int64_t val = 0;
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_AICPU_CORE_NUM, &val);
+    rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_AICPU_CORE_NUM, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX, &val);
@@ -113,50 +141,40 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
         .with(mockcpp::any(), mockcpp::any(), outBound(literalStr))
         .will(returnValue(true));
 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_CUBE_CORE_NUM, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    constexpr rtDevAttr attrs[] = {
+        RT_DEV_ATTR_CUBE_CORE_NUM,
+        RT_DEV_ATTR_VECTOR_CORE_NUM,
+        RT_DEV_ATTR_WARP_SIZE,
+        RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE,
+        RT_DEV_ATTR_UBUF_PER_VECTOR_CORE,
+        RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE,
+        RT_DEV_ATTR_L2_CACHE_SIZE,
+        RT_DEV_ATTR_SMP_ID,
+        RT_DEV_ATTR_PHY_CHIP_ID,
+        RT_DEV_ATTR_SUPER_POD_DEVICE_ID,
+        RT_DEV_ATTR_SUPER_POD_SERVER_ID,
+        RT_DEV_ATTR_SUPER_POD_ID,
+        RT_DEV_ATTR_CUST_OP_PRIVILEGE,
+        RT_DEV_ATTR_MAINBOARD_ID
+    };
+    for (const auto attr : attrs) {
+        error = rtsDeviceGetInfo(devid, attr, &val);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+    }
+}
 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_VECTOR_CORE_NUM, &val);
+void CheckDeviceInfoNpuArch(int32_t devid, int64_t &val)
+{
+    ScopedNpuArchProps propsGuard(2201);
+    const rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_NPU_ARCH, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_GT(val, static_cast<int64_t>(0));
+}
 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_WARP_SIZE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_UBUF_PER_VECTOR_CORE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_L2_CACHE_SIZE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SMP_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_PHY_CHIP_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_DEVICE_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_SERVER_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_SUPER_POD_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_CUST_OP_PRIVILEGE, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
- 
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAINBOARD_ID, &val);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
+void CheckDeviceInfoVirtualAttrs(int32_t devid, int64_t &val)
+{
     MOCKER(halGetDeviceSplitMode).stubs().will(invoke(halGetDeviceSplitMode_rts1));
-    error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_IS_VIRTUAL, &val);
+    rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_IS_VIRTUAL, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(val, static_cast<int64_t>(0));
     GlobalMockObject::verify();
@@ -176,6 +194,15 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
     MOCKER(halGetDeviceSplitMode).stubs().will(invoke(halGetDeviceSplitMode_rts4));
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_IS_VIRTUAL, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
+{
+    constexpr int32_t devid = 0;
+    int64_t val = 0;
+    CheckDeviceInfoCommonAttrs(devid, val);
+    CheckDeviceInfoNpuArch(devid, val);
+    CheckDeviceInfoVirtualAttrs(devid, val);
 }
 
 TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_abnormal_1)
@@ -238,6 +265,47 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_abnormal_4)
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_L2_CACHE_SIZE, &val);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_npu_arch_repeat_query)
+{
+    constexpr int32_t devid = 0;
+    int64_t firstVal = 0;
+    int64_t secondVal = 0;
+    ScopedNpuArchProps propsGuard(2201);
+
+    EXPECT_EQ(rtsDeviceGetInfo(devid, RT_DEV_ATTR_NPU_ARCH, &firstVal), RT_ERROR_NONE);
+    EXPECT_EQ(rtsDeviceGetInfo(devid, RT_DEV_ATTR_NPU_ARCH, &secondVal), RT_ERROR_NONE);
+    EXPECT_EQ(firstVal, secondVal);
+    EXPECT_GT(firstVal, static_cast<int64_t>(0));
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_npu_arch_without_set_device)
+{
+    constexpr int32_t devid = 0;
+    int64_t val = 0;
+    ScopedNpuArchProps propsGuard(2201);
+    EXPECT_EQ(rtDeviceReset(devid), RT_ERROR_NONE);
+    EXPECT_EQ(rtsDeviceGetInfo(devid, RT_DEV_ATTR_NPU_ARCH, &val), RT_ERROR_NONE);
+    EXPECT_GT(val, static_cast<int64_t>(0));
+}
+
+TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_npu_arch_not_initialized)
+{
+    Runtime *rt = Runtime::Instance();
+    ASSERT_NE(rt, nullptr);
+    DevProperties origProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(rt->GetChipType(), origProps), RT_ERROR_NONE);
+    DevProperties testProps = origProps;
+    testProps.npuArch = 0;
+    SET_DEV_PROPERTIES(rt->GetChipType(), testProps);
+
+    constexpr int32_t devid = 0;
+    int64_t val = 0;
+    const rtError_t error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_NPU_ARCH, &val);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    SET_DEV_PROPERTIES(rt->GetChipType(), origProps);
 }
 
 TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo_abnormal_5)
