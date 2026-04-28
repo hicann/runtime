@@ -1075,18 +1075,18 @@ void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * cons
     const RtKernelMetaInfo * const metaInfo = &(kernel->metaInfo);
     const uint32_t nameOffset = AppendKernelName(kernel->name);
     kernelObj->SetNameOffset(nameOffset);
-    kernelObj->SetDfxSize(metaInfo->dfxSize);
     kernelObj->SetDfxAddr(metaInfo->dfxAddr);
+    kernelObj->SetDfxSize(metaInfo->dfxSize);
     kernelObj->SetElfDataFlag(metaInfo->elfDataFlag);
     kernelObj->SetKernelLength1(static_cast<uint32_t>(kernel->length));
     kernelObj->SetMinStackSize1(metaInfo->minStackSize);
     kernelObj->SetUserParaNum(metaInfo->userArgsNum);
     kernelObj->SetKernelVfType_(metaInfo->kernelVfType);
     kernelObj->SetShareMemSize_(metaInfo->shareMemSize);
-    kernelObj->SetSchedMode(metaInfo->schedMode);
-    kernelObj->SetFunctionEntryType(metaInfo->funcEntryType);
     kernelObj->SetFuncType(metaInfo->funcType);
     kernelObj->SetTaskRation(metaInfo->taskRation);
+    kernelObj->SetSchedMode(metaInfo->schedMode);
+    kernelObj->SetFunctionEntryType(metaInfo->funcEntryType);
 
     uint16_t sysParamNum = 0U;
     if (kernelObj->IsSupportOverFlow()) {
@@ -1645,7 +1645,8 @@ rtError_t ElfProgram::BuildNewKernel(const std::string tripKernelName, const RtK
     SetKernelAttribute(elfkernelInfo, kernelObj);
     (void)GetPrefetchCnt(kernelObj);
 
-    RT_LOG(RT_LOG_INFO, "new kernel size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
+    RT_LOG(RT_LOG_INFO,
+        "new kernel success, size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
         "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%d, mixType=%hu, taskRation=%u, "
         "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u",
         sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
@@ -1659,9 +1660,9 @@ rtError_t ElfProgram::BuildNewKernel(const std::string tripKernelName, const RtK
 rtError_t ElfProgram::MergeKernel(const RtKernel * const elfkernelInfo, Kernel *oldKernel)
 {
     const RtKernelMetaInfo * const metaInfo = &(elfkernelInfo->metaInfo);
-    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
     rtKernelAttrType oldKernelAttrType = oldKernel->GetKernelAttrType();
     uint8_t oldMixType = oldKernel->GetMixType();
+    rtKernelAttrType kernelAttrType = static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID);
     uint8_t mixType = static_cast<uint8_t>(NO_MIX);
 
     /* 获取kernelType和mixType */
@@ -1719,7 +1720,7 @@ rtError_t ElfProgram::MergeKernel(const RtKernel * const elfkernelInfo, Kernel *
 
     (void)GetPrefetchCnt(oldKernel);
 
-    RT_LOG(RT_LOG_INFO, "proc mix kernel register, programId=%u, kernel name=[%s], offset1=%u, offset2=%u, "
+    RT_LOG(RT_LOG_INFO, "merge kernel success, programId=%u, kernel name=[%s], offset1=%u, offset2=%u, "
         "mixType1=%hu, mixType2=%hu, final mixType=%hu, final kernelAttrType=%d, kernelVfType=%u, shareMemSize=%u",
         Id_(), oldKernel->Name_().c_str(), oldKernel->Offset_(), oldKernel->Offset2_(), kernelTmpMixType,
         mixType, oldKernel->GetMixType(), oldKernel->GetKernelAttrType(),

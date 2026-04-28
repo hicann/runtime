@@ -825,7 +825,7 @@ rtError_t Context::LaunchKernelPrepare(
             COND_RETURN_ERROR_MSG_INNER((((kernelAttrType == RT_KERNEL_ATTR_TYPE_AICORE) ||
                 (kernelAttrType == RT_KERNEL_ATTR_TYPE_CUBE)) && (tsId == 1U)) ||
                 ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
-                "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelAttrType, tsId);
+                "Launch kernel failed, current ts doesn't support the task! type=%d, tsid=%u.", kernelAttrType, tsId);
         }
         addr1 = 0ULL;
         addr2 = 0ULL;
@@ -860,7 +860,7 @@ rtError_t Context::LaunchKernelPrepare(
         COND_RETURN_ERROR_MSG_INNER((((kernelAttrType == RT_KERNEL_ATTR_TYPE_AICORE) ||
             (kernelAttrType == RT_KERNEL_ATTR_TYPE_CUBE)) && (tsId == 1U)) ||
             ((kernelAttrType == RT_KERNEL_ATTR_TYPE_VECTOR) && (tsId == 0U)), RT_ERROR_PROGRAM_MACHINE_TYPE,
-            "Launch kernel failed, current ts doesn't support the task! type=%u, tsid=%u.", kernelAttrType, tsId);
+            "Launch kernel failed, current ts doesn't support the task! type=%d, tsid=%u.", kernelAttrType, tsId);
     }
     mdl = GetModule(prog);
     TIMESTAMP_END(rtKernelLaunch_GetModule);

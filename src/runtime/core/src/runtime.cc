@@ -1305,9 +1305,8 @@ rtError_t Runtime::WaitMonitorExit() const
 
 rtKernelAttrType Runtime::GetDefaultKernelAttrType(void) const
 {
-    const auto rtInstance = Runtime::Instance();
     DevProperties properties;
-    auto error = GET_DEV_PROPERTIES(rtInstance->GetChipType(), properties);
+    auto error = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), properties);
     if ((error == RT_ERROR_NONE) && (properties.cvArchType == DeviceCvArchType::CV_ARCH_SEPARATION)) {
         return RT_KERNEL_ATTR_TYPE_CUBE;
     } else {

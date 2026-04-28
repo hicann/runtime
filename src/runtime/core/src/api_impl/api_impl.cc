@@ -389,7 +389,7 @@ rtError_t ApiImpl::DependencyRegister(Program * const mProgram, Program * const 
 rtError_t ApiImpl::FunctionRegister(Program * const prog, const void * const stubFunc, const char_t * const stubName,
     const void * const kernelInfoExt, const uint32_t funcMode)
 {
-    RT_LOG(RT_LOG_DEBUG, "register function, type=%u, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
+    RT_LOG(RT_LOG_DEBUG, "register function, type=%d, stubFunc=%p, funcMode=%u, funcName=%s, kernelInfoExt=%s.",
         prog->GetDefaultKernelAttrType(), stubFunc, funcMode, (stubName != nullptr) ? stubName : "(none)", kernelInfoExt);
     return Runtime::Instance()->KernelRegister(prog, stubFunc, stubName, kernelInfoExt, funcMode);
 }
