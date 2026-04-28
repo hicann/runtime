@@ -37,7 +37,7 @@ static void SetCcuExceptionSqeInfo(rtCcuMissionDetailInfo_t * const sqeInfo, con
     /* second ccu sqe part: 64 Byte(1 sqe size) */
     (void)memcpy_s(RtPtrToPtr<uint8_t *, uint64_t *>(args) + firstCpySize, sizeof(rtDavidSqe_t), &ccuSqe[inputIdx + 1U],
         sizeof(rtDavidSqe_t));
-    RT_LOG(RT_LOG_ERROR, "128B:index=%u, dieId=%u, missionId=%u, instrId=%u.", outputIdx, sqeInfo[outputIdx].dieId,
+    RT_LOG(RT_LOG_ERROR, "128B:index=%u, udie_id=%hhu, missionId=%hhu, instrId=%hu.", outputIdx, sqeInfo[outputIdx].dieId,
         sqeInfo[outputIdx].missionId, sqeInfo[outputIdx].instrId);
     return;
 }
