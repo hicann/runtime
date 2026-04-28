@@ -223,8 +223,6 @@ public:
     void AddOpDetailConf(uint64_t &dataTypeConfig) const;
     void AddSubscribeConf(uint64_t &dataTypeConfig) const;
     void AddLowPowerConf(NanoJson::Json &jsonCfg);
-    std::string GenerateHelperDirName(const std::string& devId, const std::string& helperDir);
-    int32_t ProcessHelperHostConfig(const char *config, size_t configLength);
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> PackDataTrunk() const;
     void AddCcuInstruction(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
 
@@ -326,10 +324,6 @@ private:
     void GenerateSystemTraceConf(const uint64_t dataTypeConfig, ProfAicoreMetrics aicMetrics,
                                  SHARED_PTR_ALIA<Analysis::Dvvp::Host::Adapter::ProfApiStartReq> feature,
                                  SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
-    int32_t ProfStartAscendProfHalTask(const uint64_t dataTypeConfig, const uint32_t devNums,
-        CONST_UINT32_T_PTR devIdList) const;
-    int32_t ProfStartHostServer(uint32_t moduleType, const uint32_t devNums,
-                                CONST_UINT32_T_PTR devIdList) const;
     int32_t UpdateSubscribeInfo(const std::string &key, const uint32_t devId, const MsprofConfig *config);
     int32_t StartDeviceSubscribeTask(const std::string &key, const uint32_t devId,
                                  const MsprofConfig *config);
@@ -388,9 +382,6 @@ private:
     uint32_t subscribeType_;
     ProfImplRegisterTransport createTransport_{nullptr};
 };
-static std::mutex g_helperMtx;
-int32_t SetHelperDirToTransport(const std::string id);
-int32_t SendHelperData(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq);
 } // namespace Api
 } // namespace Msprofiler
 

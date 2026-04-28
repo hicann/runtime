@@ -32,7 +32,6 @@ public:
     void WriteDone() override;
     int32_t Init();
     void SetAbility(bool needSlice);
-    void SetHelperDir(const std::string &id, const std::string &helperPath) override;
     void SetStopped() override;
     void RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr* ptr) override;
 
@@ -51,9 +50,7 @@ private:
     bool stopped_;
     bool parseStr2IdStart_;
     HashDataGenIdFuncPtr* hashDataGenIdFuncPtr_;
-    std::map<std::string, std::string> helperStorageMap_;
     std::map<std::string, std::string> channelBuffer_;
-    std::mutex helperMtx_;
 };
 
 class FileTransportFactory {

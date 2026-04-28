@@ -897,30 +897,6 @@ TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, SendBufferForMsprof) {
     EXPECT_EQ(0, trans->SendBuffer(buff.c_str(), buff.size()));
 }
 
-TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, SendBufferForHelper) {
-    GlobalMockObject::verify();
-
-    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
-    std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
-    trans->perfCount_ = perfCount;
-    trans->SetAbility(true);
-    trans->Init();
-
-    std::shared_ptr<analysis::dvvp::ProfileFileChunk> message(
-        new analysis::dvvp::ProfileFileChunk());
-    message->extraInfo = "null.64";
-    message->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_MSPROF_HOST;
-    message->id = "64.15151";
-    trans->SetHelperDir("64.15151", "/tmp");
-    EXPECT_EQ(PROFILING_FAILED, trans->SendBuffer(message));
-
-    MOCKER_CPP(&analysis::dvvp::transport::FileSlice::SaveDataToLocalFiles,
-        int(analysis::dvvp::transport::FileSlice::*)(SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>, const std::string&))
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_SUCCESS, trans->SendBuffer(message));
-}
-
 TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, AdxHdcServerAccept) {
     GlobalMockObject::verify();
 

@@ -300,7 +300,6 @@ set(devprofimplCpp
     ../depend/stub/error_manager/msprof_error_manager_stub.cpp
     ../driver/devmgmt/ai_drv_dev_api.cpp
     ../driver/devmgmt/ai_drv_dev_api_closed.cpp
-    ../message/codec.cpp
     ../common/json/json.cpp
     ../transport/hdc/helper_transport.cpp
     ../transport/uploader.cpp
@@ -415,7 +414,6 @@ target_link_libraries(profimpl_share_device PRIVATE
     unified_dlog
     mmpa
     ascend_hal_stub
-    ascend_protobuf_static
 )
  
 install(TARGETS profimpl_share_device OPTIONAL

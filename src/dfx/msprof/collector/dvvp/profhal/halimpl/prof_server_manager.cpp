@@ -24,35 +24,10 @@ ServerManager::~ServerManager()
     (void)ProfServerFinal();
 }
 
-int32_t ServerManager::ProfAiCpuServerInit(uint32_t devId)
-{
-    const auto iter = hdcDevMap_.find(devId);
-    if (iter == hdcDevMap_.end()) {
-        SHARED_PTR_ALIA<Dvvp::Hal::Server::ProfHdcServer> hdcServer;
-        MSVP_MAKE_SHARED0(hdcServer, Dvvp::Hal::Server::ProfHdcServer, return PROFILING_FAILED);
-        int32_t ret = hdcServer->Init(static_cast<int32_t>(devId));
-        if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Device[%u] init aicpu server fail", devId);
-            return ret;
-        }
-        hdcDevMap_[devId] = hdcServer;
-    }
-    return PROFILING_SUCCESS;
-}
-
 int32_t ServerManager::ProfHelperServerInit(uint32_t devId)
 {
-    const auto iter = helperDevMap_.find(devId);
-    if (iter == helperDevMap_.end()) {
-        SHARED_PTR_ALIA<Dvvp::Hal::Server::ProfHelperServer> helperServer;
-        MSVP_MAKE_SHARED0(helperServer, Dvvp::Hal::Server::ProfHelperServer, return PROFILING_FAILED);
-        int32_t ret = helperServer->Init(static_cast<int32_t>(devId));
-        if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Device[%u] init helper server fail", devId);
-            return ret;
-        }
-        helperDevMap_[devId] = helperServer;
-    }
+    UNUSED(devId);
+    MSPROF_LOGI("Prof helper server is deprecated.");
     return PROFILING_SUCCESS;
 }
 
@@ -81,53 +56,32 @@ int32_t ServerManager::ProfServerInit(uint32_t moduleType, const ProfHalModuleCo
 
 int32_t ServerManager::ProfServerFinal()
 {
-    for (auto iter = hdcDevMap_.begin(); iter != hdcDevMap_.end(); iter++) {
-        if (iter->second->UnInit() != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Failed to uninit aicpu server");
-            return PROFILING_FAILED;
-        }
-    }
-    for (auto iter = helperDevMap_.begin(); iter != helperDevMap_.end(); iter++) {
-        if (iter->second->UnInit() != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Failed to uninit helper server");
-            return PROFILING_FAILED;
-        }
-    }
-
-    hdcDevMap_.clear();
-    helperDevMap_.clear();
     return PROFILING_SUCCESS;
 }
 
 void ServerManager::SetFlushModuleCallback(const ProfHalFlushModuleCallback func)
 {
-    for (auto iter = hdcDevMap_.begin(); iter != hdcDevMap_.end(); iter++) {
-        iter->second->SetFlushModuleCallback(func);
-    }
-    for (auto iter = helperDevMap_.begin(); iter != helperDevMap_.end(); iter++) {
-        iter->second->SetFlushModuleCallback(func);
-    }
+    UNUSED(func);
+    MSPROF_LOGI("Prof flush callback is deprecated.");
 }
 
 void ServerManager::SetSendAicpuDataCallback(const ProfHalSendAicpuDataCallback func)
 {
-    for (auto iter = hdcDevMap_.begin(); iter != hdcDevMap_.end(); iter++) {
-        iter->second->SetSendAicpuDataCallback(func);
-    }
+    UNUSED(func);
+    MSPROF_LOGI("Prof aicpu callback is deprecated.");
 }
 
 void ServerManager::SetHelperDirCallback(const ProfHalHelperDirCallback func)
 {
-    for (auto iter = helperDevMap_.begin(); iter != helperDevMap_.end(); iter++) {
-        iter->second->SetHelperDirCallback(func);
-    }
+    UNUSED(func);
+    MSPROF_LOGI("Prof helper dir callback is deprecated.");
 }
 
 void ServerManager::SetSendHelperDataCallback(const ProfHalSendHelperDataCallback func)
 {
-    for (auto iter = helperDevMap_.begin(); iter != helperDevMap_.end(); iter++) {
-        iter->second->SetSendHelperDataCallback(func);
-    }
+    UNUSED(func);
+    MSPROF_LOGI("Prof helper data callback is deprecated.");
 }
-
-}}}
+}
+}
+}

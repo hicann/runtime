@@ -86,8 +86,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_reporter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/prof_stamp_pool.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hdc_server.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_helper_server.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_server_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hal_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
@@ -123,7 +121,6 @@ set(src_file
 
 add_executable(prof_hal_stest
     test/main.cpp
-    test/hal_server_stest.cpp
     test/aicpu_plugin_stest.cpp
     stub/mmpa_stub.cpp
     ../stub/mmpa_stub.cpp

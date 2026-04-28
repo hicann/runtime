@@ -31,7 +31,6 @@ FILETransport::FILETransport(const std::string &storageDir, const std::string &s
 
 FILETransport::~FILETransport()
 {
-    helperStorageMap_.clear();
 }
 
 int32_t FILETransport::Init()
@@ -96,16 +95,7 @@ int32_t FILETransport::SendBuffer(
             return PROFILING_FAILED;
         }
     }
-    int32_t ret;
-    if (helperStorageMap_.empty() || fileChunkReq->id.empty()) {
-        ret = fileSlice_->SaveDataToLocalFiles(fileChunkReq, storageDir_);
-    } else {
-        std::unique_lock<std::mutex> guard(helperMtx_, std::defer_lock);
-        guard.lock();
-        std::string helperPath = helperStorageMap_[fileChunkReq->id];
-        guard.unlock();
-        ret = fileSlice_->SaveDataToLocalFiles(fileChunkReq, helperPath);
-    }
+    int32_t ret = fileSlice_->SaveDataToLocalFiles(fileChunkReq, storageDir_);
     if (ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("write data to local files failed, fileName: %s", fileChunkReq->fileName.c_str());
         return PROFILING_FAILED;
@@ -323,18 +313,6 @@ int32_t FILETransport::SaveChunk(const char *data, SHARED_PTR_ALIA<analysis::dvv
         return PROFILING_FAILED;
     }
     return PROFILING_SUCCESS;
-}
-
-/**
- * @brief transport absolute helper device path to file_slice
- * @param [in] id: devId + devPid
- * @param [in] helperPath: absolute helper path
- */
-void FILETransport::SetHelperDir(const std::string &id, const std::string &helperPath)
-{
-    std::unique_lock<std::mutex> lk(helperMtx_);
-    MSPROF_LOGI("SetHelperDir, id: %s, helperPath: %s", id.c_str(), helperPath.c_str());
-    helperStorageMap_[id] = helperPath;
 }
 
 SHARED_PTR_ALIA<ITransport> FileTransportFactory::CreateFileTransport(

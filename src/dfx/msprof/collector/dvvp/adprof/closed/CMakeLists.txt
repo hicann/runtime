@@ -73,7 +73,6 @@ target_link_libraries(adprof PRIVATE
     $<BUILD_INTERFACE:adump_headers>
     $<BUILD_INTERFACE:slog_headers>
     $<BUILD_INTERFACE:adprofbinOnetrack_pub>
-    stackcore
     $<$<STREQUAL:${PRODUCT},ascend950>:urma>
     $<$<STREQUAL:${PRODUCT},ascend950>:urma_common>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:urma>

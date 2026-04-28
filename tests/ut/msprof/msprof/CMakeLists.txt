@@ -91,8 +91,6 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_reporter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/prof_stamp_pool.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hdc_server.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_helper_server.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_server_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/device.cpp

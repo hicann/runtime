@@ -287,8 +287,10 @@ int32_t ProfConfigStop(uint32_t dataType, const void *data, uint32_t length)
 int32_t ProfSetConfig(uint32_t configType, const char *config, size_t configLength)
 {
     if (configType == MSPROF_CONFIG_HELPER_HOST) {
-        Platform::instance()->SetPlatformHelperHostSide();
-        return ProfAclMgr::instance()->ProcessHelperHostConfig(config, configLength);
+        UNUSED(config);
+        UNUSED(configLength);
+        MSPROF_LOGI("Prof helper host config is deprecated.");
+        return PROFILING_SUCCESS;
     }
 
     return MSPROF_ERROR_NONE;

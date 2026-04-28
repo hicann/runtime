@@ -35,7 +35,6 @@ public:
     virtual void WriteDone() = 0;
     virtual void SetDevId(const std::string & /* devIdStr */){};
     virtual void SetType(const uint32_t /* type */){};
-    virtual void SetHelperDir(const std::string & /* id */, const std::string & /* helperPath */){};
     virtual void SetStopped() {};
     virtual void RegisterHashDataGenIdFuncPtr(HashDataGenIdFuncPtr*) {};
     virtual void RegisterRawDataCallback(MsprofRawDataCallback) {};

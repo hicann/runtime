@@ -35,8 +35,6 @@ TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_INIT_FINAL)
     EXPECT_EQ(0, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
     ProfAPI::ProfHalPlugin::instance()->ProfHalFlushModuleRegister(Msprof::Engine::FlushModule);
     ProfAPI::ProfHalPlugin::instance()->ProfHalSendDataRegister(Msprof::Engine::SendAiCpuData);
-    ProfAPI::ProfHalPlugin::instance()->ProfHalHelperDirRegister(Msprofiler::Api::SetHelperDirToTransport);
-    ProfAPI::ProfHalPlugin::instance()->ProfHalSendHelperDataRegister(Msprofiler::Api::SendHelperData);
     sleep(1);
     EXPECT_EQ(0, ProfAPI::ProfHalPlugin::instance()->ProfHalFinal());
     free(moduleConfigP);

@@ -92,8 +92,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprofiler/prof_acl_core.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofiler/prof_api_common.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofiler/prof_api_runtime.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hdc_server.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_helper_server.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_server_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hal_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
@@ -147,12 +145,10 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/app/env_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/application.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_rpc.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hdc_server.cpp
 )
 
 add_executable(prof_hal_utest
     test/main.cpp
-    test/hal_server_utest.cpp
     test/aicpu_plugin_utest.cpp
     stub/mmpa_stub.cpp
     ../stub/mmpa_stub.cpp

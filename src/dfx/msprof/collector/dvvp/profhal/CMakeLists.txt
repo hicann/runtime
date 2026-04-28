@@ -7,13 +7,6 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-protobuf_generate(profhal_proto
-    CppPath
-    HeaderPath
-    ${CMAKE_CURRENT_SOURCE_DIR}/../proto/profiler.proto
-    TARGET
-)
-
 ####################### libascendprofhal.so ###########################
 
 add_library(ascendprof_fwk_share SHARED
@@ -26,18 +19,8 @@ add_library(ascendprof_fwk_share SHARED
     ../common/json/json.cpp
     ${PROF_BASIC_DIR}/osal/osal.c
     ../depend/stub/error_manager/msprof_error_manager_stub.cpp
-    ../message/codec.cpp
-    ../streamio/client/src/sender.cpp
-    ../transport/hdc/hdc_transport.cpp
-    ../transport/hdc/helper_transport.cpp
-    ../transport/hdc/hdc_sender.cpp
     halimpl/prof_hal_api.cpp
-    halimpl/prof_hdc_server.cpp
-    halimpl/prof_helper_server.cpp
     halimpl/prof_server_manager.cpp
-    adx/stub/adx_prof_api.cpp
-    adx/wrapper/hdc_api.cpp
-    adx/wrapper/memory_utils.cpp
     ${CppPath}
 )
 
@@ -75,7 +58,6 @@ target_include_directories(ascendprof_fwk_share PRIVATE
     adx/inc
     halimpl
     halinc
-    ${CMAKE_BINARY_DIR}/proto/profhal_proto
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -125,7 +107,6 @@ target_link_libraries(ascendprof_fwk_share PRIVATE
     alog
     mmpa
     ascend_hal_stub
-    ascend_protobuf_static
     error_manager
     -Wl,--as-needed
 )
@@ -133,6 +114,4 @@ target_link_libraries(ascendprof_fwk_share PRIVATE
 install(TARGETS ascendprof_fwk_share OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
 )
-
-add_dependencies(ascendprof_fwk_share profhal_proto)
 ####################### libascendprofhal.so ###########################

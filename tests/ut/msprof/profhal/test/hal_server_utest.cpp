@@ -12,7 +12,6 @@
 #include <iostream>
 #include <thread>
 #include "errno/error_code.h"
-#include "prof_hdc_server.h"
 #include "prof_server_manager.h"
 #include "message/codec.h"
 #include "message/prof_params.h"

@@ -12,8 +12,6 @@
 #include <cstdint>
 #include <unordered_map>
 #include "singleton/singleton.h"
-#include "prof_hdc_server.h"
-#include "prof_helper_server.h"
 #include "prof_hal_api.h"
 
 namespace Dvvp {
@@ -31,10 +29,7 @@ public:
     void SetSendHelperDataCallback(const ProfHalSendHelperDataCallback func);
 
 private:
-    int32_t ProfAiCpuServerInit(uint32_t devId);
     int32_t ProfHelperServerInit(uint32_t devId);
-    std::unordered_map<uint32_t, SHARED_PTR_ALIA<Dvvp::Hal::Server::ProfHdcServer>> hdcDevMap_;
-    std::unordered_map<uint32_t, SHARED_PTR_ALIA<Dvvp::Hal::Server::ProfHelperServer>> helperDevMap_;
     std::mutex halMtx_;
 };
 }
