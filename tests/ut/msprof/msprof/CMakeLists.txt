@@ -161,6 +161,7 @@ set(profilerSrcFile
     ../stub/hdc-api-stub.cpp
     ../stub/error_manager_stub2.cpp
     test/json_parser_utest.cpp
+    test/devprof_drv_str2id_utest.cpp
     ${profilerSrcList}
 )
 

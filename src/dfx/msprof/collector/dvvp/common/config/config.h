@@ -248,6 +248,7 @@ const char * const KEYPOINT_OP_TYPE = "na";
 const std::string HASH_TAG = "hash_dic";
 const char * const HASH_DIC_DELIMITER = ":";
 const char * const STR2ID_DELIMITER = ",";
+const char * const STR2ID_MARK = "###drv_hashdata###";
 
 // need paired ageing file
 const char * const HWTS_DATA = "hwts.data";

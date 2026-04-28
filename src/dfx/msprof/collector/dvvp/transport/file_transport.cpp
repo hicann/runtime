@@ -200,69 +200,142 @@ void FILETransport::AddHashData(const std::string& input) const{
     }
     std::stringstream ss(input);
     std::string item;
+    uint32_t cnt = 0;
+    uint32_t totalSize = 0;
     while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
         size_t pos = item.find_last_not_of('\0');
         if (pos != std::string::npos) {
             item.erase(pos + 1);
         }
         uint64_t uid = hashDataGenIdFuncPtr_(item);
-        MSPROF_LOGD("add str2id:%s uid:%llu from adprof into hash data ", item.c_str(), uid);
+        MSPROF_LOGD("Add str2id:%s(size:%zuB) uid:%llu from adprof into hash data ",
+            item.c_str(), item.size(), uid);
+        cnt += 1;
+        totalSize += item.size();
     }
+    MSPROF_LOGD("Total add str2id keys:%d size:%dB", cnt, totalSize);
 }
 
-/**
- * @brief remove str2id info header mark
- * @param [in] data string
- * @return true: header mark matched, false: not matched
- */
-bool removeStr2IdHeaderMark(std::string& str, std::string& after) {
-    // keep mark the same as ReportStr2IdInfoToHost in devprof_drv_aicpu
-    const std::string mark = "###drv_hashdata###";
-    const size_t pos = str.find(mark);
-    if (str.find(mark) == std::string::npos) {
-        return false;
+// 取一条 MsprofAdditionalInfo.data[] 中的有效 ASCII payload (clamp 到 dataLen，剔尾部 NUL)
+std::string ExtractStructPayload(const MsprofAdditionalInfo &info)
+{
+    uint32_t len = std::min<uint32_t>(info.dataLen, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
+    return std::string(reinterpret_cast<const char *>(info.data), len);
+}
+
+// 在 infos[0..count) 里按 struct 顺序找首条含 mark 的 struct。
+// 返回 struct 索引；命中时 offAfterMark 出参被设为 mark 末尾在该 struct data[] 内的偏移
+// (用于剥掉 mark 自身)。未命中返回 count。
+size_t LocateStr2IdMark(const MsprofAdditionalInfo *infos, size_t count, const std::string &mark,
+    size_t &offAfterMark)
+{
+    for (size_t i = 0; i < count; ++i) {
+        std::string payload = ExtractStructPayload(infos[i]);
+        size_t pos = payload.find(mark);
+        if (pos != std::string::npos) {
+            offAfterMark = pos + mark.size();
+            return i;
+        }
     }
-    int totalSize = str.length();
-    after = str.substr(pos + mark.size());
-    str = str.substr(0, pos);
-    MSPROF_LOGD("filechunk total size:%d aicpu data:%d hash data:%d",
-        totalSize, str.length(), after.length());
+    return count;
+}
+
+// 判断 [data, data+len) 是否全部是可打印 ASCII (0x20-0x7E)。aicpu data 残留通常含 NUL/0x5A5A
+// magic/任意高位字节，不会通过此校验，由此把误混入 hash 流的 aicpu 二进制段筛掉。
+bool IsPrintableAsciiPayload(const char *data, size_t len)
+{
+    for (size_t i = 0; i < len; ++i) {
+        auto uc = static_cast<unsigned char>(data[i]);
+        if (uc < 0x20 || uc > 0x7E) {
+            return false;
+        }
+    }
     return true;
 }
 
-/**
- * @brief parse data block that contains str2id info chunk for adprof, and save to target file
- * @param [in] fileChunkReq: ProfileFileChunk type shared_ptr
- * @return 0:SUCCESS, !0:FAILED
- */
-int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq) {
+// 从 infos[startIdx].data[startOff] 起按 struct 边界拼出 hash payload；其余 struct 从 data[0]
+// 起。每条 struct 取出的 payload 必须非空且全可打印 ASCII，否则告警并跳过 (防御 producer 侧并发
+// 把 aicpu data 混进 hash 流的场景)。跨 struct 边界补 STR2ID_DELIMITER：producer 切新 struct
+// 时不写 ','，consumer 补回来，否则下游按 ',' 切分会把前后 struct 的 key 粘成一个。
+std::string ConcatHashPayload(const MsprofAdditionalInfo *infos, size_t startIdx, size_t count,
+    size_t startOff)
+{
     std::string after;
-    const int headerSize = sizeof(MsprofAdditionalInfo) - MSPROF_ADDTIONAL_INFO_DATA_LENGTH;
+    after.reserve((count - startIdx) * MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
+    for (size_t i = startIdx; i < count; ++i) {
+        std::string payload = ExtractStructPayload(infos[i]);
+        size_t off = (i == startIdx) ? startOff : 0;
+        if (off >= payload.size()) {
+            MSPROF_LOGW("Str2id struct[%zu] payload empty after off=%zu, skip", i, off);
+            break;
+        }
+        const char *segData = payload.data() + off;
+        size_t segLen = payload.size() - off;
+        if (!IsPrintableAsciiPayload(segData, segLen)) {
+            MSPROF_LOGW("Str2id struct[%zu] payload non-ascii (len=%zuB), skip", i, segLen);
+            continue;
+        }
+        if (!after.empty()) {
+            after.append(STR2ID_DELIMITER);
+        }
+        after.append(segData, segLen);
+    }
+    return after;
+}
+
+/**
+ * @brief 解析 aicpu 通道回传的 chunk，从中抽取 device 侧 hash payload 注册到 HashData。
+ *
+ * 输入 chunk 必为 MsprofAdditionalInfo[N] (256B/struct) 紧密拼接的二进制流。首次匹配到
+ * "###drv_hashdata###" mark 后将 parseStr2IdStart_ 置位；mark 之前的 struct 视为 aicpu data
+ * 残留留在 chunk 里供上游落盘，mark 之后的 struct 用 ConcatHashPayload 拼出 ASCII 喂给
+ * AddHashData。续段 chunk (parseStr2IdStart_ 已为 true) 整段都是 hash payload，从 struct 0 起拼。
+ *
+ * @return SUCCESS: chunk 已被完整消费 (无 aicpu 残留)；FAILED: 含 aicpu 残留或异常输入
+ */
+int32_t FILETransport::ParseStr2IdChunk(const SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunkReq)
+{
+    constexpr size_t infoSize = sizeof(MsprofAdditionalInfo);
+
     if (fileChunkReq == nullptr) {
         MSPROF_LOGW("Unable to parse fileChunkReq");
-        return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
+        return parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED;
     }
-    if (fileChunkReq->chunk.length() == 0) {
-        MSPROF_LOGW("str2id fileChunk length is 0");
-        return (parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED);
+    auto &chunk = fileChunkReq->chunk;
+    if (chunk.empty() || chunk.size() % infoSize != 0) {
+        MSPROF_LOGW("Str2id chunk size:%zuB invalid (must be non-zero multiple of %zuB)",
+            chunk.size(), infoSize);
+        return parseStr2IdStart_ ? PROFILING_SUCCESS : PROFILING_FAILED;
     }
-    if (parseStr2IdStart_) {
-        MSPROF_LOGD("parse str2id fileChunk data size:%u", fileChunkReq->chunk.length());
-        AddHashData(fileChunkReq->chunk);
-        return PROFILING_SUCCESS;
-    } else if (removeStr2IdHeaderMark(fileChunkReq->chunk, after)) {
-        MSPROF_LOGI("start parse drv str2id info");
-        parseStr2IdStart_ = true;
-        AddHashData(after);
-        if (fileChunkReq->chunk.length() > 0) {
-            fileChunkReq->chunkSize = fileChunkReq->chunk.size() - headerSize;
-            MSPROF_LOGD("store aicpu data in file chunk, size:%d", fileChunkReq->chunkSize);
-            return (fileChunkReq->chunkSize > 0 ? PROFILING_FAILED : PROFILING_SUCCESS);
-        } else {
-            return PROFILING_SUCCESS;
+
+    const auto *infos = reinterpret_cast<const MsprofAdditionalInfo *>(chunk.data());
+    const size_t structCount = chunk.size() / infoSize;
+
+    // 定位 hash payload 起点 (struct idx + struct 内 data[] off)：
+    //   - 续段 (parseStr2IdStart_=true)：整段 chunk 都是 hash，从 (0, 0) 起。
+    //   - 首次：扫 mark；未命中说明整段都是 aicpu data，交上游落盘。
+    size_t hashStartIdx = 0;
+    size_t hashStartOff = 0;
+    if (!parseStr2IdStart_) {
+        hashStartIdx = LocateStr2IdMark(infos, structCount, STR2ID_MARK, hashStartOff);
+        if (hashStartIdx == structCount) {
+            MSPROF_LOGD("Not found drv str2id mark, total chunk size:%zuB struct count:%zu",
+                chunk.size(), structCount);
+            return PROFILING_FAILED;
         }
+        parseStr2IdStart_ = true;
+        MSPROF_LOGI("Found drv str2id mark at struct[%zu](total:%zu) off[%zu]",
+            hashStartIdx, structCount, hashStartOff);
     }
-    return PROFILING_FAILED;
+
+    AddHashData(ConcatHashPayload(infos, hashStartIdx, structCount, hashStartOff));
+
+    // 截短 chunk 为 mark 前的 aicpu 残留：纯 hash chunk → 空 → SUCCESS；含残留 → FAILED 走 fileSlice_。
+    size_t totalSize = chunk.size();
+    chunk.resize(hashStartIdx * infoSize);
+    fileChunkReq->chunkSize = chunk.size();
+    MSPROF_LOGD("Str2id chunk consumed, total size:%zuB, aicpu residue size:%zuB", totalSize, chunk.size());
+    return chunk.empty() ? PROFILING_SUCCESS : PROFILING_FAILED;
 }
 
 /**

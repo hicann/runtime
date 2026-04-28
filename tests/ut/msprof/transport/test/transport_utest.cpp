@@ -9,7 +9,9 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "securec.h"
 #include <memory>
+#include <vector>
 #include <fstream>
 #include "transport/hdc/hdc_transport.h"
 #include "transport/hdc/helper_transport.h"
@@ -23,6 +25,7 @@
 #include "proto/profiler.pb.h"
 #include "op_transport.h"
 #include "data_struct.h"
+#include "aprof_pub.h"
 #include "config_manager.h"
 #include "platform/platform.h"
 #include "ascend_hal.h"
@@ -975,7 +978,61 @@ uint64_t HashDataGenHashIdWrapper(const std::string &str) {
     return str.length();
 }
 
-TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
+// ParseStr2IdChunk 的 hashDataGenIdFuncPtr_ 只接受 free function 指针，无法捕获局部状态，
+// 因此用一个文件作用域的 vector 收集喂入 AddHashData 的字符串，每个用例首尾各 clear 一次。
+std::vector<std::string> g_str2idCollected;
+
+// 注册给 FILETransport 的伪 GenHashId 回调：把待注册的 hash 字符串记录下来，
+// 返回值仅用于占位（hashDataGenIdFuncPtr_ 期望返回 uint64_t hashId）。
+uint64_t CollectStr2IdHash(const std::string &s)
+{
+    g_str2idCollected.push_back(s);
+    return static_cast<uint64_t>(g_str2idCollected.size());
+}
+
+// 模拟 device 侧 DevprofDrvAicpu::AddStr2IdIntoBuffer：把一段 ASCII payload 装进
+// 一个 MsprofAdditionalInfo（24B 二进制头 + 232B data，dataLen 标记有效字节，
+// data 末尾 232 - dataLen 字节是 NUL 填充——这就是修复前会污染解析结果的根源）。
+MsprofAdditionalInfo MakeStr2IdStruct(const std::string &payload)
+{
+    MsprofAdditionalInfo info{};
+    info.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    info.dataLen = static_cast<uint32_t>(payload.size());
+    (void)memset_s(info.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, 0, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
+    if (!payload.empty()) {
+        size_t cpyLen = std::min<size_t>(payload.size(), MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
+        (void)memcpy_s(info.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, payload.c_str(), cpyLen);
+    }
+    return info;
+}
+
+// 模拟 host 侧 ReceiveData::DumpAdprofData：把 N 个 struct 紧密拼成 raw 二进制流
+// 塞进 ProfileFileChunk::chunk，正是 ParseStr2IdChunk 实际收到的输入。
+std::string PackStr2IdStructs(const std::vector<MsprofAdditionalInfo> &arr)
+{
+    std::string out;
+    out.reserve(arr.size() * sizeof(MsprofAdditionalInfo));
+    for (const auto &info : arr) {
+        out.append(reinterpret_cast<const char *>(&info), sizeof(MsprofAdditionalInfo));
+    }
+    return out;
+}
+
+// 关键断言：注册到 HashData 的字符串应是干净 ASCII，不能残留 NUL（struct 末尾填充）
+// 或 0x5A5A magic（下一个 struct 的二进制头开头）——这两类残留是修复前直写磁盘出乱码的特征。
+void ExpectNoBinaryGarbage(const std::string &s, const char *hint)
+{
+    for (size_t i = 0; i < s.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        EXPECT_NE(c, 0x00) << hint << ": NUL leaked at offset " << i;
+        if (i + 1 < s.size()) {
+            unsigned char n = static_cast<unsigned char>(s[i + 1]);
+            EXPECT_FALSE(c == 0x5A && n == 0x5A) << hint << ": 0x5A5A leaked at offset " << i;
+        }
+    }
+}
+
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunkBasic) {
     GlobalMockObject::verify();
     std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
     std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
@@ -985,24 +1042,202 @@ TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunk) {
     fileChunkReq->fileName = "aicpu.data";
     fileChunkReq->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
     fileChunkReq->extraInfo = "null.0";
-    std::string content = "###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
-    std::string content2 = "xxxxxxx###drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH\0\0\0";
-    std::string content3 = "drv_hashdata###Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
+
     fileChunkReq->chunk = "";
     fileChunkReq->chunkSize = 0;
     EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
+
     trans->RegisterHashDataGenIdFuncPtr(HashDataGenHashIdWrapper);
+    const std::string hashStr =
+        "Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
+    const std::string content = PackStr2IdStructs({MakeStr2IdStruct(std::string(STR2ID_MARK) + hashStr)});
     fileChunkReq->chunk = content;
     fileChunkReq->chunkSize = content.length();
     EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(fileChunkReq));
-    trans->parseStr2IdStart_ = false;
+    EXPECT_TRUE(trans->parseStr2IdStart_);
+    EXPECT_EQ(fileChunkReq->chunk.size(), 0U);
+}
+
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunkResidual) {
+    GlobalMockObject::verify();
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
+    trans->perfCount_ = perfCount;
+    trans->Init();
+    trans->RegisterHashDataGenIdFuncPtr(HashDataGenHashIdWrapper);
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> fileChunkReq = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    fileChunkReq->fileName = "aicpu.data";
+    fileChunkReq->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
+    fileChunkReq->extraInfo = "null.0";
+
+    const std::string hashStr =
+        "Notify_Record,hccl_world_group,Notify_Wait,Memcpy,Reduce_Inline,Write_With_Notify,AlgType::MESH";
+    const std::string content2 = PackStr2IdStructs({MakeStr2IdStruct("xxxxxxx"),
+                                                    MakeStr2IdStruct(std::string(STR2ID_MARK) + hashStr)});
     fileChunkReq->chunk = content2;
     fileChunkReq->chunkSize = content2.length();
     EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
+    EXPECT_TRUE(trans->parseStr2IdStart_);
+    EXPECT_EQ(fileChunkReq->chunk.size(), sizeof(MsprofAdditionalInfo));
+
     trans->parseStr2IdStart_ = false;
+    const std::string content3 = PackStr2IdStructs({MakeStr2IdStruct("drv_hashdata###" + hashStr)});
     fileChunkReq->chunk = content3;
     fileChunkReq->chunkSize = content3.length();
     EXPECT_EQ(PROFILING_FAILED, trans->ParseStr2IdChunk(fileChunkReq));
+    EXPECT_FALSE(trans->parseStr2IdStart_);
+}
+
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdFileChunkLongData) {
+    GlobalMockObject::verify();
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    std::shared_ptr<PerfCount> perfCount(new PerfCount("test"));
+    trans->perfCount_ = perfCount;
+    trans->Init();
+    trans->RegisterHashDataGenIdFuncPtr(HashDataGenHashIdWrapper);
+    std::shared_ptr<analysis::dvvp::ProfileFileChunk> fileChunkReq = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    fileChunkReq->fileName = "aicpu.data";
+    fileChunkReq->chunkModule = FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
+    fileChunkReq->extraInfo = "null.0";
+
+    std::string case1Struct1 = std::string(STR2ID_MARK) + "Notify_Record,HcomReduce_6629421139219749105_1,hccl_world_group,Memcpy";
+    case1Struct1 += ",Notify_Wait,Reduce_Inline,Ub_Inline_Write,AlgType::MESH,HcomAllGather_6629421139219749105_2,Ub_Write_Or_Read";
+    std::string case1Struct2 = "HcomAllReduce_6629421139219749105_3,Write_With_Notify,HcomAllReduce_6629421139219749105_4";
+    case1Struct2 += ",HcomBroadcast_6629421139219749105_5,HcomReduceScatter_6629421139219749105_6";
+    case1Struct2 += ",HcomReduceScatter_6629421139219749105_7";
+    std::string case1Struct3 = "HcomAllToAllV_6629421139219749105_8,HcomReduceScatter_6629421139219749105_9";
+    case1Struct3 += ",HcomReduce_6629421139219749105_10,HcomReduce_6629421139219749105_11,HcomAllReduce_6629421139219749105_0";
+    const std::string content4 = PackStr2IdStructs({MakeStr2IdStruct(case1Struct1),
+                                                    MakeStr2IdStruct(case1Struct2),
+                                                    MakeStr2IdStruct(case1Struct3)});
+    fileChunkReq->chunk = content4;
+    fileChunkReq->chunkSize = content4.length();
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(fileChunkReq));
+    EXPECT_TRUE(trans->parseStr2IdStart_);
+}
+
+// 场景：device 侧 hash 流（mark + key1,key2,...）总长超过 232B，被切成 ≥2 个
+// MsprofAdditionalInfo struct 经 aicpu 通道回传。修复前 ParseStr2IdChunk 把 N 个 struct
+// 紧密拼成的 raw 二进制流当 ASCII 切，跨 struct 边界处会嵌入 NUL 填充与下一个 struct 的
+// 24B 二进制头（含 0x5A5A magic）；修复后按 struct 边界 + dataLen 解码，输出干净 ASCII。
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdChunkMultiStructStripsHeaderAndPadding) {
+    g_str2idCollected.clear();
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    trans->RegisterHashDataGenIdFuncPtr(&CollectStr2IdHash);
+
+    // 准备 30 个 hash key，总长（含 mark 18B 与逗号分隔）必然超过单 struct 的 232B 上限，
+    // 强制至少切成 2 个 struct，触发跨 struct 边界场景。
+    std::vector<std::string> keys;
+    for (int i = 0; i < 30; ++i) {
+        keys.push_back("op_kernel_name_" + std::to_string(i));
+    }
+
+    // 模拟 device 侧 ReportStr2IdInfoToHost 的累积切片逻辑：mark 直接前置在首 key 前
+    // (producer 是 dataStr.insert(0, mark) 再按 ',' split，所以 mark 与 key0 之间没有 ',')；
+    // 同一个 struct 内 key 之间用 ',' 拼接；当再加一个 key 会超过 232B 时把当前 buf 落盘，
+    // 下一个 key 在新 buf 里"打头"也不带 ','——跨 struct 边界处缺少分隔符正是要复现的 bug 场景。
+    std::vector<MsprofAdditionalInfo> structs;
+    std::string buf = STR2ID_MARK;
+    auto flush = [&]() {
+        if (!buf.empty()) {
+            structs.push_back(MakeStr2IdStruct(buf));
+            buf.clear();
+        }
+    };
+    bool firstInStruct = true;  // 当前 struct 的首 key 不需要前置 ','
+    for (const auto &k : keys) {
+        size_t addLen = firstInStruct ? k.size() : k.size() + 1;
+        if (buf.size() + addLen > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
+            flush();  // 当前 struct 装满，落盘后开新 struct
+            firstInStruct = true;
+        }
+        if (!firstInStruct) {
+            buf.append(",");
+        }
+        buf.append(k);
+        firstInStruct = false;
+    }
+    flush();  // 收尾把最后一段半满 buf 也装进 struct
+    ASSERT_GT(structs.size(), 1U) << "test premise: hash stream must span multiple structs";
+
+    auto chunk = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    chunk->fileName = "aicpu.data";
+    chunk->chunk = PackStr2IdStructs(structs);
+    chunk->chunkSize = chunk->chunk.size();
+    chunk->offset = -1;
+
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(chunk));
+    EXPECT_TRUE(trans->parseStr2IdStart_);
+    // 修复后：每个 key 都按原样注册，顺序与构造时一致，且字符串内不含 NUL / 0x5A5A 残留
+    ASSERT_EQ(g_str2idCollected.size(), keys.size());
+    for (size_t i = 0; i < keys.size(); ++i) {
+        EXPECT_EQ(g_str2idCollected[i], keys[i]);
+        ExpectNoBinaryGarbage(g_str2idCollected[i], "multi struct");
+    }
+    g_str2idCollected.clear();
+}
+
+// 场景：parseStr2IdStart_ 已置 true（首个含 mark 的 chunk 已处理过），后续到来的纯 hash
+// chunk 不再带 mark，走 ParseStr2IdChunk 的续段分支。修复前续段分支直接把 raw 二进制流
+// 喂 AddHashData 同样会乱码；修复后续段也按 struct 边界解码再喂 AddHashData。
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdChunkContinuationDecodesPayload) {
+    g_str2idCollected.clear();
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    trans->RegisterHashDataGenIdFuncPtr(&CollectStr2IdHash);
+    trans->parseStr2IdStart_ = true;  // 模拟 mark 已在前一个 chunk 中被剥离
+
+    auto chunk = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    chunk->fileName = "aicpu.data";
+    // 两个 struct，分别装 "op_x,op_y" 与 "op_z"，模拟续段场景下的多 struct 拼接：
+    // 续段路径不剥 mark，3 个 key 应全部按序还原 (struct 边界由 ParseStr2IdChunk 补 ',')。
+    chunk->chunk = PackStr2IdStructs({MakeStr2IdStruct("op_x,op_y"), MakeStr2IdStruct("op_z")});
+    chunk->chunkSize = chunk->chunk.size();
+    chunk->offset = -1;
+
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(chunk));
+    ASSERT_EQ(g_str2idCollected.size(), 3U);
+    EXPECT_EQ(g_str2idCollected[0], "op_x");
+    EXPECT_EQ(g_str2idCollected[1], "op_y");
+    EXPECT_EQ(g_str2idCollected[2], "op_z");
+    for (const auto &item : g_str2idCollected) {
+        ExpectNoBinaryGarbage(item, "continuation");
+    }
+    g_str2idCollected.clear();
+}
+
+// 场景：producer 侧在 mark 与后续 hash struct 之间被并发的 MsprofReportAdditionalInfo 挤入了
+// 一条 aicpu 二进制 struct (NUL/0x5A5A 等高位字节)。修复后 ConcatHashPayload 会按"全可打印
+// ASCII"校验逐 struct 过滤：异常 struct 报 warning 跳过，只把合法 hash struct 注册到 HashData。
+TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseStr2IdChunkSkipsNonAsciiPayload) {
+    g_str2idCollected.clear();
+    std::shared_ptr<FILETransport> trans(new FILETransport("/tmp", "200MB"));
+    trans->RegisterHashDataGenIdFuncPtr(&CollectStr2IdHash);
+
+    // 构造 3 条 struct：mark+hash / aicpu 二进制残留 / 合法 hash
+    std::string binary;
+    binary.push_back('\x5A');
+    binary.push_back('\x5A');
+    binary.append(8, '\x01');  // 共 10 个非可打印 ASCII 字节
+    auto chunk = std::make_shared<analysis::dvvp::ProfileFileChunk>();
+    chunk->fileName = "aicpu.data";
+    chunk->chunk = PackStr2IdStructs({MakeStr2IdStruct(std::string(STR2ID_MARK) + "op_a,op_b"),
+                                      MakeStr2IdStruct(binary),
+                                      MakeStr2IdStruct("op_c,op_d")});
+    chunk->chunkSize = chunk->chunk.size();
+    chunk->offset = -1;
+
+    EXPECT_EQ(PROFILING_SUCCESS, trans->ParseStr2IdChunk(chunk));
+    EXPECT_TRUE(trans->parseStr2IdStart_);
+    // 二进制 struct 整段被丢弃，只剩 mark struct 和最后一条合法 struct 的 4 个 key
+    ASSERT_EQ(g_str2idCollected.size(), 4U);
+    EXPECT_EQ(g_str2idCollected[0], "op_a");
+    EXPECT_EQ(g_str2idCollected[1], "op_b");
+    EXPECT_EQ(g_str2idCollected[2], "op_c");
+    EXPECT_EQ(g_str2idCollected[3], "op_d");
+    for (const auto &item : g_str2idCollected) {
+        ExpectNoBinaryGarbage(item, "skip non-ascii");
+    }
+    g_str2idCollected.clear();
 }
 
 TEST_F(TRANSPORT_TRANSPORT_ITRANSPORT_TEST, ParseTlvChunk) {

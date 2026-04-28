@@ -201,19 +201,21 @@ void DevprofDrvAicpu::AddStr2IdIntoBuffer(std::string& str) {
     additionInfo.dataLen = str.length();
     additionInfo.timeStamp = 0;
     (void)memset_s(additionInfo.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, 0, MSPROF_ADDTIONAL_INFO_DATA_LENGTH);
-    errno_t ret = memcpy_s(additionInfo.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, str.c_str(), additionInfo.dataLen+1);
+    errno_t ret = memcpy_s(additionInfo.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, str.c_str(), additionInfo.dataLen);
     if(ret != EOK) {
-        MSPROF_LOGE("memcpy data into addtionInfo failed, size:%u", additionInfo.dataLen);
+        MSPROF_LOGE("Memcpy data into additionInfo failed, size:%uB", additionInfo.dataLen);
         return;
     }
-    ReportAdditionalInfo(0, static_cast<void*>(&additionInfo), sizeof(MsprofAdditionalInfo));
-    MSPROF_LOGI("add str2id into addtional buffer, size:%u", additionInfo.dataLen);
+    int32_t pushRet = ReportAdditionalInfo(0, static_cast<void*>(&additionInfo), sizeof(MsprofAdditionalInfo));
+    if (pushRet != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Push str2id into additional buffer failed, size:%uB", additionInfo.dataLen);
+        return;
+    }
+    MSPROF_LOGI("Add str2id into additional buffer, size:%uB", additionInfo.dataLen);
 }
 
 int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
-    // keep mark the same with file transport removeStr2IdHeaderMark
-    std::string mark = "###drv_hashdata###";
-    dataStr.insert(0, mark);
+    dataStr.insert(0, STR2ID_MARK);
     std::stringstream ss(dataStr);
     std::string item;
     std::string sendStr;
@@ -221,11 +223,12 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
     while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
         uint32_t itemSize = item.length();
         if (itemSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
-            MSPROF_LOGW("str size is over:%u str:%s", MSPROF_ADDTIONAL_INFO_DATA_LENGTH, item.c_str());
+            MSPROF_LOGW("Str size is over:%uB str:%s", MSPROF_ADDTIONAL_INFO_DATA_LENGTH, item.c_str());
             continue;
         }
-        if (currentSize + itemSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
-            MSPROF_LOGD("AddStr2IdIntoBuffer str lenght:%u str:%s", sendStr.length(), sendStr.c_str());
+        uint32_t addSize = currentSize > 0 ? itemSize + 1 : itemSize;
+        if (currentSize + addSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
+MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
             AddStr2IdIntoBuffer(sendStr);
             sendStr = "";
             currentSize = 0;
@@ -239,7 +242,7 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
         }
     }
     if (currentSize > 0) {
-        MSPROF_LOGD("AddStr2IdIntoBuffer str lenght:%u str:%s", sendStr.length(), sendStr.c_str());
+        MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
         AddStr2IdIntoBuffer(sendStr);
     }
     int32_t ret = SendAddtionalInfo();
