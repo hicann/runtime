@@ -354,7 +354,7 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo *taskInfo, const uint32_t devId
         }
     }
 
-    if (Runtime::Instance()->ChipIsHaveStars() && (!(taskInfo->bindFlag))) {
+    if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
         Stream* const stream = taskInfo->stream;
         RT_LOG(RT_LOG_INFO, "[DFX_SYNC] notify wait finish. notify_id=%u, stream_id=%d, task_id=%hu, sq_id=%u,"
             " device_id=%u", taskInfo->u.notifywaitTask.notifyId, stream->Id_(), taskInfo->id,

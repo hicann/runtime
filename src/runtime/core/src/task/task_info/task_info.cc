@@ -26,7 +26,6 @@
 #include "davinci_kernel_task.h"
 #include "rdma_task.h"
 #include "stub_task.hpp"
-#include "task_scheduler_error.h"
 
 namespace cce {
 namespace runtime {
