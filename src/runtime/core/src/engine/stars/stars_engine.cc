@@ -609,6 +609,12 @@ rtError_t StarsEngine::MonitorTaskReclaim(uint16_t errorStreamId)
         stm.reset();
         return RT_ERROR_NONE;
     }
+
+    COND_PROC(((stm->Flags() & RT_STREAM_DQS_CTRL) != 0U) || ((stm->Flags() & RT_STREAM_DQS_INTER_CHIP) != 0U), {
+        stm.reset();
+        return RT_ERROR_NONE;
+    });
+
     if (stm->StreamSyncTryLock(30U)) { // 30 wait for lock 300s
         if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
             if (stm->IsSeparateSendAndRecycle()) {
