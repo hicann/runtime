@@ -17,6 +17,8 @@ set(SRC_LIST
     "error_manager.cc"
 )
 
+include(error_manager_headers.cmake)
+
 ############ liberror_manager.so ############
 add_library(error_manager SHARED ${SRC_LIST})
 
@@ -28,7 +30,6 @@ target_compile_options(error_manager PRIVATE
 
 target_include_directories(error_manager PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RUNTIME_DIR}/include/dfx
 )
 
 target_link_libraries(error_manager PRIVATE
@@ -42,6 +43,8 @@ target_link_libraries(error_manager PRIVATE
         json
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
         -ldl
+    PUBLIC
+        $<BUILD_INTERFACE:error_manager_headers>
 )
 
 set_target_properties(error_manager PROPERTIES

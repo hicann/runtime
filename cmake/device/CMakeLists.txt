@@ -36,6 +36,8 @@ add_cann_subdirectories_relative(${RUNTIME_DIR}
     ${RUNTIME_DIR}/cmake/stub
 )
 
+include(${RUNTIME_DIR}/src/dfx/error_manager/error_manager_headers.cmake)
+
 add_dependencies(mmpa c_sec)
 add_dependencies(static_mmpa c_sec)
 add_dependencies(platform c_sec)
