@@ -172,11 +172,18 @@ aclError GetStrFromConfigPath(const char *configPath, std::string &configStr) {
     if (configPath != nullptr && strlen(configPath) != 0UL) {
         char_t realPath[MMPA_MAX_PATH] = {};
         if (mmRealPath(configPath, realPath, MMPA_MAX_PATH) != EN_OK) {
+            const auto formatErrMsg = acl::AclGetErrorFormatMessage(mmGetErrorCode());
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PATH_MSG,
+                std::vector<const char*>({"path", "reason"}),
+                std::vector<const char*>({configPath, formatErrMsg.c_str()}));
             ACL_LOG_ERROR("Invalid file: %s", configPath);
             return ACL_ERROR_INVALID_FILE;
         }
         std::ifstream file(realPath, std::ios::binary);
         if (!file.is_open()) {
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PATH_MSG,
+                std::vector<const char*>({"path", "reason"}),
+                std::vector<const char*>({configPath, "file open failed"}));
             ACL_LOG_ERROR("Failed to open file: %s", configPath);
             return ACL_ERROR_INVALID_FILE;
         }

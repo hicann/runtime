@@ -105,7 +105,7 @@ namespace {
         try {
             *value = std::stoll(strVal);
         } catch (...) {
-            ACL_LOG_INNER_ERROR("strVal[%s] can not be converted to digital value", strVal.c_str());
+            ACL_LOG_INNER_ERROR("strVal[%s] cannot be converted to digital value", strVal.c_str());
             return ACL_ERROR_INTERNAL_ERROR;
         }
         ACL_LOG_INFO("Successfully get platform info, key = %s, value = %ld", key.c_str(), *value);
@@ -230,10 +230,9 @@ void aclGetMsgCallback(const char_t *msg, uint32_t len)
 int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen)
 {
     ACL_LOG_INFO("start to execute UpdateOpSystemRunCfg");
-    if ((cfgAddr == nullptr) || (static_cast<size_t>(cfgLen) < sizeof(size_t))) {
-        ACL_LOG_ERROR("UpdateOpSystemRunCfg failed, invalid config address(null) or invalid length %u.", cfgLen);
-        return ACL_ERROR_RT_PARAM_INVALID;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(cfgAddr, ACL_ERROR_RT_PARAM_INVALID);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(static_cast<size_t>(cfgLen) < sizeof(size_t), cfgLen,
+        "cfgLen must be greater than or equal to sizeof(size_t)", ACL_ERROR_RT_PARAM_INVALID);
 
     // get device id
     int32_t devId = 0;
@@ -273,7 +272,7 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
         bool found = false;
         auto ret = acl::JsonParser::GetJsonCtxByKey(configPath, strConfig, ACL_ERR_MSG_CONFIG_NAME, found);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("can not parse err_msg config from file[%s], errorCode = %d", configPath, ret);
+            ACL_LOG_INNER_ERROR("cannot parse err_msg config from file[%s], errorCode = %d", configPath, ret);
             return ret;
         }
         if (!found) {
@@ -285,7 +284,11 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
         } else if (strConfig == PROCESS_MODE) {
             error_mode = error_message::ErrorMessageMode::PROCESS_MODE;
         } else {
-            ACL_LOG_INNER_ERROR("err_msg mode config is invalid %s", strConfig.c_str());
+            ACL_LOG_ERROR("err_msg mode config is invalid %s", strConfig.c_str());
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, strConfig.c_str(), "err_msg mode",
+                    "err_msg mode config is invalid, only support INTERNAL_MODE and PROCESS_MODE"}));
             return ACL_ERROR_INVALID_PARAM;
         }
     }
@@ -391,6 +394,11 @@ aclError aclInitImpl(const char *configPath)
     // 内容不一致
     if (!aclInitJsonHash.empty() && currentHash != aclInitJsonHash) {
         ACL_LOG_ERROR("config content of [%s] differs from the first aclInit config file path: [%s]", configPath, aclInitJsonPath.c_str());
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "config content differs from the first aclInit config file path: %s", aclInitJsonPath.c_str());
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+            std::vector<const char *>({"path", "reason"}),
+            std::vector<const char *>({configPath, errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -478,7 +486,7 @@ aclError aclInitImpl(const char *configPath)
     // get socVersion
     const char *socName = aclrtGetSocNameImpl();
     if (socName == nullptr) {
-        ACL_LOG_INNER_ERROR("[Init][Version]init soc version failed.");
+        ACL_LOG_INNER_ERROR("[Init][Version]init SoC version failed.");
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
@@ -498,7 +506,7 @@ aclError aclInitImpl(const char *configPath)
             if (rtRegErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
                 ACL_LOG_WARN("can not register kernel launch fill function, feature not support.");
             } else {
-                ACL_LOG_INNER_ERROR("[Init][RegFillFunc]register failed,ret = %d.", rtRegErr);
+                ACL_LOG_INNER_ERROR("[Init][RegFillFunc]register failed, ret = %d.", rtRegErr);
                 return ACL_GET_ERRCODE_RTS(rtRegErr);
             }
         }
@@ -573,7 +581,7 @@ aclError aclFinalizeInternal()
             if (rtRegErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
                 ACL_LOG_WARN("can not unregister kernel launch fill function, feature not support.");
             } else {
-                ACL_LOG_INNER_ERROR("Finalize][UnRegFillFunc]unregister failed,ret = %d.", rtRegErr);
+                ACL_LOG_INNER_ERROR("[Finalize][UnRegFillFunc]unregister failed, ret = %d.", rtRegErr);
                 return ACL_GET_ERRCODE_RTS(rtRegErr);
             }
         }
@@ -665,10 +673,7 @@ bool IsFileExist(const std::string &path)
 bool ParseVersionInfo(const std::string &path, std::string &versionInfo)
 {
     std::ifstream ifs(path, std::ifstream::in);
-    if (!ifs.is_open()) {
-        ACL_LOG_ERROR("[Check]Open file [%s] failed, reason is [%s].", path.c_str(), strerror(errno));
-        return false;
-    }
+    ACL_CHECK_FILE_OPEN_FAILED(ifs.is_open(), path.c_str(), "Failed to open file", false);
 
     std::string line;
     std::string lineVersion;
@@ -725,10 +730,7 @@ bool GetDriverPath(const std::string &ascendInstallPath, std::string &driverPath
     }
 
     std::ifstream ifs(ascendInstallPath, std::ifstream::in);
-    if (!ifs.is_open()) {
-        ACL_LOG_ERROR("[Check]Open file [%s] failed, reason is [%s].", ascendInstallPath.c_str(), strerror(errno));
-        return false;
-    }
+    ACL_CHECK_FILE_OPEN_FAILED(ifs.is_open(), ascendInstallPath.c_str(), "Failed to open file", false);
 
     driverPath.clear();
     std::string line;
@@ -763,10 +765,8 @@ aclError GetCANNVersionInternal(const aclCANNPackageName name, aclCANNPackageVer
         }
         versionInfoPath = installPath + "/" + pkgNameAlternative + "/version.info";
         ACL_LOG_INFO("[Check]use Alternative versionInfoPath [%s].", versionInfoPath.c_str());
-        if (!IsFileExist(versionInfoPath)) {
-            ACL_LOG_WARN("[Check]versionInfoPath [%s] does not exist.", versionInfoPath.c_str());
-            return ACL_ERROR_INVALID_FILE;
-        }
+        ACL_CHECK_INVALID_FILE_MSG_RET(!IsFileExist(versionInfoPath), versionInfoPath.c_str(), 
+            "Version info file does not exist", ACL_ERROR_INVALID_FILE);
     }
 
     std::string versionInfo;
@@ -837,6 +837,10 @@ bool GetPkgPath(const std::string &ascendInstallPath, std::string &pkgPath, cons
 
     std::ifstream ifs(ascendInstallPath, std::ifstream::in);
     if (!ifs.is_open()) {
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("failed to open file, %s", strerror(errno));
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+            std::vector<const char *>({"path", "reason"}),
+            std::vector<const char *>({ascendInstallPath.c_str(), errMsg.c_str()}));
         ACL_LOG_ERROR("[Check]Open file [%s] failed, reason is [%s]. Please check if ASCEND_HOME_PATH is set.", ascendInstallPath.c_str(), strerror(errno));
         return false;
     }
@@ -886,10 +890,8 @@ aclError GetVersionStringInternal(const std::string &fullPath, const char_t *pkg
     }
     ifs.close();
 
-    if (!found || versionOut.empty()) {
-        ACL_LOG_ERROR("Keyword [%s] not found in file [%s].", kVersionInfoKey, fullPath.c_str());
-        return ACL_ERROR_INVALID_FILE;
-    }
+    ACL_CHECK_INVALID_FILE_MSG_RET(!found || versionOut.empty(), fullPath.c_str(), 
+        "Keyword Version= not found in version info file", ACL_ERROR_INVALID_FILE);
 
     return ACL_SUCCESS;
 }
@@ -972,9 +974,18 @@ aclError aclsysGetVersionStrImpl(char *pkgName, char *versionStr)
         return ret;
     }
 
-    if (strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str()) != EOK) {
-        ACL_LOG_ERROR("Copy string failed. Dest buffer size is [%d], source len is [%lu].",
-                      ACL_PKG_VERSION_MAX_SIZE, verInfo.length());
+    errno_t strcpyRet = strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str());
+    if (strcpyRet != EOK) {
+        std::string extendInfo = acl::AclErrorLogManager::FormatStr(
+            "dest=versionStr, destLen=%zu, srcLen=%zu",
+            static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE), verInfo.length());
+        const std::string strcpyRetVal = std::to_string(strcpyRet);
+        acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
+            std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
+            std::vector<const char *>({__func__, "strcpy_s", strcpyRetVal.c_str(),
+                strerror(strcpyRet), extendInfo.c_str()}));
+        ACL_LOG_ERROR("Copy string failed. Dest buffer size is [%zu], source len is [%zu].",
+            static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE), verInfo.length());
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
@@ -1283,7 +1294,17 @@ aclError aclGetDeviceCapabilityImpl(uint32_t deviceId, aclDeviceInfo deviceInfo,
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     // currently check only, deviceId with [0, count - 1]
-    ACL_CHECK_LESS_UINT(deviceId, static_cast<uint32_t>(count - 1));
+    if (deviceId > static_cast<uint32_t>(count - 1)) {
+        ACL_LOG_ERROR("%s failed because deviceId %u greater than deviceNum %d.",
+            __func__, deviceId, count);
+        const std::string deviceIdVal = std::to_string(deviceId);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("deviceId %u greater than deviceNum %d.", deviceId, count);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, deviceIdVal.c_str(), "deviceId", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
     const std::map<aclDeviceInfo, std::string> infoTypeToKey = {
         {ACL_DEVICE_INFO_AI_CORE_NUM, "ai_core_cnt"},
         {ACL_DEVICE_INFO_VECTOR_CORE_NUM, "vector_core_cnt"},

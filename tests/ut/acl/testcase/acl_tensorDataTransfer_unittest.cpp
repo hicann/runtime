@@ -1157,3 +1157,53 @@ TEST_F(UTEST_tensor_data_transfer, acltdtCleanChannel_succ_receive)
     EXPECT_EQ(acltdtDestroyChannel(handle), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_tensor_data_transfer, acltdtGetDimsFromItem_failed_with_valid_dims_but_zero_dimNum)
+{
+    int64_t dims[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    size_t dimNum = 0;  // dimNum 为 0，但 dims 不为 nullptr
+    acltdtDataItem *dataItem = (acltdtDataItem *)0x11;
+    
+    aclError ret = acltdtGetDimsFromItem(dataItem, dims, dimNum);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+TEST_F(UTEST_tensor_data_transfer, acltdtGetDimsFromItem_failed_with_nullptr_dims_but_nonzero_dimNum)
+{
+    int64_t *dims = nullptr;
+    size_t dimNum = 10;  // dimNum 不为 0，但 dims 为 nullptr
+    acltdtDataItem *dataItem = (acltdtDataItem *)0x11;
+    
+    aclError ret = acltdtGetDimsFromItem(dataItem, dims, dimNum);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_tensor_data_transfer, acltdtCreateDataItem_Fail_DimsNotNullButDimNumZero)
+{
+    int64_t dims[] = {1, 2, 3};
+    acltdtDataItem *dataItem = acltdtCreateDataItem(ACL_TENSOR_DATA_TENSOR, dims, 0, ACL_INT64, nullptr, 0);
+    EXPECT_EQ(dataItem, nullptr);
+}
+
+TEST_F(UTEST_tensor_data_transfer, acltdtGetDataItem_IndexOutOfRange)
+{
+    acltdtDataset *dataset = acltdtCreateDataset();
+    EXPECT_NE(dataset, nullptr);
+    
+    // 空dataset，index=0 应该返回 nullptr（size=0, index>=size）
+    EXPECT_EQ(acltdtGetDataItem(dataset, 0), nullptr);
+    EXPECT_EQ(acltdtGetDataItem(dataset, 100), nullptr);
+    
+    // 添加一个元素后，index=1 应该返回 nullptr（size=1, index>=size）
+    const int64_t dims[] = {1, 3, 224, 224};
+    acltdtDataItem *dataItem = acltdtCreateDataItem(ACL_TENSOR_DATA_TENSOR, dims, 4, ACL_INT64, nullptr, 0);
+    EXPECT_EQ(acltdtAddDataItem(dataset, dataItem), ACL_SUCCESS);
+    EXPECT_EQ(acltdtGetDataItem(dataset, 1), nullptr);
+    EXPECT_EQ(acltdtGetDataItem(dataset, 999), nullptr);
+    
+    // 正常情况：index=0 应该返回有效指针
+    acltdtDataItem *retrievedItem = acltdtGetDataItem(dataset, 0);
+    EXPECT_EQ(retrievedItem, dataItem);
+    
+    EXPECT_EQ(acltdtDestroyDataset(dataset), ACL_SUCCESS);
+    EXPECT_EQ(acltdtDestroyDataItem(dataItem), ACL_SUCCESS);
+}
+

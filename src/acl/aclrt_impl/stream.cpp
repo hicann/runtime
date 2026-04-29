@@ -151,9 +151,13 @@ aclError aclrtSynchronizeStreamImpl(aclrtStream stream)
 aclError aclrtSynchronizeStreamWithTimeoutImpl(aclrtStream stream, int32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSynchronizeStreamWithTimeout);
-    constexpr int32_t default_timeout = -1;
-    if (timeout < default_timeout) {
+    constexpr int32_t defaultTimeout = -1;
+    if (timeout < defaultTimeout) {
         ACL_LOG_CALL_ERROR("the timeout of synchronize stream is invalid");
+        const std::string timeoutVal = std::to_string(timeout);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, timeoutVal.c_str(), "timeout", "[-1, INT_MAX]"}));
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     const rtError_t rtErr = rtStreamSynchronizeWithTimeout(static_cast<rtStream_t>(stream), timeout);
@@ -290,10 +294,7 @@ aclError aclrtGetStreamOverflowSwitchImpl(aclrtStream stream, uint32_t *flag)
 aclError aclrtSetStreamOverflowSwitchImpl(aclrtStream stream, uint32_t flag)
 {
     ACL_LOG_INFO("start to execute aclrtSetStreamOverflowSwitch, flag is %u.", flag);
-    if ((flag != 0U) && ((flag != 1U))) {
-        ACL_LOG_ERROR("flag must be 1 or 0, but current value is %u", flag);
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT((flag == 0U) || (flag == 1U), flag, "0 or 1");
     const rtError_t rtErr = rtSetStreamOverflowSwitch(static_cast<rtStream_t>(stream), flag);
     if (rtErr != RT_ERROR_NONE) {
         ACL_LOG_CALL_ERROR("rtSetStreamOverflowSwitch failed, runtime result = %d.", rtErr);
@@ -408,10 +409,8 @@ aclError aclrtSwitchStreamImpl(void *leftValue, aclrtCondition cond, void *right
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(rightValue);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(trueStream);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
-    if (falseStream != nullptr) {
-        ACL_LOG_ERROR("param falseStream must be nullptr currently.");
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(falseStream == nullptr, "falseStream",
+        "falseStream is a reserved parameter and must be nullptr");
 
     const rtError_t rtErr = rtsSwitchStream(leftValue, static_cast<rtCondition_t>(cond), rightValue,
         static_cast<rtSwitchDataType_t>(dataType), static_cast<rtStream_t>(trueStream),

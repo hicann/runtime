@@ -822,6 +822,79 @@
       }
     },
     {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EH0007",
+      "ErrMessage": "%s failed because value %s for parameter %s is invalid. Expected value: %s.",
+      "Arglist": "func, value, param, expect",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1.Check the input parameter range of the function. \n2.Check the function invocation relationship."
+      }
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument_Null_Pointer",
+      "ErrCode": "EH0008",
+      "ErrMessage": "%s failed because %s cannot be a NULL pointer.",
+      "Arglist": "func, param",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Try again with a correct pointer argument."
+      }
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EH0009",
+      "ErrMessage": "%s failed. Value %s for parameter %s is invalid. Reason: %s.",
+      "Arglist": "func, value, param, reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1.Check the input parameter range of the function. \n2.Check the function invocation relationship."
+      }
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Resource_Error_Insufficient_Device_Memory",
+      "ErrCode": "EH0010",
+      "ErrMessage": "Failed to allocate %s bytes host memory for ACL.",
+      "Arglist": "buf_size",
+      "suggestion": {
+        "Possible Cause": "Allocation failed due to insufficient host memory.",
+        "Solution": "Stop unnecessary processes and ensure the required memory is available."
+      }
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Not_Supported",
+      "ErrCode": "EH0011",
+      "ErrMessage": "The current system or device does not support %s.",
+      "Arglist": "func"
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EH0012",
+      "ErrMessage": "%s failed, Parameter %s is invalid. Reason: %s.",
+      "Arglist": "func, param, reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "ACL Errors",
+      "errTitle": "Invalid_Argument",
+      "ErrCode": "EH0013",
+      "ErrMessage": "%s failed. Reason: Standard function %s failed. [Errno %s] %s. %s",
+      "Arglist": "func1, func2, ret_code, reason, extend_info",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "HCCL Errors",
       "errTitle": "Config_Error_Invalid_Environment_Variable",
       "ErrCode": "EI0001",

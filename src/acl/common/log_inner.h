@@ -37,6 +37,13 @@ constexpr const char_t *const INVALID_PATH_MSG = "EH0003";
 constexpr const char_t *const INVALID_FILE_MSG = "EH0004";
 constexpr const char_t *const INVALID_AIPP_MSG = "EH0005";
 constexpr const char_t *const UNSUPPORTED_FEATURE_MSG = "EH0006";
+constexpr const char_t *const INVALID_VALUE_MSG = "EH0007";
+constexpr const char_t *const NULL_POINTER_FUNC_MSG = "EH0008";
+constexpr const char_t *const INVALID_PARAM_REASON_MSG = "EH0009";
+constexpr const char_t *const ALLOC_MEMORY_FAILED_MSG = "EH0010";
+constexpr const char_t *const UNSUPPORTED_SYSTEM_MSG = "EH0011";
+constexpr const char_t *const INVALID_PARAM_NO_VALUE_MSG = "EH0012";
+constexpr const char_t *const STANDARD_FUNC_FAILED_MSG = "EH0013";
 
 // first stage
 constexpr const char_t *const ACL_STAGE_SET = "SET";
@@ -287,12 +294,116 @@ public:
     } \
     while (false)
 
+#define ACL_CHECK_RESERVED_PARAM_REPORT_RET(param, expect, ret) \
+    do { \
+        if ((param) != (expect)) { \
+            const std::string paramVal = std::to_string(param); \
+            const std::string expectVal = std::to_string(static_cast<long long>(expect)); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is a reserved parameter and must be %s, current value=%s", \
+                #param, expectVal.c_str(), paramVal.c_str()); \
+            std::string errMsg = acl::AclErrorLogManager::FormatStr("%s is a reserved parameter and must be %s", #param, expectVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
+                std::vector<const char *>({"func", "value", "param", "reason"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, errMsg.c_str()})); \
+            return ret; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_PARAM_WITH_REASON(condition, param, reason) \
+    do { \
+        if (condition) { \
+            const std::string paramVal = std::to_string(param); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
+                #param, reason, paramVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
+                std::vector<const char *>({"func", "value", "param", "reason"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, reason})); \
+            return ACL_ERROR_INVALID_PARAM; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(condition, param, reason, ret) \
+    do { \
+        if (condition) { \
+            const std::string paramVal = std::to_string(param); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
+                #param, reason, paramVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
+                std::vector<const char *>({"func", "value", "param", "reason"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, reason})); \
+            return ret; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET(condition, paramVal, paramName, reason, ret) \
+    do { \
+        if (condition) { \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, %s. value=%s", \
+                paramName, reason, paramVal); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG, \
+                std::vector<const char *>({"func", "value", "param", "reason"}), \
+                std::vector<const char *>({__func__, paramVal, paramName, reason})); \
+            return ret; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_VALUE_WITH_EXPECT(condition, param, expect) \
+    do { \
+        if (!(condition)) { \
+            const std::string paramVal = std::to_string(param); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
+                #param, expect, paramVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
+                std::vector<const char *>({"func", "value", "param", "expect"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, expect})); \
+            return ACL_ERROR_INVALID_PARAM; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(condition, param, expect, ret) \
+    do { \
+        if (!(condition)) { \
+            const std::string paramVal = std::to_string(param); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
+                #param, expect, paramVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
+                std::vector<const char *>({"func", "value", "param", "expect"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, expect})); \
+            return ret; \
+        } \
+    } while (false)
+
+#define ACL_CHECK_INVALID_VALUE_WITH_DESC(condition, paramVal, paramName, expect, ret) \
+    do { \
+        if (!(condition)) { \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
+                paramName, expect, paramVal); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
+                std::vector<const char *>({"func", "value", "param", "expect"}), \
+                std::vector<const char *>({__func__, paramVal, paramName, expect})); \
+            return ret; \
+        } \
+    } while (false)
+
+#define ACL_REQUIRES_PARAM_EQUAL_REPORT(param, expect) \
+    do { \
+        if ((param) != (expect)) { \
+            const std::string paramVal = std::to_string(param); \
+            ACL_LOG_ERROR("[Check][PARAM]%s is invalid, must be %s. value=%s", \
+                #param, #expect, paramVal.c_str()); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
+                std::vector<const char *>({"func", "value", "param", "expect"}), \
+                std::vector<const char *>({__func__, paramVal.c_str(), #param, #expect})); \
+            return ACL_ERROR_INVALID_PARAM; \
+        } \
+    } while (false)
+
 #ifndef ENABLE_DVPP_INTERFACE
 #define ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(val) \
     do { \
     if (UNLIKELY((val) == nullptr)) { \
         ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
-        acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {#val}); \
+        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, #val}); \
         return ACL_ERROR_INVALID_PARAM; } \
     } \
     while (false)
@@ -301,13 +412,22 @@ public:
     do { \
     if (UNLIKELY((val) == nullptr)) { \
         ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
-        const char_t *argList[] = {"param"}; \
-        const char_t *argVal[] = {#val}; \
-        acl::AclErrorLogManager::ReportInputErrorWithChar("EH0002", argList, argVal, 1U); \
+        const char_t *argList[] = {"func", "param"}; \
+        const char_t *argVal[] = {__func__, #val}; \
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::NULL_POINTER_FUNC_MSG, argList, argVal, 2U); \
         return ACL_ERROR_INVALID_PARAM; } \
     } \
     while (false)
 #endif
+
+#define ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_WITH_PRAM_NAME(val, name) \
+    do { \
+    if (UNLIKELY((val) == nullptr)) { \
+        ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
+        acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, name}); \
+        return ACL_ERROR_INVALID_PARAM; } \
+    } \
+    while (false)
 
 #define ACL_REQUIRES_NOT_NULL(val) \
     do { \
@@ -333,12 +453,54 @@ public:
         } \
     while (false)
 
+#define ACL_CHECK_INVALID_PARAM_NO_VALUE(condition, paramName, reason) \
+do { \
+    if (!(condition)) { \
+        const char_t *argList[] = {"func", "param", "reason"}; \
+        const char_t *argVal[] = {__func__, paramName, reason}; \
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_NO_VALUE_MSG, argList, argVal, 3U); \
+        return ACL_ERROR_INVALID_PARAM; \
+    } \
+} while (false)
+
+#define ACL_CHECK_INVALID_FILE_MSG_RET(condition, path, reason, ret) \
+do { \
+    if (condition) { \
+        ACL_LOG_ERROR("[Check][File]file %s is invalid, %s", path, reason); \
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG, \
+            std::vector<const char *>({"path", "reason"}), \
+            std::vector<const char *>({path, reason})); \
+        return ret; \
+    } \
+} while (false)
+
 #define ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(val) \
     do { \
         if (UNLIKELY((val) == nullptr)) { \
             ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
-            acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {#val}); \
+            acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, #val}); \
             return nullptr; } \
+        } \
+    while (false)
+
+#define ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(val, ret) \
+    do { \
+        if (UNLIKELY((val) == nullptr)) { \
+            ACL_LOG_ERROR("[Check][%s]param must not be null.", #val); \
+            acl::AclErrorLogManager::ReportInputError(acl::NULL_POINTER_FUNC_MSG, {"func", "param"}, {__func__, #val}); \
+            return ret; } \
+        } \
+    while (false)
+
+#define ACL_CHECK_MALLOC_RESULT_REPORT_RET(val, size, ret) \
+    do { \
+        if ((val) == nullptr) { \
+            const std::string sizeVal = std::to_string(size); \
+            ACL_LOG_ERROR("[Check][Malloc]Allocate memory for [%s] failed, bufferSize=%zu.", #val, size); \
+            acl::AclErrorLogManager::ReportInputError(acl::ALLOC_MEMORY_FAILED_MSG, \
+                std::vector<const char *>({"buf_size"}), \
+                std::vector<const char *>({sizeVal.c_str()})); \
+            return ret; } \
         } \
     while (false)
 
@@ -393,13 +555,14 @@ public:
         } \
     while (false)
 
-#define ACL_REQUIRES_NON_NEGATIVE_WITH_INPUT_REPORT(val) \
+#define ACL_REQUIRES_POSITIVE_REPORT(val) \
     do { \
-        if ((val) < 0) { \
-            ACL_LOG_ERROR("[Check][%s]param must be non-negative.", #val); \
-            acl::AclErrorLogManager::ReportInputError("EH0001", \
-                std::vector<const char *>({"param", "value", "reason"}), \
-                std::vector<const char *>({#val, std::to_string(val).c_str(), "must be non-negative"})); \
+        if ((val) <= 0) { \
+            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val); \
+            const std::string valStr = std::to_string(val); \
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG, \
+            std::vector<const char *>({"func", "value", "param", "expect"}), \
+            std::vector<const char *>({__func__, valStr.c_str(), #val, "must be greater than zero"})); \
             return ACL_ERROR_INVALID_PARAM; } \
         } \
     while (false)
@@ -408,17 +571,6 @@ public:
     do { \
         if ((val) <= 0) { \
             ACL_LOG_ERROR("[Check][%s]param must be positive.", #val); \
-            return ACL_ERROR_INVALID_PARAM; } \
-        } \
-    while (false)
-
-#define ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(val) \
-    do { \
-        if ((val) <= 0) { \
-            ACL_LOG_ERROR("[Check][%s]param must be positive.", #val); \
-            acl::AclErrorLogManager::ReportInputError("EH0001", \
-                std::vector<const char *>({"param", "value", "reason"}), \
-                std::vector<const char *>({#val, std::to_string(val).c_str(), "must be positive"})); \
             return ACL_ERROR_INVALID_PARAM; } \
         } \
     while (false)
@@ -562,5 +714,18 @@ public:
         } \
     } \
     while (false)
+
+#define ACL_CHECK_FILE_OPEN_FAILED(condition, path, reasonPrefix, ret) \
+do { \
+    if (!(condition)) { \
+        const std::string errReason = strerror(errno); \
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("%s, %s", reasonPrefix, errReason.c_str()); \
+        ACL_LOG_ERROR("[Check]Open file [%s] failed, reason is [%s].", path, errReason.c_str()); \
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG, \
+            std::vector<const char *>({"path", "reason"}), \
+            std::vector<const char *>({path, errMsg.c_str()})); \
+        return ret; \
+    } \
+} while (false)
 
 #endif // ACL_COMMON_LOG_H_

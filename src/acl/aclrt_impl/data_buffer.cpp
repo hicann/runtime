@@ -64,9 +64,7 @@ aclDataBuffer *aclCreateDataBufferImpl(void *data, size_t size)
 aclError aclDestroyDataBufferImpl(const aclDataBuffer *dataBuffer)
 {
     ACL_ADD_RELEASE_TOTAL_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_DATA_BUFFER);
-    if (dataBuffer == nullptr) {
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataBuffer);
 
     ACL_DELETE_AND_SET_NULL(dataBuffer);
     ACL_ADD_RELEASE_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_DATA_BUFFER);
@@ -75,13 +73,7 @@ aclError aclDestroyDataBufferImpl(const aclDataBuffer *dataBuffer)
 
 aclError aclUpdateDataBufferImpl(aclDataBuffer *dataBuffer, void *data, size_t size)
 {
-    if (dataBuffer == nullptr) {
-        ACL_LOG_ERROR("[Check][DataBuffer]invalid input pointer of dataBuffer, please use aclCreateDataBuffer "
-            "interface to create.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}), std::vector<const char *>({"dataBuffer"}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataBuffer);
     dataBuffer->data = data;
     dataBuffer->length = size;
     return ACL_SUCCESS;

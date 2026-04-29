@@ -19,7 +19,7 @@ namespace acl {
     aclError QueueProcessorHost::acltdtCreateQueue(const acltdtQueueAttr *const attr, uint32_t *const qid)
     {
         ACL_LOG_INFO("Start to acltdtCreateQueue");
-        ACL_REQUIRES_NOT_NULL(qid);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qid);
         int32_t deviceId = 0;
         rtError_t rtRet = RT_ERROR_NONE;
         rtRet = rtGetDevice(&deviceId);
@@ -62,7 +62,7 @@ namespace acl {
             ACL_REQUIRES_OK(GetQueueRouteNum(&queryInfo, deviceId, eventSum, ack, routeNum));
         }
         if (routeNum > 0UL) {
-            ACL_LOG_ERROR("qid [%u] can not be destroyed, it need to be unbinded first.", qid);
+            ACL_LOG_ERROR("qid [%u] can not be destroyed, it needs to be unbound first.", qid);
             return ACL_ERROR_FAILURE;
         }
         ACL_REQUIRES_CALL_RTS_OK(rtMemQueueDestroy(deviceId, qid), rtMemQueueDestroy);
@@ -72,7 +72,7 @@ namespace acl {
 
     aclError QueueProcessorHost::acltdtBindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         int32_t deviceId = 0;
         ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
@@ -101,7 +101,7 @@ namespace acl {
 
     aclError QueueProcessorHost::acltdtUnbindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         int32_t deviceId = 0;
         ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
@@ -127,8 +127,8 @@ namespace acl {
     aclError QueueProcessorHost::acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *const queryInfo,
                                                         acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(queryInfo);
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(queryInfo);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtQueryQueueRoutes");
         int32_t deviceId = 0;
         ACL_REQUIRES_CALL_RTS_OK(rtGetDevice(&deviceId), rtGetDevice);
@@ -173,7 +173,7 @@ namespace acl {
             isBind ? static_cast<uint32_t>(bqs::ACL_BIND_QUEUE) : static_cast<uint32_t>(bqs::ACL_UNBIND_QUEUE);
         auto ret = rtMemcpy(devPtr, routeSize, &head, sizeof(head), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed ,ret is %d", ret);
+            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -186,7 +186,7 @@ namespace acl {
             ret = rtMemcpy((static_cast<uint8_t *>(devPtr) + offset), (routeSize - offset), &tmpRoute,
                 sizeof(tmpRoute), RT_MEMCPY_HOST_TO_DEVICE);
             if (ret != ACL_RT_SUCCESS) {
-                ACL_LOG_INNER_ERROR("call rtMemcpy failed ,ret is %d", ret);
+                ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
                 (void)rtFree(devPtr);
                 devPtr = nullptr;
                 return ret;
@@ -211,7 +211,7 @@ namespace acl {
         }
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("send connet qs failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("send connect qs failed, ret code is %d", rsp->retCode);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ACL_ERROR_FAILURE;
@@ -262,7 +262,7 @@ namespace acl {
         head.subEventId = bqs::ACL_QUERY_QUEUE;
         auto ret = rtMemcpy(devPtr, routeSize, &head, sizeof(head), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed ,ret is %d", ret);
+            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -275,7 +275,7 @@ namespace acl {
         ret = rtMemcpy((static_cast<uint8_t *>(devPtr) + offset), (routeSize - offset), &routeQuery,
             sizeof(routeQuery), RT_MEMCPY_HOST_TO_DEVICE);
         if (ret != ACL_RT_SUCCESS) {
-            ACL_LOG_INNER_ERROR("call rtMemcpy failed ,ret is %d", ret);
+            ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ret;
@@ -297,7 +297,7 @@ namespace acl {
         }
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("query queue route failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("query queue route failed, ret code is %d", rsp->retCode);
             (void)rtFree(devPtr);
             devPtr = nullptr;
             return ACL_ERROR_FAILURE;
@@ -308,7 +308,7 @@ namespace acl {
             ret = rtMemcpy(&retRoute, sizeof(retRoute), (static_cast<uint8_t *>(devPtr) + offset),
                 sizeof(retRoute), RT_MEMCPY_DEVICE_TO_HOST);
             if (ret != ACL_RT_SUCCESS) {
-                ACL_LOG_INNER_ERROR("call rtMemcpy failed ,ret is %d", ret);
+                ACL_LOG_INNER_ERROR("call rtMemcpy failed, ret is %d", ret);
                 (void)rtFree(devPtr);
                 devPtr = nullptr;
                 return ret;
@@ -331,10 +331,10 @@ namespace acl {
         (void)(qid);
         (void)(buf);
         (void)(timeout);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtEnqueue is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtEnqueue", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtEnqueue is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -343,10 +343,10 @@ namespace acl {
         (void)(qid);
         (void)(buf);
         (void)(timeout);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtDequeue is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtDequeue", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtDequeue is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -355,20 +355,20 @@ namespace acl {
         (void)(size);
         (void)(type);
         (void)(buf);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtAllocBuf is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtAllocBuf", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtAllocBuf is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
     aclError QueueProcessorHost::acltdtFreeBuf(acltdtBuf buf)
     {
         (void)(buf);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtFreeBuf is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtFreeBuf", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtFreeBuf is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -377,10 +377,10 @@ namespace acl {
         (void)(buf);
         (void)(dataPtr);
         (void)(size);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtGetBufData is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGetBufData", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtGetBufData is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -391,10 +391,10 @@ namespace acl {
         (void)(dataPtr);
         (void)(size);
         (void)(offset);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtGetBufUserData is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGetBufUserData", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtGetBufUserData is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -405,10 +405,10 @@ namespace acl {
         (void)(dataPtr);
         (void)(size);
         (void)(offset);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtSetBufUserData is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtSetBufUserData", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtSetBufUserData is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -416,10 +416,10 @@ namespace acl {
     {
         (void)(buf);
         (void)(newBuf);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtCopyBufRef is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtCopyBufRef", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtCopyBufRef is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -427,10 +427,10 @@ namespace acl {
     {
         (void)(buf);
         (void)(len);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtSetBufDataLen is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtSetBufDataLen", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtSetBufDataLen is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -438,10 +438,10 @@ namespace acl {
     {
         (void)(buf);
         (void)(len);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtGetBufDataLen is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGetBufDataLen", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtGetBufDataLen is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -449,10 +449,10 @@ namespace acl {
     {
         (void)(buf);
         (void)(headBuf);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtAppendBufChain is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtAppendBufChain", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtAppendBufChain is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -460,10 +460,10 @@ namespace acl {
     {
         (void)(headBuf);
         (void)(num);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtGetBufChainNum is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGetBufChainNum", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtGetBufChainNum is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -473,10 +473,10 @@ namespace acl {
         (void)(buf);
         (void)(headBuf);
         (void)(index);
-        ACL_LOG_ERROR("[Unsupport][Feature]acltdtGetBufFromChain is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGetBufFromChain", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        ACL_LOG_ERROR("[Unsupported][Feature]acltdtGetBufFromChain is not supported in this version. Please check.");
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 }

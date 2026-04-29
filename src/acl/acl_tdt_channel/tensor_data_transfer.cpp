@@ -170,7 +170,7 @@ namespace acl {
                 break;
             }
             default: {
-                ACL_LOG_INNER_ERROR("[Check][Type]unkown acltdtTensorType %d.", aclType);
+                ACL_LOG_ERROR("[Check][Type]unknown acltdtTensorType %d.", aclType);
                 return ACL_ERROR_INVALID_PARAM;
             }
         }
@@ -193,7 +193,7 @@ namespace acl {
                 break;
             }
             default: {
-                ACL_LOG_INNER_ERROR("[Check][Type]unkown acltdtTensorType %d.", aclType);
+                ACL_LOG_INNER_ERROR("[Check][Type]unknown acltdtTensorType %d.", aclType);
                 return ACL_ERROR_INVALID_PARAM;
             }
         }
@@ -216,7 +216,7 @@ namespace acl {
                 break;
             }
             default: {
-                ACL_LOG_INNER_ERROR("[Check][Datatype]unkown TdtDataType %d.", tdtDataType);
+                ACL_LOG_INNER_ERROR("[Check][Datatype]unknown TdtDataType %d.", tdtDataType);
                 return ACL_ERROR_UNSUPPORTED_DATA_TYPE;
             }
         }
@@ -247,7 +247,7 @@ namespace acl {
                 break;
             }
             default: {
-                ACL_LOG_INNER_ERROR("[Check][Datatype]unkown TdtDataType %d.", tdtDataType);
+                ACL_LOG_INNER_ERROR("[Check][Datatype]unknown TdtDataType %d.", tdtDataType);
                 return ACL_ERROR_UNSUPPORTED_DATA_TYPE;
             }
         }
@@ -335,7 +335,7 @@ namespace acl {
                     aclDataTypeStrMap.find(itemVec[i].tensorType_);
                 if (iter == aclDataTypeStrMap.cend()) {
                     ACL_LOG_INNER_ERROR("[Deserialize][TensorDataset]TensorDatasetDeserializes failed, "
-                        "unkown data type[%s]", itemVec[i].tensorType_.c_str());
+                        "unknown data type[%s]", itemVec[i].tensorType_.c_str());
                     ret = ACL_ERROR_INTERNAL_ERROR;
                     break;
                 }
@@ -345,7 +345,11 @@ namespace acl {
                     dataType, itemVec[i].tensorType_,
                     itemVec[i].dataPtr_, itemVec[i].dataLen_);
                 if (item == nullptr) {
-                    ACL_LOG_INNER_ERROR("[Check][Item]TensorDatasetDeserializes alloc failed");
+                    ACL_LOG_ERROR("[Check][Item]TensorDatasetDeserializes alloc failed");
+                    std::string sizeStr = std::to_string(sizeof(acltdtDataItem));
+                    acl::AclErrorLogManager::ReportInputError(acl::ALLOC_MEMORY_FAILED_MSG,
+                        std::vector<const char *>({"buf_size"}),
+                        std::vector<const char *>({sizeStr.c_str()}));
                     ret = ACL_ERROR_BAD_ALLOC;
                     break;
                 }
@@ -493,23 +497,23 @@ namespace acl {
             itemVec[i].ctrlInfo.dynamicBitSize = alignedSize - sizeof(ItemInfo);
             std::shared_ptr<uint8_t> ctrlSharedPtr(
                 new (std::nothrow) uint8_t[alignedSize], std::default_delete<uint8_t[]>());
-            ACL_CHECK_MALLOC_RESULT(ctrlSharedPtr);
+            ACL_CHECK_MALLOC_RESULT_REPORT_RET(ctrlSharedPtr.get(), alignedSize, ACL_ERROR_BAD_ALLOC);
             void *ctrlPtr = ctrlSharedPtr.get();
             ACL_LOG_DEBUG("TensorDataitemSerialize alignedSize is %zu, ctrlSize is %zu, dynamicBitSize is %u, i is %zu,"
                 " lastDataSize is %zu, shape size is %zu", alignedSize, ctrlSize, itemVec[i].ctrlInfo.dynamicBitSize,
                 i, lastDataSize, itemVec[i].dims.size());
-            auto ret = memcpy_s(ctrlPtr, alignedSize, &itemVec[i].ctrlInfo, sizeof(ItemInfo));
-            if (ret != EN_OK) {
+            auto memcpyRet = memcpy_s(ctrlPtr, alignedSize, &itemVec[i].ctrlInfo, sizeof(ItemInfo));
+            if (memcpyRet != EN_OK) {
                 ACL_LOG_INNER_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%zu",
-                    ret, sizeof(ItemInfo), alignedSize);
+                    memcpyRet, sizeof(ItemInfo), alignedSize);
             }
             size_t offset = sizeof(ItemInfo);
             for (size_t j = 0; j < itemVec[i].dims.size(); ++j) {
-                ret = memcpy_s(reinterpret_cast<uint8_t *>(ctrlPtr) + offset,
+                memcpyRet = memcpy_s(reinterpret_cast<uint8_t *>(ctrlPtr) + offset,
                     alignedSize - offset, &itemVec[i].dims[j], sizeof(int64_t));
-                if (ret != EN_OK) {
+                if (memcpyRet != EN_OK) {
                     ACL_LOG_INNER_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%zu",
-                                        ret, sizeof(int64_t), alignedSize - offset);
+                                        memcpyRet, sizeof(int64_t), alignedSize - offset);
                 }
                 offset += sizeof(int64_t);
             }
@@ -580,6 +584,7 @@ namespace acl {
 
     aclError acltdtSendTensorV2(const acltdtChannelHandle *handle, const acltdtDataset *dataset, int32_t timeout)
     {
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
         std::vector<acl::aclTdtDataItemInfo> itemVec;
         auto ret = acl::TensorDatasetSerializesV2(dataset, itemVec);
         if (ret != ACL_SUCCESS) {
@@ -606,7 +611,7 @@ namespace acl {
             return ret;
         }
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("Fail to execute acltdtSendTensor, device is %u, name is %s",
+            ACL_LOG_INNER_ERROR("Failed to execute acltdtSendTensor, device is %u, name is %s",
                 handle->devId, handle->name.c_str());
             return ret;
         }
@@ -667,6 +672,7 @@ namespace acl {
 
     aclError acltdtReceiveTensorV2(const acltdtChannelHandle *handle, acltdtDataset *dataset, int32_t timeout)
     {
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
         size_t bufLen = 0;
         auto ret = rtMemQueuePeek(handle->devId, handle->qid, &bufLen, timeout);
         if (ret == ACL_ERROR_RT_QUEUE_EMPTY) {
@@ -679,7 +685,7 @@ namespace acl {
         }
         ACL_LOG_INFO("peek queue [%u] success, bufLen is %zu", handle->qid, bufLen);
         if (bufLen == 0) {
-            ACL_LOG_INNER_ERROR("[Check][bufLen]peek queue len can not be zero");
+            ACL_LOG_INNER_ERROR("[Check][bufLen]peek queue len cannot be zero");
             return ACL_ERROR_FAILURE;
         }
         void *hostPtr = nullptr;
@@ -721,31 +727,19 @@ namespace acl {
 
 acltdtTensorType acltdtGetTensorTypeFromItem(const acltdtDataItem *dataItem)
 {
-    if (dataItem == nullptr) {
-        ACL_LOG_ERROR("[Check][Dataitem]param [dataItem] must not be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}),
-            std::vector<const char *>({"dataItem"}));
-        return ACL_TENSOR_DATA_UNDEFINED;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataItem, ACL_TENSOR_DATA_UNDEFINED);
     return dataItem->tdtType;
 }
 
 aclDataType acltdtGetDataTypeFromItem(const acltdtDataItem *dataItem)
 {
-    if (dataItem == nullptr) {
-        ACL_LOG_ERROR("[Check][Dataitem]param [dataItem] must not be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}),
-            std::vector<const char *>({"dataItem"}));
-        return ACL_DT_UNDEFINED;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataItem, ACL_DT_UNDEFINED);
     return dataItem->dataType;
 }
 
 void *acltdtGetDataAddrFromItem(const acltdtDataItem *dataItem)
 {
-    ACL_REQUIRES_NOT_NULL_RET_NULL(dataItem);
+    ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(dataItem);
     if (dataItem->priorityData_ != nullptr) {
         return dataItem->priorityData_;
     }
@@ -754,25 +748,13 @@ void *acltdtGetDataAddrFromItem(const acltdtDataItem *dataItem)
 
 size_t acltdtGetDataSizeFromItem(const acltdtDataItem *dataItem)
 {
-    if (dataItem == nullptr) {
-        ACL_LOG_ERROR("[Check][Dataitem]param [dataItem] must not be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}),
-            std::vector<const char *>({"dataItem"}));
-        return 0;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataItem, 0);
     return dataItem->dataLen;
 }
 
 size_t acltdtGetDimNumFromItem(const acltdtDataItem *dataItem)
 {
-    if (dataItem == nullptr) {
-        ACL_LOG_ERROR("[Check][Dataitem]param [dataItem] must not be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}),
-            std::vector<const char *>({"dataItem"}));
-        return 0;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataItem, 0);
     return dataItem->dims.size();
 }
 
@@ -790,14 +772,33 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataItem);
     // check dims and dimNum
-    if ((dims == nullptr && dimNum != 0) || (dims != nullptr && dimNum == 0)) {
-        ACL_LOG_INNER_ERROR("[Check][Params]acltdtGetDimsFromItem failed, invalid dims and dimNum[%zu]", dimNum);
+    if (dims == nullptr && dimNum != 0) {
+        ACL_LOG_ERROR("[Check][Params]acltdtGetDimsFromItem failed, invalid dims and dimNum[%zu]", dimNum);
+        std::string value = "nullptr/" + std::to_string(dimNum);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, value.c_str(), "dims/dimNum", "If dims is nullptr, dimNum should be 0"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    if (dims != nullptr && dimNum == 0) {
+        ACL_LOG_ERROR("[Check][Params]acltdtGetDimsFromItem failed, invalid dims and dimNum[%zu]", dimNum);
+        std::string value = std::to_string(*dims) + "/" + std::to_string(dimNum);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, value.c_str(), "dims/dimNum", "If dims is not nullptr, dimNum should be greater than 0"}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
     if (dimNum < dataItem->dims.size()) {
-        ACL_LOG_INNER_ERROR("[Check][dimNum]output dimNum[%zu] cannot be less than dims number[%zu]",
+        ACL_LOG_ERROR("[Check][dimNum]output dimNum[%zu] cannot be less than dims number[%zu]",
             dimNum, dataItem->dims.size());
+        const std::string dimNumVal = std::to_string(dimNum);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr("dimNum %zu cannot be less than the size of dataItem's dims %zu",
+            dimNum, dataItem->dims.size());
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, dimNumVal.c_str(), "dimNum", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -810,33 +811,51 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 
 const char *acltdtGetDatasetName(const acltdtDataset *dataset)
 {
-    if (dataset == nullptr) {
-        ACL_LOG_ERROR("[Check][dataset]param [dataset] must not be null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}), std::vector<const char *>({"dataset"}));
-        return nullptr;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataset, nullptr);
     return dataset->name.c_str();
 }
 
 acltdtDataItem *acltdtCreateDataItem(acltdtTensorType tdtType,
     const int64_t *dims, size_t dimNum, aclDataType dataType, void *data, size_t size)
 {
-    if ((dims == nullptr && dimNum != 0) || (dims != nullptr && dimNum == 0)) {
-        ACL_LOG_INNER_ERROR("[Check][Params]acltdtCreateDataItem failed, invalid dims and dimNum[%zu]", dimNum);
+    if (dims == nullptr && dimNum != 0) {
+        ACL_LOG_ERROR("[Check][Params]acltdtCreateDataItem failed, invalid dims and dimNum[%zu]", dimNum);
+        std::string value = "nullptr/" + std::to_string(dimNum);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, value.c_str(), "dims/dimNum", "If dims is nullptr, dimNum should be 0"}));
         return nullptr;
     }
+
+    if (dims != nullptr && dimNum == 0) {
+        ACL_LOG_ERROR("[Check][Params]acltdtCreateDataItem failed, invalid dims and dimNum[%zu]", dimNum);
+        std::string value = std::to_string(*dims) + "/" + std::to_string(dimNum);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, value.c_str(), "dims/dimNum", "If dims is not nullptr, dimNum should be greater than 0"}));
+        return nullptr;
+    }
+
     constexpr size_t MAX_DIM_CNT = 128UL;
     if (dimNum > MAX_DIM_CNT) {
-        ACL_LOG_INNER_ERROR("[Check][Dimnum]acltdtCreateDataItem failed, dimNum[%zu] can't be larger than "
+        ACL_LOG_ERROR("[Check][Dimnum]acltdtCreateDataItem failed, dimNum[%zu] can't be larger than "
             "MAX_DIM_CNT[%zu]", dimNum, MAX_DIM_CNT);
+        std::string expect = "less than or equal to " + std::to_string(MAX_DIM_CNT);
+        const std::string dimNumVal = std::to_string(dimNum);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, dimNumVal.c_str(), "dimNum", expect.c_str()}));
         return nullptr;
     }
 
     if (tdtType != ACL_TENSOR_DATA_TENSOR) {
         if (dims != nullptr) {
-            ACL_LOG_INNER_ERROR("[Check][Dims]acltdtCreateDataItem failed, "
+            ACL_LOG_ERROR("[Check][Dims]acltdtCreateDataItem failed, "
                 "dims must be nullptr. tdtType is %d", tdtType);
+            const std::string dimsVal = std::to_string(reinterpret_cast<uintptr_t>(dims));
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+                std::vector<const char *>({"func", "value", "param", "expect"}),
+                std::vector<const char *>({__func__, dimsVal.c_str(), "dims", "nullptr"}));
             return nullptr;
         }
         return new(std::nothrow) acltdtDataItem(tdtType, dims, dimNum, "[]", ACL_DT_UNDEFINED, "", nullptr, 0);
@@ -860,7 +879,7 @@ acltdtDataItem *acltdtCreateDataItem(acltdtTensorType tdtType,
 
 aclError acltdtDestroyDataItem(acltdtDataItem *dataItem)
 {
-    ACL_REQUIRES_NOT_NULL(dataItem);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataItem);
     ACL_DELETE_AND_SET_NULL(dataItem);
     return ACL_SUCCESS;
 }
@@ -872,17 +891,19 @@ acltdtDataset *acltdtCreateDataset()
 
 aclError acltdtDestroyDataset(acltdtDataset *dataset)
 {
-    ACL_REQUIRES_NOT_NULL(dataset);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataset);
     ACL_DELETE_AND_SET_NULL(dataset);
     return ACL_SUCCESS;
 }
 
 aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
 {
-    ACL_REQUIRES_NOT_NULL(dataset);
-    ACL_REQUIRES_NOT_NULL(dataItem);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataset);
+ 	ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dataItem);
     if (dataset->freeSelf) {
-        ACL_LOG_INNER_ERROR("[Check][Freeself]item cannot be added, because internal item already exists");
+        acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_FEATURE_MSG,
+            std::vector<const char *>({"feature", "reason"}),
+            std::vector<const char *>({__func__, "item cannot be added because internal item already exists"}));
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
     datasetMemType currentMemType = MEM_UNKNOWN;
@@ -902,9 +923,14 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
 
     if ((dataset->memType != MEM_UNKNOWN) && (currentMemType != MEM_UNKNOWN)) {
         if (dataset->memType != currentMemType) {
-            ACL_LOG_ERROR("dataitem must be all host addr or all device addr in one dataset");
-            return ACL_ERROR_INVALID_PARAM;
-        }
+        ACL_LOG_ERROR("The memTypes in the dataset must be all host-side or device-side address");
+        const std::string memTypeVal = std::to_string(dataset->memType);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, memTypeVal.c_str(),
+                    "dataset->memType", "The memTypes in the dataset must be all host-side or device-side address"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
     }
     dataset->blobs.push_back(dataItem);
     return ACL_SUCCESS;
@@ -912,8 +938,14 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
 
 acltdtDataItem *acltdtGetDataItem(const acltdtDataset *dataset, size_t index)
 {
-    if ((dataset == nullptr) || (index >= dataset->blobs.size())) {
-        ACL_LOG_INNER_ERROR("[Check][Dataset]input param is invalid, index[%zu]", index);
+    ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(dataset);
+    if (index >= dataset->blobs.size()) {
+        std::string errMsg =
+            acl::AclErrorLogManager::FormatStr("index %zu is greater than or equal to dataset size %zu", index, dataset->blobs.size());
+        const std::string indexVal = std::to_string(index);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, indexVal.c_str(), "index", errMsg.c_str()}));
         return nullptr;
     }
 
@@ -922,12 +954,7 @@ acltdtDataItem *acltdtGetDataItem(const acltdtDataset *dataset, size_t index)
 
 size_t acltdtGetDatasetSize(const acltdtDataset *dataset)
 {
-    if (dataset == nullptr) {
-        ACL_LOG_ERROR("[Check][Dataset]dataset is null.");
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_NULL_POINTER_MSG,
-            std::vector<const char *>({"param"}), std::vector<const char *>({"dataset"}));
-        return 0;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(dataset, 0);
     return dataset->blobs.size();
 }
 
@@ -962,22 +989,31 @@ acltdtChannelHandle *acltdtCreateChannel(uint32_t deviceId, const char *name)
 
 acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const char *name, size_t capacity)
 {
-    ACL_REQUIRES_NOT_NULL_RET_NULL(name);
+    ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(name);
     ACL_LOG_INFO("acltdtCreateChannelWithCapacity devId is %u, name is %s, capacity is %zu", deviceId, name, capacity);
     if (strlen(name) + 1 > RT_MQ_MAX_NAME_LEN) {
         ACL_LOG_ERROR("name [%s] length %zu can not be larger than %d", name, (strlen(name) + 1U), RT_MQ_MAX_NAME_LEN);
+        std::string errMsg =
+            acl::AclErrorLogManager::FormatStr("name [%s] length %zu can not be larger than %d", name, (strlen(name) + 1U), RT_MQ_MAX_NAME_LEN);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, name, "name", errMsg.c_str()}));
         return nullptr;
     }
     acltdtChannelHandle *handle = new(std::nothrow) acltdtChannelHandle(deviceId, name);
-    if (handle == nullptr) {
-        ACL_LOG_INNER_ERROR("acltdtChannelHandle is nullptr");
-        return nullptr;
-    }
+    ACL_CHECK_MALLOC_RESULT_REPORT_RET(handle, sizeof(acltdtChannelHandle), nullptr);
     handle->isTdtProcess = false;
     acltdtQueueAttr attr{};
     auto ret = memcpy_s(attr.name, RT_MQ_MAX_NAME_LEN, name, strlen(name) + 1);
     if (ret != EN_OK) {
-        ACL_LOG_INNER_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%d",
+        const std::string retCode = std::to_string(ret);
+        const std::string extendInfo = "src=name, nameLen=" + std::to_string(strlen(name) + 1) + 
+            ", dst=attr.name, maxLen=" + std::to_string(RT_MQ_MAX_NAME_LEN);
+        acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
+            std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
+            std::vector<const char *>({__func__, "memcpy_s", retCode.c_str(),
+                strerror(ret), extendInfo.c_str()}));
+        ACL_LOG_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%d",
             ret, strlen(name) + 1, RT_MQ_MAX_NAME_LEN);
         ACL_DELETE_AND_SET_NULL(handle);
         return nullptr;
@@ -987,7 +1023,7 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
     attr.flowCtrlFlag = false;
     attr.flowCtrlDropTime = 0;
     attr.overWriteFlag = false;
-    // queue init should be invokeed when device is open
+    // queue init should be invoked when device is open
     auto rtError = rtMemQueueInit(deviceId);
     if (rtError == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         ACL_LOG_INFO("queue init failed due to runtime does not support.");
@@ -1011,7 +1047,7 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
 
 aclError acltdtStopChannel(acltdtChannelHandle *handle)
 {
-    ACL_REQUIRES_NOT_NULL(handle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_LOG_INFO("start to acltdtStopChannel, device is %u, name is %s",
         handle->devId, handle->name.c_str());
     if (!handle->isTdtProcess) {
@@ -1035,10 +1071,9 @@ aclError acltdtStopChannel(acltdtChannelHandle *handle)
     return ACL_SUCCESS;
 }
 
-
 aclError acltdtDestroyChannel(acltdtChannelHandle *handle)
 {
-    ACL_REQUIRES_NOT_NULL(handle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_LOG_INFO("start to acltdtDestroyChannel, device is %u, name is %s",
         handle->devId, handle->name.c_str());
     if (!handle->isTdtProcess) {
@@ -1067,7 +1102,7 @@ aclError acltdtDestroyChannel(acltdtChannelHandle *handle)
 
 aclError acltdtCleanChannel(acltdtChannelHandle *handle)
 {
-  ACL_REQUIRES_NOT_NULL(handle);
+  ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
   ACL_LOG_INFO("start to acltdtCleanChannel, device is %u, name is %s",
                handle->devId, handle->name.c_str());
   if (!handle->isTdtProcess) {
@@ -1090,14 +1125,7 @@ aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset
         return acl::acltdtSendTensorV2(handle, dataset, timeout);
     }
     // -1 represents infinite wait, it is must be -1 now
-    if (timeout != -1) {
-        ACL_LOG_ERROR("[Check][Timeout]only infinite wait is supported, "
-            "it can only be set to -1, timeout[%d].", timeout);
-        std::string errMsg = acl::AclErrorLogManager::FormatStr("it can only be set to -1, timeout[%d].", timeout);
-        acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_FEATURE_MSG,
-            std::vector<const char *>({"feature", "reason"}), std::vector<const char *>({"timeout", errMsg.c_str()}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(timeout != -1, timeout, "Only never timeout is supported, timeout can only be set to -1");
 
     std::vector<tdt::DataItem> itemVec;
     auto ret = acl::TensorDatasetSerializes(dataset, itemVec);
@@ -1135,23 +1163,11 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *d
         return acl::acltdtReceiveTensorV2(handle, dataset, timeout);
     }
     // -1 represents infinite wait, it is must be -1 now
-    if (timeout != -1) {
-        ACL_LOG_ERROR("[Check][Timeout]only infinite wait is supported, "
-            "it can only be set to -1, timeout[%d]", timeout);
-        std::string errMsg = acl::AclErrorLogManager::FormatStr("it can only be set to -1, timeout[%d].", timeout);
-        acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_FEATURE_MSG,
-            std::vector<const char *>({"feature", "reason"}), std::vector<const char *>({"timeout", errMsg.c_str()}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(timeout != -1, timeout, "Only never timeout is supported, timeout can only be set to -1");
 
     if (handle->recvName.empty()) {
         ACL_LOG_ERROR("[Check][Recvname]it is not a receive channel, failed to receive, device is %u, name is %s",
             handle->devId, handle->name.c_str());
-        std::string errMsg = acl::AclErrorLogManager::FormatStr("failed to receive, device is %u, name is %s",
-            handle->devId, handle->name.c_str());
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
-            std::vector<const char *>({"param", "value", "reason"}),
-            std::vector<const char *>({"receive channel", "", errMsg.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 

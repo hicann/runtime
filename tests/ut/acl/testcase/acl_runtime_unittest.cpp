@@ -1879,6 +1879,26 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetGroupInfoDetailTest)
     EXPECT_EQ(aclrtDestroyGroupInfo(groupInfo), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetGroupInfoDetail_Fail_ValueLenTooSmall)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetGroupCount(_))
+        .WillRepeatedly(Return(RT_ERROR_NONE));
+
+    aclrtGroupInfo *groupInfo = aclrtCreateGroupInfo();
+    uint32_t value = 0;
+    size_t param_ret_size = 0;
+
+    // case: valueLen = 1 is smaller than required size (sizeof(uint32_t) = 4)
+    EXPECT_EQ(aclrtGetGroupInfoDetail(groupInfo, 0, ACL_GROUP_AICORE_INT,
+        (void *)(&value), 1, &param_ret_size), ACL_ERROR_INVALID_PARAM);
+
+    // case: valueLen = 2 is smaller than required size (sizeof(uint32_t) = 4)
+    EXPECT_EQ(aclrtGetGroupInfoDetail(groupInfo, 0, ACL_GROUP_AIV_INT,
+        (void *)(&value), 2, &param_ret_size), ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_EQ(aclrtDestroyGroupInfo(groupInfo), ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetAllGroupInfoTest)
 {
     aclrtGroupInfo *groupInfo = aclrtCreateGroupInfo();
@@ -2168,6 +2188,69 @@ public:
     aclrtAllocatorAllocAdviseFunc allocAdviseFunc;
     aclrtAllocatorGetAddrFromBlockFunc getAddrFromBlockFunc;
 };
+
+TEST_F(UTEST_ACL_Runtime, aclrtAllocatorGetByStream_Fail_StreamNotRegistered)
+{
+    aclrtStream stream = (aclrtStream)0x01;
+    auto allocatorDesc = aclrtAllocatorCreateDesc();
+    EXPECT_NE(allocatorDesc, nullptr);
+    void *obj = (void *)0x10;
+    aclError ret = aclrtAllocatorSetObjToDesc(allocatorDesc, obj);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    aclrtAllocatorAllocFunc alloc_func = (aclrtAllocatorAllocFunc)0x20;
+    ret = aclrtAllocatorSetAllocFuncToDesc(allocatorDesc, alloc_func);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    aclrtAllocatorFreeFunc free_func = (aclrtAllocatorFreeFunc)0x30;
+    ret = aclrtAllocatorSetFreeFuncToDesc(allocatorDesc, free_func);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    aclrtAllocatorAllocAdviseFunc alloc_advise_func = (aclrtAllocatorAllocAdviseFunc)0x40;
+    ret = aclrtAllocatorSetAllocAdviseFuncToDesc(allocatorDesc, alloc_advise_func);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    aclrtAllocatorGetAddrFromBlockFunc get_addr_from_block_func = (aclrtAllocatorGetAddrFromBlockFunc)0x50;
+    ret = aclrtAllocatorSetGetAddrFromBlockFuncToDesc(allocatorDesc, get_addr_from_block_func);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    ret = aclrtAllocatorRegister(stream, static_cast<ExternalAllocatorDesc *>(allocatorDesc));
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    aclrtAllocatorDesc aclrt_desc;
+    ret = aclrtAllocatorGetByStream(stream, &aclrt_desc, nullptr, nullptr, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    ret = aclrtAllocatorUnregister(stream);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    // case: stream not found in allocator map after unregister
+    ret = aclrtAllocatorGetByStream(stream, &aclrt_desc, nullptr, nullptr, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    ret = aclrtAllocatorDestroyDesc(allocatorDesc);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetArgsFromExceptionInfo_failed_with_invalid_exception_type)
+{
+    void *devArgs = nullptr;
+    uint32_t devArgsLen = 0;
+    aclrtExceptionInfo exceptionInfo;
+    (void)memset_s(&exceptionInfo, sizeof(aclrtExceptionInfo), 0, sizeof(aclrtExceptionInfo));
+
+    // 测试 RT_EXCEPTION_INVALID (0) 类型
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
+    auto ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, static_cast<aclError>(0xFFFFFFFFU));  // ACL_ERROR_INVALID_EXCEPTION_INFO
+
+    // 测试 RT_EXCEPTION_UB 类型
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_UB;
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, static_cast<aclError>(0xFFFFFFFFU));
+
+    // 测试 RT_EXCEPTION_CCU 类型
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_CCU;
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, static_cast<aclError>(0xFFFFFFFFU));
+
+    // 测试 RT_EXCEPTION_FUSION 但 fusionInfo.type 不是 RT_FUSION_AICORE_CCU
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
+    exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_AICPU;  // 不是 RT_FUSION_AICORE_CCU
+    ret = aclrtGetArgsFromExceptionInfo(&exceptionInfo, &devArgs, &devArgsLen);
+    EXPECT_EQ(ret, static_cast<aclError>(0xFFFFFFFFU));
+}
 
 TEST_F(UTEST_ACL_Runtime, aclrtAllocatorCreateDescTest)
 {
@@ -3059,6 +3142,54 @@ TEST_F(UTEST_ACL_Runtime, get_allocation_granularity_failed_with_granularity_nul
   aclrtMemGranularityOptions option = ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM;
 
   aclError ret = aclrtMemGetAllocationGranularity(&prop, option, nullptr);
+  EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, get_allocation_granularity_failed_with_device_alloc_ddr_mem_huge)
+{
+  aclrtPhysicalMemProp prop = {};
+  prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+  prop.memAttr = ACL_DDR_MEM_HUGE;
+  aclrtMemGranularityOptions option = ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM;
+  size_t granularity = 0UL;
+
+  aclError ret = aclrtMemGetAllocationGranularity(&prop, option, &granularity);
+  EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, get_allocation_granularity_failed_with_device_alloc_ddr_mem_normal)
+{
+  aclrtPhysicalMemProp prop = {};
+  prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+  prop.memAttr = ACL_DDR_MEM_NORMAL;
+  aclrtMemGranularityOptions option = ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM;
+  size_t granularity = 0UL;
+
+  aclError ret = aclrtMemGetAllocationGranularity(&prop, option, &granularity);
+  EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, get_allocation_granularity_failed_with_device_alloc_ddr_mem_p2p_huge)
+{
+  aclrtPhysicalMemProp prop = {};
+  prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+  prop.memAttr = ACL_DDR_MEM_P2P_HUGE;
+  aclrtMemGranularityOptions option = ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM;
+  size_t granularity = 0UL;
+
+  aclError ret = aclrtMemGetAllocationGranularity(&prop, option, &granularity);
+  EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, get_allocation_granularity_failed_with_device_alloc_ddr_mem_p2p_normal)
+{
+  aclrtPhysicalMemProp prop = {};
+  prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
+  prop.memAttr = ACL_DDR_MEM_P2P_NORMAL;
+  aclrtMemGranularityOptions option = ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM;
+  size_t granularity = 0UL;
+
+  aclError ret = aclrtMemGetAllocationGranularity(&prop, option, &granularity);
   EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
@@ -5087,6 +5218,18 @@ TEST_F(UTEST_ACL_Runtime, aclrtReduceAsync_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtReduceAsync_failed_with_unsupported_data_type)
+{
+    void *dst = reinterpret_cast<void *>(0x04);
+    void *src = reinterpret_cast<void *>(0x04);
+    uint64_t count = 10;
+    aclrtReduceKind kind = ACL_RT_MEMCPY_SDMA_AUTOMATIC_SUM;
+    aclDataType type = ACL_INT64;
+
+    auto ret = aclrtReduceAsync(dst, src, count, kind, type, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceResLimit_failed_with_invalid_args)
 {
     const int32_t deviceId = 0x01;
@@ -5599,6 +5742,17 @@ TEST_F(UTEST_ACL_Runtime, aclrtAllocBuf_success)
     const auto ret = aclrtAllocBuf(&mbuf, size);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(aclrtFreeBuf(mbuf), ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetBufUserData_failed_with_size_offset_exceed_max)
+{
+    aclrtMbuf mbuf = reinterpret_cast<aclrtMbuf>(0x01);
+    char data[100] = {0};
+    size_t size = 50;
+    size_t offset = 50;  // size + offset = 100 > MEM_SIZE_MAX(96)
+
+    auto ret = aclrtGetBufUserData(mbuf, data, size, offset);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtBinaryLoadFromData_failed_with_invalid_args)

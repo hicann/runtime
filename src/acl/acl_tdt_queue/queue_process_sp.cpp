@@ -12,6 +12,7 @@
 #include "runtime/rt_mem_queue.h"
 #include "runtime/dev.h"
 #include "queue_schedule/qs_client.h"
+#include "utils/data_type_utils.h"
 
 namespace acl {
     aclError QueueProcessorSp::GrantQueue2Cp(const int32_t deviceId, const uint32_t qid) const
@@ -34,7 +35,7 @@ namespace acl {
     aclError QueueProcessorSp::acltdtCreateQueue(const acltdtQueueAttr *const attr, uint32_t *const qid)
     {
         ACL_LOG_INFO("Start to acltdtCreateQueue");
-        ACL_REQUIRES_NOT_NULL(qid);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qid);
         constexpr int32_t deviceId = 0;
         static bool isQueueIint = false;
         const std::lock_guard<std::recursive_mutex> lk(muForQueueCtrl_);
@@ -87,7 +88,7 @@ namespace acl {
     aclError QueueProcessorSp::acltdtAttachQueue(const uint32_t qid, const int32_t timeout,
         uint32_t *const permission)
     {
-        ACL_REQUIRES_NOT_NULL(permission);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(permission);
         ACL_LOG_INFO("start to acltdtAttachQueue, qid is %u, permisiion is %u, timeout is %d",
                      qid, *permission, timeout);
         constexpr int32_t deviceId = 0;
@@ -108,7 +109,7 @@ namespace acl {
 
     aclError QueueProcessorSp::acltdtBindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         constexpr int32_t deviceId = 0;
         // get dst id
@@ -147,7 +148,7 @@ namespace acl {
 
     aclError QueueProcessorSp::acltdtUnbindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         constexpr int32_t deviceId = 0;
         // get dst id
@@ -172,8 +173,8 @@ namespace acl {
     aclError QueueProcessorSp::acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *const queryInfo,
                                                        acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(queryInfo);
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(queryInfo);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtQueryQueueRoutes");
         constexpr int32_t deviceId = 0;
         // get dst id
@@ -198,9 +199,9 @@ namespace acl {
     aclError QueueProcessorSp::acltdtAllocBuf(const size_t size, const uint32_t type, acltdtBuf *const buf)
     {
         if ((type != static_cast<uint32_t>(ACL_TDT_NORMAL_MEM)) && (type != static_cast<uint32_t>(ACL_TDT_DVPP_MEM))) {
-            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
-                std::vector<const char *>({"param", "value", "reason"}),
-                std::vector<const char *>({"type", std::to_string(type).c_str(), "must be equal to zero currently"}));
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+	            std::vector<const char *>({"func", "value", "param", "expect"}),
+	            std::vector<const char *>({__func__, acl::GetAllocBufTypeDesc(static_cast<acltdtAllocBufType>(type)), "type", "[ACL_TDT_NORMAL_MEM, ACL_TDT_DVPP_MEM]"}));
             ACL_LOG_ERROR("[Check][Param]param type must be equal to zero currently");
             return ACL_ERROR_INVALID_PARAM;
         }

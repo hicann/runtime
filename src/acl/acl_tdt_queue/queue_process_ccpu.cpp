@@ -17,7 +17,7 @@ namespace acl {
     aclError QueueProcessorCcpu::acltdtCreateQueue(const acltdtQueueAttr *const attr, uint32_t *const qid)
     {
         ACL_LOG_INFO("Start to create queue");
-        ACL_REQUIRES_NOT_NULL(qid);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qid);
         ACL_REQUIRES_OK(acltdtCreateGroup());
         constexpr int32_t deviceId = 0;
         static bool isQueueIint = false;
@@ -79,7 +79,7 @@ namespace acl {
 
     aclError QueueProcessorCcpu::acltdtBindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         // qs is thread mode, so no need to grant queue to qs
         constexpr int32_t deviceId = 0;
@@ -109,7 +109,7 @@ namespace acl {
 
     aclError QueueProcessorCcpu::acltdtUnbindQueueRoutes(acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtUnBindQueueRoutes, queue route is %zu", qRouteList->routeList.size());
         // get dst id
         const int32_t dstPid = mmGetPid();
@@ -132,8 +132,8 @@ namespace acl {
     aclError QueueProcessorCcpu::acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *const queryInfo,
                                                         acltdtQueueRouteList *const qRouteList)
     {
-        ACL_REQUIRES_NOT_NULL(queryInfo);
-        ACL_REQUIRES_NOT_NULL(qRouteList);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(queryInfo);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(qRouteList);
         ACL_LOG_INFO("Start to acltdtQueryQueueRoutes");
         constexpr int32_t deviceId = 0;
         // get dst id

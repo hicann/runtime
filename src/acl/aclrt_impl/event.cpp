@@ -138,7 +138,7 @@ aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus *status)
     } else if (rtErr == ACL_ERROR_RT_EVENT_NOT_COMPLETE) {
         *status = ACL_EVENT_STATUS_NOT_READY;
     } else {
-        ACL_LOG_INNER_ERROR("query event status failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        ACL_LOG_INNER_ERROR("Failed to query event status, runtime result = %d", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;
@@ -204,11 +204,8 @@ aclError aclrtSynchronizeEventImpl(aclrtEvent event)
 aclError aclrtSynchronizeEventWithTimeoutImpl(aclrtEvent event, int32_t timeout)
 {
     ACL_LOG_INFO("start to execute aclrtSynchronizeEventWithTimeout, timeout = %dms", timeout);
-    constexpr int32_t default_timeout = -1;
-    if (timeout < default_timeout) {
-        ACL_LOG_CALL_ERROR("the timeout of synchronize event is invalid");
-        return ACL_ERROR_RT_PARAM_INVALID;
-    }
+    constexpr int32_t defaultTimeout = -1;
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= defaultTimeout, timeout, "[-1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
 
     const rtError_t rtErr = rtEventSynchronizeWithTimeout(static_cast<rtEvent_t>(event), timeout);
@@ -324,6 +321,12 @@ aclError aclrtGetMemUceInfoImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArr
     if (arraySize < rtUceInfo.count) {
         ACL_LOG_ERROR("failed to execute aclrtGetMemUceInfo, because arraySize %zu is less than the required size %u",
                       arraySize, rtUceInfo.count);
+        const std::string arraySizeVal = std::to_string(arraySize);
+        std::string reason = acl::AclErrorLogManager::FormatStr(
+            "arraySize must be greater than or equal to %u", rtUceInfo.count);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, arraySizeVal.c_str(), "arraySize", reason.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -347,11 +350,8 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArra
     ACL_LOG_INFO("start to execute aclrtMemUceRepair on device %d, arraySize %zu", deviceId, arraySize);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memUceInfoArray);
 
-    if (arraySize > RT_MAX_RECORD_PA_NUM_PER_DEV) {
-        ACL_LOG_ERROR("failed to execute aclrtMemUceRepair, because arraySize %zu is exceed max size %d",
-                      arraySize, RT_MAX_RECORD_PA_NUM_PER_DEV);
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(arraySize > RT_MAX_RECORD_PA_NUM_PER_DEV, arraySize, 
+        "must be less than or equal to 128", ACL_ERROR_INVALID_PARAM);
 
     //reserved value check, should be fill with zero
     size_t reservedZeroValue[UCE_INFO_RESERVED_SIZE] = {0};
@@ -359,6 +359,9 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo *memUceInfoArra
         if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, UCE_INFO_RESERVED_SIZE)) {
             ACL_LOG_ERROR("failed to execute aclrtMemUceRepair with mismatched version, "
                           "pls set valid value only for ptr and len ");
+            const char_t *argList[] = {"func", "param", "reason"};
+            const char_t *argVal[] = {__func__, "memUceInfoArray.reserved", "memUceInfoArray.reserved is a reserved parameter and must be 0"};
+            acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_NO_VALUE_MSG, argList, argVal, 3U);
             return ACL_ERROR_INVALID_PARAM;
         }
     }
@@ -451,10 +454,7 @@ aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent even
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEventWithTimeout);
     ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithTimeout, timeout is %d", timeout);
-    if (timeout <= 0) {
-        ACL_LOG_CALL_ERROR("the range of timeout is invalid");
-        return ACL_ERROR_RT_PARAM_INVALID;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout > 0, timeout, "[1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     const rtError_t rtErr = rtsEventWait(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout);
     if (rtErr != RT_ERROR_NONE) {

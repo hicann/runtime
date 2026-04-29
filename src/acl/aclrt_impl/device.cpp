@@ -20,6 +20,7 @@
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
 #include "runtime/rt_inner_device.h"
+#include "utils/data_type_utils.h"
 
 namespace {
     constexpr int32_t DEVICE_UTILIZATION_NOT_SUPPORT = -1;
@@ -72,6 +73,8 @@ aclError aclrtSetDeviceWithoutTsdVXXImpl(int32_t deviceId)
     const std::string &socVersion = acl::GetSocVersion();
     if (strncmp(socVersion.c_str(), "Ascend910", (sizeof("Ascend910") - 1UL)) != 0) {
         ACL_LOG_INFO("The soc version is not Ascend910, not support");
+        acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_SYSTEM_MSG, {"func"},
+            {"aclrtResetDeviceWithoutTsdVXX, only Ascend 910 chips are supported"});
         return ACL_ERROR_API_NOT_SUPPORT;
     }
     const rtError_t rtErr = rtSetDeviceWithoutTsd(deviceId);
@@ -121,7 +124,9 @@ aclError aclrtResetDeviceWithoutTsdVXXImpl(int32_t deviceId)
     ACL_LOG_INFO("start to execute aclrtResetDeviceWithoutTsdVXX, deviceId = %d.", deviceId);
     const std::string &socVersion = acl::GetSocVersion();
     if (strncmp(socVersion.c_str(), "Ascend910", (sizeof("Ascend910") - 1UL)) != 0) {
-        ACL_LOG_INNER_ERROR("The soc version is not Ascend910, not support");
+        ACL_LOG_ERROR("The soc version is not Ascend910, not support");
+        acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_SYSTEM_MSG, {"func"},
+            {"aclrtResetDeviceWithoutTsdVXX, only Ascend 910 chips are supported"});
         return ACL_ERROR_API_NOT_SUPPORT;
     }
     const rtError_t rtErr = rtDeviceResetWithoutTsd(deviceId);
@@ -185,10 +190,7 @@ aclError aclrtSynchronizeDeviceWithTimeoutImpl(int32_t timeout)
     ACL_PROFILING_REG(acl::AclProfType::AclrtSynchronizeDeviceWithTimeout);
     ACL_LOG_INFO("start to execute aclrtSynchronizeDeviceWithTimeout, timeout %dms", timeout);
     constexpr int32_t defaultTimeout = -1;
-    if (timeout < defaultTimeout) {
-        ACL_LOG_CALL_ERROR("the timeout of synchronize device is invalid, timeout is %d", timeout);
-        return ACL_ERROR_RT_PARAM_INVALID;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= defaultTimeout, timeout, "[-1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     const rtError_t rtErr = rtDeviceSynchronizeWithTimeout(timeout);
     if (rtErr == ACL_ERROR_RT_STREAM_SYNC_TIMEOUT) {
@@ -208,7 +210,9 @@ aclError aclrtSetTsDeviceImpl(aclrtTsId tsId)
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetTsDevice);
     ACL_LOG_INFO("start to execute aclrtSetTsDevice, tsId = %d.", static_cast<int32_t>(tsId));
     if ((tsId != ACL_TS_ID_AICORE) && (tsId != ACL_TS_ID_AIVECTOR)) {
-        ACL_LOG_INNER_ERROR("invalid tsId, tsID is %d.", static_cast<int32_t>(tsId));
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, acl::GetTsIdDesc(tsId), "tsId", "ACL_TS_ID_AICORE or ACL_TS_ID_AIVECTOR"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     const rtError_t rtErr = rtSetTSDevice(static_cast<uint32_t>(tsId));
@@ -225,10 +229,9 @@ aclError aclrtGetDeviceUtilizationRateImpl(int32_t deviceId, aclrtUtilizationInf
     ACL_LOG_INFO("start to execute aclrtGetDeviceUtilizationRate, device is %d.", deviceId);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(utilizationInfo);
     aclrtUtilizationExtendInfo *utilizationExtend = utilizationInfo->utilizationExtend;
-    if (utilizationExtend != nullptr) {
-        ACL_LOG_ERROR("utilizationExtend is reserved parameter, current version needs to be null!");
-        return ACL_ERROR_INVALID_PARAM;
-    }
+
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(utilizationExtend == nullptr, "utilizationInfo->utilizationExtend",
+        "utilizationExtend is a reserved parameter and must be nullptr");
     utilizationInfo->cubeUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICORE);
     utilizationInfo->vectorUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AIVECTOR);
     utilizationInfo->aicpuUtilization = GetAllUtilizations(deviceId, RT_UTIL_TYPE_AICPU);

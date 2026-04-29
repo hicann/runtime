@@ -142,7 +142,10 @@ void ErrorcodeManage::InitRtErrCodeMap()
                                                       "an error has invalidated the stream capture sequence"};
     rtErrMap_[RT_ERROR_STREAM_NOT_CAPTURED] = {ACL_ERROR_RT_STREAM_NOT_CAPTURED, "stream is not in capture status"};
     rtErrMap_[RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT] = {ACL_ERROR_RT_CAPTURE_MODE_NOT_SUPPORT,
-                                                           "the current capture mode does not support this operation"};
+ 	         "operation not permitted when a stream is capturing and the specified capture mode is not relaxed"};
+    rtErrMap_[RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC] = {ACL_ERROR_RT_CAPTURE_MODE_BLOCK_ASYNC,
+        "the operation has been converted to a synchronous operation. "
+        "operation not permitted when a stream is capturing and the specified capture mode is not relaxed"};
     rtErrMap_[RT_ERROR_STREAM_CAPTURE_IMPLICIT] = {ACL_ERROR_RT_STREAM_CAPTURE_IMPLICIT,
                                                    "a disallowed implicit dependency from default stream"};
     rtErrMap_[RT_ERROR_STREAM_AICPU_ALLOC_FAIL] = {ACL_ERROR_RT_RESOURCE_ALLOC_FAIL,

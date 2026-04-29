@@ -15,20 +15,37 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "utils/data_type_utils.h"
 
 namespace {
+
 static aclError FillAttrValue(const void *const src, const size_t srcLen, void *const dst, const size_t dstLen,
-    size_t *const paramRetSize)
+    size_t *const paramRetSize, const char *funcName)
 {
     ACL_REQUIRES_NOT_NULL(src);
     ACL_REQUIRES_NOT_NULL(dst);
     if (srcLen > dstLen) {
-        ACL_LOG_INNER_ERROR("attr real length = %zu is larger than input length = %zu", srcLen, dstLen);
+        ACL_LOG_ERROR("[Check][valueLen]valueLen[%zu] is smaller than required size[%zu] for group computing power info", 
+            dstLen, srcLen);
+        const std::string dstLenVal = std::to_string(dstLen);
+        std::string reason = std::to_string(dstLen) + " is shorter than the length of the group computing power information, "
+            "required size is " + std::to_string(srcLen) + ", cannot save the computing power information";
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({funcName, dstLenVal.c_str(), "valueLen", reason.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     const auto ret = memcpy_s(dst, dstLen, src, srcLen);
     if (ret != EOK) {
-        ACL_LOG_INNER_ERROR("call memcpy_s failed, result = %d, srcLen = %zu, dstLen = %zu", ret, srcLen, dstLen);
+        ACL_LOG_ERROR("call memcpy_s failed, result = %d, srcLen = %zu, dstLen = %zu", ret, srcLen, dstLen);
+        const std::string retVal = std::to_string(ret);
+        const std::string extendInfo = "src=" + std::to_string(reinterpret_cast<uintptr_t>(src)) +
+                ", dst=" + std::to_string(reinterpret_cast<uintptr_t>(dst)) +
+                ", dstLen=" + std::to_string(dstLen) + ", srcLen=" + std::to_string(srcLen);
+        acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
+            std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
+            std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
+                strerror(ret), extendInfo.c_str()}));
         return ACL_ERROR_FAILURE;
     }
     *paramRetSize = srcLen;
@@ -83,10 +100,7 @@ aclrtGroupInfo *aclrtCreateGroupInfoImpl()
     }
 
     aclrtGroupInfo *const groupInfo = new(std::nothrow) aclrtGroupInfo[count];
-    if (groupInfo == nullptr) {
-        ACL_LOG_INNER_ERROR("fail to new group info");
-        return nullptr;
-    }
+    ACL_CHECK_MALLOC_RESULT_REPORT_RET(groupInfo, sizeof(aclrtGroupInfo) * count, nullptr);
 
     ACL_LOG_INFO("successfully execute aclrtCreateGroupInfo, group number is %u.", count);
     ACL_ADD_APPLY_SUCCESS_COUNT(acl::ACL_STATISTICS_CREATE_DESTROY_GROUP_INFO);
@@ -146,8 +160,13 @@ aclError aclrtGetGroupInfoDetailImpl(const aclrtGroupInfo *groupInfo, int32_t gr
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     if ((groupIndex < 0) || (static_cast<uint32_t>(groupIndex) >= count)) {
-        ACL_LOG_INNER_ERROR("the index value of group is invalid, groupIndex = %d, not in range [0, %u)",
+        ACL_LOG_ERROR("the index value of group is invalid, groupIndex = %d, not in range [0, %u)",
             groupIndex, count);
+        const std::string groupIndexVal = std::to_string(groupIndex);
+        std::string expect = "[0, " + std::to_string(count) + "]";
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, groupIndexVal.c_str(), "groupIndex", expect.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -155,30 +174,33 @@ aclError aclrtGetGroupInfoDetailImpl(const aclrtGroupInfo *groupInfo, int32_t gr
     switch (attr) {
         case ACL_GROUP_AICORE_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].aicoreNum),
-                sizeof(groupInfo[groupIndex].aicoreNum), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].aicoreNum), attrValue, valueLen, paramRetSize, __func__);
             break;
         case ACL_GROUP_AIV_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].aivectorNum),
-                sizeof(groupInfo[groupIndex].aivectorNum), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].aivectorNum), attrValue, valueLen, paramRetSize, __func__);
             break;
         case ACL_GROUP_AIC_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].aicpuNum),
-                sizeof(groupInfo[groupIndex].aicpuNum), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].aicpuNum), attrValue, valueLen, paramRetSize, __func__);
             break;
         case ACL_GROUP_SDMANUM_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].sdmaNum),
-                sizeof(groupInfo[groupIndex].sdmaNum), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].sdmaNum), attrValue, valueLen, paramRetSize, __func__);
             break;
         case ACL_GROUP_ASQNUM_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].activeStreamNum),
-                sizeof(groupInfo[groupIndex].activeStreamNum), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].activeStreamNum), attrValue, valueLen, paramRetSize, __func__);
             break;
         case ACL_GROUP_GROUPID_INT:
             aclRet = FillAttrValue(static_cast<const void *>(&groupInfo[groupIndex].groupId),
-                sizeof(groupInfo[groupIndex].groupId), attrValue, valueLen, paramRetSize);
+                sizeof(groupInfo[groupIndex].groupId), attrValue, valueLen, paramRetSize, __func__);
             break;
         default:
-            ACL_LOG_INNER_ERROR("invalid group attribute, attribute = %d", static_cast<int32_t>(attr));
+            ACL_LOG_ERROR("invalid group attribute, attribute = %d", static_cast<int32_t>(attr));
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+                std::vector<const char *>({"func", "value", "param", "expect"}),
+                std::vector<const char *>({__func__, acl::GetGroupAttrDesc(attr), "attr", "[ACL_GROUP_AICORE_INT, ACL_GROUP_GROUPID_INT]"}));
             return ACL_ERROR_INVALID_PARAM;
     }
 

@@ -73,7 +73,10 @@ aclError aclmdlRICaptureGetInfoImpl(aclrtStream stream, aclmdlRICaptureStatus *s
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRICaptureGetInfo);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
     if (status == nullptr && modelRI == nullptr) {
-        ACL_LOG_INNER_ERROR("status and modelRI cannot be nullptr at the same time");
+        ACL_LOG_ERROR("status and modelRI cannot be nullptr at the same time");
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, "nullptr/nullptr", "status/modelRI", "both cannot be nullptr at the same time"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtStreamCaptureStatus rtStatus = RT_STREAM_CAPTURE_STATUS_NONE;
@@ -323,11 +326,8 @@ aclError aclmdlRIBuildEndImpl(aclmdlRI modelRI, void *reserve)
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIBuildEnd);
     ACL_LOG_INFO("start to execute aclmdlRIBuildEnd");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
-    if (reserve != nullptr) {
-        ACL_LOG_ERROR("[Check][reserve]param must be null.");
-        acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {"reserve"});
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(reserve == nullptr, "reserve",
+        "reserve is a reserved parameter and must be nullptr");
 
     const rtError_t rtErr = rtsModelLoadComplete(static_cast<rtModel_t>(modelRI), reserve);
     if (rtErr != RT_ERROR_NONE) {

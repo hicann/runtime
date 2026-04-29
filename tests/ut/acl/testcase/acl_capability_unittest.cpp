@@ -177,6 +177,21 @@ TEST_F(UTEST_ACL_Capability, aclGetDeviceCapability_Fail_InvalidDeviceIdOrInfoTy
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Capability, aclGetDeviceCapability_Fail_DeviceIdOutOfRange)
+{
+    aclDeviceInfo infoType = ACL_DEVICE_INFO_AI_CORE_NUM;
+    int64_t value;
+    // Mock rtGetDeviceCount to return count = 2 (devices 0 and 1)
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetDeviceCount(_))
+        .WillOnce(DoAll(SetArgPointee<0>(2), Return(RT_ERROR_NONE)));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), GetPlatformResWithLock(_, _, _))
+        .WillRepeatedly(Invoke(MockGetPlatformResWithLock));
+
+    // case: deviceId = 5 exceeds valid range [0, 1] when count = 2
+    aclError ret = aclGetDeviceCapability(5U, infoType, &value);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
 TEST_F(UTEST_ACL_Capability, aclGetDeviceCapability_Fail_GetPlatformInfoError)
 {
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), InitializePlatformInfo())

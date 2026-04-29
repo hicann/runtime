@@ -105,7 +105,12 @@ namespace {
         ACL_REQUIRES_NOT_NULL(data);
         constexpr size_t commandLen = sizeof(rtProfCommandHandle_t);
         if (len < commandLen) {
-            ACL_LOG_INNER_ERROR("[Check][Len]len[%u] is invalid, it should not be smaller than %zu", len, commandLen);
+            const std::string lenVal = std::to_string(len);
+            std::string errMsg = acl::AclErrorLogManager::FormatStr("len should not be smaller than %zu", commandLen);
+            ACL_LOG_ERROR("[Check][Len]len[%u] is invalid, it should not be smaller than %zu", len, commandLen);
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, lenVal.c_str(), "len", errMsg.c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
         rtProfCommandHandle_t *const profilerConfig = static_cast<rtProfCommandHandle_t *>(data);
@@ -138,7 +143,7 @@ namespace {
 namespace acl {
     aclError AclTdtQueueProfCtrlHandle(uint32_t dataType, void *data, uint32_t dataLen)
     {
-        ACL_REQUIRES_NOT_NULL(data);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
 
         if (dataType == RT_PROF_CTRL_SWITCH) {
             const aclError ret = ProcessProfData(data, dataLen);

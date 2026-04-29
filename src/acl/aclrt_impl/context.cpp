@@ -20,6 +20,7 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "utils/data_type_utils.h"
 
 aclError aclrtCreateContextImpl(aclrtContext *context, int32_t deviceId)
 {
@@ -98,16 +99,11 @@ aclError aclrtGetCurrentContextImpl(aclrtContext *context)
 static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 {
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(value);
-    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY) {
-        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d",
-                            static_cast<int32_t>(opt), static_cast<int32_t>(ACL_OPT_DETERMINISTIC),
-                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL), 
-                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY));
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
-            std::vector<const char *>({"param", "value", "reason"}),
-            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "must be 0 or 1 or 2"}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
+        acl::GetSysParamOptDesc(opt), "opt",
+        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
+        ACL_ERROR_INVALID_PARAM);
     rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
         rtErr = rtCtxGetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
@@ -131,16 +127,11 @@ static aclError GetSysParamOpt(aclSysParamOpt opt, int64_t *value, bool isCtx)
 
 static aclError SetSysParamOpt(aclSysParamOpt opt, int64_t value, bool isCtx)
 {
-    if (opt != ACL_OPT_DETERMINISTIC && opt != ACL_OPT_ENABLE_DEBUG_KERNEL && opt != ACL_OPT_STRONG_CONSISTENCY) {
-        ACL_LOG_INNER_ERROR("[Check][SysParamOpt]opt = %d is invalid, it should be %d or %d or %d",
-                            static_cast<int32_t>(opt), static_cast<int32_t>(ACL_OPT_DETERMINISTIC),
-                            static_cast<int32_t>(ACL_OPT_ENABLE_DEBUG_KERNEL), 
-                            static_cast<int32_t>(ACL_OPT_STRONG_CONSISTENCY));
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,
-            std::vector<const char *>({"param", "value", "reason"}),
-            std::vector<const char *>({"aclSysParamOpt", std::to_string(opt).c_str(), "should be 0 or 1 or 2"}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (opt == ACL_OPT_DETERMINISTIC || opt == ACL_OPT_ENABLE_DEBUG_KERNEL || opt == ACL_OPT_STRONG_CONSISTENCY),
+        acl::GetSysParamOptDesc(opt), "opt",
+        "ACL_OPT_DETERMINISTIC or ACL_OPT_ENABLE_DEBUG_KERNEL or ACL_OPT_STRONG_CONSISTENCY",
+        ACL_ERROR_INVALID_PARAM);
     rtError_t rtErr = RT_ERROR_NONE;
     if (isCtx) {
         rtErr = rtCtxSetSysParamOpt(static_cast<rtSysParamOpt>(opt), value);
@@ -186,10 +177,7 @@ aclError aclrtSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 aclError aclrtPeekAtLastErrorImpl(aclrtLastErrLevel level)
 {
     ACL_LOG_INFO("start to execute aclrtPeekAtLastError, level is %d", static_cast<int32_t>(level));
-    if (level != ACL_RT_THREAD_LEVEL) {
-        ACL_LOG_ERROR("invalid input param level %d, only support ACL_RT_THREAD_LEVEL", static_cast<int32_t>(level));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_REQUIRES_PARAM_EQUAL_REPORT(level, ACL_RT_THREAD_LEVEL);
     const rtLastErrLevel_t rtLevel = static_cast<rtLastErrLevel_t>(level);
     return rtPeekAtLastError(rtLevel);
 }
@@ -197,10 +185,7 @@ aclError aclrtPeekAtLastErrorImpl(aclrtLastErrLevel level)
 aclError aclrtGetLastErrorImpl(aclrtLastErrLevel level)
 {
     ACL_LOG_INFO("start to execute aclrtGetLastError, level is %d", static_cast<int32_t>(level));
-    if (level != ACL_RT_THREAD_LEVEL) {
-        ACL_LOG_ERROR("invalid input param level %d, only support ACL_RT_THREAD_LEVEL", static_cast<int32_t>(level));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_REQUIRES_PARAM_EQUAL_REPORT(level, ACL_RT_THREAD_LEVEL);
     const rtLastErrLevel_t rtLevel = static_cast<rtLastErrLevel_t>(level);
     return rtGetLastError(rtLevel);
 }
@@ -240,14 +225,9 @@ aclError aclrtGetPrimaryCtxStateImpl(int32_t deviceId, uint32_t *flags, int32_t 
 {
     ACL_LOG_INFO("start to execute aclrtGetPrimaryCtxState");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(active);
-    if (flags != nullptr) {
-        ACL_LOG_ERROR("[Check][flags]paramete flags is reserved, it must be null.");
-            const char_t *argList[] = {"param"};
-            const char_t *argVal[] = {"flags"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_MSG,
-            argList, argVal, 1U);
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(flags == nullptr, "flags",
+        "flags is a reserved parameter and must be nullptr");
+
     uint32_t tmp = 0;
     const rtError_t rtErr = rtsGetPrimaryCtxState(deviceId, &tmp, active);
     if (rtErr != RT_ERROR_NONE) {

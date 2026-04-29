@@ -68,17 +68,24 @@ namespace acl {
         size_t &maxObjDepth, size_t &maxArrayDepth)
     {
         if (length <= 0) {
-            ACL_LOG_INNER_ERROR("[Check][Length]the length of file %s must be larger than 0.", fileName);
+            ACL_LOG_ERROR("[Check][Length]the length of file %s must be larger than 0.", fileName);
             return;
         }
 
         char_t *pBuffer = new(std::nothrow) char_t[length];
-        ACL_REQUIRES_NOT_NULL_RET_VOID(pBuffer);
+        if (pBuffer == nullptr) {
+            ACL_LOG_ERROR("[Check][Malloc]Allocate memory failed, bufferSize=%zu.", length);
+            const std::string lengthVal = std::to_string(length);
+            acl::AclErrorLogManager::ReportInputError(acl::ALLOC_MEMORY_FAILED_MSG,
+                std::vector<const char *>({"buf_size"}),
+                std::vector<const char *>({lengthVal.c_str()}));
+            return;
+        }
         const std::shared_ptr<char_t> buffer(pBuffer, [](char_t *const deletePtr) { delete[] deletePtr; });
 
         std::ifstream fin(fileName);
         if (!fin.is_open()) {
-            ACL_LOG_INNER_ERROR("[Open][File]read file %s failed.", fileName);
+            ACL_LOG_INNER_ERROR("[Open][File]Read file %s failed.", fileName);
             return;
         }
         (void)fin.seekg(0, fin.beg);
@@ -97,13 +104,17 @@ namespace acl {
         fin.close();
     }
 
+    // 待确认
     bool JsonParser::IsValidFileName(const char_t *const fileName)
     {
         char_t trustedPath[MMPA_MAX_PATH] = {};
         int32_t ret = mmRealPath(fileName, trustedPath, MMPA_MAX_PATH);
         if (ret != EN_OK) {
             const auto formatErrMsg = acl::AclGetErrorFormatMessage(mmGetErrorCode());
-            ACL_LOG_INNER_ERROR("[Trans][RealPath]the file path %s is not like a real path, mmRealPath return %d, "
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PATH_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({fileName, formatErrMsg.c_str()}));
+            ACL_LOG_ERROR("[Trans][RealPath]the file path %s is not like a real path, mmRealPath return %d, "
                 "errMessage is %s", fileName, ret, formatErrMsg.c_str());
             return false;
         }
@@ -111,17 +122,29 @@ namespace acl {
         mmStat_t pathStat;
         ret = mmStatGet(trustedPath, &pathStat);
         if (ret != EN_OK) {
-            ACL_LOG_INNER_ERROR("[Get][FileStatus]cannot get config file status, which path is %s, "
+            const auto formatErrMsg = acl::AclGetErrorFormatMessage(mmGetErrorCode());
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PATH_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({trustedPath, formatErrMsg.c_str()}));
+            ACL_LOG_ERROR("[Get][FileStatus]cannot get config file status, which path is %s, "
                 "maybe does not exist, return %d, errcode %d", trustedPath, ret, mmGetErrorCode());
             return false;
         }
         if ((pathStat.st_mode & S_IFMT) != S_IFREG) {
-            ACL_LOG_INNER_ERROR("[Config][ConfigFile]config file is not a common file, which path is %s, "
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({trustedPath, "config file is not a regular file"}));
+            ACL_LOG_ERROR("[Config][ConfigFile]config file is not a regular file, which path is %s, "
                 "mode is %u", trustedPath, pathStat.st_mode);
             return false;
         }
         if (pathStat.st_size > MAX_CONFIG_FILE_BYTE) {
-            ACL_LOG_INNER_ERROR("[Check][FileSize]config file %s size[%ld] is larger than "
+            std::string reason = acl::AclErrorLogManager::FormatStr(
+                "file size %ld exceeds maximum allowed size %ld", pathStat.st_size, MAX_CONFIG_FILE_BYTE);
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({trustedPath, reason.c_str()}));
+            ACL_LOG_ERROR("[Check][FileSize]config file %s size[%ld] is larger than "
                 "max config file Bytes[%ld]", trustedPath, pathStat.st_size, MAX_CONFIG_FILE_BYTE);
             return false;
         }
@@ -137,10 +160,11 @@ namespace acl {
         try {
             js = nlohmann::json::parse(std::string(configStr));
         } catch (const nlohmann::json::exception &e) {
-            ACL_LOG_INNER_ERROR("[Check][JsonFile]invalid json buffer, exception:%s.", e.what());
+            ACL_LOG_ERROR("[Check][JsonFile]invalid json buffer, exception:%s.", e.what());
+            std::string reason = acl::AclErrorLogManager::FormatStr("Parse exception: %s", e.what());
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
-                std::vector<const char*>({fileName, ("Parse exception: " + std::string(e.what())).c_str()}));
+                std::vector<const char*>({fileName, reason.c_str()}));
             return ACL_ERROR_PARSE_FILE;
         }
         ACL_LOG_DEBUG("parse json from buffer successfully.");
@@ -155,14 +179,11 @@ namespace acl {
         }
         ACL_LOG_DEBUG("before GetConfigStrFromFile in ParseJsonFromFile");
         if (!IsValidFileName(fileName)) {
-            ACL_LOG_INNER_ERROR("[Check][File]invalid config file[%s]", fileName);
+            ACL_LOG_ERROR("[Check][File]invalid config file[%s]", fileName);
             return ACL_ERROR_INVALID_FILE;
         }
         std::ifstream fin(fileName, std::ios::binary);
-        if (!fin.is_open()) {
-            ACL_LOG_INNER_ERROR("[Read][File]read file %s failed cause it cannnot be read.", fileName);
-            return ACL_ERROR_INVALID_FILE;
-        }
+        ACL_CHECK_INVALID_FILE_MSG_RET(!fin.is_open(), fileName, "File cannot be opened for reading", ACL_ERROR_INVALID_FILE);
         (void)fin.seekg(0, std::ios::end);
         const std::streampos fp = fin.tellg();
         if (static_cast<int32_t>(fp) == 0) {
@@ -175,7 +196,13 @@ namespace acl {
         size_t maxArrayDepth = 0U;
         GetMaxNestedLayers(fileName, static_cast<size_t>(fp), maxObjDepth, maxArrayDepth);
         if ((maxObjDepth > MAX_CONFIG_OBJ_DEPTH) || (maxArrayDepth > MAX_CONFIG_ARRAY_DEPTH)) {
-            ACL_LOG_INNER_ERROR("[Check][MaxArrayDepth]invalid json file, the object's depth[%zu] is larger than %zu, "
+            std::string reason = acl::AclErrorLogManager::FormatStr(
+                "object depth %zu exceeds max %zu or array depth %zu exceeds max %zu",
+                maxObjDepth, MAX_CONFIG_OBJ_DEPTH, maxArrayDepth, MAX_CONFIG_ARRAY_DEPTH);
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({fileName, reason.c_str()}));
+            ACL_LOG_ERROR("[Check][MaxArrayDepth]invalid json file, the object's depth[%zu] is larger than %zu, "
                                 "or the array's depth[%zu] is larger than %zu.",
                                 maxObjDepth, MAX_CONFIG_OBJ_DEPTH, maxArrayDepth, MAX_CONFIG_ARRAY_DEPTH);
             fin.close();
@@ -195,13 +222,13 @@ namespace acl {
         std::string configStr;
         auto ret = GetConfigStrFromFile(fileName, configStr);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("[Parse][File]Get Buffer from file[%s] failed.", fileName);
+            ACL_LOG_ERROR("[Parse][File]Get Buffer from file[%s] failed.", fileName);
             return ret;
         }
 
         ret= ParseJson(fileName, configStr.c_str(), js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("[Parse][File]parse config file[%s] to json failed.", fileName);
+            ACL_LOG_ERROR("[Parse][File]parse config file[%s] to json failed.", fileName);
             return ACL_ERROR_PARSE_FILE;
         }
 
@@ -215,7 +242,7 @@ namespace acl {
         nlohmann::json js;
         aclError ret = acl::JsonParser::ParseJsonFromFile(fileName, js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("parse json from file falied, errorCode = %d", ret);
+            ACL_LOG_ERROR("parse json from file failed, errorCode = %d", ret);
             return ret;
         }
         const auto configIter = js.find(subStrKey);
@@ -232,7 +259,7 @@ namespace acl {
         nlohmann::json js;
         aclError ret = JsonParser::ParseJsonFromFile(fileName, js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("parse swFeatureList.json from file[%s] failed, ret = %d", fileName, ret);
+            ACL_LOG_ERROR("parse swFeatureList.json from file[%s] failed, ret = %d", fileName, ret);
             return ret;
         }
         try {
@@ -248,7 +275,11 @@ namespace acl {
                 }
             }
         } catch (const nlohmann::json::exception &e) {
-            ACL_LOG_INNER_ERROR("invalid config file [%s], exception: %s", fileName, e.what());
+            std::string reason = acl::AclErrorLogManager::FormatStr("JSON parse exception: %s", e.what());
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({fileName, reason.c_str()}));
+            ACL_LOG_ERROR("invalid config file [%s], exception: %s", fileName, e.what());
             return ACL_ERROR_INTERNAL_ERROR;
         }
         ACL_LOG_INFO("Finish parsing swFeatureList.json");
@@ -262,7 +293,7 @@ namespace acl {
         std::string enableFlagStr, defaultDeviceIdStr;
         aclError ret = acl::JsonParser::ParseJsonFromFile(fileName, js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("[Parse][JsonFromFile]parse default config from file[%s] failed, errorCode = %d", fileName, ret);
+            ACL_LOG_ERROR("[Parse][JsonFromFile]parse default config from file[%s] failed, errorCode = %d", fileName, ret);
             return ret;
         }
 
@@ -279,12 +310,20 @@ namespace acl {
 
             defaultDeviceIdStr = JsonParser::GetCfgStrByKey(jsDefaultDeviceConfig, ACL_JSON_DEFAULT_DEVICE_ID);
         } catch (const nlohmann::json::exception &e) {
-            ACL_LOG_INNER_ERROR("parse config file [%s], exception: %s", fileName, e.what());
+            std::string reason = acl::AclErrorLogManager::FormatStr("JSON parse exception: %s", e.what());
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({fileName, reason.c_str()}));
+            ACL_LOG_ERROR("parse config file [%s], exception: %s", fileName, e.what());
             return ACL_ERROR_INTERNAL_ERROR;
         }
 
         std::regex reg("0|[1-9]\\d*");
         if (!std::regex_match(defaultDeviceIdStr, reg)) {
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, defaultDeviceIdStr.c_str(), "default_device",
+                    "value must be zero or a positive integer"}));
             ACL_LOG_ERROR("default_device %s in acl.json is neither zero nor positive integer.",
                            defaultDeviceIdStr.c_str());
             return ACL_ERROR_INVALID_PARAM;
@@ -300,7 +339,7 @@ namespace acl {
         std::string eventModeStr;
         aclError ret = acl::JsonParser::ParseJsonFromFile(fileName, js);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("[Parse][JsonFromFile]parse json from file[%s] failed, errorCode = %d", fileName, ret);
+            ACL_LOG_ERROR("[Parse][JsonFromFile]parse json from file[%s] failed, errorCode = %d", fileName, ret);
             return ret;
         }
         const std::string ACL_GRAPH_CONFIG_NAME = "acl_graph";
@@ -321,10 +360,10 @@ namespace acl {
         std::regex reg("0|1");
         if (!std::regex_match(eventModeStr, reg)) {
             ACL_LOG_ERROR("event_mode value [%s] in json is not a valid integer.", eventModeStr.c_str());
-            const char_t *argList[] = {"param", "value", "reason"};
-            const char_t *argVal[] = {"event_mode", eventModeStr.c_str(), "only support [0,1]"};
-            acl::AclErrorLogManager::ReportInputErrorWithChar(acl::INVALID_PARAM_MSG,
-                argList, argVal, 3U);
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, eventModeStr.c_str(), "event_mode",
+                    "value must be 0 or 1"}));
             return ACL_ERROR_INVALID_PARAM;
         }
 
@@ -368,9 +407,10 @@ namespace acl {
             }
         } catch (const nlohmann::json::exception& e) {
             ACL_LOG_ERROR("parse config file [%s], exception: %s", fileName, e.what());
+            std::string reason = acl::AclErrorLogManager::FormatStr("Parse exception: %s", e.what());
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
-                std::vector<const char*>({fileName, ("Parse exception: " + std::string(e.what())).c_str()}));
+                std::vector<const char*>({fileName, reason.c_str()}));
             return ACL_ERROR_INTERNAL_ERROR;
         }
 
@@ -385,9 +425,12 @@ namespace acl {
         std::string fifoSizeStr;
         found = false;
 
-        auto ret = acl::JsonParser::GetJsonCtxByKey(fileName, fifoSizeStr, typeName,  found);
+        auto ret = acl::JsonParser::GetJsonCtxByKey(fileName, fifoSizeStr, typeName, found);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("can not parse config from file[%s], config[%s], errorCode = %d", fileName, typeName.c_str(), ret);
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_FILE_MSG,
+                std::vector<const char *>({"path", "reason"}),
+                std::vector<const char *>({fileName, ("cannot parse config for " + typeName).c_str()}));
+            ACL_LOG_ERROR("can not parse config from file[%s], config[%s], errorCode = %d", fileName, typeName.c_str(), ret);
             return ret;
         }
         if (!found) {
@@ -396,6 +439,10 @@ namespace acl {
 
         std::regex reg("[1-9]\\d*");
         if (!std::regex_match(fifoSizeStr, reg)) {
+            acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+                std::vector<const char *>({"func", "value", "param", "reason"}),
+                std::vector<const char *>({__func__, fifoSizeStr.c_str(), "fifoSize",
+                    "value must be a positive integer in acl.json"}));
             ACL_LOG_ERROR("fifoSize %s in acl.json is not a positive integer.", fifoSizeStr.c_str());
             return ACL_ERROR_INVALID_PARAM;
         }

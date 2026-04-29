@@ -49,7 +49,7 @@ namespace acl {
 
     aclError QueueProcessor::acltdtDequeue(const uint32_t qid, acltdtBuf *const buf, const int32_t timeout)
     {
-        ACL_REQUIRES_NOT_NULL(buf);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(buf);
         const QueueDataMutexPtr muPtr = GetMutexForData(qid);
         ACL_CHECK_MALLOC_RESULT(muPtr);
         const uint64_t startTime = GetTimestamp();
@@ -82,9 +82,9 @@ namespace acl {
         (void)(permission);
         (void)(timeout);
         ACL_LOG_ERROR("[Unsupport][Feature]acltdtGrantQueue is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtGrantQueue", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -95,9 +95,9 @@ namespace acl {
         (void)(permission);
         (void)(timeout);
         ACL_LOG_ERROR("[Unsupport][Feature]acltdtAttachQueue is not supported in this version. Please check.");
-        const char_t *argList[] = {"feature", "reason"};
-        const char_t *argVal[] = {"acltdtAttachQueue", "please check"};
-        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_FEATURE_MSG, argList, argVal, 2UL);
+        const char_t *argList[] = {"func"};
+        const char_t *argVal[] = {__func__};
+        acl::AclErrorLogManager::ReportInputErrorWithChar(acl::UNSUPPORTED_SYSTEM_MSG, argList, argVal, 1UL);
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
@@ -213,7 +213,7 @@ namespace acl {
         ACL_REQUIRES_CALL_RTS_OK(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("send connet qs failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("send connect qs failed, ret code is %d", rsp->retCode);
             return ACL_ERROR_FAILURE;
         }
         qsContactId_ = rsp->retValue;
@@ -270,7 +270,7 @@ namespace acl {
         eventSum.msgLen = 0U;
         eventSum.msg = nullptr;
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("call rtEschedSubmitEventSync failed, ret code id %d", ret);
+            ACL_LOG_INNER_ERROR("call rtEschedSubmitEventSync failed, ret code is %d", ret);
             if (!isMbufEnhanced_) {
                 (void)rtMbufFree(mBuf);
                 mBuf = nullptr;
@@ -285,7 +285,7 @@ namespace acl {
         }
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("send connet qs failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("send connect qs failed, ret code is %d", rsp->retCode);
             (void)rtMbufFree(mBuf);
             mBuf = nullptr;
             devPtr = nullptr;
@@ -324,7 +324,7 @@ namespace acl {
         ACL_REQUIRES_CALL_RTS_OK(rtEschedSubmitEventSync(deviceId, &eventSum, &ack), rtEschedSubmitEventSync);
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("get queue route num failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("get queue route num failed, ret code is %d", rsp->retCode);
             return ACL_ERROR_FAILURE;
         }
         routeNum = rsp->retValue;
@@ -390,7 +390,7 @@ namespace acl {
 
         bqs::QsProcMsgRsp *const rsp = reinterpret_cast<bqs::QsProcMsgRsp *>(ack.buf);
         if (rsp->retCode != 0) {
-            ACL_LOG_INNER_ERROR("query queue route failed, ret code id %d", rsp->retCode);
+            ACL_LOG_INNER_ERROR("query queue route failed, ret code is %d", rsp->retCode);
             (void)rtMbufFree(mBuf);
             devPtr = nullptr;
             mBuf = nullptr;
@@ -612,8 +612,8 @@ namespace acl {
     {
         ACL_LOG_INFO("Start to enqueue data qid is %u, dataSize is %zu, userDataSize is %zu, "
                      "timeout is %d, rsv is %u", qid, dataSize, userDataSize, timeout, rsv);
-        ACL_REQUIRES_NOT_NULL(data);
-        ACL_REQUIRES_POSITIVE(dataSize);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
+        ACL_REQUIRES_POSITIVE_REPORT(dataSize);
 
         int32_t deviceId;
         ACL_REQUIRES_OK(GetDeviceId(deviceId));
@@ -634,7 +634,7 @@ namespace acl {
             return ret;
         }
         if (ret != RT_ERROR_NONE) {
-            ACL_LOG_INNER_ERROR("Fail to execute rtMemQueueEnQueueBuff, device is %d, qid is %u", deviceId, qid);
+            ACL_LOG_INNER_ERROR("Failed to execute rtMemQueueEnQueueBuff, device is %d, qid is %u", deviceId, qid);
             return ret;
         }
 
@@ -647,9 +647,9 @@ namespace acl {
     {
         ACL_LOG_INFO("Start to dequeue data qid is %u, dataSize is %zu, userDataSize is %zu, "
                      "timeout is %d,", qid, dataSize, userDataSize, timeout);
-        ACL_REQUIRES_NOT_NULL(data);
-        ACL_REQUIRES_NOT_NULL(retDataSize);
-        ACL_REQUIRES_POSITIVE(dataSize);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
+        ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(retDataSize);
+        ACL_REQUIRES_POSITIVE_REPORT(dataSize);
 
         int32_t deviceId;
         ACL_REQUIRES_OK(GetDeviceId(deviceId));

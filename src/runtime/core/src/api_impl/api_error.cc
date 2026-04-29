@@ -1710,6 +1710,10 @@ rtError_t ApiErrorDecorator::MemcpyAsync(void *const dst, const uint64_t destMax
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", streamId);
 
         error = impl_->MemCopySync(dst, destMax, src, cnt, copyKind);
+        error = (error == RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT) ? RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC : error;
+        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, __func__,
+            "the operation has been converted to a synchronous operation. "
+            "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
     } else {
         error = impl_->MemcpyAsync(dst, destMax, src, cnt, copyKind, stm, cfgInfo, addrCfg, checkKind);
     }
@@ -2264,31 +2268,6 @@ rtError_t ApiErrorDecorator::ReduceAsyncV2(void * const dst, const void * const 
     return error;
 }
 
-rtError_t ApiErrorDecorator::MemCopy2DCheckParam(const void * const dst, const uint64_t dstPitch,
-    const void * const src, const uint64_t srcPitch, const uint64_t width, const uint64_t height,
-    const rtMemcpyKind_t kind) const
-{
-    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(height == 0U, RT_ERROR_INVALID_VALUE, height, "greater than 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(dstPitch == 0U, RT_ERROR_INVALID_VALUE, dstPitch, "greater than 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(srcPitch == 0U, RT_ERROR_INVALID_VALUE, srcPitch, "greater than 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(width == 0U, RT_ERROR_INVALID_VALUE, width, "greater than 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((width > dstPitch), RT_ERROR_INVALID_VALUE, 
-        width, "less than or equal to dstPitch");  
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((width > srcPitch), RT_ERROR_INVALID_VALUE, 
-        width, "less than or equal to srcPitch");  
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(height > RT_MAX_MEMCPY2D_HEIGHT, RT_ERROR_INVALID_VALUE, 
-        height, "less than or equal to " + std::to_string(RT_MAX_MEMCPY2D_HEIGHT));  
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(width > RT_MAX_MEMCPY2D_WIDTH, RT_ERROR_INVALID_VALUE, 
-        width, "less than or equal to " + std::to_string(RT_MAX_MEMCPY2D_WIDTH)); 
-    COND_RETURN_WARN(((kind != RT_MEMCPY_DEFAULT) && (kind != RT_MEMCPY_HOST_TO_DEVICE) &&
-        (kind != RT_MEMCPY_DEVICE_TO_HOST) && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "this memcpy2d feature only support kind is host2device, device2host or device2device.");
-
-    return RT_ERROR_NONE;
-}
-
 rtMemcpyKind_t ApiErrorDecorator::GetMemCpyKind(const rtMemcpyKind_t kind, const rtMemcpyKind newKind) const
 {
     if (newKind == RT_MEMCPY_KIND_MAX) { // 如果新枚举没传或者传的是最大值，则使用老枚举
@@ -2312,6 +2291,31 @@ rtMemcpyKind_t ApiErrorDecorator::GetMemCpyKind(const rtMemcpyKind_t kind, const
     } else {
         return RT_MEMCPY_RESERVED;
     }
+}
+
+rtError_t ApiErrorDecorator::MemCopy2DCheckParam(const void * const dst, const uint64_t dstPitch,
+    const void * const src, const uint64_t srcPitch, const uint64_t width, const uint64_t height,
+    const rtMemcpyKind_t kind) const
+{
+    NULL_PTR_RETURN_MSG_OUTER(dst, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(src, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(height == 0U, RT_ERROR_INVALID_VALUE, height, "greater than 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(dstPitch == 0U, RT_ERROR_INVALID_VALUE, dstPitch, "greater than 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(srcPitch == 0U, RT_ERROR_INVALID_VALUE, srcPitch, "greater than 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(width == 0U, RT_ERROR_INVALID_VALUE, width, "greater than 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((width > dstPitch), RT_ERROR_INVALID_VALUE, 
+        width, "less than or equal to dstPitch");  
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((width > srcPitch), RT_ERROR_INVALID_VALUE, 
+        width, "less than or equal to srcPitch");  
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(height > RT_MAX_MEMCPY2D_HEIGHT, RT_ERROR_INVALID_VALUE, 
+        height, "less than or equal to " + std::to_string(RT_MAX_MEMCPY2D_HEIGHT));  
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(width > RT_MAX_MEMCPY2D_WIDTH, RT_ERROR_INVALID_VALUE, 
+        width, "less than or equal to " + std::to_string(RT_MAX_MEMCPY2D_WIDTH)); 
+    COND_RETURN_WARN(((kind != RT_MEMCPY_DEFAULT) && (kind != RT_MEMCPY_HOST_TO_DEVICE) &&
+        (kind != RT_MEMCPY_DEVICE_TO_HOST) && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "this memcpy2d feature only support kind is host2device, device2host or device2device.");
+
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiErrorDecorator::MemCopy2DSync(void * const dst, const uint64_t dstPitch, const void * const src,
@@ -2378,6 +2382,11 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(void * const dst, const uint64_t dst
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", curStm->Id_());
 
         error = impl_->MemCopy2DSync(dst, dstPitch, src, srcPitch, width, height, copyKind, newKind);
+        error = (error == RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT) ? RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC : error;
+        COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_CAPTURE_MODE_BLOCK_ASYNC, error, ErrorCode::EE1016, __func__,
+            "the operation has been converted to a synchronous operation. "
+            "operation not permitted when a stream is capturing and the specified capture mode is not relaxed");
+        
     } else {
         error = impl_->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, curStm, copyKind, newKind);
     }

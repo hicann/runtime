@@ -17,6 +17,7 @@
 #include "common/log_inner.h"
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
+#include "utils/data_type_utils.h"
 
 namespace {
     constexpr uint32_t ACL_ERROR_INVALID_EXCEPTION_INFO = 0xFFFFFFFFU;
@@ -49,61 +50,40 @@ aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
 
 uint32_t aclrtGetTaskIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get task id failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->taskid;
 }
 
 uint32_t aclrtGetStreamIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get stream id failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->streamid;
 }
 
 uint32_t aclrtGetThreadIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get thread id failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->tid;
 }
 
 uint32_t aclrtGetDeviceIdFromExceptionInfoImpl(const aclrtExceptionInfo *info)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get device id failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->deviceid;
 }
 
 uint32_t aclrtGetErrorCodeFromExceptionInfoImpl(const aclrtExceptionInfo *info)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get error code failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
     return info->retcode;
 }
 
 aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get args failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
-
-    if (devArgsPtr == nullptr || devArgsLen == nullptr) {
-        ACL_LOG_INNER_ERROR("devArgsPtr or devArgsLen is null, get args failed.");
-        return ACL_ERROR_INVALID_PARAM;
-    }
-
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devArgsPtr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devArgsLen);
+    
     if (info->expandInfo.type == RT_EXCEPTION_AICORE) {
         *devArgsPtr = info->expandInfo.u.aicoreInfo.exceptionArgs.argAddr;
         *devArgsLen = info->expandInfo.u.aicoreInfo.exceptionArgs.argsize;
@@ -112,7 +92,11 @@ aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void 
         *devArgsPtr = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argAddr;
         *devArgsLen = info->expandInfo.u.fusionInfo.u.aicoreCcuInfo.exceptionArgs.argsize;
     } else {
-        ACL_LOG_INNER_ERROR("exception information type = %d is invalid, get args failed.", info->expandInfo.type);
+        ACL_LOG_ERROR("exception information type = %d is invalid, get args failed.", info->expandInfo.type);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, acl::GetExceptionExpandTypeDesc(info->expandInfo.type),
+                "info->expandInfo.type", "RT_EXCEPTION_AICORE or RT_EXCEPTION_FUSION"}));
         return ACL_ERROR_INVALID_EXCEPTION_INFO;
     }
     
@@ -121,16 +105,8 @@ aclError aclrtGetArgsFromExceptionInfoImpl(const aclrtExceptionInfo *info, void 
 
 aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo *info, aclrtFuncHandle *func)
 {
-    if (info == nullptr) {
-        ACL_LOG_INNER_ERROR("exception information is null, get func failed.");
-        return ACL_ERROR_INVALID_EXCEPTION_INFO;
-    }
-
-    if (func == nullptr) {
-        ACL_LOG_INNER_ERROR("func is null, get func failed.");
-        return ACL_ERROR_INVALID_PARAM;
-    }
-
+    ACL_REQUIRES_NOT_NULL_RET_INPUT_REPORT(info, static_cast<aclError>(ACL_ERROR_INVALID_EXCEPTION_INFO));
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     const rtError_t rtErr = rtGetFuncHandleFromExceptionInfo(info, func);
     if (rtErr != ACL_RT_SUCCESS) {
         ACL_LOG_CALL_ERROR("get func handle from exception info failed, runtime result = %d.", rtErr);
@@ -143,10 +119,8 @@ aclError aclrtGetFuncHandleFromExceptionInfoImpl(const aclrtExceptionInfo *info,
 aclError aclrtBinarySetExceptionCallbackImpl(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)
 {
     ACL_LOG_INFO("start to execute aclrtBinarySetExceptionCallback.");
-    if (binHandle == nullptr || callback == nullptr) {
-        ACL_LOG_INNER_ERROR("binHandle or callback is null, set callback failed.");
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(callback);
 
     const rtError_t rtErr = rtBinarySetExceptionCallback(binHandle, callback, userData);
     if (rtErr != ACL_RT_SUCCESS) {
@@ -162,10 +136,11 @@ aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void *userData, aclrtCallback
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchCallback);
     ACL_LOG_INFO("start to execute aclrtLaunchCallback.");
-    if ((blockType != ACL_CALLBACK_BLOCK) && (blockType != ACL_CALLBACK_NO_BLOCK)) {
-        ACL_LOG_INNER_ERROR("invalid block type, the current blockType = %d", static_cast<int32_t>(blockType));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (blockType == ACL_CALLBACK_BLOCK || blockType == ACL_CALLBACK_NO_BLOCK),
+        acl::GetCallbackBlockTypeDesc(blockType), "blockType",
+        "ACL_CALLBACK_BLOCK or ACL_CALLBACK_NO_BLOCK",
+        ACL_ERROR_INVALID_PARAM);
     const bool isBlock = (blockType == ACL_CALLBACK_BLOCK);
     const rtError_t rtErr = rtCallbackLaunch(static_cast<rtCallback_t>(fn), userData,
         static_cast<rtStream_t>(stream), isBlock);
@@ -196,14 +171,10 @@ aclError aclrtProcessReportImpl(int32_t timeout)
     ACL_LOG_INFO("start to execute aclrtProcessReport, timeout is %dms.", timeout);
     // -1 represents infinite wait, timeout value greater than 0 represents waiting for a fixed time.
     // other value is invalid.
-    if ((timeout < -1) || (timeout == 0)) {
-        ACL_LOG_ERROR("invalid timeout value, timeout[%d]", timeout);
-        const std::string timeoutStr = acl::AclErrorLogManager::FormatStr("%dms", timeout);
-        acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG, std::vector<const char *>({"param", "value",
-            "reason"}), std::vector<const char *>({"timeout", timeoutStr.c_str(), "-1 represents infinite wait, "
-            "timeout value greater than 0 represents waiting for a fixed time"}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_WITH_REASON_RET(
+        (timeout < -1 || timeout == 0), timeout,
+        "-1 represents infinite wait, timeout value greater than 0 represents waiting for a fixed time",
+        ACL_ERROR_INVALID_PARAM);
     const rtError_t rtErr = rtProcessReport(timeout);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_THREAD_SUBSCRIBE) {

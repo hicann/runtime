@@ -21,6 +21,7 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
+#include "utils/data_type_utils.h"
 namespace {
 static const std::map<aclDataType, rtRandomNumDataType> kMapDataType = {
     { ACL_INT32, RT_RANDOM_NUM_DATATYPE_INT32 },
@@ -31,6 +32,7 @@ static const std::map<aclDataType, rtRandomNumDataType> kMapDataType = {
     { ACL_FLOAT16, RT_RANDOM_NUM_DATATYPE_FP16 },
     { ACL_FLOAT, RT_RANDOM_NUM_DATATYPE_FP32 },
 };
+
 }
 
 aclrtBinary aclrtCreateBinaryImpl(const void *data, size_t dataLen)
@@ -40,7 +42,7 @@ aclrtBinary aclrtCreateBinaryImpl(const void *data, size_t dataLen)
   ACL_REQUIRES_NOT_NULL_RET_NULL_INPUT_REPORT(data);
 
   rtDevBinary_t *binaryDesc = new(std::nothrow) rtDevBinary_t();
-  ACL_CHECK_WITH_MESSAGE_AND_RETURN(binaryDesc != nullptr, nullptr, "Allocate memory for binaryDesc failed.");
+  ACL_CHECK_MALLOC_RESULT_REPORT_RET(binaryDesc, sizeof(rtDevBinary_t), nullptr);
 
   binaryDesc->magic = 0U;
   binaryDesc->version = 0U;
@@ -233,12 +235,10 @@ aclError aclrtLaunchKernelWithConfigImpl(aclrtFuncHandle funcHandle, uint32_t nu
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithConfig);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithConfig");
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(numBlocks);
+    ACL_REQUIRES_POSITIVE_REPORT(numBlocks);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    if (reserve != nullptr) {
-        ACL_LOG_ERROR("[Check][reserve]param is reserved and only support currently nullptr.");
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(reserve == nullptr, "reserve",
+        "reserve is a reserved parameter and must be nullptr");
 
     rtKernelLaunchCfg_t *rt_cfg = nullptr;
     if (cfg != nullptr ) {
@@ -322,7 +322,7 @@ aclError aclrtKernelArgsInitByUserMemImpl(aclrtFuncHandle funcHandle, aclrtArgsH
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(userHostMem);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(actualArgsSize);
+    ACL_REQUIRES_POSITIVE_REPORT(actualArgsSize);
 
     const auto rtErr = rtsKernelArgsInitByUserMem(funcHandle, argsHandle, userHostMem, actualArgsSize);
     if (rtErr != RT_ERROR_NONE) {
@@ -369,7 +369,7 @@ aclError aclrtKernelArgsAppendImpl(aclrtArgsHandle argsHandle, void *param, size
     ACL_LOG_INFO("Start to execute aclrtKernelArgsAppend");
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(param);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(paramSize);
+    ACL_REQUIRES_POSITIVE_REPORT(paramSize);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
 
     const auto rtErr = rtsKernelArgsAppend(argsHandle, param, paramSize, paramHandle);
@@ -402,7 +402,7 @@ aclError aclrtKernelArgsGetPlaceHolderBufferImpl(aclrtArgsHandle argsHandle, acl
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetPlaceHolderBuffer");
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(dataSize);
+    ACL_REQUIRES_POSITIVE_REPORT(dataSize);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(bufferAddr);
 
     const auto rtErr = rtsKernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, dataSize, bufferAddr);
@@ -421,7 +421,7 @@ aclError aclrtKernelArgsParaUpdateImpl(aclrtArgsHandle argsHandle, aclrtParamHan
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(param);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(paramSize);
+    ACL_REQUIRES_POSITIVE_REPORT(paramSize);
 
     const auto rtErr = rtsKernelArgsParaUpdate(argsHandle, paramHandle, param, paramSize);
     if (rtErr != RT_ERROR_NONE) {
@@ -510,7 +510,13 @@ aclError aclrtCmoWaitBarrierImpl(aclrtBarrierTaskInfo *taskInfo, aclrtStream str
     ACL_LOG_DEBUG("start to execute aclrtCmoWaitBarrier, flag is [%u]", flag);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(taskInfo);
     if ((taskInfo->barrierNum == 0U) || (taskInfo->barrierNum > ACL_RT_CMO_MAX_BARRIER_NUM)) {
-        ACL_LOG_ERROR("[Check][taskInfo]param taskInfo is invalid, taskInfo->barrierNum must be in range (0, 6]");
+        ACL_LOG_ERROR("[Check][taskInfo]param taskInfo is invalid, taskInfo->barrierNum must be in range (0, %d]",
+            ACL_RT_CMO_MAX_BARRIER_NUM);
+        const std::string barrierNumVal = std::to_string(taskInfo->barrierNum);
+        const std::string expect = acl::AclErrorLogManager::FormatStr("(0, %d]", ACL_RT_CMO_MAX_BARRIER_NUM);
+        acl::AclErrorLogManager::ReportInputError(acl::INVALID_VALUE_MSG,
+            std::vector<const char *>({"func", "value", "param", "expect"}),
+            std::vector<const char *>({__func__, barrierNumVal.c_str(), "taskInfo->barrierNum", expect.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtBarrierTaskInfo_t rtTaskInfo;
@@ -660,6 +666,9 @@ aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo *taskInfo, const a
     aclDataType type = taskInfo->dataType;
     if (kMapDataType.count(type) == 0) {
          ACL_LOG_ERROR("[Check][param]param dataType [%d] is invalid.", static_cast<int32_t>(type));
+         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_REASON_MSG,
+            std::vector<const char *>({"func", "value", "param", "reason"}),
+            std::vector<const char *>({__func__, acl::GetDataTypeDesc(type), "taskInfo->dataType", "The data type is currently not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     rtRandomNumTaskInfo_t *rtTaskInfo = const_cast<rtRandomNumTaskInfo_t *>(reinterpret_cast<const rtRandomNumTaskInfo_t *>(taskInfo));
@@ -701,7 +710,7 @@ aclError aclrtCacheLastTaskOpInfoImpl(const void * const infoPtr, const size_t i
     ACL_PROFILING_REG(acl::AclProfType::AclrtCacheLastTaskOpInfo);
     ACL_LOG_INFO("start to execute aclrtCacheLastTaskOpInfo");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(infoPtr);
-    ACL_REQUIRES_POSITIVE_WITH_INPUT_REPORT(infoSize);
+    ACL_REQUIRES_POSITIVE_REPORT(infoSize);
 
     const rtError_t rtErr = rtCacheLastTaskOpInfo(infoPtr, infoSize);
     if (rtErr != RT_ERROR_NONE) {
