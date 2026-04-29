@@ -14,6 +14,7 @@
 #endif
 #include <functional>
 #include "aicpu_sched/common/aicpu_task_struct.h"
+#include "davinci_kernel_task.h"
 #include "context.hpp"
 #include "stream.hpp"
 #include "api.hpp"

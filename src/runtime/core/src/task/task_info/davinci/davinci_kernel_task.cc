@@ -13,7 +13,6 @@
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "fwk_adpt_struct.h"
-#include "stars_cond_isa_helper.hpp"
 #include "rt_stars_define.h"
 #include "context.hpp"
 #include "event.hpp"
@@ -21,12 +20,9 @@
 #include "task_fail_callback_manager.hpp"
 #include "device/device_error_proc.hpp"
 #include "aicpu_sched/common/aicpu_task_struct.h"
-#include "context.hpp"
 #include "tsch_defines.h"
 #include "profiler.hpp"
 #include "stars.hpp"
-#include "stub_task.hpp"
-#include "hwts.hpp"
 #include "device.hpp"
 #include "raw_device.hpp"
 #include "atrace_log.hpp"
@@ -42,7 +38,7 @@ namespace runtime {
 #if F_DESC("DavinciKernelTask")
 
 static void DavinciTaskInitCommon(DavinciTaskInfoCommon *comm, const uint16_t dimNum, const uint32_t flag,
-                                 uint8_t isUpdateSinkSqe)
+                                  uint8_t isUpdateSinkSqe)
 {
     if (isUpdateSinkSqe == 0U) {
         comm->argHandle = nullptr;
@@ -54,7 +50,7 @@ static void DavinciTaskInitCommon(DavinciTaskInfoCommon *comm, const uint16_t di
     return;
 }
 
-static void AicTaskInitCommon(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum, const uint32_t flag,
+void AicTaskInitCommon(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum, const uint32_t flag,
     const bool isNeedAllocSqeDevBuf)
 {
     TaskCommonInfoInit(taskInfo);
@@ -172,34 +168,6 @@ void AicTaskInit(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, cons
         (taskInfo->stream->Device_()->CheckFeatureSupport(TS_FEATURE_OP_EXEC_TIMEOUT_MS) ||
          taskInfo->stream->Device_()->CheckFeatureSupport(TS_FEATURE_AICORE_NEVER_TIMEOUT));
     COND_PROC(((aicTaskInfo->timeout == MAX_UINT64_NUM) && (!isSupportOpNeverTimeout)), aicTaskInfo->timeout -= 1UL);
-
-    return;
-}
-
-void AicTaskInitV2(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType, const uint16_t dimNum,
-    const uint32_t flag, const LaunchTaskCfgInfo_t * const launchTaskCfg)
-{
-    AicTaskInitCommon(taskInfo, kernelAttrType, dimNum, flag, false);
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-
-    if (launchTaskCfg != nullptr) {
-        aicTaskInfo->qos = launchTaskCfg->qos;
-        aicTaskInfo->partId = launchTaskCfg->partId;
-        aicTaskInfo->schemMode = launchTaskCfg->schemMode;
-        aicTaskInfo->blockDimOffset = launchTaskCfg->blockDimOffset;
-        aicTaskInfo->dynamicShareMemSize = launchTaskCfg->dynamicShareMemSize;
-        if ((launchTaskCfg->dumpflag == RT_KERNEL_DUMPFLAG) || (launchTaskCfg->dumpflag == RT_FUSION_KERNEL_DUMPFLAG)) {
-            aicTaskInfo->comm.kernelFlag = static_cast<uint8_t>(launchTaskCfg->dumpflag & 0xFFU);
-            RT_LOG(RT_LOG_WARNING, "dumpflag set %u.", launchTaskCfg->dumpflag);
-        }
-        aicTaskInfo->groupDim = launchTaskCfg->Group.groupDim;
-        aicTaskInfo->groupBlockDim = launchTaskCfg->Group.groupBlockDim;
-    }
-
-    RT_LOG(RT_LOG_INFO, "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, groupDim=%u, groupBlockDim=%u.",
-           aicTaskInfo->comm.kernelFlag, aicTaskInfo->qos,
-           aicTaskInfo->partId, aicTaskInfo->schemMode,
-           aicTaskInfo->groupDim, aicTaskInfo->groupBlockDim);
 
     return;
 }
@@ -391,26 +359,6 @@ void TransDavinciTaskToVectorCore(const uint32_t flags, uint64_t addr2, uint64_t
     addr1 = addr2;
     mixType = static_cast<uint8_t>(NO_MIX);
     kernelAttrType = RT_KERNEL_ATTR_TYPE_VECTOR;
-}
-
-void SetResultForDavinciTask(TaskInfo* taskInfo, const void *const data, const uint32_t dataSize)
-{
-    UNUSED(dataSize);
-    const auto *const tsData = static_cast<const uint32_t *>(data);
-    const uint32_t payLoad = *tsData;
-    const uint32_t highTaskId = *(tsData + 1);
-    const uint32_t streamIdEx = *(tsData + 2);
-
-    const uint32_t deviceId = taskInfo->stream->Device_()->Id_();
-    const uint32_t retCode = static_cast<uint32_t>(payLoad & 0xFFFU);
-    taskInfo->errorCode = retCode;
-    const uint32_t taskId = (static_cast<uint32_t>(payLoad >> 22U) & 0x3FFU) |
-        static_cast<uint32_t>(highTaskId << 10U); // get taskid
-    const uint32_t streamId = (static_cast<uint32_t>(payLoad >> 12U) & 0x3FFU) |
-        (streamIdEx << RT_STREAM_ID_OFFSET); // get streamid
-    RT_LOG(RT_LOG_INFO, "Kernel payLoad=%u, highTaskId=%u, device_id=%u, rtCode=0x%x, "
-           "errorTaskId=%u, errorStreamId=%u.",
-           payLoad, highTaskId, deviceId, retCode, taskId, streamId);
 }
 
 void SetPcTrace(TaskInfo *taskInfo, std::shared_ptr<PCTrace> pcTracePtr)
@@ -641,188 +589,6 @@ rtError_t FillKernelLaunchPara(const rtKernelLaunchNames_t * const launchNames,
     return RT_ERROR_NONE;
 }
 
-static rtError_t RuntimeDevMemAlloc(void ** const dptr, const uint64_t size, const rtMemType_t type, Device *dev)
-{
-    // when alloc small page HBM OOM, try Alloc huge page.
-    rtError_t ret = (dev->Driver_())->DevMemAlloc(dptr, size, type, dev->Id_(), MODULEID_RUNTIME, false);
-    if (ret == RT_ERROR_DRV_OUT_MEMORY) {
-        RT_LOG(RT_LOG_WARNING, "device_id=%u alloc small page mem OOM, alloc huge page size=%u.", dev->Id_(), size);
-        ret = (dev->Driver_())->DevMemAlloc(dptr, size, RT_MEMORY_POLICY_HUGE_PAGE_ONLY, dev->Id_());
-    }
-    return ret;
-}
-
-static rtError_t AllocFftsMixDescMemForDavinciTask(TaskInfo *taskInfo)
-{
-    constexpr uint32_t descBufLen = CONTEXT_ALIGN_LEN;
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const rtError_t ret = RuntimeDevMemAlloc(&(aicTaskInfo->descBuf),
-        static_cast<uint64_t>(descBufLen + CONTEXT_ALIGN_LEN),
-        RT_MEMORY_HBM, taskInfo->stream->Device_());
-    COND_RETURN_ERROR((ret != RT_ERROR_NONE) || (aicTaskInfo->descBuf == nullptr), ret,
-                      "alloc fftsPlusDescDev failed, retCode=%#x, descBufLen=%u(bytes), device_id=%u.",
-                      ret, descBufLen, taskInfo->stream->Device_()->Id_());
-    const uint64_t descAlign = (RtPtrToValue(aicTaskInfo->descBuf) & 0x7FU) == 0U ?
-        RtPtrToValue(aicTaskInfo->descBuf) :
-        (((RtPtrToValue(aicTaskInfo->descBuf) >> CONTEXT_ALIGN_BIT) + 1U) << CONTEXT_ALIGN_BIT);
-    aicTaskInfo->descAlignBuf = RtValueToPtr<void *>(descAlign);
-    return RT_ERROR_NONE;
-}
-
-static rtError_t DavinciFftsPlusTaskPoolH2D(TaskInfo* taskInfo, const void * const src)
-{
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    Handle *handle = static_cast<Handle *>(aicTaskInfo->comm.argHandle);
-    void *devAddr = handle->argsAlloc->GetDevAddr(handle->kerArgs);
-    COND_RETURN_ERROR((devAddr == nullptr), RT_ERROR_INVALID_VALUE,
-        "devAddr is null, device_id=%u, stream_id=%d, task_id=%u.",
-        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id);
-
-    const rtError_t error = handle->argsAlloc->H2DMemCopy(devAddr, src, CONTEXT_ALIGN_LEN);
-    aicTaskInfo->descBuf = devAddr;
-    aicTaskInfo->descAlignBuf = devAddr;
-    return error;
-}
-
-static rtError_t DavinciFftsPlusTaskNormalH2D(TaskInfo* taskInfo, const void *src)
-{
-    constexpr uint32_t descBufLen = static_cast<uint32_t>(CONTEXT_ALIGN_LEN);
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const auto dev = taskInfo->stream->Device_();
-    rtError_t ret = AllocFftsMixDescMemForDavinciTask(taskInfo);
-    COND_RETURN_ERROR((ret != RT_ERROR_NONE) || (aicTaskInfo->descBuf == nullptr), ret,
-                      "stream_id=%d, task_id=%u, device_id=%u, alloc fftsPlusDescDev failed, "
-                      "descBufLen=%u(bytes), retCode=%#x.", taskInfo->stream->Id_(),
-                      taskInfo->id, dev->Id_(), descBufLen, ret);
-    ret = dev->Driver_()->MemCopySync(aicTaskInfo->descAlignBuf, descBufLen, src,
-                                      descBufLen, RT_MEMCPY_HOST_TO_DEVICE);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "stream_id=%d, task_id=%u, device_id=%u, MemCopySync args failed, retCode=%#x.",
-                         taskInfo->stream->Id_(), taskInfo->id, dev->Id_(), ret);
-    }
-    return ret;
-}
-
-void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
-{
-    RtStarsAicpuKernelSqe *const sqe = &(command->aicpuSqe);
-    AicpuTaskInfo *aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
-    Stream * const stm = taskInfo->stream;
-
-    sqe->header.type = RT_STARS_SQE_TYPE_AICPU;
-    sqe->header.l1_lock = 0U;
-    sqe->header.l1_unlock = 0U;
-    sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
-    sqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
-    if (stm->IsDebugRegister() && (!stm->GetBindFlag())) {
-        sqe->header.post_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
-    }
-    sqe->header.wr_cqe = stm->GetStarsWrCqeFlag();
-    sqe->header.reserved = 0U;
-    sqe->header.block_dim = aicpuTaskInfo->comm.dim;
-    sqe->header.rt_stream_id = static_cast<uint16_t>(stm->Id_());
-    sqe->header.task_id = taskInfo->id;
-
-    sqe->kernel_type = static_cast<uint16_t>(aicpuTaskInfo->aicpuKernelType);
-    sqe->batch_mode = 0U;
-
-    if ((aicpuTaskInfo->comm.kernelFlag & RT_KERNEL_HOST_FIRST) == RT_KERNEL_HOST_FIRST) {
-        sqe->topic_type = TOPIC_TYPE_HOST_AICPU_FIRST;
-    } else if ((aicpuTaskInfo->comm.kernelFlag & RT_KERNEL_HOST_ONLY) == RT_KERNEL_HOST_ONLY) {
-        sqe->topic_type = TOPIC_TYPE_HOST_AICPU_ONLY;
-    } else if ((aicpuTaskInfo->comm.kernelFlag & RT_KERNEL_DEVICE_FIRST) == RT_KERNEL_DEVICE_FIRST) {
-        sqe->topic_type = TOPIC_TYPE_DEVICE_AICPU_FIRST;
-    } else {
-        sqe->topic_type = TOPIC_TYPE_DEVICE_AICPU_ONLY;
-    }
-
-    sqe->qos = GetAICpuQos(taskInfo);
-    sqe->res7 = 0U;
-    sqe->sqe_index = 0U; // useless
-    const uint32_t curVersion = stm->Device_()->GetTschVersion() & 0xFFFFU; // 取低16位作为版本号
-    const bool isNewVersion = curVersion >= TS_VERSION_AICPU_SINGLE_TIMEOUT;
-    const bool isSupportTimeout =
-        ((sqe->kernel_type == KERNEL_TYPE_AICPU_KFC) || (sqe->kernel_type == KERNEL_TYPE_CUSTOM_KFC));
-    const bool isNeedNoTimeout = ((aicpuTaskInfo->timeout > RUNTIME_DAVINCI_MAX_TIMEOUT) && isSupportTimeout) ||
-        (aicpuTaskInfo->timeout == MAX_UINT64_NUM);
-    sqe->kernel_credit = isNeedNoTimeout ? RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT : static_cast<uint8_t>(GetAicpuKernelCredit(aicpuTaskInfo->timeout));
-
-    // old tsagent not suport config aicpu timeout  to  0xFF
-    sqe->kernel_credit = (isNeedNoTimeout && (!isNewVersion)) ? RT_STARS_MAX_KERNEL_CREDIT : sqe->kernel_credit;
-
-    uint64_t addr = RtPtrToValue(aicpuTaskInfo->soName);
-    sqe->taskSoAddrLow = static_cast<uint32_t>(addr);
-    sqe->taskSoAddrHigh = static_cast<uint16_t>(addr >> UINT32_BIT_NUM);
-    // 接口开放 args排布有调整，sqe中的param要基于args的起始地址做soName和funcName的偏移获取headParamAddr
-    const uint8_t *tmpAddr = RtPtrToPtr<const uint8_t *, void *>(aicpuTaskInfo->comm.args);
-    const void *paramAddr = tmpAddr + aicpuTaskInfo->headParamOffset;
-    addr = RtPtrToValue(paramAddr);
-    sqe->paramAddrLow = static_cast<uint32_t>(addr);
-    sqe->param_addr_high = static_cast<uint16_t>(addr >> UINT32_BIT_NUM);
-
-    addr = RtPtrToValue(aicpuTaskInfo->funcName);
-    sqe->task_name_str_ptr_low = static_cast<uint32_t>(addr);
-    sqe->task_name_str_ptr_high = static_cast<uint16_t>(addr >> UINT32_BIT_NUM);
-    sqe->pL2CtrlLow = 0U;
-    sqe->p_l2ctrl_high = 0U;
-    sqe->overflow_en = stm->IsOverflowEnable();
-    sqe->dump_en = 0U;
-    if ((aicpuTaskInfo->comm.kernelFlag & RT_KERNEL_DUMPFLAG) != 0U) {
-        sqe->dump_en = 1U; // 1: aicpu dump enable
-        sqe->kernel_credit = RT_STARS_ADJUST_KERNEL_CREDIT;
-    }
-    sqe->debug_dump_en = 0U;
-    if (stm->IsDebugRegister() && stm->GetBindFlag()) {
-        sqe->debug_dump_en = 1U;
-    }
-
-    sqe->extraFieldLow = taskInfo->id;  // send task id info to aicpu
-    sqe->extra_field_high = 0U;
-
-    sqe->subTopicId = 0U;
-    sqe->topicId = 3U; // EVENT_TS_HWTS_KERNEL
-    sqe->group_id = 0U;
-    sqe->usr_data_len = 40U; /* size: word4-13 */
-    sqe->dest_pid = 0U;
-
-    PrintSqe(command, "AICpuTask");
-    RT_LOG(RT_LOG_INFO, "taskType=%hu, topic_type=%hu, kernel_type=%hu, debug_dump_en=%u, curVersion=%u, "
-        "isNeedNoTimeout=%u, timeout=%hus, kernel_credit=%hu",
-        taskInfo->type, sqe->topic_type, sqe->kernel_type,  sqe->debug_dump_en, curVersion,
-        isNeedNoTimeout, aicpuTaskInfo->timeout, sqe->kernel_credit);
-
-    return;
-}
-
-void ConstructFftsMixSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
-{
-    rtFftsPlusMixAicAivCtx_t fftsCtx = {};
-    uint32_t minStackSize = 0U;
-    FillFftsAicAivCtxForDavinciTask(taskInfo, &fftsCtx, minStackSize);
-    // The following code cannot be used in advance because the args address may be applied for later.
-    rtError_t ret = RT_ERROR_NONE;
-    const auto dev = taskInfo->stream->Device_();
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    if (aicTaskInfo->mixOpt == 1) {
-        ret = DavinciFftsPlusTaskPoolH2D(taskInfo, static_cast<void *>(&fftsCtx));
-    } else {
-        ret = DavinciFftsPlusTaskNormalH2D(taskInfo, static_cast<void *>(&fftsCtx));
-    }
-
-    RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%u, taskType=%u, mixOpt:%hhu, handle:%p, "
-        "descBuf=%" PRIu64 ", descAlignBuf=%" PRIu64 ".",
-        dev->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, aicTaskInfo->mixOpt,
-        aicTaskInfo->comm.argHandle, aicTaskInfo->descBuf, aicTaskInfo->descAlignBuf);
-
-    COND_LOG_ERROR(ret != RT_ERROR_NONE, "stream_id=%d, task_id=%u, mix h2d failed, retCode=%#x.",
-                   taskInfo->stream->Id_(), taskInfo->id, ret);
-    FillFftsMixSqeForDavinciTask(taskInfo, command, minStackSize, ret);
-    SqeTaskUpdateForFftsPlus(taskInfo, command);
-    ShowDavinciTaskMixDebug(&fftsCtx);
-    return;
-}
-
 static QosMasterType GetQosMasterTypeForSqe(const RtFftsPlusKernelSqe *sqe)
 {
     QosMasterType masterType = QosMasterType::MASTER_INVALID;
@@ -992,44 +758,6 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     PrintSqe(command, "FFTSPlusAICore");
 
     return;
-}
-
-void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
-{
-    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
-    const uint8_t mixType = (aicTaskInfo->kernel != nullptr) ? aicTaskInfo->kernel->GetMixType() : 0U;
-    if (mixType != NO_MIX) {
-        ConstructFftsMixSqeForDavinciTask(taskInfo, command);
-    } else {
-        ConstructAICoreSqeForDavinciTask(taskInfo, command);
-    }
-
-    return;
-}
-
-TIMESTAMP_EXTERN(rtKernelLaunch_WaitAsyncCopyComplete);
-rtError_t WaitAsyncCopyCompleteForDavinciTask(TaskInfo* taskInfo)
-{
-    DavinciTaskInfoCommon *comm = (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) ?
-        &(taskInfo->u.aicpuTaskInfo.comm) : &(taskInfo->u.aicTaskInfo.comm);
-
-    if (comm->argHandle == nullptr) {
-        return RT_ERROR_NONE;
-    }
-
-    Handle *argHdl = static_cast<Handle *>(comm->argHandle);
-    if (!(argHdl->freeArgs)) {
-        return RT_ERROR_NONE;
-    }
-    TIMESTAMP_BEGIN(rtKernelLaunch_WaitAsyncCopyComplete);
-    const rtError_t error = argHdl->argsAlloc->H2DMemCopyWaitFinish(argHdl->kerArgs);
-    TIMESTAMP_END(rtKernelLaunch_WaitAsyncCopyComplete);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "H2DMemCopyWaitFinish for args cpy result failed, retCode=%#x.", static_cast<uint32_t>(error));
-        return error;
-    }
-
-    return RT_ERROR_NONE;
 }
 
 static bool CheckArgsSize(TaskInfo* taskInfo, const uint32_t devId, const uint16_t taskId, const int32_t streamId)
@@ -1391,6 +1119,26 @@ void HandleSimtPrintErrorInfo(Device * const dev) {
         writeInfo->packIdx, dev->GetSimtPrintTlvCnt()); 
     (void)dev->Driver_()->HostMemFree(hostBlockSrc); 
     return; 
+}
+
+void ShowDavinciTaskMixDebug(const rtFftsPlusMixAicAivCtx_t * const fftsCtx)
+{
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 0) {
+        return;
+    }
+
+    const uint32_t * const buf = RtPtrToPtr<const uint32_t *>(fftsCtx);
+    RT_LOG(RT_LOG_INFO, "The DavinciTask Mix context-buf:"
+        "%#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, "
+        "%#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, "
+        "%#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, "
+        "%#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, %#010x, ",
+        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7],
+        buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15],
+        buf[16], buf[17], buf[18], buf[19], buf[20], buf[21], buf[22], buf[23],
+        buf[24], buf[25], buf[26], buf[27], buf[28], buf[29], buf[30], buf[31]);
+
+    return;
 }
 
 void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)

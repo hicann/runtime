@@ -18,6 +18,7 @@
 #include "device.hpp"
 #include "device_error_info.hpp"
 #include "device_error_inner_data.hpp"
+#include "davinci_kernel_task.h"
 
 #define BITMAP_CLR(val, pos) ((val) &= (~(1ULL << (pos))))
 #define RUNTIME_NULL_NO_PROC_WITH_RET(x) \

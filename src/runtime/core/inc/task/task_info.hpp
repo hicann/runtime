@@ -197,7 +197,6 @@ void UpdateFlipNum(TaskInfo *taskInfo, const bool isDisableThread);
 void InitByStream(TaskInfo *const taskInfo, Stream *stream);
 void DoTaskComplete(TaskInfo* taskInfo, const uint32_t devId);
 
-void SetPcTrace(TaskInfo *taskInfo, std::shared_ptr<PCTrace> pcTracePtr);
 inline void SetAicoreArgs(TaskInfo *taskInfo, const void * const dataArgs, const uint32_t dataArgsSize, void *const dataArgHandle)
 {
     AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
@@ -243,20 +242,8 @@ const char_t* GetTaskDescByType(const uint8_t taskType);
 bool IsNeedFreeStreamRes(const TaskInfo *task);
 void ResetCmdList(TaskInfo* taskInfo);
 void TaskTriggerEvent(TaskInfo * const taskInfo);
-rtError_t FillKernelLaunchPara(const rtKernelLaunchNames_t * const launchNames,
-                               TaskInfo* taskInfo, ArgLoader * const devArgLdr);
-void AicpuTaskInit(TaskInfo *taskInfo, const uint16_t dimNum, const uint32_t flag);
-void AicTaskInit(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType,
-                 const uint16_t dimNum, const uint32_t flag,
-                 const TaskCfg * const taskcfg, const bool isNeedAllocSqeDevBuf = false);
-void AicTaskInitV2(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType,
-    const uint16_t dimNum, const uint32_t flag,
-    const LaunchTaskCfgInfo_t * const launchTaskCfg);
-rtError_t CheckMixKernelValid(const uint8_t mixType, const uint64_t func2);
 
 rtError_t DavinciMultipleTaskInit(TaskInfo* taskInfo, const void *const multipleTaskInfo, const uint32_t flag);
-void TransDavinciTaskToVectorCore(const uint32_t flags, uint64_t addr2, uint64_t &addr1,
-    uint8_t &mixType, rtKernelAttrType &kernelAttrType, const bool isLaunchVec);
 rtError_t MemcpyAsyncTaskInitV1(TaskInfo * const taskInfo, void *memcpyAddrInfo, const uint64_t cpySize);
 rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, const uint64_t dstPitch,
                                 const void *const srcAddr, const uint64_t srcPitch, const uint64_t width,
@@ -320,16 +307,11 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos);
 void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos);
 
 void DoCompleteSuccess(TaskInfo* taskInfo, const uint32_t devId);
-void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfo(TaskInfo *taskInfo, const uint32_t devId);
 uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo);
 void IncMultipleTaskCqeNum(TaskInfo *taskInfo);
-void ParseExtendInfo(TaskInfo* taskInfo, const char_t *const extInfos, const uint64_t extInfoLen,
-    const uint64_t extInfoStructLen, std::string &extendInfo);
 
 void SaveTaskInfo(TaskInfo *const taskInfo, TaskInfo *submitTask);
-rtError_t GetArgsInfo(TaskInfo* taskInfo);
-rtError_t GetMixCtxInfo(TaskInfo* taskInfo);
 rtError_t InitFuncCallParaForStreamSwitchTaskV2(TaskInfo* taskInfo, rtStarsStreamSwitchExFcPara_t &fcPara,
     const rtChipType_t chipType);
 rtError_t InitFuncCallParaForStreamSwitchTaskV1(TaskInfo* taskInfo, rtStarsStreamSwitchFcPara_t &fcPara,
@@ -349,7 +331,6 @@ uint8_t GetOpcodeForReduce(TaskInfo * const taskInfo);
 uint8_t ReduceOpcodeLow(TaskInfo * const taskInfo);
 void TaskCommonInfoInit(TaskInfo *taskInfo);
 bool IsSupportType(const uint16_t sqeType);
-uint16_t GetAICpuQos(const TaskInfo * const taskInfo);
 uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo * const taskInfo);
 uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo * const taskInfo);
 rtError_t UbDbSendTaskInit(TaskInfo *taskInfo, const rtUbDbInfo_t *dbInfo, const uint16_t source);

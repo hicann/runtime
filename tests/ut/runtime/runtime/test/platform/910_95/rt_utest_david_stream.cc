@@ -30,6 +30,7 @@
 #include "raw_device.hpp"
 #include "profiler.hpp"
 #include "task_info.hpp"
+#include "davinci_kernel_task.h"
 #include "context.hpp"
 #include "stream_david.hpp"
 #include "task_david.hpp"

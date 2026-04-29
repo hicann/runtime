@@ -8,26 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "runtime.hpp"
-#include "event_david.hpp"
-#include "task_manager.h"
-#include "device.hpp"
 #include "stars_david.hpp"
-#include "stars.hpp"
 #include "task_info.h"
 #include "error_code.h"
+
 namespace cce {
 namespace runtime {
-
-void ConstructDavidAICpuSqeForDavinciTask(TaskInfo *const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
-{
-    ConstructDavidAICpuSqeForDavinciTaskBase(taskInfo, davidSqe, sqBaseAddr);
-
-    RtDavidStarsAicpuKernelSqe *const sqe = &(davidSqe->aicpuSqe);
-    PrintDavidSqe(davidSqe, "AICpuTask");
-    RT_LOG(RT_LOG_INFO, "topic_type=%hu, kernel_type=%u, dump_en=%u",
-        sqe->topicType, sqe->kernelType,  sqe->debugDumpEn);
-    return;
-}
 
 void ConstructAicpuSubSqe(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint32_t &sqeIndex,
                           uint32_t aicpuIndex, uint32_t taskIdx, uint64_t sqBaseAddr)
@@ -44,21 +30,6 @@ void ConstructAicpuSubSqe(TaskInfo * const taskInfo, rtDavidSqe_t * const davidS
 
     sqeIndex++;
     return;
-}
-
-void UpdateDavidAICoreSqeForDavinciTask(RtDavidStarsAicAivKernelSqe * const sqe)
-{
-    UNUSED(sqe);
-}
-
-void UpdateDavidAICpuSqeForDavinciTask(RtDavidStarsAicpuKernelSqe * const sqe)
-{
- 	UNUSED(sqe);
-}
-
-void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe * const sqe)
-{
- 	UNUSED(sqe);
 }
 
 }  // namespace runtime

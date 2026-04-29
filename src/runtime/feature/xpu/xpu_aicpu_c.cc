@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "xpu_aicpu_c.hpp"
+#include "davinci_kernel_task.h"
 #include "task_xpu.hpp"
 #include "stream_xpu.hpp"
 #include "error_message_manage.hpp"

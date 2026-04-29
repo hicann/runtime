@@ -46,9 +46,6 @@ static inline uint8_t GetStarsDefinedErrCode(const uint8_t errorType)
     return errorType & RT_STARS_EXIST_ERROR;
 }
 
-// for aic/aiv op
-std::string GetTaskKernelName(const TaskInfo *task);
-
 
 enum tsReportType_t {
     TS_REPORT_MSG_TYPE_TS_REPORT = 0,

@@ -300,9 +300,9 @@ static void DavidRegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipType
             item = &DoCompleteSuccess;
         }
 
-        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &DoCompleteSuccessForDavinciTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AICORE] = &DoCompleteSuccessForDavinciTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AICPU] = &DoCompleteSuccessForDavinciTask;
+        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &StarsV2DoCompleteSuccessForDavinciTask;
+        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AICORE] = &StarsV2DoCompleteSuccessForDavinciTask;
+        doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AICPU] = &StarsV2DoCompleteSuccessForDavinciTask;
         
         doCompleteSuccFunc[TS_TASK_TYPE_MEMCPY] = &StarsV2DoCompleteSuccessForMemcpyAsyncTask;
         
@@ -336,9 +336,9 @@ static void DavidRegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
             taskUnInitFunc[i] = nullptr;
         }
 
-        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AICORE] = &DavinciTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &DavinciTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AICPU] = &DavinciTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AICORE] = &StarsV2DavinciTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &StarsV2DavinciTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_KERNEL_AICPU] = &StarsV2DavinciTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_MULTIPLE_TASK] = &DavinciMultipleTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_MEMCPY] = &StarsV2MemcpyAsyncTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RECORD] = &EventRecordTaskUnInit;
@@ -396,9 +396,9 @@ static void DavidRegSetStarsResultFunc(const std::vector<rtChipType_t> &chipType
             item = &SetStarsResultCommonForDavid;
         }
 
-        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AICPU] = &SetStarsResultForDavinciTask;
-        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &SetStarsResultForDavinciTask;
-        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AICORE] = &SetStarsResultForDavinciTask;
+        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AICPU] = &StarsV2SetStarsResultForDavinciTask;
+        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AIVEC] = &StarsV2SetStarsResultForDavinciTask;
+        setStarsResultFunc[TS_TASK_TYPE_KERNEL_AICORE] = &StarsV2SetStarsResultForDavinciTask;
         setStarsResultFunc[TS_TASK_TYPE_MEMCPY] = &SetStarsResultForMemcpyAsyncTask;
         setStarsResultFunc[TS_TASK_TYPE_EVENT_RECORD] = &SetStarsResultForEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &SetStarsResultForDavidEventRecordTask;

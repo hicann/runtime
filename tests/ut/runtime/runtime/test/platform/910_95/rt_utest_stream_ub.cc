@@ -34,6 +34,7 @@
 #include "raw_device.hpp"
 #include "profiler.hpp"
 #include "task_info.hpp"
+#include "davinci_kernel_task.h"
 #include "context.hpp"
 #include "task_res_da.hpp"
 #undef private

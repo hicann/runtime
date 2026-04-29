@@ -15,6 +15,7 @@
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "arg_loader.hpp"
 #include "task_info.hpp"
+#include "task_info_v100.h"
 #include "device_error_info.hpp"
 #include "davinci_kernel_task.h"
 #include "thread_local_container.hpp"

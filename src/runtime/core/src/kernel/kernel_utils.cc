@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "kernel_utils.hpp"
+#include "davinci_kernel_task.h"
 #include "kernel.hpp"
 #include "para_convertor.hpp"
 #include "capture_model.hpp"

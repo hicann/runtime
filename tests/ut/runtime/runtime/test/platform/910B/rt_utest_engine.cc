@@ -33,6 +33,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "npu_driver.hpp"
 #include "context.hpp"
+#include "davinci_kernel_task.h"
 #include "task_fail_callback_manager.hpp"
 #include "device/device_error_proc.hpp"
 #include <map>

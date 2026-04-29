@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "dvpp_c.hpp"
+#include "davinci_kernel_task.h"
 #include "stream.hpp"
 #include "context/context.hpp"
 #include "error_message_manage.hpp"

@@ -33,6 +33,7 @@
 #include "count_notify.hpp"
 #include "event_david.hpp"
 #include "context.hpp"
+#include "davinci_kernel_task.h"
 #include "profiler.hpp"
 #include "runtime.hpp"
 #include "uma_arg_loader.hpp"

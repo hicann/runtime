@@ -22,6 +22,7 @@
 #undef protected
 #undef private
 #include "ffts_task.h"
+#include "task_info_v100.h"
 #include "rdma_task.h"
 #include "stream_task.h"
 #include "dump_task.h"

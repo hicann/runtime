@@ -18,8 +18,8 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_info.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
@@ -73,8 +73,8 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_info.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_kernel_task.cc
-    ${RUNTIME_FEATURE_DIR}/ffts/davinci_kernel_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/david_event_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
@@ -156,6 +156,7 @@ set(libruntime_cmodel_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v200/memory_corruption_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel

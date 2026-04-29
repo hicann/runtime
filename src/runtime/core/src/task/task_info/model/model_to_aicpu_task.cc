@@ -9,6 +9,7 @@
  */
 
 #include "stream.hpp"
+#include "davinci_kernel_task.h"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stub_task.hpp"

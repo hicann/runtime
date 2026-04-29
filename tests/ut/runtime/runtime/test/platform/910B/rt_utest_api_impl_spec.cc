@@ -23,6 +23,7 @@
 #include "runtime/rt.h"
 #include "securec.h"
 #include "context.hpp"
+#include "davinci_kernel_task.h"
 #include "event.hpp"
 #include "runtime.hpp"
 #include "module.hpp"

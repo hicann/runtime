@@ -9,6 +9,7 @@
  */
 
 #include "aicpu_err_msg.hpp"
+#include "davinci_kernel_task.h"
 #include "base.hpp"
 #include "kernel.h"
 #include "runtime.hpp"

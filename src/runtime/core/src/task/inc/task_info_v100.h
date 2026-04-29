@@ -67,6 +67,18 @@ void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const com
 void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
 void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
 
+void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
+void SetResultForDavinciTask(TaskInfo* taskInfo, const void *const data, const uint32_t dataSize);
+void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
+rtError_t WaitAsyncCopyCompleteForDavinciTask(TaskInfo* taskInfo);
+void DavinciTaskUnInit(TaskInfo *taskInfo);
+void FillFftsMixSqeForDavinciTask(
+    TaskInfo *taskInfo, rtStarsSqe_t *const command, uint32_t minStackSize, rtError_t copyRet);
+void FillFftsPlusMixSqeSubtask(const AicTaskInfo *taskInfo, uint8_t *const subtype);
+void ConstructFftsMixSqeForDavinciTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
+void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+
 }  // namespace runtime
 }  // namespace cce
 #endif  // TASK_INFO_V100_H

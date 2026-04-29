@@ -528,10 +528,20 @@ void DoCompleteSuccessForDavidEventRecordTask(TaskInfo * const taskInfo, const u
 void DoCompleteSuccessForDavidEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventResetTask(TaskInfo * const taskInfo, const uint32_t devId);
 void SetStarsResultForDavidEventRecordTask(TaskInfo * const taskInfo, const rtLogicCqReport_t &logicCq);
+void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
+void AicTaskInitV2(TaskInfo *taskInfo, const rtKernelAttrType kernelAttrType,
+    const uint16_t dimNum, const uint32_t flag,
+    const LaunchTaskCfgInfo_t * const launchTaskCfg);
+void ConstructDavidAicAivSqeForDavinciTask(TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
+void StarsV2DavinciTaskUnInit(TaskInfo *taskInfo);
+void StarsV2DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForDavidEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId);
 rtDavidSqe_t *GetSqPosAddr(uint64_t sqBaseAddr, uint32_t pos);
 void ConstructDavidSqeForHeadCommon(const TaskInfo *taskInfo, rtDavidSqe_t * const sqe);
 void ConstructDavidAICpuSqeForDavinciTaskBase(TaskInfo *const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidAICpuSqeForDavinciTaskResFieldPart(RtDavidStarsAicpuKernelSqe *const sqe, const uint64_t addr,
+    const uint8_t kernelFlag, const Stream * const stm);
+void FillTopicType(RtDavidStarsAicpuKernelSqe * const sqe, const uint32_t kernelFlag);
 void ConstructDavidAICpuSqeForDavinciTask(TaskInfo *const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructAicpuSubSqeBase(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint32_t &sqeIndex,
     uint32_t aicpuIndex, uint32_t taskIdx, uint64_t sqBaseAddr);

@@ -199,11 +199,6 @@ TEST_F(CloudV2TaskTest, stars_timeout_sqe)
     AicTaskInit(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, &taskcfg);
     EXPECT_EQ(task.u.aicTaskInfo.comm.kernelFlag, RT_KERNEL_DUMPFLAG);
 
-    LaunchTaskCfgInfo_t launchTaskCfg = {};
-    launchTaskCfg.dumpflag = RT_KERNEL_DUMPFLAG;
-    AicTaskInitV2(&task, RT_KERNEL_ATTR_TYPE_AICORE, 1, 1, &launchTaskCfg);
-    EXPECT_EQ(task.u.aicTaskInfo.comm.kernelFlag, RT_KERNEL_DUMPFLAG);
-
     delete kernel;
 }
 

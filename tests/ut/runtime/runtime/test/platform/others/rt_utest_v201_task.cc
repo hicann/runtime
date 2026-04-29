@@ -64,6 +64,7 @@
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
 #include "notify_task.h"
+#include "davinci_kernel_task.h"
 #include "rt_unwrap.h"
 
 using namespace testing;

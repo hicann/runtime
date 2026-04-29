@@ -19,9 +19,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_info.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
@@ -68,6 +67,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -91,6 +91,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_david.cc
     ${TOP_DIR}/src/runtime/feature/cntnotify/count_notify.cc
     ${TOP_DIR}/src/runtime/core/src/event/event_david.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/davinci_task_launch_config.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/memcpy_sqe_common_proc.cc
@@ -123,6 +124,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list
@@ -135,6 +137,7 @@ set(runtimeut_david_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200/memory_corruption_checker.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
 )
 
 set(runtimeut_src_api_list
@@ -368,6 +371,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v200/src/task/v200/task_proc_func_register.cc
     ${TOP_DIR}/src/runtime/core/src/event/ipc_event.cc
@@ -1376,6 +1380,7 @@ set(runtimeut_v201_src_task_list
     ${runtimeut_david_series_common_src_task_list}
     # v201
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_proc_func_register.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v201.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/aix_task_to_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/v201/task_checker.cc
     ${TOP_DIR}/src/runtime/feature/dqs/dqs_task.cc

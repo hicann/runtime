@@ -29,6 +29,7 @@
 #include "runtime.hpp"
 #include "raw_device.hpp"
 #include "task_info.hpp"
+#include "davinci_kernel_task.h"
 #include "async_hwts_engine.hpp"
 #undef private
 #undef protected

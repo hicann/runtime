@@ -18,6 +18,7 @@
 #include "module.hpp"
 #include "event.hpp"
 #include "task_info.hpp"
+#include "davinci_kernel_task.h"
 #include "device/device_error_proc.hpp"
 #include "device.hpp"
 #include "utils/qos.hpp"

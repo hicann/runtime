@@ -9,6 +9,7 @@
  */
 #include "aicpu_c.hpp"
 
+#include "davinci_kernel_task.h"
 #include "context.hpp"
 #include "stream.hpp"
 #include "device.hpp"

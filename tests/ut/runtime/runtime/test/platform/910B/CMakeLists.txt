@@ -22,9 +22,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_info.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
-    ${TOP_DIR}/src/runtime/feature/ffts/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_kernel_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/event_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
@@ -57,6 +56,7 @@ set(runtimeut_common_src_task_list
 
 set(runtimeut_src_task_list
     ${runtimeut_common_src_task_list}
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/davinci_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_proc_func_register_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/task_checker.cc

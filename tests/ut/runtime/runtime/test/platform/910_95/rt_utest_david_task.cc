@@ -1258,10 +1258,10 @@ TEST_F(TaskTestDavid, SetStarsResultForDavinciTask)
     rtLogicCqReport_t logicCq;
     logicCq.errorType = RT_STARS_EXIST_ERROR;
     logicCq.errorCode = AE_STATUS_SILENT_FAULT;
-    SetStarsResultForDavinciTask(&task, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&task, logicCq);
     EXPECT_EQ(task.errorCode, TS_ERROR_VECTOR_CORE_EXCEPTION);
     task.type = TS_TASK_TYPE_KERNEL_AICPU;
-    SetStarsResultForDavinciTask(&task, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&task, logicCq);
     EXPECT_EQ(task.errorCode, TS_ERROR_AICPU_EXCEPTION);
 }
 
@@ -1280,29 +1280,29 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbDdrcDavinciTask)
     taskInfo.stream = stream;
     rtLogicCqReport_t logicCq = {};
     logicCq.errorCode = AE_STATUS_TASK_ABORT;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
 
     taskInfo.stream->Device_()->SetDeviceRas(true);
     logicCq.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
     faultEventFlag = 2;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_AICPU_EXCEPTION);
 
     taskInfo.stream->Device_()->SetDeviceRas(true);
     logicCq.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
     faultEventFlag = 3;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_AICPU_EXCEPTION);
 
     taskInfo.stream->Device_()->SetDeviceRas(true);
     logicCq.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
     faultEventFlag = 7;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_LOCAL_MEM_ERROR);
     
     logicCq.errorCode = AICPU_HCCL_OP_UB_DDRC_FAILED;
     faultEventFlag = 0;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_AICPU_EXCEPTION);
 
     ret = rtStreamDestroy(newStream);
@@ -1326,7 +1326,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclUbPoisonDavinciTask)
     taskInfo.stream->Device_()->SetDeviceRas(false);
     logicCq.errorCode = AICPU_HCCL_OP_UB_POISON_FAILED;
     faultEventFlag = 7;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_REMOTE_MEM_ERROR);
     faultEventFlag = 0;
 
@@ -1350,7 +1350,7 @@ TEST_F(TaskTestDavid, SetStarsResultForHcclLinkDavinciTask)
     taskInfo.stream->Device_()->SetDeviceRas(false);
     logicCq.errorCode = AICPU_HCCL_OP_UB_LINK_FAILED;
     faultEventFlag = 0;
-    SetStarsResultForDavinciTask(&taskInfo, logicCq);
+    StarsV2SetStarsResultForDavinciTask(&taskInfo, logicCq);
     EXPECT_EQ(taskInfo.errorCode, TS_ERROR_LINK_ERROR);
 
     ret = rtStreamDestroy(newStream);

@@ -15,6 +15,7 @@
 #include "base.hpp"
 #include "task.hpp"
 #include "stars.hpp"
+#include "davinci_kernel_task.h"
 #include "hwts.hpp"
 #include "rt_unwrap.h"
 #include "notify.hpp"
