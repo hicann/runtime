@@ -177,6 +177,7 @@ static const DevProperties CHIP_5612_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 38U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_ASCEND_031, CHIP_5612_PROPERTIES);

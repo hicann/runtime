@@ -158,6 +158,7 @@ static const DevProperties CHIP_KIRINX90_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INVALID,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_X90, CHIP_KIRINX90_PROPERTIES);

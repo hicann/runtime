@@ -361,6 +361,7 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
     .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DAVID, CHIP_DAVID_PROPERTIES);

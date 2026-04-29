@@ -195,6 +195,7 @@ static const DevProperties CHIP_AS31XM1_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_AS31XM1, CHIP_AS31XM1_PROPERTIES);

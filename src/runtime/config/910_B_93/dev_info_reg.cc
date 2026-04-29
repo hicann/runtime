@@ -289,6 +289,7 @@ static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
     .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_CLOUD_V2_PROPERTIES);

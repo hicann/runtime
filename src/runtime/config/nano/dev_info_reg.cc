@@ -177,6 +177,7 @@ static const DevProperties CHIP_NANO_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INVALID,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_NANO, CHIP_NANO_PROPERTIES);

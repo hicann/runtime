@@ -334,7 +334,7 @@ struct DevProperties final {
     uint32_t maxTaskNumPerHugeStream;
     uint32_t rtsqReservedTaskNum;
     DeviceCvArchType cvArchType;
-    int64_t npuArch{0};
+    int64_t npuArch;
 };
 }
 }

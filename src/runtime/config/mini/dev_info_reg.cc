@@ -156,6 +156,7 @@ static const DevProperties CHIP_MINI_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_MINI, CHIP_MINI_PROPERTIES);

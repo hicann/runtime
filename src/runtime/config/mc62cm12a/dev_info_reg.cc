@@ -234,6 +234,7 @@ static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .maxTaskNumPerHugeStream = 0U,
     .rtsqReservedTaskNum = 35U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
+    .npuArch = 0,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_MC62CM12A, CHIP_MC62CM12A_PROPERTIES);
