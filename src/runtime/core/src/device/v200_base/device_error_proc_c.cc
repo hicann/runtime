@@ -346,8 +346,7 @@ static bool PrintRasEvents(const Device * const dev, const rtDmsFaultEvent * con
         uint32_t eventId = event.eventId;
         auto it = ubRasEventIdAndDesc.find(eventId);
         if (it != ubRasEventIdAndDesc.end()) {
-            RT_LOG(RT_LOG_ERROR, "RAS event detected: event_id=0x%x, ras_code=0x%x, description=%s", 
-                eventId, GetRasCodeFromEvent(event), it->second.c_str());
+            RT_LOG(RT_LOG_ERROR, "RAS event detected: event_id=0x%x, %s", eventId, it->second.c_str());
             return true;
         }
     }
