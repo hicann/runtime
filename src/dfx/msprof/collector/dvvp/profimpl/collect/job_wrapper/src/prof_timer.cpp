@@ -884,9 +884,9 @@ int32_t NetDevStatsHandler::Init()
         return PROFILING_NOTSUPPORT;
     }
     if (isDcmiV2Supported_) {
-        if (dcmiV2Init_() != PROFILING_SUCCESS) {
-            MSPROF_LOGE("NetDevStatsHandler dcmi init failed");
-            MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler dcmi init failed");
+        ret = dcmiV2Init_();
+        if (ret != PROFILING_SUCCESS) {
+            MSPROF_LOGW("NetDevStatsHandler dcmi init failed, ret=%d", ret);
             return PROFILING_FAILED;
         }
     } else {
@@ -932,17 +932,15 @@ int32_t NetDevStatsHandler::Execute()
         auto dcmiCardId = iter.second.first;
         auto dcmiDeviceId = iter.second.second;
         if (isDcmiV2Supported_) {
-           if (dcmiV2GetNetdevPktStatsInfo_(devId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo) !=
-               PROFILING_SUCCESS) {
-               MSPROF_LOGE("NetDevStatsHandler get netdev pkt stats info failed devId %u", devId);
-               MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler get netdev pkt stats info failed");
+           int ret = dcmiV2GetNetdevPktStatsInfo_(devId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo);
+           if (ret != PROFILING_SUCCESS) {
+               MSPROF_LOGW("NetDevStatsHandler get netdev pkt stats info failed devId %u, ret=%d", devId, ret);
                break;
            }
         } else {
-           if (dcmiGetNetdevPktStatsInfo_(dcmiCardId, dcmiDeviceId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo) !=
-               PROFILING_SUCCESS) {
-               MSPROF_LOGE("NetDevStatsHandler get netdev pkt stats info failed devId %u", devId);
-               MSPROF_INNER_ERROR("EK9999", "NetDevStatsHandler get netdev pkt stats info failed");
+           int ret = dcmiGetNetdevPktStatsInfo_(dcmiCardId, dcmiDeviceId, NETDEV_STATS_DEFAULT_PORT_ID, &statsInfo);
+           if (ret != PROFILING_SUCCESS) {
+               MSPROF_LOGW("NetDevStatsHandler get netdev pkt stats info failed devId %u, ret=%d", devId, ret);
                break;
            }
         }

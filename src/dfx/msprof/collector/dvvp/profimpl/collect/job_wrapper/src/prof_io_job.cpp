@@ -151,7 +151,7 @@ int32_t ProfNetDevStatJob::Process()
             return PROFILING_FAILED);
         auto ret = statHandler->Init();
         if (ret == PROFILING_FAILED) {
-            MSPROF_LOGE("NetDevStatsHandler Init Failed");
+            MSPROF_LOGW("NetDevStatsHandler Init Failed, ret=%d", ret);
             return PROFILING_FAILED;
         } else if (ret == PROFILING_NOTSUPPORT) {
             MSPROF_LOGW("NetDevStatsHandler Not Support");
