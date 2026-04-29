@@ -624,47 +624,6 @@ TEST_F(ProgramTest, Program_Process_ELF_LoadSize_Error)
         delete program;
 }
 
-TEST_F(ProgramTest, Program_Process_ELF_hasMixKernel)
-{
-        rtError_t error;
-        rtDevBinary_t binary;
-
-        size_t MAX_LENGTH = 6144;
-        FILE *bin = NULL;
-        bin = fopen("llt/ace/npuruntime/runtime/ut/runtime/test/data/elf.o", "rb");
-        if (bin == NULL)
-        {
-            printf("error\n");
-            return;
-        }
-        else
-        {
-            printf("succ\n");
-        }
-
-        char bindata[MAX_LENGTH];
-        fread(bindata, sizeof(char), MAX_LENGTH, bin);
-
-        fclose(bin);
-
-        binary.magic = RT_DEV_BINARY_MAGIC_ELF;
-        binary.version = 0;
-        binary.data = (void*)bindata;
-        binary.length = MAX_LENGTH;
-
-        Program* program = new ElfProgram();
-        bool mixKernel = program->HasMixKernel();
-        printf("mixKernel0 %d\n", mixKernel);
-        EXPECT_EQ(mixKernel, false);
-        error = program->Register(binary.data, binary.length);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-        mixKernel = program->HasMixKernel();
-        printf("mixKernel1 %d\n", mixKernel);
-        EXPECT_EQ(mixKernel, false);
-
-        delete program;
-}
-
 TEST_F(ProgramTest, LOAD_EXTRACT_TEST)
 {
     size_t MAX_LENGTH = 6144;

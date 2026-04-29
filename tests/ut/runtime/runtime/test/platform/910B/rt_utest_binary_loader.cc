@@ -468,15 +468,6 @@ TEST_F(BinaryLoaderTest, TestAdjustKernelNameAndGetMixType)
 
 }
 
-TEST_F(BinaryLoaderTest, TestLoadFromDataWithMixKernelNotFound)
-{
-    ElfProgram prog;
-    Kernel * k1 = new Kernel("f1", 0ULL, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
-    rtError_t ret = prog.KernelNameMapRemove(k1);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete k1;
-}
-
 TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAiv)
 {
     ElfProgram prog;

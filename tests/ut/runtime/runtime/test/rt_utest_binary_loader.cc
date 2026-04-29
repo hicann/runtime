@@ -611,29 +611,6 @@ TEST_F(BinaryLoaderTest, TestAdjustKernelNameAndGetMixType)
     EXPECT_EQ(kernelAttrType, RT_KERNEL_ATTR_TYPE_CUBE);
 }
 
-TEST_F(BinaryLoaderTest, TestLoadFromDataWithMixKernelNotFound)
-{
-    ElfProgram prog;
-    Kernel * k1 = new Kernel("f1", 0ULL, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 10);
-    rtError_t ret = prog.KernelNameMapRemove(k1);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    delete k1;
-}
-
-TEST_F(BinaryLoaderTest, TestFindAndProcMixKernelWithConflict)
-{
-    ElfProgram prog;
-    Kernel kernelAicObj("testKernelName", 1, &prog, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
-    Kernel *kernelAicPtr = &kernelAicObj;
-    rtError_t ret = prog.KernelNameMapAdd(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ret = prog.KernelNameMapRemove(kernelAicPtr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-
-
 TEST_F(BinaryLoaderTest, TestFuncGetAddrWithOnlyAiv)
 {
     ElfProgram prog;

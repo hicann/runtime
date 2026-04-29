@@ -288,7 +288,6 @@ public:
     Kernel *AllKernelLookup(const uint64_t tilingKey, const bool getProgFlag = true);
     const Kernel *GetKernelByTillingKey(const uint64_t tilingKey);
     rtError_t KernelNameMapAdd(Kernel *&addKernel);
-    rtError_t KernelNameMapRemove(Kernel *&delKernel);
     const Kernel *GetKernelByName(const char_t *kernelName);
 
     void DependencyRegister(Program * const prog);
@@ -304,7 +303,6 @@ public:
     virtual rtError_t LoadExtract(void *output, uint32_t size) = 0;
     virtual void *Data() = 0;
     virtual rtError_t GetKernel(const void * const symbol, RtKernel &kernel) = 0;
-    virtual bool HasMixKernel() = 0;
     virtual rtError_t RefreshSymbolAddr() = 0;
     virtual rtError_t BinaryGetMetaNum(const rtBinaryMetaType type, size_t *numOfMeta) = 0;
     virtual rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, const size_t numOfMeta, void **data,
@@ -395,7 +393,6 @@ public:
     rtError_t LoadExtract(void * const output, const uint32_t size) override;
     void *Data() override;
     rtError_t GetKernel(const void * const symbol, RtKernel &kernel) override;
-    bool HasMixKernel() override;
     rtError_t RefreshSymbolAddr() override;
     rtError_t BinaryGetMetaNum(const rtBinaryMetaType type, size_t *numOfMeta) override;
     rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, const size_t numOfMeta, void **data,
@@ -414,7 +411,6 @@ public:
     rtError_t LoadExtract(void * const output, const uint32_t size) override;
     void *Data() override;
     rtError_t GetKernel(const void * const symbol, RtKernel &kernel) override;
-    bool HasMixKernel() override;
     rtError_t RefreshSymbolAddr() override;
     rtError_t BinaryGetMetaInfo(const rtBinaryMetaType type, const size_t numOfMeta, void **data,
                                 const size_t *dataSize) override;

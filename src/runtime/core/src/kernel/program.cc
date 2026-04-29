@@ -314,22 +314,6 @@ rtError_t Program::KernelNameMapAdd(Kernel *&addKernel)
     return RT_ERROR_NONE;
 }
 
-rtError_t Program::KernelNameMapRemove(Kernel *&delKernel)
-{
-    kernelMapLock_.Lock();
-    const auto iter = kernelNameMap_.find(delKernel->Name_());
-    if (iter != kernelNameMap_.end()) {
-        (void)kernelNameMap_.erase(iter);
-        kernelMapLock_.Unlock();
-        return RT_ERROR_NONE;
-    }
-    RT_LOG(RT_LOG_WARNING, "try to remove kernel from kernel name map, but cannot found. name=%s",
-        delKernel->Name_().c_str());
-    kernelMapLock_.Unlock();
-
-    return RT_ERROR_NONE;
-}
-
 const Kernel *Program::GetKernelByName(const char_t *kernelName)
 {
     kernelMapLock_.Lock();
@@ -748,11 +732,6 @@ rtError_t PlainProgram::LoadExtract(void * const output, const uint32_t size)
     return RT_ERROR_NONE;
 }
 
-bool PlainProgram::HasMixKernel()
-{
-    return false;
-}
-
 void *PlainProgram::Data()
 {
     return binary_;
@@ -956,28 +935,6 @@ uint32_t ElfProgram::SymbolOffset(const void * const symbol, uint32_t &length)
         }
     }
     return UINT32_MAX;
-}
-
-bool ElfProgram::HasMixKernel()
-{
-    if ((kernels_ == nullptr) || (elfData_ == nullptr)) {
-        RT_LOG(RT_LOG_WARNING, "kernels or elfData is null");
-        return false;
-    }
-    const uint32_t kernelCount = elfData_->kernel_num;
-    uint32_t mixkernelCount = 0U;
-    for (uint32_t idx = 0U; idx < kernelCount; idx++) {
-        std::string kernelValue = kernels_[idx].name;
-        const std::string mixAicName = "_mix_aic";
-        const std::string mixAivName = "_mix_aiv";
-        const auto aicPos = kernelValue.rfind(mixAicName);
-        const auto aivPos = kernelValue.rfind(mixAivName);
-        if ((aicPos != std::string::npos) || (aivPos != std::string::npos)) {
-            mixkernelCount++;
-        }
-    }
-    RT_LOG(RT_LOG_DEBUG, "kernelCount:%u, mixkernelCount:%u", kernelCount, mixkernelCount);
-    return mixkernelCount != 0;
 }
 
 uint32_t ElfProgram::LoadSize()
