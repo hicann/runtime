@@ -876,10 +876,12 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
     uint8_t funcType = 0U;
     uint32_t prefetchCnt1 = 0U;
     uint32_t minStackSize = 0U;
+    rtKernelAttrType kernelAttrType = RT_KERNEL_ATTR_TYPE_AICORE;
     if (aicTaskInfo->kernel != nullptr) {
         funcType = aicTaskInfo->kernel->GetFuncType();
         prefetchCnt1 = aicTaskInfo->kernel->PrefetchCnt1_();
         minStackSize = aicTaskInfo->kernel->GetMinStackSize1();
+        kernelAttrType = aicTaskInfo->kernel->GetKernelAttrType();
     }
 
     uint64_t stackPhyBase = 0UL;
@@ -920,7 +922,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
         }
     }
     sqe->header.task_id = taskInfo->id;
-    ConstructFFTSPlusFFTSType(aicTaskInfo->kernel->GetKernelAttrType(), sqe);
+    ConstructFFTSPlusFFTSType(kernelAttrType, sqe);
     sqe->header.wr_cqe = stm->GetStarsWrCqeFlag();
     sqe->header.block_dim = aicTaskInfo->comm.dim;
     sqe->header.rt_stream_id = static_cast<uint16_t>(stm->Id_());
@@ -936,7 +938,7 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t *co
         "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
         Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode, taskInfo->type, aicTaskInfo->comm.kernelFlag,
-        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, aicTaskInfo->kernel->GetKernelAttrType(),
+        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, kernelAttrType,
         minStackSize, stackSize, stackPhyBase);
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
