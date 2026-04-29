@@ -372,19 +372,19 @@ bool PlatFormInfos::LoadFromBuffer(const char *bufPtr, const size_t bufLen) {
       PF_LOGE("Parse proto failed.");
       return false;
   }
-  std::map<std::string, std::vector<std::string>> aiCoreInstrinsicDtypesMap;
-  std::map<std::string, std::vector<std::string>> aiVectorInstrinsicDtypesMap;
+  std::map<std::string, std::vector<std::string>> aiCoreIntrinsicDtypesMap;
+  std::map<std::string, std::vector<std::string>> aiVectorIntrinsicDtypesMap;
   std::map<std::string, std::map<std::string, std::string>> platformResMap;
   std::map<std::string, std::vector<std::string>> fixPipeDtypeMap;
 
-  GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_ai_core_intrinsic_dtype_map(), aiCoreInstrinsicDtypesMap);
-  GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_vector_core_intrinsic_dtype_map(), aiVectorInstrinsicDtypesMap);
+  GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_ai_core_intrinsic_dtype_map(), aiCoreIntrinsicDtypesMap);
+  GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_vector_core_intrinsic_dtype_map(), aiVectorIntrinsicDtypesMap);
   GetMapMapInfoFromProtoBuf(platformDefInfos.mutable_platform_res_map(), platformResMap);
   GetVecMapInfoFromProtoBuf(platformDefInfos.mutable_fixpipe_dtype_map(), fixPipeDtypeMap);
 
   std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
-  platform_infos_impl_->SetAICoreIntrinsicDtype(aiCoreInstrinsicDtypesMap);
-  platform_infos_impl_->SetVectorCoreIntrinsicDtype(aiVectorInstrinsicDtypesMap);
+  platform_infos_impl_->SetAICoreIntrinsicDtype(aiCoreIntrinsicDtypesMap);
+  platform_infos_impl_->SetVectorCoreIntrinsicDtype(aiVectorIntrinsicDtypesMap);
   for (auto iter = platformResMap.begin(); iter != platformResMap.end(); ++iter) {
       platform_infos_impl_->SetPlatformRes(iter->first, iter->second);
   }

@@ -20,7 +20,7 @@ extern "C" {
  * @param [in] deviceId : The id of self cpu.
  * @param [in] reschedInterval : reshedule time in ctrl cpu
  * @param [in] deployMode : 0 single process 1 muti process 2 muti thread.
- * @return AICPU_SCHEDULE_SUCCESS: sucess  other: error code in ErrorCode
+ * @return AICPU_SCHEDULE_SUCCESS: success  other: error code in ErrorCode
  */
 __attribute__((visibility("default"))) int32_t InitQueueScheduler(const uint32_t deviceId,
                                                                   const uint32_t reschedInterval);

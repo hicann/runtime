@@ -67,7 +67,7 @@ int32_t HdcRead(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen);
 int32_t HdcReadNb(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen);
 
 /**
- * @brief Receives data based on HDC sessions in timout mode.
+ * @brief Receives data based on HDC sessions in timeout mode.
  * @param [in]  session : specifies session in used
  * @param [in]  timeout : max wait time
  * @param [out]  recvBuf : buffer for receiving data

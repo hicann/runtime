@@ -435,7 +435,7 @@ int32_t CreateDatadumpThread(const struct TsdSubEventInfo * const msg)
     char message[EVENT_MAX_MSG_LEN] = {};
     auto ret = memcpy_s(message, EVENT_MAX_MSG_LEN, msg, sizeof(struct TsdSubEventInfo));
     if (ret != 0) {
-        aicpusd_err("Memcpy failed. ret[%d], size[%u].", ret, sizeof(struct TsdSubEventInfo));
+        aicpusd_err("Memcpy failed. ret[%d], size[%zu].", ret, sizeof(struct TsdSubEventInfo));
         return AicpuSchedule::AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     return AicpuSchedule::AicpuSdCustDumpProcess::GetInstance().CreateUdfDatadumpThread(message,

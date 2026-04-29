@@ -278,7 +278,7 @@ int32_t Sender::SendData(CONST_CHAR_PTR buffer, int32_t size)
         if (sentLen != size) {
             MSPROF_LOGE("Failed to SendData, data_len=%d, sent len=%d", size, sentLen);
         } else {
-            MSPROF_LOGD("[%s]sended data %d", engineName_.c_str(), size);
+            MSPROF_LOGD("[%s]sent data %d", engineName_.c_str(), size);
         }
     }
 

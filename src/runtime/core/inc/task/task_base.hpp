@@ -106,7 +106,7 @@ enum {
 
 /**
  * @ingroup
- * @brief the type defination of task
+ * @brief the type definition of task
  */
 typedef enum tagTsTaskType {
     TS_TASK_TYPE_KERNEL_AICORE = 0,        /* AI core task */

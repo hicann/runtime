@@ -123,7 +123,7 @@ int32_t OperatorKernelRemoteComm::ModelHcomBroadCast(const HcomOpDesc *const hco
     tensorDesc->subFormat = FORMAT_ND;
     // record mbuf to psIdBuffAddr
     *(reinterpret_cast<Mbuf **>(psIdBuffAddr)) = psIdBuffPtr;
-    aicpusd_info("Hcom broadcast process psid sucess, model[%u].", taskContext.modelId);
+    aicpusd_info("Hcom broadcast process psid success, model[%u].", taskContext.modelId);
 
     if (stepBuffAddr != 0) {
         // clear stepBuffAddr
@@ -162,7 +162,7 @@ int32_t OperatorKernelRemoteComm::ModelHcomBroadCast(const HcomOpDesc *const hco
         stepTensorDesc->subFormat = FORMAT_ND;
         // record mbuf to stepBuffAddr
         *(reinterpret_cast<Mbuf **>(stepBuffAddr)) = stepBuffPtr;
-        aicpusd_info("Hcom broadcast process step sucess, model[%u].", taskContext.modelId);
+        aicpusd_info("Hcom broadcast process step success, model[%u].", taskContext.modelId);
     }
 
     return static_cast<int32_t>(AICPU_SCHEDULE_OK);

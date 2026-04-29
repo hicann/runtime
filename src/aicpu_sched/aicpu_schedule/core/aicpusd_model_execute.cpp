@@ -441,7 +441,7 @@ namespace AicpuSchedule {
         }
 
         tensorDescMap_[cfg.runtimeModelId] = tensorInfo;
-        aicpusd_info("tensorInfo size = %d, cfg.runtimeModelId = %d", tensorInfo.size(), cfg.runtimeModelId);
+        aicpusd_info("tensorInfo size = %zu, cfg.runtimeModelId = %u", tensorInfo.size(), cfg.runtimeModelId);
         return AICPU_SCHEDULE_OK;
     }
 

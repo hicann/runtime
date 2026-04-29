@@ -143,7 +143,7 @@ struct tagTsHostFuncSendMsg{
 
 /**
  * @ingroup engine
- * @brief the type defination of logic cq (total 16 bytes).
+ * @brief the type definition of logic cq (total 16 bytes).
  */
 typedef struct tagTsLogicCqReportMsg {
     volatile uint16_t phase      : 1;
@@ -175,7 +175,7 @@ typedef enum tagTsLogicCqType {
 
 /**
  * @ingroup engine
- * @brief the type defination of virtual sq shm (total 32 bytes).
+ * @brief the type definition of virtual sq shm (total 32 bytes).
  */
 typedef struct tagTsShmTaskMsg {
     volatile uint32_t taskId;       // execute position

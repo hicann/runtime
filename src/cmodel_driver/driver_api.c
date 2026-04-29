@@ -291,8 +291,8 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo *info)
             command = (drvCommand_t)&queue->taskCommand[(queue->tailIndex + DRV_QOS_QUEUE_SIZE - 1) %
                 DRV_QOS_QUEUE_SIZE];
 
-            ret = drvQosHanddleToId(deviceId, &qos, &qid, command);
-            COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, ret, "drvQosHanddleToId failed");
+            ret = drvQosHandleToId(deviceId, &qos, &qid, command);
+            COND_RETURN_CMODEL(ret != DRV_ERROR_NONE, ret, "drvQosHandleToId failed");
             COND_RETURN_CMODEL(qid < 0, DRV_ERROR_INVALID_VALUE, "invalid qid %d", qid);
 
             qMgmt = &(g_drvQosQueueMgmt[deviceId][qos]);

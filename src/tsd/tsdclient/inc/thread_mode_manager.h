@@ -65,13 +65,13 @@ public:
 
     /**
      * @ingroup ThreadModeManager
-     * @brief  used for release resource when error occured
+     * @brief  used for release resource when error occurred
      * @return TSD_OK when SUCCESS
      */
     void Destroy() override;
     /**
      * @ingroup ProcessModeManager
-     * @brief tsd capablity apply
+     * @brief tsd capability apply
      * @return TSD_OK when success
      */
     TSD_StatusT CapabilityGet(const int32_t type, const uint64_t ptr) override;

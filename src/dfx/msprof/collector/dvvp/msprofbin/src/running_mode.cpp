@@ -795,12 +795,12 @@ bool SystemMode::DataWillBeCollected() const
     if (params_ == nullptr || params_->usedParams.empty()) {
         return false;
     }
-    std::set<int32_t> unneccessaryParams;
+    std::set<int32_t> unnecessaryParams;
     set_difference(params_->usedParams.begin(), params_->usedParams.end(), neccessarySet_.begin(), neccessarySet_.end(),
-                   inserter(unneccessaryParams, unneccessaryParams.begin()));
-    set_intersection(params_->usedParams.begin(), params_->usedParams.end(), unneccessaryParams.begin(),
-                     unneccessaryParams.end(), inserter(unneccessaryParams, unneccessaryParams.begin()));
-    if (unneccessaryParams.size() == 1 && *(unneccessaryParams.begin()) == ARGS_SYS_DEVICES) {
+                   inserter(unnecessaryParams, unnecessaryParams.begin()));
+    set_intersection(params_->usedParams.begin(), params_->usedParams.end(), unnecessaryParams.begin(),
+                     unnecessaryParams.end(), inserter(unnecessaryParams, unnecessaryParams.begin()));
+    if (unnecessaryParams.size() == 1 && *(unnecessaryParams.begin()) == ARGS_SYS_DEVICES) {
         CmdLog::CmdWarningLog("No collection data type is specified, profiling will not start");
         return false;
     }

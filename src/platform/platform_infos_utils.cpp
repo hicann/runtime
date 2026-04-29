@@ -78,11 +78,11 @@ std::string RealSoFilePath(const std::string &path) {
     return "";
   }
 
-  char resoved_path[PATH_MAX] = {0};
+  char resolved_path[PATH_MAX] = {0};
   std::string res = "";
 
-  if (realpath(path.c_str(), resoved_path) != nullptr) {
-    res = resoved_path;
+  if (realpath(path.c_str(), resolved_path) != nullptr) {
+    res = resolved_path;
   } else {
     PF_LOGE("Path '%s' does not exist.", path.c_str());
   }

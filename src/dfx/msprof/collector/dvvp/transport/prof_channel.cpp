@@ -80,8 +80,8 @@ ChannelReader::~ChannelReader() {}
 
 int32_t ChannelReader::Init()
 {
-    /* different channel of same device should be seperated to different thread and
-     different device of same channel shoud be seperate to different thread */
+    /* different channel of same device should be separated to different thread and
+     different device of same channel should be separate to different thread */
     hashId_ = channelId_ + deviceId_;
     MSVP_MAKE_SHARED1(readSpeedPerfCount_, PerfCount, SPEED_PERFCOUNT_MODULE_NAME, return PROFILING_FAILED);
     MSVP_MAKE_SHARED1(overallReadSpeedPerfCount_, PerfCount, SPEEDALL_PERFCOUNT_MODULE_NAME, return PROFILING_FAILED);

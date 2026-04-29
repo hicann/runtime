@@ -301,7 +301,7 @@ struct RtLogicCqReportMsg {
 
 /**
  * @ingroup engine or starsEngine
- * @brief the type defination of logic cq for all chipType(total 32 bytes).
+ * @brief the type definition of logic cq for all chipType(total 32 bytes).
  */
 struct rtLogicCqReport_t {
     volatile uint16_t streamId;

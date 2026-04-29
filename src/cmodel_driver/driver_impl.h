@@ -22,13 +22,13 @@ const uint32_t MAX_STREAM_NUM = 64;
 #else
 /*
  * @ingroup driver-stub
- * @brief Pilling there are 1024 events served each device.
+ * @brief Piling there are 1024 events served each device.
  */
 #define MAX_EVENT_NUM (1024)
 
 /*
  * @ingroup driver-stub
- * @brief Pilling there are 1024 streams served each device.
+ * @brief Piling there are 1024 streams served each device.
  */
 #define MAX_STREAM_NUM (1024)
 #endif

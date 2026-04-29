@@ -300,7 +300,7 @@ typedef enum tag_debug_exception {
 } ts_dbg_except_t;
 /**
  * @ingroup tsch
- * @brief the bool value defination
+ * @brief the bool value definition
  */
 #define TS_FALSE ((ts_bool_t)0U)
 #define TS_TRUE ((ts_bool_t)1U)

@@ -86,7 +86,7 @@ EXIT:
 #endif
 }
 
-drvError_t drvQosHanddleToId(int32_t deviceId, int8_t *qos, int32_t *qid, const drvCommand_t * const cmd)
+drvError_t drvQosHandleToId(int32_t deviceId, int8_t *qos, int32_t *qid, const drvCommand_t * const cmd)
 {
     int32_t i, j;
     int8_t qosLevel = -1;
@@ -210,7 +210,7 @@ drvError_t drvQueueInit(void)
     return DRV_ERROR_NONE;
 }
 
-void drvReportIrqTriger(drvInterruptNum_t irq)
+void drvReportIrqTrigger(drvInterruptNum_t irq)
 {
     int32_t deviceId;
     drvError_t ret;

@@ -259,7 +259,7 @@ void HashData::SaveNewHashData(bool isLastChunk)
 }
 
 /**
- * @brief return hash data keys string seperated by HASH_DIC_DELIMITER
+ * @brief return hash data keys string separated by HASH_DIC_DELIMITER
  * @param [in] std:string: saveHashData
  * @return 0:SUCCESS, !0:FAILED
  */

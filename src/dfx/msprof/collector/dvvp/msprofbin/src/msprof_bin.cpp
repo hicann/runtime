@@ -77,7 +77,7 @@ int main(int argc, const char **argv, const char **envp)
     SetEnvList(*envp, envpList);
     EnvManager::instance()->SetGlobalEnv(envpList);
     if (Platform::instance()->PlatformInitByDriver() != PROFILING_SUCCESS) {
-        CmdLog::CmdErrorLog("Init platform by driver faild!");
+        CmdLog::CmdErrorLog("Init platform by driver failed!");
         return PROFILING_FAILED;
     }
     if (Platform::instance()->Init() != PROFILING_SUCCESS) {

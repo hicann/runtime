@@ -330,7 +330,7 @@ namespace acl {
         routeNum = rsp->retValue;
         eventSum.msgLen = 0U;
         eventSum.msg = nullptr;
-        ACL_LOG_INFO("sucessfully to get queue route num %zu.", routeNum);
+        ACL_LOG_INFO("successfully to get queue route num %zu.", routeNum);
         return ACL_SUCCESS;
     }
 

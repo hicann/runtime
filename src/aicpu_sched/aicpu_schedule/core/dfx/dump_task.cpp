@@ -710,7 +710,7 @@ StatusCode OpDumpTask::ProcessngNoTiliInput()
             inputTotalSize_ += size;
             inputsShape_.push_back(inputshape);
             inputsOriginShape_.push_back(inputOriginShape);
-            aicpusd_info("op name[%s], dump input size[%llu], type[%lld]", opName_.c_str(), size, tensorDesc->dtype);
+            aicpusd_info("op name[%s], dump input size[%llu], type[%d]", opName_.c_str(), size, tensorDesc->dtype);
         }
     }
     return AICPU_SCHEDULE_OK;
@@ -775,7 +775,7 @@ StatusCode OpDumpTask::ProcessngNoTiliOutput()
             outputTotalSize_ += size;
             outputsShape_.push_back(outputShape);
             outputsOriginShape_.push_back(outputOriginShape);
-            aicpusd_info("op name[%s], dump output size[%llu], type[%lld]", opName_.c_str(), size, tensorDesc->dtype);
+            aicpusd_info("op name[%s], dump output size[%llu], type[%d]", opName_.c_str(), size, tensorDesc->dtype);
         }
     }
     return AICPU_SCHEDULE_OK;

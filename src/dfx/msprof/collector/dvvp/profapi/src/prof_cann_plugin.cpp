@@ -501,8 +501,8 @@ bool ProfCannPlugin::ProfIfReportBufEmpty()
     static uint32_t cnt = 0;
     int printFreq = 10;
     if ((cnt++) % printFreq == 0) {
-        MSPROF_LOGD("apiBuffer_:%d compactBuffer_:%d additionalBuffer_:%d batchAdditionalBuffer_:%d \
-            variableAdditionalBuffer_:%d", apiBuffer_.GetUsedSize(), compactBuffer_.GetUsedSize(),
+        MSPROF_LOGD("apiBuffer_:%zu compactBuffer_:%zu additionalBuffer_:%zu batchAdditionalBuffer_:%zu \
+            variableAdditionalBuffer_:%zu", apiBuffer_.GetUsedSize(), compactBuffer_.GetUsedSize(),
             additionalBuffer_.GetUsedSize(), batchAdditionalBuffer_.GetUsedSize(),
             variableAdditionalBuffer_.GetUsedSize());
     }

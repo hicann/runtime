@@ -58,7 +58,7 @@ rtError_t SetupContext(Context *context)
         mmMutexUnLock(&g_ctxRecordMutex);
         return ACL_ERROR_RT_INTERNAL_ERROR;
     }
-    RT_LOG_INFO("new g_contextRecord size: %d", SortVectorSize(&g_contextRecord));
+    RT_LOG_INFO("new g_contextRecord size: %zu", SortVectorSize(&g_contextRecord));
     mmMutexUnLock(&g_ctxRecordMutex);
 
     return RT_ERROR_NONE;
@@ -76,7 +76,7 @@ rtError_t TearDownContext(Context *context)
             RemoveSortVector(&g_contextRecord, index);
         }
     }
-    RT_LOG_INFO("delete g_contextRecord size: %d", SortVectorSize(&g_contextRecord));
+    RT_LOG_INFO("delete g_contextRecord size: %zu", SortVectorSize(&g_contextRecord));
     mmMutexUnLock(&g_ctxRecordMutex);
 
     mmMutexLock(&context->streamLock);

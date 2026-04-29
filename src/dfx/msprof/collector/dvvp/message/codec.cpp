@@ -145,7 +145,7 @@ SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string &buf)
 
     // parse name len
     if (bufLen < currLen + sizeof(uint32_t)) {
-        MSPROF_LOGE("bufLen less than name len, bufLen=%d, expected_len=%d", bufLen, sizeof(uint32_t));
+        MSPROF_LOGE("bufLen less than name len, bufLen=%zu, expected_len=%zu", bufLen, sizeof(uint32_t));
         return message;
     }
     uint32_t nameLen = ::ntohl(*(reinterpret_cast<const uint32_t *>(buf.c_str())));
@@ -157,8 +157,8 @@ SHARED_PTR_ALIA<google::protobuf::Message> DecodeMessage(const std::string &buf)
 
     // parse name
     if (bufLen < (currLen + nameLen)) {
-        MSPROF_LOGE("bufLen less than name, bufLen=%d, expected_len=%d",
-            bufLen, currLen + nameLen);
+        MSPROF_LOGE("bufLen less than name, bufLen=%zu, expected_len=%zu",
+            bufLen, static_cast<size_t>(currLen + nameLen));
         return message;
     }
     std::string name(buf.begin() + currLen, buf.begin() + currLen + nameLen);

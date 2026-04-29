@@ -22,7 +22,7 @@ int32_t AdxDumpReceive::Init()
 
 int32_t AdxDumpReceive::Process(const CommHandle &handle, const SharedPtr<MsgProto> &proto)
 {
-    // hand shake control(sended by IdeDumpStart)
+    // hand shake control(sent by IdeDumpStart)
     if (proto->msgType == MsgType::MSG_CTRL && proto->status == MsgStatus::MSG_STATUS_HAND_SHAKE) {
         IdeErrorT err = AdxMsgProto::SendResponse(handle,
             (CmdClassT)proto->reqType, proto->devId, MsgStatus::MSG_STATUS_NONE_ERROR);
@@ -39,7 +39,7 @@ int32_t AdxDumpReceive::Process(const CommHandle &handle, const SharedPtr<MsgPro
     // store client session(persistent session. must be closed before close server)
     AdxCommHandle adxHandle = const_cast<AdxCommHandle>(&handle);
     StoreSession(proto->devId, adxHandle);
-    // read dump data(sended by IdeDumpData) and end dump control(sended by IdeDumpEnd)
+    // read dump data(sent by IdeDumpData) and end dump control(sent by IdeDumpEnd)
     int32_t ret = Receive(handle, proto);
     ReleaseSession(proto->devId, adxHandle);
     return ret;
@@ -67,7 +67,7 @@ int32_t AdxDumpReceive::Receive(const CommHandle &handle, const SharedPtr<MsgPro
         msg = nullptr;
         if (msgPtr->msgType == MsgType::MSG_CTRL) {
             if (msgPtr->status == MsgStatus::MSG_STATUS_DATA_END) {
-                IDE_LOGI("received dump ctrl msg from deivce(id:%u,session:%zu), end transfer dump data",
+                IDE_LOGI("received dump ctrl msg from device(id:%u,session:%zu), end transfer dump data",
                     proto->devId, handle.session);
                 return IDE_DAEMON_OK;
             } else {

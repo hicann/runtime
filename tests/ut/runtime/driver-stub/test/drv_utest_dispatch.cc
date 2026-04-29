@@ -154,7 +154,7 @@ TEST_F(DrvDispatchTest, dispatch_send_test)
 
 TEST_F(DrvDispatchTest, dispatch_send_test2)
 {
-    MOCKER(drvQosHanddleToId).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    MOCKER(drvQosHandleToId).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
 
     drvError_t error;
     int32_t deviceId = 0;
@@ -262,7 +262,7 @@ TEST_F(DrvDispatchTest, dispatch_queueAPI_test)
 TEST_F(DrvDispatchTest, dispatch_qosHandle2Id_API_test)
 {
     drvError_t error;
-    error=drvQosHanddleToId(2, NULL, NULL, NULL);
+    error=drvQosHandleToId(2, NULL, NULL, NULL);
     EXPECT_EQ(error, DRV_ERROR_INVALID_VALUE);
 }
 

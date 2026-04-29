@@ -89,7 +89,7 @@ STATIC IdeThreadArg IdeMonitorThread(IdeThreadArg args)
         MSPROF_LOGE("app mon client init failed with %d", ret);
         return nullptr;
     }
-    MSPROF_LOGI("app mon client init sucess.");
+    MSPROF_LOGI("app mon client init success.");
     IdeMonitorSetStatus(IDE_MONITOR_RUNNING);
     while (IdeMonitorIsRun() == true) {
         if (IdeMonitorIsHeartBeat() != true) {
@@ -98,7 +98,7 @@ STATIC IdeThreadArg IdeMonitorThread(IdeThreadArg args)
                 (void)mmSleep(MONITOR_REGISTER_WAIT_TIME);
                 continue;
             }
-            MSPROF_LOGI("app mon client register sucess.");
+            MSPROF_LOGI("app mon client register success.");
             IdeMonitorSetStatus(IDE_MONITOR_HEARTBEAT);
         }
 
