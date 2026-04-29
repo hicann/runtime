@@ -112,7 +112,6 @@ rtError_t MemcpyAsyncBatchTaskInit(TaskInfo * const taskInfo, void** const dsts,
     ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
 
     MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
-    Stream * const stream = taskInfo->stream;
 
     if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) { 
         error = ConvertAsyncDmaBatch(taskInfo, dsts, srcs, sizes, count, fixedSize);
