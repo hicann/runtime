@@ -448,6 +448,18 @@ RTS_API rtError_t rtBinaryGetMetaNum(const rtBinHandle binHandle, const rtBinary
 RTS_API rtError_t rtBinaryGetMetaInfo(const rtBinHandle binHandle, const rtBinaryMetaType type, const size_t numOfMeta,
     void **data, const size_t *dataSize);
 
+/**
+ * @ingroup rt_kernel
+ * @brief get binary function meta info
+ * @param [in] funcHandle  function handle
+ * @param [in] type        function meta info type
+ * @param [out] data       function meta info addr
+ * @param [in] length      function meta info length
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionMetaType type, void* data, const uint32_t length);
+
 #if defined(__cplusplus)
 }
 #endif
