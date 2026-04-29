@@ -1664,6 +1664,49 @@ public:
     Atomic<uint16_t> latestConcernedTaskId{MAX_UINT16_NUM};
 };
 
+inline std::string StreamFlagsToString(uint32_t flags) {
+    if (flags == 0U) {
+        return "RT_STREAM_DEFAULT(0x0)";
+    }
+    
+    std::string result;
+    std::vector<std::pair<uint32_t, std::string>> flagNames = {
+        {RT_STREAM_PERSISTENT, "RT_STREAM_PERSISTENT"},
+        {RT_STREAM_FORCE_COPY, "RT_STREAM_FORCE_COPY"},
+        {RT_STREAM_HUGE, "RT_STREAM_HUGE"},
+        {RT_STREAM_AICPU, "RT_STREAM_AICPU"},
+        {RT_STREAM_FORBIDDEN_DEFAULT, "RT_STREAM_FORBIDDEN_DEFAULT"},
+        {RT_STREAM_HEAD, "RT_STREAM_HEAD"},
+        {RT_STREAM_PRIMARY_DEFAULT, "RT_STREAM_PRIMARY_DEFAULT"},
+        {RT_STREAM_PRIMARY_FIRST_DEFAULT, "RT_STREAM_PRIMARY_FIRST_DEFAULT"},
+        {RT_STREAM_OVERFLOW, "RT_STREAM_OVERFLOW"},
+        {RT_STREAM_FAST_LAUNCH, "RT_STREAM_FAST_LAUNCH"},
+        {RT_STREAM_FAST_SYNC, "RT_STREAM_FAST_SYNC"},
+        {RT_STREAM_CP_PROCESS_USE, "RT_STREAM_CP_PROCESS_USE"},
+        {RT_STREAM_VECTOR_CORE_USE, "RT_STREAM_VECTOR_CORE_USE"},
+        {RT_STREAM_ACSQ_LOCK, "RT_STREAM_ACSQ_LOCK"},
+        {RT_STREAM_DQS_CTRL, "RT_STREAM_DQS_CTRL"},
+        {RT_STREAM_DQS_INTER_CHIP, "RT_STREAM_DQS_INTER_CHIP"},
+    };
+    
+    for (const auto& item : flagNames) {
+        if ((flags & item.first) != 0U) {
+            if (!result.empty()) {
+                result += "|";
+            }
+            result += item.second;
+        }
+    }
+    
+    if (result.empty()) {
+        std::ostringstream oss;
+        oss << "UNKNOWN(0x" << std::hex << flags << ")";
+        return oss.str();
+    }
+    
+    return result;
+}
+
 inline void DeleteStream(Stream * &stm) {
     if (stm != nullptr) {
         stm->Destructor();

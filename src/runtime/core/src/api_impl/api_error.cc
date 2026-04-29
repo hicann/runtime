@@ -71,8 +71,8 @@ rtError_t ApiErrorDecorator::RegisterAllKernel(const rtDevBinary_t * const bin, 
     const uint32_t magic = bin->magic;
     const bool isElfProgram = ((magic == RT_DEV_BINARY_MAGIC_ELF) || (magic == RT_DEV_BINARY_MAGIC_ELF_AICUBE) ||
         (magic == RT_DEV_BINARY_MAGIC_ELF_AIVEC));
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_TBE, !isElfProgram, RT_ERROR_INVALID_VALUE,
-        "Invalid magic, magic=%#x", magic);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((!isElfProgram), RT_ERROR_INVALID_VALUE, magic, std::to_string(RT_DEV_BINARY_MAGIC_ELF) 
+        + " or " + std::to_string(RT_DEV_BINARY_MAGIC_ELF_AICUBE) + " or " + std::to_string(RT_DEV_BINARY_MAGIC_ELF_AIVEC));
 
     const rtError_t error = impl_->RegisterAllKernel(bin, prog);
     ERROR_RETURN(error, "Register binary failed.");
@@ -406,11 +406,8 @@ rtError_t ApiErrorDecorator::CalcLaunchArgsSize(size_t const argsSize, size_t co
     NULL_PTR_RETURN_MSG_OUTER(launchArgsSize, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(argsSize);
     ZERO_RETURN_AND_MSG_OUTER(hostInfoTotalSize);
-    COND_RETURN_ERROR_MSG_INNER(hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX),
-        RT_ERROR_INVALID_VALUE,
-        "hostInfoNum [%zu] is invalid, valid range is [1, %d]",
-        hostInfoNum,
-        UINT16_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX)), RT_ERROR_INVALID_VALUE, 
+        hostInfoNum, "[1, " + std::to_string(static_cast<size_t>(UINT16_MAX)) + "]");
 
     return impl_->CalcLaunchArgsSize(argsSize, hostInfoTotalSize, hostInfoNum, launchArgsSize);
 }
@@ -423,11 +420,8 @@ rtError_t ApiErrorDecorator::CreateLaunchArgs(size_t const argsSize, size_t cons
     NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(argsSize);
     ZERO_RETURN_AND_MSG_OUTER(hostInfoTotalSize);
-    COND_RETURN_ERROR_MSG_INNER(hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX),
-        RT_ERROR_INVALID_VALUE,
-        "hostInfoNum [%zu] is invalid, valid range is [1, %d]",
-        hostInfoNum,
-        UINT16_MAX);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((hostInfoNum == 0U || hostInfoNum > static_cast<size_t>(UINT16_MAX)), RT_ERROR_INVALID_VALUE, 
+        hostInfoNum, "[1, " + std::to_string(static_cast<size_t>(UINT16_MAX)) + "]");
     const rtError_t error = impl_->CreateLaunchArgs(argsSize, hostInfoTotalSize, hostInfoNum, argsData, argsHandle);
     ERROR_RETURN(error, "CreateLaunchArgs, argsSize=%zu, hostInfoTotalSize=%zu, hostInfoNum=%zu, argsData=0x%x",
         argsSize, hostInfoTotalSize, hostInfoNum, argsData);
@@ -460,9 +454,8 @@ rtError_t ApiErrorDecorator::BinaryLoad(const rtDevBinary_t * const bin, Program
     const uint32_t magic = bin->magic;
     const bool isElfProgram = ((magic == RT_DEV_BINARY_MAGIC_ELF) || (magic == RT_DEV_BINARY_MAGIC_ELF_AICUBE) ||
         (magic == RT_DEV_BINARY_MAGIC_ELF_AIVEC));
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_TBE, !isElfProgram, RT_ERROR_INVALID_VALUE,
-        "Invalid magic, magic=%#x", magic);
-
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((!isElfProgram), RT_ERROR_INVALID_VALUE, magic, std::to_string(RT_DEV_BINARY_MAGIC_ELF) 
+        + " or " + std::to_string(RT_DEV_BINARY_MAGIC_ELF_AICUBE) + " or " + std::to_string(RT_DEV_BINARY_MAGIC_ELF_AIVEC));
     const rtError_t error = impl_->BinaryLoad(bin, prog);
     ERROR_RETURN(error, "BinaryLoad failed.");
     return error;
@@ -1007,8 +1000,8 @@ rtError_t ApiErrorDecorator::StreamDestroy(Stream * const stm, bool flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
 
-    COND_RETURN_ERROR_MSG_INNER(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "stream is in capture mode, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER(stm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
 
     return impl_->StreamDestroy(stm, flag);
 }
@@ -1039,8 +1032,8 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
         "StreamSynchronize failed. The stm parameter cannot be the stream whose flag is %u.",
         stm->Flags());
 
-    COND_RETURN_ERROR_MSG_INNER(((stm != nullptr) && (stm->IsCapturing())),
-        RT_ERROR_STREAM_CAPTURED, "Not allow to synchronize captured-stream, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
 
     int32_t streamId = 0;
     if (stm != nullptr) {
@@ -1065,8 +1058,8 @@ rtError_t ApiErrorDecorator::StreamSynchronize(Stream * const stm, const int32_t
 
 rtError_t ApiErrorDecorator::StreamQuery(Stream * const stm)
 {
-    COND_RETURN_ERROR_MSG_INNER(((stm != nullptr) && (stm->IsCapturing())),
-        RT_ERROR_STREAM_CAPTURED, "Not allow to query captured-stream.");
+    COND_RETURN_AND_MSG_OUTER(((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     return impl_->StreamQuery(stm);
 }
 
@@ -1303,7 +1296,8 @@ rtError_t ApiErrorDecorator::EventSynchronize(Event * const evt, const int32_t t
     NULL_PTR_RETURN_MSG_OUTER(evt, RT_ERROR_INVALID_VALUE);
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support synchronization.");
-    COND_RETURN_ERROR_MSG_INNER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, "Not allow to synchronize captured-event.");
+    COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "event " + std::to_string(evt->EventId_()) + " during the capture stage");
     COND_RETURN_AND_MSG_OUTER(evt->IsEventInModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, __func__,
         "the event (ID: " + std::to_string(evt->EventId_()) + ") in the stream bound to the model");
     return impl_->EventSynchronize(evt, timeout);
@@ -1318,7 +1312,8 @@ rtError_t ApiErrorDecorator::EventQuery(Event * const evt)
         "The external event does not support to query status.");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "Not support ipc event in rtEventQuery api");
-    COND_RETURN_ERROR_MSG_INNER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, "Not allow to query captured-event.");
+    COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "event " + std::to_string(evt->EventId_()) + " during the capture stage");
     return impl_->EventQuery(evt);
 }
 
@@ -1328,7 +1323,8 @@ rtError_t ApiErrorDecorator::EventQueryStatus(Event * const evt, rtEventStatus_t
     NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
     COND_RETURN_WARN(evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support to query status.");
-    COND_RETURN_ERROR_MSG_INNER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, "Not allow to query captured-event.");
+    COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "event " + std::to_string(evt->EventId_()) + " during the capture stage");
     return impl_->EventQueryStatus(evt, status);
 }
 
@@ -1342,7 +1338,8 @@ rtError_t ApiErrorDecorator::EventQueryWaitStatus(Event * const evt, rtEventWait
         "The external event does not support to query status.");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "Not support ipc event in rtEventQueryWaitStatus api");
-    COND_RETURN_ERROR_MSG_INNER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, "Not allow to query captured-event.");
+    COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "event " + std::to_string(evt->EventId_()) + " during the capture stage");
     return impl_->EventQueryWaitStatus(evt, status);
 }
 
@@ -1351,8 +1348,10 @@ rtError_t ApiErrorDecorator::EventElapsedTime(float32_t * const retTime, Event *
     NULL_PTR_RETURN_MSG_OUTER(retTime, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(startEvt, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(endEvt, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((startEvt->IsCapturing() || endEvt->IsCapturing()),
-                                RT_ERROR_EVENT_CAPTURED, "Not allow to query captured-event.");
+    COND_RETURN_AND_MSG_OUTER(startEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "startEvent " + std::to_string(startEvt->EventId_()) + " during the capture stage");
+    COND_RETURN_AND_MSG_OUTER(endEvt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "endEvent " + std::to_string(endEvt->EventId_()) + " during the capture stage");
     COND_RETURN_WARN((startEvt->GetEventFlag() == RT_EVENT_EXTERNAL || endEvt->GetEventFlag() == RT_EVENT_EXTERNAL),
         RT_ERROR_FEATURE_NOT_SUPPORT, "The external event does not support to get elapsed time.");
     COND_RETURN_WARN((startEvt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
@@ -1369,7 +1368,8 @@ rtError_t ApiErrorDecorator::EventGetTimeStamp(uint64_t * const retTime, Event *
         "The external event does not support to get timestamp.");
     COND_RETURN_WARN(evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC),
         RT_ERROR_FEATURE_NOT_SUPPORT, "Not support ipc event in rtEventGetTimeStamp api");
-    COND_RETURN_ERROR_MSG_INNER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, "Not allow to query captured-event.");
+    COND_RETURN_AND_MSG_OUTER(evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, 
+        ErrorCode::EE1006, __func__, "event " + std::to_string(evt->EventId_()) + " during the capture stage");
     return impl_->EventGetTimeStamp(retTime, evt);
 }
 
@@ -1546,8 +1546,7 @@ rtError_t ApiErrorDecorator::HostMemMapCapabilities(uint32_t deviceId, rtHacType
     NULL_PTR_RETURN_MSG_OUTER(capabilities, RT_ERROR_INVALID_VALUE);
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:drv devId %u is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
 
     error = CheckDeviceIdIsValid(static_cast<int32_t>(realDeviceId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%u, retCode=%#x",
@@ -1747,14 +1746,14 @@ rtError_t ApiErrorDecorator::LaunchSqeUpdateTask(uint32_t streamId, uint32_t tas
 rtError_t ApiErrorDecorator::MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax,
     const uint64_t count, Stream *stm, const rtTaskCfgInfo_t * const cfgInfo, const bool isMemcpyDesc)
 {
-    NULL_PTR_RETURN_MSG(memcpyAddrInfo, RT_ERROR_INVALID_VALUE);
-    ZERO_RETURN_MSG(count);
-    COND_RETURN_ERROR_MSG_INNER(count > destMax, RT_ERROR_INVALID_VALUE,
-        "Invalid count, current count=%" PRIu64 ", valid count range is (0, %" PRIu64 "]!", count, destMax);
+    NULL_PTR_RETURN_MSG_OUTER(memcpyAddrInfo, RT_ERROR_INVALID_VALUE);
+    ZERO_RETURN_AND_MSG_OUTER(count);
+    COND_RETURN_AND_MSG_OUTER(count > destMax, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, 
+        count, "count", "The count cannot exceed the maximum value destMax " + std::to_string(destMax));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((count > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, 
         count, "(0, " + std::to_string(MAX_MEMCPY_SIZE_OF_D2D) + "]");
-    COND_RETURN_ERROR_MSG_INNER((RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL,
-        RT_ERROR_INVALID_VALUE, "Invalid address!");                // 64U for addr align
+    COND_RETURN_AND_MSG_OUTER((RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, 
+        __func__, memcpyAddrInfo, "memcpyAddrInfo", "memcpyAddrInfo is not 64-byte aligned");
 
     if (isMemcpyDesc == false) {
         Context *curCtx = nullptr;
@@ -1763,7 +1762,6 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(void * const memcpyAddrInfo, const u
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_GE, error != RT_ERROR_NONE, error,
             "Get current context failed, retCode=%#x", static_cast<uint32_t>(error));
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-        NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
         if ((curCtx->Device_()->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE)) {
             rtPtrAttributes_t attributes;
             error = impl_->PtrGetAttributes(memcpyAddrInfo, &attributes);
@@ -1863,16 +1861,16 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(rtMemcpyDesc_t desc, const void * con
 {
     COND_RETURN_WARN((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
-    NULL_PTR_RETURN_MSG(srcAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(dstAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(desc, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((config != nullptr), RT_ERROR_INVALID_VALUE,
-        "Invalid config address, currently only null is supported.");
-    ZERO_RETURN_MSG(count);
+    NULL_PTR_RETURN_MSG_OUTER(srcAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(dstAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_RESERVED_PARAM((config != nullptr), RT_ERROR_INVALID_VALUE, "config",
+        "config is reserved parameter and must be null");
+    ZERO_RETURN_AND_MSG_OUTER(count);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM((count > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE, 
         count, "(0, " + std::to_string(MAX_MEMCPY_SIZE_OF_D2D) + "]");
-    COND_RETURN_ERROR_MSG_INNER((RtPtrToValue(desc) % 64ULL) != 0ULL,
-        RT_ERROR_INVALID_VALUE, "Invalid address, desc should be a 64-byte aligned address"); // 64U for addr align
+    COND_RETURN_AND_MSG_OUTER((RtPtrToValue(desc) % 64ULL) != 0ULL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, 
+        __func__, desc, "desc", "desc is not 64-byte aligned");
     rtPtrAttributes_t srcAttributes;
     rtPtrAttributes_t destAttributes;
     rtPtrAttributes_t descAttributes;
@@ -1908,9 +1906,9 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(rtMemcpyDesc_t desc, Stream *st
 {
     COND_RETURN_WARN((kind != RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Kind should be %u, but now is %u.", RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, kind);
-    NULL_PTR_RETURN_MSG(desc, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((config != nullptr), RT_ERROR_INVALID_VALUE,
-        "Invalid config address, currently only null is supported.");
+    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_RESERVED_PARAM((config != nullptr), RT_ERROR_INVALID_VALUE, "config",
+        "config is reserved parameter and must be null");
 
     rtPtrAttributes_t descAttributes;
     const rtError_t error = impl_->PtrGetAttributes(desc, &descAttributes);
@@ -1928,10 +1926,10 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(rtMemcpyDesc_t desc, Stream *st
 rtError_t ApiErrorDecorator::GetDevArgsAddr(Stream *stm, rtArgsEx_t *argsInfo, void **devArgsAddr, void **argsHandle)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
-    NULL_PTR_RETURN_MSG(curStm, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(argsInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(devArgsAddr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(argsHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(argsInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(devArgsAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(argsHandle, RT_ERROR_INVALID_VALUE);
     const rtError_t error = impl_->GetDevArgsAddr(curStm, argsInfo, devArgsAddr, argsHandle);
     ERROR_RETURN_MSG_INNER(error, "GetDevArgsAddr failed, stream_id=%d.", curStm->Id_());
     return error;
@@ -2442,8 +2440,7 @@ rtError_t ApiErrorDecorator::MemGetInfoByType(const int32_t devId, const rtMemTy
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Error input devId:%d is err:%#x",
-        devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%d, retCode=%#x",
         realDeviceId, static_cast<uint32_t>(error));
@@ -2457,8 +2454,9 @@ rtError_t ApiErrorDecorator::MemGetInfoEx(const rtMemInfoType_t memInfoType, siz
 {
     NULL_PTR_RETURN_MSG_OUTER(freeSize, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(totalSize, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((memInfoType < RT_MEMORYINFO_DDR) || (memInfoType > RT_MEMORYINFO_P2P_HUGE1G),
-        RT_ERROR_INVALID_MEMORY_TYPE, "Invalid memInfoType=%d.", memInfoType);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((memInfoType < RT_MEMORYINFO_DDR) || (memInfoType > RT_MEMORYINFO_P2P_HUGE1G), 
+        RT_ERROR_INVALID_MEMORY_TYPE, memInfoType, 
+        "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_P2P_HUGE1G) + "]");
     const rtError_t error = impl_->MemGetInfoEx(memInfoType, freeSize, totalSize);
     ERROR_RETURN(error, "Get Memory extend info failed, memInfoType=%u, free=%zu, total=%zu.",
         memInfoType, *freeSize, *totalSize);
@@ -2479,7 +2477,8 @@ rtError_t ApiErrorDecorator::PointerGetAttributes(rtPointerAttributes_t * const 
     if (attributes->locationType == RT_MEMORY_LOC_DEVICE) {
         const uint32_t drvDeviceId = attributes->deviceID;
         error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, &attributes->deviceID);
-        ERROR_RETURN_MSG_INNER(error, "Conv drvDeviceId:%u is err:%#x", drvDeviceId, static_cast<uint32_t>(error));
+        ERROR_RETURN_MSG_INNER(error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x", 
+            drvDeviceId, static_cast<uint32_t>(error));
     }
     return RT_ERROR_NONE;
 }
@@ -2551,13 +2550,9 @@ rtError_t ApiErrorDecorator::SetDevice(const int32_t devId)
 
     rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId), true);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Failed to set visible device. The invalid device is %d and the input visible device is %s.",
-            devId,
-            rt->inputDeviceStr);
-        return RT_ERROR_DEVICE_ID;
-    }
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, 
+        "Failed to convert the user device ID %d to driver device ID. The input visible device is %s.",
+        devId, rt->inputDeviceStr);
 
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
@@ -2586,10 +2581,10 @@ rtError_t ApiErrorDecorator::GetDevicePhyIdByIndex(const uint32_t devIndex, uint
 
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIndex, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devIndex:%u is err:%#x", devIndex, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devIndex);
     error = impl_->GetDevicePhyIdByIndex(realDeviceId, phyId);
-    ERROR_RETURN(error, "Get device physic id by index failed, index=%u.", devIndex);
+    ERROR_RETURN(error, "Get device physical id by index failed, index=%u.", devIndex);
     return error;
 }
 
@@ -2600,13 +2595,14 @@ rtError_t ApiErrorDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_
     uint32_t realDeviceId = 0;
     rtError_t error = impl_->GetDeviceIndexByPhyId(phyId, &realDeviceId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Get device index by physic id failed, phyId:%u, realDeviceId=%u", phyId, realDeviceId);
+        RT_LOG(RT_LOG_ERROR, "Get device index by physical id failed, phyId:%u, realDeviceId=%u", phyId, realDeviceId);
         return error;
     }
 
     error = Runtime::Instance()->GetUserDevIdByDeviceId(realDeviceId, devIndex);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "get error: phyid:%u realDeviceId:%u is err:%#x", phyId, realDeviceId, static_cast<uint32_t>(error));
+        "Failed to convert the driver device ID %u to user device ID, phyId=%u, retCode=%#x", 
+        realDeviceId, phyId, static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_DEBUG, "realDeviceId:%u, phyId=%u, devIndex=%u.", realDeviceId, phyId, (*devIndex));
     return RT_ERROR_NONE;
 }
@@ -2615,10 +2611,10 @@ rtError_t ApiErrorDecorator::EnableP2P(const uint32_t devIdDes, const uint32_t p
 {
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:drv devId %u is err:%#x", realDeviceId, static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u, valid drv devId range is [0, %u)", realDeviceId, RT_MAX_DEV_NUM);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devIdDes);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
+        realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         phyIdSrc, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 
@@ -2631,10 +2627,10 @@ rtError_t ApiErrorDecorator::DisableP2P(const uint32_t devIdDes, const uint32_t 
 {
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:drv devId %u is err:%#x", realDeviceId, static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u, valid drv devId range is [0, %u)", realDeviceId, RT_MAX_DEV_NUM);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devIdDes);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
+        realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         phyIdSrc, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     error = impl_->DisableP2P(realDeviceId, phyIdSrc);
@@ -2647,10 +2643,10 @@ rtError_t ApiErrorDecorator::DeviceCanAccessPeer(int32_t * const canAccessPeer, 
 {
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:devId %u is err:%#x", devId, static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u, valid drv devId range is [0, %u)", realDeviceId, RT_MAX_DEV_NUM);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devId);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
+        realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     NULL_PTR_RETURN_MSG_OUTER(canAccessPeer, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(peerDevice >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         peerDevice, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
@@ -2663,11 +2659,10 @@ rtError_t ApiErrorDecorator::GetP2PStatus(const uint32_t devIdDes, const uint32_
 {
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:devIdDes %u is err:%#x", devIdDes, static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u, valid drv devId range is [0, %u).",
-        realDeviceId, RT_MAX_DEV_NUM);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devIdDes);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
+        realDeviceId, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, 
         phyIdSrc, "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
     NULL_PTR_RETURN_MSG_OUTER(status, RT_ERROR_INVALID_VALUE);
@@ -2689,8 +2684,7 @@ rtError_t ApiErrorDecorator::DeviceReset(const int32_t devId, const bool isForce
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId), true);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -2707,7 +2701,7 @@ rtError_t ApiErrorDecorator::DeviceSetLimit(const int32_t devId, const rtLimitTy
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = impl_->DeviceSetLimit(realDeviceId, type, val);
     ERROR_RETURN(error, "Device set limit failed, device_id=%d, type=%d, value=%u.",
         devId, static_cast<int32_t>(type), val);
@@ -2738,13 +2732,12 @@ rtError_t ApiErrorDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t
 
     rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_OUT_ERROR_MSG_CALL((error != RT_ERROR_NONE), RT_ERROR_DEVICE_ID,
-        "Set visible device failed, invalid device=%d, input visible devices:%s", devId, rt->inputDeviceStr);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
 
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "invalid drv devId, set drv devId=%d, valid drv devId range is [0, %d)", realDeviceId, deviceCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((realDeviceId < 0) || (realDeviceId >= deviceCnt)),
+        RT_ERROR_DEVICE_ID, realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     return impl_->DeviceTaskAbort(realDeviceId, timeout);
 }
@@ -2811,8 +2804,8 @@ rtError_t ApiErrorDecorator::GetDeviceInfo(const uint32_t deviceId, const int32_
         moduleType, "not equal to " + std::to_string(MODULE_TYPE_HOST_AICPU));
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error:deviceId:%u is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
     const auto npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
@@ -2820,10 +2813,8 @@ rtError_t ApiErrorDecorator::GetDeviceInfo(const uint32_t deviceId, const int32_
     error = npuDrv->GetDeviceCount(&cnt);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, error != RT_ERROR_NONE, error,
         "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= static_cast<uint32_t>(cnt),
-        RT_ERROR_INVALID_VALUE,
-        "Get device info failed, invalid drv devId, current drv devId=%u , valid drv devId range is [0, %d)",
-        realDeviceId, cnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= static_cast<uint32_t>(cnt),
+        RT_ERROR_INVALID_VALUE, realDeviceId, "[0, " + std::to_string(cnt) + ")");
 
     error = impl_->GetDeviceInfo(realDeviceId, moduleType, infoType, val);
     ERROR_RETURN(error, "Get device info failed, deviceId=%u.", deviceId);
@@ -2860,8 +2851,8 @@ rtError_t ApiErrorDecorator::ContextCreate(Context ** const inCtx, const int32_t
 {
     uint32_t realDeviceId = static_cast<uint32_t>(devId);
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error:devId %d is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
 
     NULL_PTR_RETURN_MSG_OUTER(inCtx, RT_ERROR_INVALID_VALUE);
     error = impl_->ContextCreate(inCtx, static_cast<int32_t>(realDeviceId));
@@ -3109,23 +3100,24 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model * const mdl, Stream * const s
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support bind stream, modelType=%d .", mdl->GetModelType());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
+    
+    COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, 
+        __func__, "ACL_STREAM_DEVICE_USE_ONLY", "stream flag", 
+        "Stream " + std::to_string(curStm->Id_()) + " with the flag ACL_STREAM_DEVICE_USE_ONLY cannot be bound to a model");
+    COND_RETURN_ERROR_MSG_INNER(curStm->IsBindDvppGrp(), RT_ERROR_STREAM_BIND_GRP, 
+        "Stream %d of the specified DVPP group cannot be bound to a model", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == STOP_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
+        ErrorCode::EE1006, __func__, "stop mode for stream " + std::to_string(curStm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(curStm->GetFailureMode() == ABORT_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, 
+        ErrorCode::EE1006, __func__, "abort mode for stream " + std::to_string(curStm->Id_()));
 
-    COND_RETURN_OUT_ERROR_MSG_CALL((curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U,
-        RT_ERROR_STREAM_INVALID,
-        "Failed to bind the model with the stream. The stm parameter cannot be the stream whose flag is %u.",
-        curStm->Flags());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsBindDvppGrp(), RT_ERROR_STREAM_BIND_GRP, "stream bind dvpp grp");
-    COND_RETURN_ERROR_MSG_INNER(curStm->GetFailureMode() == STOP_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "stream is already STOP mode");
-    COND_RETURN_ERROR_MSG_INNER(curStm->GetFailureMode() == ABORT_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "stream is already ABORT mode");
-
-    COND_RETURN_ERROR_MSG_INNER((curStm->Flags() & RT_STREAM_FAST_LAUNCH) != 0, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "fast launch stream does not support bind model.");
+    COND_RETURN_AND_MSG_OUTER((curStm->Flags() & RT_STREAM_FAST_LAUNCH) != 0, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011, 
+        __func__, "ACL_STREAM_FAST_LAUNCH", "stream flag", 
+        "Stream " + std::to_string(curStm->Id_()) + " with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model");
 
     COND_RETURN_OUT_ERROR_MSG_CALL((curStm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC)) &&
         ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0),
@@ -3146,10 +3138,10 @@ rtError_t ApiErrorDecorator::ModelUnbindStream(Model * const mdl, Stream * const
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support unbind stream, modelType=%d .", mdl->GetModelType());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
     
     const uint32_t modelId = mdl->Id_();
     const int32_t streamId = curStm->Id_();
@@ -3162,9 +3154,8 @@ rtError_t ApiErrorDecorator::ModelUnbindStream(Model * const mdl, Stream * const
 
 rtError_t ApiErrorDecorator::ModelLoadComplete(Model * const mdl)
 {
-    COND_RETURN_ERROR_MSG_INNER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL),
-        RT_ERROR_INVALID_VALUE,
-        "capture model does not support load complete, modelType=%d .", mdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
 
     const rtError_t error = impl_->ModelLoadComplete(mdl);
     ERROR_RETURN(error, "Load model complete failed.");
@@ -3180,8 +3171,9 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetModelNum() != 0),
         RT_ERROR_INVALID_VALUE,
         "The current stream cannot be the same as the model stream.");
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED,
-        "The stream cannot be used for model execution during the capture stage.");
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
+    
     if ((stm != nullptr) && (stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC))) {
         COND_RETURN_OUT_ERROR_MSG_CALL(
         ((stm->Flags() & (RT_STREAM_AICPU | RT_STREAM_PERSISTENT | RT_STREAM_CP_PROCESS_USE)) != 0),
@@ -3200,8 +3192,8 @@ rtError_t ApiErrorDecorator::ModelExecuteSync(Model * const mdl, int32_t timeout
         ErrorCode::EE1006, __func__, "timeout=" + std::to_string(timeout));
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
 
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support execute sync, modelType=%d .", mdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
 
     const rtError_t error = impl_->ModelExecuteSync(mdl, timeout);
     ERROR_RETURN(error, "Execute model failed.");
@@ -3214,8 +3206,8 @@ rtError_t ApiErrorDecorator::ModelExecuteAsync(Model * const mdl, Stream * const
     COND_RETURN_OUT_ERROR_MSG_CALL((stm != nullptr) && (stm->GetModelNum() != 0),
         RT_ERROR_INVALID_VALUE,
         "The current stream cannot be the same as the model stream.");
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED,
-        "The stream cannot be used for model execution during the capture stage.");
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
 
     const rtError_t error = impl_->ModelExecuteAsync(mdl, stm);
     ERROR_RETURN(error, "Execute model failed.");
@@ -3358,10 +3350,10 @@ rtError_t ApiErrorDecorator::ModelEndGraph(Model * const mdl, Stream * const stm
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support end graph, modelType=%d .", mdl->GetModelType());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
     
     const rtError_t error = impl_->ModelEndGraph(mdl, curStm, flags);
     ERROR_RETURN(error, "Add model end graph failed, flags=%u.", flags);
@@ -3371,8 +3363,8 @@ rtError_t ApiErrorDecorator::ModelEndGraph(Model * const mdl, Stream * const stm
 rtError_t ApiErrorDecorator::ModelExecutorSet(Model * const mdl, const uint8_t flags)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support set executor, modelType=%d .", mdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(!((flags == EXECUTOR_TS) || (flags == EXECUTOR_AICPU)), RT_ERROR_INVALID_VALUE, 
         flags, std::to_string(EXECUTOR_TS) + " or " + std::to_string(EXECUTOR_AICPU));
     const rtError_t error = impl_->ModelExecutorSet(mdl, flags);
@@ -3403,8 +3395,8 @@ rtError_t ApiErrorDecorator::ModelExit(Model * const mdl, Stream * const stm)
 rtError_t ApiErrorDecorator::ModelBindQueue(Model * const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "capture model does not support bind queue, modelType=%d .", mdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag != RT_MODEL_INPUT_QUEUE) && (flag != RT_MODEL_OUTPUT_QUEUE), 
         RT_ERROR_INVALID_VALUE, flag, std::to_string(RT_MODEL_INPUT_QUEUE) + " or " + std::to_string(RT_MODEL_OUTPUT_QUEUE));    
     const rtError_t error = impl_->ModelBindQueue(mdl, queueId, flag);
@@ -3419,8 +3411,8 @@ rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify ** cons
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%d is error:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", deviceId);
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((flag & static_cast<uint32_t>(~static_cast<uint32_t>(RT_NOTIFY_FLAG_MAX))) != 0U, 
         RT_ERROR_INVALID_VALUE, flag, 
@@ -3478,13 +3470,12 @@ rtError_t ApiErrorDecorator::ResourceClean(int32_t devId, rtIdType_t type)
     int32_t realDeviceId;
     rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_OUT_ERROR_MSG_CALL((error != RT_ERROR_NONE), RT_ERROR_DEVICE_ID,
-        "input devId=%d, set fail drv devId=%d", devId, realDeviceId);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
 
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "invalid devId=%d, set drv devId=%d, valid drv devId range is [0, %d)", devId, realDeviceId, deviceCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((realDeviceId < 0) || (realDeviceId >= deviceCnt)),
+        RT_ERROR_DEVICE_ID, realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     error = impl_->ResourceClean(realDeviceId, type);
     ERROR_RETURN(error, "resource clean.");
@@ -3621,9 +3612,8 @@ rtError_t ApiErrorDecorator::StreamActive(Stream * const activeStream, Stream * 
 rtError_t ApiErrorDecorator::LabelCreate(Label ** const lbl, Model * const mdl)
 {
     NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL),
-        RT_ERROR_INVALID_VALUE,
-        "capture model does not support create label, modelType=%d .", mdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
     const rtError_t error = impl_->LabelCreate(lbl, mdl);
     ERROR_RETURN(error, "Label create failed.");
     RT_LOG(RT_LOG_DEBUG, "label create success, labelId = %hu", (*lbl)->Id_());
@@ -3692,8 +3682,8 @@ rtError_t ApiErrorDecorator::GetL2CacheOffset(uint32_t deviceId, uint64_t *offse
     COND_RETURN_ERROR((offset == nullptr), RT_ERROR_INVALID_VALUE, "offset is null");
     uint32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%u is error:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     error = CheckDeviceIdIsValid(static_cast<int32_t>(realDeviceId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%u, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -3794,10 +3784,10 @@ rtError_t ApiErrorDecorator::LabelCreateEx(Label ** const lbl, Model * const mdl
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(lbl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE,
-        "capture model does not support create label to stream, modelType=%d .", mdl->GetModelType());
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-        "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "ACL Graph mode");
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
 
     return impl_->LabelCreateEx(lbl, mdl, curStm);
 }
@@ -3836,12 +3826,12 @@ rtError_t ApiErrorDecorator::GetPairDevicesInfo(const uint32_t devId, const uint
     NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", devId);
     uint32_t readOtherDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(otherDevId, &readOtherDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error otherDevId:%u is err:%#x", otherDevId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", otherDevId);
     return impl_->GetPairDevicesInfo(realDeviceId, readOtherDeviceId, infoType, val);
 }
 
@@ -3849,7 +3839,7 @@ rtError_t ApiErrorDecorator::GetPairPhyDevicesInfo(const uint32_t devId, const u
     int64_t * const val)
 {
     NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
-    RT_LOG(RT_LOG_INFO, "input physic devId=%u, input physic otherDevId=%u, infoType=%d", devId, otherDevId, infoType);
+    RT_LOG(RT_LOG_INFO, "input physical devId=%u, input physical otherDevId=%u, infoType=%d", devId, otherDevId, infoType);
     return impl_->GetPairPhyDevicesInfo(devId, otherDevId, infoType, val);
 }
 
@@ -3897,8 +3887,8 @@ rtError_t ApiErrorDecorator::GetDeviceCapability(const int32_t deviceId,
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error deviceId:%d is err:%#x", deviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+        "Failed to convert the user device ID %d to driver device ID.", deviceId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -3922,8 +3912,8 @@ rtError_t ApiErrorDecorator::GetFaultEvent(const int32_t deviceId, rtDmsEventFil
     int32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%d is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", deviceId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -3944,21 +3934,21 @@ rtError_t ApiErrorDecorator::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo
     int32_t realDeviceId = 0;
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%u is error:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
 
     const driverType_t rawDrvType = rtInstance->GetDriverType();
     Driver * const rawDrv = rtInstance->driverFactory_.GetDriver(rawDrvType);
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "invalid devId=%u, set drv devId=%d, valid drv devId range is [0, %d)", deviceId, realDeviceId, deviceCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((realDeviceId < 0) || (realDeviceId >= deviceCnt)),
+        RT_ERROR_DEVICE_ID, realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     error = impl_->GetMemUceInfo(static_cast<uint32_t>(realDeviceId), memUceInfo);
     ERROR_RETURN(error, "GetMemUceInfo failed");
     const uint32_t drvDeviceId = memUceInfo->devid;
     error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, &memUceInfo->devid);
-    ERROR_RETURN_MSG_INNER(error, "Conv drvDeviceId:%u is error:%#x", drvDeviceId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x", drvDeviceId, static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
@@ -3975,20 +3965,20 @@ rtError_t ApiErrorDecorator::MemUceRepair(const uint32_t deviceId, rtMemUceInfo 
     int32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%u is error:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
 
     const driverType_t rawDrvType = rtInstance->GetDriverType();
     Driver * const rawDrv = rtInstance->driverFactory_.GetDriver(rawDrvType);
     error = rawDrv->GetDeviceCount(&deviceCnt);
     ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "invalid devId=%u, set drv devId=%d, valid device range is [0, %d)", deviceId, realDeviceId, deviceCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((realDeviceId < 0) || (realDeviceId >= deviceCnt)),
+        RT_ERROR_DEVICE_ID, realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     const uint32_t userDeviceId = memUceInfo->devid;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &memUceInfo->devid);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%u is error:%#x", userDeviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", userDeviceId);
     COND_RETURN_OUT_ERROR_MSG_CALL((memUceInfo->devid >= static_cast<uint32_t>(deviceCnt)), RT_ERROR_DEVICE_ID,
         "userDeviceId=%u, valid device range is [0, %d)", userDeviceId, deviceCnt);
     return impl_->MemUceRepair(realDeviceId, memUceInfo);
@@ -4104,8 +4094,8 @@ rtError_t ApiErrorDecorator::NpuGetFloatStatus(void * const outputAddrPtr, const
     NULL_PTR_RETURN_MSG_OUTER(outputAddrPtr, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
-        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
 
     return impl_->NpuGetFloatStatus(outputAddrPtr, outputSize, checkMode, stm);
 }
@@ -4114,8 +4104,8 @@ rtError_t ApiErrorDecorator::NpuClearFloatStatus(const uint32_t checkMode, Strea
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
-        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
     return impl_->NpuClearFloatStatus(checkMode, curStm);
 }
 
@@ -4128,8 +4118,8 @@ rtError_t ApiErrorDecorator::NpuGetFloatDebugStatus(void * const outputAddrPtr, 
 
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE, 
         outputSize, std::to_string(OVERFLOW_OUTPUT_SIZE));
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
-        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
 
     return impl_->NpuGetFloatDebugStatus(outputAddrPtr, outputSize, checkMode, curStm);
 }
@@ -4138,8 +4128,8 @@ rtError_t ApiErrorDecorator::NpuClearFloatDebugStatus(const uint32_t checkMode, 
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(curStm->IsCapturing(),
-        RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(curStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(curStm->Id_()) + " during the capture stage");
     return impl_->NpuClearFloatDebugStatus(checkMode, curStm);
 }
 
@@ -4161,8 +4151,8 @@ rtError_t ApiErrorDecorator::MemQueueInitQS(const int32_t devId, const char_t * 
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     return impl_->MemQueueInitQS(realDeviceId, grpName);
 }
 
@@ -4172,8 +4162,8 @@ rtError_t ApiErrorDecorator::MemQueueInitFlowGw(const int32_t devId, const rtIni
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     return impl_->MemQueueInitFlowGw(realDeviceId, initInfo);
 }
 
@@ -4193,8 +4183,8 @@ rtError_t ApiErrorDecorator::MemQueueCreate(const int32_t devId, const rtMemQueu
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueCreate(realDeviceId, queAttr, qid);
 }
@@ -4217,12 +4207,12 @@ rtError_t ApiErrorDecorator::MemQueueExport(const int32_t devId, const uint32_t 
     int32_t realPeerDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));    
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
         RtPtrToPtr<uint32_t *>(&realPeerDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));    
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", peerDevId);
     return impl_->MemQueueExport(realDeviceId, qid, realPeerDeviceId, shareName);
 }
 
@@ -4244,12 +4234,12 @@ rtError_t ApiErrorDecorator::MemQueueUnExport(const int32_t devId, const uint32_
     int32_t realPeerDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));    
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
         RtPtrToPtr<uint32_t *>(&realPeerDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));                     
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", peerDevId);
     return impl_->MemQueueUnExport(realDeviceId, qid, realPeerDeviceId, shareName);
 }
 
@@ -4272,12 +4262,12 @@ rtError_t ApiErrorDecorator::MemQueueImport(const int32_t devId, const int32_t p
     int32_t realPeerDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));    
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
         RtPtrToPtr<uint32_t *>(&realPeerDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error peerDevId:%d is err:%#x", peerDevId, static_cast<uint32_t>(error));                     
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", peerDevId);
     return impl_->MemQueueImport(realDeviceId, realPeerDeviceId, shareName, qid);
 }
 
@@ -4299,12 +4289,12 @@ rtError_t ApiErrorDecorator::MemQueueUnImport(const int32_t devId, const uint32_
     int32_t realPeerDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));    
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
         RtPtrToPtr<uint32_t *>(&realPeerDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));                     
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", peerDevId);
     return impl_->MemQueueUnImport(realDeviceId, qid, realPeerDeviceId, shareName);
 }     
 
@@ -4318,8 +4308,8 @@ rtError_t ApiErrorDecorator::MemQueueSet(const int32_t devId, const rtMemQueueSe
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueSet(realDeviceId, cmd, input);
 }
@@ -4332,8 +4322,8 @@ rtError_t ApiErrorDecorator::MemQueueDestroy(const int32_t devId, const uint32_t
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueDestroy(realDeviceId, qid);
 }
@@ -4346,8 +4336,8 @@ rtError_t ApiErrorDecorator::MemQueueInit(const int32_t devId)
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueInit(realDeviceId);
 }
@@ -4360,8 +4350,8 @@ rtError_t ApiErrorDecorator::MemQueueReset(const int32_t devId, const uint32_t q
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueReset(realDeviceId, qid);
 }
@@ -4375,8 +4365,8 @@ rtError_t ApiErrorDecorator::MemQueueEnQueue(const int32_t devId, const uint32_t
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueEnQueue(realDeviceId, qid, enQBuf);
 }
@@ -4390,8 +4380,8 @@ rtError_t ApiErrorDecorator::MemQueueDeQueue(const int32_t devId, const uint32_t
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueDeQueue(realDeviceId, qid, deQBuf);
 }
@@ -4406,8 +4396,8 @@ rtError_t ApiErrorDecorator::MemQueuePeek(const int32_t devId, const uint32_t qi
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueuePeek(realDeviceId, qid, bufLen, timeout);
 }
@@ -4422,8 +4412,8 @@ rtError_t ApiErrorDecorator::MemQueueQueryInfo(const int32_t devId, const uint32
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueQueryInfo(realDeviceId, qid, queryQueueInfo);
 }
@@ -4440,8 +4430,8 @@ rtError_t ApiErrorDecorator::MemQueueQuery(const int32_t devId, const rtMemQueue
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueQuery(realDeviceId, cmd, inBuff, inLen, outBuff, outLen);
 }
@@ -4456,8 +4446,8 @@ rtError_t ApiErrorDecorator::MemQueueGrant(const int32_t devId, const uint32_t q
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             reinterpret_cast<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueGrant(realDeviceId, qid, pid, attr);
 }
@@ -4470,8 +4460,8 @@ rtError_t ApiErrorDecorator::MemQueueAttach(const int32_t devId, const uint32_t 
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueAttach(realDeviceId, qid, timeOut);
 }
@@ -4491,8 +4481,8 @@ rtError_t ApiErrorDecorator::EschedSubmitEventSync(const int32_t devId, rtEsched
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedSubmitEventSync(realDeviceId, evt, ack);
 }
@@ -4510,8 +4500,8 @@ rtError_t ApiErrorDecorator::MemQueueEnQueueBuff(const int32_t devId, const uint
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueEnQueueBuff(realDeviceId, qid, inBuf, timeout);
 }
@@ -4529,8 +4519,8 @@ rtError_t ApiErrorDecorator::MemQueueDeQueueBuff(const int32_t devId, const uint
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueDeQueueBuff(realDeviceId, qid, outBuf, timeout);
 }
@@ -4543,8 +4533,8 @@ rtError_t ApiErrorDecorator::QueueSubF2NFEvent(const int32_t devId, const uint32
     } else {
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
         error = CheckDeviceIdIsValid(realDeviceId);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
             "Device id is invalid, deviceId=%d, retCode=%#x", devId, static_cast<uint32_t>(error));
@@ -4561,8 +4551,8 @@ rtError_t ApiErrorDecorator::QueueSubscribe(const int32_t devId, const uint32_t 
     } else {
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
         error = CheckDeviceIdIsValid(realDeviceId);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
             "Device id is invalid, deviceId=%d, retCode=%#x", devId, static_cast<uint32_t>(error));
@@ -4584,7 +4574,7 @@ rtError_t ApiErrorDecorator::QueryDevPid(rtBindHostpidInfo_t * const info, int32
 
     uint32_t realDeviceId = 0U;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(info->chipId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "input error devId:%u, err:%#x", info->chipId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", info->chipId);
     info->chipId = realDeviceId;
     return impl_->QueryDevPid(info, devPid);
 }
@@ -4634,8 +4624,8 @@ rtError_t ApiErrorDecorator::MemGrpCacheAlloc(const char_t *const name, const in
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemGrpCacheAlloc(name, realDeviceId, para);
 }
@@ -4668,8 +4658,8 @@ rtError_t ApiErrorDecorator::MemGrpQuery(rtMemGrpQueryInput_t * const input, rtM
             realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
         } else {
             rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &realDeviceId);
-            COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-                "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(error));
+            COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+                "Failed to convert the user device ID %u to driver device ID.", userDeviceId);
             error = CheckDeviceIdIsValid(static_cast<int32_t>(realDeviceId));
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
                 "drv devId is invalid, drv devId=%u, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -4689,8 +4679,8 @@ rtError_t ApiErrorDecorator::MemQueueGetQidByName(const int32_t devId, const cha
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->MemQueueGetQidByName(realDeviceId, name, qId);
 }
@@ -4703,8 +4693,8 @@ rtError_t ApiErrorDecorator::EschedAttachDevice(const uint32_t devId)
         realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %u to driver device ID.", devId);
     }
     return impl_->EschedAttachDevice(realDeviceId);
 }
@@ -4716,8 +4706,8 @@ rtError_t ApiErrorDecorator::EschedDettachDevice(const uint32_t devId)
         realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %u to driver device ID.", devId);
     }
     return impl_->EschedDettachDevice(realDeviceId);
 }
@@ -4732,8 +4722,8 @@ rtError_t ApiErrorDecorator::EschedWaitEvent(const int32_t devId, const uint32_t
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedWaitEvent(realDeviceId, grpId, threadId, timeout, evt);
 }
@@ -4750,8 +4740,8 @@ rtError_t ApiErrorDecorator::EschedCreateGrp(const int32_t devId, const uint32_t
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedCreateGrp(realDeviceId, grpId, type);
 }
@@ -4765,8 +4755,8 @@ rtError_t ApiErrorDecorator::EschedSubmitEvent(const int32_t devId, rtEschedEven
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedSubmitEvent(realDeviceId, evt);
 }
@@ -4780,8 +4770,8 @@ rtError_t ApiErrorDecorator::EschedSubscribeEvent(const int32_t devId, const uin
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             reinterpret_cast<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedSubscribeEvent(realDeviceId, grpId, threadId, eventBitmap);
 }
@@ -4796,8 +4786,8 @@ rtError_t ApiErrorDecorator::EschedAckEvent(const int32_t devId, const rtEventId
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
             RtPtrToPtr<uint32_t *>(&realDeviceId));
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %d to driver device ID.", devId);
     }
     return impl_->EschedAckEvent(realDeviceId, evtId, subeventId, msg, len);
 }
@@ -4822,9 +4812,8 @@ rtError_t ApiErrorDecorator::CmoTaskLaunch(const rtCmoTaskInfo_t * const taskInf
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     const rtCmoOpCode_t opCode = static_cast<rtCmoOpCode_t>(taskInfo->opCode);
     if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_CMO)) {
-        COND_RETURN_ERROR_MSG_INNER(((opCode < RT_CMO_PREFETCH) || (opCode >= RT_CMO_RESERVED)), RT_ERROR_INVALID_VALUE,
-            "Invalid opCode, the valid value range is [RT_CMO_PREFETCH, RT_CMO_RESERVED), current opCode=%u",
-            taskInfo->opCode);
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM((opCode < RT_CMO_PREFETCH) || (opCode >= RT_CMO_RESERVED), 
+            RT_ERROR_INVALID_VALUE, taskInfo->opCode, "[" + std::to_string(RT_CMO_PREFETCH) + ", " + std::to_string(RT_CMO_RESERVED) + ")");
     }
     const rtError_t error = impl_->CmoTaskLaunch(taskInfo, stm, flag);
     COND_RETURN_ERROR(((error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT)),
@@ -4836,10 +4825,8 @@ rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t
     const rtCmoOpCode_t cmoOpCode, Stream * const stm, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(cmoAddrInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(
-        ((cmoOpCode < RT_CMO_PREFETCH) || (cmoOpCode >= RT_CMO_RESERVED)), RT_ERROR_INVALID_VALUE,
-        "Invalid cmoOpCode, the valid value range is [RT_CMO_PREFETCH, RT_CMO_RESERVED), current cmoOpCode=%u",
-        static_cast<uint8_t>(cmoOpCode));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((cmoOpCode < RT_CMO_PREFETCH) || (cmoOpCode >= RT_CMO_RESERVED)), 
+        RT_ERROR_INVALID_VALUE, cmoOpCode, "[" + std::to_string(RT_CMO_PREFETCH) + ", " + std::to_string(RT_CMO_RESERVED) + ")");
     rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties devProperty {};
     rtError_t error = GET_DEV_PROPERTIES(chipType, devProperty);
@@ -4847,9 +4834,8 @@ rtError_t ApiErrorDecorator::CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t
         "Failed to get dev properties, chipType = %u", chipType);
     const uint64_t sizeMax = (devProperty.cmoAddrInfoType == CmoAddrInfoType::CMO_ADDR_INFO_TYPE_DAVID) ?
         sizeof(rtDavidCmoAddrInfo) : sizeof(rtCmoAddrInfo);
-    COND_RETURN_ERROR_MSG_INNER(((destMax == 0) || (destMax > sizeMax)), RT_ERROR_INVALID_VALUE,
-        "Invalid destMax, current destMax size = %" PRIu64 "(bytes). The valid value range is (0, %" PRIu64 "]",
-        destMax, sizeMax);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((destMax == 0) || (destMax > sizeMax)), 
+        RT_ERROR_INVALID_VALUE, destMax, "(0, " + std::to_string(sizeMax) + "]");
 
     error = impl_->CmoAddrTaskLaunch(cmoAddrInfo, destMax, cmoOpCode, stm, flag);
     ERROR_RETURN(error, "CmoAddr Task launch failed.");
@@ -4860,9 +4846,9 @@ rtError_t ApiErrorDecorator::BarrierTaskLaunch(const rtBarrierTaskInfo_t * const
     const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
-    ZERO_RETURN_MSG(taskInfo->logicIdNum);
-    COND_RETURN_ERROR_MSG_INNER(taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM, RT_ERROR_INVALID_VALUE,
-        "logicIdNum=%hhu is invalid, valid range is [1, %u]", taskInfo->logicIdNum, RT_CMO_MAX_BARRIER_NUM);
+    ZERO_RETURN_AND_MSG_OUTER(taskInfo->logicIdNum);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(taskInfo->logicIdNum > RT_CMO_MAX_BARRIER_NUM, 
+        RT_ERROR_INVALID_VALUE, taskInfo->logicIdNum, "[1, " + std::to_string(RT_CMO_MAX_BARRIER_NUM) + "]");
 
     const rtError_t error = impl_->BarrierTaskLaunch(taskInfo, stm, flag);
     ERROR_RETURN(error, "Barrier Task failed.");
@@ -4917,8 +4903,8 @@ rtError_t ApiErrorDecorator::SetStreamOverflowSwitch(Stream * const stm, const u
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(flags >= static_cast<uint32_t>(RT_OVERFLOW_MODE_UNDEF), 
         RT_ERROR_INVALID_VALUE, flags, 
         "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
- 	  	RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());   
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     return impl_->SetStreamOverflowSwitch(stm, flags);
 }
 rtError_t ApiErrorDecorator::GetStreamOverflowSwitch(Stream * const stm, uint32_t * const flags)
@@ -4980,8 +4966,8 @@ rtError_t ApiErrorDecorator::DvppWaitGroupReport(DvppGrp * const grp, const  rtD
 
 rtError_t ApiErrorDecorator::SetStreamTag(Stream * const stm, const uint32_t geOpTag)
 {
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
- 	  	RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     const rtError_t error = impl_->SetStreamTag(stm, geOpTag);
     ERROR_RETURN(error, "set stream geOpTag failed.");
     return error;
@@ -5046,15 +5032,15 @@ rtError_t ApiErrorDecorator::GetDeviceSatStatus(void * const outputAddrPtr, cons
     COND_RETURN_ERROR(outputSize != OVERFLOW_OUTPUT_SIZE,
         RT_ERROR_INVALID_VALUE, "output size %lu is invalid, only support %lu bytes",
         outputSize, OVERFLOW_OUTPUT_SIZE);
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
- 	    RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     return impl_->GetDeviceSatStatus(outputAddrPtr, outputSize, stm);
 }
 
 rtError_t ApiErrorDecorator::CleanDeviceSatStatus(Stream * const stm)
 {
-    COND_RETURN_ERROR_MSG_INNER((stm != nullptr) && (stm->IsCapturing()),
- 	    RT_ERROR_STREAM_CAPTURED, "stream is in capture mode, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_OUTER((stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, 
+        ErrorCode::EE1006, __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     return impl_->CleanDeviceSatStatus(stm);
 }
 
@@ -5066,7 +5052,7 @@ rtError_t ApiErrorDecorator::GetAllUtilizations(const int32_t devId, const rtTyp
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
 
     return impl_->GetAllUtilizations(realDeviceId, kind, util);
 }
@@ -5099,9 +5085,9 @@ rtError_t ApiErrorDecorator::GetKernelBin(const char_t *const binFileName, char_
 rtError_t ApiErrorDecorator::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void **bin,
                                           uint32_t *binSize)
 {
-    NULL_PTR_RETURN_MSG(binHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(bin, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(binSize, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(bin, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(binSize, RT_ERROR_INVALID_VALUE);
     return impl_->GetBinBuffer(binHandle, type, bin, binSize);
 }
 
@@ -5124,15 +5110,15 @@ rtError_t ApiErrorDecorator::FreeKernelBin(char_t * const buffer)
 rtError_t ApiErrorDecorator::EschedQueryInfo(const uint32_t devId, const rtEschedQueryType type,
     rtEschedInputInfo *inPut, rtEschedOutputInfo *outPut)
 {
-    NULL_PTR_RETURN_MSG(inPut, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(outPut, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(inPut, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(outPut, RT_ERROR_INVALID_VALUE);
     uint32_t realDeviceId = 0U;
     if (IsHostCpuDevId(static_cast<int32_t>(devId))) {
         realDeviceId = static_cast<uint32_t>(DEFAULT_HOSTCPU_LOGIC_DEVICE_ID);
     } else {
         const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+            "Failed to convert the user device ID %u to driver device ID.", devId);
     }
     return impl_->EschedQueryInfo(realDeviceId, type, inPut, outPut);
 }
@@ -5150,7 +5136,7 @@ rtError_t ApiErrorDecorator::ModelCheckArchVersion(const char_t *omsocVersion)
 rtError_t ApiErrorDecorator::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void *devAddr,
     uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG(devPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(devPtr, RT_ERROR_INVALID_VALUE);
     return impl_->ReserveMemAddress(devPtr, size, alignment, devAddr, flags);
 }
 
@@ -5162,14 +5148,14 @@ rtError_t ApiErrorDecorator::ReleaseMemAddress(void* devPtr)
 rtError_t ApiErrorDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop,
     uint64_t flags)
 {
-    NULL_PTR_RETURN_MSG(prop, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(prop, RT_ERROR_INVALID_VALUE);
     rtError_t error = RT_ERROR_NONE;
     // only device id need covert
     if (prop->side == DEVICE_TYPE) {
         const uint32_t userDeviceId = prop->devid;
         error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-            "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "Failed to convert the user device ID %u to driver device ID.", userDeviceId);
         error = CheckDeviceIdIsValid(static_cast<int32_t>(prop->devid));
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
             "drv devId is invalid, drv devId=%u, retCode=%#x", prop->devid, static_cast<uint32_t>(error));
@@ -5211,16 +5197,16 @@ rtError_t ApiErrorDecorator::UnmapMem(void* devPtr)
 
 rtError_t ApiErrorDecorator::MemSetAccess(void *virPtr, size_t size, rtMemAccessDesc *desc, size_t count)
 {
-    NULL_PTR_RETURN_MSG(virPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(desc, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(desc, RT_ERROR_INVALID_VALUE);
     return impl_->MemSetAccess(virPtr, size, desc, count);
 }
 
 rtError_t ApiErrorDecorator::MemGetAccess(void *virPtr, rtMemLocation *location, uint64_t *flags)
 {
-    NULL_PTR_RETURN_MSG(virPtr, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(location, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(flags, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(location, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
     return impl_->MemGetAccess(virPtr, location, flags);
 }
 
@@ -5237,7 +5223,7 @@ rtError_t ApiErrorDecorator::ExportToShareableHandle(rtDrvMemHandle handle, rtDr
 rtError_t ApiErrorDecorator::ExportToShareableHandleV2(
     rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void *shareableHandle)
 {
-    NULL_PTR_RETURN_MSG(shareableHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5252,12 +5238,12 @@ rtError_t ApiErrorDecorator::ExportToShareableHandleV2(
 rtError_t ApiErrorDecorator::ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId,
     rtDrvMemHandle* handle)
 {
-    NULL_PTR_RETURN_MSG(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
     int32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -5267,8 +5253,8 @@ rtError_t ApiErrorDecorator::ImportFromShareableHandle(uint64_t shareableHandle,
 rtError_t ApiErrorDecorator::ImportFromShareableHandleV2(const void *shareableHandle,
     rtMemSharedHandleType handleType, uint64_t flags, int32_t devId, rtDrvMemHandle *handle)
 {
-    NULL_PTR_RETURN_MSG(shareableHandle, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(handle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5277,8 +5263,7 @@ rtError_t ApiErrorDecorator::ImportFromShareableHandleV2(const void *shareableHa
     int32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
         static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "input error devId:%d is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
         error,
@@ -5296,7 +5281,7 @@ rtError_t ApiErrorDecorator::SetPidToShareableHandle(uint64_t shareableHandle, i
 rtError_t ApiErrorDecorator::SetPidToShareableHandleV2(
     const void *shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum)
 {
-    NULL_PTR_RETURN_MSG(shareableHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(shareableHandle, RT_ERROR_INVALID_VALUE);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (handleType != RT_MEM_SHARE_HANDLE_TYPE_DEFAULT && handleType != RT_MEM_SHARE_HANDLE_TYPE_FABRIC), 
         RT_ERROR_INVALID_VALUE, handleType, std::to_string(RT_MEM_SHARE_HANDLE_TYPE_DEFAULT) 
@@ -5307,12 +5292,12 @@ rtError_t ApiErrorDecorator::SetPidToShareableHandleV2(
 rtError_t ApiErrorDecorator::GetAllocationGranularity(rtDrvMemProp_t *prop, rtDrvMemGranularityOptions option,
     size_t *granularity)
 {
-    NULL_PTR_RETURN_MSG(prop, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(prop, RT_ERROR_INVALID_VALUE);
     if (prop->side == DEVICE_TYPE) {
         uint32_t userDeviceId = prop->devid;
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &prop->devid);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-            "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "Failed to convert the user device ID %u to driver device ID.", userDeviceId);
         error = CheckDeviceIdIsValid(static_cast<int32_t>(prop->devid));
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
             "drv devId is invalid, drv devId=%u, retCode=%#x", prop->devid, static_cast<uint32_t>(error));
@@ -5331,8 +5316,8 @@ rtError_t ApiErrorDecorator::DeviceStatusQuery(const uint32_t devId, rtDeviceSta
     NULL_PTR_RETURN_MSG_OUTER(deviceStatus, RT_ERROR_INVALID_VALUE);
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error devId=%u is err:%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+        "Failed to convert the user device ID %u to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, devId=%u, drv devId=%u, retCode=%#x", devId, realDeviceId, static_cast<uint32_t>(error));
@@ -5357,7 +5342,7 @@ rtError_t ApiErrorDecorator::QueryProcessHostPid(int32_t pid, uint32_t *chipId, 
     if (chipId != nullptr) {
         const uint32_t drvDeviceId = *chipId;
         error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, chipId);
-        ERROR_RETURN_MSG_INNER(error, "Conv drvDeviceId=%u is err:%#x.", drvDeviceId, static_cast<uint32_t>(error));
+        ERROR_RETURN_MSG_INNER(error,  "Failed to convert the driver device ID %u to user device ID, retCode=%#x", drvDeviceId, static_cast<uint32_t>(error));
     }
     return RT_ERROR_NONE;
 }
@@ -5465,7 +5450,7 @@ rtError_t ApiErrorDecorator::SetDefaultDeviceId(const int32_t deviceId)
     int32_t realDeviceId;
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         RtPtrToPtr<uint32_t *>(&realDeviceId), true);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "input error deviceId:%u is err:%#x", deviceId, error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", deviceId);
 
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
@@ -5475,14 +5460,14 @@ rtError_t ApiErrorDecorator::SetDefaultDeviceId(const int32_t deviceId)
 
 rtError_t ApiErrorDecorator::CtxGetCurrentDefaultStream(Stream ** const stm)
 {
-    NULL_PTR_RETURN_MSG(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     return impl_->CtxGetCurrentDefaultStream(stm);
 }
 
 rtError_t ApiErrorDecorator::GetPrimaryCtxState(const int32_t devId, uint32_t *flags, int32_t *active)
 {
-    NULL_PTR_RETURN_MSG(flags, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(active, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(flags, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(active, RT_ERROR_INVALID_VALUE);
     int32_t realDeviceId;
     Runtime *rtInstance = Runtime::Instance();
 
@@ -5497,8 +5482,8 @@ rtError_t ApiErrorDecorator::GetPrimaryCtxState(const int32_t devId, uint32_t *f
     error = rtInstance->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId), true);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "input error deviceId:%d is err:%#x", devId, error);
-    COND_RETURN_ERROR(((realDeviceId < 0) || (realDeviceId >= deviceCnt)), RT_ERROR_DEVICE_ID,
-        "Invalid devId=%d drv devId=%d, valid range is [0, %d).", devId, realDeviceId, deviceCnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((realDeviceId < 0) || (realDeviceId >= deviceCnt)),
+        RT_ERROR_DEVICE_ID, realDeviceId, "[0, " + std::to_string(deviceCnt) + ")");
 
     return impl_->GetPrimaryCtxState(realDeviceId, flags, active);
 }
@@ -5514,8 +5499,8 @@ rtError_t ApiErrorDecorator::DeviceResetForce(const int32_t devId)
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "input error devId:%u is err:%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId, static_cast<uint32_t>(error));
@@ -5531,8 +5516,7 @@ rtError_t ApiErrorDecorator::GetDeviceStatus(const int32_t devId, rtDevStatus_t 
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Error input devId:%d is err:%#x",
-        devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%d, retCode=%#x",
         realDeviceId, static_cast<uint32_t>(error));
@@ -5545,8 +5529,8 @@ rtError_t ApiErrorDecorator::SetDeviceResLimit(const uint32_t devId, const rtDev
         type, "[0, " + std::to_string(RT_DEV_RES_TYPE_MAX) + ")");
     uint32_t drvDevId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Error input devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %u to driver device ID.", devId);
     error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
         error,
@@ -5560,8 +5544,8 @@ rtError_t ApiErrorDecorator::ResetDeviceResLimit(const uint32_t devId)
 {
     uint32_t drvDevId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Error input devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %u to driver device ID.", devId);
     error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
         error,
@@ -5578,8 +5562,8 @@ rtError_t ApiErrorDecorator::GetDeviceResLimit(const uint32_t devId, const rtDev
     NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
     uint32_t drvDevId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Error input devId:%u is err:%#x", devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %u to driver device ID.", devId);
     error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
         error,
@@ -5635,8 +5619,8 @@ rtError_t ApiErrorDecorator::HdcServerCreate(const int32_t devId, const rtHdcSer
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Error input devId:%d is err:%#x",
-        devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%d, retCode=%#x",
         realDeviceId, static_cast<uint32_t>(error));
@@ -5659,8 +5643,8 @@ rtError_t ApiErrorDecorator::HdcSessionConnect(const int32_t peerNode, const int
     int32_t realDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(peerDevId),
         RtPtrToPtr<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Error input devId:%d is err:%#x",
-        peerDevId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %d to driver device ID.", peerDevId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%d, retCode=%#x",
         realDeviceId, static_cast<uint32_t>(error));
@@ -5711,8 +5695,7 @@ rtError_t ApiErrorDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t *uuid)
     int32_t drvDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         RtPtrToPtr<uint32_t*>(&drvDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Input devId is invalid, devId=%d, ErrorCode=%#x",
-        devId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
 
     error = CheckDeviceIdIsValid(drvDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "drvDeviceId is invalid, drvDeviceId=%d, ErrorCode=%#x",
@@ -5745,7 +5728,7 @@ rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
-        ErrorCode::EE1006, __func__, "non aclGraph mode" );
+        ErrorCode::EE1006, __func__, "non ACL Graph mode" );
     return impl_->ModelUpdate(mdl);
 }
 
@@ -5783,10 +5766,10 @@ rtError_t ApiErrorDecorator::MemReserveAddress(void** virPtr, size_t size, rtMal
 {
     NULL_PTR_RETURN_MSG_OUTER(virPtr, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(size);
-    COND_RETURN_ERROR_MSG_INNER((expectAddr != nullptr), RT_ERROR_INVALID_VALUE,
-        "Invalid expectAddr, currently only null is supported.");
-    COND_RETURN_ERROR_MSG_INNER((cfg != nullptr), RT_ERROR_INVALID_VALUE,
-        "Invalid cfg, currently only null is supported.");
+    COND_RETURN_AND_MSG_RESERVED_PARAM((expectAddr != nullptr), RT_ERROR_INVALID_VALUE, "expectAddr",
+        "expectAddr is reserved parameter and must be null");
+    COND_RETURN_AND_MSG_RESERVED_PARAM((cfg != nullptr), RT_ERROR_INVALID_VALUE, "cfg",
+        "cfg is reserved parameter and must be null");
     return impl_->MemReserveAddress(virPtr, size, policy, expectAddr, cfg);
 }
  
@@ -5815,8 +5798,8 @@ rtError_t ApiErrorDecorator::MemMallocPhysical(rtMemHandle* handle, size_t size,
     if (isSetDeviceId == true) {
         const uint32_t userDeviceId = deviceId;
         rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &deviceId);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-            "input error devId:%u is err:%#x", userDeviceId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+            "Failed to convert the user device ID %u to driver device ID.", userDeviceId);
         error = CheckDeviceIdIsValid(static_cast<int32_t>(deviceId));
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
             "drv devId is invalid, drv devId=%u, retCode=%#x", deviceId, static_cast<uint32_t>(error));
@@ -6074,8 +6057,8 @@ rtError_t ApiErrorDecorator::FuncGetName(const Kernel * const kernel, const uint
 {
     NULL_PTR_RETURN_MSG_OUTER(kernel, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(maxLen < (kernel->Name_().length() + 1U), RT_ERROR_INVALID_VALUE,
-        "the maxLen %u is smaller than func name length %zu", maxLen, kernel->Name_().length() + 1U);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(maxLen < (kernel->Name_().length() + 1U), 
+        RT_ERROR_INVALID_VALUE, maxLen, "greater than or equal to " + std::to_string(kernel->Name_().length() + 1U));
     const rtError_t error = impl_->FuncGetName(kernel, maxLen, name);
     ERROR_RETURN(error, "get func name failed");
     return error;
@@ -6087,8 +6070,8 @@ rtError_t ApiErrorDecorator::GetErrorVerbose(const uint32_t deviceId, rtErrorInf
     const Runtime * const rtInstance = Runtime::Instance();
     uint32_t realDeviceId = 0U;
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%u is invalid, errcode=%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     
     int32_t deviceCnt = 0;
     const driverType_t rawDrvType = rtInstance->GetDriverType();
@@ -6111,8 +6094,8 @@ rtError_t ApiErrorDecorator::RepairError(const uint32_t deviceId, const rtErrorI
     const Runtime * const rtInstance = Runtime::Instance();
     uint32_t realDeviceId = 0U;
     rtError_t error = rtInstance->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error deviceId:%u is invalid, errcode=%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     
     int32_t deviceCnt = 0;
     const driverType_t rawDrvType = rtInstance->GetDriverType();
@@ -6148,8 +6131,8 @@ rtError_t ApiErrorDecorator::GetMemUsageInfo(const uint32_t deviceId, rtMemUsage
     rtError_t error;
     uint32_t realDeviceId = 0U;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "input error deviceId:%u, errCode:%#x",
-        deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, 
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%u, retCode=%#x",
         realDeviceId, static_cast<uint32_t>(error));
@@ -6348,9 +6331,7 @@ rtError_t ApiErrorDecorator::GetHostAtomicCapabilities(
 
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId), true);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error devId:%d is err:%#x", deviceId,
-        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.", deviceId);
 
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(
@@ -6377,9 +6358,7 @@ rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
     int32_t realSrcDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
         static_cast<uint32_t>(srcDeviceId), RtPtrToPtr<uint32_t*>(&realSrcDeviceId), true);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error srcDevId:%d is err:%#x", srcDeviceId,
-        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.", srcDeviceId);
     error = CheckDeviceIdIsValid(realSrcDeviceId);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realSrcDeviceId,
@@ -6388,9 +6367,7 @@ rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
     int32_t realDstDeviceId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(
         static_cast<uint32_t>(dstDeviceId), RtPtrToPtr<uint32_t*>(&realDstDeviceId), true);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "input error dstDevId:%d is err:%#x", dstDeviceId,
-        static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.", dstDeviceId);
     error = CheckDeviceIdIsValid(realDstDeviceId);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDstDeviceId,

@@ -36,8 +36,8 @@ static unordered_set<string> g_fusionAllowedList {
 rtError_t ApiErrorDecorator::WriteValuePtr(void * const writeValueInfo, Stream * const stm,
     void * const pointedAddr)
 {
-    NULL_PTR_RETURN_MSG(writeValueInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(pointedAddr, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(writeValueInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(pointedAddr, RT_ERROR_INVALID_VALUE);
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);
 }
 
@@ -48,8 +48,8 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify
     int32_t realDeviceId;
     const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId),
         reinterpret_cast<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "input error device_id:%d is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
+        "Failed to convert the user device ID %d to driver device ID.", deviceId);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(!((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)),
         RT_ERROR_INVALID_VALUE, flag, std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV));
     return impl_->CntNotifyCreate(realDeviceId, retCntNotify, flag);
@@ -114,21 +114,21 @@ rtError_t ApiErrorDecorator::GetCntNotifyId(CountNotify * const inCntNotify, uin
 rtError_t ApiErrorDecorator::WriteValue(rtWriteValueInfo_t * const info, Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(((static_cast<uint32_t>(info->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
-        (info->size == WRITE_VALUE_SIZE_TYPE_INVALID)), RT_ERROR_INVALID_VALUE,
-        "Write value size[%d] does not support, it should between [1, %d).", info->size,
-        WRITE_VALUE_SIZE_TYPE_BUFF);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((static_cast<uint32_t>(info->size) >= WRITE_VALUE_SIZE_TYPE_BUFF) ||
+        (info->size == WRITE_VALUE_SIZE_TYPE_INVALID)), RT_ERROR_INVALID_VALUE, 
+        info->size, "[1, " + std::to_string(WRITE_VALUE_SIZE_TYPE_BUFF) + ")");
     const uint64_t temp = 0ULL;
     const uint64_t info_size = static_cast<uint64_t>(info->size) - 1;
-    COND_RETURN_ERROR_MSG_INNER(static_cast<bool>((~(~temp << info_size )) & info->addr),
-        RT_ERROR_INVALID_VALUE, "Address [%lu] is not aligned by awsize [%d].", info->addr, info->size);
+    COND_RETURN_AND_MSG_OUTER(static_cast<bool>((~(~temp << info_size )) & info->addr),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, 
+        std::to_string(info->addr), "info->addr", "Address is not aligned by size " + std::to_string(info->size));
     return impl_->WriteValue(info, stm);
 }
 
 rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t *taskInfo,  Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG(taskInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(taskInfo->args, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(taskInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(taskInfo->args, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->instCnt == RT_CCU_INST_CNT_INVALID), RT_ERROR_INVALID_VALUE, 
         taskInfo->instCnt, "not equal to 0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->instStartId >= RT_CCU_INST_START_MAX), RT_ERROR_INVALID_VALUE, 
@@ -143,7 +143,7 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t *taskInfo,  Stream * cons
 
 rtError_t ApiErrorDecorator::UbDevQueryInfo(rtUbDevQueryCmd cmd, void * devInfo)
 {
-    NULL_PTR_RETURN_MSG(devInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(devInfo, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, 
         cmd, "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
     return impl_->UbDevQueryInfo(cmd, devInfo);
@@ -151,10 +151,10 @@ rtError_t ApiErrorDecorator::UbDevQueryInfo(rtUbDevQueryCmd cmd, void * devInfo)
 
 rtError_t ApiErrorDecorator::GetDevResAddress(const rtDevResInfo * const resInfo, rtDevResAddrInfo * const addrInfo)
 {
-    NULL_PTR_RETURN_MSG(resInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(addrInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(addrInfo->len, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(addrInfo->resAddress, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(resInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(addrInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(addrInfo->len, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(addrInfo->resAddress, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0), RT_ERROR_INVALID_VALUE, 
         resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0), RT_ERROR_INVALID_VALUE, 
@@ -164,7 +164,7 @@ rtError_t ApiErrorDecorator::GetDevResAddress(const rtDevResInfo * const resInfo
 
 rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo * const resInfo)
 {
-    NULL_PTR_RETURN_MSG(resInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(resInfo, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
         resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX, RT_ERROR_INVALID_VALUE, 
@@ -174,7 +174,7 @@ rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo * const resInfo)
 
 rtError_t ApiErrorDecorator::UbDbSend(rtUbDbInfo_t *const dbInfo, Stream *const stm)
 {
-    NULL_PTR_RETURN_MSG(dbInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(dbInfo, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dbInfo->dbNum != UB_DOORBELL_NUM_MIN) && (dbInfo->dbNum != UB_DOORBELL_NUM_MAX), 
         RT_ERROR_INVALID_VALUE, dbInfo->dbNum, "1 or 2");    
     if (dbInfo->dbNum == UB_DOORBELL_NUM_MAX) {
@@ -189,8 +189,8 @@ rtError_t ApiErrorDecorator::UbDbSend(rtUbDbInfo_t *const dbInfo, Stream *const 
 
 rtError_t ApiErrorDecorator::UbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG(wqeInfo, RT_ERROR_INVALID_VALUE);
-    NULL_PTR_RETURN_MSG(wqeInfo->wqe, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(wqeInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(wqeInfo->wqe, RT_ERROR_INVALID_VALUE);
     COND_RETURN_OUT_ERROR_MSG_CALL((wqeInfo->wqeSize == 0 && wqeInfo->wqePtrLen != UB_DIRECT_WQE_MIN_LEN) ||
         (wqeInfo->wqeSize == 1 && wqeInfo->wqePtrLen != UB_DIRECT_WQE_MAX_LEN), RT_ERROR_INVALID_VALUE,
         "Invalid parameter. wqeSize:%u and wqePtrLen:%u do not match.", wqeInfo->wqeSize, wqeInfo->wqePtrLen);
@@ -207,7 +207,7 @@ static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t * const argsInf
         aicpuTaskNum, "[0, " + std::to_string(FUSION_SUB_TASK_MAX_CPU_NUM) + "]");
     if (argsInfo->isNoNeedH2DCopy == 0U) {
         if (argsInfo->aicpuNum > 0) {
-            NULL_PTR_RETURN_MSG(argsInfo->aicpuArgs, RT_ERROR_INVALID_VALUE);
+            NULL_PTR_RETURN_MSG_OUTER(argsInfo->aicpuArgs, RT_ERROR_INVALID_VALUE);
             for (uint8_t i = 0U; i < argsInfo->aicpuNum; i++) {
                 COND_RETURN_OUT_ERROR_MSG_CALL(
                     argsInfo->aicpuArgs[i].soNameAddrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
@@ -251,7 +251,7 @@ rtError_t ApiErrorDecorator::FusionLaunch(void * const fusionInfo, Stream * cons
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     // 1. check args  sub & 0x7 != 0
-    NULL_PTR_RETURN_MSG(fusionInfo, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(fusionInfo, RT_ERROR_INVALID_VALUE);
 
     rtFunsionTaskInfo_t *fusionTask = static_cast<rtFunsionTaskInfo_t *>(fusionInfo);
     const uint32_t subTaskNum = fusionTask->subTaskNum;
@@ -294,7 +294,7 @@ rtError_t ApiErrorDecorator::StreamTaskAbort(Stream * const stm)
 
 rtError_t ApiErrorDecorator::StreamRecover(Stream * const stm)
 {
-    NULL_PTR_RETURN_MSG(stm, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_WITH_NOLOG(!stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM), 
         ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
@@ -307,14 +307,18 @@ rtError_t ApiErrorDecorator::StreamTaskClean(Stream * const stm)
     const bool isSupport =
         stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM) ||
         stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT);
-    COND_RETURN_WITH_NOLOG(!isSupport, RT_ERROR_FEATURE_NOT_SUPPORT);
-    COND_RETURN_ERROR_MSG_INNER((((stm->Flags() & RT_STREAM_PERSISTENT) == 0U) || (!stm->GetBindFlag())),
-        RT_ERROR_STREAM_INVALID, "Stream must binded");
-    COND_RETURN_ERROR_MSG_INNER(((stm->Flags() & RT_STREAM_AICPU) != 0U),
-        RT_ERROR_STREAM_INVALID, "AICPU stream can not clean");
+    COND_RETURN_WITH_NOLOG(!isSupport, RT_ERROR_FEATURE_NOT_SUPPORT); 
+    COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_PERSISTENT) == 0U), RT_ERROR_STREAM_INVALID, 
+        ErrorCode::EE1011, __func__, "RT_STREAM_PERSISTENT", "stream flag", 
+        "Non-persistent stream " + std::to_string(stm->Id_()) + " does not support stream task clearance");
+    COND_RETURN_AND_MSG_OUTER((!stm->GetBindFlag()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, __func__,
+        "stream", "Stream " + std::to_string(stm->Id_()) + " must be bound to a model");
+    COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_AICPU) != 0U), RT_ERROR_STREAM_INVALID, 
+        ErrorCode::EE1011, __func__, "RT_STREAM_AICPU", "stream flag", 
+        "AICPU stream " + std::to_string(stm->Id_()) + " does not support stream task clearance");
     NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
-    COND_RETURN_ERROR_MSG_INNER((!stm->Model_()->IsModelLoadComplete()),
-        RT_ERROR_STREAM_INVALID, "Model not load complete");
+    COND_RETURN_AND_MSG_OUTER((!stm->Model_()->IsModelLoadComplete()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, 
+        __func__, "stream", "Model " + std::to_string(stm->Model_()->Id_()) + " where stream " + std::to_string(stm->Id_()) + " is located has not been loaded. Clear stream tasks after the model is loaded");
     return impl_->StreamTaskClean(stm);
 }
 
@@ -323,11 +327,11 @@ rtError_t ApiErrorDecorator::DeviceResourceClean(const int32_t devId)
     int32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId),
         reinterpret_cast<uint32_t *>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
-        "devId=%d is invalid, retCode=%#x", devId, static_cast<uint32_t>(RT_ERROR_DEVICE_ID));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID,
+        "Failed to convert the user device ID %d to driver device ID.", devId);
     error = CheckDeviceIdIsValid(realDeviceId);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "devId=%d is invalid, drv devId=%d, retCode=%#x", devId, realDeviceId, static_cast<uint32_t>(error));
+        "The driver device ID %d is invalid. The user device ID is %d, retCode=%#x", realDeviceId, devId, static_cast<uint32_t>(error));
 
     return impl_->DeviceResourceClean(realDeviceId);
 }
@@ -373,17 +377,15 @@ rtError_t ApiErrorDecorator::MemGetInfoByDeviceId(
     uint32_t realDeviceId;
     Runtime * const rt = Runtime::Instance();
     rtError_t error = rt->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    ERROR_RETURN(error, "ChgUserDevIdToDeviceId error:userDeviceId:%u is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
     
     int32_t cnt = 1;
     const auto npuDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
     error = npuDrv->GetDeviceCount(&cnt);
     ERROR_RETURN(error, "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_ERROR(realDeviceId >= static_cast<uint32_t>(cnt),
-        RT_ERROR_INVALID_VALUE,
-        "Invalid drv devId, current drv devId=%u , valid device range is [0, %d)",
-        realDeviceId, cnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= static_cast<uint32_t>(cnt),
+        RT_ERROR_INVALID_VALUE, realDeviceId, "[0, " + std::to_string(cnt) + ")");
 
     error = impl_->MemGetInfoByDeviceId(realDeviceId, isHugeOnly, freeSize, totalSize);
     ERROR_RETURN(error, "Get memory info failed, deviceId=%u, isHugeOnly=%d, err=%#x.", 
@@ -403,18 +405,16 @@ rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr at
     NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
-        "input error:deviceId:%u is err:%#x", deviceId, static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
+        "Failed to convert the user device ID %u to driver device ID.", deviceId);
     const auto npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
     int32_t cnt = 1;
     error = npuDrv->GetDeviceCount(&cnt);
     COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, error != RT_ERROR_NONE, error,
         "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_OUT_ERROR_MSG_CALL(realDeviceId >= static_cast<uint32_t>(cnt),
-        RT_ERROR_INVALID_VALUE,
-        "Get device info failed, invalid drv devId, current drv devId=%u , valid device range is [0, %d)",
-        realDeviceId, cnt);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= static_cast<uint32_t>(cnt),
+        RT_ERROR_INVALID_VALUE, realDeviceId, "[0, " + std::to_string(cnt) + ")");
 
     return impl_->GetDeviceInfoByAttr(realDeviceId, attr, val);
 }

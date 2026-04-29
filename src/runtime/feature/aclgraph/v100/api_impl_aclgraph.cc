@@ -29,13 +29,12 @@ rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
-        "stream is binded, stream_id=%d, model_id=%u.", stm->Id_(), stm->Model_()->Id_());
-    COND_RETURN_ERROR_MSG_INNER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "the default stream cannot be captured.");
-
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+        "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+        "stream", "The default stream cannot be used in the ACL Graph");
     return curCtx->StreamBeginCapture(stm, mode);
 }
 
@@ -43,12 +42,12 @@ rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMd
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
-        "stream is binded, stream_id=%d, model_id=%u.", stm->Id_(), stm->Model_()->Id_());
-    COND_RETURN_ERROR_MSG_INNER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "the default stream cannot be captured.");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+        "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+        "stream", "The default stream cannot be used in the ACL Graph");
 
     return curCtx->StreamEndCapture(stm, captureMdl);
 }
@@ -57,8 +56,8 @@ rtError_t ApiImpl::StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
     return curCtx->StreamBeginTaskUpdate(stm, handle);
 }
 
@@ -66,8 +65,8 @@ rtError_t ApiImpl::StreamEndTaskUpdate(Stream * const stm)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
     return curCtx->StreamEndTaskUpdate(stm);
 }
 
@@ -100,8 +99,8 @@ rtError_t ApiImpl::ModelGetNodes(const Model * const mdl, uint32_t * const num)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
-        "model context is not current ctx, model_id=%u.", mdl->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT, 
+        "model " + std::to_string(mdl->Id_()));
 
     return curCtx->ModelGetNodes(mdl, num);
 }
@@ -110,8 +109,8 @@ rtError_t ApiImpl::ModelDebugDotPrint(const Model * const mdl)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
-        "model context is not current ctx, model_id=%u.", mdl->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT, 
+        "model " + std::to_string(mdl->Id_()));
 
     return curCtx->ModelDebugDotPrint(mdl);
 }
@@ -120,8 +119,8 @@ rtError_t ApiImpl::ModelDebugJsonPrint(const Model * const mdl, const char* path
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
-        "model context is not current ctx, model_id=%u.", mdl->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT, 
+        "model " + std::to_string(mdl->Id_()));
 
     return curCtx->ModelDebugJsonPrint(mdl, path, flags);
 }
@@ -130,14 +129,14 @@ rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
-    COND_RETURN_ERROR_MSG_INNER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
-        "stream is binded, stream_id=%d, model_id=%u.", stm->Id_(), stm->Model_()->Id_());
-    COND_RETURN_ERROR_MSG_INNER(captureMdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
-        "model context is not current ctx, model_id=%u.", captureMdl->Id_());
-    COND_RETURN_ERROR_MSG_INNER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "the default stream cannot be captured.");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1017, __func__,
+        "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(captureMdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT, 
+        "model " + std::to_string(captureMdl->Id_()));
+    COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
+        "stream", "The default stream cannot be used in the ACL Graph");
 
     return curCtx->StreamAddToModel(stm, captureMdl);
 }
@@ -155,8 +154,8 @@ rtError_t ApiImpl::StreamBeginTaskGrp(Stream * const stm)
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
     return curCtx->StreamBeginTaskGrp(stm);
 }
 
@@ -165,8 +164,8 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handl
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
     return curCtx->StreamEndTaskGrp(stm, handle);
 }
 

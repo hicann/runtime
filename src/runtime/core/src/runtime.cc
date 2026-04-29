@@ -4326,6 +4326,7 @@ rtError_t Runtime::ChgUserDevIdToDeviceId(const uint32_t userDevId, uint32_t * c
         RT_LOG(RT_LOG_ERROR, "input userDevId:%u is err, userDeviceCnt:%u, real deviceCnt:%u isSetVisibleDev:%d "
             "ASCEND_RT_VISIBLE_DEVICES:[%s], available visible devices:[%s]",
             userDevId, userDeviceCnt, deviceCnt, isSetVisibleDev, inputDeviceStr, availableDeviceStr);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, userDevId, "userDevId", "[0, " + std::to_string(userDeviceCnt) + ")");
         return RT_ERROR_DEVICE_ID;
     }
     (*deviceId) = deviceInfo[userDevId];
@@ -4346,6 +4347,7 @@ rtError_t Runtime::GetUserDevIdByDeviceId(const uint32_t deviceId, uint32_t * co
             RT_LOG(RT_LOG_ERROR, "Get userDevId failed, "
                 "input deviceId:%u real deviceCnt:%u isSetVisibleDev:%d ASCEND_RT_VISIBLE_DEVICES:[%s].",
                 deviceId, deviceCnt, isSetVisibleDev, inputDeviceStr);
+            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to convert the driver device ID %u to user device ID. Reason: driver device ID is invalid, valid range is [0, %u).", deviceId, deviceCnt);
         }
         return RT_ERROR_DEVICE_ID;
     }

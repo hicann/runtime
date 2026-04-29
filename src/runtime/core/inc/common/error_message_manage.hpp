@@ -175,6 +175,68 @@
         RT_LOG_INNER_MSG(RT_LOG_ERROR, format, ##__VA_ARGS__); \
     }
 
+//EE1010 错误码使用，用于stream/model/context等的归属关系校验
+#define RT_LOG_OUTER_MSG_INVALID_CONTEXT(object) \
+    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1010, (object))
+
+#define COND_RETURN_AND_MSG_INVALID_CONTEXT(COND, RTERRCODE, object) \
+    if (unlikely(COND)) { \
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1010, (object)); \
+        return RTERRCODE; \
+    }
+
+//EE1017 预留参数校验使用
+#define RT_LOG_OUTER_MSG_RESERVED_PARAM(param, reason) \
+    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, param, reason)
+
+#define COND_RETURN_AND_MSG_RESERVED_PARAM(COND, RTERRCODE, param, reason) \
+    if (unlikely(COND)) { \
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, param, reason); \
+        return RTERRCODE; \
+    }
+
+//EE1013 内存分配失败使用，PROC 为清理操作，bufSize 为请求分配的内存大小
+#define COND_PROC_RETURN_AND_MSG_ALLOC_FAILED(COND, RTERRCODE, PROC, bufSize) \
+    if (unlikely(COND)) { \
+        PROC; \
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, bufSize); \
+        return RTERRCODE; \
+    }
+
+// EE1016 capture mode检查使用
+#define REPORT_CAPTURE_MODE_ERROR(ctx, funcName) \
+    do { \
+        const rtStreamCaptureMode threadCaptureMode = InnerThreadLocalContainer::GetThreadCaptureMode(); \
+        const rtStreamCaptureMode exchangeCaptureMode = InnerThreadLocalContainer::GetThreadExchangeCaptureMode(); \
+        const rtStreamCaptureMode contextCaptureMode = (ctx)->GetContextCaptureMode(); \
+        const uint32_t threadId = PidTidFetcher::GetCurrentTid(); \
+        if (threadCaptureMode == RT_STREAM_CAPTURE_MODE_RELAXED) { \
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1016, funcName, \
+                "Other threads of the current context are in the capture state. " \
+                "As a result, the current operation cannot be performed on thread " + std::to_string(threadId) + ". " \
+                "To perform this operation in the current thread, call aclmdlRICaptureThreadExchangeMode to change the capture mode of the current thread. " \
+                "The mode set using the aclmdlRICaptureBegin API is " + std::to_string(static_cast<int32_t>(contextCaptureMode)) + ", " \
+                "the capture mode of the current thread is " + std::to_string(static_cast<int32_t>(threadCaptureMode)) + ", " \
+                "and the mode set using the aclmdlRICaptureThreadExchangeMode API is " + std::to_string(static_cast<int32_t>(exchangeCaptureMode))); \
+        } else { \
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1016, funcName, \
+                "The current thread " + std::to_string(threadId) + " is in the capture state and the current operation cannot be performed. " \
+                "Check whether the mode set by the aclmdlRICaptureBegin API supports the current operation. " \
+                "This operation is supported only in the RELAXED mode. " \
+                "The mode set using the aclmdlRICaptureBegin API is " + std::to_string(static_cast<int32_t>(contextCaptureMode)) + ", " \
+                "the capture mode of the current thread is " + std::to_string(static_cast<int32_t>(threadCaptureMode)) + ", " \
+                "and the mode set using the aclmdlRICaptureThreadExchangeMode API is " + std::to_string(static_cast<int32_t>(exchangeCaptureMode))); \
+        } \
+    } while (false)
+
+#define CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN(ctx) \
+    do { \
+        if (!(ctx)->IsCaptureModeSupport()) { \
+            REPORT_CAPTURE_MODE_ERROR(ctx, __func__); \
+            return RT_ERROR_STREAM_CAPTURE_MODE_NOT_SUPPORT; \
+        } \
+    } while (false)
+
 #define NULL_PTR_PROC_RETURN_ERROR_MSG_CALL(MODULE_TYPE, PTR, ERR, PROC) \
     if (unlikely((PTR) == nullptr)) { \
         PROC \

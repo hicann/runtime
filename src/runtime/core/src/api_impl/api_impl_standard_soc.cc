@@ -194,8 +194,8 @@ rtError_t ApiImpl::StreamTaskClean(Stream * const stm)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_ERROR_MSG_INNER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "task clean failed, stream is not in current ctx, stream_id=%d.", stm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(stm->Id_()));
     return stm->StreamTaskClean();
 }
 
@@ -226,7 +226,8 @@ rtError_t ApiImpl::FftsPlusTaskLaunch(const rtFftsPlusTaskInfo_t * const fftsPlu
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream * const curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    COND_RETURN_ERROR(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, "stream is not in current ctx");
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(curStm->Id_()));
 
     return curCtx->FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag);
 }
@@ -242,8 +243,8 @@ rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-                                "RDMA send failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(curStm->Id_()));
 
     return curCtx->RDMASend(sqIndex, wqeIndex, curStm);
 }
@@ -259,8 +260,8 @@ rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
         NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
 
-    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-                                "RDMA db send failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(curStm->Id_()));
 
     return curCtx->RdmaDbSend(dbIndex, dbInfo, curStm);
 }
@@ -290,8 +291,7 @@ rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, in
     uint32_t userDeviceId = 0U;
     rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(static_cast<uint32_t>(deviceId), &userDeviceId);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Get userDeviceId failed, error=%#x, drv devId=%u",
-        static_cast<uint32_t>(error), deviceId);
+        error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x", deviceId, static_cast<uint32_t>(error));
 
     /* 当attr无法转化为(moduleType, infoType)时，在此增加case */
     switch(attr) {
@@ -395,7 +395,7 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(const uint32_t deviceId, const 
     const std::string socVersion = rt->GetSocVersion();
     uint32_t platformRet = fe::PlatformInfoManager::GeInstance().InitRuntimePlatformInfos(socVersion);
     if (platformRet != 0U) {
-        RT_LOG(RT_LOG_ERROR,
+        RT_LOG_INNER_MSG(RT_LOG_ERROR,
             "InitRuntime PlatformInfos failed, devId=%u, socVersion=%s, platformRet=%u",
             deviceId, socVersion.c_str(), platformRet);
         return RT_ERROR_INVALID_VALUE;
@@ -404,13 +404,13 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(const uint32_t deviceId, const 
     fe::PlatFormInfos platformInfos;
     platformRet = fe::PlatformInfoManager::GeInstance().GetRuntimePlatformInfosByDevice(deviceId, platformInfos);
     if (platformRet != 0U) {
-        RT_LOG(RT_LOG_ERROR, "get runtime platformInfos by device failed, deviceId=%d", deviceId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "get runtime platformInfos by device failed, deviceId=%d", deviceId);
         return RT_ERROR_INVALID_VALUE;
     }
 
     std::string strVal;
     if (!platformInfos.GetPlatformResWithLock(label, key, strVal)) {
-        RT_LOG(RT_LOG_ERROR, "get platform res failed, label=%s, key=%s socVersion=%s", 
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "get platform res failed, label=%s, key=%s socVersion=%s", 
             label.c_str(), key.c_str(), socVersion.c_str());
         return RT_ERROR_INVALID_VALUE;
     }
@@ -418,7 +418,7 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(const uint32_t deviceId, const 
     try {
         *value = std::stoll(strVal);
     } catch (...) {
-        RT_LOG(RT_LOG_ERROR, "strVal[%s] can not be converted to digital value, label=%s key=%s socVersion=%s",
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "strVal[%s] can not be converted to digital value, label=%s key=%s socVersion=%s",
             strVal.c_str(), label.c_str(), key.c_str(), socVersion.c_str());
         return RT_ERROR_INVALID_VALUE;
     }
@@ -458,7 +458,8 @@ rtError_t ApiImpl::IpcOpenEventHandle(rtIpcEventHandle_t *handle, IpcEvent** con
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device * const dev = curCtx->Device_();
     *event = new (std::nothrow) IpcEvent(dev, RT_EVENT_IPC, curCtx);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *event == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
+    COND_RETURN_AND_MSG_OUTER((*event == nullptr), RT_ERROR_EVENT_NEW, ErrorCode::EE1013,
+        sizeof(IpcEvent));
     RT_LOG(RT_LOG_INFO, "new event success");
     const rtError_t error = (*event)->IpcOpenEventHandle(handle);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*event);,

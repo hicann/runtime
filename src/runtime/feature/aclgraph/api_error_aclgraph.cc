@@ -19,9 +19,10 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStre
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((mode >= RT_STREAM_CAPTURE_MODE_MAX) || (mode < RT_STREAM_CAPTURE_MODE_GLOBAL)), 
         RT_ERROR_INVALID_VALUE, mode, "[" + std::to_string(RT_STREAM_CAPTURE_MODE_GLOBAL) + ", " 
-        + std::to_string(RT_STREAM_CAPTURE_MODE_MAX) +")");  
-    COND_RETURN_ERROR_MSG_INNER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID,
-        "stream flag does not support capture to model, flag=%u.", stm->Flags());
+        + std::to_string(RT_STREAM_CAPTURE_MODE_MAX) +")");
+    COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
+        StreamFlagsToString(stm->Flags()), "stream flag",
+        "Stream " + std::to_string(stm->Id_()) + " does not support the ACL Graph"); 
     return impl_->StreamBeginCapture(stm, mode);
 }
 
@@ -29,8 +30,9 @@ rtError_t ApiErrorDecorator::StreamEndCapture(Stream * const stm, Model ** const
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(captureMdl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID,
-        "stream flag does not support capture to model, flag=%u.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
+        StreamFlagsToString(stm->Flags()), "stream flag",
+        "Stream " + std::to_string(stm->Id_()) + " does not support the ACL Graph");
 
     return impl_->StreamEndCapture(stm, captureMdl);
 }
@@ -50,8 +52,8 @@ rtError_t ApiErrorDecorator::StreamBeginTaskUpdate(Stream * const stm, TaskGroup
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
 
-    COND_RETURN_ERROR_MSG_INNER((stm->IsCapturing()),
-        RT_ERROR_STREAM_CAPTURED, "the stream is capturing.");
+    COND_RETURN_AND_MSG_OUTER((stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1006,
+        __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     
     COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL ,
         "only support single operator stream.");
@@ -63,8 +65,8 @@ rtError_t ApiErrorDecorator::StreamEndTaskUpdate(Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
 
-    COND_RETURN_ERROR_MSG_INNER((stm->IsCapturing()),
-        RT_ERROR_STREAM_CAPTURED, "the stream is capturing.");
+    COND_RETURN_AND_MSG_OUTER((stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1006,
+        __func__, "stream " + std::to_string(stm->Id_()) + " during the capture stage");
     
     COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() != 0, RT_ERROR_STREAM_MODEL ,
         "only support single operator stream.");
@@ -98,11 +100,12 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream * const stm, Model * const 
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(captureMdl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER(captureMdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "model does not support stream to model, modelType=%d .", captureMdl->GetModelType());
+    COND_RETURN_AND_MSG_OUTER(captureMdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, 
+        ErrorCode::EE1006, __func__, "non aclGraph mode");
     
-    COND_RETURN_ERROR_MSG_INNER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID,
-        "stream flag does not support capture to model, flag=%u.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(!StreamFlagIsSupportCapture(stm->Flags()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011, __func__,
+        StreamFlagsToString(stm->Flags()), "stream flag",
+        "Stream " + std::to_string(stm->Id_()) + " does not support the ACL Graph");
 
     return impl_->StreamAddToModel(stm, captureMdl);
 }
@@ -119,8 +122,8 @@ rtError_t ApiErrorDecorator::ThreadExchangeCaptureMode(rtStreamCaptureMode * con
 rtError_t ApiErrorDecorator::StreamBeginTaskGrp(Stream * const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((!stm->IsCapturing()),
-        RT_ERROR_STREAM_NOT_CAPTURED, "the stream is not captured.");
+    COND_RETURN_AND_MSG_OUTER((!stm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1006,
+        __func__, "stream " + std::to_string(stm->Id_()) + " is not in the capture stage");
     return impl_->StreamBeginTaskGrp(stm);
 }
 
@@ -128,8 +131,8 @@ rtError_t ApiErrorDecorator::StreamEndTaskGrp(Stream * const stm, TaskGroup ** c
 {
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(handle, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_ERROR_MSG_INNER((!stm->IsCapturing()),
-        RT_ERROR_STREAM_NOT_CAPTURED, "the stream is not captured.");
+    COND_RETURN_AND_MSG_OUTER((!stm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1006,
+        __func__, "stream " + std::to_string(stm->Id_()) + " is not in the capture stage");
     return impl_->StreamEndTaskGrp(stm, handle);
 }
 
