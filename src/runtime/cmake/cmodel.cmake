@@ -143,6 +143,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v100.cc
 )
 
 set(libruntime_cmodel_v200_task_src_files
