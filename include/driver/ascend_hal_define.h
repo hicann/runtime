@@ -1212,10 +1212,13 @@ struct halAsyncDmaOutputPara {
             uint32_t dieId;
             uint32_t functionId;
             uint32_t jettyId;
-            uint32_t size;  /* wqe size */
+            uint32_t size;         /* wqe size */
             uint8_t *wqe;
             uint32_t pi;           /* jetty pi, pi is absolute in single task scene, relative in task sinking scene*/
-            uint32_t fixedSize;    /* already posted 2d size or batch cnt, current always posted all */
+            union {                /* already posted 2d size or batch cnt, only support 2d/batch yet */
+                unsigned long long fixedSize;    // used for 2d async copy in ub doorbell mode
+                unsigned long long fixedCnt;      // used for batch async copy in ub doorbell mode
+            };     
         };
         struct DMA_ADDR dma_addr;
     };
@@ -1248,7 +1251,7 @@ struct halAsyncDmaInput2DPara {
     unsigned long long spitch;      /* pitch of source memory */
     unsigned long long width;       /* width of matrix transfer */
     unsigned long long height;      /* height of matrix transfer */
-    unsigned long long fixedSize;   /* Input: already converted size, current not support none zero */
+    unsigned long long fixedSize;   /* Input: already converted size */
     unsigned int rsv[TRS_ASYNC_CPY_2D_IN_RSV_LEN];
 };
 
@@ -1271,7 +1274,7 @@ struct halAsyncDmaInputBatchPara {
     unsigned long long *src;        /* source memory address array */
     unsigned long long *len;        /* cpy size array */
     unsigned long long count;       /* cpy array elements count */
-    unsigned long long fixedSize;   /* Input: already converted size, current not support none zero */
+    unsigned long long fixedCnt;   /* Input: already converted array cnt */
     unsigned int rsv[TRS_ASYNC_CPY_BATCH_IN_RSV_LEN];
 };
 

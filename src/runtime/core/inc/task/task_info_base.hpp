@@ -230,6 +230,11 @@ struct UbDma {
     uint8_t *wqePtr;
     bool isUbAsyncMode;
     int32_t wqeLen;
+    uint32_t pi;
+    union {
+        uint64_t fixedSize;
+        uint64_t fixedCnt;
+    };   
 };
 
 struct MemcpyAsyncTaskInfo {
@@ -247,6 +252,7 @@ struct MemcpyAsyncTaskInfo {
     uint32_t copyType;
     uint32_t copyKind;
     uint8_t copyDataType;
+    uint8_t copyMethod;
     uint8_t qos;
     uint8_t partId;
     uint8_t sqeOffset;
@@ -415,6 +421,12 @@ struct CommonCmdTaskInfo {
 };
 
 // =============================
+enum rtAsyncCpyMethod : uint8_t {
+    RT_ASYNC_CPY        = 0, // rtMemcpyAsync
+    RT_ASYNC_CPY_2D     = 1, // rtMemcpy2dAsync
+    RT_ASYNC_CPY_BATCH  = 2  // rtMemcpyBatchAsync
+};
+
 enum rtDavidUbDmaSqeMode : uint16_t {
     RT_DAVID_SQE_DIRECTWQE_MODE        = 0, // direct wqe
     RT_DAVID_SQE_DOORBELL_MODE         = 1, // doorbell

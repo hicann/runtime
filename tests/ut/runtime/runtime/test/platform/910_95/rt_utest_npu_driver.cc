@@ -77,3 +77,132 @@ TEST_F(NpuDriverTest, host_register)
 
     delete rawDrv;
 }
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqe2D_Test)
+{
+    NpuDriver* rawDrv = new NpuDriver();
+    uint32_t devId = 0;
+    AsyncDmaWqeInputInfo2D input = {};
+    AsyncDmaWqeOutputInfo output = {};
+
+    input.tsId = 0;
+    input.sqId = 0;
+    input.dst = (void*)0x1000;
+    input.src = (void*)0x2000;
+    input.dpitch = 1024;
+    input.spitch = 1024;
+    input.width = 64;
+    input.height = 64;
+    input.fixedSize = 4096;
+
+    struct halAsyncDmaOutputPara wqeOutput = {};
+    wqeOutput.dieId = 0;
+    wqeOutput.functionId = 1;
+    wqeOutput.jettyId = 2;
+    wqeOutput.wqe = (uint8_t*)0x3000;
+    wqeOutput.size = 128;
+    wqeOutput.pi = 10;
+    wqeOutput.fixedSize = 4096;
+
+    MOCKER(halAsyncDmaCreate2D).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    rtError_t error = rawDrv->CreateAsyncDmaWqe2D(devId, input, &output);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    MOCKER(halAsyncDmaCreate2D)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&wqeOutput, sizeof(struct halAsyncDmaOutputPara)))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->CreateAsyncDmaWqe2D(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(output.dieId, 0U);
+    EXPECT_EQ(output.functionId, 1U);
+    EXPECT_EQ(output.jettyId, 2U);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqe2D_Success)
+{
+    NpuDriver* rawDrv = new NpuDriver();
+    uint32_t devId = 0;
+    AsyncDmaWqeDestroyInfo2D destroyPara = {};
+
+    destroyPara.tsId = 0;
+    destroyPara.sqId = 0;
+    destroyPara.ci = 5;
+
+    MOCKER(halAsyncDmaDestroy2D).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT)).then(returnValue(DRV_ERROR_NONE));
+    rtError_t error = rawDrv->DestroyAsyncDmaWqe2D(devId, &destroyPara);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rawDrv->DestroyAsyncDmaWqe2D(devId, &destroyPara);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqeBatch_Success)
+{
+    NpuDriver* rawDrv = new NpuDriver();
+    uint32_t devId = 0;
+    AsyncDmaWqeInputInfoBatch input = {};
+    AsyncDmaWqeOutputInfo output = {};
+
+    input.tsId = 0;
+    input.sqId = 0;
+    void* dsts[2] = {(void*)0x1000, (void*)0x2000};
+    void* srcs[2] = {(void*)0x3000, (void*)0x4000};
+    uint64_t lens[2] = {64, 64};
+    input.dst = dsts;
+    input.src = srcs;
+    input.len = lens;
+    input.count = 2;
+    input.fixedSize = 128;
+
+    struct halAsyncDmaOutputPara wqeOutput = {};
+    wqeOutput.dieId = 0;
+    wqeOutput.functionId = 1;
+    wqeOutput.jettyId = 2;
+    wqeOutput.wqe = (uint8_t*)0x5000;
+    wqeOutput.size = 256;
+    wqeOutput.pi = 20;
+    wqeOutput.fixedSize = 128;
+
+    MOCKER(halAsyncDmaCreateBatch).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    rtError_t error = rawDrv->CreateAsyncDmaWqeBatch(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
+
+    MOCKER(halAsyncDmaCreateBatch)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&wqeOutput, sizeof(struct halAsyncDmaOutputPara)))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    rtError_t error = rawDrv->CreateAsyncDmaWqeBatch(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(output.dieId, 0U);
+    EXPECT_EQ(output.functionId, 1U);
+    EXPECT_EQ(output.jettyId, 2U);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqeBatch_Success)
+{
+    NpuDriver* rawDrv = new NpuDriver();
+    uint32_t devId = 0;
+    AsyncDmaWqeDestroyInfoBatch destroyPara = {};
+
+    destroyPara.tsId = 0;
+    destroyPara.sqId = 0;
+    destroyPara.ci = 10;
+
+    MOCKER(halAsyncDmaDestroyBatch).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT)).then(returnValue(DRV_ERROR_NONE));
+    rtError_t error = rawDrv->DestroyAsyncDmaWqeBatch(devId, &destroyPara);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    error = rawDrv->DestroyAsyncDmaWqeBatch(devId, &destroyPara);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}

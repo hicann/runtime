@@ -98,7 +98,7 @@ static void ConstructDavidAsyncUbDbSqe(TaskInfo * const taskInfo, rtDavidSqe_t *
     sqe->jettyId1 = memcpyAsyncTaskInfo->ubDma.jettyId;
     sqe->funcId1 = memcpyAsyncTaskInfo->ubDma.functionId;
     sqe->dieId1 = memcpyAsyncTaskInfo->ubDma.dieId;
-    sqe->piValue1 = 1U;
+    sqe->piValue1 = memcpyAsyncTaskInfo->ubDma.pi;
 
     PrintDavidSqe(command, "ModelByUb UbDbSend");
 
@@ -149,7 +149,12 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
             if (stream->GetBindFlag()) {
                 ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
             } else {
-                ConstructDavidAsyncDmaSqe(taskInfo, davidSqe, sqBaseAddr);
+                if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_2D ||
+                    memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_BATCH) {
+                    ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
+                } else {
+                    ConstructDavidAsyncDmaSqe(taskInfo, davidSqe, sqBaseAddr);
+                }
             }
         } else if (IsPcieDma(memcpyAsyncTaskInfo->copyType)) {
             ConstructDavidPcieDmaSqe(taskInfo, davidSqe, sqBaseAddr);

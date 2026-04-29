@@ -4188,3 +4188,139 @@ TEST_F(NpuDriverTest, CheckIsSupportFeature_invalid)
 
     delete rawDrv;
 }
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqe2D_Success)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeInputInfo2D input;
+    AsyncDmaWqeOutputInfo output;
+    uint32_t devId = 0;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo2D), 0, sizeof(AsyncDmaWqeInputInfo2D));
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+
+    MOCKER(halAsyncDmaCreate2D).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->CreateAsyncDmaWqe2D(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqe2D_Fail)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeInputInfo2D input;
+    AsyncDmaWqeOutputInfo output;
+    uint32_t devId = 0;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo2D), 0, sizeof(AsyncDmaWqeInputInfo2D));
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+
+    MOCKER(halAsyncDmaCreate2D).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = rawDrv->CreateAsyncDmaWqe2D(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqe2D_Success)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeDestroyInfo2D destroyPara;
+    uint32_t devId = 0;
+    (void)memset_s(&destroyPara, sizeof(AsyncDmaWqeDestroyInfo2D), 0, sizeof(AsyncDmaWqeDestroyInfo2D));
+
+    MOCKER(halAsyncDmaDestroy2D).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->DestroyAsyncDmaWqe2D(devId, &destroyPara);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqe2D_Fail)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeDestroyInfo2D destroyPara;
+    uint32_t devId = 0;
+    (void)memset_s(&destroyPara, sizeof(AsyncDmaWqeDestroyInfo2D), 0, sizeof(AsyncDmaWqeDestroyInfo2D));
+
+    MOCKER(halAsyncDmaDestroy2D).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = rawDrv->DestroyAsyncDmaWqe2D(devId, &destroyPara);
+    EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqeBatch_Success)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeInputInfoBatch input;
+    AsyncDmaWqeOutputInfo output;
+    uint32_t devId = 0;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfoBatch), 0, sizeof(AsyncDmaWqeInputInfoBatch));
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+
+    MOCKER(halAsyncDmaCreateBatch).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->CreateAsyncDmaWqeBatch(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, CreateAsyncDmaWqeBatch_Fail)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeInputInfoBatch input;
+    AsyncDmaWqeOutputInfo output;
+    uint32_t devId = 0;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfoBatch), 0, sizeof(AsyncDmaWqeInputInfoBatch));
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+
+    MOCKER(halAsyncDmaCreateBatch).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = rawDrv->CreateAsyncDmaWqeBatch(devId, input, &output);
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqeBatch_Success)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeDestroyInfoBatch destroyPara;
+    uint32_t devId = 0;
+    (void)memset_s(&destroyPara, sizeof(AsyncDmaWqeDestroyInfoBatch), 0, sizeof(AsyncDmaWqeDestroyInfoBatch));
+
+    MOCKER(halAsyncDmaDestroyBatch).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    error = rawDrv->DestroyAsyncDmaWqeBatch(devId, &destroyPara);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, DestroyAsyncDmaWqeBatch_Fail)
+{
+    rtError_t error;
+    NpuDriver* rawDrv = new NpuDriver();
+    AsyncDmaWqeDestroyInfoBatch destroyPara;
+    uint32_t devId = 0;
+    (void)memset_s(&destroyPara, sizeof(AsyncDmaWqeDestroyInfoBatch), 0, sizeof(AsyncDmaWqeDestroyInfoBatch));
+
+    MOCKER(halAsyncDmaDestroyBatch).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    error = rawDrv->DestroyAsyncDmaWqeBatch(devId, &destroyPara);
+    EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+
+    delete rawDrv;
+}

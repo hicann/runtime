@@ -6372,6 +6372,12 @@ errno_t memset_s_stub(void* dest, size_t destMax, int c, size_t count)
     return -1;
 }
 
+DVresult drvMemGetAttribute_1(DVdeviceptr vptr, struct DVattribute *attr)
+{
+    attr->memType = DV_MEM_LOCK_DEV;
+    return DRV_ERROR_NONE;
+}
+
 DVresult drvMemGetAttribute_2(DVdeviceptr vptr, struct DVattribute *attr)
 {
     attr->memType = DV_MEM_LOCK_HOST;
@@ -10011,4 +10017,66 @@ TEST_F(ApiDavidTest, GetNotifyAddressApi)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtDeviceReset(devId);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+TEST_F(ApiDavidTest, test_memcpy_batch_async_batch_path)
+{
+    ApiImplDavid apiImpl;
+
+    void* dsts[2] = {(void*)0x1000, (void*)0x2000};
+    size_t destMaxs[2] = {1024, 1024};
+    void* srcs[2] = {(void*)0x11000000, (void*)0x12000000};
+    size_t sizes[2] = {512, 512};
+    size_t failIdx = 0;
+    rtMemcpyBatchAttr attrs[2] = {};
+    attrs[0].dstLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[0].srcLoc.type = RT_MEMORY_LOC_DEVICE;
+    attrs[1].dstLoc.type = RT_MEMORY_LOC_HOST;
+    attrs[1].srcLoc.type = RT_MEMORY_LOC_DEVICE;
+    size_t attrsIdxs[2] = {0, 1};
+
+    Runtime::Instance()->SetConnectUbFlag(true);
+    stream_->Device_()->SetChipType(CHIP_DAVID);
+    stream_->SetBindFlag(false);
+
+    MOCKER(drvMemGetAttribute)
+        .stubs()
+        .will(invoke(drvMemGetAttribute_2))
+        .then(invoke(drvMemGetAttribute_2))
+        .then(invoke(drvMemGetAttribute_1))
+        .then(invoke(drvMemGetAttribute_2))
+        .then(invoke(drvMemGetAttribute_1));
+    MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(false));
+    uint64_t realSize = 2;
+    MOCKER(MemcopyBatchAsync).stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&realSize, sizeof(realSize)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = apiImpl.MemcpyBatchAsync(dsts, destMaxs, srcs, sizes, 2, attrs, attrsIdxs, 2, &failIdx, stream_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, test_memcpy2d_async_david_ub_path)
+{
+    ApiImplDavid apiImpl;
+
+    void* dst = (void*)0x1000;
+    void* src = (void*)0x11000000;
+    uint64_t width = 10;
+    uint64_t height = 2;
+
+    Runtime::Instance()->SetConnectUbFlag(true);
+    stream_->Device_()->SetChipType(CHIP_DAVID);
+    stream_->SetBindFlag(false);
+
+    uint64_t realSize = 15; // width * height = 20, 设置 realSize < 20 以触发 Synchronize
+    MOCKER(Memcpy2DAsync)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any(), mockcpp::any(),outBoundP(&realSize, sizeof(realSize)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_DEVICE_TASK_ABORT));
+
+    rtError_t error = apiImpl.MemCopy2DAsync(dst, 150, src, 150, width, height, stream_, RT_MEMCPY_DEVICE_TO_HOST);
+    EXPECT_EQ(error, RT_ERROR_DEVICE_TASK_ABORT);
 }

@@ -742,7 +742,11 @@ public:
 protected:
     virtual rtError_t GetDeviceSimtInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val);
     virtual rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback);
-
+    rtError_t LoopMemcpyAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
+        const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
+        size_t* const failIdx, Stream* const stm);
+    rtError_t ValidateMemCpyParamsAndAttributes(void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr,
+        rtPtrAttributes_t& dstAttr, rtPtrAttributes_t& srcAttr);
 private:
     rtError_t GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val);
     rtError_t GetDeviceNpuArch(uint32_t deviceId, int64_t *val);
@@ -790,11 +794,10 @@ private:
         const bool isBlock, Event ** const evt, const uint64_t threadId);
     rtError_t CallbackLaunchWithoutEvent(const rtCallback_t callBackFunc, void * const fnData, Stream * const stm,
         const bool isBlock) const;
-    rtError_t LoopMemcpyAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
-        const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
-        size_t* const failIdx, Stream* const stm);
     rtError_t CheckMemCpyAttr(const void * const dst, const void * const src, const rtMemcpyBatchAttr &memAttr,
         rtPtrAttributes_t &dstAttr, rtPtrAttributes_t &srcAttr);
+    rtError_t ValidateAndCheckMemCpyBatchAsync(void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr, 
+        rtPtrAttributes_t& dstAttr, rtPtrAttributes_t& srcAttr, rtMemcpyKind_t& kind);
     rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t *attrValue) override;
     rtError_t FunctionGetBinary(const Kernel *const funcHandle, Program **const binHandle) override;
     rtError_t GetAtomicDevProperties(uint32_t* capabilities, uint32_t count, DevProperties& prop);

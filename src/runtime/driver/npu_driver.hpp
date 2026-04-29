@@ -245,6 +245,12 @@ public:
     rtError_t DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestroyInfo *destroyPara,
                                 bool isUbMode = true) override;
 
+    rtError_t CreateAsyncDmaWqe2D(uint32_t devId, const AsyncDmaWqeInputInfo2D &input, AsyncDmaWqeOutputInfo *output) override;
+    rtError_t DestroyAsyncDmaWqe2D(uint32_t devId, struct AsyncDmaWqeDestroyInfo2D *destroyPara) override;
+
+    rtError_t CreateAsyncDmaWqeBatch(uint32_t devId, const AsyncDmaWqeInputInfoBatch &input, AsyncDmaWqeOutputInfo *output) override;
+    rtError_t DestroyAsyncDmaWqeBatch(uint32_t devId, struct AsyncDmaWqeDestroyInfoBatch *destroyPara) override;
+
     rtError_t DebugCqReport(const uint32_t devId, const uint32_t tsId, const uint32_t cqId,
                             uint8_t *const report, uint32_t &realCnt) override;
 

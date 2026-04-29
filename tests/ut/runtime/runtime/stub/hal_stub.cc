@@ -1627,6 +1627,23 @@ drvError_t halAsyncDmaDestory(uint32_t devId, halAsyncDmaDestoryPara *para)
     return DRV_ERROR_NONE;
 }
 
+drvError_t halAsyncDmaCreate2D(uint32_t devId, struct halAsyncDmaInput2DPara *in, struct halAsyncDmaOutputPara *out) {
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halAsyncDmaDestroy2D(uint32_t devId, struct halAsyncDmaDestroy2DPara *para) {
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halAsyncDmaCreateBatch(uint32_t devId, struct halAsyncDmaInputBatchPara *in,
+    struct halAsyncDmaOutputPara *out) {
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halAsyncDmaDestroyBatch(uint32_t devId, struct halAsyncDmaDestroyBatchPara *para) {
+    return DRV_ERROR_NONE;
+}
+
 drvError_t halResAddrUnmap(unsigned int devId, struct res_addr_info *res_info)
 {
     return DRV_ERROR_NONE;

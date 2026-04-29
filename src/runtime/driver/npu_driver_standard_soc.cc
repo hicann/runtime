@@ -93,6 +93,120 @@ rtError_t NpuDriver::DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestro
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::CreateAsyncDmaWqe2D(uint32_t devId, const AsyncDmaWqeInputInfo2D &input, AsyncDmaWqeOutputInfo *output) {
+    struct halAsyncDmaOutputPara wqeDmaOutput;
+    (void)memset_s(&wqeDmaOutput, sizeof(struct halAsyncDmaOutputPara), 0U, sizeof(struct halAsyncDmaOutputPara));
+    struct halAsyncDmaInput2DPara wqeDmaInput;
+    (void)memset_s(&wqeDmaInput, sizeof(struct halAsyncDmaInput2DPara), 0U, sizeof(struct halAsyncDmaInput2DPara));
+    wqeDmaInput.type = DRV_NORMAL_TYPE;
+    wqeDmaInput.tsId = input.tsId;
+    wqeDmaInput.sqId = input.sqId;
+    wqeDmaInput.dir = input.dir;
+    wqeDmaInput.dst = RtPtrToPtr<UINT64 *>(input.dst);
+    wqeDmaInput.dpitch = input.dpitch;
+    wqeDmaInput.src = RtPtrToPtr<UINT64 *>(input.src);
+    wqeDmaInput.spitch = input.spitch;
+    wqeDmaInput.width = input.width;
+    wqeDmaInput.height = input.height;
+    wqeDmaInput.fixedSize = input.fixedSize;
+
+    const drvError_t drvRet = halAsyncDmaCreate2D(devId, &wqeDmaInput, &wqeDmaOutput);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halAsyncDmaCreate2D failed, device_id=%u, ts_id=%u, sq_id=%u, fixedSize=%llu, drvRetCode=%d.",
+            devId, input.tsId, input.sqId, static_cast<UINT64>(input.fixedSize), static_cast<int32_t>(drvRet));
+        return RT_ERROR_DRV_ERR;
+    }
+
+    output->dieId = wqeDmaOutput.dieId;
+    output->functionId = static_cast<uint16_t>(wqeDmaOutput.functionId);
+    output->jettyId = static_cast<uint16_t>(wqeDmaOutput.jettyId);
+    output->wqe = wqeDmaOutput.wqe;
+    output->wqeLen = wqeDmaOutput.size;
+    output->pi = wqeDmaOutput.pi;
+    output->fixedSize = wqeDmaOutput.fixedSize;
+    RT_LOG(RT_LOG_DEBUG, "halAsyncDmaCreate2D success, die_id=%u, functionId=%u, jettyId=%u, wqeLen=%d, pi=%u, fixedSize=%llu.",
+        output->dieId, output->functionId, output->jettyId, output->wqeLen, output->pi, output->fixedSize);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::DestroyAsyncDmaWqe2D(uint32_t devId, struct AsyncDmaWqeDestroyInfo2D *destroyPara)
+{
+    struct halAsyncDmaDestroy2DPara para;
+    (void)memset_s(&para, sizeof(struct halAsyncDmaDestroy2DPara), 0U, sizeof(struct halAsyncDmaDestroy2DPara));
+    para.type = destroyPara->type;
+    para.tsId = destroyPara->tsId;
+    para.sqId = destroyPara->sqId;
+    para.ci = destroyPara->ci;
+
+    const drvError_t drvRet = halAsyncDmaDestroy2D(devId, &para);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halAsyncDmaDestroy2D failed:drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "Destroy 2D wqe success.");
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::CreateAsyncDmaWqeBatch(uint32_t devId, const AsyncDmaWqeInputInfoBatch &input, AsyncDmaWqeOutputInfo *output)
+{
+    struct halAsyncDmaOutputPara wqeDmaOutput;
+    (void)memset_s(&wqeDmaOutput, sizeof(struct halAsyncDmaOutputPara), 0U, sizeof(struct halAsyncDmaOutputPara));
+    struct halAsyncDmaInputBatchPara wqeDmaInput;
+    (void)memset_s(&wqeDmaInput, sizeof(struct halAsyncDmaInputBatchPara), 0U, sizeof(struct halAsyncDmaInputBatchPara));
+    wqeDmaInput.type = input.type;
+    wqeDmaInput.tsId = input.tsId;
+    wqeDmaInput.sqId = input.sqId;
+    wqeDmaInput.dir = input.dir;
+    wqeDmaInput.dst = RtPtrToPtr<UINT64 *>(input.dsts);
+    wqeDmaInput.src = RtPtrToPtr<UINT64 *>(input.srcs);
+    wqeDmaInput.len = RtPtrToPtr<UINT64 *>(input.lens);
+    wqeDmaInput.count = input.count;
+    wqeDmaInput.fixedCnt = input.fixedCnt;
+
+    const drvError_t drvRet = halAsyncDmaCreateBatch(devId, &wqeDmaInput, &wqeDmaOutput);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halAsyncDmaCreateBatch failed, device_id=%u, ts_id=%u, sq_id=%u, fixedCnt=%llu, drvRetCode=%d.",
+            devId, input.tsId, input.sqId, static_cast<UINT64>(input.fixedCnt), static_cast<int32_t>(drvRet));
+        return RT_ERROR_DRV_ERR;
+    }
+
+    output->fixedCnt = wqeDmaOutput.fixedCnt;
+    output->dieId = wqeDmaOutput.dieId;
+    output->functionId = static_cast<uint16_t>(wqeDmaOutput.functionId);
+    output->jettyId = static_cast<uint16_t>(wqeDmaOutput.jettyId);
+    output->wqe = wqeDmaOutput.wqe;
+    output->wqeLen = wqeDmaOutput.size;
+    output->pi = wqeDmaOutput.pi;
+    RT_LOG(RT_LOG_DEBUG, "halAsyncDmaCreateBatch success, die_id=%u, functionId=%u, jettyId=%u, wqeLen=%d, pi=%u, fixedCnt=%llu.",
+        output->dieId, output->functionId, output->jettyId, output->wqeLen, output->pi, output->fixedCnt);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::DestroyAsyncDmaWqeBatch(uint32_t devId, struct AsyncDmaWqeDestroyInfoBatch *destroyPara)
+{
+    struct halAsyncDmaDestroyBatchPara para;
+    (void)memset_s(&para, sizeof(struct halAsyncDmaDestroyBatchPara), 0U, sizeof(struct halAsyncDmaDestroyBatchPara));
+    para.type = destroyPara->type;
+    para.tsId = destroyPara->tsId;
+    para.sqId = destroyPara->sqId;
+    para.ci = destroyPara->ci;
+
+    const drvError_t drvRet = halAsyncDmaDestroyBatch(devId, &para);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet,
+            "[drv api] halAsyncDmaDestroyBatch failed:drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "Destroy batch wqe success.");
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, uint64_t &addr)
 {
     ts_ctrl_msg_body_t queryIn = {};

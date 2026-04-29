@@ -29,7 +29,6 @@ namespace runtime {
 namespace {
 constexpr const uint32_t ASYNC_MEMORY_NUM = 2U;
 constexpr uint8_t DSA_SQE_UPDATE_OFFSET = 16U;
-
 } // namespace
 
 TIMESTAMP_EXTERN(rtMemcpyAsync_drvDeviceGetTransWay);
@@ -288,6 +287,7 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo)
     taskInfo->type = TS_TASK_TYPE_MEMCPY;
     taskInfo->typeName = const_cast<char_t*>("MEMCPY_ASYNC");
     memcpyAsyncTaskInfo->copyType = 0U;
+    memcpyAsyncTaskInfo->copyMethod = 0U;
     memcpyAsyncTaskInfo->copyKind = 0U;
     memcpyAsyncTaskInfo->size = 0U;
     memcpyAsyncTaskInfo->src = nullptr;
@@ -328,7 +328,7 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo)
     return RT_ERROR_NONE;
 }
 
-uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, uint32_t cpyType)
+uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, uint32_t cpyType, uint32_t cpyMethod)
 {
     if (!Runtime::Instance()->GetConnectUbFlag()) {
         return 1U;
@@ -337,6 +337,12 @@ uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb, u
     if (isModelByUb) {
         return 1U;
     }
+
+    // UB 2D异步拷贝和批量异步拷贝需要1个sqe ub db
+    if (cpyMethod == RT_ASYNC_CPY_BATCH || cpyMethod == RT_ASYNC_CPY_2D) {
+        return 1U;
+    }
+
     // 单算子
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE) || (kind == RT_MEMCPY_DEVICE_TO_HOST) ||
         (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX) ||
@@ -440,6 +446,48 @@ rtError_t MemcpyAsyncTaskInitV1(TaskInfo * const taskInfo, void *memcpyAddrInfo,
     return RT_ERROR_NONE;
 }
 
+rtError_t ConvertAsyncDma2D(TaskInfo * const taskInfo2D, void *const dst, const uint64_t dstPitch,
+                                const void *const src, const uint64_t srcPitch, const uint64_t width,
+                                const uint64_t height, const uint64_t fixedSize)
+{
+    bool isUbMode = Runtime::Instance()->GetConnectUbFlag() ? true : false;
+    if (!isUbMode) {
+        RT_LOG(RT_LOG_ERROR, "pcie does not support");
+        return RT_ERROR_INVALID_VALUE;
+    }   
+
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo2D->u.memcpyAsyncTaskInfo);
+    Stream * const stream = taskInfo2D->stream;
+    Driver * const driver = taskInfo2D->stream->Device_()->Driver_();
+    const uint32_t devId = stream->Device_()->Id_();
+    AsyncDmaWqeInputInfo2D input;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfo2D), 0, sizeof(AsyncDmaWqeInputInfo2D));
+    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
+
+    input.tsId = stream->Device_()->DevGetTsId();
+    input.sqId = stream->GetSqId();
+    input.dst = dst;
+    input.dpitch = dstPitch;
+    input.src = const_cast<void *>(src);
+    input.spitch = srcPitch;
+    input.width = width;
+    input.height = height;
+    input.fixedSize = fixedSize;
+    AsyncDmaWqeOutputInfo output;
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+    const rtError_t error = driver->CreateAsyncDmaWqe2D(devId, input, &output);
+    ERROR_RETURN_MSG_INNER(error, "drv create asyncDmaWqe2D failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    memcpyAsyncTaskInfo->ubDma.jettyId = output.jettyId;
+    memcpyAsyncTaskInfo->ubDma.functionId = output.functionId;
+    memcpyAsyncTaskInfo->ubDma.dieId = output.dieId;
+    memcpyAsyncTaskInfo->ubDma.pi = output.pi;
+    memcpyAsyncTaskInfo->ubDma.fixedSize = output.fixedSize;
+    memcpyAsyncTaskInfo->size = output.fixedSize;
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, const uint64_t dstPitch,
                                 const void *const srcAddr, const uint64_t srcPitch, const uint64_t width,
                                 const uint64_t height, const uint32_t kind, const uint64_t fixedSize)
@@ -475,18 +523,25 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
         memcpyAsyncTaskInfo->size = width;
         return RT_ERROR_NONE;
     } else {
-        // d2h or h2d data convert
-        error = driver->MemCopy2D(dst, dstPitch, srcAddr, srcPitch, width, height, kind,
-            DEVMM_MEMCPY2D_ASYNC_CONVERT, fixedSize, &(memcpyAsyncTaskInfo->dmaAddr));
-        ERROR_RETURN_MSG_INNER(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
-        memcpyAsyncTaskInfo->isConcernedRecycle = true;
-        memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
-        if (stream->Device_()->IsDavidPlatform() && IsPcieDma(memcpyAsyncTaskInfo->copyType) && !(Runtime::Instance()->GetConnectUbFlag())) {
+        // david UB 单算子场景 走 UB Doorbell模式
+        if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType) && !stream->GetBindFlag()) {
+            error = ConvertAsyncDma2D(taskInfo, dst, dstPitch, srcAddr, srcPitch, width, height, fixedSize);
+            ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDma2D failed, retCode=%#x.", error);
             memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
+        } else {
+            // d2h or h2d data convert
+            error = driver->MemCopy2D(dst, dstPitch, srcAddr, srcPitch, width, height, kind,
+                DEVMM_MEMCPY2D_ASYNC_CONVERT, fixedSize, &(memcpyAsyncTaskInfo->dmaAddr));
+            ERROR_RETURN_MSG_INNER(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
+            memcpyAsyncTaskInfo->isConcernedRecycle = true;
+            memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
+            if (stream->Device_()->IsDavidPlatform() && IsPcieDma(memcpyAsyncTaskInfo->copyType) && !(Runtime::Instance()->GetConnectUbFlag())) {
+                memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
+            }
+            RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
+            ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u, dmaKernelConvertFlag=%u.",
+            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType, memcpyAsyncTaskInfo->dmaKernelConvertFlag);
         }
-        RT_LOG(RT_LOG_DEBUG, "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64
-        ", width=%" PRIu64 ", height=%" PRIu64 ", fixedSize:%" PRIu64 ", copyType=%u, dmaKernelConvertFlag=%u.",
-        dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType, memcpyAsyncTaskInfo->dmaKernelConvertFlag);
         return RT_ERROR_NONE;
     }
 }
@@ -530,6 +585,7 @@ rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTask
         memcpyAsyncTaskInfo->ubDma.dieId = output.dieId;
         memcpyAsyncTaskInfo->ubDma.wqeLen = output.wqeLen;
         memcpyAsyncTaskInfo->ubDma.wqePtr = output.wqe;
+        memcpyAsyncTaskInfo->ubDma.pi = 1U;
         if (output.wqeLen != 0) {
             const errno_t ret = memcpy_s(memcpyAsyncTaskInfo->ubDma.wqe.data(), sizeof(rtDavidSqe_t),
                 output.wqe, static_cast<size_t>(output.wqeLen));
@@ -791,10 +847,10 @@ static void PrintUbdmaErrorInfo(const MemcpyAsyncTaskInfo * const memcpyAsyncTas
 {
     if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
         RT_LOG(RT_LOG_ERROR, "ub async copy error, die_id=%u, functionId=%u, jettyId=%u,"
-            " wqeLen=%d, is_ub_mode=%d, is_sqe_update=%d.",
+            " wqeLen=%d, is_ub_mode=%d, is_sqe_update=%d, pi=%u, fixedSize(fixedCnt)=%llu.",
             memcpyAsyncTaskInfo->ubDma.dieId, memcpyAsyncTaskInfo->ubDma.functionId, memcpyAsyncTaskInfo->ubDma.jettyId,
             memcpyAsyncTaskInfo->ubDma.wqeLen, memcpyAsyncTaskInfo->ubDma.isUbAsyncMode,
-            memcpyAsyncTaskInfo->isSqeUpdateH2D);
+            memcpyAsyncTaskInfo->isSqeUpdateH2D, memcpyAsyncTaskInfo->ubDma.pi, memcpyAsyncTaskInfo->ubDma.fixedSize);
     }
 }
 
@@ -833,8 +889,9 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
         } else {
             countNum += sprintf_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                "copy_type=%u, memcpy_type=%u, copy_data_type=%u, length=%u",
-                copyType, static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
+                "copy_type=%u, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%u",
+                copyType, static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+                static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
             STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_RTS, "%s", errStr);
             (void)snprintf_truncated_s(errStr + countNum,
@@ -845,7 +902,9 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
         }
     } else {
         countNum += sprintf_s(errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-            "copy_type=%u, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64, copyType, 0,
+            "copy_type=%u, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64, copyType,
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
             static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->size);
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_HCCL, "%s", errStr);
 

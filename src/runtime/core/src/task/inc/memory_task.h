@@ -20,6 +20,11 @@ constexpr uint32_t MEM_WAIT_WRITE_VALUE_ADDRESS_LEN = 64U;
 
 rtError_t MemcpyAsyncTaskCommonInit(TaskInfo * const taskInfo);
 rtError_t ConvertAsyncDma(TaskInfo * const taskInfo, TaskInfo * const updateTaskInfo, bool isSqeUpdate = false);
+rtError_t ConvertAsyncDma2D(TaskInfo * const taskInfo2D, void *const dst, const uint64_t dstPitch,
+    const void *const src, const uint64_t srcPitch, const uint64_t width, const uint64_t height,
+    const uint64_t fixedSize);
+rtError_t ConvertAsyncDmaBatch(TaskInfo * const taskInfo, void** const dsts,
+    void** const srcs, const uint64_t* const sizes, const uint64_t count, const uint64_t fixedSize);
 void ToCommandBodyForMemcpyAsyncTask(TaskInfo * const taskInfo, rtCommand_t *const command);
 void SetStarsResultForMemcpyAsyncTask(TaskInfo * const taskInfo, const rtLogicCqReport_t &logicCq);
 void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t devId);

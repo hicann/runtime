@@ -28,6 +28,36 @@ rtError_t NpuDriver::DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestro
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t NpuDriver::CreateAsyncDmaWqe2D(uint32_t devId, const AsyncDmaWqeInputInfo2D &input, AsyncDmaWqeOutputInfo *output)
+{
+    UNUSED(devId);
+    UNUSED(input);
+    UNUSED(output);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::DestroyAsyncDmaWqe2D(uint32_t devId, struct AsyncDmaWqeDestroyInfo2D *destroyPara)
+{
+    UNUSED(devId);
+    UNUSED(destroyPara);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::CreateAsyncDmaWqeBatch(uint32_t devId, const AsyncDmaWqeInputInfoBatch &input, AsyncDmaWqeOutputInfo *output)
+{
+    UNUSED(devId);
+    UNUSED(input);
+    UNUSED(output);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::DestroyAsyncDmaWqeBatch(uint32_t devId, struct AsyncDmaWqeDestroyInfoBatch *destroyPara)
+{
+    UNUSED(devId);
+    UNUSED(destroyPara);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t NpuDriver::GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, uint64_t &addr)
 {
     UNUSED(deviceId);

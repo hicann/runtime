@@ -19,7 +19,6 @@
 namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
 constexpr uint32_t MEM_TYPE_MASK = 0xFF00U;
-constexpr int32_t MEMCPY_BATCH_ASYNC_FEATURE = 3;
 
 }
 

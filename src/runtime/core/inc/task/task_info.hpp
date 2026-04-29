@@ -250,6 +250,8 @@ rtError_t MemcpyAsyncTaskInitV2(TaskInfo * const taskInfo, void *const dst, cons
                                 const uint64_t height, const uint32_t kind, const uint64_t fixedSize);
 rtError_t MemcpyAsyncTaskInitV3(TaskInfo * const taskInfo, uint32_t cpyType, const void *srcAddr,
     void *desAddr, const uint64_t cpySize, const rtTaskCfgInfo_t *cfgInfo, const rtD2DAddrCfgInfo_t * const addrCfg);
+rtError_t MemcpyAsyncBatchTaskInit(TaskInfo * const taskInfo, void** const dsts, 
+    void** const srcs, const uint64_t* const sizes, const uint64_t count, const uint64_t fixedSize);
 rtError_t MemcpyAsyncD2HTaskInit(TaskInfo * const taskInfo, const void *srcAddr, const uint64_t cpySize,
                                  uint32_t sqId, uint32_t pos);
 rtError_t ReduceAsyncV2TaskInit(TaskInfo * const taskInfo, uint32_t cpyType, const void *srcAddr,
@@ -293,7 +295,7 @@ void FlipTaskInit(TaskInfo* taskInfo, const uint16_t flipNum);
 void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t *argsInfo);
 
 // others
-uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb = false, uint32_t cpyType = UINT32_MAX);
+uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb = false, uint32_t cpyType = UINT32_MAX, uint32_t cpyMethod = UINT32_MAX);
 rtError_t ConvertD2DCpyType(const Stream * const stm, uint32_t &cpyType, const void *const srcAddr, void *const desAddr);
 void TimeoutSetTaskInitV1(TaskInfo* taskInfo);
 void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);

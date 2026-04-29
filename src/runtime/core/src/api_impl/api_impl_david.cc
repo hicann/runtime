@@ -45,6 +45,7 @@
 #include "para_convertor.hpp"
 #include "runtime/kernel.h"
 #include "starsv2_base.hpp"
+#include "utils.h"
 
 namespace cce {
 namespace runtime {
@@ -693,6 +694,7 @@ rtError_t ApiImplDavid::MemCopy2DAsync(void * const dst, const uint64_t dstPitch
 
     rtError_t error = RT_ERROR_NONE;
     uint64_t remainSize = width * height;
+    uint64_t totalSize = remainSize;
     uint64_t realSize = 0UL;
     uint64_t fixedSize = 0UL;
     uint64_t srcoffset = 0UL;
@@ -719,10 +721,105 @@ rtError_t ApiImplDavid::MemCopy2DAsync(void * const dst, const uint64_t dstPitch
             error = Memcpy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
         }
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        fixedSize += realSize;
-        remainSize -= realSize;
+        // ub 单算子，h2d/d2h都走这里, d2d目前不支持，不会走到下面
+        if (Runtime::Instance()->GetConnectUbFlag() && !curStm->GetBindFlag() && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)) {
+            fixedSize = realSize;   // 这里的realSize返回的就是累计的
+            remainSize = totalSize - fixedSize;
+            if (remainSize > 0) {
+                error = curStm->Synchronize();
+                ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
+            }
+        } else {
+            fixedSize += realSize;
+            remainSize -= realSize; 
+        }
     }
     return error;
+}
+
+rtError_t ApiImplDavid::BatchMemcpyAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
+    const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
+    size_t* const failIdx, Stream* const stm)
+{
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
+    }
+    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        "MemcopyBatch async failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+
+    rtError_t error = RT_ERROR_NONE;
+    rtMemcpyBatchAttr memAttr = attrs[0];
+    size_t attrIdx = 0U;
+    rtPtrAttributes_t dstAttr = {};
+    rtPtrAttributes_t srcAttr = {};
+    uint64_t realSize = 0UL;
+    uint64_t remainSize = count;
+    uint64_t fixedSize = 0UL;
+    bool isD2HorH2DInvolvePageableMemory = false;
+
+    for (size_t i = 0U; i < count; i++) {
+        if (((attrIdx + 1U) < numAttrs) && (i >= attrsIdxs[attrIdx + 1U])) {
+            attrIdx = attrIdx + 1U;
+            memAttr = attrs[attrIdx];
+        }
+        error = ValidateMemCpyParamsAndAttributes(dsts[i], destMaxs[i], srcs[i], sizes[i], memAttr, dstAttr, srcAttr);
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,  SetFailIndex(failIdx, i), "ValidateMemCpyParamsAndAttributes %u failed.", i);
+
+        if (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED || srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) {
+            isD2HorH2DInvolvePageableMemory = true;
+        }
+    }
+
+    if (isD2HorH2DInvolvePageableMemory) {
+        error = StreamSynchronize(curStm, -1);
+        ERROR_RETURN(error, "StreamSynchronize failed, stream_id=%d.", curStm->Id_());
+        RT_LOG(RT_LOG_DEBUG, "Stream Synchronize success, stream_id=%d.", curStm->Id_());
+        return MemcpyBatch(dsts, srcs, const_cast<size_t*>(sizes), count, const_cast<rtMemcpyBatchAttr*>(attrs), 
+            const_cast<size_t*>(attrsIdxs), numAttrs, failIdx);
+    }
+
+    while (remainSize > 0UL) {
+        error = MemcopyBatchAsync(dsts, destMaxs, srcs, sizes, count, &realSize, curStm, fixedSize);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+        // 这里的realSize返回的就是累计处理的量
+        fixedSize = realSize;
+        remainSize = count - fixedSize;
+        if (remainSize > 0UL) {
+            error = curStm->Synchronize();
+            ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
+        }
+    }
+ 
+    return error;
+}
+
+rtError_t ApiImplDavid::MemcpyBatchAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
+    const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, size_t* const failIdx,
+    Stream* const stm)
+{
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
+
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
+    }
+
+    if (!NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), FEATURE_MEMCPY_BATCH_ASYNC)) {
+        // ub 单算子
+        if (Runtime::Instance()->GetConnectUbFlag() && !curStm->GetBindFlag()) {
+            return BatchMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm);  
+        } else {
+            return LoopMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, stm);
+        }
+    }
+    return RT_ERROR_DRV_NOT_SUPPORT;
 }
 
 rtError_t ApiImplDavid::MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,

@@ -18,6 +18,7 @@
 #include "stream_david.hpp"
 #include "stars_cond_isa_define.hpp"
 #include "stars_cond_isa_helper.hpp"
+#include "error_message_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -66,7 +67,104 @@ void StarsV2DoCompleteSuccessForMemcpyAsyncTask(TaskInfo * const taskInfo, const
     }
 }
 
-static void AsyncDmaWqeProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
+rtError_t ConvertAsyncDmaBatch(TaskInfo * const taskInfo, void** const dsts, 
+    void** const srcs, const uint64_t* const sizes, const uint64_t count, const uint64_t fixedCnt)
+{
+    bool isUbMode = Runtime::Instance()->GetConnectUbFlag() ? true : false;
+    if (!isUbMode) {
+        RT_LOG(RT_LOG_ERROR, "pcie does not support");
+        return RT_ERROR_INVALID_VALUE;
+    }   
+
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    Stream * const stream = taskInfo->stream;
+    Driver * const driver = taskInfo->stream->Device_()->Driver_();
+    const uint32_t devId = stream->Device_()->Id_();
+    AsyncDmaWqeInputInfoBatch input;
+    (void)memset_s(&input, sizeof(AsyncDmaWqeInputInfoBatch), 0, sizeof(AsyncDmaWqeInputInfoBatch));
+    memcpyAsyncTaskInfo->ubDma.isUbAsyncMode = true;
+
+    input.tsId = stream->Device_()->DevGetTsId();
+    input.sqId = stream->GetSqId();
+    input.dsts = dsts;
+    input.srcs = srcs;
+    input.lens = const_cast<uint64_t *>(sizes);    
+    input.count = count;
+    input.fixedCnt = fixedCnt;
+    AsyncDmaWqeOutputInfo output;
+    (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
+    const rtError_t error = driver->CreateAsyncDmaWqeBatch(devId, input, &output);
+    ERROR_RETURN_MSG_INNER(error, "drv create asyncDmaWqeBatch failed, retCode=%#x.", static_cast<uint32_t>(error));
+
+    memcpyAsyncTaskInfo->ubDma.jettyId = output.jettyId;
+    memcpyAsyncTaskInfo->ubDma.functionId = output.functionId;
+    memcpyAsyncTaskInfo->ubDma.dieId = output.dieId;
+    memcpyAsyncTaskInfo->ubDma.pi = output.pi;
+    memcpyAsyncTaskInfo->ubDma.fixedCnt = output.fixedCnt;
+    memcpyAsyncTaskInfo->size = output.fixedCnt;
+    return RT_ERROR_NONE;
+}
+
+rtError_t MemcpyAsyncBatchTaskInit(TaskInfo * const taskInfo, void** const dsts, 
+    void** const srcs, const uint64_t* const sizes, const uint64_t count, const uint64_t fixedSize)
+{
+    rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);
+    ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
+
+    MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    Stream * const stream = taskInfo->stream;
+
+    if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) { 
+        error = ConvertAsyncDmaBatch(taskInfo, dsts, srcs, sizes, count, fixedSize);
+        ERROR_RETURN_MSG_INNER(error, "ConvertAsyncDmaBatch failed, retCode=%#x.", error);
+        memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
+    } else {
+        // 除DavidUbDma之外的其他情况不处理
+    }
+    
+    return RT_ERROR_NONE;
+}
+
+static void AsyncDmaWqe2DProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
+{
+    bool ubFlag = IsDavidUbDma(memcpyAsyncTaskInfo->copyType);
+    if (!ubFlag) {
+        return;     
+    }
+
+    AsyncDmaWqeDestroyInfo2D destroyParm;
+    (void)memset_s(&destroyParm, sizeof(AsyncDmaWqeDestroyInfo2D), 0, sizeof(AsyncDmaWqeDestroyInfo2D));
+    destroyParm.tsId = stream->Device_()->DevGetTsId();
+    destroyParm.sqId = stream->GetSqId();
+    destroyParm.ci = memcpyAsyncTaskInfo->ubDma.pi;
+    
+    rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqe2D(stream->Device_()->Id_(), &destroyParm);
+    COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqe2d failed, retCode=%#x.", error);
+    RT_LOG(RT_LOG_INFO, "ub wqe async 2d release success, ci=%u, sq_id=%u.",
+            destroyParm.ci, destroyParm.sqId);
+}
+
+static void AsyncDmaWqeBatchProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
+{
+    bool ubFlag = IsDavidUbDma(memcpyAsyncTaskInfo->copyType);
+    if (!ubFlag) {
+        return;     
+    }
+
+    AsyncDmaWqeDestroyInfoBatch destroyParm;
+    (void)memset_s(&destroyParm, sizeof(AsyncDmaWqeDestroyInfoBatch), 0, sizeof(AsyncDmaWqeDestroyInfoBatch));
+    destroyParm.tsId = stream->Device_()->DevGetTsId();
+    destroyParm.sqId = stream->GetSqId();
+    destroyParm.ci = memcpyAsyncTaskInfo->ubDma.pi;
+    
+    rtError_t error = stream->Device_()->Driver_()->DestroyAsyncDmaWqeBatch(stream->Device_()->Id_(), &destroyParm);
+    COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqeBatch failed, retCode=%#x.", error);
+    RT_LOG(RT_LOG_INFO, "ub wqe async batch release success, ci=%u, sq_id=%u.",
+            destroyParm.ci, destroyParm.sqId);
+}
+
+
+static void AsyncDmaWqeBasicProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
 {
     bool ubFlag = IsDavidUbDma(memcpyAsyncTaskInfo->copyType);
     if ((!ubFlag) && (!memcpyAsyncTaskInfo->isSqeUpdateH2D)) {
@@ -95,6 +193,17 @@ static void AsyncDmaWqeProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stre
     COND_RETURN_VOID(error != RT_ERROR_NONE, "drv destroy asyncDmaWqe failed, retCode=%#x.", error);
     RT_LOG(RT_LOG_INFO, "ub wqe or pcie dma release success, is_ub_mode=%d, is_update=%d, sq_id=%u.",
         isUbMode, memcpyAsyncTaskInfo->isSqeUpdateH2D, destroyParm.sqId);
+}
+
+static void AsyncDmaWqeProc(MemcpyAsyncTaskInfo *memcpyAsyncTaskInfo, const Stream * const stream)
+{
+    if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_2D) {
+        AsyncDmaWqe2DProc(memcpyAsyncTaskInfo, stream);
+    } else if (memcpyAsyncTaskInfo->copyMethod == RT_ASYNC_CPY_BATCH) {
+        AsyncDmaWqeBatchProc(memcpyAsyncTaskInfo, stream);
+    } else {
+        AsyncDmaWqeBasicProc(memcpyAsyncTaskInfo, stream);
+    }
 }
 
 void StarsV2MemcpyAsyncTaskUnInit(TaskInfo * const taskInfo)

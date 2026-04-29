@@ -21,6 +21,8 @@ namespace runtime {
     rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
         const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind, uint64_t * const realSize,
         Stream * const stm, const uint64_t fixedSize);
+    rtError_t MemcopyBatchAsync(void** const dsts, const uint64_t* const destMaxs, void** const srcs, const uint64_t* const sizes,
+        const uint64_t count, uint64_t * const realSize, Stream * const stm, const uint64_t fixedSize);
     rtError_t MemcopyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cpySize,
         const rtMemcpyKind_t kind, Stream * const stm, uint64_t * const realSize,
         const std::shared_ptr<void> &guardMem = nullptr, const rtTaskCfgInfo_t * const cfgInfo = nullptr,

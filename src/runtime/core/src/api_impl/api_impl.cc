@@ -82,7 +82,6 @@
 namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
 constexpr uint32_t MEM_TYPE_MASK = 0xFF00U;
-constexpr int32_t MEMCPY_BATCH_ASYNC_FEATURE = 3;
 
 }
 
@@ -8324,6 +8323,54 @@ rtError_t ApiImpl::CheckMemCpyAttr(const void * const dst, const void * const sr
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::ValidateMemCpyParamsAndAttributes(void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr,
+    rtPtrAttributes_t& dstAttr, rtPtrAttributes_t& srcAttr)
+{
+    rtError_t error = RT_ERROR_NONE;
+    rtMemLocationType realDstLoc = RT_MEMORY_LOC_MAX;
+    rtMemLocationType realSrcLoc = RT_MEMORY_LOC_MAX;
+
+    COND_RETURN_ERROR_MSG_INNER((size > destMax), RT_ERROR_INVALID_VALUE, 
+        "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", size, destMax);
+    COND_RETURN_ERROR_MSG_INNER((size == 0U), RT_ERROR_INVALID_VALUE, "sizes's value can not be 0.");
+    COND_RETURN_ERROR_MSG_INNER(((dst == nullptr) || (src == nullptr)),
+        RT_ERROR_INVALID_VALUE, "dst's value or src's value is nullptr.");    
+
+    error = CheckMemCpyAttr(dst, src, memAttr, dstAttr, srcAttr);
+    realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
+    realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "check attributes failed, attributes of src locationType=%d, dst locationType=%d, "
+        "actually srcs locationType=%d(%s), dsts locationType=%d(%s).",
+        memAttr.srcLoc.type, memAttr.dstLoc.type, realDstLoc, MemLocationTypeToStr(realDstLoc),
+        realSrcLoc, MemLocationTypeToStr(realSrcLoc));
+
+    COND_RETURN_ERROR_MSG_INNER((realDstLoc == realSrcLoc),
+        RT_ERROR_INVALID_VALUE, "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
+        "srcLoc type=%d(%s).", realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
+        MemLocationTypeToStr(realSrcLoc));
+
+    return error;
+}
+
+rtError_t ApiImpl::ValidateAndCheckMemCpyBatchAsync(void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr,
+    rtPtrAttributes_t& dstAttr, rtPtrAttributes_t& srcAttr, rtMemcpyKind_t& kind)
+{
+    rtError_t error = RT_ERROR_NONE;
+    error = ValidateMemCpyParamsAndAttributes(dst, destMax, src, size, memAttr, dstAttr, srcAttr);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    if (dstAttr.location.type == RT_MEMORY_LOC_DEVICE) {
+        kind = RT_MEMCPY_HOST_TO_DEVICE;
+    } else {
+        kind = RT_MEMCPY_DEVICE_TO_HOST;
+    }
+
+    return error;
+}
+
 rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
     const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
     size_t* const failIdx, Stream* const stm)
@@ -8333,45 +8380,18 @@ rtError_t ApiImpl::LoopMemcpyAsync(void** const dsts, const size_t* const destMa
     size_t attrIdx = 0U;
     rtPtrAttributes_t dstAttr = {};
     rtPtrAttributes_t srcAttr = {};
-    rtMemLocationType realDstLoc = RT_MEMORY_LOC_MAX;
-    rtMemLocationType realSrcLoc = RT_MEMORY_LOC_MAX;
     rtMemcpyKind_t kind;
 
     for (size_t i = 0U; i < count; i++) {
-        COND_PROC_RETURN_ERROR_MSG_INNER((sizes[i] > destMaxs[i]), RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i),
-            "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", sizes[i], destMaxs[i]);
-
-        COND_PROC_RETURN_ERROR_MSG_INNER((sizes[i] == 0U),
-            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "sizes's value can not be 0, sizes[%zu]=%zu.", i, sizes[i]);
-
-        COND_PROC_RETURN_ERROR_MSG_INNER(
-            ((dsts[i] == nullptr) || (srcs[i] == nullptr)),
-            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "dsts[%zu]'s value or srcs[%zu]'s value is nullptr.", i, i);
-
         if (((attrIdx + 1U) < numAttrs) && (i >= attrsIdxs[attrIdx + 1U])) {
             attrIdx = attrIdx + 1U;
             memAttr = attrs[attrIdx];
         }
 
-        error = CheckMemCpyAttr(dsts[i], srcs[i], memAttr, dstAttr, srcAttr);
-        realDstLoc = (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : dstAttr.location.type;
-        realSrcLoc = (srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) ? RT_MEMORY_LOC_HOST : srcAttr.location.type;
-        COND_PROC_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, error, SetFailIndex(failIdx, i),
-            "check attributes[%zu] failed, attributes of srcs[%zu] locationType=%d, dsts[%zu] locationType=%d, "
-            "actually srcs[%zu] locationType=%d(%s), dsts[%zu] locationType=%d(%s).",
-            i, i, memAttr.srcLoc.type, i, memAttr.dstLoc.type, i, realDstLoc, MemLocationTypeToStr(realDstLoc), i,
-            realSrcLoc, MemLocationTypeToStr(realSrcLoc));
-
-        COND_PROC_RETURN_ERROR_MSG_INNER((realDstLoc == realSrcLoc),
-            RT_ERROR_INVALID_VALUE, SetFailIndex(failIdx, i), "Only H2D and D2H copy directions are supported, dstLoc type=%d(%s), "
-            "srcLoc type=%d(%s).", realDstLoc, MemLocationTypeToStr(realDstLoc), realSrcLoc,
-            MemLocationTypeToStr(realSrcLoc));
-
-        if (dstAttr.location.type == RT_MEMORY_LOC_DEVICE) {
-            kind = RT_MEMCPY_HOST_TO_DEVICE;
-        } else {
-            kind = RT_MEMCPY_DEVICE_TO_HOST;
+        error = ValidateAndCheckMemCpyBatchAsync(dsts[i], destMaxs[i], srcs[i], sizes[i], memAttr, dstAttr, srcAttr, kind);
+        if (error != RT_ERROR_NONE) {
+            SetFailIndex(failIdx, i);
+            return error;
         }
 
         if (dstAttr.location.type == RT_MEMORY_LOC_UNREGISTERED || srcAttr.location.type == RT_MEMORY_LOC_UNREGISTERED) {
@@ -8406,7 +8426,7 @@ rtError_t ApiImpl::MemcpyBatchAsync(void** const dsts, const size_t* const destM
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
 
-    if (!NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), MEMCPY_BATCH_ASYNC_FEATURE)) {
+    if (!NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), FEATURE_MEMCPY_BATCH_ASYNC)) {
         return LoopMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, stm);
     }
     return RT_ERROR_DRV_NOT_SUPPORT;

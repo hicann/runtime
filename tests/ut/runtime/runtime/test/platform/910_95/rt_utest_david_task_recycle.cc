@@ -1638,3 +1638,88 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
     g_cqReport.errorType = 0U;
     g_cqReport.sqeType = RT_DAVID_SQE_TYPE_INVALID;
 }
+
+static void SetupMemcpyAsyncTaskInfoForTest(TaskInfo* taskInfo, Stream* stream, Driver* drv)
+{
+    taskInfo->type = TS_TASK_TYPE_MEMCPY;
+    taskInfo->typeName = const_cast<char_t*>("MEMCPY_ASYNC");
+    taskInfo->stream = stream;
+    ((RawDevice*)(stream->device_))->driver_ = drv;
+    MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
+    memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
+    memcpyAsyncTaskInfo->guardMemVec = nullptr;
+    memcpyAsyncTaskInfo->src = nullptr;
+    memcpyAsyncTaskInfo->destPtr = nullptr;
+}
+
+TEST_F(DavidTaskRecycleTest, AsyncDmaWqe2DProc_test)
+{
+    rtError_t error;
+    rtStream_t streamHandle = nullptr;
+    error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream* stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    Device* device = stream->Device_();
+    Driver* drv = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+
+    TaskInfo taskInfo = {};
+    SetupMemcpyAsyncTaskInfoForTest(&taskInfo, stream, drv);
+    MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo.u.memcpyAsyncTaskInfo);
+    memcpyAsyncTaskInfo->copyMethod = RT_ASYNC_CPY_2D;
+    memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
+    memcpyAsyncTaskInfo->ubDma.pi = 10;
+
+    // case 1: ub flag return early - SetConnectUbFlag(false) makes IsDavidUbDma return false
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(false);
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    // case 2: drv returns error
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(true);
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DestroyAsyncDmaWqe2D).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    // case 3: drv returns success
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(true);
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DestroyAsyncDmaWqe2D).stubs().will(returnValue(RT_ERROR_NONE));
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(false);
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(DavidTaskRecycleTest, AsyncDmaWqeBatchProc_test)
+{
+    rtError_t error;
+    rtStream_t streamHandle = nullptr;
+    error = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream* stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    Device* device = stream->Device_();
+    Driver* drv = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+
+    TaskInfo taskInfo = {};
+    SetupMemcpyAsyncTaskInfoForTest(&taskInfo, stream, drv);
+    MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo.u.memcpyAsyncTaskInfo);
+    memcpyAsyncTaskInfo->copyMethod = RT_ASYNC_CPY_BATCH;
+    memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_H2D;
+    memcpyAsyncTaskInfo->ubDma.pi = 20;
+
+    // case 1: ub flag return early - SetConnectUbFlag(false) makes IsDavidUbDma return false
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(false);
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    // case 2: drv returns error
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(true);
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DestroyAsyncDmaWqeBatch).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    // case 3: drv returns success
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(true);
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DestroyAsyncDmaWqeBatch).stubs().will(returnValue(RT_ERROR_NONE));
+    StarsV2MemcpyAsyncTaskUnInit(&taskInfo);
+
+    ((Runtime*)Runtime::Instance())->SetConnectUbFlag(false);
+    error = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

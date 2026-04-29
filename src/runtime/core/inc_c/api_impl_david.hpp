@@ -55,6 +55,12 @@ public:
     rtError_t MemCopy2DAsync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
         const uint64_t width, const uint64_t height, Stream * const stm,
         const rtMemcpyKind_t kind = RT_MEMCPY_RESERVED, const rtMemcpyKind newKind = RT_MEMCPY_KIND_MAX) override;
+    rtError_t MemcpyBatchAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
+        const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, 
+        size_t* const failIdx, Stream* const stm) override;
+    rtError_t BatchMemcpyAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes, 
+        const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, 
+        size_t* const failIdx, Stream* const stm);
     rtError_t MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,
         const rtMemcpyKind_t kind, Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
         const rtD2DAddrCfgInfo_t * const addrCfg = nullptr, bool checkKind = true,

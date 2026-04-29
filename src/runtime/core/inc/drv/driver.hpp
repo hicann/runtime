@@ -85,6 +85,11 @@ struct AsyncDmaWqeOutputInfo {
             uint16_t jettyId;
             uint8_t *wqe;
             int32_t wqeLen;
+            uint32_t pi;
+            union {
+                unsigned long long fixedSize;  // used for 2d async copy in ub doorbell mode
+                unsigned long long fixedCnt;   // used for batch async copy in ub doorbell mode
+            };   
         };
         struct DMA_ADDR dmaAddr;
     };
@@ -100,6 +105,55 @@ struct AsyncDmaWqeDestroyInfo {
         };
         struct DMA_ADDR *dmaAddr;
     };
+};
+
+#define ASYNC_CPY_2D_IN_RSV_LEN 8
+struct AsyncDmaWqeInputInfo2D {
+    drvSqCqType_t type;
+    uint32_t tsId;              /* default is 0 */
+    uint32_t sqId;
+    uint32_t dir;               /* reserved copy direction, the real dir is convert by src/dst addr */
+    void *dst;        /* destination memory address */
+    uint64_t dpitch;      /* pitch of destination memory */
+    void *src;        /* source memory address */
+    uint64_t destAddr;
+    uint64_t spitch;      /* pitch of source memory */
+    uint64_t width;       /* width of matrix transfer */
+    uint64_t height;      /* height of matrix transfer */
+    uint64_t fixedSize;   /* Input: already converted size, current not support none zero */
+    uint32_t rsv[ASYNC_CPY_2D_IN_RSV_LEN];
+};
+
+#define ASYNC_CPY_2D_DESTROY_RSV_LEN 8
+struct AsyncDmaWqeDestroyInfo2D {
+    drvSqCqType_t type;
+    uint32_t tsId;
+    uint32_t sqId;
+    uint32_t ci;                /* current jetty ci */
+    uint32_t rsv[ASYNC_CPY_2D_DESTROY_RSV_LEN];
+};
+
+#define ASYNC_CPY_BATCH_IN_RSV_LEN 8
+struct AsyncDmaWqeInputInfoBatch {
+    drvSqCqType_t type;
+    uint32_t tsId;              /* default is 0 */
+    uint32_t sqId;
+    uint32_t dir;               /* reserved copy direction, the real dir is convert by src/dst addr */
+    void **dsts;        /* destination memory address array */
+    void **srcs;        /* source memory address array */
+    uint64_t *lens;        /* cpy size array */
+    uint64_t count;       /* cpy array elements count */
+    uint64_t fixedCnt;   /* Input: already converted array cnt */
+    uint32_t rsv[ASYNC_CPY_BATCH_IN_RSV_LEN];
+};
+
+#define ASYNC_CPY_BATCH_DESTROY_RSV_LEN 8
+struct AsyncDmaWqeDestroyInfoBatch {
+    drvSqCqType_t type;
+    uint32_t tsId;
+    uint32_t sqId;
+    uint32_t ci;                /* current jetty ci */
+    uint32_t rsv[ASYNC_CPY_BATCH_DESTROY_RSV_LEN];
 };
 
 struct IpcNotifyOpenPara {
@@ -349,6 +403,13 @@ public:
     virtual rtError_t CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInfo &input, AsyncDmaWqeOutputInfo *output,
                                         bool isUbMode, bool isSqeUpdate) = 0;
     virtual rtError_t DestroyAsyncDmaWqe(uint32_t devId, struct AsyncDmaWqeDestroyInfo *destroyPara, bool isUbMode = true) = 0;
+
+    virtual rtError_t CreateAsyncDmaWqe2D(uint32_t devId, const AsyncDmaWqeInputInfo2D &input, AsyncDmaWqeOutputInfo *output) = 0;
+    virtual rtError_t DestroyAsyncDmaWqe2D(uint32_t devId, struct AsyncDmaWqeDestroyInfo2D *destroyPara) = 0;
+
+    virtual rtError_t CreateAsyncDmaWqeBatch(uint32_t devId, const AsyncDmaWqeInputInfoBatch &input, AsyncDmaWqeOutputInfo *output) = 0;
+    virtual rtError_t DestroyAsyncDmaWqeBatch(uint32_t devId, struct AsyncDmaWqeDestroyInfoBatch *destroyPara) = 0;
+
     virtual rtError_t WriteNotifyRecord(const uint32_t deviceId, const uint32_t tsId, const uint32_t notifyId) = 0;
     virtual rtError_t DebugCqReport(const uint32_t devId, const uint32_t tsId, const uint32_t cqId,
                                     uint8_t *const report, uint32_t &realCnt) = 0;

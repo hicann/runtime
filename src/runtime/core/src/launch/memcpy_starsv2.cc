@@ -86,7 +86,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
         TaskRollBack(dstStm, pos);
         stm->StreamUnLock();
     };
-    const uint32_t sqeNum = Runtime::Instance()->GetConnectUbFlag() ? 2U : 1U;
+    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(kind, false, UINT32_MAX, RT_ASYNC_CPY_2D);
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&taskAsync2d, stm, pos, dstStm, sqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
@@ -94,8 +94,17 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     SaveTaskCommonInfo(taskAsync2d, dstStm, pos, sqeNum);
     ScopeGuard tskErrRecycle(errRecycle);
     error = MemcpyAsyncTaskInitV2(taskAsync2d, dst, dstPitch, src, srcPitch, width, height, kind, fixedSize);
+    taskAsync2d->u.memcpyAsyncTaskInfo.copyMethod = RT_ASYNC_CPY_2D;
     ERROR_RETURN_MSG_INNER(error, "invoke taskAsync2d Init stream_id=%d, errorcode:%#x", stm->Id_(),
         static_cast<uint32_t>(error));
+    // David UB 单算子场景 fixedSize是否与计算出的size相等，如果相等则不需要发送任务
+    if (IsDavidUbDma(taskAsync2d->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag() 
+        && fixedSize == taskAsync2d->u.memcpyAsyncTaskInfo.size) {
+        RT_LOG(RT_LOG_WARNING, 
+            "In UB eager mode, no need to send taskAsync2d if fixedSize has not changed. stream_id=%d, fixedSize=%" PRIu64 ", size=%" PRIu64 " ", 
+            stm->Id_(), fixedSize, taskAsync2d->u.memcpyAsyncTaskInfo.size);
+        return RT_ERROR_NONE;
+    }
     *realSize = taskAsync2d->u.memcpyAsyncTaskInfo.size;
     taskAsync2d->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     error = DavidSendTask(taskAsync2d, dstStm);
@@ -104,6 +113,54 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), taskAsync2d->taskSn);
+    error = SubmitTaskPostProc(dstStm, pos);
+    ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.",
+        stm->Id_(), static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t MemcopyBatchAsync(void** const dsts, const uint64_t* const destMaxs, void** const srcs, const uint64_t* const sizes,
+    const uint64_t count, uint64_t * const realSize, Stream * const stm, const uint64_t fixedSize)
+{
+    UNUSED(destMaxs);
+    rtError_t error = CheckTaskCanSend(stm);
+    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
+        stm->Id_(), static_cast<uint32_t>(error));
+    uint32_t pos = 0xFFFFU;
+    TaskInfo *taskAsyncBatch = nullptr;
+    Stream *dstStm = stm;
+    std::function<void()> const errRecycle = [&taskAsyncBatch, &stm, &pos, &dstStm]() {
+        TaskUnInitProc(taskAsyncBatch);
+        TaskRollBack(dstStm, pos);
+        stm->StreamUnLock();
+    };
+    const uint32_t sqeNum = GetSqeNumForMemcopyAsync(RT_MEMCPY_RESERVED, false, UINT32_MAX, RT_ASYNC_CPY_BATCH);
+    stm->StreamLock();
+    error = AllocTaskInfoForCapture(&taskAsyncBatch, stm, pos, dstStm, sqeNum);
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
+                                stm->Id_(), static_cast<uint32_t>(error));
+    SaveTaskCommonInfo(taskAsyncBatch, dstStm, pos, sqeNum);
+    ScopeGuard tskErrRecycle(errRecycle);
+    error = MemcpyAsyncBatchTaskInit(taskAsyncBatch, dsts, srcs, sizes, count, fixedSize);
+    taskAsyncBatch->u.memcpyAsyncTaskInfo.copyMethod = RT_ASYNC_CPY_BATCH;
+    ERROR_RETURN_MSG_INNER(error, "invoke taskAsyncBatch Init stream_id=%d, errorcode:%#x", stm->Id_(),
+        static_cast<uint32_t>(error));
+     // David UB 单算子场景 如果驱动本次下发处理的count个数为0，则表示没有触发wqe下发，不需要下发ub db task
+    if (IsDavidUbDma(taskAsyncBatch->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag() 
+        && fixedSize == taskAsyncBatch->u.memcpyAsyncTaskInfo.size) {
+        RT_LOG(RT_LOG_WARNING, 
+            "In UB eager mode, no need to send taskAsyncBatch if fixedSize has not changed. stream_id=%d, fixedSize=%" PRIu64 ", size=%" PRIu64 " ", 
+            stm->Id_(), fixedSize, taskAsyncBatch->u.memcpyAsyncTaskInfo.size);    
+        return RT_ERROR_NONE;
+    }
+    *realSize = taskAsyncBatch->u.memcpyAsyncTaskInfo.size;
+    taskAsyncBatch->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
+    error = DavidSendTask(taskAsyncBatch, dstStm);
+    ERROR_RETURN_MSG_INNER(error, "taskAsyncBatch task submit task failed, stream_id=%d, pos=%u, retCode=%#x.",
+        stm->Id_(), pos, static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    stm->StreamUnLock();
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->Id_(), taskAsyncBatch->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
