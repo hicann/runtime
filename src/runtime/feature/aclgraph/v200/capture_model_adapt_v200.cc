@@ -20,16 +20,16 @@ namespace runtime {
 rtError_t CaptureModel::BindSqCqAndSendSqe(void)
 {
     rtError_t error = BindSqCq();
-    ERROR_RETURN_MSG_INNER(error, "bind sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to bind SQ and CQ, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
     error = SendSqe();
-    ERROR_RETURN_MSG_INNER(error, "send sqe failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to send SQE, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
     error = BindStreamToModel();
-    ERROR_RETURN_MSG_INNER(error, "bind stream to model failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
-    
+    ERROR_RETURN(error, "Failed to bind stream to model, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+
     error = ConfigSqTail();
-    ERROR_RETURN_MSG_INNER(error, "config sq tail failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to configure SQ tail, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
     return error;
 }

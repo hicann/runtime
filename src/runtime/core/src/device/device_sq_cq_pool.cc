@@ -201,7 +201,7 @@ rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t
     return RT_ERROR_NONE;
 }
 
-rtError_t DeviceSqCqPool::AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t * const sqCqInfo)
+rtError_t DeviceSqCqPool::AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t * const sqCqInfo) const
 {
     RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u", device_->Id_(), device_->DevGetTsId());
     COND_RETURN_INFO((sqCqInfo == nullptr), RT_ERROR_INVALID_VALUE,

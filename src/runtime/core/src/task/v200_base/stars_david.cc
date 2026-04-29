@@ -133,8 +133,10 @@ static void ConstructDavidDvppSqe(TaskInfo * const taskInfo, rtDavidSqe_t * cons
     const errno_t error = memcpy_s(dvppSqe, sizeof(RtDavidStarsDvppSqe), &(dvppTask.sqe), sizeof(dvppTask.sqe));
     if (error != EOK) {
         dvppSqe->header.type = RT_DAVID_SQE_TYPE_INVALID;
-        RT_LOG(RT_LOG_ERROR, "copy to starsSqe failed, ret=%d, src size=%zu, dst size=%zu",
-            error, sizeof(rtDavidStarsCommonSqe_t), sizeof(dvppTask.sqe));
+        RT_LOG_INNER_MSG(RT_LOG_ERROR,
+            "Failed to call memcpy_s to copy dvppTask.sqe, src=%p, dest=%p, dest_max=%u, count=%u, retCode=%#x.",
+            &(dvppTask.sqe), dvppSqe, static_cast<uint32_t>(sizeof(RtDavidStarsDvppSqe)),
+            static_cast<uint32_t>(sizeof(dvppTask.sqe)), static_cast<uint32_t>(error));
         return;
     }
     dvppSqe->header.lock = 0U;
@@ -158,7 +160,7 @@ static void ConstructDavidDvppSqe(TaskInfo * const taskInfo, rtDavidSqe_t * cons
     void *cmdList = RtValueToPtr<void *>(((cmdListAddrHigh << UINT32_BIT_NUM) & 0xFFFFFFFF00000000ULL) |
         (cmdListAddrLow & 0x00000000FFFFFFFFULL));
     if (cmdList == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "cmdList addr is null.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to get cmdList address, it is null.");
         return;
     }
     davinciMultiTaskInfo->cmdListVec->push_back(cmdList);
@@ -183,7 +185,7 @@ static void CommonConstructDavidAICpuSqe(TaskInfo* const taskInfo, rtDavidSqe_t 
     rtError_t error = static_cast<DavidStream *>(stm)->LoadArgsInfo(&(params->argsInfo), false, &result);
     if (error != RT_ERROR_NONE) {
         sqe->header.type = RT_DAVID_SQE_TYPE_INVALID;
-        RT_LOG(RT_LOG_ERROR, "Failed to load cpu Kernel args, retCode=%#x", static_cast<uint32_t>(error));
+        RT_LOG(RT_LOG_ERROR, "Failed to load CPU Kernel args, retCode=%#x", static_cast<uint32_t>(error));
         return;
     }
     davinciMultiTaskInfo->argHandleVec->push_back(result.handle);
@@ -284,7 +286,7 @@ static void ConstructDavidAICpuSqeForDavinciMultipleTask(TaskInfo * const taskIn
                                                 KernelInfoType::SO_NAME, &soNameAddr);
         if (error != RT_ERROR_NONE) {
             sqe->header.type = RT_DAVID_SQE_TYPE_INVALID;
-            RT_LOG(RT_LOG_ERROR, "Failed to get so address by name, retCode=%#x", static_cast<uint32_t>(error));
+            RT_LOG(RT_LOG_ERROR, "Failed to get SO address by name, retCode=%#x", static_cast<uint32_t>(error));
             return;
         }
     }
@@ -394,8 +396,11 @@ static void ConstructDavidSqeForStarsCommonTask(TaskInfo * const taskInfo, rtDav
         &starsCommTask->commonStarsSqe.commonDavidSqe, sizeof(starsCommTask->commonStarsSqe.commonDavidSqe));
     if (error != EOK) {
         davidSqe->commonSqe.sqeHeader.type = RT_STARS_SQE_TYPE_INVALID;
-        RT_LOG(RT_LOG_ERROR, "copy to starsSqe failed,ret=%d,src size=%zu,dst size=%zu",
-            error, sizeof(starsCommTask->commonStarsSqe.commonDavidSqe), sizeof(rtDavidSqe_t));
+        RT_LOG_INNER_MSG(RT_LOG_ERROR,
+            "Failed to call memcpy_s to copy commonStarsSqe.commonDavidSqe, src=%p, dest=%p, dest_max=%lu, "
+            "count=%lu, retCode=%#x.",
+            &starsCommTask->commonStarsSqe.commonDavidSqe, davidSqe, static_cast<unsigned long>(sizeof(rtDavidSqe_t)),
+            static_cast<unsigned long>(sizeof(starsCommTask->commonStarsSqe.commonDavidSqe)), static_cast<uint32_t>(error));
     }
     ConstructDavidSqeForWordOne(taskInfo, davidSqe);
     PrintDavidSqe(davidSqe, "StarsCommonTask");

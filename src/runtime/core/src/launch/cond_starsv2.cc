@@ -32,7 +32,7 @@ static rtError_t CondStreamActiveForAicpuStream(const Stream * const activeStrea
     TaskInfo *tsk = &taskSubmit;
     tsk->stream = stm;
     rtError_t error = mdl->MallocDevValue(&activeStreamId, static_cast<uint32_t>(sizeof(int32_t)), &args);
-    ERROR_RETURN_MSG_INNER(error, "Active task malloc device value failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to allocate device value for active task, retCode=%#x.", static_cast<uint32_t>(error));
 
     (void)ActiveAicpuStreamTaskInit(tsk, RtPtrToValue<void *>(args),
             static_cast<uint32_t>(sizeof(int32_t)), RtPtrToValue<const void *>(funcName), TS_AICPU_KERNEL_CCE);
@@ -40,7 +40,7 @@ static rtError_t CondStreamActiveForAicpuStream(const Stream * const activeStrea
     mdl->PushbackArgActiveStream(args);
     error = ProcAicpuTask(tsk);
     ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk);,
-        "Active task submit ActiveAicpuStreamTask failed, retCode=%#x.", static_cast<uint32_t>(error));
+        "Failed to submit ActiveAicpuStreamTask, retCode=%#x.", static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 
@@ -64,7 +64,7 @@ rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm
         return RT_ERROR_NONE;
     }
     rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
     TaskInfo *tsk = nullptr;
@@ -76,15 +76,15 @@ rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm
     };
     stm->StreamLock();
     error = alreadyCascaded ? AllocTaskInfoOnAutoSplitStream(dstStm, 1U, &tsk, pos) : AllocTaskInfoForCapture(&tsk, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
     SaveTaskCommonInfo(tsk, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamActiveTaskInit(tsk, activeStream);
-    ERROR_RETURN_MSG_INNER(error, "Active task init failed, stream_id=%d, pos=%u, retCode=%#x",
+    ERROR_RETURN_MSG_INNER(error, "Failed to initialize active task, stream_id=%d, pos=%u, retCode=%#x.",
         streamId, pos, static_cast<uint32_t>(error));
     error = DavidSendTask(tsk, dstStm);
-    ERROR_RETURN_MSG_INNER(error, "Active task submit task failed, stream_id=%d, pos=%u, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit active task, stream_id=%d, pos=%u, retCode=%#x.",
         streamId, pos, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
@@ -102,7 +102,7 @@ rtError_t CondStreamSwitchEx(const void * const ptr, const rtCondition_t conditi
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     std::function<void()> const errRecycle = [&rtStreamSwitchTask, &stm, &pos, &dstStm]() {
         TaskUnInitProc(rtStreamSwitchTask);
         TaskRollBack(dstStm, pos);
@@ -110,15 +110,15 @@ rtError_t CondStreamSwitchEx(const void * const ptr, const rtCondition_t conditi
     };
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&rtStreamSwitchTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     SaveTaskCommonInfo(rtStreamSwitchTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamSwitchTaskInitV2(rtStreamSwitchTask, ptr, condition, trueStream, valuePtr, dataType);
-    ERROR_RETURN_MSG_INNER(error, "Stream switch task init failed, stream_id=%d, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to initialize stream switch task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     error = DavidSendTask(rtStreamSwitchTask, dstStm);
-    ERROR_RETURN_MSG_INNER(error, "Active task submit task failed, stream_id=%d, pos=%u, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit stream switch task, stream_id=%d, pos=%u, retCode=%#x.",
         streamId, pos, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
@@ -146,7 +146,7 @@ rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
 {
     const int32_t streamId = stm->Id_();
     rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     TaskInfo *rtMemWaitValueTask = nullptr;
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
@@ -157,25 +157,25 @@ rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
     };
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&rtMemWaitValueTask, stm, pos, dstStm, MEM_WAIT_V2_SQE_NUM);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     SaveTaskCommonInfo(rtMemWaitValueTask, dstStm, pos, MEM_WAIT_V2_SQE_NUM);
     ScopeGuard tskErrRecycle(errRecycle);
     rtMemWaitValueTask->typeName = "MEM_WAIT_VALUE";
     rtMemWaitValueTask->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
     error = MemWaitValueTaskInit(rtMemWaitValueTask, devAddr, value, flag);
-    ERROR_RETURN_MSG_INNER(error, "Memory wait value task init failed, stream_id=%d, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to initialize memory wait value task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
     rtMemWaitValueTask->needPostProc = true;
     rtMemWaitValueTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();
     error = DavidSendTask(rtMemWaitValueTask, dstStm);
-    ERROR_RETURN_MSG_INNER(error, "Memory wait value task submit task failed, stream_id=%d, pos=%u, retCode=%#x.",
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit memory wait value task, stream_id=%d, pos=%u, retCode=%#x.",
         streamId, pos, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), rtMemWaitValueTask->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
-    ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

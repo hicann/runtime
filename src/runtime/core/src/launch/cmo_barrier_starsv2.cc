@@ -21,10 +21,7 @@ namespace runtime {
 
 rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm, const uint32_t flag)
 {
-    if (stm == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "CMO task launch failed, stream is nullptr.");
-        return RT_ERROR_STREAM_NULL;
-    }
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
     if (stm->Model_() != nullptr) {
         RT_LOG(RT_LOG_WARNING, "CMO task stream does not support in model.");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -34,7 +31,7 @@ rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm
     TaskInfo* rtCmoTask = nullptr;
     uint32_t pos = 0xFFFFU;
     rtError_t error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     Stream* dstStm = stm;
     std::function<void()> const errRecycle = [&rtCmoTask, &stm, &pos, &dstStm]() {
         TaskUnInitProc(rtCmoTask);
@@ -43,23 +40,23 @@ rtError_t CmoTaskLaunch(const rtCmoTaskInfo_t* const taskInfo, Stream* const stm
     };
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&rtCmoTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "stream_id=%d alloc cmo task failed, retCode=%#x.",
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate CMO task, stream_id=%d, retCode=%#x.",
                                                            streamId, static_cast<uint32_t>(error));
     SaveTaskCommonInfo(rtCmoTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
     // must be original stream
     error = CmoTaskInit(rtCmoTask, taskInfo, stm, flag);
     ERROR_RETURN_MSG_INNER(
-        error, "CMO task init failed, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+        error, "Failed to initialize CMO task, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     rtCmoTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtCmoTask, dstStm);
     ERROR_RETURN_MSG_INNER(
-        error, "CMO task submit failed, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+        error, "Failed to submit CMO task, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     tskErrRecycle.ReleaseGuard();
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), rtCmoTask->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
-    ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

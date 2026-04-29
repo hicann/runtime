@@ -34,7 +34,7 @@ public:
     rtError_t Init(void) const;
     void PreAllocSqCq(void);
     rtError_t AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t * const sqCqList);
-    rtError_t AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t * const sqCqInfo);
+    rtError_t AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t * const sqCqInfo) const;
 
     // Release sqcqs in bulk, only releasing them to the pool;
     // actual resources are not released to the driver, making it convenient for future requests of sqcqs.

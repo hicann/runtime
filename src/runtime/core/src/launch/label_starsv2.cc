@@ -58,17 +58,24 @@ rtError_t CondLabelSwitchByIndex(void* const ptr, const uint32_t maxIndex, void*
 
 rtError_t CondLabelSet(Label* const lbl, Stream* const stm)
 {
-    NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() == nullptr, RT_ERROR_STREAM_MODEL,
+        ErrorCode::EE1017, __func__, "stream",
+        "The stream must be bound to a model for label set operation");
+    COND_RETURN_AND_MSG_OUTER(
         (lbl->MgrType_() == Label::LABEL_MGR_TYPE_MODEL) && (stm->Model_() != lbl->Model_()), RT_ERROR_LABEL_MODEL,
-        "Set label failed, stream don't bind to label mdl!");
-    COND_RETURN_ERROR_MSG_INNER(
+        ErrorCode::EE1017, __func__, "label",
+        "Label and stream must be bound to the same model");
+    COND_RETURN_AND_MSG_OUTER(
         (lbl->Stream_() != nullptr) && (lbl->Stream_() != stm), RT_ERROR_LABEL_STREAM,
-        "Set label failed, label stream not same with create stream!");
-    COND_RETURN_ERROR_MSG_INNER(lbl->SetFlag_(), RT_ERROR_LABEL_SET, "Set label failed, label already set!");
-    COND_RETURN_ERROR_MSG_INNER(
+        ErrorCode::EE1017, __func__, "label",
+        "Label is already bound to another stream");
+    COND_RETURN_AND_MSG_OUTER(lbl->SetFlag_(), RT_ERROR_LABEL_SET,
+        ErrorCode::EE1017, __func__, "label",
+        "Label has already been set, cannot set again");
+    COND_RETURN_AND_MSG_OUTER(
         (lbl->DevDstAddr_() == nullptr), RT_ERROR_LABEL_PHY_ADDR_NULL,
-        "Need call rtLabelListCpy api before set label task.");
+        ErrorCode::EE1017, __func__, "label",
+        "Call rtLabelListCpy before setting label task");
 
     TaskInfo* labelTask = nullptr;
     uint32_t pos = 0xFFFFU;

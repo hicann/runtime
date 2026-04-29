@@ -38,23 +38,22 @@ uint32_t GetCaptureStreamFlag()
 rtError_t GetCaptureEventFromTask(const Device * const dev, uint32_t streamId, uint32_t pos, Event *&eventPtr, CaptureCntNotify &cntInfo)
 {
     UNUSED(cntInfo);
-    if (dev != nullptr) {
-        TaskInfo *taskInfo = GetTaskInfo(dev, streamId, pos);
-        COND_RETURN_ERROR((taskInfo == nullptr),
-            RT_ERROR_TASK_NULL,
-            "Get task failed, stream_id=%u, task_id=%u.", streamId, pos);
-        COND_RETURN_ERROR(!((taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) || (taskInfo->type ==TS_TASK_TYPE_CAPTURE_RECORD)),
-            RT_ERROR_STREAM_UNJOINED,
-            "The last task type is not event record, stream_id=%u, task_id=%u.",
-            streamId, pos);
-        if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
-            eventPtr = taskInfo->u.davidEventRecordTaskInfo.event;
-        } else {
-            eventPtr = taskInfo->u.memWriteValueTask.event;
-        }
-        return RT_ERROR_NONE;
+    COND_RETURN_ERROR((dev == nullptr), RT_ERROR_DEVICE_NULL,
+        "Failed to get capture event from task, device is null, stream_id=%u, task_id=%u.", streamId, pos);
+    TaskInfo *taskInfo = GetTaskInfo(dev, streamId, pos);
+    COND_RETURN_ERROR((taskInfo == nullptr),
+        RT_ERROR_TASK_NULL,
+        "Failed to get task, stream_id=%u, task_id=%u.", streamId, pos);
+    COND_RETURN_ERROR(!((taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) || (taskInfo->type ==TS_TASK_TYPE_CAPTURE_RECORD)),
+        RT_ERROR_STREAM_UNJOINED,
+        "Failed to get capture event from task, the last task type is not event record, stream_id=%u, task_id=%u.",
+        streamId, pos);
+    if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
+        eventPtr = taskInfo->u.davidEventRecordTaskInfo.event;
+    } else {
+        eventPtr = taskInfo->u.memWriteValueTask.event;
     }
-    return RT_ERROR_DEVICE_NULL;
+    return RT_ERROR_NONE;
 }
 
 rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream * const stm)
@@ -63,7 +62,7 @@ rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream
     for (Event * const evt : captureModel->GetCaptureEvent()) {
         COND_RETURN_ERROR((!(evt->HasRecord())),
             RT_ERROR_CAPTURE_DEPENDENCY,
-            "the capture event has not been recorded, stream_id=%d, event_id=%d.",
+            "Failed to reset capture events, the capture event has not been recorded, stream_id=%d, event_id=%d.",
             stm->Id_(), evt->EventId_());
 
         if (GlobalContainer::IsEventHardMode()) {
@@ -72,8 +71,8 @@ rtError_t ResetCaptureEventsProc(const CaptureModel * const captureModel, Stream
  	        error = EvtResetSoftwareMode(evt, stm);
         }
 
-        COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Capture stream reset event failed, stream_id=%d, error=%d.",
-            stm->Id_(), error);
+        COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Failed to reset capture event, stream_id=%d, retCode=%#x.",
+            stm->Id_(), static_cast<uint32_t>(error));
     }
 
     return RT_ERROR_NONE;
@@ -97,7 +96,7 @@ bool TaskTypeIsSupportTaskGroup(const TaskInfo * const task)
         if ((fusionTaskInfo->sqeSubType & (1U << RT_FUSION_AIC_BIT_MOVE)) != 0U) {
             return true;
         }
-        RT_LOG(RT_LOG_ERROR, "Fusion subtask does not include the aicore task, sqeSubType=0x%x.",
+        RT_LOG(RT_LOG_ERROR, "Failed to check task type for task group, fusion subtask does not include the aicore task, sqeSubType=0x%x.",
             fusionTaskInfo->sqeSubType);
         return false;
     }

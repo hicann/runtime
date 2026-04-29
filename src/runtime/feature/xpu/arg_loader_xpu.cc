@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <string>
 #include "xpu_device.hpp"
 #include "arg_loader_xpu.hpp"
 #include "stream_xpu.hpp"
@@ -38,19 +39,19 @@ rtError_t XpuArgLoader::Init()
     argAllocator_ = new (std::nothrow) H2HCopyMgr(itemSize_, argAllocatorSize,
         maxItemCount, BufferAllocator::LINEAR, H2HCopyPolicy::H2H_COPY_POLICY_SYNC);
 
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, argAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init xpu arg loader stage1 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(argAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(H2HCopyMgr)).c_str());
 
     randomAllocator_ = new (std::nothrow) H2HCopyMgr(H2HCopyPolicy::H2H_COPY_POLICY_SYNC);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, randomAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init xpu arg loader stage2 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(randomAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(H2HCopyMgr)).c_str());
 
     const uint32_t handleAllocatorSize = 1024U;
     handleAllocator_ = new (std::nothrow) BufferAllocator(static_cast<uint32_t>(sizeof(XpuHandle)), handleAllocatorSize,
         maxItemCount);
 
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, handleAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init xpu arg loader stage3 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(handleAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(BufferAllocator)).c_str());
     RT_LOG(RT_LOG_INFO, "new BufferAllocator handleAllocator_ ok, Runtime_alloc_size %zu", sizeof(BufferAllocator));
 
     return RT_ERROR_NONE;
@@ -60,7 +61,8 @@ rtError_t XpuArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * cons
 {
     XpuHandle *argHandle = nullptr;
     result->handle = handleAllocator_->AllocItem();
-    NULL_PTR_RETURN(result->handle, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_AND_MSG_OUTER(result->handle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(XpuHandle)).c_str());
     argHandle = static_cast<XpuHandle *>(result->handle);
     argHandle->isFreeArgs = false;
     bool isRandom = false;
@@ -82,7 +84,7 @@ rtError_t XpuArgLoader::AllocCopyPtr(const uint32_t size, ArgLoaderResult * cons
     if (kerArgs == nullptr) {
         handleAllocator_->FreeByItem(argHandle);
         result->handle = nullptr;
-        RT_LOG(RT_LOG_ERROR, "Alloc args loader mem failed.");
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, std::to_string(size));
         return RT_ERROR_MEMORY_ALLOCATION;
     }
     RT_LOG(RT_LOG_DEBUG, "Alloc args loader mem success.");

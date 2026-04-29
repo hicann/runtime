@@ -38,8 +38,8 @@ rtError_t XpuStreamSqCqManage::AllocXpuStreamSqCq(const Stream *const newStm)
     XpuDriver *xpuDriver = static_cast<XpuDriver *>(Device_()->Driver_());
     rtError_t error =
         xpuDriver->XpuDriverDeviceSqCqAlloc(newStm->Device_()->Id_(), newStm->GetSqId(), newStm->GetCqId());
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_STREAM_NEW, "Alloc xpu sq cq failed, stream_id=%d.", streamId);
+    COND_RETURN_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_STREAM_NEW,
+        "Failed to allocate XPU SQ/CQ, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     streamIdToSqIdMap_[streamId] = newStm->GetSqId();
     streamIdToCqIdMap_[streamId] = newStm->GetCqId();
     return RT_ERROR_NONE;

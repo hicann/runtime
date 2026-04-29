@@ -64,28 +64,35 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     const uint32_t groupDim = launchTaskCfg->Group.groupDim;
     const uint32_t groupBlockDim = launchTaskCfg->Group.groupBlockDim;
 
-    if ((blockDim > UINT16_MAX) || (groupDim > UINT16_MAX) || (groupBlockDim > UINT16_MAX)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Invalid block_dim(=%#x), group_dim(=%#x), or group_block_dim(=%#x). It exceeds 0xffff.",
-            blockDim, groupDim, groupBlockDim);
+    if (blockDim > UINT16_MAX) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(blockDim, "[0, 0xffff]");
+        return RT_ERROR_INVALID_VALUE;
+    }
+    if (groupDim > UINT16_MAX) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(groupDim, "[0, 0xffff]");
+        return RT_ERROR_INVALID_VALUE;
+    }
+    if (groupBlockDim > UINT16_MAX) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(groupBlockDim, "[0, 0xffff]");
         return RT_ERROR_INVALID_VALUE;
     }
 
     if (((groupDim != 0U) && (groupBlockDim == 0U)) || ((groupDim == 0U) && (groupBlockDim != 0U))) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "groupDim=%u and groupBlockDim=%u must both be zero or non-zero.",
-            groupDim, groupBlockDim);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, "groupDim",
+            "groupDim and groupBlockDim must both be zero or both non-zero");
         return RT_ERROR_INVALID_VALUE;
     }
 
     if ((blockDim == 0) && (groupDim == 0)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid block_dim and group_dim/group_block_dim. They must all be 0.");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, "blockDim",
+            "blockDim and groupDim cannot both be zero");
         return RT_ERROR_INVALID_VALUE;
     }
 
     if ((groupDim * groupBlockDim) > UINT16_MAX) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "Invalid product of group_dim(=%#x) and group_block_dim(=%#x). It exceeds 0xffff.",
-            groupDim, groupBlockDim);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011,
+            std::to_string(groupDim), "groupDim",
+            "the product of groupDim and groupBlockDim must not exceed 65535 (groupBlockDim=" + std::to_string(groupBlockDim) + ")");
         return RT_ERROR_INVALID_VALUE;
     }
 

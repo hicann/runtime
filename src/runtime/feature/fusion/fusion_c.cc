@@ -115,11 +115,10 @@ static rtError_t PreProcAicAivTaskForFusion(rtFusionSubTaskInfo_t *const fusionT
     rtAicoreFusionInfo_t * const aicInfo = &(fusionTask->task.aicoreInfo);
     void * const stubFunc = aicInfo->stubFunc;
     void * const progHandle = aicInfo->hdl;
-    if ((stubFunc == nullptr && progHandle == nullptr) || (stubFunc != nullptr && progHandle != nullptr)) {
-        RT_LOG(RT_LOG_ERROR, "invalid input, stubFunc=%p, progHandle=%p, stream_id=%d.",
-            stubFunc, progHandle, stm->Id_());
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((stubFunc == nullptr && progHandle == nullptr) ||
+        (stubFunc != nullptr && progHandle != nullptr), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "stubFunc/progHandle",
+        "exactly one of stubFunc or progHandle must be non-null");
 
     rtLaunchConfig_t *cfgInfo = aicInfo->config;
     NULL_PTR_RETURN_MSG_OUTER(cfgInfo, RT_ERROR_INVALID_VALUE);
@@ -143,8 +142,8 @@ static rtError_t PreProcAicAivTaskForFusion(rtFusionSubTaskInfo_t *const fusionT
 
     error = StreamLaunchKernelPrepare(stm, registeredKernel, prog, kernelAttrType, launchMdl, stubFunc,
                                 addr1, addr2, progHandle, tilingKey);
-    COND_RETURN_OUT_ERROR_MSG_CALL(error != RT_ERROR_NONE, error, "kernel launch prepare failed,"
-        "stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to prepare kernel launch, stream_id=%d, retCode=%#x.",
+        stm->Id_(), static_cast<uint32_t>(error));
 
     mixType = registeredKernel->GetMixType();
     aicAivInfo->kernelAttrType = kernelAttrType;
@@ -204,20 +203,21 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
     // get ccu subType
     for (uint32_t i = 0U; i < ccuInfo->taskNum; i++) {
         NULL_PTR_RETURN_MSG_OUTER(ccuInfo->ccuTaskInfo[i].args, RT_ERROR_INVALID_VALUE);
-        COND_RETURN_OUT_ERROR_MSG_CALL(ccuInfo->ccuTaskInfo[i].argSize != RT_CCU_SQE128B_ARGS_SIZE &&
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+            ccuInfo->ccuTaskInfo[i].argSize != RT_CCU_SQE128B_ARGS_SIZE &&
             ccuInfo->ccuTaskInfo[i].argSize != RT_CCU_SQE32B_ARGS_SIZE, RT_ERROR_INVALID_VALUE,
-            "ccu subTask [%u] argSize is invalid, it should be 1 or 13.", i);
-        COND_RETURN_OUT_ERROR_MSG_CALL(ccuInfo->ccuTaskInfo[i].dieId > 1, RT_ERROR_INVALID_VALUE,
-            "ccu subTask die id is invalid, it should between [0,1].");
-        COND_RETURN_OUT_ERROR_MSG_CALL(ccuInfo->ccuTaskInfo[i].missionId > RT_CCU_MISSION_ID_MAX,
-            RT_ERROR_INVALID_VALUE, "ccu subTask mission id is invalid, it should <= %u.",
-            RT_CCU_MISSION_ID_MAX);
-        COND_RETURN_OUT_ERROR_MSG_CALL(ccuInfo->ccuTaskInfo[i].instCnt == RT_CCU_INST_CNT_INVALID,
-            RT_ERROR_INVALID_VALUE, "ccu subTask instCnt is invalid, it should not be %u.",
-            RT_CCU_INST_CNT_INVALID);
-        COND_RETURN_OUT_ERROR_MSG_CALL(ccuInfo->ccuTaskInfo[i].instStartId >= RT_CCU_INST_START_MAX,
-            RT_ERROR_INVALID_VALUE, "ccu subTask instStartId is invalid, it should be [%u, %u).",
-            0U, RT_CCU_INST_START_MAX);
+            ccuInfo->ccuTaskInfo[i].argSize,
+            std::to_string(RT_CCU_SQE32B_ARGS_SIZE) + " or " + std::to_string(RT_CCU_SQE128B_ARGS_SIZE));
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].dieId > 1, RT_ERROR_INVALID_VALUE,
+            ccuInfo->ccuTaskInfo[i].dieId, "[0, 1]");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].missionId > RT_CCU_MISSION_ID_MAX,
+            RT_ERROR_INVALID_VALUE, ccuInfo->ccuTaskInfo[i].missionId,
+            "[0, " + std::to_string(RT_CCU_MISSION_ID_MAX) + "]");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].instCnt == RT_CCU_INST_CNT_INVALID,
+            RT_ERROR_INVALID_VALUE, ccuInfo->ccuTaskInfo[i].instCnt, "not equal to 0");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].instStartId >= RT_CCU_INST_START_MAX,
+            RT_ERROR_INVALID_VALUE, ccuInfo->ccuTaskInfo[i].instStartId,
+            "[0, " + std::to_string(RT_CCU_INST_START_MAX) + ")");
         sqeSubType |= (ccuInfo->ccuTaskInfo[i].dieId == 0U) ? (1U << RT_FUSION_CCU_DIE0_BIT_MOVE) :
             (1U << RT_FUSION_CCU_DIE1_BIT_MOVE);
         // 双die上 0、1排布合法性
@@ -226,28 +226,33 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
         isHas32B |= ccuInfo->ccuTaskInfo[i].argSize == RT_CCU_SQE32B_ARGS_SIZE ? 1U : 0U;
         isHas128B |= ccuInfo->ccuTaskInfo[i].argSize == RT_CCU_SQE128B_ARGS_SIZE ? 1U : 0U;
     }
-    COND_RETURN_OUT_ERROR_MSG_CALL((isHas32B == 1U) && (isHas128B == 1U), RT_ERROR_INVALID_VALUE,
-        "ccu subTasks' argSize is invalid, it should be all 32B or 128B.");
+    COND_RETURN_AND_MSG_OUTER((isHas32B == 1U) && (isHas128B == 1U), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "argSize",
+        "all CCU subtasks must use the same argSize, either 32B or 128B");
 
     // 双die num奇数返错 0x18 -> 11000
     const bool isDoubleDie = (sqeSubType & 0x18U) == 0x18U ? true : false;
     uint8_t taskNum = static_cast<uint8_t>(ccuInfo->taskNum);
     if (isDoubleDie) {
-        COND_RETURN_OUT_ERROR_MSG_CALL(((taskNum & 1U) == 1U), RT_ERROR_INVALID_VALUE,
-            "ccu subTasks' num %u is invalid, it should be even number when double die.", taskNum);
-        COND_RETURN_OUT_ERROR_MSG_CALL((dieIdArrange != checkArrange), RT_ERROR_INVALID_VALUE,
-            "ccu subTasks' arrangement %u is wrong when double die.", dieIdArrange);
+        COND_RETURN_AND_MSG_OUTER(((taskNum & 1U) == 1U), RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1011, __func__, static_cast<uint32_t>(taskNum), "taskNum",
+            "taskNum must be an even number when double die is used");
+        COND_RETURN_AND_MSG_OUTER((dieIdArrange != checkArrange), RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1017, __func__, "dieIdArrange",
+            "die IDs must alternate between die 0 and die 1 when double die is used");
         taskNum = taskNum / 2U;
     }
 
-    COND_RETURN_OUT_ERROR_MSG_CALL((isHas32B == 1U) && (taskNum <= 1U), RT_ERROR_INVALID_VALUE,
-        "ccu subTask argSize is invalid, taskNum should > 1 when argSize is 1 per die.");
-    COND_RETURN_OUT_ERROR_MSG_CALL((isHas128B == 1U) && (taskNum > 1U), RT_ERROR_INVALID_VALUE,
-        "ccu subTask argSize is invalid, taskNum should be 1 when argSize is 13 per die.");
+    COND_RETURN_AND_MSG_OUTER((isHas32B == 1U) && (taskNum <= 1U), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1011, __func__, static_cast<uint32_t>(taskNum), "taskNum",
+        "taskNum must be greater than 1 when argSize is 32B per die");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((isHas128B == 1U) && (taskNum > 1U), RT_ERROR_INVALID_VALUE,
+        taskNum, "1");
     ccuArgSize = (isHas32B == 1U) ? RT_CCU_SQE32B_ARGS_SIZE : RT_CCU_SQE128B_ARGS_SIZE;
     // mission id的递增
-    COND_RETURN_OUT_ERROR_MSG_CALL(!CheckCcuMissionId(ccuInfo->ccuTaskInfo, static_cast<int32_t>(ccuInfo->taskNum),
-        isDoubleDie), RT_ERROR_INVALID_VALUE, "ccu subTasks' mission id is invalid, it should increase.");
+    COND_RETURN_AND_MSG_OUTER(!CheckCcuMissionId(ccuInfo->ccuTaskInfo, static_cast<int32_t>(ccuInfo->taskNum),
+        isDoubleDie), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "missionId",
+        "CCU subtask mission IDs must be strictly increasing");
 
     // when fusion type is "ccu + aic" or "ccu + ccu", ccu sqe' size must be occupied 4*64B=256B.
     sqeLen += 4U;
@@ -305,10 +310,8 @@ static rtError_t FusionKernelTaskPreProc(rtFunsionTaskInfo_t * const fusionKerne
                 sqeLen += 1U;
                 break;
             case RT_FUSION_HCOM_CPU:
-                COND_RETURN_OUT_ERROR_MSG_CALL(fusionKernel->subTask[idx].task.aicpuInfo.blockDim != 1U,
-                    RT_ERROR_INVALID_VALUE,
-                    "stream_id=%d hcom_cpu task's blkdim is invalid, it should be 1, but now blkdim=%u.",
-                    stm->Id_(), fusionKernel->subTask[idx].task.aicpuInfo.blockDim);
+                COND_RETURN_AND_MSG_OUTER_WITH_PARAM(fusionKernel->subTask[idx].task.aicpuInfo.blockDim != 1U,
+                    RT_ERROR_INVALID_VALUE, fusionKernel->subTask[idx].task.aicpuInfo.blockDim, "1");
                 subKernelType += (stm->Device_()->IsSupportHcomcpu() == 1U) ? 0U : 1U;
                 sqeSubType |= (1U << fusionSubTaskMove[subKernelType]);
                 sqeLen += 1U;
@@ -322,14 +325,14 @@ static rtError_t FusionKernelTaskPreProc(rtFunsionTaskInfo_t * const fusionKerne
                 ERROR_RETURN(error, "stream_id=%d failed to proc ccu sub task, retCode=%#x",
                     stm->Id_(), static_cast<uint32_t>(error));
                 /* 0x18U means die0 ccu + die1 ccu */
-                COND_RETURN_OUT_ERROR_MSG_CALL((subKernelNum == 1U) && ((sqeSubType != 0x18U) ||
+                COND_RETURN_AND_MSG_OUTER((subKernelNum == 1U) && ((sqeSubType != 0x18U) ||
                     (ccuArgSize != RT_CCU_SQE128B_ARGS_SIZE)), RT_ERROR_INVALID_VALUE,
-                    "If only have ccu task (without aic task), fusion only accept double die 128B ccu, "
-                    "ccuArgsSize=%u, sqeSubType=0x%x.", ccuArgSize, sqeSubType);
+                    ErrorCode::EE1017, __func__, "ccuArgSize",
+                    "CCU-only fusion task requires double die with 128B argSize");
                 break;
             default:
-                RT_LOG(RT_LOG_ERROR, "sub task [%u]'s type is invalid, type=%u.", idx,
-                    static_cast<uint32_t>(subKernelType));
+                RT_LOG_OUTER_MSG_INVALID_PARAM(subKernelType,
+                    "[0, 3]");
                 return RT_ERROR_INVALID_VALUE;
         }
     }
@@ -368,39 +371,29 @@ static void SetArgsFusionKernel(const rtFusionArgsEx_t * const argsInfo,
 static rtError_t CheckUpdateFusionTaskInfo(const TaskInfo * const updateTask, uint32_t sqeLen, uint8_t sqeSubType,
     const Kernel * const kernel, uint8_t kernelType, const Stream * const stm)
 {
-    if (updateTask->stream->Model_() == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "The update task must be a sinked task, stream_id=%d, task_id=%hu.",
-               updateTask->stream->Id_(), updateTask->id);
-        return RT_ERROR_MODEL_NULL;
-    }
+    COND_RETURN_AND_MSG_OUTER(updateTask->stream->Model_() == nullptr, RT_ERROR_MODEL_NULL,
+        ErrorCode::EE1017, __func__, "task",
+        "The update task must be a sinked task");
 
-    if (stm->Model_() != nullptr) {
-        RT_LOG(RT_LOG_ERROR, "The update stream must be a single operator stream, stream_id=%d, task_id=%hu.",
-            updateTask->stream->Id_(), updateTask->id);
-        return RT_ERROR_STREAM_MODEL;
-    }
+    COND_RETURN_AND_MSG_OUTER(stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
+        ErrorCode::EE1017, __func__, "stream",
+        "The update stream must be a single operator stream, not bound to a model");
 
-    if (updateTask->u.fusionKernelTask.sqeLen != sqeLen) {
-        RT_LOG(RT_LOG_ERROR, "check fusion sqe num failed, old sqeLen=%u, new sqeLen=%u.",
-            updateTask->u.fusionKernelTask.sqeLen, sqeLen);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER(updateTask->u.fusionKernelTask.sqeLen != sqeLen, RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1011, __func__, sqeLen, "sqeLen",
+        "sqeLen must match the original fusion task's sqeLen (" +
+        std::to_string(updateTask->u.fusionKernelTask.sqeLen) + ")");
 
-    if ((sqeSubType & (1U << RT_FUSION_AIC_BIT_MOVE)) == 0U) {
-        RT_LOG(RT_LOG_ERROR, "The update subtask does not include the aicore task, sqeSubType=0x%x.", sqeSubType);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((sqeSubType & (1U << RT_FUSION_AIC_BIT_MOVE)) == 0U, RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "sqeSubType",
+        "The update subtask must include the AI Core task");
 
-    if ((updateTask->u.fusionKernelTask.aicPart.kernel->GetMixType() != kernel->GetMixType()) ||
+    COND_RETURN_AND_MSG_OUTER(
+        (updateTask->u.fusionKernelTask.aicPart.kernel->GetMixType() != kernel->GetMixType()) ||
         (updateTask->u.fusionKernelTask.aicPart.kernel->GetFuncType() != kernel->GetFuncType()) ||
-        (updateTask->u.fusionKernelTask.aicAivType != kernelType)) {
-        RT_LOG(RT_LOG_ERROR, "check kernel type failed, stream_id=%d, task_id=%hu, "
-            "old mixType=%u, funcType=%u, machine=%u, new mixType=%u, funcType=%u, machine=%u.",
-            updateTask->stream->Id_(), updateTask->id, updateTask->u.fusionKernelTask.aicPart.kernel->GetMixType(),
-            updateTask->u.fusionKernelTask.aicPart.kernel->GetFuncType(), updateTask->u.fusionKernelTask.aicAivType,
-            kernel->GetMixType(), kernel->GetFuncType(), kernelType);
-        return RT_ERROR_KERNEL_TYPE;
-    }
+        (updateTask->u.fusionKernelTask.aicAivType != kernelType),
+        RT_ERROR_KERNEL_TYPE, ErrorCode::EE1017, __func__, "kernelType",
+        "kernel type (mixType, funcType, machine) must match the original fusion task");
 
     return RT_ERROR_NONE;
 }
@@ -438,8 +431,12 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
     rtError_t error = FusionKernelTaskPreProc(fusionKernel, stm, prog, sqeLen, sqeSubType, ccuArgSize, &aicAivInfo, &launchTaskCfg);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);,
         "Failed to pre proc fusion kernel task, retCode=%#x.", static_cast<uint32_t>(error));
-    COND_PROC_RETURN_ERROR_MSG_INNER(sqeLen > SQE_NUM_PER_DAVID_TASK_MAX, RT_ERROR_INVALID_VALUE, rt->PutProgram(prog);,
-        "sqelen:%u is invalid max:%u.", sqeLen, SQE_NUM_PER_DAVID_TASK_MAX);
+    if (sqeLen > SQE_NUM_PER_DAVID_TASK_MAX) {
+        rt->PutProgram(prog);
+        RT_LOG_OUTER_MSG_INVALID_PARAM(sqeLen,
+            "(0, " + std::to_string(SQE_NUM_PER_DAVID_TASK_MAX) + "]");
+        return RT_ERROR_INVALID_VALUE;
+    }
     error = CheckTaskCanSend(stm);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);, "stream_id=%d check failed, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
@@ -464,8 +461,8 @@ rtError_t LaunchFusionKernel(Stream* stm, void * const fusionKernelInfo, rtFusio
         uint8_t aicAivType = 0U;
         GetAicAivTypeForFusion(aicAivInfo.mixType, aicAivInfo.kernelAttrType, aicAivType);
         error = CheckUpdateFusionTaskInfo(taskInfo, sqeLen, sqeSubType, aicAivInfo.kernel, aicAivType, stm);
-        ERROR_RETURN_MSG_INNER(error, "stream_id=%d, kernelType=%u, retCode=%#x.", stm->Id_(), aicAivType,
-                               static_cast<uint32_t>(error));
+        ERROR_RETURN(error, "Failed to check update fusion task info, stream_id=%d, kernelType=%u, retCode=%#x.",
+            stm->Id_(), aicAivType, static_cast<uint32_t>(error));
     } else {
         SaveTaskCommonInfo(taskInfo, dstStm, pos, sqeLen);
     }

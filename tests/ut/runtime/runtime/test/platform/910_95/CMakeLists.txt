@@ -50,6 +50,7 @@ add_executable(runtime_utest_task_david
     rt_utest_david_task_recycle.cc
     rt_utest_david_task_send.cc
     rt_utest_david_task.cc
+    rt_utest_david_model_c.cc
     rt_utest_david_event.cc
     rt_utest_david_stream.cc
     rt_utest_david_elf.cc

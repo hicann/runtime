@@ -105,7 +105,13 @@ rtError_t UbArgManage::H2DArgCopy(const DavidArgLoaderResult * const result, voi
         const errno_t ret = memcpy_s(RtValueToPtr<void *>(RtPtrToValue<void *>(dest) + offset), static_cast<size_t>(curSize),
             RtValueToPtr<void *>(RtPtrToValue<void *>(src) + offset), static_cast<size_t>(curSize));
         if (ret != EOK) {
-            RT_LOG(RT_LOG_ERROR, "Args host memcpy failed, size=%u, offset=%u, kind=%d, ret=%#x.", size, offset, RT_MEMCPY_HOST_TO_HOST, ret);
+            const std::string retStr = std::to_string(ret);
+            const std::string extInfo = "src=" + std::to_string(RtPtrToValue(src) + offset) +
+                ", dest=" + std::to_string(RtPtrToValue(dest) + offset) +
+                ", dest_max=" + std::to_string(curSize) +
+                ", count=" + std::to_string(curSize);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
+                retStr.c_str(), strerror(ret), extInfo.c_str());
             return RT_ERROR_DRV_ERR;
         }
         offset += curSize;

@@ -31,7 +31,8 @@ static rtError_t XpuStreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, cons
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
     XpuStream *xpuStm = static_cast<XpuStream *>(stm);
     Kernel *newKernel =  new (std::nothrow) Kernel(kernel->GetCpuKernelSo(), kernel->GetCpuFuncName(), kernel->GetCpuOpType());
-    NULL_PTR_RETURN_MSG(newKernel, RT_ERROR_KERNEL_NEW);
+    COND_RETURN_AND_MSG_OUTER(newKernel == nullptr, RT_ERROR_KERNEL_NEW,
+        ErrorCode::EE1013, std::to_string(sizeof(Kernel)));
     newKernel->SetKernelLiteralNameDevAddr(nullptr, kernel->GetFuncNameDevAddr(stm->Device_()->Id_()), stm->Device_()->Id_());
 
     bool useArgPool = true;
@@ -77,17 +78,15 @@ static rtError_t XpuStreamLaunchCpuKernelExWithArgs(const uint32_t coreDim, cons
 rtError_t XpuLaunchKernelV2(Kernel * const kernel, uint32_t blockDim, const RtArgsWithType * const argsWithType,
     Stream * const stm, const TaskCfg &taskCfg)
 {
-    COND_RETURN_ERROR_MSG_INNER(kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_NON_CPU,
-        RT_ERROR_INVALID_VALUE,
-        "Xpu Kernel launch only supports AICPU operators, the kernel type is %d.",
-        kernel->GetKernelRegisterType());
-    COND_RETURN_ERROR_MSG_INNER(argsWithType->type != RT_ARGS_CPU_EX,
-        RT_ERROR_INVALID_VALUE,
-        "Xpu Kernel launch only supports AICPU operators, the args type is %d.",
-        argsWithType->type);
-    COND_RETURN_ERROR_MSG_INNER(taskCfg.base.dumpflag != 0,
-        RT_ERROR_INVALID_VALUE,
-        "Xpu Kernel launch does not support dump.");
+    COND_RETURN_AND_MSG_OUTER(kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_NON_CPU,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "kernel",
+        "XPU kernel launch only supports AICPU operators");
+    COND_RETURN_AND_MSG_OUTER(argsWithType->type != RT_ARGS_CPU_EX,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "argsWithType",
+        "XPU kernel launch only supports RT_ARGS_CPU_EX args type");
+    COND_RETURN_AND_MSG_OUTER(taskCfg.base.dumpflag != 0,
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "taskCfg",
+        "XPU kernel launch does not support dump");
     
     RT_LOG(RT_LOG_DEBUG,
         "launch kernel V2, device_id=%u, stream_id=%d, blockDim=%u, argsType=%u.",

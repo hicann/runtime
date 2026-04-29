@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <string>
+#include <cstring>
 #include "memcpy_c.hpp"
 #include "stars_david.hpp"
 #include "task_david.hpp"
@@ -34,7 +36,7 @@ rtError_t MemcpyAsyncPtrForDavid(rtDavidMemcpyAddrInfo *const memcpyAddrInfo, co
     RT_LOG(RT_LOG_INFO, "memcpyAddrInfo=0x%lx , qos=%u", RtPtrToValue(memcpyAddrInfo), sdmaSqe.qos);
 
     error = dev->Driver_()->MemCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
-    ERROR_RETURN_MSG_INNER(error, "Failed to memory copy info, device_id=%u, size=%u, retCode=%#x",
+    ERROR_RETURN(error, "Failed to memory copy info, device_id=%u, size=%u, retCode=%#x.",
         dev->Id_(), cpySize, static_cast<uint32_t>(error));
     error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "stream check failed, stream_id=%d, retCode=%#x.",
@@ -72,9 +74,7 @@ rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * 
     const uint64_t srcPitch, const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind,
     uint64_t * const realSize, Stream * const stm, const uint64_t fixedSize)
 {
-    if (stm == nullptr) {
-        return RT_ERROR_STREAM_NULL;
-    }
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, stm->Id_(), retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
@@ -194,9 +194,7 @@ rtError_t MemcopyAsync(void * const dst, const uint64_t destMax, const void * co
     const rtD2DAddrCfgInfo_t * const addrCfg)
 {
     UNUSED(destMax);
-    if (stm == nullptr) {
-        return RT_ERROR_STREAM_NULL;
-    }
+    NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_STREAM_NULL);
 
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "CheckTaskCanSend failed, stream_id=%d, error:%#x", stm->Id_(),
@@ -324,7 +322,7 @@ static rtError_t DevMemSetAsync(Stream * const stm, void * const ptr, const uint
     const errno_t ret = memset_s(hostPtr, setSize, static_cast<int32_t>(fillVal), setSize);
     if (ret != EOK) {
         (void)driver->HostMemFree(hostPtr);
-        RT_LOG(RT_LOG_ERROR, "memset_s failed, retCode=%d.", ret);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to call memset_s, size=%zu, retCode=%d.", setSize, ret);
         return RT_ERROR_SEC_HANDLE;
     }
 
@@ -378,7 +376,7 @@ rtError_t MemSetAsync(Stream * const stm, void * const ptr, const uint64_t destM
     rtError_t error = RT_ERROR_NONE;
     rtPtrAttributes_t attributes;
     error = stm->Device_()->Driver_()->PtrGetAttributes(ptr, &attributes);
-    ERROR_RETURN_MSG_INNER(error, "get pointer attribute failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to get pointer attribute, retCode=%#x.", static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_DEBUG, "memset memory type is %u.", attributes.location.type);
 
     if ((attributes.location.type == RT_MEMORY_LOC_HOST) || (attributes.location.type == RT_MEMORY_LOC_UNREGISTERED)) {
@@ -386,15 +384,15 @@ rtError_t MemSetAsync(Stream * const stm, void * const ptr, const uint64_t destM
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
             "Memset async failed, due to memset_s failed, destMax=%" PRIu64 ", fillCount=%" PRIu64 ", retCode=%d.",
             destMax, fillCount, ret);
-    } else {
-        if (fillCount > destMax) {
-            RT_LOG(RT_LOG_WARNING,
-                "current fillCount=%" PRIu64 ", destMax=%" PRIu64 ", fillCount must be less than or equal to destMax!",
-                fillCount, destMax);
-            return RT_ERROR_MEMORY_ALLOCATION;
+        } else {
+            if (fillCount > destMax) {
+                RT_LOG(RT_LOG_WARNING,
+                    "current fillCount=%" PRIu64 ", destMax=%" PRIu64 ", fillCount must be less than or equal to destMax!",
+                    fillCount, destMax);
+                return RT_ERROR_MEMORY_ALLOCATION;
+            }
+            return DevMemSetAsync(stm, ptr, destMax, fillVal, fillCount);
         }
-        return DevMemSetAsync(stm, ptr, destMax, fillVal, fillCount);
-    }
 
     return error;
 }

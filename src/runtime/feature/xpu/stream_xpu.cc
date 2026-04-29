@@ -65,34 +65,30 @@ rtError_t XpuStream::Setup(void)
 {
     XpuDevice *xpuDevice = static_cast<XpuDevice *>(Device_());
     streamId_ = xpuDevice->AllocStreamId(); 
-    COND_RETURN_ERROR_MSG_INNER(streamId_ == -1, RT_ERROR_DRV_NO_STREAM_RESOURCES, "Alloc stream id failed.");
+    COND_RETURN_AND_MSG_INNER(streamId_ == -1, RT_ERROR_DRV_NO_STREAM_RESOURCES,
+        "Failed to allocate stream ID. No available stream resources.");
     sqId_ = static_cast<uint32_t>(streamId_);
     cqId_ = static_cast<uint32_t>(streamId_);
 
     taskPublicBuffSize_ = xpuDevice->GetXpuStreamDepth();
     taskPublicBuff_ = new (std::nothrow) uint32_t[taskPublicBuffSize_];
-    COND_RETURN_ERROR_MSG_INNER(taskPublicBuff_ == nullptr,
-        RT_ERROR_STREAM_NEW,
-        "New task pubic buffer failed, size=%hu.",
-        taskPublicBuffSize_);
+    COND_RETURN_AND_MSG_OUTER(taskPublicBuff_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013,
+        std::to_string(sizeof(uint32_t) * taskPublicBuffSize_));
 
     rtError_t error = CreateStreamTaskRes();
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, RT_ERROR_STREAM_NEW, "Create task res buffer failed, stream_id=%d.", streamId_);
+    COND_RETURN_AND_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_STREAM_NEW,
+        "Failed to create or initialize task resource manager, stream_id=%d.", streamId_);
     error = CreateStreamArgRes();
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Create stream args res failed, stream_id=%d.", streamId_);
+    COND_RETURN_AND_MSG_INNER(
+        error != RT_ERROR_NONE, error, "Failed to create arg resource, stream_id=%d.", streamId_);
     SetFailureMode(STOP_ON_FAILURE);
 
     XpuStreamSqCqManage *stmSqCqManage = static_cast<XpuStreamSqCqManage *>(Device_()->GetStreamSqCqManage());
     stmSqCqManage->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this); 
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
     error = stmSqCqManage->AllocXpuStreamSqCq(this);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
-        error,
-        "Alloc sq cq failed, stream_id=%d, retCode=%#x.",
-        streamId_,
-        static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_INNER(error != RT_ERROR_NONE, error,
+        "Failed to allocate SQ/CQ resources, stream_id=%d, retCode=%#x.", streamId_, static_cast<uint32_t>(error));
     InitEmbeddedInnerHandle<Stream>(this);
     return RT_ERROR_NONE;
 }
@@ -102,13 +98,14 @@ rtError_t XpuStream::AddTaskToList(const TaskInfo *const tsk)
     if (tsk->needPostProc == true) {
         const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);
         const uint32_t tail = (publicQueueTail_ + 1U) % taskPublicBuffSize_;
-        COND_RETURN_WARN(publicQueueHead_ == tail,
-            RT_ERROR_STREAM_FULL,
-            "task public buff full, stream_id=%d, task_id=%hu, head=%u, tail=%u",
-            streamId_,
-            tsk->id,
-            publicQueueHead_,
-            publicQueueTail_);
+        if (unlikely(publicQueueHead_ == tail)) {
+            RT_LOG(RT_LOG_WARNING,
+                "task public buff full, stream_id=%d, task_id=%hu, head=%u, tail=%u",
+                streamId_, tsk->id, publicQueueHead_, publicQueueTail_);
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1019,
+                "stream task public buffer is full");
+            return RT_ERROR_STREAM_FULL;
+        }
         taskPublicBuff_[publicQueueTail_ % taskPublicBuffSize_] = tsk->id;
         publicQueueTail_ = tail;
         RT_LOG(RT_LOG_INFO,
@@ -127,7 +124,8 @@ rtError_t XpuStream::AddTaskToList(const TaskInfo *const tsk)
 
 rtError_t XpuStream::StarsAddTaskToStream(TaskInfo *const tsk, const uint32_t sendSqeNum)
 {
-    NULL_PTR_RETURN_MSG(tsk, RT_ERROR_TASK_NULL);
+    COND_RETURN_AND_MSG_INNER(tsk == nullptr, RT_ERROR_TASK_NULL,
+        "Task info is null, stream_id=%d.", streamId_);
     const rtError_t ret = AddTaskToList(tsk);
     if (ret != RT_ERROR_NONE) {
         return ret;
@@ -157,7 +155,8 @@ rtError_t XpuStream::StarsGetPublicTaskHead(
 {
     (void)workTask;
     (void)isTaskBind;
-    NULL_PTR_RETURN_MSG(delTaskId, RT_ERROR_TASK_NULL);
+    COND_RETURN_AND_MSG_INNER(delTaskId == nullptr, RT_ERROR_TASK_NULL,
+        "delTaskId is null, stream_id=%d.", streamId_);
     NULL_PTR_RETURN_MSG_OUTER(taskResMang_, RT_ERROR_INVALID_VALUE);
     TaskResManageDavid *taskRes = RtPtrToPtr<TaskResManageDavid *>(taskResMang_);
     const uint32_t taskResTail = taskRes->GetTaskPosTail();
@@ -243,13 +242,14 @@ bool XpuStream::IsExistCqe(void) const
 rtError_t XpuStream::CreateStreamTaskRes()
 {
     taskResMang_ = new (std::nothrow) TaskResManageDavid();
-    COND_RETURN_ERROR_MSG_INNER(taskResMang_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, "New TaskResManage failed.");
+    COND_RETURN_AND_MSG_OUTER(taskResMang_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        sizeof(TaskResManageDavid));
     uint32_t rtsqDepth = (RtPtrToPtr<XpuDevice *>(Device_()))->GetXpuStreamDepth();
     taskResMang_->taskPoolNum_ = static_cast<uint16_t>(rtsqDepth);
     SetSqDepth(rtsqDepth);
     const bool isSuccess = taskResMang_->CreateTaskRes(this);
     if (!isSuccess) {
-        RT_LOG(RT_LOG_ERROR, "Create task res failed.");
+        RT_LOG(RT_LOG_ERROR, "Failed to create task resource, stream_id=%d.", streamId_);
         return RT_ERROR_STREAM_NEW;
     }
     taskResMang_->streamId_ = streamId_;
@@ -259,10 +259,13 @@ rtError_t XpuStream::CreateStreamTaskRes()
 rtError_t XpuStream::CreateStreamArgRes()
 {
     argManage_ = new (std::nothrow) XpuArgManage(this);
-    COND_RETURN_ERROR_MSG_INNER(argManage_ == nullptr, RT_ERROR_CALLOC, "New XpuArgManage failed.");
+    COND_RETURN_AND_MSG_OUTER(argManage_ == nullptr, RT_ERROR_CALLOC, ErrorCode::EE1013, sizeof(XpuArgManage));
 
     isHasArgPool_ = argManage_->CreateArgRes();
-    COND_RETURN_ERROR_MSG_INNER(isHasArgPool_ == false, RT_ERROR_CALLOC, "Create arg resource failed.");
+    if (isHasArgPool_ == false) {
+        RT_LOG(RT_LOG_ERROR, "Failed to create arg resource, stream_id=%d.", streamId_);
+        return RT_ERROR_CALLOC;
+    }
     return RT_ERROR_NONE;
 }
 
@@ -280,10 +283,8 @@ rtError_t XpuStream::TearDown(const bool terminal, bool flag)
     uint32_t sqStatus = static_cast<uint32_t>(TPRT_SQ_STATE_IS_RUNNING);
     while (!((dynamic_cast<TaskResManageDavid *>(taskResMang_))->IsEmpty())) {
         error = xpuDrv->GetSqState(Device_()->Id_(), GetSqId(), sqStatus);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Query sq status failed, retCode=%#x", static_cast<uint32_t>(error));
-            return error;
-        }
+        COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+            "Failed to query SQ status, stream_id=%d, retCode=%#x.", streamId_, static_cast<uint32_t>(error));
         if ((GetFailureMode() == ABORT_ON_FAILURE) && (sqStatus != static_cast<uint32_t>(TPRT_SQ_STATE_IS_QUITTED))) {
             xpuSqCqManage->SetXpuTprtSqCqStatus(Device_()->Id_(), GetSqId());
         }
@@ -359,6 +360,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &
     uint16_t posTail = GetTaskPosTail();
     uint16_t posHead = GetTaskPosHead();
     if (((posTail + rtsqDepth - sqHead) % rtsqDepth) > (posTail + rtsqDepth - posHead) % rtsqDepth) {
+        RT_LOG(RT_LOG_WARNING, "Invalid task position relation, stream_id=%d, sqHead=%u.", streamId_, sqHead);
         return RT_ERROR_INVALID_VALUE;
     }
     uint32_t endTaskId = MAX_UINT32_NUM;
@@ -368,6 +370,7 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &
     if (unlikely(exeWorkTask != nullptr)) {
         nextTaskId = exeWorkTask->taskSn;
     } else {
+        RT_LOG(RT_LOG_WARNING, "Failed to get task info at sqHead, stream_id=%d, sqHead=%u.", streamId_, sqHead);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -377,6 +380,8 @@ rtError_t XpuStream::GetFinishedTaskIdBySqHead(const uint16_t sqHead, uint32_t &
     if (unlikely(latestRecyleTask != nullptr)) {
         endTaskId = latestRecyleTask->taskSn;
     } else {
+        RT_LOG(RT_LOG_WARNING, "Failed to get task info at finishedPos, stream_id=%d, finishedPos=%u.", streamId_,
+               finishedPos);
         return RT_ERROR_INVALID_VALUE;
     }
     if (sqHead == posTail || nextTaskId != endTaskId) {
@@ -404,13 +409,9 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
     const uint16_t perSchedYield = 1000U;
     int32_t reportTime = 180 * 1000;  // report timeout 3 min.
     while (true) {
-        COND_RETURN_ERROR((IsProcessTimeout(beginTime, timeout)),
-            RT_ERROR_STREAM_SYNC_TIMEOUT,
-            "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms, tryCount=%u.",
-            Device_()->Id_(),
-            streamId_,
-            timeout,
-            tryCount);
+        COND_RETURN_AND_MSG_OUTER(IsProcessTimeout(beginTime, timeout),
+            RT_ERROR_STREAM_SYNC_TIMEOUT, ErrorCode::EE1002,
+            "exceeded the specified timeout");
         if (IsProcessTimeout(beginTime, reportTime)) {
             reportTime += reportTime;
             RT_LOG(RT_LOG_EVENT,
@@ -421,7 +422,8 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
         }
 
         error = CheckContextStatus(false);
-        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+        COND_RETURN_AND_MSG_INNER(error != RT_ERROR_NONE, error,
+            "Context is in abort state, stream_id=%d, status=%#x.", streamId_, static_cast<uint32_t>(error));
         if (TASK_ID_GEQ(recycleFinishTaskId_, taskId) || sqHead == GetTaskPosTail()) {
             return RT_ERROR_NONE;
         }
@@ -429,8 +431,8 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
             Device_()->WakeUpRecycleThread();
         }
         error = Device_()->Driver_()->GetSqHead(Device_()->Id_(), Device_()->DevGetTsId(), sqId_, sqHead);
-        COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, error, "Query sq head failed, retCode=%#x.", static_cast<uint32_t>(error));
+        COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+            "Failed to query SQ head, stream_id=%d, retCode=%#x.", streamId_, static_cast<uint32_t>(error));
         uint32_t finishedId = MAX_UINT32_NUM;
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
         RT_LOG(RT_LOG_DEBUG,
@@ -456,7 +458,8 @@ rtError_t XpuStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
     rtError_t error = RT_ERROR_NONE;
     const mmTimespec beginTime = mmGetTickCount();
     error = SynchronizeExecutedTask(GetLastTaskId(), beginTime, timeout);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "failed, stream_id=%d, error=0x%x", Id_(), error);
+    COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+        "Stream synchronize failed, stream_id=%d, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
     return GetSynchronizeError(error);
 }
 

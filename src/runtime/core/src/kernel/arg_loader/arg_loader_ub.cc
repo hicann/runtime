@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <list>
+#include <string>
 #include "api.hpp"
 #include "npu_driver.hpp"
 #include "error_message_manage.hpp"
@@ -37,19 +38,19 @@ rtError_t UbArgLoader::Init()
     argAllocator_ = new (std::nothrow) H2DCopyMgr(
         device_, UB_ARG_MAX_ENTRY_SIZE, UB_ARG_INIT_CNT, device_->GetDevProperties().maxSupportTaskNum,
         BufferAllocator::LINEAR, COPY_POLICY_UB);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, argAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init ubArgLoader stage1 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(argAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(H2DCopyMgr)).c_str());
 
     superArgAllocator_ = new (std::nothrow) H2DCopyMgr(
         device_, UB_ARG_MAX_SUPER_ENTRY_SIZE, UB_ARG_SUPER_INIT_CNT, device_->GetDevProperties().maxSupportTaskNum,
         BufferAllocator::LINEAR, COPY_POLICY_UB);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, superArgAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init ubArgLoader stage2 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(superArgAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(H2DCopyMgr)).c_str());
 
     handleAllocator_ = new (std::nothrow) BufferAllocator(
         static_cast<uint32_t>(sizeof(UbHandle)), UB_ARG_INIT_CNT, device_->GetDevProperties().maxSupportTaskNum);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, handleAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-        "Init ubArgLoader stage3 failed, new BufferAllocator failed.");
+    COND_RETURN_AND_MSG_OUTER(handleAllocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(BufferAllocator)).c_str());
     RT_LOG(RT_LOG_INFO, "new argAllocator and handleAllocator success.");
 
     return RT_ERROR_NONE;
@@ -132,7 +133,7 @@ rtError_t UbArgLoader::AllocDynamic(const uint32_t size, UbHandle * const argHan
 
     rtError_t error = device_->Driver_()->DevMemAlloc(&devAddr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_());
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Alloc args dynamic dev mem failed, retCode=%#x, size=%u, device_id=%u.",
+        RT_LOG(RT_LOG_ERROR, "Failed to allocate args dynamic device memory, retCode=%#x, size=%u, device_id=%u.",
             error, size, device_->Id_());
         return error;
     }
@@ -140,7 +141,7 @@ rtError_t UbArgLoader::AllocDynamic(const uint32_t size, UbHandle * const argHan
     error = device_->Driver_()->HostMemAlloc(&hostAddr, static_cast<uint64_t>(size), device_->Id_());
     if (error != RT_ERROR_NONE) {
         (void)device_->Driver_()->DevMemFree(devAddr, device_->Id_());
-        RT_LOG(RT_LOG_ERROR, "Alloc args dynamic host mem failed, retCode=%#x, size=%u, device_id=%u.",
+        RT_LOG(RT_LOG_ERROR, "Failed to allocate args dynamic host memory, retCode=%#x, size=%u, device_id=%u.",
             error, size, device_->Id_());
         return error;
     }
@@ -156,7 +157,7 @@ rtError_t UbArgLoader::AllocDynamic(const uint32_t size, UbHandle * const argHan
         &(argHandle->memTsegInfo->hostTsegInfo));
     ERROR_PROC_RETURN_MSG_INNER(error, (void)device_->Driver_()->HostMemFree(argHandle->memTsegInfo);
                                        argHandle->memTsegInfo = nullptr;,
-                                       "get tseg info failed, retCode=%#x, size=%u, device_id=%u.",
+                                       "Failed to get tseg info, retCode=%#x, size=%u, device_id=%u.",
                                        error, size, device_->Id_());
 
     RT_LOG(RT_LOG_DEBUG, "Alloc args dynamic mem success.");
@@ -174,7 +175,8 @@ rtError_t UbArgLoader::AllocCopyPtr(const uint32_t size, DavidArgLoaderResult * 
     UbHandle *argHandle = nullptr;
 
     result->handle = handleAllocator_->AllocItem();
-    NULL_PTR_RETURN(result->handle, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_AND_MSG_OUTER(result->handle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        std::to_string(sizeof(UbHandle)).c_str());
     argHandle = static_cast<UbHandle *>(result->handle);
     argHandle->argsAlloc = nullptr;
     void *devTsegInfo = nullptr;

@@ -103,8 +103,16 @@ rtError_t XpuArgManage::H2DArgCopy(const DavidArgLoaderResult * const result, vo
             static_cast<int32_t>(RT_MEMCPY_HOST_TO_HOST), static_cast<uint32_t>(error));
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "host memcpy failed, kind=%d, ret=%d.", RT_MEMCPY_HOST_TO_HOST, ret);
+        if (ret != EOK) {
+            const std::string retStr = std::to_string(ret);
+            const std::string extInfo = "src=" + std::to_string(RtPtrToValue(args)) +
+                ", dest=" + std::to_string(RtPtrToValue(result->kerArgs)) +
+                ", dest_max=" + std::to_string(size) +
+                ", count=" + std::to_string(size);
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
+                retStr.c_str(), strerror(ret), extInfo.c_str());
+            return RT_ERROR_DRV_MEMORY;
+        }
     }
     return error;
 }

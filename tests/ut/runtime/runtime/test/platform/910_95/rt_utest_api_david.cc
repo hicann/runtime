@@ -70,6 +70,10 @@
 #include "capture_model_utils.hpp"
 #include "cmo_task.h"
 #include "model_execute_task.h"
+#include "dvpp_c.hpp"
+#include "stars_david.hpp"
+#include "stream_david.hpp"
+#include "stream_factory.hpp"
 #include "../../data/elf.h"
 #undef protected
 #undef private
@@ -77,9 +81,18 @@
 using namespace testing;
 using namespace cce::runtime;
 
+// Mock for AllocTaskInfo that sets valid task pointer
+static TaskInfo g_apiMockTaskInfo = {};
+static rtError_t AllocTaskInfoSuccessMock(TaskInfo** tsk, Stream* stm, uint32_t& pos) {
+    *tsk = &g_apiMockTaskInfo;
+    pos = 0U;
+    return RT_ERROR_NONE;
+}
+
 static bool g_disableThread;
 static rtChipType_t g_chipType;
-extern int64_t g_device_driver_version_stub;
+#include "stub/hal_stub.h"
+#include "rt_utest_david_fixture_helper.h"
 
     static unsigned char m_data[] = 
         {0x7f, 0x45, 0x4c, 0x46, 0x2, 0x1, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x29, 0x10, 0x1, 
@@ -3872,20 +3885,6 @@ extern int64_t g_device_driver_version_stub;
 0x7f, 0x0, 0x0, 0xa0, 0xb, 0xde, 0x64, 0xfe, 0x7f, 0x0, 0x0, 0x2a, 0xc1, 0x9b, 0xcc, 0xff, 0xf, 0x0, 0x0, 0x50, 
 0x9, 0xde, 0x64, 0xfe, 0x7f, 0x0, 0x0, 0xa0, 0xf6, 0xda, 0x0, 0x0, 0x0, 0x0, 0x0};
 
-static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
-{
-    if (value) {
-        if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_VERSION) {
-            *value = PLATFORMCONFIG_DAVID_950PR_9599;
-        } else if (moduleType == MODULE_TYPE_SYSTEM && infoType == INFO_TYPE_CORE_NUM) {
-            *value = g_device_driver_version_stub;
-        } else {
-            *value = 0;
-        }
-    }
-    return DRV_ERROR_NONE;
-}
-
 class ApiDavidTest : public testing::Test
 {
 protected:
@@ -3917,20 +3916,7 @@ protected:
     virtual void SetUp()
     {
         GlobalMockObject::reset();
-        int64_t hardwareVersion = ((ARCH_V100 << 16) | (CHIP_DAVID << 8) | (VER_NA));
-        Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
-        MOCKER_CPP_VIRTUAL(driver,
-            &Driver::GetDevInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
-            .will(returnValue(RT_ERROR_NONE));
-        char *socVer = "Ascend950PR_9599";
-        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(), outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any()).will(returnValue(DRV_ERROR_NONE));
-        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
-
-        MOCKER_CPP_VIRTUAL(driver, &Driver::StreamUnBindLogicCq)
-                .stubs()
-                .will(returnValue(RT_ERROR_NONE));
+        Driver *driver = MockDavidDriverSetup();
 
         MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
                         .stubs()
@@ -3944,12 +3930,7 @@ protected:
         MOCKER_CPP_VIRTUAL(driver, &Driver::EnableSq)
                 .stubs()
                 .will(returnValue(RT_ERROR_NONE));
-        rtSetDevice(0);
-        (void)rtSetSocVersion("Ascend950PR_9599");
-        ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
-        device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-        device_->SetChipType(CHIP_DAVID);
-        engine_ = ((RawDevice *)device_)->engine_;
+        SetupDavidDeviceAndEngine(device_, engine_);
 
         rtError_t res = rtStreamCreateWithFlags(&streamHandle_, 0, 0);
         EXPECT_EQ(res, RT_ERROR_NONE);
@@ -10018,6 +9999,8 @@ TEST_F(ApiDavidTest, GetNotifyAddressApi)
     error = rtDeviceReset(devId);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
+
+
 TEST_F(ApiDavidTest, test_memcpy_batch_async_batch_path)
 {
     ApiImplDavid apiImpl;
@@ -10080,3 +10063,580 @@ TEST_F(ApiDavidTest, test_memcpy2d_async_david_ub_path)
     rtError_t error = apiImpl.MemCopy2DAsync(dst, 150, src, 150, width, height, stream_, RT_MEMCPY_DEVICE_TO_HOST);
     EXPECT_EQ(error, RT_ERROR_DEVICE_TASK_ABORT);
 }
+
+
+// UT for api_impl_david.cc line 1683: StreamTaskAbort with invalid stream pointer
+TEST_F(ApiDavidTest, StreamTaskAbort_CheckStreamPtrInvalid)
+{
+    ApiImplDavid apiImpl;
+    MOCKER(ContextManage::CheckStreamPtrIsValid).stubs().will(returnValue(false));
+    rtError_t error = apiImpl.StreamTaskAbort(stream_);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, StreamRecover_CheckStreamPtrInvalid)
+{
+    ApiImplDavid apiImpl;
+    MOCKER(ContextManage::CheckStreamPtrIsValid).stubs().will(returnValue(false));
+    rtError_t error = apiImpl.StreamRecover(stream_);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, LaunchHostFunc_CreateCallBackThreadFail)
+{
+    ApiImplDavid apiImpl;
+    Context *curCtx = stream_->Context_();
+    curCtx->callBackThreadExist_.Set(false);
+    MOCKER_CPP(&Context::CreateContextCallBackThread)
+        .stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    rtError_t error = apiImpl.LaunchHostFunc(stream_, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+}
+
+TEST_F(ApiDavidTest, MemWriteValue_ContextMismatch)
+{
+    ApiImplDavid apiImpl;
+    // Save original context and set a different one to trigger mismatch
+    Context *origCtx = stream_->context_;
+    // Use a second stream from a different context to trigger the context mismatch
+    // Temporarily set stream context to null to simulate mismatch
+    stream_->context_ = nullptr;
+    rtError_t error = apiImpl.MemWriteValue(nullptr, 0, 0, stream_);
+    EXPECT_EQ(error, RT_ERROR_STREAM_CONTEXT);
+    // Restore original context
+    stream_->context_ = origCtx;
+}
+
+TEST_F(ApiDavidTest, LaunchKernelV3_ContextMismatch)
+{
+    ApiImplDavid apiImpl;
+    Context *origCtx = stream_->context_;
+    stream_->context_ = nullptr;
+    rtError_t error = apiImpl.LaunchKernelV3(nullptr, nullptr, stream_, nullptr);
+    EXPECT_EQ(error, RT_ERROR_STREAM_CONTEXT);
+    stream_->context_ = origCtx;
+}
+
+TEST_F(ApiDavidTest, SetStreamOverflowSwitch_ContextMismatch)
+{
+    ApiImplDavid apiImpl;
+    Runtime::Instance()->SetSatMode(RT_OVERFLOW_MODE_SATURATION);
+    Context *origCtx = stream_->context_;
+    stream_->context_ = nullptr;
+    rtError_t error = apiImpl.SetStreamOverflowSwitch(stream_, 0U);
+    EXPECT_EQ(error, RT_ERROR_STREAM_CONTEXT);
+    stream_->context_ = origCtx;
+}
+
+TEST_F(ApiDavidTest, MultipleTaskInfoLaunch_ContextMismatch)
+{
+    ApiImplDavid apiImpl;
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 0U;
+    taskInfo.taskDesc = nullptr;
+    Context *origCtx = stream_->context_;
+    stream_->context_ = nullptr;
+    rtError_t error = apiImpl.MultipleTaskInfoLaunch(&taskInfo, stream_, 0U);
+    EXPECT_EQ(error, RT_ERROR_STREAM_CONTEXT);
+    stream_->context_ = origCtx;
+}
+
+
+
+// UT for api_impl_david.cc line 1775: GetMemUceInfo memcpy_s failure in GetMemUceInfo
+TEST_F(ApiDavidTest, GetMemUceInfo_MemcpyFail)
+{
+    ApiImplDavid apiImpl;
+    rtMemUceInfo memUceInfo = {};
+
+    // GetMemUceInfoProc must succeed so we reach the memcpy_s in GetMemUceInfo (line 1765)
+    MOCKER(GetMemUceInfoProc).stubs().will(returnValue(RT_ERROR_NONE));
+    // Then mock memcpy_s to fail specifically for the call in GetMemUceInfo
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+
+    rtError_t error = apiImpl.GetMemUceInfo(0, &memUceInfo);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, LaunchKernelV2_KernelProgramInvalid)
+{
+    ApiImplDavid apiImpl;
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program *program = &stubProg;
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    // Mock IsDeviceSoAndNameValid to return false -> triggers line 47
+    MOCKER_CPP(&Program::IsDeviceSoAndNameValid).stubs().will(returnValue(false));
+
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_ARGS_NON_CPU_EX;
+    rtArgsEx_t argsInfo = {};
+    argsWithType.args.nonCpuArgsInfo = &argsInfo;
+
+    rtError_t error = apiImpl.LaunchKernelV2(k1, 1U, &argsWithType, stream_, nullptr);
+    EXPECT_EQ(error, RT_ERROR_KERNEL_INVALID);
+
+    delete k1;
+}
+
+TEST_F(ApiDavidTest, StarsLaunch_DvppRRProcessFail)
+{
+    rtDavidSqe_t *sqe = new rtDavidSqe_t{};
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    // Construct a DVPP sqe with reserved=1 to trigger DVPP RR path (line 99)
+    rtDavidStarsCommonSqe_t commonSqe = {};
+    commonSqe.sqeHeader.reserved = 1U;
+    commonSqe.sqeHeader.type = RT_DAVID_SQE_TYPE_VPC; // IsDvppTask returns true
+    // Set valid cmdList address so StarsCommonTaskInit template passes the DVPP null check
+    commonSqe.commandCustom[12U] = 0x1000U;
+    commonSqe.commandCustom[13U] = 0U;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(IsSupportType).stubs().will(returnValue(true));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+    // StarsLaunchDvppRRProcess returns error -> triggers line 102
+    MOCKER(StarsLaunchDvppRRProcess).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    rtError_t error = StarsLaunch(&commonSqe, sizeof(cce::runtime::rtStarsCommonSqe_t), stream_, 0U);
+    // line 102 only logs error, still returns RT_ERROR_NONE (line 106)
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    delete sqe;
+}
+
+TEST_F(ApiDavidTest, LaunchMultipleTaskInfo_CheckTaskCanSendFail)
+{
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 1U;
+    rtTaskDesc_t desc = {};
+    taskInfo.taskDesc = &desc;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = LaunchMultipleTaskInfo(&taskInfo, stream_, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, LaunchMultipleTaskInfo_AllocTaskInfoFail)
+{
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 1U;
+    rtTaskDesc_t desc = {};
+    taskInfo.taskDesc = &desc;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    rtError_t error = LaunchMultipleTaskInfo(&taskInfo, stream_, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, LaunchMultipleTaskInfo_TaskInitFail)
+{
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 1U;
+    rtTaskDesc_t desc = {};
+    taskInfo.taskDesc = &desc;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavinciMultipleTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(TaskUnInitProc).stubs();
+    MOCKER(TaskRollBack).stubs();
+
+    rtError_t error = LaunchMultipleTaskInfo(&taskInfo, stream_, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, LaunchMultipleTaskInfo_SendTaskFail)
+{
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 1U;
+    rtTaskDesc_t desc = {};
+    taskInfo.taskDesc = &desc;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavinciMultipleTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(TaskUnInitProc).stubs();
+    MOCKER(TaskRollBack).stubs();
+
+    rtError_t error = LaunchMultipleTaskInfo(&taskInfo, stream_, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, LaunchMultipleTaskInfo_SubmitPostProcFail)
+{
+    rtDavidSqe_t *sqe = new rtDavidSqe_t{};
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    rtMultipleTaskInfo_t taskInfo = {};
+    taskInfo.taskNum = 1U;
+    rtTaskDesc_t desc = {};
+    taskInfo.taskDesc = &desc;
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavinciMultipleTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = LaunchMultipleTaskInfo(&taskInfo, stream_, 0U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    delete sqe;
+}
+
+
+
+// UT for stars_david.cc line 136: ConstructDavidDvppSqe memcpy_s fail
+TEST_F(ApiDavidTest, ConstructDavidDvppSqe_MemcpyFail)
+{
+    g_apiMockTaskInfo = {};
+    g_apiMockTaskInfo.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    g_apiMockTaskInfo.stream = stream_;
+
+    // Set up DVPP task desc (type=0 means neither AICPU nor AICPU_BY_HANDLE, falls to else/DVPP)
+    rtTaskDesc_t taskDesc = {};
+    rtMultipleTaskInfo_t multiTaskInfo = {};
+    multiTaskInfo.taskNum = 1U;
+    multiTaskInfo.taskDesc = &taskDesc;
+
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.multipleTaskInfo = &multiTaskInfo;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.sqeNum = 1U;
+    std::vector<void*> cmdListVec;
+    std::vector<void*> argHandleVec;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.cmdListVec = &cmdListVec;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.argHandleVec = &argHandleVec;
+
+    rtDavidSqe_t davidSqe = {};
+
+    // Mock memcpy_s to fail -> triggers line 136
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+
+    ToConstructDavidSqe(&g_apiMockTaskInfo, &davidSqe, 0ULL);
+
+    EXPECT_EQ(davidSqe.dvppSqe.header.type, RT_DAVID_SQE_TYPE_INVALID);
+}
+
+TEST_F(ApiDavidTest, ConstructDavidAICpuSqe_LoadArgsInfoFail)
+{
+    g_apiMockTaskInfo = {};
+    g_apiMockTaskInfo.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    g_apiMockTaskInfo.stream = stream_;
+
+    // Set up AICPU task desc with null soName/kernelName (skip GetKernelInfoDevAddr)
+    rtTaskDesc_t taskDesc = {};
+    taskDesc.type = RT_MULTIPLE_TASK_TYPE_AICPU;
+    rtMultipleTaskInfo_t multiTaskInfo = {};
+    multiTaskInfo.taskNum = 1U;
+    multiTaskInfo.taskDesc = &taskDesc;
+
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.multipleTaskInfo = &multiTaskInfo;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.sqeNum = 1U;
+    std::vector<void*> cmdListVec;
+    std::vector<void*> argHandleVec;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.cmdListVec = &cmdListVec;
+    g_apiMockTaskInfo.u.davinciMultiTaskInfo.argHandleVec = &argHandleVec;
+
+    rtDavidSqe_t davidSqe = {};
+
+    // Mock LoadArgsInfo to return error -> triggers line 188
+    MOCKER_CPP(&DavidStream::LoadArgsInfo<rtArgsEx_t>).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    ToConstructDavidSqe(&g_apiMockTaskInfo, &davidSqe, 0ULL);
+
+    EXPECT_EQ(davidSqe.aicpuSqe.header.type, RT_DAVID_SQE_TYPE_INVALID);
+}
+
+TEST_F(ApiDavidTest, ConstructDavidStarsCommonSqe_MemcpyFail)
+{
+    g_apiMockTaskInfo = {};
+    g_apiMockTaskInfo.type = TS_TASK_TYPE_STARS_COMMON;
+    g_apiMockTaskInfo.stream = stream_;
+    g_apiMockTaskInfo.sqeNum = 1U;
+
+    rtDavidSqe_t davidSqe = {};
+
+    // Mock memcpy_s to fail -> triggers line 399
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+
+    ToConstructDavidSqe(&g_apiMockTaskInfo, &davidSqe, 0ULL);
+
+    EXPECT_EQ(davidSqe.commonSqe.sqeHeader.type, RT_STARS_SQE_TYPE_INVALID);
+}
+
+TEST_F(ApiDavidTest, GetLaunchConfigInfo_BlockDimExceed)
+{
+    rtLaunchAttribute_t attr = {};
+    attr.id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
+    attr.value.blockDim = static_cast<uint32_t>(UINT16_MAX) + 1U; // 65536, exceeds limit
+
+    rtLaunchConfig_t config = {};
+    config.attrs = &attr;
+    config.numAttrs = 1U;
+
+    LaunchTaskCfgInfo_t launchTaskCfg = {};
+
+    rtError_t error = GetLaunchConfigInfo(&config, &launchTaskCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, GetLaunchConfigInfo_GroupDimExceed)
+{
+    rtLaunchAttribute_t attrs[2] = {};
+    attrs[0].id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
+    attrs[0].value.blockDim = 1U; // valid blockDim, passes first check
+
+    attrs[1].id = RT_LAUNCH_ATTRIBUTE_GROUP;
+    attrs[1].value.Group.groupDim = static_cast<uint32_t>(UINT16_MAX) + 1U; // 65536, exceeds limit
+    attrs[1].value.Group.groupBlockDim = 1U;
+
+    rtLaunchConfig_t config = {};
+    config.attrs = attrs;
+    config.numAttrs = 2U;
+
+    LaunchTaskCfgInfo_t launchTaskCfg = {};
+
+    rtError_t error = GetLaunchConfigInfo(&config, &launchTaskCfg);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+
+
+// ===== UT for stream_c.cc uncovered lines =====
+
+// UT for stream_c.cc line 213: StreamDatadumpInfoLoad CheckTaskCanSend fail
+TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_CheckTaskFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint8_t dumpInfo[16] = {};
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_SyncTimeout)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+
+    uint8_t dumpInfo[16] = {};
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, StreamDatadumpInfoLoad_SyncOtherError)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    uint8_t dumpInfo[16] = {};
+    rtError_t error = StreamDatadumpInfoLoad(dumpInfo, sizeof(dumpInfo), stream_);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, StreamGetSatStatus_AlignedMallocFail)
+{
+    MOCKER(AlignedMalloc).stubs().will(returnValue(static_cast<void *>(nullptr)));
+
+    rtError_t error = StreamGetSatStatus(sizeof(uint64_t), stream_);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+}
+
+TEST_F(ApiDavidTest, SyncGetDeviceMsg_CreateStreamNull)
+{
+    MOCKER_CPP((&StreamFactory::CreateStream)).stubs().will(returnValue(static_cast<Stream *>(nullptr)));
+
+    uint32_t val = 0;
+    rtError_t error = SyncGetDeviceMsg(device_, &val, sizeof(uint32_t), RT_GET_DEV_ERROR_MSG);
+    EXPECT_EQ(error, RT_ERROR_STREAM_NEW);
+}
+
+TEST_F(ApiDavidTest, SyncGetDeviceMsg_DavidSendTaskFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(GetDevMsgTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(TaskUnInitProc).stubs();
+    MOCKER(TaskRollBack).stubs();
+
+    uint32_t val = 0;
+    rtError_t error = SyncGetDeviceMsg(device_, &val, sizeof(uint32_t), RT_GET_DEV_ERROR_MSG);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_CheckTaskFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_AllocTaskInfoForCaptureFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfoForCapture).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, SetOverflowSwitchOnStream_SubmitTaskPostProcFail)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    TaskInfo taskMem = {};
+    TaskInfo *tmpTask = &taskMem;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfoForCapture).stubs().with(outBoundP(&tmpTask), mockcpp::any(),
+        mockcpp::any(), mockcpp::any()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SetOverflowSwitchOnStream(stream_, 1U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, SetTagOnStream_AllocTaskInfoFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    rtError_t error = SetTagOnStream(stream_, 1U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, SetTagOnStream_SubmitTaskPostProcFail)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    MOCKER_CPP_VIRTUAL(device_, &Device::IsSupportFeature).stubs().will(returnValue(false));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    rtError_t error = SetTagOnStream(stream_, 1U);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, StreamAicpuInfoLoad_CheckTaskFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    uint8_t aicpuInfo[16] = {};
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, StreamAicpuInfoLoad_AllocTaskInfoFail)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    uint8_t aicpuInfo[16] = {};
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, StreamAicpuInfoLoad_SyncTimeout)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+
+    uint8_t aicpuInfo[16] = {};
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, StreamAicpuInfoLoad_SyncOtherError)
+{
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(3 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(sqe));
+
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(AllocTaskInfo).stubs().will(invoke(AllocTaskInfoSuccessMock));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    uint8_t aicpuInfo[16] = {};
+    rtError_t error = StreamAicpuInfoLoad(stream_, aicpuInfo, sizeof(aicpuInfo));
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+}
+
+TEST_F(ApiDavidTest, StreamWriteValuePtr_InvalidSize)
+{
+    rtWriteValueInfo_t writeValueInfo = {};
+    writeValueInfo.size = WRITE_VALUE_SIZE_TYPE_BUFF; // 7, exceeds valid range [1, 7)
+    writeValueInfo.addr = 0x1000;
+    uint8_t value = 0;
+    writeValueInfo.value = &value;
+
+    rtError_t error = StreamWriteValuePtr(&writeValueInfo, stream_, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, StreamWriteValuePtr_UnalignedAddr)
+{
+    rtWriteValueInfo_t writeValueInfo = {};
+    writeValueInfo.size = WRITE_VALUE_SIZE_TYPE_64BIT; // 4, 64-bit write
+    writeValueInfo.addr = 0x1; // Not 8-byte aligned, triggers alignment check
+    uint8_t value = 0;
+    writeValueInfo.value = &value;
+
+    rtError_t error = StreamWriteValuePtr(&writeValueInfo, stream_, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+

@@ -36,15 +36,15 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
     Stream *curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
-    COND_RETURN_ERROR_MSG_INNER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "Kernel launch with handle failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_OUTER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        ErrorCode::EE1010, __func__, "stream");
     
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
         return XpuLaunchKernelV2(kernel, blockDim, argsWithType, stm, taskCfg);
     }
 
     if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
-        RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
+        RT_LOG(RT_LOG_WARNING, "Failed to validate kernel program, device_id=%d.", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;
     }
     // For the new launch logic, the nop task delivery is hidden in the launchKernel. only for aic/aiv kernel
@@ -52,7 +52,7 @@ rtError_t ApiImplDavid::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim,
         const uint8_t prefetchCnt = PREFETCH_CNT_CLOUD_V2;
         for (uint8_t cntIdx = 0U; cntIdx < prefetchCnt; cntIdx++) {
             error = NopTask(curStm);
-            ERROR_RETURN_MSG_INNER(error, "launch nop task error, error=%#x.", error);
+            ERROR_RETURN_MSG_INNER(error, "Failed to launch NOP task, error=%#x.", error);
         }
     }
 
