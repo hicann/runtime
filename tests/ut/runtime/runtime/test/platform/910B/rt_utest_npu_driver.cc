@@ -2486,6 +2486,17 @@ TEST_F(CloudV2NpuDriverTest, getDeviceAicpuStat_02)
     delete rawDrv;
 }
 
+TEST_F(CloudV2NpuDriverTest, getDeviceAicpuStat_03)
+{
+    rtError_t error;
+    NpuDriver *rawDrv = new NpuDriver();
+    MOCKER(halCheckProcessStatus).stubs().will(returnValue(1));
+    error = rawDrv->GetDeviceAicpuStat(0);
+
+    EXPECT_EQ(error, RT_ERROR_DRV_NO_DEVICE);
+
+    delete rawDrv;
+}
 
 
 TEST_F(CloudV2NpuDriverTest, memory_dev_alloc_offline_mini)

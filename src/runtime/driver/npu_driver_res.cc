@@ -193,9 +193,17 @@ rtError_t NpuDriver::GetDeviceAicpuStat(const uint32_t deviceId)
 {
     COND_RETURN_INFO(halCheckProcessStatus == nullptr, RT_ERROR_NONE, "[drv api] halCheckProcessStatus does not exist.");
     bool isMatched = false;
+    static bool firstLogFlag = true;
     const drvError_t drvRet = halCheckProcessStatus(deviceId, PROCESS_CP1, STATUS_NOMEM, &isMatched);
-    DRV_PROCESS_ERROR_RETURN(drvRet, "Call driver api halCheckProcessStatus failed, drvRetCode=%d, drvDevId=%u.",
-        static_cast<int32_t>(drvRet), deviceId);
+    if (unlikely(drvRet != DRV_ERROR_NONE)) {
+        if (firstLogFlag) {
+            firstLogFlag = false;
+            DRV_PROCESS_ERROR_RETURN(drvRet, "Call driver api halCheckProcessStatus failed, drvRetCode=%d, drvDevId=%u.",
+                                     static_cast<int32_t>(drvRet), deviceId);
+        } else {
+            return RT_GET_DRV_ERRCODE(drvRet); 
+        }
+    }
     if (isMatched) {
         return RT_ERROR_DEVICE_OOM;
     }
