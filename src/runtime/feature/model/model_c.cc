@@ -260,7 +260,7 @@ rtError_t AicpuMdlDestroy(Model * const mdl)
     ERROR_PROC_RETURN_MSG_INNER(error, defaultStream->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
         defaultStream->Id_(), static_cast<uint32_t>(error));
     SaveTaskCommonInfo(toAicpuTask, defaultStream, pos);
-    (void)ModelToAicpuTaskInit(toAicpuTask, mdl->Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_ABORT), executorFlag,
+    (void)ModelToAicpuTaskInit(toAicpuTask, mdl->Id_(), static_cast<uint32_t>(TS_AICPU_MODEL_DESTROY), executorFlag,
         RtPtrToValue(mdl->GetAicpuModelInfo()));
     error = DavidSendTask(toAicpuTask, defaultStream);
     ERROR_PROC_RETURN_MSG_INNER(error,

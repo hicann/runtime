@@ -21,26 +21,27 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo *const taskInfo, rtDavidSqe_t
 
     // swap buffer use host pid
     sqe->header.type = RT_DAVID_SQE_TYPE_AICPU_D;
-    sqe->topicType = TOPIC_TYPE_DEVICE_AICPU_SRC_PID;
+    UpdateDavidAICpuKernelSqeForDavinciTask(sqe);
 
     PrintDavidSqe(davidSqe, "AICpuTask");
-    RT_LOG(RT_LOG_INFO, "type=%hu, topic_type=%hu, kernel_type=%u, dump_en=%u", sqe->header.type,
-        sqe->topicType, sqe->kernelType,  sqe->debugDumpEn);
+    RT_LOG(RT_LOG_INFO, "type=%hu, topic_type=%hu, kernel_type=%u, dump_en=%u",
+        sqe->header.type, sqe->topicType, sqe->kernelType,  sqe->debugDumpEn);
     return;
 }
 
 void UpdateDavidAICoreSqeForDavinciTask(RtDavidStarsAicAivKernelSqe * const sqe)
 {
     sqe->piMix = 1U;
+    return;
 }
 
-void UpdateDavidAICpuSqeForDavinciTask(RtDavidStarsAicpuKernelSqe * const sqe)
+void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe * const sqe)
 {
  	sqe->topicType = TOPIC_TYPE_DEVICE_AICPU_SRC_PID;
  	return;
 }
 
-void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe * const sqe)
+void UpdateDavidAICpuKernelSqeForDavinciTask(RtDavidStarsAicpuKernelSqe * const sqe)
 {
  	sqe->topicType = TOPIC_TYPE_DEVICE_AICPU_SRC_PID;
  	return;

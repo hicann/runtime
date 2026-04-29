@@ -30,7 +30,7 @@ void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, rtDavidSqe_t
     sqe->kernelType = (static_cast<uint16_t>(TS_AICPU_KERNEL_AICPU));
     sqe->batchMode = 0U;
     sqe->topicType = 0U;
-    UpdateDavidAICpuSqeForDavinciTask(sqe);
+    UpdateDavidAICpuKernelSqeForDavinciTask(sqe);
 
     sqe->qos = stm->Device_()->GetTsdQos();
     sqe->res2 = 0U;
