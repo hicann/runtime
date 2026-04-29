@@ -671,11 +671,12 @@ public:
         const void* devAddr;
         Driver* drv;
         uint8_t* hostAddr;
-        ModuleMemInfo(uint32_t deviceId, uint64_t memLen, const void* devAddrBase, Driver* driverEntry):
+        bool readonly;
+        ModuleMemInfo(uint32_t deviceId, uint64_t memLen, const void* devAddrBase, Driver* driverEntry, bool isReadonly):
             devId(deviceId), memSize(memLen),devAddr(devAddrBase), drv(driverEntry),
-            hostAddr((memSize != 0U) ? new (std::nothrow) uint8_t[memSize] : nullptr) {
+            hostAddr((memSize != 0U) ? new (std::nothrow) uint8_t[memSize] : nullptr), readonly(isReadonly) {
         }
-        ModuleMemInfo():devId(UINT32_MAX), memSize(0), devAddr(nullptr), drv(nullptr), hostAddr(nullptr) {
+        ModuleMemInfo():devId(UINT32_MAX), memSize(0), devAddr(nullptr), drv(nullptr), hostAddr(nullptr), readonly(false) {
         }
         ~ModuleMemInfo() {
             DELETE_A(hostAddr);
@@ -685,8 +686,8 @@ public:
     std::list<std::unique_ptr<ModuleMemInfo>> moduleBackupList_;
  
     rtError_t SaveModelAllDataToHost(void);
-    rtError_t SaveModelAicpuInfo(const Module* const module, const uint32_t devId, Driver* curDrv);
-    rtError_t SaveModelDataInfoToList(Program *prog);
+    rtError_t SaveModuleAicpuInfo(const Module* const module, const uint32_t devId, Driver* curDrv);
+    rtError_t SaveModuleDataInfoToList(Program *prog);
     rtError_t SaveModule(void);
 
     rtError_t RestoreModule(void) const;

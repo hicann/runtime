@@ -14,6 +14,7 @@
 #endif
 #include <functional>
 #include "context.hpp"
+#include "model_c.hpp"
 
 namespace cce {
 namespace runtime {
@@ -182,7 +183,12 @@ rtError_t Model::ReBuild(void)
     ERROR_RETURN_MSG_INNER(error,"Check SQ status failed. retCode=%#x.",
         static_cast<uint32_t>(error));
 
-    error = LoadCompleteByStream();
+    if (context_->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
+        error = ModelLoadCompleteByStream(this);
+    } else {
+        error = LoadCompleteByStream();
+    }
+    
     ERROR_RETURN_MSG_INNER(error,"ReLoad complete failed. retCode=%#x.",
         static_cast<uint32_t>(error));
     

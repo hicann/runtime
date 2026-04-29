@@ -50,6 +50,7 @@ public:
         const uint64_t timeStamp);
     rtError_t GenEventId() override;
     bool IsEventInModel() override;
+    rtError_t ReAllocId() override;
     bool IsEventWithoutWaitTask() const override {
         return (((eventFlag_ & (RT_EVENT_DDSYNC | RT_EVENT_DDSYNC_NS | RT_EVENT_MC2 | RT_EVENT_EXTERNAL | RT_EVENT_IPC)) == 0U));
     }

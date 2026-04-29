@@ -1589,7 +1589,21 @@ rtError_t NpuDriver::AllocFastRingBufferAndDispatch(void ** const dptr, const ui
         "[drv api] halMemAlloc failed: size=%" PRIu64 "(bytes), drvRetCode=%d, device_id=%u, "
         "drvFlag=%#" PRIx64 ", moduleId=%hu", size, static_cast<int32_t>(drvRet), deviceId, drvFlag, moduleId);
 
-    COND_PROC_RETURN_ERROR(&halSetMemSharing == nullptr, RT_ERROR_DRV_NOT_SUPPORT, (void)halMemFree(ptr);,
+    rtError_t ret = SetMemSharing(ptr, size, deviceId);
+    if (ret != RT_ERROR_NONE) {
+        (void)halMemFree(ptr);
+        RT_LOG(RT_LOG_ERROR, "SetMemSharing failed: ret=%u, device_id=%u, drvFlag=%#" PRIx64 ", moduleId=%hu",
+            ret, deviceId, drvFlag, moduleId);
+        return ret;
+    }
+
+    *dptr = ptr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::SetMemSharing(void *ptr, const uint64_t size, const uint32_t deviceId)
+{
+    COND_PROC_RETURN_ERROR(&halSetMemSharing == nullptr, DRV_ERROR_NOT_SUPPORT, return DRV_ERROR_NOT_SUPPORT,
         "[drv api] halSetMemSharing does not exist.");
     struct drvMemSharingPara para = {};
     para.ptr = ptr;
@@ -1597,13 +1611,13 @@ rtError_t NpuDriver::AllocFastRingBufferAndDispatch(void ** const dptr, const ui
     para.id = deviceId;
     para.side = MEM_HOST_SIDE;
     para.accessor = TS_ACCESSOR;
-    para.enable_flag =  0U; /* 0:enable; 1:disable */
-    drvRet = halSetMemSharing(&para);
-    COND_PROC_RETURN_ERROR(drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet), (void)halMemFree(ptr);,
-         "[drv api] halSetMemSharing failed: size=%" PRIu64 "(bytes), drvRetCode=%d, device_id=%u, "
-         "drvFlag=%#" PRIx64 ", moduleId=%hu", size, static_cast<int32_t>(drvRet), deviceId, drvFlag, moduleId);
-
-    *dptr = ptr;
+    para.enable_flag = 0U; /* 0:enable; 1:disable */
+    drvError_t drvRet = halSetMemSharing(&para);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(drvRet, "[drv api] halSetMemSharing failed: size=%" PRIu64 "(bytes), drvRetCode=%d, device_id=%u, ",
+            size, static_cast<int32_t>(drvRet), deviceId);
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
     return RT_ERROR_NONE;
 }
 

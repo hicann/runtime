@@ -245,8 +245,23 @@ rtError_t RawDevice::ResourceRestore()
     }
     ERROR_RETURN(ret, "TschStreamAllocDsaAddr failed, ret=%#x, deviceId=%u", ret, deviceId_);
 
-    ret = Alloc32kStackAddrForDcache();
+    if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK_DOT_ALLOC_STACK)) {
+        if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_16K_STACK)) {
+            ret = Alloc32kStackAddrForDcache();
+        } else {
+            ret = AllocStackPhyBaseDavid();
+        }
+    }
+
     ERROR_RETURN(ret, "Alloc32kStackAddrForDcache failed, ret=%#x, deviceId=%u", ret, deviceId_);
+
+    if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
+        ret = SendTopicMsgVersionToAicpu();
+        ERROR_RETURN(ret, "Send topic msg version to aicpu failed, ret=%#x.", ret);
+    }
+
+    ret = UpdateTimeoutConfig();
+    ERROR_RETURN(ret, "UpdateTimeoutConfig failed, ret=%#x, deviceId=%u", ret, deviceId_);
 
     Context *ctx = Runtime::Instance()->GetPriCtxByDeviceId(deviceId_, tsId_);
     CHECK_CONTEXT_VALID_WITH_RETURN(ctx, RT_ERROR_CONTEXT_NULL);
@@ -257,6 +272,9 @@ rtError_t RawDevice::ResourceRestore()
 
 rtError_t RawDevice::EventExpandingPoolRestore(void)
 {
+    if (eventExpandingPool_ == nullptr) {
+        return RT_ERROR_NONE;
+    }
     rtError_t ret = eventExpandingPool_->ResetBufferForEvent();
     ERROR_RETURN(ret, "ResetBufferForEvent failed, ret=%#x, deviceId=%u", ret, deviceId_);
     return ret;
@@ -274,7 +292,7 @@ rtError_t RawDevice::ReOpen()
     ret = Runtime::Instance()->StopAicpuExecutor(deviceId_, 0U, true);
     ERROR_RETURN(ret, "StopAicpuExecutor failed, ret=%#x, deviceId=%u", ret, deviceId_);
     ret = Runtime::Instance()->startAicpuExecutor(deviceId_, 0U);
-    ERROR_RETURN(ret, "startAicpuExecutor failed, ret=%#x, deviceId=%u", ret, deviceId_);
+    ERROR_RETURN(ret, "StartAicpuExecutor failed, ret=%#x, deviceId=%u", ret, deviceId_);
 
     // halDeviceOpen接口和halDeviceClose接口同时提供，此处不需要再判断RT_ERROR_DRV_NOT_SUPPORT
     ret = driver_->DeviceOpen(deviceId_, tsId_, &SSID_);

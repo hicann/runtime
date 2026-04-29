@@ -33,6 +33,15 @@ CountNotify::CountNotify(const uint32_t devId, const uint32_t taskSchId)
 
 CountNotify::~CountNotify() noexcept
 {
+    Runtime* runtime = Runtime::Instance();
+    if (runtime != nullptr) {
+        Context * const curCtx = runtime->CurrentContext();
+        if (curCtx != nullptr) {
+            Device * const dev = curCtx->Device_();
+            COND_PROC(dev != nullptr, dev->RemoveCntNotify(this));
+        }
+    }
+
     ResetEmbeddedInnerHandle<CountNotify>(this);
     if (driver_ == nullptr) {
         return;
@@ -65,6 +74,7 @@ rtError_t CountNotify::Setup()
     ERROR_RETURN_MSG_INNER(error, "count NotifyIdAlloc failed, device_id=%u, retCode=%#x!",
         deviceId_, static_cast<uint32_t>(error));
 
+    dev->PushCntNotify(this);
     notifyid_ = curNotifyId;
     InitEmbeddedInnerHandle<CountNotify>(this);
     return RT_ERROR_NONE;
@@ -154,6 +164,17 @@ rtError_t CountNotify::Wait(Stream * const streamIn, const rtCntNtyWaitInfo_t * 
     error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.",
         streamIn->Id_(), static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t CountNotify::ReAllocId() const
+{
+    Context * const curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device * const dev = curCtx->Device_();
+    const rtError_t ret = driver_->ReAllocResourceId(deviceId_, dev->DevGetTsId(), 0U, notifyid_, DRV_CNT_NOTIFY_ID);
+    ERROR_RETURN(ret, "CountNotifyId reAlloc failed, notify_id=%u, device_id=%u, retCode=%#x!",
+        notifyid_, deviceId_, static_cast<uint32_t>(ret));
     return RT_ERROR_NONE;
 }
 

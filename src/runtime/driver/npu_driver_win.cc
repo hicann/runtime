@@ -1802,6 +1802,14 @@ void NpuDriver::FreeFastRingBuffer(void * const ptr, const uint64_t size, const 
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::SetMemSharing(void *ptr, const uint64_t size, const uint32_t deviceId)
+{
+    UNUSED(ptr);
+    UNUSED(size);
+    UNUSED(deviceId);
+    return RT_ERROR_NONE; 
+}
+
 rtError_t NpuDriver::MemAddressTranslate(const int32_t deviceId, const uint64_t vptr, uint64_t * const pptr)
 {
     UNUSED(vptr);

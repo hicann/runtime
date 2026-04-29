@@ -97,6 +97,7 @@ public:
     void FillStreamAttrSimt(const Stream * const stm, rtStreamInfoExMsg_t &infoEX) const;
     rtError_t UpdateStreamSqCq(Stream *newStm);
     rtError_t ReAllocSqCqId(const Stream * const newStm);
+    rtError_t ReAllocDavidSqCqId(const Stream * const newStm);
     rtError_t DeAllocStreamSqCq(const uint32_t streamId, const uint32_t normalCqId, uint32_t drvFlag);
     std::mutex *GetSqMutex(const uint32_t sqId);
     rtError_t GetSqId(const uint32_t streamId, uint32_t &sqId);

@@ -246,6 +246,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/v100/device_snapshot_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq.cc

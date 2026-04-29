@@ -397,5 +397,25 @@ bool DavidEvent::IsEventInModel()
     return false;
 }
 
+rtError_t DavidEvent::ReAllocId()
+{
+    if (IsEventWithoutWaitTask() || isNewMode_ || eventFlag_ == RT_EVENT_DEFAULT || eventFlag_ == RT_EVENT_IPC) {
+        RT_LOG(RT_LOG_INFO, "Event_id not need to realloc in this flag=%u", eventFlag_);
+        return RT_ERROR_NONE;
+    }
+
+    Runtime * const rt = Runtime::Instance();
+    Driver *devDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(devDrv, RT_ERROR_DRV_NULL);
+    const rtError_t error = devDrv->ReAllocResourceId(device_->Id_(), device_->DevGetTsId(), 0U,
+        static_cast<uint32_t>(eventId_), DRV_NOTIFY_ID);
+    ERROR_RETURN(error, "Realloc event_id failed, event_id=%d, device_id=%u, ret_code=%d.",
+        eventId_, device_->Id_(), error);
+
+    RT_LOG(RT_LOG_INFO, "Realloc event_id success, device_id=%u, ts_id=%u, event_id=%d",
+        device_->Id_(), device_->DevGetTsId(), eventId_);
+    return error;
+}
+
 }
 }

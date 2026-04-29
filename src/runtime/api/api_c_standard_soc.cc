@@ -1034,6 +1034,7 @@ rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *ts
 VISIBILITY_DEFAULT
 rtError_t rtSetIpcNotifyPid(const char_t *name, int32_t pid[], int32_t num)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY)) {

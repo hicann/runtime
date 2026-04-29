@@ -2648,6 +2648,7 @@ rtError_t rtMemQueueInitFlowGw(int32_t devId, const rtInitFlowGwInfo_t * const i
 VISIBILITY_DEFAULT
 rtError_t rtMemQueueCreate(int32_t devId, const rtMemQueueAttr_t *queAttr, uint32_t *qid)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemQueueCreate(devId, queAttr, qid);
@@ -2703,6 +2704,7 @@ rtError_t rtMemQueueUnImport(int32_t devId, uint32_t qid, int32_t peerDevId, con
 VISIBILITY_DEFAULT
 rtError_t rtMemQueueSet(int32_t devId, rtMemQueueSetCmdType cmd, const rtMemQueueSetInputPara *input)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemQueueSet(devId, cmd, input);
@@ -2714,6 +2716,7 @@ rtError_t rtMemQueueSet(int32_t devId, rtMemQueueSetCmdType cmd, const rtMemQueu
 VISIBILITY_DEFAULT
 rtError_t rtMemQueueDestroy(int32_t devId, uint32_t qid)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemQueueDestroy(devId, qid);
@@ -2738,6 +2741,7 @@ rtError_t rtMemQueueInit(int32_t devId)
 VISIBILITY_DEFAULT
 rtError_t rtMemQueueReset(int32_t devId, uint32_t qid)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemQueueReset(devId, qid);
@@ -3033,6 +3037,7 @@ rtError_t rtMemQueueInitQS(int32_t devId, const char_t* grpName)
 VISIBILITY_DEFAULT
 rtError_t rtMemGrpCreate(const char_t *name, const rtMemGrpConfig_t *cfg)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemGrpCreate(name, cfg);
@@ -3056,6 +3061,7 @@ rtError_t rtBuffGetInfo(rtBuffGetCmdType type, const void * const inBuff, uint32
 VISIBILITY_DEFAULT
 rtError_t rtMemGrpCacheAlloc(const char_t *name, int32_t devId, const rtMemGrpCacheAllocPara *para)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->MemGrpCacheAlloc(name, devId, para);

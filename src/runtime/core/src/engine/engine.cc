@@ -32,6 +32,7 @@
 #include "ctrl_res_pool.hpp"
 #include "task_recycle.hpp"
 #include "error_code.h"
+#include "global_state_manager.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1299,9 +1300,12 @@ void Engine::PrintfRun()
     NULL_PTR_RETURN_DIRECTLY(dev);
     Context *ctx = Runtime::Instance()->GetPriCtxByDeviceId(dev->Id_(), 0U);
     InnerThreadLocalContainer::SetCurCtx(ctx);
+    GlobalStateManager::GetInstance().IncBackgroundThreadCount(__func__);
     while (printThreadRunFlag_ && !Runtime::Instance()->IsExiting()) {
+        GlobalStateManager::GetInstance().BackgroundThreadWaitIfLocked(__func__);
         (void)dev->ParsePrintInfo();
     }
+    GlobalStateManager::GetInstance().DecBackgroundThreadCount(__func__);
 }
 }  // namespace runtime
 }  // namespace cce

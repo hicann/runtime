@@ -421,6 +421,7 @@ rtError_t ApiImplDavid::EventCreate(Event ** const evt, const uint64_t flag)
             dev->Id_(), dev->DevGetTsId(), static_cast<uint32_t>(error));
     }
     InitEmbeddedInnerHandle<Event>(*evt);
+    dev->PushEvent(*evt);
     return RT_ERROR_NONE;
 }
 
@@ -443,6 +444,7 @@ rtError_t ApiImplDavid::EventCreateEx(Event ** const evt, const uint64_t flag)
     }
 
     InitEmbeddedInnerHandle<Event>(*evt);
+    dev->PushEvent(*evt);
     return RT_ERROR_NONE;
 }
 

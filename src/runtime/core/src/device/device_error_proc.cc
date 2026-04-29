@@ -22,6 +22,7 @@
 #include "stub_task.hpp"
 #include "context_manage.hpp"
 #include "davinci_kernel_task.h"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -702,8 +703,20 @@ rtError_t DeviceErrorProc::RingBufferRestore()
         ringBufferSize_, error);
 
     // create task to transfer the addr to device.
-    error = ProcRingBufferTask(deviceRingBufferAddr_, false, RINGBUFFER_LEN);
+    if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
+        error = ProcRingBufferTaskDavid(device_, deviceRingBufferAddr_, false, RINGBUFFER_LEN_DAVID);
+    } else {
+        error = ProcRingBufferTask(deviceRingBufferAddr_, false, RINGBUFFER_LEN);
+    }
     ERROR_RETURN(error, "Failed to create ring buffer, errorcode=%u.", error);
+
+    if (fastRingBufferAddr_ != nullptr) {
+        NpuDriver *npuDrv = dynamic_cast<NpuDriver*>(devDrv);
+        if (npuDrv != nullptr) {
+            error = npuDrv->SetMemSharing(fastRingBufferAddr_, fastRingBufferSize_, device_->Id_());
+            ERROR_RETURN(error, "Failed to set fast ring buffer, errorcode=%u.", error);
+        }
+    }
     return RT_ERROR_NONE;
 }
 

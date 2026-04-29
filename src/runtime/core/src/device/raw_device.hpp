@@ -43,6 +43,9 @@ public:
     void PushNotify(Notify *const nty) override;
     void RemoveNotify(Notify *const nty) override;
     rtError_t NotifiesReAllocId(void) override;
+    rtError_t CntNotifiesReAllocId(void) override;
+    void PushCntNotify(CountNotify *const nty) override;
+    void RemoveCntNotify(CountNotify *const nty) override;
 
     Module *ModuleAlloc(Program * const prog) override;
     bool ModuleRetain(Module * const mdl) override;
@@ -1036,6 +1039,8 @@ private:
     std::mutex eventLock_;
     std::unordered_set<Notify *> notifies_;
     std::mutex notifyLock_;
+    std::unordered_set<CountNotify *> cntNotifies_;
+    std::mutex cntNotifyLock_;
     DeviceSnapshot *deviceSnapshot_{nullptr};
     EventExpandingPool *eventExpandingPool_;
     /* 

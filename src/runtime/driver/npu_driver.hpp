@@ -51,6 +51,7 @@ public:
     rtError_t AllocFastRingBufferAndDispatch(void ** const dptr, const uint64_t size, const uint32_t deviceId,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     void FreeFastRingBuffer(void * const ptr, const uint64_t size, const uint32_t deviceId) override;
+    rtError_t SetMemSharing(void *ptr, const uint64_t size, const uint32_t deviceId);
 
     // Free host memory.
     rtError_t HostMemFree(void * const dptr) override;

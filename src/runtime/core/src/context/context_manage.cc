@@ -447,6 +447,9 @@ rtError_t ContextManage::SnapShotProcessRestore()
         ret = deviceSnapShot->ArgsPoolRestore();
         ERROR_RETURN(ret, "args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
 
+        ret = deviceSnapShot->UbArgsPoolRestore();
+        ERROR_RETURN(ret, "ub args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+
         ret = ModelRestore(static_cast<int32_t>(devId));
         ERROR_RETURN(ret, "ModelRestore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
@@ -487,7 +490,7 @@ rtError_t ContextManage::ModelBackup(const int32_t devId)
             RT_ERROR_FEATURE_NOT_SUPPORT,
             "Snapshots cannot be created for models with the AICPU execution type.");
         // 扩流场景model的sqe不做备份，sqe数据本身就在host中，非扩流场景为了确保恢复之后model能够删除成功，需要继续走备份流程
-        if (IsSoftwareSqCaptureModel(mdl)) {
+        if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
             continue;
         }
         COND_RETURN_ERROR((!mdl->IsModelLoadComplete()),
@@ -516,7 +519,7 @@ rtError_t ContextManage::ModelRestore(const int32_t devId)
             RT_ERROR_FEATURE_NOT_SUPPORT,
             "Models with the AICPU executor type cannot be restored.");
         // 只恢复非扩流场景的mode
-        if (IsSoftwareSqCaptureModel(mdl)) {
+        if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
             continue;
         }
         const rtError_t ret = mdl->ReBuild();

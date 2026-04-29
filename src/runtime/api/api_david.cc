@@ -20,6 +20,7 @@
 #include "count_notify.hpp"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
+#include "global_state_manager.hpp"
 
 using namespace cce::runtime;
 
@@ -30,6 +31,7 @@ extern "C" {
 VISIBILITY_DEFAULT
 rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * const cntNotify)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->CntNotifyCreate(deviceId, RtPtrToPtr<CountNotify **>(cntNotify));
@@ -42,6 +44,7 @@ rtError_t rtCntNotifyCreate(const int32_t deviceId, rtCntNotify_t * const cntNot
 VISIBILITY_DEFAULT
 rtError_t rtCntNotifyCreateWithFlag(const int32_t deviceId, rtCntNotify_t * const cntNotify, const uint32_t flags)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->CntNotifyCreate(deviceId, RtPtrToPtr<CountNotify **>(cntNotify), flags);
@@ -55,6 +58,7 @@ VISIBILITY_DEFAULT
 rtError_t rtCntNotifyRecord(rtCntNotify_t const inCntNotify, rtStream_t const stm,
                             const rtCntNtyRecordInfo_t * const info)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
@@ -69,6 +73,7 @@ VISIBILITY_DEFAULT
 rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rtStream_t const stm,
                                      const rtCntNtyWaitInfo_t * const info)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
@@ -82,6 +87,7 @@ rtError_t rtCntNotifyWaitWithTimeout(rtCntNotify_t const inCntNotify, rtStream_t
 VISIBILITY_DEFAULT
 rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t const stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
@@ -95,6 +101,7 @@ rtError_t rtCntNotifyReset(rtCntNotify_t const inCntNotify, rtStream_t const stm
 VISIBILITY_DEFAULT
 rtError_t rtCntNotifyDestroy(rtCntNotify_t const inCntNotify)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(inCntNotify, CountNotify, notifyPtr);
@@ -132,6 +139,7 @@ rtError_t rtGetCntNotifyId(rtCntNotify_t inCntNotify, uint32_t * const notifyId)
 VISIBILITY_DEFAULT
 rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flags)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(flags != 0ULL, RT_ERROR_INVALID_VALUE, flags, "0");
     int32_t deviceId = 0;
     const rtError_t rtRet = rtGetDevice(&deviceId);
@@ -145,6 +153,7 @@ rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flag
 VISIBILITY_DEFAULT
 rtError_t rtsCntNotifyRecord(rtCntNotify_t cntNotify, rtStream_t stm, rtCntNotifyRecordInfo_t *info)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
@@ -159,6 +168,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm,
                                       rtCntNotifyWaitInfo_t *info)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
@@ -172,6 +182,7 @@ rtError_t rtsCntNotifyWaitWithTimeout(rtCntNotify_t cntNotify, rtStream_t stm,
 VISIBILITY_DEFAULT
 rtError_t rtsCntNotifyReset(rtCntNotify_t cntNotify, rtStream_t stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(cntNotify, CountNotify, notifyPtr);
@@ -195,6 +206,7 @@ rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId)
 VISIBILITY_DEFAULT
 rtError_t rtUbDbSend(rtUbDbInfo_t *dbInfo,  rtStream_t stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -206,6 +218,7 @@ rtError_t rtUbDbSend(rtUbDbInfo_t *dbInfo,  rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtUbDirectSend(rtUbWqeInfo_t *wqeInfo, rtStream_t stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
@@ -217,6 +230,7 @@ rtError_t rtUbDirectSend(rtUbWqeInfo_t *wqeInfo, rtStream_t stm)
 VISIBILITY_DEFAULT
 rtError_t rtFusionLaunch(void * const fusionInfo, rtStream_t const stm, rtFusionArgsEx_t *argsInfo)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
@@ -228,6 +242,7 @@ rtError_t rtFusionLaunch(void * const fusionInfo, rtStream_t const stm, rtFusion
 VISIBILITY_DEFAULT
 rtError_t rtCCULaunch(rtCcuTaskInfo_t *taskInfo,  rtStream_t const stm)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
@@ -264,6 +279,7 @@ rtError_t rtGetDevResAddress(rtDevResInfo * const resInfo, rtDevResAddrInfo * co
 VISIBILITY_DEFAULT
 rtError_t rtReleaseDevResAddress(rtDevResInfo * const resInfo)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->ReleaseDevResAddress(resInfo);

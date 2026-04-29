@@ -36,9 +36,9 @@ rtError_t SnapShotDeviceRestore()
         if (dev == nullptr) {
             continue;
         }
-
         const rtError_t ret = dev->ReOpen();
         if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
+            RT_LOG(RT_LOG_WARNING, "DeviceReOpen driver not support, ret=%#x, devId=%d.", ret, devId);
             return ret;
         }
         ERROR_RETURN(ret, "DeviceOpen failed, ret=%#x, devId=%d.", ret, devId);
@@ -73,6 +73,9 @@ rtError_t SnapShotResourceRestore(ContextDataManage &ctxMan)
 
         ret = dev->NotifiesReAllocId();
         ERROR_RETURN(ret, "Realloc notify id failed, ret=%#x.", ret);
+
+        ret = dev->CntNotifiesReAllocId();
+        ERROR_RETURN(ret, "Realloc count notify id failed, ret=%#x.", ret);
 
         ret = dev->ResourceRestore();
         ERROR_RETURN(ret, "Device resource restore failed, devId=%d, ret=%#x.", devId, ret);

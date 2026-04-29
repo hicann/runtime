@@ -50,6 +50,15 @@ public:
     rtError_t Init();
     rtError_t Release(void * const argHandle);
     rtError_t AllocCopyPtr(const uint32_t size, DavidArgLoaderResult * const result);
+    H2DCopyMgr *GetArgsAllocator(void) const
+    {
+        return argAllocator_;
+    }
+
+    H2DCopyMgr *GetSuperArgsAllocator(void) const
+    {
+        return superArgAllocator_;
+    }
 protected:
     Device* device_;
 

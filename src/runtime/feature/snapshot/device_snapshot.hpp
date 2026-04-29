@@ -10,6 +10,7 @@
 #ifndef CCE_RUNTIME_DEVICE_SNAPSHOT_HPP
 #define CCE_RUNTIME_DEVICE_SNAPSHOT_HPP
 #include <vector>
+#include <unordered_map>
 #include "base.hpp"
 #include "h2d_copy_mgr.hpp"
 #include "task_info.hpp"
@@ -74,15 +75,29 @@ public:
     rtError_t OpMemoryBackup(void);
     rtError_t OpMemoryRestore(void);
     rtError_t ArgsPoolRestore(void) const;
+    rtError_t UbArgsPoolRestore(void) const;
     rtError_t ArgsPoolConvertAddr(H2DCopyMgr *const mgr) const;
     void OpMemoryInfoInit(void);
+protected:
+    using TaskHandlerFunc = void (*)(TaskInfo* const, DeviceSnapshot*);
+    using TaskHandlerFuncMap = std::unordered_map<int, TaskHandlerFunc>;
+    const TaskHandlerFuncMap& GetHandlerMap() const;
 private:
     std::vector<std::pair<void*, size_t>> opVirtualAddrs_{};
     std::unique_ptr<uint8_t[]> opBackUpAddrs_ = nullptr;
     size_t opTotalHostMemSize_ = 0U;
     Device *device_ = nullptr;
 };
-}
-}
+
+namespace TaskHandlers {
+    void HandleStreamSwitch(TaskInfo* const task, DeviceSnapshot* snapshot);
+    void HandleStreamLabelSwitchByIndex(TaskInfo* const task, DeviceSnapshot* snapshot);
+    void HandleMemWaitValue(TaskInfo* const task, DeviceSnapshot* snapshot);
+    void HandleRdmaPiValueModify(TaskInfo* const task, DeviceSnapshot* snapshot);
+    void HandleStreamActive(TaskInfo* const task, DeviceSnapshot* snapshot);
+    void HandleModelTaskUpdate(TaskInfo* const task, DeviceSnapshot* snapshot);
+} // namespace TaskHandlers
+} // namespace runtime
+} // namespace cce
 
 #endif  // CCE_RUNTIME_DEVICE_SNAPSHOT_HPP

@@ -605,6 +605,7 @@ rtError_t rtsMemFreeAddress(void** virPtr)
 VISIBILITY_DEFAULT
 rtError_t rtsMemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t *cfg)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     Api *apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtsMemMallocPhysical);
@@ -783,6 +784,7 @@ rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t
 VISIBILITY_DEFAULT
 rtError_t rtsLaunchCmoTask(rtCmoTaskCfg_t *taskCfg, rtStream_t stm, const void *reserve)
 {
+    GLOBAL_STATE_WAIT_IF_LOCKED();
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(taskCfg, RT_ERROR_INVALID_VALUE);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), RT_ERROR_INVALID_VALUE, reserve, "nullptr");
 

@@ -33,6 +33,7 @@ public:
     rtError_t Record(Stream * const streamIn, const rtCntNtyRecordInfo_t * const info);
     rtError_t Setup();
     rtError_t Wait(Stream * const streamIn, const rtCntNtyWaitInfo_t * const info);
+    rtError_t ReAllocId() const;
 
     uint32_t GetCntNotifyId() const
     {

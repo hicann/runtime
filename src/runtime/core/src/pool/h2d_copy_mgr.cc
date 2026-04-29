@@ -538,5 +538,46 @@ void H2DCopyMgr::FreeUbBuffer(void * const addr, void * const para)
     cpyInfoUbInfo->memTsegInfoMap[poolIndex] = nullptr;
     cpyInfoUbInfo->memTsegInfoMap.erase(poolIndex);
 }
+
+rtError_t H2DCopyMgr::UbArgsPoolConvertAddr(void)
+{
+    const WriteProtect wp(cpyInfoUbMap_.mapLock);
+    Device * const dev = cpyInfoUbMap_.device;
+    const CpyAddrUbMgr *cpyAddrPtr;
+    for (uint32_t poolIndex = 0U; poolIndex < cpyInfoUbMap_.poolIndex; poolIndex++) {
+        cpyAddrPtr = nullptr;
+        for (const auto &cpyUbPair : cpyInfoUbMap_.cpyUbMap) {
+            if (cpyUbPair.second.poolIndex == poolIndex) {
+                cpyAddrPtr = &(cpyUbPair.second);
+                break;
+            }
+        }
+        if (cpyAddrPtr == nullptr) {
+            RT_LOG(RT_LOG_WARNING, "Can't find cpyAddr by pool index=%u.", poolIndex);
+            continue;
+        }
+
+        const auto tsegInfo = cpyInfoUbMap_.memTsegInfoMap.find(poolIndex);
+        if (tsegInfo == cpyInfoUbMap_.memTsegInfoMap.end()) {
+            RT_LOG(RT_LOG_WARNING, "Can't find tseg info by pool index=%u, devAddr=%#lx.", poolIndex, cpyAddrPtr->devBaseAddr);
+            continue;
+        }
+        
+        struct memTsegInfo *memInfo = tsegInfo->second;
+        if (memInfo == nullptr) {
+            RT_LOG(RT_LOG_WARNING, "MemTsegInfo is null, poolIndex=%u, devAddr=%#lx.", poolIndex, cpyAddrPtr->devBaseAddr);
+            continue;
+        }
+        const rtError_t error = GetMemTsegInfo(dev, RtValueToPtr<void *>(cpyAddrPtr->devBaseAddr),
+            RtValueToPtr<void *>(cpyAddrPtr->hostBaseAddr), static_cast<uint64_t>(cpyInfoUbMap_.cpyItemSize),
+            &(memInfo->devTsegInfo), &(memInfo->hostTsegInfo));
+        ERROR_RETURN_MSG_INNER(error,
+            "Refresh ub segment info failed, poolIndex=%u, devAddr=%#lx, retCode=%#x.", poolIndex, cpyAddrPtr->devBaseAddr, error);
+        RT_LOG(RT_LOG_DEBUG, "Refresh ub segment success, poolIndex=%u, devAddr=%#lx.", poolIndex, cpyAddrPtr->devBaseAddr);
+    }
+
+    return RT_ERROR_NONE;
+}
+
 }  // namespace runtime
 }  // namespace cce

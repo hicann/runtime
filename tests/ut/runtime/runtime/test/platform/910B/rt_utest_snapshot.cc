@@ -353,7 +353,7 @@ TEST_F(SnapshotTest, GetPoolIndex_AfterAlloc) {
     EXPECT_GE(poolIndex, 0U);
 }
 
-TEST_F(SnapshotTest, SaveModelDataInfoToList) {
+TEST_F(SnapshotTest, SaveModuleDataInfoToList) {
     PlainProgram prog;
     prog.SetKernelRegType(RT_KERNEL_REG_TYPE_CPU);
     rtFuncHandle funcHandle = nullptr;
@@ -361,7 +361,7 @@ TEST_F(SnapshotTest, SaveModelDataInfoToList) {
     auto error = rtsRegisterCpuFunc(&prog, "RunCpuKernel", "Abs", &funcHandle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(true, funcHandle != nullptr);
-    error = Runtime::Instance()->SaveModelDataInfoToList(&prog);
+    error = Runtime::Instance()->SaveModuleDataInfoToList(&prog);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

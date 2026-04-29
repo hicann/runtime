@@ -4425,10 +4425,10 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
     }
 
     if (isPoolMem) {
-        error = prog->BinaryPoolMemCopySync(devMem, size, data, device, readonly);
+        error = Program::BinaryPoolMemCopySync(devMem, size, data, device, readonly);
     } else {
         uint32_t adviseSize = devSize + INSTR_ALIGN_SIZE;
-        error = prog->BinaryMemCopySync(devMem, adviseSize, size, data, device, readonly);
+        error = Program::BinaryMemCopySync(devMem, adviseSize, size, data, device, readonly);
     }
     prog->SetBinBaseAddr(baseAddr, device->Id_());
     prog->SetBinAlignBaseAddr(devMem, device->Id_());
@@ -5176,7 +5176,7 @@ rtError_t Runtime::SaveModelAllDataToHost(void)
     return ret;
 }
 
-rtError_t Runtime::SaveModelAicpuInfo(const Module* const module, const uint32_t devId, Driver* curDrv)
+rtError_t Runtime::SaveModuleAicpuInfo(const Module* const module, const uint32_t devId, Driver* curDrv)
 {
     void *soNameBase = nullptr;
     void *kernelNameBase = nullptr;
@@ -5187,13 +5187,13 @@ rtError_t Runtime::SaveModelAicpuInfo(const Module* const module, const uint32_t
     module->GetAicpuLoadInfo(&soNameBase, &soNameSize, &kernelNameBase, &kenelNameSize);
 
     // back aicpu so name
-    std::unique_ptr<ModuleMemInfo> soNameMemInfo(std::make_unique<ModuleMemInfo>(devId, soNameSize, soNameBase, curDrv));
+    std::unique_ptr<ModuleMemInfo> soNameMemInfo(std::make_unique<ModuleMemInfo>(devId, soNameSize, soNameBase, curDrv, false));
     COND_PROC(soNameMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
     NULL_PTR_RETURN(soNameMemInfo, RT_ERROR_MEMORY_ALLOCATION);
     COND_PROC(soNameBase != nullptr, moduleBackupList_.push_back(std::move(soNameMemInfo)));
 
     // backup aicpu kernel info
-    std::unique_ptr<ModuleMemInfo> kernelNameMemInfo(std::make_unique<ModuleMemInfo>(devId, kenelNameSize, kernelNameBase, curDrv));
+    std::unique_ptr<ModuleMemInfo> kernelNameMemInfo(std::make_unique<ModuleMemInfo>(devId, kenelNameSize, kernelNameBase, curDrv, false));
     COND_PROC(kernelNameMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
     NULL_PTR_RETURN(kernelNameMemInfo, RT_ERROR_MEMORY_ALLOCATION);
     COND_PROC(kernelNameBase != nullptr, moduleBackupList_.push_back(std::move(kernelNameMemInfo)));
@@ -5201,14 +5201,13 @@ rtError_t Runtime::SaveModelAicpuInfo(const Module* const module, const uint32_t
     return ret;
 }
 
-rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
+rtError_t Runtime::SaveModuleDataInfoToList(Program *prog)
 {
-    rtError_t ret = RT_ERROR_NONE;
+    bool readonly = prog->IsReadOnly();
     for (uint32_t i = 0U; i < RT_MAX_DEV_NUM; i++) {
         if (prog->GetBinAlignBaseAddr(i) != nullptr) {
             // save program load addr
-            std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, prog->LoadSize(),
-                prog->GetBinAlignBaseAddr(i), nullptr));
+            std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, prog->LoadSize(), prog->GetBinAlignBaseAddr(i), nullptr, readonly));
             NULL_PTR_RETURN(progMemInfo, RT_ERROR_MEMORY_ALLOCATION);
             moduleBackupList_.push_back(std::move(progMemInfo));
         }
@@ -5218,12 +5217,10 @@ rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
             const std::string& soName = iter.first;
             void* soNameDevAddr = iter.second;
             if (soNameDevAddr != nullptr) {
-                std::unique_ptr<ModuleMemInfo> progMemInfo(
-                    std::make_unique<ModuleMemInfo>(i, soName.size() + 1, soNameDevAddr, nullptr));
+                std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, soName.size() + 1, soNameDevAddr, nullptr, false));
                 NULL_PTR_RETURN(progMemInfo, RT_ERROR_MEMORY_ALLOCATION);
                 moduleBackupList_.push_back(std::move(progMemInfo));
-                RT_LOG(
-                    RT_LOG_INFO, "prog id=%u, soName=%s, soNameDevAddr=%p", prog->Id_(), soName.c_str(), soNameDevAddr);
+                RT_LOG(RT_LOG_INFO, "prog id=%u, soName=%s, soNameDevAddr=%p", prog->Id_(), soName.c_str(), soNameDevAddr);
             }
         }
 
@@ -5232,13 +5229,10 @@ rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
             const std::string& funcName = iter.first;
             void* funcNameDevAddr = iter.second;
             if (funcNameDevAddr != nullptr) {
-                std::unique_ptr<ModuleMemInfo> progMemInfo(
-                    std::make_unique<ModuleMemInfo>(i, funcName.size() + 1, funcNameDevAddr, nullptr));
+                std::unique_ptr<ModuleMemInfo> progMemInfo(std::make_unique<ModuleMemInfo>(i, funcName.size() + 1, funcNameDevAddr, nullptr, false));
                 NULL_PTR_RETURN(progMemInfo, RT_ERROR_MEMORY_ALLOCATION);
                 moduleBackupList_.push_back(std::move(progMemInfo));
-                RT_LOG(
-                    RT_LOG_INFO, "prog id=%u, funcName=%s, funcNameDevAddr=%p", prog->Id_(), funcName.c_str(),
-                    funcNameDevAddr);
+                RT_LOG(RT_LOG_INFO, "prog id=%u, funcName=%s, funcNameDevAddr=%p", prog->Id_(), funcName.c_str(), funcNameDevAddr);
             }
         }
     }
@@ -5252,23 +5246,19 @@ rtError_t Runtime::SaveModelDataInfoToList(Program *prog)
 
         Driver* curDrv = dereferenceCtx->Device_()->Driver_();
         const uint32_t devId = dereferenceCtx->Device_()->Id_();
-        const void* devAddr = nullptr;
-        uint32_t memSize = 0U;
-        devAddr = module->GetBaseAddr();
-        memSize = module->GetBaseAddrSize();
+        const void *devAddr = module->GetBaseAddr();
+        uint32_t memSize = module->GetBaseAddrSize();
         // The address in the module may be the same as that in the prog.
-        std::unique_ptr<ModuleMemInfo> kernelMemInfo(std::make_unique<ModuleMemInfo>(
-                devId, memSize, devAddr, curDrv));
-        COND_PROC(kernelMemInfo == nullptr, ret = RT_ERROR_MEMORY_ALLOCATION);
+        std::unique_ptr<ModuleMemInfo> kernelMemInfo(std::make_unique<ModuleMemInfo>(devId, memSize, devAddr, curDrv, readonly));
         NULL_PTR_RETURN(kernelMemInfo, RT_ERROR_MEMORY_ALLOCATION);
         COND_PROC((prog->GetBinAlignBaseAddr(devId) != devAddr && prog->LoadSize() != memSize),
             moduleBackupList_.push_back(std::move(kernelMemInfo)));
 
-        ret = SaveModelAicpuInfo(module, devId, curDrv);
+        rtError_t ret = SaveModuleAicpuInfo(module, devId, curDrv);
         COND_PROC(ret != RT_ERROR_NONE, return ret);
     }
 
-    return ret;
+    return RT_ERROR_NONE;
 }
 
 rtError_t Runtime::SaveModule(void)
@@ -5311,7 +5301,7 @@ rtError_t Runtime::SaveModule(void)
             COND_PROC(prog == nullptr, continue);
             
             RT_LOG(RT_LOG_DEBUG, "prog ctx cnt=%u, prog id=%u", prog->GetCtxMap().size(), prog->Id_());
-            ret = SaveModelDataInfoToList(prog);
+            ret = SaveModuleDataInfoToList(prog);
             COND_PROC(ret != RT_ERROR_NONE, return ret);
         }
     }
@@ -5323,17 +5313,25 @@ rtError_t Runtime::SaveModule(void)
 rtError_t Runtime::RestoreModule(void) const
 {
     rtError_t ret = RT_ERROR_NONE;
-    Runtime * const rt = Runtime::Instance();
-    Driver* devDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
     RT_LOG(RT_LOG_DEBUG, "backup begain");
     for (const auto& node : moduleBackupList_) {
-        Driver* curDrv = (node->drv != nullptr ? node->drv : devDrv);
         void* devAddr = const_cast<void *>(node->devAddr);
         uint32_t memSize = node->memSize;
         void *hostAddr = static_cast<void *>(node->hostAddr);
-        auto error = curDrv->MemCopySync(devAddr, memSize, hostAddr, memSize, RT_MEMCPY_HOST_TO_DEVICE);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-            "device=%u MemCopySync fail! src=%p, dest=%p, len=%u", node->devId, hostAddr, devAddr, memSize);
+        Device *device = const_cast<Runtime*>(this)->GetDevice(node->devId, 0U);
+        rtError_t error;
+        void *baseAddr = const_cast<void *>(device->GetKernelMemoryPool()->GetMemoryPoolBaseAddr(devAddr));
+        if (baseAddr != nullptr) {
+            error = Program::BinaryPoolMemCopySync(devAddr, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
+            COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+                "device_id=%u BinaryPoolMemCopySync fail! src=%p, dest=%p, len=%u", node->devId, hostAddr, devAddr, memSize);
+        } else {
+            uint32_t adviseSize = static_cast<uint32_t>(node->memSize) + INSTR_ALIGN_SIZE;
+            error = Program::BinaryMemCopySync(devAddr, adviseSize, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
+            COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
+                "device_id=%u BinaryMemCopySync fail! src=%p, dest=%p, len=%u", node->devId, hostAddr, devAddr, memSize);
+        }
+  
         RT_LOG(RT_LOG_DEBUG,"baseAddr=0x%llx, hostMem=0x%llx.", devAddr, hostAddr);
     }
     RT_LOG(RT_LOG_DEBUG, "backup work finish");    

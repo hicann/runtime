@@ -92,6 +92,7 @@ public:
     rtError_t H2DMemCopyWaitFinish(void *devAddr);
     void *GetDevAddr(void *item) const;
     rtError_t ArgsPoolConvertAddr(void);
+    rtError_t UbArgsPoolConvertAddr(void);
 
     H2DCopyPolicy GetPolicy(void) const
     {

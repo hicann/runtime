@@ -30,6 +30,7 @@
 #include "fusion_task_david.hpp"
 #include <thread>
 #include "raw_device.hpp"
+#include "aix_c.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1401,7 +1402,7 @@ void DavidStream::ExpandStreamRecycleModelBindStreamAllTask()
     return;
 }
 
-void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) {
+void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) const {
     if (IsSoftwareSqEnable() || IsAutoSplitSq()) {
         if (!delayRecycleTaskid_.empty()) {
             head = *delayRecycleTaskid_.begin();
@@ -1416,6 +1417,121 @@ void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) {
         }
         (dynamic_cast<TaskResManageDavid *>(taskResMang_))->GetHeadTail(head, tail);
     }
+}
+
+rtError_t DavidStream::ReAllocStreamId()
+{
+    rtError_t error = device_->Driver_()->ReAllocResourceId(device_->Id_(), device_->DevGetTsId(), priority_,
+        static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
+    ERROR_RETURN_MSG_INNER(error, "Realloc stream_id failed, stream_id=%d, device_id=%u, ret=%d.",
+        streamId_, device_->Id_(), error);
+
+    StreamSqCqManage *stmSqCqManage = device_->GetStreamSqCqManage();
+    error = stmSqCqManage->ReAllocDavidSqCqId(this);
+    ERROR_RETURN_MSG_INNER(error, "Realloc sqcq_id failed, stream_id=%d, device_id=%u, sq_id=%u, ret=%d.",
+        streamId_, device_->Id_(), sqId_, error);
+
+    uint32_t addrLen = 0U;
+    if ((flags_ & RT_STREAM_PERSISTENT) != 0U) {
+        error = device_->Driver_()->GetSqRegVirtualAddrBySqid(static_cast<int32_t>(device_->Id_()),
+        device_->DevGetTsId(), sqId_, &sqRegVirtualAddr_, &addrLen);
+        ERROR_RETURN_MSG_INNER(error, "Fail to get sq reg virtual addr, device_id=%u, sq_id=%u, ret=%d.",
+            device_->Id_(), sqId_, error);
+
+        error = SetSqRegVirtualAddrToDevice(sqRegVirtualAddr_);
+        ERROR_RETURN_MSG_INNER(error, "Fail to copy sq_id=%u virtual addr to device, ret=%d.", sqId_, error);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t DavidStream::Restore()
+{
+    rtError_t error = ReAllocStreamId();
+    ERROR_RETURN(error, "Stream restore failed, stream_id=%d, device_id=%u, ret=%#x.", streamId_, device_->Id_(), error);
+    if (GetExecutedTimesSvm() != nullptr) {
+        error = device_->Driver_()->MemSetSync(GetExecutedTimesSvm(), sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE,
+            error, "MemSetSync stream executed times SVM failed, ret=%#x.", static_cast<uint32_t>(error));
+    }
+
+    const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
+    if (cntNotifyId_ != MAX_UINT32_NUM) {
+        const uint32_t deviceId = device_->Id_();
+        const uint32_t tsId = device_->DevGetTsId();
+        error = device_->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, cntNotifyId_, DRV_CNT_NOTIFY_ID);
+        ERROR_RETURN(error, "Realloc cnt_notify_id failed, cnt_notify_id=%u, device_id=%u, ret=%#x.",
+            cntNotifyId_, deviceId, static_cast<uint32_t>(error));
+    }
+
+    recordVersion_.Set(0);
+    return RT_ERROR_NONE;
+}
+
+bool DavidStream::IsNeedUpdateTask(const TaskInfo * const updateTask) const
+{
+    const std::vector<tagTsTaskType> updateTasks = {TS_TASK_TYPE_MEMCPY};
+    return std::find(updateTasks.begin(), updateTasks.end(), updateTask->type) != updateTasks.end();
+}
+
+rtError_t DavidStream::UpdateSnapShotSqe()
+{
+    Context *ctx = Context_();
+    if (ctx == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Context is nullptr, stream_id=%d.", Id_());
+        return RT_ERROR_INVALID_VALUE;
+    }
+    Device *dev = Device_();
+    Stream * const ctrlStream = ctx->GetCtrlSQStream();
+
+    // 获取任务队列的头尾指针
+    uint16_t head = 0U;
+    uint16_t tail = 0U;
+    GetTaskQueueHeadTail(head, tail);
+
+    RT_LOG(RT_LOG_DEBUG, "UpdateSnapShotSqe, device_id=%u, stream_id=%d, head=%hu, tail=%hu.", 
+        dev->Id_(), Id_(), head, tail);
+
+    TaskInfo *nextTask = nullptr;
+    for (uint32_t i = head; i < tail;) {
+        nextTask = GetTaskInfo(this->Device_(), Id_(), i);
+        if (nextTask == nullptr) {
+            i++;
+            continue;
+        }
+        i = IsSoftwareSqEnable() || IsAutoSplitSq() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
+            (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
+
+        RT_LOG(RT_LOG_DEBUG, "Stream_id=%d, pos=%u, type=%d.", Id_(), i, nextTask->type);
+        if (IsNeedUpdateTask(nextTask)) {
+            const rtError_t error = UpdateTaskAndSqe(nextTask, ctrlStream);
+            ERROR_RETURN(error, "Update task failed, stream_id=%d, pos=%u, ret=%d", Id_(), i, error);
+        }
+    }
+
+    constexpr uint32_t waitTimeout = 1000u * 60u * 10u;
+    const rtError_t error = ctrlStream->Synchronize(false, waitTimeout);
+    ERROR_RETURN(error, "Synchronize failed, stream_id=%u, ret=%#x.", ctrlStream->Id_(), error);
+    return RT_ERROR_NONE;
+}
+
+// 当前暂未支持图下沉备份和恢复, 代码预埋
+rtError_t DavidStream::UpdateTaskAndSqe(TaskInfo *task, Stream *stream)
+{
+    if (task->type == TS_TASK_TYPE_MEMCPY) {
+        // convert dma
+        if (IsPcieDma(task->u.memcpyAsyncTaskInfo.copyType) && (device_->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE)) {
+            rtError_t error = device_->Driver_()->MemConvertAddr(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(task->u.memcpyAsyncTaskInfo.src)),
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(task->u.memcpyAsyncTaskInfo.desPtr)), task->u.memcpyAsyncTaskInfo.size,
+                &(task->u.memcpyAsyncTaskInfo.dmaAddr));
+            ERROR_RETURN_MSG_INNER(error,
+                "Convert memory address from virtual to dma physical failed, ret=%#x.", error);
+        }
+    }
+    
+    rtError_t error = UpdateDavidKernelTaskSubmit(task, stream);
+    ERROR_RETURN_MSG_INNER(error, "UpdateDavidKernelTaskSubmit failed, ret=%#x.", error);
+    return RT_ERROR_NONE;
 }
 
 }  // namespace runtime

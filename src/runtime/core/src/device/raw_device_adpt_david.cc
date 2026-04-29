@@ -32,6 +32,7 @@
 #include "stream_factory.hpp"
 #include "arg_loader_ub.hpp"
 #include "stream_c.hpp"
+#include "count_notify.hpp"
 
 namespace cce {
 namespace runtime {
@@ -120,5 +121,28 @@ rtError_t RawDevice::SendTopicMsgVersionToAicpu(void)
 {
     return SendTopicMsgVersionToAicpuDavid(primaryStream_);
 }
+
+rtError_t RawDevice::CntNotifiesReAllocId(void)
+{
+    std::unique_lock<std::mutex> l(cntNotifyLock_);
+    for (CountNotify *nty : cntNotifies_) {
+        const rtError_t error = nty->ReAllocId();
+        ERROR_RETURN(error, "Realloc count notify id %u failed, retCode=%#x.", nty->GetCntNotifyId(), error);
+    }
+    return RT_ERROR_NONE;
+}
+
+void RawDevice::PushCntNotify(CountNotify * const nty)
+{
+    std::unique_lock<std::mutex> l(cntNotifyLock_);
+    (void)cntNotifies_.insert(nty);
+}
+
+void RawDevice::RemoveCntNotify(CountNotify * const nty)
+{
+    std::unique_lock<std::mutex> l(cntNotifyLock_);
+    (void)cntNotifies_.erase(nty);
+}
+
 }
 }
