@@ -420,6 +420,8 @@ void ProfParamsAdapter::SetHostSysParam(const std::string &config,
             params->host_disk_profiling = "on";
         } else if (sysSwitch == HOST_SYS_OSRT) {
             params->host_osrt_profiling = "on";
+        } else if (sysSwitch == HOST_SYS_PLATFORM) {
+            params->host_platform_profiling = "on";
         }
     }
 }

@@ -291,14 +291,14 @@ int32_t InputParser::CheckHostSysValid(const struct MsprofCmdInfo &cmdInfo)
     std::string hostSys = std::string(cmdInfo.args[ARGS_HOST_SYS]);
     if (hostSys.empty()) {
         CmdLog::CmdErrorLog("Argument --host-sys is empty. Please input in the range of "
-            "'cpu|mem|disk|network|osrt'");
+            "'cpu|mem|disk|network|osrt|platform'");
         return MSPROF_DAEMON_ERROR;
     }
     std::vector<std::string> hostSysArray = Utils::Split(cmdInfo.args[ARGS_HOST_SYS], false, "", ",");
     for (size_t i = 0; i < hostSysArray.size(); ++i) {
         if (!(ParamValidation::instance()->CheckHostSysOptionsIsValid(hostSysArray[i]))) {
             CmdLog::CmdErrorLog("Argument --host-sys: invalid value:%s. Please input in the range of "
-                "'cpu|mem|disk|network|osrt'", hostSysArray[i].c_str());
+                "'cpu|mem|disk|network|osrt|platform'", hostSysArray[i].c_str());
             return MSPROF_DAEMON_ERROR;
         }
         SetHostSysParam(hostSysArray[i]);
@@ -345,6 +345,8 @@ void InputParser::SetHostSysParam(const std::string hostSysParam)
         params_->host_disk_profiling = ON;
     } else if (hostSysParam.compare(HOST_SYS_OSRT) == 0) {
         params_->host_osrt_profiling = ON;
+    } else if (hostSysParam.compare(HOST_SYS_PLATFORM) == 0) {
+        params_->host_platform_profiling = ON;
     }
 }
 
@@ -1468,7 +1470,7 @@ void ArgsManager::AddHostArgs()
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
     return;
 #endif
-    Args hostSys = {"host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt",
+    Args hostSys = {"host-sys", "The host-sys data type, include cpu, mem, disk, network, osrt, platform.",
         HOST_SYS_CPU};
     Args hostSysPid = {"host-sys-pid", "Set the PID of the app process for "
         "which you want to collect performance data."};

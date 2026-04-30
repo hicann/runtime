@@ -533,7 +533,8 @@ int32_t JobDeviceSoc::CreateTsCollectionJobArray()
 int32_t JobDeviceSoc::CreateSysCollectionJobArray()
 {
     // for system
-    MSVP_MAKE_SHARED0(collectionJobV_[ADPROF_COLLECTION_JOB].collectionJob, ProfAdprofJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[ADPROF_COLLECTION_JOB].collectionJob, ProfAdprofJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[CTRLCPU_PERF_COLLECTION_JOB].collectionJob, ProfCtrlcpuJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
@@ -542,15 +543,20 @@ int32_t JobDeviceSoc::CreateSysCollectionJobArray()
         collectionJobV_[SYSMEM_PROC_COLLECTION_JOB].collectionJob, ProfSysMemJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[ALLPID_PROC_COLLECTION_JOB].collectionJob, ProfAllPidsJob, return PROFILING_FAILED);
+
     // for host system
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_SYSCALLS_COLLECTION_JOB].collectionJob, ProfHostSysCallsJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
+        collectionJobV_[HOST_CCA_MS_JOB].collectionJob, ProfHostCcaMsJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_PTHREAD_COLLECTION_JOB].collectionJob, ProfHostPthreadJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_DISKIO_COLLECTION_JOB].collectionJob, ProfHostDiskJob, return PROFILING_FAILED);
-    MSVP_MAKE_SHARED0(collectionJobV_[HOST_CPU_COLLECTION_JOB].collectionJob, ProfHostCpuJob, return PROFILING_FAILED);
-    MSVP_MAKE_SHARED0(collectionJobV_[HOST_MEM_COLLECTION_JOB].collectionJob, ProfHostMemJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[HOST_CPU_COLLECTION_JOB].collectionJob, ProfHostCpuJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
+        collectionJobV_[HOST_MEM_COLLECTION_JOB].collectionJob, ProfHostMemJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_NETWORK_COLLECTION_JOB].collectionJob, ProfHostNetworkJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(

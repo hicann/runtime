@@ -511,6 +511,120 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SYSCALLS_JOB_TEST, UninitFailed) {
     EXPECT_EQ(PROFILING_FAILED, profHostSysCallsJob->Uninit());
 }
 
+class JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST: public testing::Test {
+protected:
+    virtual void SetUp() {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
+            new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(
+            new analysis::dvvp::message::JobContext);
+        auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
+        comParams->params = params;
+        comParams->jobCtx = jobCtx;
+        collectionJobCfg_->comParams = comParams;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+    }
+    virtual void TearDown() {
+        collectionJobCfg_.reset();
+    }
+public:
+    std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
+};
+
+TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Init) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .will(returnValue(true))
+        .then(returnValue(false));
+    auto profHostCcaMsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCcaMsJob>();
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(nullptr));
+
+    collectionJobCfg_->comParams->devIdOnHost = DEFAULT_HOST_ID + 1;
+    EXPECT_EQ(PROFILING_NOTSUPPORT, profHostCcaMsJob->Init(collectionJobCfg_));
+
+    collectionJobCfg_->comParams->params->hostProfiling = true;
+    EXPECT_EQ(PROFILING_NOTSUPPORT, profHostCcaMsJob->Init(collectionJobCfg_));
+
+    collectionJobCfg_->comParams->params->host_platform_profiling = "off";
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->host_platform_profiling = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Init(collectionJobCfg_));
+}
+
+TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Process) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .then(returnValue(false));
+    
+    Analysis::Dvvp::JobWrapper::ProfHostService hostServiceThread;
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfHostService::Init)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP_VIRTUAL(
+            (Analysis::Dvvp::JobWrapper::ProfHostService*)&hostServiceThread, &Analysis::Dvvp::JobWrapper::ProfHostService::Start)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+
+    collectionJobCfg_->comParams->params->hostProfiling = true;
+    collectionJobCfg_->comParams->params->host_platform_profiling = "on";
+    auto profHostCcaMsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCcaMsJob>();
+
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Process());
+    
+    profHostCcaMsJob->Init(collectionJobCfg_);
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Process());
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Process());
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Process());
+}
+
+TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Uninit) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .then(returnValue(false));
+
+    Analysis::Dvvp::JobWrapper::ProfHostService hostServiceThread;
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfHostService::Init)
+        .stubs()
+        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP_VIRTUAL(
+            (Analysis::Dvvp::JobWrapper::ProfHostService*)&hostServiceThread, &Analysis::Dvvp::JobWrapper::ProfHostService::Stop)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP_VIRTUAL(
+            (Analysis::Dvvp::JobWrapper::ProfHostService*)&hostServiceThread, &Analysis::Dvvp::JobWrapper::ProfHostService::Start)
+        .stubs()
+        .then(returnValue(PROFILING_SUCCESS));
+
+    auto profHostCcaMsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCcaMsJob>();
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Uninit());
+    collectionJobCfg_->comParams->params->hostProfiling = true;
+    profHostCcaMsJob->Init(collectionJobCfg_);
+    profHostCcaMsJob->Process();
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Uninit());
+    EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Uninit());
+}
+
+TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, UninitFailed) {
+    GlobalMockObject::verify();
+    Analysis::Dvvp::JobWrapper::ProfHostService hostServiceThread;
+
+    MOCKER_CPP_VIRTUAL(
+            (Analysis::Dvvp::JobWrapper::ProfHostService*)&hostServiceThread, &Analysis::Dvvp::JobWrapper::ProfHostService::Stop)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+
+    auto profHostCcaMsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCcaMsJob>();
+    EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Uninit());
+}
+
 class JOB_WRAPPER_PROF_HOST_PTHREAD_JOB_TEST: public testing::Test {
 protected:
     virtual void SetUp() {
@@ -775,7 +889,30 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, Init) {
     auto profHostService = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostService>();
     EXPECT_EQ(PROFILING_FAILED, profHostService->Init(nullptr, PROF_HOST_SYS_CALL));
     EXPECT_EQ(PROFILING_FAILED, profHostService->Init(collectionJobCfg_, PROF_HOST_MAX_TAG));
+
     EXPECT_EQ(PROFILING_SUCCESS, profHostService->Init(collectionJobCfg_, PROF_HOST_SYS_CALL));
+    EXPECT_EQ(true, profHostService->isStarted_);
+    EXPECT_EQ(true, profHostService->hostTimerTag_ == PROF_HOST_SYS_CALL);
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->toolName_.compare(PROF_HOST_TOOL_NAME[PROF_HOST_SYS_CALL]));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->startProcessCmd_.compare(PROF_HOST_PROCESS_CMD[PROF_HOST_SYS_CALL]));
+
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->Init(collectionJobCfg_, PROF_HOST_SYS_PTHREAD));
+    EXPECT_EQ(true, profHostService->isStarted_);
+    EXPECT_EQ(true, profHostService->hostTimerTag_ == PROF_HOST_SYS_PTHREAD);
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->toolName_.compare(PROF_HOST_TOOL_NAME[PROF_HOST_SYS_PTHREAD]));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->startProcessCmd_.compare(PROF_HOST_PROCESS_CMD[PROF_HOST_SYS_PTHREAD]));
+
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->Init(collectionJobCfg_, PROF_HOST_SYS_DISK));
+    EXPECT_EQ(true, profHostService->isStarted_);
+    EXPECT_EQ(true, profHostService->hostTimerTag_ == PROF_HOST_SYS_DISK);
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->toolName_.compare(PROF_HOST_TOOL_NAME[PROF_HOST_SYS_DISK]));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->startProcessCmd_.compare(PROF_HOST_PROCESS_CMD[PROF_HOST_SYS_DISK]));
+
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->Init(collectionJobCfg_, PROF_HOST_CCA_MS));
+    EXPECT_EQ(true, profHostService->isStarted_);
+    EXPECT_EQ(true, profHostService->hostTimerTag_ == PROF_HOST_CCA_MS);
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->toolName_.compare(PROF_HOST_TOOL_NAME[PROF_HOST_CCA_MS]));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->startProcessCmd_.compare(PROF_HOST_PROCESS_CMD[PROF_HOST_CCA_MS]));
 }
 
 TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCollectIOTopCmd) {
@@ -815,6 +952,56 @@ TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCollectSysCallsCmd) {
     EXPECT_EQ(PROFILING_FAILED, profHostService->GetCollectSysCallsCmd(-1, test));
 
     EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCollectSysCallsCmd(1, test));
+}
+
+TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCollectCcaMSCmd) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .will(returnValue(true))
+        .then(returnValue(false));
+
+    auto profHostService = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostService>();
+    profHostService->Init(collectionJobCfg_, PROF_HOST_CCA_MS);
+    std::string test = "test";
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCollectCcaMSCmd(-1, test));
+
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCollectCcaMSCmd(1, test));
+}
+
+TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, GetCmdStr) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .will(returnValue(true))
+        .then(returnValue(false));
+
+    auto profHostService = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostService>();
+    profHostService->Init(collectionJobCfg_, PROF_HOST_SYS_CALL);
+    std::string test = "test";
+
+    profHostService->hostTimerTag_ = PROF_HOST_MAX_TAG;
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(1, test));
+
+    profHostService->hostTimerTag_ = PROF_HOST_SYS_CALL;
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(-1, test));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCmdStr(1, test));
+    EXPECT_EQ(true, test.find(PROF_HOST_TOOL_NAME[profHostService->hostTimerTag_]) != std::string::npos);
+
+    profHostService->hostTimerTag_ = PROF_HOST_SYS_PTHREAD;
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(-1, test));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCmdStr(1, test));
+    EXPECT_EQ(true, test.find(PROF_HOST_TOOL_NAME[profHostService->hostTimerTag_]) != std::string::npos);
+
+    profHostService->hostTimerTag_ = PROF_HOST_SYS_DISK;
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(-1, test));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCmdStr(1, test));
+    EXPECT_EQ(true, test.find(PROF_HOST_TOOL_NAME[profHostService->hostTimerTag_]) != std::string::npos);
+
+    profHostService->hostTimerTag_ = PROF_HOST_CCA_MS;
+    EXPECT_EQ(PROFILING_FAILED, profHostService->GetCmdStr(-1, test));
+    EXPECT_EQ(PROFILING_SUCCESS, profHostService->GetCmdStr(1, test));
+    EXPECT_EQ(true, test.find(PROF_HOST_TOOL_NAME[profHostService->hostTimerTag_]) != std::string::npos);
 }
 
 TEST_F(JOB_WRAPPER_PROF_HOST_SERVER_TEST, Handler) {

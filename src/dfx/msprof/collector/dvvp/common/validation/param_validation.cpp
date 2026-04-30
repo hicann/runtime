@@ -918,7 +918,8 @@ bool ParamValidation::CheckHostSysOptionsIsValid(const std::string &hostSysOptio
         HOST_SYS_MEM,
         HOST_SYS_DISK,
         HOST_SYS_NETWORK,
-        HOST_SYS_OSRT
+        HOST_SYS_OSRT,
+        HOST_SYS_PLATFORM
     };
 
     for (size_t j = 0; j < hostSysWhiteList.size(); j++) {

@@ -22,19 +22,29 @@ enum HostTimerHandlerTag {
     PROF_HOST_SYS_CALL = 0,
     PROF_HOST_SYS_PTHREAD,
     PROF_HOST_SYS_DISK,
+    PROF_HOST_CCA_MS,
     PROF_HOST_MAX_TAG
 };
 
 static const std::string PROF_HOST_TOOL_NAME[PROF_HOST_MAX_TAG] = {
     "perf",
     "ltrace",
-    "iotop"
+    "iotop",
+    "cca"
+};
+
+static const std::string PROF_HOST_PROCESS_CMD[PROF_HOST_MAX_TAG] = {
+    "perf trace -T --syscalls",
+    "ltrace -ttt -T -e pthread_",
+    "iotop -b -d",
+    "cca-ms-collector -freq "
 };
 
 const std::string PROF_HOST_OUTDATA[PROF_HOST_MAX_TAG] = {
     "data/host_syscall.data",
     "data/host_pthreadcall.data",
-    "data/host_disk.data"
+    "data/host_disk.data",
+    "data/"
 };
 
 struct ProfHostWriteDoneInfo {
@@ -142,6 +152,7 @@ private:
     int32_t GetCollectSysCallsCmd(int32_t pid, std::string &profHostCmd);
     int32_t GetCollectPthreadsCmd(int32_t pid, std::string &profHostCmd);
     int32_t GetCollectIOTopCmd(int32_t pid, std::string &profHostCmd);
+    int32_t GetCollectCcaMSCmd(int32_t pid, std::string &profHostCmd);
     int32_t GetCmdStr(int32_t hostSysPid, std::string &profHostCmd);
     int32_t CollectToolIsRun();
     int32_t WaitCollectToolStart();
@@ -189,6 +200,18 @@ class ProfHostDiskJob : public ProfHostDataBase {
 public:
     ProfHostDiskJob();
     ~ProfHostDiskJob() override;
+    int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
+    int32_t Process() override;
+    int32_t Uninit() override;
+
+private:
+    SHARED_PTR_ALIA<ProfHostService> profHostService_{nullptr};
+};
+
+class ProfHostCcaMsJob : public ProfHostDataBase {
+public:
+    ProfHostCcaMsJob();
+    ~ProfHostCcaMsJob() override;
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
     int32_t Process() override;
     int32_t Uninit() override;

@@ -180,6 +180,7 @@ struct ProfileParams : public BaseInfo {
     uint32_t hostProfilingSamplingInterval;
     std::string host_disk_profiling;
     std::string host_osrt_profiling;
+    std::string host_platform_profiling;
     std::string pureCpu;
 
     // app cpu/memory/network usage on host
@@ -242,7 +243,7 @@ struct ProfileParams : public BaseInfo {
           prof_level("off"), geApi("off"), scaleType(""), scaleName(""), host_sys(""),
           host_sys_pid(HOST_PID_DEFAULT), hostSysUsage(""),
           hostProfilingSamplingInterval(DEFAULT_PROFILING_INTERVAL_20MS), host_disk_profiling("off"),
-          host_osrt_profiling("off"), pureCpu("off"), hostProfiling(false), host_cpu_profiling("off"),
+          host_osrt_profiling("off"), host_platform_profiling("off"), pureCpu("off"), hostProfiling(false), host_cpu_profiling("off"),
           host_mem_profiling("off"), hostAllPidCpuProfiling("off"), hostAllPidMemProfiling("off"),
           host_network_profiling("off"), host_disk_freq(DEFAULT_PROFILING_INTERVAL_50MS),
           pythonPath(""), parseSwitch("off"), querySwitch("off"), exportSwitch("off"), clearSwitch("off"),
@@ -306,7 +307,7 @@ struct ProfileParams : public BaseInfo {
         if (host_cpu_profiling.compare("on") == 0 || host_mem_profiling.compare("on") == 0 ||
             hostAllPidCpuProfiling.compare("on") == 0 || hostAllPidMemProfiling.compare("on") == 0 ||
             host_network_profiling.compare("on") == 0 || host_disk_profiling.compare("on") == 0 ||
-            host_osrt_profiling.compare("on") == 0 ||
+            host_osrt_profiling.compare("on") == 0 || host_platform_profiling.compare("on") == 0 ||
             msproftx.compare("on") == 0) {
             return true;
         }
@@ -455,6 +456,7 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, host_sys_pid);
         SET_VALUE(object, host_disk_profiling);
         SET_VALUE(object, host_osrt_profiling);
+        SET_VALUE(object, host_platform_profiling);
         SET_VALUE(object, host_disk_freq);
         SET_VALUE(object, stars_acsq_task);
         SET_VALUE(object, taskBlock);
@@ -632,6 +634,7 @@ struct ProfileParams : public BaseInfo {
         FROM_INT_VALUE(object, hostProfilingSamplingInterval, DEFAULT_PROFILING_INTERVAL_20MS);
         FROM_STRING_VALUE(object, host_disk_profiling);
         FROM_STRING_VALUE(object, host_osrt_profiling);
+        FROM_STRING_VALUE(object, host_platform_profiling);
         FROM_INT_VALUE(object, host_disk_freq, DEFAULT_PROFILING_INTERVAL_10MS);
         FROM_STRING_VALUE(object, host_mem_profiling);
         FROM_STRING_VALUE(object, host_network_profiling);

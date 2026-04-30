@@ -67,6 +67,7 @@ static const std::string COLLECTION_JOB_FILENAME[NR_MAX_COLLECTION_JOB] = {
     "",
     "",
     "",
+    "",
     ""
 };
 

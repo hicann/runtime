@@ -237,6 +237,7 @@ constexpr char HOST_SYS_MEM[] = "mem";
 constexpr char HOST_SYS_DISK[] = "disk";
 constexpr char HOST_SYS_NETWORK[] = "network";
 constexpr char HOST_SYS_OSRT[] = "osrt"; // os_runtime: system call && pthread
+constexpr char HOST_SYS_PLATFORM[] = "platform";
 
 constexpr char OUTPUT_RECORD[] = "profiling_output_record";
 
