@@ -1375,7 +1375,7 @@ rtError_t ApiImpl::StreamCreate(Stream ** const stm, const int32_t priority, con
     bool isDrvSupport = NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND);
 
     bool isAutoSplitEnable = false;
-    if (((flags & RT_STREAM_PERSISTENT) != 0U) && isHostSupport && isTsSupport &&
+    if (((flags & RT_STREAM_PERSISTENT) != 0U && (flags & RT_STREAM_AICPU) == 0U) && isHostSupport && isTsSupport &&
             isDrvSupport && !(Runtime::Instance()->GetConnectUbFlag())) {
         isAutoSplitEnable = true;
     }
@@ -3934,7 +3934,7 @@ rtError_t ApiImpl::ModelBindStream(Model * const mdl, Stream * const stm, const 
         "model " + std::to_string(mdl->Id_()));
 
     // 自动切分模式仅 Runtime 侧绑定
-    if (mdl->IsAutoSplitSq()) {
+    if (mdl->IsAutoSplitSq() && (stm->Flags() & RT_STREAM_AICPU) == 0U) {
         return curCtx->ModelAddStream(mdl, stm, flag);
     }
     return curCtx->ModelBindStream(mdl, stm, flag);

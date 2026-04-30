@@ -725,6 +725,7 @@ rtError_t Model::SendSqe(void)
     const uint32_t deviceId = Context_()->Device_()->Id_();
 
     for (auto stm : StreamList_()) {
+        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
         const uint32_t totalSqeNum = stm->GetDelayRecycleTaskSqeNum();
         if (totalSqeNum != 0U) {
             const rtError_t ret = Context_()->Device_()->Driver_()->StreamTaskFill(deviceId,
@@ -749,6 +750,7 @@ rtError_t Model::ConfigSqTail(void) const
     Device * const dev = Context_()->Device_();
     /* config sq tail */
     for (auto stm : StreamList_()) {
+        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
         error = dev->Driver_()->SetSqTail(dev->Id_(), dev->DevGetTsId(), stm->GetSqId(), stm->GetCurSqPos());
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "set sq tail failed, device_id=%u, model_id=%u, software_sq_enable=%d, auto_split_sq=%d, stream_id=%d, sq_id=%u, retCode=%#x.",
@@ -760,12 +762,14 @@ rtError_t Model::ConfigSqTail(void) const
 rtError_t Model::BuildSqCqForAutoSplit()
 {
     Device * const dev = Context_()->Device_();
+    uint32_t streamNum = 0U;
     for (auto stm : StreamList_()) {
+        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
+        streamNum++;
         rtError_t ret = stm->AllocAutoSplitSqAddr();
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "AllocAutoSplitSqAddr failed. device_id=%u, stream_id=%d, "
             "model_id=%u, retCode=%#x.", dev->Id_(), stm->Id_(), Id_(), static_cast<uint32_t>(ret));
     }
-    const uint32_t streamNum = static_cast<uint32_t>(StreamList_().size());
 
     if (modelSwitchInfo_ == nullptr) {
         modelSwitchInfo_ = new (std::nothrow) struct sq_switch_stream_info[streamNum]();
@@ -774,6 +778,7 @@ rtError_t Model::BuildSqCqForAutoSplit()
     }
     uint32_t index = 0U;
     for (auto stm : StreamList_()) {
+        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
         /* prepare sq switch Info */
         modelSwitchInfo_[index].stream_id = static_cast<uint32_t>(stm->Id_());
         modelSwitchInfo_[index].sq_id = stm->GetSqId();
@@ -793,6 +798,7 @@ rtError_t Model::BuildSqCqForAutoSplit()
     ERROR_RETURN_MSG_INNER(error, "send sqe failed, model_id=%u, auto_split_sq=%d, retCode=%#x.", Id_(), IsAutoSplitSq(), static_cast<uint32_t>(error));
 
     for (auto stm : StreamList_()) {
+        COND_PROC(((stm->Flags() & RT_STREAM_AICPU) != 0U), continue);
         uint32_t streamFlag = static_cast<uint32_t>(RT_INVALID_FLAG);
         COND_PROC(IsModelHeadStream(stm), streamFlag = RT_HEAD_STREAM);
         error = EnterBindStream(stm, streamFlag);

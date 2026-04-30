@@ -684,18 +684,19 @@ static rtError_t MdlAddEndGraphForAicpuModel(Model * const mdl, Stream * const s
         stm->Id_(), static_cast<uint32_t>(error));
     TaskInfo *rtAddEndGraphTask = nullptr;
     uint32_t pos = 0xFFFFU;
+    Stream *dstStm = stm;
     stm->StreamLock();
-    error = AllocTaskInfo(&rtAddEndGraphTask, stm, pos);
+    error = AllocTaskInfoForCapture(&rtAddEndGraphTask, stm, pos, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, model_id=%u, stream_id=%d, retCode=%#x.",
         mdl->Id_(), stm->Id_(), static_cast<uint32_t>(error));
-    SaveTaskCommonInfo(rtAddEndGraphTask, stm, pos);
+    SaveTaskCommonInfo(rtAddEndGraphTask, dstStm, pos);
     (void)AddEndGraphTaskInit(rtAddEndGraphTask, mdl->Id_(), modelExecuteType,
         RtPtrToValue(mdl->GetDevModelID()), RtPtrToValue(mdl->GetDevString(RT_DEV_STRING_ENDGRAPH)),
         static_cast<uint8_t>(flags));
-    error = DavidSendTask(rtAddEndGraphTask, stm);
+    error = DavidSendTask(rtAddEndGraphTask, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error,
                                 TaskUnInitProc(rtAddEndGraphTask);
-                                TaskRollBack(stm, pos);
+                                TaskRollBack(dstStm, pos);
                                 stm->StreamUnLock();,
                                 "Failed to submit AddEndGraphTask, retCode=%#x.", static_cast<uint32_t>(error));
     stm->StreamUnLock();

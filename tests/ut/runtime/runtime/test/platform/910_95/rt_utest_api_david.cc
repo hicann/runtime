@@ -5054,6 +5054,62 @@ static void MockBeforeLoadComplete(Stream *stream, rtDavidSqe_t *sqe) {
     defaultStm->SetSqBaseAddr(newSqAddr);
 }
 
+TEST_F(ApiDavidTest, test_model_auto_split_aicpu)
+{
+    void *hostPtr;
+    void *devPtr;
+    Driver *driver = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL((NpuDriver *)driver, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    rtError_t error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);//RT_MEMORY_TYPE_HOST
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);//RT_MEMORY_TYPE_DEVICE
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    MOCKER(ModelExecuteTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqTail).stubs().will(returnValue(1));
+    MOCKER(ModelLoadCompleteByStream).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtModel_t model;
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t oldFlags = stream_->Flags();
+    stream_->flags_ = oldFlags | RT_STREAM_PERSISTENT | RT_STREAM_AICPU;
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(7 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
+    stream_->SetSqBaseAddr(newSqAddr);
+    error = rtModelBindStream(model, streamHandle_, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rt_ut::UnwrapOrNull<Model>(model)->SetModelExecutorType(EXECUTOR_AICPU);
+    rt_ut::UnwrapOrNull<Model>(model)->SetAutoSplitSq(true);
+    error = rtEndGraphEx(model, streamHandle_, 2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelLoadComplete(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtModelUnbindStream(model, streamHandle_);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->flags_ = oldFlags;
+
+    error = rtModelDestroy(model);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->SetSqBaseAddr(oldSqAddr);
+
+    error = rtFree(devPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtFree(hostPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    free(sqe);
+    sqe = nullptr;
+}
+
 TEST_F(ApiDavidTest, test_auto_split_model_load_complete)
 {
     void *hostPtr;
