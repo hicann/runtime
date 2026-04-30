@@ -22,6 +22,10 @@ public:
     explicit TprtProfiling();
     ~TprtProfiling();
     uint32_t TprtReportTask(uint64_t startTime, uint64_t endTime, uint32_t devId, TprtSqe_t headTask) const;
+
+private:
+    uint32_t RT_PROFILE_TYPE_DPU_INFO = 806U;
+    uint32_t TS_TASK_TYPE_KERNEL_AICPU = 1U;
 };
 }
 }

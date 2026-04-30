@@ -87,11 +87,16 @@ rtError_t XpuSendTask(TaskInfo *taskInfo, Stream * const stm)
         compactInfo.timeStamp = MsprofSysCycleTime();
         compactInfo.threadId = GetCurrentTid();
         compactInfo.dataLen = static_cast<uint32_t>(sizeof(MsprofRuntimeTrack));
-        compactInfo.data.runtimeTrack.deviceId = static_cast<uint16_t>(devId);
+        compactInfo.data.runtimeTrack.deviceId = static_cast<uint16_t>((0x1U << 12U) | (devId & 0xFFFU));
         compactInfo.data.runtimeTrack.streamId =
             (stm == nullptr) ? RT_MAX_STREAM_ID : static_cast<uint16_t>(stm->Id_());
         compactInfo.data.runtimeTrack.taskId = taskInfo->drvErr;
         compactInfo.data.runtimeTrack.taskType = TS_TASK_TYPE_KERNEL_AICPU;
+        uint64_t kernelNameId = 0U;
+        if (taskInfo->u.aicpuTaskInfo.kernel != nullptr) {
+            kernelNameId = taskInfo->u.aicpuTaskInfo.kernel->GetNameId();
+        }
+        compactInfo.data.runtimeTrack.kernelName = kernelNameId;
         
         const int32_t ret = MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
         if (ret != MSPROF_ERROR_NONE) {

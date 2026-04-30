@@ -27,11 +27,15 @@ uint32_t TprtProfiling::TprtReportTask(uint64_t startTime, uint64_t endTime, uin
 {
     if (TprtManage::Instance()->getTprtTaskReportEnable()) {
         MsprofCompactInfo compactInfo{};
-        compactInfo.data.dpuTack.startTime = startTime;
         compactInfo.timeStamp = endTime;
-        compactInfo.data.dpuTack.deviceId = devId;
+        compactInfo.type = RT_PROFILE_TYPE_DPU_INFO;
+        compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
+        compactInfo.dataLen = static_cast<uint32_t>(sizeof(MsprofDpuTrack));
+        compactInfo.threadId = mmGetTid();
+        compactInfo.data.dpuTack.startTime = startTime;
+        compactInfo.data.dpuTack.deviceId = static_cast<uint16_t>((0x1U << 12U) | (devId & 0xFFFU));
         compactInfo.data.dpuTack.taskId = headTask.commonSqe.sqeHeader.dfxId;
-        compactInfo.data.dpuTack.taskType = headTask.commonSqe.sqeHeader.type;
+        compactInfo.data.dpuTack.taskType = TS_TASK_TYPE_KERNEL_AICPU;
         const int32_t ret = MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
         if (ret != MSPROF_ERROR_NONE) {
             return ret;

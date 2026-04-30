@@ -131,6 +131,8 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {RT_PROFILE_TYPE_SOFTWARE_SQ_ENABLE, "expand_stream_spec"},
         // capture last task op info
         {RT_PROFILE_TYPE_SHAPE_INFO, "capture_op_info"},
+        // dpu track
+ 	    {RT_PROFILE_TYPE_DPU_INFO, "dpu_track"},
 
         // api, RT_PROFILE_TYPE_API_BEGIN + rtProfApiType_t
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_DEVBINARY_REGISTER), "DevBinaryRegister"},
