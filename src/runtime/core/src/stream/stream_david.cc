@@ -22,6 +22,7 @@
 #include "task_submit.hpp"
 #include "task_david.hpp"
 #include "task_recycle.hpp"
+#include "maintenance_task.h"
 #include "event_c.hpp"
 #include "profiler_c.hpp"
 #include "inner_thread_local.hpp"

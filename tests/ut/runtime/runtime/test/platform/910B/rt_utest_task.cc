@@ -26,6 +26,8 @@
 #include "ffts_task.h"
 #include "cond_op_stream_task.h"
 #include "cond_op_label_task.h"
+#include "maintenance_task.h"
+#include "timeout_set_task.h"
 #include "kernel.hpp"
 #include <thread>
 #include <chrono>

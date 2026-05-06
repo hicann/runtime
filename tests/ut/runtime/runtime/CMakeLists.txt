@@ -26,26 +26,26 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/rdma_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/rdma_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci_multiple_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common/stars_common_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/random_num_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task.cc
 )
 
 set(runtimeut_src_task_list
@@ -68,6 +68,11 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common/stars_common_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -110,6 +115,11 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
 
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common/stars_common_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
+
     # mechanism dependance
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
@@ -125,6 +135,11 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/stars_common/stars_common_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list

@@ -15,7 +15,7 @@
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+rtError_t RingBufferMaintainTaskInit(TaskInfo *taskInfo, const void *const addr, const bool delFlag, const uint32_t len);
 void ToCmdBodyForRingBufferMaintainTask(TaskInfo* taskInfo, rtCommand_t *const command);
 }  // namespace runtime
 }  // namespace cce

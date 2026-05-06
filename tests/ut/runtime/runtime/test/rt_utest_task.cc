@@ -31,6 +31,8 @@
 #include "cond_op_stream_task.h"
 #include "cond_op_label_task.h"
 #include "host_task.hpp"
+#include "stars_common_task.h"
+#include "reduce_task.h"
 #include "count_notify.hpp"
 #include "ffts_task.h"
 #include "kernel.hpp"

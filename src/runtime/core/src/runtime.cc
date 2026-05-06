@@ -48,6 +48,7 @@
 #include "runtime_keeper.h"
 #include "utils.h"
 #include "device.hpp"
+#include "timeout_set_task.h"
 #include "device_error_proc.hpp"
 #include "api_impl_creator.hpp"
 #include "dev_info_manage.h"

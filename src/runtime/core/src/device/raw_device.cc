@@ -42,6 +42,8 @@
 #include "sq_addr_memory_pool.hpp"
 #include "printf.hpp"
 #include "task_manager.h"
+#include "maintenance_task.h"
+#include "timeout_set_task.h"
 
 namespace cce {
 namespace runtime {

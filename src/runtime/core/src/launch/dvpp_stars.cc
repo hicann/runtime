@@ -9,6 +9,7 @@
  */
 #include "dvpp_c.hpp"
 #include "davinci_kernel_task.h"
+#include "stars_common_task.h"
 #include "stream.hpp"
 #include "context/context.hpp"
 #include "error_message_manage.hpp"

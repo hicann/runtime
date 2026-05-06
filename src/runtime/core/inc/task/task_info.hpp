@@ -254,8 +254,7 @@ rtError_t MemcpyAsyncBatchTaskInit(TaskInfo * const taskInfo, void** const dsts,
     void** const srcs, const uint64_t* const sizes, const uint64_t count, const uint64_t fixedSize);
 rtError_t MemcpyAsyncD2HTaskInit(TaskInfo * const taskInfo, const void *srcAddr, const uint64_t cpySize,
                                  uint32_t sqId, uint32_t pos);
-rtError_t ReduceAsyncV2TaskInit(TaskInfo * const taskInfo, uint32_t cpyType, const void *srcAddr,
-     void *desAddr, const uint64_t cpySize, void * const overflowAddr);
+
 rtError_t UpdateEventTimeLine(TaskInfo * const taskInfo, const Event *const eventPtr);
 rtError_t EventRecordTaskInit(TaskInfo * const taskInfo, Event *const eventPtr, const bool isNotifyRecordFlag,
                               const int32_t newEventId);
@@ -265,8 +264,7 @@ rtError_t RemoteEventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventR
                                   const int32_t srcDeviceId, const int32_t eventIndex);
 rtError_t EventWaitTaskInit(TaskInfo * const taskInfo, Event *const eventRec, const int32_t eventIndex,
                             const uint32_t timeout, const uint8_t waitFlag = 0U);
-rtError_t MaintenanceTaskInit(TaskInfo * const taskInfo, const MtType type, const uint32_t id,
-                              bool flag, const uint32_t idType = UINT32_MAX);
+
 rtError_t CreateL2AddrTaskInit(TaskInfo * const taskInfo, const uint64_t ptePtrAddr);
 rtError_t KernelFusionTaskInit(TaskInfo * const taskInfo, const FusionFlag fusFlag);
 rtError_t PCTraceTaskInit(TaskInfo * const taskInfo, const uint16_t enableTaskIndex,
@@ -278,7 +276,7 @@ rtError_t NpuGetFloatStaTaskInit(TaskInfo *taskInfo, void * const outputAddrPtr,
                                  const uint64_t outputSize, const uint32_t checkMode,
                                  bool debugFlag = false);
 rtError_t NpuClrFloatStaTaskInit(TaskInfo *taskInfo, const uint32_t checkMode, bool debugFlag = false);
-rtError_t RingBufferMaintainTaskInit(TaskInfo *taskInfo, const void *const addr, const bool delFlag, const uint32_t len);
+
 rtError_t WriteValueTaskInit(TaskInfo *taskInfo, uint64_t addr, WriteValueSize size,
                              uint8_t *value, TaskWrCqeFlag cqeFlag);
 rtError_t WriteValuePtrTaskInit(TaskInfo *taskInfo, const void * const pointedAddr, TaskWrCqeFlag cqeFlag);
@@ -286,7 +284,6 @@ void CcuLaunchTaskInit(TaskInfo *taskInfo, rtCcuTaskInfo_t *const ccuInfo);
 void CommonCmdTaskInit(TaskInfo * const taskInfo, const PhCmdType cmdType, const CommonCmdTaskInfo *cmdInfo);
 
 
-rtError_t TimeoutSetTaskInit(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
 rtError_t GetDevMsgTaskInit(TaskInfo* taskInfo, const void *const devMemAddr,
     const uint32_t devMemSize, const rtGetDevMsgType_t messageType);
 uint32_t CovertToFlipTaskId(const int32_t streamId, const uint32_t taskId, const Device * const dev);
@@ -297,8 +294,6 @@ void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t *argsInfo);
 // others
 uint32_t GetSqeNumForMemcopyAsync(const rtMemcpyKind_t kind, bool isModelByUb = false, uint32_t cpyType = UINT32_MAX, uint32_t cpyMethod = UINT32_MAX);
 rtError_t ConvertD2DCpyType(const Stream * const stm, uint32_t &cpyType, const void *const srcAddr, void *const desAddr);
-void TimeoutSetTaskInitV1(TaskInfo* taskInfo);
-void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
 void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo * const taskInfo);
 uint8_t GetMultipleTaskCqeNum(TaskInfo * const taskInfo);
 void DecMultipleTaskCqeNum(TaskInfo *taskInfo);
@@ -348,57 +343,6 @@ void PrintStarsCqeInfo(const rtLogicCqReport_t &cqe, const uint32_t devId, const
 void GetBinAndKernelNameExceptionArgs(const Kernel * const kernel, rtExceptionArgsInfo_t *argsInfo);
 void GetKernelExceptionDfxInfo(const Kernel * const kernel, const rtArgsSizeInfo_t * const sizeInfo,
     void * const args, const uint32_t argsSize, rtExceptionArgsInfo_t * const argsInfo);
-template<typename T>
-rtError_t StarsCommonTaskInit(TaskInfo* taskInfo, const T &sqe, const uint32_t flag)
-{
-    TaskCommonInfoInit(taskInfo);
-
-    StarsCommonTaskInfo *starsCommTask = &taskInfo->u.starsCommTask;
-
-    taskInfo->typeName = const_cast<char_t*>("STARS_COMMON");
-    taskInfo->type = TS_TASK_TYPE_STARS_COMMON;
-    starsCommTask->flag = RT_KERNEL_DEFAULT;
-    starsCommTask->cmdList = nullptr;
-    starsCommTask->errorTimes = 0U;
-    starsCommTask->srcDevAddr = nullptr;
-
-    const uint16_t sqeType = sqe.sqeHeader.type;
-    if (!IsSupportType(sqeType)) {
-        RT_LOG(RT_LOG_ERROR, "StarsCommonTask not support type[%hu]", sqeType);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    starsCommTask->flag = flag;
-    const errno_t error = memcpy_s(&starsCommTask->commonStarsSqe.commonSqe,
-        sizeof(starsCommTask->commonStarsSqe.commonSqe), &sqe, sizeof(sqe));
-    if (error != EOK) {
-        RT_LOG(RT_LOG_ERROR, "copy to starsSqe failed,ret=%d,src size=%zu,dst size=%zu",
-               error, sizeof(sqe), sizeof(starsCommTask->commonStarsSqe.commonSqe));
-        return RT_ERROR_SEC_HANDLE;
-    }
-
-    if (!IsDvppTask(sqeType)) {
-        return RT_ERROR_NONE;
-    }
-
-    const uint64_t cmdListAddrLow =
-        starsCommTask->commonStarsSqe.commonSqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_LOW_IDX];
-    const uint64_t cmdListAddrHigh =
-        starsCommTask->commonStarsSqe.commonSqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_HIGH_IDX];
-    // the dvpp has malloced the cmdlist memory.
-    starsCommTask->cmdList = RtValueToPtr<void *>(((cmdListAddrHigh << UINT32_BIT_NUM) & 0xFFFFFFFF00000000ULL) |
-        (cmdListAddrLow & 0x00000000FFFFFFFFULL));
-    if (starsCommTask->cmdList == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "cmdList addr is null.");
-        return RT_ERROR_INVALID_VALUE ;
-    }
-    if ((starsCommTask->flag & RT_KERNEL_CMDLIST_NOT_FREE) == 0U) {
-        taskInfo->needPostProc = true;
-    }
-
-    RT_LOG(RT_LOG_INFO, "dvpp type=%hu,need to write value=%u, needPostProc=%u.", sqeType, sqe.sqeHeader.reserved, taskInfo->needPostProc);
-    return RT_ERROR_NONE;
-}
 }
 }
 #endif  // CCE_RUNTIME_TASK_INFO_HPP

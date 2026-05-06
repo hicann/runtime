@@ -14,6 +14,7 @@
 #include "task_recycle.hpp"
 #include "stream.hpp"
 #include "task_fail_callback_manager.hpp"
+#include "ringbuffer_maintain_task.h"
 #include "profiler_c.hpp"
 #include "acc_error_info.h"
 #include "error_code.h"

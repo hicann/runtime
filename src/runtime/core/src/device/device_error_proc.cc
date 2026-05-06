@@ -23,6 +23,7 @@
 #include "context_manage.hpp"
 #include "davinci_kernel_task.h"
 #include "npu_driver.hpp"
+#include "ringbuffer_maintain_task.h"
 
 namespace cce {
 namespace runtime {

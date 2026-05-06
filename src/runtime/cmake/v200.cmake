@@ -51,7 +51,8 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/david_event_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
+
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task.cc
@@ -64,7 +65,8 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/stream/stream_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_execute_time.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci_multiple_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common/stars_common_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common/stars_common_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
@@ -74,15 +76,18 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set_task.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v200_base.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_dvpp.cc
     ${RUNTIME_CORE_DIR}/src/task/task_submit/v200/task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_send_sync.cc
@@ -110,7 +115,12 @@ set(david_series_common_task_src_file
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/stars_common/stars_common_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_update_task_v100.cc

@@ -99,7 +99,7 @@ void ToConstructDavidSqe(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint
 }
 
 // fusion ccu not use these following func
-static void ConstructDavidSqeForWordOne(const TaskInfo *const taskInfo, rtDavidSqe_t * const sqe)
+void ConstructDavidSqeForWordOne(const TaskInfo *const taskInfo, rtDavidSqe_t * const sqe)
 {
     sqe->commonSqe.sqeHeader.rtStreamId = static_cast<uint16_t>(taskInfo->taskSn & 0xFFFFULL);
     sqe->commonSqe.sqeHeader.taskId = static_cast<uint16_t>((taskInfo->taskSn & 0xFFFF0000ULL) >> UINT16_BIT_NUM);
@@ -351,63 +351,6 @@ static void ConstructDavidSqeForDavinciMultipleTask(TaskInfo * const taskInfo, r
     }
 }
 
-static void ConstructDavidSqeForMaintenanceTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    MaintenanceTaskInfo * const maintenanceTaskInfo = &(taskInfo->u.maintenanceTaskInfo);
-    Stream * const stream = taskInfo->stream;
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidPlaceHolderSqe * const sqe = &(davidSqe->phSqe);
-
-    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
-    if (maintenanceTaskInfo->flag && (maintenanceTaskInfo->mtType == MT_STREAM_RECYCLE_TASK)) {
-        sqe->u.maintainceInfo.subType = FORCE_RECYCLE_TASK_FLAG;
-        sqe->u.maintainceInfo.targetId = static_cast<uint16_t>(maintenanceTaskInfo->mtId);
-        sqe->header.preP = 1U; // for force recycle
-    } else {
-        sqe->header.preP = 0U;
-    }
-    sqe->header.wrCqe = 1U;       // need write cqe for recycle task
-    sqe->taskType = TS_TASK_TYPE_MAINTENANCE;
-
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-
-    PrintDavidSqe(davidSqe, "MaintenanceTask");
-    RT_LOG(RT_LOG_INFO, "MaintenanceTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
-        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn);
-}
-
-static void ConstructDavidSqeForStarsCommonTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    StarsCommonTaskInfo * const starsCommTask = &(taskInfo->u.starsCommTask);
-    Stream * const stm = taskInfo->stream;
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.reserved = 0U;
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.ie = 0U;
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.preP = 0U;
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.postP =
-        ((starsCommTask->flag & RT_KERNEL_DUMPFLAG) != 0U) ? 1U : 0U;
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.wrCqe = taskInfo->stream->GetStarsWrCqeFlag();
-    starsCommTask->commonStarsSqe.commonDavidSqe.sqeHeader.headUpdate = 0U;
-
-    const errno_t error = memcpy_s(davidSqe, sizeof(rtDavidSqe_t),
-        &starsCommTask->commonStarsSqe.commonDavidSqe, sizeof(starsCommTask->commonStarsSqe.commonDavidSqe));
-    if (error != EOK) {
-        davidSqe->commonSqe.sqeHeader.type = RT_STARS_SQE_TYPE_INVALID;
-        RT_LOG_INNER_MSG(RT_LOG_ERROR,
-            "Failed to call memcpy_s to copy commonStarsSqe.commonDavidSqe, src=%p, dest=%p, dest_max=%lu, "
-            "count=%lu, retCode=%#x.",
-            &starsCommTask->commonStarsSqe.commonDavidSqe, davidSqe, static_cast<unsigned long>(sizeof(rtDavidSqe_t)),
-            static_cast<unsigned long>(sizeof(starsCommTask->commonStarsSqe.commonDavidSqe)), static_cast<uint32_t>(error));
-    }
-    ConstructDavidSqeForWordOne(taskInfo, davidSqe);
-    PrintDavidSqe(davidSqe, "StarsCommonTask");
-    RT_LOG(RT_LOG_INFO, "StarsCommonTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
-        stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
-}
-
 static void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
     uint64_t sqBaseAddr)
 {
@@ -452,43 +395,6 @@ static void ConstructDavidSqeForNpuClrFloatStaTask(TaskInfo * const taskInfo, rt
     RT_LOG(RT_LOG_INFO, "NpuClearFloatStatusTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, debugFlag=%d.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         npuClrFltSta->debugFlag);
-}
-
-static void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    UNUSED(sqBaseAddr);
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidPlaceHolderSqe *const sqe = &(davidSqe->phSqe);
-    RingBufferMaintainTaskInfo * const ringBufMtTsk = &(taskInfo->u.ringBufMtTask);
-    sqe->header.type = RT_DAVID_SQE_TYPE_PLACE_HOLDER;
-    sqe->header.preP = 1U;
-    sqe->res1 = taskInfo->stream->Device_()->GetTsLogToHostFlag();
-    sqe->taskType = TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL;
-    sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-
-    sqe->u.ringBufferControlInfo.ringbufferPhyAddr = 0UL;
-    if (ringBufMtTsk->deleteFlag) {
-        sqe->u.ringBufferControlInfo.ringbufferOffset = 0UL;
-        sqe->u.ringBufferControlInfo.totalLen = 0U;
-        sqe->u.ringBufferControlInfo.ringbufferDelFlag = RINGBUFFER_NEED_DEL;
-        PrintDavidSqe(davidSqe, "RingBufferMaintain");
-        RT_LOG(RT_LOG_INFO, "RingBufferMaintainTask, device_id=%u, stream_id=%d, task_id=%hu",
-            taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id);
-        return;
-    }
-
-    uint64_t offset = RtPtrToValue(ringBufMtTsk->deviceRingBufferAddr);
-    sqe->u.ringBufferControlInfo.ringbufferOffset = offset;
-    sqe->u.ringBufferControlInfo.totalLen = ringBufMtTsk->bufferLen;
-    sqe->u.ringBufferControlInfo.ringbufferDelFlag = 0U;
-    sqe->u.ringBufferControlInfo.elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
-
-    PrintDavidSqe(davidSqe, "RingBufferCreate");
-    RT_LOG(RT_LOG_INFO, "RingBufferCreate, device_id=%u, stream_id=%d, task_id=%hu,"
-        " offset=%#" PRIx64 ", elementSize=%u.",
-        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, offset,
-        sqe->u.ringBufferControlInfo.elementSize);
 }
 
 static void ConstructWriteValueSqePtr(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr)
@@ -606,54 +512,6 @@ static void ConstructDavidSqeBase(TaskInfo *taskInfo, rtDavidSqe_t * const david
     RT_LOG(RT_LOG_WARNING, "No need to construct sqe. task_type=%u, device_id=%u, stream_id=%d, task_id=%hu,"
         " task_sn=%u.", taskInfo->type, taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(),
         taskInfo->id, taskInfo->taskSn);
-}
-
-static void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe,
-    uint64_t sqBaseAddr)
-{
-    TimeoutSetTaskInfo * const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
-    Stream * const stm = taskInfo->stream;
-    UNUSED(sqBaseAddr);
-    ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
-    RtDavidStarsAicpuControlSqe *const sqe = &(davidSqe->aicpuControlSqe);
-    sqe->header.type = RT_DAVID_SQE_TYPE_AICPU_D;
-    sqe->header.blockDim = 1U;
-
-    sqe->kernelType = static_cast<uint16_t>(TS_AICPU_KERNEL_AICPU);
-    sqe->batchMode = 0U;
-    sqe->topicType = 0U;
-    UpdateDavidAICpuControlSqeForDavinciTask(sqe);
-
-    sqe->qos = stm->Device_()->GetTsdQos();
-    sqe->res2 = 0U;
-    sqe->sqeIndex = 0U; // useless
-    sqe->kernelCredit = RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT;
-
-    sqe->usrData.pid = 0U;
-    sqe->usrData.cmdType = static_cast<uint8_t>(TS_AICPU_TIMEOUT_CONFIG);
-    sqe->usrData.vfId = 0U;
-    sqe->usrData.tid = 0U;
-    sqe->usrData.tsId = 0U;
-    sqe->usrData.u.timeoutCfg.opWaitTimeoutEn = timeoutSetTask->opWaitTimeoutEn;
-    sqe->usrData.u.timeoutCfg.opWaitTimeout = timeoutSetTask->opWaitTimeout;
-
-    sqe->usrData.u.timeoutCfg.opExecuteTimeoutEn = timeoutSetTask->opExecuteTimeoutEn;
-    if ((timeoutSetTask->opExecuteTimeoutEn) && (timeoutSetTask->opExecuteTimeout == 0U)) {
-        sqe->usrData.u.timeoutCfg.opExecuteTimeout = RT_STARS_AICPU_DEFAULT_TIMEOUT;
-    } else {
-        sqe->usrData.u.timeoutCfg.opExecuteTimeout = timeoutSetTask->opExecuteTimeout;
-    }
-
-    sqe->subTopicId = 0U;
-    sqe->topicId = 5U; // EVENT_TS_CTRL_MSG
-    sqe->groupId = 0U;
-    sqe->usrDataLen = 20U;
-
-    sqe->destPid = 0U;
-    PrintDavidSqe(davidSqe, "TaskTimeoutSetTask");
-    RT_LOG(RT_LOG_INFO, "TaskTimeoutSetTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
-        "topicType=%u, cmdType=%u.", stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn,
-        static_cast<uint32_t>(sqe->topicType), sqe->usrData.cmdType);
 }
 
 static void ConstructDavidSqeForCallbackLaunchTask(TaskInfo * const taskInfo, rtDavidSqe_t *const command,

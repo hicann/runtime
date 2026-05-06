@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -11,38 +11,16 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
-#include "task_manager.h"
+#include "reduce_task.h"
 #include "memory_task.h"
 #include "error_code.h"
-#include "reduce_task.h"
+#include "task_info_v100.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("ReduceAsyncV2Task")
-rtError_t ReduceAsyncV2TaskInit(TaskInfo* const taskInfo, uint32_t cpyType, const void* srcAddr,
-    void* desAddr, const uint64_t cpySize, void* const overflowAddr)
-{
-    ReduceAsyncV2TaskInfo *reduceAsyncV2TaskInfo = &(taskInfo->u.reduceAsyncV2TaskInfo);
-    TaskCommonInfoInit(taskInfo);
-
-    taskInfo->type = TS_TASK_TYPE_REDUCE_ASYNC_V2;
-    taskInfo->typeName = const_cast<char_t*>("REDUCE_ASYNC_V2");
-    reduceAsyncV2TaskInfo->copyType = cpyType;
-    reduceAsyncV2TaskInfo->copyKind = RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD;
-    reduceAsyncV2TaskInfo->size = cpySize;
-    reduceAsyncV2TaskInfo->src = const_cast<void*>(srcAddr);
-    reduceAsyncV2TaskInfo->destPtr = desAddr;
-    reduceAsyncV2TaskInfo->copyDataType = 0U;
-    reduceAsyncV2TaskInfo->overflowAddr = overflowAddr;
-    if (reduceAsyncV2TaskInfo->guardMemVec == nullptr) {
-        reduceAsyncV2TaskInfo->guardMemVec = new (std::nothrow) std::vector<std::shared_ptr<void>>();
-        COND_RETURN_AND_MSG_OUTER(reduceAsyncV2TaskInfo->guardMemVec == nullptr, RT_ERROR_MEMORY_ALLOCATION,
-            ErrorCode::EE1013, std::to_string(sizeof(std::vector<std::shared_ptr<void>>)));
-    }
-    return RT_ERROR_NONE;
-}
-
 void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo)
 {
     ReduceAsyncV2TaskInfo *reduceAsyncV2TaskInfo = &(taskInfo->u.reduceAsyncV2TaskInfo);
@@ -57,38 +35,6 @@ void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo)
     }
 
     return;
-}
-
-void ToCommandBodyForReduceAsyncV2Task(TaskInfo * const taskInfo, rtCommand_t * const command)
-{
-    ReduceAsyncV2TaskInfo *reduceAsyncV2TaskInfo = &(taskInfo->u.reduceAsyncV2TaskInfo);
-    Stream * const stream = taskInfo->stream;
-    Driver * const driver = taskInfo->stream->Device_()->Driver_();
-
-    command->u.reduceAsyncV2Task.dir = static_cast<uint8_t>(reduceAsyncV2TaskInfo->copyType);
-    uint64_t offset = 0UL;
-
-    if (reduceAsyncV2TaskInfo->overflowAddrOffset != INVALID_CONTEXT_OVERFLOW_OFFSET) {
-        offset = reduceAsyncV2TaskInfo->overflowAddrOffset;
-    } else  {
-        const rtError_t error = driver->MemAddressTranslate(static_cast<int32_t>(stream->Device_()->Id_()),
-            RtPtrToValue<void *>(reduceAsyncV2TaskInfo->overflowAddr), &offset);
-        COND_RETURN_VOID(error != RT_ERROR_NONE,
-            "Failed to translate address to physic for reduce async v2 address, retCode=%#x.", error);
-        RT_LOG(RT_LOG_INFO, "ReduceAsyncV2Task offset=%#" PRIx64 ", dir=%u, size_=%" PRIu64, offset,
-            command->u.reduceAsyncV2Task.dir, reduceAsyncV2TaskInfo->size);
-    }
-
-    command->u.reduceAsyncV2Task.overflowAddr = offset;
-    command->u.reduceAsyncV2Task.memcpyType = 0U;  // single copy
-    command->u.reduceAsyncV2Task.length = reduceAsyncV2TaskInfo->size;
-    command->u.reduceAsyncV2Task.srcBaseAddr =
-        RtPtrToValue<void *>(reduceAsyncV2TaskInfo->src);
-    command->u.reduceAsyncV2Task.dstBaseAddr =
-        RtPtrToValue<void *>(reduceAsyncV2TaskInfo->destPtr);
-    command->u.reduceAsyncV2Task.isAddrConvert = RT_NOT_NEED_CONVERT;
-    command->u.reduceAsyncV2Task.copyDataType = reduceAsyncV2TaskInfo->copyDataType;
-    command->taskInfoFlag = stream->GetTaskRevFlag(taskInfo->bindFlag);
 }
 
 void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId)

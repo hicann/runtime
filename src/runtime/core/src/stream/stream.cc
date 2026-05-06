@@ -39,6 +39,7 @@
 #include "device_error_info.hpp"
 #include "capture_adapt.hpp"
 #include "memory_task.h"
+#include "maintenance_task.h"
 #include "sq_addr_memory_pool.hpp"
 #include "capture_model_utils.hpp"
 #include "davinci_kernel_task.h"

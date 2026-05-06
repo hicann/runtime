@@ -15,7 +15,9 @@
 
 namespace cce {
 namespace runtime {
-void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void TimeoutSetTaskInitV1(TaskInfo* taskInfo);
+rtError_t TimeoutSetTaskInit(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
+void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, const uint32_t timeout);
 void ToCommandBodyForTimeoutSetTask(TaskInfo* taskInfo, rtCommand_t *const command);
 }  // namespace runtime
 }  // namespace cce

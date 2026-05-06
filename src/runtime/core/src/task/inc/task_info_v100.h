@@ -15,6 +15,9 @@
 namespace cce {
 namespace runtime {
 
+void ConstructSqeForStarsCommonTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+
 void ConstructSqeForBarrierTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForCmoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId);
@@ -78,6 +81,15 @@ void FillFftsPlusMixSqeSubtask(const AicTaskInfo *taskInfo, uint8_t *const subty
 void ConstructFftsMixSqeForDavinciTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
 void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
+
+void ConstructSqeForMaintenanceTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
+void DoCompleteSuccessForMaintenanceTask(TaskInfo * const taskInfo, const uint32_t devId);
+
+void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo);
+void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
+void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
+
+void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
 }  // namespace runtime
 }  // namespace cce

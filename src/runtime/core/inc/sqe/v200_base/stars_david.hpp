@@ -524,6 +524,8 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo *taskInfo, Event **eventPtr, David
 void ConstructDavidSqeForEventRecordTask(TaskInfo *const taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForEventWaitTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForEventResetTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
+void ConstructDavidSqeForMaintenanceTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForRingBufferMaintainTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void DoCompleteSuccessForDavidEventRecordTask(TaskInfo * const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventResetTask(TaskInfo * const taskInfo, const uint32_t devId);
@@ -576,6 +578,9 @@ void ConstructDavidSqeForAddEndGraphTask(TaskInfo * const taskInfo, rtDavidSqe_t
 void ConstructDavidSqeForNopTask(TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForNotifyWaitTask(TaskInfo *taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);
 void ConstructDavidSqeForNotifyRecordTask(TaskInfo *taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);
+void ConstructDavidSqeForStarsCommonTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForTimeoutSetTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForWordOne(const TaskInfo *const taskInfo, rtDavidSqe_t * const sqe);
 void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t * const command);
 void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForMemWriteValueTask(TaskInfo *const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);

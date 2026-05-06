@@ -21,6 +21,7 @@
 #include "raw_device.hpp"
 #include "error_message_manage.hpp"
 #include "task.hpp"
+#include "maintenance_task.h"
 #include "context.hpp"
 
 namespace cce {

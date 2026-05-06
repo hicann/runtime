@@ -51,6 +51,7 @@
 #include "stars_common_task.h"
 #include "random_num_task.h"
 #include "memory_task.h"
+#include "reduce_task.h"
 #include "stream_factory.hpp"
 #include "stub_task.hpp"
 #include "capture_adapt.hpp"
