@@ -920,7 +920,7 @@ static INT32 LocalSetThreadAttr(pthread_attr_t *attr, const mmThreadAttr *thread
 
     // 设置堆栈
     if (threadAttr->stackFlag == TRUE) {
-        if (threadAttr->stackSize < MMPA_THREAD_MIN_STACK_SIZE) {
+        if (threadAttr->stackSize < (UINT32)MMPA_THREAD_MIN_STACK_SIZE) {
             return EN_INVALID_PARAM;
         }
         if (pthread_attr_setstacksize(attr, threadAttr->stackSize) != EN_OK) {
