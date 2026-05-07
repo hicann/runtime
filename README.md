@@ -257,7 +257,7 @@ bash tests/build_ut.sh --ut=acl --target=ascendcl_utest -c --cann_3rd_lib_path={
 
 通过`--ut`指定模块名称，上述示例中指定的模块名称为`acl`。
 
-`runtime`仓中的`UT`用例按模块分类归档在`tests/ut/`的不同目录下，所有模块名称以及和用例路径的映射关系可以查询`tests/build.sh`中的`ut_path_map`，例如：`acl`模块的`UT`在`tests/ut/acl`下，`runtime`模块的`UT`在`tests/ut/runtime/runtime`下。
+`runtime`仓中的`UT`用例按模块分类归档在`tests/ut/`的不同目录下，所有模块名称以及和用例路径的映射关系可以查询`tests/build_ut.sh`中的`ut_path_map`，例如：`acl`模块的`UT`在`tests/ut/acl`下，`runtime`模块的`UT`在`tests/ut/runtime/runtime`下。
 
 **指定测试目标文件**
 
