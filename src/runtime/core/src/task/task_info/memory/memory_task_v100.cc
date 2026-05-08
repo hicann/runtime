@@ -167,8 +167,8 @@ void ConstructPcieDmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
 
     if (memcpyAsyncTaskInfo->dmaKernelConvertFlag) {
-        sqe->src = (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src)));
-        sqe->dst = (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr)));
+        sqe->src = RtPtrToValue(memcpyAsyncTaskInfo->src);
+        sqe->dst = RtPtrToValue(memcpyAsyncTaskInfo->destPtr);
         sqe->length = memcpyAsyncTaskInfo->size;
         sqe->isDsaUpdate = 0U;
         sqe->isSqeUpdate = 0U;

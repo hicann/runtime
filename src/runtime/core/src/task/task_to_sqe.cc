@@ -98,8 +98,8 @@ rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32
 
     const errno_t ret = memcpy_s(taskInput->dataBuffer, bufferLen, paramBufDesc.bufInfo, paramBufDesc.bufSize);
     COND_RETURN_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__, "memcpy_s",
-        std::to_string(ret), strerror(ret), "src=" + std::to_string(reinterpret_cast<uintptr_t>(paramBufDesc.bufInfo)) +
-        ", dest=" + std::to_string(reinterpret_cast<uintptr_t>(taskInput->dataBuffer)) + ", dest_max=" +
+        std::to_string(ret), strerror(ret), "src=" + std::to_string(RtPtrToValue(paramBufDesc.bufInfo)) +
+        ", dest=" + std::to_string(RtPtrToValue(taskInput->dataBuffer)) + ", dest_max=" +
         std::to_string(bufferLen) + ", count=" + std::to_string(paramBufDesc.bufSize) + ".");
     RT_LOG(RT_LOG_INFO, "Construct host func prefetch Sqe success. taskLen=%u.", *taskLen);
     return RT_ERROR_NONE;

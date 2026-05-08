@@ -5084,7 +5084,7 @@ void Runtime::ReportUBMemRasProc()
     }
 }
 
-void Runtime::ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount)
+void Runtime::ProcUBMemNetworkException(const uint32_t devId, const rtDmsFaultEvent *faultEventInfo, uint32_t eventCount) const
 {
     for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
         if (faultEventInfo[faultIndex].eventId == UB_MEM_NETWORK_EXCEPTION_EVENT_ID) {

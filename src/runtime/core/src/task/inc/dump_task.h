@@ -12,6 +12,7 @@
 #define RUNTIME_DUMP_TASK_H
 
 #include "task_info.hpp"
+#include "hwts.hpp"
 
 namespace cce {
 namespace runtime {

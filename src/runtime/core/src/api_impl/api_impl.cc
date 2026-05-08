@@ -2740,8 +2740,8 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void 
         offset += sizeof(paramLength);
         // append DsaUpdateParam, refer to DsaUpdateParam struct
         ret = memcpy_s(args + offset, sizeof(src), &src, sizeof(src));
-        std::string extendInfo2 = "destAddr=" + std::to_string(reinterpret_cast<uintptr_t>(args + offset)) +
-                                  ", srcAddr=" + std::to_string(reinterpret_cast<uintptr_t>(&src)) +
+        std::string extendInfo2 = "destAddr=" + std::to_string(RtPtrToValue(args + offset)) +
+                                  ", srcAddr=" + std::to_string(RtPtrToValue(&src)) +
                                   ", maxLen=" + std::to_string(sizeof(src)) + "(bytes)" +
                                   ", actualLen=" + std::to_string(sizeof(src)) + "(bytes)";
         COND_RETURN_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
@@ -8519,8 +8519,8 @@ rtError_t ApiImpl::FuncGetName(const Kernel * const kernel, const uint32_t maxLe
 {
     const errno_t error = memcpy_s(name, static_cast<size_t>(maxLen), kernel->Name_().c_str(), kernel->Name_().length() + 1U);
     if (error != EOK) {
-        std::string extendInfo4 = "destAddr=" + std::to_string(reinterpret_cast<uintptr_t>(name)) +
-                                  ", srcAddr=" + std::to_string(reinterpret_cast<uintptr_t>(kernel->Name_().c_str())) +
+        std::string extendInfo4 = "destAddr=" + std::to_string(RtPtrToValue(name)) +
+                                  ", srcAddr=" + std::to_string(RtPtrToValue(kernel->Name_().c_str())) +
                                   ", maxLen=" + std::to_string(static_cast<size_t>(maxLen)) + "(bytes)" +
                                   ", actualLen=" + std::to_string(kernel->Name_().length() + 1U) + "(bytes)";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
