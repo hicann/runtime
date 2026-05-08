@@ -12,6 +12,7 @@
 #include <string>
 #include "runtime.hpp"
 #include "rt_inner_task.h"
+#include "kernel.h"
 
 namespace cce {
 namespace runtime {
@@ -21,6 +22,7 @@ namespace runtime {
     rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const params);
     rtError_t GetKernelAttribute(const TaskInfo* const taskInfo, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue);
     rtError_t GetOpExecuteMsTimeout(uint32_t *const timeout, uint64_t *customTimeout=nullptr);
+    void SetKernelLaunchParams(const Stream *const stm, const rtArgsEx_t *const argsInfo, TaskInfo &task);
 }  // namespace runtime
 }  // namespace cce
 #endif  // __CCE_RUNTIME_KERNEL_UTILS_HPP__

@@ -3245,13 +3245,19 @@ TEST_F(CloudV2ApiTest, apiImpl_datadump_loadinfo)
     error = rtDatadumpInfoLoad(datdumpinfo, sizeof(datdumpinfo));
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    std::vector<uint64_t> arg(3, 0x1234567890);
+    // input output tilingaddr tilingdata hostdata
+    std::vector<uint64_t> arg(10, 0x1234567890);
     rtArgsEx_t argsInfo = {};
     argsInfo.args = arg.data();
-    argsInfo.argsSize = 3 * sizeof(arg[0]);
-    argsInfo.tilingAddrOffset = 1U;
-    argsInfo.tilingDataOffset = 2U;
+    argsInfo.argsSize = 10 * sizeof(arg[0]);
+    argsInfo.tilingAddrOffset = 16U;
+    argsInfo.tilingDataOffset = 24U;
     argsInfo.hasTiling = true;
+    rtHostInputInfo_t hostInputInfo = {};
+    hostInputInfo.addrOffset = 0U;
+    hostInputInfo.dataOffset = 32U;
+    argsInfo.hostInputInfoNum = 1U;
+    argsInfo.hostInputInfoPtr = &hostInputInfo;
 
     error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);

@@ -20,6 +20,7 @@
 #include "profiler_c.hpp"
 #include "stars_david.hpp"
 #include "memory_task.h"
+#include "kernel_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -64,8 +65,10 @@ static rtError_t CheckDynSizeValid(TaskInfo* taskInfo, const Kernel * const kern
     return CheckAndGetTotalShareMemorySize(kernel, aicTaskInfo->dynamicShareMemSize, aicTaskInfo->simtDcuSmSize);
 }
 
-static void SetArgsAix(const rtArgsEx_t * const argsInfo, TaskInfo * const taskInfo, DavidArgLoaderResult * const result)
+static void SetArgsAix(const Stream *const stm, const rtArgsEx_t * const argsInfo, TaskInfo * const taskInfo,
+    DavidArgLoaderResult * const result)
 {
+    SetKernelLaunchParams(stm, argsInfo, *taskInfo);
     AicTaskInfo *aicTask = &(taskInfo->u.aicTaskInfo);
     aicTask->comm.argsSize = argsInfo->argsSize;
     aicTask->comm.args = result->kerArgs;
@@ -303,7 +306,7 @@ rtError_t StreamLaunchKernelV1(const void * const stubFunc, const uint32_t coreD
     error = static_cast<DavidStream *>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     ERROR_RETURN_MSG_INNER(error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.",
         stm->Id_(), useArgPool, static_cast<uint32_t>(error));
-    SetArgsAix(argsInfo, kernelTask, &result);
+    SetArgsAix(stm, argsInfo, kernelTask, &result);
     AicTaskInfo *aicTask = &(kernelTask->u.aicTaskInfo);
     aicTask->kernel = const_cast<Kernel *>(registeredKernel);
     aicTask->funcAddr = addr1;
@@ -417,7 +420,7 @@ rtError_t StreamLaunchKernelWithHandle(void * const progHandle, const uint64_t t
     aicTask->kernel = const_cast<Kernel *>(registeredKernel);
     aicTask->progHandle = (prog != nullptr) ? prog : RtPtrToPtr<Program *>(progHandle);
     aicTask->tilingKey = tilingKey;
-    SetArgsAix(argsInfo, kernelTask, &result);
+    SetArgsAix(stm, argsInfo, kernelTask, &result);
     aicTask->funcAddr = addr1;
     aicTask->funcAddr1 = addr2;
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, "
@@ -529,7 +532,7 @@ rtError_t StreamLaunchKernelV2(Kernel * const kernel, const uint32_t coreDim, St
     aicTask->progHandle = prog;
     aicTask->funcAddr = kernelPc1;
     aicTask->funcAddr1 = kernelPc2;
-    SetArgsAix(argsInfo, kernelTask, &result);
+    SetArgsAix(stm, argsInfo, kernelTask, &result);
 
     RT_LOG(RT_LOG_INFO, "stream_id=%d, kernel_name=%s, kernelAttrType=%d, funcType=%u, arg_size=%u, mixType=%hhu, "
         "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
