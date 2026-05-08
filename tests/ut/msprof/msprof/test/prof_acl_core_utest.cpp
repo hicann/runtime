@@ -4441,23 +4441,32 @@ TEST_F(MSPROF_ACL_CORE_UTEST, GetOutputPath) {
     GlobalMockObject::verify();
 
     using namespace Msprofiler::Api;
+    Msprofiler::Api::ProfAclMgr profAclMgr;
 
-    EXPECT_EQ("", ProfAclMgr::instance()->GetOutputPath());
+    EXPECT_EQ("", profAclMgr.GetOutputPath());
 
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
-        new analysis::dvvp::message::ProfileParams());
+    NanoJson::Json inputCfgPb;
+    inputCfgPb["output"] = "/tmp/test_prof_output";
 
-    NanoJson::Json message;
-    message["output"] = "";
-    std::string jobInfo = "123";
-    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::MsprofResultPathAdapter)
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetAicoreEvents)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));
-    ProfAclMgr::instance()->MsprofGeOptionsParamConstruct("hello", message);
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDirAccessible)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER(analysis::dvvp::common::utils::Utils::CanonicalizePath)
+        .stubs()
+        .will(returnValue("/tmp/test_prof_output"));
 
-    ProfAclMgr::instance()->MsprofInitGeOptionsParamAdaper(params, jobInfo, message);
-    MSPROF_LOGE("outputpath is %s", ProfAclMgr::instance()->GetOutputPath().c_str());
-    EXPECT_EQ("", ProfAclMgr::instance()->GetOutputPath());
+    EXPECT_EQ(MSPROF_ERROR_NONE, profAclMgr.MsprofAclJsonParamConstruct(inputCfgPb));
+
+    std::string outputPath = profAclMgr.GetOutputPath();
+    EXPECT_NE("", outputPath);
+    EXPECT_TRUE(outputPath.find("/tmp/test_prof_output") != std::string::npos);
+    EXPECT_TRUE(outputPath.find("PROF_") != std::string::npos);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofResetDeviceHandle_SetUploaderStopped)

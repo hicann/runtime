@@ -231,37 +231,51 @@ int32_t ProfTxPlugin::CopyTensorData(const aclprofTensorInfo* tensorInfo, uint8_
     return PROFILING_SUCCESS;
 }
 
-int32_t ProfTxPlugin::ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo, 
+int32_t ProfTxPlugin::ReportAdditionalInfo(const aclprofTensorInfo* tensorInfo,
                                             uint64_t timeStampPush, uint64_t timeStampPop)
 {
-    MsprofAdditionalInfo addInfo;
-    addInfo.level = MSPROF_REPORT_NODE_LEVEL;
-    addInfo.type = MSPROF_REPORT_NODE_TENSOR_INFO_TYPE;
-    addInfo.threadId = static_cast<uint32_t>(OsalGetTid());
-    addInfo.dataLen = sizeof(tensorInfo->opNameId) + sizeof(tensorInfo->tensorNum) + 
-                      (sizeof(aclprofTensor) * tensorInfo->tensorNum);
-    addInfo.timeStamp = (timeStampPush >> 1) + (timeStampPop >> 1) + ((timeStampPush & 1) & (timeStampPop & 1));
-    uint8_t *dest = static_cast<uint8_t *>(addInfo.data);
+    size_t infoSize = sizeof(tensorInfo->opNameId) + sizeof(tensorInfo->tensorNum) +
+                            (sizeof(MsrofTensorData) * tensorInfo->tensorNum);
+    size_t totalSize = sizeof(MsprofShapeInfo) + infoSize;
+    VOID_PTR infoPtr = Utils::ProfMalloc(totalSize);
+    if (infoPtr == nullptr) {
+        MSPROF_LOGE("Failed to allocate MsprofShapeInfo, size=%zu", totalSize);
+        return PROFILING_FAILED;
+    }
+    auto *shapeInfo = static_cast<MsprofShapeInfo *>(infoPtr);
+    shapeInfo->magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    shapeInfo->level = MSPROF_REPORT_NODE_LEVEL;
+    shapeInfo->type = MSPROF_REPORT_NODE_TENSOR_INFO_TYPE;
+    shapeInfo->threadId = static_cast<uint32_t>(OsalGetTid());
+    shapeInfo->dataLen = static_cast<uint32_t>(infoSize);
+    shapeInfo->timeStamp = (timeStampPush >> 1) + (timeStampPop >> 1) + ((timeStampPush & 1) & (timeStampPop & 1));
+    uint8_t *dest = shapeInfo->data;
     uint64_t destOffset = 0;
-    errno_t err = memcpy_s(dest + destOffset, sizeof(tensorInfo->opNameId), 
+    errno_t err = memcpy_s(dest + destOffset, infoSize - destOffset,
                            &tensorInfo->opNameId, sizeof(tensorInfo->opNameId));
     if (err != EOK) {
         MSPROF_LOGE("memcpy_s tensorInfo->opNameId failed, result=%d.", err);
+        Utils::ProfFree(infoPtr);
         return PROFILING_FAILED;
     }
     destOffset += sizeof(tensorInfo->opNameId);
-    err = memcpy_s(dest + destOffset, sizeof(tensorInfo->tensorNum), &tensorInfo->tensorNum, sizeof(tensorInfo->tensorNum));
+    err = memcpy_s(dest + destOffset, infoSize - destOffset,
+                   &tensorInfo->tensorNum, sizeof(tensorInfo->tensorNum));
     if (err != EOK) {
         MSPROF_LOGE("memcpy_s tensorInfo->tensorNum failed, result=%d.", err);
+        Utils::ProfFree(infoPtr);
         return PROFILING_FAILED;
     }
     destOffset += sizeof(tensorInfo->tensorNum);
-    int32_t ret = CopyTensorData(tensorInfo, dest, destOffset, sizeof(addInfo.data));
+    int32_t ret = CopyTensorData(tensorInfo, dest, destOffset, infoSize);
     if (ret != PROFILING_SUCCESS) {
+        Utils::ProfFree(infoPtr);
         return ret;
     }
     MSPROF_LOGI("Execute ReportAdditionalInfo successfully, report data to msprof.");
-    return MsprofReportAdditionalInfo(0, (void *)(&addInfo), sizeof(MsprofAdditionalInfo));
+    ret = MsprofReportAdditionalInfo(0, infoPtr, static_cast<uint32_t>(totalSize));
+    Utils::ProfFree(infoPtr);
+    return ret;
 }
 
 int32_t ProfTxPlugin::ReportCacheOpInfo2RT(const aclprofTensorInfo* tensorInfo)
