@@ -198,6 +198,7 @@ static const DevProperties CHIP_MINI_V3_PROPERTIES = {
     .rtsqReservedTaskNum = 38U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
     .npuArch = 0,
+    .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
 };
 REGISTER_DEV_PROPERTIES(CHIP_MINI_V3, CHIP_MINI_V3_PROPERTIES);
 }

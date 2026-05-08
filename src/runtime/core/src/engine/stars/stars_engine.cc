@@ -1368,13 +1368,15 @@ rtError_t StarsEngine::StarsResumeRtsq(const rtLogicCqReport_t &logicCq, const u
     RT_LOG(RT_LOG_WARNING, "Begin to query sq status, stream_id=%hu.", logicCq.streamId);
     int32_t getSqTimeout = (failStm->GetSyncRemainTime() == -1) ? (RT_GET_SQ_STATUS_TIMEOUT_TIME * 2) :
         (failStm->GetSyncRemainTime() * 1000);
+    uint32_t pollingCycleCnt = dev->GetDevProperties().sqDisableStatPollingCycleNum;
+    pollingCycleCnt = (pollingCycleCnt == 0U) ? SQ_DISABLE_POLLING_CYCLE_COMMON_CNT : pollingCycleCnt;
     while (true) {
         COND_RETURN_ERROR_MSG_INNER((Runtime::Instance()->IsSupportOpTimeoutMs() &&
             (failStm->GetFailureMode() == ABORT_ON_FAILURE)), RT_ERROR_NONE,
             "stop scheduling in abort failure mode: stream_id=%hu, sq_id=%hu, sq_head=%hu"
             ", task_id=%hu, taskType=%hu.", logicCq.streamId, logicCq.sqId, logicCq.sqHead,
             logicCq.taskId, taskType);
-        if ((cnt++ % RT_GET_HEAD_CYCLE_NUM) == 0U) {
+        if ((cnt++ % pollingCycleCnt) == 0U) {
             queryCnt++;
             error = devDrv->GetSqEnable(devId, tsId, static_cast<uint32_t>(logicCq.sqId), enable);
             COND_PROC_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,

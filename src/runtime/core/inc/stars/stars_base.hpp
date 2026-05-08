@@ -40,7 +40,6 @@ constexpr uint8_t RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT = 255U;
 constexpr uint8_t RT_STARS_EXIST_ERROR = 0x3FU;
 constexpr uint8_t RT_STARS_EXIST_WARNING = 0x40U;
 constexpr uint16_t RT_SYNC_TASK_FLAG = 0x8000U;
-constexpr uint64_t RT_GET_HEAD_CYCLE_NUM = 100000000U;
 constexpr uint64_t RT_QUERY_CNT_NUM = 200000U;
 constexpr uint8_t RT_STARS_AICPU_MODEL_KERNEL_CREDIT = 18U;
 constexpr uint8_t RT_STARS_AICPU_DEFAULT_TIMEOUT = 28U;

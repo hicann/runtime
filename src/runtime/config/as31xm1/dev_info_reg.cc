@@ -196,6 +196,7 @@ static const DevProperties CHIP_AS31XM1_PROPERTIES = {
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
     .npuArch = 0,
+    .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_ADC_CNT,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_AS31XM1, CHIP_AS31XM1_PROPERTIES);

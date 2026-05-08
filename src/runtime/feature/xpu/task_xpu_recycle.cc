@@ -210,16 +210,19 @@ static rtError_t XpuStarsResumeSq(const TprtLogicCqReport_t *logicCq, const Task
     rtError_t error = RT_ERROR_NONE;
     Stream * const failStm = taskInfo->stream;
     uint32_t queryCnt = 0U;
-    uint32_t cnt = 0U;
+    uint64_t cnt = 0U;
     uint32_t status;
-    XpuDriver *devDrv = static_cast<XpuDriver *>(taskInfo->stream->Device_()->Driver_());
+    Device * const dev = taskInfo->stream->Device_();
+    uint32_t pollingCycleCnt = dev->GetDevProperties().sqDisableStatPollingCycleNum;
+    pollingCycleCnt = (pollingCycleCnt == 0U) ? SQ_DISABLE_POLLING_CYCLE_COMMON_CNT : pollingCycleCnt;
+    XpuDriver *devDrv = static_cast<XpuDriver *>(dev->Driver_());
     failStm->EnterFailureAbort();
     mmTimespec beginTimeSpec = mmGetTickCount();
     const uint64_t beginCnt = static_cast<uint64_t>(beginTimeSpec.tv_sec) * RT_MS_PER_S +
                               static_cast<uint64_t>(beginTimeSpec.tv_nsec) / RT_MS_TO_NS;
     const int32_t getSqTimeout = RT_GET_SQ_STATUS_TIMEOUT_TIME;
     while (true) {
-        if ((cnt++ % RT_GET_HEAD_CYCLE_NUM) == 0U) {
+        if ((cnt++ % pollingCycleCnt) == 0U) {
             queryCnt++;
             error = devDrv->GetSqState(taskInfo->stream->Device_()->Id_(), taskInfo->stream->GetSqId(), status);
             ERROR_RETURN_MSG_INNER(error, "Failed to get sq status, stream_id=%d.", failStm->Id_());

@@ -86,6 +86,8 @@ static rtError_t PollingSqDisable(const rtLogicCqReport_t *logicCq, Stream * con
     const uint32_t devId = dev->Id_();
     Driver * const devDrv = dev->Driver_();
     const uint32_t tsId = dev->DevGetTsId();
+    uint32_t pollingCycleCnt = dev->GetDevProperties().sqDisableStatPollingCycleNum;
+    pollingCycleCnt = (pollingCycleCnt == 0U) ? SQ_DISABLE_POLLING_CYCLE_COMMON_CNT : pollingCycleCnt;
     mmTimespec beginTimeSpec = mmGetTickCount();
     const uint64_t beginCnt = static_cast<uint64_t>(beginTimeSpec.tv_sec) * RT_MS_PER_S +
                               static_cast<uint64_t>(beginTimeSpec.tv_nsec) / RT_MS_TO_NS;
@@ -95,7 +97,7 @@ static rtError_t PollingSqDisable(const rtLogicCqReport_t *logicCq, Stream * con
     uint32_t queryCnt = 0U;
     bool enable = true;
     while (true) {
-        if ((cnt++ % RT_GET_HEAD_CYCLE_NUM) == 0U) {
+        if ((cnt++ % pollingCycleCnt) == 0U) {
             queryCnt++;
             error = devDrv->GetSqEnable(devId, tsId, logicCq->sqId, enable);
             COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,

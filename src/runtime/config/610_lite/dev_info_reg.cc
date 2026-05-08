@@ -185,6 +185,7 @@ static const DevProperties CHIP_610LITE_PROPERTIES = {
     .rtsqReservedTaskNum = 0U,
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
     .npuArch = 0,
+    .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_ADC_CNT,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_610LITE, CHIP_610LITE_PROPERTIES);

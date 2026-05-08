@@ -222,6 +222,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .rtsqReservedTaskNum = 35U,
     .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
     .npuArch = 0,
+    .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);

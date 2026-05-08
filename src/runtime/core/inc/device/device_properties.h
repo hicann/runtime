@@ -335,6 +335,7 @@ struct DevProperties final {
     uint32_t rtsqReservedTaskNum;
     DeviceCvArchType cvArchType;
     int64_t npuArch;
+    uint32_t sqDisableStatPollingCycleNum;
 };
 }
 }
