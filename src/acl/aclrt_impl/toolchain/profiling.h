@@ -12,7 +12,6 @@
 #define ACL_PROFILING_H_
 
 #include "acl/acl_base.h"
-#include "aprof_pub.h"
 #include <string>
 #include "common/log_inner.h"
 

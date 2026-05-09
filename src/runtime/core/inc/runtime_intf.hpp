@@ -13,7 +13,6 @@
 #include "base.hpp"
 #include "errcode_manage.hpp"
 #include "dev.h"
-#include "toolchain/prof_api.h"
 #include "stream.hpp"
 
 namespace cce {
