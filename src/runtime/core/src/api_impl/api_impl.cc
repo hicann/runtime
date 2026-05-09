@@ -1332,8 +1332,8 @@ rtError_t ApiImpl::SetupArgument(const void * const setupArg, const uint32_t siz
     char_t * const launchArgs = launchArg.args;
     const errno_t ret = memcpy_s(launchArgs + offset, sizeof(launchArg.args) - offset,
         setupArg, static_cast<size_t>(size));
-    std::string extendInfo = "destAddr=" + std::to_string(reinterpret_cast<uintptr_t>(launchArgs + offset)) +
-                             ", srcAddr=" + std::to_string(reinterpret_cast<uintptr_t>(setupArg)) +
+    std::string extendInfo = "destAddr=" + std::to_string(RtPtrToValue(launchArgs + offset)) +
+                             ", srcAddr=" + std::to_string(RtPtrToValue(setupArg)) +
                              ", maxLen=" + std::to_string(sizeof(launchArg.args) - offset) + "(bytes)" +
                              ", actualLen=" + std::to_string(static_cast<size_t>(size)) + "(bytes)";
     COND_RETURN_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
@@ -4978,7 +4978,7 @@ rtError_t ApiImpl::CallbackLaunch(const rtCallback_t callBackFunc, void * const 
     COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(curStm->Id_()));
     COND_RETURN_AND_MSG_OUTER(!curStm->IsHostFuncCbReg(), RT_ERROR_STREAM_NO_CB_REG, ErrorCode::EE1018,
-        __func__, "Stream " + std::to_string(stm->Id_()) + " is not bound to any thread. "
+        __func__, "Stream " + std::to_string(curStm->Id_()) + " is not bound to any thread. "
         "Call the rtSubscribeReport API to bind a thread to the stream");
 
     Runtime * const rt = Runtime::Instance();
@@ -8270,7 +8270,7 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle *argsHandle, void *para, size_t
     const uintptr_t offset = reinterpret_cast<uintptr_t>(argsHandle->buffer) + static_cast<uint64_t>(realParaOffset);
     const errno_t ret = memcpy_s(reinterpret_cast<void *>(offset), paraSize, para, paraSize);
     std::string extendInfo3 = "destAddr=" + std::to_string(offset) +
-                              ", srcAddr=" + std::to_string(reinterpret_cast<uintptr_t>(para)) +
+                              ", srcAddr=" + std::to_string(RtPtrToValue(para)) +
                               ", maxLen=" + std::to_string(paraSize) + "(bytes)" +
                               ", actualLen=" + std::to_string(paraSize) + "(bytes)";
     COND_RETURN_AND_MSG_OUTER(ret != EOK, RT_ERROR_INVALID_VALUE, ErrorCode::EE1020,
