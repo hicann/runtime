@@ -281,6 +281,7 @@ public:
     virtual rtError_t rtBinaryUnLoad(rtBinHandle binHandle);
     virtual rtError_t rtsFuncGetByName(const rtBinHandle binHandle, const char_t *kernelName,
                                        rtFuncHandle *funcHandle);
+    virtual rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t *name, void **dptr, size_t *size);
     virtual rtError_t rtCreateLaunchArgs(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
                                          void *argsData, rtLaunchArgsHandle *argsHandle);
     virtual rtError_t rtDestroyLaunchArgs(rtLaunchArgsHandle argsHandle);
@@ -772,6 +773,7 @@ public:
     MOCK_METHOD1(rtBinaryUnLoad, rtError_t(rtBinHandle binHandle));
     MOCK_METHOD3(rtsFuncGetByName, rtError_t(const rtBinHandle binHandle, const char_t *kernelName,
                                              rtFuncHandle *funcHandle));
+    MOCK_METHOD4(rtBinaryGetGlobal, rtError_t(const rtBinHandle binHandle, const char_t *name, void **dptr, size_t *size));
     MOCK_METHOD5(rtCreateLaunchArgs, rtError_t(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
                                                void *argsData, rtLaunchArgsHandle *argsHandle));
     MOCK_METHOD1(rtDestroyLaunchArgs, rtError_t(rtLaunchArgsHandle argsHandle));

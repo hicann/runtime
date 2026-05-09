@@ -10,6 +10,7 @@
 - [`aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kernelName, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunction)：根据核函数名称，查找到对应的核函数，并使用funcHandle表达。
 - [`aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle *funcHandle)`](#aclrtBinaryGetFunctionByEntry)：根据Function Entry获取核函数句柄。
 - [`aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr, size_t *binSize)`](#aclrtBinaryGetDevAddress)：获取算子二进制数据在Device上的内存地址及内存大小。
+- [`aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)`](#aclrtBinaryGetGlobal)：根据全局变量名称获取Device侧全局变量的地址和大小。
 - [`aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)`](#aclrtBinarySetExceptionCallback)：调用本接口注册回调函数。若多次设置回调函数，以最后一次设置为准。
 - [`aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)`](#aclrtGetArgsFromExceptionInfo)：从aclrtExceptionInfo异常信息中获取用户下发算子执行任务时的参数。
 - [`aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, aclrtFuncHandle *func)`](#aclrtGetFuncHandleFromExceptionInfo)：从aclrtExceptionInfo异常信息中获取核函数句柄。
@@ -309,6 +310,58 @@ aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr
 <br>
 
 
+
+
+<a id="aclrtBinaryGetGlobal"></a>
+
+## aclrtBinaryGetGlobal
+
+```c
+aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)
+```
+
+### 产品支持情况
+
+
+| 产品 | 是否支持 |
+| --- | :---: |
+| Ascend 950PR/Ascend 950DT | √ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
+### 功能说明
+
+根据全局变量名称，获取Device侧全局变量的地址和大小。
+
+调用本接口前，需先调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口加载算子二进制，并确保算子二进制中包含全局符号（Global Symbol）。
+
+### 参数说明
+
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25_数据类型及其操作接口.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
+| name | 输入 | 全局变量名称。需与算子二进制中定义的全局符号名称一致。 |
+| dptr | 输出 | Device侧全局变量的地址指针。可以为nullptr，表示不需要获取地址。 |
+| size | 输出 | Device侧全局变量的大小，单位Byte。可以为nullptr，表示不需要获取大小。<br>dptr和size不能同时为nullptr。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败。
+
+| 错误码 | 说明 |
+| --- | --- |
+| ACL_SUCCESS | 接口调用成功。 |
+| ACL_ERROR_INVALID_PARAM | 参数校验失败，请检查入参binHandle、name是否为nullptr，或者dptr和size是否同时为nullptr。 |
+| ACL_ERROR_RT_FEATURE_NOT_SUPPORT | 当前设备不支持此特性。 |
+| ACL_ERROR_RT_SYMBOL_NOT_FOUND | 全局符号未找到，请检查name参数是否与算子二进制中的全局符号名称一致。 |
+
+### 约束说明
+- 当前不支持XPU设备调用此接口。
+
+<br>
+<br>
+<br>
 
 <a id="aclrtBinarySetExceptionCallback"></a>
 

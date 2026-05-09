@@ -58,6 +58,18 @@ RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, 
  */
 RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHandle);
 
+/**
+ * @ingroup rts_kernel
+ * @brief Get global symbol address and size from binary.
+ * @param [in] binHandle    bin handle
+ * @param [in] name         global symbol name
+ * @param [out] dptr        global symbol device address (can be nullptr)
+ * @param [out] size        global symbol size (can be nullptr)
+ * @return ACL_RT_SUCCESS for ok
+ * @return ACL_ERROR_RT_SYMBOL_NOT_FOUND if symbol not found
+ */
+RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void **dptr, size_t *size);
+
 #if defined(__cplusplus)
 }
 #endif

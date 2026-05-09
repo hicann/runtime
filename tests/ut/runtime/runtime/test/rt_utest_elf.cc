@@ -444,11 +444,8 @@ TEST_F(ELFTest, ELF_Get_64bit_Section_Headers_Error_02)
 {
     rtElfData *elfData;
     int out;
-    elfData = new rtElfData;
-    if (NULL != elfData)
-    {
-        memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
-    }
+    elfData = new (std::nothrow) rtElfData();
+  
     elfData->elf_header.e_shentsize = 0;
     elfData->elf_header.e_shnum = 0;
 
@@ -485,12 +482,8 @@ TEST_F(ELFTest, ELF_Get_64bit_Elf_Symbols_Error_01)
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
     unsigned long num_syms_return = 0;
-    elfData = new rtElfData;
+    elfData = new (std::nothrow) rtElfData();
 
-    if (NULL != elfData)
-    {
-        memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
-    }
     section= new Elf_Internal_Shdr;
     if (NULL != section)
     {
@@ -523,11 +516,8 @@ TEST_F(ELFTest, ELF_Get_64bit_Elf_Symbols_Error_02)
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
     unsigned long num_syms_return = 0;
-    elfData = new rtElfData;
-    if (NULL != elfData)
-    {
-        memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
-    }
+    elfData = new (std::nothrow) rtElfData();
+
     section= new Elf_Internal_Shdr;
     if (NULL != section)
     {
@@ -561,11 +551,7 @@ TEST_F(ELFTest, ELF_Get_64bit_Elf_Symbols_Error_03)
     rtElfData *elfData;
     Elf_Internal_Shdr *section;
     unsigned long num_syms_return = 0;
-    elfData = new rtElfData;;
-    if (NULL != elfData)
-    {
-        memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
-    }
+    elfData = new (std::nothrow) rtElfData();
     section= new Elf_Internal_Shdr;
     if (NULL != section)
     {
@@ -600,11 +586,8 @@ TEST_F(ELFTest, ELF_Process_Object_Error)
     RtKernel* out;
     char *obj_buf = NULL;
 
-    elfData = new rtElfData;
-    if (NULL != elfData)
-    {
-        memset_s(elfData,sizeof(rtElfData),'\0',sizeof(rtElfData));
-    }
+    elfData = new (std::nothrow) rtElfData();
+
     out = ProcessObject(obj_buf, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
     if (NULL != elfData)
@@ -680,11 +663,6 @@ TEST_F(ELFTest, ELF_Process_Object_08)
     kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
     delete [] kernels[0].name;
-    if(NULL != elfData->section_headers)
-    {
-        delete [] elfData->section_headers;
-        elfData->section_headers = NULL;
-    }
     delete elfData;
     elfData = NULL;
     delete []kernels;
@@ -727,7 +705,8 @@ TEST_F(ELFTest, ELF_Process_Object_09)
     rtElfData *elfData;
     RtKernel *kernels;
 
-    elfData= (rtElfData*)malloc(sizeof(rtElfData));
+    elfData = new (std::nothrow) rtElfData();
+
     elfData->elf_header.e_shnum = 1;
 
     Elf_Internal_Shdr *section_headers = (Elf_Internal_Shdr *)malloc(sizeof(Elf_Internal_Shdr));
@@ -740,7 +719,7 @@ TEST_F(ELFTest, ELF_Process_Object_09)
     EXPECT_EQ(elfData->kernel_num,1);
     if(NULL != elfData->section_headers)
     {
-        delete [] elfData->section_headers;
+        free(elfData->section_headers);
         elfData->section_headers = NULL;
     }
     for (uint32_t i = 0; i < elfData->kernel_num; ++i) {
@@ -748,11 +727,10 @@ TEST_F(ELFTest, ELF_Process_Object_09)
             DELETE_A(kernels[i].name);
         }
     }
-    free(elfData);
+    delete elfData;
     elfData = NULL;
     delete []kernels;
     kernels = NULL;
-    free(section_headers);
 }
 
 
@@ -787,11 +765,6 @@ TEST_F(ELFTest, ELF_Process_Object_10)
     elfData->section_headers = section_headers;
     kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,1);
-    if(NULL != elfData->section_headers)
-    {
-        delete [] elfData->section_headers;
-        elfData->section_headers = NULL;
-    }
     for (uint32_t i = 0; i < elfData->kernel_num; ++i) {
         if (kernels != nullptr) {
             DELETE_A(kernels[i].name);
@@ -837,11 +810,6 @@ TEST_F(ELFTest, ELF_Process_Object_11)
     elfData->section_headers = section_headers;
     kernels = ProcessObject(bindata, elfData);
     EXPECT_EQ(elfData->kernel_num,0);
-    if(NULL != elfData->section_headers)
-    {
-        delete [] elfData->section_headers;
-        elfData->section_headers = NULL;
-    }
     delete elfData;
     elfData = NULL;
     delete [] kernels;
@@ -876,8 +844,7 @@ TEST_F(ELFTest, ELF_Process_Object_12)
     rtElfData    *elfData;
     RtKernel    *kernels;
 
-    elfData = new rtElfData;
-    memset(elfData, '\0', sizeof(rtElfData));
+    elfData = new (std::nothrow) rtElfData();
 
     kernels = ProcessObject(bindata, elfData);
 

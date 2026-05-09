@@ -6880,6 +6880,37 @@ rtError_t ApiImpl::GetBinBuffer(const rtBinHandle binHandle, const rtBinBufferTy
     return Runtime::Instance()->GetBinBuffer(binHandle, type, bin, binSize);
 }
 
+rtError_t ApiImpl::BinaryGetGlobal(const Program * const binHandle, const char *name, void **dptr, size_t *size)
+{
+    RT_LOG(RT_LOG_INFO, "Start to BinaryGetGlobal, name=%s", name);
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    ElfProgram *prog = const_cast<ElfProgram *>(dynamic_cast<const ElfProgram *>(binHandle));
+    COND_RETURN_ERROR_MSG_INNER(prog == nullptr, RT_ERROR_INVALID_VALUE, "can't dynamic_cast program.");
+
+    rtError_t ret = prog->Load2Device();
+    ERROR_RETURN(ret, "load program to device failed, retCode=%#x", ret);
+
+    uint64_t offset = 0;
+    uint64_t symbolSize = 0;
+    ret = prog->GetGlobalSymbol(name, &offset, &symbolSize);
+    ERROR_RETURN(ret, "get global symbol %s failed, retCode=%#x", name, ret);
+
+    const void *baseAddr = prog->GetBinAlignBaseAddr(curCtx->Device_()->Id_());
+    COND_RETURN_ERROR_MSG_INNER(baseAddr == nullptr, RT_ERROR_INVALID_VALUE,
+                                "binary not loaded to device, device_id=%u", curCtx->Device_()->Id_());
+
+    if (dptr != nullptr) {
+        *dptr = RtValueToPtr<void *>(RtPtrToValue(baseAddr) + offset);
+    }
+    if (size != nullptr) {
+        *size = static_cast<size_t>(symbolSize);
+    }
+    RT_LOG(RT_LOG_INFO, "BinaryGetGlobal success, name=%s", name);
+    return RT_ERROR_NONE;
+}
+
 rtError_t ApiImpl::FreeKernelBin(char_t * const buffer)
 {
     RT_LOG(RT_LOG_INFO, "FreeKernelBin");

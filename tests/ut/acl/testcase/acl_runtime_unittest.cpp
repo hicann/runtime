@@ -8080,3 +8080,76 @@ TEST_F(UTEST_ACL_Runtime, aclrtTemplateMemAllocManagedTest)
     ret = aclrtMemAllocManaged(&devPtr, size, ACL_RT_MEM_ATTACH_GLOBAL);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_failed_with_nullptr_binHandle)
+{
+    aclrtBinHandle binHandle = nullptr;
+    const char *name = "global_var";
+    void *dptr = nullptr;
+    size_t size = 0;
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_failed_with_nullptr_name)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = nullptr;
+    void *dptr = nullptr;
+    size_t size = 0;
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_failed_with_both_nullptr_output)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = "global_var";
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_success)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = "global_var";
+    void *dptr = nullptr;
+    size_t size = 0;
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_feature_not_support)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = "global_var";
+    void *dptr = nullptr;
+    size_t size = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryGetGlobal(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_global_symbol_not_found)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = "global_var";
+    void *dptr = nullptr;
+    size_t size = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryGetGlobal(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_SYMBOL_NOT_FOUND));
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_ERROR_RT_SYMBOL_NOT_FOUND);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtBinaryGetGlobal_rt_error)
+{
+    aclrtBinHandle binHandle = (aclrtBinHandle)0x01U;
+    const char *name = "global_var";
+    void *dptr = nullptr;
+    size_t size = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtBinaryGetGlobal(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_INVALID_HANDLE));
+    aclError ret = aclrtBinaryGetGlobal(binHandle, name, &dptr, &size);
+    EXPECT_EQ(ret, ACL_ERROR_RT_INVALID_HANDLE);
+}

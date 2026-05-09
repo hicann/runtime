@@ -1046,6 +1046,15 @@ rtError_t aclStub::rtsFuncGetByName(const rtBinHandle binHandle, const char_t *k
   return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t *name, void **dptr, size_t *size)
+{
+  (void)binHandle;
+  (void)name;
+  (void)dptr;
+  (void)size;
+  return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtCreateLaunchArgs(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
     void* argsData, rtLaunchArgsHandle* argsHandle)
 {
@@ -3488,6 +3497,11 @@ rtError_t rtsFuncGetByName(const rtBinHandle binHandle, const char_t *kernelName
   return MockFunctionTest::aclStubInstance().rtsFuncGetByName(binHandle, kernelName, funcHandle);
 }
 
+
+rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char_t *name, void **dptr, size_t *size)
+{
+    return MockFunctionTest::aclStubInstance().rtBinaryGetGlobal(binHandle, name, dptr, size);
+}
 rtError_t rtCreateLaunchArgs(size_t argsSize, size_t hostInfoTotalSize, size_t hostInfoNum,
                              void* argsData, rtLaunchArgsHandle* argsHandle)
 {

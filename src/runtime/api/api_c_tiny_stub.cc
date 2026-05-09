@@ -1211,6 +1211,16 @@ rtError_t rtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
 }
 
+
+VISIBILITY_DEFAULT
+rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void **dptr, size_t *size)
+{
+    UNUSED(binHandle);
+    UNUSED(name);
+    UNUSED(dptr);
+    UNUSED(size);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
 #ifdef __cplusplus
 }
 #endif // __cplusplus

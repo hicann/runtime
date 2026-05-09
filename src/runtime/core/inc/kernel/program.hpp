@@ -417,6 +417,7 @@ public:
     rtError_t BinaryGetMetaNum(const rtBinaryMetaType type, size_t *numOfMeta) override;
     rtError_t FunctionGetMetaInfo(const std::string &kernelName, const rtFunctionMetaType type,
                                   void *data, const uint32_t length) override;
+    rtError_t GetGlobalSymbol(const char *name, uint64_t *offset, uint64_t *size) const;
 
     rtError_t UnifiedKernelRegister();
     rtError_t RegisterAllKernelCommon(void);

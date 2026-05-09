@@ -3246,6 +3246,18 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHa
  */
 ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEntry,
                                                            aclrtFuncHandle *funcHandle);
+
+/**
+ * @ingroup AscendCL
+ * @brief Get global variable device address and size by name
+ * @param [in] binHandle  bin handle
+ * @param [in] name  global variable name
+ * @param [out] dptr  global variable device address
+ * @param [out] size  global variable size
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size);
 /**
  * @ingroup AscendCL
  * @brief Get kernel pc start address in device

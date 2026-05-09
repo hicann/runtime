@@ -417,9 +417,14 @@ void SetSymbolAddress(const char_t *stringTab, const Elf_Internal_Sym * const ps
             (void)symbol.assign(stringTab + internalSym->st_name);
             char_t *src = elfData->obj_ptr_origin;
             Elf_Internal_Shdr *internalShdr = elfData->section_headers + internalSym->st_shndx;
-            RT_LOG(RT_LOG_DEBUG, "st_name=%s, st_value=%llu, size=%llu, idx=%u",
-                stringTab + internalSym->st_name, internalSym->st_value, internalSym->st_size, internalSym->st_shndx);
             uint64_t *addr = RtPtrToPtr<uint64_t *>(src + internalSym->st_value + internalShdr->sh_offset - internalShdr->sh_addr);
+            uint64_t offsetInCopiedContent = RtPtrToValue(addr) - RtPtrToValue(src) - elfData->text_offset;
+            RT_LOG(RT_LOG_DEBUG, "STT_OBJECT symbol=%s, offset_in_copied=%llu, size=%llu, st_value=%llu, sh_offset=%llu, sh_addr=%llu, text_offset=%llu",
+                symbol.c_str(), offsetInCopiedContent, internalSym->st_size, internalSym->st_value,
+                internalShdr->sh_offset, internalShdr->sh_addr, elfData->text_offset);
+            if (ELF_ST_BIND(internalSym->st_info) == static_cast<uint32_t>(STB_GLOBAL)) {
+                elfData->globalSymbolMap[symbol] = {offsetInCopiedContent, internalSym->st_size};
+            }
             if (((elfData->ascendMetaFlag & KERNEL_PRINT_FIFO_ADDR_BIT) != 0) && (symbol ==  "g_sysPrintFifoSpace")) {
                 // 维侧空间地址
                 elfData->symbolAddr.g_sysPrintFifoSpace = addr;
@@ -1394,6 +1399,7 @@ static void ProcessSymbolTableGetOffset(rtElfData *elfData, uint32_t* offset)
     return;
 }
 
+
 RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData)
 {
     if (objBuf == nullptr) {
@@ -1419,13 +1425,13 @@ RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData)
 
 int32_t GetEhSizeOffset(void * const elfData, const uint32_t elfLen, uint32_t* offset)
 {
-    rtElfData *elfDataF = new (std::nothrow) rtElfData;
+    rtElfData *elfDataF = new (std::nothrow) rtElfData();
 
     if (elfDataF == nullptr) {
         RT_LOG(RT_LOG_ERROR, "new elfDataF failed.");
         return ELF_FAIL;
     }
-    (void)memset_s(elfDataF, sizeof(rtElfData), 0, sizeof(rtElfData));
+
 
     elfDataF->obj_ptr = static_cast<char_t *>(elfData);
     elfDataF->obj_ptr_origin = static_cast<char_t *>(elfData);

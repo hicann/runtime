@@ -1865,6 +1865,11 @@ rtError_t ApiDecorator::GetStackBuffer(const rtBinHandle binHandle, uint32_t dev
     return impl_->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
+rtError_t ApiDecorator::BinaryGetGlobal(const Program * const binHandle, const char *name, void **dptr, size_t *size)
+{
+    return impl_->BinaryGetGlobal(binHandle, name, dptr, size);
+}
+
 rtError_t ApiDecorator::FreeKernelBin(char_t * const buffer)
 {
     return impl_->FreeKernelBin(buffer);

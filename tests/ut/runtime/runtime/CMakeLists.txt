@@ -356,6 +356,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/api_preload_task.cc
     ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
     ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
+    ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_decorator_xpu.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_standard_soc.cc

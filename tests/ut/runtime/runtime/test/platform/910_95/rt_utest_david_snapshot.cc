@@ -736,7 +736,7 @@ TEST_F(DavidSnapshotTest, RecordOpAddrAndSize_EmptyTaskList)
     const auto& addrs = deviceSnapshot_->GetOpVirtualAddrs();
     EXPECT_EQ(addrs.size(), 0U);
 
-    error = rtStreamDestroy(streamHandle);
+    error = rtStreamDestroy(streamHandle);	 
     ASSERT_EQ(error, RT_ERROR_NONE);
 }
 

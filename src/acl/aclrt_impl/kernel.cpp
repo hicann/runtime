@@ -204,6 +204,30 @@ aclError aclrtBinaryGetFunctionByEntryImpl(aclrtBinHandle binHandle, uint64_t fu
     return ACL_SUCCESS;
 }
 
+aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size)
+{
+    ACL_LOG_INFO("start to execute aclrtBinaryGetGlobal");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(name);
+    if ((dptr == nullptr) && (size == nullptr)) {
+        ACL_LOG_ERROR("[Check][dptr,size]dptr and size cannot both be null.");
+        acl::AclErrorLogManager::ReportInputError("EH0002", {"param"}, {"dptr and size"});
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    const auto rtErr = rtBinaryGetGlobal(binHandle, name, dptr, size);
+    if (rtErr != RT_ERROR_NONE) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtBinaryGetGlobal not support, runtime result = %d.", rtErr);
+        } else {
+            ACL_LOG_CALL_ERROR("Binary get global Failed, runtime result = %d", rtErr);
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    ACL_LOG_INFO("execute aclrtBinaryGetGlobal success, name=%s", name);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
 {
     ACL_LOG_INFO("start to execute aclrtGetFunctionAddr");

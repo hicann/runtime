@@ -858,10 +858,9 @@ ElfProgram::ElfProgram(const rtKernelAttrType kernelAttrType) : Program(kernelAt
 {
     kernels_ = nullptr;
     SetType(Program::ELF_PROGRAM);
-    elfData_ = new (std::nothrow) rtElfData;
-    if (elfData_ != nullptr) {
-        const errno_t ret = memset_s(elfData_, sizeof(rtElfData), '\0', sizeof(rtElfData));
-        COND_LOG_DEBUG(ret != EOK, "memset_s failed, retCode=%d, size=%zu(bytes)", ret, sizeof(rtElfData));
+    elfData_ = new (std::nothrow) rtElfData();
+    if (elfData_ == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "new elfData_ failed.");
     }
 }
 
@@ -1119,6 +1118,20 @@ rtError_t ElfProgram::FunctionGetMetaInfo(const std::string &kernelName, const r
                                           void *data, const uint32_t length)
 {
     return GetFunctionMetaInfo(elfData_, kernelName, type, data, length);
+}
+
+rtError_t ElfProgram::GetGlobalSymbol(const char *name, uint64_t *offset, uint64_t *size) const
+{
+    NULL_PTR_RETURN_MSG(elfData_, RT_ERROR_INVALID_VALUE);
+
+    auto it = elfData_->globalSymbolMap.find(name);
+    if (it == elfData_->globalSymbolMap.end()) {
+        RT_LOG(RT_LOG_ERROR, "global symbol %s not found", name);
+        return RT_ERROR_SYMBOL_NOT_FOUND;
+    }
+    *offset = it->second.first;
+    *size = it->second.second;
+    return RT_ERROR_NONE;
 }
 
 void Program::RegCpuProgInfo(const void *data, const uint64_t length, const std::string &soName, const int32_t cpuRegMode,

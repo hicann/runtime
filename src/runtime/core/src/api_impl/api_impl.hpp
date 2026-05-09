@@ -117,6 +117,7 @@ public:
                            uint32_t *binSize) override;
     rtError_t GetStackBuffer(const rtBinHandle binHandle, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId,
                              const void **stack, uint32_t *stackSize) override;
+    rtError_t BinaryGetGlobal(const Program * const binHandle, const char *name, void **dptr, size_t *size) override;
     rtError_t FreeKernelBin(char_t * const buffer) override;
     rtError_t FusionLaunch(void * const fusionInfo, Stream * const stm, rtFusionArgsEx_t *argsInfo) override;
 

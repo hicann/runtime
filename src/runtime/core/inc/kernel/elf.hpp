@@ -368,6 +368,7 @@ struct rtElfData {
     bool dataFlag = false;
     uint32_t ascendMetaFlag = 0;
     rtElfSymbolAddr symbolAddr;
+    std::map<std::string, std::pair<uint64_t, uint64_t>> globalSymbolMap; // name -> (st_value, st_size)
 };
 
 RtKernel *ProcessObject(char_t * const objBuf, rtElfData * const elfData);

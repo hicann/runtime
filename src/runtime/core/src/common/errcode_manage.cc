@@ -221,6 +221,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_KERNEL_DUPLICATE] = {ACL_ERROR_RT_KERNEL_DUPLICATE, "kernel duplicate"};
     rtErrMap_[RT_ERROR_KERNEL_UNREGISTERING] = {ACL_ERROR_RT_KERNEL_UNREGISTERING, "kernel unregistering"};
     rtErrMap_[RT_ERROR_KERNEL_INVALID] = {ACL_ERROR_RT_INVALID_HANDLE, "invalid funcHandle"};
+    rtErrMap_[RT_ERROR_SYMBOL_NOT_FOUND] = {ACL_ERROR_RT_SYMBOL_NOT_FOUND, "global symbol not found"};
 
     // program error
     rtErrMap_[RT_ERROR_PROGRAM_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "program base error"};

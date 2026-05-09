@@ -17,12 +17,14 @@
 #include "rt_error_codes.h"
 #include "api_impl.hpp"
 #include "api_decorator.hpp"
+#include "api_error.hpp"
 #include "api_profile_log_decorator.hpp"
 #include "api_profile_decorator.hpp"
 #include "dev.h"
 #include "profiler.hpp"
 #include "binary_loader.hpp"
 #include "thread_local_container.hpp"
+#include "dev_info_manage.h"
 #undef private
 
 
@@ -529,4 +531,81 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSchedMode)
         &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(attrValue, 1);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_Success)
+{
+    ElfProgram prog;
+    prog.elfData_ = new rtElfData();
+    prog.elfData_->globalSymbolMap["test_global_var"] = {0x100, 256};
+    prog.SetBinBaseAddr((void *)0x8000, 0);
+    prog.SetBinAlignBaseAddr((void *)0x8000, 0);
+    void *dptr = nullptr;
+    size_t size = 0;
+    rtError_t ret = rtBinaryGetGlobal((rtBinHandle)(&prog), "test_global_var", &dptr, &size);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+    EXPECT_EQ(dptr, (void *)0x8100);
+    EXPECT_EQ(size, 256);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_SymbolNotFound)
+{
+    ElfProgram prog;
+    prog.elfData_ = new rtElfData();
+    prog.SetBinBaseAddr((void *)0x8000, 0);
+    prog.SetBinAlignBaseAddr((void *)0x8000, 0);
+    ApiImpl apiImpl;
+    void *dptr = nullptr;
+    size_t size = 0;
+    rtError_t ret = apiImpl.BinaryGetGlobal(static_cast<const Program*>(&prog), "nonexistent_symbol", &dptr, &size);
+    EXPECT_EQ(ret, RT_ERROR_SYMBOL_NOT_FOUND);
+}
+
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_NullOutputsParams)
+{
+    ElfProgram prog;
+    prog.elfData_ = new rtElfData();
+    prog.elfData_->globalSymbolMap["test_global_var"] = {0x100, 256};
+    prog.SetBinBaseAddr((void *)0x8000, 0);
+    prog.SetBinAlignBaseAddr((void *)0x8000, 0);
+    ApiImpl apiImpl;
+    rtError_t ret = apiImpl.BinaryGetGlobal(static_cast<const Program*>(&prog), "test_global_var", nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_CPUKernelNotSupport)
+{
+    PlainProgram prog(RT_KERNEL_REG_TYPE_CPU);
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    void *dptr = nullptr;
+    size_t size = 0;
+    rtError_t ret = apiError.BinaryGetGlobal(static_cast<const Program*>(&prog), "test_symbol", &dptr, &size);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_XPUFeatureNotSupport)
+{
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
+    ApiImpl apiImpl;
+    void *dptr = nullptr;
+    size_t size = 0;
+    rtError_t ret = rtBinaryGetGlobal((rtBinHandle)0x01, "test_symbol", &dptr, &size);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_BaseAddrNull)
+{
+    ElfProgram prog;
+    prog.elfData_ = new rtElfData();
+    prog.elfData_->globalSymbolMap["test_global_var"] = {0x100, 256};
+    prog.SetBinBaseAddr(nullptr, 0);
+    prog.SetBinAlignBaseAddr(nullptr, 0);
+    
+    ApiImpl apiImpl;
+    void *dptr = nullptr;
+    size_t size = 0;
+    rtError_t ret = apiImpl.BinaryGetGlobal(static_cast<const Program*>(&prog), "test_global_var", &dptr, &size);
+    EXPECT_EQ(ret, 0x7090001);
 }

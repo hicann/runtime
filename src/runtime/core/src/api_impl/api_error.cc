@@ -5100,6 +5100,14 @@ rtError_t ApiErrorDecorator::GetStackBuffer(const rtBinHandle binHandle, uint32_
     return impl_->GetStackBuffer(binHandle, deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 
+rtError_t ApiErrorDecorator::BinaryGetGlobal(const Program * const binHandle, const char *name, void **dptr, size_t *size)
+{
+    if (binHandle->GetKernelRegType() == RT_KERNEL_REG_TYPE_CPU) {
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    return impl_->BinaryGetGlobal(binHandle, name, dptr, size);
+}
+
 rtError_t ApiErrorDecorator::FreeKernelBin(char_t * const buffer)
 {
     NULL_PTR_RETURN_MSG_OUTER(buffer, RT_ERROR_INVALID_VALUE);

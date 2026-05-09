@@ -160,6 +160,7 @@
     _(aclError, aclrtBinaryLoadFromFile, (const char* binPath, aclrtBinaryLoadOptions * options, aclrtBinHandle * binHandle), (binPath, options, binHandle)) \
     _(aclError, aclrtBinaryGetDevAddress, (const aclrtBinHandle binHandle, void ** binAddr, size_t * binSize), (binHandle, binAddr, binSize)) \
     _(aclError, aclrtBinaryGetFunctionByEntry, (aclrtBinHandle binHandle, uint64_t funcEntry, aclrtFuncHandle * funcHandle), (binHandle, funcEntry, funcHandle)) \
+    _(aclError, aclrtBinaryGetGlobal, (aclrtBinHandle binHandle, const char * name, void ** dptr, size_t * size), (binHandle, name, dptr, size)) \
     _(aclError, aclrtGetFunctionAddr, (aclrtFuncHandle funcHandle, void ** aicAddr, void ** aivAddr), (funcHandle, aicAddr, aivAddr)) \
     _(aclError, aclrtGetFunctionSize, (aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize), (funcHandle, aicSize, aivSize)) \
     _(aclError, aclrtGetMemcpyDescSize, (aclrtMemcpyKind kind, size_t * descSize), (kind, descSize)) \
