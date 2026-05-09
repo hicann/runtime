@@ -357,6 +357,7 @@
     _(aclError, aclmdlRIExecute, (aclmdlRI modelRI, int32_t timeout), (modelRI, timeout)) \
     _(aclError, aclmdlRISetName, (aclmdlRI modelRI, const char * name), (modelRI, name)) \
     _(aclError, aclmdlRIGetName, (aclmdlRI modelRI, uint32_t maxLen, char * name), (modelRI, maxLen, name)) \
+    _(aclError, aclmdlRIGetId, (aclmdlRI modelRI, uint32_t * modelRIId), (modelRI, modelRIId)) \
     _(aclError, aclmdlRIAbort, (aclmdlRI modelRI), (modelRI)) \
     _(aclError, aclmdlRITaskGetSeqId, (aclmdlRITask task, uint32_t *id), (task, id)) \
     _(aclError, aclmdlRIGetStreams, (aclmdlRI modelRI, aclrtStream *streams, uint32_t *numStreams), (modelRI, streams, numStreams)) \

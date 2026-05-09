@@ -4549,6 +4549,16 @@ ACL_FUNC_VISIBILITY aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, 
 
 /**
  * @ingroup AscendCL
+ * @brief get model RI id
+ * @param [in] modelRI  model to execute
+ * @param [out] modelRIId   model RI id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIGetId(aclmdlRI modelRI, uint32_t *modelRIId);
+
+/**
+ * @ingroup AscendCL
  * @brief register callback func for model destroy
  * @param [in] modelRI  model to execute
  * @param [in] func     callback func

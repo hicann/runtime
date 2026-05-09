@@ -303,6 +303,7 @@ namespace acl {
         {AclProfType::AclrtDeviceGetHostAtomicCapabilities,     "aclrtDeviceGetHostAtomicCapabilities"},
         {AclProfType::AclrtDeviceGetP2PAtomicCapabilities,      "aclrtDeviceGetP2PAtomicCapabilities"},
         {AclProfType::AclrtMemMapSelectedLink,                  "aclrtMemMapSelectedLink"},
+        {AclProfType::AclmdlRIGetId,                            "aclmdlRIGetId"},
 };
 
 aclError RegisterType(const uint32_t index) {

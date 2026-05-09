@@ -2442,6 +2442,13 @@ rtError_t aclStub::rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, u
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelGetId(rtModel_t mdl, uint32_t *modelId)
+{
+    (void)mdl;
+    (void)modelId;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numTasks)
 {
     (void)stm;
@@ -4406,6 +4413,11 @@ rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t *info, rtFunc
 rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *numStreams)
 {
     return MockFunctionTest::aclStubInstance().rtModelGetStreams(mdl, streams, numStreams);
+}
+
+rtError_t rtModelGetId(rtModel_t mdl, uint32_t *modelId)
+{
+    return MockFunctionTest::aclStubInstance().rtModelGetId(mdl, modelId);
 }
 
 rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numTasks)

@@ -5478,6 +5478,31 @@ TEST_F(UTEST_ACL_Runtime, aclmdlRIGetName_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclmdlRIGetId_failed_with_invalid_args)
+{
+    aclmdlRI modelRI = (aclmdlRI)0x01;
+    uint32_t modelRIId = 0;
+    auto ret = aclmdlRIGetId(nullptr, &modelRIId);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclmdlRIGetId(modelRI, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelGetId(_, _))
+                    .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    ret = aclmdlRIGetId(modelRI, &modelRIId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclmdlRIGetId_success)
+{
+    aclmdlRI modelRI = (aclmdlRI)0x01;
+    uint32_t modelRIId = 0;
+    const auto ret = aclmdlRIGetId(modelRI, &modelRIId);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtCreateLabel_failed_with_invalid_args)
 {
     aclrtLabel label = (aclrtLabel)0x01;

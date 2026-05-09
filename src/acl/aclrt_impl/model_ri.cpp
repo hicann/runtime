@@ -405,6 +405,23 @@ aclError aclmdlRIGetNameImpl(aclmdlRI modelRI, uint32_t maxLen, char *name)
     return ACL_SUCCESS;
 }
 
+aclError aclmdlRIGetIdImpl(aclmdlRI modelRI, uint32_t *modelRIId)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetId);
+    ACL_LOG_INFO("start to execute aclmdlRIGetId");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRIId);
+
+    const rtError_t rtErr = rtModelGetId(static_cast<rtModel_t>(modelRI), modelRIId);
+    if (rtErr != RT_ERROR_NONE) {
+        ACL_LOG_CALL_ERROR("call rtModelGetId failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_INFO("successfully execute aclmdlRIGetId");
+    return ACL_SUCCESS;
+}
+
 aclError aclmdlRIAbortImpl(aclmdlRI modelRI)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIAbort);

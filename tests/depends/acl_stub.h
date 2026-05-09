@@ -347,6 +347,7 @@ public:
     virtual rtError_t rtsStreamEndTaskUpdate(rtStream_t stm);
     
     virtual rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *numStreams);
+    virtual rtError_t rtModelGetId(rtModel_t mdl, uint32_t *modelId);
     virtual rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numTasks);
     virtual rtError_t rtTaskGetType(rtTask_t task, rtTaskType *type);
     virtual rtError_t rtTaskGetSeqId(rtTask_t task, uint32_t *id);
@@ -828,6 +829,7 @@ public:
     MOCK_METHOD2(rtsStreamBeginTaskUpdate, rtError_t(rtStream_t stm, rtTaskGrp_t handle));
     MOCK_METHOD1(rtsStreamEndTaskUpdate, rtError_t(rtStream_t stm));
     MOCK_METHOD3(rtModelGetStreams, rtError_t(rtModel_t const mdl, rtStream_t *streams, uint32_t *numStreams));
+    MOCK_METHOD2(rtModelGetId, rtError_t(rtModel_t mdl, uint32_t *modelId));
     MOCK_METHOD3(rtStreamGetTasks, rtError_t(rtStream_t const stm, rtTask_t *tasks, uint32_t *numTasks));
     MOCK_METHOD2(rtTaskGetType, rtError_t(rtTask_t task, rtTaskType *type));
     MOCK_METHOD2(rtTaskGetSeqId, rtError_t(rtTask_t task, uint32_t *id));
