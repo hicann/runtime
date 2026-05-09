@@ -49,7 +49,6 @@ constexpr uint64_t MAX_ALLOC_SIZE = (1ULL << 50U);
 constexpr uint32_t L1FUSION_DUMP_SIZE = 0x100000U;
 constexpr uint32_t RT_MAX_TS_ID = 1U;
 constexpr uint32_t RT_DEV_ZERO = 0U;
-constexpr uint32_t RT_IPC_MAX_NAME = 64U;
 constexpr uint32_t STUB_DEVICE_ID = RT_MAX_DEV_NUM;
 
 constexpr uint32_t RT_AICORE_NUM_30 = 30U;

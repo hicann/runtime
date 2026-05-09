@@ -2997,9 +2997,6 @@ rtError_t ApiErrorDecorator::IpcSetMemoryName(const void * const ptr, const uint
 rtError_t ApiErrorDecorator::IpcSetMemoryAttr(const char *name, uint32_t type, uint64_t attr)
 {
     NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
-    const uint32_t nameLen = strnlen(name, RT_IPC_MAX_NAME);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(nameLen >= RT_IPC_MAX_NAME, RT_ERROR_INVALID_VALUE, 
-        nameLen, "[0, " + std::to_string(RT_IPC_MAX_NAME) + ")");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((type >= RT_ATTR_TYPE_MAX), RT_ERROR_INVALID_VALUE, 
         type, "[0, " + std::to_string(RT_ATTR_TYPE_MAX) + ")");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((attr >= RT_IPC_ATTR_MAX), RT_ERROR_INVALID_VALUE, 
