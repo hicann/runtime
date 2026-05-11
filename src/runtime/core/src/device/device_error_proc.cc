@@ -1031,6 +1031,7 @@ rtError_t DeviceErrorProc::ProcErrorInfoWithoutLock(const TaskInfo * const taskP
 
     // Set error device status
     device_->SetHasTaskError(true);
+    (void)Runtime::Instance()->SetWatchDogDevStatus(device_, RT_DEVICE_STATUS_ABNORMAL);
 
     // 2. memset read pointer
     ctrlInfo->head = tail;

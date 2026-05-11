@@ -26,6 +26,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "api_impl.hpp"
 #include "aicpu_err_msg.hpp"
+#include "cmodel_driver.h"
 #include "thread_local_container.hpp"
 #undef private
 #undef protected
@@ -212,6 +213,18 @@ uint16_t ChipDeviceTest::g_sId = 0;
 uint16_t ChipDeviceTest::g_tId = 0;
 uint32_t ChipDeviceTest::g_printType = 0;
 
+DevRingBufferCtlInfo ctrlInfo;
+DVresult cmodelDrvMemcpyStubForDevErrProc(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_t size, drvMemcpyKind_t kind)
+{
+    ctrlInfo.ringBufferLen = 1U;
+    ctrlInfo.magic = RINGBUFFER_MAGIC;
+    ctrlInfo.head = 0U;
+    ctrlInfo.tail = 1U;
+    size_t cpySize = (size < sizeof(DevRingBufferCtlInfo)) ? size : sizeof(DevRingBufferCtlInfo);
+    (void)memcpy_s(reinterpret_cast<void *>(dst), cpySize, &ctrlInfo, cpySize);
+    return DRV_ERROR_NONE;
+}
+
 TEST_F(ChipDeviceTest, device_error_proc2)
 {
     Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
@@ -227,18 +240,16 @@ TEST_F(ChipDeviceTest, device_error_proc2)
 
     errorProc->deviceRingBufferAddr_ = hostAddr.get();
 
-    MOCKER_CPP_VIRTUAL((NpuDriver*)(device->Driver_()),&NpuDriver::MemCopySync)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(cmodelDrvMemcpy).stubs().will(invoke(cmodelDrvMemcpyStubForDevErrProc));
+    MOCKER_CPP(&DeviceErrorProc::ProcessOneElementInRingBuffer).stubs().will(returnValue(RT_ERROR_NONE));
     error = errorProc->ProcErrorInfo();
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
     rtInstance->SetChipType(chipOld);
     GlobalContainer::SetRtChipType(chipOld);
 }
-
 
 TEST_F(ChipDeviceTest, device_error_report_ringbuffer_01)
 {
