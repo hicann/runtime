@@ -669,10 +669,15 @@ void ReportModelEndGraphErrorForNotifyWaitTask(TaskInfo *taskInfo, const uint32_
         RT_LOG(RT_LOG_ERROR, "this model is not in current context.");
         return;
     }
+
     TaskInfo mdlExecTsk = {};
     InitByStream(&mdlExecTsk, taskInfo->stream);
     /* In stars, modelExecute task is always followed by an endgraph task, modelExecuteTaskId = endgraphTaskId - 1 */
     mdlExecTsk.id = taskInfo->id - 1U;
+    mdlExecTsk.tid = taskInfo->tid;
+    RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%hu, model_id=%u, tid=%u",
+        mdlExecTsk.stream->Id_(), mdlExecTsk.id, mdl->Id_(), mdlExecTsk.tid);
+
     (void)ModelExecuteTaskInit(&mdlExecTsk, mdl, mdl->Id_(), 0U);
     (void)DoCompleteStarsErrorForModelExecuteTask(&mdlExecTsk, devId, taskInfo->errorCode);
     ModelExecuteTaskUnInit(&mdlExecTsk);
