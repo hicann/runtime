@@ -2559,3 +2559,22 @@ TEST_F(CloudV2ApiTest910b, get_mem_uce_info_proc_fast_recover)
     EXPECT_EQ(error, RT_ERROR_NONE);
     device->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
 }
+
+TEST_F(CloudV2ApiTest910b, get_mem_uce_info_proc_fast_recover_02)
+{
+    rtError_t error;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    Device * device = rtInstance->DeviceRetain(0, 0);
+    device->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
+    GlobalMockObject::verify();
+    rtErrorInfo errorInfo = {};
+
+    error = rtsGetErrorVerbose(0,  &errorInfo);
+    EXPECT_EQ(errorInfo.errorType, RT_ERROR_OTHERS);
+    EXPECT_EQ(errorInfo.tryRepair, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtsRepairError(0, &errorInfo);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    device->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
+}

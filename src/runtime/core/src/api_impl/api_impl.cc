@@ -8609,23 +8609,13 @@ rtError_t ApiImpl::FuncGetName(const Kernel * const kernel, const uint32_t maxLe
     return RT_ERROR_NONE;
 }
 
-static void UnknowErrorProc(const Context * const curCtx, rtErrorInfo * const errorInfo)
-{
-    if (curCtx->GetFailureError() == RT_ERROR_NONE) {
-        errorInfo->errorType = RT_NO_ERROR;
-    } else {
-        errorInfo->errorType = RT_ERROR_OTHERS;
-    }
-}
-
 rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorInfo)
 {
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device * const dev = curCtx->Device_();
+    rtError_t error = RT_ERROR_NONE;
+    Runtime * const rtInstance = Runtime::Instance();
+    Device * const dev = rtInstance->GetDevice(static_cast<uint32_t>(deviceId), static_cast<uint32_t>(RT_TSC_ID));
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
 
-    rtError_t error = RT_ERROR_NONE;
     const DeviceFaultType faultType = dev->GetDeviceFaultType();
     RT_LOG(RT_LOG_DEBUG, "start GetErrorVerbose, device_id=%u, type=%u", deviceId, faultType);
     errorInfo->hasDetail = 0U;
@@ -8636,11 +8626,10 @@ rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const 
             errorInfo->errorType = RT_ERROR_MEMORY;
             break;
         case DeviceFaultType::LINK_ERROR:
-            errorInfo->errorType = RT_ERROR_LINK;
-            errorInfo->tryRepair = 1U;
+            errorInfo->errorType = RT_ERROR_OTHERS;
             break;
         default:
-            UnknowErrorProc(curCtx, errorInfo);
+            errorInfo->errorType = RT_NO_ERROR;
             break;
     }
     return error;
@@ -8649,10 +8638,10 @@ rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const 
 rtError_t ApiImpl::RepairError(const uint32_t deviceId, const rtErrorInfo * const errorInfo)
 {
     rtError_t error = RT_ERROR_NONE;
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device * const dev = curCtx->Device_();
+    Runtime * const rtInstance = Runtime::Instance();
+    Device * const dev = rtInstance->GetDevice(static_cast<uint32_t>(deviceId), static_cast<uint32_t>(RT_TSC_ID));
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
+
     switch (errorInfo->errorType) {
         case RT_NO_ERROR:
             RT_LOG(RT_LOG_DEBUG ,"No device fault error exists.");
@@ -8660,10 +8649,6 @@ rtError_t ApiImpl::RepairError(const uint32_t deviceId, const rtErrorInfo * cons
             break;
         case RT_ERROR_MEMORY:
             error = MemUceErrorResume(dev, deviceId, errorInfo);
-            break;
-        case RT_ERROR_LINK:
-            RT_LOG(RT_LOG_WARNING ,"Check the fault information about the remote device.");
-            dev->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
