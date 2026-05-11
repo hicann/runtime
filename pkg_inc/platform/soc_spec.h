@@ -14,7 +14,7 @@
 #include <cstdint>
 
 
-enum class __attribute__((visibility("default"))) NpuArch : uint32_t {
+enum class NpuArch : uint32_t {
     DAV_1001 = 1001,
     DAV_1002 = 1002,
     DAV_1003 = 1003,

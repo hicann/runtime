@@ -20,7 +20,7 @@
 namespace fe {
 class PlatformInfosUtils;
 
-enum class __attribute__((visibility("default"))) LocalMemType {
+enum class LocalMemType {
   L0_A = 0,
   L0_B = 1,
   L0_C = 2,

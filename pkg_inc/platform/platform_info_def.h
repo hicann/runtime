@@ -21,13 +21,13 @@ using std::vector;
 using std::string;
 
 namespace fe {
-enum __attribute__((visibility("default"))) MemoryType { DDR = 0, HBM };
+enum MemoryType { DDR = 0, HBM };
 
-enum __attribute__((visibility("default"))) L2Type { Cache = 0, Buff };
+enum L2Type { Cache = 0, Buff };
 
-enum __attribute__((visibility("default"))) JitCompileMode { REUSE_BINARY = 0, COMPILE_ONLINE, AUTO };
+enum JitCompileMode { REUSE_BINARY = 0, COMPILE_ONLINE, AUTO };
 
-typedef struct __attribute__((visibility("default"))) tag_str_info {
+typedef struct tag_str_info {
   std::string aic_version;
   std::string ccec_aic_version;
   std::string ccec_aiv_version;
@@ -35,7 +35,7 @@ typedef struct __attribute__((visibility("default"))) tag_str_info {
   std::string short_soc_version;
 } StrInfo;
 
-typedef struct __attribute__((visibility("default"))) tag_so_c_info {
+typedef struct tag_so_c_info {
   uint32_t ai_core_cnt;
   uint32_t vector_core_cnt;
   uint32_t ai_cpu_cnt;
@@ -52,7 +52,7 @@ typedef struct __attribute__((visibility("default"))) tag_so_c_info {
         chip_type(-1) {}
 } SoCInfo;
 
-typedef struct __attribute__((visibility("default"))) tag_ai_core_spec {
+typedef struct tag_ai_core_spec {
   double cube_freq;
   uint64_t cube_m_size;
   uint64_t cube_n_size;
@@ -77,7 +77,7 @@ typedef struct __attribute__((visibility("default"))) tag_ai_core_spec {
   uint8_t sparsity;
 } AiCoreSpec;
 
-typedef struct __attribute__((visibility("default"))) tag_ai_core_memory_rates {
+typedef struct tag_ai_core_memory_rates {
   double ddr_rate;
   double ddr_read_rate;
   double ddr_write_rate;
@@ -93,7 +93,7 @@ typedef struct __attribute__((visibility("default"))) tag_ai_core_memory_rates {
   double ub_to_l1_rate;
 } AiCoreMemoryRates;
 
-typedef struct __attribute__((visibility("default"))) tag_vector_core_spec {
+typedef struct tag_vector_core_spec {
   double vec_freq;
   uint64_t vec_calc_size;
   uint64_t smask_buffer;
@@ -109,7 +109,7 @@ typedef struct __attribute__((visibility("default"))) tag_vector_core_spec {
   uint64_t alignment_reg_size;
 } VectorCoreSpec;
 
-typedef struct __attribute__((visibility("default"))) tag_vector_core_memory_rates {
+typedef struct tag_vector_core_memory_rates {
   double ddr_rate;
   double ddr_read_rate;
   double ddr_write_rate;
@@ -120,12 +120,12 @@ typedef struct __attribute__((visibility("default"))) tag_vector_core_memory_rat
   double ub_to_ddr_rate;
 } VectorCoreMemoryRates;
 
-typedef struct __attribute__((visibility("default"))) tag_cpu_cache {
+typedef struct tag_cpu_cache {
   uint32_t AICPUSyncBySW;
   uint32_t TSCPUSyncBySW;
 } CPUCache;
 
-typedef struct __attribute__((visibility("default"))) tag_software_spec {
+typedef struct tag_software_spec {
   bool jit_compile_default_value;
   JitCompileMode jit_compile_mode;
   tag_software_spec() {
@@ -134,7 +134,7 @@ typedef struct __attribute__((visibility("default"))) tag_software_spec {
   }
 } SoftwareSpec;
 
-typedef struct __attribute__((visibility("default"))) tag_platform_info {
+typedef struct tag_platform_info {
   StrInfo str_info;
   SoCInfo soc_info;
   AiCoreSpec ai_core_spec;
@@ -147,7 +147,7 @@ typedef struct __attribute__((visibility("default"))) tag_platform_info {
   SoftwareSpec software_spec;
 } PlatformInfo;
 
-typedef struct __attribute__((visibility("default"))) tag_optional_info {
+typedef struct tag_optional_info {
   std::string soc_version;
   std::string core_type;
   uint32_t ai_core_num;

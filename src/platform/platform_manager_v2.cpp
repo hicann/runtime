@@ -29,7 +29,7 @@ const std::string STR_VECTOR_CORE_INTRINSIC_DTYPE_MAP = "VectorCoreintrinsicDtyp
 const std::string SOC_VERSION_ASCEND910 = "Ascend910";
 const std::string SOC_VERSION_ASCEND910A = "Ascend910A";
 
-__attribute__((visibility("default"))) PlatformManagerV2 &PlatformManagerV2::Instance() {
+PlatformManagerV2 &PlatformManagerV2::Instance() {
   static PlatformManagerV2 platform_info;
   return platform_info;
 }
@@ -247,8 +247,8 @@ int32_t PlatformManagerV2::GetPlatformInfos(const std::string &soc_version, fe::
   return PLATFORM_SUCCESS;
 }
 
-__attribute__((visibility("default"))) int32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version,
-    const std::string &label, const std::string &key, std::string &value) {
+int32_t PlatformManagerV2::GetSocSpec(const std::string &soc_version,
+                                       const std::string &label, const std::string &key, std::string &value) {
   PF_LOGD("Begin to get soc[%s] info: label[%s], key[%s].", soc_version.c_str(), label.c_str(), key.c_str());
   fe::PlatFormInfos platform_info;
   auto ret = GetPlatformInfos(soc_version, platform_info);
