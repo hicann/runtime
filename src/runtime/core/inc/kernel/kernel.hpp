@@ -25,7 +25,7 @@
 namespace cce {
 namespace runtime {
 constexpr uint32_t KERNEL_ARRAY_SIZE_PER_ALLOC = 2048U;
-constexpr uint32_t RT_KERNEL_ATTR_TYPE_INVALID = 0x7FFFFFFF;
+constexpr uint32_t RT_KERNEL_ATTR_TYPE_INVALID = 0x7FFFFFFFU;
 
 // 算子注册的类型分为CPU算子和非CPU算子
 // 对于AIC/AIV/MIX都默认为非CPU算子，即：RT_KERNEL_REG_TYPE_NON_CPU

@@ -8775,7 +8775,7 @@ rtError_t ApiImpl::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute
     switch (attrType) {
         case RT_FUNCTION_ATTR_KERNEL_TYPE: {
             *attrValue = static_cast<int64_t>(kernel->GetKernelAttrType());
-            COND_RETURN_ERROR_MSG_INNER(*attrValue == static_cast<rtKernelAttrType>(0x7FFFFFFF), RT_ERROR_INVALID_VALUE, "Invalid kernel type.");
+            COND_RETURN_ERROR_MSG_INNER(*attrValue == static_cast<int64_t>(RT_KERNEL_ATTR_TYPE_INVALID), RT_ERROR_INVALID_VALUE, "Invalid kernel type.");
             break;
         }
         case RT_FUNCTION_ATTR_KERNEL_RATIO: {

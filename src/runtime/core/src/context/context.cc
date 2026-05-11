@@ -805,7 +805,7 @@ rtError_t Context::LaunchKernelPrepare(
         RT_ERROR_PROGRAM_BASE, "Kernel prog is not belong to the launch prog.");
 
     kernelAttrType = registeredKernel->GetKernelAttrType();
-    COND_RETURN_ERROR_MSG_INNER(kernelAttrType == RT_KERNEL_ATTR_TYPE_INVALID,
+    COND_RETURN_ERROR_MSG_INNER(static_cast<uint32_t>(kernelAttrType) == RT_KERNEL_ATTR_TYPE_INVALID,
         RT_ERROR_PROGRAM_MACHINE_TYPE,
         "Launch kernel failed, kernelAttrType failed! invalid type, current kernelAttrType=%d,"
         " valid kernelAttrType range is [%u, %u].",
