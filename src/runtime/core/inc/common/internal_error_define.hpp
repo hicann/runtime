@@ -20,8 +20,8 @@ constexpr uint32_t MASK_32_BIT = 0xFFFFFFFFU;
 constexpr uint32_t MASK_17_BIT = 0x0001FFFFU;
 constexpr uint32_t RT_MAX_STRING_LEN = 512U;
 constexpr uint32_t RT_GENERAL_SQE_NUM = 3U;
-constexpr uint8_t MEM_WAIT_SQE_NUM = 4U;
-constexpr uint8_t MEM_WAIT_V2_SQE_NUM = 3U;
+constexpr uint8_t MEM_WAIT_SQE_NUM = 4U;      // 修改此值，需要同步修改CANN/ge仓的rts_engine代码
+constexpr uint8_t MEM_WAIT_V2_SQE_NUM = 3U;   // 修改此值，需要同步修改CANN/ge仓的rts_engine代码
 
 constexpr uint64_t RT_MEMCPYASYNC_SPLIT_SIZE = 67108864UL; // 64*1024*1024
 constexpr uint64_t RT_MAX_MEMCPY2D_HEIGHT = 5242880UL; // 5*1024*1024
