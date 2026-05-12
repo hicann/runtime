@@ -1941,9 +1941,10 @@ static void UnknowErrorProc(const Context * const curCtx, rtErrorInfo * const er
 
 rtError_t ApiImplDavid::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorInfo)
 {
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device * const dev = curCtx->Device_();
+    const uint32_t tsId = InnerThreadLocalContainer::GetTsId();
+    Context * const ctx = Runtime::Instance()->GetPriCtxByDeviceId(deviceId, tsId);
+    CHECK_CONTEXT_VALID_WITH_RETURN(ctx, RT_ERROR_CONTEXT_NULL);
+    Device * const dev = ctx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
 
     rtError_t error = RT_ERROR_NONE;
@@ -1979,7 +1980,7 @@ rtError_t ApiImplDavid::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * c
             errorInfo->tryRepair = 1U;
             break;
         default:
-            UnknowErrorProc(curCtx, errorInfo);
+            UnknowErrorProc(ctx, errorInfo);
             break;
     }
     return error;
@@ -2045,9 +2046,10 @@ static void L3PortErrorStatusReset(Device * const dev)
 rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo * const errorInfo)
 {
     rtError_t error = RT_ERROR_NONE;
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device * const dev = curCtx->Device_();
+    const uint32_t tsId = InnerThreadLocalContainer::GetTsId();
+    Context * const ctx = Runtime::Instance()->GetPriCtxByDeviceId(deviceId, tsId);
+    CHECK_CONTEXT_VALID_WITH_RETURN(ctx, RT_ERROR_CONTEXT_NULL);
+    Device * const dev = ctx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     switch (errorInfo->errorType) {
         case RT_ERROR_L2:
