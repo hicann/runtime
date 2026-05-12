@@ -1639,12 +1639,12 @@ aclError aclrtCmoAsyncWithBarrierImpl(void *src, size_t size, aclrtCmoType cmoTy
 static aclError ValidateMemcpyBatchParams(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes,
     size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(dsts);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(destMaxs);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(srcs);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(sizes);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrs);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrsIndexes);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dsts);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(destMaxs);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(srcs);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(sizes);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrs);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrsIndexes);
 
     ACL_REQUIRES_POSITIVE_REPORT(numBatches);
 
@@ -1757,7 +1757,7 @@ aclError aclrtMemcpyBatchImpl(void **dsts, size_t *destMaxs, void **srcs, size_t
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatch);
     ACL_LOG_INFO("start to execute aclrtMemcpyBatch");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(failIndex);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(failIndex);
     return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex,
         nullptr, false, "aclrtMemcpyBatch");
 }
@@ -1777,7 +1777,7 @@ aclError aclrtMemcpyBatchAsyncImpl(void **dsts, size_t *destMaxs, void **srcs, s
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemcpyBatchAsync);
     ACL_LOG_INFO("start to execute aclrtMemcpyBatchAsync");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(failIndex);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(failIndex);
     return MemcpyBatchImpl(dsts, destMaxs, srcs, sizes, numBatches, attrs, attrsIndexes, numAttrs, failIndex,
         stream, true, "aclrtMemcpyBatchAsync");
 }
@@ -2262,8 +2262,8 @@ aclError aclrtMemMapSelectedLinkImpl(void *virPtrDst, size_t size, void *virPtrS
 {   
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemMapSelectedLink);
     ACL_LOG_INFO("start to execute aclrtMemMapSelectedLink.");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(virPtrDst);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(virPtrSrc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtrDst);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtrSrc);
     if (size == 0UL) {
         ACL_LOG_ERROR("size is [%zu], size must be greater than zero", size);
         acl::AclErrorLogManager::ReportInputError(acl::INVALID_PARAM_MSG,

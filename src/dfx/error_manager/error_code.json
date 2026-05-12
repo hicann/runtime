@@ -856,7 +856,7 @@
     },
     {
       "errClass": "ACL Errors",
-      "errTitle": "Resource_Error_Insufficient_Device_Memory",
+      "errTitle": "Resource_Error_Insufficient_Host_Memory",
       "ErrCode": "EH0010",
       "ErrMessage": "Failed to allocate %s bytes host memory for ACL.",
       "Arglist": "buf_size",

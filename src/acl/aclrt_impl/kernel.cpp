@@ -177,7 +177,7 @@ aclError aclrtBinaryGetDevAddressImpl(const aclrtBinHandle binHandle, void **bin
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtBinaryGetDevAddress);
     ACL_LOG_INFO("start to execute aclrtBinaryGetDevAddress");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(binHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(binHandle);
     uint32_t tempBinSize = 0U;
 
     const auto rtErr = rtsBinaryGetDevAddress(binHandle, binAddr, &tempBinSize);
@@ -258,9 +258,9 @@ aclError aclrtLaunchKernelWithConfigImpl(aclrtFuncHandle funcHandle, uint32_t nu
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithConfig);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithConfig");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_POSITIVE_REPORT(numBlocks);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
     ACL_CHECK_INVALID_PARAM_NO_VALUE(reserve == nullptr, "reserve",
         "reserve is a reserved parameter and must be nullptr");
 
@@ -314,8 +314,8 @@ aclError aclmdlRITaskSetParamsImpl(aclmdlRITask task, aclmdlRITaskParams* params
 aclError aclmdlRIKernelTaskGetAttributeImpl(aclmdlRITask task, aclrtLaunchKernelAttrId attrId, aclrtLaunchKernelAttrValue *attrValue)
 {
     ACL_PROFILING_REG(acl::AclProfType::aclmdlRIKernelTaskGetAttribute);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(task);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(attrValue);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(task);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrValue);
     const auto rtErr = rtModelKernelTaskGetAttribute(static_cast<rtTask_t>(task), static_cast<rtLaunchKernelAttrId>(attrId),
         reinterpret_cast<rtLaunchKernelAttrVal_t*>(attrValue));
     if (rtErr != RT_ERROR_NONE) {
@@ -328,8 +328,8 @@ aclError aclmdlRIKernelTaskGetAttributeImpl(aclmdlRITask task, aclrtLaunchKernel
 aclError aclrtKernelArgsInitImpl(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHandle)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsInit");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
 
     const auto rtErr = rtsKernelArgsInit(funcHandle, argsHandle);
     if (rtErr != RT_ERROR_NONE) {
@@ -343,9 +343,9 @@ aclError aclrtKernelArgsInitByUserMemImpl(aclrtFuncHandle funcHandle, aclrtArgsH
                                           size_t actualArgsSize)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsInitByUserMem");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(userHostMem);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(userHostMem);
     ACL_REQUIRES_POSITIVE_REPORT(actualArgsSize);
 
     const auto rtErr = rtsKernelArgsInitByUserMem(funcHandle, argsHandle, userHostMem, actualArgsSize);
@@ -360,8 +360,8 @@ aclError aclrtKernelArgsGetMemSizeImpl(aclrtFuncHandle funcHandle, size_t userAr
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetMemSize);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetMemSize");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(actualArgsSize);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(actualArgsSize);
 
     const auto rtErr = rtsKernelArgsGetMemSize(funcHandle, userArgsSize, actualArgsSize);
     if (rtErr != RT_ERROR_NONE) {
@@ -375,8 +375,8 @@ aclError aclrtKernelArgsGetHandleMemSizeImpl(aclrtFuncHandle funcHandle, size_t 
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetHandleMemSize);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetHandleMemSize");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(funcHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(memSize);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memSize);
 
     const auto rtErr = rtsKernelArgsGetHandleMemSize(funcHandle, memSize);
     if (rtErr != RT_ERROR_NONE) {
@@ -391,10 +391,10 @@ aclError aclrtKernelArgsAppendImpl(aclrtArgsHandle argsHandle, void *param, size
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsAppend);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsAppend");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(param);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(param);
     ACL_REQUIRES_POSITIVE_REPORT(paramSize);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramHandle);
 
     const auto rtErr = rtsKernelArgsAppend(argsHandle, param, paramSize, paramHandle);
     if (rtErr != RT_ERROR_NONE) {
@@ -408,8 +408,8 @@ aclError aclrtKernelArgsAppendPlaceHolderImpl(aclrtArgsHandle argsHandle, aclrtP
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsAppendPlaceHolder);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsAppendPlaceHolder");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramHandle);
 
     const auto rtErr = rtsKernelArgsAppendPlaceHolder(argsHandle, paramHandle);
     if (rtErr != RT_ERROR_NONE) {
@@ -424,10 +424,10 @@ aclError aclrtKernelArgsGetPlaceHolderBufferImpl(aclrtArgsHandle argsHandle, acl
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsGetPlaceHolderBuffer);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsGetPlaceHolderBuffer");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramHandle);
     ACL_REQUIRES_POSITIVE_REPORT(dataSize);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(bufferAddr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(bufferAddr);
 
     const auto rtErr = rtsKernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, dataSize, bufferAddr);
     if (rtErr != RT_ERROR_NONE) {
@@ -442,9 +442,9 @@ aclError aclrtKernelArgsParaUpdateImpl(aclrtArgsHandle argsHandle, aclrtParamHan
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtKernelArgsParaUpdate);
     ACL_LOG_INFO("Start to execute aclrtKernelArgsParaUpdate");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(paramHandle);
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(param);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(paramHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(param);
     ACL_REQUIRES_POSITIVE_REPORT(paramSize);
 
     const auto rtErr = rtsKernelArgsParaUpdate(argsHandle, paramHandle, param, paramSize);
@@ -458,7 +458,7 @@ aclError aclrtKernelArgsParaUpdateImpl(aclrtArgsHandle argsHandle, aclrtParamHan
 aclError aclrtKernelArgsFinalizeImpl(aclrtArgsHandle argsHandle)
 {
     ACL_LOG_INFO("Start to execute aclrtKernelArgsFinalize");
-    ACL_REQUIRES_NOT_NULL_WITH_INNER_REPORT(argsHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsHandle);
 
     const auto rtErr = rtsKernelArgsFinalize(argsHandle);
     if (rtErr != RT_ERROR_NONE) {

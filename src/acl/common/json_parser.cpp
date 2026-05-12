@@ -104,7 +104,6 @@ namespace acl {
         fin.close();
     }
 
-    // 待确认
     bool JsonParser::IsValidFileName(const char_t *const fileName)
     {
         char_t trustedPath[MMPA_MAX_PATH] = {};
