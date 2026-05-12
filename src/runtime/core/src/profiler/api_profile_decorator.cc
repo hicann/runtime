@@ -82,7 +82,7 @@ void ApiProfileDecorator::CallApiEnd(const rtError_t retCode, const uint32_t dev
         return;
     }
 
-    if (!profApiContext.needReport) {
+    if (!profApiContext.needReport || !profiler_->GetApiProfEnable()) {
         return;
     }
 

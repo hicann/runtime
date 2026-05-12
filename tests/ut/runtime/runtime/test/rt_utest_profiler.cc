@@ -296,8 +296,7 @@ TEST_F(ProfilerTest, ApiProfilePlaceholderFramePreserveOuterContext)
     profiler->GetProfTaskTrackData().taskNum = 0U;
     profiler->apiProfileDecorator_->CallApiEnd(RT_ERROR_NONE, 0);
 
-    ASSERT_EQ(g_reportedApiTypeNum, 1U);
-    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_STREAM_DESTROY + RT_PROFILE_TYPE_API_BEGIN);
+    ASSERT_EQ(g_reportedApiTypeNum, 0U);
     ClearApiProfContextStack(profiler);
 }
 
