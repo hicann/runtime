@@ -28,7 +28,7 @@ struct XpuHandle {
 class XpuArgLoader final : public NoCopy {
 public:
     explicit XpuArgLoader(XpuDevice * const dev);
-    ~XpuArgLoader();
+    ~XpuArgLoader() override;
     rtError_t Init();
     rtError_t Release(void * const argHandle) const;
     rtError_t AllocCopyPtr(const uint32_t size, ArgLoaderResult * const result) const;
