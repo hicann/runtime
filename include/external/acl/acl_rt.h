@@ -543,6 +543,7 @@ typedef enum {
     ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK = 2,
     ACL_STREAM_ATTR_USER_CUSTOM_TAG      = 3,
     ACL_STREAM_ATTR_CACHE_OP_INFO        = 4,
+    ACL_STREAM_ATTR_PRIORITY             = 5,
 } aclrtStreamAttr;
 
 typedef union {
@@ -550,6 +551,7 @@ typedef union {
     uint32_t overflowSwitch;
     uint32_t userCustomTag;
     uint32_t cacheOpInfoSwitch;
+    uint32_t streamPriority;
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 
