@@ -858,6 +858,7 @@ void SaveTaskInfo(TaskInfo *const taskInfo, TaskInfo *submitTask)
     taskInfo->preRecycleFlag = submitTask->preRecycleFlag;
     taskInfo->isCqeNeedConcern = submitTask->isCqeNeedConcern;
     taskInfo->u = submitTask->u;
+    taskInfo->taskOwner = submitTask->taskOwner;
 
     TaskCommonInfoInit(taskInfo);
     taskInfo->needPostProc = submitTask->needPostProc;
