@@ -14,6 +14,7 @@ set(RUNTIME_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 include(${RUNTIME_DIR}/src/inc/runtime/runtime_inner_headers.cmake)
 include(${RUNTIME_CMAKE_DIR}/platform.cmake)
+include(${RUNTIME_CMAKE_DIR}/runtime_warning_options.cmake)
 
 if ("${PRODUCT}" STREQUAL "ascend031")
     runtime_platform_tiny_obj(runtime_platform_tiny)

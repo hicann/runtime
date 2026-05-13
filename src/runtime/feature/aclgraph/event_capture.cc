@@ -27,7 +27,7 @@ rtError_t Event::CaptureEventProcess(Stream * const stm)
     TaskInfo *tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_EVENT_RECORD, errorReason);
     COND_RETURN_ERROR_MSG_INNER((tsk == nullptr), errorReason,
                                 "Failed to alloc task when event record, stream_id=%d.", stm->Id_());
-    std::function<void()> const errRecycle = [&dev, &tsk, &eventAddr, &newEventId]() {
+    std::function<void()> const errRecycle = [&dev, &tsk]() {
         (void)dev->GetTaskFactory()->Recycle(tsk);
     };
     ScopeGuard tskErrRecycle(errRecycle);

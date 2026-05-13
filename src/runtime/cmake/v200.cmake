@@ -587,6 +587,7 @@ macro(add_runtime_v200_library target_name)
     target_link_libraries(${target_name}
         PRIVATE
             $<BUILD_INTERFACE:intf_pub>
+            $<BUILD_INTERFACE:runtime_warning_options>
             $<BUILD_INTERFACE:mmpa_headers>
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
@@ -693,6 +694,7 @@ macro(add_runtime_v201_library target_name)
     target_link_libraries(${target_name}
         PRIVATE
             $<BUILD_INTERFACE:intf_pub>
+            $<BUILD_INTERFACE:runtime_warning_options>
             $<BUILD_INTERFACE:mmpa_headers>
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>

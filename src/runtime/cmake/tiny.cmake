@@ -530,6 +530,7 @@ macro(add_runtime_common_library target_name)
     target_link_libraries(${target_name}
         PRIVATE
             $<BUILD_INTERFACE:intf_pub>
+            $<BUILD_INTERFACE:runtime_warning_options>
             $<BUILD_INTERFACE:mmpa_headers>
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
@@ -632,6 +633,7 @@ macro(add_runtime_api_library target_name)
     target_link_libraries(${target_name}
         PRIVATE
             $<BUILD_INTERFACE:intf_pub>
+            $<BUILD_INTERFACE:runtime_warning_options>
             $<BUILD_INTERFACE:platform_headers>
             $<BUILD_INTERFACE:mmpa_headers>
             $<BUILD_INTERFACE:msprof_headers>
@@ -722,6 +724,7 @@ macro(add_runtime_v100_library target_name)
     target_link_libraries(${target_name}
         PRIVATE
             $<BUILD_INTERFACE:intf_pub>
+            $<BUILD_INTERFACE:runtime_warning_options>
             $<BUILD_INTERFACE:mmpa_headers>
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
@@ -849,6 +852,7 @@ endif()
 target_link_libraries(static_runtime
     PRIVATE
         $<BUILD_INTERFACE:intf_pub>
+        $<BUILD_INTERFACE:runtime_warning_options>
         $<BUILD_INTERFACE:mmpa_headers>
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>

@@ -1766,3 +1766,144 @@ TEST_F(CloudV2CaptureModelTest, task_get_seq_id)
     stm->DelModel(&model);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
+
+TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_Success)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtStream_t captureStream;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+
+    error = rtStreamCreate(&captureStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *capStm = rt_ut::UnwrapOrNull<Stream>(captureStream);
+
+    rtEvent_t event;
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    evt->SetCaptureStream(capStm);
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stm;
+    MOCKER_CPP(&Stream::AllocTask)
+        .stubs()
+        .will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = evt->CaptureEventProcess(stm);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(captureStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_AllocEventFail)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtStream_t captureStream;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+
+    error = rtStreamCreate(&captureStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *capStm = rt_ut::UnwrapOrNull<Stream>(captureStream);
+
+    rtEvent_t event;
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    evt->SetCaptureStream(capStm);
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stm;
+    MOCKER_CPP(&Stream::AllocTask)
+        .stubs()
+        .will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = evt->CaptureEventProcess(stm);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(captureStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_SubmitTaskFail)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtStream_t captureStream;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *stm = rt_ut::UnwrapOrNull<Stream>(stream);
+
+    error = rtStreamCreate(&captureStream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Stream *capStm = rt_ut::UnwrapOrNull<Stream>(captureStream);
+
+    rtEvent_t event;
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    evt->SetCaptureStream(capStm);
+
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stm;
+    MOCKER_CPP(&Stream::AllocTask)
+        .stubs()
+        .will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask)
+        .stubs()
+        .will(returnValue(RT_ERROR_STREAM_FULL));
+    MOCKER_CPP(&TaskFactory::Recycle)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = evt->CaptureEventProcess(stm);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(captureStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}

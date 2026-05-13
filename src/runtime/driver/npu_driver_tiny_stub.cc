@@ -17,6 +17,7 @@ rtError_t NpuDriver::CreateAsyncDmaWqe(uint32_t devId, const AsyncDmaWqeInputInf
     UNUSED(input);
     UNUSED(output);
     UNUSED(isSqeUpdate);
+    UNUSED(isUbMode);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

@@ -3771,7 +3771,6 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
     RT_LOG(RT_LOG_DEBUG, "Begin wait for task, device_id=%u, stream_id=%d, task_id=%u, finish_task_id=%u, "
         "last_task_id=%u, timeout=%dms.", deviceId, streamId_, taskId, finishTaskId_, lastTaskId_, timeout);
 
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     if ((!device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_DOT_SYNC)) && (GetBindFlag())) {
         return ModelWaitForTask(taskId, isNeedWaitSyncCq);
     }
@@ -3805,6 +3804,7 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
         this->SetSyncRemainTime(remainTime);
 #if !(defined(__arm__))
         SetStreamAsyncRecycleFlag(true);
+        const rtChipType_t chipType = Runtime::Instance()->GetChipType();
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
             errorCode = TaskReclaimByStream(this, false);
             currentId = static_cast<uint32_t>(GetRecycleEndTaskId());
