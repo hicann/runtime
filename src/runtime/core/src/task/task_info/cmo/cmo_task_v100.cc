@@ -138,9 +138,9 @@ void ConstructCmoAddrSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     sqe->ptrMode = 1U;
     sqe->va = 1U;
-    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x00000000FFFFFFFFU);
+    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x00000000FFFFFFFFUL);
     sqe->sdmaSqeBaseAddrHigh =
-        static_cast<uint32_t>((RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x0001FFFF00000000U) >> UINT32_BIT_NUM);
+        static_cast<uint32_t>((RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x0001FFFF00000000UL) >> UINT32_BIT_NUM);
     RT_LOG(RT_LOG_INFO, "ConstructCmoAddrSqe, cmoAddrTaskInfo=%p, device_id=%d, stream_id=%d, task_id=%hu.",
         cmoAddrInfo->cmoAddrInfo, static_cast<int32_t>(stream->Device_()->Id_()),
         taskInfo->stream->Id_(), taskInfo->id);

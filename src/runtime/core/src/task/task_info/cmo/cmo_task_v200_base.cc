@@ -65,9 +65,9 @@ void ConstructDavidCmoAddrSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const dav
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->header.ptrMode = 1U;
     sqe->va = 1U;
-    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x00000000FFFFFFFFU);
+    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x00000000FFFFFFFFUL);
     sqe->sdmaSqeBaseAddrHigh =
-        static_cast<uint32_t>((RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x0001FFFF00000000U) >> UINT32_BIT_NUM);
+        static_cast<uint32_t>((RtPtrToValue(cmoAddrInfo->cmoAddrInfo) & 0x0001FFFF00000000UL) >> UINT32_BIT_NUM);
     RT_LOG(RT_LOG_INFO, "ConstructCmoAddrSqe, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn);
     PrintDavidSqe(davidSqe, "CmoAddrTask");

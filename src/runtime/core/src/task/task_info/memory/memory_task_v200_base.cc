@@ -36,9 +36,9 @@ static void ConstructDavidMemcpySqePtr(TaskInfo * const taskInfo, rtDavidSqe_t *
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     sqe->va = 1U;
     sqe->sdmaSqeBaseAddrLow =
-        static_cast<uint32_t>(RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x00000000FFFFFFFFU);
+        static_cast<uint32_t>(RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x00000000FFFFFFFFUL);
     sqe->sdmaSqeBaseAddrHigh = static_cast<uint32_t>(
-        (RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x0001FFFF00000000U) >> UINT32_BIT_NUM);
+        (RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x0001FFFF00000000UL) >> UINT32_BIT_NUM);
     PrintDavidSqe(davidSqe, "MemcpyAsyncPtr");
     RT_LOG(RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, memcpyAddrInfo=%p .",
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->memcpyAddrInfo);

@@ -102,10 +102,8 @@ static void ConstructPlaceHolderSqe(TaskInfo * const taskInfo, rtStarsSqe_t * co
     sqe->pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
     sqe->post_p = RT_STARS_SQE_INT_DIR_NO;
 
-    sqe->u.memcpy_async_without_sdma_info.src =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src));
-    sqe->u.memcpy_async_without_sdma_info.dest =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr));
+    sqe->u.memcpy_async_without_sdma_info.src = RtPtrToValue(memcpyAsyncTaskInfo->src);
+    sqe->u.memcpy_async_without_sdma_info.dest = RtPtrToValue(memcpyAsyncTaskInfo->destPtr);
     sqe->u.memcpy_async_without_sdma_info.size = memcpyAsyncTaskInfo->size;
     if (!stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_ASYNC_DOT_BY_PLACEHOLDER)) {
         sqe->u.memcpy_async_without_sdma_info.pid = static_cast<uint32_t>(drvDeviceGetBareTgid());
@@ -141,10 +139,10 @@ static void ConstructMemcpySqePtr(TaskInfo * const taskInfo, rtStarsSqe_t * cons
     sqe->kernelCredit = GetSdmaKernelCredit();
     sqe->ptrMode = 1U;
     sqe->va = 1U;
-    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(static_cast<uint64_t>(reinterpret_cast<uintptr_t>
-        (memcpyAsyncTaskInfo->memcpyAddrInfo)) & 0x00000000FFFFFFFFU);
-    sqe->sdmaSqeBaseAddrHigh = static_cast<uint32_t>((static_cast<uint64_t>(reinterpret_cast<uintptr_t>
-        (memcpyAsyncTaskInfo->memcpyAddrInfo)) & 0x0001FFFF00000000U) >> UINT32_BIT_NUM);
+    sqe->sdmaSqeBaseAddrLow = static_cast<uint32_t>(
+        RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x00000000FFFFFFFFUL);
+    sqe->sdmaSqeBaseAddrHigh = static_cast<uint32_t>(
+        (RtPtrToValue(memcpyAsyncTaskInfo->memcpyAddrInfo) & 0x0001FFFF00000000UL) >> UINT32_BIT_NUM);
     PrintSqe(command, "MemcpyAsyncPtr");
 }
 
@@ -179,7 +177,7 @@ void ConstructPcieDmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
     }
 
     if (memcpyAsyncTaskInfo->dsaSqeUpdateFlag || memcpyAsyncTaskInfo->isSqeUpdateD2H) {
-        sqe->src = (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src)));
+        sqe->src = RtPtrToValue(memcpyAsyncTaskInfo->src);
         sqe->dst = (static_cast<uint64_t>(memcpyAsyncTaskInfo->sqId) << 32U) +
             static_cast<uint64_t>(memcpyAsyncTaskInfo->taskPos);
         sqe->length = memcpyAsyncTaskInfo->size;
@@ -199,8 +197,7 @@ void ConstructPcieDmaSqe(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
     sqe->isConverted = 1U;
     sqe->isDsaUpdate = 0U;
     sqe->isSqeUpdate = 0U;
-    const uint64_t sqAddr =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src));
+    const uint64_t sqAddr = RtPtrToValue(memcpyAsyncTaskInfo->dmaAddr.phyAddr.src);
     sqe->sq_addr_low = static_cast<uint32_t>(sqAddr & MASK_32_BIT);
     sqe->sq_addr_high = static_cast<uint32_t>(sqAddr >> UINT32_BIT_NUM);
     sqe->sq_tail_ptr = static_cast<uint16_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
