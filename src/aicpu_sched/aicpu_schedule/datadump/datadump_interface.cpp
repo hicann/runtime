@@ -75,7 +75,7 @@ int32_t StopAICPUDatadump(uint32_t deviceId, pid_t hostPid)
     UNUSED(deviceId);
     UNUSED(hostPid);
     AicpuSchedule::OpDumpTaskManager::GetInstance().ClearResource();
-    aicpusd_run_info("Success to stop aicpu scheduler, deviceId[%u], hostPid[%d].", deviceId, hostPid);
+    aicpusd_run_info("Successfully stopped AICPU scheduler, deviceId[%u], hostPid[%d].", deviceId, hostPid);
     return AicpuSchedule::AICPU_SCHEDULE_OK;
 }
 }

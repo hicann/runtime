@@ -168,7 +168,7 @@ namespace AicpuSchedule {
                 callback->event.comm.subevent_id, userData);
             return AICPU_SCHEDULE_ERROR_ADD_CALLBACK_FAILED;
         }
-        aicpusd_info("Success to AddCallback subevent_id[%d], userData[%llu].",
+        aicpusd_info("Successfully added callback, subevent_id[%d], userData[%llu].",
             callback->event.comm.subevent_id, userData);
         return AICPU_SCHEDULE_OK;
     }
@@ -184,7 +184,7 @@ namespace AicpuSchedule {
         }
         callback = iter->second;
         (void) callbacks_.erase(iter);
-        aicpusd_info("Success to GetAndDeleteCallback subevent_id[%u], userData[%llu].",
+        aicpusd_info("Successfully got and deleted callback, subevent_id[%u], userData[%llu].",
             callback->event.comm.subevent_id, userData);
         return AICPU_SCHEDULE_OK;
     }
@@ -264,7 +264,7 @@ namespace AicpuSchedule {
             (void) GetAndDeleteCallback(userData, callback);
             return ret;
         }
-        aicpusd_info("Success to ProcessBindQueueInit.");
+        aicpusd_info("Successfully processed bind queue init.");
         return AICPU_SCHEDULE_OK;
     }
 
@@ -290,7 +290,7 @@ namespace AicpuSchedule {
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
         initPipeline_ = BindQueueInitStatus::INITED;
-        aicpusd_info("Success to ProcessBindQueueInitRet, queueId[%u].", pipelineQueueId_);
+        aicpusd_info("Successfully processed bind queue init ret, queueId[%u].", pipelineQueueId_);
         return AICPU_SCHEDULE_OK;
     }
 
@@ -325,7 +325,7 @@ namespace AicpuSchedule {
             return ret;
         }
 
-        aicpusd_info("Success to ProcessQueryQueueNum.");
+        aicpusd_info("Successfully processed query queue num.");
         return AICPU_SCHEDULE_OK;
     }
 
@@ -490,7 +490,7 @@ namespace AicpuSchedule {
                 event.comm.subevent_id);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
-        aicpusd_info("Success to response event event_id[%u], subevent_id[%u].", event.comm.event_id,
+        aicpusd_info("Successfully responded to event, event_id[%u], subevent_id[%u].", event.comm.event_id,
             event.comm.subevent_id);
         return AICPU_SCHEDULE_OK;
     }
@@ -668,7 +668,7 @@ namespace AicpuSchedule {
             aicpusd_err("Query qs pid failed, ret=[%d]", drvRet);
             return AICPU_SCHEDULE_ERROR_DRV_ERR;
         }
-        aicpusd_info("Success to QueryQsPid.");
+        aicpusd_info("Successfully queried QS pid.");
         return AICPU_SCHEDULE_OK;
     }
 

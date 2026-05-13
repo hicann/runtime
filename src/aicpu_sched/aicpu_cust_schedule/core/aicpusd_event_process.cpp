@@ -84,7 +84,7 @@ namespace AicpuSchedule {
             aicpusd_err("Failed to process aicpu event, eventId[%d].", custEventId);
             return ret;
         }
-        aicpusd_info("Success to process aicpu event, eventId[%d].", custEventId);
+        aicpusd_info("Successfully processed AICPU event, eventId[%d].", custEventId);
         return AICPU_SCHEDULE_OK;
     }
 

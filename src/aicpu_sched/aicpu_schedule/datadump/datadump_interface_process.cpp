@@ -152,7 +152,7 @@ namespace AicpuSchedule {
             return AICPU_SCHEDULE_ERROR_INIT_CP_FAILED;
         }
 
-        aicpusd_info("Success to start compute process, deviceId[%u], hostPid[%d], runMode[%u]",
+        aicpusd_info("Successfully started compute process, deviceId[%u], hostPid[%d], runMode[%u]",
                      deviceVec[FIRST_INDEX], hostPid, runMode_);
         initFlag_ = true;
         return AICPU_SCHEDULE_OK;
@@ -177,7 +177,7 @@ namespace AicpuSchedule {
                 aicpusd_err("Failed to detach device[%u], result[%d].", deviceVec[i], ret);
                 return ret;
             }
-            aicpusd_info("Success to detach aicpu scheduler, device[%d].", deviceVec[i]);
+            aicpusd_info("Successfully detached AICPU scheduler, device[%d].", deviceVec[i]);
         }
         return AICPU_SCHEDULE_OK;
     }

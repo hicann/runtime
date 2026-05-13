@@ -139,7 +139,7 @@ namespace AicpuSchedule {
             ComputeProcess::GetInstance().Stop();
             return AICPU_SCHEDULE_ERROR_INIT_CP_FAILED;
         }
-        aicpusd_info("Success to start compute process, deviceId[%u], hostPid[%d], mode[%d].",
+        aicpusd_info("Successfully started compute process, deviceId[%u], hostPid[%d], mode[%d].",
                      deviceId, hostPid, static_cast<int32_t>(isOnline));
         initFlag_ = true;
         return AICPU_SCHEDULE_OK;
@@ -178,7 +178,7 @@ namespace AicpuSchedule {
             aicpusd_err("Failed to detach device[%u], result[%d].", deviceId, static_cast<int32_t>(ret));
             return static_cast<int32_t>(ret);
         }
-        aicpusd_info("Success to stop aicpu custom scheduler.");
+        aicpusd_info("Successfully stopped AICPU custom scheduler.");
         return AICPU_SCHEDULE_OK;
     }
 

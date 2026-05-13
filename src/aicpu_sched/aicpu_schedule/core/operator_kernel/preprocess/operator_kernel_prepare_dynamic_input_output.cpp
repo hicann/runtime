@@ -205,7 +205,7 @@ int32_t PrepareDynamicInputOutputBase::PrepareReqMsg(const PrepareDynamicInputOu
                 aicpusd_err("Failed to update the[%zu]th data addr. fusion offset = %d.", i, srcFusionOffsets[i]);
                 return ret;
             }
-            aicpusd_info("Success to update the[%zu]th data addr. fusion offset = %d.", i, srcFusionOffsets[i]);
+            aicpusd_info("Successfully updated the[%zu]th data addr. fusion offset = %d.", i, srcFusionOffsets[i]);
         }
 
         if (inputDynamicFlags[i] > 0U) {

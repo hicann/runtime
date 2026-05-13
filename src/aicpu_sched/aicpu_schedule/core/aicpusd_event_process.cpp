@@ -630,7 +630,7 @@ namespace AicpuSchedule {
             aicpusd_err("failed to process aicpu event, eventId[%d].", drvEventId);
             return ret;
         }
-        aicpusd_info("Success to process aicpu event, eventId[%d]", drvEventId);
+        aicpusd_info("Successfully processed AICPU event, eventId[%d]", drvEventId);
         return AICPU_SCHEDULE_OK;
     }
 

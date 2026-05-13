@@ -227,7 +227,7 @@ int32_t StopAICPUScheduler(uint32_t deviceId, pid_t hostPid)
     AicpuSchedule::OpDumpTaskManager::GetInstance().ClearResource();
     const std::vector<uint32_t> deviceVec = {deviceId};
     (void)AicpuSchedule::AicpuScheduleInterface::GetInstance().StopAICPUSchedulerWithFlag(deviceVec, hostPid, false);
-    aicpusd_run_info("Success to stop aicpu scheduler, deviceId[%u], hostPid[%d].", deviceId, hostPid);
+    aicpusd_run_info("Successfully stopped AICPU scheduler, deviceId[%u], hostPid[%d].", deviceId, hostPid);
     return AicpuSchedule::AICPU_SCHEDULE_OK;
 }
 

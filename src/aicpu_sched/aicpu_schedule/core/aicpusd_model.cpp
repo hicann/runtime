@@ -1175,7 +1175,7 @@ namespace AicpuSchedule {
                     cfgInfo->tagId, static_cast<int32_t>(hcclRet));
                 return AICPU_SCHEDULE_ERROR_CALL_HCCL;
             }
-            aicpusd_info("Success to create resource for tag[%d] of model[%u].", cfgInfo->tagId, modelId_);
+            aicpusd_info("Successfully created resource for tag[%d] of model[%u].", cfgInfo->tagId, modelId_);
         }
 
         isSupportCounterFilter_ = cfgInfo->supportCounterFilter;

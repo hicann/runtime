@@ -340,7 +340,7 @@ namespace AicpuSchedule {
 
         // init AicpuCustSoManager
         (void)AicpuSchedule::AicpuCustSoManager::GetInstance().InitAicpuCustSoManager(runMode_, schedMode);
-        aicpusd_info("Success to start compute process, deviceId[%u], hostPid[%d], runMode[%u]",
+        aicpusd_info("Successfully started compute process, deviceId[%u], hostPid[%d], runMode[%u]",
                      deviceVec[FIRST_INDEX], hostPid, runMode_);
         UpdateOrInsertStartFlag(deviceVec[0], true);
         return AICPU_SCHEDULE_OK;
@@ -414,7 +414,7 @@ namespace AicpuSchedule {
             if (drvRet != DRV_ERROR_NONE) {
                 aicpusd_err("Failed to send destroy model[%u] to ts[%u] , result[%d].", modelId, tsId, drvRet);
             }
-            aicpusd_info("Success to destroy tsDevSendMsgAsync.");
+            aicpusd_info("Successfully destroyed tsDevSendMsgAsync.");
         }
 
         const auto ret =  model->ModelDestroy();
@@ -459,7 +459,7 @@ namespace AicpuSchedule {
             if (drvRet != DRV_ERROR_NONE) {
                 aicpusd_err("Failed to send destroy model[%u] to ts[%u] , result[%d].", modelId, tsId, drvRet);
             }
-            aicpusd_info("Success to destroy tsDevSendMsgAsync.");
+            aicpusd_info("Successfully destroyed tsDevSendMsgAsync.");
         }
 
         uint32_t retryCost = 0U;
@@ -579,7 +579,7 @@ namespace AicpuSchedule {
             AicpuSchedule::ThreadPool::Instance().WaitForStop();
         }
         g_aicpuProfiler.Uninit();
-        aicpusd_run_info("Success to stop aicpu scheduler, hostPid[%d]", hostPid);
+        aicpusd_run_info("Successfully stopped AICPU scheduler, hostPid[%d]", hostPid);
         return AICPU_SCHEDULE_OK;
     }
 
@@ -633,7 +633,7 @@ namespace AicpuSchedule {
                 aicpusd_err("Failed to detach device[%u], result[%d].", deviceVec[i], ret);
                 return ret;
             }
-            aicpusd_info("Success to detach aicpu scheduler, device[%d].", deviceVec[i]);
+            aicpusd_info("Successfully detached AICPU scheduler, device[%d].", deviceVec[i]);
         }
         return AICPU_SCHEDULE_OK;
     }
@@ -698,10 +698,10 @@ namespace AicpuSchedule {
             if (processRet != AICPU_SCHEDULE_OK) {
                 return processRet;
             }
-            aicpusd_run_info("Success to process kernel data exception for transid[%lu] of model[%u].",
+            aicpusd_run_info("Successfully processed kernel data exception for transid[%lu] of model[%u].",
                 exceptionInfo->transId, modelId);
         }
-        aicpusd_info("Success to process kernel data exception event.");
+        aicpusd_info("Successfully processed kernel data exception event.");
         return AICPU_SCHEDULE_OK;
     }
 
