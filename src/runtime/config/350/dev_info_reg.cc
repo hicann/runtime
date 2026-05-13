@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -17,37 +17,48 @@
 namespace cce {
 namespace runtime {
 
-REGISTER_PLATFORM_LIB_INFO(CHIP_CLOUD_V5, "libruntime_v200.so");
+REGISTER_PLATFORM_LIB_INFO(CHIP_ASCEND_350, "libruntime_v200.so");
 
-const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
+const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_LITE_FEATURE{
+    RtOptionalFeatureType::RT_FEATURE_DFX_REPORT_RAS,
     RtOptionalFeatureType::RT_FEATURE_OVERFLOW_MODE,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH,
     RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY,
+    RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
+    RtOptionalFeatureType::RT_FEATURE_TASK_FUSION,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK,
     RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_V2,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_KEY_SINK,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_BATCH_COPY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_GET_AVILIABLE_NUM,
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING,
-    RtOptionalFeatureType::RT_FEATURE_TASK_CMO,
     RtOptionalFeatureType::RT_FEATURE_DRIVER_NUMA_TS_MEM_CTRL,
+    RtOptionalFeatureType::RT_FEATURE_TASK_CMO,
     RtOptionalFeatureType::RT_FEATURE_DFX_ERR_GET_AND_REPAIR,
-    RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE,
     RtOptionalFeatureType::RT_FEATURE_TASK_FLIP,
     RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_COMMON_CPU,
+    RtOptionalFeatureType::RT_FEATURE_TASK_DVPP,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DVPP_GROUP,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TAB_COPY_V2,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_REGISTER_CALLBACK,
+    RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL_DOT_CPUKERNEL,
     RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH,
     RtOptionalFeatureType::RT_FEATURE_TASK_TRY_RECYCLE_DISABLE_HWTS,
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT_TIMEOUT,
     RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER,
     RtOptionalFeatureType::RT_FEATURE_DFX_TS_RING_BUFFER,
+    RtOptionalFeatureType::RT_FEATURE_MEM_1G_HUGE_PAGE,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_NOTIFY_ONLY,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_VISIBLE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_EXECUTE_COPY_ONCE,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT,
     RtOptionalFeatureType::RT_FEATURE_MEM_L2_CACHE_PERSISTANT,
     RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_SQCQ_ALLOC_EX,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_HAS_TS_DEAMON,
     RtOptionalFeatureType::RT_FEATURE_DFX_HWTS_LOG,
+    RtOptionalFeatureType::RT_FEATURE_TASK_DEBUG_REGISTER_WITH_VA_ADDR,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_STARS_VERSION,
     RtOptionalFeatureType::RT_FEATURE_TASK_PCIE_DMA_ASYNC_WITH_USER_VA,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P,
@@ -59,54 +70,114 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_MAINTAINCE_WITH_VA,
     RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG,
     RtOptionalFeatureType::RT_FEATURE_DRIVER_GET_FAULT_EVENT,
+    RtOptionalFeatureType::RT_FEATURE_IPC_EVENT,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_DCACHE_LOCK_DOT_ALLOC_STACK,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MESSAGE_QUEUE,
+    RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT,
     RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_MAP_SQ_ADDR_TO_USER_SPACE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_HUGE_DEPTH,
-    RtOptionalFeatureType::RT_FEATURE_STREAM_ABORT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_TASK_RATION,
-    RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL,
     RtOptionalFeatureType::RT_FEATURE_DRIVER_RESOURCE_ALLOC_WITH_VFID,
-    RtOptionalFeatureType::RT_FEATURE_DEVICE_DOT_GET_GROUP_AIC_NUM,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT,
     RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL,
+    RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RtOptionalFeatureType::RT_FEATURE_DFX_FLOAT_OVERFLOW_DEBUG,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SET_RUNTIME_CAPABLITY,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DOT_SET_MODE,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST,
-    RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_DATA_READ_ONLY,
+    RtOptionalFeatureType::RT_FEATURE_STREAM_DELETE_FORCE,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_DOT_GET_GROUP_AIC_NUM,
+    RtOptionalFeatureType::RT_FEATURE_DFX_STOP_ON_STREAM_ERROR,
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_D2D_BY_OFFSET,
     RtOptionalFeatureType::RT_FEATURE_MODEL_STREAM_LOAD_COMPLETE_TO_RTSQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_UPDATE_SQE_TILING_KEY,
+    RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_EX_BY_FUNC_HANDLE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE,
-    RtOptionalFeatureType::RT_FEATURE_DEVICE_C2C_SYNC,
+    RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_OVERFLOW_CHECK,
+    RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG,
+    RtOptionalFeatureType::RT_FEATURE_STREAM_TAG,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_LOAD_DOT_WITHOUT_TILING,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_BINARY_GET_FUNCTION_DOT_BY_NAME,
     RtOptionalFeatureType::RT_FEATURE_DRIVER_ESCHED_QUERY_INFO,
-    RtOptionalFeatureType::RT_FEATURE_MODEL_ID_FOR_AICPU,
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC,
+    RtOptionalFeatureType::RT_FEATURE_TASK_CMO_DOT_NO_LOG,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_FLOAT_STATUS,
+    RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN,
     RtOptionalFeatureType::RT_FEATURE_MEM_H2D_MANAGER_POLICY_SYNC_FORCE,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL,
+    RtOptionalFeatureType::RT_FEATURE_NOTIFY_RESET,
+    RtOptionalFeatureType::RT_FEATURE_STREAM_EXTENSION,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE,
+    RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ,
+    RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH,
+    RtOptionalFeatureType::RT_FEATURE_TASK_EXEC_TIMEOUT_SCALE_MODIFY,
+    RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT
 };
 
-REGISTER_CHIP_FEATURE_SET(CHIP_CLOUD_V5, CHIP_CLOUD_V5_FEATURE);
+REGISTER_CHIP_FEATURE_SET(CHIP_ASCEND_350, CHIP_DAVID_LITE_FEATURE);
 
-constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP = 23U;
-constexpr uint32_t TASK_RATION = 1U;
+constexpr uint32_t TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP = 23;
+static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
+static constexpr uint32_t RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32 = 254U; // The STARS reference time is 1090921693.184 us.
+static constexpr int32_t KERNEL_CUSTOM_STACK_SIZE_MAX = 131072U; // 128KB
+static constexpr size_t MEMCPY_DESC_SIZE_V2 = 64U;
+static constexpr float64_t RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN = 0.001F;  // 0.001(us) = 1ns
 
-static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
+const uint32_t RT_ATOMIC_CAPS_TYPE1 = RT_ATOMIC_CAPABILITY_SIGNED | RT_ATOMIC_CAPABILITY_UNSIGNED |
+                                    RT_ATOMIC_CAPABILITY_SCALAR32 | RT_ATOMIC_CAPABILITY_SCALAR64;
+const uint32_t RT_ATOMIC_CAPS_TYPE2 =
+    RT_ATOMIC_CAPABILITY_UNSIGNED | RT_ATOMIC_CAPABILITY_SCALAR32 | RT_ATOMIC_CAPABILITY_SCALAR64;
+const uint32_t RT_ATOMIC_CAPS_TYPE3 = RT_ATOMIC_CAPABILITY_SCALAR16 | RT_ATOMIC_CAPABILITY_SCALAR32;
+const uint32_t RT_ATOMIC_CAPS_TYPE4 = RT_ATOMIC_CAPABILITY_SIGNED | RT_ATOMIC_CAPABILITY_SCALAR8 |
+                                    RT_ATOMIC_CAPABILITY_SCALAR16 | RT_ATOMIC_CAPABILITY_SCALAR32;
+
+static constexpr std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> GetDavidAtomicCaps()
+{
+    std::array<uint32_t, RT_ATOMIC_OPERATION_MAX_VAL> caps{};
+    caps[RT_ATOMIC_OPERATION_INTEGER_ADD] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_INTEGER_MIN] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_INTEGER_MAX] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_AND] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_OR] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_XOR] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_EXCHANGE] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_CAS] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_SIMD_SCALAR_MIN] = RT_ATOMIC_CAPS_TYPE1;
+    caps[RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX] = RT_ATOMIC_CAPS_TYPE1;
+
+    caps[RT_ATOMIC_OPERATION_INTEGER_INCREMENT] = RT_ATOMIC_CAPS_TYPE2;
+    caps[RT_ATOMIC_OPERATION_INTEGER_DECREMENT] = RT_ATOMIC_CAPS_TYPE2;
+    caps[RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS] = RT_ATOMIC_CAPS_TYPE2;
+    caps[RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH] = RT_ATOMIC_CAPS_TYPE2;
+
+    caps[RT_ATOMIC_OPERATION_FLOAT_ADD] = RT_ATOMIC_CAPS_TYPE3;
+    caps[RT_ATOMIC_OPERATION_FLOAT_MIN] = RT_ATOMIC_CAPS_TYPE3;
+    caps[RT_ATOMIC_OPERATION_FLOAT_MAX] = RT_ATOMIC_CAPS_TYPE3;
+
+    caps[RT_ATOMIC_OPERATION_DMA_ADD] = RT_ATOMIC_CAPS_TYPE4;
+    caps[RT_ATOMIC_OPERATION_DMA_MIN] = RT_ATOMIC_CAPS_TYPE4;
+    caps[RT_ATOMIC_OPERATION_DMA_MAX] = RT_ATOMIC_CAPS_TYPE4;
+
+    return caps;
+}
+
+static const DevProperties CHIP_DAVID_LITE_PROPERTIES = {
     .engineType = "STARS",
     .isStars = true,
     .isStarsV2 = true,
     .pthreadStackSize = 0U,
     .eventWaitTimeout = EventWaitTimeoutType::SET_OP_WAIT_TIMEOUT_CONFIG,
     .tsCount = 1U,
-    .defaultTaskRatio = TASK_RATION,
+    .defaultTaskRatio = NORMAL_TASK_RATION,
     .sqTailOffset = DAVID_SIMPLE_SQ_TAIL_OFFSET,
     .maxGroupId = MAX_GROUP_ID,
     .reduceOverflow = ReduceOverflowType::REDUCE_NO_OVERFLOW,
@@ -121,9 +192,9 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .ipcNotifyNumMask = 0x7FUL,
     .mc2FeatureFlag = TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP,
     .stackPhyBase = RT_SCALAR_BUFFER_SIZE_32K_75,
-    .maxCustomerStackSize = DEFAULT_CUSTOM_STACK_SIZE_MAX,
-    .aicNum = RT_AICORE_NUM_25,
-    .aivNum = RT_AIVECTOR_NUM_50,
+    .maxCustomerStackSize = KERNEL_CUSTOM_STACK_SIZE_MAX,
+    .aicNum = RT_DAVID_AICORE_NUM_PER_DIE,
+    .aivNum = RT_DAVID_AIVECTOR_NUM_PER_DIE,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE_ON_95_96,
     .hugeManagedFlag = SVM_HOST_AGENT,
     .memAllocPctraceFlag = MEM_SVM_HUGE,
@@ -131,18 +202,18 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .taskPrefetchCount = PREFETCH_CNT_8,
     .maxAllocHugeStreamNum = DEFAULT,
     .reduceAicNum = false,
-    .timeoutUpdateMethod = TimeoutUpdateMethod::DEFAULT_METHOD,
+    .timeoutUpdateMethod = TimeoutUpdateMethod::TIMEOUT_WITHOUT_UPDATE,
     .hugePolicyFlag = DEFAULT,
     .memInfoMapType = DEFAULT,
     .resAllocRange = TSDRV_RES_RANGE_ID,
     .supportSnapshot = SupportSnapshot::SUPPORT,
-    .MaxKernelCredit = 0U,
+    .MaxKernelCredit = RT_STARS_MAX_KERNEL_CREDIT_UINT32,
     .eventTimestampFreq = RT_DEFAULT_TIMESTAMP_FREQ,
     .taskEngineType = EngineCreateType::STARS_ENGINE,
-    .CmoSqeVersion = SqeVersion::CMO_SQE_VERSION_V1,
-    .DefaultKernelCredit = 0U,
+    .CmoSqeVersion = SqeVersion::CMO_SQE_VERSION_V3,
+    .DefaultKernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_UINT32,
     .starsDefaultKernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT,
-    .KernelCreditScale = 0.0F,
+    .KernelCreditScale = RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN,
     .isSupportInitFuncCallPara = true,
     .rtsqVirtualAddr = {DAVID_SIMPLE_RTSQ_FSM_SEL_REG,
         STARS_SIMPLE_SQ_ENABLE_OFFSET,
@@ -153,7 +224,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .rtSqEnableAddrCalMethod = RtSqEnableAddrCalMethod::RT_SQ_ENABLE_ADDR_CAL_STATIC,
     .isSupportDvppAccelerator = true,
     .isSupportDevVA2PA = false,
-    .cmoAddrInfoType = CmoAddrInfoType::CMO_ADDR_INFO_TYPE_DAFAULT,
+    .cmoAddrInfoType = CmoAddrInfoType::CMO_ADDR_INFO_TYPE_DAVID,
     .memcpyAsyncTaskD2DQos = UINT32_MAX,
     .isMemcpyAsyncTaskSqeType = true,
     .sqeDepth = UINT32_MAX,
@@ -161,7 +232,7 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .cqeDepth = static_cast<uint32_t>(CqeDepth::CQE_DEPTH_DVPP_GRP),
     .cqeWaitTimeout = RT_REPORT_STARS_TIMEOUT_TIME,
     .getRtsqPosition = UINT16_MAX,
-    .creditStartValue = UINT16_MAX,
+    .creditStartValue = 0U,
     .argsItemSize = MULTI_GRAPH_ARG_ENTRY_SIZE_OTH,
     .argInitCountSize = DEFAULT_INIT_CNT_OTH,
     .argsAllocatorSize = TINY_INIT_CNT_DEFAULT,
@@ -174,17 +245,17 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .opExecuteTimeout = false,
     .omArchVersion = OMArchVersion::omArchVersion_DEFAULT,
     .checkArchVersionCompatibility = CheckArchVersionCompatibility::Arch_Version_Compat_DEFAULT,
-    .dcacheLockMixType = DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_DEFAULT,
+    .dcacheLockMixType = DcacheLockMixType::DCACHE_LOCK_MIX_TYPE_FROM_STARS_V2,
     .kernelFuncType = KernelFuncType::Kernel_FUC_TYPE_SUPP_AICORE,
     .taskPoolSizeFromRtsqDepth = true,
     .taskPoolSize = 0U,
     .getTsMemTypeMethod = GetTsMemTypeMethod::GET_TS_MEM_TYPE_STATIC,
     .enabledTSNum = ENABLED_TS_NUM_1,
-    .deviceSatStatus = DeviceSatStatus::DEVICE_SAT_STATUS_SUPPORT,  // David 默认支持
+    .deviceSatStatus = DeviceSatStatus::DEVICE_SAT_STATUS_OTHER,
     .ringBufferMemCopyCycleTimes = 1U,
     .tsOverflowHandling = TsOverflowHandling::TS_OVER_FLOW_HANDING_DEFAULT,
     .getCapabilityMethod = GetCapabilityMethod::GET_CAPABILITY_BY_BOTH_FEATURE_AND_DRIVER_CHECK,
-    .memcpyDescriptorSize = MEMCPY_DESC_SIZE_V1,
+    .memcpyDescriptorSize = MEMCPY_DESC_SIZE_V2,
     .cmoDDRStructInfoSize = sizeof(rtDavidCmoAddrInfo),
     .streamWaitEventTimeout = StreamWaitEventTimeout::CUSTOM,
     .timelineEventId = TIMELINE_EVENT_ID_DEFAULT,
@@ -195,23 +266,23 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .rtsqShamt = 0x7FFU,
     .supportCreateTaskRes = SupportCreateTaskRes::CREATE_TASK_RES_SUPPORT_WITH_OFFLINE,
     .physicalMemTypePolicy = PhysicalMemTypePolicy::DEFAULT,
-    .aicNumForCoreStack = RT_AICORE_NUM_25,
+    .aicNumForCoreStack = RT_DAVID_AICORE_NUM_PER_DIE,
     .engineWaitCompletionTImeout = 0UL,
     .reportWaitTimeout = RT_REPORT_TIMEOUT_TIME,
-    .hostAtomicCapabilities = {},
-    .p2pAtomicCapabilities = {},
+    .hostAtomicCapabilities = GetDavidAtomicCaps(),
+    .p2pAtomicCapabilities = GetDavidAtomicCaps(),
     .maxPersistTaskNum = 60000U,
-    .maxSupportTaskNum = 1000000U,
+    .maxSupportTaskNum = 134215680U,
     .stubEventCount = 131072U,
     .maxReportTimeoutCnt = 36,
     .rtcqDepth = 2049U,
     .baseAicpuStreamId = 1024U,
-    .expandStreamRsvTaskNum = 0U,
-    .expandStreamSqDepthAdapt = 0U,
-    .expandStreamAdditionalSqeNum = 0U,
+    .expandStreamRsvTaskNum = 8U,
+    .expandStreamSqDepthAdapt = 7U,
+    .expandStreamAdditionalSqeNum = 8U,
     .rsvAicpuStreamNum = 0U,
     .maxPhysicalStreamNum = 2016U,
-    .maxAllocStreamNum = 2016U,
+    .maxAllocStreamNum = 65535U,
     .rtsqDepth = 2049U,
     .maxTaskNumPerStream = 2014U,
     .maxTaskNumPerHugeStream = 0U,
@@ -234,6 +305,6 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .ioDieNum = 0U,
 };
 
-REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);
-}
-}
+REGISTER_DEV_PROPERTIES(CHIP_ASCEND_350, CHIP_DAVID_LITE_PROPERTIES);
+}  // namespace runtime
+}  // namespace cce

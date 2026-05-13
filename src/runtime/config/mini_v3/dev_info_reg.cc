@@ -203,6 +203,7 @@ static const DevProperties CHIP_MINI_V3_PROPERTIES = {
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
+    .ioDieNum = 0U,
 };
 REGISTER_DEV_PROPERTIES(CHIP_MINI_V3, CHIP_MINI_V3_PROPERTIES);
 }

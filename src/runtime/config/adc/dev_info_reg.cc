@@ -191,6 +191,7 @@ static const DevProperties CHIP_ADC_PROPERTIES = {
     .cvArchType = DeviceCvArchType::CV_ARCH_INTERGRATION,
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_ADC_CNT,
+    .ioDieNum = 0U,
 };
 REGISTER_DEV_PROPERTIES(CHIP_ADC, CHIP_ADC_PROPERTIES);
 }

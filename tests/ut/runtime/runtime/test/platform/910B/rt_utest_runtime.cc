@@ -670,6 +670,7 @@ TEST_F(CloudV2RuntimeTest, UpdateDevPropertiesFromIniAttrs_AllFieldsOverride)
     iniAttrs.normalStreamDepth = 8192U;
     iniAttrs.hugeStreamNum = 16U;
     iniAttrs.hugeStreamDepth = 4096U;
+    iniAttrs.ioDieNum = 1U;
 
     rtInstance->UpdateDevPropertiesFromIniAttrs(CHIP_910_B_93, iniAttrs);
 

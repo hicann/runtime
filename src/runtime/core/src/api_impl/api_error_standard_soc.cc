@@ -133,7 +133,6 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t *taskInfo,  Stream * cons
         taskInfo->instCnt, "not equal to 0");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->instStartId >= RT_CCU_INST_START_MAX), RT_ERROR_INVALID_VALUE, 
         taskInfo->instStartId, "[0, " + std::to_string(RT_CCU_INST_START_MAX) + ")");
-        
     // 1 or 13 to sqe ccu size
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
         (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN) && (taskInfo->argSize != RT_CCU_SQE_ARGS_LEN_32B), RT_ERROR_INVALID_VALUE, 
@@ -176,7 +175,7 @@ rtError_t ApiErrorDecorator::UbDbSend(rtUbDbInfo_t *const dbInfo, Stream *const 
 {
     NULL_PTR_RETURN_MSG_OUTER(dbInfo, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dbInfo->dbNum != UB_DOORBELL_NUM_MIN) && (dbInfo->dbNum != UB_DOORBELL_NUM_MAX), 
-        RT_ERROR_INVALID_VALUE, dbInfo->dbNum, "1 or 2");    
+        RT_ERROR_INVALID_VALUE, dbInfo->dbNum, "1 or 2");
     if (dbInfo->dbNum == UB_DOORBELL_NUM_MAX) {
         COND_RETURN_OUT_ERROR_MSG_CALL((dbInfo->info[0].dieId == dbInfo->info[1].dieId) &&
                                        (dbInfo->info[0].jettyId == dbInfo->info[1].jettyId) &&

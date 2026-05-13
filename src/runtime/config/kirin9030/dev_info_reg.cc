@@ -161,6 +161,7 @@ static const DevProperties CHIP_KIRIN9030_PROPERTIES = {
     .cvArchType = DeviceCvArchType::CV_ARCH_INVALID,
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
+    .ioDieNum = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_9030, CHIP_KIRIN9030_PROPERTIES);

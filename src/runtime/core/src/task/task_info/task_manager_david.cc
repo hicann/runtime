@@ -176,7 +176,7 @@ static void DavidRegSetStarsResultFunc(const std::vector<rtChipType_t> &chipType
 void RegDavidTaskFunc(void)
 {
     static const std::vector<rtChipType_t> chipTypes = {
-        CHIP_DAVID, CHIP_CLOUD_V5, CHIP_MC62CM12A, CHIP_XPU
+        CHIP_DAVID, CHIP_CLOUD_V5, CHIP_MC62CM12A, CHIP_XPU, CHIP_ASCEND_350
     };
     RegTaskToCommandFunc(chipTypes);
     RegTaskToDavidSqefunc();

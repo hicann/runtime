@@ -156,6 +156,7 @@ macro(runtime_platform_others_obj target_name)
     add_library(runtime_platform_others OBJECT
         ${RUNTIME_DIR}/src/runtime/config/610_lite/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/950/dev_info_reg.cc
+        ${RUNTIME_DIR}/src/runtime/config/350/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/as31xm1/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/bs9sx1a/dev_info_reg.cc
         ${RUNTIME_DIR}/src/runtime/config/cloud/dev_info_reg.cc

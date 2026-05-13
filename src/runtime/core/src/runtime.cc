@@ -260,6 +260,9 @@ void Runtime::UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, 
     if (iniAttrs.hugeStreamDepth != 0U) {
         props.maxTaskNumPerHugeStream = iniAttrs.hugeStreamDepth;
     }
+    if (iniAttrs.ioDieNum != 0U) {
+        props.ioDieNum = iniAttrs.ioDieNum;
+    }
 
     if ((iniAttrs.normalStreamDepth != 0U) && (props.rtsqReservedTaskNum > 0U)) {
         if (iniAttrs.normalStreamDepth <= props.rtsqReservedTaskNum) {

@@ -509,6 +509,9 @@ TEST_F(TaskTestDavid, TestModelSubmitExecuteTask)
     mdl->executorFlag_ = EXECUTOR_AICPU;
 
     MOCKER(ModelToAicpuTaskInit).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    RtIniAttributes iniAttrs = {};
+    iniAttrs.ioDieNum = 2U;
+    ((Runtime *)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
     ret = ModelSubmitExecuteTask(mdl, stm);
     EXPECT_EQ(ret, RT_ERROR_MODEL_EXECUTOR);
     

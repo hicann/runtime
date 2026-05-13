@@ -33,6 +33,7 @@ constexpr StreamFieldConfig kStreamFieldConfigs[] = {
     {"normal_stream_depth", &RtIniAttributes::normalStreamDepth},
     {"huge_stream_num", &RtIniAttributes::hugeStreamNum},
     {"huge_stream_depth", &RtIniAttributes::hugeStreamDepth},
+    {"io_die_num", &RtIniAttributes::ioDieNum},
 };
 
 } // namespace

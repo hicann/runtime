@@ -2364,6 +2364,10 @@ TEST_F(ProfilerTest, UbDirectSend_ProfileLog)
 
     Profiler *profiler = ((Runtime *)Runtime::Instance())->profiler_;
 
+    RtIniAttributes iniAttrs = {};
+    iniAttrs.ioDieNum = 1U;
+    ((Runtime *)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
+
     ApiImpl *apiImpl_ = new ApiImpl();
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::UbDirectSend).stubs().will(returnValue(RT_ERROR_NONE));
     error = profiler->apiProfileLogDecorator_->UbDirectSend(&wqeInfo, stream);

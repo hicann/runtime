@@ -277,6 +277,7 @@ static const DevProperties CHIP_CLOUD_V2_PROPERTIES = {
     .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
+    .ioDieNum = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_910_B_93, CHIP_CLOUD_V2_PROPERTIES);

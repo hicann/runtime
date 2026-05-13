@@ -193,8 +193,8 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .mc2FeatureFlag = TS_FEATURE_MC2_RTS_SUPPORT_HCCL_PROP,
     .stackPhyBase = RT_SCALAR_BUFFER_SIZE_32K_75,
     .maxCustomerStackSize = KERNEL_CUSTOM_STACK_SIZE_MAX,
-    .aicNum = RT_DAVID_AICORE_NUM,
-    .aivNum = RT_DAVID_AIVECTOR_NUM,
+    .aicNum = RT_DAVID_AICORE_NUM_PER_DIE * RT_DAVID_DIE_MAX_NUM,
+    .aivNum = RT_DAVID_AIVECTOR_NUM_PER_DIE * RT_DAVID_DIE_MAX_NUM,
     .ringbufSize = DEVICE_RINGBUFFER_SIZE_ON_95_96,
     .hugeManagedFlag = SVM_HOST_AGENT,
     .memAllocPctraceFlag = MEM_SVM_HUGE,
@@ -302,6 +302,7 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .cvArchType = DeviceCvArchType::CV_ARCH_SEPARATION,
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
+    .ioDieNum = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DAVID, CHIP_DAVID_PROPERTIES);

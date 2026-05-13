@@ -25,6 +25,12 @@ rtError_t StreamCCULaunch(Stream *stm, rtCcuTaskInfo_t *taskInfo)
     error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+
+    const uint8_t devDieNum = stm->Device_()->GetDevProperties().ioDieNum;
+    const uint8_t dieNum = (devDieNum != 0) ? devDieNum : 2U;
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskInfo->dieId >= dieNum), RT_ERROR_INVALID_VALUE, 
+        taskInfo->dieId, "[0, " + std::to_string(dieNum) + ")");
+
     Stream *dstStm = stm;
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&ccuLaunchTask, stm, pos, dstStm, sqeNum);

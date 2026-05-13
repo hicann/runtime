@@ -240,6 +240,7 @@ set(runtimeut_src_common_list
 set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/610_lite/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/950/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/350/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/910_B_93/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/as31xm1/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/bs9sx1a/dev_info_reg.cc

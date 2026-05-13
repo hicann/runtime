@@ -537,6 +537,15 @@ rtError_t StreamUbDbSend(const rtUbDbInfo_t * const dbInfo, Stream * const stm, 
     error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    const uint32_t dieNum = stm->Device_()->GetDevProperties().ioDieNum;
+    if (dieNum != 0U) {
+        for (uint8_t i = 0; i < dbInfo->dbNum; i++) {
+            uint32_t dieId = static_cast<uint32_t>(dbInfo->info[i].dieId);
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dieId >= dieNum), RT_ERROR_INVALID_VALUE,
+                dieId, "[0, " + std::to_string(dieNum) + ")");
+        }
+    }
+
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     stm->StreamLock();
@@ -570,6 +579,13 @@ rtError_t StreamUbDirectSend(rtUbWqeInfo_t * const wqeInfo, Stream * const stm)
     error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    const uint32_t dieNum = stm->Device_()->GetDevProperties().ioDieNum;
+    if (dieNum != 0U) {
+        uint32_t dieId = static_cast<uint32_t>(wqeInfo->dieId);
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM((dieId >= dieNum), RT_ERROR_INVALID_VALUE,
+            dieId, "[0, " + std::to_string(dieNum) + ")");
+    }
+
     stm->StreamLock();
     error = AllocTaskInfo(&rtDirectSendTask, stm, pos, sqeNum);
     ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",

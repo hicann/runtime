@@ -190,7 +190,7 @@ static bool CheckCcuMissionId(rtCcuTaskInfo_t *ccuTaskInfo, uint32_t num, bool i
 }
 
 static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask, uint8_t &sqeSubType,
-    uint32_t &sqeLen, uint8_t &ccuArgSize)
+    uint32_t &sqeLen, uint8_t &ccuArgSize, Stream * const stm)
 {
     rtCcuTaskGroup_t * const ccuInfo = &(fusionTask->task.ccuInfo);
 	COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->taskNum == 0U || ccuInfo->taskNum > FUSION_SUB_TASK_MAX_CCU_NUM, 
@@ -201,6 +201,8 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
     uint8_t isHas32B = 0U;
     uint32_t dieIdArrange = 0U;
     uint32_t checkArrange = 0U;
+    const uint8_t devDieNum = stm->Device_()->GetDevProperties().ioDieNum;
+    const uint8_t dieNum = (devDieNum != 0) ? devDieNum : 2U;
 
     // get ccu subType
     for (uint32_t i = 0U; i < ccuInfo->taskNum; i++) {
@@ -210,8 +212,8 @@ static rtError_t PreProcCcuTaskForFusion(rtFusionSubTaskInfo_t *const fusionTask
             ccuInfo->ccuTaskInfo[i].argSize != RT_CCU_SQE32B_ARGS_SIZE, RT_ERROR_INVALID_VALUE,
             ccuInfo->ccuTaskInfo[i].argSize,
             std::to_string(RT_CCU_SQE32B_ARGS_SIZE) + " or " + std::to_string(RT_CCU_SQE128B_ARGS_SIZE));
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].dieId > 1, RT_ERROR_INVALID_VALUE,
-            ccuInfo->ccuTaskInfo[i].dieId, "[0, 1]");
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].dieId >= dieNum, RT_ERROR_INVALID_VALUE,
+            ccuInfo->ccuTaskInfo[i].dieId, "[0, " + std::to_string(dieNum) + ")");
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM(ccuInfo->ccuTaskInfo[i].missionId > RT_CCU_MISSION_ID_MAX,
             RT_ERROR_INVALID_VALUE, ccuInfo->ccuTaskInfo[i].missionId,
             "[0, " + std::to_string(RT_CCU_MISSION_ID_MAX) + "]");
@@ -323,7 +325,7 @@ static rtError_t FusionKernelTaskPreProc(rtFunsionTaskInfo_t * const fusionKerne
                 sqeLen += 1U;
                 break;
             case RT_FUSION_CCU:
-                error = PreProcCcuTaskForFusion(subKernelInfo, sqeSubType, sqeLen, ccuArgSize);
+                error = PreProcCcuTaskForFusion(subKernelInfo, sqeSubType, sqeLen, ccuArgSize, stm);
                 ERROR_RETURN(error, "stream_id=%d failed to proc ccu sub task, retCode=%#x",
                     stm->Id_(), static_cast<uint32_t>(error));
                 /* 0x18U means die0 ccu + die1 ccu */

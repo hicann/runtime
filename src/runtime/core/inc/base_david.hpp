@@ -12,9 +12,6 @@
 
 #include <cinttypes>
 
-#define RT_DAVID_SCALAR_BUFFER_SIZE_32K \
-    (32U * 1024U * (RT_DAVID_AICORE_NUM + RT_DAVID_AIVECTOR_NUM))
-
 #define RT_MAX_THREAD_NUM_PER_WARP (32U)
 #define RT_MAX_WARP_NUM_PER_VECTOR_CORE (64U)
 #define RT_MAX_THREAD_PER_VECTOR_CORE (RT_MAX_THREAD_NUM_PER_WARP * RT_MAX_WARP_NUM_PER_VECTOR_CORE)
@@ -33,8 +30,10 @@ namespace runtime {
 constexpr uint32_t STACK_PHY_BASE_ALIGN_LEN = 128U;
 constexpr uint32_t STACK_PHY_BASE_ALIGN_BIT = 7U;
 
-constexpr uint32_t RT_DAVID_AICORE_NUM = 36U;
-constexpr uint32_t RT_DAVID_AIVECTOR_NUM = 72U;
+constexpr uint32_t RT_DAVID_AICORE_NUM_PER_DIE = 18U;
+constexpr uint32_t RT_DAVID_AIVECTOR_NUM_PER_DIE = 36U;
+
+constexpr uint32_t RT_DAVID_DIE_MAX_NUM = 2U;
 
 constexpr uint32_t RT_SIMT_SHARE_MEM_ALIGN_LEN = 128U;
 }

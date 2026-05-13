@@ -44,7 +44,9 @@ rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
     }
     const uint64_t simtWarpStkSize = Runtime::Instance()->GetSimtWarpStkSize();
     const uint32_t simtDvgWarpStkSize = Runtime::Instance()->GetSimtDvgWarpStkSize();
-    uint64_t stackPhySize = 72ULL * 64ULL * (simtWarpStkSize + static_cast<uint64_t>(simtDvgWarpStkSize));
+
+    uint64_t aivCoreNum = GetDavidDieNum() * RT_DAVID_AIVECTOR_NUM_PER_DIE;
+    uint64_t stackPhySize = aivCoreNum * RT_MAX_WARP_NUM_PER_VECTOR_CORE * (simtWarpStkSize + static_cast<uint64_t>(simtDvgWarpStkSize));
     stackPhySize += static_cast<uint64_t>(STACK_PHY_BASE_ALIGN_LEN);   // 128B align
 
     const rtError_t error =  driver_->DevMemAlloc(&simtStackPhyBase_,
@@ -80,15 +82,15 @@ rtError_t RawDevice::FreeSimtStackPhyBase()
 
 rtError_t RawDevice::AllocStackPhyBaseDavid()
 {
-    rtError_t error = AllocAddrForDcache(deviceId_, stackPhyBase32k_, RT_DAVID_SCALAR_BUFFER_SIZE_32K,
-        drvMemCtrlHandle_);
+    uint64_t scalerBufSize = 32U * 1024U * GetDavidDieNum() * (RT_DAVID_AICORE_NUM_PER_DIE + RT_DAVID_AIVECTOR_NUM_PER_DIE);
+
+    rtError_t error = AllocAddrForDcache(deviceId_, stackPhyBase32k_, scalerBufSize, drvMemCtrlHandle_);
     if (error == RT_ERROR_NONE) {
         stackAddrIsDcache_ = true;
         stackPhyBase32kAlign_ = stackPhyBase32k_;
         return RT_ERROR_NONE;
     }
-    constexpr uint64_t stackPhySize = static_cast<uint64_t>
-        (RT_DAVID_SCALAR_BUFFER_SIZE_32K + STACK_PHY_BASE_ALIGN_LEN);
+    const uint64_t stackPhySize = static_cast<uint64_t>(scalerBufSize + STACK_PHY_BASE_ALIGN_LEN);
     error = driver_->DevMemAlloc(&stackPhyBase32k_,
         stackPhySize, RT_MEMORY_DDR, deviceId_);
     COND_RETURN_ERROR((error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
@@ -102,6 +104,7 @@ rtError_t RawDevice::AllocStackPhyBaseDavid()
         RtPtrToValue(stackPhyBase32kAlign_), stackPhySize);
     return RT_ERROR_NONE;
 }
+
 rtError_t RawDevice::UbArgLoaderInit(void)
 {
     if (Runtime::Instance()->GetConnectUbFlag()) {

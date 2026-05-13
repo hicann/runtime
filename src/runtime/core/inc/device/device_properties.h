@@ -359,6 +359,7 @@ struct DevProperties final {
     DeviceCvArchType cvArchType;
     int64_t npuArch;
     uint32_t sqDisableStatPollingCycleNum;
+    uint32_t ioDieNum;
 };
 }
 }

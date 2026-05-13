@@ -44,6 +44,7 @@
 #include "../../rt_utest_config_define.hpp"
 #include "rt_unwrap.h"
 #include "../../data/elf.h"
+#include "dev_info_manage.h"
 #undef protected
 #undef private
 
@@ -1213,6 +1214,36 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_normal)
     wqeInfo.wqe = nullptr;
 }
 
+TEST_F(ApiTestUb2, ub_doorbell_send_test_die_id_invalid)
+{
+    rtError_t error;
+    rtUbDbInfo_t dbSendInfo;
+    dbSendInfo.dbNum = 2;
+    dbSendInfo.info[0].dieId = 5;
+    dbSendInfo.info[0].functionId = 1;
+    dbSendInfo.info[0].jettyId = 10;
+    dbSendInfo.info[0].piValue = 20;
+    dbSendInfo.info[1].dieId = 1;
+    dbSendInfo.info[1].functionId = 1;
+    dbSendInfo.info[1].jettyId = 10;
+    dbSendInfo.info[1].piValue = 20;
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
+    stream_->SetSqBaseAddr(newSqAddr);
+    DevProperties props = stream_->Device_()->GetDevProperties();
+    props.ioDieNum = 2U;
+    stream_->Device_()->RefreshDevProperties(props);
+    error = rtUbDbSend(&dbSendInfo, streamHandle_);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
+    taskResMang->ResetTaskRes();
+    props.ioDieNum = 0U;
+    stream_->Device_()->RefreshDevProperties(props);
+}
+
 TEST_F(ApiTestUb2, ub_direct_wqe_send_test_submit3)
 {
     rtError_t error;
@@ -1233,6 +1264,38 @@ TEST_F(ApiTestUb2, ub_direct_wqe_send_test_submit3)
 
     error = rtUbDirectSend(&wqeInfo, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->SetSqBaseAddr(oldSqAddr);
+    free(sqe);
+    free(wqeInfo.wqe);
+    wqeInfo.wqe = nullptr;
+    TaskResManageDavid *taskResMang = ((TaskResManageDavid *)(static_cast<Stream *>(stream_)->taskResMang_));
+    taskResMang->ResetTaskRes();
+}
+
+TEST_F(ApiTestUb2, ub_direct_wqe_send_test_die_id_invalid)
+{
+    rtError_t error;
+    rtUbWqeInfo_t wqeInfo;
+
+    wqeInfo.wrCqe = 1;
+    wqeInfo.wqeSize = 0;
+    wqeInfo.dieId = 1;
+    wqeInfo.functionId = 1;
+    wqeInfo.jettyId = 10;
+    wqeInfo.wqe = (uint8_t *)malloc(64 * sizeof(uint8_t));
+    wqeInfo.wqePtrLen = 64U;
+    rtDavidSqe_t *sqe = (rtDavidSqe_t *)malloc(2 * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
+    stream_->SetSqBaseAddr(newSqAddr);
+    DevProperties props = stream_->Device_()->GetDevProperties();
+    props.ioDieNum = 1U;
+    stream_->Device_()->RefreshDevProperties(props);
+
+    error = rtUbDirectSend(&wqeInfo, streamHandle_);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    props.ioDieNum = 0U;
+    stream_->Device_()->RefreshDevProperties(props);
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     free(wqeInfo.wqe);
