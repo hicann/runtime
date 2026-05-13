@@ -9,7 +9,6 @@
  */
 #ifndef CCE_RUNTIME_TASK_INFO_HPP
 #define CCE_RUNTIME_TASK_INFO_HPP
-#include "dev.h"
 #include "rt_model.h"
 #include "task_info_struct.hpp"
 #include "task_info_struct_cond.hpp"

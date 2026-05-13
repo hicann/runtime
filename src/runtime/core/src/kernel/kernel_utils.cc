@@ -397,7 +397,7 @@ void SetKernelLaunchParams(const Stream *const stm, const rtArgsEx_t *const args
         launchParam.placeHoderNum = 0U;
     }
     uint16_t placeHoderNum = argsInfo->hostInputInfoNum;
-    if (argsInfo->hasTiling) {
+    if (argsInfo->hasTiling != 0U) {
         placeHoderNum++;
     }
     // 没有host input/tiling data的offset需要保存
@@ -416,7 +416,7 @@ void SetKernelLaunchParams(const Stream *const stm, const rtArgsEx_t *const args
         launchParam.placeHoderPtr[idx].addrOffset = argsInfo->hostInputInfoPtr[idx].addrOffset;
         launchParam.placeHoderPtr[idx].dataOffset = argsInfo->hostInputInfoPtr[idx].dataOffset;
     }
-    if (argsInfo->hasTiling) {
+    if (argsInfo->hasTiling != 0U) {
         launchParam.placeHoderPtr[idx].addrOffset = argsInfo->tilingAddrOffset;
         launchParam.placeHoderPtr[idx].dataOffset = argsInfo->tilingDataOffset;
     }
