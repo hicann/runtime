@@ -14,6 +14,7 @@
 #include <mutex>
 #include "base.hpp"
 #include "driver.hpp"
+#include "stream_sqcq_manage.hpp"
 
 namespace cce {
 namespace runtime {
@@ -56,6 +57,7 @@ public:
         const std::list<rtDeviceSqCqInfo_t>::iterator end) const;
 
 private:
+    void FillStreamAttrSimt(rtStreamInfoExMsg_t &infoEX) const;
     Device *device_;
     std::mutex deviceSqCqLock_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqFreeList_;

@@ -9,7 +9,6 @@
  */
 #include "runtime.hpp"
 #include "device_sq_cq_pool.hpp"
-#include "stream_sqcq_manage.hpp"
 #include "error_message_manage.hpp"
 namespace cce {
 namespace runtime {
@@ -43,6 +42,32 @@ rtError_t DeviceSqCqPool::Init(void) const
     return RT_ERROR_NONE;
 }
 
+void DeviceSqCqPool::FillStreamAttrSimt(rtStreamInfoExMsg_t &infoEX) const
+{
+    if (!device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
+        return;
+    }
+
+    infoEX.head.type = static_cast<uint32_t>(StreamInfoExHeaderType::TS_SQCQ_NORMAL_TYPE);
+    const uint32_t vfId = device_->GetVfId();
+    if (vfId != MAX_UINT32_NUM) {
+        infoEX.head.vfid = vfId;
+    }
+
+    const uint64_t stackPhyAddr = RtPtrToValue(device_->GetSimtStackPhyBase());
+    infoEX.body.kisSimtStkBaseAddrLow = static_cast<uint32_t>(stackPhyAddr);
+    infoEX.body.kisSimtStkBaseAddrHigh = static_cast<uint16_t>(stackPhyAddr >> UINT32_BIT_NUM);
+    infoEX.body.kisSimtWarpStkSize = device_->GetSimtWarpStkSize();
+    infoEX.body.kisSimtDvgWarpStkSize = device_->GetSimtDvgWarpStkSize();
+    infoEX.body.poolId = device_->GetPoolId();
+    infoEX.body.poolIdMax = device_->GetPoolIdMax();
+    RT_LOG(RT_LOG_DEBUG, "Alloc sq cq info: validFlag=%llu, poolId=%u, poolIdMax=%u, stackPhyAddr=%#llx,"
+           " WarpStkSize=%u, DvgWarpStkSize=%u.",
+           infoEX.body.validFlag, infoEX.body.poolId, infoEX.body.poolIdMax, stackPhyAddr, 
+           infoEX.body.kisSimtWarpStkSize, infoEX.body.kisSimtDvgWarpStkSize);
+    return;
+}
+
 rtError_t DeviceSqCqPool::AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, const uint32_t drvFlag, const int32_t retryCount) const
 {
     rtStreamAllocInfo_t info = {};
@@ -58,6 +83,10 @@ rtError_t DeviceSqCqPool::AllocSqCqFromDrv(rtDeviceSqCqInfo_t * const sqCqInfo, 
     info.shareSqId = device_->GetShareSqId();
     info.tsSqType = SQ_ALLOC_TYPE_RT_DEFAULT;
     info.swsqFlag = true;
+
+    if (device_->IsDavidPlatform()) {
+        FillStreamAttrSimt(infoEx);
+    }
 
     const rtError_t error = device_->Driver_()->NormalSqCqAllocate(device_->Id_(),
         device_->DevGetTsId(), drvFlag, &sqCqInfo->sqId, &sqCqInfo->cqId,
