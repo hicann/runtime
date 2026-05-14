@@ -250,7 +250,7 @@ int32_t MsprofTxManager::MarkEx(CONST_CHAR_PTR msg, size_t msgLen, aclrtStream s
 int32_t MsprofTxManager::MarkExPoint(aclrtStream stream, MsprofTxInfo &info)
 {
     FUNRET_CHECK_EXPR_ACTION(rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
-        "[MarkEx]Failed to call nullptr rtProfilerTraceEx.");
+        "[MarkEx][MarkExPoint]Failed to call nullptr rtProfilerTraceEx.");
     uint64_t markId = GetTxEventId();
     const int32_t ret = rtProfilerTraceExFunc_(markId, MARKEX_MODEL_ID, MARKEX_TAG_ID,
         static_cast<void *>(stream));
@@ -372,7 +372,7 @@ void MsprofTxManager::RegisterReporterCallback(const ProfAdditionalBufPushCallba
 int32_t MsprofTxManager::LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm)
 {
     FUNRET_CHECK_EXPR_ACTION(rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
-        "[MarkEx]Failed to call nullptr rtProfilerTraceEx.");
+        "[MarkEx][LaunchDeviceTxTask]Failed to call nullptr rtProfilerTraceEx.");
     return rtProfilerTraceExFunc_(indexId, MARKEX_MODEL_ID, MARKEX_TAG_ID, stm);
 }
 
