@@ -8814,9 +8814,18 @@ rtError_t ApiImpl::FunctionGetParamCount(const Kernel *funcHandle, size_t *param
 rtError_t ApiImpl::FunctionGetParamInfo(const Kernel *funcHandle, size_t paramIndex,
                                         size_t *paramOffset, size_t *paramSize)
 {
-    return funcHandle->GetParamInfo(static_cast<uint32_t>(paramIndex),
-                                RtPtrToPtr<uint32_t *>(paramOffset),
-                                RtPtrToPtr<uint32_t *>(paramSize));
+    uint32_t offset = 0U;
+    uint32_t size = 0U;
+    const rtError_t ret = funcHandle->GetParamInfo(static_cast<uint32_t>(paramIndex),
+                                                   &offset, &size);
+    ERROR_RETURN(ret, "GetParamInfo failed, paramIndex=%zu.", paramIndex);
+    if (paramOffset != nullptr) {
+        *paramOffset = static_cast<size_t>(offset);
+    }
+    if (paramSize != nullptr) {
+        *paramSize = static_cast<size_t>(size);
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle *handle)
