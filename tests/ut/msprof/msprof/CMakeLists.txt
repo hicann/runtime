@@ -46,7 +46,6 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/mini/ai_drv_dsmi_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_runtime_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_register.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_soc.cpp
@@ -153,7 +152,6 @@ set(profilerSrcFile
     test/msprof_dynamic_utest.cpp
     test/msprofiler_adapter_utest.cpp
     test/info_json_utest.cpp
-    test/mstx_utest.cpp
     ../stub/drv_stub.cpp
     ../stub/mmpa_stub.cpp
     ../stub/prof_api_stub.cpp
