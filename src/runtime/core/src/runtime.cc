@@ -1930,8 +1930,8 @@ rtError_t Runtime::StartAicpuSd(Device * const device) const
     device->SetIsAiCpuSdStarted(true);
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_AICPUSD_LATER_PROCEDURE)) {
         error = device->SendTopicMsgVersionToAicpu();
-            COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, aicpuSchSdLock->Unlock();, "send topic msg version to aicpu failed,"
- 	            "retCode=%#x, devId=%u.", static_cast<uint32_t>(error), device->Id_());
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, aicpuSchSdLock->Unlock();, "send topic msg version to aicpu failed,"	 
+  	        "retCode=%#x, devId=%u.", static_cast<uint32_t>(error), device->Id_());
  	}
     aicpuSchSdLock->Unlock();
 #endif
@@ -4103,8 +4103,10 @@ rtError_t Runtime::SetTimeoutConfig(const rtTaskTimeoutType_t type, const uint64
 
     COND_RETURN_ERROR_MSG_INNER((tsNum_ == 0U) || (tsNum_ > RT_MAX_TS_NUM), RT_ERROR_DEVICE_INVALID,
         "Set timeout config failed, tsNum=%u, valid range is [1,%u].", tsNum_, RT_MAX_TS_NUM);
+    const Runtime * const rtInstance = Runtime::Instance();
+    const rtChipType_t chipType = rtInstance->GetChipType();
     // AS31XM1 use ms to calculate timeout cfg
-    if (socVersion_ == "AS31XM1X") {
+    if ((socVersion_ == "AS31XM1X") || (chipType == CHIP_MC32DM11A) || (chipType == CHIP_MC62CM12A)) {
         timeoutConfig_.mtx.lock();
         timeoutConfig_.isCfgOpExcTaskTimeout = true;
         timeoutConfig_.opExcTaskTimeout = timeout * RT_TIMEOUT_MS_TO_US;
@@ -4114,8 +4116,6 @@ rtError_t Runtime::SetTimeoutConfig(const rtTaskTimeoutType_t type, const uint64
 
     uint64_t opExcTaskTimeout = ConvertTimeoutToUs(timeout, timeUnitType);
     uint32_t taskTimeout;
-    const Runtime * const rtInstance = Runtime::Instance();
-    const rtChipType_t chipType = rtInstance->GetChipType();
     DevProperties prop;
     rtError_t ret = GET_DEV_PROPERTIES(chipType, prop);
     COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "GetDevProperties failed.");
@@ -4141,12 +4141,6 @@ rtError_t Runtime::SetTimeoutConfig(const rtTaskTimeoutType_t type, const uint64
             Device * const device = refObj[i].GetVal();
             if (device == nullptr) {
                 continue;
-            }
-
-            if (socVersion_ == "AS31XM1X") {
-                // set op exec time out depend on aicpu in AS31XM1X
-                ERROR_RETURN_MSG_INNER(StartAicpuSd(device),
-                    "Set timeout config failed, start tsd open aicpu sd error.");
             }
 
             Stream * const stm = device->GetCtrlStream(device->PrimaryStream_());

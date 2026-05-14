@@ -84,19 +84,23 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC32DM11A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL,
+    RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL
 };
 
 REGISTER_CHIP_FEATURE_SET(CHIP_MC32DM11A, CHIP_MC32DM11A_FEATURE);
 
 static constexpr uint32_t CQE_DEPTH = 1024U;
 
+static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
+static constexpr uint32_t RT_STARS_MC32DM11A_DEFAULT_KERNEL_CREDIT_UINT32 = 9U; // The STARS MC32DM11A reference time is 301.989ms.
+static constexpr double RT_STARS_MC32DM11A_TASK_KERNEL_CREDIT_SCALE_US = 33554.432; // 2^24 / 500M *1000*1000(us)
+
 static const DevProperties CHIP_MC32DM11A_PROPERTIES = {
     .engineType = "STARS",
     .isStars = true,
     .isStarsV2 = true,
     .pthreadStackSize = PTHREAD_STACK_SIZE,
-    .eventWaitTimeout = EventWaitTimeoutType::SET_OP_WAIT_TIMEOUT_CONFIG,
+    .eventWaitTimeout = EventWaitTimeoutType::SET_OP_WAIT_TIMEOUT_NOT_SUPPORT,
     .tsCount = 2U,
     .defaultTaskRatio = NORMAL_TASK_RATION,
     .sqTailOffset = DAVID_SIMPLE_SQ_TAIL_OFFSET,
@@ -128,13 +132,13 @@ static const DevProperties CHIP_MC32DM11A_PROPERTIES = {
     .memInfoMapType = DEFAULT,
     .resAllocRange = TSDRV_RES_RANGE_ID,
     .supportSnapshot = SupportSnapshot::SUPPORT,
-    .MaxKernelCredit = 0,
+    .MaxKernelCredit = RT_STARS_MAX_KERNEL_CREDIT_UINT32,
     .eventTimestampFreq = RT_DEFAULT_TIMESTAMP_FREQ,
     .taskEngineType = EngineCreateType::STARS_ENGINE,
     .CmoSqeVersion = SqeVersion::CMO_SQE_VERSION_V1,
-    .DefaultKernelCredit = 0U,
-    .starsDefaultKernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT,
-    .KernelCreditScale = 0.0F,
+    .DefaultKernelCredit = RT_STARS_MC32DM11A_DEFAULT_KERNEL_CREDIT_UINT32,
+    .starsDefaultKernelCredit = RT_STARS_MC32DM11A_DEFAULT_KERNEL_CREDIT_UINT32,
+    .KernelCreditScale = RT_STARS_MC32DM11A_TASK_KERNEL_CREDIT_SCALE_US,
     .isSupportInitFuncCallPara = true,
     .rtsqVirtualAddr = {DAVID_SIMPLE_RTSQ_FSM_SEL_REG,
         STARS_SIMPLE_SQ_ENABLE_OFFSET,
@@ -153,7 +157,7 @@ static const DevProperties CHIP_MC32DM11A_PROPERTIES = {
     .cqeDepth = CQE_DEPTH,
     .cqeWaitTimeout = RT_REPORT_MDC_TIMEOUT_TIME,
     .getRtsqPosition = UINT16_MAX,
-    .creditStartValue = 0U,
+    .creditStartValue = UINT16_MAX,
     .argsItemSize = MULTI_GRAPH_ARG_ENTRY_SIZE_OTH,
     .argInitCountSize = DEFAULT_INIT_CNT_OTH,
     .argsAllocatorSize = TINY_INIT_CNT_DEFAULT,

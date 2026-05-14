@@ -1642,3 +1642,17 @@ TEST_F(TaskTestV201, Test_IpcRecordTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     free(sqe);
 }
+
+TEST_F(TaskTestV201, RT_SetOpExecuteWithMs)
+{
+    rtError_t error;
+    rtStream_t stream;
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    error = rtSetOpExecuteTimeOutWithMs(33);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    uint16_t kernelCredit = GetAicpuKernelCredit(0);
+    EXPECT_EQ(kernelCredit, 5);      // failed
+    kernelCredit = GetAicoreKernelCredit(0);
+    EXPECT_EQ(kernelCredit, 1);
+}
+

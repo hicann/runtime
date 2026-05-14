@@ -188,8 +188,8 @@ inline void ConstructCommonAicAivSqePart(const T * const kernelInfo, RtDavidStar
         sqe->featureFlag = static_cast<uint8_t>(sqe->featureFlag | SQE_BIZ_FLAG_L2CACHE);
     }
 
-    RT_LOG(RT_LOG_INFO, "sqe dieFriendly=%u, blockdim=%u, groupDim=%u, groupBlockDim=%u, featureFlag=%u.",
-        sqe->dieFriendly, sqe->header.blockDim, sqe->groupDim, sqe->groupBlockdim, sqe->featureFlag);
+    RT_LOG(RT_LOG_INFO, "sqe dieFriendly=%u, blockdim=%u, groupDim=%u, groupBlockDim=%u, featureFlag=%u,kernelcredit=%u.",
+        sqe->dieFriendly, sqe->header.blockDim, sqe->groupDim, sqe->groupBlockdim, sqe->featureFlag, sqe->kernelCredit);
     uint64_t stackPhyBase = RtPtrToValue(stm->Device_()->GetStackPhyBase32k());
     if (unlikely(minStackSize > KERNEL_STACK_SIZE_32K)) {
         stackPhyBase = RtPtrToValue(stm->Device_()->GetCustomerStackPhyBase());
