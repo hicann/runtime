@@ -8625,8 +8625,16 @@ rtError_t ApiImpl::FuncGetName(const Kernel * const kernel, const uint32_t maxLe
 rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo * const errorInfo)
 {
     rtError_t error = RT_ERROR_NONE;
-    Runtime * const rtInstance = Runtime::Instance();
-    Device * const dev = rtInstance->GetDevice(static_cast<uint32_t>(deviceId), static_cast<uint32_t>(RT_TSC_ID));
+    const uint32_t tsId = InnerThreadLocalContainer::GetTsId();
+    Context * const ctx = Runtime::Instance()->GetPriCtxByDeviceId(deviceId, tsId);
+    if (ctx == nullptr) {
+        errorInfo->hasDetail = 0U;
+        errorInfo->tryRepair = 0U;
+        errorInfo->errorType = RT_NO_ERROR;
+        RT_LOG(RT_LOG_DEBUG, "Device[%u] has no fault.", deviceId);
+        return RT_ERROR_NONE;
+    }
+    Device * const dev = ctx->Device_();
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
 
     const DeviceFaultType faultType = dev->GetDeviceFaultType();

@@ -25,10 +25,12 @@ struct RtIniAttributes {
 
 struct DevProperties;
 using DEV_PROPS_UPDATE_FUNC = void (*)(DevProperties&);
+using DEV_RAS_PRE_CHECK_FUNC = bool (*)(uint32_t devId);
 
 // Dynamic attribute processing, which is registered in the SO opened in dlopen mode,
 struct DevDynInfoProcFunc {
     DEV_PROPS_UPDATE_FUNC devPropsUpdateFunc = nullptr;
+    DEV_RAS_PRE_CHECK_FUNC devHitBlackListErrors = nullptr;
 };
 }  // namespace runtime
 }  // namespace cce

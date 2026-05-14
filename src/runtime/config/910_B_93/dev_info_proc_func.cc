@@ -10,10 +10,20 @@
 #include "dev_info.h"
 #include "dev_info_manage.h"
 #include "npu_driver.hpp"
+#include "device_error_proc.hpp"
 
 namespace cce {
 namespace runtime {
-static void UpdateDevProps910B(DevProperties& props)
+static bool HitBlackListErrors(uint32_t devId)
+{
+    if (IsHitBlacklist(devId, g_mulBitEccEventId) || IsSmmuFault(devId)) {
+        RT_LOG(RT_LOG_ERROR, "hit black list or hit smmu fault!");
+        return true;
+    }
+    return false;
+}
+
+static void UpdateDevProps(DevProperties& props)
 {
     if (NpuDriver::CheckIsSupportFeature(0U, FEATURE_TRSDRV_SQ_SUPPORT_DYNAMIC_BIND)) {
         props.baseAicpuStreamId = 32768U; // 32*1024
@@ -21,7 +31,8 @@ static void UpdateDevProps910B(DevProperties& props)
 }
 
 static DevDynInfoProcFunc CHIP_910B_PROC_FUNC = {
-    .devPropsUpdateFunc = &UpdateDevProps910B,
+    .devPropsUpdateFunc = &UpdateDevProps,
+    .devHitBlackListErrors = &HitBlackListErrors,
 };
 
 REGISTER_DEV_INFO_PROC_FUNC(CHIP_910_B_93, CHIP_910B_PROC_FUNC);

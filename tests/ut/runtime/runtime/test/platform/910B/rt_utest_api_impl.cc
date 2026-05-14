@@ -1969,3 +1969,21 @@ TEST_F(CloudV2ApiImplTest, ModelDestroyRegisterCallbackApiDecorator)
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TEST_F(CloudV2ApiImplTest, GetErrorVerbose_CtxNull)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    ApiImpl impl;
+    rtErrorInfo errorInfo = {};
+
+    MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::GetPriCtxByDeviceId)
+        .stubs()
+        .will(returnValue(static_cast<Context *>(nullptr)));
+
+    rtError_t error = impl.GetErrorVerbose(0, &errorInfo);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(errorInfo.hasDetail, 0U);
+    EXPECT_EQ(errorInfo.tryRepair, 0U);
+    EXPECT_EQ(errorInfo.errorType, RT_NO_ERROR);
+}
