@@ -31,7 +31,7 @@
 #include "aicpusd_model_execute.h"
 #include "task_queue.h"
 #include "tdt_server.h"
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #include "aicpu_task_struct.h"
 #include "ascend_hal.h"
 #include "aicpu_context.h"

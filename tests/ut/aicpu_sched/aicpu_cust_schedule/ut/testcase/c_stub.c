@@ -27,7 +27,7 @@
 
 #include "driver/ascend_hal.h"
 #include "ascend_inpackage_hal.h"
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #include "tsd.h"
 #include "toolchain/slog.h"
 

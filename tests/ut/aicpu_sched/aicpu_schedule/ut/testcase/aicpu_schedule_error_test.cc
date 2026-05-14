@@ -20,7 +20,7 @@
 #include "aicpusd_interface.h"
 #include "aicpusd_status.h"
 #include "tsd.h"
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #define private public
 #include "aicpusd_interface_process.h"
 #include "aicpusd_event_manager.h"

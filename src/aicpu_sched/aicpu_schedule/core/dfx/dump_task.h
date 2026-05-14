@@ -22,7 +22,7 @@
 #include "aicpusd_status.h"
 #include "dump_data.pb.h"
 #include "op_mapping_info.pb.h"
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #include "aicpusd_common.h"
 #include "type_def.h"
 #include "datadump_kfc_interface.h"

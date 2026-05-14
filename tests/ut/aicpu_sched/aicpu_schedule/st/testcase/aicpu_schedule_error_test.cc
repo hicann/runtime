@@ -26,7 +26,7 @@
 #include "aicpusd_threads_process.h"
 #include "aicpusd_task_queue.h"
 #include "tdt_server.h"
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #include "aicpu_task_struct.h"
 #include <memory>
 #include <map>

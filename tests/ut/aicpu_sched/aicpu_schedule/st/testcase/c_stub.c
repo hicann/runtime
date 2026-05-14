@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include "base.h"
 
-#include "adump/ide_daemon_api.h"
+#include "dump/adump_device_pub.h"
 #include "ascend_inpackage_hal.h"
 #include "tsd.h"
 #include "toolchain/slog.h"
