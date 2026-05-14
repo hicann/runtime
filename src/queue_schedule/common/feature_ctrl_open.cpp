@@ -15,6 +15,7 @@ namespace bqs {
         CHIP_ASCEND_910B = 5,
         CHIP_ASCEND_950 = 15,
         CHIP_CLOUD_V5 = 16,
+        CHIP_ASCEND_350 = 19,
     } ChipType_t;
 
     bool QSFeatureCtrl::IsSupportSetVisibleDevices(int64_t chip) {
@@ -23,6 +24,7 @@ namespace bqs {
             case CHIP_ASCEND_910A:
             case CHIP_ASCEND_910B:
             case CHIP_ASCEND_950:
+            case CHIP_ASCEND_350:
                 return true;
             default:
                 return false;

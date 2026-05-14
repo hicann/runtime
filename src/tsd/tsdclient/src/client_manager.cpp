@@ -368,6 +368,7 @@ bool ClientManager::GetPackageTitle(std::string &packageTitle) const
         case CHIP_ASCEND_910B:
         case CHIP_CLOUD_V5:
         case CHIP_MINI_V3:
+        case CHIP_ASCEND_350:
             packageTitle = "Ascend";
             break;
         default:
@@ -423,6 +424,7 @@ bool ClientManager::IsSupportSetVisibleDevices()
         case CHIP_ASCEND_910B:
         case CHIP_MINI_V3:
         case CHIP_ASCEND_950:
+        case CHIP_ASCEND_350:
         case CHIP_CLOUD_V5:
             flag = true;
             break;

@@ -62,14 +62,14 @@ constexpr uint32_t INVALID_NUMBER = 0xffffffffU;
 constexpr uint32_t DEFUALT_NET_SERVICE = 2U;
 constexpr uint32_t SOC_VERSION_LEN = 50U;
 const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP = {
-    {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
-    {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950}},
-    {"aicpu_hcomm.tar.gz", {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
-    {"cann-hcomm-compat.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}},
+    {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
+    {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350}},
+    {"aicpu_hcomm.tar.gz", {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
+    {"cann-hcomm-compat.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
     {HCCD_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
     {"cann-tsch-compat.tar.gz", {}},
     {UDF_PKG_NAME, {tsd::CHIP_ASCEND_910B}},
-    {HIXL_PKG_NAME, {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5}}
+    {HIXL_PKG_NAME, {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}}
 };
 const int64_t SUPPORT_MAX_DEVICE_PER_HOST = 8;
 const std::string MUTEX_FILE_PREFIX = "sink_file_mutex_";

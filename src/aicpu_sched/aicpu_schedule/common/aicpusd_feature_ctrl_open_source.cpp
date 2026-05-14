@@ -22,6 +22,7 @@ typedef enum tagChipType {
     CHIP_ASCEND_910B = 5,
     CHIP_ASCEND_950 = 15,
     CHIP_CLOUD_V5 = 16,
+    CHIP_ASCEND_350 = 19,
 } ChipType_t;
 
 void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
@@ -31,7 +32,8 @@ void FeatureCtrl::Init(const int64_t hardwareVersion, const uint32_t deviceId)
         aicpuFeatureUseMsqV2_ = true;
     }
 
-    if ((chipType == CHIP_ASCEND_910A) || (chipType == CHIP_ASCEND_910B) || (chipType == CHIP_ASCEND_950)) {
+    if ((chipType == CHIP_ASCEND_910A) || (chipType == CHIP_ASCEND_910B) || (chipType == CHIP_ASCEND_950) ||
+        (chipType == CHIP_ASCEND_350)) {
         aicpuFeatureBindPidByHal_ = true;
     }
 
