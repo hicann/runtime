@@ -9,6 +9,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 _ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
+set -e
+
 
 source $_ASCEND_INSTALL_PATH/bin/setenv.bash
 echo "[INFO]: Current compile soc version is ${SOC_VERSION}"

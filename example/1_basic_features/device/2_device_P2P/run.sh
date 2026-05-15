@@ -9,6 +9,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+set -e
+
 _ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
 
 source $_ASCEND_INSTALL_PATH/bin/setenv.bash
