@@ -205,7 +205,8 @@ TEST_F(XpuTaskTest, xpu_task_test_06)
     argsWithType.args.cpuArgsInfo = &argsInfo;
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP(&TaskResManageDavid::AllocTaskInfoAndPos).stubs().will(returnValue(RT_ERROR_TASKRES_QUEUE_FULL)).then(returnValue(RT_ERROR_DRV_ERR));
-    error = XpuLaunchKernelV2(kernel, 1, &argsWithType, context->StreamList_().front(), taskCfg);
+    error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
+        context->StreamList_().front(), &taskCfg);
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     delete result;
     delete kernel;
@@ -251,7 +252,8 @@ TEST_F(XpuTaskTest, xpu_task_test_07)
     argsWithType.args.cpuArgsInfo = &argsInfo;
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP_VIRTUAL((XpuStream *)(context->StreamList_().front()), &XpuStream::StarsAddTaskToStream).stubs().will(returnValue(1));
-    error = XpuLaunchKernelV2(kernel, 1, &argsWithType, context->StreamList_().front(), taskCfg);
+    error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
+        context->StreamList_().front(), &taskCfg);
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     delete result;
     delete kernel;

@@ -42,6 +42,7 @@
 #include "task_manager_david.h"
 #include "rt_inner_model.h"
 #include "inner_kernel.h"
+#include "xpu_aicpu_c.hpp"
 #undef protected
 #undef private
 
@@ -765,4 +766,10 @@ TEST_F(TinyStubTest, event_expanding_stub)
     ret = eventExpandingPool.ResetBufferForEvent();
     EXPECT_EQ(ret, RT_ERROR_NONE);
     eventExpandingPool.FreeEventId(MAX_INT32_NUM);
+}
+
+TEST_F(TinyStubTest, xpu_launch_kernel_stub)
+{
+    rtError_t ret = XpuLaunchKernel(nullptr, 0, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }

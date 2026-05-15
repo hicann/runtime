@@ -119,7 +119,8 @@ TEST_F(XpuRecycleTest, xpu_recycle_test_02)
     argsWithType.args.cpuArgsInfo = &argsInfo;
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
     MOCKER_CPP_VIRTUAL((XpuDriver *)context->Device_()->Driver_(), &XpuDriver::LogicCqReportV2).stubs().will(returnValue(RT_ERROR_LOST_HEARTBEAT));
-    error = XpuLaunchKernelV2(kernel, 1, &argsWithType, context->StreamList_().front(), taskCfg);
+    error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
+        context->StreamList_().front(), &taskCfg);
     context->StreamList_().front()->SetFailureMode(ABORT_ON_FAILURE);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);

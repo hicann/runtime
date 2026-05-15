@@ -191,7 +191,8 @@ TEST_F(XpuProfilingTest, rtXpuProfilingCommandHandle_05)
     argsInfo.baseArgs.soNameAddrOffset = 1U;
     argsWithType.args.cpuArgsInfo = &argsInfo;
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    error = XpuLaunchKernelV2(kernel, 1, &argsWithType, context->StreamList_().front(), taskCfg);
+    error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
+        context->StreamList_().front(), &taskCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     delete result;

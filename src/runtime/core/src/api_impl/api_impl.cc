@@ -1213,7 +1213,7 @@ rtError_t ApiImpl::LaunchKernelV2(Kernel * const kernel, uint32_t blockDim, cons
         "stream " + std::to_string(curStm->Id_()));
 
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
-        return XpuLaunchKernelV2(kernel, blockDim, argsWithType, stm, taskCfg);
+        return XpuLaunchKernel(kernel, blockDim, &argsWithType->args.cpuArgsInfo->baseArgs, curStm, &taskCfg);
     }
 
     if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {

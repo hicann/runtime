@@ -110,7 +110,8 @@ TEST_F(XpuStreamTest, Stream_synchronize_fail)
     argsInfo.baseArgs.soNameAddrOffset = 1U;
     argsWithType.args.cpuArgsInfo = &argsInfo;
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    error = XpuLaunchKernelV2(kernel, 1, &argsWithType, context->StreamList_().front(), taskCfg);
+    error = XpuLaunchKernel(kernel, 1, &argsWithType.args.cpuArgsInfo->baseArgs,
+        context->StreamList_().front(), &taskCfg);
 
     XpuStream *stream = static_cast<XpuStream *>(context->StreamList_().front());
     stream->Synchronize(true, 10000000);

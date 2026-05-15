@@ -12,12 +12,12 @@
 namespace cce {
 namespace runtime {
 
-rtError_t XpuLaunchKernelV2(Kernel *const kernel, uint32_t blockDim,
-    const RtArgsWithType *const argsWithType, Stream *const stm, const TaskCfg &taskCfg)
+rtError_t XpuLaunchKernel(const Kernel * const kernel, const uint32_t coreDim, const rtAicpuArgsEx_t * const argsInfo,
+    Stream * const stm, const TaskCfg * const taskCfg)
 {
     UNUSED(kernel);
-    UNUSED(blockDim);
-    UNUSED(argsWithType);
+    UNUSED(coreDim);
+    UNUSED(argsInfo);
     UNUSED(stm);
     UNUSED(taskCfg);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
