@@ -26,6 +26,10 @@
 
 namespace Adx {
 
+// AdumpGetDFXInfoAddr chunk
+uint64_t *g_dynamicChunk = nullptr;
+uint64_t *g_staticChunk = nullptr;
+    
 DumpManager::DumpManager()
 {
 }
