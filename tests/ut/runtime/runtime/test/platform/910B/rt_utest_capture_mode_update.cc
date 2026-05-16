@@ -239,6 +239,61 @@ void ReleaseModelResource(rtContext_t& ctx, rtStream_t& stream, rtModel_t& model
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskInvalidParam)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    
+    void* args[] = {&ret, NULL};
+    ret = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    void *devAddr;
+    ret = rtMalloc(&devAddr, 64U, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtsValueWrite(devAddr, 1, 0, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t model;
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t stmNum = 1;
+    rtStream_t inputStreams[stmNum];
+    ret = rtModelGetStreams(model, inputStreams, &stmNum);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 3;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtTask_t kernelTask = inputTasks[0];
+    rtTask_t valueTask = inputTasks[1];
+
+    rtLaunchKernelAttrVal_t attrValue;
+    ret = rtModelKernelTaskGetAttribute(valueTask, RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE, &attrValue);
+    EXPECT_EQ(ret, 107000);
+
+    rtTaskParams params;
+    ret = rtModelTaskGetParams(kernelTask, &params);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtModelTaskSetParams(valueTask, &params);
+    EXPECT_EQ(ret, 107000);
+
+    ret = rtFree(devAddr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ReleaseModelResource(ctx, stream, model);
+    GlobalMockObject::verify();
+}
+
 TEST_F(CloudV2CaptureModelUpdateTest, rtModelKernelTaskGetAttribute001)
 {
     rtContext_t ctx;

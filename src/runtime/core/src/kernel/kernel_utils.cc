@@ -197,9 +197,12 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
 
 rtError_t UpdateKernelParams(TaskInfo* const taskInfo, rtTaskParams* const params)
 {
-    COND_RETURN_AND_MSG_OUTER(
-        (taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE && taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, "rtModelTaskSetParams", taskInfo->type, "taskInfo->type", "0:AI core task or 66:AI vector task");
+    if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "task",
+            "The input task must be a compute task on Cube Core and Vector Core. You can call the aclmdlRITaskGetType API to obtain the task type");
+        RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
+        return RT_ERROR_INVALID_VALUE;
+    }
     COND_RETURN_AND_MSG_OUTER((params->taskGrp != nullptr),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, "rtModelTaskSetParams", params->taskGrp, "params->taskGrp", "NULL pointer");
 
@@ -276,10 +279,12 @@ static rtError_t ConvertTimeoutByAttrId(uint64_t timeout, rtLaunchKernelAttrId a
 rtError_t GetKernelAttribute(const TaskInfo* const taskInfo, rtLaunchKernelAttrId attrId,
     rtLaunchKernelAttrVal_t *attrValue)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)),
-        RT_ERROR_INVALID_VALUE, taskInfo->type,
-        std::to_string(TS_TASK_TYPE_KERNEL_AICORE) + " or " + std::to_string(TS_TASK_TYPE_KERNEL_AIVEC));
+    if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "task",
+            "The input task must be a compute task on Cube Core and Vector Core. You can call the aclmdlRITaskGetType API to obtain the task type");
+        RT_LOG(RT_LOG_ERROR, "Invalid taskInfo type(%d), expect 0(AI core) or 66(AI vector)", taskInfo->type);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     RT_LOG(RT_LOG_INFO, "get kernel attrId=%d", attrId);
     const AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
