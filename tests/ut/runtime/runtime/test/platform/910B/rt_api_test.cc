@@ -464,7 +464,7 @@ TEST_F(CloudV2ApiAbnormalTest, cm0_task_abnormal)
 TEST_F(CloudV2ApiAbnormalTest, cntNotify_abnormal)
 {
     rtError_t ret = RT_ERROR_NONE;
-    rtCntNotify_t inNotify;
+    rtCntNotify_t inNotify = nullptr;
     rtCntNotifyWaitInfo_t waitInfo = {RT_CNT_NOTIFY_WAIT_EQUAL_MODE, 0, 10, false};
     rtCntNotifyRecordInfo_t recordInfo = {RT_CNT_NOTIFY_RECORD_ADD_MODE, 0U};
     uint32_t notifyId = 0;
