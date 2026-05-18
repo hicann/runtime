@@ -186,8 +186,23 @@ TraStatus AtraceClientInit(void)
     return TRACE_SUCCESS;
 }
 
+/**
+ * @brief       : stub stop function used in process-exit destructor.
+ *                Skips sending [end] over HDC because runtime/HDC resources may
+ *                already be torn down (e.g. when Runtime::DeviceRelease is bypassed
+ *                in isExiting_ path). Sending [end] there would re-create an HDC
+ *                session and trigger hdc_ub_connect/register_urma_seg failures.
+ *                Recv threads still exit safely via THREAD_STATUS_WAIT_EXIT set by
+ *                AtraceThreadRelease.
+ */
+STATIC int32_t AtraceClientExitNoSend(int32_t devId)
+{
+    (void)devId;
+    return TRACE_SUCCESS;
+}
+
 void AtraceClientExit(void)
 {
-    // release all receive thread
-    AtraceThreadPoolExit(AtraceClientSendEnd);
+    // release all receive thread; do not send [end] in destructor path
+    AtraceThreadPoolExit(AtraceClientExitNoSend);
 }

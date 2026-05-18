@@ -10,5 +10,8 @@
 set(ADIAG_DIR ${TOP_DIR}/src/dfx/trace)
 set(ATRACE_SOURCE_DIR ${ADIAG_DIR}/atrace)
 include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
+# mockcpp 头文件包含 <boost/typeof/typeof.hpp>，需要把 boost include 路径补上，
+# 否则单独构建 atrace UT 时会报 boost/typeof/typeof.hpp not found
+include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
 
 add_subdirectory(ut)

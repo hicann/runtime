@@ -177,3 +177,66 @@ TEST_F(TraceClientUtest, TraceClient_SendHelloFailed)
     EXPECT_EQ(TRACE_UNSUPPORTED, ret);
 }
 
+/* ----------------------------------------------------------------------------
+ * Tests for the destructor-path fix: AtraceClientExit must NOT issue a [end]
+ * message via AdxSendMsgAndNoResultByType, because at TraceExit destructor time
+ * runtime/HDC resources may already have been torn down (Runtime::DeviceRelease
+ * skips AtraceReportStop when isExiting_=true). Sending [end] there would
+ * re-create an HDC session and trigger hdc_register_urma_seg failures.
+ * AtraceClientStop (the normal device-release path) must still send [end].
+ * ---------------------------------------------------------------------------- */
+
+// Forward declaration for the stub stop function used by AtraceClientExit.
+// In the LLT build, STATIC is defined empty (see common/adiag_print.h), so the
+// symbol has external linkage and can be called directly from the test.
+extern "C" int32_t AtraceClientExitNoSend(int32_t devId);
+
+TEST_F(TraceClientUtest, AtraceClientExitNoSend_ReturnsSuccessWithoutHdc)
+{
+    // The stub passed into AtraceThreadPoolExit by AtraceClientExit must be a
+    // pure no-op: any HDC traffic at destructor time is the bug we are guarding
+    // against. Wire AdxSendMsgAndNoResultByType with expects(never()) and call
+    // the stub directly. If a future change re-introduces an HDC send here,
+    // mockcpp::verify() in TearDown will fail the test.
+    MOCKER(AdxSendMsgAndNoResultByType).expects(never());
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(0));
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(1));
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientExitNoSend(-1));   // stub ignores devId
+}
+
+TEST_F(TraceClientUtest, AtraceClientExit_DoesNotSendEnd)
+{
+    // Simulate the process-exit path:
+    //   1. recv thread is alive (AtraceClientStart succeeded);
+    //   2. Runtime skipped AtraceReportStop because of isExiting_=true;
+    //   3. trace.so destructor fires AtraceClientExit.
+    // The new behaviour must let the recv thread exit via WAIT_EXIT without
+    // any AdxSendMsgAndNoResultByType invocation. Any such call would, in the
+    // real system, re-attach the device and fail register_urma_seg.
+    int32_t devId = 0;
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientStart(devId));
+    sleep(1);   // let the recv thread enter its loop
+
+    MOCKER(AdxSendMsgAndNoResultByType).expects(never());
+    AtraceClientExit();
+    GlobalMockObject::verify();
+
+    // Re-init the pool so the suite-level TearDownTestCase Exit still has a
+    // valid pool to tear down; AdiagMalloc zero-initialises, so this is safe.
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientInit());
+}
+
+TEST_F(TraceClientUtest, AtraceClientStop_StillSendsEnd)
+{
+    // Regression guard for commit 38d1f8a6 (sync-join in AtraceClientStop):
+    // the normal device-release path must still send [end] over HDC. We bypass
+    // the suite-level adcore_stub.c implementation by stubbing the function
+    // here so we can count invocations.
+    int32_t devId = 0;
+    EXPECT_EQ(TRACE_SUCCESS, AtraceClientStart(devId));
+    sleep(1);
+
+    MOCKER(AdxSendMsgAndNoResultByType).expects(atLeast(1)).will(returnValue((int32_t)IDE_DAEMON_OK));
+    AtraceClientStop(devId);
+}
+
