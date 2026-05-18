@@ -2843,10 +2843,10 @@ rtError_t ApiImpl::MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t de
         stm = curCtx->DefaultStream_();
         NULL_STREAM_PTR_RETURN_MSG(stm);
     }
+    
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(stm->Id_()));
-    return curCtx->MemcpyAsyncPtr(reinterpret_cast<rtMemcpyAddrInfo *>(memcpyAddrInfo), destMax, count, stm, nullptr,
-        cfgInfo, isMemcpyDesc);
+    return MemcopyAsyncPtr(memcpyAddrInfo, destMax, count, stm, nullptr, cfgInfo, isMemcpyDesc);
 }
 
 rtError_t ApiImpl::RtsMemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,
@@ -2987,7 +2987,7 @@ rtError_t ApiImpl::MemsetAsync(void * const ptr, const uint64_t destMax, const u
         return error;
     }
 
-    return curCtx->MemsetAsync(ptr, destMax, val, cnt, curStm);
+    return MemSetAsync(curStm, ptr, destMax, val, cnt);
 }
 
 rtError_t ApiImpl::MemGetInfo(size_t * const freeSize, size_t * const totalSize)
@@ -6572,13 +6572,13 @@ rtError_t ApiImpl::MemCopy2DAsync(void * const dst, const uint64_t dstPitch, con
 
     while (remainSize > 0UL) {
         if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
-            error = curCtx->MemCopy2DAsync((static_cast<char_t *>(dst)) + dstoffset, dstPitch,
+            error = Memcpy2DAsync((static_cast<char_t *>(dst)) + dstoffset, dstPitch,
                 (static_cast<const char_t *>(src)) + srcoffset, srcPitch, width, height, kind,
                 &realSize, curStm, fixedSize);
             dstoffset += dstPitch;
             srcoffset += srcPitch;
         } else {
-            error = curCtx->MemCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
+            error = Memcpy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
         }
         if (error != RT_ERROR_NONE) {
             return error;
@@ -6897,8 +6897,8 @@ rtError_t ApiImpl::CleanDeviceSatStatus(Stream * const stm)
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(curStm->Id_()));
-    const rtError_t error = curCtx->MemsetAsync(curCtx->CtxGetOverflowAddr(), OVERFLOW_ADDR_MAX_SIZE,
-        0U, OVERFLOW_ADDR_MAX_SIZE, curStm);
+    const rtError_t error = MemSetAsync(curStm, curCtx->CtxGetOverflowAddr(), OVERFLOW_ADDR_MAX_SIZE,
+     	0U, OVERFLOW_ADDR_MAX_SIZE);
     return error;
 }
 

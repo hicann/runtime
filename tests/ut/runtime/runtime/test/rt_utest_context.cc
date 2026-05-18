@@ -3024,10 +3024,10 @@ TEST_F(ContextTest, memcpy2d_invalid_stream)
     ctx = refObject->GetVal();
 
 
-    error = ctx->MemCopy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, NULL, 100);
+    error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, NULL, 100);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = ctx->MemCopy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_DEVICE, &realSize, NULL, 100);
+    error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_DEVICE, &realSize, NULL, 100);
     EXPECT_NE(error, RT_ERROR_INVALID_VALUE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3170,7 +3170,7 @@ TEST_F(ContextTest, MemCopy2DAsync_invalid_stream)
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
     uint64_t realSize;
-    error = ctx->MemCopy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
+    error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3263,6 +3263,58 @@ TEST_F(ContextTest, GetSatStatusForStars_test)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, MemSetAsync_HostMemory_Test)
+{
+    GlobalMockObject::verify();
+    rtError_t error;
+    RawDevice *device = new RawDevice(0);
+    EXPECT_NE(device, nullptr);
+    device->Init();
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+
+    uint8_t data[16] = {};
+    rtPtrAttributes_t attributes = {};
+    attributes.location.type = RT_MEMORY_LOC_HOST;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::PtrGetAttributes)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&attributes, sizeof(attributes)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    error = MemSetAsync(stream, data, sizeof(data), 0x5AU, sizeof(data));
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(data[0], static_cast<uint8_t>(0x5A));
+    EXPECT_EQ(data[sizeof(data) - 1U], static_cast<uint8_t>(0x5A));
+
+    delete stream;
+    delete device;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, MemSetAsync_PtrGetAttributesFail_Test)
+{
+    GlobalMockObject::verify();
+    rtError_t error;
+    RawDevice *device = new RawDevice(0);
+    EXPECT_NE(device, nullptr);
+    device->Init();
+    Stream *stream = new Stream(device, 0);
+    EXPECT_NE(stream, nullptr);
+
+    uint8_t data[16] = {};
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::PtrGetAttributes)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    error = MemSetAsync(stream, data, sizeof(data), 0U, sizeof(data));
+    EXPECT_EQ(error, RT_ERROR_DRV_ERR);
+
+    delete stream;
+    delete device;
     GlobalMockObject::verify();
 }
 
@@ -3950,7 +4002,7 @@ TEST_F(ContextTest, MemcpyAsyncPtr_test)
         .will(returnValue(1))
         .then(returnValue(1))
         .then(returnValue(RT_ERROR_NONE));
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0, 0, stream, guardMem, &cfgInfo, false);
     EXPECT_EQ(error, 1);
 
     MOCKER_CPP_VIRTUAL(ctx->device_->Driver_(), &Driver::GetRunMode)
@@ -3960,10 +4012,10 @@ TEST_F(ContextTest, MemcpyAsyncPtr_test)
         .stubs()
         .will(returnValue(1))
         .then(returnValue(RT_ERROR_NONE));
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0, 0, stream, guardMem, &cfgInfo, false);
     EXPECT_EQ(error, 1);
 
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0, 0, stream, guardMem, &cfgInfo, false);
     EXPECT_EQ(error, 1);
 
     MOCKER(MemcpyAsyncTaskInitV1)
@@ -3971,10 +4023,10 @@ TEST_F(ContextTest, MemcpyAsyncPtr_test)
         .with(outBoundP(&submitTask))
         .will(returnValue(1))
         .then(returnValue(RT_ERROR_NONE));
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0, 0, stream, guardMem, &cfgInfo, false);
     EXPECT_EQ(error, 1);
 
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0, 0, stream, guardMem, &cfgInfo, false);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4032,7 +4084,7 @@ TEST_F(ContextTest, MemcpyAsyncPtrTest)
         .stubs()
         .with(outBoundP(&submitTask))
         .then(returnValue(RT_ERROR_NONE));
-    error = ctx->MemcpyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo, true);
+    error = MemcopyAsyncPtr(&memcpyAddrInfo, 0 ,0, stream, guardMem, &cfgInfo, true);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -4272,10 +4324,10 @@ TEST_F(ContextTest, MemCopy2DAsync_test)
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(MemcpyAsyncTaskInitV2).stubs().will(returnValue(RT_ERROR_NONE)).then(returnValue(1));
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ctx->MemCopy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
+    error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ctx->MemCopy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
+    error = Memcpy2DAsync(NULL, 100, NULL, 100, 100, 1, RT_MEMCPY_DEVICE_TO_HOST, &realSize, stream, 100);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);

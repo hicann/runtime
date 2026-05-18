@@ -48,13 +48,12 @@ public:
     rtError_t CmoAddrTaskLaunch(void *cmoAddrInfo, const uint64_t destMax, const rtCmoOpCode_t cmoOpCode,
         Stream * const stm, const uint32_t flag) override;
 
-    rtError_t MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count, Stream *stm,
-        const rtTaskCfgInfo_t * const cfgInfo = nullptr, const bool isMemcpyDesc = false) override;
     rtError_t SetMemcpyDesc(rtMemcpyDesc_t desc, const void * const srcAddr, const void * const dstAddr,
     const size_t count, const rtMemcpyKind kind, rtMemcpyConfig_t * const config) override;
     rtError_t MemCopy2DAsync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
         const uint64_t width, const uint64_t height, Stream * const stm,
         const rtMemcpyKind_t kind = RT_MEMCPY_RESERVED, const rtMemcpyKind newKind = RT_MEMCPY_KIND_MAX) override;
+   
     rtError_t MemcpyBatchAsync(void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
         const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, 
         size_t* const failIdx, Stream* const stm) override;

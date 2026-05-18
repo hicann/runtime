@@ -645,25 +645,6 @@ rtError_t ApiImplDavid::StreamWaitEvent(Stream * const stm, Event * const evt, c
     return error;
 }
 
-rtError_t ApiImplDavid::MemcpyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax,
-    const uint64_t count, Stream *stm, const rtTaskCfgInfo_t * const cfgInfo, const bool isMemcpyDesc)
-{
-    UNUSED(destMax);
-    UNUSED(isMemcpyDesc);
-    RT_LOG(RT_LOG_DEBUG, "async memcpy, using ptr_mode=1, stream=%p, count=%" PRIu64 ".", stm, count);
-
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    if (stm == nullptr) {
-        stm = curCtx->DefaultStream_();
-        NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
-    }
-    COND_RETURN_AND_MSG_OUTER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        ErrorCode::EE1010, __func__, "stream");
-    return MemcpyAsyncPtrForDavid(static_cast<rtDavidMemcpyAddrInfo *>(memcpyAddrInfo), count, stm, cfgInfo);
-}
-
 rtError_t ApiImplDavid::SetMemcpyDesc(rtMemcpyDesc_t desc, const void * const srcAddr, const void * const dstAddr,
     const size_t count, const rtMemcpyKind kind, rtMemcpyConfig_t * const config)
 {
@@ -711,7 +692,7 @@ rtError_t ApiImplDavid::MemCopy2DAsync(void * const dst, const uint64_t dstPitch
 
     rtError_t error = RT_ERROR_NONE;
     uint64_t remainSize = width * height;
-    uint64_t totalSize = remainSize;
+    const uint64_t totalSize = remainSize;
     uint64_t realSize = 0UL;
     uint64_t fixedSize = 0UL;
     uint64_t srcoffset = 0UL;
@@ -738,17 +719,18 @@ rtError_t ApiImplDavid::MemCopy2DAsync(void * const dst, const uint64_t dstPitch
             error = Memcpy2DAsync(dst, dstPitch, src, srcPitch, width, height, kind, &realSize, curStm, fixedSize);
         }
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        // ub 单算子，h2d/d2h都走这里, d2d目前不支持，不会走到下面
-        if (Runtime::Instance()->GetConnectUbFlag() && !curStm->GetBindFlag() && (kind != RT_MEMCPY_DEVICE_TO_DEVICE)) {
-            fixedSize = realSize;   // 这里的realSize返回的就是累计的
+        if (Runtime::Instance()->GetConnectUbFlag() && !curStm->GetBindFlag() &&
+            (kind != RT_MEMCPY_DEVICE_TO_DEVICE)) {
+            fixedSize = realSize;
             remainSize = totalSize - fixedSize;
-            if (remainSize > 0) {
+            if (remainSize > 0UL) {
                 error = curStm->Synchronize();
-                ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.", static_cast<uint32_t>(error));
+                ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, retCode=%#x.",
+                    static_cast<uint32_t>(error));
             }
         } else {
             fixedSize += realSize;
-            remainSize -= realSize; 
+            remainSize -= realSize;
         }
     }
     return error;

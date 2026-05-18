@@ -121,23 +121,14 @@ public:
 
     rtError_t DebugUnRegisterForStream(Stream * const debugStream);
 
-    rtError_t MemcpyAsyncPtr(rtMemcpyAddrInfo * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count,
-        Stream *stm, const std::shared_ptr<void> &guardMem = nullptr, const rtTaskCfgInfo_t * const cfgInfo = nullptr,
-        const bool isMemcpyDesc = false) const;
     rtError_t GetDevArgsAddr(Stream * const stm, const rtArgsEx_t * const argsInfo, void ** const devArgsAddr,
         void ** const argsHandle) const;
     rtError_t LaunchSqeUpdateTask(const void * const src, const uint64_t cpySize, uint32_t sqId, uint32_t pos,
                                   Stream * const stm);
-    rtError_t MemsetAsync(void * const ptr, const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount,
-                          Stream * const stm);
-
-    rtError_t MemCopy2DAsync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
-        const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind, uint64_t * const realSize,
-        Stream * const stm, const uint64_t fixedSize);
 
     virtual rtError_t StreamCreate(const uint32_t prio, const uint32_t flag, Stream ** const result, DvppGrp *grp = nullptr,
-        const bool isSoftWareSqEnable = false, const bool isAutoSplitEnable = false);
-
+    	const bool isSoftWareSqEnable = false, const bool isAutoSplitEnable = false);
+    
     virtual rtError_t StreamDestroy(Stream * const stm, bool flag = true);
 
     rtError_t CreateAutoSplitSlaveStream(Stream * const masterStm, Stream **newSlaveStream);

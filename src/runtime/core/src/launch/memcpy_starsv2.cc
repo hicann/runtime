@@ -21,9 +21,12 @@
 namespace cce {
 namespace runtime {
 
-rtError_t MemcpyAsyncPtrForDavid(rtDavidMemcpyAddrInfo *const memcpyAddrInfo, const uint64_t count, Stream *stm,
-    const rtTaskCfgInfo_t * const cfgInfo)
+rtError_t MemcopyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count,
+    Stream *stm, const std::shared_ptr<void> &guardMem, const rtTaskCfgInfo_t * const cfgInfo, const bool isMemcpyDesc)
 {
+    UNUSED(destMax);
+    UNUSED(guardMem);
+    UNUSED(isMemcpyDesc);
     rtError_t error = RT_ERROR_NONE;
     constexpr uint32_t cpySize = 32U;
     Device *dev = stm->Device_();
@@ -52,7 +55,7 @@ rtError_t MemcpyAsyncPtrForDavid(rtDavidMemcpyAddrInfo *const memcpyAddrInfo, co
         stm->Id_(), static_cast<uint32_t>(error));
     SaveTaskCommonInfo(cpyAsyncTask, dstStm, pos);
     ScopeGuard tskErrRecycle(errRecycle);
-    error = MemcpyAsyncTaskInitV1(cpyAsyncTask, memcpyAddrInfo, count);
+    error = MemcpyAsyncTaskInitV1(cpyAsyncTask, static_cast<rtDavidMemcpyAddrInfo *>(memcpyAddrInfo), count);
     ERROR_RETURN_MSG_INNER(error, "task init failed, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
     cpyAsyncTask->stmArgPos = static_cast<DavidStream *>(dstStm)->GetArgPos();

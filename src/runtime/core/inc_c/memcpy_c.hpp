@@ -16,8 +16,9 @@
 #include "starsv2_base.hpp"
 namespace cce {
 namespace runtime {
-    rtError_t MemcpyAsyncPtrForDavid(rtDavidMemcpyAddrInfo * const memcpyAddrInfo, const uint64_t count, Stream *stm,
-        const rtTaskCfgInfo_t * const cfgInfo = nullptr);
+    rtError_t MemcopyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, const uint64_t count,
+        Stream *stm, const std::shared_ptr<void> &guardMem, const rtTaskCfgInfo_t * const cfgInfo,
+     	const bool isMemcpyDesc);
     rtError_t Memcpy2DAsync(void * const dst, const uint64_t dstPitch, const void * const src, const uint64_t srcPitch,
         const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind, uint64_t * const realSize,
         Stream * const stm, const uint64_t fixedSize);
