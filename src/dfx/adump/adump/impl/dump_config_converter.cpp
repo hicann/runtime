@@ -684,60 +684,6 @@ bool DumpConfigConverter::CheckWatcherSceneConstraints(const AclModelDumpConfig 
     
     return true;
 }
-bool DumpConfigConverter::CheckBlacklistValues(const std::vector<AclDumpBlacklist> &blacklist,
-                                                  const std::string &blacklistPath) const
-{
-    for (size_t i = 0U; i < blacklist.size(); ++i) {
-        const auto &item = blacklist[i];
-        std::string itemPath = BuildIndexedPath(blacklistPath, i);
-        
-        for (size_t j = 0U; j < item.pos.size(); ++j) {
-            const std::string &posValue = item.pos[j];
-            if (posValue.empty()) {
-                continue;
-            }
-            
-            std::string posIndexPath = BuildIndexedPath(BuildPath(itemPath, ADUMP_DUMP_BLACKLIST_POS), j);
-            if (!CheckPosFormat(posValue, posIndexPath)) {
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-bool DumpConfigConverter::CheckPosFormat(const std::string &posValue, const std::string &posPath) const
-{
-    if (!CheckPosPrefix(posValue, "input", posPath) && !CheckPosPrefix(posValue, "output", posPath)) {
-        REPORT_EP0003_INVALID_VALUE("CheckDumpList", posValue, posPath,
-            ADUMP_REASON_BLACKLIST_POS_INVALID_FORMAT, configPath_);
-        return false;
-    }
-    
-    return true;
-}
-
-bool DumpConfigConverter::CheckPosPrefix(const std::string &posValue, const std::string &prefix,
-                                            const std::string &posPath) const
-{
-    if (posValue.length() <= prefix.length()) {
-        return false;
-    }
-    
-    if (posValue.substr(0, prefix.length()) != prefix) {
-        return false;
-    }
-    
-    std::string indexStr = posValue.substr(prefix.length());
-    if (!IsDigit(indexStr)) {
-        REPORT_EP0003_INVALID_VALUE("CheckDumpList", posValue, posPath,
-            ADUMP_REASON_BLACKLIST_POS_INDEX_NOT_DIGIT, configPath_);
-        return false;
-    }
-    
-    return true;
-}
 
 bool DumpConfigConverter::CheckBlacklistSize(const AclModelDumpConfig &item,
                                                const std::string &itemPath) const
@@ -776,20 +722,6 @@ bool DumpConfigConverter::CheckBlacklistWithDumpLevel(const AclModelDumpConfig &
         REPORT_EP0005_ITEM_CANNOT_SET_WHEN_ITEM_NOT_VALUE("CheckDumpList", blacklistPath,
             ADUMP_DUMP_LEVEL, ADUMP_DUMP_LEVEL_OP, configPath_);
         return false;
-    }
-    
-    if (hasOptypeBlacklist) {
-        std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPTYPE_BLACKLIST);
-        if (!CheckBlacklistValues(item.optypeBlacklist, blacklistPath)) {
-            return false;
-        }
-    }
-    
-    if (hasOpnameBlacklist) {
-        std::string blacklistPath = BuildPath(itemPath, ADUMP_DUMP_OPNAME_BLACKLIST);
-        if (!CheckBlacklistValues(item.opnameBlacklist, blacklistPath)) {
-            return false;
-        }
     }
     
     return true;

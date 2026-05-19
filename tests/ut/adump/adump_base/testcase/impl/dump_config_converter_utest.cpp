@@ -962,6 +962,29 @@ TEST_F(DumpConfigConverterUtest, TestBlacklistWithDumpLevelConstraints)
         configPath, "EP0005");
 }
 
+TEST_F(DumpConfigConverterUtest, TestBlacklistPosValuesSuccess)
+{
+    std::string configPath = "/TestBlacklistPosValuesSuccess.json";
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_level": "op",
+        "dump_list": [{"model_name": "model1", "optype_blacklist": [{"name": "type1", "pos": ["workspace0"]}]}]}})",
+        configPath, true, DumpType::OPERATOR);
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_level": "op",
+        "dump_list": [{"model_name": "model1", "optype_blacklist": [{"name": "type1", "pos": ["input_0"]}]}]}})",
+        configPath, true, DumpType::OPERATOR);
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_level": "op",
+        "dump_list": [{"model_name": "model1", "optype_blacklist": [{"name": "type1", "pos": ["output_0"]}]}]}})",
+        configPath, true, DumpType::OPERATOR);
+    // pos正常格式的数据(inputN or outputN)
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_level": "op",
+        "dump_list": [{"model_name": "model1", "opname_blacklist": [{"name": "op1", "pos": ["input0", "output0"]}]}]}})",
+        configPath, true, DumpType::OPERATOR);
+}
+
 TEST_F(DumpConfigConverterUtest, TestOpnameRangeWithDumpLevelConstraints)
 {
     std::string configPath = "/TestOpnameRangeWithDumpLevelConstraints.json";
@@ -1030,28 +1053,6 @@ TEST_F(DumpConfigConverterUtest, TestModelNameAndLayerEmptyConstraints)
     TestFailureHelper(
         R"({"dump": {"dump_path": "./", "dump_list": [{"model_name": "model1", "layer": []}]}})",
         configPath, "EP0001");
-}
-
-TEST_F(DumpConfigConverterUtest, TestBlacklistPosFormatConstraints)
-{
-    std::string configPath = "/TestBlacklistPosFormatConstraints.json";
-
-    TestFailureHelper(
-        R"({"dump": {"dump_path": "./", "dump_level": "op",
-        "dump_list": [{"model_name": "model1", "optype_blacklist": [{"name": "type1", "pos": ["invalid"]}]}]}})",
-        configPath, "EP0003");
-    TestFailureHelper(
-        R"({"dump": {"dump_path": "./", "dump_level": "op",
-        "dump_list": [{"model_name": "model1", "optype_blacklist": [{"name": "type1", "pos": ["inputabc"]}]}]}})",
-        configPath, "EP0003");
-    TestFailureHelper(
-        R"({"dump": {"dump_path": "./", "dump_level": "op",
-        "dump_list": [{"model_name": "model1", "opname_blacklist": [{"name": "op1", "pos": ["invalid"]}]}]}})",
-        configPath, "EP0003");
-    TestFailureHelper(
-        R"({"dump": {"dump_path": "./", "dump_level": "op",
-        "dump_list": [{"model_name": "model1", "opname_blacklist": [{"name": "op1", "pos": ["outputabc"]}]}]}})",
-        configPath, "EP0003");
 }
 
 TEST_F(DumpConfigConverterUtest, TestBlacklistSizeExceedLimit)

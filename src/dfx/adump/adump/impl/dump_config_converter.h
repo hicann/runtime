@@ -168,11 +168,6 @@ private:
     bool CheckWatcherSceneConstraints(const AclModelDumpConfig &item, const std::string &itemPath,
         const std::string &dumpScene) const;
     bool CheckBlacklistSize(const AclModelDumpConfig &item, const std::string &itemPath) const;
-    bool CheckBlacklistValues(const std::vector<AclDumpBlacklist> &blacklist,
-                               const std::string &blacklistPath) const;
-    bool CheckPosFormat(const std::string &posValue, const std::string &posPath) const;
-    bool CheckPosPrefix(const std::string &posValue, const std::string &prefix,
-                        const std::string &posPath) const;
     bool CheckBlacklistWithDumpLevel(const AclModelDumpConfig &item, const std::string &itemPath,
         const std::string &dumpLevel) const;
     bool CheckOpNameRange(const AclModelDumpConfig &item, const std::string &itemPath,
