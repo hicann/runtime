@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include <gtest/gtest.h>
 #include <thread>
 #include <chrono>
@@ -138,14 +138,12 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpResourceSafeMap_Clear)
 TEST_F(DumpResourceSafeMapUtest, Test_DumpResourceSafeMap_WaitAndClear_Completed)
 {
     DumpStreamInfo* dumpPtr = nullptr;
-    ;
     int32_t ret = DumpStreamCreate(&dumpPtr);
     ASSERT_EQ(ret, ADUMP_SUCCESS);
     std::shared_ptr<DumpStreamInfo> dumpInfo(dumpPtr, DumpStreamFree);
 
     DumpResourceSafeMap::Instance().insert("test_key", dumpInfo);
 
-    // Enqueue cleanup and wait
     DumpResourceSafeMap::Instance().EnqueueCleanup("test_key");
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     DumpResourceSafeMap::Instance().waitAndClear();
@@ -167,7 +165,6 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpResourceSafeMap_WaitAndClear_Multiple)
     DumpResourceSafeMap::Instance().insert("key1", dumpInfo1);
     DumpResourceSafeMap::Instance().insert("key2", dumpInfo2);
 
-    // Enqueue cleanup for both keys and wait
     DumpResourceSafeMap::Instance().EnqueueCleanup("key1");
     DumpResourceSafeMap::Instance().EnqueueCleanup("key2");
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -180,7 +177,6 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpResourceSafeMap_ThreadSafety)
     const int numThreads = 10;
     std::vector<std::thread> threads;
 
-    // Concurrent inserts
     for (int i = 0; i < numThreads; ++i) {
         threads.emplace_back([i]() {
             DumpStreamInfo* dumpPtr = nullptr;
@@ -221,9 +217,7 @@ TEST_F(DumpResourceSafeMapUtest, Test_CleanupThread_EnqueueAndProcess)
     EXPECT_EQ(DumpResourceSafeMap::Instance().size(), 1);
 
     DumpResourceSafeMap::Instance().EnqueueCleanup("test_key_cleanup");
-
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     EXPECT_EQ(DumpResourceSafeMap::Instance().size(), 0);
 
     DumpResourceSafeMap::Instance().waitAndClear();
@@ -247,9 +241,7 @@ TEST_F(DumpResourceSafeMapUtest, Test_CleanupThread_MultipleKeys)
 
     DumpResourceSafeMap::Instance().EnqueueCleanup("key_cleanup_1");
     DumpResourceSafeMap::Instance().EnqueueCleanup("key_cleanup_2");
-
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     EXPECT_EQ(DumpResourceSafeMap::Instance().size(), 0);
 
     DumpResourceSafeMap::Instance().waitAndClear();

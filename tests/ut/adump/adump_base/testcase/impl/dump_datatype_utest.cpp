@@ -41,3 +41,67 @@ TEST_F(GetIrDataTypeUtest, Test_GetIrDataType)
         EXPECT_EQ(DumpDataType::GetIrDataType(pair.first),  static_cast<int32_t>(pair.second));
     }
 }
+
+TEST_F(GetIrDataTypeUtest, Test_GetIrDataType_Unknown)
+{
+    // An unknown GeDataType value should return DT_UNDEFINED
+    int32_t ret = DumpDataType::GetIrDataType(static_cast<GeDataType>(9999));
+    EXPECT_EQ(ret, static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
+}
+
+TEST_F(GetIrDataTypeUtest, Test_GetIrDataType_Common)
+{
+    // Common types that are in the map
+    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_FLOAT),
+              static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
+    EXPECT_NE(DumpDataType::GetIrDataType(GeDataType::DT_INT32),
+              static_cast<int32_t>(ProtoDataType::DT_UNDEFINED));
+}
+
+TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_Known)
+{
+    // FORMAT_ND = 2, FORMAT_NCHW = 0 (common formats that should be in the map)
+    // Just call with any format value; a known one returns a non-"RESERVED" string
+    std::string s = DumpDataType::FormatToSerialString(0); // FORMAT_NCHW
+    EXPECT_NE(s, ""); // should have some result
+}
+
+TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_Unknown)
+{
+    // FormatToSerialString masks with 0xFF, so use a large value
+    // Result depends on whether the masked byte is in the format map
+    std::string s = DumpDataType::FormatToSerialString(9999);
+    EXPECT_FALSE(s.empty()); // Should return some string (known format or "RESERVED")
+}
+
+TEST_F(GetIrDataTypeUtest, Test_FormatToSerialString_WithSubFormat)
+{
+    // format with sub-format bits set: bits 8-23 contain sub-format value
+    // Format = 0 (NCHW) + sub-format in upper bits = (1 << 8) | 0
+    int32_t formatWithSub = (1 << 8) | 0; // FORMAT_NCHW + sub=1
+    std::string s = DumpDataType::FormatToSerialString(formatWithSub);
+    // Should contain ":" for sub-format
+    EXPECT_NE(s.find(":"), std::string::npos);
+}
+
+TEST_F(GetIrDataTypeUtest, Test_DataTypeToSerialString_Known)
+{
+    // DT_FLOAT = 0 should be in map
+    std::string s = DumpDataType::DataTypeToSerialString(0);
+    EXPECT_NE(s, "");
+    EXPECT_NE(s, "UNDEFINED");
+}
+
+TEST_F(GetIrDataTypeUtest, Test_DataTypeToSerialString_Unknown)
+{
+    // Unknown datatype -> "UNDEFINED"
+    std::string s = DumpDataType::DataTypeToSerialString(9999);
+    EXPECT_EQ(s, "UNDEFINED");
+}
+
+TEST_F(GetIrDataTypeUtest, Test_DataTypeToSerialString_Float16)
+{
+    // DT_FLOAT16 = 1
+    std::string s = DumpDataType::DataTypeToSerialString(1);
+    EXPECT_NE(s, "UNDEFINED");
+}

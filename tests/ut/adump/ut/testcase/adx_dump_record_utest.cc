@@ -174,6 +174,26 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueue)
     Adx::AdxDumpRecord::Instance().RecordDumpInfo();
 }
 
+static int SysinfoAmpleMem(struct sysinfo *info)
+{
+    info->totalram = 4ULL * 1024 * 1024 * 1024;  // 4 GB total
+    info->freeram  = 2ULL * 1024 * 1024 * 1024;  // 2 GB free (50% > 15% threshold)
+    return 0;
+}
+
+static int SysinfoLowMem(struct sysinfo *info)
+{
+    info->totalram = 4ULL * 1024 * 1024 * 1024;  // 4 GB total
+    info->freeram  = 0;                           // 0 free (< 15% threshold)
+    return 0;
+}
+
+static int SysinfoError(struct sysinfo *info)
+{
+    (void)info;
+    return -1;  // sysinfo failure → fallback to queue-size check
+}
+
 TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueueLimit)
 {
     const char *srcFile = "adx_data_dump_server_manager";
@@ -181,32 +201,29 @@ TEST_F(ADX_DUMP_RECORD_TEST, RecordDumpDataToFullQueueLimit)
     MsgProto *msg = Adx::AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
     Adx::SharedPtr<MsgProto> msgPtr(msg, IdeXfree);
     Adx::HostDumpDataInfo info = {msgPtr, dataLen};
-    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::ReadMemory)
-    .stubs()
-    .will(returnValue(static_cast<uint64_t>(10ULL * 1024 * 1024 * 1024)));
+
+    // Push 61 items with ample free memory so IsFull() stays false during pushes
+    MOCKER(sysinfo).stubs().will(invoke(SysinfoAmpleMem));
     BoundQueueMemory<HostDumpDataInfo> mem;
-    GlobalMockObject::reset();
     for (int i = 0; i < 61; i++) {
         mem.Push(info);
     }
+
+    // Check 1: IsFull = true when free memory is exhausted
     GlobalMockObject::reset();
-    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::ReadMemory)
-    .stubs()
-    .will(returnValue(static_cast<uint64_t>(10ULL * 1024 * 1024 * 1024)));
+    MOCKER(sysinfo).stubs().will(invoke(SysinfoLowMem));
     bool ret = mem.IsFull();
     EXPECT_EQ(true, ret);
 
+    // Check 2: IsFull = true when sysinfo fails (fallback: queue.size() >= 60)
     GlobalMockObject::reset();
-    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::ReadMemory)
-    .stubs()
-    .will(returnValue(static_cast<uint64_t>(0)));
+    MOCKER(sysinfo).stubs().will(invoke(SysinfoError));
     ret = mem.IsFull();
     EXPECT_EQ(true, ret);
 
+    // Check 3: IsFull = false when memory is ample (1 GB usage < 85% of no limit)
     GlobalMockObject::reset();
-    MOCKER_CPP(&Adx::BoundQueueMemory<HostDumpDataInfo>::ReadMemory)
-    .stubs()
-    .will(returnValue(static_cast<uint64_t>(1ULL * 1024 * 1024 * 1024)));
+    MOCKER(sysinfo).stubs().will(invoke(SysinfoAmpleMem));
     ret = mem.IsFull();
     EXPECT_EQ(false, ret);
 }

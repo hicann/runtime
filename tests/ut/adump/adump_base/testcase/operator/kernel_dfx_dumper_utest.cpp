@@ -58,8 +58,9 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithEnv)
     // 环境变量ASCEND_DUMP_PATH无效路径/ASCEND_WORK_PATH无效路径，不使能KernelDataDump
     (void)setenv("ASCEND_DUMP_PATH", "./Test_DfxDumper_EnableWithEnv/NoPermission/ascendDumpPath", 1);
     (void)setenv("ASCEND_WORK_PATH", "./Test_DfxDumper_EnableWithEnv/NoPermission/ascendWorkPath", 1);
-    // root用户执行用例有权限
-    bool bRet = getuid() == 0 ? true : false;
+    // root用户执行用例有权限；但virtiofs等特殊挂载下root也可能无法绕过chmod 400，动态探测
+    bool bRet = (system("mkdir ./Test_DfxDumper_EnableWithEnv/NoPermission/_probe_ 2>/dev/null") == 0);
+    if (bRet) { (void)system("rm -rf ./Test_DfxDumper_EnableWithEnv/NoPermission/_probe_"); }
     KernelDfxDumper::Instance().EnableDfxDumper();
     EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(), bRet);
 

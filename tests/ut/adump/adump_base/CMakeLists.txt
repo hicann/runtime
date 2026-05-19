@@ -8,7 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 ########################### adump base utest ################################
-include_directories(${CANN_3RD_LIB_PATH}/boost)
+include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
 include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(ADUMP_BASE_UT_ROOT_PATH ${TOP_DIR}/tests/ut/adump/adump_base)
@@ -106,12 +106,14 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/common/common_sys_utils_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_manager_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/dump_manager/dump_stream_info_func_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/adump_api_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_datatype_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_memory_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_tensor_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_setting_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_config_converter_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/dump_config_converter_extra_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/acl_dump_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/impl/adx_dump_callback_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_preliminary_utest.cpp
@@ -121,9 +123,13 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_ELF_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_core_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_file_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_operator_extra_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/exception_dumper_extra_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/register_config_platform_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/printf/dump_printf_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/printf/dump_printf_platform_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/printf/fp16_t_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/main.cpp
 )
 

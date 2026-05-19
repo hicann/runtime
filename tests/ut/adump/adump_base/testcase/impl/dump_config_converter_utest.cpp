@@ -333,8 +333,9 @@ TEST_F(DumpConfigConverterUtest, TestNpuCollectPathEnableExceptionDump)
     (void)system("chmod 400 ./TestNpuCollectPathEnableExceptionDump/NoPermission");
     (void)setenv("NPU_COLLECT_PATH", "./TestNpuCollectPathEnableExceptionDump/NoPermission/npuCollectPath", 1);
     ret = DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType);
-    // root用户执行用例有权限
-    bool bRet = getuid() == 0 ? true : false;
+    // 动态探测是否能在chmod 400目录下创建子目录（virtiofs环境下root可能无此权限）
+    bool bRet = (system("mkdir ./TestNpuCollectPathEnableExceptionDump/NoPermission/_probe_ 2>/dev/null") == 0);
+    if (bRet) { (void)system("rm -rf ./TestNpuCollectPathEnableExceptionDump/NoPermission/_probe_"); }
     EXPECT_EQ(ret, bRet);
 
     // 环境变量NPU_COLLECT_PATH，无效路径，无权限，不使能L1 exception dump
@@ -342,8 +343,9 @@ TEST_F(DumpConfigConverterUtest, TestNpuCollectPathEnableExceptionDump)
     (void)system("chmod 400 ./TestNpuCollectPathEnableExceptionDump/npuCollectPathNoPermission");
     (void)setenv("NPU_COLLECT_PATH", "./TestNpuCollectPathEnableExceptionDump/npuCollectPathNoPermission", 1);
     ret = DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType);
-    // root用户执行用例有权限
-    EXPECT_EQ(ret, bRet);
+    // CheckDumpPath uses access(R_OK|W_OK) on the existing dir — probe the same way
+    bool bRet2 = (access("./TestNpuCollectPathEnableExceptionDump/npuCollectPathNoPermission", R_OK | W_OK) == 0);
+    EXPECT_EQ(ret, bRet2);
 
     // 环境变量NPU_COLLECT_PATH，无效路径，非目录，不使能L1 exception dump
     (void)system("touch ./TestNpuCollectPathEnableExceptionDump/npuCollectPathIsFile");
@@ -394,9 +396,10 @@ TEST_F(DumpConfigConverterUtest, TestAscendDumpSceneEnableExceptionDump)
     ret = DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(dumpType, DumpType::ARGS_EXCEPTION);
-    // root用户执行用例有权限
-    std::string dumpPath =
-        getuid() == 0 ? "./TestAscendDumpSceneEnableExceptionDump/NoPermission/ascendWorkPath" : "./";
+    // 动态探测是否能在chmod 400目录下创建子目录（virtiofs环境下root可能无此权限）
+    bool canWriteNoPermission = (system("mkdir ./TestAscendDumpSceneEnableExceptionDump/NoPermission/_probe_ 2>/dev/null") == 0);
+    if (canWriteNoPermission) { (void)system("rm -rf ./TestAscendDumpSceneEnableExceptionDump/NoPermission/_probe_"); }
+    std::string dumpPath = canWriteNoPermission ? "./TestAscendDumpSceneEnableExceptionDump/NoPermission/ascendWorkPath" : "./";
     EXPECT_EQ(config.dumpPath, dumpPath);
 
     // 路径优先级2.2：生效ASCEND_WORK_PATH，有效路径
@@ -411,8 +414,7 @@ TEST_F(DumpConfigConverterUtest, TestAscendDumpSceneEnableExceptionDump)
     ret = DumpConfigConverter::EnableExceptionDumpWithEnv(config, dumpType);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(dumpType, DumpType::ARGS_EXCEPTION);
-    // root用户执行用例有权限
-    dumpPath = getuid() == 0 ? "./TestAscendDumpSceneEnableExceptionDump/NoPermission/ascendDumpPath" :
+    dumpPath = canWriteNoPermission ? "./TestAscendDumpSceneEnableExceptionDump/NoPermission/ascendDumpPath" :
                                "./TestAscendDumpSceneEnableExceptionDump/ascendWorkPath";
     EXPECT_EQ(config.dumpPath, dumpPath);
     // 路径优先级1.2：生效ASCEND_DUMP_PATH，有效路径

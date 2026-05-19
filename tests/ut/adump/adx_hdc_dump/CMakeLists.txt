@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 
 #  cmakelist for adx hdc data dump ut
-include_directories(${CANN_3RD_LIB_PATH}/boost)
+include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
 include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(adxHdcDumpApiSrcList

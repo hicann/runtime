@@ -11,7 +11,7 @@
 set(SRC_CODE_ROOT_PATH ${TOP_DIR}/src/dfx/adump)
 set(LLT_CODE_ROOT_PATH ${TOP_DIR}/tests/ut/adump/ut)
 
-include_directories(${CANN_3RD_LIB_PATH}/boost)
+include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
 include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 ############# intf_llt_pub ####################
