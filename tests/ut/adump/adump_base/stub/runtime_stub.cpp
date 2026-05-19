@@ -202,6 +202,12 @@ rtError_t rtRegTaskFailCallbackByModule(const char_t* moduleName, rtTaskFailCall
 
 rtError_t rtCtxGetCurrent(rtContext_t* context)
 {
+    *context = reinterpret_cast<rtContext_t>(0x1);
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtCtxSetCurrent(rtContext_t context)
+{
     (void)context;
     return RT_ERROR_NONE;
 }

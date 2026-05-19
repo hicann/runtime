@@ -274,3 +274,45 @@ TEST_F(DumpResourceSafeMapUtest, Test_CleanupThread_LazyStart)
     DumpResourceSafeMap::Instance().waitAndClear();
     EXPECT_FALSE(DumpResourceSafeMap::Instance().IsCleanupThreadActive());
 }
+
+// 验证 DumpStreamCreate 在创建 Stream 时保存了当前 context
+TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamCreate_SavesContext)
+{
+    DumpStreamInfo* dumpPtr = nullptr;
+    ASSERT_EQ(DumpStreamCreate(&dumpPtr), ADUMP_SUCCESS);
+    ASSERT_NE(dumpPtr, nullptr);
+
+    // rtCtxGetCurrent stub 返回 0x1，创建后 ctx 字段应被写入该值
+    EXPECT_EQ(dumpPtr->ctx, reinterpret_cast<rtContext_t>(0x1));
+
+    DumpStreamFree(dumpPtr);
+}
+
+namespace {
+rtContext_t g_capturedSetContext = nullptr;
+rtError_t CaptureCtxSetCurrent(rtContext_t ctx)
+{
+    g_capturedSetContext = ctx;
+    return RT_ERROR_NONE;
+}
+} // namespace
+
+// 验证 DumpStreamFree 在销毁 Stream 前恢复了创建时保存的 context
+TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamFree_SetsContextBeforeDestroy)
+{
+    g_capturedSetContext = nullptr;
+
+    DumpStreamInfo* dumpPtr = nullptr;
+    ASSERT_EQ(DumpStreamCreate(&dumpPtr), ADUMP_SUCCESS);
+    ASSERT_NE(dumpPtr, nullptr);
+
+    rtContext_t expectedCtx = dumpPtr->ctx;
+    EXPECT_NE(expectedCtx, nullptr);
+
+    MOCKER(rtCtxSetCurrent).stubs().will(invoke(CaptureCtxSetCurrent));
+
+    DumpStreamFree(dumpPtr);
+
+    // 销毁时使用的 context 必须与创建时保存的一致
+    EXPECT_EQ(g_capturedSetContext, expectedCtx);
+}

@@ -131,6 +131,15 @@ int32_t DumpStreamCreate(DumpStreamInfo** ptr)
         return ret;
     }
 
+    ret = rtCtxGetCurrent(&(dumpPtr->ctx));
+    if (ret != RT_ERROR_NONE) {
+        IDE_LOGE("get current context failed, ret: %d", ret);
+        rtEventDestroy(dumpPtr->mainStmEvt);
+        rtEventDestroy(dumpPtr->dumpStmEvt);
+        delete dumpPtr;    // stm 尚未创建无需释放
+        return ret;
+    }
+
     ret = rtStreamCreate(&(dumpPtr->stm), 0);
     if (ret != RT_ERROR_NONE) {
         IDE_LOGE("create dump stream failed");
@@ -167,7 +176,16 @@ void DumpStreamFree(DumpStreamInfo* ptr)
         rtEventDestroy(ptr->dumpStmEvt);
     }
     if (ptr->stm) {
+        if (ptr->ctx != nullptr) {
+            rtError_t ret = rtCtxSetCurrent(ptr->ctx);
+            if (ret != RT_ERROR_NONE) {
+                IDE_LOGE("set context failed before stream destroy, ret: %d", ret);
+                return;
+            }
+        }
         rtStreamDestroy(ptr->stm);
+        ptr->stm = nullptr;
+        ptr->ctx = nullptr; // 防止悬空
     }
     ptr->inputTensors.clear();
     ptr->outputTensors.clear();

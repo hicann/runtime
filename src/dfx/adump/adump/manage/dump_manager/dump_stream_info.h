@@ -32,6 +32,7 @@
 #include "dump_tensor.h"
 #include "proto/dump_task.pb.h"
 #include "dump_memory.h"
+#include "runtime/runtime/context.h"
 #include "runtime/runtime/event.h"
 #include "runtime/runtime/stream.h"
 #include "runtime/rts/rts_stream.h"
@@ -49,6 +50,7 @@ typedef struct DumpStreamInfo {
     rtStream_t stm;
     rtEvent_t mainStmEvt;
     rtEvent_t dumpStmEvt;
+    rtContext_t ctx{nullptr};
     std::vector<DumpTensor> inputTensors;
     std::vector<DumpTensor> outputTensors;
     std::string mainStreamKey;
