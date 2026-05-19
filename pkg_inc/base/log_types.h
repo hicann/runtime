@@ -94,6 +94,7 @@ enum {
     AIVECTOR = 56,
     TBE = 57,
     FV = 58,
+    PYPTO = 59,
     TUNE = 60,
     HSS = 61,               /* helper */
     FFTS = 62,
