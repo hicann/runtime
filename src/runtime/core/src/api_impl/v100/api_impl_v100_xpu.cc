@@ -34,21 +34,22 @@ rtError_t ApiImpl::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t
     }
 
     rtProfCommandHandle_t * const profilerConfig = static_cast<rtProfCommandHandle_t *>(data);
-    if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
-        Context * const curCtx = CurrentContext();
-        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-        XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
-        xpuDevice->SetXpuTaskReportEnable(true);
-        TprtProfilingEnable(true);
-        return RT_ERROR_NONE;
-    } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
-        Context * const curCtx = CurrentContext();
+    if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
+        Context * const curCtx = Runtime::Instance()->GetXpuCtxt();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
         xpuDevice->SetXpuTaskReportEnable(false);
         TprtProfilingEnable(false);
         return RT_ERROR_NONE;
-    } else {
+    } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
+        Context * const curCtx = Runtime::Instance()->GetXpuCtxt();
+        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+        XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
+        xpuDevice->SetXpuTaskReportEnable(true);
+        TprtProfilingEnable(true);
+        return RT_ERROR_NONE;
+    }
+    else {
         RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig->type);
     }
     return RT_ERROR_NONE;
@@ -63,23 +64,21 @@ rtError_t XpuProfilingHandleV100(uint32_t type, void *data, uint32_t len)
 rtError_t ApiImpl::SetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
     RT_LOG(RT_LOG_INFO, "Set xpu device drv devId=%u, devType=%d.", devId, devType);
-    Runtime *const rt = Runtime::Instance();
+    Runtime *const rtInstance = Runtime::Instance();
     Context *context = nullptr;
     {
-        const std::unique_lock<std::mutex> xpuSetDevLock(rt->XpuSetDevMutex());
-        if (rt->GetXpuDevice() == nullptr) {
-            context = rt->PrimaryXpuContextRetain(devId);
+        const std::unique_lock<std::mutex> xpuSetDevLock(rtInstance->XpuSetDevMutex());
+        if (rtInstance->GetXpuDevice() == nullptr) {
+            context = rtInstance->PrimaryXpuContextRetain(devId);
             NULL_PTR_RETURN_MSG(context, RT_ERROR_DEVICE_RETAIN);
         } else {
-            context = rt->GetXpuCtxt();
+            context = rtInstance->GetXpuCtxt();
             NULL_PTR_RETURN_MSG(context, RT_ERROR_CONTEXT_NULL);
         }
     }
-    MsprofRegisterCallback(RUNTIME, &XpuProfilingHandleV100);
-
     InnerThreadLocalContainer::SetCurRef(nullptr);
     InnerThreadLocalContainer::SetCurCtx(context);
-    MsprofNotifySetDevice(0, devId, true);
+    MsprofRegisterCallback(RUNTIME, &XpuProfilingHandleV100);
     RT_LOG(RT_LOG_INFO, "Set current context success, drv devId=%u, curCtx=%p.", devId, context);
     return RT_ERROR_NONE;
 }

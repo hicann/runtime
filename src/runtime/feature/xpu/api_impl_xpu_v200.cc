@@ -36,14 +36,14 @@ rtError_t ApiImplDavid::XpuProfilingCommandHandle(uint32_t type, void *data, uin
 
     rtProfCommandHandle_t * const profilerConfig = static_cast<rtProfCommandHandle_t *>(data);
     if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
-        Context * const curCtx = CurrentContext();
+        Context * const curCtx = Runtime::Instance()->GetXpuCtxt();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
         xpuDevice->SetXpuTaskReportEnable(true);
         TprtProfilingEnable(true);
         return RT_ERROR_NONE;
     } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
-        Context * const curCtx = CurrentContext();
+        Context * const curCtx = Runtime::Instance()->GetXpuCtxt();
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         XpuDevice * const xpuDevice = static_cast<XpuDevice *>(curCtx->Device_());
         xpuDevice->SetXpuTaskReportEnable(false);
@@ -76,11 +76,9 @@ rtError_t ApiImplDavid::SetXpuDevice(const rtXpuDevType devType, const uint32_t 
             NULL_PTR_RETURN_MSG(context, RT_ERROR_CONTEXT_NULL);
         }
     }
-    MsprofRegisterCallback(RUNTIME, &XpuProfilingHandle);
-
     InnerThreadLocalContainer::SetCurRef(nullptr);
     InnerThreadLocalContainer::SetCurCtx(context);
-    MsprofNotifySetDevice(0, devId, true);
+    MsprofRegisterCallback(RUNTIME, &XpuProfilingHandle);
     RT_LOG(RT_LOG_INFO, "Set current context success, device_id=%u, curCtx=%p.", devId, context);
     return RT_ERROR_NONE;
 }
