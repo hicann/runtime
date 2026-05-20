@@ -1505,50 +1505,54 @@ rtError_t Runtime::RegisterKernelByStubFunc(ElfProgram *elfProg, const void *stu
     uint32_t kernelCount = elfProg->GetKernelsCount();
     bool isKernelFound = false;
     const RtKernel *kernels = elfProg->GetKernels();
-    for (uint32_t idx = 0U; idx < kernelCount; idx++) {
-        const RtKernel * const elfKernelInfo = &kernels[idx];
+    Kernel *kernelObj = nullptr;
+    std::string aicMixSuffix = std::string(kernelName) + "_mix_aic";
+    std::string aivMixSuffix = std::string(kernelName) + "_mix_aiv";
+    const char *aicMixName = aicMixSuffix.c_str();
+    const char *aivMixName = aivMixSuffix.c_str();
 
-        /* 去掉kernelName的_mix_aic/_mix_aiv的后缀 */
+    for (uint32_t idx = 0U; idx < kernelCount; idx++) {
+        const RtKernel *elfKernelInfo = &kernels[idx];
         rtError_t error;
-        const std::string tripKernelName = elfProg->AdjustKernelName(elfKernelInfo->name);
-        if (strcmp(kernelName, tripKernelName.c_str()) != 0) {
+        if (strncmp(kernelName, elfKernelInfo->name, strlen(kernelName)) != 0) {
             continue;
         }
 
-        Kernel *kernelTmp = kernelTable_.Lookup(stubFunc);
-        if (kernelTmp != nullptr) {
-            PutProgram(kernelTmp->Program_());
-            error = elfProg->MergeKernel(elfKernelInfo, kernelTmp);
-            ERROR_RETURN(error, "merge kernel failed, kerneName=%s. retCode=%#x.",
-                tripKernelName.c_str(), static_cast<uint32_t>(error));
-            return RT_ERROR_NONE;
+        if ((strcmp(kernelName, elfKernelInfo->name) == 0) ||
+            (strcmp(aicMixName, elfKernelInfo->name) == 0) ||
+            (strcmp(aivMixName, elfKernelInfo->name) == 0)) {
+            if (kernelObj != nullptr) {
+                error = elfProg->MergeKernel(elfKernelInfo, kernelObj);
+                ERROR_RETURN(error, "merge kernel failed, kerneName=%s. retCode=%#x.",
+                    elfKernelInfo->name, static_cast<uint32_t>(error));
+                return RT_ERROR_NONE;
+            }
+
+            isKernelFound = true;
+            error = elfProg->BuildNewKernel(kernelName, elfKernelInfo, kernelObj);
+            COND_RETURN_ERROR((kernelObj == nullptr), error,
+                "Kernel register failed, build new Kernel failed, kerneName=%s.", elfKernelInfo->name);
+
+            kernelObj->SetStub_(stubFunc);
+            kernelObj->SetStubName_(stubName);
+            if (kernelInfoExt != nullptr) {
+                kernelObj->SetKernelInfoExt(static_cast<const char_t *>(kernelInfoExt));
+            }
+
+            const uint32_t funcModeInner = (funcMode & 0xFFFFU);
+            if ((funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_RECORDLOOP) ||
+                (funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_SKIPLOOP) ||
+                (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_RECORDLOOP) ||
+                (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_SKIPLOOP)) {
+                kernelObj->SetPctraceFlag(funcModeInner);
+            }
+
+            /* add kernel to runtime KernelTable */
+            error = kernelTable_.Add(kernelObj);
+            COND_PROC_RETURN_ERROR((error != RT_ERROR_NONE), error, DELETE_O(kernelObj),
+                "kernel add fail, stubFunc=%p, stubName=%s, kernelInfoExt=%s, kernelName=%s.",
+                stubFunc, stubName, kernelInfoExt, kernelName);
         }
-
-        isKernelFound = true;
-        Kernel *kernelObj = nullptr;
-        error = elfProg->BuildNewKernel(tripKernelName, elfKernelInfo, kernelObj);
-        COND_RETURN_ERROR((kernelObj == nullptr), error,
-            "Kernel register failed, build new Kernel failed, kerneName=%s.", elfKernelInfo->name);
-
-        kernelObj->SetStub_(stubFunc);
-        kernelObj->SetStubName_(stubName);
-        if (kernelInfoExt != nullptr) {
-            kernelObj->SetKernelInfoExt(static_cast<const char_t *>(kernelInfoExt));
-        }
-
-        const uint32_t funcModeInner = (funcMode & 0xFFFFU);
-        if ((funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_RECORDLOOP) ||
-            (funcModeInner == FUNC_MODE_PCTRACE_USERPROFILE_SKIPLOOP) ||
-            (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_RECORDLOOP) ||
-            (funcModeInner == FUNC_MODE_PCTRACE_CYCLECNT_SKIPLOOP)) {
-            kernelObj->SetPctraceFlag(funcModeInner);
-        }
-
-        /* add kernel to runtime KernelTable */
-        error = kernelTable_.Add(kernelObj);
-        COND_PROC_RETURN_ERROR((error != RT_ERROR_NONE), error, DELETE_O(kernelObj),
-            "kernel add fail, stubFunc=%p, stubName=%s, kernelInfoExt=%s, kernelName=%s.",
-            stubFunc, stubName, kernelInfoExt, kernelName);
     }
 
     COND_RETURN_ERROR((!isKernelFound), RT_ERROR_KERNEL_NAME, "kernel register fail, stubFunc=%p, "
