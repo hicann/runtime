@@ -919,19 +919,18 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
     ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ret = rtModelDestroy(model);
+    // 测试update时归还sqAddr_的场景
+    ret = rtModelExecute(model, exeStream, 0);
+    ret = rtModelTaskSetParams(inputTasks[0], &params);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ret = rtStreamDestroy(stream);
+    ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ret = rtStreamDestroy(exeStream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    ReleaseModelResource(ctx, stream, model);
 
     ret = rtFree(addr);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-
-    ret = rtCtxDestroy(ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     GlobalMockObject::verify();

@@ -3395,6 +3395,17 @@ rtError_t Stream::UpdateAllPersistentTask()
 
     uint32_t totalSendSqeNum = 0U;
     rtError_t error = RT_ERROR_NONE;
+    // sqAddr还回池子，并恢复为默认值，防止执行后再次更新模型执行时，SQE个数增加(例如kernel->valueWait 4个)并跨档导致更新失败
+    if (sqAddr_ != 0U) {
+        SqAddrMemoryOrder *sqAddrMemoryManage = Device_()->GetSqAddrMemoryManage();
+        if (sqAddrMemoryManage != nullptr) {
+            error = sqAddrMemoryManage->FreeSqAddr(RtValueToPtr<uint64_t *>(sqAddr_), sqMemOrderType_);
+            COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
+                "Free sq addr failed, streamId=%d, ret=%#x.", streamId_, error);
+            SetSqBaseAddr(0ULL);
+            SetSqDepth(STREAM_SQ_MAX_DEPTH);
+        }
+    }
     for (uint16_t taskId : taskIdVec) {
         TaskInfo* workTask = device_->GetTaskFactory()->GetTask(streamId_, taskId);
         COND_RETURN_ERROR(
