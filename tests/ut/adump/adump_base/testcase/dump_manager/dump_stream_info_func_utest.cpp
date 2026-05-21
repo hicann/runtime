@@ -21,6 +21,11 @@
 
 using namespace Adx;
 
+static void WaitInterval_stub(uint32_t intervalSec)
+{
+    (void)intervalSec;
+}
+
 static DumpTensor BuildFuncTestTensor(void* addr, size_t size, int32_t dataType = 0, int32_t format = 0)
 {
     TensorInfoV2 info = {};
@@ -62,6 +67,7 @@ class DumpStreamInfoFuncUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
+        MOCKER(DumpResourceSafeMap::WaitInterval).stubs().will(invoke(WaitInterval_stub));
         MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
 
@@ -87,6 +93,7 @@ class DumpStreamQueueUtest : public testing::Test {
 protected:
     virtual void SetUp()
     {
+        MOCKER(DumpResourceSafeMap::WaitInterval).stubs().will(invoke(WaitInterval_stub));
         MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
         DumpConfig dumpConf;
         dumpConf.dumpPath = "/tmp/dump_test";

@@ -27,6 +27,11 @@ uint64_t GetNextDumpNumber()
     return g_dumpNumber.fetch_add(1);
 }
 
+void DumpResourceSafeMap::WaitInterval(uint32_t intervalSec)
+{
+    std::this_thread::sleep_for(std::chrono::seconds(intervalSec));
+}
+
 void DumpResourceSafeMap::CleanupThreadLoop()
 {
     IDE_LOGI("Cleanup thread started");

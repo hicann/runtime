@@ -117,6 +117,7 @@ struct AclModelDumpConfig
     std::vector<std::string> watcherNodes;
     bool isLayer = false;
     bool isModelName = false;
+    bool isWatcherNodes = false;
     std::vector<AclDumpBlacklist> optypeBlacklist;
     std::vector<AclDumpBlacklist> opnameBlacklist;
     std::vector<OpNameRange> dumpOpNameRanges;
@@ -188,8 +189,8 @@ private:
     bool CheckOpnameRangeFieldTypes(const nlohmann::json &rangeArray, const std::string &basePath) const;
     bool CheckOpnameRangeItemFieldTypes(const nlohmann::json &rangeItem, const std::string &basePath) const;
 
-    void ParseDumpDfxConfig(DumpType dumpType, const RawDumpConfig &rawDumpConfig,
-        DumpDfxConfig &dumpDfxConfig) const;
+    void ParseDfxTypesFromJson(const RawDumpConfig &rawDumpConfig, DumpDfxConfig &dumpDfxConfig) const;
+    void EnsureDefaultDfxType(const DumpType &dumpType, DumpDfxConfig &dumpDfxConfig) const;
     DumpConfig ConvertDumpConfig(const RawDumpConfig &rawDumpConfig) const;
     DumpType ConvertDumpType(const RawDumpConfig &rawDumpConfig) const;
 

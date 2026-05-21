@@ -126,6 +126,8 @@ public:
         return instance;
     }
 
+    static void WaitInterval(uint32_t intervalSec);
+
     void insert(const std::string key, std::shared_ptr<DumpStreamInfo> ptr)
     {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -181,7 +183,7 @@ public:
             }
 
             // map 不为空，等待 5 秒让任务完成
-            std::this_thread::sleep_for(std::chrono::seconds(WAIT_INTERVAL_SEC));
+            WaitInterval(WAIT_INTERVAL_SEC);
             waitCount++;
         }
 

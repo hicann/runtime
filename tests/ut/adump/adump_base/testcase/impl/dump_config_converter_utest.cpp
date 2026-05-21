@@ -22,8 +22,7 @@
 using namespace Adx;
 
 namespace {
-void TestFailureHelper(const std::string &configData, 
-                       const std::string &configPath, 
+void TestFailureHelper(const std::string &configData, const std::string &configPath,
                        const std::string &expectedErrorCode)
 {
     DumpConfig dumpConfig;
@@ -39,16 +38,44 @@ void TestFailureHelper(const std::string &configData,
     EXPECT_EQ(GetLastReportedErrorCode(), expectedErrorCode);
 }
 
+struct TestSuccessOptions {
+    bool expectNeedDump = false;
+    DumpType expectDumpType = DumpType::OPERATOR;
+    DumpConfig *outDumpConfig = nullptr;
+    DumpDfxConfig *outDumpDfxConfig = nullptr;
+    
+    TestSuccessOptions(bool needDump, DumpType type, DumpConfig *cfg = nullptr, DumpDfxConfig *dfx = nullptr)
+        : expectNeedDump(needDump), expectDumpType(type), outDumpConfig(cfg), outDumpDfxConfig(dfx) {}
+};
+
+void TestSuccessHelperWithOpts(const std::string &configData, const std::string &configPath,
+                               const TestSuccessOptions &opts)
+{
+    DumpConfig localDumpConfig;
+    DumpDfxConfig localDumpDfxConfig;
+    DumpConfig &dumpConfig = opts.outDumpConfig ? *opts.outDumpConfig : localDumpConfig;
+    DumpDfxConfig &dumpDfxConfig = opts.outDumpDfxConfig ? *opts.outDumpDfxConfig : localDumpDfxConfig;
+    
+    DumpType dumpType;
+    bool IsNeedDump = false;
+    DumpConfigConverter converter{configData.c_str(), configData.size(), configPath.c_str()};
+    int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(IsNeedDump, opts.expectNeedDump);
+    if (opts.expectNeedDump) {
+        EXPECT_EQ(dumpType, opts.expectDumpType);
+    }
+}
+
 void TestSuccessHelper(const std::string &configData, 
                        const std::string &configPath,
                        bool expectNeedDump,
                        DumpType expectDumpType,
-                       DumpConfig &dumpConfig)
+                       DumpConfig &dumpConfig,
+                       DumpDfxConfig &dumpDfxConfig)
 {
-    DumpDfxConfig dumpDfxConfig;
     DumpType dumpType;
     bool IsNeedDump = false;
-    
     DumpConfigConverter converter{configData.c_str(), configData.size(), configPath.c_str()};
     int32_t ret = converter.Convert(dumpType, dumpConfig, IsNeedDump, dumpDfxConfig);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
@@ -61,10 +88,31 @@ void TestSuccessHelper(const std::string &configData,
 void TestSuccessHelper(const std::string &configData, 
                        const std::string &configPath,
                        bool expectNeedDump,
+                       DumpType expectDumpType,
+                       DumpConfig &dumpConfig)
+{
+    DumpDfxConfig dumpDfxConfig;
+    TestSuccessHelper(configData, configPath, expectNeedDump, expectDumpType, dumpConfig, dumpDfxConfig);
+}
+
+void TestSuccessHelper(const std::string &configData, 
+                       const std::string &configPath,
+                       bool expectNeedDump,
                        DumpType expectDumpType)
 {
     DumpConfig dumpConfig;
-    TestSuccessHelper(configData, configPath, expectNeedDump, expectDumpType, dumpConfig);
+    DumpDfxConfig dumpDfxConfig;
+    TestSuccessHelper(configData, configPath, expectNeedDump, expectDumpType, dumpConfig, dumpDfxConfig);
+}
+
+void TestSuccessHelper(const std::string &configData, 
+                       const std::string &configPath,
+                       bool expectNeedDump,
+                       DumpType expectDumpType,
+                       DumpDfxConfig &dumpDfxConfig)
+{
+    DumpConfig dumpConfig;
+    TestSuccessHelper(configData, configPath, expectNeedDump, expectDumpType, dumpConfig, dumpDfxConfig);
 }
 } // namespace
 
@@ -559,6 +607,35 @@ TEST_F(DumpConfigConverterUtest, TestWatcherSuccess)
         R"({"dump": {"dump_path": "./", "dump_scene": "watcher", "dump_mode": "output",
         "dump_list": [{"layer": ["A", "B"], "watcher_nodes": ["C", "D"]}]}})",
         configPath, true, DumpType::OPERATOR);
+
+    DumpDfxConfig dumpDfxConfig;
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_scene": "watcher", "dump_mode": "output"}})", 
+        configPath, true, DumpType::OPERATOR, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
+}
+
+TEST_F(DumpConfigConverterUtest, TestWatcherDumpFieldsSuccess)
+{
+    std::string configPath = "/TestWatcherDumpFieldsSuccess.json";
+    DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
+
+    TestSuccessHelperWithOpts(
+        R"({"dump": {"dump_path": "./", "dump_scene": "watcher", "dump_mode": "output", 
+        "dump_level": "op", "dump_data": "stats", "dump_kernel_data": "all,printf",
+        "dump_stats": ["Max", "Min"], "dump_step": "1-10"}})",
+        configPath, TestSuccessOptions{true, DumpType::OPERATOR, &dumpConfig, &dumpDfxConfig});
+
+    EXPECT_EQ(dumpConfig.dumpSwitch, OPERATOR_OP_DUMP);
+    EXPECT_EQ(dumpConfig.dumpData, "stats");
+    EXPECT_EQ(dumpConfig.dumpStatsItem.size(), 2U);
+    EXPECT_EQ(dumpConfig.dumpStatsItem[0], "Max");
+    EXPECT_EQ(dumpConfig.dumpStatsItem[1], "Min");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 2U);
+    EXPECT_EQ(dumpDfxConfig.dfxTypes[0], "all");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes[1], "printf");
 }
 
 TEST_F(DumpConfigConverterUtest, TestWatcherDumpPathNotOverrideByEnv)
@@ -883,30 +960,53 @@ TEST_F(DumpConfigConverterUtest, TestDumpDebugConflictWithDumpOpSwitch)
         R"({"dump": {"dump_path": "./", "dump_debug": "on", "dump_op_switch": "on"}})", configPath, "EP0005");
 }
 
-TEST_F(DumpConfigConverterUtest, TestDumpDebugConflictWithDumpList)
-{
-    std::string configPath = "/TestDumpDebugConflictWithDumpList.json";
-
-    TestFailureHelper(
-        R"({"dump": {"dump_path": "./", "dump_debug": "on", "dump_list": [{"model_name": "model1"}]}})",
-        configPath, "EP0005");
-}
-
 TEST_F(DumpConfigConverterUtest, TestExceptionDumpSceneConflictWithForbiddenFields)
 {
     std::string configPath = "/TestExceptionDumpSceneConflictWithForbiddenFields.json";
 
-    TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_mode": "output"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_level": "op"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_data": "tensor"}})", configPath, "EP0005");
     TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_debug": "on"}})", configPath, "EP0005");
     TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_op_switch": "on"}})", configPath, "EP0005");
-    TestFailureHelper(
-        R"({"dump": {"dump_scene": "lite_exception", "dump_kernel_data": "all"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_step": "1-10"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "lite_exception", "dump_stats": ["Max"]}})", configPath, "EP0005");
-    TestFailureHelper(
-        R"({"dump": {"dump_scene": "lite_exception", "dump_list": [{"model_name": ""}]}})", configPath, "EP0005");
+}
+
+TEST_F(DumpConfigConverterUtest, TestExceptionDumpSceneNoConflictWithForbiddenFields)
+{
+    std::string configPath = "/TestExceptionDumpSceneNoConflictWithForbiddenFields.json";
+    DumpConfig dumpConfig;
+    DumpDfxConfig dumpDfxConfig;
+
+    TestSuccessHelperWithOpts(
+        R"({"dump": {"dump_scene": "lite_exception", "dump_path": "./", "dump_mode": "output",
+        "dump_level": "kernel", "dump_data": "tensor", "dump_kernel_data": "printf",
+        "dump_stats": ["Max", "Min"], "dump_step": "1-10"}})",
+        configPath, TestSuccessOptions{true, DumpType::ARGS_EXCEPTION, &dumpConfig, &dumpDfxConfig});
+
+    EXPECT_EQ(dumpConfig.dumpMode, "output");
+    EXPECT_EQ(dumpConfig.dumpSwitch, OPERATOR_KERNEL_DUMP);
+    EXPECT_EQ(dumpConfig.dumpData, "tensor");
+    EXPECT_EQ(dumpConfig.dumpStatsItem.size(), 2U);
+    EXPECT_EQ(dumpConfig.dumpStatsItem[0], "Max");
+    EXPECT_EQ(dumpConfig.dumpStatsItem[1], "Min");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
+    EXPECT_EQ(dumpDfxConfig.dfxTypes[0], "printf");
+}
+
+TEST_F(DumpConfigConverterUtest, TestExceptionDumpSceneWithDumpDfxConfig)
+{
+    DumpDfxConfig dumpDfxConfig;
+    std::string configPath = "/TestExceptionDumpSceneWithDumpDfxConfig.json";
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_scene": "lite_exception", "dump_kernel_data": "all"}})",
+        configPath, true, DumpType::ARGS_EXCEPTION, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
+    dumpDfxConfig.dfxTypes.clear();
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_scene": "lite_exception", "dump_path": "./", "dump_kernel_data": "printf"}})",
+        configPath, true, DumpType::ARGS_EXCEPTION, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
 }
 
 TEST_F(DumpConfigConverterUtest, TestWatcherConflictWithForbiddenFields)
@@ -915,21 +1015,6 @@ TEST_F(DumpConfigConverterUtest, TestWatcherConflictWithForbiddenFields)
 
     TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_debug": "on"}})", configPath, "EP0005");
     TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_op_switch": "on"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_level": "op"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_data": "tensor"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_kernel_data": "all"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_step": "1-10"}})", configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_stats": ["Max"]}})", configPath, "EP0005");
-
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_mode": "output"}})", configPath, "EP0001");
-    TestFailureHelper(
-        R"({"dump": {"dump_scene": "watcher", "dump_mode": "output", "dump_list": [{"watcher_nodes": ["node1"]}]}})",
-        configPath, "EP0001");
-
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_path": "./", "dump_mode": "input"}})", 
-        configPath, "EP0005");
-    TestFailureHelper(R"({"dump": {"dump_scene": "watcher", "dump_path": "./", "dump_mode": "all"}})", 
-        configPath, "EP0005");
 }
 
 TEST_F(DumpConfigConverterUtest, TestWatcherSceneConstraints)
@@ -1164,4 +1249,36 @@ TEST_F(DumpConfigConverterUtest, TestDumpPathValueError)
     TestFailureHelper(R"({"dump": {"dump_path": "192.168.0.aaa:/home/xh"}})", configPath, "EP0003");
     TestFailureHelper(R"({"dump": {"dump_path": ":/home/xh"}})", configPath, "EP0003");
     TestFailureHelper(R"({"dump": {"dump_path": "192.168.0.1:/home/    "}})", configPath, "EP0003");
+}
+
+TEST_F(DumpConfigConverterUtest, TestConvertDumpDfxConfig)
+{
+    std::string configPath = "/TestConvertDumpDfxCfx.json";
+    DumpDfxConfig dumpDfxConfig;
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./"}})",
+        configPath, false, DumpType::OPERATOR, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.empty(), true);
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_kernel_data": "printf"}})",
+        configPath, false, DumpType::OPERATOR, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
+    dumpDfxConfig.dfxTypes.clear();
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_op_switch": "on"}})",
+        configPath, true, DumpType::OPERATOR, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
+    dumpDfxConfig.dfxTypes.clear();
+
+    TestSuccessHelper(
+        R"({"dump": {"dump_path": "./", "dump_op_switch": "on", "dump_kernel_data": "tensor"}})",
+        configPath, true, DumpType::OPERATOR, dumpDfxConfig);
+    EXPECT_EQ(dumpDfxConfig.dumpPath, "./");
+    EXPECT_EQ(dumpDfxConfig.dfxTypes.size(), 1U);
 }
