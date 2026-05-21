@@ -58,6 +58,7 @@ enum class GeDataType: int32_t {
     DT_FLOAT4_E2M1 = 40,     // float4_e2m1 type
     DT_FLOAT4_E1M2 = 41,     // float4_e1m2 type
     DT_HIFLOAT4 = 42,        // hifloat4 type
+    DT_HIFLOAT4_SCALE = 43,  // hifloat4_scale type
 };
 
 enum class ProtoDataType: int32_t {
@@ -103,6 +104,7 @@ enum class ProtoDataType: int32_t {
     DT_FLOAT4_E2M1 = 39,       // float4_e2m1 type
     DT_FLOAT4_E1M2 = 40,       // float4_e1m2 type
     DT_HIFLOAT4 = 41,          // hifloat4 type
+    DT_HIFLOAT4_SCALE = 42,    // hifloat4_scale type
 };
 
 enum class ImplyType : unsigned int {

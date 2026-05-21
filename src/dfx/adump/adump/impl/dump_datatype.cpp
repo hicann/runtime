@@ -58,6 +58,7 @@ const std::map<GeDataType, ProtoDataType> GE_DT_TO_PROTO_DT = {
     { GeDataType::DT_FLOAT4_E2M1, ProtoDataType::DT_FLOAT4_E2M1 },
     { GeDataType::DT_FLOAT4_E1M2, ProtoDataType::DT_FLOAT4_E1M2 },
     { GeDataType::DT_HIFLOAT4, ProtoDataType::DT_HIFLOAT4 },
+    { GeDataType::DT_HIFLOAT4_SCALE, ProtoDataType::DT_HIFLOAT4_SCALE },
 };
 
 static const std::map<toolkit::dump::OutputDataType, std::string> DT_STRING_MAPS = {
@@ -102,6 +103,7 @@ static const std::map<toolkit::dump::OutputDataType, std::string> DT_STRING_MAPS
     {toolkit::dump::DT_FLOAT4_E2M1,    "DT_FLOAT4_E2M1"},
     {toolkit::dump::DT_FLOAT4_E1M2,    "DT_FLOAT4_E1M2"},
     {toolkit::dump::DT_HIFLOAT4,       "DT_HIFLOAT4"},
+    {toolkit::dump::DT_HIFLOAT4_SCALE, "DT_HIFLOAT4_SCALE"},
 };
 
 static const std::map<toolkit::dump::OutputFormat, std::string> FORMAT_STRING_MAPS = {
