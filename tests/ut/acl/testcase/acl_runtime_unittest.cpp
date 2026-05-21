@@ -4818,6 +4818,18 @@ TEST_F(UTEST_ACL_Runtime, aclrtHostGetDevicePointer_failed03)
     EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_hd_connect_type)
+{
+    uint32_t deviceId = 0;
+    int64_t value = 0;
+    auto ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_HD_CONNECT_TYPE, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_HD_CONNECT_TYPE, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_TRUE(value >= ACL_HOST_DEVICE_CONNECT_TYPE_PCIE && value <= ACL_HOST_DEVICE_CONNECT_TYPE_UB);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtHostMemMapCapabilities_succ)
 {
     uint32_t deviceId = 0U;

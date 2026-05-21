@@ -91,7 +91,10 @@ extern "C" {
 // for mem link
 #define ACL_RT_MEM_LINK_IDX_0 0U     // SIO
 #define ACL_RT_MEM_LINK_IDX_1 1U     // HCCS
-
+// Protocol between host and device 
+#define ACL_HOST_DEVICE_CONNECT_TYPE_PCIE   0  // PCIe connection
+#define ACL_HOST_DEVICE_CONNECT_TYPE_HCCS   1  // HCCS connection
+#define ACL_HOST_DEVICE_CONNECT_TYPE_UB     2  // UB connection
 typedef enum aclrtRunMode {
     ACL_DEVICE,
     ACL_HOST,
@@ -652,6 +655,7 @@ typedef enum {
     ACL_DEV_ATTR_SUPER_POD_ID = 405U,           // super pod id
     ACL_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,      // indicates whether the custom operator privilege is enabled
     ACL_DEV_ATTR_MAINBOARD_ID = 407U,           // mainborad id
+    ACL_DEV_ATTR_HD_CONNECT_TYPE = 408U,        // host-device connect type
 
     ACL_DEV_ATTR_IS_VIRTUAL = 501U,             // whether it is in compute power splitting mode
 
