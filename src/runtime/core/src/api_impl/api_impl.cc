@@ -2152,7 +2152,7 @@ rtError_t ApiImpl::DevMalloc(void ** const devPtr, const uint64_t size, const rt
     uint32_t devId = curCtx->Device_()->Id_();
     rtError_t ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "DevMemAlloc first try failed, ret=%d, trigger implicit mempool trim.", ret);
+        RT_LOG(RT_LOG_INFO, "DevMemAlloc first try not successful, ret=%d, trigger implicit mempool trim.", ret);
         rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(true);
         if (trimRet != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);

@@ -392,6 +392,26 @@ rtError_t StartMock(DirectHwtsEngine * engine) {
     return 0;
 }
 
+TEST_F(DirectHwtsEngineTest, SearchErrorKernel_DiagnosticPc)
+{
+    RawDevice *device = new RawDevice(0);
+    DirectHwtsEngine engine(device);
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t pcArr[] = {0x1000ULL};
+    uint64_t *pcArrPtr = pcArr;
+    uint32_t pcCnt = 1U;
+
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::GetErrorPcArr)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&pcArrPtr, sizeof(pcArrPtr)), outBoundP(&pcCnt, sizeof(pcCnt)));
+
+    Kernel *kernel = engine.SearchErrorKernel(0U, &stubProg);
+    EXPECT_EQ(kernel, nullptr);
+
+    delete device;
+    GlobalMockObject::reset();
+}
+
 TEST_F(DirectHwtsEngineTest, ReportExceptProc_TS_TASK_TYPE_KERNEL_AICORE_001)
 {
     const bool olgFlag = Runtime::Instance()->GetDisableThread();

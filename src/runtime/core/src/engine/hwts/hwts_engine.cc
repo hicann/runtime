@@ -111,7 +111,7 @@ Kernel* HwtsEngine::SearchErrorKernel(const uint16_t devId, const Program* const
         if (pc_arr[i] == 0ULL) {
             continue;
         }
-        RT_LOG(RT_LOG_INFO, "DevId=%u, the error pc is 0x%llx.", devId, pc_arr[i]);
+        RT_LOG(RT_LOG_INFO, "DevId=%u, diagnostic pc is 0x%llx.", devId, pc_arr[i]);
         Kernel* krnl = prog->SearchKernelByPcAddr(pc_arr[i]);
         if (krnl != nullptr) return krnl;
     }
