@@ -2179,7 +2179,7 @@ rtError_t RawDevice::InitPrintInfo()
     auto props = GetDevProperties();
     const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
     rtError_t ret = driver_->DevMemAlloc(&printfAddr_, printblockLen_ * totalCoreNum, RT_MEMORY_HBM, deviceId_,
-        DEFAULT_MODULEID);
+        MODULEID_RUNTIME);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device_id=%u, ret=%u.", deviceId_, ret);
 
     // 如果初始化失败，需要free后返回
@@ -2201,7 +2201,7 @@ rtError_t RawDevice::InitSimtPrintInfo()
     simtPrintLen_ = rt->GetSimtPrintFifoSize();
 
     rtError_t ret = driver_->DevMemAlloc(&simtPrintfAddr_, simtPrintLen_, RT_MEMORY_HBM, deviceId_,
-        DEFAULT_MODULEID);
+        MODULEID_RUNTIME);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "Malloc mem failed, device_id=%u, ret=%u.", deviceId_, ret);
 
     // 如果初始化失败，需要free后返回

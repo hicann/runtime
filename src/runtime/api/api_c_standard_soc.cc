@@ -970,7 +970,7 @@ rtError_t rtStartADCProfiler(void **addr, uint32_t length)
     }
 
     const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, static_cast<uint64_t>(length));
-    error = rtMalloc(addr, static_cast<uint64_t>(length), memType, DEFAULT_MODULEID);
+    error = rtMalloc(addr, static_cast<uint64_t>(length), memType, MODULEID_RUNTIME);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(RT_LOG_ERROR, "Malloc memory failed, error=%d, length=%u", error, length);
         REPORT_FUNC_ERROR_REASON(RT_ERROR_MEMORY_ALLOCATION);

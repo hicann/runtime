@@ -4402,7 +4402,7 @@ rtError_t Runtime::BinaryLoad(const Device *const device, Program * const prog)
 
     if (devMem == nullptr) {
         error = curDrv->DevMemAlloc(&devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE),
-            RT_MEMORY_HBM, device->Id_(), DEFAULT_MODULEID, true, readonly);
+            RT_MEMORY_HBM, device->Id_(), MODULEID_RUNTIME, true, readonly);
         isPoolMem = false;
     }
     TIMESTAMP_END(rtBinaryLoad_DevMemAlloc);
