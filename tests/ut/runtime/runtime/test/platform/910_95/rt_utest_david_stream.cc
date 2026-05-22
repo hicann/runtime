@@ -932,6 +932,97 @@ TEST_F(DavidStreamTest, TestSyncDelayTime)
     EXPECT_EQ(isFinish, false); 
 }
 
+TEST_F(DavidStreamTest, SynchronizeDelayTime_DistanceGte10)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    TaskResManageDavid *taskResMng = dynamic_cast<TaskResManageDavid *>(stream->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+
+    taskResMng->taskPoolNum_ = 2049;
+
+    uint16_t finishedId = 0;
+    uint16_t taskId = 15;
+    uint16_t sqHead = 0;
+
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(result, false);
+}
+
+TEST_F(DavidStreamTest, SynchronizeDelayTime_IsTaskExcutedTrue)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    TaskResManageDavid *taskResMng = dynamic_cast<TaskResManageDavid *>(stream->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+
+    taskResMng->taskPoolNum_ = 2049;
+
+    uint16_t origHead, origTail;
+    taskResMng->GetHeadTail(origHead, origTail);
+
+    taskResMng->taskResAHead_.Set(10);
+    taskResMng->taskResATail_.Set(2048);
+
+    uint16_t finishedId = 0;
+    uint16_t taskId = 5;
+    uint16_t sqHead = 100;
+
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(result, true);
+
+    taskResMng->taskResAHead_.Set(origHead);
+    taskResMng->taskResATail_.Set(origTail);
+}
+
+TEST_F(DavidStreamTest, SynchronizeDelayTime_WrapAround_IsTaskExcutedTrue)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    TaskResManageDavid *taskResMng = dynamic_cast<TaskResManageDavid *>(stream->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+
+    taskResMng->taskPoolNum_ = 2049;
+
+    uint16_t origHead, origTail;
+    taskResMng->GetHeadTail(origHead, origTail);
+
+    taskResMng->taskResAHead_.Set(2048);
+    taskResMng->taskResATail_.Set(0);
+
+    uint16_t finishedId = 2048;
+    uint16_t taskId = 0;
+    uint16_t sqHead = 100;
+
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(result, true);
+
+    taskResMng->taskResAHead_.Set(origHead);
+    taskResMng->taskResATail_.Set(origTail);
+}
+
+TEST_F(DavidStreamTest, SynchronizeDelayTime_WrapAround_IsTaskExcutedFalse)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    TaskResManageDavid *taskResMng = dynamic_cast<TaskResManageDavid *>(stream->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+
+    taskResMng->taskPoolNum_ = 2049;
+
+    uint16_t origHead, origTail;
+    taskResMng->GetHeadTail(origHead, origTail);
+
+    taskResMng->taskResAHead_.Set(2048);
+    taskResMng->taskResATail_.Set(5);
+
+    uint16_t finishedId = 2048;
+    uint16_t taskId = 0;
+    uint16_t sqHead = 100;
+
+    bool result = stream->SynchronizeDelayTime(finishedId, taskId, sqHead);
+    EXPECT_EQ(result, false);
+
+    taskResMng->taskResAHead_.Set(origHead);
+    taskResMng->taskResATail_.Set(origTail);
+}
+
 TEST_F(DavidStreamTest, ExpandStreamRecycleModelBindStreamAllTask)
 {
     DavidStream *stream = (DavidStream *)stream_;
