@@ -9,7 +9,6 @@
  */
 
 #include "inc/message_parse_client.h"
-#include "log.h"
 
 namespace tsd {
     /**

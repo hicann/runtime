@@ -46,7 +46,7 @@ BqsMsprofApiAdapter &BqsMsprofApiAdapter::GetInstance()
     return instance;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void *data, uint32_t dataLen)
+ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void *data, uint32_t dataLen) const
 {
     void *funcHandle = GetFuncHandle(MsprofInitFuncName);
     if (funcHandle == nullptr) {
@@ -62,7 +62,7 @@ ProfStatus BqsMsprofApiAdapter::MsprofInit(uint32_t dataType, void *data, uint32
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofFinalize()
+ProfStatus BqsMsprofApiAdapter::MsprofFinalize() const
 {
     void *funcHandle = GetFuncHandle(MsprofFinalizeFuncName);
     if (funcHandle == nullptr) {
@@ -126,7 +126,7 @@ ProfStatus BqsMsprofApiAdapter::MsprofReportApi(uint32_t agingFlag, const Msprof
     return ProfStatus::PROF_SUCCESS;
 }
 
-ProfStatus BqsMsprofApiAdapter::MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event)
+ProfStatus BqsMsprofApiAdapter::MsprofReportEvent(uint32_t agingFlag, const MsprofEvent *event) const
 {
     void *funcHandle = GetFuncHandle(MsprofReportEventFuncName);
     if (funcHandle == nullptr) {
