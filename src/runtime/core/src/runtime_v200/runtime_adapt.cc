@@ -56,6 +56,7 @@ namespace runtime {
 Runtime::~Runtime()
 {
     RT_LOG(RT_LOG_EVENT, "runtime destructor.");
+    SetRuntimeExiting(true);
     DestroyReportRasThread();
     isExiting_ = true;
     (void)WaitMonitorExit();

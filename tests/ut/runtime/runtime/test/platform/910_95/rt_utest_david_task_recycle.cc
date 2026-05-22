@@ -816,6 +816,21 @@ TEST_F(DavidTaskRecycleTest, ProcCqReportException)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(DavidTaskRecycleTest, ProcCqReportException_Abnormal)
+{
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    ((Runtime *)Runtime::Instance())->SetRuntimeExiting(true);
+    TaskInfo reportTask = {};
+    rtLogicCqReport_t report = {0};
+    report.sqeType = TS_TASK_TYPE_KERNEL_AICORE;
+    report.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
+    report.errorCode = TS_ERROR_AICORE_OVERFLOW;
+    ProcCqReportException(device, report, &reportTask, 0U);
+
+    ((Runtime *)Runtime::Instance())->SetRuntimeExiting(false);
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
 TEST_F(DavidTaskRecycleTest, StarsResumeRtsq_01)
 {
     rtError_t ret;

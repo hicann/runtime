@@ -255,6 +255,10 @@ static void ClearcMulTaskCqeNum(const uint8_t mulTaskCqeNum, TaskInfo * const re
 void ProcCqReportException(Device * const dev, rtLogicCqReport_t &logicCq,
     TaskInfo * reportTask, uint16_t streamId)
 {
+    if (Runtime::Instance()->IsRuntimeExiting()) {
+        RT_LOG(RT_LOG_WARNING, "Runtime is exiting, skip cqe processing.");
+        return;
+    }
     const uint16_t pos = logicCq.sqHead;
     const uint8_t errType = logicCq.errorType;
     const uint32_t errBit = (errType == 0U) ? UINT32_BIT_NUM : static_cast<uint32_t>(CTZ(errType));

@@ -829,6 +829,11 @@ public:
         return xpuSetDevMutex_;
     }
 
+    bool IsRuntimeExiting()
+    {
+        return isRuntimeExiting_;
+    }
+
 private:
     void UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, const RtIniAttributes& iniAttrs);
     void SocTypeInit(const int64_t aicoreNumLevel, const int64_t aicoreFreqLevel);
@@ -941,6 +946,11 @@ private:
     void SetNpuCollectFlag(bool flag)
     {
         isNpuCollect = flag;
+    }
+
+    void SetRuntimeExiting(bool flag)
+    {
+        isRuntimeExiting_ = flag;
     }
 
     void FindDcacheLockOp();
@@ -1062,6 +1072,7 @@ private:
     std::unordered_map<rtChipType_t, DevProperties> propertiesMap_;
     DevProperties curChipProperties_;
     std::mutex memMapSelectedLinkMutex_;
+    bool isRuntimeExiting_{false};
 };
 }
 }
