@@ -663,8 +663,8 @@ static void GetRegInfoErrReg(const DavidOneCoreErrorInfo& info, rtExceptionErrRe
     regInfo.errReg[RT_V200_L1_ERR_INFO_T0_1] = static_cast<uint32_t>(info.l1ErrInfo >> REG_OFFSET);
     regInfo.errReg[RT_V200_SC_ERROR_T0_0] = static_cast<uint32_t>(info.scError);
     regInfo.errReg[RT_V200_SU_ERROR_T0_0] = static_cast<uint32_t>(info.suError);
-    regInfo.errReg[RT_V200_MTE_ERROR_T0_0] = static_cast<uint32_t>(info.mteError[0] >> REG_OFFSET);
-    regInfo.errReg[RT_V200_MTE_ERROR_T1_0] = static_cast<uint32_t>(info.mteError[1] >> REG_OFFSET);
+    regInfo.errReg[RT_V200_MTE_ERROR_T0_0] = static_cast<uint32_t>(info.mteError[0]);
+    regInfo.errReg[RT_V200_MTE_ERROR_T1_0] = static_cast<uint32_t>(info.mteError[1]);
     regInfo.errReg[RT_V200_VEC_ERROR_T0_0] = static_cast<uint32_t>(info.vecError);
     regInfo.errReg[RT_V200_VEC_ERROR_T0_2] = static_cast<uint32_t>(info.vecError >> REG_OFFSET);
     regInfo.errReg[RT_V200_CUBE_ERROR_T0_0] = static_cast<uint32_t>(info.cubeError);
