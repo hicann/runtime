@@ -1,18 +1,122 @@
 # CANN Runtime简介
 
-CANN Runtime是CANN软件栈中负责驱动硬件执行与管理AI计算任务的核心组件，它通过提供统一的API，使得上层应用和框架能够高效利用AI处理器的硬件计算资源。其主要功能包括以下几类
+CANN Runtime是CANN软件栈中负责驱动硬件执行与管理AI计算任务的核心组件，它通过提供统一的API，使得上层应用、AI框架、加速库能够高效利用AI处理器的硬件计算资源。
+<br>
+<br>
 
--   **Device管理**：提供对计算设备设置、重置、查询和配置等功能。
--   **Memory管理**：提供设备内存和主机内存的申请、释放、内存拷贝等功能。
--   **Context管理**： Context是计算设备的执行上下文环境，提供上下文创建、销毁，切换和配置等功能。
--   **Stream管理**：Stream是Device提供的逻辑任务执行队列，提供Stream创建和销毁、属性查询和配置、Stream同步、Stream状态管理等功能。
--   **Kernel管理**：提供AI Core \(AI Cube 、AI Vector\)、AI CPU等算子注册管理和KernelLaunch功能。
--   **Event管理**：Event是用于设备内Stream间任务同步的事件，提供Event创建和销毁、事件同步、记录事件时间戳信息等功能。
--   **Notify管理**：Notify主要是跨设备间的通知，提供Notify创建和销毁、Record/Wait功能。
--   **运行时全局管理**：提供运行时初始化和进程级配置、DFX配置（例如算子数据Dump、溢出检测等）功能。
--   **ACL Graph**：提供任务捕获或编排方式构建“运行时图”功能，利用“运行时图”任务整体下发能力，节省Host调度耗时提升整体性能。
+## 典型应用示例
 
-下图展示了Runtime的功能架构：
+下面以一个向量加法算子（VectorAdd，实现 `result = x + alpha * y` 的计算）伪码，展示使用CANN Runtime进行算子调用的完整流程。该示例真实可运行代码请见[hello_cann样例](../../example/0_quickstart/0_hello_cann/main.cpp)
+
+
+```c
+#include "acl/acl.h"
+
+int main() {
+    // 1. 初始化Runtime
+    aclInit(nullptr);
+  
+    // 2. 设置计算设备
+    int32_t deviceId = 0;
+    aclrtSetDevice(deviceId);  // 创建默认Context和默认Stream
+  
+    // 3. 创建Stream
+    aclrtStream stream;
+    aclrtCreateStream(&stream);
+  
+    // 4. 申请设备内存
+    size_t bufferSize = 8 * sizeof(float);  // 8个float元素
+    float *xDevice, *yDevice, *resultDevice;
+    aclrtMalloc(&xDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc(&yDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
+    aclrtMalloc(&resultDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
+  
+    // 5. 准备主机数据并拷贝到设备
+    float xHost[8] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+    float yHost[8] = {0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f};
+    float alpha = 1.0f;
+  
+    aclrtMemcpy(xDevice, bufferSize, xHost, bufferSize, ACL_MEMCPY_HOST_TO_DEVICE);
+    aclrtMemcpy(yDevice, bufferSize, yHost, bufferSize, ACL_MEMCPY_HOST_TO_DEVICE);
+  
+    // 6. 调用aclnnAdd(...)下发计算任务
+  
+    // 7. 同步等待计算完成
+    aclrtSynchronizeStream(stream);
+  
+    // 8. 将结果拷贝回主机
+    float resultHost[8];
+    aclrtMemcpy(resultHost, bufferSize, resultDevice, bufferSize, ACL_MEMCPY_DEVICE_TO_HOST);
+  
+    // 9. 释放资源
+    aclrtFree(xDevice);
+    aclrtFree(yDevice);
+    aclrtFree(resultDevice);
+    aclrtDestroyStream(stream);
+    aclrtResetDeviceForce(deviceId);
+    aclFinalize();
+  
+    return 0;
+}
+```
+
+### 代码解析
+
+上述调用示例展示了Runtime编程的核心步骤，每个步骤对应Runtime的不同能力模块：
+
+
+| 步骤 | 操作                     | Runtime能力        | 说明                                  |
+| ---- | ------------------------ | ------------------ | ------------------------------------- |
+| 1    | `aclInit`                | **运行时全局管理** | 初始化Runtime运行时环境，加载配置     |
+| 2    | `aclrtSetDevice`         | **Device管理**     | 指定计算设备，创建默认Context和Stream |
+| 3    | `aclrtCreateStream`      | **Stream管理**     | 创建任务执行队列，用于异步任务下发    |
+| 4    | `aclrtMalloc`            | **Memory管理**     | 在设备上申请内存，存储计算数据        |
+| 5    | `aclrtMemcpy`            | **Memory管理**     | 主机与设备间的数据传输                |
+| 6    | 调用`aclnnAdd`算子函数    | **Kernel管理**     | aclnnAdd函数会使用Runtime的Kernel管理功能，下发算子执行任务到Stream          |
+| 7    | `aclrtSynchronizeStream` | **Stream管理**     | 同步等待Stream上任务完成              |
+| 8    | `aclrtMemcpy`            | **Memory管理**     | 将计算结果从设备拷贝回主机            |
+| 9    | 资源释放                 | **资源管理**       | 释放内存、Stream、Device资源          |
+
+<br>
+
+### 核心编程模式
+
+Runtime采用**主机-设备异步并行**的编程模式：
+
+1. **主机与设备分离**：主机（CPU）负责任务编排和下发，设备（NPU）负责计算执行，各自拥有独立内存空间。
+2. **异步任务下发**：主机调用算子接口后立即返回，不等待设备执行完成。任务下发到Stream队列后，设备异步执行。
+3. **显式同步**：当主机需要获取计算结果时，调用同步接口阻塞等待设备任务完成。
+
+这种模式有效隐藏了主机处理时间和数据传输延迟，实现主机与设备的并行工作，提升整体吞吐量。
+
+<br>
+<br>
+
+## Runtime功能架构
+
+从上述示例可以看出，Runtime围绕计算任务的执行生命周期，提供以下核心功能模块：
+
+
+| 功能模块           | 核心能力                             | 关键接口                                       |
+| ------------------ | ------------------------------------ | ---------------------------------------------- |
+| **运行时全局管理** | 初始化/去初始化、进程级配置、DFX功能 | `aclInit`、`aclFinalize`                       |
+| **Device管理**     | 设备设置、复位、查询、配置           | `aclrtSetDevice`、`aclrtResetDevice`           |
+| **Context管理**    | 上下文创建、销毁、切换               | `aclrtCreateContext`、`aclrtSetCurrentContext` |
+| **Stream管理**     | Stream创建、销毁、同步、属性配置     | `aclrtCreateStream`、`aclrtSynchronizeStream`  |
+| **Memory管理**     | 设备内存、主机内存申请/释放/拷贝     | `aclrtMalloc`、`aclrtMemcpy`                   |
+| **Kernel管理**     | 算子加载、注册、执行                 | `<<< >>>` 语法、`aclrtLaunchKernel`        |
+| **Event管理**      | Stream间同步、时间戳记录             | `aclrtCreateEvent`、`aclrtRecordEvent`         |
+<br>
+
+此外Runtime还提供一系列特性（如ACL Graph），Runtime功能架构如下图所示：
 
 ![](figures/逻辑架构图.png)
 
+<br>
+<br>
+
+## 深入了解
+
+本章介绍了Runtime的基本概念和算子调用的典型流程。要深入理解Runtime编程，建议继续阅读：
+
+- [Runtime编程模型](Runtime编程模型.md)：主机-设备架构、异步执行机制、Stream与Task关系
