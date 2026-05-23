@@ -226,13 +226,6 @@ rtError_t ApiErrorDecorator::MemsetD32Async(void * const dst, const uint64_t des
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)
-{
-    UNUSED(deviceId);
-    UNUSED(attr);
-    UNUSED(val);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 rtError_t ApiErrorDecorator::SetXpuDevice(const rtXpuDevType devType, const uint32_t devId)
 {
     UNUSED(devType);

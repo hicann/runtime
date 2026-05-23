@@ -437,25 +437,6 @@ rtError_t ApiErrorDecorator::MemsetD32Async(void * const dst, const uint64_t des
     return error;
 }
 
-rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)
-{
-    NULL_PTR_RETURN_MSG_OUTER(val, RT_ERROR_INVALID_VALUE);
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
-        "Failed to convert the user device ID %u to driver device ID.", deviceId);
-    const auto npuDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(npuDrv, RT_ERROR_DRV_NULL);
-    int32_t cnt = 1;
-    error = npuDrv->GetDeviceCount(&cnt);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, error != RT_ERROR_NONE, error,
-        "Get device info failed, get device count failed, retCode=%#x", static_cast<uint32_t>(error));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(realDeviceId >= static_cast<uint32_t>(cnt),
-        RT_ERROR_INVALID_VALUE, realDeviceId, "[0, " + std::to_string(cnt) + ")");
-
-    return impl_->GetDeviceInfoByAttr(realDeviceId, attr, val);
-}
-
 rtError_t ApiErrorDecorator::EventWorkModeSet(uint8_t mode)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), 

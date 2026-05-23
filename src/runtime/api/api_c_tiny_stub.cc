@@ -873,15 +873,6 @@ rtError_t rtReduceAsyncWithCfgV2(void *dst, uint64_t destMax, const void *src, u
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val)
-{
-    (void)deviceId;
-    (void)attr;
-    (void)val;
-    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtSnapShotProcessLock()
 {
     return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;

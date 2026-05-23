@@ -199,28 +199,26 @@ rtError_t ApiImpl::LaunchDqsTask(Stream * const stm, const rtDqsTaskCfg_t * cons
     return RT_ERROR_FEATURE_NOT_SUPPORT;    
 }
 
+rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t *val)
+{
+    UNUSED(deviceId);
+    UNUSED(val);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::GetDeviceNpuArch(uint32_t deviceId, int64_t *val)
+{
+    UNUSED(deviceId);
+    UNUSED(val);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::MemGetInfoByDeviceId(uint32_t deviceId, bool isHugeOnly, size_t* const freeSize, size_t* const totalSize)
 {
     UNUSED(deviceId);
     UNUSED(isHugeOnly);
     UNUSED(freeSize);
     UNUSED(totalSize);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val)
-{
-    UNUSED(deviceId);
-    UNUSED(attr);
-    UNUSED(val);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)
-{
-    UNUSED(deviceId);
-    UNUSED(attr);
-    UNUSED(val);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

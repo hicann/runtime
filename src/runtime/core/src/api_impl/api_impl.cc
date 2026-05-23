@@ -88,6 +88,12 @@
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
 
+namespace {
+using DevInfo = struct {
+    DEV_MODULE_TYPE moduleType;
+    DEV_INFO_TYPE infoType;
+};
+}
 
 namespace {
 constexpr uint32_t MEM_POLICY_MASK = 0xFFU;
@@ -9305,6 +9311,97 @@ rtError_t ApiImpl::TaskGetSeqId(rtTask_t task, uint32_t *id)
     *id = taskInfo->modelSeqId;
     RT_LOG(RT_LOG_INFO, "Get task sequence id=%u, streamId=%d, taskId=%u.", *id, stm->Id_(), taskInfo->id);
     return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetDeviceInfoByAttrMisc(uint32_t deviceId, rtDevAttr attr, int64_t *val)
+{
+    size_t freeSize = 0UL;
+    size_t totalSize = 0UL;
+
+    RT_LOG(RT_LOG_INFO, "get device info by attr misc, deviceId=%u attr=%d", deviceId, attr);
+
+    uint32_t userDeviceId = 0U;
+    rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(static_cast<uint32_t>(deviceId), &userDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x", deviceId, static_cast<uint32_t>(error));
+
+    /* 当attr无法转化为(moduleType, infoType)时，在此增加case */
+    switch(attr) {
+        case RT_DEV_ATTR_CUBE_CORE_NUM:
+            error = GetDeviceInfoFromPlatformInfo(userDeviceId, "SoCInfo", "cube_core_cnt", val);
+            break;
+        case RT_DEV_ATTR_WARP_SIZE:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE:
+            [[fallthrough]];
+        case RT_DEV_ATTR_UBUF_PER_VECTOR_CORE:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_GRID_DIM_X:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_GRID_DIM_Y:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_GRID_DIM_Z:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_BLOCK_PER_GRID:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_THREADS_PER_BLOCK:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_BLOCK_DIM_X:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_BLOCK_DIM_Y:
+            [[fallthrough]];
+        case RT_DEV_ATTR_MAX_BLOCK_DIM_Z:
+            error = GetDeviceSimtInfo(attr, val);
+            break;
+        case RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE:
+            error = MemGetInfoByDeviceId(deviceId, false, &freeSize, &totalSize);
+            *val = static_cast<int64_t>(totalSize);
+            break;
+        case RT_DEV_ATTR_L2_CACHE_SIZE:
+            error = GetDeviceInfoFromPlatformInfo(userDeviceId, "SoCInfo", "l2_size", val);
+            break;
+        case RT_DEV_ATTR_NPU_ARCH:
+            error = GetDeviceNpuArch(deviceId, val);
+            break;
+        case RT_DEV_ATTR_IS_VIRTUAL:
+            error = GetDeviceVirtualInfo(deviceId, val);
+            break;
+        default:
+            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Invalid attr=%d.", attr);
+            error = RT_ERROR_INVALID_VALUE;
+            break;
+    }
+
+    return error;
+}
+
+rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t *val)
+{
+    static const std::map<rtDevAttr, DevInfo> devInfoMap = {
+        {RT_DEV_ATTR_AICPU_CORE_NUM, {MODULE_TYPE_AICPU, INFO_TYPE_CORE_NUM}},
+        {RT_DEV_ATTR_AICORE_CORE_NUM, {MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM}},
+        {RT_DEV_ATTR_VECTOR_CORE_NUM, {MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM}},
+        {RT_DEV_ATTR_PHY_CHIP_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID}},
+        {RT_DEV_ATTR_SUPER_POD_DEVICE_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_SDID}},
+        {RT_DEV_ATTR_SUPER_POD_SERVER_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_SERVER_ID}},
+        {RT_DEV_ATTR_SUPER_POD_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_SUPER_POD_ID}},
+        {RT_DEV_ATTR_CUST_OP_PRIVILEGE, {MODULE_TYPE_SYSTEM, INFO_TYPE_CUST_OP_ENHANCE}},
+        {RT_DEV_ATTR_MAINBOARD_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_MAINBOARD_ID}},
+        {RT_DEV_ATTR_SMP_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID}},
+        {RT_DEV_ATTR_HD_CONNECT_TYPE, {MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE}},
+    };
+ 
+    int32_t moduleType = -1;
+    int32_t infoType = -1;
+    const auto it = devInfoMap.find(attr);
+    if (it != devInfoMap.end()) {
+        const DevInfo& devInfo = it->second;
+        moduleType = devInfo.moduleType;
+        infoType = devInfo.infoType;
+        return GetDeviceInfo(deviceId, moduleType, infoType, val);
+    }
+
+    return GetDeviceInfoByAttrMisc(deviceId, attr, val);
 }
 }  // namespace runtime
 }  // namespace cce

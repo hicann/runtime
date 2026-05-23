@@ -160,7 +160,7 @@ TEST_F(TinyStubTest, api_c_stub)
     ret = rtStreamCreateWithFlagsExternal(nullptr, 0, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtsDeviceGetInfo(0, RT_DEV_ATTR_AICORE_CORE_NUM, nullptr);
-    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
     ret = rtSetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
@@ -256,7 +256,7 @@ TEST_F(TinyStubTest, api_error_stub)
     ret = api.GetDeviceInfoFromPlatformInfo(0, "", "", nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.GetDeviceInfoByAttr(0, RT_DEV_ATTR_AICORE_CORE_NUM, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     ret = api.SetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.ResetXpuDevice(RT_DEV_TYPE_DPU, 0);
@@ -339,10 +339,6 @@ TEST_F(TinyStubTest, api_impl_stub)
     ret = impl.MemGetInfoByDeviceId(0, false, nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.GetDeviceInfoFromPlatformInfo(0, "", "", nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.GetDeviceInfoByAttr(0, RT_DEV_ATTR_AICORE_CORE_NUM, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.GetDeviceInfoByAttrMisc(0, RT_DEV_ATTR_AICORE_CORE_NUM, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.SetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

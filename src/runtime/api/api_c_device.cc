@@ -988,6 +988,16 @@ rtError_t rtDeviceGetP2PAtomicCapabilities(
     return ACL_RT_SUCCESS;
 }
 
+VISIBILITY_DEFAULT
+rtError_t rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t *val)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->GetDeviceInfoByAttr(deviceId, attr, val);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
