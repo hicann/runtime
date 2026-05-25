@@ -56,6 +56,9 @@ target_link_libraries(mmpa
     PUBLIC
         mmpa_headers
 )
+target_link_options(mmpa PRIVATE
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-Wl,-z,relro,-z,now>
+)
 target_compile_options(mmpa PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-fvisibility=hidden>
 )
