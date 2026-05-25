@@ -12,7 +12,6 @@
 #include "device.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
-#include "device_snapshot.hpp"
 
 namespace cce {
 namespace runtime {

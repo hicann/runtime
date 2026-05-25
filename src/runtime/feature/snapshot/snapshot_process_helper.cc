@@ -8,14 +8,18 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "snapshot_process_helper.hpp"
-#include "context_manage.hpp"
+#include "context_data_manage.h"
 #include "context.hpp"
 #include "device.hpp"
 #include "runtime.hpp"
 #include "capture_model_utils.hpp"
+#include "idevice_snapshot_ops.hpp"
+#include "npu_driver.hpp"
+#include "model.hpp"
 
 namespace cce {
 namespace runtime {
+
 rtError_t SnapShotPreProcessBackup(ContextDataManage &ctxMan)
 {
     // 做device同步，确保已经没有任务在执行
@@ -91,36 +95,49 @@ rtError_t SnapShotAclGraphRestore(Device * const dev)
     RT_LOG(RT_LOG_INFO, "Start to restore aclgraph.");
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
     const int32_t deviceId = dev->Id_();
-    auto mdlList = std::make_unique<ModelList_t>();
-    NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
-    ContextManage::DeviceGetModelList(deviceId, mdlList.get());
-    COND_RETURN_DEBUG((mdlList->mdlNum == 0U),
-        RT_ERROR_NONE, "No model needs to be restore, devId=%d.", deviceId);
+    ContextDataManage &ctxMan = ContextDataManage::Instance();
+    const ReadProtect rp(&ctxMan.GetSetRwLock());
 
     Driver *drv = dev->Driver_();
     const uint32_t tsId = dev->DevGetTsId();
 
-    for (uint32_t i = 0; i < mdlList->mdlNum; i ++) {
-        Model *mdl = RtPtrToPtr<Model *>(mdlList->mdls[i]);
-        // 只恢复扩流场景的mode
-        if (mdl->GetModelType() != ModelType::RT_MODEL_CAPTURE_MODEL) {
+    for (Context *const ctx : ctxMan.GetSetObj()) {
+        if (ctx->Device_()->Id_() != static_cast<uint32_t>(deviceId)) {
             continue;
         }
-        CaptureModel *capMdl = dynamic_cast<CaptureModel *>(mdl);
-        if (capMdl == nullptr) {
-            RT_LOG(RT_LOG_WARNING, "Dynamic cast to CaptureModel failed, modelId=%u.", mdl->Id_());
-            continue;
-        }
-        if (capMdl->IsSoftwareSqEnable() && capMdl->IsCaptureReady()) {
-            // 恢复modelID
-            rtError_t err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
-            ERROR_RETURN(err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!",
-                deviceId, tsId, static_cast<uint32_t>(err));
+        SpinLock &modelLock = ctx->GetModelLock();
+        modelLock.Lock();
+        for (Model *mdl : ctx->GetModelList()) {
+            if (mdl == nullptr) {
+                continue;
+            }
+            // 只恢复扩流场景的model
+            if (mdl->GetModelType() != ModelType::RT_MODEL_CAPTURE_MODEL) {
+                continue;
+            }
+            CaptureModel *capMdl = dynamic_cast<CaptureModel *>(mdl);
+            if (capMdl == nullptr) {
+                RT_LOG(RT_LOG_WARNING, "Dynamic cast to CaptureModel failed, modelId=%u.", mdl->Id_());
+                continue;
+            }
+            if (capMdl->IsSoftwareSqEnable() && capMdl->IsCaptureReady()) {
+                // 恢复modelID
+                rtError_t err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
+                if (err != RT_ERROR_NONE) {
+                    modelLock.Unlock();
+                    ERROR_RETURN(err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!",
+                        deviceId, tsId, static_cast<uint32_t>(err));
+                }
 
-            err = capMdl->RestoreForSoftwareSq(dev);
-            ERROR_RETURN(err, "Restore capture model failed, deviceId=%u, tsId=%u, retCode=%#x!",
-                deviceId, tsId, static_cast<uint32_t>(err));
+                err = capMdl->RestoreForSoftwareSq(dev);
+                if (err != RT_ERROR_NONE) {
+                    modelLock.Unlock();
+                    ERROR_RETURN(err, "Restore capture model failed, deviceId=%u, tsId=%u, retCode=%#x!",
+                        deviceId, tsId, static_cast<uint32_t>(err));
+                }
+            }
         }
+        modelLock.Unlock();
     }
 
     rtError_t err = dev->RestoreSqCqPool();
@@ -128,5 +145,156 @@ rtError_t SnapShotAclGraphRestore(Device * const dev)
                 deviceId, static_cast<uint32_t>(err));
     return RT_ERROR_NONE;
 }
+
+rtError_t SinkTaskMemoryBackup(const int32_t devId)
+{
+    Device *dev = Runtime::Instance()->GetDevice(static_cast<uint32_t>(devId), 0U);
+    COND_RETURN_ERROR((dev == nullptr), RT_ERROR_DEVICE_NULL, "Get dev nullptr, devId=%d", devId);
+    IDeviceSnapshotOps *deviceSnapShot = dev->GetDeviceSnapShot();
+    NULL_PTR_RETURN_MSG(deviceSnapShot, RT_ERROR_MEMORY_ALLOCATION);
+    const rtError_t error = deviceSnapShot->OpMemoryBackup();
+    ERROR_RETURN(error, "memcpy back up failed, retCode=%#x.", error);
+    return error;
 }
-}  // namespace cce
+
+rtError_t ModelBackup(const int32_t devId)
+{
+    ContextDataManage &ctxMan = ContextDataManage::Instance();
+    const ReadProtect rp(&ctxMan.GetSetRwLock());
+    for (Context *const ctx : ctxMan.GetSetObj()) {
+        if (ctx->Device_()->Id_() != static_cast<uint32_t>(devId)) {
+            continue;
+        }
+        SpinLock &mdlLock = ctx->GetModelLock();
+        mdlLock.Lock();
+        for (Model *mdl : ctx->GetModelList()) {
+            if (mdl == nullptr) {
+                continue;
+            }
+            if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
+                mdlLock.Unlock();
+                COND_RETURN_WARN(true, RT_ERROR_FEATURE_NOT_SUPPORT,
+                    "Snapshots cannot be created for models with the AICPU execution type.");
+            }
+            if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
+                continue;
+            }
+            if (!mdl->IsModelLoadComplete()) {
+                mdlLock.Unlock();
+                COND_RETURN_ERROR(true, RT_ERROR_SNAPSHOT_BACKUP_FAILED,
+                    "The model is not complete, model_id=%u.", mdl->Id_());
+            }
+            const rtError_t ret = mdl->SinkSqTasksBackup();
+            if (ret != RT_ERROR_NONE) {
+                mdlLock.Unlock();
+                ERROR_RETURN(ret, "Backup model tasks failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
+            }
+        }
+        mdlLock.Unlock();
+    }
+
+    const rtError_t ret = SinkTaskMemoryBackup(devId);
+    ERROR_RETURN(ret, "Backup model memory failed, ret=%u, devId=%d", ret, devId);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ModelRestore(const int32_t devId)
+{
+    ContextDataManage &ctxMan = ContextDataManage::Instance();
+    const ReadProtect rp(&ctxMan.GetSetRwLock());
+    // loop ctx
+    for (Context *const ctx : ctxMan.GetSetObj()) {
+        if (ctx->Device_()->Id_() != static_cast<uint32_t>(devId)) {
+            continue;
+        }
+        SpinLock &modelLock = ctx->GetModelLock();
+        modelLock.Lock();
+        for (Model *mdl : ctx->GetModelList()) {
+            if (mdl == nullptr) {
+                continue;
+            }
+            if (mdl->GetModelExecutorType() != EXECUTOR_TS) {
+                modelLock.Unlock();
+                COND_RETURN_WARN(true, RT_ERROR_FEATURE_NOT_SUPPORT,
+                    "Models with the AICPU executor type cannot be restored.");
+            }
+            if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
+                continue;
+            }
+            const rtError_t ret = mdl->ReBuild();
+            if (ret != RT_ERROR_NONE) {
+                modelLock.Unlock();
+                ERROR_RETURN(ret, "Rebuild model failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
+            }
+        }
+        modelLock.Unlock();
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t SnapShotProcessBackup()
+{
+    ContextDataManage &ctxMan = ContextDataManage::Instance();
+    rtError_t ret = SnapShotPreProcessBackup(ctxMan);
+    ERROR_RETURN(ret, "PreProcessBackup failed, ret=%#x.", ret);
+
+    for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
+        Device *dev = Runtime::Instance()->GetDevice(devId, 0U);
+        if (dev == nullptr) {
+            continue;
+        }
+        ret = ModelBackup(static_cast<int32_t>(devId));
+        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    }
+
+    Runtime::Instance()->SaveModule();
+    return NpuDriver::ProcessResBackup();
+}
+
+rtError_t SnapShotProcessRestore()
+{
+    ContextDataManage &ctxMan = ContextDataManage::Instance();
+    RT_LOG(RT_LOG_INFO, "start to restore resource");
+    rtError_t ret = SnapShotDeviceRestore();
+    if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
+        return ret;
+    }
+    ERROR_RETURN(ret, "DeviceRestore failed, ret=%#x.", ret);
+
+    ret = SnapShotResourceRestore(ctxMan);
+    ERROR_RETURN(ret, "Resource Restore failed, ret=%#x.", ret);
+    for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
+        Device *dev = Runtime::Instance()->GetDevice(devId, 0U);
+        if (dev == nullptr) {
+            continue;
+        }
+
+        IDeviceSnapshotOps *deviceSnapShot = dev->GetDeviceSnapShot();
+        NULL_PTR_RETURN_MSG(deviceSnapShot, RT_ERROR_MEMORY_ALLOCATION);
+
+        ret = deviceSnapShot->OpMemoryRestore();
+        ERROR_RETURN(ret, "memory restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+
+        ret = deviceSnapShot->ArgsPoolRestore();
+        ERROR_RETURN(ret, "args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+
+        ret = deviceSnapShot->UbArgsPoolRestore();
+        ERROR_RETURN(ret, "ub args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+
+        ret = ModelRestore(static_cast<int32_t>(devId));
+        ERROR_RETURN(ret, "ModelRestore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
+
+        ret = SnapShotAclGraphRestore(dev);
+        ERROR_RETURN(ret, "AclGraph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
+
+        dev->ArgLoader_()->RestoreAiCpuKernelInfo();
+    }
+
+    ret = Runtime::Instance()->RestoreModule();
+    ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+    RT_LOG(RT_LOG_INFO, "the resource is restored successfully");
+    return RT_ERROR_NONE;
+}
+
+}
+}

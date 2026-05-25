@@ -27,7 +27,7 @@
 #include "event_pool.hpp"
 #include "memory_pool_manager.hpp"
 #include "dev_info_manage.h"
-#include "device_snapshot.hpp"
+#include "idevice_snapshot_ops.hpp"
 #include "event_expanding.hpp"
 #include "qos.hpp"
 
@@ -446,7 +446,7 @@ public:
     virtual bool IsSupportUserMem() const = 0;
     virtual rtError_t EnableP2PWithOtherDevice(const uint32_t peerPhyDeviceId) = 0;
     virtual bool IsSupportFeature(RtOptionalFeatureType f) const = 0;
-    virtual DeviceSnapshot *GetDeviceSnapShot(void) = 0;
+    virtual IDeviceSnapshotOps *GetDeviceSnapShot(void) = 0;
     virtual std::map<std::pair<uint32_t, uint32_t>, std::vector<rtExceptionErrRegInfo_t>>& GetExceptionRegMap() = 0;
     virtual std::mutex& GetExceptionRegMutex() = 0;
     virtual rtError_t ParsePrintInfo() = 0;

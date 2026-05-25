@@ -10,19 +10,6 @@
 #include "context.hpp"
 namespace cce {
 namespace runtime {
-void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
-{
-    UNUSED(type);
-    UNUSED(stmList);
-    return;
-}
-
-void Context::GetModelList(ModelList_t *mdlList)
-{
-    UNUSED(mdlList);
-    return;
-}
-
 rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream * const stm)
 {
     UNUSED(sqIndex);

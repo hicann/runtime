@@ -307,12 +307,6 @@ public:
     rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) override;
     rtError_t DeviceSynchronize(const int32_t timeout) override;
     rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) override;
-    rtError_t SnapShotProcessLock() override;
-    rtError_t SnapShotProcessUnlock() override;
-    rtError_t SnapShotProcessBackup() override;
-    rtError_t SnapShotProcessRestore() override;
-    rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args) override;
-    rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) override;
     rtError_t DeviceGetStreamPriorityRange(int32_t * const leastPriority, int32_t * const greatestPriority) override;
     rtError_t GetDeviceInfo(const uint32_t deviceId, const int32_t moduleType, const int32_t infoType,
         int64_t * const val) override;

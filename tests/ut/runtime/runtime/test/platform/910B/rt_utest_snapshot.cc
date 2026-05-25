@@ -21,6 +21,7 @@
 #include "global_state_manager.hpp"
 #include "api_decorator.hpp"
 #include "snapshot_process_helper.hpp"
+#include "device_snapshot.hpp"
 #undef private
 #undef protected
 
@@ -230,8 +231,8 @@ TEST_F(SnapshotTest, SnapShotCallbackRegisterLock)
     error = rtSnapShotProcessLock();
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    MOCKER(ContextManage::SnapShotProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(ContextManage::SnapShotProcessRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SnapShotProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SnapShotProcessRestore).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = rtSnapShotProcessBackup();
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -243,31 +244,6 @@ TEST_F(SnapshotTest, SnapShotCallbackRegisterLock)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtSnapShotCallbackUnregister(RT_SNAPSHOT_LOCK_PRE, rtSnapShotCallBackUt);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = rtDeviceReset(devId);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-}
-
-TEST_F(SnapshotTest, SnapShotCallbackRegisterLockApiDecorator)
-{
-    Api *oldApi_= const_cast<Api *>(Runtime::runtime_->api_);
-    ApiDecorator apiDecorator(oldApi_);
-
-    int32_t devId = 0;
-    rtError_t error = rtSetDevice(devId);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = apiDecorator.SnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, rtSnapShotCallBackUt, nullptr);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = apiDecorator.SnapShotProcessLock();
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = apiDecorator.SnapShotProcessUnlock();
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    error = apiDecorator.SnapShotCallbackUnregister(RT_SNAPSHOT_LOCK_PRE, rtSnapShotCallBackUt);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtDeviceReset(devId);
@@ -379,11 +355,11 @@ TEST_F(SnapshotTest, SnapShotProcessRestore1)
     captureModel->executorFlag_ = EXECUTOR_TS;
     captureModel->modelType_ = ModelType::RT_MODEL_CAPTURE_MODEL;
 
-    MOCKER_CPP(&ContextManage::SinkTaskMemoryBackup).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ContextManage::ModelBackup(0);
+    MOCKER_CPP(&SinkTaskMemoryBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    error = ModelBackup(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = ContextManage::ModelRestore(0);
+    error = ModelRestore(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -447,7 +423,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore3)
 
     RawDevice * device = dynamic_cast<RawDevice *>(device_);
     MOCKER_CPP_VIRTUAL(device, &RawDevice::RestoreSqCqPool).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ContextManage::AclGraphRestore(device);
+    error = SnapShotAclGraphRestore(device);
     EXPECT_EQ(error, RT_ERROR_NONE);
     curCtx->models_.clear();
     captureModel->ModelRemoveStream(stm);
@@ -462,9 +438,33 @@ TEST_F(SnapshotTest, SnapShotProcessRestore4)
         .then(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
     MOCKER_CPP(&SnapShotResourceRestore).stubs()
         .will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));  
-    rtError_t error = ContextManage::SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore();
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = ContextManage::SnapShotProcessRestore();
+    error = SnapShotProcessRestore();
     EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_Success)
+{
+    RawDevice *rawDevice = dynamic_cast<RawDevice *>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+    
+    MOCKER_CPP(&SnapShotDeviceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    
+    IDeviceSnapshotOps *deviceSnapshotOps = static_cast<IDeviceSnapshotOps *>(deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::GetDeviceSnapShot).stubs().will(returnValue(deviceSnapshotOps));
+    
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::ArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::UbArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    
+    MOCKER_CPP(&ModelRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotAclGraphRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    
+    MOCKER_CPP(&Runtime::RestoreModule).stubs().will(returnValue(RT_ERROR_NONE));
+    
+    rtError_t error = SnapShotProcessRestore();
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }

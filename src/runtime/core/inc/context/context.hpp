@@ -430,9 +430,7 @@ public:
     }
 
     rtError_t SyncStreamsWithTimeout(const std::list<Stream *> &streams, int32_t timeout, const mmTimespec start) const;
-    void GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList);
-    void GetModelList(ModelList_t *mdlList);
-	rtError_t CheckMemAlign(const void * const addr, const rtDataType_t type) const;
+    rtError_t CheckMemAlign(const void * const addr, const rtDataType_t type) const;
     bool IsStreamInContext(Stream * const stm);
     rtError_t ResourceReset(void);
  

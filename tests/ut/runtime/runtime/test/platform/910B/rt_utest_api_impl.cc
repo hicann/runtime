@@ -38,6 +38,7 @@
 #include "stub_task.hpp"
 #include "device_error_proc.hpp"
 #include "snapshot_process_helper.hpp"
+#include "device_snapshot.hpp"
 #undef private
 #include <string>
 #include "driver/ascend_hal.h"
@@ -510,8 +511,8 @@ TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::TearDown).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&DeviceSnapshot::OpMemoryBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->GetDeviceSnapShot(), &IDeviceSnapshotOps::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->GetDeviceSnapShot(), &IDeviceSnapshotOps::OpMemoryBackup).stubs().will(returnValue(RT_ERROR_NONE));
     deviceCloseFlag = 1;
     rtError_t error = rtSnapShotProcessBackup();
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);

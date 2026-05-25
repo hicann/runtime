@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -7,26 +7,25 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCE_RUNTIME_SNAPSHOT_PROCESS_HELPER_HPP
-#define CCE_RUNTIME_SNAPSHOT_PROCESS_HELPER_HPP
+#ifndef RUNTIME_IDEVICE_SNAPSHOT_OPS_HPP
+#define RUNTIME_IDEVICE_SNAPSHOT_OPS_HPP
 
-#include "base.hpp"
-#include "context_data_manage.h"
+#include "base.h"
 
 namespace cce {
 namespace runtime {
-class Device;
 
-rtError_t SnapShotPreProcessBackup(ContextDataManage &ctxMan);
-rtError_t SnapShotDeviceRestore();
-rtError_t SnapShotResourceRestore(ContextDataManage &ctxMan);
-rtError_t SnapShotAclGraphRestore(Device * const dev);
+class IDeviceSnapshotOps {
+public:
+    virtual ~IDeviceSnapshotOps() = default;
 
-rtError_t SnapShotProcessBackup();
-rtError_t SnapShotProcessRestore();
-rtError_t ModelBackup(const int32_t devId);
-rtError_t ModelRestore(const int32_t devId);
-rtError_t SinkTaskMemoryBackup(const int32_t devId);
+    virtual rtError_t OpMemoryBackup() = 0;
+    virtual rtError_t OpMemoryRestore() = 0;
+    virtual rtError_t ArgsPoolRestore() const = 0;
+    virtual rtError_t UbArgsPoolRestore() const = 0;
+};
+
 }
 }
-#endif  // CCE_RUNTIME_SNAPSHOT_PROCESS_HELPER_HPP
+
+#endif

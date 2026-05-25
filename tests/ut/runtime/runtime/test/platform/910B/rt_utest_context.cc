@@ -3468,9 +3468,6 @@ TEST_F(CloudV2ContextTest, MixKernelUpdate_test_3)
     error = LaunchUpdateKernelSubmit(ctx, &updateTask2, updateStream, nullptr, result);
     EXPECT_EQ(error, RT_ERROR_DRV_ERR);
 
-    StreamList_t stmList = {};
-    stmList.stmNum = 2049U;
-    ctx->GetStreamlist(RT_NOTSINKED_STREAM, &stmList);
     ((Runtime *)Runtime::Instance())->DeviceRelease(deviceStub);
     (void)((Runtime *)Runtime::Instance())->PrimaryContextRelease(devId);
     stream->taskResMang_ = preVal;

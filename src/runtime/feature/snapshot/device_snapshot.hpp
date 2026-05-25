@@ -14,29 +14,16 @@
 #include "base.hpp"
 #include "h2d_copy_mgr.hpp"
 #include "task_info.hpp"
+#include "idevice_snapshot_ops.hpp"
 
 namespace cce {
 namespace runtime {
-
-#define RT_MAX_STREAM_NUM (32 * 1024)
-struct StreamList {
-    uint32_t stmNum;
-    rtStream_t stms[RT_MAX_STREAM_NUM];
-};
-using StreamList_t = StreamList;
-
-#define RT_MAX_MODEL_NUM (32 * 1024)
-struct ModelList {
-    uint32_t mdlNum;
-    rtModel_t mdls[RT_MAX_MODEL_NUM];
-};
-using ModelList_t = ModelList;
 
 class Device;
 class Stream;
 class Model;
 
-class DeviceSnapshot : public NoCopy {
+class DeviceSnapshot : public NoCopy, public IDeviceSnapshotOps {
 public:
     explicit DeviceSnapshot(Device *dev);
 
@@ -72,10 +59,10 @@ public:
     void GetOpTotalMemoryInfo(const Model *const mdl);
     void RecordFuncCallAddrAndSize(TaskInfo *const task);
     void RecordArgsAddrAndSize(TaskInfo *const task);
-    rtError_t OpMemoryBackup(void);
-    rtError_t OpMemoryRestore(void);
-    rtError_t ArgsPoolRestore(void) const;
-    rtError_t UbArgsPoolRestore(void) const;
+    rtError_t OpMemoryBackup(void) override;
+    rtError_t OpMemoryRestore(void) override;
+    rtError_t ArgsPoolRestore(void) const override;
+    rtError_t UbArgsPoolRestore(void) const override;
     rtError_t ArgsPoolConvertAddr(H2DCopyMgr *const mgr) const;
     void OpMemoryInfoInit(void);
 protected:

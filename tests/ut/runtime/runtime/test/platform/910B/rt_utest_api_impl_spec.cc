@@ -36,6 +36,8 @@
 #include "task_info.hpp"
 #include "thread_local_container.hpp"
 #include "device_msg_handler.hpp"
+#include "device_snapshot.hpp"
+#include "snapshot_process_helper.hpp"
 
 #include "ttlv.hpp"
 #include "model.hpp"
@@ -536,8 +538,8 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE)
         .with(mockcpp::any(), mockcpp::any())
         .will(returnValue(&task1));
 
-    MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
-    error = ContextManage::ModelRestore(dev->Id_());
+    MOCKER_CPP_VIRTUAL(dev->GetDeviceSnapShot(), &IDeviceSnapshotOps::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    error = ModelRestore(dev->Id_());
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     GlobalMockObject::verify();
@@ -633,14 +635,14 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_RESTORE2)
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
         .will(returnValue(&task1));
-    MOCKER_CPP(&DeviceSnapshot::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->GetDeviceSnapShot(), &IDeviceSnapshotOps::OpMemoryRestore).stubs().will(returnValue(RT_ERROR_NONE));
  
     Stream *desStream = rt_ut::UnwrapOrNull<Stream>(desStm);
     Stream *sinkStream = rt_ut::UnwrapOrNull<Stream>(sinkStm);
     MOCKER_CPP_VIRTUAL(desStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(sinkStream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
  
-    error = ContextManage::ModelRestore(dev->Id_());
+    error = ModelRestore(dev->Id_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     GlobalMockObject::verify();
@@ -786,7 +788,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_007)
             .stubs()
             .will(returnValue(RT_ERROR_NONE));
 
-    error = dev->GetDeviceSnapShot()->ArgsPoolConvertAddr(argAllocator);
+    error = dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->ArgsPoolConvertAddr(argAllocator);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete argAllocator;
     DELETE_O(stream);
@@ -821,14 +823,14 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     task1.u.aicTaskInfo.comm.args = &args[0];
     task1.u.aicTaskInfo.comm.argsSize = 8;
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task1);
-    dev->GetDeviceSnapShot()->RecordArgsAddrAndSize(&task1);
+    dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->RecordArgsAddrAndSize(&task1);
     TaskInfo task2 = {};
     InitByStream(&task2, rt_ut::UnwrapOrNull<Stream>(sinkStm));
     AicTaskInit(&task2, RT_KERNEL_ATTR_TYPE_AICORE, 1, nullptr);
     task2.u.aicTaskInfo.comm.args = &args[1];
     task2.u.aicTaskInfo.comm.argsSize = 8;
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task2);
-    dev->GetDeviceSnapShot()->RecordArgsAddrAndSize(&task2);
+    dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->RecordArgsAddrAndSize(&task2);
     const void *stubFunc = (void *)0x02;
     const char *stubName = "abc";
     TaskInfo task3 = {};
@@ -847,7 +849,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     rtFftsPlusMixAicAivCtx_t * descAlignBuf = new rtFftsPlusMixAicAivCtx_t;
     task3.u.aicTaskInfo.descAlignBuf = descAlignBuf;
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task3);
-    dev->GetDeviceSnapShot()->RecordArgsAddrAndSize(&task3);
+    dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->RecordArgsAddrAndSize(&task3);
     TaskInfo task4 = {};
     rtFftsPlusTaskInfo_t  fftsPlusTaskInfo = {};
     MOCKER(FillFftsPlusSqe).stubs().will(returnValue(RT_ERROR_NONE));
@@ -857,7 +859,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     fftsPlusTask->descAlignBuf = &args[4];
     fftsPlusTask->descBufLen = 8;
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task4);
-    dev->GetDeviceSnapShot()->RecordArgsAddrAndSize(&task4);
+    dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->RecordArgsAddrAndSize(&task4);
     TaskInfo task5 = {};
     InitByStream(&task5, rt_ut::UnwrapOrNull<Stream>(sinkStm));
     StreamActiveTaskInit(&task5, rt_ut::UnwrapOrNull<Stream>(sinkStm));
@@ -921,7 +923,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_SNAPSHOT_001)
     (rt_ut::UnwrapOrNull<Stream>(sinkStm))->AddTaskToStream(&task11);
     testTasks.push_back({&task11, [&task11]() { MemWaitTaskUnInit(&task11); }});
     for (auto& [task, cleanup] : testTasks) {
-        dev->GetDeviceSnapShot()->RecordFuncCallAddrAndSize(task);
+        dynamic_cast<DeviceSnapshot*>(dev->GetDeviceSnapShot())->RecordFuncCallAddrAndSize(task);
     }
     
     for (auto& [task, cleanup] : testTasks) {

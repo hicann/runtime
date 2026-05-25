@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include "device.hpp"
+#include "device_snapshot.hpp"
 #include "uma_arg_loader.hpp"
 #include "runtime.hpp"
 #include "ctrl_stream.hpp"

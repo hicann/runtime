@@ -456,8 +456,6 @@ TEST_F(TinyStubTest, context_stub)
     Context ctx(dev, 0);
     ctx.Init();
     rtError_t ret = RT_ERROR_NONE;
-    ctx.GetStreamlist(RT_STREAM_TYPE_MAX, nullptr);
-    ctx.GetModelList(nullptr);
     ctx.TryRecycleCaptureModelResource(1, 1, nullptr);
     ret = ctx.FftsPlusTaskLaunch(nullptr, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);

@@ -44,36 +44,6 @@
 
 namespace cce {
 namespace runtime {
-void Context::GetStreamlist(rtStreamlistType_t type, StreamList_t *stmList)
-{
-    std::unique_lock<std::mutex> taskLock(streamLock_);
-    if (type == RT_NOTSINKED_STREAM) {
-        for (Stream *stream : streams_) {
-            if (!stream->GetBindFlag() && stmList->stmNum < RT_MAX_STREAM_NUM) {
-                stmList->stms[(stmList->stmNum)++] = reinterpret_cast<rtStream_t>(stream->GetInnerHandle());
-            }
-        }
-    }
-    if (stmList->stmNum >= RT_MAX_STREAM_NUM) {
-        return;
-    }
-    Stream *defaultStream = DefaultStream_();
-    if (stmList->stmNum < RT_MAX_STREAM_NUM) {
-        stmList->stms[(stmList->stmNum)++] = RtPtrToPtr<rtStream_t>(defaultStream->GetInnerHandle());
-    }
-}
-
-void Context::GetModelList(ModelList_t *mdlList)
-{
-    modelLock_.Lock();
-    for (Model *model : models_) {
-        if (mdlList->mdlNum < RT_MAX_MODEL_NUM) {
-            mdlList->mdls[(mdlList->mdlNum)++] = static_cast<rtModel_t>(model);
-        }
-    }
-    modelLock_.Unlock();
-}
-
 rtError_t Context::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream * const stm)
 {
     rtError_t error;

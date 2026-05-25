@@ -224,6 +224,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/v100/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
@@ -330,6 +331,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/v100/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc

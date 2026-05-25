@@ -181,6 +181,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_dqs.cc
     ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
@@ -361,6 +362,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/api_david.cc
     ${TOP_DIR}/src/runtime/api/api_preload_task.cc
     ${TOP_DIR}/src/runtime/api/api_c_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/api/api_c_uvm.cc
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_standard_soc.cc
@@ -644,7 +646,8 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
-    ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/v200_base/device_snapshot_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
@@ -1474,9 +1477,10 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/core/src/context/context.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/device/device.cc
-    ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
+${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/v100/device_snapshot_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc

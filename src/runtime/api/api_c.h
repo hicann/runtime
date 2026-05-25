@@ -13,6 +13,7 @@
 
 #include "error_code.h"
 #include "api_global_err.h"
+#include "error_message_manage.hpp"
 
 constexpr uint32_t RUNTIME_PUBLIC_VERSION = 1001U;
 

@@ -11,10 +11,6 @@
 #include "context.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
-#include "device_snapshot.hpp"
-#include "snapshot_process_helper.hpp"
-#include "raw_device.hpp"
-#include "capture_model_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -349,28 +345,6 @@ bool ContextManage::DeviceSetFaultTypeIfNoError(const uint32_t devId, DeviceFaul
     return setFaultFlag;
 }
 
-void ContextManage::DeviceGetStreamlist(int32_t devId, rtStreamlistType_t type, StreamList_t *stmList)
-{
-    RT_LOG(RT_LOG_INFO, "start");
-    const ReadProtect rp(&(g_ctxMan.GetSetRwLock()));
-    stmList->stmNum = 0U;
-    for (Context *const ctx : g_ctxMan.GetSetObj()) {
-        COND_PROC((ctx->Device_()->Id_() != static_cast<uint32_t>(devId)), continue);
-        ctx->GetStreamlist(type, stmList);
-    }
-}
-
-void ContextManage::DeviceGetModelList(int32_t devId, ModelList_t *mdlList)
-{
-    RT_LOG(RT_LOG_INFO, "start");
-    const ReadProtect rp(&(g_ctxMan.GetSetRwLock()));
-    mdlList->mdlNum = 0U;
-    for (Context *const ctx : g_ctxMan.GetSetObj()) {
-        COND_PROC((ctx->Device_()->Id_() != static_cast<uint32_t>(devId)), continue);
-        ctx->GetModelList(mdlList);
-    }
-}
-
 bool ContextManage::CheckStreamPtrIsValid(Stream * const stm)
 {
     RT_LOG(RT_LOG_INFO, "start");
@@ -395,137 +369,5 @@ rtError_t ContextManage::DeviceResourceClean(int32_t devId)
     return error;
 }
 
-rtError_t ContextManage::SnapShotProcessBackup()
-{
-    rtError_t ret = SnapShotPreProcessBackup(g_ctxMan);
-    ERROR_RETURN(ret, "PreProcessBackup failed, ret=%#x.", ret);
-
-    for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
-        Device *dev = Runtime::Instance()->GetDevice(devId, 0U);
-        if (dev == nullptr) {
-            continue;
-        }
-        ret = ModelBackup(static_cast<int32_t>(devId));
-        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
-    }
-
-    // 申请host内存，保存所有launch过的算子.o
-    Runtime::Instance()->SaveModule();
-
-    // driver备份
-    return NpuDriver::ProcessResBackup();
-}
-
-rtError_t ContextManage::AclGraphRestore(Device * const dev)
-{
-    return SnapShotAclGraphRestore(dev);
-}
-
-rtError_t ContextManage::SnapShotProcessRestore()
-{
-    RT_LOG(RT_LOG_INFO, "start to restore resource");
-    rtError_t ret = SnapShotDeviceRestore();
-    if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
-        return ret;
-    }
-    ERROR_RETURN(ret, "DeviceRestore failed, ret=%#x.", ret);
-
-    ret = SnapShotResourceRestore(g_ctxMan);
-    ERROR_RETURN(ret, "Resource Restore failed, ret=%#x.", ret);
-    for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
-        Device *dev = Runtime::Instance()->GetDevice(devId, 0U);
-        if (dev == nullptr) {
-            continue;
-        }
-
-        DeviceSnapshot *deviceSnapShot = dev->GetDeviceSnapShot();
-        NULL_PTR_RETURN_MSG(deviceSnapShot, RT_ERROR_MEMORY_ALLOCATION);
-
-        ret = deviceSnapShot->OpMemoryRestore();
-        ERROR_RETURN(ret, "memory restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
-
-        ret = deviceSnapShot->ArgsPoolRestore();
-        ERROR_RETURN(ret, "args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
-
-        ret = deviceSnapShot->UbArgsPoolRestore();
-        ERROR_RETURN(ret, "ub args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
-
-        ret = ModelRestore(static_cast<int32_t>(devId));
-        ERROR_RETURN(ret, "ModelRestore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
-
-        ret = AclGraphRestore(dev);
-        ERROR_RETURN(ret, "AclGraph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
-
-        dev->ArgLoader_()->RestoreAiCpuKernelInfo();
-    }
-
-    // kernel info restore
-    ret = Runtime::Instance()->RestoreModule();
-    ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
-    RT_LOG(RT_LOG_INFO, "the resource is restored successfully");
-    return RT_ERROR_NONE;
-}
-
-rtError_t ContextManage::SinkTaskMemoryBackup(const int32_t devId)
-{
-    Device *dev = Runtime::Instance()->GetDevice(static_cast<uint32_t>(devId), 0U);
-    COND_RETURN_ERROR((dev == nullptr), RT_ERROR_DEVICE_NULL, "Get dev nullptr, devId=%d", devId);
-    DeviceSnapshot *deviceSnapShot = dev->GetDeviceSnapShot();
-    NULL_PTR_RETURN_MSG(deviceSnapShot, RT_ERROR_MEMORY_ALLOCATION);
-    const rtError_t error = deviceSnapShot->OpMemoryBackup();
-    ERROR_RETURN(error, "memcpy back up failed, retCode=%#x.", error);
-    return error;
-}
-
-rtError_t ContextManage::ModelBackup(const int32_t devId)
-{
-    auto mdlList = std::make_unique<ModelList_t>();
-    NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
-    DeviceGetModelList(devId, mdlList.get());
-    COND_RETURN_DEBUG((mdlList->mdlNum == 0U),
-        RT_ERROR_NONE, "No model needs to be backed up, devId=%d.", devId);
-    for (uint32_t i = 0U; i < mdlList->mdlNum; i++) {
-        Model *mdl = RtPtrToPtr<Model *>(mdlList->mdls[i]);
-        COND_RETURN_WARN((mdl->GetModelExecutorType() != EXECUTOR_TS),
-            RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Snapshots cannot be created for models with the AICPU execution type.");
-        // 扩流场景model的sqe不做备份，sqe数据本身就在host中，非扩流场景为了确保恢复之后model能够删除成功，需要继续走备份流程
-        if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
-            continue;
-        }
-        COND_RETURN_ERROR((!mdl->IsModelLoadComplete()),
-            RT_ERROR_SNAPSHOT_BACKUP_FAILED,
-            "The model is not complete, model_id=%u.", mdl->Id_());
-        const rtError_t ret = mdl->SinkSqTasksBackup();
-        ERROR_RETURN(ret, "Backup model tasks failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
-    }
-
-    /* args device memory and funCall device memory */
-    const rtError_t ret = SinkTaskMemoryBackup(devId);
-    ERROR_RETURN(ret, "Backup model memory failed, ret=%u, devId=%d", ret, devId);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ContextManage::ModelRestore(const int32_t devId)
-{
-    auto mdlList = std::make_unique<ModelList_t>();
-    NULL_PTR_RETURN(mdlList, RT_ERROR_MEMORY_ALLOCATION);
-    DeviceGetModelList(devId, mdlList.get());
-    COND_RETURN_DEBUG((mdlList->mdlNum == 0U),
-        RT_ERROR_NONE, "No model needs to be restore, devId=%d.", devId);
-    for (uint32_t i = 0; i < mdlList->mdlNum; i++) {
-        Model *mdl = RtPtrToPtr<Model *>(mdlList->mdls[i]);
-        COND_RETURN_WARN((mdl->GetModelExecutorType() != EXECUTOR_TS),
-            RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Models with the AICPU executor type cannot be restored.");
-        // 只恢复非扩流场景的mode
-        if (IsSoftwareSqCaptureModel(mdl) || mdl->IsAutoSplitSq()) {
-            continue;
-        }
-        const rtError_t ret = mdl->ReBuild();
-        ERROR_RETURN(ret, "Rebuild model failed, ret=%#x, devId=%d.", static_cast<uint32_t>(ret), devId);
-    }
-    return RT_ERROR_NONE;
-}
 }  // namespace runtime
 }  // namespace cce

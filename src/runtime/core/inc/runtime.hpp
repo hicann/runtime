@@ -114,11 +114,6 @@ struct TaskAbortCallbackInfo{
     void                        *args;
 };
 
-struct SnapShotCallBackInfo {
-    rtSnapShotCallBack callback;
-    void *args;
-};
-
 static inline bool IsAbortError(rtError_t error)
 {
     if (error == RT_ERROR_STREAM_ABORT || error == RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL ||
@@ -274,9 +269,6 @@ public:
     rtError_t SetTaskAbortCallBack(const char_t *regName, void *callback, void *args,
         TaskAbortCallbackType type) override;
     rtError_t TaskAbortCallBack(int32_t devId, rtTaskAbortStage_t stage, uint32_t timeout);
-    rtError_t SnapShotCallbackRegister(const rtSnapShotStage stage, rtSnapShotCallBack callback, void *args);
-    rtError_t SnapShotCallbackUnregister(const rtSnapShotStage stage, rtSnapShotCallBack callback);
-    rtError_t SnapShotCallback(const rtSnapShotStage stage);
     rtError_t SetAicpuAttr(const char_t * const key, const char_t * const value) const override;
     rtError_t StartAicpuSd(Device * const device) const;
     rtError_t OpenNetService(const rtNetServiceOpenArgs *args) const;
@@ -1035,8 +1027,6 @@ private:
     std::mutex mapMutex_;
     std::map<std::string, TaskAbortCallbackInfo> taskAbortCallbackMap_;
     std::mutex taskAbortMutex_;
-    std::mutex snapShotCallBackMapMutex_;
-    std::map<rtSnapShotStage, std::list<SnapShotCallBackInfo>> snapShotCallBackMap_;
     uint32_t tschVersion_ = 0U;
     uint8_t tilingKeyFlag_ = UINT8_MAX;
     ThreadGuard *threadGuard_;
