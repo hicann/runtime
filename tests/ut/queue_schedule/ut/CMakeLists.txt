@@ -36,6 +36,7 @@ set(LOCAL_SRC_FILES
     testcase/bind_relation_utest.cpp
     testcase/bqs_queue_manager_utest.cpp
     testcase/statistic_manager_utest.cpp
+    testcase/msprof_api_adapter_utest.cpp
     testcase/msprof_manager_utest.cpp
     testcase/profile_manager_utest.cpp
     testcase/router_server_utest.cpp

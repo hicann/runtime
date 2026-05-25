@@ -90,6 +90,7 @@ set(LOCAL_SRC_FILES
     testcase/bind_relation_stest.cpp
     testcase/queue_schedule_sub_module_interface_stest.cpp
     testcase/bqs_server_stest.cpp
+    testcase/msprof_api_adapter_stest.cpp
     testcase/msprof_manager_stest.cpp
     testcase/bqs_so_msnager_stest.cpp
     testcase/queue_schedule_stest.cpp

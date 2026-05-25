@@ -69,6 +69,7 @@ set(TSD_UT_TEST_SRC_FILE
     test/package_worker_utils_utest.cpp
     test/path_mgr_utest.cpp
     test/tsd_util_func_utest.cpp
+    test/message_parse_client_utest.cpp
     test/tsd_sha256_utest.cpp
     test/env_internal_api_utest.cpp
     test/hdc_client_utest.cpp
