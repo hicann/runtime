@@ -61,6 +61,7 @@ TEST_F(ADPROF_UTEST, CheckBindHostPid)
         .will(returnValue(DRV_ERROR_NO_PROCESS))
         .then(returnValue(DRV_ERROR_INVALID_VALUE))
         .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(OsalSleep).stubs().will(returnValue(0));
     EXPECT_EQ(PROFILING_FAILED, CheckBindHostPid(hostPid.c_str()));
     EXPECT_EQ(PROFILING_SUCCESS, CheckBindHostPid(hostPid.c_str()));
 }
@@ -251,27 +252,6 @@ TEST_F(ADPROF_UTEST, AdprofBinSuccess)
         .will(returnValue((void*)&AdprofStartStub))
         .then(returnValue((void*)&GetIsExitStub));
     EXPECT_EQ(PROFILING_SUCCESS, LltMain(sizeof(argv) / sizeof(argv[0]), (const char**)argv));
-}
-
-TEST_F(ADPROF_UTEST, AicpuReportHdc)
-{
-    EXPECT_EQ(false, AicpuReportHdc::instance()->started_);
-
-    char *data = "1111";
-    ReporterData reporterData = {"DATA_PREPROCESS", 1, strlen(data), (unsigned char *)data};
-    int32_t ret = AdprofReportData(static_cast<VOID_PTR>(&reporterData), static_cast<uint32_t>(sizeof(ReporterData)));
-    EXPECT_EQ(PROFILING_FAILED, ret);
-
-    std::string moduleName = "DATA_PREPROCESS-123-1";
-    MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect)
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_SUCCESS, AicpuReportHdc::instance()->Init(moduleName));
-    EXPECT_EQ(true, AicpuReportHdc::instance()->started_);
-
-    ret = AdprofReportData(static_cast<VOID_PTR>(&reporterData), static_cast<uint32_t>(sizeof(ReporterData)));
-    EXPECT_EQ(PROFILING_SUCCESS, ret);
-    EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStop());
 }
 
 TEST_F(ADPROF_UTEST, AdprofModifyParam)

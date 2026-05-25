@@ -44,6 +44,12 @@ int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof
     return DRV_ERROR_NONE;
 }
 
+int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *ops)
+{
+    SimulatorMgr().ProfSampleRegister(dev_id, chan_id, &(ops->ops));
+    return DRV_ERROR_NONE;
+}
+
 drvError_t drvGetDevNum(uint32_t *num_dev)
 {
     return static_cast<drvError_t>(SimulatorMgr().GetDevNum(*num_dev));

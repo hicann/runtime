@@ -103,6 +103,7 @@ set(MSPROF_TARGET
     job_wrapper
     message_utest
     msprofiler_utest
+    msprof_utest
     msprof_bin_utest
     prof_api_utest
     prof_hal_utest

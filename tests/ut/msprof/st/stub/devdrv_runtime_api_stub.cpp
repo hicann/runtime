@@ -182,6 +182,11 @@ int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof
     return 0;
 }
 
+int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *ops)
+{
+    return 0;
+}
+
 drvError_t drvQueryProcessHostPid(int pid, unsigned int *chip_id, unsigned int *vfid,
                                   unsigned int *host_pid, unsigned int *cp_type)
 {

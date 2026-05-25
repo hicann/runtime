@@ -1,16 +1,17 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "devprof_drv_aicpu.h"
 #include <string>
 #include "error_code.h"
+#include "base/log_types.h"
 #include "config/config.h"
 #include "ai_drv_prof_api.h"
 #include "devprof_common.h"
@@ -29,6 +30,7 @@ using namespace Devprof;
 constexpr uint64_t START_SWITCH = 1U;       // define by runtime
 constexpr uint32_t AICPU_SWITCH = 2U;       // define by runtime
 constexpr uint32_t MAX_ADD_REPORT_SIZE = 131072; // 512 * sizeof(MsprofAdditionalInfo)
+constexpr uint64_t HOST_MOVE_BUFFER_SIZE = 4 * 1024 * 1024;
 const char * const AICPU_EVENT_GRP_NAME = "prof_aicpu_grp";
 const char * const AI_CUSTOM_CPU_EVENT_GRP_NAME = "prof_cus_grp";
 const char * const AICPU_PROFILING_REPORT_THREAD_NAME = "Prof_Reporter";
@@ -53,6 +55,7 @@ int32_t DevprofDrvAicpu::ReportAdditionalInfo(uint32_t agingFlag, ConstVoidPtr d
         MSPROF_LOGE("Report additional info length [%u bytes] is invalid.", length);
         return PROFILING_FAILED;
     }
+
     int32_t ret = aicpuAdditionalBuffer_.BatchPush(static_cast<const MsprofAdditionalInfo *>(data), length);
     if (ret != MSPROF_ERROR_NONE) {
         MSPROF_LOGE("Try push buff failed, size: %" PRIu64 " bytes, ret:%d.", length, ret);
@@ -61,11 +64,45 @@ int32_t DevprofDrvAicpu::ReportAdditionalInfo(uint32_t agingFlag, ConstVoidPtr d
     return PROFILING_SUCCESS;
 }
 
+STATIC int32_t ProfStartHostMove(ProfSampleStartPara *para)
+{
+    if ((para->out_data == nullptr) ||
+        (para->out_data_max_len < sizeof(Devprof::AicpuUserProfileBufferInfo))) {
+        MSPROF_LOGE("Host move: out_data invalid (ptr=%p, max_len=%u, need=%zu)",
+            para->out_data, para->out_data_max_len, sizeof(Devprof::AicpuUserProfileBufferInfo));
+        return PROFILING_FAILED;
+    }
+
+    auto instance = DevprofDrvAicpu::instance();
+    auto *info = static_cast<Devprof::AicpuUserProfileBufferInfo *>(para->out_data);
+    if (instance->RecordHostMoveBufferAddresses(info) != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+    instance->SetSupportHostMove(true);
+    MSPROF_LOGI("Host move mode enabled, base=0x%llx, wptr=0x%llx, rptr=0x%llx",
+        info->buffer_base_user_va, info->buffer_write_ptr_user_va, info->buffer_read_ptr_user_va);
+    return PROFILING_SUCCESS;
+}
+
 STATIC int32_t ProfStartAicpu(ProfSampleStartPara *para)
 {
-    UNUSED(para);
     MSPROF_EVENT("drv start aicpu");
-    return DevprofDrvAicpu::instance()->Start();
+    if (para == nullptr) {
+        MSPROF_LOGE("ProfStartAicpu para is nullptr");
+        return PROFILING_FAILED;
+    }
+    auto instance = DevprofDrvAicpu::instance();
+    if (para->is_support_host_move) {
+        int32_t ret = ProfStartHostMove(para);
+        if (ret != PROFILING_SUCCESS) {
+            instance->Release();
+            return ret;
+        }
+    } else {
+        instance->SetSupportHostMove(false);
+    }
+    instance->DeviceReportStart();
+    return instance->Start();
 }
 
 STATIC int32_t ProfSampleAicpu(ProfSamplePara *para)
@@ -74,15 +111,49 @@ STATIC int32_t ProfSampleAicpu(ProfSamplePara *para)
     return PROFILING_SUCCESS;
 }
 
-STATIC int32_t ProfStopAicpu(ProfSampleStopPara *para)
+STATIC int32_t ProfStopDevicePause(ProfSampleStopPara *para)
 {
-    UNUSED(para);
-    MSPROF_EVENT("drv stop aicpu");
+    MSPROF_LOGI("ProfStopDevicePause: stop reporting data");
     DevprofDrvAicpu::instance()->DeviceReportStop();
     return DevprofDrvAicpu::instance()->Stop();
 }
 
-DevprofDrvAicpu::DevprofDrvAicpu() : stopped_(false), devId_(0), channelId_(0), profConfig_(0), isRegister_(false)
+STATIC int32_t ProfStopDeviceRelease(ProfSampleStopPara *para)
+{
+    MSPROF_LOGI("ProfStopDeviceRelease: clear host move addresses, isSupportHostMove=%d",
+        DevprofDrvAicpu::instance()->IsSupportHostMove());
+    DevprofDrvAicpu::instance()->Release();
+    return PROFILING_SUCCESS;
+}
+
+STATIC int32_t ProfStopAicpu(ProfSampleStopPara *para)
+{
+    if (para == nullptr) {
+        MSPROF_LOGE("ProfStopAicpu para is nullptr");
+        return PROFILING_FAILED;
+    }
+    MSPROF_EVENT("drv stop aicpu, release_flag=%u", para->release_flag);
+
+    switch (para->release_flag) {
+        case PROF_STOP_STAGE_DEFAULT:
+            return ProfStopDevicePause(para);
+        case PROF_STOP_STAGE_PAUSE:
+            return ProfStopDevicePause(para);
+        case PROF_STOP_STAGE_RELEASE:
+            return ProfStopDeviceRelease(para);
+        case PROF_STOP_STAGE_PAUSE_AND_RELEASE:
+            ProfStopDevicePause(para);
+            return ProfStopDeviceRelease(para);
+        default:
+            MSPROF_LOGE("Invalid release_flag=%u", para->release_flag);
+            return PROFILING_FAILED;
+    }
+}
+
+DevprofDrvAicpu::DevprofDrvAicpu() : stopped_(false), devId_(0), channelId_(0), profConfig_(0),
+    isRegister_(false), isSupportHostMove_(false), hostMoveBuffer_(nullptr),
+    hostMoveBufferSize_(0), hostMoveWptr_(nullptr), hostMoveRptr_(nullptr),
+    hostMoveWriteIndex_(0)
 {
     Thread::SetThreadName(AICPU_PROFILING_REPORT_THREAD_NAME);
     command_.type = static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MAX);
@@ -103,6 +174,7 @@ DevprofDrvAicpu::~DevprofDrvAicpu()
 {
     Stop();
     aicpuAdditionalBuffer_.UnInit();
+    UninitHostMoveBuffer();
     moduleCallbacks_.clear();
 }
 
@@ -144,12 +216,29 @@ int32_t DevprofDrvAicpu::Start()
 int32_t DevprofDrvAicpu::Stop()
 {
     stopped_ = true;
-    profConfig_ = 0;        // close all prof switch
+    profConfig_ = 0;
+
     if (Thread::Stop() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to stop report %s thread", AICPU_PROFILING_REPORT_THREAD_NAME);
     }
+
     aicpuAdditionalBuffer_.Print();
     return PROFILING_SUCCESS;
+}
+
+void DevprofDrvAicpu::Release()
+{
+    UninitHostMoveBuffer();
+    SetSupportHostMove(false);
+}
+
+void DevprofDrvAicpu::UninitHostMoveBuffer()
+{
+    hostMoveBuffer_ = nullptr;
+    hostMoveWptr_ = nullptr;
+    hostMoveRptr_ = nullptr;
+    hostMoveBufferSize_ = 0;
+    hostMoveWriteIndex_.store(0);
 }
 
 int32_t DevprofDrvAicpu::SendAddtionalInfo() {
@@ -254,9 +343,64 @@ MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendS
     return ret;
 }
 
-void DevprofDrvAicpu::Run(const struct error_message::Context &errorContext)
+void DevprofDrvAicpu::RunHostMoveMode()
 {
-    (void)errorContext;
+    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || hostMoveRptr_ == nullptr) {
+        MSPROF_LOGE("Host move buffer pointers are null while isSupportHostMove_ is true");
+        return;
+    }
+    if (hostMoveBufferSize_ == 0 || hostMoveBufferSize_ < sizeof(MsprofAdditionalInfo)) {
+        MSPROF_LOGE("Host move buffer size is invalid, hostMoveBufferSize_=%zu", hostMoveBufferSize_);
+        return;
+    }
+    while (!stopped_ || (aicpuAdditionalBuffer_.GetUsedSize() != 0)) {
+        if (aicpuAdditionalBuffer_.GetUsedSize() == 0) {
+            (void)OsalSleep(WAIT_DATA_TIME);
+            continue;
+        }
+
+        uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
+        uint32_t rptr = *hostMoveRptr_;
+        uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / sizeof(MsprofAdditionalInfo));
+        if (writeIdx >= maxIdx || rptr >= maxIdx) {
+            MSPROF_LOGE("Invalid wptr/rptr, wptr=%u rptr=%u max=%u", writeIdx, rptr, maxIdx);
+            stopped_ = true;
+            MSPROF_LOGE("Discarded pending data size=%zu in host move buffer", aicpuAdditionalBuffer_.GetUsedSize());
+            break;
+        }
+
+        uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
+        if (usedSlots >= maxIdx - 1) {
+            MSPROF_LOGW("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
+            if (stopped_) {
+                MSPROF_LOGE("Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
+                break;
+            }
+            (void)OsalSleep(WAIT_DATA_TIME);
+            continue;
+        }
+
+        size_t outSize = sizeof(MsprofAdditionalInfo);
+        void *outPtr = aicpuAdditionalBuffer_.BatchPop(outSize, stopped_);
+        if (outPtr == nullptr) {
+            (void)OsalSleep(WAIT_DRV_TIME);
+            continue;
+        }
+
+        int32_t ret = WriteToHostMoveBuffer(static_cast<const MsprofAdditionalInfo *>(outPtr),
+            sizeof(MsprofAdditionalInfo));
+        if (ret != PROFILING_SUCCESS) {
+            MSPROF_LOGE("Write to host move buffer failed");
+        }
+        aicpuAdditionalBuffer_.BatchPopBufferIndexShift(outPtr, sizeof(MsprofAdditionalInfo));
+    }
+
+    MSPROF_LOGI("Host move: all pending data flushed to ring buffer, Run() exiting");
+    (void)OsalSleep(WAIT_DRV_TIME);
+}
+
+void DevprofDrvAicpu::RunNormalMode()
+{
     uint32_t bufLen = 0;
     int32_t ret = halProfQueryAvailBufLen(devId_, channelId_, &bufLen);
     if (ret != DRV_ERROR_NONE) {
@@ -304,12 +448,98 @@ void DevprofDrvAicpu::Run(const struct error_message::Context &errorContext)
     }
 }
 
+void DevprofDrvAicpu::Run(const struct error_message::Context &errorContext)
+{
+    (void)errorContext;
+
+    MSPROF_LOGI("Run() enter, isSupportHostMove_=%d, hostMoveBuffer_=%p, hostMoveWptr_=%p, hostMoveRptr_=%p",
+        isSupportHostMove_, hostMoveBuffer_, hostMoveWptr_, hostMoveRptr_);
+
+    if (isSupportHostMove_) {
+        RunHostMoveMode();
+    } else {
+        RunNormalMode();
+    }
+}
+
+int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserProfileBufferInfo *info)
+{
+    if (info == nullptr) {
+        MSPROF_LOGE("RecordHostMoveBufferAddresses info is nullptr");
+        return PROFILING_FAILED;
+    }
+    if (info->buffer_size == 0 || info->buffer_base_user_va == 0) {
+        MSPROF_LOGE("RecordHostMoveBufferAddresses buffer_size=%u or buffer_base_user_va=0x%llx is invalid",
+            info->buffer_size, info->buffer_base_user_va);
+        return PROFILING_FAILED;
+    }
+    hostMoveBufferSize_ = static_cast<size_t>(info->buffer_size);
+    hostMoveBuffer_ = reinterpret_cast<uint8_t *>(static_cast<uintptr_t>(info->buffer_base_user_va));
+    hostMoveRptr_ = reinterpret_cast<volatile uint32_t *>(static_cast<uintptr_t>(info->buffer_read_ptr_user_va));
+    hostMoveWptr_ = reinterpret_cast<volatile uint32_t *>(static_cast<uintptr_t>(info->buffer_write_ptr_user_va));
+    hostMoveWriteIndex_.store(0);
+    MSPROF_LOGI("RecordHostMoveBufferAddresses: base=0x%llx, size=%zu, wptr=0x%llx, rptr=0x%llx",
+        info->buffer_base_user_va, hostMoveBufferSize_,
+        info->buffer_write_ptr_user_va, info->buffer_read_ptr_user_va);
+    return PROFILING_SUCCESS;
+}
+
+int32_t DevprofDrvAicpu::WriteToHostMoveBuffer(const MsprofAdditionalInfo *data, size_t dataSize)
+{
+    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || data == nullptr || dataSize == 0) {
+        MSPROF_LOGE("Write to host move buffer input invalid");
+        return PROFILING_FAILED;
+    }
+
+    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
+    uint32_t writeOffset = writeIdx * sizeof(MsprofAdditionalInfo);
+    uint32_t bufferLimit = static_cast<uint32_t>(hostMoveBufferSize_);
+
+    if (dataSize > sizeof(MsprofAdditionalInfo) || writeOffset + sizeof(MsprofAdditionalInfo) > bufferLimit) {
+        MSPROF_LOGE("Host move buffer write failed, writeIdx=%u, dataSize=%zu, bufferSize=%zu",
+            writeIdx, dataSize, hostMoveBufferSize_);
+        return PROFILING_FAILED;
+    }
+
+    MSPROF_LOGD("WriteToHostMoveBuffer: writeIdx=%u, writeOffset=%u, hostMoveBuffer_=%p, hostMoveWptr_=%p (*wptr=%u)",
+        writeIdx, writeOffset, hostMoveBuffer_, hostMoveWptr_,
+        (hostMoveWptr_ != nullptr) ? *hostMoveWptr_ : 0xFFFF);
+
+    errno_t ret = memcpy_s(hostMoveBuffer_ + writeOffset, bufferLimit - writeOffset, data, dataSize);
+    if (ret != EOK) {
+        MSPROF_LOGE("Memcpy to host move buffer failed, ret: %d", ret);
+        return PROFILING_FAILED;
+    }
+
+    uint32_t newWriteIdx = (writeIdx + 1) % (bufferLimit / sizeof(MsprofAdditionalInfo));
+    hostMoveWriteIndex_.store(newWriteIdx, std::memory_order_release);
+    std::atomic_thread_fence(std::memory_order_release);
+    *hostMoveWptr_ = newWriteIdx;
+
+    MSPROF_LOGD("Write to host move buffer success, writeIdx=%u -> %u", writeIdx, newWriteIdx);
+    return PROFILING_SUCCESS;
+}
+
 int32_t DevprofDrvAicpu::RegisterDrvChannel(uint32_t devId, uint32_t channelId)
 {
     ProfSampleRegisterPara registerPara = {1, {ProfStartAicpu, ProfSampleAicpu, nullptr, ProfStopAicpu}};
     int32_t ret = halProfSampleRegister(devId, channelId, &registerPara);
     if (ret != DRV_ERROR_NONE) {
         MSPROF_LOGE("Failed to regist aicpu sample ops, ret = %d.", ret);
+        return PROFILING_FAILED;
+    }
+
+    ret = halProfSampleRegisterEx(devId, channelId, &registerPara);
+    if (ret != DRV_ERROR_NONE) {
+        // If the driver does not support halProfSampleRegisterEx, run to the old process.
+        if (ret == DRV_ERROR_NOT_SUPPORT) {
+            MSPROF_LOGI("halProfSampleRegister succeeded but halProfSampleRegisterEx failed, ret = %d. "
+                "Driver not supported.", ret);
+            isRegister_ = true;
+            return PROFILING_SUCCESS;
+        }
+        MSPROF_LOGW("halProfSampleRegister succeeded but halProfSampleRegisterEx failed, ret = %d. "
+            "Partial registration remains in driver, state inconsistent.", ret);
         return PROFILING_FAILED;
     }
     isRegister_ = true;
@@ -326,6 +556,8 @@ void DevprofDrvAicpu::Reset(void)
 {
     isRegister_ = false;
     stopped_ = false;
+    SetSupportHostMove(false);
+    UninitHostMoveBuffer();
     command_.type = static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MAX);
     command_.profSwitch = 0;
     command_.profSwitchHi = 0;
@@ -459,8 +691,6 @@ int32_t DevprofDrvAicpu::AdprofInit(const AicpuStartPara *para)
         MSPROF_LOGE("HashData init failed.");
         return PROFILING_FAILED;
     }
-    command_.type = static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_START);
-    CommandHandleLaunch();
     return PROFILING_CONTINUE;
 }
 

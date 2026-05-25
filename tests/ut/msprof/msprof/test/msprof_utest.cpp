@@ -155,7 +155,7 @@ int GetDiskFreeSpaceStub(const char *path, mmDiskSize *diskSize) {
 
 TEST_F(MSPROF_TEST, init_engine) {
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitBufferEmptyEvent)
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
         .stubs();
     static EngineImpl_0 engine_0;
     MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect).stubs().will(returnValue(PROFILING_SUCCESS));
@@ -182,7 +182,7 @@ TEST_F(MSPROF_TEST, init_engine) {
 
 TEST_F(MSPROF_TEST, uninit_engine) {
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitBufferEmptyEvent)
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
         .stubs();
     static EngineImpl_0 engine_0;
 
@@ -213,7 +213,7 @@ TEST_F(MSPROF_TEST, ConfigHandler)
 TEST_F(MSPROF_TEST, ModuleJob)
 {
     GlobalMockObject::verify();
-    MOCKER_CPP(&ReceiveData::WaitBufferEmptyEvent)
+    MOCKER_CPP(&ReceiveData::WaitAllBufferEmptyEvent)
         .stubs();
     static EngineImpl_0 engine_0;
 

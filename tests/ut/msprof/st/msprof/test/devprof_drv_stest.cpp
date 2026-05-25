@@ -222,6 +222,9 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAdprof)
         .stubs()
         .will(returnValue(1))
         .then(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegisterEx)
+        .stubs()
+        .will(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_FAILED, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
 
@@ -332,6 +335,9 @@ TEST_F(DEVPROF_DRV_STEST, BufLenZero)
     MOCKER(halProfSampleRegister)
         .stubs()
         .will(returnValue((int)DRV_ERROR_NONE));
+    MOCKER(halProfSampleRegisterEx)
+        .stubs()
+        .will(returnValue((int)DRV_ERROR_NONE));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStartRegister(adprofCallBack, 0, 123));
     EXPECT_EQ(PROFILING_SUCCESS, ProfStartAdprof(&startPara));
     analysis::dvvp::ProfileFileChunk fileChunk;
@@ -372,17 +378,19 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuWithNewApi)
         .then(returnValue(PROFILING_FAILED));
     ret = AdprofInit(&aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
+    // AdprofInit no longer calls CommandHandleLaunch, callbacks not triggered here
+    EXPECT_EQ(g_callbackHandle, 0);
 
     ret = AdprofInit(&aicpuStartPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
     EXPECT_EQ(g_callbackHandle, 1);
     ret = AdprofRegisterCallback(10087, &AicpuCallbackFunc);
-    sleep(1);
-    EXPECT_EQ(g_callbackHandle, 2);
 
     prof_sample_start_para startPara = {0};
     ret = ProfStartAicpu(&startPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);
+    // ProfStartAicpu calls DeviceReportStart, triggers callbacks for all registered modules
+    EXPECT_EQ(g_callbackHandle, 3);
 
     MsprofAdditionalInfo additionalInfo;
     additionalInfo.level = 0;
@@ -400,8 +408,7 @@ TEST_F(DEVPROF_DRV_STEST, DevprofDrvAicpuWithNewApi)
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 
     EXPECT_EQ(PROFILING_SUCCESS, AdprofFinalize());
-    sleep(1);
-    EXPECT_EQ(g_callbackHandle, 4);
+    EXPECT_EQ(g_callbackHandle, 5);
     prof_sample_stop_para stopPara = {0};
     ret = ProfStopAicpu(&stopPara);
     EXPECT_EQ(PROFILING_SUCCESS, ret);

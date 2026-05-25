@@ -498,13 +498,19 @@ DLLEXPORT int drv_hw_inflate(struct drv_zip_stream *zstrm, int flush);
 DLLEXPORT int drv_hw_inflateEnd(struct drv_zip_stream *zstrm);
 
 #define PROF_SAMPLE_RSV_NUM 8
+#define PROF_SAMPLE_START_RSV_NUM 3
 struct prof_sample_start_para {
     unsigned int dev_id;
     unsigned int sub_chan_id;
     int target_pid;
     void *user_data;       /* sample configuration information */
     unsigned int user_data_len;     /* sample length of the configuration data */
-    unsigned int rsv[PROF_SAMPLE_RSV_NUM];
+    bool is_support_host_move;
+    void *out_data;        /* device buff info, host sample use */
+    unsigned int out_data_len; /* device buff info, host sample use */
+    unsigned int out_data_max_len;
+    unsigned int phease; // dev 0; host 1; host 2
+    unsigned int rsv[PROF_SAMPLE_START_RSV_NUM];
 };
 
 #define SAMPLE_DATA_ONLY        0x0      /* not the first sample, only data needs to be reported */
@@ -526,10 +532,12 @@ struct prof_sample_flush_para {
     unsigned int rsv[PROF_SAMPLE_RSV_NUM];
 };
 
+#define PROF_STOP_RSV_NUM 7
 struct prof_sample_stop_para {
     unsigned int dev_id;
     unsigned int sub_chan_id;
-    unsigned int rsv[PROF_SAMPLE_RSV_NUM];
+    unsigned int release_flag;
+    unsigned int rsv[PROF_STOP_RSV_NUM];
 };
 
 struct prof_sample_ops {
@@ -554,6 +562,17 @@ struct prof_sample_register_para {
  * @return  0 for success, others for fail
  */
 DLLEXPORT int halProfSampleRegister(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *para);
+
+/**
+ * @ingroup driver
+ * @brief register prof channel sample handle
+ * @attention null
+ * @param [in] dev_id : device id
+ * @param [in] chan_id : channel id
+ * @param [in] para : information to be registered with the channel
+ * @return  0 for success, others for fail
+ */
+DLLEXPORT int halProfSampleRegisterEx(unsigned int dev_id, unsigned int chan_id, struct prof_sample_register_para *para);
 
 /**
  * @ingroup driver

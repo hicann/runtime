@@ -106,7 +106,7 @@ int32_t DavidDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType
 
 int32_t DavidDeviceSimulator::ProfDrvStart(uint32_t channelId, const ProfStartPara &para)
 {
-    prof_sample_start_para profPara;
+    prof_sample_start_para profPara = {0};
     profPara.dev_id = 0;
     profPara.user_data = para.user_data;
     profPara.user_data_len = para.user_data_size;

@@ -29,6 +29,12 @@ typedef struct prof_sample_stop_para ProfSampleStopPara;
 typedef struct prof_sample_ops ProfSampleOps;
 typedef struct prof_sample_register_para ProfSampleRegisterPara;
 
+enum ProfStopStage {
+    PROF_STOP_STAGE_DEFAULT = 0,
+    PROF_STOP_STAGE_PAUSE = 1,
+    PROF_STOP_STAGE_RELEASE = 2,
+    PROF_STOP_STAGE_PAUSE_AND_RELEASE = 3
+};
 
 #ifdef __cplusplus
 }
@@ -40,6 +46,14 @@ constexpr size_t REPORT_BUFF_SIZE = 1024 * 1024;
 constexpr uint32_t WAIT_DATA_TIME = 5U;
 constexpr uint32_t WAIT_DRV_TIME = 1U;
 int32_t ProfSendEvent(uint32_t devId, int32_t hostPid, const char *grpName);
+
+struct AicpuUserProfileBufferInfo {
+    uint32_t buffer_size;
+    uint32_t reserved;
+    uint64_t buffer_base_user_va;
+    uint64_t buffer_read_ptr_user_va;
+    uint64_t buffer_write_ptr_user_va;
+};
 }
 
 #endif
