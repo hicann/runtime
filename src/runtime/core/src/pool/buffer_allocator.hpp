@@ -49,8 +49,10 @@ public:
             bitmap_.FreeId(id);
             return;
         }
-
-        hugeBitmap_->FreeId(id - BUFF_SLIP_NUMBER);
+        
+        if (hugeBitmap_ != nullptr) {
+            hugeBitmap_->FreeId(id - BUFF_SLIP_NUMBER);
+        }
     }
     void FreeByItem(const void *item) 
     {
@@ -104,8 +106,12 @@ private:
         if (id < BUFF_SLIP_NUMBER) {
             return bitmap_.IsIdOccupied(id);
         }
-
-        return hugeBitmap_->IsIdOccupied(id - BUFF_SLIP_NUMBER);
+        
+        if (hugeBitmap_ != nullptr) {
+            return hugeBitmap_->IsIdOccupied(id - BUFF_SLIP_NUMBER);
+        } else {
+            return false;
+        }    
     }
 
     const Strategy allocStrategy_;
