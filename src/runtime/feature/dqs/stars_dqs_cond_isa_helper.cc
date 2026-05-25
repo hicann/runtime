@@ -692,7 +692,6 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc &fc, const RtStarsDqsBa
     ConstructBranch(r0, r9, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(offset), fc.bneErrHandle);
 
 	/* 此时r6存储的是合法的handle。可用寄存器：R1\5\8\9\10 */
-    // r5为blk id, TODO: 此处需要修改，另存一个可用寄存器
     // r6为mbuf handle value寄存器，结合上下文，mbuf_handle_reg不可复用
     MbufTraceRegParam mbufTraceRegInfo = {
         .loop_index_reg = r7, .mbuf_handle_reg = r6, .avail_reg0 = r1, .avail_reg1 = r5, .avail_reg2 = r8, .avail_reg3 = r9
