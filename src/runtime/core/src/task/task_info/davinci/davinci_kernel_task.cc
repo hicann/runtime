@@ -857,7 +857,7 @@ void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, st
     uint64_t buffBytes = argsSize + alignBytes;
     std::unique_ptr<char_t[]> tmpBuff(new (std::nothrow) char_t[buffBytes]);
     if (tmpBuff == nullptr) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1013, std::to_string(buffBytes * sizeof(char_t)));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, buffBytes * sizeof(char_t));
         return;
     }
     auto tmpArgsAddr = RtPtrToValue(tmpBuff.get());
@@ -865,7 +865,7 @@ void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, st
     char_t *const dataArgs = RtValueToPtr<char_t*>(tmpArgsAddr);
     rtError_t error;
     if (dataArgs == nullptr) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1013, std::to_string(buffBytes * sizeof(char_t) - alignBytes + 1));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, buffBytes * sizeof(char_t) - alignBytes + 1);
         return;
     }
     if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
@@ -928,14 +928,14 @@ void GetFirstExtendInfoForAicpuTask(TaskInfo* taskInfo, const uint32_t devId, st
     buffBytes = extInfoLen + alignBytes;
     tmpBuff.reset(new (std::nothrow) char_t[buffBytes]);
     if (tmpBuff == nullptr) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1013, std::to_string(buffBytes * sizeof(char_t)));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, buffBytes * sizeof(char_t));
         return;
     }
     auto tmpExtInfosAddr = RtPtrToValue(tmpBuff.get());
     tmpExtInfosAddr = (tmpExtInfosAddr + alignBytes - 1UL) & (~(alignBytes - 1UL));
     char_t *const extInfos = RtValueToPtr<char_t*>(tmpExtInfosAddr);
     if (extInfos == nullptr) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1013, std::to_string(buffBytes * sizeof(char_t)));
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, buffBytes * sizeof(char_t));
         return;
     }
     if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {

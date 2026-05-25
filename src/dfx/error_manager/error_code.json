@@ -400,11 +400,11 @@
       "errClass": "RTS Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EE1001",
-      "ErrMessage": "The argument is invalid.Reason: %s",
+      "ErrMessage": "The argument is invalid. Reason: %s",
       "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function.\n2.Check the function invocation relationship."
+        "Solution": "1. Check the input parameter range of the function. 2. Check the function invocation relationship."
       }
     },
     {
@@ -426,7 +426,7 @@
       "Arglist": "func, value, param, expect",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function.\n2.Check the function invocation relationship."
+        "Solution": "1. Check the input parameter range of the function. 2. Check the function invocation relationship."
       }
     },
     {
@@ -454,8 +454,8 @@
       "ErrMessage": "%s execution failed because %s is not supported.",
       "Arglist": "func, type",
       "suggestion": {
-        "Possible Cause": "1.The current CANN software version is not supported.\n2.The current driver software version does not supported.\n3.The current chip version is not supported.",
-        "Solution": "1.Upgrade the CANN software version.\n2.Upgrade the driver software version."
+        "Possible Cause": "1. The current CANN software version is not supported. 2. The current driver software version does not match. 3. The current chip version is not supported.",
+        "Solution": "1. Upgrade the CANN software version. 2. Upgrade the driver software version."
       }
     },
     {
@@ -477,7 +477,7 @@
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
+        "Solution": "N/A"
       }
     },
     {
@@ -488,7 +488,7 @@
       "Arglist": "id, reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
+        "Solution": "N/A"
       }
     },
     {
@@ -499,7 +499,7 @@
       "Arglist": "func, object",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
+        "Solution": "N/A"
       }
     },
     {
@@ -510,7 +510,7 @@
       "Arglist": "func, value, param, reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function.\n2.Check the function invocation relationship."
+        "Solution": "1. Check the input parameter range of the function. 2. Check the function invocation relationship."
       }
     },
     {
@@ -521,7 +521,7 @@
       "Arglist": "func, value, param, reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
+        "Solution": "N/A"
       }
     },
     {
@@ -542,7 +542,7 @@
       "ErrMessage": "Failed to parse the binary file of the operator. Reason: %s.",
       "Arglist": "reason",
       "suggestion": {
-        "Possible Cause": "1. The binary file of the operator is damaged.\n2. The build parameter is incorrect.",
+        "Possible Cause": "1. The binary file of the operator is damaged. 2. The build parameter is incorrect.",
         "Solution": "Rebuild and load the binary file of the operator."
       }
     },
@@ -597,8 +597,8 @@
       "ErrMessage": "%s (for delivering tasks to the stream) failed. Reason: %s.",
       "Arglist": "func, reason",
       "suggestion": {
-        "Possible Cause": "NA",
-        "Solution": "1. Reduce the number of tasks delivered to the same stream.\n2.Use multiple streams to submit tasks in parallel. 3.Before submitting a new task, call aclrtSynchronize Stream to wait until the submitted task is complete."
+        "Possible Cause": "N/A",
+        "Solution": "1. Reduce the number of tasks delivered to the same stream. 2. Use multiple streams to submit tasks in parallel. 3. Before submitting a new task, call aclrtSynchronizeStream to wait until the submitted task is complete."
       }
     },
     {
@@ -609,7 +609,7 @@
       "Arglist": "func1, func2, ret_code, reason, extend_info",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
+        "Solution": "N/A"
       }
     },
     {
@@ -641,8 +641,19 @@
       "ErrMessage": "Failed to unbind the stream to the model. %s",
       "Arglist": "extend_info",
       "suggestion": {
-        "Possible Cause": "1.The stream to be unbound is not bound to the model.\n2.The model is running.",
-        "Solution": "1.Check the code to ensure that the stream to be unbound is bound to the model.\n2.Ensure that the model is not running."
+        "Possible Cause": "1. The stream to be unbound is not bound to the model. 2. The model is running.",
+        "Solution": "1. Check the code to ensure that the stream to be unbound is bound to the model. 2. Ensure that the model is not running."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Profiling_Enable_Errors",
+      "ErrCode": "EE4004",
+      "ErrMessage": "Failed to enable profiling. %s",
+      "Arglist": "extend_info",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Do not enable profiling repeatedly."
       }
     },
     {
@@ -653,18 +664,7 @@
       "Arglist": "function, type",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "NA"
-      }
-    },
-    {
-      "errClass": "RTS Errors",
-      "errTitle": "Profiling_Enable_Errors",
-      "ErrCode": "EE4004",
-      "ErrMessage": "Failed to enable profiling.  %s",
-      "Arglist": "extend_info",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "Do not enable profiling repeatedly."
+        "Solution": "N/A"
       }
     },
     {
@@ -829,7 +829,7 @@
       "Arglist": "func, value, param, expect",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function. \n2.Check the function invocation relationship."
+        "Solution": "1. Check the input parameter range of the function. 2. Check the function invocation relationship."
       }
     },
     {
@@ -851,7 +851,7 @@
       "Arglist": "func, value, param, reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1.Check the input parameter range of the function. \n2.Check the function invocation relationship."
+        "Solution": "1. Check the input parameter range of the function. 2. Check the function invocation relationship."
       }
     },
     {

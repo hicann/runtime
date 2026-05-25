@@ -531,7 +531,7 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     rtError_t error = RT_ERROR_NONE;
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((devFeatureType >= static_cast<int32_t>(RT_DEV_FEATURE_MAX)) || (devFeatureType < 0),
-        RT_ERROR_INVALID_VALUE, __func__, std::to_string(devFeatureType), "devFeatureType", "[0, RT_DEV_FEATURE_MAX)");
+        RT_ERROR_INVALID_VALUE, devFeatureType, "[0, RT_DEV_FEATURE_MAX)");
 
     if (devFeatureType == static_cast<int32_t>(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV)) {
         error = apiInstance->GetDeviceCapability(deviceId, static_cast<int32_t>(RT_MODULE_TYPE_TSCPU),

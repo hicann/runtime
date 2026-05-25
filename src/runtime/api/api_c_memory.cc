@@ -677,7 +677,7 @@ rtError_t rtsCmoAsyncWithBarrier(void *srcAddrPtr, size_t srcLen, rtCmoOpCode cm
         case RT_CMO_WRITEBACK:
         case RT_CMO_FLUSH:
             COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(logicId != 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-                __func__, std::to_string(logicId), "If parameter cmoType is equal to" 
+                __func__, std::to_string(logicId), "logicId", "If parameter cmoType is equal to" 
                 " RT_CMO_PREFETCH, RT_CMO_WRITEBACK, or RT_CMO_FLUSH, the value of parameter logicId should be 0");
             break;
         default:

@@ -90,7 +90,7 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     }
 
     if ((groupDim * groupBlockDim) > UINT16_MAX) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011,
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1011,
             std::to_string(groupDim), "groupDim",
             "the product of groupDim and groupBlockDim must not exceed 65535 (groupBlockDim=" + std::to_string(groupBlockDim) + ")");
         return RT_ERROR_INVALID_VALUE;
