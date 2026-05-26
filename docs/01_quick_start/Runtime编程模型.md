@@ -167,7 +167,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
    根据源、目的地址构造DMA描述符后下发DMA任务。等待DMA任务完成，接口返回。
 
-9. 释放设备核主机内存。
+9. 释放设备和主机内存。
 
    ```
    aclrtFree(devPtr);
@@ -185,7 +185,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 ## Runtime主要编程概念
 
--   **Host**, 是Runime对主机的抽象。
+-   **Host**, 是Runtime对主机的抽象。
 -   **Device**，是对AI处理器所属设备的抽象，通常Host与Device关系为1：N。用户APP可以调用acl接口，例如aclrtSetDevice，指定当前用于运算的硬件设备。
 -   **Context**，是Device的逻辑运行环境，Context与Device的关系为N：1，即每个Context必定隶属于一个唯一的Device。Context负责管理运行资源对象（包括Stream、Event和Notify，但不包括内存）的生命周期；不同Context中的对象是完全隔离的，例如，不同Context的Stream和Event是完全隔离的，无法建立同步等待关系；运行出错同样按Context隔离。
 -   **Stream**，是Device提供的逻辑任务执行队列，可以异步地向Stream中添加任务，在同一个Stream中的任务会严格按FIFO方式执行。Stream与Context的关系是N：1，某条Stream一定属于唯一的Context。
