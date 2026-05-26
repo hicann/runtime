@@ -120,6 +120,9 @@ if (WIN32)
 else()
     set(msprof_targets msprofiler_fwk_share profapi_share msprof_headers)
 endif()
+
+add_library(msprofiler ALIAS msprofiler_fwk_share)
+
 install_package(
     PACKAGE msprof
     TARGETS ${msprof_targets}

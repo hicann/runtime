@@ -7,8 +7,4 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-if(BUILD_OPEN_PROJECT)
-    add_subdirectory(open)
-else()
-    add_subdirectory(closed)
-endif()
+add_subdirectory(closed)

@@ -273,6 +273,8 @@ target_link_libraries(profimpl_fwk_share PRIVATE
 install(TARGETS profimpl_fwk_share OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
 )
+
+add_library(profimpl ALIAS profimpl_fwk_share)
 ####################### libprofimpl.so ###########################
 
 ####################### libprofimpl.so for device ###########################

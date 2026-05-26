@@ -159,6 +159,8 @@ target_link_libraries(profapi_share
     PUBLIC
         msprof_headers
 )
+
+add_library(profapi ALIAS profapi_share)
 ####################### libprofapi.so ###########################
 
 ####################### libprofapi_lite.so ###########################
