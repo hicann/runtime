@@ -5240,6 +5240,17 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetUuid_failed_with_invalid_args)
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetUuid_feature_not_support)
+{
+    int32_t deviceId = 0;
+    aclrtUuid uuid = {0};
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetDeviceUuid(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    const auto ret = aclrtDeviceGetUuid(deviceId, &uuid);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetUuid_success)
 {
     int32_t deviceId = 0;

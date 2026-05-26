@@ -454,7 +454,7 @@ aclError aclrtStreamWaitEventWithTimeoutImpl(aclrtStream stream, aclrtEvent even
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEventWithTimeout);
     ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithTimeout, timeout is %d", timeout);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout > 0, timeout, "[1, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(timeout >= 0, timeout, "[0, INT_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     const rtError_t rtErr = rtsEventWait(static_cast<rtStream_t>(stream), static_cast<rtEvent_t>(event), timeout);
     if (rtErr != RT_ERROR_NONE) {

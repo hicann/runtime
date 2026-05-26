@@ -648,7 +648,7 @@ aclError aclrtStreamWaitEventWithTimeout(aclrtStream stream, aclrtEvent event, i
 | --- | :---: | --- |
 | stream | 输入 | 指定Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。<br>多Stream同步等待场景下，例如，Stream2等待Stream1的场景，此处配置为Stream2。 |
 | event | 输入 | 需等待的Event。类型定义请参见[aclrtEvent](25_数据类型及其操作接口.md#aclrtEvent)。 |
-| timeout | 输入 | 超时时间。<br>取值>0，用于配置具体的超时时间，单位是毫秒。 |
+| timeout | 输入 | 超时时间。<br>取值>=0，用于配置具体的超时时间，单位是毫秒。0代表永不超时。 |
 
 ### 返回值说明
 
