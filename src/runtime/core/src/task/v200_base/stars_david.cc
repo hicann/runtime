@@ -148,7 +148,7 @@ void SetStarsResultCommonForDavid(TaskInfo *taskInfo, const rtLogicCqReport_t &l
     }
 }
 
-static void ConstructDavidSqeBase(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
+void ConstructDavidSqeBase(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
@@ -163,12 +163,10 @@ static void ConstructDavidSqeBase(TaskInfo *taskInfo, rtDavidSqe_t * const david
 
 void RegTaskToDavidSqefunc(void)
 {
-    g_toDavidSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructDavidSqeForMemcpyAsyncTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructDavidSqeForMaintenanceTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructDavidSqeForProfilingEnableTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructDavidSqeForProfilingDisableTask;
@@ -220,7 +218,6 @@ void RegTaskToDavidSqefunc(void)
     g_toDavidSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_CCU_LAUNCH] = &ConstructDavidSqeForCcuLaunchTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_KERNEL] = &ConstructDavidSqeForFusionKernelTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_UB_DB_SEND] = &ConstructDavidSqeForUbDbSendTask;
@@ -232,12 +229,6 @@ void RegTaskToDavidSqefunc(void)
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT] = &ConstructDavidSqeForEventWaitTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_RESET] = &ConstructDavidSqeForEventResetTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION] = &ConstructDavidSqeForAicpuMsgVersionTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructDavidSqeForMemWaitValueTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructDavidSqeForMemWriteValueTask;
- 	g_toDavidSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructDavidSqeForMemWriteValueTask;
- 	g_toDavidSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructDavidSqeForMemWaitValueTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructDavidSqeForMemWriteValueTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructDavidSqeForMemWaitValueTask;
 }
 
 }  // namespace runtime

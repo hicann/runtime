@@ -539,6 +539,7 @@ void StarsV2DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t d
 void PrintErrorInfoForDavidEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId);
 rtDavidSqe_t *GetSqPosAddr(uint64_t sqBaseAddr, uint32_t pos);
 void ConstructDavidSqeForHeadCommon(const TaskInfo *taskInfo, rtDavidSqe_t * const sqe);
+void ConstructDavidSqeBase(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidAICpuSqeForDavinciTaskBase(TaskInfo *const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidAICpuSqeForDavinciTaskResFieldPart(RtDavidStarsAicpuKernelSqe *const sqe, const uint64_t addr,
     const uint8_t kernelFlag, const Stream * const stm);

@@ -134,7 +134,6 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc

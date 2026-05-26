@@ -172,5 +172,125 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
 }
 #endif
 
+static bool MemoryTaskRegister()
+{
+    TaskFuncSingle memcpyFuncs = {
+        .toCommandFunc = &ToCommandBodyForMemcpyAsyncTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForMemcpyAsyncTask,
+        .taskUnInitFunc = &StarsV2MemcpyAsyncTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForMemcpyAsyncTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForMemcpyAsyncTask,
+    };
+    TaskFuncSingle createL2AddrFuncs = {
+        .toCommandFunc = &ToCommandBodyForCreateL2AddrTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle updateAddressFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle memWriteValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle memWaitValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle captureRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle captureWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle ipcRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StarsV2IpcEventRecordTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle ipcWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StarsV2IpcEventWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetV200Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MEMCPY, memcpyFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MEM_WRITE_VALUE, memWriteValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, updateAddressFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MEMCPY, &ConstructDavidSqeForMemcpyAsyncTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MEM_WRITE_VALUE, &ConstructDavidSqeForMemWriteValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_UPDATE_ADDRESS, &ConstructDavidSqeBase);
+    return true;
+}
+
+static bool g_memoryTaskRegister = MemoryTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

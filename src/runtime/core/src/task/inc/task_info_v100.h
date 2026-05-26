@@ -45,11 +45,6 @@ void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, rtStarsSqe_
 void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
 
 void ConstructSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
-rtError_t WaitAsyncCopyCompleteForMemcpyTask(TaskInfo* taskInfo);
-void MemcpyAsyncTaskUnInit(TaskInfo * const taskInfo);
-void DoCompleteSuccessForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t devId);
-void ConstructSqeForMemWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
 void ConstructSqeForModelExecuteTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
 void SetResultForModelExecuteTask(TaskInfo * const taskInfo, const void * const data, const uint32_t dataSize);
@@ -106,7 +101,6 @@ void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const c
 void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
 
-void ConstructSqeForUpdateAddressTask(TaskInfo * const taskInfo, rtStarsSqe_t * const command);
 rtError_t WaitAsyncCopyCompleteForUpdateTask(TaskInfo* taskInfo);
 
 void ConstructSqeForWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);

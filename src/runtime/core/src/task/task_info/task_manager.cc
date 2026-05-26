@@ -898,7 +898,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         toCommandFunc = g_taskFuncArrays[chipType].toCommandFunc;
 
-        toCommandFunc[TS_TASK_TYPE_MEMCPY] = &ToCommandBodyForMemcpyAsyncTask;
         toCommandFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ToCommandBodyForReduceAsyncV2Task;
         toCommandFunc[TS_TASK_TYPE_EVENT_RECORD] = &ToCommandBodyForEventRecordTask;
         toCommandFunc[TS_TASK_TYPE_EVENT_RESET] = &ToCommandBodyForEventResetTask;
@@ -906,7 +905,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ToCommandBodyForEventWaitTask;
         toCommandFunc[TS_TASK_TYPE_MAINTENANCE] = &ToCommandBodyForMaintenanceTask;
         toCommandFunc[TS_TASK_TYPE_CREATE_STREAM] = &ToCommandBodyForCreateStreamTask;
-        toCommandFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ToCommandBodyForCreateL2AddrTask;
         toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &ToCommandBodyForDynamicProfilingEnableTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &ToCommandBodyForDynamicProfilingDisableTask;
@@ -964,8 +962,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ToCommandBodyForAicpuInfoLoadTask;
         toCommandFunc[TS_TASK_TYPE_NOP] = &ToCommandForNopTask;
         toCommandFunc[TS_TASK_TYPE_COMMON_CMD] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = nullptr;
         toCommandFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &ToCommandBodyForSqeUpdateTask;
     }
 }
@@ -974,7 +970,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
     PfnTaskToSqe *toSqeFunc = nullptr;
     for (auto chipType : chipTypes) {
         toSqeFunc = g_taskFuncArrays[chipType].toSqeFunc;
-        toSqeFunc[TS_TASK_TYPE_MEMCPY] = &ConstructSqeForMemcpyAsyncTask;
         toSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_EVENT_RECORD] = &ConstructSqeForEventRecordTask;
         toSqeFunc[TS_TASK_TYPE_EVENT_RESET] = &ConstructSqeForEventResetTask;
@@ -982,7 +977,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
         toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
         toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
         toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
@@ -1035,17 +1029,10 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
         toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
         toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
-        toSqeFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &ConstructSqeForUpdateAddressTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
         toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
         toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
         toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
-        toSqeFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &ConstructSqeForMemWriteValueTask;
-        toSqeFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &ConstructSqeForMemWaitValueTask;
-        toSqeFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &ConstructSqeForMemWriteValueTask;
-        toSqeFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &ConstructSqeForMemWaitValueTask;
-        toSqeFunc[TS_TASK_TYPE_IPC_RECORD] = &ConstructSqeForMemWriteValueTask;
-        toSqeFunc[TS_TASK_TYPE_IPC_WAIT] = &ConstructSqeForMemWaitValueTask;
     }
 }
 
@@ -1054,7 +1041,6 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         auto &taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
 
-        taskUnInitFunc[TS_TASK_TYPE_MEMCPY] = &MemcpyAsyncTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ReduceAsyncV2TaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RECORD] = &EventRecordTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RESET] = &EventResetTaskUnInit;
@@ -1065,10 +1051,7 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
         taskUnInitFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &StreamLabelSwitchByIndexTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_STARS_COMMON] = &StarsCommonTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &MemWaitTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &RdmaPiValueModifyTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &MemWaitTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_IPC_WAIT] = &MemWaitTaskUnInit;
     }
 }
 
@@ -1078,7 +1061,6 @@ static void RegWaitAsyncCpCompleteFunc(const std::vector<rtChipType_t> &chipType
     for (auto chipType : chipTypes) {
         waitAsyncCpCompleteFunc = g_taskFuncArrays[chipType].waitAsyncCpCompleteFunc;
 
-        waitAsyncCpCompleteFunc[TS_TASK_TYPE_MEMCPY] = &WaitAsyncCopyCompleteForMemcpyTask;
         waitAsyncCpCompleteFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &WaitAsyncCopyCompleteForUpdateTask;
     }
 }
@@ -1090,7 +1072,6 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         doCompleteSuccFunc = g_taskFuncArrays[chipType].doCompleteSuccFunc;
 
-        doCompleteSuccFunc[TS_TASK_TYPE_MEMCPY] = &DoCompleteSuccessForMemcpyAsyncTask;
         doCompleteSuccFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &DoCompleteSuccessForReduceAsyncV2Task;
         doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RECORD] = &DoCompleteSuccessForEventRecordTask;
         doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RESET] = &DoCompleteSuccessForEventResetTask;
@@ -1098,7 +1079,6 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &DoCompleteSuccessForEventWaitTask;
         doCompleteSuccFunc[TS_TASK_TYPE_MAINTENANCE] = &DoCompleteSuccessForMaintenanceTask;
         doCompleteSuccFunc[TS_TASK_TYPE_CREATE_STREAM] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_CREATE_L2_ADDR] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_FUSION_ISSUE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &DoCompleteSuccess;
@@ -1154,17 +1134,10 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_FLIP] = nullptr;
         doCompleteSuccFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &DoCompleteSuccessForStarsVersionTask;
         doCompleteSuccFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_UPDATE_ADDRESS] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &DoCompleteSuccessForAicpuInfoLoadTask;
         doCompleteSuccFunc[TS_TASK_TYPE_NOP] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_COMMON_CMD] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MEM_WRITE_VALUE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_RECORD] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_WAIT] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_IPC_RECORD] = &DoCompleteSuccessForIpcRecordTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_IPC_WAIT] = &DoCompleteSuccessForIpcWaitTask;
         doCompleteSuccFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &DoCompleteSuccess;
     }
 }
@@ -1196,7 +1169,6 @@ static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
                 item = &PrintErrorInfoCommon;
             }
         }
-        printErrorInfoFunc[TS_TASK_TYPE_MEMCPY] = &PrintErrorInfoForMemcpyAsyncTask;
         printErrorInfoFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &PrintErrorInfoForReduceAsyncV2Task;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
@@ -1223,7 +1195,6 @@ static void RegSetStarsResultFunc(const std::vector<rtChipType_t> &chipTypes)
             }
         }
 
-        setStarsResultFunc[TS_TASK_TYPE_MEMCPY] = &SetStarsResultForMemcpyAsyncTask;
         setStarsResultFunc[TS_TASK_TYPE_EVENT_RECORD] = &SetStarsResultForEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
         setStarsResultFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &SetStarsResultForDataDumpLoadInfoTask;

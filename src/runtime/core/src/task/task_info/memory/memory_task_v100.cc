@@ -661,5 +661,116 @@ void ConstructSqeForUpdateAddressTask(TaskInfo * const taskInfo, rtStarsSqe_t * 
 }
 #endif
 
+static bool MemoryTaskRegister()
+{
+    TaskFuncSingle memcpyFuncs = {
+        .toCommandFunc = &ToCommandBodyForMemcpyAsyncTask,
+        .toSqeFunc = &ConstructSqeForMemcpyAsyncTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForMemcpyAsyncTask,
+        .taskUnInitFunc = &MemcpyAsyncTaskUnInit,
+        .waitAsyncCpCompleteFunc = &WaitAsyncCopyCompleteForMemcpyTask,
+        .printErrorInfoFunc = &PrintErrorInfoForMemcpyAsyncTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForMemcpyAsyncTask,
+    };
+    TaskFuncSingle createL2AddrFuncs = {
+        .toCommandFunc = &ToCommandBodyForCreateL2AddrTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle updateAddressFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForUpdateAddressTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle memWriteValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle memWaitValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWaitValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle captureRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle captureWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWaitValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle ipcRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForIpcRecordTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle ipcWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForMemWaitValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForIpcWaitTask,
+        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MEMCPY, memcpyFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MEM_WRITE_VALUE, memWriteValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, updateAddressFuncs);
+    }
+
+    return true;
+}
+
+static bool g_memoryTaskRegister = MemoryTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

@@ -29,6 +29,7 @@ namespace runtime {
 
 Stream* GetReportStream(Stream *stream);
 void PrintErrorSqe(const rtStarsSqe_t * const sqe, const char_t *desc);
+void ConstructSqeBase(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
 uint64_t CombineTo64Bit(uint32_t high, uint32_t low);
 void SetStarsResultCommon(TaskInfo *taskInfo, const rtLogicCqReport_t &logicCq);
 void SetResultCommon(TaskInfo *taskInfo, const void *const data, const uint32_t dataSize);

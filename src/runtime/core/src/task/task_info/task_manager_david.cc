@@ -17,7 +17,6 @@
 #include "stars.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "event_task.h"
-#include "memory_task.h"
 #include "rdma_task.h"
 #include "reduce_task.h"
 #include "cond_op_stream_task.h"
@@ -58,8 +57,6 @@ static void DavidRegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipType
             }
         }
 
-        doCompleteSuccFunc[TS_TASK_TYPE_MEMCPY] = &StarsV2DoCompleteSuccessForMemcpyAsyncTask;
-        
         doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RECORD] = &DoCompleteSuccessForEventRecordTask;
         doCompleteSuccFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &DoCompleteSuccessForEventWaitTask;
         doCompleteSuccFunc[TS_TASK_TYPE_EVENT_RESET] = &DoCompleteSuccessForEventResetTask;
@@ -87,7 +84,6 @@ static void DavidRegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
     for (auto chipType : chipTypes) {
         taskUnInitFunc = g_taskFuncArrays[chipType].taskUnInitFunc;
 
-        taskUnInitFunc[TS_TASK_TYPE_MEMCPY] = &StarsV2MemcpyAsyncTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RECORD] = &EventRecordTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RESET] = &EventResetTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &DavidEventRecordTaskUnInit;
@@ -99,9 +95,6 @@ static void DavidRegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
         taskUnInitFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &StreamLabelSwitchByIndexTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_STARS_COMMON] = &StarsCommonTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FUSION_KERNEL] = &FusionKernelTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_MEM_WAIT_VALUE] = &MemWaitTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_IPC_WAIT] = &StarsV2IpcEventWaitTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_IPC_RECORD] = &StarsV2IpcEventRecordTaskUnInit;
     }
 }
 
@@ -115,7 +108,6 @@ static void DavidRegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipType
             }
         }
 
-        printErrorInfoFunc[TS_TASK_TYPE_MEMCPY] = &PrintErrorInfoForMemcpyAsyncTask;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &PrintErrorInfoForModelMaintainceTask;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
@@ -144,7 +136,6 @@ static void DavidRegSetStarsResultFunc(const std::vector<rtChipType_t> &chipType
             }
         }
 
-        setStarsResultFunc[TS_TASK_TYPE_MEMCPY] = &SetStarsResultForMemcpyAsyncTask;
         setStarsResultFunc[TS_TASK_TYPE_EVENT_RECORD] = &SetStarsResultForEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &SetStarsResultForDavidEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
