@@ -308,7 +308,20 @@ static void SigintWatcherThread()
         return;
     }
     int signum = static_cast<int>(g_sigintReceived);
-    MSPROF_LOGI("SigintWatcherThread: received signal %d, calling MsprofFinalizeHandle", signum);
+    MSPROF_LOGI("SigintWatcherThread: received signal %d, waiting for graceful shutdown", signum);
+    // Give the host application a window to react to the signal (e.g. CPython
+    // raising KeyboardInterrupt and unwinding) before we force-finalize.
+    // Stop polling early once the application's own teardown has driven the
+    // profiling state machine into MODE_OFF (g_sigWatcherQuit set by UnInit).
+    constexpr int kGraceLoops = 200;  // 200 * 10ms = 2s ceiling
+    for (int i = 0; i < kGraceLoops && !g_sigWatcherQuit.load(); ++i) {
+        OsalSleep(10);
+    }
+    if (g_sigWatcherQuit.load()) {
+        MSPROF_LOGI("SigintWatcherThread: app finished teardown, no force finalize");
+        return;
+    }
+    MSPROF_LOGI("SigintWatcherThread: calling MsprofFinalizeHandle as fallback");
     if (profAclMgrObjPtr != NULL) {
         (void)profAclMgrObjPtr->MsprofFinalizeHandle();
     }
@@ -360,6 +373,19 @@ static void newSigHandler(int signum)
     // Only sig_atomic_t assignment: async-signal-safe per POSIX
     // Actual finalize is done by SigintWatcherThread in normal thread context
     g_sigintReceived = static_cast<sig_atomic_t>(signum);
+    // Forward the signal to the previously installed handler (e.g. CPython's
+    // default_int_handler) so the host application stops scheduling new ops.
+    // Without this, the profiled process keeps issuing tasks while the
+    // watcher thread is finalizing -- those new tasks are captured on the host
+    // side but their PMU association data is dropped because the device-side
+    // collection has already been stopped, producing
+    // "contextPmu has no matched log" in the analysis stage.
+    if (oldSigAction.sa_handler != nullptr
+        && oldSigAction.sa_handler != SIG_IGN
+        && oldSigAction.sa_handler != SIG_DFL
+        && oldSigAction.sa_handler != newSigHandler) {
+        oldSigAction.sa_handler(signum);
+    }
 }
 
 static void RegisterSiganlHandler(ProfAclMgr* ptr)
@@ -2160,6 +2186,15 @@ int32_t ProfAclMgr::MsprofFinalizeHandle(void)
     }
     DoFinalizeHandle();
     MSPROF_EVENT("Finalize profiling");
+    // SIGINT graceful exit: device may still have in-flight PMU/task frames in
+    // transit. Drain them before marking transports stopped, otherwise task data
+    // can outrun PMU association data and trigger
+    // "contextPmu has no matched log" in the analysis stage.
+    if (IsSigintShutdownInProgress()) {
+        constexpr uint32_t SIGINT_DRAIN_WAIT_MS = 1000;
+        OsalSleep(SIGINT_DRAIN_WAIT_MS);
+        Msprof::Engine::FlushAllModule();
+    }
     UploaderMgr::instance()->SetAllUploaderTransportStopped();
     std::lock_guard<std::mutex> lk(mtx_);
     for (auto iter = devTasks_.begin(); iter != devTasks_.end(); iter++) {
