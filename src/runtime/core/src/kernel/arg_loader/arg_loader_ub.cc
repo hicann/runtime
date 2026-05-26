@@ -82,6 +82,9 @@ void UbArgLoader::ReleaseDynamic(UbHandle * const argHandle)
         (void)device_->Driver_()->HostMemFree(static_cast<void *>(argHandle->memTsegInfo));
         RT_LOG(RT_LOG_DEBUG, "Recycle args dynamic tseg info, device_id=%u.", device_->Id_());
     }
+    argHandle->kerArgs = nullptr;
+    argHandle->hostAddr = nullptr;
+    argHandle->memTsegInfo = nullptr;
 }
 
 rtError_t UbArgLoader::Release(void * const argHandle)

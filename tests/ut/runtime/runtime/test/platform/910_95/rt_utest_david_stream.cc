@@ -1056,7 +1056,6 @@ TEST_F(DavidStreamTest, RecordPosToTaskIdMap)
     EXPECT_NE(stream, nullptr);
 }
 
-
 TEST_F(DavidStreamTest, HandleTaskUpdate)
 {
     DavidStream *stream = (DavidStream *)stream_;
@@ -1094,4 +1093,43 @@ TEST_F(DavidStreamTest, HandleTaskDefault)
 
     rtError_t ret = stream->HandleTaskDefault(task, &captureModel, sqeBuffer1, 1);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidStreamTest, Destructor_ArgHandleNonNull)
+{
+    rtStream_t streamHandle = 0;
+    rtError_t res = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(streamHandle));
+    ASSERT_NE(davidStream, nullptr);
+    ASSERT_NE(davidStream->ArgManagePtr(), nullptr);
+
+    davidStream->SetArgHandle(reinterpret_cast<void *>(0x1U));
+
+    MOCKER_CPP_VIRTUAL(device_->ArgLoader_(), &ArgLoader::Release)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
+
+    res = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidStreamTest, Destructor_ArgHandleNull)
+{
+    rtStream_t streamHandle = 0;
+    rtError_t res = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    DavidStream *davidStream = (DavidStream *)(rt_ut::UnwrapOrNull<Stream>(streamHandle));
+    ASSERT_NE(davidStream, nullptr);
+    ASSERT_NE(davidStream->ArgManagePtr(), nullptr);
+
+    davidStream->SetArgHandle(nullptr);
+
+    MOCKER_CPP_VIRTUAL(device_->ArgLoader_(), &ArgLoader::Release)
+        .expects(never());
+
+    res = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    GlobalMockObject::verify();
 }

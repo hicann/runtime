@@ -47,6 +47,11 @@ DavidStream::DavidStream(Device * const dev, const uint32_t prio, const uint32_t
 
 DavidStream::~DavidStream()
 {
+    if (this->GetArgHandle() != nullptr) {
+        this->ArgManagePtr()->RecycleDevLoader(this->GetArgHandle());
+        this->SetArgHandle(nullptr);
+    }
+
     Runtime * const rt = Runtime::Instance();
     if (GetSubscribeFlag() != StreamSubscribeFlag::SUBSCRIBE_NONE) {
         (void)rt->UnSubscribeReport(this);
@@ -467,11 +472,6 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
     if (taskResMang_ == nullptr) {
         return RT_ERROR_NONE;
     }
-
-    if (this->GetArgHandle() != nullptr) {
-        this->ArgManagePtr()->RecycleDevLoader(this->GetArgHandle());
- 	    this->SetArgHandle(nullptr);
- 	}
 
     (dynamic_cast<TaskResManageDavid *>(taskResMang_))->GetHeadTail(head, tail);
     bool isForceRecycle = GetForceRecycleFlag(flag);
