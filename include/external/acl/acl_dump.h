@@ -62,13 +62,13 @@ ACL_FUNC_VISIBILITY aclError aclopStartDumpArgs(uint32_t dumpType, const char *p
  */
 ACL_FUNC_VISIBILITY aclError aclopStopDumpArgs(uint32_t dumpType);
 
-enum acldumpType {
+typedef enum acldumpType {
     AIC_ERR_BRIEF_DUMP = 1,         // lite exception dump
     AIC_ERR_NORM_DUMP = 2,          // normal exception dump
     AIC_ERR_DETAIL_DUMP = 3,        // coredump mode
     DATA_DUMP = 4,                  // tensor data dump
     OVERFLOW_DUMP = 5               // overflow dump
-};
+} acldumpType;
 
 /**
  * @ingroup AscendCL
