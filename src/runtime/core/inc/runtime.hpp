@@ -829,7 +829,7 @@ public:
         return xpuSetDevMutex_;
     }
 
-    bool IsRuntimeExiting()
+    bool IsRuntimeExiting() const
     {
         return isRuntimeExiting_;
     }

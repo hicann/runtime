@@ -40,7 +40,6 @@
 #include "task_manager.h"
 #include "task_manager_david.h"
 #include "device_error_proc.hpp"
-#include "starsv2_base.hpp"
 #include "fusion_task.h"
 #include <vector>
 namespace cce {
