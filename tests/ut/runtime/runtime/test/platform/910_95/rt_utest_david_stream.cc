@@ -59,6 +59,40 @@ using namespace testing;
 using namespace cce::runtime;
 extern int64_t g_device_driver_version_stub;
 static rtChipType_t g_chipType;
+timespec g_abort_clock_time = {0, 0};
+
+rtError_t TaskAbortByTypeTimeoutStub(Stream *stm, uint32_t &result, const uint32_t opType, const uint32_t targetId)
+{
+    (void)stm;
+    (void)opType;
+    (void)targetId;
+    result = TS_SUCCESS;
+    return RT_ERROR_NONE;
+}
+
+rtError_t QueryAbortStatusByTypeTimeoutStub(Stream *stm, uint32_t &status, const uint32_t opType, const uint32_t targetId)
+{
+    (void)stm;
+    (void)opType;
+    (void)targetId;
+    status = DAVID_ABORT_INIT;
+    return RT_ERROR_NONE;
+}
+
+int ClockGettimeAbortTimeoutStub(clockid_t clockId, struct timespec *tp)
+{
+    (void)clockId;
+    if (tp == nullptr) {
+        return -1;
+    }
+    tp->tv_sec = g_abort_clock_time.tv_sec;
+    tp->tv_nsec = g_abort_clock_time.tv_nsec;
+    if (g_abort_clock_time.tv_sec == 0) {
+        g_abort_clock_time.tv_sec = 61;
+    }
+    return 0;
+}
+
 static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
 {
     if (value) {
@@ -575,9 +609,14 @@ TEST_F(DavidStreamTest, DavidrtStreamTaskAbort_01)
     MOCKER(halSqCqConfig)
     .stubs()
     .will(returnValue(DRV_ERROR_NONE));
-    NpuDriver drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::TaskAbortByType).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::QueryAbortStatusByType).stubs().will(returnValue(RT_ERROR_NONE));
+    g_abort_clock_time = {0, 0};
+    MOCKER(clock_gettime).stubs().will(invoke(ClockGettimeAbortTimeoutStub));
+    MOCKER_CPP_VIRTUAL(static_cast<Stream *>(davidStream), &Stream::TaskAbortByType)
+        .stubs()
+        .will(invoke(TaskAbortByTypeTimeoutStub));
+    MOCKER_CPP_VIRTUAL(static_cast<Stream *>(davidStream), &Stream::QueryAbortStatusByType)
+        .stubs()
+        .will(invoke(QueryAbortStatusByTypeTimeoutStub));
     rtError_t error = davidStream->StreamAbort();
     EXPECT_EQ(error, RT_ERROR_WAIT_TIMEOUT);
     error = rtStreamDestroy(stream);
