@@ -34,6 +34,22 @@ ut_path_map["tsd"]="tests/ut/tsd"
 ut_path_map["error_manager"]="tests/ut/error_manager"
 ut_path_map["mmpa"]="tests/ut/mmpa"
 
+ut_name_map["acl"]="ascendcl_utest"
+ut_name_map["runtime"]="runtime_utest"
+ut_name_map["runtime_c"]="runtime_c_ut"
+ut_name_map["platform"]="platform_ut"
+ut_name_map["qs"]="queue_schedule_ut"
+ut_name_map["queue_schedule"]="queue_schedule_ut"
+ut_name_map["aicpusd"]="aicpu_sched_ut"
+ut_name_map["aicpu_sched"]="aicpu_sched_ut"
+ut_name_map["slog"]="slog_ut"
+ut_name_map["atrace"]="atrace_ut"
+ut_name_map["msprof"]="msprof_ut"
+ut_name_map["adump"]="adump_ut"
+ut_name_map["tsd"]="tsd_ut"
+ut_name_map["error_manager"]="ut_error_manager"
+ut_name_map["mmpa"]="mmpa_utest"
+
 # print usage message
 usage() {
   echo "Usage:"
@@ -292,8 +308,17 @@ build_rts() {
       fi
     done
   else
-    # make all
-    cmake --build . -j${THREAD_NUM}
+    if [ -n "${ut_name_map["${UT_TARGET}"]}" ]; then
+      DEFAULT_TARGET="${ut_name_map["${UT_TARGET}"]}"
+      echo "Building default target for --ut=${UT_TARGET}: ${DEFAULT_TARGET}"
+      cmake --build . --target "${DEFAULT_TARGET}" -j${THREAD_NUM}
+      if [ $? -ne 0 ]; then
+        echo "execute command: cmake --build build --target=${DEFAULT_TARGET} -j${THREAD_NUM} failed."
+        return 1
+      fi
+    else
+      cmake --build . -j${THREAD_NUM}
+    fi
   fi
 
   if [[ "X$MAKE_PKG" = "Xon" ]]; then
