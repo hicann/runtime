@@ -1114,6 +1114,23 @@ TEST_F(DavidStreamTest, HandleTaskUpdate)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(DavidStreamTest, HandleTaskDisable)
+{
+    DavidStream *stream = (DavidStream *)stream_;
+    CaptureModel captureModel(RT_MODEL_CAPTURE_MODEL);
+    TaskInfo taskInfo = {};
+    TaskInfo *task = &taskInfo;
+    captureModel.context_ = stream->Context_();
+
+    InitByStream(task, stream_);
+    AicpuTaskInit(task, 1, 0);
+
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtError_t ret = stream->HandleTaskDisable(task, &captureModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
 TEST_F(DavidStreamTest, HandleTaskDefault)
 {
     DavidStream *stream = (DavidStream *)stream_;

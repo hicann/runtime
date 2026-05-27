@@ -105,6 +105,7 @@ private:
         uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
     rtError_t HandleTaskDefault(TaskInfo* workTask, CaptureModel* model,
         uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
+    rtError_t HandleTaskDisable(TaskInfo* workTask, CaptureModel* model) override;
 
     uint64_t sqAddr_{0ULL};
     std::mutex cntNotifyInfoLock_;

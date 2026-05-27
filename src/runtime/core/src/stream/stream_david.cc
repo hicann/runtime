@@ -1527,8 +1527,7 @@ rtError_t DavidStream::HandleTaskUpdate(TaskInfo* workTask, CaptureModel* model,
     RT_LOG(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
-    // 将model中的argsHandle备份，然后将新的argsHandle添加到model中
-    model->BackupArgHandle(streamId_, workTask->id);
+    // 被更新的task的argsHandle已在stream中备份，此处不需要再备份
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX];
     rtDavidSqe_t *sqeAddr = davidSqe;
@@ -1551,6 +1550,18 @@ rtError_t DavidStream::HandleTaskUpdate(TaskInfo* workTask, CaptureModel* model,
     RT_LOG(
         RT_LOG_INFO, "update task finish, stream_id=%d, task_id=%hu, task_type=%d(%s).",
         streamId_, workTask->id, workTask->type, workTask->typeName);
+    return RT_ERROR_NONE;
+}
+
+rtError_t DavidStream::HandleTaskDisable(TaskInfo* workTask, CaptureModel* model)
+{
+    UNUSED(model);
+    RT_LOG(RT_LOG_INFO, "disable task, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
+        workTask->type, workTask->typeName);
+    // 保存argsHandle到stream上
+
+    // 释放老的taskInfo 释放mix任务的subContext
+    (void)device_->GetTaskFactory()->Recycle(workTask);
     return RT_ERROR_NONE;
 }
 
