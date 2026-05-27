@@ -23,8 +23,6 @@ namespace {
     using VerifyImgFunc = int32_t(*)(HAL_VERIFY_TYPE, HAL_IMG_ID, const char_t *, int32_t);
     constexpr uint32_t CMS_HEAD_FIX_PACKET_LEN = (4U + 4U) * 1024U;
     constexpr uint32_t CMS_IMG_DESC_LEN = 256U;
-    constexpr uint32_t ALIGN_PADDING_SIZE = 32U;
-    constexpr uint32_t CMS_ALIGN_PADDING_SIZE = 16U;
 } // namespace
 
 TSD_StatusT PackageVerify::VerifyPackage() const

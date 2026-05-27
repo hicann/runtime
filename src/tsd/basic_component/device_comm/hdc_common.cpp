@@ -17,9 +17,6 @@ namespace tsd {
         // message head size
         constexpr uint32_t MAX_HEAP_BUFF_BYTE = 0x20000000U;
 
-        // 保留的flag标记位，当前不适用，填0
-        constexpr uint32_t HDC_DEFAULT_FLAG_VALUE(0U);
-
         // 收发消息中,默认的buf使用个数
         constexpr uint32_t HDC_DEFAULT_BUFF_COUNT(1U);
 

@@ -31,7 +31,6 @@
 
 namespace {
     constexpr int32_t SYSTE_EXECUTE_CMD_ERROR = 127; // 与system实现保持一致
-    constexpr const int32_t HX_PRINT_POS = 2;
     // min number of vDeviceId
     constexpr const uint32_t VDEVICE_MIN_CPU_NUM = 32U;
     // max number of vDeviceId

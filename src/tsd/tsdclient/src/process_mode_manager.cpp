@@ -52,7 +52,6 @@ constexpr uint64_t TSD_NOT_SUPPORT_OM_INNER_DEC = 0UL;
 constexpr uint32_t SUPPORT_OM_INNER_DEC_MSG_TIMEOUT = 10000U;
 constexpr uint32_t ASAN_OPEN_TIMEOUT = 3600000U; // 1hour
 const std::string TSDEMON_START_APP = "TSDaemon";
-constexpr int32_t TSD_START_TIMEOUT = 5000;
 constexpr uint32_t MAX_PROCESS_PID_CNT = 1024U;
 constexpr uint32_t CLOSE_PID_PER_LOOP = 50U;
 const std::string DRIVER_EXTEND_PKG_NAME = "Ascend-device-sw-plugin.tar.gz";
