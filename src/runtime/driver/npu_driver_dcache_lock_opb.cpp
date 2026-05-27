@@ -30,7 +30,7 @@ void FreeDcacheAddr(const uint32_t deviceId, void *&dcacheAddr, void *&drvHandle
             halMemCtl(CTRL_TYPE_PROCESS_CP_MUNMAP, RtPtrToPtr<void *>(&munmapInfo), sizeof(struct ProcessCpMunmap),
                       nullptr, nullptr);
         if (drvRet != DRV_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "Free dcache stack phy failed, drvRet=%#x.", drvRet);
+            RT_LOG(RT_LOG_ERROR, "Failed to free dcache stack physical address, drvRet=%#x.", drvRet);
         }
         dcacheAddr = nullptr;
     }
@@ -84,7 +84,7 @@ rtError_t DcacheLockSendTask(const Context *ctx, const uint32_t blockDim, const 
     taskCfg.base.schemMode = 1U;
     rtError_t error = StreamLaunchKernelV1(funcAddr, blockDim, &argsInfo, stream, &taskCfg, false);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "launch kernel failed, reCode=%#x", error);
+        RT_LOG(RT_LOG_ERROR, "launch kernel failed, retCode=%#x.", error);
         return error;
     }
     return RT_ERROR_NONE;

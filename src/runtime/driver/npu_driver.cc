@@ -197,9 +197,7 @@ rtError_t NpuDriver::transMemAttribute(const uint32_t memPolicy, rtMemType_t * c
         case RT_MEMORY_POLICY_HUGE_PAGE_ONLY_P2P:
         case RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P:
             if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P)) {
-                RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "this feature does not support on this chipType, "
-                    "memory policy=0x%x(RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P)!.",
-                    RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P);
+                RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "P2P memory on current chipType");
                 error = RT_ERROR_FEATURE_NOT_SUPPORT;
                 break;
             }
@@ -269,13 +267,13 @@ rtError_t NpuDriver::MemConvertAddr(const uint64_t src, const uint64_t dst, cons
 
     if (dmaAddress->fixed_size != len) {
         RT_LOG(RT_LOG_WARNING, "[drv api]drvMemConvertAddr, fixed_size!=len, pSrc=%" PRIu64 ", pDst=%" PRIu64
-            ", len=%" PRIu64 "(bytes), fixed_size:%u(bytes), drvRetCode=%d!", src, dst, len, dmaAddress->fixed_size,
+            ", len=%" PRIu64 "(bytes), fixed_size:%u(bytes), drvRetCode=%d.", src, dst, len, dmaAddress->fixed_size,
             static_cast<int32_t>(drvRet));
     }
     if (dmaAddress->fixed_size > len) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
             "[drv api] drvMemConvertAddr failed: pSrc=%" PRIu64 ", pDst=%" PRIu64
-            ", len=%" PRIu64 "(bytes), fixed_size:%u(bytes), drvRetCode=%d!",
+            ", len=%" PRIu64 "(bytes), fixed_size:%u(bytes), drvRetCode=%d.",
             src, dst, len, dmaAddress->fixed_size, static_cast<int32_t>(drvRet));
         return RT_ERROR_DRV_ERR;
     }
@@ -283,7 +281,7 @@ rtError_t NpuDriver::MemConvertAddr(const uint64_t src, const uint64_t dst, cons
     if ((dmaAddress->fixed_size != len) && (dmaAddress->fixed_size == 0U)) {
         RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
             "[drv api] drvMemConvertAddr failed, fixed_size is 0 : pSrc=%" PRIu64 ", "
-            "pDst=%" PRIu64 ", len=%" PRIu64 "(bytes), fixed_size:%u, drvRetCode=%d!", src,
+            "pDst=%" PRIu64 ", len=%" PRIu64 "(bytes), fixed_size:%u, drvRetCode=%d.", src,
             dst, len, dmaAddress->fixed_size, static_cast<int32_t>(drvRet));
         return RT_ERROR_DRV_ERR;
     }
@@ -629,7 +627,7 @@ rtError_t NpuDriver::CreateIpcNotifyWithFlag(char_t * const name, const uint32_t
     uint32_t * const notifyId, const uint32_t tsId, const uint32_t notifyFlag) const
 {
     if (&halShrIdCreate == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Driver unspport with flag, name=%s", name);
+        RT_LOG(RT_LOG_ERROR, "Driver unsupported flag, name=%s.", name);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -767,7 +765,7 @@ static rtError_t OpenIpcNotifyWithFlag(const IpcNotifyOpenPara &openPara,
     uint32_t * const isPod, uint32_t * const adcDieId)
 {
     if (&halShrIdOpen == nullptr) {
-        RT_LOG(RT_LOG_WARNING, "Driver unspport with flag, name=%s", openPara.name);
+        RT_LOG(RT_LOG_WARNING, "Driver unsupported flag, name=%s.", openPara.name);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -1410,7 +1408,7 @@ rtError_t NpuDriver::HdcSessionClose(rtHdcSession_t const session)
 
 rtError_t NpuDriver::GetServerId(const uint32_t deviceId, int64_t *const serverId)
 {
-    NULL_PTR_RETURN_MSG(serverId, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(serverId, RT_ERROR_INVALID_VALUE);
     const drvError_t drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_SERVER_ID, serverId);
     // 判断是否支持跨机 (71 serverId=0x3FF)
     if (drvRet == DRV_ERROR_NOT_SUPPORT || *serverId == 0x3FF) {
@@ -1437,7 +1435,7 @@ rtError_t NpuDriver::GetHostID(uint32_t *hostId)
 
 rtError_t NpuDriver::GetPageFaultCount(const uint32_t deviceId, uint32_t * const value)
 {
-    NULL_PTR_RETURN_MSG(value, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(value, RT_ERROR_INVALID_VALUE);
     struct drv_process_status_output out = {};
     COND_RETURN_WARN(&halCheckProcessStatusEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halCheckProcessStatusEx does not exist");

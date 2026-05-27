@@ -12,6 +12,7 @@
 #include "driver/ascend_inpackage_hal.h"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
+#include "rt_log.h"
 
 namespace {
     constexpr int32_t MEMQ_EVENT_CROSS_DEV_VERSION = 0x72316; // MAJOR:0x07, MINOR:0x23, PATCH:0x16
@@ -459,11 +460,12 @@ static rtError_t MemGrpQueryGroupsOfProcess(const rtMemGrpQueryInput_t * const i
     const uint32_t drvInputLen = static_cast<uint32_t>(sizeof(drvInput));
 
     const std::unique_ptr<GroupQueryOutput> drvOutputUniquePtr(new (std::nothrow)(GroupQueryOutput));
-    COND_RETURN_ERROR(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(sizeof(GroupQueryOutput)).c_str());
     GroupQueryOutput * const drvOutput = drvOutputUniquePtr.get();
 
     ret = memset_s(RtPtrToPtr<void *>(drvOutput), sizeof(GroupQueryOutput), 0, sizeof(GroupQueryOutput));
-    COND_LOG_ERROR(ret != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(GroupQueryOutput), ret);
+    COND_LOG_ERROR(ret != EOK, "memset_s failed, size=%zu(bytes), retCode=%d.", sizeof(GroupQueryOutput), ret);
     uint32_t drvOutputLen = static_cast<uint32_t>(sizeof(GroupQueryOutput));
 
     const drvError_t drvRet = static_cast<drvError_t>(halGrpQuery(GRP_QUERY_GROUPS_OF_PROCESS,
@@ -505,11 +507,12 @@ static rtError_t MemGrpQueryGroupId(const rtMemGrpQueryInput_t * const input, rt
     const uint32_t drvInputLen = static_cast<uint32_t>(sizeof(drvInput));
 
     const std::unique_ptr<GroupQueryOutput> drvOutputUniquePtr(new (std::nothrow)(GroupQueryOutput));
-    COND_RETURN_ERROR(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(sizeof(GroupQueryOutput)).c_str());
     GroupQueryOutput * const drvOutput = drvOutputUniquePtr.get();
 
     ret = memset_s(RtPtrToPtr<void *>(drvOutput), sizeof(GroupQueryOutput), 0, sizeof(GroupQueryOutput));
-    COND_LOG_ERROR(ret != EOK, "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(GroupQueryOutput), ret);
+    COND_LOG_ERROR(ret != EOK, "memset_s failed, size=%zu(bytes), retCode=%d.", sizeof(GroupQueryOutput), ret);
     uint32_t drvOutputLen = static_cast<uint32_t>(sizeof(GroupQueryOutput));
 
     const drvError_t drvRet = static_cast<drvError_t>(halGrpQuery(GRP_QUERY_GROUP_ID,
@@ -536,18 +539,19 @@ static rtError_t MemGrpGrpQueryGroupAddrInfo(const rtMemGrpQueryInput_t * const 
     GroupQueryInput drvInput;
     errno_t ret = memset_s(&drvInput, sizeof(drvInput), 0, sizeof(drvInput));
     COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE,
-        "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(drvInput), ret);
+        "memset_s failed, size=%zu(bytes), retCode=%d.", sizeof(drvInput), ret);
     ret = strcpy_s(drvInput.grpQueryGroupAddrPara.grpName, sizeof(drvInput.grpQueryGroupAddrPara.grpName),
         input->grpQueryGroupAddrPara.grpName);
     COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "strcpy_s failed, retCode=%d!", ret);
     drvInput.grpQueryGroupAddrPara.devId = input->grpQueryGroupAddrPara.devId;
 
     const std::unique_ptr<GroupQueryOutput> drvOutputUniquePtr(new (std::nothrow)(GroupQueryOutput));
-    COND_RETURN_ERROR(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(drvOutputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(sizeof(GroupQueryOutput)).c_str());
     GroupQueryOutput * const drvOutput = drvOutputUniquePtr.get();
     ret = memset_s(RtPtrToPtr<void *>(drvOutput), sizeof(GroupQueryOutput), 0, sizeof(GroupQueryOutput));
     COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE,
-        "memset_s failed, size=%zu(bytes), retCode=%d!", sizeof(GroupQueryOutput), ret);
+        "memset_s failed, size=%zu(bytes), retCode=%d.", sizeof(GroupQueryOutput), ret);
     uint32_t drvOutputLen = static_cast<uint32_t>(sizeof(GroupQueryOutput));
     const drvError_t drvRet = static_cast<drvError_t>(halGrpQuery(GRP_QUERY_GROUP_ADDR_INFO,
         &drvInput, static_cast<uint32_t>(sizeof(drvInput)), drvOutput, &drvOutputLen));
@@ -635,9 +639,10 @@ rtError_t NpuDriver::BufEventTrigger(const char_t * const name)
 {
     COND_RETURN_WARN(&halQueueCreate == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halQueueCreate does not exist.");
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, queAttr->depth < RT_MQ_DEPTH_MIN, RT_ERROR_INVALID_VALUE,
-        "mem queue depth=%u, it can't be less than %u, name=%s.",
-        queAttr->depth, RT_MQ_DEPTH_MIN, queAttr->name);
+    if (queAttr->depth < RT_MQ_DEPTH_MIN) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(queAttr->depth, std::to_string(RT_MQ_DEPTH_MIN));
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     QueueAttr attr = {};
     const errno_t ret = strcpy_s(attr.name, sizeof(attr.name), queAttr->name);
@@ -716,7 +721,8 @@ rtError_t NpuDriver::MemQueueInit(const int32_t devId)
     QueueQueryInputPara inputPara = {nullptr, 0U};
 
     const std::unique_ptr<QueueQueryOutput> outputUniquePtr(new (std::nothrow)(QueueQueryOutput));
-    COND_RETURN_ERROR(outputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(outputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(sizeof(QueueQueryOutput)).c_str());
     QueueQueryOutput * const output = outputUniquePtr.get();
 
     const errno_t rc = memset_s(RtPtrToPtr<void *>(output), sizeof(QueueQueryOutput), 0,
@@ -932,7 +938,8 @@ static rtError_t GetBuffIovec(struct buff_iovec * const vec, const rtMemQueueBuf
     }
     COND_RETURN_ERROR(len == 0U, RT_ERROR_INVALID_VALUE, "malloc len can not be 0");
     char_t *tempBuff = new (std::nothrow)char_t[len];
-    COND_RETURN_ERROR(tempBuff == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(tempBuff == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(len).c_str());
     size_t offset = 0U;
     for (uint32_t i = 0U; i < inBuf->buffCount; ++i) {
         const drvError_t drvRet = drvMemcpy(static_cast<DVdeviceptr>(RtPtrToPtr<uintptr_t>(tempBuff) + offset),
@@ -969,7 +976,8 @@ rtError_t NpuDriver::MemQueueEnQueueBuff(const int32_t devId, const uint32_t qid
 
     const size_t totalLen = sizeof(struct buff_iovec) + (buffCnt * sizeof(struct iovec_info));
     const std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow)char_t[totalLen]);
-    COND_RETURN_ERROR(vecUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(vecUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(totalLen).c_str());
     struct buff_iovec * const vec = RtPtrToPtr<buff_iovec *>(vecUniquePtr.get());
 
     vec->context_base = inBuf->contextAddr;
@@ -1004,7 +1012,8 @@ rtError_t NpuDriver::MemQueueDeQueueBuff(const int32_t devId, const uint32_t qid
 
     const size_t totalLen = sizeof(struct buff_iovec) + (outBuf->buffCount * sizeof(struct iovec_info));
     const std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow)char_t[totalLen]);
-    COND_RETURN_ERROR(vecUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(vecUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(totalLen).c_str());
     struct buff_iovec * const vec = RtPtrToPtr<buff_iovec *>(vecUniquePtr.get());
 
     vec->context_base = outBuf->contextAddr;
@@ -1072,7 +1081,8 @@ rtError_t NpuDriver::MemQueueQuery(const int32_t devId, const rtMemQueueQueryCmd
 
     // output, the length is too large, malloc is required.
     const std::unique_ptr<QueueQueryOutput> outputUniquePtr(new (std::nothrow)(QueueQueryOutput));
-    COND_RETURN_ERROR(outputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc failed");
+    COND_RETURN_AND_MSG_OUTER(outputUniquePtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        ErrorCode::EE1013, std::to_string(sizeof(QueueQueryOutput)).c_str());
     QueueQueryOutput * const output = outputUniquePtr.get();
 
     ret = memset_s(RtPtrToPtr<void *>(output), sizeof(QueueQueryOutput), 0, sizeof(QueueQueryOutput));
@@ -1315,8 +1325,10 @@ rtError_t NpuDriver::EschedWaitEvent(const int32_t devId, const uint32_t grpId, 
         const errno_t ret = memcpy_s(evt->msg, evt->msgLen,
                                      evtInfo.priv.msg, static_cast<size_t>(evtInfo.priv.msg_len));
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
-                                   "Call memcpy_s failed, dst length=%u, src length=%u, retCode=%d!",
-                                   evt->msgLen, evtInfo.priv.msg_len, ret);
+                                   "Failed to call memcpy_s to copy evt->msg, src=%p, dest=%p, dest_max=%u, count=%u, retCode=%#x.",
+                                   static_cast<const void *>(evtInfo.priv.msg), static_cast<void *>(evt->msg),
+                                   evt->msgLen, static_cast<uint32_t>(evtInfo.priv.msg_len),
+                                   static_cast<uint32_t>(ret));
         evt->msgLen = evtInfo.priv.msg_len;
     }
     return RT_ERROR_NONE;
@@ -1392,7 +1404,7 @@ drvError_t NpuDriver::DrvEschedManage(const uint32_t devId, const int32_t timeou
             count = GetTimeInterval(lastTimeSpec, curTimeSpec);
             lastTimeSpec = curTimeSpec;
             if (count >= static_cast<uint64_t>(timeoutLeft)) {
-                RT_LOG(RT_LOG_ERROR, "Stream sync timeout, time=%lums, total timeout=%dms", count, timeout);
+                RT_LOG(RT_LOG_ERROR, "Stream sync timeout, time=%lums, total timeout=%dms.", count, timeout);
                 return DRV_ERROR_WAIT_TIMEOUT;
             }
             timeoutLeft = (timeoutLeft - static_cast<int32_t>(count));

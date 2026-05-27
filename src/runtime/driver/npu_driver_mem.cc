@@ -55,10 +55,10 @@ rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const i
         constexpr const char_t *path = "/dev/shm/";
         char_t name[MMPA_MAX_PATH] = {};
         errno_t retSafe = strcpy_s(&name[0], sizeof(name), path);
-        COND_LOG_ERROR(retSafe != EOK, "strcpy_s failed, size=%zu(bytes), retCode=%d!",
+        COND_LOG_ERROR(retSafe != EOK, "Failed to call strcpy_s to copy name, size=%zu, retCode=%d.",
                        sizeof(name), retSafe);
         retSafe = strcat_s(name, sizeof(name), in->name);
-        COND_LOG_ERROR(retSafe != EOK, "strcat_s failed, size=%zu(bytes), retCode=%d!",
+        COND_LOG_ERROR(retSafe != EOK, "Failed to call strcat_s to append name, size=%zu, retCode=%d.",
                        sizeof(name), retSafe);
         retVal = stat(name, &buf);
 
@@ -73,12 +73,10 @@ rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const i
         if (retVal == -1) {
             const int32_t err = ftruncate(out->fd, static_cast<off_t>(in->size));
             COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(ERR_MODULE_SYSTEM, err != 0, ERROR, error, RT_ERROR_SEC_HANDLE,
-                "Malloc host shared memory failed, ftruncate failed!");
+                "Malloc host shared memory failed, ftruncate failed.");
             RT_LOG(RT_LOG_DEBUG, "ftruncate success");
         } else if (in->size != static_cast<uint64_t>(buf.st_size)) {
-            RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Failed to apply for the shared memory of the host. The"
-                "current size=%" PRIu64 "(bytes), valid size=%" PRIu64 "(bytes)", in->size,
-                static_cast<uint64_t>(buf.st_size));
+            RT_LOG_OUTER_MSG_INVALID_PARAM(in->size, std::to_string(static_cast<uint64_t>(buf.st_size)));
             (void)close(out->fd);
             out->fd = -1;
             return RT_ERROR_INVALID_VALUE;
@@ -89,11 +87,11 @@ rtError_t NpuDriver::MallocHostSharedMemory(rtMallocHostSharedMemoryIn * const i
                         static_cast<int32_t>(MAP_SHARED), out->fd, 0);
         COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(ERR_MODULE_SYSTEM, out->ptr == static_cast<void*>(MAP_FAILED), ERROR,
             error, RT_ERROR_SEC_HANDLE,
-            "Malloc host shared memory failed, mmap failed, size=%" PRIu64 "(bytes), retCode=%d!", in->size, error);
+            "Malloc host shared memory failed, mmap failed, size=%" PRIu64 "(bytes), retCode=%d.", in->size, error);
         RT_LOG(RT_LOG_DEBUG, "malloc host shared memory mmap success.");
 
         const int32_t ret = madvise(out->ptr, in->size, MADV_HUGEPAGE);
-        COND_LOG(ret != 0, "madvise failed, size=%" PRIu64 "(bytes), retVal=%d!", in->size, ret);
+        COND_LOG(ret != 0, "madvise failed, size=%" PRIu64 "(bytes), retCode=%d.", in->size, ret);
 
         if (retVal == -1) {
             const uint64_t loop = (in->size + PAGE_SIZE - 1U) / PAGE_SIZE;
@@ -161,12 +159,12 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in, c
             ret = shm_unlink(in->name);
             RT_LOG(RT_LOG_DEBUG, "shm_unlink name: %s, size=%" PRIu64 "", in->name, in->size);
             COND_RETURN_WARN(ret != 0, RT_ERROR_NONE,
-                             "shm_unlink failed, %s may not exsit!", in->name);
+                             "shm_unlink failed, %s may not exist.", in->name);
         } else if ((ret == 0) && (in->size != static_cast<uint64_t>(buf.st_size))) {
             RT_LOG_OUTER_MSG_INVALID_PARAM(in->size, buf.st_size);
             return RT_ERROR_INVALID_VALUE;
         } else {
-            RT_LOG(RT_LOG_WARNING, "%s is not exsit.", in->name);
+            RT_LOG(RT_LOG_WARNING, "%s does not exist.", in->name);
         }
     } else {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -641,7 +639,7 @@ rtError_t NpuDriver::GetServerIdAndshareableHandle(
         *shareableHandle = *RtPtrToPtr<uint64_t *>(RtPtrToUnConstPtr<void *>(sharehandle));
         return RT_ERROR_NONE;
     } else {
-        RT_LOG(RT_LOG_ERROR, "Invalid handle type: %d", handleType);
+        RT_LOG(RT_LOG_ERROR, "Invalid handle type: %d.", handleType);
         return RT_ERROR_INVALID_VALUE;
     }
 }
@@ -945,7 +943,7 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(void ** const dptr, const uint64
                 static_cast<int32_t>(drvRet), size, type, moduleId, drvFlag, deviceId, errorStr.c_str());
         } else {
             RT_LOG(RT_LOG_WARNING, "[drv api] halMemAlloc failed:size=%" PRIu64
-                    "(bytes), type=%u, moduleId=%hu, drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u!",
+                    "(bytes), type=%u, moduleId=%hu, drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u.",
                    size, type, moduleId, drvFlag, static_cast<int32_t>(drvRet), deviceId);
         }
         return rtErrorCode;
@@ -961,7 +959,7 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(void ** const dptr, const uint64_t si
 {
     const rtError_t ret = CheckIfSupport1GHugePage();
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "this feature does not support on current version, "
+        RT_LOG(RT_LOG_ERROR, "this feature is not supported on current version, "
             "size=%lu, type=%u, memory policy=%u, deviceId=%u, moduleId=%u.",
             size, type, memPolicy, deviceId, moduleId);
         return ret;
@@ -985,7 +983,7 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(void ** const dptr, const uint64_t si
         drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_PAGE_GIANT) | static_cast<uint64_t>(MEM_TYPE_HBM) |
             static_cast<uint64_t>(MEM_ADVISE_P2P) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
     } else {
-        RT_LOG(RT_LOG_ERROR, " memory policy does not support, memory policy=%u.", memPolicy);
+        RT_LOG(RT_LOG_ERROR, "memory policy is not supported, memory policy=%u.", memPolicy);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -1000,7 +998,7 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(void ** const dptr, const uint64_t si
                 static_cast<int32_t>(drvRet), size, type, moduleId, drvFlag, deviceId, errorStr.c_str());
         } else {
             RT_LOG(RT_LOG_WARNING, "[drv api] halMemAlloc failed:size=%" PRIu64
-                   "(bytes), type=%d,moduleId=%hu,drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u!",
+                   "(bytes), type=%d,moduleId=%hu,drvFlag=%#" PRIx64 ", drvRetCode=%d, device_id=%u.",
                    size, type, moduleId, drvFlag, static_cast<int32_t>(drvRet), deviceId);
         }
         return rtErrorCode;
@@ -1258,11 +1256,13 @@ rtError_t NpuDriver::DevMemAllocOffline(void **dptr, const uint64_t size,
         Runtime * const rtInstance = Runtime::Instance();
         type = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, size);
     }
-    RT_LOG(RT_LOG_DEBUG, "device offline alloc size=%" PRIu64 ", type=%u, device_id=%u, chipType=%d!",
+    RT_LOG(RT_LOG_DEBUG, "device offline alloc size=%" PRIu64 ", type=%u, device_id=%u, chipType=%d.",
            size, type, deviceId, chipType_);
 
-    COND_RETURN_ERROR_MSG_INNER(IsOfflineNotSupportMemType(type), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Offline mode does not support memType=%d", static_cast<int>(type));
+    if (IsOfflineNotSupportMemType(type)) {
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "memory type in offline mode");
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
     if (memPolicy == RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) {
         const rtError_t ret = CheckIfSupport1GHugePage();
         if (ret != RT_ERROR_NONE) {
@@ -1462,7 +1462,7 @@ rtError_t NpuDriver::DevContinuousMemAlloc(void ** const dptr, const uint64_t si
                                             static_cast<void *>(&cmPara));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
-            "[drv api] drvCustomCall failed: device_id=%u, size=%" PRIu64 "(bytes), drvRetCode=%d!",
+            "[drv api] drvCustomCall failed: device_id=%u, size=%" PRIu64 "(bytes), drvRetCode=%d.",
             deviceId, size, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -1481,7 +1481,7 @@ rtError_t NpuDriver::DevContinuousMemFree(void * const dptr, const uint32_t devi
                                             static_cast<void *>(&cmPara));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
-            "[drv api] drvCustomCall failed: device_id=%u, drvRetCode=%d!",
+            "[drv api] drvCustomCall failed: device_id=%u, drvRetCode=%d.",
             deviceId, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -1531,7 +1531,7 @@ rtError_t NpuDriver::DevMemAllocCached(void ** const dptr, const uint64_t size,
         return RT_ERROR_INVALID_VALUE;
     } else {
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
-            RT_LOG(RT_LOG_WARNING, "invalid size, current size=%" PRIu64 ", valid size range is [%d, %" PRId64 "]!",
+            RT_LOG(RT_LOG_WARNING, "invalid size, current size=%" PRIu64 ", valid size range is [%d, %" PRId64 "].",
                    size, 0, HUGE_PAGE_MEM_CRITICAL_VALUE);
         }
 
@@ -1574,7 +1574,7 @@ rtError_t NpuDriver::MemFreeEx(void * const dptr)
 rtError_t NpuDriver::DevMemFree(void * const dptr, const uint32_t deviceId)
 {
     (void)deviceId;
-    NULL_PTR_RETURN_MSG(dptr, RT_ERROR_DRV_PTRNULL);
+    NULL_PTR_RETURN_MSG_OUTER(dptr, RT_ERROR_DRV_PTRNULL);
 
     const drvError_t drvRet = halMemFree(dptr);
     if (drvRet != DRV_ERROR_NONE) {
@@ -1592,7 +1592,7 @@ rtError_t NpuDriver::DevSCMemFree(void * const dptr, const uint32_t deviceId)
     const drvError_t drvRet = drvCustomCall(deviceId, static_cast<uint32_t>(CMD_TYPE_SC_FREE), dptr);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet,
-            "[drv api] drvCustomCall failed: device_id=%u, drvRetCode=%d!",
+            "[drv api] drvCustomCall failed: device_id=%u, drvRetCode=%d.",
             deviceId, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -1778,7 +1778,8 @@ static void ExtractDrvMemGetInfo(const rtMemType_t type, rtMemInfo_t * const inf
             break;
         case RT_MEM_INFO_TYPE_SVM_GRP_INFO:
             ret = strcpy_s(info->grpInfo.name, RT_SVM_GRP_NAME_LEN, drvMemInfo->grp_info.name);
-            COND_RETURN_VOID(ret != EOK, "strcpy_s failed, retCode=%d!", ret);
+            COND_RETURN_VOID(ret != EOK, "Failed to call strcpy_s to copy grpInfo.name, size=%zu, retCode=%d.",
+                             static_cast<size_t>(RT_SVM_GRP_NAME_LEN), ret);
             RT_LOG(RT_LOG_DEBUG, "[%s] name=%s", typeDesc[type - 1U], info->grpInfo.name);
             break;
         case RT_MEM_INFO_TYPE_UB_TOKEN_INFO:
@@ -1949,9 +1950,8 @@ rtError_t NpuDriver::MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t
     }
     const rtError_t error = GetMemInfoType(curMemInfoType, &type);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "GetMemInfoType failed: curMemInfoType=%d is not in "
-            "range[%u, %u], retCode=%d!", static_cast<int32_t>(curMemInfoType), RT_MEMORYINFO_DDR,
-            RT_MEMORYINFO_HBM_P2P_NORMAL, static_cast<int32_t>(error));
+        RT_LOG_OUTER_MSG_INVALID_PARAM(static_cast<int32_t>(curMemInfoType),
+            "[" + std::to_string(RT_MEMORYINFO_DDR) + ", " + std::to_string(RT_MEMORYINFO_HBM_P2P_NORMAL) + "]");
         return error;
     }
  
@@ -1976,7 +1976,7 @@ rtError_t NpuDriver::MemGetInfoEx(const uint32_t deviceId, const rtMemInfoType_t
     } else if (Is1GHugePageMem(curMemInfoType)) {
         const rtError_t ret = CheckIfSupport1GHugePage();
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "this feature does not support on current version, memory policy=%u.",
+            RT_LOG(RT_LOG_ERROR, "this feature is not supported on current version, memory policy=%u.",
                 curMemInfoType);
             return ret;
         }
@@ -2230,7 +2230,7 @@ rtError_t NpuDriver::MemCopySync(void * const dst, const uint64_t destMax, const
     record.SaveRecord();
 
     if (drvRet == DRV_ERROR_NOT_SUPPORT) {
-        RT_LOG(RT_LOG_WARNING, "drv does not support, return.");
+        RT_LOG(RT_LOG_WARNING, "driver does not support this operation.");
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     if (drvRet != DRV_ERROR_NONE) {
@@ -2477,8 +2477,8 @@ rtError_t NpuDriver::CheckIfSupport1GHugePage()
 
     const rtError_t ret = Support1GHugePageCtrl();
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "this feature does not support on current version, "
-            "memory policy=0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) or 0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P)!.",
+        RT_LOG(RT_LOG_ERROR, "this feature is not supported on current version, "
+            "memory policy=0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) or 0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P).",
             RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY, RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P );
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }

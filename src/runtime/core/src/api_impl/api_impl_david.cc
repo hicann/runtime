@@ -1812,8 +1812,8 @@ rtError_t ApiImplDavid::LabelGotoEx(Label * const lbl, Stream * const stm)
         ErrorCode::EE1010, __func__, "stream");
     COND_RETURN_AND_MSG_OUTER(lbl->Context_() != curCtx, RT_ERROR_LABEL_CONTEXT,
         ErrorCode::EE1010, __func__, "label");
-    COND_RETURN_AND_MSG_OUTER(true, RT_ERROR_FEATURE_NOT_SUPPORT,
-        ErrorCode::EE1006, __func__, "LabelGotoEx on current device");
+    RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 rtError_t ApiImplDavid::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUceInfo)

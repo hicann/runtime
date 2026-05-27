@@ -34,12 +34,12 @@ rtError_t ProfTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t 
 
     TaskInfo *rtProfTraceExTask = nullptr;
     rtError_t  error = CheckTaskCanSend(stm);
-    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
     Stream *dstStm = stm;
     stm->StreamLock();
     error = AllocTaskInfoForCapture(&rtProfTraceExTask, stm, pos, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "stream_id=%d alloc task failed, retCode=%#x.",
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
         stm->Id_(), static_cast<uint32_t>(error));
     SaveTaskCommonInfo(rtProfTraceExTask, dstStm, pos);
     (void)ProfilerTraceExTaskInit(rtProfTraceExTask, id, modelId, tagId);
@@ -48,12 +48,12 @@ rtError_t ProfTraceEx(const uint64_t id, const uint64_t modelId, const uint16_t 
     ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(rtProfTraceExTask);
                                        TaskRollBack(dstStm, pos);
                                        stm->StreamUnLock();,
-                                       "stream_id=%d send task failed, retCode=%#x.",
+                                       "Failed to send task, stream_id=%d, retCode=%#x.",
                                        stm->Id_(), static_cast<uint32_t>(error));
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), rtProfTraceExTask->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
-    ERROR_RETURN_MSG_INNER(error, "recycle fail, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     return error;
 }
 

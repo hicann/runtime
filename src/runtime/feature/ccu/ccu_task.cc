@@ -39,14 +39,14 @@ void PrintErrorInfoForCcuLaunchTask(TaskInfo *taskInfo, const uint32_t devId)
     Stream *const reportStream = GetReportStream(taskInfo->stream);
     if ((ccuLaunchTsk->errInfo.err & STARS_CCU_EXIST_ERROR) != 0U) {
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_HCCL,
-            "CCU Launch task error status [%#x], subStatus [%#x], device_id=%u, stream_id=%d, "
+            "CCU launch task failed, status=%#x, subStatus=%#x, device_id=%u, stream_id=%d, "
             "task_id=%hu, udie_id=%u, missionId=%hu, sq_id=%u.",
             ccuLaunchTsk->errInfo.info.status, ccuLaunchTsk->errInfo.info.subStatus,
             devId, reportStream->Id_(), taskInfo->id, ccuLaunchTsk->dieId,
             ccuLaunchTsk->missionId, reportStream->GetSqId());
     } else {
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_HCCL,
-            "CCU Launch task error device_id=%u, stream_id=%d, "
+            "CCU launch task failed, device_id=%u, stream_id=%d, "
             "task_id=%hu, udie_id=%u, missionId=%hu, sq_id=%u.",
             devId, reportStream->Id_(), taskInfo->id, ccuLaunchTsk->dieId,
             ccuLaunchTsk->missionId, reportStream->GetSqId());

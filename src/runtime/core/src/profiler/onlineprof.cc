@@ -34,38 +34,40 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream * const stm)
     Runtime * const rtInstance = Runtime::Instance();
     const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, memSize);
     ret = deviceDrv->DevMemAlloc(&deviceMem, memSize, memType, dev->Id_());
-    ERROR_RETURN(ret, "Alloc online profiling device memory failed, "
-        "size=%" PRIu64 ", type=%d, id=%d, retCode=%#x!", memSize, RT_MEMORY_DEFAULT, dev->Id_(),
+    ERROR_RETURN(ret, "Failed to allocate online profiling device memory, "
+        "size=%" PRIu64 ", type=%d, deviceId=%d, retCode=%#x.", memSize, RT_MEMORY_DEFAULT, dev->Id_(),
         static_cast<uint32_t>(ret));
 
     if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_PROFILING_ONLINE_DEVICE_MEM_CLEAR)) {
         ret = deviceDrv->MemSetSync(deviceMem, memSize, 0U, memSize);
-        ERROR_GOTO_MSG_INNER(ret, ERROR_FREE, "Memset sync device memory failed, "
-                                               "size=%" PRIu64 ", retCode=%#x!", memSize, static_cast<uint32_t>(ret));
+        ERROR_GOTO_MSG_INNER(ret, ERROR_FREE, "Failed to synchronize memset on device memory, "
+                                               "size=%" PRIu64 ", retCode=%#x.", memSize, static_cast<uint32_t>(ret));
 
         ret = deviceDrv->DevMemFlushCache(RtPtrToValue(deviceMem),
             static_cast<size_t>(memSize));
-        ERROR_GOTO_MSG_INNER(ret, ERROR_FREE, "Online profiling memory flush failed, size=%zu, retCode=%#x!",
+        ERROR_GOTO_MSG_INNER(ret, ERROR_FREE, "Failed to flush online profiling memory cache, size=%zu, retCode=%#x.",
             static_cast<size_t>(memSize), static_cast<uint32_t>(ret));
     }
 
     ret = deviceDrv->HostMemAlloc(&hostRtMem, static_cast<uint64_t>(ONLINEPROF_MEM_SIZE), dev->Id_());
-    ERROR_GOTO(ret, ERROR_FREE, "Alloc start online profiling host runtime memory failed, "
-                                           "size=%u, retCode=%#x!", ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
+    ERROR_GOTO(ret, ERROR_FREE, "Failed to allocate online profiling host runtime memory, "
+                                           "size=%u, retCode=%#x.", ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
 
     memRet = memset_s(hostRtMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(ERR_MODULE_SYSTEM, memRet != EOK, ERROR_FREE, ret, RT_ERROR_SEC_HANDLE,
-        "Online prof malloc failed, memset_s fail, size=%u, retCode=%u!", ONLINEPROF_MEM_SIZE,
-        static_cast<uint32_t>(ret));
+        "Failed to call memset_s to clear online profiling host runtime memory, "
+            "dest=%p, dest_max=%u, count=%u, retCode=%d.",
+        hostRtMem, ONLINEPROF_MEM_SIZE, ONLINEPROF_MEM_SIZE, static_cast<int32_t>(memRet));
 
     ret = deviceDrv->HostMemAlloc(&hostTsMem, static_cast<uint64_t>(ONLINEPROF_MEM_SIZE), dev->Id_());
-    ERROR_GOTO(ret, ERROR_FREE, "Alloc start online profiling host tsch memory failed, "
-                                           "size=%u, retCode=%#x!", ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
+    ERROR_GOTO(ret, ERROR_FREE, "Failed to allocate online profiling host task scheduler memory, "
+                                           "size=%u, retCode=%#x.", ONLINEPROF_MEM_SIZE, static_cast<uint32_t>(ret));
 
     memRet = memset_s(hostTsMem, ONLINEPROF_MEM_SIZE, 0, ONLINEPROF_MEM_SIZE);
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(ERR_MODULE_SYSTEM, memRet != EOK, ERROR_FREE, ret, RT_ERROR_SEC_HANDLE,
-        "Online prof malloc failed, memset_s fail, size=%u, retCode=%u!", ONLINEPROF_MEM_SIZE,
-        static_cast<uint32_t>(ret));
+        "Failed to call memset_s to clear online profiling host task scheduler memory, "
+            "dest=%p, dest_max=%u, count=%u, retCode=%d.",
+        hostTsMem, ONLINEPROF_MEM_SIZE, ONLINEPROF_MEM_SIZE, static_cast<int32_t>(memRet));
 
     stm->SetOnProfDeviceAddr(deviceMem);
     stm->SetOnProfHostRtAddr(hostRtMem);
@@ -82,12 +84,12 @@ ERROR_FREE:
     if (hostTsMem != nullptr) {
         freeRet3 = deviceDrv->HostMemFree(hostTsMem);
     }
-    ERROR_RETURN_MSG_INNER(freeRet1, "Free online profiling memory[deviceMem] failed, "
-                 "retCode=%#x!", static_cast<uint32_t>(ret));
-    ERROR_RETURN_MSG_INNER(freeRet2, "Free online profiling memory[hostRtMem] failed, "
-                 "retCode=%#x!", static_cast<uint32_t>(ret));
-    ERROR_RETURN_MSG_INNER(freeRet3, "Free online profiling memory[hostTsMem] failed, "
-                 "retCode=%#x!", static_cast<uint32_t>(ret));
+    ERROR_RETURN_MSG_INNER(freeRet1, "Failed to free online profiling device memory, "
+                 "retCode=%#x.", static_cast<uint32_t>(freeRet1));
+    ERROR_RETURN_MSG_INNER(freeRet2, "Failed to free online profiling host runtime memory, "
+                 "retCode=%#x.", static_cast<uint32_t>(freeRet2));
+    ERROR_RETURN_MSG_INNER(freeRet3, "Failed to free online profiling host task scheduler memory, "
+                 "retCode=%#x.", static_cast<uint32_t>(freeRet3));
     return ret;
 }
 
@@ -106,21 +108,21 @@ rtError_t OnlineProf::OnlineProfFree(Stream * const stm)
     deviceMem = stm->GetOnProfDeviceAddr();
     if (deviceMem != nullptr) {
         error = deviceDrv->DevMemFree(deviceMem, dev->Id_());
-        COND_LOG(error != RT_ERROR_NONE, "Free online profiling memory deviceMem failed, "
-                 "retCode=%#x!", static_cast<uint32_t>(error));
+        COND_LOG(error != RT_ERROR_NONE, "Failed to free online profiling device memory, "
+                 "retCode=%#x.", static_cast<uint32_t>(error));
     }
 
     hostRtMem = stm->GetOnProfHostRtAddr();
     if (hostRtMem != nullptr) {
         error = deviceDrv->HostMemFree(hostRtMem);
-        COND_LOG(error != RT_ERROR_NONE, "Free online profiling memory hostRtMem failed, retCode=%#x",
+        COND_LOG(error != RT_ERROR_NONE, "Failed to free online profiling host runtime memory, retCode=%#x.",
                  static_cast<uint32_t>(error));
     }
 
     hostTsMem = stm->GetOnProfHostTsAddr();
     if (hostTsMem != nullptr) {
         error = deviceDrv->HostMemFree(hostTsMem);
-        COND_LOG(error != RT_ERROR_NONE, "Free online profiling memory hostTsMem failed, retCode=%#x",
+        COND_LOG(error != RT_ERROR_NONE, "Failed to free online profiling host task scheduler memory, retCode=%#x.",
                  static_cast<uint32_t>(error));
     }
     stm->SetOnProfDeviceAddr(nullptr);
@@ -150,7 +152,7 @@ rtError_t OnlineProf::GetOnlineProfilingData(const Stream * const stm, rtProfDat
     rtError_t error = stm->Device_()->Driver_()->MemCopySync(hostTsMem, ONLINEPROF_MEM_SIZE,
         deviceMem, ONLINEPROF_MEM_SIZE, RT_MEMCPY_DEVICE_TO_HOST);
     ERROR_RETURN_MSG_INNER(error, "Copy memory from ts to runtime failed, size=%u, kind=%d(RT_MEMCPY_DEVICE_TO_HOST), "
-        "retCode=%#x!", ONLINEPROF_MEM_SIZE,
+        "retCode=%#x.", ONLINEPROF_MEM_SIZE,
         static_cast<int32_t>(RT_MEMCPY_DEVICE_TO_HOST), static_cast<uint32_t>(error));
 
     onlineProfAddr = RtPtrToValue(hostTsMem);
@@ -174,7 +176,7 @@ rtError_t OnlineProf::GetOnlineProfilingData(const Stream * const stm, rtProfDat
 
     for (uint32_t profDataIndex = 0U; profDataIndex < profDataNum; profDataIndex++) {
         if (*rtReadAddr == *rtWriteAddr) { /* should not happen */
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to read data, current index=%u, need read num=%u",
+            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to read data, current index=%u, need read num=%u.",
                 profDataIndex, profDataNum);
             break;
         }
@@ -186,7 +188,7 @@ rtError_t OnlineProf::GetOnlineProfilingData(const Stream * const stm, rtProfDat
         pProfData[profDataIndex].stream   = profRtSourceData[*rtReadAddr].stream;
         if (stm != profRtSourceData[*rtReadAddr].stream) { /* need or not? If yes, need return? */
             RT_LOG_INNER_MSG(RT_LOG_ERROR,
-                "Invalid stream, kernel stream is different from input stream, id=%d", stm->Id_());
+                "Failed to match stream, kernel stream is different from input stream, id=%d.", stm->Id_());
         }
 
         pProfData[profDataIndex].totalcycle = profTsSourceData[*rtReadAddr].totalcycle;

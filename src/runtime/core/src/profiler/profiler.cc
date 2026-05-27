@@ -10,6 +10,8 @@
 #include "profiler.hpp"
 #include <set>
 #include "toolchain/prof_acl_api.h"
+#include "error_message_manage.hpp"
+#include "rt_log.h"
 #include "stream.hpp"
 #include "device.hpp"
 #include "runtime.hpp"
@@ -77,17 +79,13 @@ Profiler::~Profiler()
 rtError_t Profiler::Init()
 {
     apiProfileDecorator_ = new (std::nothrow) ApiProfileDecorator(api_, this);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM,
-        apiProfileDecorator_ == nullptr,
-        RT_ERROR_PROF_NEW,
-        "Init profiler failed, new ApiProfileDecorator failed.");
+    COND_RETURN_AND_MSG_OUTER(apiProfileDecorator_ == nullptr, RT_ERROR_PROF_NEW,
+        ErrorCode::EE1013, std::to_string(sizeof(ApiProfileDecorator)).c_str());
     RT_LOG(RT_LOG_DEBUG, "new ApiProfileDecorator ok, size=%zu", sizeof(ApiProfileDecorator));
 
     apiProfileLogDecorator_ = new (std::nothrow) ApiProfileLogDecorator(api_, this);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM,
-        apiProfileLogDecorator_ == nullptr,
-        RT_ERROR_PROF_NEW,
-        "Init profiler failed, new ApiProfileLogDecorator failed.");
+    COND_RETURN_AND_MSG_OUTER(apiProfileLogDecorator_ == nullptr, RT_ERROR_PROF_NEW,
+        ErrorCode::EE1013, std::to_string(sizeof(ApiProfileLogDecorator)).c_str());
     RT_LOG(RT_LOG_DEBUG, "new ApiProfileLogDecorator ok, size=%zu", sizeof(ApiProfileLogDecorator));
 
     RT_LOG(
@@ -260,7 +258,7 @@ void Profiler::ReportTaskTrack(TaskInfo *const taskInfo, const uint32_t devId) c
             trackData = &trackMngInfo.trackBuff[i];
             const int32_t ret = ReportCompactInfo(trackData);
             if (ret != MSPROF_ERROR_NONE) {
-                RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Profiling reporter report task_track failed, ret=%d.", ret);
+                RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
                 return;
             }
         }
@@ -277,7 +275,7 @@ void Profiler::ReportTaskTrack(TaskInfo *const taskInfo, const uint32_t devId) c
     if ((profApiContext == nullptr) || !profApiContext->needReport) {  // if not open api profiling, will send taskTrack separately
         const int32_t ret = ReportCompactInfo(trackData);
         if (ret != MSPROF_ERROR_NONE) {
-            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Profiling reporter report task_track failed, ret=%d.", ret);
+            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
             return;
         }
         trackMngInfo.taskNum = 0U;
@@ -307,7 +305,7 @@ void Profiler::ReportDestroyFlipTask(const Stream *const stm, const uint32_t dev
 
     const int32_t ret = MsprofReportCompactInfo(true, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
     if (ret != MSPROF_ERROR_NONE) {
-        RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Profiling reporter report task_track failed, ret=%d.", ret);
+        RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
         return;
     }
     return;
@@ -326,7 +324,7 @@ void Profiler::InsertStream(Stream *const stm)
 // When the stream is destroyed, erase the cached model stream object
 void Profiler::EraseStream(Stream *const stm)
 {
-    RT_LOG(RT_LOG_INFO, "earse streamId=%u", stm->Id_());
+    RT_LOG(RT_LOG_INFO, "erase streamId=%u.", stm->Id_());
     streamSetMutex_.lock();
     const auto it = streamSet_.find(stm);
     if (unlikely(it == streamSet_.end())) {

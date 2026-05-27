@@ -47,7 +47,7 @@ rtError_t ProfMapGeModelDevice::GetDeviceIdByGeModelIdx(const uint32_t geModelId
             geModelIdx, *deviceId);
         return RT_ERROR_NONE;
     }
-    RT_LOG(RT_LOG_ERROR, "Device of geModelIdx:%u does not exist!", geModelIdx);
+    RT_LOG(RT_LOG_ERROR, "Device of geModelIdx:%u does not exist.", geModelIdx);
     return RT_ERROR_PROF_FIND_FAIL;
 }
 

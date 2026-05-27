@@ -572,15 +572,15 @@ void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &l
         if (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC) {
             taskInfo->errorCode = vectorErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_TBE,
-                "AIV Kernel happen error, retCode=%#x.", taskInfo->errorCode));
+                "Vector Core kernel execution failed, retCode=%#x.", taskInfo->errorCode));
         } else if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
             taskInfo->errorCode = aicpuErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
-                "AICPU Kernel task happen error, retCode=%#x.", taskInfo->errorCode));
+                "AI CPU kernel task execution failed, retCode=%#x.", taskInfo->errorCode));
         } else {
             taskInfo->errorCode = aicorerErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_TBE,
-                "AICORE Kernel task happen error, retCode=%#x.", taskInfo->errorCode));
+                "AI Core kernel task execution failed, retCode=%#x.", taskInfo->errorCode));
         }
     }
 }

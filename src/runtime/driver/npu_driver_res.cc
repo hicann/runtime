@@ -69,7 +69,7 @@ rtError_t NpuDriver::GetAllFaultEvent(const uint32_t deviceId, rtDmsFaultEvent *
 rtError_t NpuDriver::ReadFaultEvent(
     const int32_t deviceId, uint32_t timeout, const rtDmsEventFilter * const filter, rtDmsFaultEvent *dmsEvent)
 {
-    NULL_PTR_RETURN_MSG(filter, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(filter, RT_ERROR_INVALID_VALUE);
     drvError_t drvRet = DRV_ERROR_NONE;
 
     COND_RETURN_WARN(&halReadFaultEvent == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -1721,7 +1721,7 @@ rtError_t NpuDriver::CtrlSqCqAllocate(const uint32_t deviceId, const uint32_t ts
     }
 
     if (drvRet != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "[drv api] CtrlSqCqAllocate failed: device_id=%u, drvRetCode=%d!", deviceId,
+        RT_LOG(RT_LOG_WARNING, "[drv api] CtrlSqCqAllocate failed: device_id=%u, drvRetCode=%d.", deviceId,
             static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -1747,7 +1747,7 @@ rtError_t NpuDriver::CtrlSqCqFree(const uint32_t deviceId, const uint32_t tsId,
     RT_LOG(RT_LOG_INFO, "sqId=%u, cqId=%u, device_id=%u, tsId=%u.",
         ctrlSqCqFreeInputInfo.sqId, ctrlSqCqFreeInputInfo.cqId, deviceId, tsId);
     if (drvRet != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "[drv api] CtrlSqCqFree failed: device_id=%u, sqId=%u, cqId=%u, drvRetCode=%d!",
+        RT_LOG(RT_LOG_WARNING, "[drv api] CtrlSqCqFree failed: device_id=%u, sqId=%u, cqId=%u, drvRetCode=%d.",
             deviceId, sqId, cqId, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
@@ -1955,7 +1955,7 @@ rtError_t NpuDriver::SqTaskSend(const uint32_t sqId, rtStarsSqe_t * const sqe, c
     const drvError_t drvRet = halSqTaskSend(deviceId, &info);
     if (unlikely(drvRet != DRV_ERROR_NONE)) {
         RT_LOG(RT_LOG_WARNING, "[drv api] halSqTaskSend failed: [sqId=%u], device_id=%u, ts_id=%u, "
-            "sqe_num=%u, drvRetCode=%d!", sqId, deviceId, tsId, sqeNum, static_cast<int32_t>(drvRet));
+            "sqe_num=%u, drvRetCode=%d.", sqId, deviceId, tsId, sqeNum, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
@@ -2020,7 +2020,7 @@ rtError_t NpuDriver::DebugSqTaskSend(const uint32_t sqId, uint8_t *const sqe, co
     const drvError_t drvRet = halSqTaskSend(deviceId, &info);
     if (unlikely(drvRet != DRV_ERROR_NONE)) {
         RT_LOG(RT_LOG_WARNING, "[drv api] halSqTaskSend failed: [sqId=%u], device_id=%u, ts_id=%u, "
-            "drvRetCode=%d!", sqId, deviceId, tsId, static_cast<int32_t>(drvRet));
+            "drvRetCode=%d.", sqId, deviceId, tsId, static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 

@@ -113,7 +113,7 @@ void ApiProfileDecorator::CallApiEnd(const rtError_t retCode, const uint32_t dev
         const int32_t ret = MsprofReportCompactInfo(static_cast<uint32_t>(agingFlag), &(data->compactInfo),
             static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
         if (ret != MSPROF_ERROR_NONE) {
-            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Profiling reporter report task_track failed, ret=%d.", ret);
+            RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
             return;
         }
     }
@@ -819,10 +819,8 @@ rtError_t ApiProfileDecorator::NameStream(Stream * const stm, const char_t * con
     NULL_PTR_RETURN_MSG_OUTER(name, RT_ERROR_INVALID_VALUE);
 
     const uint32_t nameLen = strnlen(name, static_cast<size_t>(M_PROF_STREAM_NAME_LEN));
-    if (nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream name too long, range[0, %u).", M_PROF_STREAM_NAME_LEN);
-        return RT_ERROR_PROF_NAME;
-    }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(nameLen >= static_cast<uint32_t>(M_PROF_STREAM_NAME_LEN), RT_ERROR_PROF_NAME,
+        nameLen, ("[0, " + std::to_string(M_PROF_STREAM_NAME_LEN) + ")").c_str());
     stm->SetName(name);
     return impl_->NameStream(stm, name);
 }

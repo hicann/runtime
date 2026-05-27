@@ -216,7 +216,7 @@ static void MapAicpuErrorCodeForFastRecovery(TaskInfo *taskInfo, const rtLogicCq
 void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq)
 {
     if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
-        RT_LOG(RT_LOG_DEBUG, "AICPU Kernel task happen error, retCode=%#x.", logicCq.errorCode);
+        RT_LOG(RT_LOG_DEBUG, "AI CPU Kernel task happen error, retCode=%#x.", logicCq.errorCode);
         if (logicCq.errorCode == AICPU_HCCL_OP_UB_DDRC_FAILED || logicCq.errorCode == AICPU_HCCL_OP_UB_POISON_FAILED || logicCq.errorCode == AICPU_HCCL_OP_UB_LINK_FAILED) {
             MapAicpuErrorCodeForFastRecovery(taskInfo, logicCq);
             return;
@@ -254,15 +254,15 @@ void StarsV2SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqRepo
         if (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC) {
             taskInfo->errorCode = vectorErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_TBE,
-                "AIV Kernel happen error, retCode=%#x.", taskInfo->errorCode));
+                "Vector Core kernel execution failed, retCode=%#x.", taskInfo->errorCode));
         } else if (taskInfo->type == TS_TASK_TYPE_KERNEL_AICPU) {
             taskInfo->errorCode = aicpuErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
-                "AICPU Kernel task happen error, retCode=%#x.", taskInfo->errorCode));
+                "AI CPU kernel task execution failed, retCode=%#x.", taskInfo->errorCode));
         } else {
             taskInfo->errorCode = aicorerErrMap[errorIndex];
             COND_PROC(CheckErrPrint(taskInfo->errorCode), STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_TBE,
-                "AICORE Kernel task happen error, retCode=%#x.", taskInfo->errorCode));
+                "AI Core kernel task execution failed, retCode=%#x.", taskInfo->errorCode));
         }
     }
 }

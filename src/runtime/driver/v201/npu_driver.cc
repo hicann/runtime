@@ -55,10 +55,10 @@ rtError_t GetDrvSentinelMode(void)
     curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     rtError_t err = curDrv->GetCentreNotify(sentinelIndex, &sentinelMode); /* index 11可以获取是否为哨兵模式 */
     COND_RETURN_ERROR_MSG_INNER(err != RT_ERROR_NONE, err,
-        "Failed to get drv sentinel mode, error=%#x", err);
+        "Failed to get driver sentinel mode, error=%#x.", err);
     err = curDrv->GetDevInfo(0, MODULE_TYPE_AICORE, INFO_TYPE_DIE_NUM, &dieNum);
     COND_RETURN_ERROR_MSG_INNER(err != RT_ERROR_NONE, err,
-        "Get Ddie_die_num failed! error=%#x", err);
+        "Failed to get die number, error=%#x.", err);
     // 1：to lowpower  3: lowpower
     const bool mode = ((sentinelMode == 1) || (sentinelMode == 3) || (dieNum == 0)) ? true : false;
     Runtime::Instance()->SetSentinelMode(mode);
