@@ -72,7 +72,7 @@ void AicpuSoManager::CloseSo()
 void AicpuSoManager::SetDeviceIdToDvpp(uint32_t deviceId)
 {
     if (soHandle_ != nullptr) {
-        aicpusd_info("Already load libmpi_dvpp_adapter.so");
+        aicpusd_info("Already loaded libmpi_dvpp_adapter.so");
     } else {
         bool retOpenSo = OpenSo("/lib64/libmpi_dvpp_adapter.so");
         if ((retOpenSo == false) || (soHandle_ == nullptr)) {

@@ -199,7 +199,7 @@ std::string ProcessModeManager::GetHostSoPath() const
 {
     Dl_info info = { };
     if (dladdr(reinterpret_cast<void *>(drvHdcSendFile), &info) == 0) {
-        TSD_INFO("get host so path not success error[%s], errorno[%d]", SafeStrerror().c_str(), errno);
+        TSD_INFO("Getting the host so path was not successful, reason[%s], errno[%d]", SafeStrerror().c_str(), errno);
         return "";
     }
     TSD_INFO("dli_fname[%s]", info.dli_fname);

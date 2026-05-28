@@ -117,7 +117,8 @@ namespace AicpuSchedule {
             }
             const int32_t ret = pthread_setaffinity_np(threadId, sizeof(cpu_set_t), &cpuset);
             if (ret != 0) {
-                aicpusd_run_warn("Datadump thread bind ctrl cpu not success, will run in aicpu. ret=%d, reason=%s",
+                aicpusd_run_warn(
+                    "Binding datadump thread to control CPU was not successful, will run in aicpu. ret=%d, reason=%s",
                                  ret, strerror(errno));
             } else {
                 aicpusd_run_info("aicpu bind by self success");
@@ -292,7 +293,7 @@ namespace AicpuSchedule {
         backEvent.msg = PtrToPtr<struct event_proc_result, char_t>(&rsp);
         const uint32_t deviceId = deviceId_;
         ret = halEschedSubmitEvent(deviceId, &backEvent);
-        aicpusd_info("backEvent dst[%d], pid[%d], grpId[%d],  eventId[%d], subeventId[%d], msgLen[%d], deviceId[%u]",
+        aicpusd_info("backEvent dst[%d], pid[%d], grpId[%d], eventId[%d], subeventId[%d], msgLen[%d], deviceId[%u]",
             backEvent.dst_engine, backEvent.pid, backEvent.grp_id, backEvent.event_id,
             backEvent.subevent_id, backEvent.msg_len, deviceId);
         if (ret != 0) {

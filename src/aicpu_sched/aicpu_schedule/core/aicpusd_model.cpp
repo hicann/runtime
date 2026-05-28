@@ -1028,7 +1028,7 @@ namespace AicpuSchedule {
         aicpusd_info("Task queue size[%u].", modelInfo->queueSize);
         const auto infoPtr = PtrToPtr<void, QueInfo>(ValueToPtr(modelInfo->queueInfoPtr));
         if (infoPtr == nullptr) {
-            aicpusd_info("Model[%u] load not success, as queueSize[%u] but queueInfoPtr is null.",
+            aicpusd_info("Model[%u] load was not successful, as queueSize[%u] but queueInfoPtr is null.",
                          modelId_, modelInfo->queueSize);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
@@ -1775,7 +1775,7 @@ namespace AicpuSchedule {
     bool QueueMbufStore::Store(const size_t qIndex, Mbuf *const mbuf, std::map<size_t, uint64_t> &gCntList)
     {
         if (queuesLists_.empty()) {
-            aicpusd_err("QueueMbufStore has not been inited");
+            aicpusd_err("QueueMbufStore has not been initialized");
             return false;
         }
         if (qIndex >= queuesLists_.size()) {
@@ -1792,7 +1792,7 @@ namespace AicpuSchedule {
     bool QueueMbufStore::Consume(Mbuf ***mbufPptr, std::map<size_t, uint64_t> &gCntList)
     {
         if (queuesLists_.empty()) {
-            aicpusd_err("QueueMbufStore has not been inited");
+            aicpusd_err("QueueMbufStore has not been initialized");
             return false;
         }
         for (size_t arrIndex = 0U; arrIndex < queuesLists_.size(); ++arrIndex) {

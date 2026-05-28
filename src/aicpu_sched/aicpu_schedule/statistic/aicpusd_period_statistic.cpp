@@ -96,7 +96,7 @@ namespace AicpuSchedule {
         deviceId_ = deviceId;
         runningFlag_ = true;
         hostPid_ = hostPid;
-        aicpusd_info("start init static devid:%u, hostpid:%u", deviceId_, hostPid_);
+        aicpusd_info("Start initializing statistics, deviceId:%u, hostPid:%u", deviceId_, hostPid_);
         if (!procMemInfo_.InitProcMemStatistic()) {
             aicpusd_err("InitProcMemStatistic failed");
             return;

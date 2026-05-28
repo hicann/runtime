@@ -195,7 +195,7 @@ int32_t CustOperationCommon::AicpuNotifyLoadSoEventToCustCtrlCpu(const uint32_t 
         aicpusd_info("msg[%s], msglen[%u]", event.msg, event.msg_len);
         const drvError_t ret = halEschedSubmitEvent(deviceId, &event);
         if (ret != DRV_ERROR_NONE) {
-            aicpusd_run_warn("Aicpu send open custom so event to custom ctrl cpu not success, deviceId[%u], "
+            aicpusd_run_warn("Sending open custom so event to custom ctrl cpu was not successful, deviceId[%u], "
                              "errcode[%d], please check so name length", deviceId, ret);
         } else {
             aicpusd_info("Aicpu send open custom so event to custom ctrl cpu success.");
@@ -251,7 +251,7 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
                 return AICPU_SCHEDULE_ERROR_INNER_ERROR;
             }
         } else {
-            aicpusd_run_info("[%s] is already load.", realSoName.c_str());
+            aicpusd_run_info("[%s] is already loaded.", realSoName.c_str());
         }
     }
 

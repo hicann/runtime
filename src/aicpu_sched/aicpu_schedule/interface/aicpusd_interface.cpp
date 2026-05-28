@@ -116,7 +116,7 @@ int32_t AICPUPreOpenKernels(const char *soName)
         aicpusd_err("Failed to preload aicpu so %s. Please check.", soName);
         return ret;
     }
-    aicpusd_run_info("Preload so %s success.", soName);
+    aicpusd_run_info("Preload so %s Successfully.", soName);
     return AicpuSchedule::AICPU_SCHEDULE_OK;
 }
 

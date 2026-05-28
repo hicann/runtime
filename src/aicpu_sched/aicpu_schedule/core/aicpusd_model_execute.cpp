@@ -689,7 +689,7 @@ namespace AicpuSchedule {
         if (hcclEmbInit_) {
             return &hcclComm_;
         } else {
-            aicpusd_warn("HcclComm has not been inited");
+            aicpusd_warn("HcclComm has not been initialized");
             return nullptr;
         }
     }

@@ -45,7 +45,7 @@ AicpuSqeAdapter::AicpuSqeAdapter(const TsAicpuMsgInfo &msgInfo, const int16_t ve
 
 AicpuSqeAdapter::AicpuSqeAdapter(const int16_t version) : version_(version), invalid_msg_info_(true), invalid_sqe_(true)
 {
-    aicpusd_info("Enter AicpuSqeAdapter constructor,  using version init, version[%hu]", version_);
+    aicpusd_info("Enter AicpuSqeAdapter constructor, using version init, version[%hu]", version_);
     InitAdapterFuncMap();
 }
 
@@ -177,7 +177,7 @@ int32_t AicpuSqeAdapter::AicpuDataDumpLoadResponseToTs(const int32_t ret)
 {
     aicpusd_info("Aicpu datadump load response to ts.");
     if (getDataDumpLoadRspFuncMap_.find(version_) == getDataDumpLoadRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get data dump load respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get data dump load response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getDataDumpLoadRspFuncMap_[version_])(ret);

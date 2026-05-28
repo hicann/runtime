@@ -235,7 +235,7 @@ namespace tsd {
             return recvResult;
         }
         if (hdcMsg.type() != HDCMessage::TEST_HDC_RSP) {
-            TSD_INFO("Service create hdc not success");
+            TSD_INFO("Hdc service creation was not successful");
             return TSD_HDC_RECV_MSG_ERROR;
         }
         TSD_CHECK(inspector->PeerVersionCheck(hdcMsg.version_info()), TSD_HDC_RECV_MSG_ERROR,
@@ -425,7 +425,7 @@ namespace tsd {
         HDC_SESSION session = nullptr;
         const TSD_StatusT ret = GetHdcSession(sessionId, session);
         if (ret != TSD_OK) {
-            TSD_RUN_WARN("GetHdcSession not success ret[%d]", ret);
+            TSD_RUN_WARN("GetHdcSession was not successful, ret[%d]", ret);
             return TSD_HDC_SEND_MSG_ERROR;
         }
         std::shared_ptr<VersionVerify> inspector = nullptr;
@@ -449,7 +449,7 @@ namespace tsd {
         HDC_SESSION session = nullptr;
         TSD_StatusT ret = GetHdcSession(sessionId, session);
         if (ret != TSD_OK) {
-            TSD_RUN_WARN("[TsdEVENT] GetHdcSession not success ret[%d]", ret);
+            TSD_RUN_WARN("[TsdEVENT] GetHdcSession was not successful, ret[%d]", ret);
             return TSD_HDC_RECV_MSG_ERROR;
         }
 

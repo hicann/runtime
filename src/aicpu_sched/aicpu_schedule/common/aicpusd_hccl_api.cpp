@@ -61,7 +61,7 @@ HcclSoManager *HcclSoManager::GetInstance()
 void HcclSoManager::LoadHccdSo()
 {
     if (hccdSoHandle_ != nullptr) {
-        aicpusd_info("Already load libhccd.so");
+        aicpusd_info("Already loaded libhccd.so");
         return;
     }
     hccdSoHandle_ = dlopen("libhccd.so", RTLD_LAZY);
@@ -83,13 +83,13 @@ void HcclSoManager::LoadHccdSo()
             aicpusd_err("Failed to get function [%s]", name.c_str());
         }
     }
-    aicpusd_info("Load libhccd.so success");
+    aicpusd_info("Loaded libhccd.so successfully");
 }
 
 void HcclSoManager::LoadHcclSo()
 {
     if (hcclSoHandle_ != nullptr) {
-        aicpusd_info("Already load libhccl_heterog.so");
+        aicpusd_info("Already loaded libhccl_heterog.so");
         return;
     }
     hcclSoHandle_ = dlopen("libhccl_heterog.so", RTLD_LAZY);
@@ -109,7 +109,7 @@ void HcclSoManager::LoadHcclSo()
             aicpusd_err("Failed to get function [%s]", name.c_str());
         }
     }
-    aicpusd_info("Load libhccl_heterog.so success");
+    aicpusd_info("Load libhccl_heterog.so successfully");
 }
 
 void HcclSoManager::LoadSo()
@@ -124,7 +124,7 @@ void HcclSoManager::UnLoadHccdSo()
         (void)dlclose(hccdSoHandle_);
         hccdSoHandle_ = nullptr;
     }
-    aicpusd_info("Unload libhccd.so success");
+    aicpusd_info("Unload libhccd.so successfully");
 }
 
 void HcclSoManager::UnLoadHcclSo()
@@ -133,7 +133,7 @@ void HcclSoManager::UnLoadHcclSo()
         (void)dlclose(hcclSoHandle_);
         hcclSoHandle_ = nullptr;
     }
-    aicpusd_info("Unload libhccl.so success");
+    aicpusd_info("Unload libhccl.so successfully");
 }
 void HcclSoManager::UnloadSo()
 {
@@ -171,7 +171,8 @@ int32_t MBufferPool::Init(const uint32_t blockNum, const uint32_t blockSize, con
     }
 
     if (!registerMem) {
-        aicpusd_info("create pool success without register meomry, blockSize: %u, blockNum: %u", blockSize, blockNum);
+        aicpusd_info("Create pool successfully without registering memory, blockSize: %u, blockNum: %u", blockSize,
+            blockNum);
         return RET_SUCCESS;
     }
 

@@ -344,7 +344,7 @@ bool ClientManager::GetPackagePath(std::string &packagePath, const uint32_t pack
         return false;
     }
 
-    TSD_INFO("[TsdClient][deviceId=%u] get packagePath[%s] ", logicDeviceId_, packagePath.c_str());
+    TSD_INFO("[TsdClient][deviceId=%u] get packagePath[%s]", logicDeviceId_, packagePath.c_str());
     return true;
 }
 

@@ -255,6 +255,22 @@ TEST_F(TsdUtilFuncTest, RemoveOneFileNotExist)
     RemoveOneFile(filepath);
 }
 
+TEST_F(TsdUtilFuncTest, RemoveOneFileRemoveFailed)
+{
+    string dirPath = "/tmp/test_remove_failed_dir";
+    mkdir(dirPath.c_str(), 0755);
+    string filepath = dirPath + "/test_file.txt";
+    ofstream outfile(filepath);
+    outfile << "test content";
+    outfile.close();
+
+    RemoveOneFile(dirPath);
+
+    EXPECT_EQ(access(dirPath.c_str(), F_OK), 0);
+    unlink(filepath.c_str());
+    rmdir(dirPath.c_str());
+}
+
 TEST_F(TsdUtilFuncTest, RemoveOneFileEmptyPath)
 {
     string filepath = "";

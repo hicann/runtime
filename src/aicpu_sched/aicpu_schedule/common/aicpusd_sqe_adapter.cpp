@@ -43,7 +43,7 @@ AicpuSqeAdapter::AicpuSqeAdapter(const TsAicpuMsgInfo &msgInfo, const int16_t ve
 
 AicpuSqeAdapter::AicpuSqeAdapter(const int16_t version) : version_(version), invalid_msg_info_(true), invalid_sqe_(true)
 {
-    aicpusd_info("Enter AicpuSqeAdapter constructor,  using version init, version[%hu]", version_);
+    aicpusd_info("Enter AicpuSqeAdapter constructor, using version init, version[%hu]", version_);
     InitAdapterFuncMap();
 }
 
@@ -389,7 +389,7 @@ void AicpuSqeAdapter::GetAicpuDataDumpInfoV0(AicpuDataDumpInfo &info)
 
 void AicpuSqeAdapter::GetAicpuDataDumpInfo(AicpuDataDumpInfo &info)
 {
-    aicpusd_info("Get aicpu  datadump Info.");
+    aicpusd_info("Get aicpu datadump Info.");
     if (getDataDumpInfoFuncMap_.find(version_) == getDataDumpInfoFuncMap_.end()) {
         aicpusd_err("The version[%hu] does not have a corresponding get data dump info Function.", version_);
         return;
@@ -477,7 +477,7 @@ int32_t AicpuSqeAdapter::AicpuDumpResponseToTs(const int32_t ret)
 {
     aicpusd_info("Aicpu dump response to ts.");
     if (getDataDumpRspFuncMap_.find(version_) == getDataDumpRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get data dump respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get data dump response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getDataDumpRspFuncMap_[version_])(ret);
@@ -573,7 +573,7 @@ int32_t AicpuSqeAdapter::AicpuDataDumpLoadResponseToTs(const int32_t ret)
 {
     aicpusd_info("Aicpu datadump load response to ts.");
     if (getDataDumpLoadRspFuncMap_.find(version_) == getDataDumpLoadRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get data dump load respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get data dump load response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getDataDumpLoadRspFuncMap_[version_])(ret);
@@ -696,7 +696,7 @@ int32_t AicpuSqeAdapter::AicpuSqeAdapter::ErrorMsgResponseToTs(ErrMsgRspInfo &rs
 {
     aicpusd_info("Error msg response to ts.");
     if (getErrorMsgRspFuncMap_.find(version_) == getErrorMsgRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get error msg respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get error msg response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getErrorMsgRspFuncMap_[version_])(rspInfo);
@@ -740,7 +740,7 @@ void AicpuSqeAdapter::AicpuActiveStreamSetMsg(ActiveStreamInfo &info)
 {
     aicpusd_info("Aicpu active stream set msg.");
     if (activeStreamSetMsgFuncMap_.find(version_) == activeStreamSetMsgFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get error msg respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get error msg response Function.", version_);
         return;
     }
     return (this->*activeStreamSetMsgFuncMap_[version_])(info);
@@ -868,7 +868,7 @@ int32_t AicpuSqeAdapter::AicpuTimeOutConfigResponseToTs(const int32_t ret)
 {
     aicpusd_info("Aicpu timeout config response to ts.");
     if (getTimeOutConfigRspFuncMap_.find(version_) == getTimeOutConfigRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get time out config respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get time out config response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getTimeOutConfigRspFuncMap_[version_])(ret);
@@ -918,9 +918,9 @@ int32_t AicpuSqeAdapter::AicpuInfoLoadResponseToTsV1(const int32_t ret)
 
 int32_t AicpuSqeAdapter::AicpuInfoLoadResponseToTs(const int32_t ret)
 {
-    aicpusd_info("Aicpu  info load response to ts.");
+    aicpusd_info("Aicpu info load response to ts.");
     if (getInfoLoadRspFuncMap_.find(version_) == getInfoLoadRspFuncMap_.end()) {
-        aicpusd_err("The version[%hu] does not have a corresponding get load info respone Function.", version_);
+        aicpusd_err("The version[%hu] does not have a corresponding get load info response Function.", version_);
         return AICPU_SCHEDULE_ERROR_NOT_FOUND_FUNCTION;
     }
     return (this->*getInfoLoadRspFuncMap_[version_])(ret);

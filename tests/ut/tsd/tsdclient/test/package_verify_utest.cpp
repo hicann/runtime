@@ -345,6 +345,19 @@ TEST_F(PackageVerifyTest, ReWriteAicpuPackageOpenFail)
     EXPECT_EQ(ret, TSD_START_FAIL);
 }
 
+TEST_F(PackageVerifyTest, ReWriteAicpuPackageWriteFail)
+{
+    string filepath = "/tmp/test_rewrite_fwrite_fail.bin";
+    vector<uint8_t> data(1024, 0xEF);
+
+    PackageVerify inst(filepath);
+    MOCKER(fwrite).stubs().will(returnValue(static_cast<size_t>(0)));
+    const TSD_StatusT ret = inst.ReWriteAicpuPackage(data.data(), 1024, filepath);
+    EXPECT_EQ(ret, TSD_START_FAIL);
+
+    remove(filepath.c_str());
+}
+
 TEST_F(PackageVerifyTest, IsSupportCmsVerify)
 {
     PackageVerify inst("tmp.tar.gz");

@@ -180,7 +180,7 @@ TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeShared(uint64_t &savedChe
     // used read lock for faster process when parallel case
     int32_t ret = flock(fd_, LOCK_SH);
     if (ret == -1) {
-        TSD_ERROR("Lock verify file not success, reason=%s", SafeStrerror().c_str());
+        TSD_ERROR("Lock verify file was not successful, reason=%s", SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -188,7 +188,7 @@ TSD_StatusT AicpuThreadPackageWorker::GetSavedCheckCodeShared(uint64_t &savedChe
 
     ret = flock(fd_, LOCK_UN);
     if (ret == -1) {
-        TSD_ERROR("Unlock verify file not success, reason=%s", SafeStrerror().c_str());
+        TSD_ERROR("Unlock verify file was not successful, reason=%s", SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -223,7 +223,7 @@ TSD_StatusT AicpuThreadPackageWorker::ReadCheckCode(uint64_t &savedCheckCode) co
 
     const ssize_t ret = static_cast<ssize_t>(read(fd_, &buf[0], VERIFY_FILE_CONTENT_LEN));
     if (ret < 0) {
-        TSD_RUN_WARN("Read check code in verify file not success, reason=%s", SafeStrerror().c_str());
+        TSD_RUN_WARN("Reading check code in verify file was not successful, reason=%s", SafeStrerror().c_str());
         return TSD_OK;
     }
 
@@ -292,7 +292,7 @@ TSD_StatusT AicpuThreadPackageWorker::WriteCheckCode(const int32_t fd, const uin
     const std::string writeCode = std::to_string(checkCode);
     const ssize_t ret = write(fd, writeCode.c_str(), writeCode.length());
     if (ret < 0) {
-        TSD_ERROR("Write check code to verify file not success, reason=%s", SafeStrerror().c_str());
+        TSD_ERROR("Writing check code to verify file was not successful, reason=%s", SafeStrerror().c_str());
         return TSD_INTERNAL_ERROR;
     }
 
@@ -304,7 +304,7 @@ TSD_StatusT AicpuThreadPackageWorker::ResetExtendVerifyFile() const
     const std::string extendVerifyFile = decomPackagePath_.path + EXTEND_VERIFY_FILE_NAME;
     const int32_t fd = open(extendVerifyFile.c_str(), O_RDWR);
     if (fd < 0) {
-        TSD_INFO("Open extend verify file not success, path=%s, reason=%s",
+        TSD_INFO("Opening extend verify file was not successful, path=%s, reason=%s",
                  extendVerifyFile.c_str(), SafeStrerror().c_str());
         return TSD_OK;
     }
@@ -313,7 +313,7 @@ TSD_StatusT AicpuThreadPackageWorker::ResetExtendVerifyFile() const
     if (WriteCheckCode(fd, 0UL) == TSD_OK) {
         TSD_RUN_INFO("Clear extend verify file success, path=%s", extendVerifyFile.c_str());
     } else {
-        TSD_RUN_WARN("Clear extend verify file not success, path=%s", extendVerifyFile.c_str());
+        TSD_RUN_WARN("Clearing extend verify file was not successful, path=%s", extendVerifyFile.c_str());
     }
 
     return TSD_OK;

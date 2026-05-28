@@ -215,7 +215,7 @@ namespace tsd {
         // 此处是hiaiengine中hdc代码移植过来，去除了长消息发送功能
         const TSD_StatusT ret = RecvHdcDefaultMsg(session, hdcMsg, tempBuf, bufferLengthOut, timeout);
         if ((ret != TSD_OK) || (tempBuf == nullptr) || (bufferLengthOut < HDC_MSG_SHORT_HEAD_SIZE)) {
-            TSD_WARN("Receive not success ret[%d], bufferLengthOut[%u]", ret, bufferLengthOut);
+            TSD_WARN("Receiving was not successful, ret[%d], bufferLengthOut[%u]", ret, bufferLengthOut);
         } else {
             (void)msg.ParseFromArray(tempBuf + HDC_MSG_SHORT_HEAD_SIZE,
                 static_cast<int32_t>(bufferLengthOut) - static_cast<int32_t>(HDC_MSG_SHORT_HEAD_SIZE));
@@ -256,10 +256,10 @@ namespace tsd {
                 int32_t value = 0;
                 const auto ret = halHdcGetSessionAttr(session, HDC_SESSION_ATTR_DFX, &value);
                 if (ret != DRV_ERROR_NONE) {
-                    TSD_RUN_INFO("halHdcGetSessionAttr HDC_SESSION_ATTR_DFX not success, ret[%d].", ret);
+                    TSD_RUN_INFO("halHdcGetSessionAttr HDC_SESSION_ATTR_DFX was not successful, ret[%d].", ret);
                 }
                 if (value < 0) {
-                    TSD_RUN_INFO("halHdcGetSessionAttr HDC_SESSION_ATTR_DFX not success, value[%d].", value);
+                    TSD_RUN_INFO("halHdcGetSessionAttr HDC_SESSION_ATTR_DFX was not successful, value[%d].", value);
                 }
                 TSD_INFO("halHdcGetSessionAttr HDC_SESSION_ATTR_DFX finish");
             } 

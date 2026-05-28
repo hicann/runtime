@@ -145,7 +145,7 @@ namespace AicpuSchedule {
             aicpusd_err("Model[%u] repeat failed, ret[%d].", modelId, ret);
             return ret;
         }
-        aicpusd_info("Finshed to execute repeat model[%u]", modelId);
+        aicpusd_info("Finished to execute repeat model[%u]", modelId);
         return AICPU_SCHEDULE_OK;
     }
 
@@ -165,7 +165,7 @@ namespace AicpuSchedule {
             aicpusd_err("Model[%u] recovery aicpu stream[%u] failed, ret[%d].", modelId, recoverStreamId, ret);
             return ret;
         }
-        aicpusd_info("Model[%u] finshed to recovery aicpu stream[%u]", modelId, recoverStreamId);
+        aicpusd_info("Model[%u] finished recovering aicpu stream[%u]", modelId, recoverStreamId);
         return AICPU_SCHEDULE_OK;
     }
 
@@ -892,7 +892,7 @@ namespace AicpuSchedule {
         aicpusd_info("platform buf:0x%x, len:%u", info.aicpuInfoPtr, info.length);
         const int32_t ret = funcPtr(info.aicpuInfoPtr, info.length);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("func:%s procss failed,ret:%u", EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), ret);
+            aicpusd_err("func:%s process failed,ret:%u", EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), ret);
         }
         return SendLoadPlatformFromBufMsgRsp(ret, aicpuSqeAdapter);
     }

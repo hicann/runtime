@@ -25,7 +25,7 @@ void ProfSoManager::LoadSo()
 {
     const std::lock_guard<std::mutex> loadSoLock(profMtx_);
     if (soHandle_ != nullptr) {
-        AICPU_LOG_INFO("Already load libascend_devprof.so");
+        AICPU_LOG_INFO("Already loaded libascend_devprof.so");
         return;
     }
     bool isProfApiSo = false;
@@ -41,13 +41,13 @@ void ProfSoManager::LoadSo()
             AICPU_RUN_INFO("The new profiling so hadn't taken effect. try another old one.");
         }
     } else {
-        AICPU_RUN_INFO("dlopen libprofapi.so not success. reason: %s", dlerror());
+        AICPU_RUN_INFO("dlopen libprofapi.so was not successful. reason: %s", dlerror());
     }
     if (isProfApiSo == false) {
         soHandle_ = dlopen("libascend_devprof.so", static_cast<int32_t>(
             (static_cast<uint32_t>(RTLD_LAZY))|(static_cast<uint32_t>(RTLD_GLOBAL))));
         if (soHandle_ == nullptr) {
-            AICPU_RUN_INFO("dlopen libascend_devprof.so not success. reason: %s", dlerror());
+            AICPU_RUN_INFO("dlopen libascend_devprof.so was not successful. reason: %s", dlerror());
             return;
         }
         const std::vector<std::string> funcName = {
@@ -65,7 +65,7 @@ void ProfSoManager::LoadSo()
         "MsprofReportAdditionalInfo",
     };
     InitFunctionMap(funcName);
-    AICPU_LOG_INFO("Load profiling so success. [%u]", isProfApiSo);
+    AICPU_LOG_INFO("Load profiling so successfully. [%u]", isProfApiSo);
 }
 
 void ProfSoManager::InitFunctionMap(const std::vector<std::string> &funcName)

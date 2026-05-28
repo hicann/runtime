@@ -275,7 +275,7 @@ TSD_StatusT PackageVerify::ReWriteAicpuPackage(const uint8_t * const buf, const 
     const ScopeGuard closeFileGuard([&fp]() { (void)fclose(fp); });
     const size_t writeRet = fwrite(buf, len, 1, fp);
     if (writeRet != 1) {
-        TSD_ERROR("[CMSCBB_VERIFY] fwrite failed writeRet[%u]", writeRet);
+        TSD_ERROR("[CMSCBB_VERIFY] fwrite failed writeRet[%zu]", writeRet);
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
     TSD_INFO("[CMSCBB_VERIFY] end write new file:%s, len:%u", srcPath.c_str(), len);

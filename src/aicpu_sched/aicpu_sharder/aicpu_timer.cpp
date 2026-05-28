@@ -54,7 +54,7 @@ TimerStatus AicpuTimer::StartTimer(TimerHandle &timerHandle, const TimeoutCallba
 
     TimerStatus ret = RegistTimeoutCallback(timerHandle, callback);
     if (ret != TimerStatus::AICPU_TIMER_SUCCESS) {
-        AICPUE_LOGE("Regist op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
+        AICPUE_LOGE("Register op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
                     timerHandle);
         return ret;
     }
@@ -85,7 +85,7 @@ TimerStatus AicpuTimer::StopTimer(const TimerHandle timerHandle)
 
     ret = UnregistTimeoutCallback(timerHandle);
     if (ret != TimerStatus::AICPU_TIMER_SUCCESS) {
-        AICPUE_LOGE("Unregist op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
+        AICPUE_LOGE("Unregister op timeout callback func failed, ret=%d, TimerHandle=%lu.", static_cast<int32_t>(ret),
                     timerHandle);
         return ret;
     }

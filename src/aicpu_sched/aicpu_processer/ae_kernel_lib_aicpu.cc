@@ -213,7 +213,7 @@ namespace cce {
         }
 
         if (errCode == static_cast<uint32_t>(AicpuOpErrorCode::AICPU_END_OF_SEQUENCE_FLAG)) {
-            AE_INFO_LOG(AE_MODULE_ID, "Get aicpu end of sequence flag. ");
+            AE_INFO_LOG(AE_MODULE_ID, "Get aicpu end of sequence flag.");
             return AE_STATUS_END_OF_SEQUENCE;
         }
         if (errCode == static_cast<uint32_t>(AicpuOpErrorCode::AICPU_TASK_WATI_FLAG)) {
@@ -262,9 +262,9 @@ namespace cce {
         auto iter = soWhiteList_.find(soName);
         if (iter != soWhiteList_.end()) {
             soWhiteList_.erase(iter);
-            AE_INFO_LOG(AE_MODULE_ID, "erase so:%s in whilte list", soName.c_str());
+            AE_INFO_LOG(AE_MODULE_ID, "erase so:%s in white list", soName.c_str());
         } else {
-            AE_INFO_LOG(AE_MODULE_ID, "so:%s not in whilte list", soName.c_str());
+            AE_INFO_LOG(AE_MODULE_ID, "so:%s not in white list", soName.c_str());
         }
     }
 
@@ -278,9 +278,9 @@ namespace cce {
         auto iter = soWhiteList_.find(soName);
         if (iter == soWhiteList_.end()) {
             soWhiteList_[soName] = soName;
-            AE_INFO_LOG(AE_MODULE_ID, "add so:%s in whilte list, list size:%zu", soName.c_str(), soWhiteList_.size());
+            AE_INFO_LOG(AE_MODULE_ID, "add so:%s in white list, list size:%zu", soName.c_str(), soWhiteList_.size());
         } else {
-            AE_INFO_LOG(AE_MODULE_ID, "so:%s aleady in whilte list, size:%zu", soName.c_str(), soWhiteList_.size());
+            AE_INFO_LOG(AE_MODULE_ID, "so:%s already in white list, size:%zu", soName.c_str(), soWhiteList_.size());
         }
         return AE_STATUS_SUCCESS;
     }

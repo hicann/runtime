@@ -123,7 +123,7 @@ uint32_t *MessageQueue::MapResAddr(const res_addr_type resType) const
 
 int32_t MessageQueue::InitMessageQueueForThread(const size_t threadIndex) const
 {
-    aicpusd_info("Start init message queue for thread");
+    aicpusd_info("Start initializing message queue for thread");
 
     int32_t ret = ResetMessageQueueStatus(threadIndex);
     if (ret != AICPU_SCHEDULE_OK) {

@@ -1994,6 +1994,63 @@ TEST_F(ProcessManagerTest, SendAICPUPackageComplex_010)
     EXPECT_EQ(ret, 1U);
 }
 
+TEST_F(ProcessManagerTest, SendAICPUPackageComplex_012_OpenMutexFileFailed)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    const std::string srcFile = "Ascend-aicpu_kernels.tar.gz";
+    const std::string dstFile = "123_Ascend-aicpu_kernels.tar.gz";
+    HDCMessage msg;
+    msg.set_real_device_id(0);
+    msg.set_type(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
+    msg.set_check_code(0);
+    auto aicpuPkgCompareMethd = []() {
+        return true;
+    };
+
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath)
+        .stubs()
+        .will(invoke(GetHostSoPathFake));
+    MOCKER(CheckRealPath).stubs().will(returnValue(true));
+    MOCKER(mockerOpen).stubs().will(returnValue(-1));
+    MOCKER_CPP(&ProcessModeManager::SendMsgAndHostPackage)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+
+    auto ret = processModeManager.SendHostPackageComplex(0, srcFile, dstFile, msg,
+        aicpuPkgCompareMethd, false);
+    GlobalMockObject::verify();
+    EXPECT_EQ(ret, TSD_OK);
+}
+
+TEST_F(ProcessManagerTest, SendAICPUPackageComplex_013_FileLockFailed)
+{
+    ProcessModeManager processModeManager(deviceId, 0);
+    const std::string srcFile = "Ascend-aicpu_kernels.tar.gz";
+    const std::string dstFile = "123_Ascend-aicpu_kernels.tar.gz";
+    HDCMessage msg;
+    msg.set_real_device_id(0);
+    msg.set_type(HDCMessage::TSD_CHECK_PACKAGE_RETRY);
+    msg.set_check_code(0);
+    auto aicpuPkgCompareMethd = []() {
+        return true;
+    };
+
+    MOCKER_CPP(&ProcessModeManager::GetHostSoPath)
+        .stubs()
+        .will(invoke(GetHostSoPathFake));
+    MOCKER(CheckRealPath).stubs().will(returnValue(true));
+    MOCKER(mockerOpen).stubs().will(returnValue(3));
+    MOCKER(flock).stubs().will(returnValue(-1));
+    MOCKER_CPP(&ProcessModeManager::SendMsgAndHostPackage)
+        .stubs()
+        .will(returnValue(tsd::TSD_OK));
+
+    auto ret = processModeManager.SendHostPackageComplex(0, srcFile, dstFile, msg,
+        aicpuPkgCompareMethd, false);
+    GlobalMockObject::verify();
+    EXPECT_EQ(ret, TSD_OK);
+}
+
 TEST_F(ProcessManagerTest, SendAICPUPackageComplex_011)
 {
     ProcessModeManager processModeManager(deviceId, 0);

@@ -593,7 +593,7 @@ aeStatus_t MultiSoManager::CreateSingleSoMgr(const aicpu::KernelType kernelType,
     // Cache it so that we can get it from cache next time.
     soCacher_[soName] = newSSoMngr;
     soMgr = newSSoMngr;
-    AE_INFO_LOG(AE_MODULE_ID, "Load so success, soFile=%s.", soFile.c_str());
+    AE_INFO_LOG(AE_MODULE_ID, "Loaded so successfully, soFile=%s.", soFile.c_str());
     return AE_STATUS_SUCCESS;
 }
 

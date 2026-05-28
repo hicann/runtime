@@ -368,7 +368,7 @@ namespace AicpuSchedule {
             if (!envRet) {
                 envRet = AicpuUtil::GetEnvVal(ENV_NAME_HOME, custDirName);
                 if (!envRet) {
-                    aicpusd_info("Get current home directory not success.");
+                    aicpusd_info("Getting current home directory was not successful.");
                     return AICPU_SCHEDULE_ERROR_INNER_ERROR;
                 }
             }
@@ -452,7 +452,7 @@ namespace AicpuSchedule {
 
         const auto eRet = memset_s(path.get(), PATH_MAX, 0, PATH_MAX);
         if (eRet != EOK) {
-            aicpusd_run_info("Mem set not success, ret=%d", eRet);
+            aicpusd_run_info("Mem set was not successful, ret=%d", eRet);
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
 
@@ -536,7 +536,7 @@ namespace AicpuSchedule {
         }
 
         if (access(custSoDirName_.c_str(), F_OK) != 0) {
-            aicpusd_run_info("Access cust so dir %s not success, reason is %s.",
+            aicpusd_run_info("Accessing cust so dir %s was not successful, reason is %s.",
                              custSoDirName_.c_str(), strerror(errno));
             return AICPU_SCHEDULE_OK;
         }

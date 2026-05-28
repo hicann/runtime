@@ -38,7 +38,7 @@ int32_t OperatorKernelModelEnqueueBuff::ModelEnqueueBuff(BufEnQueueBuffInfo &buf
 {
     const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
     if ((model != nullptr) && (model->GetModelRetCode() != 0)) {
-        aicpusd_info("Model execute not success, no need to enqueue. modelId=%u, modelRetCode=%d.",
+        aicpusd_info("Model execution was not successful, no need to enqueue. modelId=%u, modelRetCode=%d.",
                      taskContext.modelId, model->GetModelRetCode());
         return AICPU_SCHEDULE_OK;
     }

@@ -237,7 +237,7 @@ int32_t DestroyQueueTsKernel::Compute(const aicpu::HwtsTsKernel &tsKernelInfo)
 
     ret = halQueueUnsubF2NFEvent(deviceId, queueId);
     if ((ret != DRV_ERROR_NONE) && (ret != DRV_ERROR_NOT_EXIST)) {
-        aicpusd_err("Unsubscribe  queue[%u] F2NF event failed, ret[%d].", queueId, ret);
+        aicpusd_err("Unsubscribe queue[%u] F2NF event failed, ret[%d].", queueId, ret);
         eventRet = AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
 

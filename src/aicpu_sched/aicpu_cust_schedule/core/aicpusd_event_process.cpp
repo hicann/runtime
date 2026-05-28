@@ -178,7 +178,7 @@ namespace AicpuSchedule {
         ProfilingMode profilingMode = PROFILING_CLOSE;
         bool kernelFlag = false;
         AicpuUtil::GetProfilingInfo(modelInfoFlag, profilingMode, kernelFlag);
-        aicpusd_info("Update aicpu profiling mode success, profilingMode[%u], kernelFlag[%d], ",
+        aicpusd_info("Update aicpu profiling mode success, profilingMode[%u], kernelFlag[%d]",
                      profilingMode, kernelFlag);
         aicpu::LoadProfilingLib();
         aicpu::SetProfilingFlagForKFC(modelInfoFlag);

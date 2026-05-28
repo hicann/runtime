@@ -54,7 +54,7 @@ namespace AicpuSchedule {
     {
         std::ifstream inFile(svmMemCfgFile_);
         if (!inFile) {
-            aicpusd_info("open svmMem file not success, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
+            aicpusd_info("Opening svmMem file was not successful, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
                          errno, strerror(errno));
             return false;
         }
@@ -96,7 +96,7 @@ namespace AicpuSchedule {
     {
         std::ifstream inFile(xsMemCfgFile_);
         if (!inFile) {
-            aicpusd_info("open xsMem file not success, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
+            aicpusd_info("Opening xsMem file was not successful, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
                          errno, strerror(errno));
             return false;
         }
@@ -149,7 +149,7 @@ namespace AicpuSchedule {
     {
         std::ifstream ifFile(rssMemCfgFile_);
         if (!ifFile) {
-            aicpusd_info("open rss file not success, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
+            aicpusd_info("Opening rss file was not successful, pid=%d, errno=%d, reason:%s", static_cast<int32_t>(curPid_),
                          errno, strerror(errno));
             return false;
         }

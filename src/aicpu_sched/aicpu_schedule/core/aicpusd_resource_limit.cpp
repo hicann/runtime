@@ -50,7 +50,7 @@ bool AddToCgroup(const uint32_t deviceId, const uint32_t vfId)
     while (tryTimes <= MAX_EXECUTE_TRY_TIMES) {
         status = AicpuUtil::ExecuteCmd(command);
         if (status != 0) {
-            aicpusd_run_warn("Add to cgroup not success, ret:[%d], cmd:[%s]", status, command.c_str());
+            aicpusd_run_warn("Adding to cgroup was not successful, ret:[%d], cmd:[%s]", status, command.c_str());
             (void)usleep(SLEEP_100_MSECS);
         } else {
             aicpusd_info("Add to cgroup successfully, cmd:[%s].", command.c_str());

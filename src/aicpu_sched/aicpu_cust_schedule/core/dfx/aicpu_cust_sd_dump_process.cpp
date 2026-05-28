@@ -123,7 +123,8 @@ namespace AicpuSchedule {
             }
             const int32_t ret = pthread_setaffinity_np(threadId, sizeof(cpu_set_t), &cpuset);
             if (ret != 0) {
-                aicpusd_run_warn("Datadump thread bind ctrl cpu not success, will run in aicpu. ret=%d, reason=%s",
+                aicpusd_run_warn(
+                    "Binding datadump thread to control CPU was not successful, will run in aicpu. ret=%d, reason=%s",
                                  ret, strerror(errno));
             } else {
                 aicpusd_run_info("aicpu bind by self success");

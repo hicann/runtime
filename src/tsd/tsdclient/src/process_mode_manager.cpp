@@ -97,7 +97,7 @@ TSD_StatusT ProcessModeManager::OpenProcess(const uint32_t rankSize)
     TsdStartStatusInfo startInfo = { };
     const TimePoint beginOpen = std::chrono::high_resolution_clock::now();
     if (!CheckNeedToOpen(rankSize, startInfo)) {
-        TSD_INFO("Open has already done before.");
+        TSD_INFO("Open has already been done before.");
         return TSD_OK;
     }
 
@@ -438,7 +438,7 @@ TSD_StatusT ProcessModeManager::SendHostPackageComplex(const int32_t peerNode, c
     }
     const int32_t fileData = open(mutexFile.c_str(), O_RDONLY);
     if (fileData < 0) {
-        TSD_INFO("Open qs so not success [%s], strerror[%s]", mutexFile.c_str(), SafeStrerror().c_str());
+        TSD_INFO("Opening qs so [%s] was not successful, reason[%s]", mutexFile.c_str(), SafeStrerror().c_str());
         return SendMsgAndHostPackage(peerNode, orgFile, dstFile, msg, compareCallBack, useCannPath);
     } else {
         TSD_INFO("Open qs so [%s] success", mutexFile.c_str());
@@ -452,7 +452,7 @@ TSD_StatusT ProcessModeManager::SendHostPackageComplex(const int32_t peerNode, c
     const ScopeGuard fileDataGuard([&fileData]() { (void)close(fileData); });
     const int32_t flockRet = flock(fileData, LOCK_EX);
     if (flockRet == -1) {
-        TSD_RUN_WARN("File lock is not success, ret[%d], errno[%d], strerror[%s] ",
+        TSD_RUN_WARN("File lock was not successful, ret[%d], errno[%d], reason[%s]",
                      flockRet, errno, SafeStrerror().c_str());
     }
 
@@ -502,7 +502,7 @@ TSD_StatusT ProcessModeManager::InitTsdClient()
 {
     // tsd支持重入，如果实例已经初始化过则不需要再次初始化，使用初始化过的sessionId发送数据
     if (initFlag_) {
-        TSD_INFO("[TsdClient] tsd client has been inited before");
+        TSD_INFO("[TsdClient] tsd client has already been initialized");
         return TSD_OK;
     }
     // 获取当前进程号，通过驱动接口可以区分容器 虚拟机 hostpid会有相同的情况
@@ -1055,7 +1055,7 @@ TSD_StatusT ProcessModeManager::CapabilityGet(const int32_t type, const uint64_t
     TSD_CHECK(ret == TSD_OK, ret, "SendCapabilityMsg failed.");
 
     TSD_RUN_INFO(
-        "[TsdClient][deviceId=%u] [sessionId=%u] [type=%d]send capability successfully. ",
+        "[TsdClient][deviceId=%u] [sessionId=%u] [type=%d]send capability successfully.",
         logicDeviceId_, tsdSessionId_, type);
 
     ret = WaitCapabilityRsp(type, ptr);
@@ -1712,7 +1712,8 @@ bool ProcessModeManager::IsSupportCommonInterface(const uint32_t level)
         return true;
     }
 
-    TSD_RUN_INFO("IsSupportCommonInterface check not success, level[%u], tsd support level[%u]", level, tsdSupportLevel_);
+    TSD_RUN_INFO("IsSupportCommonInterface check was not successful, level[%u], tsd support level[%u]",
+                 level, tsdSupportLevel_);
     return false;
 }
 
@@ -2150,7 +2151,7 @@ TSD_StatusT ProcessModeManager::LoadPackageConfigInfoToDevice()
     PackageProcessConfig *pkgConInst = PackageProcessConfig::GetInstance();
     ret = pkgConInst->ParseConfigDataFromFile(packageTitle);
     if (ret != TSD_OK) {
-        TSD_ERROR("Parse config data not success");
+        TSD_ERROR("Parsing config data was not successful");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -2303,13 +2304,15 @@ std::string ProcessModeManager::GetCurHostMutexFile(bool useCannPath) const
         uint32_t phyId = 0U;
         auto drvRet = drvDeviceGetPhyIdByIndex(logicDeviceId_, &phyId);
         if (drvRet != DRV_ERROR_NONE) {
-            TSD_RUN_WARN("get physical ID not success, retCode[%d] deviceId[%u]", drvRet, logicDeviceId_);
+            TSD_RUN_WARN("Getting the physical ID was not successful, retCode[%d] deviceId[%u]",
+                         drvRet, logicDeviceId_);
             return QUEUE_SCHEDULE_SO;
         }
         TSD_INFO("deviceId[%u] physical ID[%u]", logicDeviceId_, phyId);
         drvRet = halGetDeviceInfo(phyId, MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID, &masterId);
         if (drvRet != DRV_ERROR_NONE) {
-            TSD_RUN_WARN("get halGetDeviceInfo not success, retCode[%d] deviceId[%u] physical ID[%u]", drvRet, logicDeviceId_, phyId);
+            TSD_RUN_WARN("Calling halGetDeviceInfo was not successful, retCode[%d] deviceId[%u] physical ID[%u]",
+                         drvRet, logicDeviceId_, phyId);
             return QUEUE_SCHEDULE_SO;
         }
         const int64_t devOsId = masterId % SUPPORT_MAX_DEVICE_PER_HOST;

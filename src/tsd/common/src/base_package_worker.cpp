@@ -76,7 +76,7 @@ TSD_StatusT BasePackageWorker::MoveOriginPackageToDecompressDir() const
     const std::string cmd = GetMovePackageToDecompressDirCmd();
     const int32_t cmdRet = PackSystem(cmd.c_str());
     if (cmdRet != 0) {
-        TSD_RUN_WARN("Move origin package to decompress path not success, ret=%d, cmd=%s, reason=%s",
+        TSD_RUN_WARN("Moving the origin package to the decompress path was not successful, ret=%d, cmd=%s, reason=%s",
                      cmdRet, cmd.c_str(), strerror(errno));
     }
     TSD_INFO("Move origin package to decompress path end, ret=%d, cmd=%s", cmdRet, cmd.c_str());

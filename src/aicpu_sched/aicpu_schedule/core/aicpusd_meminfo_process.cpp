@@ -125,7 +125,7 @@ namespace AicpuSchedule {
 
         const auto eRet = memset_s(path.get(), PATH_MAX, 0, PATH_MAX);
         if (eRet != EOK) {
-            aicpusd_run_info("Mem set not success, ret=%d", eRet);
+            aicpusd_run_info("Mem set was not successful, ret=%d", eRet);
             return AICPU_SCHEDULE_ERROR_GET_PATH_FAILED;
         }
 

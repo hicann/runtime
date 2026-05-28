@@ -892,7 +892,7 @@ int32_t OpDumpTaskManager::Unload(const aicpu::dump::OpMappingInfo &opMappingInf
                 taskInfo.streamId_, taskInfo.taskId_);
         }
         (void)modelIdToTask_.erase(iter);
-        aicpusd_info("unload model id[%u] success", optionalParam.modelId);
+        aicpusd_info("Unloaded model id[%u] successfully", optionalParam.modelId);
     }
     return AICPU_SCHEDULE_OK;
 }

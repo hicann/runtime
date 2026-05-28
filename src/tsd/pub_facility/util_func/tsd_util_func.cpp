@@ -57,7 +57,7 @@ namespace tsd {
         struct stat st = {};
         const auto ret = lstat(filePath.c_str(), &st);
         if (ret != 0) {
-            TSD_RUN_WARN("Get file stat not success, ret=%d, path=%s, reason=%s",
+            TSD_RUN_WARN("Getting the file stat was not successful, ret=%d, path=%s, reason=%s",
                      ret, filePath.c_str(), SafeStrerror().c_str());
             return 0UL;
         }
@@ -296,7 +296,7 @@ namespace tsd {
 
         const int32_t ret = remove(filePath.c_str());
         if (ret != 0) {
-            TSD_RUN_WARN("Remove file not success, ret=%d, path=%s, reason=%s",
+            TSD_RUN_WARN("Removing the file was not successful, ret=%d, path=%s, reason=%s",
                          ret, filePath.c_str(), SafeStrerror().c_str());
             return;
         }
@@ -335,7 +335,7 @@ namespace tsd {
     {
         std::ifstream curFile(filePath, std::ios::binary);
         if (!curFile) {
-            TSD_RUN_WARN("open file:%s not success, reason:%s", filePath.c_str(), SafeStrerror().c_str());
+            TSD_RUN_WARN("Opening file:%s was not successful, reason:%s", filePath.c_str(), SafeStrerror().c_str());
             return "";
         }
 

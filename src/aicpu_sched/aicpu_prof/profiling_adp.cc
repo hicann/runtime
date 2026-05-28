@@ -153,7 +153,7 @@ Return Value  : NA
 *****************************************************************************/
 void InitProfiling(const uint32_t deviceId, const pid_t hostPid, const uint32_t channelId)
 {
-    AICPU_LOG_INFO("Start init profiling.");
+    AICPU_LOG_INFO("Start initializing profiling.");
     const int32_t ret = ProfilingAdp::GetInstance().InitAicpuProfiling(deviceId, hostPid, channelId);
     AICPU_LOG_WHEN(ret != static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS),
                    "Failed to init profiling(%d).", ret);
@@ -168,7 +168,7 @@ Return Value  : NA
 *****************************************************************************/
 void InitProfilingDataInfo(const uint32_t deviceId, const pid_t hostPid, const uint32_t channelId)
 {
-    AICPU_LOG_INFO("Start init profiling data info.");
+    AICPU_LOG_INFO("Start initializing profiling data info.");
     ProfilingAdp::GetInstance().InitAicpuProfilingDataInfo(deviceId, hostPid, channelId);
 }
 
@@ -302,7 +302,7 @@ ProfMessage::ProfMessage(const char_t *tag) : std::basic_ostringstream<char_t>()
     if (ret != EOK) {
         AICPU_LOG_ERROR("memset error ret:%d", ret);
     }
-    AICPU_LOG_INFO("sendData_ has inited");
+    AICPU_LOG_INFO("sendData_ is initialized");
     const std::string mark = tag;
     if (mark == "DP") {
         (void)SetTimeStamp(NowMicros());
@@ -324,7 +324,7 @@ ProfMessage::~ProfMessage()
     } else if (mark == "DP") {
         SendToProfilingForSimplify(PtrToPtr<MsprofDpProfData, const char_t>(&sendData_.dPProfData), mark);
     } else {
-        AICPU_LOG_INFO("Not send data, mark=%s.", mark.c_str());
+        AICPU_LOG_INFO("Will not send data, mark=%s.", mark.c_str());
     }
 }
 
@@ -582,7 +582,7 @@ bool ProfilingAdp::BuildSendContent(const std::string &sendData, const std::stri
     const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
                                      mark.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
-        AICPU_LOG_WARN("copy reportData tag not success, retCpy=[%d].", retCpy);
+        AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
 
     reportData.tag[MSPROF_ENGINE_MAX_TAG_LEN] = '\0';
@@ -607,7 +607,7 @@ void ProfilingAdp::BuildProfData(const T &sendData, const std::string &mark,
     const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
                                      mark.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
-        AICPU_LOG_WARN("copy reportData tag not success, retCpy=[%d].", retCpy);
+        AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
 
     reportData.tag[MSPROF_ENGINE_MAX_TAG_LEN] = '\0';
@@ -666,12 +666,12 @@ void ProfilingAdp::BuildProfDpAdditionalData(const MsprofDpProfData &sendData, M
     errno_t retCpy = strncpy_s(data->action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN),
                                sendData.action, static_cast<size_t>(MSPROF_DP_DATA_ACTION_LEN));
     if (retCpy != EOK) {
-        AICPU_LOG_WARN("copy sendData.action tag not success, retCpy=[%d].", retCpy);
+        AICPU_LOG_WARN("Copying sendData.action tag was not successful, retCpy=[%d].", retCpy);
     }
     retCpy = strncpy_s(data->source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN),
                        sendData.source, static_cast<size_t>(MSPROF_DP_DATA_SOURCE_LEN));
     if (retCpy != EOK) {
-        AICPU_LOG_WARN("copy sendData.source tag not success, retCpy=[%d].", retCpy);
+        AICPU_LOG_WARN("Copying sendData.source tag was not successful, retCpy=[%d].", retCpy);
     }
     data->index = sendData.index;
     data->size = sendData.size;
@@ -824,7 +824,7 @@ int32_t ProfModelMessage::SendProfModelMessageWithOldChannel()
     const errno_t retCpy = strncpy_s(reportData.tag, static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN + 1),
                                      tagStr.c_str(), static_cast<size_t>(MSPROF_ENGINE_MAX_TAG_LEN));
     if (retCpy != EOK) {
-        AICPU_LOG_WARN("copy reportData tag not success, retCpy=[%d].", retCpy);
+        AICPU_LOG_WARN("Copying reportData tag was not successful, retCpy=[%d].", retCpy);
     }
     reportData.tag[MSPROF_ENGINE_MAX_TAG_LEN] = '\0';
     int32_t ret = ProfilingAdp::GetInstance().SendProcess(reportData);

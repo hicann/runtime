@@ -62,7 +62,7 @@ int32_t OperatorKernelModelReportStatus::ModelReportStatus(const uint32_t modelU
         QueueInfo queueInfo;
         const auto drvRet = halQueueQueryInfo(deviceId, inputQueueId, &queueInfo);
         if (drvRet != DRV_ERROR_NONE) {
-            aicpusd_info("query queue info not success, queue id[%u], device id[%u], ret[%d].",
+            aicpusd_info("Querying queue info was not successful, queue id[%u], device id[%u], ret[%d].",
                 inputQueueId, deviceId, drvRet);
         } else {
             queueDepth = static_cast<size_t>(queueInfo.size);

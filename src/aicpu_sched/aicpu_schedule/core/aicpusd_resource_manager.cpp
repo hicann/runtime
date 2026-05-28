@@ -164,7 +164,7 @@ namespace AicpuSchedule {
         // free mbuf if error occur
         const ScopeGuard mbufGuard([&]() {
             if (mbuf != nullptr) {
-                aicpusd_info("MallocAndGuardBufList guard release not success, ret:[%d]", ret);
+                aicpusd_info("MallocAndGuardBufList guard release was not successful, ret:[%d]", ret);
                 // do not set ret value by halMbufFree, keep ret value for function return
                 const auto drvRet = halMbufFree(mbuf);
                 if (drvRet != DRV_ERROR_NONE) {

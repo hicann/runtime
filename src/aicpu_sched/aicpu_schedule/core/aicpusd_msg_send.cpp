@@ -120,7 +120,7 @@ void AicpuMsgSend::SendEvent()
                 g_sendType = AICPUSendType::NO_NEED_SEND;
                 return;
             } else {
-                aicpusd_run_info("Send async msg to ts not success. ret=%d, deviceId=%u, tsId=%u, retry times=%d",
+                aicpusd_run_info("Sending async msg to ts was not successful. ret=%d, deviceId=%u, tsId=%u, retry times=%d",
                                  ret, g_tsDevSendMsgAsync.deviceId,  g_tsDevSendMsgAsync.tsId, index);
             }
             (void)usleep(TSDEV_SEND_MSG_ASYNC_RETRY_INTERVAL);

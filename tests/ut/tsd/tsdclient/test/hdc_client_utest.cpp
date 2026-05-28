@@ -424,6 +424,17 @@ TEST_F(HdcClientTest, CommCreateSession_CheckHdcConnection_RecvFail)
     EXPECT_EQ(ret, TSD_HDC_RECV_MSG_ERROR);
 }
 
+TEST_F(HdcClientTest, CommCreateSession_CheckHdcConnection_RspTypeMismatch)
+{
+    HdcClient client(devId_);
+    client.InitPre();
+    StubServerReply::GetInstance()->RegisterCallBack(HDCMessage::TEST_HDC_SEND,
+        StubServerMsgImpl::DefaultStartProcMsgProc);
+    uint32_t sessionId = 0;
+    TSD_StatusT ret = client.CommCreateSession(sessionId);
+    EXPECT_EQ(ret, TSD_HDC_RECV_MSG_ERROR);
+}
+
 TEST_F(HdcClientTest, CommGetVersionVerify_NotExist_Fail)
 {
     HdcClient client(devId_);

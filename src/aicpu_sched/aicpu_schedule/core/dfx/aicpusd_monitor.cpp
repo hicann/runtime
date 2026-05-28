@@ -160,7 +160,7 @@ int32_t AicpuMonitor::InitMonitor(const uint32_t devId, const bool isOnline)
 
 void AicpuMonitor::InitAsyncOpTimer()
 {
-    aicpusd_info("Start init async op timer in monitor");
+    aicpusd_info("Start initializing async op timer in monitor");
 
     const auto startTimerCbk = [this](const aicpu::TimerHandle timerHandle, const uint32_t timeInS) {
         return SetOpTimerStartTime(timerHandle, timeInS);

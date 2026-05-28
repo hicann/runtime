@@ -120,8 +120,8 @@ int32_t OperatorKernelZeroCpyV2::DoCompute(AddrMapInfoV2 &mapInfo, const RunCont
             const uint32_t skipSize = *(PtrToPtr<char, uint32_t>(mapInfo.extendInfo));
             const uint64_t baseAddr = PtrToValue(srcDataPtr);
             if ((UINT64_MAX - baseAddr) < static_cast<uint64_t>(skipSize)) {
-                aicpusd_err("AddrMapInfoV2 extendInfo skip size[%u] + baseAddr will overflow, modelId[%u], \
-                    streamId[%u].", skipSize, taskContext.modelId, taskContext.streamId);
+                aicpusd_err("AddrMapInfoV2 extendInfo skip size[%u] + baseAddr will overflow, modelId[%u], "
+                    "streamId[%u].", skipSize, taskContext.modelId, taskContext.streamId);
                 return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
             }
             *dstPtr = ValueToPtr(baseAddr + static_cast<uint64_t>(skipSize));

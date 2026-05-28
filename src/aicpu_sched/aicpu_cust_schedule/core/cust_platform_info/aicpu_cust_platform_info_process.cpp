@@ -66,10 +66,10 @@ namespace AicpuSchedule {
         if (info->platformInfo == 0LU || info->length == 0LU) {
             aicpusd_err("info->platformInfo is nullptr or info->length is %llu", info->length);
         }
-        aicpusd_info("func:%s procss, info[%llu], length[%llu], pid[%u]", CUSTOM_EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), info->platformInfo, info->length, info->aicpuPid);
+        aicpusd_info("func:%s process, info[%llu], length[%llu], pid[%u]", CUSTOM_EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), info->platformInfo, info->length, info->aicpuPid);
         ret = funcPtr(info->platformInfo, info->length);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("func:%s procss failed,ret:%u, info[%llu], length[%llu], pid[%u]",
+            aicpusd_err("func:%s process failed, ret:%u, info[%llu], length[%llu], pid[%u]",
                 CUSTOM_EXTEND_SO_PLATFORM_FUNC_NAME.c_str(), ret, info->platformInfo, info->length, info->aicpuPid);
         }
         struct event_proc_result rsp = {};
@@ -108,7 +108,7 @@ namespace AicpuSchedule {
         backEvent.msg = PtrToPtr<struct event_proc_result, char_t>(&rsp);
         const uint32_t deviceId = AicpuDrvManager::GetInstance().GetDeviceId();
         ret = halEschedSubmitEvent(deviceId, &backEvent);
-        aicpusd_info("backEvent dst[%d], pid[%d], grpId[%d],  eventId[%d], subeventId[%d], msgLen[%d], deviceId[%u]",
+        aicpusd_info("backEvent dst[%d], pid[%d], grpId[%d], eventId[%d], subeventId[%d], msgLen[%d], deviceId[%u]",
             backEvent.dst_engine, backEvent.pid, backEvent.grp_id, backEvent.event_id,
             backEvent.subevent_id, backEvent.msg_len, deviceId);
         if (ret != 0) {

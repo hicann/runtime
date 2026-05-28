@@ -26,6 +26,18 @@
 using namespace tsd;
 using namespace std;
 
+namespace {
+drvError_t HalHdcGetSessionAttrDfxFailNegativeStub(HDC_SESSION session, int attr, int *value)
+{
+    (void)session;
+    (void)attr;
+    if (value != nullptr) {
+        *value = -1;
+    }
+    return DRV_ERROR_INNER_ERR;
+}
+}
+
 class HdcCommonTest : public testing::Test {
 protected:
     virtual void SetUp()
@@ -183,6 +195,22 @@ TEST_F(HdcCommonTest, RecvHdcDefaultMsg_HalHdcRecvFailed)
     
     MOCKER(&halHdcRecv).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
     
+    TSD_StatusT ret = hdcCommon.RecvHdcDefaultMsg(session, &drvMsg, buffer, bufferLengthOut, 1000U);
+    EXPECT_EQ(ret, TSD_HDC_RECV_MSG_ERROR);
+}
+
+TEST_F(HdcCommonTest, RecvHdcDefaultMsg_HalHdcRecvFailed_DfxAttrCheckFailed)
+{
+    HdcCommon hdcCommon;
+    hdcCommon.InitMsgSize();
+    HDC_SESSION session = reinterpret_cast<HDC_SESSION>(0x1);
+    drvHdcMsg drvMsg;
+    char_t* buffer = nullptr;
+    uint32_t bufferLengthOut = 0U;
+
+    MOCKER(&halHdcRecv).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
+    MOCKER(&halHdcGetSessionAttr).stubs().will(invoke(HalHdcGetSessionAttrDfxFailNegativeStub));
+
     TSD_StatusT ret = hdcCommon.RecvHdcDefaultMsg(session, &drvMsg, buffer, bufferLengthOut, 1000U);
     EXPECT_EQ(ret, TSD_HDC_RECV_MSG_ERROR);
 }

@@ -42,8 +42,8 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutput(ProcessOutputInfo &output
     g_aicpuProfiler.SetPrepareOutStart();
     if (tensorDesc != nullptr) {
         if ((UINT32_MAX - static_cast<uint32_t>(sizeof(RuntimeTensorDesc))) < outputInfo.dataSize) {
-            aicpusd_err("PrepareOutput param is invalid, output data size[%u] + sizeof(RuntimeTensorDesc)[%zu] \
-                will overflow.", outputInfo.dataSize, sizeof(RuntimeTensorDesc));
+            aicpusd_err("PrepareOutput param is invalid, output data size[%u] + sizeof(RuntimeTensorDesc)[%zu] "
+                        "will overflow.", outputInfo.dataSize, sizeof(RuntimeTensorDesc));
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         *outMBuf = BufManager::GetInstance().MallocAndGuardBuf(
@@ -154,8 +154,8 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutWithTensorDesc(const AicpuTas
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     if ((UINT64_MAX - static_cast<uint64_t>(sizeof(ProcessOutputInfo))) < kernelTaskInfo.paraBase) {
-        aicpusd_err("AicpuTaskInfo.paramBase[%lu] + sizeof(ProcessOutputInfo)[%zu] will overflow, modelId[%u], \
-            streamId[%u], taskId[%u]", kernelTaskInfo.paraBase, sizeof(ProcessOutputInfo), taskContext.modelId,
+        aicpusd_err("AicpuTaskInfo.paramBase[%lu] + sizeof(ProcessOutputInfo)[%zu] will overflow, modelId[%u], "
+            "streamId[%u], taskId[%u]", kernelTaskInfo.paraBase, sizeof(ProcessOutputInfo), taskContext.modelId,
             taskContext.streamId, kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
