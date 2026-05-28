@@ -80,6 +80,8 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/exception/kernel_info_collector.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_operator.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_args.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/exception/dfx_args_parser.cpp
+    ${SRC_CODE_ROOT_PATH}/adump/exception/dump_args_callback.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/thread_manager.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/exception_dumper.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/exception_dumper_platform.cpp
@@ -121,6 +123,7 @@ set(adumpBaseUtestSrcList
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/operator_dumper_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/operator/kernel_dfx_dumper_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_utest.cpp
+    ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_args_callback_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_ELF_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_core_utest.cpp
     ${ADUMP_BASE_UT_ROOT_PATH}/testcase/exception/dump_file_utest.cpp

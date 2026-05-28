@@ -63,21 +63,33 @@ void KernelInfoCollector::LoadKernelInfo(const rtExceptionArgsInfo &argsInfo)
              kernelName_.c_str());
 }
 
+int32_t KernelInfoCollector::InitFromBinHandle(rtBinHandle bin, const std::string &kernelName)
+{ 
+    kernelBinHandle_ = bin;
+    kernelName_ = kernelName;
+
+    return LoadKernelBinBuffer();
+}
+
 int32_t KernelInfoCollector::LoadKernelBinBuffer()
 {
-    if (kernelBinHandle_ == nullptr){
+    if (kernelBinHandle_ == nullptr) {
         return ADUMP_SUCCESS;
     }
     uint32_t binSize = 0;
     void *binAddr = nullptr;
     rtError_t rtRet = rtGetBinBuffer(kernelBinHandle_, RT_BIN_HOST_ADDR, &binAddr, &binSize);
     if (rtRet != RT_ERROR_NONE || binAddr == nullptr || binSize == 0) {
-        IDE_LOGE("rtGetBinBuffer kernel bin addr failed, ret: %d", static_cast<int32_t>(rtRet));
+        IDE_LOGE("rtGetBinBuffer kernel bin addr failed, ret=%d, bin=%p.",
+            static_cast<int32_t>(rtRet), kernelBinHandle_);
         kernelBinData_ = "";
         return ADUMP_FAILED;
     }
+
+    kernelBinSize_ = binSize;
     kernelBinData_ = std::string(static_cast<AdxStringBuffer>(binAddr), binSize);
-    IDE_LOGI("Get kernel addr: %p", binAddr);
+    IDE_LOGI("LoadKernelBinBuffer success, binHandle=%p, binAddr=%p, binSize=%u",
+        kernelBinHandle_, binAddr, binSize);
     return ADUMP_SUCCESS;
 }
 

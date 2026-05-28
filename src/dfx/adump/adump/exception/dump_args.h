@@ -95,15 +95,10 @@ public:
           inputNum_(0),
           argAddr_(nullptr),
           argSize_(0),
-          dynamicModeFlag_(false),
           dumpWithDfxFlag_(false),
           isTik_(false),
-          shapeDataAddr_(nullptr),
-          shapeDataMaxAddr_(nullptr),
           exceptionDfxPtr_(nullptr),
           exceptionDfxSize_(0),
-          maxArgNum_(0),
-          argOnHost_(nullptr),
           kernelCollector_(std::make_shared<KernelInfoCollector>()){};
     ~DumpArgs() = default;
     int32_t LoadArgsExceptionInfo(const rtExceptionInfo &exception);
@@ -140,21 +135,7 @@ private:
     int32_t FindExceptionDfx(const rtExceptionArgsInfo_t &exceptionArgsInfo);
     int32_t CheckAddressOverArgs(const uint64_t *address, const void **argOnHost, uint64_t maxArgNum) const;
     int32_t GetAddressBias(uint64_t &addrBias, const void *argAddr, void *baseAddr, uint64_t argsSize) const;
-    int32_t LoadDfxInfo(uint64_t &currExceptionDfxSize, uint32_t &currArgsIndex);
-    int32_t LoadDfxTensor(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize, uint16_t argsInfoNum);
-    int32_t LoadDfxL1PtrTensor(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize);
-    int32_t LoadTensorShapeAndSize(TensorBuffer &tensorBuffer, uint64_t *dynamicTensorAddr, void **tensorAddr,
-                                   uint64_t shapeInfoCount);
-    int32_t LoadDfxL2ShapePtrTensor(TensorBuffer &tensorBuffer);
-    int32_t LoadDfxWorkspace(const TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize);
-    void LoadDfxMc2(const TensorBuffer &tensorBuffer);
-    int32_t LoadDfxTilingData(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize);
-    int32_t LoadDfxShapeData();
-    int32_t GetShapeData(uint64_t atomicIndex);
-    bool CheckMagicMemory(const uint8_t *address) const;
-    int32_t CheckShapeDataAddress() const;
     void RecordCurrentLog();
-    bool GetIsDataTypeSizeByte(bool &isDataTypeSizeByte) const;
     std::string taskId_;
     std::string streamId_;
     std::vector<InputBuffer> inputBuffer_;
@@ -168,17 +149,11 @@ private:
     uint32_t inputNum_;
     void *argAddr_;
     uint64_t argSize_;
-    bool dynamicModeFlag_;
     bool dumpWithDfxFlag_;
     bool isTik_;
-    uint64_t *shapeDataAddr_;
-    uint64_t *shapeDataMaxAddr_;
     const uint8_t *exceptionDfxPtr_;
     uint16_t exceptionDfxSize_;
-    uint64_t maxArgNum_;
-    const void **argOnHost_;
     std::shared_ptr<KernelInfoCollector> kernelCollector_;
-    // log record
     std::vector<std::string> logRecord_;
     std::ostringstream oss_;
 };

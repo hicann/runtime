@@ -14,6 +14,7 @@
 #include "dump_manager.h"
 #include "common/thread.h"
 #include "adx_dump_record.h"
+#include "dump_exception_stub.h"
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 
@@ -385,4 +386,272 @@ TEST_F(ExceptionDumperExtraUtest, FindExceptionOperator_ResidentOpMatches)
     int32_t ret = dumper.DumpException(exception);
     (void)ret;
     EXPECT_TRUE(true);
+}
+
+// ============================================================================
+// RegisterExceptionDumpCallback tests
+// ============================================================================
+TEST_F(ExceptionDumperExtraUtest, RegisterExceptionDumpCallback_NullCallback)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.RegisterExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, RegisterExceptionDumpCallback_Success)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, RegisterExceptionDumpCallback_AlreadyRegistered)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    ret = dumper.RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+// ============================================================================
+// UnregisterExceptionDumpCallback tests
+// ============================================================================
+TEST_F(ExceptionDumperExtraUtest, UnregisterExceptionDumpCallback_NullCallback)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.UnregisterExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(ExceptionDumperExtraUtest, UnregisterExceptionDumpCallback_Success)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    ret = dumper.UnregisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, UnregisterExceptionDumpCallback_NotFound)
+{
+    ExceptionDumper dumper;
+    int32_t ret = dumper.UnregisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, NeedDumpException_OverflowRetcode)
+{
+    ExceptionDumper dumper;
+    rtExceptionInfo exception = {};
+    exception.retcode = ACL_ERROR_RT_AICORE_OVER_FLOW;
+    bool needDump = dumper.NeedDumpException(exception);
+    EXPECT_FALSE(needDump);
+}
+
+TEST_F(ExceptionDumperExtraUtest, NeedDumpException_AivecOverflow)
+{
+    ExceptionDumper dumper;
+    rtExceptionInfo exception = {};
+    exception.retcode = ACL_ERROR_RT_AIVEC_OVER_FLOW;
+    bool needDump = dumper.NeedDumpException(exception);
+    EXPECT_FALSE(needDump);
+}
+
+TEST_F(ExceptionDumperExtraUtest, NeedDumpException_NormalException)
+{
+    ExceptionDumper dumper;
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    bool needDump = dumper.NeedDumpException(exception);
+    EXPECT_TRUE(needDump);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_NoCallbacks)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_args_inner_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    int32_t ret = dumper.DumpException(exception);
+    (void)ret;
+    EXPECT_TRUE(true);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackOverwrite)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_args_overwrite_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithOverwrite);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    (void)dumper.DumpException(exception);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackAdditional)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_args_additional_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithAdditional);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_CallbackNone)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_args_none_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithNone);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_UnsafeSlashInDisplayName)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_unsafe_slash_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithUnsafePathSlash);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 3U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_UnsafeBackslashInKernelName)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_unsafe_backslash_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithUnsafePathBackslash);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 4U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_UnsafeParentDirInKernelName)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_unsafe_parentdir_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithUnsafeParentDir);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 5U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_UnsafeControlCharInDisplayName)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_unsafe_control_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithUnsafeControlChar);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 2U;
+    exception.streamid = 6U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_NE(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(ExceptionDumperExtraUtest, DumpArgsExceptionInner_EmptyNamesAllowed)
+{
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = "/tmp/adump_empty_names_test";
+    int32_t initRet = dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config);
+    EXPECT_EQ(initRet, ADUMP_SUCCESS);
+
+    int32_t ret = dumper.RegisterExceptionDumpCallback(MockCallbackWithEmptyNames);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 7U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    ret = dumper.DumpException(exception);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
 }

@@ -30,7 +30,6 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown()
     {
-        DumpManager::Instance().Reset();
         GlobalMockObject::verify();
     }
 

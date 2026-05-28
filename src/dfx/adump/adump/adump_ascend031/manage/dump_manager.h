@@ -48,11 +48,8 @@ public:
     void AddExceptionOpV2(const OperatorInfoV2 &opInfo);
     int32_t DelExceptionOp(uint32_t deviceId, uint32_t streamId);
 
-#ifdef __ADUMP_LLT
-    void Reset();
-    bool GetKFCInitStatus();
-    void SetKFCInitStatus(bool status);
-#endif
+    int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
+    int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
 
 private:
     DumpManager();

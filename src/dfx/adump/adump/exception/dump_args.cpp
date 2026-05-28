@@ -7,8 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
+#include <set>
+#include <cmath>
 #include "dump_args.h"
+#include "dfx_args_parser.h"
 #include <cinttypes>
 #include "path.h"
 #include "dump_file.h"
@@ -19,7 +21,6 @@
 #include "dump_tensor_plugin.h"
 #include "adump_dsmi.h"
 #include "log/adx_log.h"
-#include <set>
 
 namespace Adx {
 namespace {
@@ -37,13 +38,6 @@ constexpr uint8_t SHAPE_PTR_TENSOR = 2;
 constexpr uint8_t TILING_DATA_PTR = 3;
 constexpr uint8_t WORKSPACE_TENSOR = 4;
 constexpr uint32_t ARGS_PER_STRING_MAX_LEN = 20;
-constexpr uint32_t BUFFER_ID_SHIFT_BITS = 31;
-constexpr uint64_t BUFFER_ID_MASK = 0x080000000;  // 32nd bit
-constexpr uint64_t OFFSET_MASK = 0x0FFFFFF;       // low 24 bits
-constexpr uint64_t MAGIC_NUM = 0xA5A5A5A500000000;
-constexpr uint64_t MAGIC_NUM_MASK = 0xFFFFFFFF00000000;  // high 32 bits
-constexpr uint64_t SPACE_MASK = 0x00000000FFFFFFFF;      // low 32 bits
-constexpr uint64_t ATOMIC_INDEX_SIZE = 8;
 }  // namespace
 
 template <typename T>
@@ -79,201 +73,6 @@ int32_t DumpArgs::GetPointerValueByLittleEndian(const uint8_t **ptr, T &value, u
         value = (value) | (static_cast<uint64_t>(**ptr) << (i * bitOfByte));
         currentDfxSize++;
         (*ptr)++;
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::GetAddressBias(uint64_t &addrBias, const void *argAddr, void *baseAddr, uint64_t argsSize) const
-{
-    addrBias = reinterpret_cast<uint64_t>(argAddr) - reinterpret_cast<uint64_t>(baseAddr);
-    if (addrBias >= argsSize) {
-        IDE_LOGE("Address bias[%p - %p] is over args size[%" PRIu64 "], invalid.", argAddr, baseAddr, argsSize);
-        return ADUMP_FAILED;
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::CheckAddressOverArgs(const uint64_t *address, const void **argOnHost, uint64_t maxArgNum) const
-{
-    uint64_t *endArgAddr = reinterpret_cast<uint64_t *>(argOnHost + maxArgNum);
-    if (address >= endArgAddr) {
-        IDE_LOGE("Args address[%p] is over args end address[%p].", address, endArgAddr);
-        return ADUMP_FAILED;
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::CheckShapeDataAddress() const
-{
-    if (shapeDataAddr_ >= shapeDataMaxAddr_) {
-        IDE_LOGE("The shape data address[%p] is over the max address[%p].", shapeDataAddr_, shapeDataMaxAddr_);
-        return ADUMP_FAILED;
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::GetShapeData(uint64_t atomicIndex)
-{
-    IDE_LOGI("The atomicIndex is %" PRIu64, atomicIndex);
-    uint8_t bufferId = static_cast<uint8_t>((atomicIndex & BUFFER_ID_MASK) >> BUFFER_ID_SHIFT_BITS);
-    uint32_t offset = static_cast<uint32_t>(atomicIndex & OFFSET_MASK);
-    uint32_t chunkSize = 0;
-    uint64_t *chunkAddr = nullptr;
-    if (bufferId == 0U) {
-        chunkSize = DYNAMIC_RING_CHUNK_SIZE;
-        chunkAddr = g_dynamicChunk;
-    } else {
-        chunkSize = STATIC_RING_CHUNK_SIZE;
-        chunkAddr = g_staticChunk;
-    }
-    if (chunkAddr == nullptr) {
-        IDE_LOGE("The chunk memory is nullptr.");
-        return ADUMP_FAILED;
-    }
-    if (offset >= chunkSize) {
-        IDE_LOGE("The offset[%" PRIu32 "] is over the max offset[%" PRIu32 "].", offset, chunkSize);
-        return ADUMP_FAILED;
-    }
-
-    uint64_t magicAndSpace = chunkAddr[offset];
-    uint64_t magicNum = magicAndSpace & MAGIC_NUM_MASK;
-    uint32_t space = static_cast<uint32_t>(magicAndSpace & SPACE_MASK);
-    IDE_LOGI("The space is %" PRIu32, space);
-    if (magicNum != MAGIC_NUM) {
-        IDE_LOGE("The magic number is invalid, magic number:%" PRIu64, magicNum);
-        return ADUMP_FAILED;
-    }
-    if (space > DFX_MAX_TENSOR_NUM) {
-        IDE_LOGE("The space[%" PRIu32 "] is over the max space[%" PRIu32 "].", space, DFX_MAX_TENSOR_NUM);
-        return ADUMP_FAILED;
-    }
-
-    uint64_t dumpAtomicIndex = chunkAddr[offset + 1];
-    if (dumpAtomicIndex != atomicIndex) {
-        IDE_LOGE("The atomic index:%" PRIu64 " is not equal %" PRIu64, atomicIndex, dumpAtomicIndex);
-        return ADUMP_FAILED;
-    }
-
-    shapeDataAddr_ = chunkAddr + offset + RESERVE_SPACE;
-    shapeDataMaxAddr_ = shapeDataAddr_ + space;
-    std::stringstream ss;
-    for (uint32_t i = 0; i < space; i++) {
-        ss << *(shapeDataAddr_ + i) << ", ";
-    }
-    IDE_LOGI("The shape item size: %s", ss.str().c_str());
-    return ADUMP_SUCCESS;
-}
-
-bool DumpArgs::CheckMagicMemory(const uint8_t *address) const
-{
-    for (uint16_t i = 0; i < 4; ++i) {  // verify that 4 consecutive bytes are 0xA5
-        if (*(address + i) != 0xA5) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-int32_t DumpArgs::InitTensorModeInfoInner(const uint8_t *exceptionDfxPtr, uint64_t &currDfxSize, uint32_t currArgsIndex)
-{
-    IDE_LOGI("Find tiling data, the mode is dynamic");
-    dynamicModeFlag_ = true;
-
-    uint64_t tilingDataSize = 0;
-    int32_t ret = GetPointerValueByBigEndian(&exceptionDfxPtr, tilingDataSize, currDfxSize, exceptionDfxSize_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-
-    if (tilingDataSize < ATOMIC_INDEX_SIZE) {
-        IDE_LOGE("The tiling data size[%" PRIu64 "] is less than the min size[" PRIu64 "].", tilingDataSize,
-                 ATOMIC_INDEX_SIZE);
-        return ADUMP_FAILED;
-    }
-
-    void *tilingDataAddr = DumpMemory::CopyDeviceToHostEx(argOnHost_[currArgsIndex], tilingDataSize);
-    if (tilingDataAddr == nullptr) {
-        IDE_LOGE("Copy device tiling to host failed.");
-        return ADUMP_FAILED;
-    }
-    HOST_RT_MEMORY_GUARD(tilingDataAddr);
-
-    auto addr = static_cast<uint8_t *>(tilingDataAddr);
-    if (isTik_) {
-        for (size_t i = 4; i <= tilingDataSize - 4; ++i) {  // 4 -- reserve for atomicIndex 4 bytes
-            if (!CheckMagicMemory(addr + i)) {
-                continue;
-            }
-            uint64_t atomicIndex = *reinterpret_cast<uint64_t *>(addr + i - 4);  // 4 -- atomicIndex low 4 bytes
-            if (GetShapeData(atomicIndex) == ADUMP_SUCCESS) {
-                return ADUMP_SUCCESS;
-            }
-        }
-        IDE_LOGE("Can not find shape info.");
-        return ADUMP_FAILED;
-    } else {
-        uint64_t atomicIndex = *reinterpret_cast<uint64_t *>(addr + tilingDataSize - ATOMIC_INDEX_SIZE);
-        ret = GetShapeData(atomicIndex);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::InitTensorModeInfo(const uint8_t *exceptionDfxPtr)
-{
-    uint64_t currDfxSize = 0;
-    uint32_t currArgsIndex = 0;
-    while (currDfxSize < exceptionDfxSize_) {
-        std::stringstream exceptionDfxStr;
-        for (size_t i = 0; i < (exceptionDfxSize_ - currDfxSize); ++i) {
-            exceptionDfxStr << int32_t(*(exceptionDfxPtr + i)) << ", ";
-        }
-        IDE_LOGI("current arg index[%" PRIu32 "], Tiling current exception dfx raw data:%s ", currArgsIndex,
-                 exceptionDfxStr.str().c_str());
-
-        if (currArgsIndex >= maxArgNum_) {
-            IDE_LOGE("The current arg index[%" PRIu32 "] is greater than the max arg number[%" PRIu64 "]",
-                     currArgsIndex, maxArgNum_);
-            return ADUMP_FAILED;
-        }
-
-        uint16_t argsInfoType = 0;
-        int32_t ret = GetPointerValueByBigEndian(&exceptionDfxPtr, argsInfoType, currDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        uint16_t argsInfoNum = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr, argsInfoNum, currDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        if (argsInfoNum == 0) {
-            IDE_LOGE("The dfx args info num[%" PRIu16 "] is invalid.", argsInfoNum);
-            return ADUMP_FAILED;
-        }
-
-        if (argsInfoType == TYPE_L0_EXCEPTION_DFX_ARGS_INFO) {
-            uint64_t typeInfo = 0;
-            ret = GetPointerValueByBigEndian(&exceptionDfxPtr, typeInfo, currDfxSize, exceptionDfxSize_);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-            DfxTensorType tensorType = static_cast<DfxTensorType>(typeInfo & TENSOR_TYPE_MASK);
-            if (tensorType == DfxTensorType::TILING_DATA) {
-                ret = InitTensorModeInfoInner(exceptionDfxPtr, currDfxSize, currArgsIndex);
-                return ret;
-            }
-            currDfxSize += sizeof(uint64_t) * (argsInfoNum - 1);
-            exceptionDfxPtr += sizeof(uint64_t) * (argsInfoNum - 1);
-            ++currArgsIndex;
-        } else {
-            currDfxSize += sizeof(uint64_t) * argsInfoNum;
-            exceptionDfxPtr += sizeof(uint64_t) * argsInfoNum;
-        }
-        IDE_LOGI("Current dfx total size is %" PRIu64, currDfxSize);
-    }
-
-    if (currDfxSize > exceptionDfxSize_) {
-        IDE_LOGE("The dfx info size[%" PRIu64 "] is over the max size[%" PRIu16 "].", currDfxSize, exceptionDfxSize_);
-        return ADUMP_FAILED;
     }
 
     return ADUMP_SUCCESS;
@@ -334,336 +133,12 @@ int32_t DumpArgs::FindExceptionDfx(const rtExceptionArgsInfo_t &exceptionArgsInf
     return ADUMP_SUCCESS;
 }
 
-int32_t DumpArgs::LoadTensorShapeAndSize(TensorBuffer &tensorBuffer, uint64_t *dynamicTensorAddr, void **tensorAddr,
-                                         uint64_t shapeInfoCount)
-{
-    int32_t ret = ADUMP_SUCCESS;
-    uint64_t currShapeCount = 0;
-    while (currShapeCount < shapeInfoCount) {
-        ret = CheckAddressOverArgs(dynamicTensorAddr, argOnHost_, maxArgNum_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        uint64_t dimAndCnt = *dynamicTensorAddr;
-        if (dimAndCnt == 0) {
-            IDE_LOGI("The tensor dimension and count are 0, which is an empty address.");
-            break;
-        }
-        uint32_t tensorDim = static_cast<uint32_t>(dimAndCnt & TENSOR_DIMENSION_MASK);
-        uint32_t tensorCount = static_cast<uint32_t>((dimAndCnt & TENSOR_COUNT_MASK) >> TENSOR_COUNT_SHIFT_BITS);
-        tensorBuffer.dimension = tensorDim;
-        IDE_LOGI("The tensor dimension[%u], count[%u].", tensorDim, tensorCount);
-        dynamicTensorAddr++;
-        currShapeCount++;
-        uint64_t size = 1;
-        std::vector<uint64_t> tmpShapeVec;
-        for (uint32_t i = 0; i < tensorDim; ++i) {
-            ret = CheckAddressOverArgs(dynamicTensorAddr, argOnHost_, maxArgNum_);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-            size *= *dynamicTensorAddr;
-            IDE_LOGI("The tensor shape[%" PRIu64 "].", *dynamicTensorAddr);
-            tmpShapeVec.push_back(*dynamicTensorAddr);
-            dynamicTensorAddr++;
-            currShapeCount++;
-        }
-        tensorBuffer.shape = tmpShapeVec;
-        tensorBuffer.size = size;
-
-        const void **endArgAddr = argOnHost_ + maxArgNum_;
-        for (uint32_t i = 0; i < tensorCount; ++i) {
-            if (tensorAddr >= endArgAddr) {
-                IDE_LOGE("Args address[%p] is over args end address[%p].", tensorAddr, endArgAddr);
-                return ADUMP_FAILED;
-            }
-            tensorBuffer.addr = *tensorAddr;
-            tensorBuffer_.push_back(tensorBuffer);
-            oss_ << "[Dump][Exception] exception info dump args data, addr:" << *tensorAddr
-                 << "; size:" << tensorBuffer.GetTotalByteSize() << " bytes";
-            RecordCurrentLog();
-            tensorAddr++;
-        }
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::LoadDfxL2ShapePtrTensor(TensorBuffer &tensorBuffer)
-{
-    uint64_t addrBias = 0;
-    int32_t ret = GetAddressBias(addrBias, tensorBuffer.addr, argAddr_, argSize_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    uint64_t *dynamicTensorAddr = reinterpret_cast<uint64_t *>(addrBias + reinterpret_cast<uint64_t>(argOnHost_));
-    ret = CheckAddressOverArgs(dynamicTensorAddr, argOnHost_, maxArgNum_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    uint64_t offset = *dynamicTensorAddr;
-    dynamicTensorAddr++;
-    void **tensorAddr = reinterpret_cast<void **>(reinterpret_cast<uint64_t>(argOnHost_) + addrBias + offset);
-    uint64_t shapeInfoCount = (offset - sizeof(uint64_t)) / sizeof(uint64_t);
-    ret = LoadTensorShapeAndSize(tensorBuffer, dynamicTensorAddr, tensorAddr, shapeInfoCount);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    shapeDataAddr_++;
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::LoadDfxL1PtrTensor(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize)
-{
-    int32_t ret = ADUMP_SUCCESS;
-    if (dynamicModeFlag_) {
-        exceptionDfxPtr_ += sizeof(uint64_t);
-        currExceptionDfxSize += sizeof(uint64_t);
-        ret = CheckShapeDataAddress();
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        tensorBuffer.size = *shapeDataAddr_;
-        shapeDataAddr_++;
-        tensorBuffer_.push_back(tensorBuffer);
-        IDE_LOGE("[Dump][Exception] tensor type:%" PRIu16 ", pointer type:%" PRIu16,
-                 static_cast<uint16_t>(tensorBuffer.tensorType), static_cast<uint16_t>(tensorBuffer.pointerType));
-        oss_ << "[Dump][Exception] exception info dump args data, addr:" << tensorBuffer.addr
-             << "; size:" << tensorBuffer.size << " bytes";
-        RecordCurrentLog();
-    } else {
-        uint64_t size = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, size, currExceptionDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("The tensor size[%" PRIu64 "].", size);
-        tensorBuffer.size = size;
-        uint64_t dimension = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, dimension, currExceptionDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("The tensor dimension[%" PRIu64 "].", dimension);
-        tensorBuffer.dimension = dimension;
-        for (uint64_t i = 0; i < dimension; ++i) {
-            uint64_t shape = 0;
-            ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, shape, currExceptionDfxSize, exceptionDfxSize_);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-            IDE_LOGI("The tensor shape[%" PRIu64 "].", shape);
-            tensorBuffer.shape.push_back(shape);
-        }
-        tensorBuffer_.push_back(tensorBuffer);
-        IDE_LOGE("[Dump][Exception] tensor type:%" PRIu16 ", pointer type:%" PRIu16,
-                 static_cast<uint16_t>(tensorBuffer.tensorType), static_cast<uint16_t>(tensorBuffer.pointerType));
-        oss_ << "[Dump][Exception] exception info dump args data, addr:" << tensorBuffer.addr
-             << "; size:" << tensorBuffer.size << " bytes";
-        RecordCurrentLog();
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-bool DumpArgs::GetIsDataTypeSizeByte(bool &isDataTypeSizeByte) const
-{
-    static const std::set<PlatformType> platforms = {PlatformType::CHIP_CLOUD_V2, PlatformType::CHIP_DC_TYPE};
-    uint32_t platformType = 0;
-    IDE_CTRL_VALUE_FAILED(AdumpDsmi::DrvGetPlatformType(platformType), return false, "Get platform type failed.");
-    auto it = platforms.find(static_cast<PlatformType>(platformType));
-    // david以前支持dfx的芯片上，二级指针的datatype size单位是byte；david后可能会新增小于1byte的datatype，因此该字段单位改为bit
-    isDataTypeSizeByte = it != platforms.end() ? true: false;
-    return true;
-}
-
-int32_t DumpArgs::LoadDfxTensor(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize, uint16_t argsInfoNum)
-{
-    int32_t ret = ADUMP_SUCCESS;
-    if (tensorBuffer.pointerType == DfxPointerType::LEVEL_2_POINTER_WITH_SHAPE) {
-        exceptionDfxPtr_ += sizeof(uint64_t);
-        currExceptionDfxSize += sizeof(uint64_t);
-        uint64_t dataTypeSize = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, dataTypeSize, currExceptionDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("The tensor datatype size[%" PRIu64 "].", dataTypeSize);
-        IDE_CTRL_VALUE_FAILED(GetIsDataTypeSizeByte(tensorBuffer.isDataTypeSizeByte), return ADUMP_FAILED,
-                              "Load data type size unit failed.");
-        tensorBuffer.dataTypeSize = dataTypeSize;
-        const void *shapeTensorAddr = tensorBuffer.addr;
-        oss_ << "[Dump][Exception] begin to load shape pointer tensor, index:" << tensorBuffer.argIndex
-             << ", addr:" << shapeTensorAddr;
-        RecordCurrentLog();
-        ret = LoadDfxL2ShapePtrTensor(tensorBuffer);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        oss_ << "[Dump][Exception] end to load shape pointer tensor, index:" << tensorBuffer.argIndex
-             << ", addr:" << shapeTensorAddr;
-        RecordCurrentLog();
-    } else if (tensorBuffer.pointerType == DfxPointerType::LEVEL_1_POINTER ||
-               tensorBuffer.pointerType == DfxPointerType::SHAPE_TENSOR_PLACEHOLD) {
-        oss_ << "[Dump][Exception] begin to load normal tensor, index:" << tensorBuffer.argIndex;
-        RecordCurrentLog();
-        ret = LoadDfxL1PtrTensor(tensorBuffer, currExceptionDfxSize);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        oss_ << "[Dump][Exception] end to load normal tensor, index:" << tensorBuffer.argIndex;
-        RecordCurrentLog();
-    } else {
-        exceptionDfxPtr_ += sizeof(uint64_t) * (argsInfoNum - 1);
-        currExceptionDfxSize += sizeof(uint64_t) * (argsInfoNum - 1);
-        oss_ << "[Dump][Exception] begin to load normal pointer tensor, index:" << tensorBuffer.argIndex
-             << ", addr:" << tensorBuffer.addr;
-        RecordCurrentLog();
-        oss_ << "[Dump][Exception] end to load normal pointer tensor, index:" << tensorBuffer.argIndex
-             << ", addr:" << tensorBuffer.addr;
-        RecordCurrentLog();
-    }
-
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::LoadDfxWorkspace(const TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize)
-{
-    int32_t ret = ADUMP_SUCCESS;
-    DumpWorkspace workspace;
-    workspace.addr = tensorBuffer.addr;
-    workspace.argsOffset = tensorBuffer.argIndex;
-    IDE_LOGE("[Dump][Exception] begin to load workspace, index:%" PRIu32, tensorBuffer.argIndex);
-    if (dynamicModeFlag_) {
-        ret = CheckShapeDataAddress();
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        workspace.bytes = *shapeDataAddr_;
-        shapeDataAddr_++;
-        oss_ << "[Dump][Exception] exception info dump args data, addr:" << tensorBuffer.addr
-             << "; size:" << workspace.bytes << " bytes";
-        RecordCurrentLog();
-    } else {
-        uint64_t size = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, size, currExceptionDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        IDE_LOGI("The tensor size[%" PRIu64 "].", size);
-        workspace.bytes = size;
-        oss_ << "[Dump][Exception] exception info dump args data, addr:" << tensorBuffer.addr << "; size:" << size
-             << " bytes";
-        RecordCurrentLog();
-    }
-    workspace_.push_back(workspace);
-    IDE_LOGE("[Dump][Exception] end to load workspace, index:%" PRIu32, tensorBuffer.argIndex);
-
-    return ADUMP_SUCCESS;
-}
-
-void DumpArgs::LoadDfxMc2(const TensorBuffer &tensorBuffer)
-{
-    IDE_LOGE("[Dump][Exception] begin to load mc2, index:%" PRIu32, tensorBuffer.argIndex);
-    DumpWorkspace workspace;
-    workspace.addr = tensorBuffer.addr;
-    workspace.argsOffset = tensorBuffer.argIndex;
-    workspace.bytes = 0;
-    mc2Space_.push_back(workspace);
-    shapeDataAddr_++;
-    oss_ << "[Dump][Exception] exception info dump mc2 data, addr:" << workspace.addr
-            << "; size:" << workspace.bytes << " bytes";
-    RecordCurrentLog();
-    IDE_LOGE("[Dump][Exception] end to load mc2, index:%" PRIu32, tensorBuffer.argIndex);
-}
-
-int32_t DumpArgs::LoadDfxShapeData()
-{
-    int32_t ret = ADUMP_SUCCESS;
-    size_t tensorBufferSize = tensorBuffer_.size();
-    IDE_LOGI("The tensor buffer size[%" PRIu64 "].", tensorBufferSize);
-    for (size_t i = 0; i < tensorBufferSize; ++i) {
-        DfxPointerType localPointerType = tensorBuffer_[i].pointerType;
-        if ((localPointerType == DfxPointerType::LEVEL_1_POINTER) && tensorBuffer_[i].size != 0 &&
-            tensorBuffer_[i].tensorType != DfxTensorType::SHAPE_TENSOR) {
-            ret = CheckShapeDataAddress();
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-            uint64_t tensorDim = *shapeDataAddr_;
-            IDE_LOGI("The tensor dimension[%" PRIu64 "].", tensorDim);
-            tensorBuffer_[i].dimension = tensorDim;
-            shapeDataAddr_++;
-            for (uint64_t dim = 0; dim < tensorDim; ++dim) {
-                ret = CheckShapeDataAddress();
-                IDE_CHECK_RET(ret, {
-                    tensorBuffer_[i].dimension = 0;
-                    return ADUMP_FAILED;
-                });
-                IDE_LOGI("The tensor shape[%" PRIu64 "].", *shapeDataAddr_);
-                tensorBuffer_[i].shape.push_back(*shapeDataAddr_);
-                shapeDataAddr_++;
-            }
-        }
-    }
-
-    return ret;
-}
-
-int32_t DumpArgs::LoadDfxTilingData(TensorBuffer &tensorBuffer, uint64_t &currExceptionDfxSize)
-{
-    IDE_LOGE("[Dump][Exception] begin to load tiling data, index:%" PRIu32, tensorBuffer.argIndex);
-    uint64_t tilingDataSize = 0;
-    int32_t ret =
-        GetPointerValueByBigEndian(&exceptionDfxPtr_, tilingDataSize, currExceptionDfxSize, exceptionDfxSize_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    IDE_LOGI("The tiling data size[%" PRIu64 "].", tilingDataSize);
-    tensorBuffer.size = tilingDataSize;
-
-    // TBE算子无法区分tensor和workspace，当前GE框架无法识别TBE算子，对workspace不会添加dim和shape信息，解析到shape地址越界报错时，忽略错误
-    (void)LoadDfxShapeData();
-    tensorBuffer_.push_back(tensorBuffer);
-    oss_ << "[Dump][Exception] exception info dump args data, addr:" << tensorBuffer.addr << "; size:" << tilingDataSize
-         << " bytes";
-    RecordCurrentLog();
-    IDE_LOGE("[Dump][Exception] end to load tiling data, index:%" PRIu32, tensorBuffer.argIndex);
-    return ADUMP_SUCCESS;
-}
-
-int32_t DumpArgs::LoadDfxInfo(uint64_t &currExceptionDfxSize, uint32_t &currArgsIndex)
-{
-    uint16_t argsInfoType = 0;
-    int32_t ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, argsInfoType, currExceptionDfxSize, exceptionDfxSize_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    uint16_t argsInfoNum = 0;
-    ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, argsInfoNum, currExceptionDfxSize, exceptionDfxSize_);
-    IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    IDE_LOGI("The arg info type: %" PRIu16 ", info num:%" PRIu16, argsInfoType, argsInfoNum);
-    if (argsInfoNum == 0) {
-        IDE_LOGE("The dfx args info num[%" PRIu16 "] is invalid.", argsInfoNum);
-        return ADUMP_FAILED;
-    }
-
-    if (argsInfoType == TYPE_L0_EXCEPTION_DFX_ARGS_INFO) {
-        uint64_t typeInfo = 0;
-        ret = GetPointerValueByBigEndian(&exceptionDfxPtr_, typeInfo, currExceptionDfxSize, exceptionDfxSize_);
-        IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        DfxTensorType tensorType = static_cast<DfxTensorType>(typeInfo & TENSOR_TYPE_MASK);
-        DfxPointerType pointerType =
-            static_cast<DfxPointerType>((typeInfo & POINTER_TYPE_MASK) >> POINTER_TYPE_SHIFT_BITS);
-        IDE_LOGI("The arg type info: %" PRIu64 ", tensor type: %" PRIu16 " , pointer type: %" PRIu16, typeInfo,
-                 static_cast<uint16_t>(tensorType), static_cast<uint16_t>(pointerType));
-
-        TensorBuffer tensorBuffer(argOnHost_[currArgsIndex], currArgsIndex, tensorType, pointerType);
-        if ((tensorType <= DfxTensorType::OUTPUT_TENSOR && tensorType > DfxTensorType::INVALID_TENSOR) ||
-            tensorType == DfxTensorType::SHAPE_TENSOR) {
-            ret = LoadDfxTensor(tensorBuffer, currExceptionDfxSize, argsInfoNum);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        } else if (tensorType == DfxTensorType::WORKSPACE_TENSOR) {
-            ret = LoadDfxWorkspace(tensorBuffer, currExceptionDfxSize);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        } else if (tensorType == DfxTensorType::TILING_DATA) {
-            ret = LoadDfxTilingData(tensorBuffer, currExceptionDfxSize);
-            IDE_CHECK_RET(ret, return ADUMP_FAILED);
-        } else if (tensorType == DfxTensorType::MC2_CTX) {
-            LoadDfxMc2(tensorBuffer);
-        } else {
-            IDE_LOGE("[Dump][Exception] args dump dfx info, addr:%p, tensor type:%" PRIu16 ", pointer type:%" PRIu16
-                     ", index: %" PRIu32,
-                     argOnHost_[currArgsIndex], static_cast<uint16_t>(tensorType), static_cast<uint16_t>(pointerType),
-                     currArgsIndex);
-            exceptionDfxPtr_ += sizeof(uint64_t) * (argsInfoNum - 1);
-            currExceptionDfxSize += sizeof(uint64_t) * (argsInfoNum - 1);
-        }
-        ++currArgsIndex;
-    } else {
-        IDE_LOGW("The dfx args info type[%" PRIu16 "] is not allowed, except the type[%" PRIu16 "]", argsInfoType,
-                 TYPE_L0_EXCEPTION_DFX_ARGS_INFO);
-        exceptionDfxPtr_ += sizeof(uint64_t) * argsInfoNum;
-        currExceptionDfxSize += sizeof(uint64_t) * argsInfoNum;
-    }
-
-    return ADUMP_SUCCESS;
-}
-
 int32_t DumpArgs::LoadArgsInfoWithDfx(const rtExceptionArgsInfo_t &exceptionArgsInfo)
 {
-    // Except the aic/aiv error, other exceptions are also called back. Therefore, warning logs are generated here.
     if (exceptionArgsInfo.argAddr == nullptr || exceptionArgsInfo.argsize == 0 ||
         exceptionArgsInfo.exceptionKernelInfo.dfxAddr == nullptr ||
         exceptionArgsInfo.exceptionKernelInfo.dfxSize == 0) {
-        IDE_LOGE("In argAddr[%p]|argSize[%" PRIu32 "]|dfxAddr[%p]|dfxSize[%" PRIu16 "] has invalid attribute.",
+        IDE_LOGE("In argAddr[%p]|argSize[%u]|dfxAddr[%p]|dfxSize[%u] has invalid attribute.",
                  exceptionArgsInfo.argAddr, exceptionArgsInfo.argsize, exceptionArgsInfo.exceptionKernelInfo.dfxAddr,
                  exceptionArgsInfo.exceptionKernelInfo.dfxSize);
         return ADUMP_FAILED;
@@ -671,44 +146,29 @@ int32_t DumpArgs::LoadArgsInfoWithDfx(const rtExceptionArgsInfo_t &exceptionArgs
 
     argAddr_ = exceptionArgsInfo.argAddr;
     argSize_ = exceptionArgsInfo.argsize;
-    int32_t ret = DumpArgs::FindExceptionDfx(exceptionArgsInfo);
+
+    // FindExceptionDfx 保留在 DumpArgs（从 meta dfx 定位 exception dfx）
+    int32_t ret = FindExceptionDfx(exceptionArgsInfo);
     IDE_CHECK_RET(ret, return ADUMP_FAILED);
-    IDE_LOGI("The dfx address[%p] and dfx size[%" PRIu16 "].", exceptionDfxPtr_, exceptionDfxSize_);
+    IDE_LOGI("The dfx address[%p] and dfx size[%u].", exceptionDfxPtr_, exceptionDfxSize_);
 
-    auto data = DumpMemory::CopyDeviceToHostEx(argAddr_, argSize_);
-    if (data == nullptr) {
-        IDE_LOGE("Copy device args to host failed.");
-        return ADUMP_FAILED;
-    }
-    HOST_RT_MEMORY_GUARD(data);
-    argOnHost_ = static_cast<const void **>(data);
-    maxArgNum_ = argSize_ / sizeof(uint64_t);
-    LogArgsInfo(argOnHost_, maxArgNum_);
+    // 使用 DfxArgsParser
+    DfxArgsParser parser;
+    ret = parser.Init(argAddr_, argSize_, exceptionDfxPtr_, exceptionDfxSize_);
+    IDE_CHECK_RET(ret, return ADUMP_FAILED);
 
-    ret = InitTensorModeInfo(exceptionDfxPtr_);
-    if (ret != ADUMP_SUCCESS) {
-        return ret;
-    }
-    uint32_t currArgsIndex = 0;
-    uint64_t currExceptionDfxSize = 0;
-    while (currExceptionDfxSize < exceptionDfxSize_) {
-        std::stringstream exceptionDfxStr;
-        for (size_t i = 0; i < (exceptionDfxSize_ - currExceptionDfxSize); ++i) {
-            exceptionDfxStr << int32_t(*(exceptionDfxPtr_ + i)) << ", ";
-        }
-        IDE_LOGI("Current exception dfx raw data:%s ", exceptionDfxStr.str().c_str());
+    parser.SetIsTik(isTik_);
+    ret = parser.InitTensorModeInfo();
+    IDE_CHECK_RET(ret, return ADUMP_FAILED);
 
-        if (currArgsIndex >= maxArgNum_) {
-            IDE_LOGE("The current arg index[%" PRIu32 "] is greater than the max arg number[%" PRIu64 "]",
-                     currArgsIndex, maxArgNum_);
-            return ADUMP_FAILED;
-        }
+    ret = parser.ParseAll();
+    IDE_CHECK_RET(ret, return ADUMP_FAILED);
 
-        ret = LoadDfxInfo(currExceptionDfxSize, currArgsIndex);
-        if (ret != ADUMP_SUCCESS) {
-            return ret;
-        }
-    }
+    // 获取解析结果
+    tensorBuffer_ = parser.GetTensors();
+    workspace_ = parser.GetWorkspaces();
+    mc2Space_ = parser.GetMc2Space();
+    logRecord_ = parser.GetLogRecords();
 
     return ADUMP_SUCCESS;
 }

@@ -19,6 +19,7 @@
 #include "rts/rts_snapshot.h"
 #include "adx_dump_record.h"
 #include "dump_stream_info.h"
+#include "dump_exception_stub.h"
 
 using namespace Adx;
 
@@ -333,4 +334,36 @@ TEST_F(DumpManagerUtest, Test_StartDumpArgs_CallbackNoDeadlock)
     DumpManager::Instance().StopDataDumpServer();
     DumpManager::Instance().opInfoRecordPath_.clear();
     system("rm -rf ./llt_test_dump_args");
+}
+
+TEST_F(DumpManagerUtest, Test_RegisterExceptionDumpCallback_Null)
+{
+    int32_t ret = DumpManager::Instance().RegisterExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(DumpManagerUtest, Test_RegisterExceptionDumpCallback_Success)
+{
+    int32_t ret = DumpManager::Instance().RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(DumpManagerUtest, Test_UnregisterExceptionDumpCallback_Null)
+{
+    int32_t ret = DumpManager::Instance().UnregisterExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(DumpManagerUtest, Test_UnregisterExceptionDumpCallback_Success)
+{
+    int32_t ret = DumpManager::Instance().RegisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    ret = DumpManager::Instance().UnregisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(DumpManagerUtest, Test_UnregisterExceptionDumpCallback_NotFound)
+{
+    int32_t ret = DumpManager::Instance().UnregisterExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
 }

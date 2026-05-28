@@ -11,16 +11,6 @@
 #include "log/hdc_log.h"
 
 namespace Adx {
-DumpTensor::DumpTensor(const TensorInfoV2 &tensorInfo)
-    : dataType_(tensorInfo.dataType),
-      format_(tensorInfo.format),
-      shape_(tensorInfo.shape),
-      originShape_(tensorInfo.originShape),
-      size_(tensorInfo.tensorSize),
-      address_(tensorInfo.tensorAddr),
-      addrType_(tensorInfo.addrType),
-      argsOffSet_(tensorInfo.argsOffSet)
-{};
 
 int32_t DumpTensor::GetDataType() const
 {

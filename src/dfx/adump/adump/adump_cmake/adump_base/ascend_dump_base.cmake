@@ -20,6 +20,8 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/common/sys_utils.cpp
     ${ADUMP_ADUMP_DIR}/exception/adx_exception_callback.cpp
     ${ADUMP_ADUMP_DIR}/exception/dump_args.cpp
+    ${ADUMP_ADUMP_DIR}/exception/dfx_args_parser.cpp
+    ${ADUMP_ADUMP_DIR}/exception/dump_args_callback.cpp
     ${ADUMP_ADUMP_DIR}/exception/dump_core/dump_core.cpp
     ${ADUMP_ADUMP_DIR}/exception/dump_core/dump_core_register.cpp
     ${ADUMP_ADUMP_DIR}/exception/dump_ELF.cpp

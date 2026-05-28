@@ -495,14 +495,15 @@ rtError_t rtDebugReadAICore(rtDebugMemoryParam_t* const param)
 rtError_t rtGetBinBuffer(const rtBinHandle binHandle, const rtBinBufferType_t type, void** bin, uint32_t* binSize)
 {
     if (type == RT_BIN_HOST_ADDR || type == RT_BIN_DEVICE_ADDR) {
+        static std::string b = "bin stub data";
         if (binHandle == nullptr) {
-            static std::string b = "bin stub";
             *bin = (void*)b.c_str();
             *binSize = b.size();
             return RT_ERROR_NONE;
         }
-        *bin = (void*)binHandle;
-        *binSize = strlen((const char*)binHandle);
+        // 对于假指针，返回静态数据而不是尝试解析指针
+        *bin = (void*)b.c_str();
+        *binSize = b.size();
         return RT_ERROR_NONE;
     }
     return RT_ERROR_STUB_FAILURE;
@@ -737,5 +738,38 @@ rtError_t rtEventDestroy(rtEvent_t evt)
 
 rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void *args)
 {
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtBinaryGetFunctionByName(rtBinHandle binHandle, const char *kernelName, rtFuncHandle *funcHandle)
+{
+    (void)binHandle;
+    (void)kernelName;
+    if (funcHandle == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *funcHandle = (rtFuncHandle)0x5f;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtFunctionGetMetaInfoSize(rtFuncHandle funcHandle, rtFunctionMetaType type, size_t *size)
+{
+    (void)funcHandle;
+    (void)type;
+    if (size == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    *size = 16;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionMetaType type, void *data, const uint32_t length)
+{
+    (void)funcHandle;
+    (void)type;
+    (void)length;
+    if (data == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
     return RT_ERROR_NONE;
 }

@@ -15,7 +15,17 @@
 namespace Adx {
 class DumpTensor {
 public:
-    DumpTensor(const TensorInfoV2 &tensorInfo);
+    template<typename TensorInfoT>
+    explicit DumpTensor(const TensorInfoT &tensorInfo)
+        : dataType_(tensorInfo.dataType),
+          format_(tensorInfo.format),
+          shape_(tensorInfo.shape),
+          originShape_(tensorInfo.originShape),
+          size_(tensorInfo.tensorSize),
+          address_(tensorInfo.tensorAddr),
+          addrType_(tensorInfo.addrType),
+          argsOffSet_(tensorInfo.argsOffSet) {}
+    
     ~DumpTensor() = default;
     int32_t GetDataType() const;
     int32_t GetFormat() const;

@@ -389,5 +389,37 @@ enum class SaveType : int32_t {
 
 ADX_API int32_t AdumpSaveToFile(const char *data, size_t dataLen, const char *filename, SaveType type);
 
+constexpr uint32_t MAX_KERNELNAME_LEN = 1024U;
+constexpr uint32_t EXCEPTION_DUMP_MAX_TENSOR_NUM = 128U;
+
+enum class ExceptionDumpMode : uint32_t {
+    DUMP_MODE_NONE = 0,
+    DUMP_MODE_OVERWRITE = 1,
+    DUMP_MODE_ADDITIONAL = 2
+};
+
+// 调用方保证 kernelName/kernelDisplayName 以 \0 结尾，最大长度含终止符 MAX_KERNELNAME_LEN 字节。
+struct ExceptionDumpInfo {
+    uint32_t coreId;
+    uint32_t coreType;     // rtCoreType_t
+    uint32_t argSize;
+    void *argAddr;
+    void *bin;             // rtBinHandle
+    char kernelName[MAX_KERNELNAME_LEN];
+    char kernelDisplayName[MAX_KERNELNAME_LEN];
+    uint32_t extraTensorNum;
+    TensorInfo extraTensor[EXCEPTION_DUMP_MAX_TENSOR_NUM];
+};
+
+using ExceptionDumpCallback = uint32_t (*)(void *exceptionInfo,  // rtExceptionInfo_t*
+    ExceptionDumpInfo *exceptionDumpInfo,
+    uint32_t exceptionDumpSize,
+    uint32_t *exceptionDumpRealSize,
+    ExceptionDumpMode *mode);
+
+__attribute__((weak)) ADX_API int32_t AdumpRegExceptionDumpCallback(ExceptionDumpCallback callback);
+
+__attribute__((weak)) ADX_API int32_t AdumpUnregExceptionDumpCallback(ExceptionDumpCallback callback);
+
 } // namespace Adx
 #endif

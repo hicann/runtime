@@ -37,6 +37,9 @@ public:
     int32_t DumpException(const rtExceptionInfo &exception);
     void ExceptionModeDowngrade();
     bool IsRepeatEnableException(DumpType type, const DumpConfig &dumpConfig);
+    
+    int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
+    int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
 
 #ifdef __ADUMP_LLT
     void Reset();
@@ -46,13 +49,22 @@ private:
     std::string CreateDumpPath(Path &dumpPath) const;
     std::string CreateDeviceDumpPath(uint32_t deviceId) const;
     bool FindExceptionOperator(const rtExceptionInfo &exception, DumpOperator &excOp);
-    int32_t DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath) const;
-    int32_t DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath) const;
+    int32_t DumpArgsException(const rtExceptionInfo &exception, const std::string &dumpPath);
+    int32_t DumpArgsExceptionInner(const rtExceptionInfo &exception, const std::string &dumpPath);
+    int32_t DumpArgsExceptionDefault(const rtExceptionInfo &exception, const std::string &dumpPath);
     int32_t DumpArgsExceptionFastRecovery(const rtExceptionInfo &exception) const;
+    
+    int32_t InvokeCallbacks(const rtExceptionInfo &exception,
+                             std::vector<ExceptionDumpInfo> &dumpInfos,
+                             ExceptionDumpMode &finalMode);
+    void DumpCallbackData(const rtExceptionInfo &exception,
+                          const std::vector<ExceptionDumpInfo> &dumpInfos,
+                          const std::string &dumpPath);
     int32_t DumpNormalException(const rtExceptionInfo &exception, const std::string &dumpPath);
     int32_t DumpDetailException(const rtExceptionInfo &exception, const std::string &dumpPath);
     int32_t LoadTensorPluginLib();
     bool InitArgsExceptionMemory() const;
+    bool NeedDumpException(const rtExceptionInfo &exception) const;
     void Exit() const;
     bool coredumpStatus_{ false };
     bool coredumpEnableComplete_{ true };
@@ -65,6 +77,8 @@ private:
     std::mutex mutex_;
     std::deque<DumpOperator> agingOperators_;
     std::map<uint32_t, std::map<uint32_t, std::deque<DumpOperator>>> residentOperators_;
+    std::vector<ExceptionDumpCallback> callbacks_;
+    std::recursive_mutex callbackMutex_;
 };
 
 inline bool ExceptionDumper::GetExceptionStatus() const

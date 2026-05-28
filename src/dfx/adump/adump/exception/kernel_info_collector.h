@@ -43,6 +43,7 @@ public:
           kernelBinSize_(0){};
     ~KernelInfoCollector() = default;
     void LoadKernelInfo(const rtExceptionArgsInfo &argsInfo);
+    int32_t InitFromBinHandle(rtBinHandle bin, const std::string &kernelName);
     int32_t LoadKernelBinBuffer();
     int32_t StartCollectKernel(const std::string &dumpPath) const;
     std::string GetProcessedKernelName() const;

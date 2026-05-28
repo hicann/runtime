@@ -166,6 +166,18 @@ int32_t DumpManager::DumpOperatorWithCfg(const std::string &opType, const std::s
     return ADUMP_SUCCESS;
 }
 
+int32_t DumpManager::RegisterExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    UNUSED(callback);
+    return ADUMP_SUCCESS;
+}
+
+int32_t DumpManager::UnregisterExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    UNUSED(callback);
+    return ADUMP_SUCCESS;
+}
+
 void DumpManager::AddExceptionOp(const OperatorInfo &opInfo)
 {
     UNUSED(opInfo);
@@ -289,19 +301,4 @@ int32_t DumpManager::HandleDumpEvent(uint32_t moduleId, DumpEnableAction action)
     return result;
 }
 
-#ifdef __ADUMP_LLT
-void DumpManager::Reset()
-{
-}
-
-bool DumpManager::GetKFCInitStatus()
-{
-    return isKFCInit_;
-}
-
-void DumpManager::SetKFCInitStatus(bool status)
-{
-    isKFCInit_ = status;
-}
-#endif
 }  // namespace Adx

@@ -63,6 +63,9 @@ public:
     const char* GetDataDumpPath();
     bool StartDataDumpServer();
     bool StopDataDumpServer();
+    
+    int32_t RegisterExceptionDumpCallback(ExceptionDumpCallback callback);
+    int32_t UnregisterExceptionDumpCallback(ExceptionDumpCallback callback);
 
 public:
     static std::vector<std::shared_ptr<OperatorPreliminary>> operatorMap_;

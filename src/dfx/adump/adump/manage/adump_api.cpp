@@ -154,6 +154,16 @@ void AdumpPrintSetConfig(const AdumpPrintConfig &config)
     AdxPrintSetConfig(config);
 }
 
+int32_t AdumpRegExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    return DumpManager::Instance().RegisterExceptionDumpCallback(callback);
+}
+
+int32_t AdumpUnregExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    return DumpManager::Instance().UnregisterExceptionDumpCallback(callback);
+}
+
 #ifndef __ADUMP_LLT
 static void __attribute__((constructor)) AdumpInit(void)
 {

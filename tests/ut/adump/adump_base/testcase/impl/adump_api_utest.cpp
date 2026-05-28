@@ -29,6 +29,7 @@
 #include "common/thread.h"
 #include "utils.h"
 #include "error_manager_stub.h"
+#include "dump_exception_stub.h"
 
 using namespace Adx;
 #define JSON_BASE ADUMP_BASE_DIR "stub/data/json/"
@@ -839,4 +840,37 @@ TEST_F(AdumpApiUtest, Test_acldumpGetPath)
     path = acldumpGetPath(acldumpType::DATA_DUMP);
     EXPECT_NE(path, nullptr);
     EXPECT_EQ(path, DumpManager::Instance().dumpSetting_.dumpPath_.path_.c_str());
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpRegExceptionDumpCallback_Null)
+{
+    int32_t ret = AdumpRegExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpRegExceptionDumpCallback_Success)
+{
+    int32_t ret = AdumpRegExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpUnregExceptionDumpCallback_Null)
+{
+    int32_t ret = AdumpUnregExceptionDumpCallback(nullptr);
+    EXPECT_EQ(ret, ADUMP_INPUT_FAILED);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpUnregExceptionDumpCallback_NotRegistered)
+{
+    int32_t ret = AdumpUnregExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpUnregExceptionDumpCallback_Success)
+{
+    int32_t ret = AdumpRegExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    
+    ret = AdumpUnregExceptionDumpCallback(MockExceptionCallback);
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
 }

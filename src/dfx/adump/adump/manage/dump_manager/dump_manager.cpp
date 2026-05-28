@@ -37,8 +37,6 @@
 namespace Adx {
 constexpr char EXCEPTION_CB_MODULE[] = "AdumpException";
 constexpr char COREDUMP_CB_MODULE[] = "AdumpCoredump";
-static const uint32_t ADUMP_ACL_ERROR_RT_AICORE_OVER_FLOW = 207003;   // aicore over flow
-static const uint32_t ADUMP_ACL_ERROR_RT_AIVEC_OVER_FLOW = 207016;    // aivec over flow
 
 std::vector<std::shared_ptr<OperatorPreliminary>> DumpManager::operatorMap_;
 
@@ -46,18 +44,6 @@ static void ExceptionCallback(rtExceptionInfo* const exception)
 {
     IDE_RUN_LOGI("An exception callback message is received.");
     if (exception != nullptr) {
-        if (exception->retcode == ADUMP_ACL_ERROR_RT_AICORE_OVER_FLOW ||
-            exception->retcode == ADUMP_ACL_ERROR_RT_AIVEC_OVER_FLOW) {
-            IDE_LOGW("Ignore exception dump request, retcode: %u.", exception->retcode);
-            return;
-        }
-        rtExceptionArgsInfo_t exceptionArgsInfo{};
-        rtExceptionExpandType_t exceptionTaskType = exception->expandInfo.type;
-        if (ExceptionInfoCommon::GetExceptionInfo(*exception, exceptionTaskType, exceptionArgsInfo) != ADUMP_SUCCESS) {
-            IDE_LOGW("Get exception args info failed.");
-            return;
-        }
-
         (void)DumpManager::Instance().DumpExceptionInfo(*exception);
         AdxLogFlush();
     }
@@ -848,4 +834,15 @@ void DumpManager::SetKFCInitStatus(bool status)
     isKFCInit_ = status;
 }
 #endif
+
+int32_t DumpManager::RegisterExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    return exceptionDumper_.RegisterExceptionDumpCallback(callback);
+}
+
+int32_t DumpManager::UnregisterExceptionDumpCallback(ExceptionDumpCallback callback)
+{
+    return exceptionDumper_.UnregisterExceptionDumpCallback(callback);
+}
+
 } // namespace Adx

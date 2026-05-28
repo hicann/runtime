@@ -531,6 +531,7 @@ TEST_F(DumpArgsUtest, Test_Dump_Args)
     exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
     EXPECT_EQ(ADUMP_FAILED, DumpManager::Instance().DumpExceptionInfo(exceptionInfo));
 
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.argAddr = nullptr;
     ret = DumpManager::Instance().DumpExceptionInfo(exceptionInfo);
     EXPECT_EQ(ret, ADUMP_FAILED);

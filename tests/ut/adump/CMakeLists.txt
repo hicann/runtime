@@ -70,11 +70,13 @@ target_link_libraries(adx_utestonetrack_pub INTERFACE
 add_subdirectory(adx_hdc_dump)
 add_subdirectory(adx_soc_dump)
 add_subdirectory(adump_base)
+add_subdirectory(adump_tiny)
 
 set(ADUMP_UT_SUB_TARGETS
     adx_hdc_dump_utest
     adx_soc_dump_utest
     adump_base_utest
+    adump_tiny_utest
 )
 
 add_custom_target(adump_ut DEPENDS ${ADUMP_UT_SUB_TARGETS})
