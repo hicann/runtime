@@ -50,6 +50,7 @@ SqAddrMemoryOrder::SqAddrMemoryOrder(Device * const dev)
 SqAddrMemoryOrder::~SqAddrMemoryOrder()
 {
     RT_LOG(RT_LOG_DEBUG, "free sq addr order");
+    std::lock_guard<std::mutex> lock(sqAddrAllocatorsMutex_);
     for (auto& pair : sqAddrAllocators_) {
         DELETE_O(pair.second);
     }
@@ -95,6 +96,7 @@ uint32_t SqAddrMemoryOrder::GetMemOrderSizeByMemOrderType(const uint32_t memOrde
 
 BufferAllocator* SqAddrMemoryOrder::FindSqMemPoolByMemOrderType(const uint32_t memOrderType)
 {
+    std::lock_guard<std::mutex> lock(sqAddrAllocatorsMutex_);
     auto it = std::find_if(sqAddrAllocators_.begin(), sqAddrAllocators_.end(),
         [memOrderType](const auto& pair) { return pair.first == memOrderType; });
     if (it != sqAddrAllocators_.end()) {
