@@ -10,15 +10,15 @@
 此外，开发者在编码、编写测试和准备设计方案前，请优先阅读 `docs/guidelines/` 目录下的开发指南，并遵从其中的相关规范：
 
 - [开发指南总览](docs/guidelines/README.md)
-- [编码规范](docs/guidelines/编码规范.md)：适用于 Runtime 仓源码实现的统一编码规范
-- [UT代码规范](docs/guidelines/UT代码规范.md)：适用于 `tests/**` 下 UT 代码的实现规范
+- [编码规范](docs/guidelines/coding-guidelines.md)：适用于 Runtime 仓源码实现的统一编码规范
+- [UT代码规范](docs/guidelines/ut-coding-guidelines.md)：适用于 `tests/**` 下 UT 代码的实现规范
 - [UT用例开发指导](docs/guidelines/dt_guide/UT用例开发指导.md)：适用于 UT 场景设计、校验方法和测试实现
 - [设计文档模板](docs/guidelines/design_document_template.md)：涉及新增特性、接口、配置参数或流程改动时，建议先按模板完成设计说明
 
 建议遵循以下原则：
 
 1. 修改源码前，先阅读并遵守对应的编码规范。
-2. 修改 UT 代码时，除通用编码规范外，还应同时遵守 `UT代码规范` 和 `UT用例开发指导`。
+2. 修改 UT 代码时，除通用编码规范外，还应同时遵守 `ut-coding-guidelines.md` 和 `UT用例开发指导`。
 3. 涉及新增能力、接口或流程调整的改动，应先补充设计说明，再开始编码。
 
 开发者贡献场景主要包括：

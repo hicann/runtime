@@ -4,7 +4,7 @@
 
 ## 输入规则
 
-1. 必须先读取 `docs/guidelines/编码规范.md`，将其作为基础规范来源。
+1. 必须先读取 `docs/guidelines/coding-guidelines.md`，将其作为基础规范来源。
 2. 当变更涉及设计、接口、测试或文档时，还应结合 `docs/guidelines/design_document_template.md` 和 `docs/guidelines/dt_guide/` 下相关文档。
 3. 审查对象由调用方模式提供，可以是本地 diff，也可以是 GitCode PR diff。
 
@@ -21,7 +21,7 @@
 
 必须读取：
 
-- `docs/guidelines/编码规范.md`
+- `docs/guidelines/coding-guidelines.md`
 
 ### UT 文件
 
@@ -33,8 +33,8 @@
 
 必须读取：
 
-- `docs/guidelines/编码规范.md`（重点关注其中的“通用 C/C++ 编码规范”）
-- `docs/guidelines/UT代码规范.md`
+- `docs/guidelines/coding-guidelines.md`（重点关注其中的"通用 C/C++ 编码规范"）
+- `docs/guidelines/ut-coding-guidelines.md`
 - `docs/guidelines/dt_guide/UT用例开发指导.md`
 
 ### 文档文件
@@ -46,7 +46,7 @@
 建议读取：
 
 - `docs/guidelines/design_document_template.md`
-- `docs/guidelines/编码规范.md`
+- `docs/guidelines/coding-guidelines.md`
 
 ### 其他文件
 
@@ -58,7 +58,7 @@
 
 建议读取：
 
-- `docs/guidelines/编码规范.md`
+- `docs/guidelines/coding-guidelines.md`
 
 ## 审查优先级与高信号原则
 

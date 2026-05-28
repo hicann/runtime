@@ -134,10 +134,10 @@ python3 .claude/skills/runtime-code-review/scripts/prepare_pr_review_context.py 
 ```
 
 8. 按共享规则加载规范文档：
-   - `source_files`：`docs/guidelines/编码规范.md`
-   - `ut_files`：额外再读
-     - `docs/guidelines/UT代码规范.md`
-     - `docs/guidelines/dt_guide/UT用例开发指导.md`
+    - `source_files`：`docs/guidelines/coding-guidelines.md`
+    - `ut_files`：额外再读
+      - `docs/guidelines/ut-coding-guidelines.md`
+      - `docs/guidelines/dt_guide/UT用例开发指导.md`
    - `doc_files`：必要时结合 `docs/guidelines/design_document_template.md`
 9. 按共享规则逐文件审查
 10. 对发现的问题做验证并过滤误报

@@ -45,7 +45,7 @@ description: |
 
 ## 规范加载原则
 
-- 所有源码审查都必须遵从 `docs/guidelines/编码规范.md`
+- 所有源码审查都必须遵从 `docs/guidelines/coding-guidelines.md`
 - 审查 UT 代码时，除上面的文档外，还必须额外遵从：
-  - `docs/guidelines/UT代码规范.md`
+  - `docs/guidelines/ut-coding-guidelines.md`
   - `docs/guidelines/dt_guide/UT用例开发指导.md`

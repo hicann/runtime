@@ -207,7 +207,7 @@ Runtime 需要兼容多 SoC、多 driver 能力和多运行环境。公共路径
 
 ### 编码规范
 
-参考 [编码规范.md](编码规范.md)
+参考 [coding-guidelines.md](coding-guidelines.md)
 
 ### 设计检查项
 
