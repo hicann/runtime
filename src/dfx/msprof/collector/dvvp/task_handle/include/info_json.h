@@ -85,6 +85,7 @@ struct InfoMain {
     std::vector<InfoDeviceInfo> deviceInfos;
     std::vector<NetCardInfo> netCardInfos;
     uint32_t drvVersion;
+    std::string cannVersion;
 };
 
 struct DeviceInfo {
@@ -132,6 +133,7 @@ private:
     std::string EncodeInfoMainJson(SHARED_PTR_ALIA<InfoMain> infoMain) const;
     std::string GetHwtsFreq(std::string freq) const;
     void SetDrvVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const;
+    void SetCannVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const;
 
 private:
     std::string jobInfo_;

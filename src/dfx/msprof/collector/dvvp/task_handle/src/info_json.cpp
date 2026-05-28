@@ -22,9 +22,9 @@
 #include "prof_manager.h"
 #include "securec.h"
 #include "utils/utils.h"
+#include "json/json.h"
 #include "platform/platform.h"
 #include "task_relationship_mgr.h"
-#include "json/json.h"
 
 namespace analysis {
 namespace dvvp {
@@ -42,13 +42,37 @@ const char *const PROF_PROC_UPTIME = "/proc/uptime";
 const char *const PROC_MEM_TOTAL = "MemTotal";
 const char *const PROC_NET_SPEED = "speed";
 
+
+static void EncodeInfoMainScalarFields(SHARED_PTR_ALIA<InfoMain> infoMain, NanoJson::Json &infoMainJson)
+{
+    infoMainJson["version"] = infoMain->version;
+    infoMainJson["jobInfo"] = infoMain->jobInfo;
+    infoMainJson["OS"] = infoMain->os;
+    infoMainJson["hostname"] = infoMain->hostname;
+    infoMainJson["hwtype"] = infoMain->hwtype;
+    infoMainJson["devices"] = infoMain->devices;
+    infoMainJson["platform"] = infoMain->platform;
+    infoMainJson["platform_version"] = infoMain->platformVersion;
+    infoMainJson["pid"] = infoMain->pid;
+    infoMainJson["pid_name"] = infoMain->pidName;
+    infoMainJson["upTime"] = infoMain->upTime;
+    infoMainJson["memoryTotal"] = infoMain->memoryTotal;
+    infoMainJson["cpuNums"] = infoMain->cpuNums;
+    infoMainJson["sysClockFreq"] = infoMain->sysClockFreq;
+    infoMainJson["cpuCores"] = infoMain->cpuCores;
+    infoMainJson["netCardNums"] = infoMain->netCardNums;
+    infoMainJson["rank_id"] = infoMain->rankId;
+    infoMainJson["drvVersion"] = infoMain->drvVersion;
+    infoMainJson["cannVersion"] = infoMain->cannVersion;
+}
+
+
 InfoJson::InfoJson(const std::string &jobInfo, const std::string &devices, int32_t hostpid)
     : jobInfo_(jobInfo), devices_(devices), hostpid_(hostpid)
 {}
 
 std::string InfoJson::EncodeInfoMainJson(SHARED_PTR_ALIA<InfoMain> infoMain) const
 {
-    using namespace NanoJson;
     if (infoMain == nullptr) {
         return "";
     }
@@ -56,7 +80,7 @@ std::string InfoJson::EncodeInfoMainJson(SHARED_PTR_ALIA<InfoMain> infoMain) con
     size_t netCardInfoSize = infoMain->netCardInfos.size();
     size_t infoCpuSize = infoMain->infoCpus.size();
 
-    Json infoMainJson;
+    NanoJson::Json infoMainJson;
     infoMainJson["DeviceInfo"].SetArraySize(deviceInfoSize);
     infoMainJson["netCard"].SetArraySize(netCardInfoSize);
     infoMainJson["CPU"].SetArraySize(infoCpuSize);
@@ -93,25 +117,7 @@ std::string InfoJson::EncodeInfoMainJson(SHARED_PTR_ALIA<InfoMain> infoMain) con
         infoMainJson["CPU"][i]["Logical_CPU_Count"] = infoMain->infoCpus[i].logicalCpuCount;
         infoMainJson["CPU"][i]["Type"] = infoMain->infoCpus[i].type;
     }
-
-    infoMainJson["version"] = infoMain->version;
-    infoMainJson["jobInfo"] = infoMain->jobInfo;
-    infoMainJson["OS"] = infoMain->os;
-    infoMainJson["hostname"] = infoMain->hostname;
-    infoMainJson["hwtype"] = infoMain->hwtype;
-    infoMainJson["devices"] = infoMain->devices;
-    infoMainJson["platform"] = infoMain->platform;
-    infoMainJson["platform_version"] = infoMain->platformVersion;
-    infoMainJson["pid"] = infoMain->pid;
-    infoMainJson["pid_name"] = infoMain->pidName;
-    infoMainJson["upTime"] = infoMain->upTime;
-    infoMainJson["memoryTotal"] = infoMain->memoryTotal;
-    infoMainJson["cpuNums"] = infoMain->cpuNums;
-    infoMainJson["sysClockFreq"] = infoMain->sysClockFreq;
-    infoMainJson["cpuCores"] = infoMain->cpuCores;
-    infoMainJson["netCardNums"] = infoMain->netCardNums;
-    infoMainJson["rank_id"] = infoMain->rankId;
-    infoMainJson["drvVersion"] = infoMain->drvVersion;
+    EncodeInfoMainScalarFields(infoMain, infoMainJson);
 
     return infoMainJson.ToString();
 }
@@ -536,6 +542,7 @@ int32_t InfoJson::AddOtherInfo(SHARED_PTR_ALIA<InfoMain> infoMain)
     SetPlatFormVersion(infoMain);
     SetVersionInfo(infoMain);
     SetDrvVersion(infoMain);
+    SetCannVersion(infoMain);
     return PROFILING_SUCCESS;
 }
 
@@ -591,6 +598,56 @@ void InfoJson::SetPidInfo(SHARED_PTR_ALIA<InfoMain> infoMain, int32_t pid) const
     infoMain->pid = pidTmp;
     infoMain->pidName = pidName;
     return;
+}
+
+void InfoJson::SetCannVersion(SHARED_PTR_ALIA<InfoMain> infoMain) const
+{
+    constexpr size_t MAX_VERSION_LENGTH = 64;
+    std::string cannPath;
+    MSPROF_GET_ENV(MM_ENV_ASCEND_HOME_PATH, cannPath);
+    if (cannPath.empty()) {
+        MSPROF_LOGW("Environment variable ASCEND_HOME_PATH is not set, cann version info will be missing.");
+        return;
+    }
+    while (!cannPath.empty()) {
+        if (cannPath.back() == MSVP_SLASH[0]) {
+            cannPath.pop_back();
+        } else {
+            break;
+        }
+    }
+    if (cannPath.empty()) {
+        MSPROF_LOGW("Environment variable ASCEND_HOME_PATH is invalid, cann version info will be missing.");
+        return;
+    }
+    std::string versionFilePath = cannPath + "/share/info/runtime/version.info";
+    int64_t fileSize = Utils::GetFileSize(versionFilePath);
+    if (fileSize < 0 || fileSize > MSVP_LARGE_FILE_MAX_LEN) {
+        MSPROF_LOGW("[SetCannVersion] Cann version file(%s) size(%" PRId64 ")", versionFilePath.c_str(), fileSize);
+        return;
+    }
+    std::ifstream versionFile(versionFilePath, std::ifstream::in);
+    if (!versionFile.is_open()) {
+        MSPROF_LOGW("Failed to open cann version file: %s, cann version info will be missing.", versionFilePath.c_str());
+        return;
+    }
+    std::string line;
+    std::string lineVersion;
+    while (std::getline(versionFile, line)) {
+        if (line.length() <= strlen("Version=") || line.length() > MAX_VERSION_LENGTH) {
+            continue;
+        }
+        const auto &pos = line.find("Version=");
+        if (pos != std::string::npos) {
+            lineVersion = line.substr(pos + strlen("Version="));
+            break;
+        }
+    }
+    versionFile.close();
+    if (lineVersion.empty()) {
+        MSPROF_LOGW("No Version= line found in %s, cann version info will be missing.", versionFilePath.c_str());
+    }
+    infoMain->cannVersion = lineVersion;
 }
 
 InfoJson::~InfoJson()

@@ -94,3 +94,129 @@ TEST_F(INFO_JSON_TEST, SetPidInfo) {
     EXPECT_NE("NA", infoMain->pidName);
     EXPECT_EQ("1", infoMain->pid);
 }
+
+TEST_F(INFO_JSON_TEST, SetCannVersionWillNotSetVersionWhenAscendHomePathIsNotSet) {
+    GlobalMockObject::verify();
+
+    SHARED_PTR_ALIA<InfoMain> infoMain = nullptr;
+    MSVP_MAKE_SHARED0(infoMain, InfoMain, return);
+
+    std::string emptyAscendHome = "";
+    InfoJson infoJson(jobInfo, devices, hostpid);
+
+    MOCKER_CPP(&Utils::HandleEnvString)
+        .stubs()
+        .will(returnValue(emptyAscendHome));
+
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+}
+
+TEST_F(INFO_JSON_TEST, SetCannVersionWillNotSetVersionWhenAscendHomePathIsInvalid) {
+    GlobalMockObject::verify();
+
+    SHARED_PTR_ALIA<InfoMain> infoMain = nullptr;
+    MSVP_MAKE_SHARED0(infoMain, InfoMain, return);
+
+    std::string invalidAscendHome = "/////";
+    InfoJson infoJson(jobInfo, devices, hostpid);
+
+    MOCKER_CPP(&Utils::HandleEnvString)
+        .stubs()
+        .will(returnValue(invalidAscendHome));
+
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+}
+
+TEST_F(INFO_JSON_TEST, SetCannVersionWillNotSetVersionWhenVersionFileIsNotAccessible) {
+    GlobalMockObject::verify();
+
+    SHARED_PTR_ALIA<InfoMain> infoMain = nullptr;
+    MSVP_MAKE_SHARED0(infoMain, InfoMain, return);
+
+    std::string utAscendHome = "./info_ut";
+    std::string versionFile = utAscendHome + "/share/info/runtime/version.info";
+    Utils::RemoveDir(utAscendHome);
+    InfoJson infoJson(jobInfo, devices, hostpid);
+
+    MOCKER_CPP(&Utils::HandleEnvString)
+        .stubs()
+        .will(returnValue(utAscendHome));
+
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+    Utils::RemoveDir(utAscendHome);
+}
+
+TEST_F(INFO_JSON_TEST, SetCannVersionWillNotSetVersionWhenVersionFileContentIsInvalid) {
+    GlobalMockObject::verify();
+
+    SHARED_PTR_ALIA<InfoMain> infoMain = nullptr;
+    MSVP_MAKE_SHARED0(infoMain, InfoMain, return);
+
+    std::string utAscendHome = "./info_ut";
+    std::string versionFile = utAscendHome + "/share/info/runtime/version.info";
+    Utils::RemoveDir(utAscendHome);
+    Utils::CreateDir(utAscendHome + "/share/info/runtime");
+    std::ofstream invalidFile(versionFile);
+    invalidFile << "invalid_version_content" << std::endl;
+    invalidFile.close();
+
+    InfoJson infoJson(jobInfo, devices, hostpid);
+
+    MOCKER_CPP(&Utils::HandleEnvString)
+        .stubs()
+        .will(returnValue(utAscendHome));
+
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+
+    invalidFile.open(versionFile, std::ios::trunc);
+    invalidFile << "Version=\n" << std::endl;
+    invalidFile.close();
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+
+    invalidFile.open(versionFile, std::ios::trunc);
+    invalidFile << "Version=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << std::endl;
+    invalidFile.close();
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("", infoMain->cannVersion);
+
+    remove(versionFile.c_str());
+    Utils::RemoveDir(utAscendHome);
+}
+
+TEST_F(INFO_JSON_TEST, SetCannVersionWillSetVersionWhenVersionFileContentIsValid) {
+    GlobalMockObject::verify();
+
+    SHARED_PTR_ALIA<InfoMain> infoMain = nullptr;
+    MSVP_MAKE_SHARED0(infoMain, InfoMain, return);
+
+    std::string utAscendHome = "./info_ut";
+    std::string versionFile = utAscendHome + "/share/info/runtime/version.info";
+    Utils::RemoveDir(utAscendHome);
+    Utils::CreateDir(utAscendHome + "/share/info/runtime");
+    std::ofstream validFile(versionFile);
+    validFile << "Version=9.1.0" << std::endl;
+    validFile.close();
+
+    InfoJson infoJson(jobInfo, devices, hostpid);
+
+    MOCKER_CPP(&Utils::HandleEnvString)
+        .stubs()
+        .will(returnValue(utAscendHome));
+
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("9.1.0", infoMain->cannVersion);
+
+    validFile.open(versionFile, std::ios::trunc);
+    validFile << "Version=9.1.0\nVersion=9.2.0" << std::endl;
+    validFile.close();
+    infoJson.SetCannVersion(infoMain);
+    EXPECT_EQ("9.1.0", infoMain->cannVersion);
+
+    remove(versionFile.c_str());
+    Utils::RemoveDir(utAscendHome);
+}
