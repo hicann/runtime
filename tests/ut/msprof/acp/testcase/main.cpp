@@ -1,19 +1,31 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include "gtest/gtest.h"
 
-int main(int argc, char** argv) { 
-    testing::InitGoogleTest(&argc, argv); 
+#if defined(__GNUC__)
+extern "C" void __gcov_dump(void) __attribute__((weak));
+extern "C" void __gcov_exit(void) __attribute__((weak));
+#endif
+
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
 
     // Runs all tests using Google Test.
     // testing::GTEST_FLAG(filter) = "COMMON_QUEUE_RING_BUFFER_TEST.BlockBuffer_BasePushPopTest";
     int ret = RUN_ALL_TESTS();
+#if defined(__GNUC__)
+    if (__gcov_dump != nullptr) {
+        __gcov_dump();
+    } else if (__gcov_exit != nullptr) {
+        __gcov_exit();
+    }
+#endif
     _exit(ret);
 }

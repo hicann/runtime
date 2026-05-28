@@ -19,6 +19,8 @@ set(testSrc
     testcase/acp_bin_utest.cpp
     testcase/acp_manager_utest.cpp
     testcase/op_data_manager_utest.cpp
+    testcase/op_analyzer_biu_utest.cpp
+    testcase/op_analyzer_pmu_utest.cpp
 )
 
 set(src_file

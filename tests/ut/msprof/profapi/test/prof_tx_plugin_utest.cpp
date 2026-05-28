@@ -16,8 +16,10 @@
 #include "mmpa_api.h"
 #include "acl/acl_base.h"
 #include "runtime/base.h"
+#include "utils.h"
 
 using namespace analysis::dvvp::common::error;
+using namespace analysis::dvvp::common::utils;
 using namespace ProfAPI;
 class PROF_TX_UTTEST : public testing::Test {
 protected:
@@ -205,18 +207,125 @@ TEST_F(PROF_TX_UTTEST, ReportAdditionalInfo_ReportFailed)
     tensor.shapeDim = 2;
     tensor.shape[0] = 10;
     tensor.shape[1] = 20;
-    
+
     aclprofTensorInfo tensorInfo;
     tensorInfo.opNameId = 11111;
     tensorInfo.tensorNum = 1;
     tensorInfo.tensors = &tensor;
-    
+
     uint64_t timeStampPush = 100;
     uint64_t timeStampPop = 200;
-    
+
     MOCKER(MsprofReportAdditionalInfo)
         .stubs()
         .will(returnValue(PROFILING_FAILED));
-    
+
     EXPECT_EQ(PROFILING_FAILED, ProfTxPlugin::GetProftxInstance().ReportAdditionalInfo(&tensorInfo, timeStampPush, timeStampPop));
+}
+
+TEST_F(PROF_TX_UTTEST, ProftxRangePushEx_NullAttr)
+{
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(nullptr));
+}
+
+TEST_F(PROF_TX_UTTEST, ProftxRangePushEx_BadMessageType)
+{
+    aclprofEventAttributes attr;
+    attr.messageType = 0xFF;  // not MESSAGE_TYPE_TENSOR_INFO
+    EXPECT_EQ(PROFILING_FAILED, ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(&attr));
+}
+
+TEST_F(PROF_TX_UTTEST, ProftxRangePushEx_Success)
+{
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    tensor.shape[0] = 1;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.tensorNum = 1;
+    tensorInfo.tensors = &tensor;
+    aclprofEventAttributes attr;
+    attr.messageType = MESSAGE_TYPE_TENSOR_INFO;
+    attr.message.tensorInfo = &tensorInfo;
+    EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(&attr));
+}
+
+TEST_F(PROF_TX_UTTEST, ProftxRangePop_GetAttrFail)
+{
+    // After previous PushEx success attr_ is set; force ProfRtsStreamGetAttribute to fail.
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    tensor.shape[0] = 1;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.tensorNum = 1;
+    tensorInfo.tensors = &tensor;
+    aclprofEventAttributes attr;
+    attr.messageType = MESSAGE_TYPE_TENSOR_INFO;
+    attr.message.tensorInfo = &tensorInfo;
+    EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(&attr));
+
+    MOCKER_CPP(&ProfRuntimePlugin::ProfRtsStreamGetAttribute)
+        .stubs().will(returnValue((int32_t)-1));
+    EXPECT_EQ(PROFILING_FAILED, ProfTxPlugin::GetProftxInstance().ProftxRangePop());
+}
+
+TEST_F(PROF_TX_UTTEST, ProftxRangePop_AdditionalInfoBranch)
+{
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    tensor.shape[0] = 4;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.opNameId = 1;
+    tensorInfo.tensorNum = 1;
+    tensorInfo.tensors = &tensor;
+    aclprofEventAttributes attr;
+    attr.messageType = MESSAGE_TYPE_TENSOR_INFO;
+    attr.message.tensorInfo = &tensorInfo;
+    EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ProftxRangePushEx(&attr));
+
+    MOCKER_CPP(&ProfRuntimePlugin::ProfRtsStreamGetAttribute)
+        .stubs().will(returnValue((int32_t)RT_ERROR_NONE));
+    MOCKER(MsprofReportAdditionalInfo).stubs().will(returnValue(PROFILING_SUCCESS));
+    // value.cacheOpInfoSwitch is uninitialized stack mem; cover both branches by both calls.
+    (void)ProfTxPlugin::GetProftxInstance().ProftxRangePop();
+}
+
+TEST_F(PROF_TX_UTTEST, ReportCacheOpInfo2RT_MallocFail)
+{
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.tensorNum = 1;
+    tensorInfo.tensors = &tensor;
+    MOCKER(&Utils::ProfMalloc).stubs().will(returnValue((void*)nullptr));
+    EXPECT_EQ(PROFILING_FAILED, ProfTxPlugin::GetProftxInstance().ReportCacheOpInfo2RT(&tensorInfo));
+}
+
+TEST_F(PROF_TX_UTTEST, ReportCacheOpInfo2RT_RtFail)
+{
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    tensor.shape[0] = 4;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.opNameId = 1;
+    tensorInfo.tensorNum = 1;
+    tensorInfo.kernelType = 2;
+    tensorInfo.blockNums = 3;
+    tensorInfo.tensors = &tensor;
+    MOCKER_CPP(&ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo)
+        .stubs().will(returnValue((int32_t)-1));
+    EXPECT_EQ(PROFILING_FAILED, ProfTxPlugin::GetProftxInstance().ReportCacheOpInfo2RT(&tensorInfo));
+}
+
+TEST_F(PROF_TX_UTTEST, ReportCacheOpInfo2RT_Success)
+{
+    aclprofTensor tensor{};
+    tensor.shapeDim = 1;
+    tensor.shape[0] = 4;
+    aclprofTensorInfo tensorInfo{};
+    tensorInfo.opNameId = 1;
+    tensorInfo.tensorNum = 1;
+    tensorInfo.tensors = &tensor;
+    MOCKER_CPP(&ProfRuntimePlugin::ProfRtCacheLastTaskOpInfo)
+        .stubs().will(returnValue((int32_t)RT_ERROR_NONE));
+    EXPECT_EQ(PROFILING_SUCCESS, ProfTxPlugin::GetProftxInstance().ReportCacheOpInfo2RT(&tensorInfo));
 }

@@ -39,6 +39,8 @@ add_executable(prof_api_utest
     test/prof_api_utest.cpp
     test/prof_api_plugin_utest.cpp
     test/prof_tx_plugin_utest.cpp
+    test/prof_mstx_plugin_utest.cpp
+    test/prof_cann_plugin_utest.cpp
     test/prof_api_c_utest.cpp
     stub/mmpa_stub.cpp
     ../stub/mmpa_stub.cpp

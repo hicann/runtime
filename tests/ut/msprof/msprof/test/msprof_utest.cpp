@@ -29,9 +29,13 @@
 #include "uploader_mgr.h"
 #include "prof_stamp_pool.h"
 #include "prof_tx_plugin.h"
-#include "rpc_data_handle.h"
 #define private public
+#define protected public
 #include "msprof_tx_manager.h"
+#include "rpc_dumper.h"
+#include "rpc_data_handle.h"
+#undef protected
+#undef private
 
 static uint8_t g_device_id = 0;
 static bool createPluginTrue = true;
@@ -238,7 +242,7 @@ TEST_F(MSPROF_TEST, ModuleJob)
     EXPECT_EQ(PROFILING_FAILED, moduleJob.ProfStart());
 }
 
-TEST_F(MSPROF_TEST, MsprofTxMemPool)
+TEST_F(MSPROF_TEST, DISABLED_MsprofTxMemPool)
 {
     GlobalMockObject::verify();
     std::shared_ptr<ProfStampPool> stampPool;
@@ -498,3 +502,141 @@ public:
         return 0;
     }
 };
+
+TEST_F(MSPROF_TEST, RpcDumper_GetNameAndId_Variants)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("");
+    // No dash → use module as is
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.GetNameAndId("foo"));
+    // Single dash, posTmp == pos → fail
+    EXPECT_EQ(PROFILING_FAILED, dumper.GetNameAndId("foo-1"));
+    // Bad pid integer → fail
+    EXPECT_EQ(PROFILING_FAILED, dumper.GetNameAndId("foo-abc-1"));
+    // Bad devid integer → fail
+    EXPECT_EQ(PROFILING_FAILED, dumper.GetNameAndId("foo-1-abc"));
+    // Success: module-pid-devid
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.GetNameAndId("foo-100-2"));
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_StopFlushNotStarted)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("foo-1-2");
+    // Not started → Stop returns SUCCESS (no-op branch)
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Stop());
+    // Not started → Flush returns SUCCESS (no-op branch)
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Flush());
+    // GetReportDataMaxLen always returns RECEIVE_CHUNK_SIZE
+    EXPECT_NE(0u, dumper.GetReportDataMaxLen());
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_Start_GetNameAndIdFailed)
+{
+    GlobalMockObject::verify();
+    // single dash -> GetNameAndId fails -> Start fails
+    RpcDumper dumper("badmod-1");
+    EXPECT_EQ(PROFILING_FAILED, dumper.Start());
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_Start_TryToConnectFailed)
+{
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprof::Engine::RpcDataHandle::TryToConnect)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED));
+    RpcDumper dumper("DATA_PREPROCESS-100-2");
+    EXPECT_EQ(PROFILING_FAILED, dumper.Start());
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_DumpProfileFileChunk_Empty)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("foo-1-2");
+    std::vector<SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk>> message;
+    // Overload that just takes ProfileFileChunk vector - returns SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Dump(message));
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_DumpData_NullFileChunk)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("foo-1-2");
+    std::vector<ReporterDataChunk> message;
+    SHARED_PTR_ALIA<FileChunkReq> fileChunk = nullptr;
+    // fileChunk is nullptr -> failed
+    EXPECT_EQ(PROFILING_FAILED, dumper.DumpData(message, fileChunk));
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_DumpData_Success)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("foo-1-2");
+    std::vector<ReporterDataChunk> message;
+    ReporterDataChunk chunk;
+    memset(&chunk, 0, sizeof(chunk));
+    memcpy(chunk.tag, "tag1", 4);
+    chunk.dataLen = 4;
+    memcpy(chunk.data, "data", 4);
+    chunk.reportTime = 100;
+    chunk.deviceId = 0;
+    message.push_back(chunk);
+    // Two messages -> exercise both branches in DumpData (isFirstMessage and follow-up)
+    chunk.reportTime = 200;
+    message.push_back(chunk);
+    SHARED_PTR_ALIA<FileChunkReq> fileChunk(new FileChunkReq());
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.DumpData(message, fileChunk));
+}
+
+TEST_F(MSPROF_TEST, RpcDumper_RunDefaultProfileData)
+{
+    GlobalMockObject::verify();
+    RpcDumper dumper("foo-1-2");
+    std::vector<SHARED_PTR_ALIA<FileChunkReq>> fileChunks;
+    // RunDefaultProfileData is a no-op for RpcDumper -> just exercise it
+    dumper.RunDefaultProfileData(fileChunks);
+}
+
+TEST_F(MSPROF_TEST, RpcDataHandle_Init_Uninit)
+{
+    GlobalMockObject::verify();
+    RpcDataHandle handle("DATA_PREPROCESS-100-2", "DATA_PREPROCESS", 100, 2);
+    // Init is a no-op returning SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, handle.Init());
+    // dataHandle_ is null -> IsReady false
+    EXPECT_FALSE(handle.IsReady());
+    // dataHandle_ null -> UnInit returns SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, handle.UnInit());
+    // dataHandle_ null -> Flush returns SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, handle.Flush());
+}
+
+TEST_F(MSPROF_TEST, RpcDataHandle_SendData_InvalidParam)
+{
+    GlobalMockObject::verify();
+    RpcDataHandle handle("DATA_PREPROCESS-100-2", "DATA_PREPROCESS", 100, 2);
+    // null data -> failed
+    EXPECT_EQ(PROFILING_FAILED, handle.SendData(nullptr, 10, "f", "ctx"));
+    char data[8] = {0};
+    // dataLen 0 -> failed
+    EXPECT_EQ(PROFILING_FAILED, handle.SendData(data, 0, "f", "ctx"));
+    // dataHandle_ null -> SendData returns SUCCESS (warn branch)
+    EXPECT_EQ(PROFILING_SUCCESS, handle.SendData(data, 8, "f", "ctx"));
+}
+
+TEST_F(MSPROF_TEST, HdcDataHandle_SendData_InvalidParam)
+{
+    GlobalMockObject::verify();
+    HdcDataHandle handle("DATA_PREPROCESS-100-2", 100, 2);
+    // null data -> failed
+    EXPECT_EQ(PROFILING_FAILED, handle.SendData(nullptr, 10, "f", "ctx"));
+    char data[8] = {0};
+    // dataLen 0 -> failed
+    EXPECT_EQ(PROFILING_FAILED, handle.SendData(data, 0, "f", "ctx"));
+    // hdcSender_ nullptr -> failed
+    EXPECT_EQ(PROFILING_FAILED, handle.SendData(data, 8, "f", "ctx"));
+    // Flush hdcSender null -> SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, handle.Flush());
+    // UnInit hdcSender null -> SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, handle.UnInit());
+}

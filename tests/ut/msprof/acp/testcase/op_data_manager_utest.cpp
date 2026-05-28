@@ -12,9 +12,13 @@
 #include "error_code.h"
 #include "msprof_dlog.h"
 #include "prof_utils.h"
+#define private public
+#define protected public
 #include "op_analyzer.h"
 #include "op_analyzer_pc_sampling.h"
 #include "op_data_manager.h"
+#undef protected
+#undef private
 #include "platform/platform.h"
 #include "david_analyzer.h"
 #include "david_platform.h"
@@ -250,5 +254,124 @@ TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzerMilanBase)
     EXPECT_EQ(0, metricsVec.size());
     EXPECT_EQ(0, OpDataManager::instance()->GetAnalyzeCount());
     OpDataManager::instance()->UnInit();
+    Platform::instance()->Uninit();
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, PcSampling_IsPcSamplingData)
+{
+    GlobalMockObject::verify();
+    OpAnalyzerPcSampling pc;
+    EXPECT_FALSE(pc.IsPcSamplingData("foo.csv"));
+    EXPECT_TRUE(pc.IsPcSamplingData("david_pc_sampling.bin"));
+    // No data parsed -> IsPcSamplingMode returns false
+    EXPECT_FALSE(pc.IsPcSamplingMode());
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, PcSampling_ParsePcSamplingData_AndAnalyze)
+{
+    GlobalMockObject::verify();
+    OpAnalyzerPcSampling pc;
+
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
+    MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
+    fileChunk->fileName = "pc_sampling.0";
+    fileChunk->offset = -1;
+    // Construct payload: 16 bytes (looks like one SamplingInstrRecord aligned).
+    std::string payload(16, '\x01');
+    fileChunk->chunk = payload;
+    fileChunk->chunkSize = payload.size();
+    fileChunk->isLastChunk = false;
+
+    // First parse: data is filled and at least one record extracted.
+    pc.ParsePcSamplingData(fileChunk);
+    // After parsing, mode becomes true.
+    EXPECT_TRUE(pc.IsPcSamplingMode());
+
+    // Add another chunk for second branch (find succeeds in first if).
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk2;
+    MSVP_MAKE_SHARED0(fileChunk2, analysis::dvvp::ProfileFileChunk, return);
+    fileChunk2->fileName = "pc_sampling.0";
+    fileChunk2->chunk = payload;
+    fileChunk2->chunkSize = payload.size();
+    pc.ParsePcSamplingData(fileChunk2);
+
+    // Analyze: stub AnalyzeBinaryObject + DumpFile so we do not depend on llvm-objdump.
+    MOCKER_CPP(&Utils::ExecCmd)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+    MOCKER_CPP(&Utils::DumpFile)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    pc.AnalyzePcSamplingDataAndSaveSummary("/tmp/pc_sampling_out");
+    // After analyze, sampling enable cleared
+    // (no public getter; we just verify subsequent call is the early-return branch)
+    pc.AnalyzePcSamplingDataAndSaveSummary("/tmp/pc_sampling_out");
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzer_OnOpData_NotInited)
+{
+    SHARED_PTR_ALIA<Dvvp::Acp::Analyze::OpAnalyzer> analyzer = nullptr;
+    MSVP_MAKE_SHARED0(analyzer, Dvvp::Acp::Analyze::OpAnalyzer, return);
+    analyzer->inited_ = false;
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
+    MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
+    fileChunk->fileName = "anything";
+    analyzer->OnOpData(fileChunk);
+    // null fileChunk path
+    analyzer->inited_ = true;
+    analyzer->OnOpData(nullptr);
+    // empty fileName path
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> emptyChunk;
+    MSVP_MAKE_SHARED0(emptyChunk, analysis::dvvp::ProfileFileChunk, return);
+    emptyChunk->fileName = "";
+    analyzer->OnOpData(emptyChunk);
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzer_InitAnalyzerByDeviceId_BadId)
+{
+    SHARED_PTR_ALIA<Dvvp::Acp::Analyze::OpAnalyzer> analyzer = nullptr;
+    MSVP_MAKE_SHARED0(analyzer, Dvvp::Acp::Analyze::OpAnalyzer, return);
+    analyzer->inited_ = true;
+    // not numeric -> StrToUint32 fails -> hit branch lines 60-63
+    analyzer->InitAnalyzerByDeviceId("not_a_number_id");
+    EXPECT_FALSE(analyzer->inited_);
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzer_BlockAndSubTaskAssociation_Empty)
+{
+    SHARED_PTR_ALIA<Dvvp::Acp::Analyze::OpAnalyzer> analyzer = nullptr;
+    MSVP_MAKE_SHARED0(analyzer, Dvvp::Acp::Analyze::OpAnalyzer, return);
+    // BlockInfoMatch with key not in blockInfo_ -> early return (lines 210-212)
+    KernelDetail value;
+    analyzer->BlockInfoMatch("nonexistent", value);
+
+    // SubTaskInfoMatch with empty subTaskInfo_ -> nothing happens
+    analyzer->SubTaskInfoMatch(value);
+
+    // Empty StoreAssociation path
+    analyzer->StoreAssociation();
+}
+
+TEST_F(OP_DATA_MANAGER_UTEST, OpAnalyzer_OnOpData_EndInfo_ConvertFail)
+{
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V3));
+    MOCKER(halGetDeviceInfo)
+        .stubs()
+        .will(invoke(halGetDeviceInfoTransOpStub));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+
+    SHARED_PTR_ALIA<Dvvp::Acp::Analyze::OpAnalyzer> analyzer = nullptr;
+    MSVP_MAKE_SHARED0(analyzer, Dvvp::Acp::Analyze::OpAnalyzer, return);
+    analyzer->inited_ = true;
+    SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> fileChunk;
+    MSVP_MAKE_SHARED0(fileChunk, analysis::dvvp::ProfileFileChunk, return);
+    // GetInfoSuffix returns non-numeric -> StrToUint32 fails -> early return
+    fileChunk->fileName = Utils::PackDotInfo("end_info", "abc");
+    fileChunk->chunk = "Custom:0x1";
+    fileChunk->id = "1";
+    analyzer->OnOpData(fileChunk);
     Platform::instance()->Uninit();
 }

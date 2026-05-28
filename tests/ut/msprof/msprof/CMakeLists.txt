@@ -180,6 +180,7 @@ set(profilerSrcFile
     ../common/test/nano_json_test.cpp
     ../common/test/argparse_utest.cpp
     test/prof_acl_core_utest.cpp
+    test/prof_ge_core_utest.cpp
     test/mstx_utest.cpp
     ${profilerSrcList}
 )
@@ -314,9 +315,9 @@ protobuf_generate(msprof_utest_proto
 
 add_executable(msprof_utest
     test/main.cpp
-    # test/msprof_utest.cpp
     test/devprof_drv_utest.cpp
     test/adprof_utest.cpp
+    test/msprof_utest.cpp
     ./stub/prof_impl_inner_api_stub.cpp
     ../stub/drv_stub.cpp
     ../stub/mmpa_stub.cpp

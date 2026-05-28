@@ -802,3 +802,118 @@ TEST_F(PROF_TIMER_TEST, run) {
     auto errorContext = MsprofErrorManager::instance()->GetErrorManagerContext();
     timerHandler.Run(errorContext);
 }
+
+class PROF_NET_DEV_STATS_TEST : public testing::Test {
+protected:
+    virtual void SetUp() {
+        jobCtx = std::make_shared<analysis::dvvp::message::JobContext>();
+        jobCtx->job_id = "0";
+        jobCtx->dev_id = "0";
+        jobCtx->tag    = "tag";
+    }
+    virtual void TearDown() {
+        GlobalMockObject::verify();
+    }
+public:
+    std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx;
+};
+
+TEST_F(PROF_NET_DEV_STATS_TEST, Uinit_NotInited)
+{
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.Uinit());
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, Execute_NotInited)
+{
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.Execute());
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, GetCurDevTaskCount_Empty)
+{
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(static_cast<size_t>(0), h.GetCurDevTaskCount());
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, RemoveDevTask_NotRegistered)
+{
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.RemoveDevTask(7));
+}
+
+// File-scope stubs for NetDevStatsHandler tests
+static int g_dcmi_init_ok_stub() { return 0; }
+static int g_dcmi_init_fail_stub() { return -1; }
+static int g_dcmi_card_list_zero_stub(int *cardNum, int *, int) { if (cardNum) *cardNum = 0; return 0; }
+static int g_dcmi_card_list_fail_stub(int *, int *, int) { return -1; }
+static int g_dcmi_dev_num_stub(int, int *) { return 0; }
+static int g_dcmi_pkt_stub(int, int, int, struct dcmi_network_pkt_stats_info *) { return 0; }
+
+TEST_F(PROF_NET_DEV_STATS_TEST, Init_LoadDcmiFails)
+{
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    // Init() calls LoadDcmiApi() → OsalDlopen for dcmi lib normally fails in UT env.
+    int32_t ret = h.Init();
+    (void)ret;
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, Init_LoadDcmiV1AllSym_ThenV1InitFails)
+{
+    // OsalDlopen returns non-null handle, dcmiv2_get_dcmi_version returns null
+    // -> isDcmiV2Supported_ = false. LoadDcmiV1Api succeeds (syms non-null),
+    // then dcmiInit_ returns failure -> Init FAILED via dcmiInit_() != SUCCESS.
+    MOCKER(OsalDlopen).stubs().will(returnValue((void *)0x12345678));
+    MOCKER(OsalDlsym)
+        .stubs()
+        .will(returnValue((void *)nullptr))                                // v2 version
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_init_fail_stub))) // dcmi_init
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_card_list_zero_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_dev_num_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_pkt_stub)));
+
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    int32_t ret = h.Init();
+    EXPECT_EQ(PROFILING_FAILED, ret);
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, RegisterDevTask_NoDcmiCardList)
+{
+    // OsalDlopen succeeds, all v1 syms succeed, dcmi_init succeeds (=0)
+    // GetDcmiCardDevId fails because dcmiGetCardList_ stub returns failure
+    MOCKER(OsalDlopen).stubs().will(returnValue((void *)0x12345678));
+    MOCKER(OsalDlsym)
+        .stubs()
+        .will(returnValue((void *)nullptr))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_init_ok_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_card_list_fail_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_dev_num_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_pkt_stub)));
+
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.Init());
+    // RegisterDevTask -> not v2, GetDcmiCardDevId fails
+    EXPECT_EQ(PROFILING_FAILED, h.RegisterDevTask(0));
+    EXPECT_EQ(static_cast<size_t>(0), h.GetCurDevTaskCount());
+    // Remove not registered -> SUCCESS (warn branch)
+    EXPECT_EQ(PROFILING_SUCCESS, h.RemoveDevTask(0));
+    // Uinit on inited handler -> SUCCESS
+    EXPECT_EQ(PROFILING_SUCCESS, h.Uinit());
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, Init_DoubleInit_Fails)
+{
+    MOCKER(OsalDlopen).stubs().will(returnValue((void *)0x12345678));
+    MOCKER(OsalDlsym)
+        .stubs()
+        .will(returnValue((void *)nullptr))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_init_ok_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_card_list_zero_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_dev_num_stub)))
+        .then(returnValue(reinterpret_cast<void *>(&g_dcmi_pkt_stub)));
+
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.Init());
+    // Re-init after isInited_ is true -> FAILED
+    EXPECT_EQ(PROFILING_FAILED, h.Init());
+}

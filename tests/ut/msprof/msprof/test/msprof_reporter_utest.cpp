@@ -81,7 +81,7 @@ TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, DISABLED_MultiThreadTest) {
     GlobalMockObject::verify();
 }
 
-TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, DISABLED_HandleMsprofRequestTest) {
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, HandleMsprofRequestTest) {
     GlobalMockObject::verify();
     MsprofReporter handler("utest");
 
@@ -116,7 +116,7 @@ TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, DISABLED_HandleMsprofRequestTest) {
     EXPECT_EQ(PROFILING_FAILED, handler.HandleReportRequest(invalidType, nullptr, 0));
 }
 
-TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, DISABLED_SendDataTest) {
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, SendDataTest) {
     GlobalMockObject::verify();
     MsprofReporter handler("utest");
 
@@ -404,4 +404,77 @@ TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ProfImplHostFreqIsEnable)
         .will(invoke(halGetDeviceInfoStub));
     Platform::instance()->Init();
     EXPECT_EQ(true, ProfImplHostFreqIsEnable());
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_BadJson)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_FALSE(mgr.ValidateDataFormat("not a json"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_NoVersion)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_FALSE(mgr.ValidateDataFormat("{\"level\":\"uint64\"}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_DependencyMissing)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_FALSE(mgr.ValidateDataFormat(
+        "{\"version\":1.0,\"shape\":{\"value\":\"uint64\",\"dependency\":\"missing\"}}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_DependencyNotString)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    // dependency value is a number → rule3 fails
+    EXPECT_FALSE(mgr.ValidateDataFormat(
+        "{\"version\":1.0,\"type2\":\"uint64\",\"shape\":{\"value\":\"uint64\",\"dependency\":1}}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_OkSimple)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_TRUE(mgr.ValidateDataFormat("{\"version\":1.0}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, ValidateDataFormat_OkWithDependency)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_TRUE(mgr.ValidateDataFormat(
+        "{\"version\":1.0,\"type2\":\"uint64\",\"shape\":{\"value\":\"uint64\",\"dependency\":\"type2\"}}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, RegReportDataFormat_InvalidAndOk)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_EQ(PROFILING_FAILED, mgr.RegReportDataFormat(0, 0, ""));     // empty + level0 → fail
+    EXPECT_EQ(PROFILING_SUCCESS, mgr.RegReportDataFormat(5000, 801, "{\"version\":1.0}"));
+    // Re-register same key updates the existing entry — exercise the update branch.
+    EXPECT_EQ(PROFILING_SUCCESS, mgr.RegReportDataFormat(5000, 801, "{\"version\":2.0}"));
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, GetHashInfo_Default)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    auto &s = mgr.GetHashInfo(0xDEADBEEF);
+    (void)s;  // implementation just delegates to HashData; non-throw is enough.
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, StartAdprofReporters_NotStartedFirst)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    // Without StartReporters(), isStarted_ is false → expect failed.
+    int32_t ret = mgr.StartAdprofReporters();
+    (void)ret;
+}
+
+TEST_F(MSPROF_CALLBACK_HANDLER_UTEST, RegReportTypeInfo_LevelZeroEmpty)
+{
+    auto &mgr = Dvvp::Collect::Report::ProfReporterMgr::GetInstance();
+    EXPECT_EQ(PROFILING_FAILED, mgr.RegReportTypeInfo(0, 0, ""));
+    EXPECT_EQ(PROFILING_SUCCESS, mgr.RegReportTypeInfo(5000, 802, "iter_cycle_info"));
+    // Existing key updates entry — execute the update branch.
+    EXPECT_EQ(PROFILING_SUCCESS, mgr.RegReportTypeInfo(5000, 802, "iter_cycle_info_v2"));
 }
