@@ -663,8 +663,12 @@ rtError_t Runtime::GetSocVersionByHardwareVer(int64_t hardwareVersion, int64_t a
     return RT_ERROR_NONE;
 }
 
-rtError_t Runtime::InitSocVersionAndChipType(const uint32_t deviceId)
+rtError_t Runtime::InitSocVersionByDrvSocVersion(const uint32_t deviceId, const bool isUserSetSocVersion,
+                                                 bool &isSocVersionInitialized)
 {
+    // Prefer the driver's soc name when available. If the user already set a target soc, the driver's soc name is
+    // treated as raw hardware soc only.
+    isSocVersionInitialized = false;
     drvError_t drvRet = DRV_ERROR_NONE;
     if (&halGetSocVersion != nullptr) {
         char_t socVersion[SOC_VERSION_LEN] = {0};
@@ -675,6 +679,17 @@ rtError_t Runtime::InitSocVersionAndChipType(const uint32_t deviceId)
         }
 
         if ((drvRet == DRV_ERROR_NONE) && (socVersion[0] != '\0')) {
+            if (isUserSetSocVersion) {
+                // Keep socVersion_ as the real hardware soc for later mismatch checks.
+                // The effective target soc remains in GlobalContainer::socVersion_.
+                chipType_ = GlobalContainer::GetRtChipType();
+                socVersion_ = socVersion;
+                RT_LOG(RT_LOG_INFO, "user socVersion=%s, hardware socVersion=%s, chipType=%d",
+                    GlobalContainer::GetSocVersion().c_str(), socVersion_.c_str(), chipType_);
+                isSocVersionInitialized = true;
+                return RT_ERROR_NONE;
+            }
+
             rtChipType_t chipType = CHIP_END;
             const rtError_t ret = GetChipTypeFromPlatform(socVersion, chipType);
             if (ret != RT_ERROR_NONE) {
@@ -684,13 +699,19 @@ rtError_t Runtime::InitSocVersionAndChipType(const uint32_t deviceId)
             chipType_ = chipType;
             socVersion_ = socVersion;
             RT_LOG(RT_LOG_INFO, "socVersion=%s, chipType=%d", socVersion_.c_str(), chipType_);
+            isSocVersionInitialized = true;
             return RT_ERROR_NONE;
         }
     }
     RT_LOG(RT_LOG_INFO, "drv_ret=%d", drvRet);
+    return RT_ERROR_NONE;
+}
 
+rtError_t Runtime::InitSocVersionByHardwareVersion(const uint32_t deviceId, const bool isUserSetSocVersion)
+{
+    // This path keeps the original hardware-version based soc deduction, including VM-mode adjustment.
     int64_t hardwareVersion = 0;
-    drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION, &hardwareVersion);
+    drvError_t drvRet = halGetDeviceInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION, &hardwareVersion);
     if (drvRet != DRV_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "[drv api] halGetDeviceInfo failed, device_id=%u, drv_ret=%d", deviceId, drvRet);
         return RT_GET_DRV_ERRCODE(drvRet);
@@ -713,7 +734,29 @@ rtError_t Runtime::InitSocVersionAndChipType(const uint32_t deviceId)
         "Get aicore number by level failed: aicore numer level=%u", static_cast<uint32_t>(aicoreNumLevel));
 
     CheckVirtualMachineMode(aicoreNum, vmAicoreNum);
-    return GetSocVersionByHardwareVer(hardwareVersion, aicoreNumLevel, vmAicoreNum);
+    const rtError_t retSoc = GetSocVersionByHardwareVer(hardwareVersion, aicoreNumLevel, vmAicoreNum);
+    if (retSoc != RT_ERROR_NONE) {
+        return retSoc;
+    }
+    if (isUserSetSocVersion) {
+        // GetSocVersionByHardwareVer updates socVersion_ with hardware-derived soc.
+        // Restore chipType_ to the user target soc after VM-mode detection uses hardware chip type.
+        chipType_ = GlobalContainer::GetRtChipType();
+        RT_LOG(RT_LOG_INFO, "user socVersion=%s, hardware socVersion=%s, chipType=%d",
+            GlobalContainer::GetSocVersion().c_str(), socVersion_.c_str(), chipType_);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::InitSocVersionAndChipType(const uint32_t deviceId)
+{
+    const bool isUserSetSocVersion = !GlobalContainer::GetUserSocVersion().empty();
+    bool isSocVersionInitialized = false;
+    rtError_t ret = InitSocVersionByDrvSocVersion(deviceId, isUserSetSocVersion, isSocVersionInitialized);
+    if ((ret != RT_ERROR_NONE) || isSocVersionInitialized) {
+        return ret;
+    }
+    return InitSocVersionByHardwareVersion(deviceId, isUserSetSocVersion);
 }
 
 rtError_t Runtime::InitSocVersion()
@@ -723,6 +766,7 @@ rtError_t Runtime::InitSocVersion()
         RT_LOG(RT_LOG_ERROR, "Init socVersion and chipType failed.");
         return error;
     }
+
     if (chipType_ == CHIP_NO_DEVICE) {
         return RT_ERROR_NONE;
     }

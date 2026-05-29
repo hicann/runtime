@@ -146,6 +146,17 @@ static rtChipType_t GetChipType()
 {
     int64_t hwVersion = RTS_INVALID_HARDWARE_VERSION;
     rtChipType_t chipType = GlobalContainer::GetRtChipType();
+    const bool isRuntimeChipType = (chipType != CHIP_NO_DEVICE) &&
+        (((chipType >= CHIP_BEGIN) && (chipType < CHIP_END)) ||
+        ((chipType >= CHIP_EXT_BEGIN) && (chipType < CHIP_EXT_END)));
+        
+    // rtSetSocVersion may call Runtime::Instance before the Runtime object is fully booted.
+    // In that path, select libruntime by the user target soc instead of the local hardware.
+    if (!GlobalContainer::GetUserSocVersion().empty() && isRuntimeChipType) {
+        g_chipType = chipType;
+        return chipType;
+    }
+
     const rtError_t ret = GetDeviceType(&hwVersion);
     if (ret == RT_ERROR_NONE) {
         const rtChipType_t type = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(hwVersion)));

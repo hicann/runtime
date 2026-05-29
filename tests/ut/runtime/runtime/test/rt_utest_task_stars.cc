@@ -858,6 +858,7 @@ TEST_F(StarsTaskTest, DeviceSatMode)
 {
     rtError_t ret;
     rtFloatOverflowMode_t mode = RT_OVERFLOW_MODE_UNDEF;
+    Runtime::Instance()->SetSatMode(RT_OVERFLOW_MODE_SATURATION);
 
     ret = rtGetDeviceSatMode(&mode);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);

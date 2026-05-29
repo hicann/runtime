@@ -917,6 +917,11 @@ private:
     void ParseHostCpuModelInfo();
     rtError_t InitSocVersion();
     rtError_t InitSocVersionAndChipType(const uint32_t deviceId);
+    // Initialize soc info from halGetSocVersion. In user-specified soc mode, keep raw hardware soc separately.
+    rtError_t InitSocVersionByDrvSocVersion(const uint32_t deviceId, const bool isUserSetSocVersion,
+                                            bool &isSocVersionInitialized);
+    // Initialize soc info from hardware version when halGetSocVersion is unavailable or returns no soc name.
+    rtError_t InitSocVersionByHardwareVersion(const uint32_t deviceId, const bool isUserSetSocVersion);
     rtError_t GetSocVersionByHardwareVer(int64_t hardwareVersion, int64_t aicoreNumLevel, int64_t vmAicoreNum);
     bool CheckHaveDevice();
     rtError_t WaitMonitorExit() const;

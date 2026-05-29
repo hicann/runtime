@@ -6669,6 +6669,118 @@ TEST_F(ApiTest, rtGetSocVersion)
     ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
     GlobalContainer::SetHardwareSocVersion("");
 }
+
+TEST_F(ApiTest, InitSocVersionFailedWhenInitSocVersionAndChipTypeFailed)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    const rtChipType_t oldChipType = rtInstance->chipType_;
+    const rtChipType_t oldGlobalChipType = GlobalContainer::GetRtChipType();
+    const std::string oldRuntimeSocVersion = rtInstance->GetRawSocVersion();
+    const std::string oldGlobalSocVersion = GlobalContainer::GetSocVersion();
+    const std::string oldUserSocVersion = GlobalContainer::GetUserSocVersion();
+    const uint32_t oldTsNum = rtInstance->tsNum_;
+    const bool oldConnectUbFlag = rtInstance->connectUbFlag_;
+
+    rtInstance->SetChipType(CHIP_CLOUD);
+    GlobalContainer::SetRtChipType(CHIP_CLOUD);
+    GlobalContainer::SetSocVersion("");
+    GlobalContainer::SetUserSocVersion("");
+    MOCKER(halGetSocVersion)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    const rtError_t error = rtInstance->InitSocVersion();
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    rtInstance->SetChipType(oldChipType);
+    GlobalContainer::SetRtChipType(oldGlobalChipType);
+    rtInstance->SetSocVersion(oldRuntimeSocVersion);
+    GlobalContainer::SetSocVersion(oldGlobalSocVersion);
+    GlobalContainer::SetUserSocVersion(oldUserSocVersion);
+    rtInstance->tsNum_ = oldTsNum;
+    rtInstance->connectUbFlag_ = oldConnectUbFlag;
+    drvStubInit(oldRuntimeSocVersion);
+}
+
+TEST_F(ApiTest, InitSocVersionGetConnectUbFlagSuccess)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    const rtChipType_t oldChipType = rtInstance->chipType_;
+    const rtChipType_t oldGlobalChipType = GlobalContainer::GetRtChipType();
+    const std::string oldRuntimeSocVersion = rtInstance->GetRawSocVersion();
+    const std::string oldGlobalSocVersion = GlobalContainer::GetSocVersion();
+    const std::string oldUserSocVersion = GlobalContainer::GetUserSocVersion();
+    const uint32_t oldTsNum = rtInstance->tsNum_;
+    const bool oldConnectUbFlag = rtInstance->connectUbFlag_;
+
+    drvStubInit("Ascend910A");
+    rtInstance->SetChipType(CHIP_CLOUD);
+    rtInstance->SetSocVersion("Ascend910A");
+    GlobalContainer::SetRtChipType(CHIP_CLOUD);
+    GlobalContainer::SetSocVersion("Ascend910A");
+    GlobalContainer::SetUserSocVersion("");
+    MOCKER(halGetSocVersion)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(stubHalGetDeviceInfo));
+
+    const rtError_t error = rtInstance->InitSocVersion();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    rtInstance->SetChipType(oldChipType);
+    GlobalContainer::SetRtChipType(oldGlobalChipType);
+    rtInstance->SetSocVersion(oldRuntimeSocVersion);
+    GlobalContainer::SetSocVersion(oldGlobalSocVersion);
+    GlobalContainer::SetUserSocVersion(oldUserSocVersion);
+    rtInstance->tsNum_ = oldTsNum;
+    rtInstance->connectUbFlag_ = oldConnectUbFlag;
+    drvStubInit(oldRuntimeSocVersion);
+}
+
+TEST_F(ApiTest, InitSocVersionUserSocKeepsHardwareRawSocVersion)
+{
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    const rtChipType_t oldChipType = rtInstance->chipType_;
+    const rtChipType_t oldGlobalChipType = GlobalContainer::GetRtChipType();
+    const std::string oldRuntimeSocVersion = rtInstance->GetRawSocVersion();
+    const std::string oldGlobalSocVersion = GlobalContainer::GetSocVersion();
+    const std::string oldUserSocVersion = GlobalContainer::GetUserSocVersion();
+    const uint32_t oldTsNum = rtInstance->tsNum_;
+    const bool oldConnectUbFlag = rtInstance->connectUbFlag_;
+
+    char *hardwareSocVersion = const_cast<char *>("Ascend910_9382");
+    drvStubInit("Ascend910A");
+    rtInstance->SetChipType(CHIP_CLOUD);
+    rtInstance->SetSocVersion("Ascend910A");
+    GlobalContainer::SetRtChipType(CHIP_MC62CM12A);
+    GlobalContainer::SetSocVersion("MC62CM12AA");
+    GlobalContainer::SetUserSocVersion("MC62CM12AA");
+    MOCKER(halGetSocVersion)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(hardwareSocVersion, strlen("Ascend910_9382")), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halGetDeviceInfo).stubs().will(invoke(stubHalGetDeviceInfo));
+
+    const rtError_t error = rtInstance->InitSocVersion();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rtInstance->chipType_, CHIP_MC62CM12A);
+    EXPECT_EQ(rtInstance->GetRawSocVersion(), "Ascend910_9382");
+    EXPECT_EQ(GlobalContainer::GetSocVersion(), "MC62CM12AA");
+
+    GlobalMockObject::verify();
+    rtInstance->SetChipType(oldChipType);
+    GlobalContainer::SetRtChipType(oldGlobalChipType);
+    rtInstance->SetSocVersion(oldRuntimeSocVersion);
+    GlobalContainer::SetSocVersion(oldGlobalSocVersion);
+    GlobalContainer::SetUserSocVersion(oldUserSocVersion);
+    rtInstance->tsNum_ = oldTsNum;
+    rtInstance->connectUbFlag_ = oldConnectUbFlag;
+    drvStubInit(oldRuntimeSocVersion);
+}
  
 TEST_F(ApiTest, rtModelCheckCompatibility_socVersion)
 {
