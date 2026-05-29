@@ -816,19 +816,13 @@ void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, 
     uint32_t srcModuleId = static_cast<uint32_t>(SVM_INVALID_MODULE_ID);
     uint32_t dstModuleId = static_cast<uint32_t>(SVM_INVALID_MODULE_ID);
     if (GetModuleIdByMemcpyAddr(driver, reinterpret_cast<void *>(&src), &srcModuleId)) {
-        if (srcModuleId == static_cast<uint32_t>(SVM_INVALID_MODULE_ID)) {
-            countNum += snprintf_truncated_s(errStr + countNum,
-                (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)), ", src_module_id not find");
-        } else {
+        if (srcModuleId != static_cast<uint32_t>(SVM_INVALID_MODULE_ID)) {
             countNum += snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)), ", src_module_id=%u", srcModuleId);
         }
     }
     if (GetModuleIdByMemcpyAddr(driver, reinterpret_cast<void *>(&dst), &dstModuleId)) {
-        if (dstModuleId == static_cast<uint32_t>(SVM_INVALID_MODULE_ID)) {
-            countNum += snprintf_truncated_s(errStr + countNum,
-                (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)), ", dst_module_id not find");
-        } else {
+        if (dstModuleId != static_cast<uint32_t>(SVM_INVALID_MODULE_ID)) {
             countNum += snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),", dst_module_id=%u", dstModuleId);
         }
@@ -859,6 +853,7 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
 
     PrintUbdmaErrorInfo(memcpyAsyncTaskInfo);
 
+    uint8_t errorModuleType = ERR_MODULE_RTS;
     char_t errMsg[MSG_LENGTH] = {};
     char_t * const errStr = errMsg;
     int32_t countNum = sprintf_s(errStr, static_cast<size_t>(MSG_LENGTH),
@@ -878,7 +873,6 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 "copy_type=%u, sq_id=%u, task_pos=%u, cp_size=%#" PRIx64,
                 copyType, memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos, memcpyAsyncTaskInfo->size);
-            STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_RTS, "%s", errStr);
             (void)snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 ", src_dev_addr=%#" PRIx64,
@@ -890,7 +884,6 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
                 copyType, static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
-            STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_RTS, "%s", errStr);
             (void)snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64,
@@ -898,12 +891,12 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.dst)));
         }
     } else {
+        errorModuleType = ERR_MODULE_HCCL;
         countNum += sprintf_s(errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
             "copy_type=%u, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64, copyType,
             static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
             static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
             static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->size);
-        STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_HCCL, "%s", errStr);
 
         if ((copyKind == RT_MEMCPY_RESERVED) && (copyType == RT_MEMCPY_ADDR_D2D_SDMA)) {
             countNum += snprintf_truncated_s(errStr + countNum,
@@ -930,7 +923,7 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
             PrintModuleIdProc(driver, errStr, memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr, &countNum);
         }
     }
-    RT_LOG(RT_LOG_ERROR, "%s.", errStr);
+    STREAM_REPORT_ERR_MSG(reportStream, errorModuleType, "%s", errStr);
 }
 
 void RecycleTaskResourceForMemcpyAsyncTask(TaskInfo * const taskInfo)
