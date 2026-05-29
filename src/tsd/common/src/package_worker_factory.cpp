@@ -9,7 +9,7 @@
  */
 
 #include "inc/package_worker_factory.h"
-#include "log.h"
+#include "tsd_log.h"
 
 
 namespace tsd {

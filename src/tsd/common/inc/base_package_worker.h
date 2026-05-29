@@ -17,7 +17,7 @@
 #include <sstream>
 #include <map>
 #include "tsd/status.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 
 

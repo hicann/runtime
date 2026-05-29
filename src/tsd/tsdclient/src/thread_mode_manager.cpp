@@ -10,7 +10,7 @@
  
 #include "inc/thread_mode_manager.h"
 #include "driver/ascend_hal.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 #include "env_internal_api.h"
 #include "inc/package_worker.h"

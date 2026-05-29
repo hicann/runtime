@@ -16,7 +16,7 @@
 #include "mmpa/mmpa_api.h"
 #include "tsd/status.h"
 #include "inc/weak_ascend_hal.h"
-#include "log.h"
+#include "tsd_log.h"
 #define private public
 #define protected public
 #include "inc/package_verify.h"

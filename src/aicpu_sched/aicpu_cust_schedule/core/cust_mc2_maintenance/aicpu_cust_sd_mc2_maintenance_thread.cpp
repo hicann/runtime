@@ -15,7 +15,7 @@
 #include "aicpusd_info.h"
 #include "aicpusd_util.h"
 #include "aicpusd_status.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_interface_process.h"
 #include "tsd.h"
 #include "aicpu_cust_sd_mc2_maintenance_thread_api.h"

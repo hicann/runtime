@@ -14,7 +14,7 @@
 
 #define private public
 #define protected public
-#include "hdc_common.h"
+#include "tsd_hdc_common.h"
 #undef private
 #undef protected
 

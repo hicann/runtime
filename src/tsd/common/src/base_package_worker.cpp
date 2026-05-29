@@ -12,7 +12,7 @@
 
 #include <unistd.h>
 #include <sstream>
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_scope_guard.h"
 #include "tsd_util_func.h"
 #include "inc/package_worker_utils.h"

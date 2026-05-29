@@ -11,7 +11,7 @@
 #include <mutex>
 #include <securec.h>
 #include "common/type_def.h"
-#include "log.h"
+#include "tsd_log.h"
 
 #if defined(__aarch64__)
 #include <arm_neon.h>

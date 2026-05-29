@@ -8,10 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TDT_HOST_INNER_INC_MESSAGE_PARSE_CLIENT_H
-#define TDT_HOST_INNER_INC_MESSAGE_PARSE_CLIENT_H
+#ifndef TDT_HOST_INNER_INC_TSD_MESSAGE_PARSE_CLIENT_H
+#define TDT_HOST_INNER_INC_TSD_MESSAGE_PARSE_CLIENT_H
 
-#include "inc/message_parse_interface.h"
+#include "inc/tsd_message_parse_interface.h"
 
 namespace tsd {
     class MessageParseClient : public MessageParseInterface {
@@ -34,4 +34,4 @@ namespace tsd {
         MessageParseClient& operator=(MessageParseClient&&) = delete;
     };
 }
-#endif  // TDT_HOST_INNER_INC_MESSAGE_PARSE_CLIENT_H
+#endif  // TDT_HOST_INNER_INC_TSD_MESSAGE_PARSE_CLIENT_H

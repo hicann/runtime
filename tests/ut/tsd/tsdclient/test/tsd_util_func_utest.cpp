@@ -15,7 +15,7 @@
 #include "mockcpp/ChainingMockHelper.h"
 #include "tsd/status.h"
 #include "inc/weak_ascend_hal.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 #include "common_util_func.h"
 

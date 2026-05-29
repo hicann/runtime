@@ -37,3 +37,9 @@ target_link_libraries(intf_qs_llt_pub INTERFACE
 )
 add_subdirectory(ut)
 add_subdirectory(st)
+
+set(QUEUE_SCHEDULE_UT_TARGET
+  queue_schedule_main_ut
+  queue_schedule_stub_ut
+)
+add_custom_target(queue_schedule_ut DEPENDS ${QUEUE_SCHEDULE_UT_TARGET})

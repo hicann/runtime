@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "tsd.h"
+#include "qs_tsd.h"
 #include <string>
 int32_t TsdWaitForShutdown(const uint32_t deviceId, const TsdWaitType waitType,
                            const uint32_t hostPid, const uint32_t vfId)

@@ -15,7 +15,7 @@
 #include "aicpusd_drv_manager.h"
 #include "aicpusd_info.h"
 #include "aicpusd_util.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_interface_process.h"
 #include "aicpu_cust_platform_info_process.h"
 

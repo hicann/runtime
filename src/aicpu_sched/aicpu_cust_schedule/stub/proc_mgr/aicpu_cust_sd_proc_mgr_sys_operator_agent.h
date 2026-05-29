@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef PROCMGR_SYS_OPERATOR_AGENT_H
-#define PROCMGR_SYS_OPERATOR_AGENT_H
+#ifndef AICPU_CUST_SD_PROC_MGR_SYS_OPERATOR_AGENT_H
+#define AICPU_CUST_SD_PROC_MGR_SYS_OPERATOR_AGENT_H
 #include <vector>
 #include <stdint.h>
 #include <pthread.h>

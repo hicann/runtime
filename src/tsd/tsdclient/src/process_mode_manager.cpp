@@ -19,7 +19,7 @@
 #include <dlfcn.h>
 #include "driver/ascend_hal.h"
 #include "error_manager.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_scope_guard.h"
 #include "inc/weak_log.h"
 #include "driver/ascend_inpackage_hal.h"

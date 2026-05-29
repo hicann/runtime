@@ -14,7 +14,7 @@
 #include "driver/ascend_hal.h"
 #include "securec.h"
 #include <dlfcn.h>
-#include "tsd.h"
+#include "qs_tsd.h"
 #define private public
 #define protected public
 #include "bind_relation.h"

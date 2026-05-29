@@ -20,7 +20,7 @@
 #include "queue_schedule.h"
 #include "server/bind_cpu_utils.h"
 #include "queue_manager.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "bqs_proc_mgr_sys_operator_agent.h"
 #include "common/bqs_util.h"
 #include "common/bqs_feature_ctrl.h"
 #include "ezcom_client.h"

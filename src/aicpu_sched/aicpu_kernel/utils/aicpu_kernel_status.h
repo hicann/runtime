@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef AICPU_KERNEL_UTILS_STATUS_H
-#define AICPU_KERNEL_UTILS_STATUS_H
+#ifndef AICPU_KERNEL_UTILS_AICPU_KERNEL_STATUS_H
+#define AICPU_KERNEL_UTILS_AICPU_KERNEL_STATUS_H
 
 #include <cstdint>
 
@@ -32,4 +32,4 @@ constexpr uint32_t KERNEL_STATUS_DETECT_FAULT_NORAS = 503U;
 constexpr uint32_t KERNEL_STATUS_DETECT_LOW_BIT_FAULT = 504U;
 constexpr uint32_t KERNEL_STATUS_DETECT_LOW_BIT_FAULT_NORAS = 505U;
 }  // namespace aicpu
-#endif  // AICPU_KERNEL_UTILS_STATUS_H
+#endif  // AICPU_KERNEL_UTILS_AICPU_KERNEL_STATUS_H

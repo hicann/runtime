@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include "mmpa/mmpa_api.h" 
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 #include "inc/package_verify.h"
 #include "inc/tsd_path_mgr.h"

@@ -10,10 +10,10 @@
 
 #include "device_comm.h"
 
-#include "hdc_client.h"
+#include "tsd_hdc_client.h"
 #include "inc/basic_define.h"
 #include "tsd_util_func.h"
-#include "log.h"
+#include "tsd_log.h"
 
 namespace tsd {
     /**

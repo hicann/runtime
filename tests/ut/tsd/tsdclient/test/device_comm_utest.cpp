@@ -14,7 +14,7 @@
 #define private public
 #define protected public
 #include "device_comm.h"
-#include "hdc_client.h"
+#include "tsd_hdc_client.h"
 #undef private
 #undef protected
 

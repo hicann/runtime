@@ -39,7 +39,7 @@
 #include "aicpusd_feature_ctrl.h"
 #include "aicpusd_resource_limit.h"
 #include "dynamic_sched.pb.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_util.h"
 #include "aicpusd_mc2_maintenance_thread_api.h"
 #include "aicpusd_message_queue.h"

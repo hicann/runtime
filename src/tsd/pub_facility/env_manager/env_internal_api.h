@@ -11,7 +11,7 @@
 #ifndef TSD_PUB_FACILITY_ENV_MANAGER_ENV_INTERNAL_API_H
 #define TSD_PUB_FACILITY_ENV_MANAGER_ENV_INTERNAL_API_H
 
-#include "log.h"
+#include "tsd_log.h"
 #include "mmpa/mmpa_api.h"
 
 namespace tsd {

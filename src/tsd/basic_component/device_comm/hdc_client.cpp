@@ -8,15 +8,15 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "hdc_client.h"
+#include "tsd_hdc_client.h"
 #include <thread>
 #include "driver/ascend_hal.h"
 #include "driver/ascend_hal_define.h"
 #include "mmpa/mmpa_api.h"
 #include "tsd_util_func.h"
-#include "inc/message_parse_client.h"
-#include "log.h"
-#include "inc/version_verify.h"
+#include "inc/tsd_message_parse_client.h"
+#include "tsd_log.h"
+#include "inc/tsd_version_verify.h"
 #include "tsd/status.h"
 
 namespace {

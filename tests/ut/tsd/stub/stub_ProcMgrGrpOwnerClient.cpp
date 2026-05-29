@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "ProcMgrGrpOwnerClient.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "tsd_ut_proc_mgr_sys_operator_agent.h"
 #include <iostream>
 uint32_t GrpOwnerClientInit(const char *ownerName)
 {

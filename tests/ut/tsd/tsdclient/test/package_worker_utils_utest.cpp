@@ -10,7 +10,7 @@
 #include <pwd.h>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 #define private public
 #define protected public

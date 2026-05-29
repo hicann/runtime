@@ -23,7 +23,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "tsd.h"
 #include "profiling_adp.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 #include "aicpu_context.h"
 #include "seccomp.h"
 #include "aicpusd_common.h"

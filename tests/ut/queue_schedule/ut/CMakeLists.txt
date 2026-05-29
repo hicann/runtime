@@ -116,7 +116,7 @@ set(LOCAL_SRC_FILES
     ${PROTO_SRCS}
 )
 
-add_executable(queue_schedule_ut
+add_executable(queue_schedule_main_ut
     ${LOCAL_SRC_FILES}
 )
 
@@ -127,6 +127,7 @@ set(LOCAL_C_INCLUDES
     ${SRC_PATH}/server
     ${SRC_PATH}/common
     ${SRC_PATH}/client/inc
+    ${SRC_PATH}/stub/tsd
     ${SRC_PATH}/stub/proc_mgr
     ${SRC_PATH}
     ${RUNTIME_DIR}/pkg_inc/queue_schedule
@@ -140,11 +141,11 @@ set(LOCAL_C_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/../stub
     ${CANN_3RD_LIB_PATH}/mockcpp_src/include
 )
-target_include_directories(queue_schedule_ut PRIVATE
+target_include_directories(queue_schedule_main_ut PRIVATE
     ${LOCAL_C_INCLUDES}
 )
 
-target_link_libraries(queue_schedule_ut PRIVATE
+target_link_libraries(queue_schedule_main_ut PRIVATE
     c_sec
     ascend_protobuf
     -rdynamic
@@ -155,12 +156,52 @@ target_link_libraries(queue_schedule_ut PRIVATE
     c_sec_headers
     -lpthread
 )
-target_compile_options(queue_schedule_ut PRIVATE
+target_compile_options(queue_schedule_main_ut PRIVATE
     ${common_compile_options}
 )
 
-target_compile_definitions(queue_schedule_ut PRIVATE
+target_compile_definitions(queue_schedule_main_ut PRIVATE
     STATISTIC
+    google=ascend_private
+    aicpusd_UT
+    RUN_ON_X86
+)
+
+set(STUB_UT_SRC_FILES
+    main_ut.cpp
+    testcase/tsd_stub_utest.cpp
+    ${SRC_PATH}/stub/bqs_server.cpp
+    ${SRC_PATH}/stub/tsd/tsd.cpp
+    ${SRC_PATH}/common/bqs_log.cpp
+    ../stub/slog_stub.cpp
+    ${PROTO_SRCS}
+)
+
+add_executable(queue_schedule_stub_ut
+    ${STUB_UT_SRC_FILES}
+)
+
+target_include_directories(queue_schedule_stub_ut PRIVATE
+    ${LOCAL_C_INCLUDES}
+    ${CANN_3RD_LIB_PATH}/lib_cache/protobuf-25.1/include
+)
+
+target_link_libraries(queue_schedule_stub_ut PRIVATE
+    c_sec
+    ascend_protobuf
+    -rdynamic
+    $<BUILD_INTERFACE:intf_qs_llt_pub>
+    $<BUILD_INTERFACE:slog_headers>
+    -ldl
+    c_sec_headers
+    -lpthread
+)
+
+target_compile_options(queue_schedule_stub_ut PRIVATE
+    ${common_compile_options}
+)
+
+target_compile_definitions(queue_schedule_stub_ut PRIVATE
     google=ascend_private
     aicpusd_UT
     RUN_ON_X86

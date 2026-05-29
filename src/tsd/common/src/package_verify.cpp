@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <fstream>
 #include "mmpa/mmpa_api.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "tsd_scope_guard.h"
 #include "inc/weak_ascend_hal.h"
 #include "tsd_util_func.h"

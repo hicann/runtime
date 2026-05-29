@@ -13,7 +13,7 @@
 #include "gtest/gtest.h"
 #include "tsd_sha256.h"
 #include "common/type_def.h"
-#include "log.h"
+#include "tsd_log.h"
 
 using namespace tsd;
 using namespace std;

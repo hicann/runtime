@@ -16,7 +16,7 @@
 #include <cstring>
 #include <dirent.h>
 #include "tsd_sha256.h"
-#include "log.h"
+#include "tsd_log.h"
 #include <semaphore.h>
 #include <thread>
 #include <cerrno>

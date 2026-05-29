@@ -10,7 +10,7 @@
 
 #include "gtest/gtest.h"
 #define private public
-#include "inc/message_parse_client.h"
+#include "inc/tsd_message_parse_client.h"
 #undef private
 
 using namespace tsd;

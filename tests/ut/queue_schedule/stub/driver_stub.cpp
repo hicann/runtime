@@ -11,7 +11,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_hal_define.h"
 #include "driver/ascend_inpackage_hal.h"
-#include "tsd.h"
+#include "qs_tsd.h"
 
 drvError_t halGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value)
 {

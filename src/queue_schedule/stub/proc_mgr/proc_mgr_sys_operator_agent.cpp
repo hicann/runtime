@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ProcMgrSysOperatorAgent.h"
+#include "bqs_proc_mgr_sys_operator_agent.h"
 
 namespace bqs {
     uint32_t ProcMgrBindThread(pid_t threadId, const std::vector<uint32_t>& coreAffinity)

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/version_verify.h"
-#include "log.h"
+#include "inc/tsd_version_verify.h"
+#include "tsd_log.h"
 namespace tsd {
 namespace {
     // 如果修改了涉及tsdclient和tsdaemon需要配合的特性，则需要在此map中增加对应的特性信息，防止client或server单独升级导致运行结果不可控

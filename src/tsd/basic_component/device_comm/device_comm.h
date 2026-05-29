@@ -19,7 +19,7 @@
 
 #include "proto/tsd_message.pb.h"
 #include "tsd/status.h"
-#include "inc/version_verify.h"
+#include "inc/tsd_version_verify.h"
 
 namespace tsd {
     /**

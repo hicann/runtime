@@ -9,7 +9,7 @@
  */
 #include <time.h>
 #include "driver/ascend_hal.h"
-#include "tsd.h"
+#include "qs_tsd.h"
 
 drvError_t halQueueCreate(unsigned int devid, const QueueAttr *queAttr, unsigned int *qid)
 { return DRV_ERROR_NONE; }

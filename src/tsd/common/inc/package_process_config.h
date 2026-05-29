@@ -15,7 +15,7 @@
 #include <memory>
 #include <map>
 #include "tsd/status.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "proto/tsd_message.pb.h"
 
 namespace tsd {

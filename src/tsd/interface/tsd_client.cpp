@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "tsd/tsd_client.h"
-#include "log.h"
+#include "tsd_log.h"
 #include "inc/client_manager.h"
-#include "inc/msg_parse_reg.h"
+#include "inc/tsd_msg_parse_reg.h"
 #include "tsd_util_func.h"
 
 uint32_t TsdOpen(const uint32_t logicDeviceId, const uint32_t rankSize)

@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "mockcpp/ChainingMockHelper.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "bqs_proc_mgr_sys_operator_agent.h"
 #include "common/bqs_feature_ctrl.h"
 #define private public
 #define protected public

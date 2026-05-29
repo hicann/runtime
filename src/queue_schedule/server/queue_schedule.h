@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef QUEUE_SCHEDULE_QUEUE_SCHEDULE_H
-#define QUEUE_SCHEDULE_QUEUE_SCHEDULE_H
+#ifndef QUEUE_SCHEDULE_BQS_QUEUE_SCHEDULE_H
+#define QUEUE_SCHEDULE_BQS_QUEUE_SCHEDULE_H
 
 #include <vector>
 #include <thread>
@@ -253,4 +253,4 @@ private:
     uint32_t abnormalInterval_;
 };
 } // namespace bqs
-#endif // QUEUE_SCHEDULE_QUEUE_SCHEDULE_H
+#endif // QUEUE_SCHEDULE_BQS_QUEUE_SCHEDULE_H

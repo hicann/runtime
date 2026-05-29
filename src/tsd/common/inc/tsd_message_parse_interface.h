@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TDT_COMMON_COMMON_INC_MESSAGE_PARSE_INTERFACE_H
-#define TDT_COMMON_COMMON_INC_MESSAGE_PARSE_INTERFACE_H
+#ifndef TDT_COMMON_COMMON_INC_TSD_MESSAGE_PARSE_INTERFACE_H
+#define TDT_COMMON_COMMON_INC_TSD_MESSAGE_PARSE_INTERFACE_H
 
 #include "driver/ascend_hal.h"
 #include "proto/tsd_message.pb.h"
@@ -54,4 +54,4 @@ namespace tsd {
         std::map<HDCMessage::MsgType, ParseFuncType> parseFuncMap_;
     };
 }
-#endif  // TDT_COMMON_COMMON_INC_MESSAGE_PARSE_INTERFACE_H
+#endif  // TDT_COMMON_COMMON_INC_TSD_MESSAGE_PARSE_INTERFACE_H

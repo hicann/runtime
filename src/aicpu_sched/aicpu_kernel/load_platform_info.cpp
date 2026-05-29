@@ -9,8 +9,8 @@
  */
 
 #include "load_platform_info.h"
-#include "utils/log.h"
-#include "utils/status.h"
+#include "utils/aicpu_kernel_log.h"
+#include "utils/aicpu_kernel_status.h"
 #include "type_def.h"
 
 namespace {

@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_status.h"
 
 namespace AicpuSchedule {

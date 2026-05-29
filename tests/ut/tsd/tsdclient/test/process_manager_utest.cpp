@@ -17,7 +17,7 @@
 #include "inc/client_manager.h"
 #include "inc/process_mode_manager.h"
 #include "device_comm.h"
-#include "hdc_client.h"
+#include "tsd_hdc_client.h"
 #include "inc/weak_ascend_hal.h"
 #include "env_internal_api.h"
 #include "platform_manager_v2.h"

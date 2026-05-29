@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H
-#define TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H
+#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_CLIENT_H
+#define TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_CLIENT_H
 
 #include <map>
 #include <list>
@@ -18,8 +18,8 @@
 
 #include "proto/tsd_message.pb.h"
 #include "device_comm.h"
-#include "hdc_common.h"
-#include "inc/message_parse_client.h"
+#include "tsd_hdc_common.h"
+#include "inc/tsd_message_parse_client.h"
 
 namespace tsd {
     constexpr uint32_t HDC_CLIENT_WAIT_TIMEOUT_MS = 30000U; // 30s
@@ -154,4 +154,4 @@ namespace tsd {
         HdcCommon hdcCommon_;
     };
 }
-#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_CLIENT_H
+#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_CLIENT_H

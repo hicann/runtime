@@ -26,7 +26,7 @@
 #include "qs_interface_process.h"
 #include "queue_schedule_interface.h"
 #include "common/bqs_util.h"
-#include "tsd.h"
+#include "qs_tsd.h"
 #include "msprof_manager.h"
 #include "common/bqs_feature_ctrl.h"
 #undef private

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef COMMON_COMMON_INC_VERSION_VERIFY_H
-#define COMMON_COMMON_INC_VERSION_VERIFY_H
+#ifndef COMMON_COMMON_INC_TSD_VERSION_VERIFY_H
+#define COMMON_COMMON_INC_TSD_VERSION_VERIFY_H
 
 #include <set>
 #include <atomic>
@@ -56,4 +56,4 @@ private:
     std::map<HDCMessage::MsgType, bool> alreadyCheckedList_;
 };
 } // namespace tsd
-#endif // COMMON_COMMON_INC_VERSION_VERIFY_H
+#endif // COMMON_COMMON_INC_TSD_VERSION_VERIFY_H

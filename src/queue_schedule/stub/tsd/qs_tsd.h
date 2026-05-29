@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef INC_TDT_TSD_H_
-#define INC_TDT_TSD_H_
+#ifndef INC_TDT_QS_TSD_H_
+#define INC_TDT_QS_TSD_H_
 
 #include <stdint.h>
 #include <stdio.h>
@@ -144,4 +144,4 @@ int32_t TsdDestroy(const uint32_t deviceId, const TsdWaitType waitType,
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
-#endif  // INC_TDT_TSD_H_
+#endif  // INC_TDT_QS_TSD_H_

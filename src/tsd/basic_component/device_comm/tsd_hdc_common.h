@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
-#define TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
+#ifndef TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_COMMON_H
+#define TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_COMMON_H
 
 #include <functional>
 #include <mutex>
@@ -18,8 +18,8 @@
 #include "driver/ascend_hal.h"
 #include "tsd/status.h"
 #include "inc/basic_define.h"
-#include "inc/version_verify.h"
-#include "log.h"
+#include "inc/tsd_version_verify.h"
+#include "tsd_log.h"
 
 namespace tsd {
     class HdcCommon {
@@ -142,4 +142,4 @@ namespace tsd {
         uint32_t msgLongHeadDataMaxSize_;
     };
 }
-#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_HDC_COMMON_H
+#endif  // TSD_BASIC_COMPONENT_DEVICE_COMM_TSD_HDC_COMMON_H

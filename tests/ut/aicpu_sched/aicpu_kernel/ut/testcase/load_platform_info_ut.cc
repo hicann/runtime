@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "gtest/gtest.h"
-#include "utils/status.h"
+#include "utils/aicpu_kernel_status.h"
 
 #ifndef private
 #define private public

@@ -52,7 +52,7 @@
 #include "aicpusd_resource_manager.h"
 #include "aicpusd_msg_send.h"
 #include "aicpu_async_event.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "securec.h"
 #include "profiling_adp.h"
 #include "aicpu_engine.h"
@@ -68,7 +68,7 @@
 #undef private
 #include "tsd.h"
 #include "aicpusd_util.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_mc2_maintenance_thread_api.h"
 
 using namespace AicpuSchedule;

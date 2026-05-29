@@ -89,6 +89,7 @@ set (queue_schedule_inc_path
     ${RUNTIME_DIR}/pkg_inc/tsd
     ${RUNTIME_DIR}/pkg_inc/profiling
     ${RUNTIME_DIR}/pkg_inc
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/include
     ${CMAKE_BINARY_DIR}/proto/aicpu
@@ -126,6 +127,7 @@ set(queue_schedule_exe_path
     ${CMAKE_CURRENT_SOURCE_DIR}/server/entity_manager
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/common
+    ${RUNTIME_DIR}/pkg_inc/aicpu_sched
     ${RUNTIME_DIR}/include 
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc

@@ -15,14 +15,14 @@
 #define private public
 #define protected public
 #include "device_comm.h"
-#include "hdc_client.h"
+#include "tsd_hdc_client.h"
 #undef private
 #undef protected
 
 #include "driver/ascend_hal.h"
 #include "stub_server_reply.h"
 #include "stub_server_msg_impl.h"
-#include "inc/version_verify.h"
+#include "inc/tsd_version_verify.h"
 
 using namespace tsd;
 using namespace std;

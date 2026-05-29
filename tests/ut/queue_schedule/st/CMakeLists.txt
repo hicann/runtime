@@ -119,6 +119,7 @@ set(LOCAL_C_INCLUDES
     ${SRC_PATH}/server
     ${SRC_PATH}/common
     ${SRC_PATH}/client/inc
+    ${SRC_PATH}/stub/tsd
     ${SRC_PATH}/stub/proc_mgr
     ${SRC_PATH}
     ${RUNTIME_DIR}/pkg_inc/queue_schedule

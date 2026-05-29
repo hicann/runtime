@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "stub_server_msg_impl.h"
-#include "inc/version_verify.h"
+#include "inc/tsd_version_verify.h"
 #include "tsd_util_func.h"
 
 namespace tsd {

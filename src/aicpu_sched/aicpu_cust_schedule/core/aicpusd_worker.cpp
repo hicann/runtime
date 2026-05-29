@@ -19,7 +19,7 @@
 #include "aicpusd_event_manager.h"
 #include "aicpu_context.h"
 #include "aicpusd_common.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_hal_interface_ref.h"
 #include "aicpusd_util.h"
 #include "feature_ctrl.h"

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "inc/message_parse_interface.h"
-#include "log.h"
+#include "inc/tsd_message_parse_interface.h"
+#include "tsd_log.h"
 #include "tsd_util_func.h"
 
 namespace tsd {

@@ -18,7 +18,7 @@
 #include "qs_interface_process.h"
 #include "driver/ascend_hal.h"
 #include "common/bqs_log.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "bqs_proc_mgr_sys_operator_agent.h"
 #include "common/bqs_feature_ctrl.h"
 #include "queue_schedule_feature_ctrl.h"
 

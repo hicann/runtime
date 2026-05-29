@@ -7,8 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef PROCMGR_MSR_SYS_OWNER_CLIENT_H
-#define PROCMGR_MSR_SYS_OWNER_CLIENT_H
+#ifndef TSD_UT_PROC_MGR_SYS_OPERATOR_AGENT_H
+#define TSD_UT_PROC_MGR_SYS_OPERATOR_AGENT_H
 
 #include <stdint.h>
 #include <string>

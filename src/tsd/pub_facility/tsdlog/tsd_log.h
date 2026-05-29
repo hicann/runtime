@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef TSD_PUB_FACILITY_TSDLOG_LOG_H
-#define TSD_PUB_FACILITY_TSDLOG_LOG_H
+#ifndef TSD_PUB_FACILITY_TSDLOG_TSD_LOG_H
+#define TSD_PUB_FACILITY_TSDLOG_TSD_LOG_H
 
 #include <mutex>
 #include <string>
@@ -73,4 +73,4 @@
                       "[%s][tid:%llu] " log, &__FUNCTION__[0U], mmGetTid(), ##__VA_ARGS__);                \
         }                                                                                                  \
     } while (false)
-#endif  // TSD_PUB_FACILITY_TSDLOG_LOG_H
+#endif  // TSD_PUB_FACILITY_TSDLOG_TSD_LOG_H

@@ -24,7 +24,7 @@
 #include "aicpusd_event_manager.h"
 #include "aicpusd_context.h"
 #include "aicpu_context.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_hal_interface_ref.h"
 #include "aicpusd_so_manager.h"
 #include "aicpu_pulse.h"

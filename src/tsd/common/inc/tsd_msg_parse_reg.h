@@ -8,12 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef COMMON_COMMON_INC_MSG_PARSE_REG_H
-#define COMMON_COMMON_INC_MSG_PARSE_REG_H
+#ifndef COMMON_COMMON_INC_TSD_MSG_PARSE_REG_H
+#define COMMON_COMMON_INC_TSD_MSG_PARSE_REG_H
 
 #include "proto/tsd_message.pb.h"
-#include "inc/message_parse_client.h"
-#include "inc/message_parse_server.h"
+#include "inc/tsd_message_parse_client.h"
+#include "inc/tsd_message_parse_server.h"
 
 namespace tsd {
     class MsgParseReg {

@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef AICPU_KERNEL_UTILS_LOG_H
-#define AICPU_KERNEL_UTILS_LOG_H
+#ifndef AICPU_KERNEL_UTILS_AICPU_KERNEL_LOG_H
+#define AICPU_KERNEL_UTILS_AICPU_KERNEL_LOG_H
 #include <sys/syscall.h>
 #include <cstdint>
 #include <unistd.h>
@@ -145,4 +145,4 @@ const char KERNEL_MODULE[] = "AICPU";
     }                                                         \
   } while (0)
 
-#endif  // AICPU_KERNEL_UTILS_LOG_H
+#endif  // AICPU_KERNEL_UTILS_AICPU_KERNEL_LOG_H

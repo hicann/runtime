@@ -25,7 +25,7 @@
 #include "profiling_adp.h"
 #include "aicpusd_common.h"
 #include "aicpusd_util.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpusd_proc_mgr_sys_operator_agent.h"
 #include "aicpusd_feature_ctrl.h"
 #include "aicpusd_message_queue.h"
 #define private public

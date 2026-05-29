@@ -27,7 +27,7 @@
 #include "ascend_hal.h"
 #include "aicpusd_task_queue.h"
 #include "aicpu_engine.h"
-#include "ProcMgrSysOperatorAgent.h"
+#include "aicpu_cust_sd_proc_mgr_sys_operator_agent.h"
 #include "aicpu_sharder.h"
 #include "dump_task.h"
 #include "aicpusd_util.h"
@@ -2762,4 +2762,3 @@ TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_sem_wait_failed_St) {
         AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).processThread_.join();
     }
 }
-
