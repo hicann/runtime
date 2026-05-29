@@ -56,6 +56,7 @@ enum PlatformTypeEnum {
     CHIP_CLOUD_V3    = 15,
     CHIP_CLOUD_V4    = 16,
     CHIP_MDC_V2      = 17,
+    CHIP_MDC_LITE_V2 = 18,
     CHIP_END
 };
 

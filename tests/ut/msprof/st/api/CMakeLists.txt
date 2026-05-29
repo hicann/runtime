@@ -28,6 +28,7 @@ set(TEST_STUB_SRC
     ${API_STUB_DIR}/device/dc_device_simulator.cpp
     ${API_STUB_DIR}/device/mdc_device_simulator.cpp
     ${API_STUB_DIR}/device/mdc_lite_device_simulator.cpp
+    ${API_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
     ${API_STUB_DIR}/device/mini_device_simulator.cpp
     ${API_STUB_DIR}/device/tiny_device_simulator.cpp
     ${API_STUB_DIR}/device/nano_device_simulator.cpp
@@ -155,6 +156,7 @@ set(PROFIMPL_SRC_FILE
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp

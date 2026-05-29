@@ -80,10 +80,29 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, IsDriverSupportLlc)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
             .stubs()
             .will(returnValue(PlatformType::CLOUD_TYPE))
+            .then(returnValue(PlatformType::CHIP_MDC_LITE_V2))
             .then(returnValue(PlatformType::MINI_TYPE));
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
     EXPECT_EQ(true, configManger->IsDriverSupportLlc());
+    EXPECT_EQ(true, configManger->IsDriverSupportLlc());
     EXPECT_EQ(false, configManger->IsDriverSupportLlc());
+}
+
+TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
+{
+    GlobalMockObject::verify();
+    auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
+    configManger->Uninit();
+    configManger->configMap_.clear();
+    configManger->configMap_[TYPE_CONFIG] = "18";
+
+    EXPECT_EQ(PlatformType::CHIP_MDC_LITE_V2, configManger->GetPlatformType());
+    configManger->InitFrequency();
+    EXPECT_EQ("38.4", configManger->GetFrequency());
+    EXPECT_EQ("1500", configManger->GetAicDefFrequency());
+
+    configManger->configMap_.clear();
+    configManger->Uninit();
 }
 
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetVersionSpecificMetrics)

@@ -31,6 +31,7 @@ set(testStubSrc
     ${CLI_STUB_DIR}/device/dc_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mdc_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mdc_lite_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mini_device_simulator.cpp
     ${CLI_STUB_DIR}/device/nano_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
@@ -55,6 +56,7 @@ set(testSrc
     # testcase/cli_miniv3_ep_stest.cpp
     # testcase/cli_miniv3_rc_stest.cpp
     # testcase/cli_mdc_lite_stest.cpp
+    testcase/cli_mdc_lite_v2_stest.cpp
     testcase/cli_david_stest.cpp
     testcase/cli_david_v121_stest.cpp
     # testcase/cli_acp_milan_stest.cpp
@@ -102,6 +104,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp

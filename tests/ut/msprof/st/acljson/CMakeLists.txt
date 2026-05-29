@@ -34,6 +34,7 @@ set(testStubSrc
     ${ACLJSON_STUB_DIR}/device/dc_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mdc_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mdc_lite_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mini_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
@@ -183,6 +184,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp

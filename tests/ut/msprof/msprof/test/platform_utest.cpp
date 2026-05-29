@@ -18,11 +18,13 @@
 #include "prof_acl_mgr.h"
 #include "prof_params_adapter.h"
 #include "validation/param_validation.h"
+#include "mdc_lite_v2_platform.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::validation;
+using namespace Dvvp::Collect::Platform;
 
 namespace {
 class PLATFORM_UTEST: public testing::Test {
@@ -268,5 +270,72 @@ TEST_F(PLATFORM_UTEST, ProfSetConfigRejectsNtsMetricsWhenPlatformUnsupported) {
     std::string config("PipeUtilization");
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM,
         Msprofiler::AclApi::ProfSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
+}
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
+    GlobalMockObject::verify();
+    MdcLiteV2Platform platform;
+    PlatformInterface &platformInterface = platform;
+    std::string aicEvent;
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("PipeUtilization", aicEvent));
+    EXPECT_EQ("0x501,0x301,0x1,0x701,0x202,0x203,0x34,0x35,0x714", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("Memory", aicEvent));
+    EXPECT_EQ("0x400,0x401,0x56f,0x571,0x570,0x572,0x707,0x709", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("MemoryL0", aicEvent));
+    EXPECT_EQ("0x304,0x703,0x306,0x705,0x712,0x30a,0x308", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("MemoryUB", aicEvent));
+    EXPECT_EQ("0x3,0x5,0x70c,0x206,0x204,0x571,0x572", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("ArithmeticUtilization", aicEvent));
+    EXPECT_EQ("0x323,0x324", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("ResourceConflictRatio", aicEvent));
+    EXPECT_EQ("0x540,0x556,0x502,0x528", aicEvent);
+
+    EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
+
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("PipelineExecuteUtilization", aicEvent));
+    EXPECT_EQ(PROFILING_FAILED, platform.GetAiPmuMetrics("ScalarRatio", aicEvent));
+    EXPECT_EQ("0x00,0x81,0x82,0x83,0x74,0x75", platform.GetL2CacheEvents());
+    EXPECT_EQ(MAX_DAVID_MONITOR_NUM, platform.GetMaxMonitorNumber());
+    EXPECT_EQ(MAX_COLLECT_MONITOR_NUM, platformInterface.GetQosMonitorNumber());
+}
+
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures) {
+    GlobalMockObject::verify();
+    MdcLiteV2Platform platform;
+
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_SWITCH));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_ASCENDCL));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_RUNTIME_API));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_AICPU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_HCCL));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_L2_CACHE_REG));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_L2_CACHE_PMU));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_BLOCK));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_INSTR_PROFILING));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_DEVICE_LOW_POWER));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_DEVICE_QOS));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_MEM_SERVICEFLOW));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_STARS_QOS));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_MC2));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_AICPU_HCCL));
+    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_ACLAPI_SETDEVICE_ENABLE));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_FWK));
+    EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_RUNTIME));
+}
+
+TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
+    GlobalMockObject::verify();
+    auto platform = PlatformReflection::CreatePlatformClass(CHIP_MDC_LITE_V2);
+    ASSERT_NE(nullptr, platform);
+
+    std::string aicEvent;
+    EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
+    EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
 }
 }

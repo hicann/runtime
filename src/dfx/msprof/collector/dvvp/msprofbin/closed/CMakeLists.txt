@@ -143,6 +143,7 @@ set(msprofbinCpp
     ../../profimpl/platform/cloud_platform.cpp
     ../../profimpl/platform/dc_platform.cpp
     ../../profimpl/platform/mdc_lite_platform.cpp
+    ../../profimpl/platform/mdc_lite_v2_platform.cpp
     ../../profimpl/platform/mdc_mini_v3_platform.cpp
     ../../profimpl/platform/mdc_platform.cpp
     ../../profimpl/platform/mini_v3_platform.cpp

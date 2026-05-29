@@ -38,6 +38,7 @@ enum class PlatformType {
     CHIP_CLOUD_V3 = 15,
     CHIP_CLOUD_V4 = 16,
     CHIP_MDC_V2 = 17,
+    CHIP_MDC_LITE_V2 = 18,
     END_TYPE
 };
 
@@ -53,7 +54,8 @@ const std::map<PlatformType, std::string> FREQUENCY_TYPE = {
     {PlatformType::CHIP_MDC_LITE, "38.4"},
     {PlatformType::CHIP_CLOUD_V3, "1000"},
     {PlatformType::CHIP_CLOUD_V4, "1000"},
-    {PlatformType::CHIP_MDC_V2, "38.4"}
+    {PlatformType::CHIP_MDC_V2, "38.4"},
+    {PlatformType::CHIP_MDC_LITE_V2, "38.4"}
 };
 
 const std::map<PlatformType, std::string> AIC_TYPE = {
@@ -68,7 +70,8 @@ const std::map<PlatformType, std::string> AIC_TYPE = {
     {PlatformType::CHIP_MDC_LITE, "1250"},
     {PlatformType::CHIP_CLOUD_V3, "800"},
     {PlatformType::CHIP_CLOUD_V4, "1650"},
-    {PlatformType::CHIP_MDC_V2, "1400"}
+    {PlatformType::CHIP_MDC_V2, "1400"},
+    {PlatformType::CHIP_MDC_LITE_V2, "1500"}
 };
 
 class ConfigManager : public analysis::dvvp::common::singleton::Singleton<ConfigManager> {

@@ -871,6 +871,56 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3) {
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_INSTR_PROFILING_FREQ, argv));
 }
 
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2) {
+    InputParser parser = InputParser();
+    const char * argv[] = {"msprof", "--aiv=on"};
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide)
+        .stubs()
+        .will(returnValue(false));
+    MOCKER(mmGetOptInd)
+        .stubs()
+        .will(returnValue(2));
+
+    EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV, argv));
+    EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV_FREQ, argv));
+    EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV_MODE, argv));
+    EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_AIV_METRICS, argv));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_TASK_BLOCK, argv));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_INSTR_PROFILING, argv));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_SYS_LOW_POWER, argv));
+}
+
+TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
+
+    ArgsManager argsManager;
+    argsManager.argsList_.clear();
+
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool (Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+
+    argsManager.AddStarsArgs();
+    ASSERT_EQ(1, argsManager.argsList_.size());
+    EXPECT_EQ("task-block", argsManager.argsList_[0].name_);
+    EXPECT_NE(std::string::npos, argsManager.argsList_[0].detail_.find("'all', 'on', 'off'."));
+}
+
 TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
     InputParser parser = InputParser();
     int32_t argc = 4;

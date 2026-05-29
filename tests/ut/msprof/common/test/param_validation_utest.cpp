@@ -527,6 +527,57 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventCoresIsValid) {
     EXPECT_EQ(false, ret);
 }
 
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventsIsValidMdcLiteV2) {
+    using namespace analysis::dvvp::common::validation;
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::GetMaxMonitorNumber)
+        .stubs()
+        .will(returnValue(MAX_DAVID_MONITOR_NUM));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_MDC_LITE_V2));
+
+    std::vector<std::string> events = {"0x0", "0x714", "0x715"};
+    EXPECT_EQ(true, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::GetMaxMonitorNumber)
+        .stubs()
+        .will(returnValue(MAX_COLLECT_MONITOR_NUM));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_MDC_LITE));
+
+    events = {"0x0"};
+    EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+}
+
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTaskBlockValidMdcLiteV2) {
+    using namespace analysis::dvvp::common::validation;
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_MDC_LITE_V2));
+
+    EXPECT_EQ(true, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "on"));
+    EXPECT_EQ(true, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "all"));
+    EXPECT_EQ(true, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "off"));
+    EXPECT_EQ(false, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "invalid"));
+
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_MDC_LITE));
+
+    EXPECT_EQ(false, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "on"));
+}
+
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckFreqIsValid) {
     MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
         .stubs()

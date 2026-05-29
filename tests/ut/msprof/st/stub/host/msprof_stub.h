@@ -57,6 +57,7 @@ enum class StPlatformType {
     CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 15,
     CHIP_CLOUD_V4 = 16,
+    CHIP_MDC_LITE_V2 = 18,
     END_TYPE
 };
 
@@ -84,6 +85,7 @@ const std::map<uint32_t, std::string> CLI_CHECK_OUTPUT = {
     {12, "cliMdcLitestest_workspace/output"},
     {15, "cliDavidstest_workspace/output"},
     {16, "cliDavidV121stest_workspace/output"},
+    {18, "cliMdcLiteV2stest_workspace/output"},
 };
 
 void ClearSingleton();

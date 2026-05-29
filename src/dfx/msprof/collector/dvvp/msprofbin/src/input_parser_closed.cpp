@@ -127,12 +127,14 @@ std::vector<MsprofArgsType> InputParser::GeneratePlatSwithList() const
     std::vector<MsprofArgsType> davidBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
     std::vector<MsprofArgsType> david121BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
     std::vector<MsprofArgsType> mdcV2BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
+    std::vector<MsprofArgsType> mdcLiteV2BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
 
     std::map<Analysis::Dvvp::Common::Config::PlatformType, std::vector<MsprofArgsType>> platformArgsType = {
         {PlatformType::MINI_TYPE, miniBlackSwith}, {PlatformType::CLOUD_TYPE, cloudBlackSwith}, {PlatformType::MDC_TYPE, mdcBlackSwith},
         {PlatformType::DC_TYPE, dcBlackSwith}, {PlatformType::CHIP_V4_1_0, cloudBlackSwithV2}, {PlatformType::MINI_V3_TYPE, miniV3BlackSwith},
         {PlatformType::CHIP_MDC_MINI_V3, mdcMiniV3BlackSwith}, {PlatformType::CHIP_TINY_V1, mdcMiniV3BlackSwith}, {PlatformType::CHIP_MDC_LITE, mdcLiteBlackSwith},
         {PlatformType::CHIP_CLOUD_V3, davidBlackSwith}, {PlatformType::CHIP_CLOUD_V4, david121BlackSwith}, {PlatformType::CHIP_MDC_V2, mdcV2BlackSwith},
+        {PlatformType::CHIP_MDC_LITE_V2, mdcLiteV2BlackSwith}
     };
 
     return platformArgsType[platformType];
@@ -733,7 +735,8 @@ void ArgsManager::AddStarsArgs()
     std::string task_block_ranges;
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V3 ||
         ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_CLOUD_V4 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_V2) {
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_V2 ||
+        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE_V2) {
         task_block_ranges = "'all', 'on', 'off'.";
     } else {
         task_block_ranges = "'all', 'off'.";

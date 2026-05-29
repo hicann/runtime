@@ -109,6 +109,7 @@ set(profimplCpp
     ../profimpl/platform/david_platform.cpp
     ../profimpl/platform/david_v121_platform.cpp
     ../profimpl/platform/mdc_lite_platform.cpp
+    ../profimpl/platform/mdc_lite_v2_platform.cpp
     ../profimpl/platform/cloud_platform.cpp
     ../profimpl/platform/dc_platform.cpp
     ../profimpl/platform/mini_platform.cpp

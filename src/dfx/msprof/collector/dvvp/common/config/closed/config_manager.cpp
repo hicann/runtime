@@ -177,7 +177,8 @@ bool ConfigManager::IsDriverSupportLlc() const
     if (type == PlatformType::CLOUD_TYPE || type == PlatformType::DC_TYPE || type == PlatformType::MDC_TYPE ||
         type == PlatformType::CHIP_V4_1_0 || type == PlatformType::MINI_V3_TYPE || type == PlatformType::CHIP_TINY_V1 ||
         type == PlatformType::CHIP_MDC_MINI_V3 || type == PlatformType::CHIP_MDC_LITE || type == PlatformType::CHIP_MDC_V2 ||
-        type == PlatformType::CHIP_CLOUD_V3 || type == PlatformType::CHIP_CLOUD_V4) {
+        type == PlatformType::CHIP_CLOUD_V3 || type == PlatformType::CHIP_CLOUD_V4 ||
+        type == PlatformType::CHIP_MDC_LITE_V2) {
         return true;
     }
     return false;
