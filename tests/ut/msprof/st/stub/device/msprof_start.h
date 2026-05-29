@@ -61,6 +61,10 @@ private:
     MsprofStart() {}
     void SetCheckList(const std::vector<std::string> &srcDataList, const std::vector<std::string> &srcBlackDataList,
         std::vector<std::string> &dstDataList, std::vector<std::string> &dstBlackDataList);
+    int32_t RunModelLifecycle();
+    void WriteJsonToFile(const std::string &filePath, const nlohmann::json &argv);
+    int32_t PrepareAndInitAclJson(nlohmann::json &argv, std::string &acljsonPath);
+    int32_t PrepareAndInitGeOption(nlohmann::json &argv);
     std::unordered_map<std::string, std::string> inputSwitch_;
     std::vector<std::string> deviceCheckList_;
     std::vector<std::string> deviceBlackCheckList_;

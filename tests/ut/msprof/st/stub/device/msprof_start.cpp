@@ -17,12 +17,28 @@
 #include "data_report_manager.h"
 #include "msprof_main.h"
 #include "../../st/cli/stub/cli_stub.h"
+#include "ge_stub.h"
+#include "aprof_pub.h"
+#include "prof_cann_plugin.h"
 
 using namespace std;
 
 namespace Cann {
 namespace Dvvp {
 namespace Test {
+
+// In ge-option / acl-json based ST flows, MsprofStart/MsprofiInit is never called
+// directly, so the receive_data callbacks (apiTryPop_/compactTryPop_/...)
+// remain nullptr and would crash when the uploader thread runs.
+// Initialise ProfCannPlugin's report buffers here so those callbacks are wired
+// up before profiling kicks off.
+static void EnsureCannPluginReportBufInited()
+{
+    ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
+    ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf(MSPROF_CTRL_INIT_GE_OPTIONS);
+    ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
+}
+
 MsprofStart &MsprofStart::GetInstance()
 {
     static MsprofStart manager;
@@ -285,64 +301,19 @@ int32_t MsprofStart::MsprofStartBySysMode(int subArgvCount, const char **subArgv
 }
 
 /*
- * @berif  : Start profiling by acljson type
+ * @berif  : Run model lifecycle: load, mark, execute and unload
  */
-int32_t MsprofStart::AclJsonStart(int argvCount, nlohmann::json argv)
+int32_t MsprofStart::RunModelLifecycle()
 {
-    ClearSingleton();
-
-    DivideProtoJsonInput(argvCount, argv);
-    if (argv["output"].empty()) {
-        argv["output"] = "./acljsonstest_workspace/output";
-    }
-    argv["switch"] = "on";
-
-    ofstream jsonFile;
-    string acljsonPath = argv["output"];
-    // test_dir_test folder for test iterations will not be created
-    int32_t pos = acljsonPath.find("test_dir_test");
-    if (pos != string::npos) {
-        acljsonPath = acljsonPath.substr(0, pos);
-    }
-    string cmd = "mkdir -p " + acljsonPath;
-    system(cmd.c_str());
-    acljsonPath += "/acl.json";
-    jsonFile.open(acljsonPath, ios::out | ios::app);
-    if (!jsonFile.is_open()) {
-        MSPROF_LOGE("Can't find or create acl.json file");
-    }
-    jsonFile << setw(4) << argv;
-    jsonFile.close();
-    Cann::Dvvp::Test::DataCheck CheckInstance;
-    const char * aclConfigPath = static_cast<const char *>(acljsonPath.c_str());
-    if (aclInit(aclConfigPath) != ACL_SUCCESS) {
-        return -1;
-    }
-
-    if (aclrtSetDevice(0) != ACL_SUCCESS) {
-        return -1;
-    }
-
-    // check if bitSwitch match request
-    if (CheckInstance.bitSwitchChecker() != 0) {
-        MSPROF_LOGE("bitSwitchChecker failed");
-        return -1;
-    }
-
-    // report host data by old interface
-    if (DataReportMgr().SimulateReport() != 0) {
-        return -1;
-    }
-
     uint32_t modelId = 0;
-    // load model and report host data
     if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_ERROR_NONE) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
         return ACL_ERROR_INVALID_PARAM;
     }
 #ifndef MSPROF_C
     void *stream = &modelId; // fake stream
-    if (DataReportMgr().GetMsprofTx() && aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
+    if (DataReportMgr().GetMsprofTx() &&
+        aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
         MSPROF_LOGE("aclprofMarkEx failed");
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -355,6 +326,83 @@ int32_t MsprofStart::AclJsonStart(int argvCount, nlohmann::json argv)
     if (aclmdlUnload(modelId) != 0) {
         MSPROF_LOGE("aclUnLoad failed");
         return ACL_ERROR_INVALID_PARAM;
+    }
+    return 0;
+}
+
+/*
+ * @berif  : Write profiling argv as JSON to file
+ */
+void MsprofStart::WriteJsonToFile(const std::string &filePath, const nlohmann::json &argv)
+{
+    ofstream jsonFile;
+    jsonFile.open(filePath, ios::out | ios::app);
+    if (!jsonFile.is_open()) {
+        MSPROF_LOGE("Can't find or create json file");
+    }
+    jsonFile << setw(4) << argv;
+    jsonFile.close();
+}
+
+/*
+ * @berif  : Prepare acl.json file path and call aclInit
+ */
+int32_t MsprofStart::PrepareAndInitAclJson(nlohmann::json &argv, std::string &acljsonPath)
+{
+    acljsonPath = argv["output"];
+    // test_dir_test folder for test iterations will not be created
+    int32_t pos = acljsonPath.find("test_dir_test");
+    if (pos != string::npos) {
+        acljsonPath = acljsonPath.substr(0, pos);
+    }
+    string cmd = "mkdir -p " + acljsonPath;
+    system(cmd.c_str());
+    acljsonPath += "/acl.json";
+    WriteJsonToFile(acljsonPath, argv);
+
+    const char *aclConfigPath = static_cast<const char *>(acljsonPath.c_str());
+    if (aclInit(aclConfigPath) != ACL_SUCCESS) {
+        return -1;
+    }
+    if (aclrtSetDevice(0) != ACL_SUCCESS) {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * @berif  : Start profiling by acljson type
+ */
+int32_t MsprofStart::AclJsonStart(int argvCount, nlohmann::json argv)
+{
+    ClearSingleton();
+    EnsureCannPluginReportBufInited();
+
+    DivideProtoJsonInput(argvCount, argv);
+    if (argv["output"].empty()) {
+        argv["output"] = "./acljsonstest_workspace/output";
+    }
+    argv["switch"] = "on";
+
+    string acljsonPath;
+    if (PrepareAndInitAclJson(argv, acljsonPath) != 0) {
+        return -1;
+    }
+
+    Cann::Dvvp::Test::DataCheck CheckInstance;
+    // check if bitSwitch match request
+    if (CheckInstance.bitSwitchChecker() != 0) {
+        MSPROF_LOGE("bitSwitchChecker failed");
+        return -1;
+    }
+
+    // report host data by old interface
+    if (DataReportMgr().SimulateReport() != 0) {
+        return -1;
+    }
+
+    if (RunModelLifecycle() != 0) {
+        return -1;
     }
 
     if (aclFinalize() != 0) {
@@ -370,40 +418,51 @@ int32_t MsprofStart::AclJsonStart(int argvCount, nlohmann::json argv)
 }
 
 /*
- * @berif  : Start profiling by geoption type
+ * @berif  : Prepare geoption.json file and call aclInit
  */
-int32_t MsprofStart::GeOptionStart(int argvCount, nlohmann::json argv)
+int32_t MsprofStart::PrepareAndInitGeOption(nlohmann::json &argv)
 {
-    ClearSingleton();
-
-    DivideProtoJsonInput(argvCount, argv);
-    if (argv["output"].empty()) {
-        argv["output"] = "./geoptionstest_workspace/output";
-    }
     argv["aic_metrics"] = "ArithmeticUtilization";
     argv["fp_point"] = "";
     argv["bp_point"] = "";
     argv["training_trace"] = "on";
     argv["task_trace"] = "on";
+    argv["ge_api"] = "l1";
 
-    ofstream jsonFile;
-    jsonFile.open("./geoption.json", ios::out | ios::app);
-    if (!jsonFile.is_open()) {
-        MSPROF_LOGE("Can't find or create geoption.json file");
-    }
-    jsonFile << setw(4) << argv;
-    jsonFile.close();
+    WriteJsonToFile("./geoption.json", argv);
 
-    Cann::Dvvp::Test::DataCheck CheckInstance;
-    const char * geConfigPath = "./geoption.json";
+    const char *geConfigPath = "./geoption.json";
     if (aclInit(geConfigPath) != ACL_SUCCESS) {
         return -1;
     }
-
     if (aclrtSetDevice(0) != ACL_SUCCESS) {
         return -1;
     }
+    MsprofCommandHandle geCmd = {};
+    geCmd.type = PROF_COMMANDHANDLE_TYPE_START;
+    (void)ge::ProfCtrlHandle(PROF_CTRL_SWITCH, &geCmd, sizeof(geCmd));
     MSPROF_EVENT("Success to aclrtSetDevice");
+    return 0;
+}
+
+/*
+ * @berif  : Start profiling by geoption type
+ */
+int32_t MsprofStart::GeOptionStart(int argvCount, nlohmann::json argv)
+{
+    ClearSingleton();
+    EnsureCannPluginReportBufInited();
+
+    DivideProtoJsonInput(argvCount, argv);
+    if (argv["output"].empty()) {
+        argv["output"] = "./geoptionstest_workspace/output";
+    }
+
+    if (PrepareAndInitGeOption(argv) != 0) {
+        return -1;
+    }
+
+    Cann::Dvvp::Test::DataCheck CheckInstance;
     // check if bitSwitch match request
     if (CheckInstance.bitSwitchChecker() != 0) {
         return -1;
@@ -414,29 +473,12 @@ int32_t MsprofStart::GeOptionStart(int argvCount, nlohmann::json argv)
         return -1;
     }
     MSPROF_EVENT("Success to SimulateReport");
-    uint32_t modelId = 0;
-    // load model and report host data
-    if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_ERROR_NONE) {
-        MSPROF_LOGE("aclmdlLoadFromFile failed");
-        return ACL_ERROR_INVALID_PARAM;
-    }
-#ifndef MSPROF_C
-    void *stream = &modelId; // fake stream
-    if (DataReportMgr().GetMsprofTx() && aclprofMarkEx("model execute start", strlen("model execute start"), stream) != 0) {
-        MSPROF_LOGE("aclprofMarkEx failed");
-        return ACL_ERROR_INVALID_PARAM;
-    }
-#endif
+
     MSPROF_EVENT("Start to aclmdlExecute");
-    if (aclmdlExecute(modelId, nullptr, nullptr) != 0) {
-        MSPROF_LOGE("aclmdlExecute failed");
-        return ACL_ERROR_INVALID_PARAM;
+    if (RunModelLifecycle() != 0) {
+        return -1;
     }
     MSPROF_EVENT("End to aclmdlExecute");
-    if (aclmdlUnload(modelId) != 0) {
-        MSPROF_LOGE("aclUnLoad failed");
-        return ACL_ERROR_INVALID_PARAM;
-    }
 
     if (aclFinalize() != 0) {
         return -1;

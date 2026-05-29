@@ -18,8 +18,28 @@
 #include "msprof_stub.h"
 #include "data_report_manager.h"
 #include "acl_stub.h"
+#include "prof_cann_plugin.h"
+#include "aprof_pub.h"
+
+// Forward declarations for transport registration
+namespace analysis { namespace dvvp { namespace transport { class ITransport; } } }
+namespace Msprofiler { namespace AclApi {
+    using ProfCreateTransportFunc = std::shared_ptr<analysis::dvvp::transport::ITransport> (*)();
+    void ProfRegisterTransport(ProfCreateTransportFunc callback);
+    std::shared_ptr<analysis::dvvp::transport::ITransport> CreateParserTransport();
+} }
 
 using namespace std;
+
+// In subscribe mode, MsprofStart is never called, so ProfCannPlugin buffers are not initialized.
+// Call this before any subscribe operation to ensure buffers are ready.
+static void EnsureProfCannPluginInited()
+{
+    ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
+    ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf(MSPROF_CTRL_INIT_GE_OPTIONS);
+    ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
+}
+
 const uint32_t WAIT_FOR_DURATION        = 1;
 const uint32_t OP_NAME_LENGTH           = 512;
 const uint32_t OP_TYPE_LENGTH           = 512;
@@ -202,7 +222,8 @@ bool RunModel(int32_t fd)
         MSPROF_LOGE("aclmdlLoadFromFile failed");
     }
     // subscribe model
-    // Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
+    EnsureProfCannPluginInited();
+    Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
     aclprofModelSubscribe(modelId, profSubscribeConfig);
     if (err != ACL_ERROR_NONE) {
         MSPROF_LOGE("Subscribe model failed");
@@ -247,6 +268,8 @@ bool RunOp(int32_t fd)
 
     uint32_t devId = 0;
     // subscribe model
+    EnsureProfCannPluginInited();
+    Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
     auto err = ProfOpSubscribe(devId, profSubscribeConfig);
     if (err != ACL_ERROR_NONE) {
         MSPROF_LOGE("Subscribe stream failed");

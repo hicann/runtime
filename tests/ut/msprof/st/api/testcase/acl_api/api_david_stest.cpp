@@ -43,6 +43,8 @@ protected:
     }
     virtual void TearDown()
     {
+        aclprofFinalize();
+        aclFinalize();
         DevprofDrvAicpu::instance()->isRegister_ = false;   // 重置aicpu注册状态，使单进程内能多次注册
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V3));
         aclProfPath.insert(0, "rm -rf ");

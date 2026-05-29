@@ -34,6 +34,7 @@ set(TEST_STUB_SRC
     ${API_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
     ${API_STUB_DIR}/device/mini_stars_device_simulator.cpp
     ${API_STUB_DIR}/host/msprof_stub.cpp
+    ${API_STUB_DIR}/aicpu_report_hdc.cpp
     ${API_STUB_DIR}/mmpa_stub.cpp
     ${API_STUB_DIR}/hdc-log-stub.cpp
     ${API_STUB_DIR}/ide-cmd-stub.cpp
@@ -225,6 +226,7 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/dump
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/pkg_inc/profiling
     ${TOP_DIR}/pkg_inc/runtime
     ${TOP_DIR}/pkg_inc/runtime/runtime
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
@@ -240,6 +242,7 @@ set(INCLUDE_DIR
     stub
     data
     testcase/common
+    ${API_STUB_DIR}
     ${API_STUB_DIR}/device
     ${API_STUB_DIR}/host
     ${TOP_DIR}/inc/driver
@@ -321,6 +324,7 @@ add_executable(api_dc_stest
     ${TEST_SRC}
     ${SRC_FILE}
     ${CppPath}
+    stub/aoe_stub.cpp
     testcase/api_dc_stest.cpp
 )
 
@@ -349,8 +353,14 @@ target_link_options(api_dc_stest PRIVATE
 )
 
 target_link_libraries(api_dc_stest PRIVATE
-    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:adump_headers>
+    profapi_share_st
+    ascend_protobuf
     c_sec
+    json
 )
 
 set_target_properties(api_dc_stest
@@ -366,7 +376,7 @@ add_executable(api_david_stest
     ${TEST_SRC}
     ${SRC_FILE}
     ${CppPath}
-    testcase/api_david_stest.cpp
+    testcase/acl_api/api_david_stest.cpp
 )
 
 target_include_directories(api_david_stest PRIVATE
@@ -582,6 +592,7 @@ add_executable(api_mdc_stest
     ${TEST_SRC}
     ${SRC_FILE}
     ${CppPath}
+    testcase/acl_api/api_mdc_stest.cpp
 )
 
 target_include_directories(api_mdc_stest PRIVATE
@@ -637,13 +648,11 @@ add_executable(acl_api_stest
     ${CppPath}
     # testcase/api_milan_stest.cpp
     testcase/acl_api/api_milan_stest.cpp
-    testcase/acl_api/api_david_stest.cpp
-    # testcase/acl_api/api_david_v121_stest.cpp
-    # testcase/acl_api/api_mdc_stest.cpp
-    # testcase/acl_api/api_cloud_stest.cpp
-    # testcase/acl_api/api_mdc_mini_v3_stest.cpp
-    # testcase/acl_api/api_dc_stest.cpp
-    # testcase/acl_api/api_mini_v3_stest.cpp
+    testcase/acl_api/api_mdc_stest.cpp
+    testcase/acl_api/api_cloud_stest.cpp
+    testcase/acl_api/api_mdc_mini_v3_stest.cpp
+    testcase/acl_api/api_dc_stest.cpp
+    testcase/acl_api/api_mini_v3_stest.cpp
 )
 
 target_include_directories(acl_api_stest PRIVATE
@@ -687,6 +696,60 @@ target_link_libraries(acl_api_stest PRIVATE
 set_target_properties(acl_api_stest
     PROPERTIES
     OUTPUT_NAME acl_api_stest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+####################### api_david_v121_stest ###########################
+
+add_executable(api_david_v121_stest
+    ${TEST_STUB_SRC}
+    ${TEST_SRC}
+    ${SRC_FILE}
+    ${CppPath}
+    testcase/acl_api/api_david_v121_stest.cpp
+)
+
+target_include_directories(api_david_v121_stest PRIVATE
+    ${INCLUDE_DIR}
+)
+
+target_compile_options(api_david_v121_stest PRIVATE
+    -g
+    -Wall
+    -std=c++11
+    -fno-access-control
+    -Werror
+)
+
+target_compile_definitions(api_david_v121_stest PRIVATE
+    C_SEC
+    __PROF_LLT
+    google=ascend_private
+    LLT_DATA_DIR="${LLT_DATA_DIR}"
+    API_STEST
+    PLATFORM_TYPE=16
+    SOC_TYPE="david_v121"
+)
+
+target_link_options(api_david_v121_stest PRIVATE
+   -ldl
+   -lpthread
+)
+
+target_link_libraries(api_david_v121_stest PRIVATE
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:adump_headers>
+    profapi_share_st
+    ascend_protobuf
+    c_sec
+    json
+)
+
+set_target_properties(api_david_v121_stest
+    PROPERTIES
+    OUTPUT_NAME api_david_v121_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -810,6 +873,7 @@ target_include_directories(profapi_share_st PRIVATE
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/dvvp/transport
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/wrapper
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/inc
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/inc
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils
     ${TOP_DIR}/abl/msprof/inc/toolchain

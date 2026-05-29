@@ -113,16 +113,17 @@ set(MSPROF_TARGET
     transport
     cli_stest
     acl_api_stest
-    # geoption_stest
-    # acljson_stest
-    # proftransport_st_static
-    # profapi_lite_st
-    # api_dc_stest
-    # api_david_stest
-    # api_mini_v3_stest
-    # api_mdc_mini_v3_stest
-    # api_cloud_stest
-    # api_mdc_stest
-    # api_tiny_stest
+    geoption_stest
+    acljson_stest
+    proftransport_st_static
+    profapi_lite_st
+    api_dc_stest
+    api_david_stest
+    api_david_v121_stest
+    api_mini_v3_stest
+    api_mdc_mini_v3_stest
+    api_cloud_stest
+    api_mdc_stest
+    api_tiny_stest
 )
 add_custom_target(msprof_ut DEPENDS ${MSPROF_TARGET})

@@ -22,6 +22,8 @@
 #include "transport/hash_data.h"
 #include "prof_manager.h"
 #include "running_mode.h"
+#include "devprof_drv_aicpu.h"
+#include "msprof_tx_manager.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
@@ -46,6 +48,8 @@ void ClearSingleton()
     ProfAclMgr::instance()->UnInit();
     ProfManager::instance()->AclUinit();
     ProfCannPlugin::instance()->ProfUnInitReportBuf();
+    DevprofDrvAicpu::instance()->Reset();
+    Msprof::MsprofTx::MsprofTxManager::instance()->UnInit();
 #endif
     return;
 }

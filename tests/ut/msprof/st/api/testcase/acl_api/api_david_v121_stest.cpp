@@ -95,10 +95,10 @@ TEST_F(AclApiDavidV121Stest, AclApiSetConfigError)
     EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, ret);
 
     configType = ACL_PROF_OPTYPE;
-    std::string opTypeCritical(256, 't'); // critical (256 chars is max allowed)
+    std::string opTypeCritical(256, 't'); // 256 chars is within the allowed limit
     setConfig = opTypeCritical;
     ret = aclprofSetConfig(configType, setConfig.c_str(), setConfig.size());
-    EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     configType = ACL_PROF_OPTYPE;
     std::string opTypeOverflow(257, 't'); // overflow (>256 chars)
@@ -107,9 +107,9 @@ TEST_F(AclApiDavidV121Stest, AclApiSetConfigError)
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, ret);
 
     configType = ACL_PROF_OPTYPE;
-    setConfig = "MatMulV3,Index"; // valid
+    setConfig = "MatMulV3,Index"; // valid op type string
     ret = aclprofSetConfig(configType, setConfig.c_str(), setConfig.size());
-    EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     aclprofFinalize();
     aclFinalize();

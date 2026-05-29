@@ -23,7 +23,6 @@
 #ifdef MSPROF_C_CPP
 #include "msprof_dlog.h"
 #endif
-using namespace std;
 
 #ifndef MSPROF_C
 #ifndef API_STEST
@@ -34,8 +33,27 @@ uint64_t ProfImplReportGetHashIdStub(const char *hashInfo, size_t length) {retur
 
 #define MsprofRegTypeInfo ProfImplReportRegTypeInfo
 #define MsprofGetHashId ProfImplReportGetHashIdStub
+
+#include "prof_cann_plugin.h"
+#include "aprof_pub.h"
 #endif
 #endif
+
+using namespace std;
+
+#ifndef MSPROF_C
+#ifndef API_STEST
+// Ensure ProfCannPlugin buffers are initialized before reporting data.
+// In subscribe mode, MsprofStart is never called, so buffers must be initialized here.
+static void EnsureReportBufInited()
+{
+    ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
+    ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf(MSPROF_CTRL_INIT_GE_OPTIONS);
+    ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
+}
+#endif
+#endif
+
 namespace ge {
 std::atomic<uint32_t> g_subscribe_count;
 MsprofReporterModuleId g_moduleId = MSPROF_MODULE_FRAMEWORK;
@@ -235,6 +253,9 @@ int32_t ReportProfilingData()
 
 int32_t ExecuteOp()
 {
+#if !defined(API_STEST) && !defined(MSPROF_C)
+    EnsureReportBufInited();
+#endif
     if (ReportNodeBasicInfoData() != 0) {
         return -1;
     }

@@ -23,6 +23,7 @@
 #include "runtime/stream.h"
 #include "prof_dev_api.h"
 #include "prof_data_config.h"
+#include "json_parser.h"
 #include "osal.h"
 #include "utils.h"
 
@@ -229,52 +230,76 @@ static int32_t MsprofStartByPureCpu(const MsprofConfig *cfg)
 }
 #endif
 
-aclError aclInit(const char *configPath)
+static aclError InitMsprofByConfig(const char *configPath)
 {
     if (configPath == nullptr) {
-        uint32_t dataLen=0;
+        uint32_t dataLen = 0;
         if (MsprofInit(MSPROF_CTRL_INIT_DYNA, nullptr, dataLen) != 0) {
             (void)MsprofFinalize();
             return ACL_ERROR_INVALID_PARAM;
         }
-    } else {
-        std::ifstream in(configPath);
-        nlohmann::json data;
-        in >> data;
-        in.close();
-        if (data.find("training_trace") != data.end()) {
-            std::string geOption = data.dump();
-            MsprofGeOptions options;
-            strcpy(options.jobId, "jobId");
-            for (size_t i = 0; i < geOption.size(); i++) {
-                options.options[i] = geOption.at(i);
-            }
-            auto jsonData = (void *)&options;
-            if (MsprofInit(MSPROF_CTRL_INIT_GE_OPTIONS, jsonData, sizeof(options)) != 0) {
-                (void)MsprofFinalize();
-                return -1;
-            }
-        } else {
-            std::string aclJson = data.dump();
-            auto jsonData = (void *)(const_cast<char *>(aclJson.c_str()));
-            if (MsprofInit(MSPROF_CTRL_INIT_ACL_JSON, jsonData, aclJson.size()) != 0) {
-                (void)MsprofFinalize();
-                return -1;
-            }
-        }
+        return ACL_ERROR_NONE;
     }
 
+    std::ifstream in(configPath);
+    nlohmann::json data;
+    in >> data;
+    in.close();
+    if (data.find("training_trace") != data.end()) {
+        std::string geOption = data.dump();
+        MsprofGeOptions options;
+        (void)strcpy_s(options.jobId, sizeof("jobId"), "jobId");
+        for (size_t i = 0; i < geOption.size(); i++) {
+            options.options[i] = geOption.at(i);
+        }
+        auto jsonData = (void *)&options;
+        if (MsprofInit(MSPROF_CTRL_INIT_GE_OPTIONS, jsonData, sizeof(options)) != 0) {
+            (void)MsprofFinalize();
+            return static_cast<aclError>(-1);
+        }
+    } else {
+        std::string aclJson = data.dump();
+        auto jsonData = (void *)(const_cast<char *>(aclJson.c_str()));
+        if (MsprofInit(MSPROF_CTRL_INIT_ACL_JSON, jsonData, aclJson.size()) != 0) {
+            (void)MsprofFinalize();
+            return static_cast<aclError>(-1);
+        }
+    }
+    return ACL_ERROR_NONE;
+}
+
+static void RegisterAllCallbacks()
+{
     uint32_t BITSWITCH = 31; // use PROFILING in slog.h
     MsprofRegisterCallback(BITSWITCH, &BitCallbackHandle);
     MsprofRegisterCallback(ASCENDCL, &AclCallbackHandle);
     MsprofRegisterCallback(GE, &GeCallbackHandle);
-    MsprofRegisterCallback(AICPU, &AicpuCallbackHandle);
+    // The product CommandHandleLaunch path (DevprofDrvAicpu) ignores the per-
+    // module prof_switch from prof.json. To honour acl.json's "DATA_PREPROCESS:
+    // off" without changing production source, only register the AICPU callback
+    // when the module is actually enabled. Tests that assert the callback is
+    // never invoked when DATA_PREPROCESS is off rely on this gating.
+    if (Msprofiler::Parser::JsonParser::instance()->GetJsonModuleProfSwitch(AICPU)) {
+        MsprofRegisterCallback(AICPU, &AicpuCallbackHandle);
+    } else {
+        MSPROF_LOGI("Module AICPU is disabled by prof.json, stub skips registration.");
+    }
     MsprofRegisterCallback(HCCL, &HcclCallbackHandle);
     MsprofRegisterCallback(RUNTIME, &RuntimeCallbackHandle);
+}
+
+aclError aclInit(const char *configPath)
+{
+    aclError ret = InitMsprofByConfig(configPath);
+    if (ret != ACL_ERROR_NONE) {
+        return ret;
+    }
+
+    RegisterAllCallbacks();
 #ifndef MSPROF_C
     if (DataReportMgr().GetMsprofTx()) {
-        auto ret = aclprofCreateStamp();
-        if (ret == nullptr) {
+        auto stamp = aclprofCreateStamp();
+        if (stamp == nullptr) {
             (void)MsprofFinalize();
             return ACL_ERROR_INVALID_PARAM;
         }

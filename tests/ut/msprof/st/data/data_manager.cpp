@@ -51,13 +51,13 @@ void DataManager::Init(std::string socType, const char* testcase)
 {
     std::string casename = GetCaseName(testcase);
     socType_ = socType;
-    dataDir_ = LLT_DATA_DIR + socType_ + "/" + casename;
+    dataDir_ = std::string(LLT_DATA_DIR) + "/" + socType_ + "/" + casename;
     MSPROF_LOGD("Init data manager by testcase : %s", dataDir_.c_str());
 }
 
 void DataManager::SetDataDir(const char* dirName)
 {
-    dataDir_ = LLT_DATA_DIR + socType_ + "/" + dirName;
+    dataDir_ = std::string(LLT_DATA_DIR) + "/" + socType_ + "/" + dirName;
     MSPROF_LOGD("Set data dir : %s", dataDir_.c_str());
 }
 
