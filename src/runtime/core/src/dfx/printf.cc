@@ -652,6 +652,7 @@ const std::unordered_map<uint32_t,
 
 void GetDumpShape(const DumpInfoHead *dumpHead, std::vector<size_t> &shape)
 {
+    shape = {};
     if (static_cast<size_t>(dumpHead->infoLen) < sizeof(DumpShapeInfo)) {
         RT_LOG(RT_LOG_ERROR,
             "dump info length %u bytes is less than required of DumpShapeInfo (%zu bytes).",
