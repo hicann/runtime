@@ -11,6 +11,7 @@
 #ifndef INPUT_PARSER_H
 #define INPUT_PARSER_H
 #include <string>
+#include <map>
 #include <utils/utils.h>
 #include "proto/profiler.pb.h"
 #include "message/prof_params.h"
@@ -25,7 +26,11 @@ namespace Msprof {
 using namespace analysis::dvvp::common::validation;
 using namespace analysis::dvvp::common::utils;
 
+#ifdef BUILD_OPEN_PROJECT
+using MsprofStringBuffer = const char *;
+#else
 using MsprofStringBuffer = char *;
+#endif // BUILD_OPEN_PROJECT
 using MsprofString = const char *;
 using MsprofStrBufAddrT = char **;
 
@@ -100,7 +105,7 @@ enum MsprofArgsType {
     ARGS_INTERCONNECTION_FREQ,       // 50 1-50 hz
     ARGS_HOST_SYS_USAGE_FREQ,        // 50 1-50 hz
     ARGS_SYS_LOW_POWER_FREQ,         // 10000 1-10000hz
-    ARGS_INVALID = 67,              // OsalGetOptLong will return opt = 63 for invalid argument
+    ARGS_INVALID = 67,
     ARGS_EXPORT_ITERATION_ID,
     ARGS_EXPORT_MODEL_ID,
     // host
@@ -218,8 +223,21 @@ private:
     bool ConflictChecking(struct MsprofCmdInfo &cmdInfo, int32_t opt, const std::string &conflictArgs) const;
     int32_t CheckSampleModeValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const;
     int32_t CheckArgOnOff(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const;
+    int32_t CheckGeApiArgValid(const std::string &switchStr, const struct MsprofCmdInfo &cmdInfo,
+        int32_t opt) const;
+    int32_t CheckTaskBlockArgValid(const std::string &switchStr, const struct MsprofCmdInfo &cmdInfo,
+        int32_t opt) const;
+    int32_t CheckTaskTimeArgValid(const std::string &switchStr, const struct MsprofCmdInfo &cmdInfo,
+        int32_t opt) const;
+    int32_t CheckOnOffArgValid(const std::string &switchStr, const struct MsprofCmdInfo &cmdInfo,
+        int32_t opt) const;
+    void SetTaskBlockParam(const char *argValue);
+    void SetSwitchParam(int32_t opt, const char *value);
+    bool IsSwitchValid2Handled(int32_t opt) const;
     int32_t CheckArgRange(const struct MsprofCmdInfo &cmdInfo, int32_t opt, uint32_t min, uint32_t max) const;
+#ifndef BUILD_OPEN_PROJECT
     int32_t CheckNpuEventsValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const;
+#endif // BUILD_OPEN_PROJECT
     int32_t CheckCmdScaleIsValid(const struct MsprofCmdInfo &cmdInfo) const;
     int32_t CheckAiCoreMetricsValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt) const;
     std::string GeneratePrompts() const;
@@ -227,12 +245,16 @@ private:
     int32_t CheckExportSummaryFormat(const struct MsprofCmdInfo &cmdInfo) const;
     int32_t CheckExportType(const struct MsprofCmdInfo &cmdInfo) const;
     int32_t CheckReports(const struct MsprofCmdInfo &cmdInfo) const;
+#ifndef BUILD_OPEN_PROJECT
     int32_t CheckMemServiceflow(const struct MsprofCmdInfo &cmdInfo) const;
+#endif // BUILD_OPEN_PROJECT
     int32_t CheckAnalyzeRuleSwitch(const struct MsprofCmdInfo &cmdInfo) const;
     int32_t CheckLlcProfilingValid(const struct MsprofCmdInfo &cmdInfo);
     int32_t CheckSysPeriodValid(const struct MsprofCmdInfo &cmdInfo) const;
     int32_t CheckSysDevicesValid(const struct MsprofCmdInfo &cmdInfo);
     int32_t CheckHostSysValid(const struct MsprofCmdInfo &cmdInfo);
+    int32_t CheckOsrtTools() const;
+    int32_t CheckDiskTool() const;
     int32_t CheckHostSysPidValid(const struct MsprofCmdInfo &cmdInfo);
     int32_t CheckHostSysUsageValid(const struct MsprofCmdInfo &cmdInfo);
     void SetHostSysUsageParam(const std::string &hostSysUsageParam);
@@ -247,7 +269,9 @@ private:
     int32_t MsprofDynamicCheckValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt);
     void MsprofDynamicUpdateParams(const struct MsprofCmdInfo &cmdInfo, int32_t opt);
     int32_t CheckSysCpu();
+#ifndef BUILD_OPEN_PROJECT
     int32_t CheckMstxValid();
+#endif // BUILD_OPEN_PROJECT
     void ParamsSwitchValid(const struct MsprofCmdInfo &cmdInfo, int32_t opt);
     void ParamsSwitchValid2(const struct MsprofCmdInfo &cmdInfo, int32_t opt);
     void ParamsSwitchValid3(const struct MsprofCmdInfo &cmdInfo, int32_t opt);
@@ -258,7 +282,7 @@ private:
     int32_t HostAndDevParamsCheck();
     int32_t ProcessOptions(int32_t opt, struct MsprofCmdInfo &cmdInfo);
     void SetTaskTimeSwitch(const std::string timeSwitch);
-    int32_t CheckHostSysToolsIsExist(const std::string toolName, const std::string exeCmd);
+    int32_t CheckHostSysToolsIsExist(const std::string toolName, const std::string exeCmd) const;
     void SetHostSysParam(const std::string hostSysParam);
     int32_t CheckHostSysCmdOutIsExist(const std::string tmpDir, const std::string toolName,
         const OsalProcess tmpProcess) const;
@@ -266,6 +290,10 @@ private:
     int32_t UninitCheckHostSysCmd(const OsalProcess checkProcess) const;
     int32_t PreCheckPlatform(int32_t opt, CONST_CHAR_PTR argv[]);
     std::vector<MsprofArgsType> GeneratePlatSwithList() const;
+    void InitOpenBlackLists(std::map<Analysis::Dvvp::Common::Config::PlatformType, std::vector<MsprofArgsType>> &platformArgsType) const;
+#ifndef BUILD_OPEN_PROJECT
+    void InitClosedBlackLists(std::map<Analysis::Dvvp::Common::Config::PlatformType, std::vector<MsprofArgsType>> &platformArgsType) const;
+#endif // BUILD_OPEN_PROJECT
 private:
     SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params_;
 };
@@ -312,13 +340,17 @@ private:
     void AddAivArgs();
     void AddAicpuArgs();
     void AddHostArgs();
+#ifndef BUILD_OPEN_PROJECT
     void AddStarsArgs();
     void AddLowPowerArgs();
+#endif // BUILD_OPEN_PROJECT
     void AddAnalysisArgs();
     void AddDynProfArgs();
     void AddDelayDurationArgs();
     void AddScaleArgs();
+#ifndef BUILD_OPEN_PROJECT
     void PrintMsopprofHelp();
+#endif // BUILD_OPEN_PROJECT
 private:
     std::vector<Args> argsList_;
 };

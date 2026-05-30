@@ -17,6 +17,7 @@ set(common_file
     ${MSPROF_SOURCE_DIR}/dvvp/app/application.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/env_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils/llc_event_utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
@@ -91,10 +92,15 @@ set(common_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_v3_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/dynamic_profiling/src/dyn_prof_client.cpp
 )
+
+if(NOT BUILD_OPEN_PROJECT)
+    list(APPEND common_file ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_commercial.cpp)
+endif()
 
 
 set(src_file
@@ -103,6 +109,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_host_sys.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_task.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode.cpp
 )

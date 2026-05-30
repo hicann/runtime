@@ -18,6 +18,7 @@
 #include "validation/param_validation.h"
 #include "prof_acl_api.h"
 #include "platform/platform.h"
+#include "llc_event_utils.h"
 
 namespace Analysis {
 namespace Dvvp {
@@ -146,7 +147,11 @@ bool ProfParamsAdapter::CheckJsonConfig(const std::string &switchName, const Nan
     } else if (switchName == "sys_mem_serviceflow") {
         return ParamValidation::instance()->CheckMemServiceflowValid(switchName, val.GetValue<std::string>());
     } else if (switchName == "task_block") {
+#ifndef BUILD_OPEN_PROJECT
         return ParamValidation::instance()->CheckTaskBlockValid(switchName, val.GetValue<std::string>());
+#else
+        return true;
+#endif // BUILD_OPEN_PROJECT
     } else {
         return ParamValidation::instance()->CheckParamEmptyInvalid(switchName, val.GetValue<std::string>());
     }
@@ -612,36 +617,6 @@ void ProfParamsAdapter::UpdateCpuProfiling(SHARED_PTR_ALIA<analysis::dvvp::messa
     }
 }
 
-std::string ProfParamsAdapter::GenerateCapacityEvents()
-{
-    const int32_t maxLlcEvents = 8; // llc events list size
-    std::vector<std::string> llcProfilingEvents;
-    for (int32_t i = 0; i < maxLlcEvents; i++) {
-        std::string tempEvents;
-        tempEvents.append("hisi_l3c0_1/dsid");
-        tempEvents.append(std::to_string(i));
-        tempEvents.append("/");
-        llcProfilingEvents.push_back(tempEvents);
-    }
-    UtilsStringBuilder<std::string> builder;
-    return builder.Join(llcProfilingEvents, ",");
-}
-
-std::string ProfParamsAdapter::GenerateBandwidthEvents()
-{
-    MSPROF_LOGI("Begin to GenerateBandwidthEvents");
-    std::vector<std::string> llcProfilingEvents;
-    llcProfilingEvents.push_back("hisi_l3c0_1/read_allocate/");
-    llcProfilingEvents.push_back("hisi_l3c0_1/read_hit/");
-    llcProfilingEvents.push_back("hisi_l3c0_1/read_noallocate/");
-    llcProfilingEvents.push_back("hisi_l3c0_1/write_allocate/");
-    llcProfilingEvents.push_back("hisi_l3c0_1/write_hit/");
-    llcProfilingEvents.push_back("hisi_l3c0_1/write_noallocate/");
-
-    UtilsStringBuilder<std::string> builder;
-    return builder.Join(llcProfilingEvents, ",");
-}
-
 void ProfParamsAdapter::UpdateOpFeature(SHARED_PTR_ALIA<ProfApiStartReq> feature,
                                         SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const
 {
@@ -752,6 +727,46 @@ bool ProfParamsAdapter::CheckAclApiSetDeviceEnable() const
 {
    return aclApiSetDeviceEnable_;
 }
+
+void ProfParamsAdapter::UpdateHardwareMemParams(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const
+{
+    if (dstParams->hardware_mem.compare("on") == 0) {
+        const int32_t periodUs = dstParams->hardware_mem_sampling_interval;
+        const int32_t periodMs = (periodUs > DEFAULT_PROFILING_INTERVAL_10000US) ?
+            (periodUs / US_CONVERT_MS) : DEFAULT_PROFILING_INTERVAL_10MS;
+        dstParams->llc_profiling = "on";
+        dstParams->msprof_llc_profiling = "on";
+        dstParams->llc_profiling_events = srcParams->llc_profiling_events;
+        dstParams->llc_interval = periodMs;
+        dstParams->ddr_profiling = "on";
+        dstParams->ddr_profiling_events = srcParams->ddr_profiling_events;
+        dstParams->ddr_interval = periodMs;
+        dstParams->ddr_master_id = srcParams->ddr_master_id;
+        dstParams->memProfiling = "on";
+        dstParams->memInterval = periodMs;
+#ifndef BUILD_OPEN_PROJECT
+        if (Analysis::Dvvp::Common::Config::ConfigManager::instance()->GetPlatformType() != PlatformType::MINI_TYPE) {
+            dstParams->hbmProfiling = "on";
+            dstParams->hbm_profiling_events = srcParams->hbm_profiling_events;
+            dstParams->hbmInterval = periodMs;
+        }
+#else
+        dstParams->hbmProfiling = "on";
+        dstParams->hbm_profiling_events = srcParams->hbm_profiling_events;
+        dstParams->hbmInterval = periodMs;
+#endif // BUILD_OPEN_PROJECT
+    }
+}
+
+void ProfParamsAdapter::GenerateLlcEvents(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
+{
+    if (params == nullptr || params->msprof.compare("on") == 0) {
+        return;
+    }
+    analysis::dvvp::common::utils::LlcEventUtils::GenerateLlcEvents(params);
+}
+
 }   // Adaptor
 }   // Host
 }   // Dvvp

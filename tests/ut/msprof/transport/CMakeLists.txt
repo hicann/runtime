@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
-# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
@@ -16,7 +16,7 @@ protobuf_generate(transport_proto
 set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/adx_prof_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
@@ -30,26 +30,19 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/channel/ai_drv_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hash_data.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/json_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_interface.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_manager.cpp
@@ -73,9 +66,14 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux.c
     ${MSPROF_SOURCE_DIR}/basic/osal/osal_linux_mem.c
-    #${TOP_DIR}/ace/npuruntime/inc/
-    #${TOP_DIR}/ace/npuruntime/inc/external/
 )
+if(NOT BUILD_OPEN_PROJECT)
+    list(APPEND profilerSrcFiles
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
+    )
+endif()
 
 set(localSrcFiles
     test/main.cpp
@@ -86,39 +84,25 @@ set(localSrcFiles
     test/file_manager_utest.cpp
     ../stub/hdc-api-stub.cpp
     ../stub/hdc-log-stub.cpp
-    ../stub/devdrv_runtime_api_stub.cpp
-    ../stub/profile_drv_user_stub.cpp
-    ../stub/common-utils-stub.cpp
+    ../stub/drv_stub.cpp
+    ../stub/mmpa_stub.cpp
+    ../stub/prof_api_stub.cpp
 )
 
 add_executable(transport
-    ${profilerSrcFiles}
     ${localSrcFiles}
-)
-
-set(libmsprofHeaderDir
-    ${LIBC_SEC_HEADER}
-    ${TOP_DIR}/output/third_party/gtest_shared/include
-    ${TOP_DIR}/third_party/libc_sec/include
-    ${TOP_DIR}/include/driver
-    ${TOP_DIR}/include/external
-    ${TOP_DIR}/include/external/acl
-    ${TOP_DIR}/src/dfx/error_manager
-    ${TOP_DIR}/src/inc
-    ${TOP_DIR}/pkg_inc/dump
-    ${TOP_DIR}/pkg_inc/aicpu_sched
-    ${TOP_DIR}/src/dfx/adump/inc/metadef/external
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
-    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
+    ${profilerSrcFiles}
 )
 
 target_include_directories(transport PRIVATE
     ${libmsprofHeaderDir}
     ${TOP_DIR}/abl/libc_sec/include
-    ${TOP_DIR}/inc/driver
+    ${CMAKE_BINARY_DIR}/libc_sec/source/include
+    ${TOP_DIR}/src/mmpa/../../pkg_inc
+    ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa
+    ${TOP_DIR}/src/mmpa/../../pkg_inc/mmpa/sub_inc
+    ${TOP_DIR}/include/driver
+    ${TOP_DIR}/pkg_inc/dump
     ../stub/
     ${TOP_DIR}/llt/abl/msprof/st/stub
     ${TOP_DIR}/runtime/src/dfx/adump
@@ -126,8 +110,8 @@ target_include_directories(transport PRIVATE
     ${TOP_DIR}/ace/npuruntime/inc
     ${TOP_DIR}/ace/npuruntime/inc/external/
     ${TOP_DIR}/abl/msprof/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/inc/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/include/external/acl
     ${TOP_DIR}/abl/msprof/inc/toolchain
     ${TOP_DIR}/metadef/inc
     ${TOP_DIR}/metadef/inc/external
@@ -136,6 +120,7 @@ target_include_directories(transport PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halinc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/common
     ${MSPROF_SOURCE_DIR}/dvvp/common/statistics
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils
@@ -165,32 +150,32 @@ target_include_directories(transport PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform
     ${MSPROF_SOURCE_DIR}/avp/
-)
-
-target_compile_options(transport PRIVATE
-    -g
-    -pipe
-    -Wall
-    -fno-access-control
-    -Wfloat-equal
-    -Wextra
-)
-
-target_compile_definitions(transport PRIVATE
-    OSAL
-    MSPROF_DEBUG
-    google=ascend_private
+    ${TOP_DIR}/src/dfx/error_manager
 )
 
 target_link_libraries(transport PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
     c_sec
+    ascend_hal_stub
+    rt
+    dl
+    pthread
 )
 
-set_target_properties(transport
-    PROPERTIES
-    OUTPUT_NAME transport
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+target_compile_options(transport PRIVATE
+    -fno-access-control
 )
 
+target_compile_definitions(transport PRIVATE
+    OSAL
+    __PROF_LLT
+    google=ascend_private
+)
 
+if(BUILD_OPEN_PROJECT)
+    target_compile_definitions(transport PRIVATE BUILD_OPEN_PROJECT)
+endif()
+
+set_target_properties(transport PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests/ut/msprof/transport
+)

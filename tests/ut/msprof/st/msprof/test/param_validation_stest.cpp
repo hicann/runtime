@@ -353,6 +353,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckAicoreMetricsIsValid) {
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid) {
     using namespace analysis::dvvp::common::validation;
     GlobalMockObject::verify();
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CHIP_CLOUD_V3));
@@ -382,6 +383,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_STEST, CheckSocPmuEventsValid) {
     events = {"0x01", "0x02", "0x03", "0x40"};
     EXPECT_EQ(false, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_NOC, events));
     Platform::instance()->Uninit();
+#endif
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()

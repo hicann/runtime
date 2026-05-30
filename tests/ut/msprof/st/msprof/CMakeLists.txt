@@ -36,6 +36,7 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils/llc_event_utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/json/json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
@@ -112,6 +113,7 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/device.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/info_json.cpp

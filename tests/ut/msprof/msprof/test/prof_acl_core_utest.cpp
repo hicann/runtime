@@ -28,6 +28,7 @@
 #include "uploader_dumper.h"
 #include "uploader_mgr.h"
 #include "utils/utils.h"
+#include "utils/llc_event_utils.h"
 #include "prof_acl_core.h"
 #include "prof_ge_core.h"
 #include "analyzer_ge.h"
@@ -1542,6 +1543,7 @@ TEST_F(MSPROF_ACL_CORE_UTEST, DISABLED_MsprofInitAclJson) {
     EXPECT_EQ(3, ProfAclMgr::instance()->MsprofInitAclJson((void *)aclJson.c_str(), aclJson.size()));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonNano) {
     GlobalMockObject::verify();
     using namespace Msprofiler::Api;
@@ -1569,6 +1571,7 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonNano) {
     Platform::instance()->Uninit();
     Platform::instance()->Init();
 }
+#endif
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofCheckAndGetChar) {
     GlobalMockObject::verify();
@@ -3082,12 +3085,14 @@ TEST_F(MSPROF_ACL_CORE_UTEST, AicoreMetricsEnumToName) {
     Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
     EXPECT_EQ("L2Cache", metrics);
 
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE));
     metrics = "";
     Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
     EXPECT_EQ("", metrics);
+#endif
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, TaskBasedCfgTrfToReq) {
@@ -3507,13 +3512,19 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillCheckConfigWhenPlatformSupported)
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     configType = ACL_PROF_HOST_SYS_USAGE_FREQ;
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
+    int expectRet = ACL_ERROR_INVALID_PROFILING_CONFIG;
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&Platform::GetPlatformType)
         .stubs()
         .will(repeat(PlatformTypeEnum::CHIP_MINI, 3))
         .then(returnValue(PlatformTypeEnum::CHIP_CLOUD));
+#else
+    MOCKER_CPP(&Platform::GetPlatformType)
+        .stubs()
+        .will(returnValue(PlatformTypeEnum::CHIP_CLOUD));
+#endif
     configType = ACL_PROF_LLC_MODE;
     config = "read";
-    int expectRet = ACL_ERROR_INVALID_PROFILING_CONFIG;
     EXPECT_EQ(expectRet, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     config = "capacity";
     EXPECT_EQ(expectRet, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
@@ -4804,8 +4815,8 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_CheckSetDeviceEnable)
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_GenerateCapacityBandwidthEvents)
 {
     auto a = NewAdapter();
-    EXPECT_FALSE(a->GenerateCapacityEvents().empty());
-    EXPECT_FALSE(a->GenerateBandwidthEvents().empty());
+    EXPECT_FALSE(LlcEventUtils::GenerateCapacityEvents().empty());
+    EXPECT_FALSE(LlcEventUtils::GenerateBandwidthEvents().empty());
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_EncodeDecodeSysConfJson)
@@ -4992,9 +5003,11 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_CheckJsonConfig_AllSwitchNames)
     MOCKER_CPP(&ParamValidation::CheckMemServiceflowValid).stubs().will(returnValue(true));
     EXPECT_TRUE(a->CheckJsonConfig("sys_mem_serviceflow", v));
     GlobalMockObject::verify();
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&ParamValidation::CheckTaskBlockValid).stubs().will(returnValue(true));
     EXPECT_TRUE(a->CheckJsonConfig("task_block", v));
     GlobalMockObject::verify();
+#endif
     MOCKER_CPP(&ParamValidation::CheckParamEmptyInvalid).stubs().will(returnValue(true));
     EXPECT_TRUE(a->CheckJsonConfig("unknown", v));
 }

@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include "config_manager.h"
 #include <string>
 #include <algorithm>
@@ -15,7 +15,6 @@
 #include "utils/utils.h"
 #include "errno/error_code.h"
 #include "config/config.h"
-#include "config/closed/config_manager.h"
 #include "validation/param_validation.h"
 #include "ascend_hal.h"
 #include "ai_drv_dev_api.h"
@@ -52,7 +51,6 @@ int32_t ConfigManager::Init()
         MSPROF_LOGD("ConfigManager has been inited");
         return PROFILING_SUCCESS;
     }
-    // get device num and id list
     int32_t devNum = DrvGetDevNum();
     if (devNum <= 0) {
         MSPROF_LOGW("Get device num %d.", devNum);
@@ -74,12 +72,16 @@ int32_t ConfigManager::Init()
         ret = halGetDeviceInfo(devId, static_cast<int32_t>(MODULE_TYPE_SYSTEM),
             static_cast<int32_t>(INFO_TYPE_VERSION), &versionInfo);
         if (ret == DRV_ERROR_NONE) {
-            chipId = ((static_cast<uint64_t>(versionInfo) >> 8) & 0xff); // 8:shift 8 bits, get the low 8 bits(0xff)
+            chipId = ((static_cast<uint64_t>(versionInfo) >> 8) & 0xff);
             break;
         } else if (ret == DRV_ERROR_NOT_SUPPORT) {
             MSPROF_LOGW("Driver doesn't support device type version by halGetDeviceInfo interface, ret=%d"
-                ", set PlatformType::HELPER_DEVICE_TYPE", static_cast<int32_t>(ret));
-            chipId = static_cast<uint32_t>(PlatformType::HELPER_DEVICE_TYPE);
+                ", set default PlatformType", static_cast<int32_t>(ret));
+#ifndef BUILD_OPEN_PROJECT
+            chipId = static_cast<uint32_t>(PlatformType::MDC_TYPE);
+#else
+            chipId = static_cast<uint32_t>(PlatformType::CLOUD_TYPE);
+#endif // BUILD_OPEN_PROJECT
             break;
         }
     }
@@ -155,7 +157,11 @@ std::string ConfigManager::GetChipIdStr()
     if (iter != configMap_.end()) {
         return iter->second;
     }
+#ifdef BUILD_OPEN_PROJECT
+    return std::to_string(static_cast<uint32_t>(PlatformType::CLOUD_TYPE));
+#else
     return std::to_string(static_cast<uint32_t>(PlatformType::MINI_TYPE));
+#endif // BUILD_OPEN_PROJECT
 }
 
 PlatformType ConfigManager::GetPlatformType() const
@@ -163,22 +169,35 @@ PlatformType ConfigManager::GetPlatformType() const
     auto iter =  configMap_.find(TYPE_CONFIG);
     if (iter != configMap_.end()) {
         int32_t typeInt = 0;
+#ifdef BUILD_OPEN_PROJECT
+        FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, iter->second), return PlatformType::CLOUD_TYPE, 
+            "iter->second %s is invalid", iter->second.c_str());
+#else
         FUNRET_CHECK_EXPR_ACTION(!Utils::StrToInt32(typeInt, iter->second), return PlatformType::MINI_TYPE, 
             "iter->second %s is invalid", iter->second.c_str());
+#endif // BUILD_OPEN_PROJECT
         auto type = static_cast<PlatformType>(typeInt);
         return type;
     }
+#ifdef BUILD_OPEN_PROJECT
+    return PlatformType::CLOUD_TYPE;
+#else
     return PlatformType::MINI_TYPE;
+#endif // BUILD_OPEN_PROJECT
 }
 
 bool ConfigManager::IsDriverSupportLlc() const
 {
     PlatformType type = GetPlatformType();
-    if (type == PlatformType::CLOUD_TYPE || type == PlatformType::DC_TYPE || type == PlatformType::MDC_TYPE ||
-        type == PlatformType::CHIP_V4_1_0 || type == PlatformType::MINI_V3_TYPE || type == PlatformType::CHIP_TINY_V1 ||
+    if (type == PlatformType::CLOUD_TYPE || type == PlatformType::DC_TYPE || 
+        type == PlatformType::CHIP_V4_1_0 || type == PlatformType::MINI_V3_TYPE
+#ifndef BUILD_OPEN_PROJECT
+        || type == PlatformType::MDC_TYPE || type == PlatformType::CHIP_TINY_V1 ||
         type == PlatformType::CHIP_MDC_MINI_V3 || type == PlatformType::CHIP_MDC_LITE || type == PlatformType::CHIP_MDC_V2 ||
         type == PlatformType::CHIP_CLOUD_V3 || type == PlatformType::CHIP_CLOUD_V4 ||
-        type == PlatformType::CHIP_MDC_LITE_V2) {
+        type == PlatformType::CHIP_MDC_LITE_V2
+#endif // BUILD_OPEN_PROJECT
+        ) {
         return true;
     }
     return false;

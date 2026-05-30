@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
-# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
 # Please refer to the License for details. You may not use this file except in compliance with the License.
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
@@ -26,24 +26,22 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed/config_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config/config_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/config/feature_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/memory/chunk_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/platform/platform_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/json/json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/statistics/perf_count.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/thread/thread_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils/utils.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils/llc_event_utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/common/validation/param_validation_closed.cpp
     ${MSPROF_SOURCE_DIR}/basic/osal/osal.c
     ${MSPROF_SOURCE_DIR}/dvvp/depend/stub/error_manager/msprof_error_manager_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/channel/ai_drv_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/mini/ai_drv_dsmi_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_register.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_soc.cpp
@@ -51,7 +49,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_comm_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_hardware_mem_job.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_hardware_mem_job_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_dvpp_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_lpm_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_inter_connection_job.cpp
@@ -63,7 +60,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_instr_perf_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_adprof_job.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_adprof_job_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicore_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_aicpu_job.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_sys_info_job.cpp
@@ -83,7 +79,6 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/dynamic_profiling/src/dyn_prof_thread.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/dynamic_profiling/src/dyn_prof_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/src/prof_acl_mgr.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/src/prof_acl_mgr_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/src/uploader_dumper.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_reporter.cpp
@@ -99,12 +94,10 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/info_json.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_params_adapter.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_params_adapter_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_task.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/task_relationship_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
@@ -125,6 +118,26 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/aicpu/prof_hal_plugin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_v3_platform.cpp
+)
+if(NOT BUILD_OPEN_PROJECT)
+    list(APPEND src_file
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
+        ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_commercial.cpp
+    )
+endif()
+list(APPEND src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_aicpu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_mstx_plugin.cpp
@@ -137,10 +150,8 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_closed.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode_closed.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_host_sys.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter_closed.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_task.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/env_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/application.cpp
@@ -175,8 +186,8 @@ set(libmsprofHeaderDir
     ${TOP_DIR}/pkg_inc/aicpu_sched
     ${TOP_DIR}/src/dfx/adump/inc/metadef/external
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/closed
-    ${MSPROF_SOURCE_DIR}/dvvp/common/config/closed
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/include
@@ -194,7 +205,6 @@ target_include_directories(prof_hal_utest PRIVATE
     ${TOP_DIR}/abl/msprof/inc/toolchain
     ${TOP_DIR}/inc/external/acl
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
-    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/common/include
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/drvprof/include
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/dynamic_profiling/include
@@ -208,7 +218,6 @@ target_include_directories(prof_hal_utest PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/common/validation
     ${MSPROF_SOURCE_DIR}/dvvp/common/queue
     ${MSPROF_SOURCE_DIR}/dvvp/common/singleton
-    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
     ${MSPROF_SOURCE_DIR}/dvvp/common/config
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/dvvp/message
@@ -257,6 +266,9 @@ target_compile_definitions(prof_hal_utest PRIVATE
     MSPROF_DEBUG
     google=ascend_private
 )
+if(BUILD_OPEN_PROJECT)
+    target_compile_definitions(prof_hal_utest PRIVATE BUILD_OPEN_PROJECT)
+endif()
 
 target_link_libraries(prof_hal_utest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>

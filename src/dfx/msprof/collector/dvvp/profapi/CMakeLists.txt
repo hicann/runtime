@@ -225,7 +225,7 @@ install(TARGETS profapi_lite_share OPTIONAL
 
 ####################### libprofapi_lite.so ###########################
 ####################### libprofapi.so device side ###########################
-if (NOT ENABLE_OPEN_SRC)
+if (NOT ENABLE_OPEN_SRC AND NOT BUILD_OPEN_PROJECT)
     add_library(profapi_share_device SHARED
         src/prof_device_api.cpp
     )

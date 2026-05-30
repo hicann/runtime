@@ -357,6 +357,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAicoreMetricsIsValid) {
     EXPECT_EQ(false, entry->CheckAicoreMetricsIsValid(aicoreMetrics));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckL2CacheEventsValid) {
     using namespace analysis::dvvp::common::validation;
     GlobalMockObject::verify();
@@ -407,6 +408,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckL2CacheEventsValid) {
     EXPECT_EQ(false, entry->CheckSocPmuEventsValid(ProfSocPmuType::PMU_TYPE_HA, events));
     Platform::instance()->Uninit();
 }
+#endif
 
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, IsValidSleepPeriod) {
     GlobalMockObject::verify();
@@ -526,7 +528,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventCoresIsValid) {
     bool ret = ParamValidation::instance()->CheckAiCoreEventCoresIsValid(coreId);
     EXPECT_EQ(false, ret);
 }
-
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventsIsValidMdcLiteV2) {
     using namespace analysis::dvvp::common::validation;
     GlobalMockObject::verify();
@@ -577,6 +579,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTaskBlockValidMdcLiteV2) {
 
     EXPECT_EQ(false, ParamValidation::instance()->CheckTaskBlockValid("--task-block", "on"));
 }
+#endif // BUILD_OPEN_PROJECT
 
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckFreqIsValid) {
     MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const std::string) const)
@@ -599,6 +602,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckFreqIsValid) {
     EXPECT_EQ(false, ParamValidation::instance()->CheckFreqIsValid(switchName, freq));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckLlcConfigValid) {
     MOCKER_CPP(&Platform::GetPlatformType)
         .stubs()
@@ -615,6 +619,7 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckLlcConfigValid) {
     llc = "write";
     EXPECT_EQ(true, ParamValidation::instance()->CheckLlcConfigValid(llc));
 }
+#endif
 
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckOpTypeIsValid) {
     MOCKER_CPP(&Platform::CheckIfSupport, bool (Platform::*)(const PlatformFeature) const)

@@ -2987,5 +2987,145 @@ std::string ProfAclMgr::GetOutputPath() const
     }
     return GenerateProfMainName();
 }
+
+void ProfAclMgr::TaskBasedCfgTrfToReq(const uint64_t dataTypeConfig, ProfAicoreMetrics aicMetrics,
+    SHARED_PTR_ALIA<ProfApiStartReq> feature) const
+{
+    MSPROF_LOGI("Begin to transfer task-based msprof StartCfg to api StartReq");
+    feature->featureName = PROF_FEATURE_TASK;
+#ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
+        if ((dataTypeConfig & PROF_SCHEDULE_TIMELINE_MASK) != 0 ||
+            (dataTypeConfig & PROF_TASK_TIME_MASK) != 0) {
+            feature->tsTimeline = "on";
+        }
+    } else
+#endif // BUILD_OPEN_PROJECT
+    if ((dataTypeConfig & PROF_TASK_TIME_MASK) != 0) {
+        feature->hwtsLog = "on";
+    }
+    if ((dataTypeConfig & PROF_SCHEDULE_TRACE_MASK) != 0) {
+        feature->tsTaskTrack = "on";
+    }
+    if ((dataTypeConfig & PROF_TRAINING_TRACE_MASK) != 0) {
+        feature->tsFwTraining = "on";
+    }
+    SHARED_PTR_ALIA<ProfApiSysConf> conf = nullptr;
+    MSVP_MAKE_SHARED0(conf, ProfApiSysConf, return);
+    std::string metrics;
+    AicoreMetricsEnumToName(aicMetrics, metrics);
+    if ((dataTypeConfig & PROF_AICORE_METRICS_MASK) != 0 && !metrics.empty()) {
+        conf->aicoreMetrics = metrics;
+        conf->aivMetrics = metrics;
+    }
+    if ((dataTypeConfig & PROF_L2CACHE_MASK) != 0) {
+        conf->l2 = MSVP_PROF_ON;
+    }
+    if (!conf->aicoreMetrics.empty() || !conf->aivMetrics.empty() || !conf->l2.empty()) {
+        feature->taskTraceConf = ProfParamsAdapter::instance()->EncodeSysConfJson(conf);
+    }
+}
+
+void ProfAclMgr::AicoreMetricsEnumToName(ProfAicoreMetrics aicMetrics, std::string &name) const
+{
+    switch (aicMetrics) {
+        case PROF_AICORE_ARITHMETIC_UTILIZATION:
+            name = ARITHMETIC_UTILIZATION;
+            break;
+        case PROF_AICORE_PIPE_UTILIZATION:
+            name = PIPE_UTILIZATION;
+            break;
+        case PROF_AICORE_PIPE_EXECUTE_UTILIZATION:
+            name = PIPE_EXECUTION_UTILIZATION;
+            break;
+        case PROF_AICORE_MEMORY_BANDWIDTH:
+            name = MEMORY_BANDWIDTH;
+            break;
+        case PROF_AICORE_L0B_AND_WIDTH:
+            name = L0B_AND_WIDTH;
+            break;
+        case PROF_AICORE_RESOURCE_CONFLICT_RATIO:
+            name = RESOURCE_CONFLICT_RATIO;
+            break;
+        case PROF_AICORE_MEMORY_UB:
+            name = MEMORY_UB;
+            break;
+        default:
+            AicoreMetricsEnumToNameTwo(aicMetrics, name);
+    }
+}
+
+void ProfAclMgr::AicoreMetricsEnumToNameTwo(ProfAicoreMetrics aicMetrics, std::string &name) const
+{
+    std::string value = "";
+    std::string reason = "The aicore metrics enum is not supported on the current platform";
+    switch (aicMetrics) {
+        case PROF_AICORE_L2_CACHE:
+            if (
+#ifndef BUILD_OPEN_PROJECT
+                ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE ||
+                ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
+#endif // BUILD_OPEN_PROJECT
+                ConfigManager::instance()->GetPlatformType() == PlatformType::CLOUD_TYPE ||
+                ConfigManager::instance()->GetPlatformType() == PlatformType::DC_TYPE) {
+                value = L2_CACHE_ENUM;
+                break;
+            }
+            name = L2_CACHE;
+            break;
+        case PROF_AICORE_MEMORY_ACCESS:
+            if (ConfigManager::instance()->GetPlatformType() != PlatformType::CHIP_V4_1_0) {
+                value = MEMORY_ACCESS_ENUM;
+                break;
+            }
+            name = MEMORY_ACCESS;
+            break;
+        case PROF_AICORE_NONE:
+            break;
+        default:
+            value = std::to_string(static_cast<uint32_t>(aicMetrics));
+    }
+
+    if (!value.empty()) {
+        MSPROF_LOGE("Invalid aicore metrics enum: %s", value.c_str());
+        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({value, "aicoreMetrics", reason}));
+    }
+}
+
+int32_t ProfAclMgr::MsprofAclJsonMetricsConstruct(NanoJson::Json &acljsonCfg)
+{
+    std::string aiCoreMetrics;
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
+#ifndef BUILD_OPEN_PROJECT
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
+#endif // BUILD_OPEN_PROJECT
+        ) {
+        aiCoreMetrics = GetJsonMetricsParam(acljsonCfg, "aic_metrics", PIPE_EXECUTION_UTILIZATION,
+            PIPE_EXECUTION_UTILIZATION);
+    } else {
+        aiCoreMetrics = GetJsonMetricsParam(acljsonCfg, "aic_metrics", PIPE_UTILIZATION, PIPE_UTILIZATION);
+    }
+    std::string aiVectMetrics = aiCoreMetrics;
+    ConfigManager::instance()->GetVersionSpecificMetrics(aiCoreMetrics);
+    auto ret = Platform::instance()->GetAicoreEvents(aiCoreMetrics, params_->ai_core_profiling_events);
+    ret = Platform::instance()->GetAicoreEvents(aiVectMetrics, params_->aiv_profiling_events);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("The parameter of aic_metrics in aclJsonConfig is invalid");
+        MSPROF_INPUT_ERROR("EK0003", std::vector<std::string>({"config", "value", "reason"}),
+            std::vector<std::string>({
+                "aic_metrics", aiCoreMetrics, "The parameter of aic_metrics in aclJsonConfig is invalid"
+            }));
+        return MSPROF_ERROR_CONFIG_INVALID;
+    }
+    params_->ai_core_metrics = aiCoreMetrics;
+    params_->aiv_metrics = aiVectMetrics;
+    MSPROF_LOGI("MsprofInitAclJson, aicoreMetricsType:%s, aicoreEvents:%s, hcclTrace: %s",
+        params_->ai_core_metrics.c_str(), params_->ai_core_profiling_events.c_str(), params_->hcclTrace.c_str());
+    return MSPROF_ERROR_NONE;
+}
+
 }   // namespace Api
 }   // namespace Msprofiler

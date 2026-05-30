@@ -25,6 +25,52 @@ int32_t DrvGetAicoreInfo(int32_t deviceId, int64_t &freq)
     return static_cast<int32_t>(halGetDeviceInfo(static_cast<uint32_t>(deviceId),
         static_cast<int32_t>(MODULE_TYPE_AICORE), static_cast<int32_t>(INFO_TYPE_FREQUE), &freq));
 }
+
+std::string DrvGeAicFrq(int32_t deviceId)
+{
+    const std::string defAicFrq = ConfigManager::instance()->GetAicDefFrequency();
+    if (deviceId < 0) {
+        return defAicFrq;
+    }
+
+#ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
+        return defAicFrq;
+    }
+#endif // BUILD_OPEN_PROJECT
+    int64_t freq = 0;
+    int32_t ret = DrvGetAicoreInfo(deviceId, freq);
+    if (ret != PROFILING_SUCCESS || freq == 0) {
+        MSPROF_LOGW("Failed to get aic frequency, deviceId=%d, ret=%d", deviceId, ret);
+        return defAicFrq;
+    }
+
+    MSPROF_LOGI("Cube Core current frequency %" PRId64 ".", freq);
+    return std::to_string(freq);
 }
+
+std::string DrvGeAivFrq(int32_t deviceId)
+{
+    const std::string defAivFrq = ConfigManager::instance()->GetAicDefFrequency();
+    if (deviceId < 0) {
+        return defAivFrq;
+    }
+#ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
+        return defAivFrq;
+    }
+#endif // BUILD_OPEN_PROJECT
+    int64_t freq = 0;
+    const int32_t ret = static_cast<int32_t>(halGetDeviceInfo(static_cast<uint32_t>(deviceId),
+        static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE), static_cast<int32_t>(INFO_TYPE_FREQUE), &freq));
+    if (ret != DRV_ERROR_NONE || freq == 0) {
+        MSPROF_LOGW("Failed to get aiv frequency, deviceId=%d, ret=%d", deviceId, ret);
+        return defAivFrq;
+    }
+
+    MSPROF_LOGI("Vector Core current frequency %" PRId64 ".", freq);
+    return std::to_string(freq);
 }
-}
+}  // namespace Driver
+}  // namespace Dvvp
+}  // namespace Analysis

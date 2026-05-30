@@ -360,6 +360,32 @@ bool DrvGetDeviceStatus(const uint32_t deviceId)
     return true;
 }
 
+int32_t DrvGetAivNum(uint32_t deviceId, int64_t &aivNum)
+{
+    std::set<PlatformType> unsupportTypeSet{PlatformType::CLOUD_TYPE, PlatformType::DC_TYPE};
+#ifndef BUILD_OPEN_PROJECT
+    unsupportTypeSet.insert(PlatformType::MINI_TYPE);
+#endif // BUILD_OPEN_PROJECT
+    auto type = ConfigManager::instance()->GetPlatformType();
+    if (unsupportTypeSet.find(type) != unsupportTypeSet.cend()) {
+        aivNum = 0;
+        MSPROF_LOGI("Driver doesn't support aiv count retrieval by halGetDeviceInfo interface");
+        return PROFILING_SUCCESS;
+    }
+    drvError_t ret = halGetDeviceInfo(deviceId, static_cast<int32_t>(MODULE_TYPE_VECTOR_CORE),
+    static_cast<int32_t>(INFO_TYPE_CORE_NUM), &aivNum);
+    if (ret == DRV_ERROR_NOT_SUPPORT) {
+        MSPROF_LOGW("Driver doesn't support aiv count retrieval by halGetDeviceInfo interface, "
+            "deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+        return PROFILING_SUCCESS;
+    } else if (ret != DRV_ERROR_NONE) {
+        MSPROF_LOGE("Failed to get aiv count, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+        return PROFILING_FAILED;
+    }
+
+    MSPROF_LOGI("Succeeded to get aiv count, deviceId=%u, aivNum=%lld", deviceId, aivNum);
+    return PROFILING_SUCCESS;
+}
 }  // namespace driver
 }  // namespace dvvp
 }  // namespace analysis

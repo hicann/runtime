@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #ifndef DVVP_COLLECT_PLATFORM_PLATFORM_INTERFACE_H
 #define DVVP_COLLECT_PLATFORM_PLATFORM_INTERFACE_H
@@ -43,12 +43,17 @@ constexpr char INTERFACE_NTS_PIPEUTILIZATION[] = "";
 constexpr char EMPTY_FREQUENCY[] = "";
 
 enum PlatformTypeEnum {
+#ifndef BUILD_OPEN_PROJECT
     CHIP_MINI        = 0,
+#endif // BUILD_OPEN_PROJECT
     CHIP_CLOUD       = 1,
+#ifndef BUILD_OPEN_PROJECT
     CHIP_MDC         = 2,
+#endif // BUILD_OPEN_PROJECT
     CHIP_DC          = 4,
     CHIP_CLOUD_V2    = 5,
     CHIP_MINI_V3     = 7,
+#ifndef BUILD_OPEN_PROJECT
     CHIP_TINY_V1     = 8,
     CHIP_NANO_V1     = 9,
     CHIP_MDC_MINI_V3 = 11,
@@ -58,11 +63,13 @@ enum PlatformTypeEnum {
     CHIP_MDC_V2      = 17,
     CHIP_MDC_LITE_V2 = 18,
     CHIP_END
+#else
+    CHIP_END         = 17
+#endif // BUILD_OPEN_PROJECT
 };
 
 enum PlatformFeature {
     PLATFORM_FEATURE_INVALID,
-    // Task
     PLATFORM_TASK_SWITCH,
     PLATFORM_TASK_ASCENDCL,
     PLATFORM_TASK_FWK,
@@ -112,7 +119,6 @@ enum PlatformFeature {
     PLATFORM_TASK_SOC_PMU,
     PLATFORM_TASK_SOC_PMU_NOC,
     PLATFORM_TASK_SCALE,
-    // System-device
     PLATFORM_SYS_DEVICE_SYS_CPU_MEM_USAGE,
     PLATFORM_SYS_DEVICE_ALL_PID_CPU_MEM_USAGE,
     PLATFORM_SYS_DEVICE_TS_CPU_HOT_FUNC_PMU,
@@ -133,7 +139,6 @@ enum PlatformFeature {
     PLATFORM_SYS_DEVICE_QOS,
     PLATFORM_SYS_DEVICE_US,
     PLATFORM_SYS_DEVICE_AICPU_HSCB,
-    // System-host
     PLATFORM_SYS_HOST_ONE_PID_CPU,
     PLATFORM_SYS_HOST_ALL_PID_CPU,
     PLATFORM_SYS_HOST_ONE_PID_MEM,
@@ -143,7 +148,6 @@ enum PlatformFeature {
     PLATFORM_SYS_HOST_NETWORK,
     PLATFORM_SYS_HOST_SYS_CPU,
     PLATFORM_SYS_HOST_SYS_MEM,
-    // Feature collection
     PLATFORM_COLLECTOR_ACP,
     PLATFORM_DIAGNOSTIC_COLLECTION,
     PLATFORM_AOE_SUPPORT_FUNC,
@@ -154,7 +158,6 @@ enum PlatformFeature {
     PLATFORM_AICPU_HCCL,
     PLATFORM_ACLAPI_SETDEVICE_ENABLE,
     PLATFORM_TASK_NTS,
-    // MAX
     PLATFORM_COLLECTOR_TYPES_MAX
 };
 
@@ -182,7 +185,9 @@ const std::map<std::string, std::vector<PlatformFeature>> PLATFORM_FEATURE_MAP =
     {"ge_api",                      {PLATFORM_TASK_GE_API}},
     {"task_memory",                 {PLATFORM_TASK_MEMORY}},
     {"task_trace",                  {PLATFORM_TASK_TRACE}},
+#ifndef BUILD_OPEN_PROJECT
     {"task_time",                   {PLATFORM_TASK_TRACE}},
+#endif // BUILD_OPEN_PROJECT
     {"aicpu",                       {PLATFORM_TASK_AICPU}},
     {"l2",                          {PLATFORM_TASK_L2_CACHE_REG}},
     {"hccl",                        {PLATFORM_TASK_HCCL}},

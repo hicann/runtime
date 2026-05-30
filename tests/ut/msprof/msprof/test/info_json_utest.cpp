@@ -52,6 +52,7 @@ protected:
     }
 };
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(INFO_JSON_TEST, GetHwtsFreq) {
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -63,6 +64,7 @@ TEST_F(INFO_JSON_TEST, GetHwtsFreq) {
     freq = "1000.1";
     EXPECT_EQ("1000.1", infoJson.GetHwtsFreq(freq));
 }
+#endif
 
 TEST_F(INFO_JSON_TEST, GetHwtsFreq_NotCloudV3) {
     // else branch when platform is not CHIP_CLOUD_V3 -> input returned as-is

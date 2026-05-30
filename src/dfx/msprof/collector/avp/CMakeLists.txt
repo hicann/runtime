@@ -255,16 +255,14 @@ install(TARGETS profimpl_fwk_lite_share OPTIONAL
 set(proftransportCpp
     ../dvvp/common/utils/utils.cpp
     ../dvvp/common/cmd_log/cmd_log.cpp
-    ../dvvp/common/config/closed/config_manager.cpp
+    ../dvvp/common/config/config_manager.cpp
     ../dvvp/common/statistics/perf_count.cpp
     ../dvvp/transport/file_ageing.cpp
-    ../dvvp/transport/file_ageing_closed.cpp
     ../dvvp/transport/file_slice.cpp
     ../dvvp/transport/file_transport.cpp
     ../dvvp/transport/file_manager.cpp
     ../dvvp/transport/file_interface.cpp
     ../dvvp/driver/devmgmt/ai_drv_dev_api.cpp
-    ../dvvp/driver/devmgmt/ai_drv_dev_api_closed.cpp
     ${CppPath}
 )
 
@@ -275,7 +273,6 @@ set(proftransportInc
     ../dvvp/common/utils
     ../dvvp/common/cmd_log
     ../dvvp/common/config
-    ../dvvp/common/config/closed
     ../dvvp/common/logger
     ../dvvp/common/statistics
     ../dvvp/driver/inc

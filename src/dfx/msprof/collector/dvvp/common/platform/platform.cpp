@@ -25,6 +25,7 @@ using namespace analysis::dvvp::common::config;
 
 const std::string ASCEND_HAL_LIB = "libascend_hal.so";
 constexpr uint32_t SUPPORT_OSC_FREQ_API_VERSION = 0x071905;
+constexpr uint32_t SUPPORT_ADPROF_VERSION = 0x72316;
 
 template <class T>
 inline T LoadDlsymApi(VOID_PTR hanle, const std::string &name)
@@ -520,7 +521,36 @@ uint64_t Platform::GetDefaultDataTypeConfig() const
 {
     return platform_->GetDefaultDataTypeConfig();
 }
+
+bool Platform::CheckIfSupportAdprof(uint32_t deviceId) const
+{
+    if (deviceId == DEFAULT_HOST_ID) {
+        return false;
+    }
+
+    if (DrvGetApiVersion() < SUPPORT_ADPROF_VERSION
+#ifndef BUILD_OPEN_PROJECT
+        || GetPlatformType() == CHIP_MINI
+#endif // BUILD_OPEN_PROJECT
+        ) {
+        MSPROF_LOGI("Current version not support driver channel.");
+        return false;
+    }
+    constexpr uint32_t vmngNormalNoneSplitMode = 0;
+    uint32_t mode = 0;
+    int32_t ret = ascendHalAdaptor_.DrvGetDeviceSplitMode(deviceId, &mode);
+    if (ret != DRV_ERROR_NONE) {
+        MSPROF_LOGE("Call drvGetDeviceSplitMode failed, return:%d.", ret);
+        return false;
+    }
+    if ((GetPlatformType() == CHIP_DC || GetPlatformType() == CHIP_CLOUD) && mode != vmngNormalNoneSplitMode) {
+        MSPROF_LOGI("This chip not support driver channel in split mode.");
+        return false;
+    }
+
+    return true;
 }
-}
-}
-}
+} // namespace Platform
+} // namespace Common
+} // namespace Dvvp
+} // namespace Analysis

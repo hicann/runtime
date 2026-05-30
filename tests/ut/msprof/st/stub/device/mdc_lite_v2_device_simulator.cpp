@@ -81,24 +81,15 @@ int32_t MdcLiteV2DeviceSimulator::ProfDrvGetChannels(ChannelList &channels)
 
 int32_t MdcLiteV2DeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType, int64_t *value)
 {
+#ifndef BUILD_OPEN_PROJECT
     if (moduleType == MODULE_TYPE_SYSTEM &&
         infoType == INFO_TYPE_VERSION) {
         *value = (int64_t)StPlatformType::CHIP_MDC_LITE_V2 << 8;
     }
+#endif
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 18;
-    }
-
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 18;
-    }
-
-    if (moduleType == MODULE_TYPE_AICPU &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 8;
+    if (SetCoreNumValue(moduleType, infoType, value, 18, 18, 8)) {
+        return 0;
     }
 
     return 0;

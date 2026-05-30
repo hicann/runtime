@@ -236,6 +236,7 @@ extern "C" drvError_t halGetDeviceInfoByBuff(uint32_t devId, int32_t moduleType,
     return g_error;
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(MSPROF_MANAGER_UTEST, PlatformDavidGetQosProfileInfo) {
     GlobalMockObject::verify();
     // david
@@ -257,6 +258,7 @@ TEST_F(MSPROF_MANAGER_UTEST, PlatformDavidGetQosProfileInfo) {
     EXPECT_EQ(2, events.size());
     Platform::instance()->Uninit();
 }
+#endif
 
 TEST_F(MSPROF_MANAGER_UTEST, PlatformMilanGetQosProfileInfo) {
     GlobalMockObject::verify();

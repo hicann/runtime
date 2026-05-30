@@ -475,6 +475,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     configManger->Init();
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIV_METRICS));
 
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE));
@@ -484,13 +485,17 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     cmdInfo.args[ARGS_AIC_METRICS] = "L2Cache";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIV_METRICS));
+#endif
 
+#ifndef BUILD_OPEN_PROJECT
     cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
     cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
+#endif
 
     GlobalMockObject::verify();
+#ifndef BUILD_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_CLOUD_V4));
@@ -517,6 +522,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo) {
     cmdInfo.args[ARGS_OPTYPE] = "Index";
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckCmdScaleIsValid(cmdInfo));
 
+#endif
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -839,6 +845,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckDynProfValid)
     EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckDynProfValid(cmdInfo));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(INPUT_PARSER_UTEST, AddAicMetricsArgs)
 {
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -853,6 +860,7 @@ TEST_F(INPUT_PARSER_UTEST, AddAicMetricsArgs)
     argsManager->PrintHelp();
     EXPECT_EQ(argsManager->argsList_.size(), 2);
 }
+#endif
 
 TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3) {
     InputParser parser = InputParser();
@@ -871,6 +879,7 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3) {
     EXPECT_EQ(PROFILING_FAILED, parser.PreCheckPlatform(ARGS_INSTR_PROFILING_FREQ, argv));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2) {
     InputParser parser = InputParser();
     const char * argv[] = {"msprof", "--aiv=on"};
@@ -920,6 +929,7 @@ TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2) {
     EXPECT_EQ("task-block", argsManager.argsList_[0].name_);
     EXPECT_NE(std::string::npos, argsManager.argsList_[0].detail_.find("'all', 'on', 'off'."));
 }
+#endif // BUILD_OPEN_PROJECT
 
 TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P) {
     InputParser parser = InputParser();

@@ -67,6 +67,7 @@ TEST_F(PLATFORM_UTEST, GetPlatform) {
     EXPECT_EQ(SysPlatformType::INVALID, platform->GetPlatform());
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnMdcV2) {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
@@ -78,6 +79,7 @@ TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnMdcV2) {
     EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35",
         platform->GetNtsEvents("PipeUtilization"));
 }
+#endif
 
 TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2) {
     auto platform = Platform::instance();
@@ -89,6 +91,7 @@ TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2) {
     EXPECT_EQ(false, platform->CheckIfSupport(PLATFORM_TASK_NTS));
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents) {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
@@ -105,6 +108,7 @@ TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents) {
     EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35",
         params->ntsPmuEvents);
 }
+#endif
 
 TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationRejectsUnsupportedPlatform) {
     auto platform = Platform::instance();
@@ -271,6 +275,7 @@ TEST_F(PLATFORM_UTEST, ProfSetConfigRejectsNtsMetricsWhenPlatformUnsupported) {
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM,
         Msprofiler::AclApi::ProfSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
 }
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
     GlobalMockObject::verify();
     MdcLiteV2Platform platform;
@@ -338,4 +343,5 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection) {
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("L2Cache", aicEvent));
     EXPECT_EQ("0x424,0x425,0x426,0x42a,0x42b,0x42c", aicEvent);
 }
+#endif // BUILD_OPEN_PROJECT
 }

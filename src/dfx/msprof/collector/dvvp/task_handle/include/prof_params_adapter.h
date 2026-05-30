@@ -98,9 +98,6 @@ private:
                        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
     void UpdateCpuProfiling(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> dstParams,
                             SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> srcParams) const;
-    std::string GenerateCapacityEvents();
-    std::string GenerateBandwidthEvents();
-    void GenerateLlcDefEvents(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
 
     void UpdateOpFeature(SHARED_PTR_ALIA<ProfApiStartReq> feature,
                          SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;

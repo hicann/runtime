@@ -31,7 +31,11 @@ int32_t TinyDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType,
 {
     if (moduleType == MODULE_TYPE_SYSTEM &&
         infoType == INFO_TYPE_VERSION) {
+#ifndef BUILD_OPEN_PROJECT
         *value = (int64_t)StPlatformType::CHIP_TINY_V1 << 8;
+#else
+        *value = (int64_t)0 << 8;
+#endif
     }
 
     if (moduleType == MODULE_TYPE_AICORE &&

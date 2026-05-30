@@ -554,6 +554,7 @@ TEST_F(TRANSPORT_TRANSPORT_TRANSPORTFACTORY_TEST, ParseMilanOpMixAicData) { // a
     Platform::instance()->Uninit();
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(TRANSPORT_TRANSPORT_TRANSPORTFACTORY_TEST, ParseDavidOpMixAicData) { // aic context，aiv block
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -658,7 +659,9 @@ TEST_F(TRANSPORT_TRANSPORT_TRANSPORTFACTORY_TEST, ParseDavidOpMixAicData) { // a
     EXPECT_EQ(ret, PROFILING_SUCCESS);
     Platform::instance()->Uninit();
 }
+#endif
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(TRANSPORT_TRANSPORT_TRANSPORTFACTORY_TEST, ParseDavidOpBiuPerf) { // biuPerf
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -796,6 +799,7 @@ TEST_F(TRANSPORT_TRANSPORT_TRANSPORTFACTORY_TEST, ParseDavidOpBiuPerf) { // biuP
     ret = trans->SendBuffer(chunk);
     EXPECT_EQ(ret, PROFILING_SUCCESS);
 }
+#endif
 
 ////////////////////////////////////////FILETransport/////////////////////////////////////////
 class TRANSPORT_TRANSPORT_ITRANSPORT_TEST: public testing::Test {

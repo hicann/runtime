@@ -1136,6 +1136,7 @@ TEST_F(RUNNING_MODE_UTEST, StartSysTask) {
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(
     new analysis::dvvp::message::ProfileParams);
     Collector::Dvvp::Msprofbin::SystemMode rMode("system", params);
+    params->host_cpu_profiling = "on";
     params->devices = "0";
     MOCKER_CPP(&SystemMode::StartHostTask)
         .stubs()

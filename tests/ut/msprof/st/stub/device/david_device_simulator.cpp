@@ -83,22 +83,15 @@ int32_t DavidDeviceSimulator::GetDeviceInfo(int32_t moduleType, int32_t infoType
 {
     if (moduleType == MODULE_TYPE_SYSTEM &&
         infoType == INFO_TYPE_VERSION) {
+#ifndef BUILD_OPEN_PROJECT
         *value = (int64_t)StPlatformType::CHIP_CLOUD_V3 << 8;
+#else
+        *value = (int64_t)0 << 8;
+#endif
     }
 
-    if (moduleType == MODULE_TYPE_AICORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 18;
-    }
-
-    if (moduleType == MODULE_TYPE_VECTOR_CORE &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 18;
-    }
-
-    if (moduleType == MODULE_TYPE_AICPU &&
-        infoType == INFO_TYPE_CORE_NUM) {
-        *value = 8;
+    if (SetCoreNumValue(moduleType, infoType, value, 18, 18, 8)) {
+        return 0;
     }
 
     return 0;

@@ -13,7 +13,7 @@
 #include "utils.h"
 #include "prof_manager.h"
 #include "platform/platform.h"
-#include "config/closed/config_manager.h"
+#include "config/config_manager.h"
 #include "prof_acl_mgr.h"
 #include "hash_data.h"
 #include "prof_acl_api.h"

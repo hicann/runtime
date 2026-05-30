@@ -23,7 +23,7 @@
 #include "runtime/stream.h"
 #include "prof_dev_api.h"
 #include "prof_data_config.h"
-#include "json_parser.h"
+#include "profimpl/adapter/inc/json_parser.h"
 #include "osal.h"
 #include "utils.h"
 

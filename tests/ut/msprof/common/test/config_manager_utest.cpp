@@ -40,6 +40,7 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformType)
     EXPECT_EQ(PlatformType::MINI_TYPE, configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
+#ifndef BUILD_OPEN_PROJECT
     MOCKER(halGetDeviceInfo)
             .stubs()
             .will(returnValue(DRV_ERROR_NOT_SUPPORT))
@@ -49,17 +50,26 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformType)
     EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
+#endif
 
     configManger->Init();
     EXPECT_EQ(PlatformType::MINI_TYPE, configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
 
+#ifndef BUILD_OPEN_PROJECT
     configManger->Init();
     EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
     configManger->Uninit();
+    configManger->configMap_[TYPE_CONFIG] = "0";
+
+    configManger->Init();
+    EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    configManger->Uninit();
+#endif
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeTiny)
 {
     GlobalMockObject::verify();
@@ -73,6 +83,7 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeTiny)
     EXPECT_EQ(PlatformType::CHIP_TINY_V1, configManger->GetPlatformType());
     configManger->Uninit();
 }
+#endif
 
 TEST_F(COMMON_CONFIG_MANAGER_TEST, IsDriverSupportLlc)
 {
@@ -80,14 +91,18 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, IsDriverSupportLlc)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
             .stubs()
             .will(returnValue(PlatformType::CLOUD_TYPE))
+#ifndef BUILD_OPEN_PROJECT
             .then(returnValue(PlatformType::CHIP_MDC_LITE_V2))
+#endif
             .then(returnValue(PlatformType::MINI_TYPE));
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
     EXPECT_EQ(true, configManger->IsDriverSupportLlc());
+#ifndef BUILD_OPEN_PROJECT
     EXPECT_EQ(true, configManger->IsDriverSupportLlc());
+#endif
     EXPECT_EQ(false, configManger->IsDriverSupportLlc());
 }
-
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
 {
     GlobalMockObject::verify();
@@ -104,6 +119,7 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
     configManger->configMap_.clear();
     configManger->Uninit();
 }
+#endif // BUILD_OPEN_PROJECT
 
 TEST_F(COMMON_CONFIG_MANAGER_TEST, GetVersionSpecificMetrics)
 {

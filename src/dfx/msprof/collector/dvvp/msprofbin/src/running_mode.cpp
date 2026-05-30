@@ -1455,6 +1455,177 @@ int32_t AnalyzeMode::RunModeTasks()
 
     return PROFILING_SUCCESS;
 }
+
+AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
+    : RunningMode(preCheckParams, "app", params)
+{
+    whiteSet_ = {
+        ARGS_OUTPUT, ARGS_STORAGE_LIMIT, ARGS_APPLICATION, ARGS_ENVIRONMENT, ARGS_DYNAMIC_PROF, ARGS_DYNAMIC_PROF_PID,
+        ARGS_AIC_MODE, ARGS_AIC_METRICS, ARGS_AIV_MODE, ARGS_AIV_METRICS, ARGS_NPU_EVENTS, ARGS_LLC_PROFILING,
+        ARGS_ASCENDCL, ARGS_AI_CORE, ARGS_AIV, ARGS_MODEL_EXECUTION, ARGS_TASK_MEMORY,
+        ARGS_RUNTIME_API, ARGS_TASK_TSFW, ARGS_TASK_TIME, ARGS_GE_API, ARGS_TASK_TRACE, ARGS_AICPU,
+        ARGS_CPU_PROFILING, ARGS_SYS_PROFILING, ARGS_PID_PROFILING, ARGS_HARDWARE_MEM, ARGS_IO_PROFILING,
+        ARGS_INTERCONNECTION_PROFILING, ARGS_DVPP_PROFILING, ARGS_TASK_BLOCK, ARGS_L2_PROFILING, ARGS_AIC_FREQ,
+        ARGS_AIV_FREQ, ARGS_INSTR_PROFILING_FREQ, ARGS_INSTR_PROFILING, ARGS_HCCL,
+#ifndef BUILD_OPEN_PROJECT
+        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+#endif // BUILD_OPEN_PROJECT
+        ARGS_SYS_SAMPLING_FREQ, ARGS_PID_SAMPLING_FREQ, ARGS_HARDWARE_MEM_SAMPLING_FREQ, ARGS_MEM_SERVICEFLOW,
+        ARGS_IO_SAMPLING_FREQ, ARGS_DVPP_FREQ,  ARGS_CPU_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ,
+        ARGS_HOST_SYS, ARGS_PYTHON_PATH, ARGS_MSPROFTX, ARGS_DELAY_PROF, ARGS_DURATION_PROF, ARGS_OPTYPE,
+        ARGS_EXPORT_TYPE, ARGS_MSTX_DOMAIN_INCLUDE, ARGS_MSTX_DOMAIN_EXCLUDE
+    };
+}
+
+int32_t RunningMode::HandleProfilingParams() const
+{
+    if (params_ == nullptr) {
+        MSPROF_LOGE("ProfileParams is not valid!");
+        return PROFILING_FAILED;
+    }
+    if (params_->devices.compare("all") == 0) {
+        params_->devices = DrvGetDevIdsStr();
+    }
+    std::string aiCoreMetrics;
+    std::string aiVectMetrics;
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
+#ifndef BUILD_OPEN_PROJECT
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
+#endif // BUILD_OPEN_PROJECT
+        ) {
+        aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_EXECUTION_UTILIZATION : params_->ai_core_metrics;
+    } else {
+        aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_UTILIZATION : params_->ai_core_metrics;
+    }
+#ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
+        aiVectMetrics = params_->aiv_metrics.empty() ? PIPE_UTILIZATION : params_->aiv_metrics;
+    } else {
+        aiVectMetrics = aiCoreMetrics;
+    }
+#else
+    aiVectMetrics = aiCoreMetrics;
+#endif // BUILD_OPEN_PROJECT
+    ConfigManager::instance()->GetVersionSpecificMetrics(aiCoreMetrics);
+    int32_t ret = Platform::instance()->GetAicoreEvents(aiCoreMetrics, params_->ai_core_profiling_events);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("The intput of ai_core_metrics is invalid");
+        return PROFILING_FAILED;
+    }
+    params_->ai_core_metrics = aiCoreMetrics;
+    ret = Platform::instance()->GetAicoreEvents(aiVectMetrics, params_->aiv_profiling_events);
+    params_->aiv_metrics = aiVectMetrics;
+    Platform::instance()->L2CacheAdaptor(params_->npuEvents, params_->l2CacheTaskProfiling,
+        params_->l2CacheTaskProfilingEvents);
+    Analysis::Dvvp::Msprof::MsprofParamsAdapter::instance()->GenerateLlcEvents(params_);
+    params_->msprofBinPid = Utils::GetPid();
+    return MsprofParamsAdapter::instance()->UpdateParams(params_);
+}
+
+void AppMode::SetDefaultParamsByPlatformType() const
+{
+    auto platformType = ConfigManager::instance()->GetPlatformType();
+#ifndef BUILD_OPEN_PROJECT
+    if (platformType == PlatformType::MDC_TYPE) {
+        if (params_->aiv_profiling.empty()) {
+            params_->aiv_profiling = "on";
+        }
+    }
+#endif // BUILD_OPEN_PROJECT
+    if (params_->taskTrace == "off" || params_->taskTime == "off") {
+        return;
+    }
+    if (Platform::instance()->CheckIfSupport(PLATFORM_TASK_STARS_ACSQ)) {
+        if (params_->stars_acsq_task.empty()) {
+            params_->stars_acsq_task = MSVP_PROF_ON;
+        }
+    } else {
+        if (params_->hwts_log.empty()) {
+            params_->hwts_log = "on";
+        }
+        if (params_->hwts_log1.empty()) {
+            params_->hwts_log1 = "on";
+        }
+    }
+    if (params_->ts_memcpy.empty()) {
+        params_->ts_memcpy = "on";
+    }
+}
+
+SystemMode::SystemMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> params)
+    : RunningMode(preCheckParams, "system", params)
+{
+    whiteSet_ = {
+        ARGS_OUTPUT, ARGS_STORAGE_LIMIT, ARGS_AIC_MODE, ARGS_SYS_DEVICES,
+        ARGS_AIC_METRICS, ARGS_AIV_MODE, ARGS_AIV_METRICS, ARGS_LLC_PROFILING,
+        ARGS_AI_CORE, ARGS_AIV, ARGS_CPU_PROFILING, ARGS_SYS_PROFILING,
+        ARGS_PID_PROFILING, ARGS_HARDWARE_MEM, ARGS_IO_PROFILING, ARGS_INTERCONNECTION_PROFILING,
+        ARGS_DVPP_PROFILING, ARGS_AIC_FREQ, ARGS_AIV_FREQ,
+#ifndef BUILD_OPEN_PROJECT
+        ARGS_SYS_LOW_POWER, ARGS_SYS_LOW_POWER_FREQ,
+#endif // BUILD_OPEN_PROJECT
+        ARGS_INSTR_PROFILING_FREQ, ARGS_INSTR_PROFILING, ARGS_SYS_SAMPLING_FREQ, ARGS_PID_SAMPLING_FREQ,
+        ARGS_HARDWARE_MEM_SAMPLING_FREQ, ARGS_IO_SAMPLING_FREQ, ARGS_DVPP_FREQ,
+        ARGS_CPU_SAMPLING_FREQ, ARGS_INTERCONNECTION_FREQ, ARGS_HOST_SYS, ARGS_SYS_PERIOD,
+        ARGS_HOST_SYS_PID, ARGS_HOST_SYS_USAGE, ARGS_HOST_SYS_USAGE_FREQ, ARGS_PYTHON_PATH,
+        ARGS_MEM_SERVICEFLOW
+    };
+    neccessarySet_ = { ARGS_OUTPUT, ARGS_SYS_PERIOD };
+}
+
+bool SystemMode::IsDeviceJob() const
+{
+    if (params_ == nullptr) {
+        return false;
+    }
+    #ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE &&
+        params_->hardware_mem.compare("on") == 0) {
+        return true;
+    }
+#endif // BUILD_OPEN_PROJECT
+    if (params_->cpu_profiling.compare("on") == 0 || params_->sys_profiling.compare("on") == 0 ||
+        params_->pid_profiling.compare("on") == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+SHARED_PTR_ALIA<ProfileParams> SystemMode::GenerateDeviceParam(SHARED_PTR_ALIA<ProfileParams> params) const
+{
+    if (params == nullptr) {
+        return nullptr;
+    }
+    SHARED_PTR_ALIA<ProfileParams> dstParams = nullptr;
+    MSVP_MAKE_SHARED0(dstParams, ProfileParams, return nullptr);
+    dstParams->result_dir = params->result_dir;
+    dstParams->sys_profiling = params->sys_profiling;
+    dstParams->sys_sampling_interval = params->sys_sampling_interval;
+    dstParams->pid_profiling = params->pid_profiling;
+    dstParams->pid_sampling_interval = params->pid_sampling_interval;
+    dstParams->cpu_profiling = params->cpu_profiling;
+    dstParams->cpu_sampling_interval = params->cpu_sampling_interval;
+    dstParams->aiCtrlCpuProfiling = params->aiCtrlCpuProfiling;
+    dstParams->ai_ctrl_cpu_profiling_events = params->ai_ctrl_cpu_profiling_events;
+    dstParams->profiling_period = params->profiling_period;
+    uintptr_t addr = reinterpret_cast<uintptr_t>(dstParams.get());
+    dstParams->job_id = Utils::ProfCreateId(static_cast<uint64_t>(addr));
+    #ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
+        dstParams->llc_profiling_events = params->llc_profiling_events;
+        dstParams->llc_profiling = params->llc_profiling;
+        dstParams->msprof_llc_profiling = params->msprof_llc_profiling;
+    }
+#endif // BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_V4_1_0) {
+        dstParams->instrProfiling = params->instrProfiling;
+        dstParams->instrProfilingFreq = params->instrProfilingFreq;
+    }
+    return dstParams;
+}
 }
 }
 }

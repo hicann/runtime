@@ -58,6 +58,23 @@ protected:
     bool isAicpuChannelRegister_{false};
     bool isCustomCpuChannelRegister_{false};
     bool isAdprofChannelRegister_{false};
+    bool SetCoreNumValue(int32_t moduleType, int32_t infoType, int64_t *value,
+                         int64_t aicoreNum, int64_t vectCoreNum, int64_t aicpuNum)
+    {
+        if (infoType != INFO_TYPE_CORE_NUM) {
+            return false;
+        }
+        if (moduleType == MODULE_TYPE_AICORE) {
+            *value = aicoreNum;
+        } else if (moduleType == MODULE_TYPE_VECTOR_CORE) {
+            *value = vectCoreNum;
+        } else if (moduleType == MODULE_TYPE_AICPU) {
+            *value = aicpuNum;
+        } else {
+            return false;
+        }
+        return true;
+    }
 
 private:
     void SampleData(uint32_t channelId, std::queue<struct Buff> &dataQueue);

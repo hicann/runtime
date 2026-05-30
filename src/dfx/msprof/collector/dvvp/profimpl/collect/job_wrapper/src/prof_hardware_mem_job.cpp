@@ -467,6 +467,28 @@ int32_t ProfQosJob::SetPeripheralConfig()
     peripheralCfg_.configSize = configSize;
     return PROFILING_SUCCESS;
 }
+
+int32_t ProfLlcJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
+{
+    CHECK_JOB_EVENT_PARAM_RET(cfg, return PROFILING_FAILED);
+    if (cfg->comParams->params->hostProfiling) {
+        return PROFILING_FAILED;
+    }
+#ifndef BUILD_OPEN_PROJECT
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE) {
+        MSPROF_LOGI("Mini LLC Profiling not transport by driver channel");
+        return PROFILING_FAILED;
+    }
+#endif // BUILD_OPEN_PROJECT
+
+    collectionJobCfg_ = cfg;
+
+    if (collectionJobCfg_->comParams->params->msprof_llc_profiling.compare(MSVP_PROF_ON) != 0) {
+        MSPROF_LOGI("LLC Profiling not enabled");
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
 }
-}
-}
+}  // namespace JobWrapper
+}  // namespace Dvvp
+}  // namespace Analysis

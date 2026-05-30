@@ -2814,6 +2814,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
     // 1951 mdc
+#ifndef BUILD_OPEN_PROJECT
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
     MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
@@ -2856,8 +2857,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice) {
     ProfAclMgr::instance()->devTasks_[64] = taskInfoMdc;
     EXPECT_EQ(ACL_SUCCESS, ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
+#endif
 }
 
+#ifndef BUILD_OPEN_PROJECT
 TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3) {
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
@@ -2920,6 +2923,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3) {
     EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->Init());
     EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
 }
+#endif
 
 TEST_F(MSPROF_ACL_CORE_STEST, OtherTest) {
     GlobalMockObject::verify();
