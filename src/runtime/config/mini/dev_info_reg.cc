@@ -167,6 +167,10 @@ static const DevProperties CHIP_MINI_PROPERTIES = {
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
     .ioDieNum = 0U,
+    .swapBufferBaseAddr = 0UL,
+    .swapBufferUpdateRegOffset = 0UL,
+    .sqSwapShift = 0U,
+    .swapBufferProfCfgOffset = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_MINI, CHIP_MINI_PROPERTIES);

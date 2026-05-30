@@ -922,6 +922,7 @@ private:
     rtError_t InitSimtPrintInfo();
     rtError_t InitCtrlSQ();
     rtError_t InitQosCfg();
+    rtError_t InitSwapBufferInfo();
     rtError_t GetQosInfoByIpc();
 
     rtError_t ParseSimtPrintInfo();

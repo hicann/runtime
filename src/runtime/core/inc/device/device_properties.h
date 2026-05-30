@@ -361,6 +361,10 @@ struct DevProperties final {
     int64_t npuArch;
     uint32_t sqDisableStatPollingCycleNum;
     uint32_t ioDieNum;
+    uint64_t swapBufferBaseAddr;
+    uint64_t swapBufferUpdateRegOffset;
+    uint32_t sqSwapShift;
+    uint32_t swapBufferProfCfgOffset;
 };
 }
 }

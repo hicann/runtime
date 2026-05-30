@@ -1364,18 +1364,18 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
 {
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
     if (taskInfo->stream->IsSoftwareSqEnable()) {
-        if (taskInfo->stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF)) {
+        if (taskInfo->stream->Device_()->GetDevProperties().sqSwapShift == 0U) {
             memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcEx));
         } else {
             memWaitValueTask->funCallMemSize2 =
-                static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcExWithoutProf));
+                static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf));
         }
     } else {
-        if (taskInfo->stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF)) {
+        if (taskInfo->stream->Device_()->GetDevProperties().sqSwapShift == 0U) {
             memWaitValueTask->funCallMemSize2 = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFc));
         } else {
             memWaitValueTask->funCallMemSize2 =
-                static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcWithoutProf));
+                static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcWithDynamicProf));
         }
     }
 

@@ -701,6 +701,9 @@ public:
     rtError_t GetTopologyType(const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t * const val) override;
     rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) override;
     rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) override;
+
+    rtError_t GetSwapBufferInfo(const uint32_t deviceId, const uint32_t tsId,
+        uint64_t * const swapBufferBaseAddr) override;
 private:
     rtError_t ManagedMemAllocInner(void **const dptr, const uint64_t size, const ManagedMemFlag flag,
         const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME);

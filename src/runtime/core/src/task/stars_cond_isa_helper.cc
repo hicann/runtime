@@ -1473,7 +1473,7 @@ void ConstructStreamSwitchExFc(rtStarsStreamSwitchExFc_t &fc,
     }
 }
 
-void ConvertConditionToOpAndBranchFunc(const RtStarsMemWaitValueInstrFcPara &fcPara,
+void ConvertConditionToOpAndBranchFunc(const uint32_t flag, const uint64_t value,
     rtStarsCondIsaBranchFunc3_t &branchFunc, rtStarsCondIsaOpFunc3_t &opFunc3,
     RtStarsCondIsaOpFunc7 &opFunc7, uint64_t &value1, uint64_t &value2)
 {
@@ -1485,14 +1485,14 @@ void ConvertConditionToOpAndBranchFunc(const RtStarsMemWaitValueInstrFcPara &fcP
      * MEM_WAIT_VALUE_TYPE_NOR = 3U,    // Wait until ~(*addr | value) != 0  (*addr | value) != 0xffffffffffffffff
      */
 
-    switch (fcPara.flag) {
+    switch (flag) {
         case MEM_WAIT_VALUE_TYPE_GEQ:
             // (*addr | 0) >= value
             opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
             opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
             branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BGE;
             value1 = 0ULL;
-            value2 = fcPara.value;
+            value2 = value;
             break;
         case MEM_WAIT_VALUE_TYPE_EQ:
             // (*addr | 0) == value
@@ -1500,14 +1500,14 @@ void ConvertConditionToOpAndBranchFunc(const RtStarsMemWaitValueInstrFcPara &fcP
             opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
             branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
             value1 = 0ULL;
-            value2 = fcPara.value;
+            value2 = value;
             break;
         case MEM_WAIT_VALUE_TYPE_AND:
             // (*addr & value) != 0
             opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_AND;
             opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_AND;
             branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
-            value1 = fcPara.value;
+            value1 = value;
             value2 = 0ULL;
             break;
         case MEM_WAIT_VALUE_TYPE_NOR:
@@ -1515,12 +1515,12 @@ void ConvertConditionToOpAndBranchFunc(const RtStarsMemWaitValueInstrFcPara &fcP
             opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
             opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
             branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
-            value1 = fcPara.value;
+            value1 = value;
             value2 = MAX_UINT64_NUM;
             break;
 
         default:
-            RT_LOG(RT_LOG_WARNING, "condition=%u does not support.", fcPara.flag);
+            RT_LOG(RT_LOG_WARNING, "condition=%u does not support.", flag);
             break;
     }
 }
@@ -1542,192 +1542,6 @@ void ConvertOpToReverseOp(const rtStarsCondIsaBranchFunc3_t branchFunc,
         default:
             RT_LOG(RT_LOG_WARNING, "branchFunc=%u does not support.", branchFunc);
             break;
-    }
-}
-
-/* used for none-sofeware sq, and without prof */
-void ConstructMemWaitValueInstr2WithoutProf(RtStarsMemWaitValueLastInstrFcWithoutProf &fc,
-    const RtStarsMemWaitValueInstrFcPara &fcPara)
-{
-    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
-    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
-    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
-    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
-    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
-    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
-
-    rtStarsCondIsaBranchFunc3_t branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
-    rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
-    rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
-    RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-            RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
-    uint64_t value1 = 0ULL;
-    uint64_t value2 = fcPara.value;
-
-    ConvertConditionToOpAndBranchFunc(fcPara, branchFunc, opFunc3, opFunc7, value1, value2);
-    ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
-
-    // init loop index, r3 = r0 + 0 = 0
-    ConstructOpImmAndi(r0, r3, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi0);
-
-    // read value2 to r5
-    ConstructLHWI(r5, value2, fc.lhwi1);
-    ConstructLLWI(r5, value2, fc.llwi1);
-
-    // init r4, r4 = r0 + 0 = 0
-    ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
-
-    // load max loop num to r4
-    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.maxLoop), fc.llwi2);
-
-    uint64_t loadValueOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithoutProf, loadValue);
-    loadValueOffset = loadValueOffset / sizeof(uint32_t);
-
-    uint64_t modifySqHeadOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithoutProf, goto_i);
-    modifySqHeadOffset = modifySqHeadOffset / sizeof(uint32_t);
-
-    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithoutProf, end);
-    endOffset = endOffset / sizeof(uint32_t);
-
-    // load devAddr data from hbm to r2
-    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
-
-    // read value1 to r1
-    ConstructLHWI(r1, value1, fc.lhwi3);
-    ConstructLLWI(r1, value1, fc.llwi3);
-
-    // r2 = r2 op value1(r1)
-    ConstructOpOp(r2, r1, r2, opFunc3, opFunc7, fc.op);
-
-    // r2 == r5, goto endOffset
-    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc1);
-    ConstructBranch(r2, r5, branchFunc, static_cast<uint8_t>(endOffset), fc.branch1);
-
-    // r2 != r5, loop index++ r3 = r3 + 1
-    ConstructOpImmAndi(r3, r3, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
-
-    // r3 >= r4, goto modifySqHeadOffset
-    ConstructSetJumpPcFc(r1, modifySqHeadOffset, fc.jumpPc2);
-    ConstructBranch(r3, r4, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, static_cast<uint8_t>(modifySqHeadOffset), fc.bge);
-
-    // nop
-    ConstructNop(fc.nop1);
-    ConstructNop(fc.nop2);
-
-    // r2 != r5, goto loadValueOffset, continue load devAddr data from hbm to r2
-    ConstructSetJumpPcFc(r1, loadValueOffset, fc.jumpPc3);
-    ConstructBranch(r2, r5, reverseBranchFunc, static_cast<uint8_t>(loadValueOffset), fc.branch2);
-
-    // modifySqHeadOffset
-    ConstructGotoI(r5, static_cast<uint16_t>(fcPara.sqId), static_cast<uint16_t>(fcPara.sqHeadPre), fc.goto_i);
-
-    // end
-    ConstructNop(fc.end);
-
-    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
-    for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcWithoutProf) / sizeof(uint32_t)); i++) {
-        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
-    }
-}
-
-/* used for sofeware sq, and without prof */
-void ConstructMemWaitValueInstr2ExWithoutProf(RtStarsMemWaitValueLastInstrFcExWithoutProf &fc,
-                                              const RtStarsMemWaitValueInstrFcPara &fcPara)
-{
-    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
-    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
-    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
-    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
-    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
-    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
-
-    rtStarsCondIsaBranchFunc3_t branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
-    rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
-    rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
-    RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-                RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
-    uint64_t value1 = 0ULL;
-    uint64_t value2 = fcPara.value;
-
-    ConvertConditionToOpAndBranchFunc(fcPara, branchFunc, opFunc3, opFunc7, value1, value2);
-    ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
-
-    // init loop index, r3 = r0 + 0 = 0
-    ConstructOpImmAndi(r0, r3, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi0);
-
-    // read value2 to r5
-    ConstructLHWI(r5, value2, fc.lhwi1);
-    ConstructLLWI(r5, value2, fc.llwi1);
-
-    // init r4, r4 = r0 + 0 = 0
-    ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
-
-    // load max loop num to r4
-    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.maxLoop), fc.llwi2);
-
-    uint64_t loadValueOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithoutProf, loadValue);
-    loadValueOffset = loadValueOffset / sizeof(uint32_t);
-
-    uint64_t modifySqHeadOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithoutProf, loadSqId);
-    modifySqHeadOffset = modifySqHeadOffset / sizeof(uint32_t);
-
-    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithoutProf, end);
-    endOffset = endOffset / sizeof(uint32_t);
-
-    // load devAddr data from hbm to r2
-    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
-
-    // read value1 to r1
-    ConstructLHWI(r1, value1, fc.lhwi3);
-    ConstructLLWI(r1, value1, fc.llwi3);
-
-    // r2 = r2 op value1(r1)
-    ConstructOpOp(r2, r1, r2, opFunc3, opFunc7, fc.op);
-
-    // r2 == r5, goto endOffset
-    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc1);
-    ConstructBranch(r2, r5, branchFunc, static_cast<uint8_t>(endOffset), fc.branch1);
-
-    // r2 != r5, loop index++ r3 = r3 + 1
-    ConstructOpImmAndi(r3, r3, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
-
-    // r3 >= r4, goto modifySqHeadOffset
-    ConstructSetJumpPcFc(r1, modifySqHeadOffset, fc.jumpPc2);
-    ConstructBranch(r3, r4, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, static_cast<uint8_t>(modifySqHeadOffset), fc.bge);
-
-    // nop
-    ConstructNop(fc.nop1);
-    ConstructNop(fc.nop2);
-
-    // r2 != r5, goto loadValueOffset, continue load devAddr data from hbm to r2
-    ConstructSetJumpPcFc(r1, loadValueOffset, fc.jumpPc3);
-    ConstructBranch(r2, r5, reverseBranchFunc, static_cast<uint8_t>(loadValueOffset), fc.branch2);
-
-    // modifySqHeadOffset
-    // load sqid from virtual addr to r3
-    ConstructLoadImm(r3, fcPara.sqIdMemAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadSqId);
-
-    // load sqHead to r4
-    ConstructLHWI(r4, static_cast<uint64_t>(fcPara.sqHeadPre), fc.lhwi4);
-    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.sqHeadPre), fc.llwi4);
-
-    // r4 = r4 < 16
-    ConstructOpImmSlli(r4, r4, 16U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli);
-
-    // r3 = r3 | r4, sqId=[10:0], head=[31:16]
-    ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op2);
-
-    // modify sq head by goto_r
-    ConstructGotoR(r3, r5, fc.goto_r);
-
-    // end
-    ConstructNop(fc.end);
-
-    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
-    for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcExWithoutProf) / sizeof(uint32_t)); i++) {
-        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
     }
 }
 
@@ -1833,7 +1647,7 @@ void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc,
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
-    ConvertConditionToOpAndBranchFunc(fcPara, branchFunc, opFunc3, opFunc7, value1, value2);
+    ConvertConditionToOpAndBranchFunc(fcPara.flag, fcPara.value, branchFunc, opFunc3, opFunc7, value1, value2);
     ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
 
     // init loop index, r3 = r0 + 0 = 0
@@ -2178,7 +1992,7 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
-    ConvertConditionToOpAndBranchFunc(fcPara, branchFunc, opFunc3, opFunc7, value1, value2);
+    ConvertConditionToOpAndBranchFunc(fcPara.flag, fcPara.value, branchFunc, opFunc3, opFunc7, value1, value2);
     ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
 
     // init loop index, r3 = r0 + 0 = 0
@@ -2255,5 +2069,605 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc,
         RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
     }
 }
+
+void MemWaitInstrWaitSuccessForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    /* wait success */
+    // load prof disable status to r2
+    ConstructLoadImm(r2, fcPara.profDisableAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus1);
+
+    // r2 == 0, goto sqe next check
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc4);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch4);
+
+    // r2 != 0, write prof disable status to 0
+    // load profDisableAddr to r4
+    ConstructLHWI(r4, fcPara.profDisableAddr, fc.lhwi4);
+    ConstructLLWI(r4, fcPara.profDisableAddr, fc.llwi4);
+
+    // write r4 to 0x0
+    ConstructStore(r4, r0, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.updateProfDisableStatus1);
+
+    // enable profling
+    // load swapBufferProfCfgAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferProfCfgAddr, fc.lhwi41);
+    ConstructLLWI(r4, fcPara.swapBufferProfCfgAddr, fc.llwi41);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask41);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask41);
+
+    // cfg use PA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc41);
+
+    // load value(u64) from swapBufferProfCfgAddr to r5
+    ConstructLoadImm(r5, fcPara.swapBufferProfCfgAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LW, fc.loadProfCfg1);
+
+    // load value 0x4000 to r1, bit14 is sq_log_en
+    ConstructLHWI(r1, 0x4000, fc.lhwi42);
+    ConstructLLWI(r1, 0x4000, fc.llwi42);
+
+    // r5 = r5 | r1, bit14 set to 1
+    ConstructOpOp(r5, r1, r5, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op43);
+
+    // write r4 by r5, enable profling
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.enableProf);
+
+    // load swapBufferUpdateAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferUpdateAddr, fc.lhwi44);
+    ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi44);
+
+    // load swapBufferUpdateValue to r5
+    ConstructLHWI(r5, fcPara.swapBufferUpdateValue, fc.lhwi45);
+    ConstructLLWI(r5, fcPara.swapBufferUpdateValue, fc.llwi45);
+
+    // write r4 by r5, disable profling triger
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.enableProfTriger);
+
+    // restore to use VA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs45);
+
+    // goto end
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc5);
+    ConstructBranch(r2, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch5);
+}
+
+void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+
+    uint64_t modifySqHeadPreOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, goto_pre);
+    modifySqHeadPreOffset = modifySqHeadPreOffset / sizeof(uint32_t);
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    /* wait failed */
+    // load prof disable status to r2
+    ConstructLoadImm(r2, fcPara.profDisableAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus2);
+
+    // r2 != 0, goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc6);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch6);
+
+    // load prof swaitch value from hbm to r3
+    ConstructLoadImm(r3, fcPara.profSwitchAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfSwitch);
+
+    // r3 == 0, goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc7);
+    ConstructBranch(r3, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch7);
+
+    // load profDisableAddr to r4
+    ConstructLHWI(r4, fcPara.profDisableAddr, fc.lhwi5);
+    ConstructLLWI(r4, fcPara.profDisableAddr, fc.llwi5);
+
+    // load 0x1 to r5
+    ConstructLHWI(r5, 0x1, fc.lhwi6);
+    ConstructLLWI(r5, 0x1, fc.llwi6);
+
+    // write r4 to 0x0
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.updateProfDisableStatus2);
+
+    // disable profling
+    // load swapBufferProfCfgAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferProfCfgAddr, fc.lhwi61);
+    ConstructLLWI(r4, fcPara.swapBufferProfCfgAddr, fc.llwi61);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask61);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask61);
+
+    // cfg use PA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc61);
+
+    // load value(u64) from swapBufferProfCfgAddr to r5
+    ConstructLoadImm(r5, fcPara.swapBufferProfCfgAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LW, fc.loadProfCfg2);
+
+    // load value 0xFFFFBFFF to r1, bit14 is sq_log_en
+    ConstructLHWI(r1, 0xFFFFBFFF, fc.lhwi62);
+    ConstructLLWI(r1, 0xFFFFBFFF, fc.llwi62);
+
+    // r5 = r5 & r1, bit14 set to 0
+    ConstructOpOp(r5, r1, r5, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.op63);
+
+    // write r4 by r5, disable profling
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.disableProf);
+
+    // load swapBufferUpdateAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferUpdateAddr, fc.lhwi64);
+    ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi64);
+
+    // load swapBufferUpdateValue to r5
+    ConstructLHWI(r5, fcPara.swapBufferUpdateValue, fc.lhwi65);
+    ConstructLLWI(r5, fcPara.swapBufferUpdateValue, fc.llwi65);
+
+    // write r4 by r5, disable profling triger
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.disableProfTriger);
+
+    // restore to use VA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs65);
+
+    // goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc8);
+    ConstructBranch(r3, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch8);
+}
+
+/* used for none-software sq, support dynamic prof, prof enable/disable by c-core */
+void ConstructMemWaitValueInstr2WithDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    rtStarsCondIsaBranchFunc3_t branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
+    rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
+    rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
+    RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
+    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+        RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    uint64_t value1 = 0ULL;
+    uint64_t value2 = fcPara.value;
+
+    ConvertConditionToOpAndBranchFunc(fcPara.flag, fcPara.value, branchFunc, opFunc3, opFunc7, value1, value2);
+    ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
+
+    // init loop index, r3 = r0 + 0 = 0
+    ConstructOpImmAndi(r0, r3, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi0);
+
+    // read value2 to r5
+    ConstructLHWI(r5, value2, fc.lhwi1);
+    ConstructLLWI(r5, value2, fc.llwi1);
+
+    // init r4, r4 = r0 + 0 = 0
+    ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
+
+    // load max loop num to r4
+    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.maxLoop), fc.llwi2);
+
+    uint64_t loadValueOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, loadValue);
+    loadValueOffset = loadValueOffset / sizeof(uint32_t);
+
+    uint64_t waitSuccessOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, loadProfDisableStatus1);
+    waitSuccessOffset = waitSuccessOffset / sizeof(uint32_t);
+
+    uint64_t waitFailedOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, loadProfDisableStatus2);
+    waitFailedOffset = waitFailedOffset / sizeof(uint32_t);
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    // load devAddr data from hbm to r2
+    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
+
+    // read value1 to r1
+    ConstructLHWI(r1, value1, fc.lhwi3);
+    ConstructLLWI(r1, value1, fc.llwi3);
+
+    // r2 = r2 op value1(r1)
+    ConstructOpOp(r2, r1, r2, opFunc3, opFunc7, fc.op);
+
+    // r2 == r5, goto waitSuccessOffset
+    ConstructSetJumpPcFc(r1, waitSuccessOffset, fc.jumpPc1);
+    ConstructBranch(r2, r5, branchFunc, static_cast<uint8_t>(waitSuccessOffset), fc.branch1);
+
+    // r2 != r5, loop index++ r3 = r3 + 1
+    ConstructOpImmAndi(r3, r3, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
+
+    // r3 >= r4, goto waitFailedOffset
+    ConstructSetJumpPcFc(r1, waitFailedOffset, fc.jumpPc2);
+    ConstructBranch(r3, r4, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, static_cast<uint8_t>(waitFailedOffset), fc.bge);
+
+    // nop
+    ConstructNop(fc.nop1);
+    ConstructNop(fc.nop2);
+
+    // r2 != r5, goto loadValueOffset, continue load devAddr data from hbm to r2
+    ConstructSetJumpPcFc(r1, loadValueOffset, fc.jumpPc3);
+    ConstructBranch(r2, r5, reverseBranchFunc, static_cast<uint8_t>(loadValueOffset), fc.branch2);
+
+    /* wait success */
+    MemWaitInstrWaitSuccessForNonSoftwareSqAndDynamicProf(fc, fcPara);
+
+    /* wait failed */
+    MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(fc, fcPara);
+
+    /* sqe pre */
+    ConstructGotoI(r5, static_cast<uint16_t>(fcPara.sqId), static_cast<uint16_t>(fcPara.sqHeadPre), fc.goto_pre);
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc9);
+    ConstructBranch(r2, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch9);
+
+    // end
+    ConstructNop(fc.end);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
+    for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcWithDynamicProf) / sizeof(uint32_t)); i++) {
+        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, cmd[i]);
+    }
+}
+
+void MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcExWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    /* wait success */
+    // load sqId to r3, prof disable status is bit32
+    ConstructLoadImm(r3, fcPara.sqIdMemAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus1);
+
+    // r2 = r3 >> 32, r2 is prof disable status
+    ConstructOpImmSlli(r3, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli1);
+
+    // r2 == 0, goto sqe next check
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc4);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch4);
+
+    // r2 != 0, write prof disable status to 0
+    // load sqIdMemAddr to r5
+    ConstructLHWI(r5, fcPara.sqIdMemAddr, fc.lhwi4);
+    ConstructLLWI(r5, fcPara.sqIdMemAddr, fc.llwi4);
+
+    // load 0xFFFFFFFF to r4
+    ConstructLHWI(r4, 0xFFFFFFFF, fc.lhwi41);
+    ConstructLLWI(r4, 0xFFFFFFFF, fc.llwi41);
+
+    // r3 = r3 & r4 = sqId & 0xFFFFFFFF
+    ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.andOp);
+
+    // write r5 to sqId & 0xFFFFFFFF
+    ConstructStore(r5, r3, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SD, fc.updateProfDisableStatus1);
+
+    // enable profling
+    // swapBufferProfCfgAddr = swapBufferBaseAddr + (sqid << sqSwapShift) +  swapBufferProfCfgOffset
+    // r1 = r3 << sqSwapShift, r3 = sqId
+    ConstructOpImmSlli(r3, r1, fcPara.sqSwapShift, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli51);
+
+    // load swapBufferBaseAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferBaseAddr, fc.lhwi52);
+    ConstructLLWI(r4, fcPara.swapBufferBaseAddr, fc.llwi52);
+
+    // r4 = r4 | r1
+    ConstructOpOp(r1, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op53);
+
+    // load swapBufferProfCfgOffset to r2
+    ConstructLHWI(r2, fcPara.swapBufferProfCfgOffset, fc.lhwi54);
+    ConstructLLWI(r2, fcPara.swapBufferProfCfgOffset, fc.llwi54);
+
+    // r4 = r4 | r2
+    ConstructOpOp(r2, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op55);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask55);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask55);
+    // cfg use PA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc55);
+
+    // LD_R: read sqProfCfg to r5, from r4
+    ConstructLoad(r4, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadProfCfg1);
+
+    // load value 0x4000 to r1, bit14 is sq_log_en
+    ConstructLHWI(r1, 0x4000, fc.lhwi56);
+    ConstructLLWI(r1, 0x4000, fc.llwi56);
+
+    // r5 = r5 | r1, bit14 set to 1
+    ConstructOpOp(r5, r1, r5, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op57);
+
+    // write r4 by r5, enable profling
+    ConstructStore(r4, r5, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.enableProf);
+
+    // load swapBufferUpdateAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferUpdateAddr, fc.lhwi58);
+    ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi58);
+
+    // load 0x80000000 to r1
+    ConstructLHWI(r1, 0x80000000, fc.lhwi59);
+    ConstructLLWI(r1, 0x80000000, fc.llwi59);
+
+    // r2 = r3 | r1, r3 = sqId
+    ConstructOpOp(r3, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op59);
+
+    // write r4 by r2, enable profling triger
+    ConstructStore(r4, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.enableProfTriger);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask59);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask59);
+
+    // restore to use VA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs59);
+
+    // goto end
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc5);
+    ConstructBranch(r2, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch5);
+}
+
+void MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcExWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+    constexpr uint64_t axiUserVaCfgMask = 0x100000001ULL;
+
+    uint64_t modifySqHeadPreOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, loadSqId1);
+    modifySqHeadPreOffset = modifySqHeadPreOffset / sizeof(uint32_t);
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    /* wait failed */
+    // load sqId to r5, prof disable status is bit32
+    ConstructLoadImm(r5, fcPara.sqIdMemAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfDisableStatus2);
+    // r2 = r5 >> 32, r2 is prof disable status
+    ConstructOpImmSlli(r5, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli2);
+
+    // r2 != 0, goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc6);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch6);
+
+    // load prof swaitch value from hbm to r3
+    ConstructLoadImm(r3, fcPara.profSwitchAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadProfSwitch);
+
+    // r3 == 0, goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc7);
+    ConstructBranch(r3, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch7);
+
+    // load sqIdMemAddr to r4
+    ConstructLHWI(r4, fcPara.sqIdMemAddr, fc.lhwi5);
+    ConstructLLWI(r4, fcPara.sqIdMemAddr, fc.llwi5);
+
+    // load 0x100000000 to r2
+    ConstructLHWI(r2, 0x100000000, fc.lhwi51);
+    ConstructLLWI(r2, 0x100000000, fc.llwi51);
+
+    // r1 = r5 | r2, sqId bit32 set to 1
+    ConstructOpOp(r5, r2, r1, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.orOp);
+
+    // write r4 to (0x100000000 + sqId)
+    ConstructStore(r4, r1, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SD, fc.updateProfDisableStatus2);
+
+    // disable profling
+    // swapBufferProfCfgAddr = swapBufferBaseAddr + (sqid << sqSwapShift) +  swapBufferProfCfgOffset
+    // r1 = r5 << sqSwapShift, r5 = sqId
+    ConstructOpImmSlli(r5, r1, fcPara.sqSwapShift, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli61);
+
+    // load swapBufferBaseAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferBaseAddr, fc.lhwi62);
+    ConstructLLWI(r4, fcPara.swapBufferBaseAddr, fc.llwi62);
+
+    // r4 = r4 | r1
+    ConstructOpOp(r1, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op63);
+
+    // load swapBufferProfCfgOffset to r2
+    ConstructLHWI(r2, fcPara.swapBufferProfCfgOffset, fc.lhwi64);
+    ConstructLLWI(r2, fcPara.swapBufferProfCfgOffset, fc.llwi64);
+
+    // r4 = r4 | r2
+    ConstructOpOp(r2, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op65);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask65);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask65);
+    // cfg use PA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc65);
+
+    // LD_R: read sqProfCfg to r2, from r4
+    ConstructLoad(r4, 0U, r2, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.loadProfCfg2);
+
+    // load value 0xFFFFBFFF to r1, bit14 is sq_log_en
+    ConstructLHWI(r1, 0xFFFFBFFF, fc.lhwi66);
+    ConstructLLWI(r1, 0xFFFFBFFF, fc.llwi66);
+
+    // r2 = r2 & r1, bit14 set to 0
+    ConstructOpOp(r2, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_AND, RT_STARS_COND_ISA_OP_FUNC7_AND, fc.op67);
+
+    // write r4 by r2, disable profling
+    ConstructStore(r4, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.disableProf);
+
+    // load swapBufferUpdateAddr to r4
+    ConstructLHWI(r4, fcPara.swapBufferUpdateAddr, fc.lhwi68);
+    ConstructLLWI(r4, fcPara.swapBufferUpdateAddr, fc.llwi68);
+
+    // load 0x80000000 to r1
+    ConstructLHWI(r1, 0x80000000, fc.lhwi69);
+    ConstructLLWI(r1, 0x80000000, fc.llwi69);
+
+    // r2 = r5 | r1, r5 = sqId
+    ConstructOpOp(r5, r1, r2, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op69);
+
+    // write r4 by r2, disable profling triger
+    ConstructStore(r4, r2, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.disableProfTriger);
+
+    // read immd reg va cfg mask
+    ConstructLHWI(r2, axiUserVaCfgMask, fc.lhwiMask69);
+    ConstructLLWI(r2, axiUserVaCfgMask, fc.llwiMask69);
+
+    // restore to use VA
+    ConstructSystemCsr(r2, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs69);
+
+    // goto modifySqHeadPreOffset
+    ConstructSetJumpPcFc(r1, modifySqHeadPreOffset, fc.jumpPc8);
+    ConstructBranch(r3, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(modifySqHeadPreOffset), fc.branch8);
+}
+
+void MemWaitInstrSqePreForSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcExWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    uint64_t endOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, end);
+    endOffset = endOffset / sizeof(uint32_t);
+
+    // modifySqHeadPreOffset
+    // load sqid from virtual addr to r3
+    ConstructLoadImm(r3, fcPara.sqIdMemAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.loadSqId1);
+
+    // load sqHead to r4
+    ConstructLHWI(r4, static_cast<uint64_t>(fcPara.sqHeadPre), fc.lhwi7);
+    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.sqHeadPre), fc.llwi7);
+
+    // r4 = r4 < 16
+    ConstructOpImmSlli(r4, r4, 16U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli1);
+
+    // r3 = r3 | r4, sqId=[10:0], head=[31:16]
+    ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.op2);
+
+    // modify sq head by goto_r
+    ConstructGotoR(r3, r5, fc.goto_pre);
+
+    // goto end
+    ConstructSetJumpPcFc(r1, endOffset, fc.jumpPc9);
+    ConstructBranch(r2, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch9);
+}
+
+/* used for software sq, support dynamic prof, prof enable/disable by c-core */
+void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFcExWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    rtStarsCondIsaBranchFunc3_t branchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ;
+    rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
+    rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
+    RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
+    rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
+        RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU : RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    uint64_t value1 = 0ULL;
+    uint64_t value2 = fcPara.value;
+
+    ConvertConditionToOpAndBranchFunc(fcPara.flag, fcPara.value, branchFunc, opFunc3, opFunc7, value1, value2);
+    ConvertOpToReverseOp(branchFunc, reverseBranchFunc);
+
+    // init loop index, r3 = r0 + 0 = 0
+    ConstructOpImmAndi(r0, r3, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi0);
+
+    // read value2 to r5
+    ConstructLHWI(r5, value2, fc.lhwi1);
+    ConstructLLWI(r5, value2, fc.llwi1);
+
+    // init r4, r4 = r0 + 0 = 0
+    ConstructOpImmAndi(r0, r4, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi1);
+
+    // load max loop num to r4
+    ConstructLLWI(r4, static_cast<uint64_t>(fcPara.maxLoop), fc.llwi2);
+
+    uint64_t loadValueOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, loadValue);
+    loadValueOffset = loadValueOffset / sizeof(uint32_t);
+
+    uint64_t waitSuccessOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, loadProfDisableStatus1);
+    waitSuccessOffset = waitSuccessOffset / sizeof(uint32_t);
+
+    uint64_t waitFailedOffset = offsetof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf, loadProfDisableStatus2);
+    waitFailedOffset = waitFailedOffset / sizeof(uint32_t);
+
+    // load devAddr data from hbm to r2
+    ConstructLoadImm(r2, fcPara.devAddr, opFunc8, fc.loadValue);
+
+    // read value1 to r1
+    ConstructLHWI(r1, value1, fc.lhwi3);
+    ConstructLLWI(r1, value1, fc.llwi3);
+
+    // r2 = r2 op value1(r1)
+    ConstructOpOp(r2, r1, r2, opFunc3, opFunc7, fc.op);
+
+    // r2 == r5, goto waitSuccessOffset
+    ConstructSetJumpPcFc(r1, waitSuccessOffset, fc.jumpPc1);
+    ConstructBranch(r2, r5, branchFunc, static_cast<uint8_t>(waitSuccessOffset), fc.branch1);
+
+    // r2 != r5, loop index++ r3 = r3 + 1
+    ConstructOpImmAndi(r3, r3, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
+
+    // r3 >= r4, goto waitFailedOffset
+    ConstructSetJumpPcFc(r1, waitFailedOffset, fc.jumpPc2);
+    ConstructBranch(r3, r4, RT_STARS_COND_ISA_BRANCH_FUNC3_BGE, static_cast<uint8_t>(waitFailedOffset), fc.bge);
+
+    // nop
+    ConstructNop(fc.nop1);
+    ConstructNop(fc.nop2);
+
+    // r2 != r5, goto loadValueOffset, continue load devAddr data from hbm to r2
+    ConstructSetJumpPcFc(r1, loadValueOffset, fc.jumpPc3);
+    ConstructBranch(r2, r5, reverseBranchFunc, static_cast<uint8_t>(loadValueOffset), fc.branch2);
+
+    /* wait success */
+    MemWaitInstrWaitSuccessForSoftwareSqAndDynamicProf(fc, fcPara);
+
+    /* wait failed */
+    MemWaitInstrWaitFailedForSoftwareSqAndDynamicProf(fc, fcPara);
+
+    /* sqe pre */
+    MemWaitInstrSqePreForSoftwareSqAndDynamicProf(fc, fcPara);
+
+    // end
+    ConstructNop(fc.end);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc);
+    for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf) / sizeof(uint32_t)); i++) {
+        RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
+    }
+}
+
 }  // namespace runtime
 }  // namespace cce

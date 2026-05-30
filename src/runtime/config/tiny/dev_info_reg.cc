@@ -188,6 +188,10 @@ static const DevProperties CHIP_5612_PROPERTIES = {
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
     .ioDieNum = 0U,
+    .swapBufferBaseAddr = 0UL,
+    .swapBufferUpdateRegOffset = 0UL,
+    .sqSwapShift = 0U,
+    .swapBufferProfCfgOffset = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_ASCEND_031, CHIP_5612_PROPERTIES);

@@ -678,6 +678,9 @@ public:
     virtual rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) = 0;
     virtual rtError_t GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority) = 0;
 
+    virtual rtError_t GetSwapBufferInfo(const uint32_t deviceId, const uint32_t tsId,
+        uint64_t * const swapBufferBaseAddr) = 0;
+
 protected:
     // CallBack
     rtKernelReportCallback callBack_;

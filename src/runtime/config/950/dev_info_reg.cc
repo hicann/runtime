@@ -119,6 +119,7 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_DAVID_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ,
     RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH,
     RtOptionalFeatureType::RT_FEATURE_TASK_EXEC_TIMEOUT_SCALE_MODIFY,
+    RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF,
     RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT
 };
 
@@ -304,6 +305,10 @@ static const DevProperties CHIP_DAVID_PROPERTIES = {
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
     .ioDieNum = 0U,
+    .swapBufferBaseAddr = 0UL,
+    .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
+    .sqSwapShift = 6U,
+    .swapBufferProfCfgOffset = 32U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_DAVID, CHIP_DAVID_PROPERTIES);

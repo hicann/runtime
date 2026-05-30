@@ -1006,6 +1006,21 @@ rtError_t RawDevice::InitQosCfg()
     return error;
 }
 
+rtError_t RawDevice::InitSwapBufferInfo()
+{
+    if (!CheckFeatureSupport(TS_FEATURE_MEM_WAIT_PROF) || !IsDavidPlatform()) {
+        return RT_ERROR_NONE;
+    }
+
+    uint64_t swapBufferBaseAddr = 0UL;
+    rtError_t error = driver_->GetSwapBufferInfo(deviceId_, tsId_, &swapBufferBaseAddr);
+    if (error == RT_ERROR_NONE) {
+        properties_.swapBufferBaseAddr = swapBufferBaseAddr;
+        RT_LOG(RT_LOG_INFO, "Get SwapBufferInfo success, baseAddr=0x%llx.", swapBufferBaseAddr);
+    }
+    return error;
+}
+
 rtError_t RawDevice::Start()
 {
     COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "there has primaryStream");
@@ -1100,6 +1115,9 @@ rtError_t RawDevice::Start()
 #else
     Runtime::Instance()->RtTimeoutConfigInit();
 #endif
+
+    error = InitSwapBufferInfo();
+    ERROR_GOTO_MSG_INNER(error, ERROR_STOP, "init swap buffer failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = AllocProfSwitchAddr();
     ERROR_GOTO(error, ERROR_STOP, "Failed to allocate the prof switch address, retCode=%#x.", static_cast<uint32_t>(error));

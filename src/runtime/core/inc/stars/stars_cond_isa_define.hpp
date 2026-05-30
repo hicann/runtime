@@ -305,59 +305,6 @@ enum RtMemWaitValueType : std::uint32_t {
     MEM_WAIT_VALUE_TYPE_MAX = 4U
 };
 
-/* used for none-software sq, and without prof */
-struct RtStarsMemWaitValueLastInstrFcWithoutProf {
-    RtStarsCondOpImm addi0;           // init loop index, r3 = r0 + 0 = 0
-    RtStarsCondOpLHWI lhwi1;          // load value2 to r5
-    RtStarsCondOpLLWI llwi1;
-    RtStarsCondOpImm addi1;           // init r4, r4 = r0 + 0 = 0
-    RtStarsCondOpLLWI llwi2;          // load max loop num to r4
-    RtStarsCondOpLoadImm loadValue;   // load value(u64) from virtual addr to r2
-    RtStarsCondOpLHWI lhwi3;          // load value1 to r1
-    RtStarsCondOpLLWI llwi3;
-    RtStarsCondOpOp        op;        // r2 = r2 op value1(r1)
-    RtStarsSetCsrJumpPc jumpPc1;
-	RtStarsCondOpBranch branch1;      // r2 == r5, goto end
-	RtStarsCondOpImm addi2;           // loop index++ r3 = r3 + 1
-    RtStarsSetCsrJumpPc jumpPc2;
-	RtStarsCondOpBranch bge;          // r3 >= r4, goto modify sqHead
-	RtStarsCondOpNop  nop1;
-	RtStarsCondOpNop  nop2;
-    RtStarsSetCsrJumpPc jumpPc3;
-	RtStarsCondOpBranch branch2;      // r2 != r5, goto loadValue
-    RtStarsCondOpStreamGotoI goto_i;  // modify sq head;
-    RtStarsCondOpNop end;
-};
-
-/* used for software sq, and without prof */
-struct RtStarsMemWaitValueLastInstrFcExWithoutProf {
-    RtStarsCondOpImm addi0;           // init loop index, r3 = r0 + 0 = 0
-    RtStarsCondOpLHWI lhwi1;          // load value2 to r5
-    RtStarsCondOpLLWI llwi1;
-    RtStarsCondOpImm addi1;           // init r4, r4 = r0 + 0 = 0
-    RtStarsCondOpLLWI llwi2;          // load max loop num to r4
-    RtStarsCondOpLoadImm loadValue;   // load value(u64) from virtual addr to r2
-    RtStarsCondOpLHWI lhwi3;          // load value1 to r1
-    RtStarsCondOpLLWI llwi3;
-    RtStarsCondOpOp        op;        // r2 = r2 op value1(r1)
-    RtStarsSetCsrJumpPc jumpPc1;
-	RtStarsCondOpBranch branch1;      // r2 == r5, goto end
-	RtStarsCondOpImm addi2;           // loop index++ r3 = r3 + 1
-    RtStarsSetCsrJumpPc jumpPc2;
-	RtStarsCondOpBranch bge;          // r3 >= r4, goto modify sqHead
-	RtStarsCondOpNop  nop1;
-	RtStarsCondOpNop  nop2;
-    RtStarsSetCsrJumpPc jumpPc3;
-	RtStarsCondOpBranch branch2;      // r2 != r5, goto loadValue
-    RtStarsCondOpLoadImm loadSqId;    // load sqid from virtual addr to r3
-	RtStarsCondOpLHWI lhwi4;          // load sqHead to r4
-    RtStarsCondOpLLWI llwi4;
-	RtStarsCondOpImmSLLI slli;        // r4 = r4 < 16
-	RtStarsCondOpOp        op2;       // r3 = r3 | r4, sqId=r3[10:0], head=r3[31:16]
-	RtStarsCondOpStreamGotoR goto_r;  // modify sq head;
-    RtStarsCondOpNop end;
-};
-
 /* used for none-software sq */
 struct RtStarsMemWaitValueLastInstrFc {
     RtStarsCondOpImm addi0;           // init loop index, r3 = r0 + 0 = 0
@@ -512,6 +459,216 @@ struct RtStarsMemWaitValueLastInstrFcEx {
     RtStarsCondOpNop end;
 };
 
+/* used for none-software sq, support dynamic prof, prof enable/disable by c-core */
+struct RtStarsMemWaitValueLastInstrFcWithDynamicProf {
+    RtStarsCondOpImm addi0;           // init loop index, r3 = r0 + 0 = 0
+    RtStarsCondOpLHWI lhwi1;          // load value2 to r5
+    RtStarsCondOpLLWI llwi1;
+    RtStarsCondOpImm addi1;           // init r4, r4 = r0 + 0 = 0
+    RtStarsCondOpLLWI llwi2;          // load max loop num to r4
+    RtStarsCondOpLoadImm loadValue;   // load value(u64) from virtual addr to r2
+    RtStarsCondOpLHWI lhwi3;          // load value1 to r1
+    RtStarsCondOpLLWI llwi3;
+    RtStarsCondOpOp        op;        // r2 = r2 op value1(r1)
+    RtStarsSetCsrJumpPc jumpPc1;
+	RtStarsCondOpBranch branch1;      // r2 == r5, goto wait success
+	RtStarsCondOpImm addi2;           // loop index++ r3 = r3 + 1
+    RtStarsSetCsrJumpPc jumpPc2;
+	RtStarsCondOpBranch bge;          // r3 >= r4, goto wait failed
+	RtStarsCondOpNop  nop1;
+	RtStarsCondOpNop  nop2;
+    RtStarsSetCsrJumpPc jumpPc3;
+	RtStarsCondOpBranch branch2;      // r2 != r5, goto loadValue
+
+    /* wait success */
+    RtStarsCondOpLoadImm loadProfDisableStatus1; // wait success, load prof disable status to r2
+    RtStarsSetCsrJumpPc jumpPc4;
+    RtStarsCondOpBranch branch4;      // r2 == r0(0), goto end
+    RtStarsCondOpLHWI lhwi4;          // load profDisableAddr to r4
+    RtStarsCondOpLLWI llwi4;
+    RtStarsCondOpStore  updateProfDisableStatus1; // write r4 to 0x0 by r0
+
+    /* enable profling */
+    RtStarsCondOpLHWI lhwi41;         // load swapBufferProfCfgAddr to r4
+    RtStarsCondOpLLWI llwi41;
+    RtStarsCondOpLHWI lhwiMask41;
+    RtStarsCondOpLLWI llwiMask41;
+    RtStarsCondOpSystemCsr csrrc41;     // cfg use pa
+    RtStarsCondOpLoadImm loadProfCfg1; // load value(u64) from swapBufferProfCfgAddr to r5
+    RtStarsCondOpLHWI lhwi42;          // load value 0x4000 to r1
+    RtStarsCondOpLLWI llwi42;
+    RtStarsCondOpOp   op43;            // r5 = r5 | r1
+    RtStarsCondOpStore enableProf;    // write r4 by r5, enable profling
+    RtStarsCondOpLHWI lhwi44;         // load swapBufferUpdateAddr to r4
+    RtStarsCondOpLLWI llwi44;
+    RtStarsCondOpLHWI lhwi45;         // load swapBufferUpdateValue to r5
+    RtStarsCondOpLLWI llwi45;
+    RtStarsCondOpStore enableProfTriger; // write r4 by r5, disable profling triger
+    RtStarsCondOpSystemCsr csrrs45;    // cfg use va
+    RtStarsSetCsrJumpPc jumpPc5;
+    RtStarsCondOpBranch branch5;      // goto end
+
+    /* wait failed */
+    RtStarsCondOpLoadImm loadProfDisableStatus2; // wait failed, load prof disable status to r2
+    RtStarsSetCsrJumpPc jumpPc6;
+    RtStarsCondOpBranch branch6;      // r2 != r0(0), goto sqe pre
+    RtStarsCondOpLoadImm loadProfSwitch;  // load value(u64) from profSwitchAddr to r3
+    RtStarsSetCsrJumpPc jumpPc7;
+    RtStarsCondOpBranch branch7;      // r3 == r0(0), goto sqe pre
+    RtStarsCondOpLHWI lhwi5;          // load profDisableAddr to r4
+    RtStarsCondOpLLWI llwi5;
+    RtStarsCondOpLHWI lhwi6;          // load 0x1 to r5
+    RtStarsCondOpLLWI llwi6;
+    RtStarsCondOpStore  updateProfDisableStatus2; // write r4 to 0x1 by r5
+
+    /* disable profling */
+    RtStarsCondOpLHWI lhwi61;         // load swapBufferProfCfgAddr to r4
+    RtStarsCondOpLLWI llwi61;
+    RtStarsCondOpLHWI lhwiMask61;
+    RtStarsCondOpLLWI llwiMask61;
+    RtStarsCondOpSystemCsr csrrc61;     // cfg use pa
+    RtStarsCondOpLoadImm loadProfCfg2; // load value(u64) from swapBufferProfCfgAddr to r5
+    RtStarsCondOpLHWI lhwi62;         // load value 0xFFFFBFFF to r1
+    RtStarsCondOpLLWI llwi62;
+    RtStarsCondOpOp   op63;            // r5 = r5 & r1
+    RtStarsCondOpStore disableProf;   // write r4 by r5, disable profling
+    RtStarsCondOpLHWI lhwi64;         // load swapBufferUpdateAddr to r4
+    RtStarsCondOpLLWI llwi64;
+    RtStarsCondOpLHWI lhwi65;         // load swapBufferUpdateValue to r5
+    RtStarsCondOpLLWI llwi65;
+    RtStarsCondOpStore disableProfTriger; // write r4 by r5, disable profling triger
+    RtStarsCondOpSystemCsr csrrs65;    // cfg use va
+    RtStarsSetCsrJumpPc jumpPc8;
+    RtStarsCondOpBranch branch8;      // goto sqe pre
+
+    /* sqe pre */
+    RtStarsCondOpStreamGotoI goto_pre;  // modify sq head, sqe pre;
+    RtStarsSetCsrJumpPc jumpPc9;
+    RtStarsCondOpBranch branch9;        // goto end
+
+    RtStarsCondOpNop end;
+};
+
+/* used for software sq, support dynamic prof, prof enable/disable by c-core */
+struct RtStarsMemWaitValueLastInstrFcExWithDynamicProf {
+    RtStarsCondOpImm addi0;           // init loop index, r3 = r0 + 0 = 0
+    RtStarsCondOpLHWI lhwi1;          // load value2 to r5
+    RtStarsCondOpLLWI llwi1;
+    RtStarsCondOpImm addi1;           // init r4, r4 = r0 + 0 = 0
+    RtStarsCondOpLLWI llwi2;          // load max loop num to r4
+    RtStarsCondOpLoadImm loadValue;   // load value(u64) from virtual addr to r2
+    RtStarsCondOpLHWI lhwi3;          // load value1 to r1
+    RtStarsCondOpLLWI llwi3;
+    RtStarsCondOpOp        op;        // r2 = r2 op value1(r1)
+    RtStarsSetCsrJumpPc jumpPc1;
+	RtStarsCondOpBranch branch1;      // r2 == r5, goto wait success
+	RtStarsCondOpImm addi2;           // loop index++ r3 = r3 + 1
+    RtStarsSetCsrJumpPc jumpPc2;
+	RtStarsCondOpBranch bge;          // r3 >= r4, goto wait failed
+	RtStarsCondOpNop  nop1;
+	RtStarsCondOpNop  nop2;
+    RtStarsSetCsrJumpPc jumpPc3;
+	RtStarsCondOpBranch branch2;      // r2 != r5, goto loadValue
+
+    /* wait success */
+    RtStarsCondOpLoadImm loadProfDisableStatus1; // wait success, load sqId to r3, prof disable status is bit32
+    RtStarsCondOpImmSLLI srli1;                  // r2 = r3 >> 32, r2 is prof disable status
+    RtStarsSetCsrJumpPc jumpPc4;
+    RtStarsCondOpBranch branch4;      // r2 == r0(0), goto end
+    RtStarsCondOpLHWI lhwi4;          // load sqIdMemAddr to r5
+    RtStarsCondOpLLWI llwi4;
+    RtStarsCondOpLHWI lhwi41;          // load 0xFFFFFFFF to r4
+    RtStarsCondOpLLWI llwi41;
+    RtStarsCondOpOp   andOp;           // r3 = r3 & r4 = sqId & 0xFFFFFFFF
+    RtStarsCondOpStore  updateProfDisableStatus1; // write r5, sqId bit32 clear to 0
+
+    /* enable profling */
+    // swapBufferProfCfgAddr = swapBufferBaseAddr + (sqid << sqSwapShift) +  swapBufferProfCfgOffset
+    RtStarsCondOpImmSLLI slli51;      // r1 = r3 << sqSwapShift, r3 = sqId
+    RtStarsCondOpLHWI lhwi52;         // load swapBufferBaseAddr to r4
+    RtStarsCondOpLLWI llwi52;
+    RtStarsCondOpOp   op53;           // r4 = r4 | r1
+    RtStarsCondOpLHWI lhwi54;         // load swapBufferProfCfgOffset to r2
+    RtStarsCondOpLLWI llwi54;
+    RtStarsCondOpOp   op55;           // r4 = r4 | r2
+    RtStarsCondOpLHWI lhwiMask55;
+    RtStarsCondOpLLWI llwiMask55;
+    RtStarsCondOpSystemCsr csrrc55;    // cfg use pa
+    RtStarsCondOpLoad loadProfCfg1;   // LD_R: read sqProfCfg to r5, from r4
+    RtStarsCondOpLHWI lhwi56;         // load value 0x4000 to r1
+    RtStarsCondOpLLWI llwi56;
+    RtStarsCondOpOp   op57;           // r5 = r5 | r1
+    RtStarsCondOpStore enableProf;    // write r4 by r5, enable profling
+    RtStarsCondOpLHWI lhwi58;         // load swapBufferUpdateAddr to r4
+    RtStarsCondOpLLWI llwi58;
+    RtStarsCondOpLHWI lhwi59;         // load 0x80000000 to r1
+    RtStarsCondOpLLWI llwi59;
+    RtStarsCondOpOp   op59;           // r2 = r3 | r1, swapBufferUpdateValue = 0x80000000 + sqId
+    RtStarsCondOpStore enableProfTriger; // write r4 by r2, enable profling triger
+    RtStarsCondOpLHWI lhwiMask59;
+    RtStarsCondOpLLWI llwiMask59;
+    RtStarsCondOpSystemCsr csrrs59;    // cfg use va
+    RtStarsSetCsrJumpPc jumpPc5;
+    RtStarsCondOpBranch branch5;      // goto end
+
+    /* wait failed */
+    RtStarsCondOpLoadImm loadProfDisableStatus2; // wait failed, load sqId to r5, prof disable status is bit32
+    RtStarsCondOpImmSLLI srli2;                  // r2 = r5 >> 32, r2 is prof disable status
+    RtStarsSetCsrJumpPc jumpPc6;
+    RtStarsCondOpBranch branch6;      // r2 != r0(0), goto sqe pre
+    RtStarsCondOpLoadImm loadProfSwitch;  // load value(u64) from profSwitchAddr to r3
+    RtStarsSetCsrJumpPc jumpPc7;
+    RtStarsCondOpBranch branch7;      // r3 == r0(0), goto sqe pre
+    RtStarsCondOpLHWI lhwi5;          // load sqIdMemAddr to r4
+    RtStarsCondOpLLWI llwi5;
+    RtStarsCondOpLHWI lhwi51;          // load 0x100000000 to r2
+    RtStarsCondOpLLWI llwi51;
+    RtStarsCondOpOp   orOp;           // r1 = r5 | r2, sqId bit32 set to 1
+    RtStarsCondOpStore  updateProfDisableStatus2; // write r4 by r1, sqId bit32 set to 1
+
+    /* disable profling */
+    // swapBufferProfCfgAddr = swapBufferBaseAddr + (sqid << sqSwapShift) +  swapBufferProfCfgOffset
+    RtStarsCondOpImmSLLI slli61;      // r1 = r5 << sqSwapShift, r5 = sqId
+    RtStarsCondOpLHWI lhwi62;         // load swapBufferBaseAddr to r4
+    RtStarsCondOpLLWI llwi62;
+    RtStarsCondOpOp   op63;           // r4 = r4 | r1
+    RtStarsCondOpLHWI lhwi64;         // load swapBufferProfCfgOffset to r2
+    RtStarsCondOpLLWI llwi64;
+    RtStarsCondOpOp   op65;           // r4 = r4 | r2
+    RtStarsCondOpLHWI lhwiMask65;
+    RtStarsCondOpLLWI llwiMask65;
+    RtStarsCondOpSystemCsr csrrc65;    // cfg use pa
+    RtStarsCondOpLoad loadProfCfg2;   // LD_R: read sqProfCfg to r2, from r4
+    RtStarsCondOpLHWI lhwi66;         // load value 0xFFFFBFFF to r1
+    RtStarsCondOpLLWI llwi66;
+    RtStarsCondOpOp   op67;           // r2 = r2 & r1
+    RtStarsCondOpStore disableProf;   // write r4 by r2, disable profling
+    RtStarsCondOpLHWI lhwi68;         // load swapBufferUpdateAddr to r4
+    RtStarsCondOpLLWI llwi68;
+    RtStarsCondOpLHWI lhwi69;         // load 0x80000000 to r1
+    RtStarsCondOpLLWI llwi69;
+    RtStarsCondOpOp   op69;           // r2 = r5 | r1, swapBufferUpdateValue = 0x80000000 + sqId
+    RtStarsCondOpStore disableProfTriger; // write r4 by r2, disable profling triger
+    RtStarsCondOpLHWI lhwiMask69;
+    RtStarsCondOpLLWI llwiMask69;
+    RtStarsCondOpSystemCsr csrrs69;    // cfg use va
+    RtStarsSetCsrJumpPc jumpPc8;
+    RtStarsCondOpBranch branch8;      // goto sqe pre
+
+    /* sqe pre */
+    RtStarsCondOpLoadImm loadSqId1;    // load sqid from virtual addr to r3
+	RtStarsCondOpLHWI lhwi7;          // load sq head pre to r4
+    RtStarsCondOpLLWI llwi7;
+	RtStarsCondOpImmSLLI slli1;        // r4 = r4 < 16
+	RtStarsCondOpOp        op2;       // r3 = r3 | r4, sqId=r3[10:0], head=r3[31:16]
+	RtStarsCondOpStreamGotoR goto_pre;  // modify sq head, sqe pre;
+    RtStarsSetCsrJumpPc jumpPc9;
+    RtStarsCondOpBranch branch9;        // goto end
+
+    /* end */
+    RtStarsCondOpNop end;
+};
+
 // mem wait task func call para
 struct RtStarsMemWaitValueInstrFcPara {
     uint64_t devAddr;
@@ -531,6 +688,27 @@ struct RtStarsMemWaitValueInstrFcPara {
     uint32_t lastSqePos;      // 当lastSqePos和sqTail相同是，说明最后一个sqe还没下发下来，不能跳转到sqHeadNext
     uint16_t awSize;
     uint8_t  bindFlag;         // 确认下是否是模型，模型场景下，直接跳转，不需要check
+};
+
+// mem wait task func call para, used for dynamic prof
+struct RtStarsMemWaitValueInstrFcParaWithDynamicProf {
+    uint64_t devAddr;
+    uint64_t value;
+    uint64_t maxLoop;
+    uint64_t sqIdMemAddr;     // used for software sq, get sq id 
+    uint64_t profSwitchAddr;  // 记录是否开启了profling，使用全局内存，开启proling后，写入0x1，没开启写入0
+    uint64_t profSwitchValue; // 值为0x1
+    uint64_t profDisableAddr; // task力度的，初始值为0，profling关闭时，写1，profling打开时，写0
+    uint64_t swapBufferProfCfgAddr;   // prof enable/disable by c-core, used for non software sq
+    uint64_t swapBufferBaseAddr;      // prof enable/disable by c-core, used for software sq
+    uint64_t swapBufferUpdateAddr;    // prof enable/disable by c-core
+    uint32_t sqSwapShift;             // prof enable/disable by c-core, used for software sq
+    uint32_t swapBufferProfCfgOffset; // prof enable/disable by c-core, used for software sq
+    uint32_t swapBufferUpdateValue;   // bit31=1, bit[0-11]=sqId, used for non software sq
+    uint32_t sqId;            // used for non software sq
+    uint32_t flag;
+    uint32_t sqHeadPre;
+    uint16_t awSize;
 };
 
 #pragma pack(pop)

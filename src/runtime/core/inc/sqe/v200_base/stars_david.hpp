@@ -595,7 +595,7 @@ void StarsV2IpcEventWaitTaskUnInit(TaskInfo* taskInfo);
 void StarsV2IpcEventRecordTaskUnInit(TaskInfo* taskInfo);
 void ConstructFirstDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe);
 void ConstructSecondDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe,
-    const RtStarsMemWaitValueInstrFcPara &fcPara);
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara);
 void ConstructNopSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe);
 
 

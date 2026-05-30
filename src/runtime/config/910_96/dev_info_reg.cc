@@ -91,6 +91,7 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC,
     RtOptionalFeatureType::RT_FEATURE_MEM_H2D_MANAGER_POLICY_SYNC_FORCE,
+    RtOptionalFeatureType::RT_FEATURE_MEM_WAIT_PROF,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL
 };
 
@@ -233,6 +234,10 @@ static const DevProperties CHIP_CLOUD_V5_PROPERTIES = {
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_COMMON_CNT,
     .ioDieNum = 0U,
+    .swapBufferBaseAddr = 0UL,
+    .swapBufferUpdateRegOffset = DAVID_SWAPBUFF_INFO_UPDATE_REG_OFFSET,
+    .sqSwapShift = 7U,
+    .swapBufferProfCfgOffset = 64U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V5, CHIP_CLOUD_V5_PROPERTIES);

@@ -388,9 +388,10 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *cons
     constexpr uint8_t MEM_WAIT_SQE_INDEX_1 = 1U;
     constexpr uint8_t MEM_WAIT_SQE_INDEX_2 = 2U;
 
-    RtStarsMemWaitValueInstrFcPara fcPara = {};
+    RtStarsMemWaitValueInstrFcParaWithDynamicProf fcPara = {};
     MemWaitValueTaskInfo *memWaitValueTask = &taskInfo->u.memWaitValueTask;
     Stream * const stream = taskInfo->stream;
+    auto props = stream->Device_()->GetDevProperties();
 
     const uint32_t taskPosTail = (stream->taskResMang_ == nullptr) ? (static_cast<Stream *>(stream))->GetCurSqPos() : taskInfo->id;
     fcPara.devAddr = memWaitValueTask->devAddr;
@@ -401,6 +402,27 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *cons
     fcPara.sqHeadPre = (taskPosTail + 1) % stream->GetSqDepth();
     fcPara.awSize = memWaitValueTask->awSize;
     fcPara.sqIdMemAddr = stream->GetSqIdMemAddr();
+    fcPara.profSwitchAddr = stream->Device_()->GetProfSwitchAddr();
+    fcPara.profSwitchValue = 0x1;
+    fcPara.profDisableAddr = memWaitValueTask->profDisableStatusAddr;
+    fcPara.swapBufferBaseAddr = props.swapBufferBaseAddr;
+    fcPara.swapBufferUpdateAddr = stream->Device_()->GetStarsRegBaseAddr() + props.swapBufferUpdateRegOffset;
+    fcPara.sqSwapShift = props.sqSwapShift;
+    fcPara.swapBufferProfCfgOffset = props.swapBufferProfCfgOffset;
+
+    if (stream->IsSoftwareSqEnable()) {
+        fcPara.swapBufferUpdateValue = 0U;
+        fcPara.swapBufferProfCfgAddr = 0U;
+    } else {
+        fcPara.swapBufferUpdateValue = 0x80000000 + fcPara.sqId;  // bit[31]=1, bit[0-11]=sqId
+        fcPara.swapBufferProfCfgAddr =
+            fcPara.swapBufferBaseAddr + (fcPara.sqId << fcPara.sqSwapShift) + fcPara.swapBufferProfCfgOffset;
+    }
+
+    RT_LOG(RT_LOG_INFO, "swapBufferBaseAddr=0x%llx, swapBufferUpdateAddr=0x%llx, sqSwapShif=%u, sqId=%u, "
+        "swapBufferProfCfgOffset=%u, swapBufferUpdateValue=0x%llx.",
+        fcPara.swapBufferBaseAddr, fcPara.swapBufferUpdateAddr, fcPara.sqSwapShift, fcPara.sqId,
+        fcPara.swapBufferProfCfgOffset, fcPara.swapBufferUpdateValue);
 
     // two sqes probably trigger a software constraint when the stream is full, add a nop sqe to evade
     ConstructNopSqeForMemWaitValueTask(taskInfo, davidSqe);
@@ -460,7 +482,7 @@ void ConstructFirstDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t 
 }
 
 void ConstructSecondDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe,
-    const RtStarsMemWaitValueInstrFcPara &fcPara)
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
 
@@ -470,16 +492,16 @@ void ConstructSecondDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t
     rtError_t ret;
     uint64_t funcCallSize;
     if (taskInfo->stream->IsSoftwareSqEnable()) {
-        RtStarsMemWaitValueLastInstrFcExWithoutProf fcEx = {};
-        funcCallSize = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcExWithoutProf));
-        ConstructMemWaitValueInstr2ExWithoutProf(fcEx, fcPara);
+        RtStarsMemWaitValueLastInstrFcExWithDynamicProf fcEx = {};
+        funcCallSize = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf));
+        ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(memWaitValueTask->funcCallSvmMem2,
             memWaitValueTask->funCallMemSize2, &fcEx, funcCallSize,
             RT_MEMCPY_HOST_TO_DEVICE);
     } else {
-        RtStarsMemWaitValueLastInstrFcWithoutProf fc = {};
-        funcCallSize = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcWithoutProf));
-        ConstructMemWaitValueInstr2WithoutProf(fc, fcPara);
+        RtStarsMemWaitValueLastInstrFcWithDynamicProf fc = {};
+        funcCallSize = static_cast<uint64_t>(sizeof(RtStarsMemWaitValueLastInstrFcWithDynamicProf));
+        ConstructMemWaitValueInstr2WithDynamicProf(fc, fcPara);
         ret = taskInfo->stream->Device_()->Driver_()->MemCopySync(memWaitValueTask->funcCallSvmMem2,
             memWaitValueTask->funCallMemSize2, &fc, funcCallSize,
             RT_MEMCPY_HOST_TO_DEVICE);

@@ -2021,3 +2021,53 @@ TEST_F(TaskTestDavid, memcpy_async_batch_ub_dma_test)
     rtInstance->SetConnectUbFlag(false);
     GlobalMockObject::verify();
 }
+
+TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_basic)
+{
+    RtStarsMemWaitValueInstrFcParaWithDynamicProf fcPara = {};
+    fcPara.devAddr = 0x1000;
+    fcPara.value = 0x1;
+    fcPara.maxLoop = 100;
+    fcPara.sqIdMemAddr = 0x2000;
+    fcPara.profSwitchAddr = 0x3000;
+    fcPara.profSwitchValue = 0x1;
+    fcPara.profDisableAddr = 0x4000;
+    fcPara.swapBufferProfCfgAddr = 0x5000;
+    fcPara.swapBufferBaseAddr = 0x6000;
+    fcPara.swapBufferUpdateAddr = 0x7000;
+    fcPara.sqSwapShift = 4;
+    fcPara.swapBufferProfCfgOffset = 8;
+    fcPara.swapBufferUpdateValue = 0x80000000;
+    fcPara.sqId = 1;
+    fcPara.flag = RT_EQUAL;
+    fcPara.sqHeadPre = 0;
+    fcPara.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
+
+    RtStarsMemWaitValueLastInstrFcExWithDynamicProf fcEx = {};
+    ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
+}
+
+TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_8bit_size)
+{
+    RtStarsMemWaitValueInstrFcParaWithDynamicProf fcPara = {};
+    fcPara.devAddr = 0x1000;
+    fcPara.value = 0x1;
+    fcPara.maxLoop = 50;
+    fcPara.sqIdMemAddr = 0x2000;
+    fcPara.profSwitchAddr = 0x3000;
+    fcPara.profSwitchValue = 0x1;
+    fcPara.profDisableAddr = 0x4000;
+    fcPara.swapBufferProfCfgAddr = 0x5000;
+    fcPara.swapBufferBaseAddr = 0x6000;
+    fcPara.swapBufferUpdateAddr = 0x7000;
+    fcPara.sqSwapShift = 4;
+    fcPara.swapBufferProfCfgOffset = 8;
+    fcPara.swapBufferUpdateValue = 0x80000000;
+    fcPara.sqId = 1;
+    fcPara.flag = RT_NOT_EQUAL;
+    fcPara.sqHeadPre = 0;
+    fcPara.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+
+    RtStarsMemWaitValueLastInstrFcExWithDynamicProf fcEx = {};
+    ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
+}

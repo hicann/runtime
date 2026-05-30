@@ -193,6 +193,10 @@ static const DevProperties CHIP_ADC_PROPERTIES = {
     .npuArch = 0,
     .sqDisableStatPollingCycleNum = SQ_DISABLE_POLLING_CYCLE_ADC_CNT,
     .ioDieNum = 0U,
+    .swapBufferBaseAddr = 0UL,
+    .swapBufferUpdateRegOffset = 0UL,
+    .sqSwapShift = 0U,
+    .swapBufferProfCfgOffset = 0U,
 };
 REGISTER_DEV_PROPERTIES(CHIP_ADC, CHIP_ADC_PROPERTIES);
 }

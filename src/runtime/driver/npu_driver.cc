@@ -1672,5 +1672,36 @@ rtError_t NpuDriver::GetStreamPriorityValue(Stream * const stm, uint32_t * const
 
     return RT_ERROR_NONE;
 }
+
+rtError_t NpuDriver::GetSwapBufferInfo(const uint32_t deviceId, const uint32_t tsId,
+    uint64_t * const swapBufferBaseAddr)
+{
+    ts_ctrl_msg_body_t swapBufferIn = {};
+    ts_ctrl_msg_body_t swapBufferAck = {};
+    size_t ackCount = sizeof(ts_ctrl_msg_body_t);
+
+    swapBufferIn.type = OP_QUERY_SWAP_BUFFER_INFO;
+    const size_t resv_count = sizeof(swapBufferIn.u.query_swap_buffer_info.resv) / sizeof(swapBufferIn.u.query_swap_buffer_info.resv[0]);
+    for (size_t i = 0; i < resv_count; i++) {
+        swapBufferIn.u.query_swap_buffer_info.resv[i] = 0;
+    }
+
+    struct tsdrv_ctrl_msg para;
+    para.tsid = tsId;
+    para.msg_len = sizeof(ts_ctrl_msg_body_t);
+    para.msg = static_cast<void*>(&swapBufferIn);
+
+    COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT,
+        "[drv api] halTsdrvCtl does not exist.");
+    RT_LOG(RT_LOG_INFO, "device_id=%u, ts_id=%u", deviceId, tsId);
+    const drvError_t drvRet = halTsdrvCtl(deviceId, TSDRV_CTL_CMD_CTRL_MSG,
+        static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg), static_cast<void*>(&swapBufferAck), &ackCount);
+    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
+        "device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId, static_cast<int32_t>(drvRet));
+
+    *swapBufferBaseAddr = swapBufferAck.u.query_swap_buffer_info.swap_buffer_base_addr;
+
+    return RT_ERROR_NONE;
+}
 }  // namespace runtime
 }  // namespace cce

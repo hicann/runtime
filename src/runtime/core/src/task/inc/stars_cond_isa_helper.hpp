@@ -40,15 +40,12 @@ void ConstructStreamSwitchFc(rtStarsStreamSwitchFc_t &fc, const rtStarsStreamSwi
 void ConstructStreamSwitchExFc(rtStarsStreamSwitchExFc_t &fc, const rtStarsStreamSwitchExFcPara_t &fcPara);
 void ConstructLabelSwitchByIndexFc(rtStarsLabelSwitchByIndexFc_t &fc, const rtStarsLabelSwitchByIndexFcPara_t &fcPara,
     const uint16_t currentStreamSqId);
-void ConstructMemWaitValueInstr2WithoutProf(RtStarsMemWaitValueLastInstrFcWithoutProf &fc,
-    const RtStarsMemWaitValueInstrFcPara &fcPara);
-void ConstructMemWaitValueInstr2ExWithoutProf(RtStarsMemWaitValueLastInstrFcExWithoutProf &fc,
-    const RtStarsMemWaitValueInstrFcPara &fcPara);
+void ConstructMemWaitValueInstr2WithDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara);
+void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFcExWithDynamicProf &fc,
+    const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara); 
 void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc &fc, const RtStarsMemWaitValueInstrFcPara &fcPara);
 void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx &fc, const RtStarsMemWaitValueInstrFcPara &fcPara);
-void ConvertConditionToOpAndBranchFunc(const RtStarsMemWaitValueInstrFcPara &fcPara,
-    rtStarsCondIsaBranchFunc3_t &branchFunc, rtStarsCondIsaOpFunc3_t &opFunc3, RtStarsCondIsaOpFunc7 &opFunc7,
-    uint64_t &value1, uint64_t &value2);
 void ConvertOpToReverseOp(const rtStarsCondIsaBranchFunc3_t branchFunc, rtStarsCondIsaBranchFunc3_t &reverseBranchFunc);
 
 void ConstructRdmaPiValueModifyInstr(
