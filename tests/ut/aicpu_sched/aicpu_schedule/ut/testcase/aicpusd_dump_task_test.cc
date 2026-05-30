@@ -76,6 +76,14 @@ bool CheckAndGetKfcDumpStatsAPIFake()
 {
     return true;
 }
+
+uint64_t GetTidGake()
+{
+    static uint64_t tid = 0;
+    tid++;
+    return tid;
+}
+
 }
 
 TEST_F(AicpuDumpTaskTest, ProcessDumpOpInfoTest1) {
@@ -916,4 +924,1000 @@ TEST_F(AicpuDumpTaskTest, GetDumpOpTaskDataforKfcUTFail3) {
     uint32_t length = 0;
     ret = taskManager.DumpOpTaskDataforKfc(taskinfo, dumpData, length);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+}
+
+// ============================================================================
+// DumpSessionManager Tests
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DumpSessionManagerGetInstanceTest) {
+    DumpSessionManager &instance1 = DumpSessionManager::GetInstance();
+    DumpSessionManager &instance2 = DumpSessionManager::GetInstance();
+    EXPECT_EQ(&instance1, &instance2);
+}
+
+TEST_F(AicpuDumpTaskTest, DumpSessionManagerGetInstanceNotNullTest) {
+    DumpSessionManager &instance = DumpSessionManager::GetInstance();
+    EXPECT_NE(&instance, nullptr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetSessionCreateNewTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x12345678));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(1001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    IDE_SESSION session = manager.GetSession(1234, 0);
+    EXPECT_NE(session, nullptr);
+    EXPECT_EQ(session, (void*)0x12345678);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, GetSessionReuseTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xABCDEF00));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(2001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    IDE_SESSION session1 = manager.GetSession(5678, 1);
+    IDE_SESSION session2 = manager.GetSession(5678, 1);
+    EXPECT_EQ(session1, session2);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, GetSessionDifferentThreadTest) {
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x11111111))
+        .then(returnValue((void*)0x22222222));
+
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(3001UL))
+        .then(returnValue(3002UL));
+
+    IDE_SESSION session1 = manager.GetSession(1111, 0);
+    EXPECT_EQ(session1, (void*)0x11111111);
+
+    IDE_SESSION session2 = manager.GetSession(1111, 0);
+    EXPECT_EQ(session2, (void*)0x22222222);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, GetSessionIdeDumpStartFailTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(4001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    IDE_SESSION session = manager.GetSession(9999, 0);
+    EXPECT_EQ(session, nullptr);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionCreateNewTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x33333333));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(5001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();  // Clear existing sessions
+
+    IDE_SESSION session = manager.ReacquireSession(8888, 0);
+    EXPECT_NE(session, nullptr);
+    EXPECT_EQ(session, (void*)0x33333333);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionRecreateTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x44444444))
+        .then(returnValue((void*)0x55555555));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(6001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session1 = manager.GetSession(7777, 0);
+    EXPECT_EQ(session1, (void*)0x44444444);
+
+    IDE_SESSION session2 = manager.ReacquireSession(7777, 0);
+    EXPECT_EQ(session2, (void*)0x55555555);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionFailTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(7001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session = manager.ReacquireSession(6666, 0);
+    EXPECT_EQ(session, nullptr);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionAfterCloseFailTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x66666666))
+        .then(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(8001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session1 = manager.GetSession(5555, 0);
+    EXPECT_NE(session1, nullptr);
+
+    IDE_SESSION session2 = manager.ReacquireSession(5555, 0);
+    EXPECT_EQ(session2, nullptr);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, CloseAllSessionsSuccessTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x77777777))
+        .then(returnValue((void*)0x88888888));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(9001UL))
+        .then(returnValue(9002UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session1 = manager.GetSession(4444, 0);
+    IDE_SESSION session2 = manager.GetSession(4444, 0);
+
+    manager.CloseAllSessions();
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, CloseAllSessionsEmptyMapTest) {
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();  // Already empty
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, CreateIdeDumpSessionSuccessTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0x99999999));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    IDE_SESSION session = manager.CreateIdeDumpSession(1234, 0);
+    EXPECT_NE(session, nullptr);
+    EXPECT_EQ(session, (void*)0x99999999);
+}
+
+TEST_F(AicpuDumpTaskTest, CreateIdeDumpSessionFailTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    IDE_SESSION session = manager.CreateIdeDumpSession(5678, 1);
+    EXPECT_EQ(session, nullptr);
+}
+
+// ============================================================================
+// OpDumpTask.Dump Tests (Failure Retry)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DumpIdeDumpDataSuccessTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+
+    IDE_SESSION mockSession = (void*)0xAAAA1111;
+
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), mockSession, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AicpuDumpTaskTest, DumpReacquireSuccessTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+
+    IDE_SESSION mockSession = (void*)0xAAAA2222;
+
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xAAAA3333));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(1111UL));
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = mockSession;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, DumpReacquireFailTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+
+    IDE_SESSION mockSession = (void*)0xAAAA4444;
+
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(2222UL));
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = mockSession;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+// ============================================================================
+// DoDumpTensor / DoDumpStats Tests
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DoDumpTensorGetSessionFailTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    opDumpTask->buffSize_ = 1024;
+    opDumpTask->buff_ = std::make_unique<char[]>(1024);
+    opDumpTask->offset_ = 1024;
+
+    const std::string dumpFilePath = "/tmp/dump";
+
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(3333UL));
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    const auto ret = opDumpTask->DoDumpTensor(dumpFilePath);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, DoDumpStatsGetSessionFailTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+
+    const std::string dumpFilePath = "/tmp/dump";
+    const std::string content = "test stats";
+
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(4444UL));
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    const auto ret = opDumpTask->DoDumpStats(dumpFilePath, content);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+// ============================================================================
+// Log Validation Tests (新增日志调用路径验证)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, PreProcessOutputLogTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+
+    aicpu::dump::Task task;
+    aicpu::dump::Output *output = task.add_output();
+    ASSERT_NE(output, nullptr);
+    output->set_data_type(7);
+    output->set_format(0);
+    output->set_address(0x1000U);
+    output->set_addr_type(aicpu::dump::AddressType::TRADITIONAL_ADDR);
+    output->set_size(16U);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    const auto ret = opDumpTask->PreProcessOutput(task, dumpData);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(opDumpTask->outputsBaseAddr_.size(), 1U);
+}
+
+TEST_F(AicpuDumpTaskTest, PreProcessInputLogTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+
+    aicpu::dump::Task task;
+    aicpu::dump::Input *input = task.add_input();
+    ASSERT_NE(input, nullptr);
+    input->set_data_type(7);
+    input->set_format(0);
+    input->set_address(0x2000U);
+    input->set_addr_type(aicpu::dump::AddressType::TRADITIONAL_ADDR);
+    input->set_size(32U);
+
+    ::toolkit::dumpdata::DumpData dumpData;
+    const auto ret = opDumpTask->PreProcessInput(task, dumpData);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(opDumpTask->inputsBaseAddr_.size(), 1U);
+}
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrLogTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+
+    uint64_t testAddr = 0x5000U;
+    opDumpTask->inputsBaseAddr_.push_back(testAddr);
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
+
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, testAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrBaseAddrZeroTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+
+    opDumpTask->inputsBaseAddr_.push_back(0U);
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::AddressType::TRADITIONAL_ADDR);
+
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrRawAddrTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+
+    uint64_t testAddr = 0x4000U;
+    opDumpTask->inputsBaseAddr_.push_back(testAddr);
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
+
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, testAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrSingleOpTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+
+    uint64_t testAddr = 0x5000U;
+    opDumpTask->inputsBaseAddr_.push_back(testAddr);
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
+
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, testAddr);
+}
+
+// ============================================================================
+// Thread Safety Boundary Tests (线程安全边界测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, GetSessionConcurrentThreadsTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xAAAA0001))
+        .then(returnValue((void*)0xAAAA0002))
+        .then(returnValue((void*)0xAAAA0003))
+        .then(returnValue((void*)0xAAAA0004));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    // 模拟4个不同线程调用
+    MOCKER_CPP(&AicpuSchedule::GetTid).stubs().will(invoke(GetTidGake));
+
+    IDE_SESSION session1 = manager.GetSession(1111, 0);
+    IDE_SESSION session2 = manager.GetSession(1111, 0);
+    IDE_SESSION session3 = manager.GetSession(1111, 0);
+    IDE_SESSION session4 = manager.GetSession(1111, 0);
+
+    // 不同线程应获得不同 session
+    EXPECT_NE(session1, session2);
+    EXPECT_NE(session2, session3);
+    EXPECT_NE(session3, session4);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionConcurrentTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xBBBB0001))
+        .then(returnValue((void*)0xBBBB0002))
+        .then(returnValue((void*)0xBBBB0003));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(20001UL))
+        .then(returnValue(20001UL))
+        .then(returnValue(20002UL));
+
+    IDE_SESSION session1 = manager.GetSession(2222, 0);
+    IDE_SESSION session2 = manager.ReacquireSession(2222, 0);
+
+    // 同线程重新获取应关闭旧 session 并创建新 session
+    EXPECT_NE(session1, session2);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, DumpSessionManagerPrivateMemberAccessTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xCCCC0001));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(30001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+
+    IDE_SESSION session = manager.GetSession(3333, 0);
+    EXPECT_EQ(manager.sessionsMap_.size(), 1U);
+
+    manager.CloseAllSessions();
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+// ============================================================================
+// Edge Cases Tests (边界情况测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, GetSessionInvalidParamsTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(40001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    // 无效参数：hostPid=-1, deviceId=UINT32_MAX
+    IDE_SESSION session = manager.GetSession(-1, UINT32_MAX);
+    EXPECT_EQ(session, nullptr);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionNullptrInMapTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(50001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session = manager.ReacquireSession(4444, 0);
+    EXPECT_EQ(session, nullptr);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, CloseAllSessionsWithNullptrSessionTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(60001UL));
+
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session = manager.GetSession(5555, 0);
+    EXPECT_EQ(session, nullptr);
+
+    manager.CloseAllSessions();
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+// ============================================================================
+// Dump Method Edge Cases (Dump方法边界情况测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DumpNullSessionTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestNullSession";
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+    IDE_SESSION nullSession = nullptr;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), nullSession, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+}
+
+TEST_F(AicpuDumpTaskTest, DumpZeroLenSuccessTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestZeroLen";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string path = "/tmp/dump";
+    IDE_SESSION mockSession = (void*)0xDDDD0001;
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    const auto ret = opDumpTask->Dump(path, nullptr, 0U, mockSession, true);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(AicpuDumpTaskTest, DumpSessionReferenceUpdateTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestSessionRef";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+    IDE_SESSION originalSession = (void*)0xDDDD0001;
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xDDDD0002));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(11111UL));
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = originalSession;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    EXPECT_NE(session, originalSession);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, DumpFirstFailReacquireNullTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestReacquireNull";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+    IDE_SESSION mockSession = (void*)0xDDDD0003;
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(22222UL));
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = mockSession;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+    EXPECT_EQ(session, nullptr);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+// ============================================================================
+// GetOutputDataAddr Tests (GetOutputDataAddr方法全分支测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrTraditionalAddrTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t expectedAddr = 0xABCD1234U;
+    uint64_t baseBuffer[1] = {expectedAddr};
+    opDumpTask->outputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::TRADITIONAL_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, expectedAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrBaseAddrZeroTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    opDumpTask->outputsBaseAddr_.push_back(0U);
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::TRADITIONAL_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrRawAddrTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t testAddr = 0x7000U;
+    opDumpTask->outputsBaseAddr_.push_back(testAddr);
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, testAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrSingleOpTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = true;
+    uint64_t testAddr = 0x8000U;
+    opDumpTask->outputsBaseAddr_.push_back(testAddr);
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::RAW_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, testAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrNotilingAddrTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t finalDataAddr = 0xCAFE5678U;
+    uint64_t level2[1] = {finalDataAddr};
+    uint64_t level1[1] = {reinterpret_cast<uint64_t>(level2)};
+    opDumpTask->outputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(level1));
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::NOTILING_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, finalDataAddr);
+}
+
+// ============================================================================
+// GetInputDataAddr Dereference Tests (指针解引用全路径测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrTraditionalAddrRealMemTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t expectedAddr = 0x1234ABCDU;
+    uint64_t baseBuffer[1] = {expectedAddr};
+    opDumpTask->inputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::TRADITIONAL_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, expectedAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetInputDataAddrNotilingAddrTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t finalDataAddr = 0xBEEF1234U;
+    uint64_t level2[1] = {finalDataAddr};
+    uint64_t level1[1] = {reinterpret_cast<uint64_t>(level2)};
+    opDumpTask->inputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(level1));
+    opDumpTask->inputsAddrType_.push_back(aicpu::dump::NOTILING_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetInputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, finalDataAddr);
+}
+
+TEST_F(AicpuDumpTaskTest, GetOutputDataAddrTraditionalAddrLogTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(0, 0);
+    opDumpTask->opName_ = "TestLogOp";
+    opDumpTask->isSingleOrUnknowShapeOp_ = false;
+    uint64_t expectedAddr = 0xFACE5678U;
+    uint64_t baseBuffer[1] = {expectedAddr};
+    opDumpTask->outputsBaseAddr_.push_back(reinterpret_cast<uint64_t>(baseBuffer));
+    opDumpTask->outputsAddrType_.push_back(aicpu::dump::TRADITIONAL_ADDR);
+    uint64_t dataAddr = 0U;
+    opDumpTask->GetOutputDataAddr(dataAddr, 0);
+    EXPECT_EQ(dataAddr, expectedAddr);
+}
+
+// ============================================================================
+// DoDumpStats Success Path with DumpSessionManager (成功路径测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DoDumpStatsSuccessWithSessionManagerTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string dumpFilePath = "/tmp/dump_stats";
+    const std::string content = "test stats content";
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xEEEE2222));
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(70002UL));
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    const auto ret = opDumpTask->DoDumpStats(dumpFilePath, content);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, DoDumpStatsRetrySuccessTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string dumpFilePath = "/tmp/dump_stats_retry";
+    const std::string content = "test stats retry";
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xEEEE3333))
+        .then(returnValue((void*)0xEEEE3334));
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(70003UL));
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    const auto ret = opDumpTask->DoDumpStats(dumpFilePath, content);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+// ============================================================================
+// DumpSessionManager Error Handling (错误处理测试)
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, CloseAllSessionsIdeDumpEndFailTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xFFFF0001));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(80001UL));
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session = manager.GetSession(1234, 0);
+    EXPECT_NE(session, nullptr);
+
+    manager.CloseAllSessions();
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+TEST_F(AicpuDumpTaskTest, ReacquireSessionIdeDumpEndFailTest) {
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xFFFF0002))
+        .then(returnValue((void*)0xFFFF0003));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(90001UL));
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session1 = manager.GetSession(1234, 0);
+    EXPECT_EQ(session1, (void*)0xFFFF0002);
+
+    IDE_SESSION session2 = manager.ReacquireSession(1234, 0);
+    EXPECT_EQ(session2, (void*)0xFFFF0003);
+
+    manager.CloseAllSessions();
+}
+
+TEST_F(AicpuDumpTaskTest, CloseAllSessionsWithNullptrSkipTest) {
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)nullptr));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(80002UL))
+        .then(returnValue(80003UL));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    DumpSessionManager &manager = DumpSessionManager::GetInstance();
+    manager.CloseAllSessions();
+
+    IDE_SESSION session1 = manager.GetSession(1111, 0);
+    EXPECT_EQ(session1, nullptr);
+    IDE_SESSION session2 = manager.GetSession(2222, 0);
+    EXPECT_EQ(session2, nullptr);
+
+    manager.CloseAllSessions();
+    EXPECT_EQ(manager.sessionsMap_.size(), 0U);
+}
+
+// ============================================================================
+// GAP-1: ReacquireSession succeeds but 2nd IdeDumpData also fails
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DumpReacquireSuccessButSecondDumpFailTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestSecondFail";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    const std::string path = "/tmp/dump";
+    std::vector<char> data(100, 0);
+    IDE_SESSION mockSession = (void*)0xDDDD0004;
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_HDC_CHANNEL_ERROR))
+        .then(returnValue(IDE_DAEMON_UNKNOW_ERROR));
+    MOCKER_CPP(&IdeDumpEnd)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xDDDD0005));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(33333UL));
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = mockSession;
+    const auto ret = opDumpTask->Dump(path, data.data(), data.size(), session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+    EXPECT_NE(session, nullptr);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+}
+
+// ============================================================================
+// GAP-3: DoDumpTensor full success path with DumpSessionManager
+// ============================================================================
+
+TEST_F(AicpuDumpTaskTest, DoDumpTensorSuccessWithSessionManagerTest) {
+    std::shared_ptr<OpDumpTask> opDumpTask = std::make_shared<OpDumpTask>(1234, 0);
+    opDumpTask->opName_ = "TestOp";
+    opDumpTask->hostPid_ = 1234;
+    opDumpTask->deviceId_ = 0;
+    opDumpTask->buffSize_ = 1024;
+    opDumpTask->buff_ = std::make_unique<char[]>(1024);
+    opDumpTask->offset_ = 1024;
+
+    const std::string dumpFilePath = "/tmp/dump";
+    MOCKER_CPP(&IdeDumpStart)
+        .stubs()
+        .will(returnValue((void*)0xEEEE1111));
+    MOCKER_CPP(&IdeDumpData)
+        .stubs()
+        .will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AicpuSchedule::GetTid)
+        .stubs()
+        .will(returnValue(70001UL));
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
+
+    IDE_SESSION session = (void*)0xEEEE1111;
+    const auto ret = opDumpTask->Dump(dumpFilePath, opDumpTask->buff_.get(), opDumpTask->offset_, session, false);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+
+    DumpSessionManager::GetInstance().CloseAllSessions();
 }

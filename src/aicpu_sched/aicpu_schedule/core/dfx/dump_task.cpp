@@ -146,6 +146,7 @@ StatusCode OpDumpTask::PreProcessOutput(const aicpu::dump::Task &task,
         outputsFormat_.push_back(ge::GetPrimaryFormat(format));
         outputsShape_.push_back(outputShape);
         outputsOriginShape_.push_back(outputOriginshape);
+        aicpusd_info("PreProcessOutput op name[%s], output[%ld], value is[%lx], value type[%d]", opName_.c_str(), i, item.address(), item.addr_type());
     }
     return AICPU_SCHEDULE_OK;
 }
@@ -194,6 +195,7 @@ StatusCode OpDumpTask::PreProcessInput(const aicpu::dump::Task &task,
         inputsFormat_.push_back(ge::GetPrimaryFormat(format));
         inputsShape_.push_back(inputshape);
         inputsOriginShape_.push_back(inputOriginShape);
+        aicpusd_info("PreProcessInput op name[%s], input[%ld], value is[%lx], value type[%d]", opName_.c_str(), i, item.address(), item.addr_type());
     }
     return AICPU_SCHEDULE_OK;
 }
@@ -352,6 +354,7 @@ StatusCode OpDumpTask::PreProcessOpMappingInfo(const aicpu::dump::Task &task,
 void OpDumpTask::GetInputDataAddr(uint64_t &dataAddr, const int32_t i)
 {
     const uint64_t baseAddr = inputsBaseAddr_.at(static_cast<size_t>(i));
+    aicpusd_info("op name[%s], input[%d], base value[%lx]", opName_.c_str(), i, baseAddr);
     dataAddr = baseAddr;
     if (!isSingleOrUnknowShapeOp_) {
         if (baseAddr == 0U) {
@@ -359,7 +362,7 @@ void OpDumpTask::GetInputDataAddr(uint64_t &dataAddr, const int32_t i)
             return;
         }
         const int32_t addrType = inputsAddrType_.at(static_cast<size_t>(i));
-        aicpusd_info("op name[%s], input[%d], Type[%u]", opName_.c_str(), i, addrType);
+        aicpusd_info("op name[%s], input[%d], Type[%u], data value[%lx]", opName_.c_str(), i, addrType, dataAddr);
         // baseAddr is a pointer point to data addr
         if (addrType != aicpu::dump::RAW_ADDR) {
             dataAddr = *(PtrToPtr<void, uint64_t>(ValueToPtr(baseAddr)));
@@ -369,13 +372,13 @@ void OpDumpTask::GetInputDataAddr(uint64_t &dataAddr, const int32_t i)
             }
         }
     }
-    aicpusd_info("op name[%s], input[%d], Type[%u]", opName_.c_str(), i, inputsAddrType_.at(static_cast<size_t>(i)));
+    aicpusd_info("op name[%s], input[%d], Type[%u], data value[%lx]", opName_.c_str(), i, inputsAddrType_.at(static_cast<size_t>(i)), dataAddr);
 
     return;
 }
 StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                         const std::string &path,
-                                        const IDE_SESSION ideSession)
+                                        IDE_SESSION &ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int64_t i = 0; i < dumpData.input_size(); ++i) {
@@ -398,8 +401,8 @@ StatusCode OpDumpTask::ProcessInputDump(const ::toolkit::dumpdata::DumpData &dum
             const uint64_t actSize = std::min(emptyBufferSize, len - innerOffset);
             const uint64_t srcAddr = dataAddr + innerOffset;
             aicpusd_info("op name[%s], begin to copy data from HBM to DDR for input[%d]," \
-                         " srcSize[%llu], innerOffset[%llu], offset[%llu], dstSize[%llu]",
-                         opName_.c_str(), i, actSize, innerOffset, offset_, emptyBufferSize);
+                         " srcSize[%llu], innerOffset[%llu], offset[%llu], dstSize[%llu], dst value[%lx], src value[%lx]",
+                         opName_.c_str(), i, actSize, innerOffset, offset_, emptyBufferSize, buff_.get() + offset_, srcAddr);
             const errno_t eRet = memcpy_s(buff_.get() + offset_,
                                           emptyBufferSize,
                                           ValueToPtr(srcAddr),
@@ -457,7 +460,7 @@ void OpDumpTask::GetOutputDataAddr(uint64_t &dataAddr, const int32_t i)
 
 StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                          const std::string &path,
-                                         const IDE_SESSION ideSession)
+                                         IDE_SESSION &ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int64_t i = 0; i < dumpData.output_size(); ++i) {
@@ -514,7 +517,7 @@ StatusCode OpDumpTask::ProcessOutputDump(const ::toolkit::dumpdata::DumpData &du
 
 StatusCode OpDumpTask::ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                            const std::string &path,
-                                           const IDE_SESSION ideSession)
+                                           IDE_SESSION &ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int64_t i = 0; i < dumpData.buffer_size(); ++i) {
@@ -566,7 +569,7 @@ StatusCode OpDumpTask::ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &
 
 StatusCode OpDumpTask::ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                               const std::string &path,
-                                              const IDE_SESSION ideSession)
+                                              IDE_SESSION &ideSession)
 {
     uint64_t dumpedSize = 0U;
     for (int64_t i = 0; i < dumpData.space_size(); ++i) {
@@ -620,7 +623,7 @@ StatusCode OpDumpTask::ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpDat
 StatusCode OpDumpTask::Dump(const std::string &path,
                             char_t * const data,
                             const uint64_t len,
-                            const IDE_SESSION ideSession,
+                            IDE_SESSION &ideSession,
                             const bool isLastSlice) const
 {
     if (ideSession != nullptr) {
@@ -634,14 +637,23 @@ StatusCode OpDumpTask::Dump(const std::string &path,
         auto startTime = std::chrono::steady_clock::now();
         aicpusd_info("op name[%s], start to call IdeDumpData, size[%u], isLastChunk[%u]",
                      opName_.c_str(), len, ideDumpChunk.isLastChunk);
-        const IdeErrorT ideState = IdeDumpData(ideSession, &ideDumpChunk);
+        IdeErrorT ideState = IdeDumpData(ideSession, &ideDumpChunk);
         if (ideState != IDE_DAEMON_NONE_ERROR) {
-            aicpusd_err("op name[%s], call IdeDumpData failed, size[%u].", opName_.c_str(), len);
+            aicpusd_run_info("Dump data not success, ret[%d].", ideState);
+            ideSession = DumpSessionManager::GetInstance().ReacquireSession(hostPid_, deviceId_);
+            if (ideSession == nullptr) {
+                 aicpusd_err("op name[%s], reacquire ide session failed.", opName_.c_str());
+                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
+             }
+            ideState = IdeDumpData(ideSession, &ideDumpChunk);
+        }
+        if (ideState != IDE_DAEMON_NONE_ERROR) {
+            aicpusd_err("op name[%s], call IdeDumpData failed, size[%u], ret[%d]", opName_.c_str(), len, ideState);
             return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
         }
         auto endTime = std::chrono::steady_clock::now();
-        double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
-        double transmissionRate = ((len == 0LU) ? 0.0 : (drUs / len));
+        const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+        const double transmissionRate = ((len == 0LU) ? 0.0 : (drUs / static_cast<double>(len)));
         aicpusd_info("op name[%s], end of call IdeDumpData, size[%lu], cost time is [%.2lf]us,"
             " transmission rate is [%.2lf]byte/us", opName_.c_str(), len, drUs, transmissionRate);
         UNUSED(transmissionRate);
@@ -710,7 +722,7 @@ StatusCode OpDumpTask::ProcessngNoTiliInput()
             inputTotalSize_ += size;
             inputsShape_.push_back(inputshape);
             inputsOriginShape_.push_back(inputOriginShape);
-            aicpusd_info("op name[%s], dump input size[%llu], type[%d]", opName_.c_str(), size, tensorDesc->dtype);
+            aicpusd_info("op name[%s], dump input size[%llu], type[%lld]", opName_.c_str(), size, tensorDesc->dtype);
         }
     }
     return AICPU_SCHEDULE_OK;
@@ -775,7 +787,7 @@ StatusCode OpDumpTask::ProcessngNoTiliOutput()
             outputTotalSize_ += size;
             outputsShape_.push_back(outputShape);
             outputsOriginShape_.push_back(outputOriginShape);
-            aicpusd_info("op name[%s], dump output size[%llu], type[%d]", opName_.c_str(), size, tensorDesc->dtype);
+            aicpusd_info("op name[%s], dump output size[%llu], type[%lld]", opName_.c_str(), size, tensorDesc->dtype);
         }
     }
     return AICPU_SCHEDULE_OK;
@@ -903,16 +915,11 @@ StatusCode OpDumpTask::ProcessDumpTensor(const std::string &dumpFilePath)
 StatusCode OpDumpTask::DoDumpTensor(const std::string &dumpFilePath)
 {
     // the port is not used in ide module, just for privateInfo format check
-    const std::string privateInfo = "127.0.0.1:22118;" + std::to_string(deviceId_) + ";" + std::to_string(hostPid_);
-    aicpusd_info("op name[%s], ide dump start private info[%s]", opName_.c_str(), privateInfo.c_str());
-    const IDE_SESSION ideSession = IdeDumpStart(privateInfo.c_str());
+    IDE_SESSION ideSession = DumpSessionManager::GetInstance().GetSession(hostPid_, deviceId_);
     if (ideSession == nullptr) {
         aicpusd_err("op name[%s], call IdeDumpStart failed, path[%s].", opName_.c_str(), dumpFilePath.c_str());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
-    const ScopeGuard ideSessGuard([&ideSession]() {
-            IdeDumpEnd(ideSession);
-        });
     StatusCode ret = AICPU_SCHEDULE_OK;
     if (offset_ == buffSize_) {
         ret = Dump(dumpFilePath, buff_.get(), buffSize_, ideSession, false);
@@ -1236,16 +1243,12 @@ StatusCode OpDumpTask::ProcessDumpStats(const std::string &dumpFilePath)
 
 StatusCode OpDumpTask::DoDumpStats(const std::string &dumpFilePath, const std::string &content)
 {
-    const std::string privateInfo = "127.0.0.1:22118;" + std::to_string(deviceId_) + ";" + std::to_string(hostPid_);
-    aicpusd_info("op name[%s], ide dump start private info[%s]", opName_.c_str(), privateInfo.c_str());
-    const IDE_SESSION ideSession = IdeDumpStart(privateInfo.c_str());
+
+    IDE_SESSION ideSession = DumpSessionManager::GetInstance().GetSession(hostPid_, deviceId_);
     if (ideSession == nullptr) {
         aicpusd_err("op name[%s], call IdeDumpStart failed, path[%s].", opName_.c_str(), dumpFilePath.c_str());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
-    const ScopeGuard ideSessGuard([&ideSession]() {
-            IdeDumpEnd(ideSession);
-    });
 
     return Dump(dumpFilePath, const_cast<char_t *>(content.c_str()), content.size(), ideSession, true);
 }
@@ -1511,5 +1514,73 @@ StatusCode OpDumpTask::PreProcessUdfOpMappingInfo(uint8_t *dumpInfo, uint64_t le
         return dumpRet;
     }
     return AICPU_SCHEDULE_OK;
+}
+
+DumpSessionManager &DumpSessionManager::GetInstance()
+{
+    static DumpSessionManager instance;
+    return instance;
+}
+
+IDE_SESSION DumpSessionManager::GetSession(int32_t hostPid, uint32_t devcieId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    const uint64_t threadId = GetTid();
+    if (sessionsMap_.find(threadId) == sessionsMap_.end()) {
+        auto startTime = std::chrono::steady_clock::now();
+        sessionsMap_[threadId] = CreateIdeDumpSession(hostPid, devcieId);
+        auto endTime = std::chrono::steady_clock::now();
+        const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+        aicpusd_run_info("thread[%lu] create ide dump session success, cost time is [%.2lf]us.",threadId, drUs);
+    }
+    return sessionsMap_[threadId];
+}
+
+IDE_SESSION DumpSessionManager::ReacquireSession(int32_t hostPid, uint32_t deviceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    const uint64_t threadId = GetTid();
+    if (sessionsMap_.find(threadId) == sessionsMap_.end()) {
+        auto startTime = std::chrono::steady_clock::now();
+        sessionsMap_[threadId] = CreateIdeDumpSession(hostPid, deviceId);
+        auto endTime = std::chrono::steady_clock::now();
+        const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+        aicpusd_run_info("thread[%lu] create ide dump session success, cost time is [%.2lf]us.",threadId, drUs);
+    } else {
+        auto startTime = std::chrono::steady_clock::now();
+        (void)IdeDumpEnd(sessionsMap_[threadId]);
+        sessionsMap_[threadId] = CreateIdeDumpSession(hostPid, deviceId);
+        auto endTime = std::chrono::steady_clock::now();
+        const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+        aicpusd_run_info("thread[%lu] reacquire ide dump session success, cost time is [%.2lf]us.",threadId, drUs);
+    }
+    return sessionsMap_[threadId];
+}
+
+void DumpSessionManager::CloseAllSessions()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& pair : sessionsMap_) {
+        if (pair.second != nullptr) {
+            auto startTime = std::chrono::steady_clock::now();
+            (void)IdeDumpEnd(pair.second);
+            auto endTime = std::chrono::steady_clock::now();
+            const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+            aicpusd_run_info("thread[%lu] reacquire ide dump session success, cost time is [%.2lf]us.",pair.first, drUs);
+        }
+    }
+    sessionsMap_.clear();
+}
+
+IDE_SESSION DumpSessionManager::CreateIdeDumpSession(int32_t hostPid, uint32_t deviceId) const
+{
+    const std::string privateInfo = "127.0.0.1:22118;" + std::to_string(deviceId) + ";" + std::to_string(hostPid);
+    aicpusd_info("ide dump start private info[%s]", privateInfo.c_str());
+    IDE_SESSION ideSession = IdeDumpStart(privateInfo.c_str());
+    if (ideSession == nullptr) {
+        aicpusd_err("call IdeDumpStart failed, private info[%s], hostPid[%d], deviceId[%u]", privateInfo.c_str(), hostPid, deviceId);
+        return nullptr;
+    }
+    return ideSession;
 }
 }  // namespace aicpu

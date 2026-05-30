@@ -2393,7 +2393,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_baseaddr_null) {
         uint64_t baseAddr = 0;
         task.inputsBaseAddr_.push_back(baseAddr);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2405,7 +2406,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_baseaddr_null) {
         uint64_t baseAddr = 0;
         task.outputsBaseAddr_.push_back(baseAddr);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2418,7 +2420,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_data_addr_null) {
         task.inputsBaseAddr_.push_back((uint64_t)(&addr));
         task.inputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2431,7 +2434,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_data_addr_null) {
         task.outputsBaseAddr_.push_back((uint64_t)(&addr));
         task.outputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2462,7 +2466,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_invalid_threadId) {
         item.add_input();
         item.add_output();
         task.UpdatePreProcessFftsPlusInputAndOutput(item);
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2480,7 +2485,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_invalid_threadId) {
         task.outputOffset_.push_back(offset);
         task.outputSize_.push_back(offset * invalidThread + 1);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2495,7 +2501,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_memcpy_fail) {
         task.inputsAddrType_.push_back(0);
         task.taskType_ = aicpu::dump::Task::AICPU;
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)),
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session),
                                         AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
@@ -2510,7 +2517,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_memcpy_fail) {
         task.outputsBaseAddr_.push_back((uint64_t)(&addr));
         task.outputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)),
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session),
                   AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
@@ -2530,7 +2538,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_dump_fail) {
         MOCKER(IdeDumpData)
             .stubs()
             .will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)),
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session),
                   AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
@@ -2550,7 +2559,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_dump_fail) {
         MOCKER(IdeDumpData)
             .stubs()
             .will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)),
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session),
                                          AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
@@ -2569,7 +2579,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_input_size_0) {
         uint64_t buffSize = 0;
         opInput->set_size(buffSize);
         OpDumpTask task(0, 0);
-        EXPECT_EQ(task.ProcessInputDump(dumpData, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(dumpData, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2580,7 +2591,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_output_size_0) {
         uint64_t buffSize = 0;
         opOutput->set_size(buffSize);
         OpDumpTask task(0, 0);
-        EXPECT_EQ(task.ProcessOutputDump(dumpData, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(dumpData, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2602,15 +2614,14 @@ TEST_F(AICPUScheduleTEST, ProcessOpWorkspaceDumpFailTes) {
         task.opWorkspaceAddr_.push_back(0);
         task.buffSize_ = data_size;
 
-        // 预期打印 [ERROR] op space[0] addr is null
-        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
 
-        // workSpace->set_size(data_size);
         workSpace->set_size(0);
         task.buffSize_ = data_size;
         task.opWorkspaceAddr_[0] = data;
-        // 预期打印 [ERROR] data size is zero
-        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session2 = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", session2), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2630,10 +2641,10 @@ TEST_F(AICPUScheduleTEST, ProcessOpWorkspaceDumpSuccessTest) {
     if (workSpace != nullptr) {
         // workSpace->set_data_addr(data);
         workSpace->set_size(data_size);
-        task.opWorkspaceAddr_.push_back(data_size);
+task.opWorkspaceAddr_.push_back(data_size);
         task.buffSize_ = data_size;
-        // 预期无 [ERROR] 打印
-        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOpWorkspaceDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -3866,7 +3877,8 @@ TEST_F(AICPUScheduleTEST, FFTSPlusProcessInputDump_baseaddr_null_threadId_over) 
         task.inputsOffset_.push_back(2);
         task.opName_ = "aa";
         task.taskType_ = aicpu::dump::Task::FFTSPLUS;
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -3883,7 +3895,8 @@ TEST_F(AICPUScheduleTEST, FFTSPlusProcessOutputDump_baseaddr_null_threadId_over)
         task.outputOffset_.push_back(2);
         task.opName_ = "aa";
         task.taskType_ = aicpu::dump::Task::FFTSPLUS;
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION session = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", session), AICPU_SCHEDULE_OK);
     }
 }
 

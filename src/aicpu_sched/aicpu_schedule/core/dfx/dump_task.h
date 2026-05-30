@@ -247,7 +247,7 @@ public:
     StatusCode Dump(const std::string &path,
                     char_t * const data,
                     const uint64_t len,
-                    const IDE_SESSION ideSession,
+                    IDE_SESSION &ideSession,
                     const bool isLastSlice) const;
 private:
     /**
@@ -276,16 +276,16 @@ private:
                                    ::toolkit::dumpdata::DumpData &dumpData);
     StatusCode ProcessInputDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                 const std::string &path,
-                                const IDE_SESSION ideSession);
+                                IDE_SESSION &ideSession);
     StatusCode ProcessOutputDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                  const std::string &path,
-                                 const IDE_SESSION ideSession);
+                                 IDE_SESSION &ideSession);
     StatusCode ProcessOpBufferDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                    const std::string &path,
-                                   const IDE_SESSION ideSession);
+                                 IDE_SESSION &ideSession);
     StatusCode ProcessOpWorkspaceDump(const ::toolkit::dumpdata::DumpData &dumpData,
                                       const std::string &path,
-                                      const IDE_SESSION ideSession);
+                                       IDE_SESSION &ideSession);
 
     std::string DumpPath(const uint64_t nowTime, const uint64_t dumpNumber,
                          const DumpFileName &dumpFileName,
@@ -684,6 +684,22 @@ private:
     EigenDataStats& operator=(EigenDataStats const&) = delete;
     EigenDataStats(EigenDataStats&&) = delete;
     EigenDataStats& operator=(EigenDataStats&&) = delete;
+};
+
+class DumpSessionManager {
+public:
+    static DumpSessionManager &GetInstance();
+    DumpSessionManager() = default;
+    ~DumpSessionManager() = default;
+
+    IDE_SESSION GetSession(int32_t hostPid, uint32_t devcieId);
+    IDE_SESSION ReacquireSession(int32_t hostPid, uint32_t deviceId);
+    void CloseAllSessions();
+    IDE_SESSION CreateIdeDumpSession(int32_t hostPid, uint32_t deviceId) const;
+
+private:
+    std::unordered_map<uint64_t, IDE_SESSION> sessionsMap_;
+    std::mutex mutex_;
 };
 }   // namespace aicpu
 

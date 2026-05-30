@@ -234,7 +234,7 @@ namespace AicpuSchedule {
         if (FeatureCtrl::GetTsMsgVersion() == AicpuSqeAdapter::VERSION_1) {
             streamId = AicpuSqeAdapter::INVALID_VALUE16;
         }
-        aicpusd_info("begin cust data dump streamid:%u, taskid:%u, threadindex:%u, custpid:%d, ackStreamId:%d",
+        aicpusd_info("begin cust data dump streamid:%u, taskid:%u, threadindex:%u, custpid:%d, ackStreamId:%u",
                      streamId, taskId, threadIndex, custPid, ackStreamId);
         OpDumpTaskManager &opDumpTaskMgr = OpDumpTaskManager::GetInstance();
         (void)opDumpTaskMgr.SetCustDumpTaskFlag(streamId, taskId , true);

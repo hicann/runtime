@@ -588,7 +588,7 @@ int32_t OpDumpTaskManager::DoDumpBySwitchBitmap(const aicpu::dump::OpMappingInfo
         }
         if ((switchBitMap & OVERFLOW_DUMP_BIT) != 0UL) {
             uint32_t overflowStatus = 0U;
-            int32_t getRet = GetAndClearOverflowStatus(deviceId, task.stream_id(), OP_QUERY_OVERFLOW, &overflowStatus);
+            const int32_t getRet = GetAndClearOverflowStatus(deviceId, task.stream_id(), OP_QUERY_OVERFLOW, &overflowStatus);
             if (getRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("Query overflow status interface returned: ret is %d, device id is %u, stream id is %u.", getRet, deviceId, task.stream_id());
                 return AICPU_SCHEDULE_ERROR_FROM_DRV;
@@ -606,7 +606,7 @@ int32_t OpDumpTaskManager::DoDumpBySwitchBitmap(const aicpu::dump::OpMappingInfo
             aicpusd_err("Preprocess op mapping info failed. Op mapping info is %s", opMappingInfo.DebugString().c_str());
             return ret;
         }
-        AicpuSqeAdapter adapter(FeatureCtrl::GetTsMsgVersion());
+        AicpuSqeAdapter adapter(static_cast<int16_t>(FeatureCtrl::GetTsMsgVersion()));
         AicpuSqeAdapter::AicpuOpMappingDumpTaskInfo opmappingInfo(task.task_id(), task.stream_id(), INVALID_VAL, INVALID_VAL);
         AicpuSqeAdapter::AicpuDumpTaskInfo taskInfo{};
         adapter.GetAicpuDumpTaskInfo(opmappingInfo, taskInfo);
@@ -618,7 +618,7 @@ int32_t OpDumpTaskManager::DoDumpBySwitchBitmap(const aicpu::dump::OpMappingInfo
         DumpFileName dumpFileName(taskInfo.stream_id, taskInfo.task_id);
         ret = opDumpTaskPtr->DumpOpInfo(dumpTaskInfo, dumpFileName);
         auto endTime = std::chrono::steady_clock::now();
-        double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+        const double drUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
         aicpusd_run_info("End of dump operation information: result is %d, op name is %s, cost time is [%.2lf]us.",
             ret, opDumpTaskPtr->GetOpName().c_str(), drUs);
         UNUSED(drUs);
@@ -879,21 +879,18 @@ int32_t OpDumpTaskManager::DumpOpTaskDataforKfc(const KfcDumpTask &taskKey, void
     }
     const std::string filePath = iter->second->GetDumpPath();
     const std::string dumpFilePath = filePath + ".bin";
-    int32_t hostPid = iter->second->GetHostPid();
-    uint32_t deviceId = iter->second->GetDeviceId();
+    const int32_t hostPid = iter->second->GetHostPid();
+    const uint32_t deviceId = iter->second->GetDeviceId();
     const std::string opName = iter->second->GetOpName();
-    const std::string privateInfo = "127.0.0.1:22118;" + std::to_string(deviceId) + ";" + std::to_string(hostPid);
-    aicpusd_info("op name[%s], ide dump start private info[%s]", opName.c_str(), privateInfo.c_str());
-    const IDE_SESSION ideSession = IdeDumpStart(privateInfo.c_str());
+
+
+    IDE_SESSION ideSession = DumpSessionManager::GetInstance().GetSession(hostPid, deviceId);
     if (ideSession == nullptr) {
-        aicpusd_err("op name[%s], call IdeDumpStart failed, path[%s] private info[%s]. length [%u], streamId[%u], taskId[%u], index[%u]",
-                    opName.c_str(), dumpFilePath.c_str(), privateInfo.c_str(), length, taskKey.streamId_, taskKey.taskId_, taskKey.index_);
+        aicpusd_err("op name[%s], call IdeDumpStart failed, path[%s]. length [%u], streamId[%u], taskId[%u], index[%u]",
+                    opName.c_str(), dumpFilePath.c_str(), length, taskKey.streamId_, taskKey.taskId_, taskKey.index_);
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
-    const ScopeGuard ideSessGuard([&ideSession]() {
-            IdeDumpEnd(ideSession);
-    });
 
-    return iter->second->Dump(dumpFilePath, PtrToPtr<void, char>(dumpData), length, ideSession, true);
+    return iter->second->Dump(dumpFilePath, PtrToPtr<void, char>(dumpData), static_cast<uint64_t>(length), ideSession, true);
 }
 }  // namespace aicpu
