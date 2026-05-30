@@ -10,6 +10,7 @@
 #ifndef CCE_RUNTIME_SQ_ADDR_MEMORY_POOL_HPP
 #define CCE_RUNTIME_SQ_ADDR_MEMORY_POOL_HPP
 
+#include <mutex>
 #include "base.hpp"
 #include "buffer_allocator.hpp"
 
@@ -65,6 +66,7 @@ public:
 
 private:
     Device *device_;
+    std::mutex sqAddrAllocatorsMutex_;
     std::vector<std::pair<SQ_ADDR_MEM_ORDER_TYPE, BufferAllocator*>> sqAddrAllocators_;
 };
 }
