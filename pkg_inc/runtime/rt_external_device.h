@@ -170,15 +170,15 @@ typedef enum {
 RTS_API rtError_t rtUbDevQueryInfo(rtUbDevQueryCmd cmd, void *devInfo);
 
 // 拉起HCCP进程
-struct rtProcExtParam {
+typedef struct rtProcExtParam {
     const char  *paramInfo;
     uint64_t    paramLen;
-};
+} rtProcExtParam;
 
-struct rtNetServiceOpenArgs {
+typedef struct rtNetServiceOpenArgs {
     rtProcExtParam *extParamList;   // 拉起服务的参数列表
     uint64_t     extParamCnt;    // 拉起服务的参数列表长度
-};
+} rtNetServiceOpenArgs;
 
 #define RT_EXT_PARAM_CNT_MAX  127U
 

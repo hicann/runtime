@@ -81,6 +81,14 @@ RTS_API rtError_t rtMetadataRegister(void *hdl, const char_t *metadata);
  * @brief magic number of elf binary for aicube
  */
 #define RT_DEV_BINARY_MAGIC_ELF_AICUBE 0x41494343U
+
+typedef struct tagRtDevBinary {
+    uint32_t magic;    // magic number
+    uint32_t version;  // version of binary
+    const void *data;  // binary data
+    uint64_t length;   // binary length
+} rtDevBinary_t;
+
 /**
  * @ingroup rt_kernel_flags
  * @brief kernel op bit flags
@@ -156,6 +164,108 @@ typedef struct tagRtFusionArgsEx {
                                     // others means doesn't need H2D copy.
     rtAicpuArgs_t aicpuArgs[FUSION_SUB_TASK_MAX_CPU_NUM]; // aicpuArgsInfo
 } rtFusionArgsEx_t;
+
+typedef union rtLaunchAttributeValue_union {
+    uint32_t blockDim;
+    RT_DEPRECATED_MESSAGE("Use dynUBufSize instead")
+    uint32_t dynamicShareMemSize; // DEPRECATED: Use dynUBufSize
+    uint32_t dynUBufSize;
+    struct {
+        uint32_t groupDim;
+        uint32_t groupBlockDim;
+    } Group;
+    uint8_t qos;
+    uint8_t partId;
+    uint8_t schemMode; // rtschemModeType_t 0:normal;1:batch;2:sync
+    uint32_t blockDimOffset;
+    uint8_t dumpflag; // dumpflag 0:fault 2:RT_KERNEL_DUMPFLAG
+} rtLaunchAttributeValue_t;
+
+typedef enum rtLaunchAttributeId {
+    RT_LAUNCH_ATTRIBUTE_BLOCKDIM = 0,
+    RT_LAUNCH_ATTRIBUTE_DYNAMIC_SHARE_MEM_SIZE
+        RT_DEPRECATED_MESSAGE("Use RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE instead") = 1,
+    RT_LAUNCH_ATTRIBUTE_DYN_UBUF_SIZE = 1,
+    RT_LAUNCH_ATTRIBUTE_GROUP = 2,
+    RT_LAUNCH_ATTRIBUTE_QOS = 3,
+    RT_LAUNCH_ATTRIBUTE_PARTID = 4,
+    RT_LAUNCH_ATTRIBUTE_SCHEMMODE = 5,
+    RT_LAUNCH_ATTRIBUTE_BLOCKDIM_OFFSET = 6,
+    RT_LAUNCH_ATTRIBUTE_DUMPFLAG = 7,
+    RT_LAUNCH_ATTRIBUTE_MAX = 8,
+} rtLaunchAttributeId_t;
+
+typedef struct rtLaunchAttribute {
+    rtLaunchAttributeId_t id;
+    rtLaunchAttributeValue_t value;
+} rtLaunchAttribute_t;
+
+typedef struct rtLaunchConfig {
+    rtLaunchAttribute_t* attrs;
+    uint32_t numAttrs;
+} rtLaunchConfig_t;
+
+typedef struct tagRtAicoreTaskInfo {
+    void *hdl;
+    uint64_t tilingKey;
+    rtLaunchConfig_t* config;
+    void *stubFunc;
+} rtAicoreFusionInfo_t;
+
+typedef struct tagRtAicpuTaskInfo {
+    uint32_t kernelType;
+    uint32_t flags;
+    uint32_t blockDim;
+} rtAicpuFusionInfo_t;
+
+#define RT_CCU_INST_CNT_INVALID (0U)
+#define RT_CCU_INST_START_MAX   (32768U)
+typedef struct tagRtCcuTaskInfo {
+    uint8_t dieId;
+    uint8_t missionId;
+    uint16_t timeout;
+    uint16_t instStartId;
+    uint16_t instCnt;
+    uint32_t key;
+    uint32_t argSize;    // 1 or 13. 1 means 32B ccu sqe; 13 means 128B ccu sqe
+    uint64_t args[RT_CCU_SQE_ARGS_LEN];
+} rtCcuTaskInfo_t;
+
+typedef struct tagRtCcuTaskGroup {
+    uint32_t taskNum;
+    rtCcuTaskInfo_t ccuTaskInfo[FUSION_SUB_TASK_MAX_CCU_NUM];
+} rtCcuTaskGroup_t;
+
+typedef union {
+    rtAicoreFusionInfo_t aicoreInfo;
+    rtAicpuFusionInfo_t aicpuInfo;
+    rtCcuTaskGroup_t ccuInfo;
+} rtFusionSubTask_t;
+
+typedef enum {
+    RT_FUSION_HCOM_CPU = 0,
+    RT_FUSION_AICPU    = 1,
+    RT_FUSION_AICORE   = 2,
+    RT_FUSION_CCU      = 3,
+    RT_FUSION_END
+} rtFusionType_t;
+
+typedef struct tagRtFusionSubTaskInfo {
+    rtFusionType_t type;
+    rtFusionSubTask_t task;
+} rtFusionSubTaskInfo_t;
+
+/*
+    fusion sub tasks' arrangement should be set as:
+    1.aicpu + aic
+    2.hcom  + aic
+    3.ccu
+    4.ccu + aic
+*/
+typedef struct tagRtFunsionTaskInfo {
+    uint32_t subTaskNum;
+    rtFusionSubTaskInfo_t subTask[FUSION_SUB_TASK_MAX_NUM];
+} rtFunsionTaskInfo_t;
 
 /**
  * @ingroup rt_kernel
@@ -248,19 +358,6 @@ RTS_API rtError_t rtDatadumpInfoLoad(const void *dumpInfo, uint32_t length);
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtAicpuInfoLoad(const void *aicpuInfo, uint32_t length);
-
-#define RT_CCU_INST_CNT_INVALID (0U)
-#define RT_CCU_INST_START_MAX   (32768U)
-typedef struct tagRtCcuTaskInfo {
-    uint8_t dieId;
-    uint8_t missionId;
-    uint16_t timeout;
-    uint16_t instStartId;
-    uint16_t instCnt;
-    uint32_t key;
-    uint32_t argSize;    // 1 or 13. 1 means 32B ccu sqe; 13 means 128B ccu sqe
-    uint64_t args[RT_CCU_SQE_ARGS_LEN];
-} rtCcuTaskInfo_t;
 
 /**
  * @ingroup rt_kernel
@@ -439,6 +536,16 @@ RTS_API rtError_t rtGetL2CacheOffset(uint32_t deviceId, uint64_t *offset);
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtFusionLaunch(void * const fusionInfo, rtStream_t const stm, rtFusionArgsEx_t *argsInfo);
+
+/**
+ * @ingroup rt_kernel
+ * @brief register device binary with all kernel
+ * @param [in] bin   device binary description
+ * @param [out] hdl   device binary handle
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ */
+RTS_API rtError_t rtRegisterAllKernel(const rtDevBinary_t *bin, void **hdl);
 
 /**
  * @ingroup rt_kernel
