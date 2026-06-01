@@ -21,9 +21,6 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_multiple_task_v100.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
@@ -114,7 +111,6 @@ set(common_src_files
 
 set(libruntime_context_src_files
     ${RUNTIME_CORE_DIR}/src/context/context.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/context_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/context/context_manage.cc
     ${RUNTIME_CORE_DIR}/src/context/context_protect.cc
 )
@@ -123,7 +119,6 @@ set(libruntime_stream_common_src_files
     ${RUNTIME_CORE_DIR}/src/stream/stream_sqcq_manage.cc
     ${RUNTIME_CORE_DIR}/src/stream/engine_stream_observer.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/stream_capture.cc
     ${RUNTIME_CORE_DIR}/src/stream/ctrl_stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/coprocessor_stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/tsch_stream.cc
@@ -164,7 +159,6 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/v100/api_impl_v100.cc
     ${RUNTIME_CORE_DIR}/src/context/context_tiny_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/ffts/context_ffts_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/dfx/printf_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event_tiny_stub.cc
@@ -172,22 +166,32 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding_tiny_stub.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/engine/engine_factory_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/binary_loader_tiny_stub.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/symbol_table_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_log_decoratoc_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/xpu_aicpu_c_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/device_snapshot_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/context_tiny_stub_aclgraph.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/event_capture_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_tiny_stub.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_tiny_stub.cc
 )
 
 set(libruntime_api_src_files_exclude_for_tiny
+    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
     ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc
-    ${RUNTIME_DIR}/src/runtime/api/api_c_snapshot.cc
     ${RUNTIME_DIR}/src/runtime/api/api_david.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
 )
@@ -200,12 +204,8 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_common.cc
@@ -223,10 +223,6 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/v100/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/npu_driver.cc
@@ -239,13 +235,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
-    ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc
@@ -258,7 +248,6 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_CORE_DIR}/src/launch/label.cc
     ${RUNTIME_CORE_DIR}/src/event/event.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/event_capture.cc
     ${RUNTIME_CORE_DIR}/src/notify/notify.cc
     ${RUNTIME_CORE_DIR}/src/engine/logger.cc
     ${RUNTIME_CORE_DIR}/src/runtime.cc
@@ -314,11 +303,8 @@ set(libruntime_dev_info_src_files
 set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_CORE_DIR}/src/api_impl/api_decorator.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_error.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/api_error_aclgraph.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_creator.cc
     ${RUNTIME_CORE_DIR}/src/api_impl/api_impl_mbuf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
@@ -330,10 +316,6 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
-    ${RUNTIME_FEATURE_DIR}/snapshot/v100/device_snapshot_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_msg.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq.cc
@@ -348,12 +330,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/pool/memory_pool_manager.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
-    ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/kernel.cc
@@ -483,6 +460,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_FEATURE_DIR}/soma
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
+    ${RUNTIME_FEATURE_DIR}/aclgraph
     ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm

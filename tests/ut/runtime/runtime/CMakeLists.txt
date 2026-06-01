@@ -367,6 +367,22 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_uvm.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/api_decorator_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_capture_event.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/context_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_adapt_v100.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/v100/capture_model_adapt_v100.cc
+    ${TOP_DIR}/src/runtime/feature/model/v100/capture_adapt.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/v100/device_snapshot_adapter.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/context_standard_soc_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_standard_soc.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
@@ -410,10 +426,19 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/api_c_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_error_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/api_impl_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/api_impl/api_decorator_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/core/src/api_impl/v100/api_impl_v100.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/context_tiny_stub_aclgraph.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_tiny_stub.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/tiny/snapshot_process_helper_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/ffts/context_ffts_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/printf_tiny_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/kernel_dfx_info.cc

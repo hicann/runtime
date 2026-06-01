@@ -404,5 +404,122 @@ rtError_t ApiImpl::MemsetD32Async(void* const dst, const uint64_t destMax,
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::GetCaptureEvent(const Stream * const stm, Event * const evt, Event ** const captureEvt,
+    const bool isNewEvt)
+{
+    UNUSED(stm);
+    UNUSED(evt);
+    UNUSED(captureEvt);
+    UNUSED(isNewEvt);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::CaptureEventRecord(Context * const ctx, Event * const evt, Stream * const stm)
+{
+    UNUSED(ctx);
+    UNUSED(evt);
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::CaptureEventWait(Context * const ctx, Stream * const stm, Event * const evt, const uint32_t timeout)
+{
+    UNUSED(ctx);
+    UNUSED(stm);
+    UNUSED(evt);
+    UNUSED(timeout);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::CaptureEventReset(const Event * const evt, Stream * const stm)
+{
+    UNUSED(evt);
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+{
+    UNUSED(stm);
+    UNUSED(mode);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMdl)
+{
+    UNUSED(stm);
+    UNUSED(captureMdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptureStatus * const status,
+    Model ** const captureMdl)
+{
+    UNUSED(stm);
+    UNUSED(status);
+    UNUSED(captureMdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ThreadExchangeCaptureMode(rtStreamCaptureMode * const mode)
+{
+    UNUSED(mode);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamBeginTaskGrp(Stream * const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handle)
+{
+    UNUSED(stm);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle)
+{
+    UNUSED(stm);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamEndTaskUpdate(Stream * const stm)
+{
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelGetNodes(const Model * const mdl, uint32_t * const num)
+{
+    UNUSED(mdl);
+    UNUSED(num);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelDebugDotPrint(const Model * const mdl)
+{
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelDebugJsonPrint(const Model * const mdl, const char* path, const uint32_t flags)
+{
+    UNUSED(mdl);
+    UNUSED(path);
+    UNUSED(flags);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl)
+{
+    UNUSED(stm);
+    UNUSED(captureMdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 }
 }
