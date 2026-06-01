@@ -128,12 +128,8 @@ set(runtimeut_david_series_common_src_task_list
     # mechanism dependance
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/stream/stream_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dump/dump_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/cond_op_label_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
@@ -142,7 +138,6 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
 )

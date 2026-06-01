@@ -24,13 +24,9 @@
 #include "rdma_task.h"
 #include "ffts_task.h"
 #include "reduce_task.h"
-#include "cond_op_stream_task.h"
 #include "cond_op_label_task.h"
 #include "debug_task.h"
-#include "stream_task.h"
 #include "davinci_multiple_task.h"
-#include "common_task.h"
-#include "cmo_task.h"
 #include "dump_task.h"
 #include "barrier_task.h"
 #include "model_maintaince_task.h"
@@ -904,7 +900,6 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = ToCommandBodyForRemoteEventWaitTask;
         toCommandFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ToCommandBodyForEventWaitTask;
         toCommandFunc[TS_TASK_TYPE_MAINTENANCE] = &ToCommandBodyForMaintenanceTask;
-        toCommandFunc[TS_TASK_TYPE_CREATE_STREAM] = &ToCommandBodyForCreateStreamTask;
         toCommandFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ToCommandBodyForKernelFusionTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &ToCommandBodyForDynamicProfilingEnableTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &ToCommandBodyForDynamicProfilingDisableTask;
@@ -920,31 +915,15 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ToCmdBodyForAddEndGraphTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ToCmdBodyForAddModelExitTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ToCmdBodyForModelToAicpuTask;
-        toCommandFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ToCmdBodyForActiveAicpuStreamTask;
-        toCommandFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ToCmdBodyForCallbackLaunchTask;
-        toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ToCmdBodyForStreamLabelSwitchByIndexTask;
-        toCommandFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ToCmdBodyForStreamLabelGotoTask;
-        toCommandFunc[TS_TASK_TYPE_STARS_COMMON] = nullptr;
         toCommandFunc[TS_TASK_TYPE_FFTS_PLUS] = nullptr;
         toCommandFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = nullptr;
         toCommandFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = nullptr;
         toCommandFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ToCmdBodyForRingBufferMaintainTask;
-        toCommandFunc[TS_TASK_TYPE_WRITE_VALUE] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_CMO] = nullptr;
         toCommandFunc[TS_TASK_TYPE_BARRIER] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ToCmdBodyForSetStreamModeTask;
         toCommandFunc[TS_TASK_TYPE_RDMA_SEND] = &ToCommandBodyForRdmaSendTask;
         toCommandFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ToCommandBodyForRdmaDbSendTask;
         toCommandFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ToCommandBodyForNotifyRecordTask;
         toCommandFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ToCommandBodyForNotifyWaitTask;
-        toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ToCommandBodyForStreamSwitchTask;
-        toCommandFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ToCommandBodyForStreamSwitchNTask;
-        toCommandFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ToCommandBodyForStreamActiveTask;
-        toCommandFunc[TS_TASK_TYPE_LABEL_SET] = &ToCommandBodyForLabelSetTask;
-        toCommandFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ToCommandBodyForLabelSwitchTask;
-        toCommandFunc[TS_TASK_TYPE_LABEL_GOTO] = &ToCommandBodyForLabelGotoTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ToCommandBodyForProfilerTraceTask;
         toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ToCommandBodyForProfilerTraceExTask;
         toCommandFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ToCommandBodyForFusionDumpAddrSetTask;
@@ -955,14 +934,10 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ToCommandBodyForGetDevMsgTask;
         toCommandFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ToCommandBodyForDebugRegisterForStreamTask;
         toCommandFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_FLIP] = &ToCmdBodyForFlipTask;
         toCommandFunc[TS_TASK_TYPE_GET_STARS_VERSION] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = nullptr;
         toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
         toCommandFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ToCommandBodyForAicpuInfoLoadTask;
         toCommandFunc[TS_TASK_TYPE_NOP] = &ToCommandForNopTask;
-        toCommandFunc[TS_TASK_TYPE_COMMON_CMD] = nullptr;
-        toCommandFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &ToCommandBodyForSqeUpdateTask;
     }
 }
 static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
@@ -976,7 +951,6 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &ConstructSqeForEventWaitTask;
         toSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructSqeForMaintenanceTask;
-        toSqeFunc[TS_TASK_TYPE_CREATE_STREAM] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructSqeForProfilingEnableTask;
         toSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructSqeForProfilingDisableTask;
@@ -991,31 +965,15 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructSqeForAddEndGraphTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructSqeForModelToAicpuTask;
-        toSqeFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &ConstructSqeForCallbackLaunchTask;
-        toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &ConstructSqeForStreamLabelSwitchByIndexTask;
-        toSqeFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_STARS_COMMON] = &ConstructSqeForStarsCommonTask;
         toSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructSqeForFftsPlusTask;
         toSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructSqeForNpuGetFloatStaTask;
         toSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructSqeForNpuClrFloatStaTask;
-        toSqeFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &ConstructSqeForOverflowSwitchSetTask;
-        toSqeFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &ConstructSqeForStreamTagSetTask;
         toSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructSqeForRingBufferMaintainTask;
-        toSqeFunc[TS_TASK_TYPE_WRITE_VALUE] = &ConstructSqeForWriteValueTask;
-        toSqeFunc[TS_TASK_TYPE_CMO] = &ConstructSqeForCmoTask;
         toSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructSqeForBarrierTask;
-        toSqeFunc[TS_TASK_TYPE_SET_STREAM_MODE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructSqeForRdmaDbSendTask;
         toSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructSqeForNotifyRecordTask;
         toSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructSqeForNotifyWaitTask;
-        toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH] = &ConstructSqeForStreamSwitchTask;
-        toSqeFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &ConstructSqeForStreamActiveTask;
-        toSqeFunc[TS_TASK_TYPE_LABEL_SET] = &ConstructSqeForLabelSetTask;
-        toSqeFunc[TS_TASK_TYPE_LABEL_SWITCH] = &ConstructSqeBase;
-        toSqeFunc[TS_TASK_TYPE_LABEL_GOTO] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructSqeBase;
         toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
         toSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructSqeBase;
@@ -1026,13 +984,10 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructSqeForGetDevMsgTask;
         toSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructSqeForDebugRegisterForStreamTask;
         toSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructSqeForAllocDsaAddrTask;
-        toSqeFunc[TS_TASK_TYPE_FLIP] = &ConstructSqeForFlipTask;
         toSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructSqeForStarsVersionTask;
-        toSqeFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &ConstructSqeForSetSqLockUnlockTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
         toSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructSqeForAicpuInfoLoadTask;
         toSqeFunc[TS_TASK_TYPE_NOP] = &ConstructSqeForNopTask;
-        toSqeFunc[TS_TASK_TYPE_COMMON_CMD] = &ConstructSqeForCommonCmdTask;
     }
 }
 
@@ -1046,25 +1001,10 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
         taskUnInitFunc[TS_TASK_TYPE_EVENT_RESET] = &EventResetTaskUnInit;
 
         taskUnInitFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &PCTraceTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_STREAM_SWITCH] = &StreamSwitchTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &StreamActiveTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &StreamLabelSwitchByIndexTaskUnInit;
-        taskUnInitFunc[TS_TASK_TYPE_STARS_COMMON] = &StarsCommonTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &RdmaPiValueModifyTaskUnInit;
     }
 }
-
-static void RegWaitAsyncCpCompleteFunc(const std::vector<rtChipType_t> &chipTypes)
-{    
-    PfnWaitAsyncCpCompleteFunc *waitAsyncCpCompleteFunc = nullptr;
-    for (auto chipType : chipTypes) {
-        waitAsyncCpCompleteFunc = g_taskFuncArrays[chipType].waitAsyncCpCompleteFunc;
-
-        waitAsyncCpCompleteFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &WaitAsyncCopyCompleteForUpdateTask;
-    }
-}
-
 
 static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
 {
@@ -1078,7 +1018,6 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &DoCompleteSuccessForRemoteEventWaitTask;
         doCompleteSuccFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &DoCompleteSuccessForEventWaitTask;
         doCompleteSuccFunc[TS_TASK_TYPE_MAINTENANCE] = &DoCompleteSuccessForMaintenanceTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_CREATE_STREAM] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_FUSION_ISSUE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE] = &DoCompleteSuccess;
@@ -1095,32 +1034,16 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &DoCompleteSuccForModelToAicpuTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_ACTIVE_AICPU_STREAM] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_HOSTFUNC_CALLBACK] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_STREAM_LABEL_GOTO] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_STARS_COMMON] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_FFTS_PLUS] = &DoCompleteSuccForFftsPlusTask;
         doCompleteSuccFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_SET_OVERFLOW_SWITCH] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_SET_STREAM_GE_OP_TAG] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_WRITE_VALUE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_CMO] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_BARRIER] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_SET_STREAM_MODE] = nullptr;
         doCompleteSuccFunc[TS_TASK_TYPE_RDMA_SEND] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &DoCompleteSuccessForNotifyRecordTask;
         doCompleteSuccFunc[TS_TASK_TYPE_IPCINT_NOTICE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &DoCompleteSuccessForNotifyWaitTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_STREAM_SWITCH] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_STREAM_SWITCH_N] = nullptr;
-        doCompleteSuccFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_LABEL_SET] = nullptr;
-        doCompleteSuccFunc[TS_TASK_TYPE_LABEL_SWITCH] = nullptr;
-        doCompleteSuccFunc[TS_TASK_TYPE_LABEL_GOTO] = nullptr;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = nullptr;
@@ -1131,14 +1054,10 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_FLIP] = nullptr;
         doCompleteSuccFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &DoCompleteSuccessForStarsVersionTask;
-        doCompleteSuccFunc[TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &DoCompleteSuccessForAicpuInfoLoadTask;
         doCompleteSuccFunc[TS_TASK_TYPE_NOP] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_COMMON_CMD] = &DoCompleteSuccess;
-        doCompleteSuccFunc[TS_TASK_TYPE_TASK_SQE_UPDATE] = &DoCompleteSuccess;
     }
 }
 
@@ -1154,7 +1073,6 @@ static void RegSetResultFunc(const std::vector<rtChipType_t> &chipTypes)
         }
 
         setResultFunc[TS_TASK_TYPE_EVENT_RECORD] = &SetResultForEventRecordTask;
-        setResultFunc[TS_TASK_TYPE_CREATE_STREAM] = &SetResultForCreateStreamTask;
         setResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetResultForModelExecuteTask;
         setResultFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &SetResultForNotifyRecordTask;
     }
@@ -1174,14 +1092,9 @@ static void RegPrintErrorInfoFunc(const std::vector<rtChipType_t> &chipTypes)
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &PrintErrorInfoForModelExecuteTask;
         printErrorInfoFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &PrintErrorInfoForRDMAPiValueModifyTask;
         printErrorInfoFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &PrintErrorInfoForModelToAicpuTask;
-        printErrorInfoFunc[TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX] = &PrintErrorInfoForStreamLabelSwitchByIndexTask;
-        printErrorInfoFunc[TS_TASK_TYPE_STARS_COMMON] = &PrintErrorInfoForStarsCommonTask;
         printErrorInfoFunc[TS_TASK_TYPE_FFTS_PLUS] = &PrintErrorInfoForFftsPlusTask;
         printErrorInfoFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &PrintErrorInfoForNotifyWaitTask;
-        printErrorInfoFunc[TS_TASK_TYPE_STREAM_SWITCH] = &PrintErrorInfoForStreamSwitchTask;
-        printErrorInfoFunc[TS_TASK_TYPE_STREAM_ACTIVE] = &PrintErrorInfoForStreamActiveTask;
         printErrorInfoFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &PrintErrorInfoForEventWaitTask;
-        printErrorInfoFunc[TS_TASK_TYPE_CMO] = &PrintErrorInfoForCmoTask;
     }
 }
 
@@ -1217,7 +1130,6 @@ void TaskFuncReg(void)
     RegPrintErrorInfoFunc(chipTypes);
     RegSetResultFunc(chipTypes);
     RegSetStarsResultFunc(chipTypes);
-    RegWaitAsyncCpCompleteFunc(chipTypes);
 
     return;
 }

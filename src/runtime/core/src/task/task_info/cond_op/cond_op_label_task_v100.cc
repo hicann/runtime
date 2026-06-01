@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "task_info_v100.h"
 #include "cond_op_label_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -40,6 +41,51 @@ void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t * const comman
     RT_LOG(RT_LOG_INFO, "LabelSetTask stream_id:%d task_id:%u", stm->Id_(), static_cast<uint32_t>(taskInfo->id));
 }
 #endif
+
+static bool CondOpLabelTaskRegister()
+{
+    TaskFuncSingle labelSetFuncs = {
+        .toCommandFunc = &ToCommandBodyForLabelSetTask,
+        .toSqeFunc = &ConstructSqeForLabelSetTask,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle labelSwitchFuncs = {
+        .toCommandFunc = &ToCommandBodyForLabelSwitchTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle labelGotoFuncs = {
+        .toCommandFunc = &ToCommandBodyForLabelGotoTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_LABEL_SET, labelSetFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_LABEL_SWITCH, labelSwitchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_LABEL_GOTO, labelGotoFuncs);
+    }
+
+    return true;
+}
+
+static bool g_condOpLabelTaskRegister = CondOpLabelTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

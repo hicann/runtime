@@ -11,6 +11,7 @@
 #include "stars_david.hpp"
 #include "stream.hpp"
 #include "model.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -32,6 +33,30 @@ void ConstructDavidSqeForCmoTask(TaskInfo * const taskInfo, rtDavidSqe_t *const 
         }
     }
 }
+
+static bool CmoTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDavidCmoTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetV200Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);
+    return true;
+}
+
+static bool g_cmoTaskRegister = CmoTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

@@ -11,7 +11,9 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
+#include "common_task.h"
 #include "stars_david.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -172,6 +174,53 @@ void ConstructDavidSqeForWriteValueTask(TaskInfo * const taskInfo, rtDavidSqe_t 
         taskInfo->id, taskInfo->taskSn, writeValTsk->addr);
 }
 #endif
+
+static bool CommonTaskRegister()
+{
+    TaskFuncSingle starsCommonFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StarsCommonTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStarsCommonTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle writeValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle commonCmdFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_STARS_COMMON, starsCommonFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_WRITE_VALUE, writeValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_COMMON_CMD, commonCmdFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_STARS_COMMON, &ConstructDavidSqeForStarsCommonTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_WRITE_VALUE, &ConstructDavidSqeForWriteValueTask);
+    return true;
+}
+
+static bool g_commonTaskRegister = CommonTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

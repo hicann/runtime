@@ -10,6 +10,7 @@
 
 #include "runtime.hpp"
 #include "context.hpp"
+#include "common_task.h"
 #include "task_manager.h"
 #include "task_info_v100.h"
 #include "stub_task.hpp"
@@ -163,6 +164,51 @@ void ConstructSqeForCommonCmdTask(TaskInfo * const taskInfo, rtStarsSqe_t *const
     }
 }
 #endif
+
+static bool CommonTaskRegister()
+{
+    TaskFuncSingle starsCommonFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForStarsCommonTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StarsCommonTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStarsCommonTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle writeValueFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle commonCmdFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForCommonCmdTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_STARS_COMMON, starsCommonFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_WRITE_VALUE, writeValueFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_COMMON_CMD, commonCmdFuncs);
+    }
+
+    return true;
+}
+
+static bool g_commonTaskRegister = CommonTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

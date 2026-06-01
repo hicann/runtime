@@ -13,6 +13,7 @@
 #include "runtime.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "cond_op_stream_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -69,6 +70,66 @@ void ConstructDavidSqeForStreamSwitchTask(TaskInfo * const taskInfo, rtDavidSqe_
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, streamSwitchTask->trueStreamId);
     return;
 }
+
+static bool CondOpStreamTaskRegister()
+{
+    TaskFuncSingle streamSwitchFuncs = {
+        .toCommandFunc = &ToCommandBodyForStreamSwitchTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StreamSwitchTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStreamSwitchTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamSwitchNFuncs = {
+        .toCommandFunc = &ToCommandBodyForStreamSwitchNTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamLabelSwitchByIndexFuncs = {
+        .toCommandFunc = &ToCmdBodyForStreamLabelSwitchByIndexTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StreamLabelSwitchByIndexTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStreamLabelSwitchByIndexTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamLabelGotoFuncs = {
+        .toCommandFunc = &ToCmdBodyForStreamLabelGotoTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_SWITCH, streamSwitchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_SWITCH_N, streamSwitchNFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, streamLabelSwitchByIndexFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, streamLabelGotoFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_SWITCH, &ConstructDavidSqeForStreamSwitchTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_SWITCH_N, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, &ConstructDavidSqeForStreamLabelSwitchByIndexTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_LABEL_GOTO, &ConstructDavidSqeBase);
+    return true;
+}
+
+static bool g_condOpStreamTaskRegister = CondOpStreamTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

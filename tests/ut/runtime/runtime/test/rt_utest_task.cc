@@ -1824,12 +1824,14 @@ TEST_F(TaskTest, LabelSetTask_ConstructSqe)
     rtModel_t model;
     rtError_t ret = rtModelCreate(&model, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    stream_->SetModel(rt_ut::UnwrapOrNull<Model>(model));
-    stream_->SetLatestModlId(rt_ut::UnwrapOrNull<Model>(model)->Id_());
+    Model *modelPtr = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(modelPtr, nullptr);
+    stream_->SetModel(modelPtr);
+    stream_->SetLatestModlId(modelPtr->Id_());
     rtStarsSqe_t sqe = {};
     ToConstructSqe(&task, &sqe);
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
-    stream_->SetModel(nullptr);
+    stream_->DelModel(modelPtr);
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
@@ -1885,44 +1887,83 @@ void GetMsgCallbackStub1(const char *msg, uint32_t len) {}
 TEST_F(TaskTest, CmoTask_test)
 {
     rtError_t error;
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    rtModel_t model;
+    ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model *modelPtr = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(modelPtr, nullptr);
+    stream->SetModel(modelPtr);
+    stream->SetLatestModlId(modelPtr->Id_());
+
     TaskInfo task = {};
-    InitByStream(&task, stream_);
+    InitByStream(&task, stream);
     EXPECT_NE(task.stream, nullptr);
     rtCmoTaskInfo_t cmoTask = {};
-    error = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    error = CmoTaskInit(&task, &cmoTask, stream, 0);
 
-    Model *tmpModel = stream_->Model_();
-    stream_->models_.clear();
-    error = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    Model *tmpModel = stream->Model_();
+    stream->models_.clear();
+    error = CmoTaskInit(&task, &cmoTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
-    stream_->SetModel(tmpModel);
-    stream_->SetLatestModlId(tmpModel->Id_());
+    stream->SetModel(tmpModel);
+    stream->SetLatestModlId(tmpModel->Id_());
     MOCKER(memcpy_s).stubs().will(returnValue(1));
-    error = CmoTaskInit(&task, &cmoTask, stream_, 0);
+    error = CmoTaskInit(&task, &cmoTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_SEC_HANDLE);
     rtStarsSqe_t sqe = {};
     ToConstructSqe(&task, &sqe);
+    TaskUnInitProc(&task);
+    stream->DelModel(modelPtr);
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(TaskTest, BarrierTask_test)
 {
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Stream *stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    rtModel_t model;
+    ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model *modelPtr = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(modelPtr, nullptr);
+    stream->SetModel(modelPtr);
+    stream->SetLatestModlId(modelPtr->Id_());
+
     TaskInfo task = {};
-    InitByStream(&task, stream_);
+    InitByStream(&task, stream);
 
     rtBarrierTaskInfo_t barrierTask = {};
-    rtError_t error = BarrierTaskInit(&task, &barrierTask, stream_, 0);
+    rtError_t error = BarrierTaskInit(&task, &barrierTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    Model *tmpModel = stream_->Model_();
-    stream_->models_.clear();
-    error = BarrierTaskInit(&task, &barrierTask, stream_, 0);
+    Model *tmpModel = stream->Model_();
+    stream->models_.clear();
+    error = BarrierTaskInit(&task, &barrierTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
-    stream_->SetModel(tmpModel);
-    stream_->SetLatestModlId(tmpModel->Id_());
+    stream->SetModel(tmpModel);
+    stream->SetLatestModlId(tmpModel->Id_());
     MOCKER(memcpy_s).stubs().will(returnValue(1));
-    error = BarrierTaskInit(&task, &barrierTask, stream_, 0);
+    error = BarrierTaskInit(&task, &barrierTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe = {};
     ToConstructSqe(&task, &sqe);
+    stream->DelModel(modelPtr);
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(TaskTest, npuGetFloatStatus_01)
@@ -2421,8 +2462,10 @@ TEST_F(TaskTest, FftsPlusTaskForDevAddr)
     FftsPlusTaskUnInit(&fftsPlusTask);
 
     free((void *)fftsPlusTaskInfo.descBuf);
-    stream_->SetModel(tmpModel);
-    stream_->SetLatestModlId(tmpModel->Id_());
+    if (tmpModel != nullptr) {
+        stream_->SetModel(tmpModel);
+        stream_->SetLatestModlId(tmpModel->Id_());
+    }
 }
 
 TEST_F(TaskTest, FftsPlusTaskForDevMemErr)

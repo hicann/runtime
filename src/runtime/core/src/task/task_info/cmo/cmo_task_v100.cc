@@ -13,6 +13,7 @@
 #include "stream.hpp"
 #include "device.hpp"
 #include "model.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -203,5 +204,28 @@ void PrintErrorInfoForCmoTask(TaskInfo* taskInfo, const uint32_t devId)
     }
     (void)dev->Driver_()->HostMemFree(hostMemSrc);
 }
+
+static bool CmoTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForCmoTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForCmoTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
+    }
+
+    return true;
+}
+
+static bool g_cmoTaskRegister = CmoTaskRegister();
 }  // namespace runtime
 }  // namespace cce

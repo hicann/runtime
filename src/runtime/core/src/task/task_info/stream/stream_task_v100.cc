@@ -263,5 +263,127 @@ void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 }
 #endif
 
+static bool StreamTaskRegister()
+{
+    TaskFuncSingle createStreamFuncs = {
+        .toCommandFunc = &ToCommandBodyForCreateStreamTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultForCreateStreamTask,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle streamActiveFuncs = {
+        .toCommandFunc = &ToCommandBodyForStreamActiveTask,
+        .toSqeFunc = &ConstructSqeForStreamActiveTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StreamActiveTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStreamActiveTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle activeAicpuStreamFuncs = {
+        .toCommandFunc = &ToCmdBodyForActiveAicpuStreamTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle callbackLaunchFuncs = {
+        .toCommandFunc = &ToCmdBodyForCallbackLaunchTask,
+        .toSqeFunc = &ConstructSqeForCallbackLaunchTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle overflowSwitchFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForOverflowSwitchSetTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle streamTagFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForStreamTagSetTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle streamModeFuncs = {
+        .toCommandFunc = &ToCmdBodyForSetStreamModeTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle sqLockUnlockFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForSetSqLockUnlockTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle flipFuncs = {
+        .toCommandFunc = &ToCmdBodyForFlipTask,
+        .toSqeFunc = &ConstructSqeForFlipTask,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle sqeUpdateFuncs = {
+        .toCommandFunc = &ToCommandBodyForSqeUpdateTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = &WaitAsyncCopyCompleteForUpdateTask,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_CREATE_STREAM, createStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_ACTIVE, streamActiveFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, activeAicpuStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_HOSTFUNC_CALLBACK, callbackLaunchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, overflowSwitchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, streamTagFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_MODE, streamModeFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, sqLockUnlockFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_FLIP, flipFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_TASK_SQE_UPDATE, sqeUpdateFuncs);
+    }
+
+    return true;
+}
+
+static bool g_streamTaskRegister = StreamTaskRegister();
+
 }  // namespace runtime
 }  // namespace cce

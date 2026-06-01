@@ -14,6 +14,8 @@
 #include "stars_cond_isa_helper.hpp"
 #include "stars_david.hpp"
 #include "error_code.h"
+#include "stream_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -139,5 +141,136 @@ void ConstructDavidSqeForCallbackLaunchTask(TaskInfo * const taskInfo, rtDavidSq
         sqe->u.callBackInfo.streamId, taskInfo->id, sqe->u.callBackInfo.notifyId, sqe->u.callBackInfo.isBlock,
         sqe->u.callBackInfo.destPid);
 }
+
+static bool StreamTaskRegister()
+{
+    TaskFuncSingle createStreamFuncs = {
+        .toCommandFunc = &ToCommandBodyForCreateStreamTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamActiveFuncs = {
+        .toCommandFunc = &ToCommandBodyForStreamActiveTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = &StreamActiveTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForStreamActiveTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle activeAicpuStreamFuncs = {
+        .toCommandFunc = &ToCmdBodyForActiveAicpuStreamTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle callbackLaunchFuncs = {
+        .toCommandFunc = &ToCmdBodyForCallbackLaunchTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle overflowSwitchFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamTagFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle streamModeFuncs = {
+        .toCommandFunc = &ToCmdBodyForSetStreamModeTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle sqLockUnlockFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle flipFuncs = {
+        .toCommandFunc = &ToCmdBodyForFlipTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle sqeUpdateFuncs = {
+        .toCommandFunc = &ToCommandBodyForSqeUpdateTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_CREATE_STREAM, createStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_ACTIVE, streamActiveFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, activeAicpuStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_HOSTFUNC_CALLBACK, callbackLaunchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, overflowSwitchFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, streamTagFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_MODE, streamModeFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, sqLockUnlockFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_FLIP, flipFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_TASK_SQE_UPDATE, sqeUpdateFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_CREATE_STREAM, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_ACTIVE, &ConstructDavidSqeForStreamActiveTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_ACTIVE_AICPU_STREAM, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_HOSTFUNC_CALLBACK, &ConstructDavidSqeForCallbackLaunchTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_SET_OVERFLOW_SWITCH, &ConstructDavidSqeForOverflowSwitchSetTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, &ConstructDavidSqeForStreamTagSetTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_MODE, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_FLIP, &ConstructDavidSqeBase);
+    return true;
+}
+
+static bool g_streamTaskRegister = StreamTaskRegister();
 }  // namespace runtime
 }  // namespace cce
