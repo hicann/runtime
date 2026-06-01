@@ -1008,8 +1008,9 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
     const tsAicpuKernelType aicpuKernelType = static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType);
     if ((aicpuKernelType == TS_AICPU_KERNEL_AICPU) || (aicpuKernelType == TS_AICPU_KERNEL_CUSTOM_AICPU)) {
         STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
-            "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, fault op_name=%s.",
-            devId, streamId, TaskIdDesc(), taskId, taskInfo->stream->GetTaskTag(taskInfo->id).c_str());
+            "AI CPU kernel execution failed, device_id=%u, stream_id=%d, %s=%u, fault op_name=%s, soName=%s, funcName=%s, kernelName=%s.",
+            devId, streamId, TaskIdDesc(), taskId, taskInfo->stream->GetTaskTag(taskInfo->id).c_str(),
+            soName.c_str(), funcName.c_str(), kernelName.c_str());
         return;
     }
 
@@ -1022,7 +1023,7 @@ static void PrintAicpuErrorInfo(TaskInfo* taskInfo, const uint32_t devId)
     kernelName = (isKernelValid && kernel != nullptr) ? kernel->GetCpuOpType() : kernelName;
     soName = (isKernelValid && kernel != nullptr) ? kernel->GetCpuKernelSo() : soName;
 
-    RT_LOG_CALL_MSG_NO_RT_LOG(ERR_MODULE_AICPU, "AI CPU kernel execution failed, device_id=%u,stream_id=%d,"
+    RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "AI CPU kernel execution failed, device_id=%u, stream_id=%d,"
         "%s=%u, soName=%s, funcName=%s, kernelName=%s.",
         devId, streamId, TaskIdDesc(), taskId, soName.c_str(), funcName.c_str(), kernelName.c_str());
     STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_AICPU,
