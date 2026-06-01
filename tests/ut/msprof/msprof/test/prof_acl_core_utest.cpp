@@ -3749,6 +3749,14 @@ TEST_F(MSPROF_API_SUBSCRIBE_UTEST, AnalyzerGe_ParseOpType) {
     analyzerGe->ParseOpType(geProfTaskData, opInfo);
 }
 
+static uint32_t g_tagId = 0;
+
+int32_t RtProfilerTraceExFuncStub(uint64_t indexId, uint64_t modelId, uint16_t tagId, VOID_PTR stm)
+{
+    g_tagId = tagId;
+    return 0;
+}
+
 class MSPROF_API_MSPROFTX_UTEST: public testing::Test {
 protected:
     virtual void SetUp() {
@@ -3757,6 +3765,30 @@ protected:
 
     }
 };
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, LaunchDeviceTxTask) {
+    GlobalMockObject::verify();
+
+    uint64_t indexId = 0;
+    uint32_t mark_tag_id = 11;
+    uint32_t range_tag_id = 12;
+
+    // rtProfilerTraceExFunc_ is nullptr
+    int32_t ret = Msprof::MsprofTx::MsprofTxManager::instance()->LaunchDeviceTxTask(indexId, nullptr, false);
+    EXPECT_EQ(PROFILING_FAILED, ret);
+
+    // rtProfilerTraceExFunc_ is not nullptr
+    Msprof::MsprofTx::MsprofTxManager::instance()->rtProfilerTraceExFunc_ = RtProfilerTraceExFuncStub;
+    ret = Msprof::MsprofTx::MsprofTxManager::instance()->LaunchDeviceTxTask(indexId, nullptr, false);
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
+    EXPECT_EQ(mark_tag_id, g_tagId);
+
+    ret = Msprof::MsprofTx::MsprofTxManager::instance()->LaunchDeviceTxTask(indexId, nullptr, true);
+    EXPECT_EQ(PROFILING_SUCCESS, ret);
+    EXPECT_EQ(range_tag_id, g_tagId);
+
+    Msprof::MsprofTx::MsprofTxManager::instance()->rtProfilerTraceExFunc_ = nullptr;
+}
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofCreateStamp) {
     GlobalMockObject::verify();

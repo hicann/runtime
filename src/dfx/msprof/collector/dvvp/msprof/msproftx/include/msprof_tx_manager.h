@@ -72,7 +72,7 @@ public:
     int32_t ReportData(MsprofTxInfo &info) const;
 
     uint64_t GetTxEventId();
-    int32_t LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm);
+    int32_t LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm, bool isRangeTx);
 
 private:
     int32_t MarkExPoint(aclrtStream stream, MsprofTxInfo &info);

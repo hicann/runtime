@@ -81,7 +81,7 @@ static bool IsDomainNameValid(const char* name)
 static void MsTxMarkAImpl(const char* msg, aclrtStream stream, uint64_t domainName)
 {
     uint64_t mstxEventId = MsprofTxManager::instance()->GetTxEventId();
-    if (stream && MsprofTxManager::instance()->LaunchDeviceTxTask(mstxEventId, stream) != PROFILING_SUCCESS) {
+    if (stream && MsprofTxManager::instance()->LaunchDeviceTxTask(mstxEventId, stream, false) != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to run mstx task for mark");
         return;
     }
@@ -96,7 +96,7 @@ static void MsTxMarkAImpl(const char* msg, aclrtStream stream, uint64_t domainNa
 static uint64_t MsTxRangeStartAImpl(const char* msg, aclrtStream stream, uint64_t domainName)
 {
     uint64_t mstxEventId = MsprofTxManager::instance()->GetTxEventId();
-    if (stream && MsprofTxManager::instance()->LaunchDeviceTxTask(mstxEventId, stream) != PROFILING_SUCCESS) {
+    if (stream && MsprofTxManager::instance()->LaunchDeviceTxTask(mstxEventId, stream, true) != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to run mstx task for range start");
         return MSTX_INVALID_RANGE_ID;
     }
@@ -132,7 +132,7 @@ static void MstxRangeEndImpl(uint64_t id, uint64_t domainName)
                 MSPROF_LOGE("Stream for range id %lu is null", id);
                 return;
             }
-            if (MsprofTxManager::instance()->LaunchDeviceTxTask(id, it->second) != PROFILING_SUCCESS) {
+            if (MsprofTxManager::instance()->LaunchDeviceTxTask(id, it->second, true) != PROFILING_SUCCESS) {
                 MSPROF_LOGE("Failed to run mstx task for range end, range id %lu", id);
                 return;
             }

@@ -31,6 +31,7 @@ namespace Msprof {
 namespace MsprofTx {
 constexpr uint32_t MARKEX_MODEL_ID = 0xFFFFFFFFU;
 constexpr uint32_t MARKEX_TAG_ID = 11;
+constexpr uint32_t MARKEX_RANGE_TAG_ID = 12;
 constexpr uint32_t MARKEX_MAX_CYCLE = 1000;
 
 MsprofTxManager::MsprofTxManager() : isInit_(false), reporter_(nullptr), stampPool_(nullptr), categoryNameMap_({}),
@@ -369,11 +370,12 @@ void MsprofTxManager::RegisterReporterCallback(const ProfAdditionalBufPushCallba
     MSPROF_LOGI("[MsprofTxManager]Register MsprofReportAdditional function.");
 }
 
-int32_t MsprofTxManager::LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm)
+int32_t MsprofTxManager::LaunchDeviceTxTask(uint64_t indexId, VOID_PTR stm, bool isRangeTx)
 {
     FUNRET_CHECK_EXPR_ACTION(rtProfilerTraceExFunc_ == nullptr, return PROFILING_FAILED,
         "[MarkEx]Failed to call nullptr rtProfilerTraceEx.");
-    return rtProfilerTraceExFunc_(indexId, MARKEX_MODEL_ID, MARKEX_TAG_ID, stm);
+    uint32_t tagId = isRangeTx ? MARKEX_RANGE_TAG_ID : MARKEX_TAG_ID;
+    return rtProfilerTraceExFunc_(indexId, MARKEX_MODEL_ID, tagId, stm);
 }
 
 uint64_t MsprofTxManager::GetTxEventId()
