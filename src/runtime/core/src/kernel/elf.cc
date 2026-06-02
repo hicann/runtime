@@ -1712,13 +1712,18 @@ static rtError_t GetMetaInfoInternal(const rtElfData * const elfData, const std:
     const rtError_t errorAiv = GetMetaSection(elfData, section, targetSection + ELF_SECTION_MIX_KERNEL_AIV);
     if ((error != RT_ERROR_NONE) && (errorAic != RT_ERROR_NONE) && (errorAiv != RT_ERROR_NONE)) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1014,
-            "Failed to obtain the meta section from the operator binary file " + kernelName + 
-            ". The meta type is " + std::to_string(type));
+            "Failed to obtain the meta section of operator " + kernelName + " from the binary file of the operator");
         return error;
     }
 
     metaInfo = GetMetaInfo(elfData, section, type);
-    COND_RETURN_WARN((metaInfo.empty()), RT_ERROR_INVALID_VALUE, "No meta info with type %u was found.", type);
+    if (metaInfo.empty()) {
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1014,
+            "Failed to find the meta information of the " + std::to_string(type) + 
+            " type from the binary file of the operator. The kernel name of the corresponding operator is " + 
+            kernelName);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     return RT_ERROR_NONE;
 }

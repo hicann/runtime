@@ -3381,7 +3381,7 @@ rtError_t rtFunctionGetMetaInfo(const rtFuncHandle funcHandle, const rtFunctionM
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->FunctionGetMetaInfo(RtPtrToPtr<const Kernel *>(funcHandle), type, data, length);
-
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -3393,6 +3393,7 @@ rtError_t rtFunctionGetMetaInfoSize(const rtFuncHandle funcHandle, const rtFunct
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->FunctionGetMetaInfoSize(RtPtrToPtr<const Kernel *>(funcHandle), type, size);
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }

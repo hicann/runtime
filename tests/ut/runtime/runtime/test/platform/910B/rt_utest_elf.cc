@@ -1476,6 +1476,9 @@ TEST_F(CloudV2ELFTest, GetFunctionMetaInfoSizeSuccess)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(metaSize, 4);
 
+    error = GetFunctionMetaInfoSize(elfData, "kernel0", RT_FUNCTION_TYPE_SU_STACK_SIZE, &metaSize);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
     delete[] elfData->section_headers;
     delete elfData;
 }
