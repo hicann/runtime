@@ -37,6 +37,22 @@ void MockMemValueSubmitSuccess(Stream * const stream)
     Device * const device = stream->Device_();
     MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
 }
+
+drvError_t halMemHostGetDevPointer_success_stub(void *srcPtr, UINT32 devid, void **dstPtr)
+{
+    *dstPtr = reinterpret_cast<void*>(0x12345678);
+    return DRV_ERROR_NONE;
+}
+
+drvError_t drvMemGetAttribute_stub(DVdeviceptr vptr, struct DVattribute *attr)
+{
+    if (vptr == 0x10000000) {
+        attr->memType = DV_MEM_LOCK_HOST;
+        return DRV_ERROR_NONE;
+    }
+    attr->memType = DV_MEM_LOCK_DEV;
+    return DRV_ERROR_NONE;
+}
 }  // namespace
 
 class CloudV2ApiTest : public testing::Test
@@ -3375,5 +3391,46 @@ TEST_F(CloudV2ApiTest, model_switch_stream_ex)
     error = rtStreamDestroy(exeStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2ApiTest, rtMemcpyAsync_convert_mapped_addr_host_to_device)
+{
+    rtError_t error;
+    void *hostPtr = reinterpret_cast<void*>(0x10000000);
+    void *devPtr;
+    size_t size = 64;
+    rtStream_t stream;
+    
+    Runtime *rtInstance = (Runtime *)Runtime::Instance();
+    
+    error = rtMalloc(&devPtr, size, RT_MEMORY_HBM, DEFAULT_MODULEID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    g_isAddrFlatDevice = true;
+
+    MOCKER(&halMemHostGetDevPointer).stubs()
+        .will(invoke(halMemHostGetDevPointer_success_stub));
+
+    MOCKER(drvMemGetAttribute).stubs()
+        .will(invoke(drvMemGetAttribute_stub));
+
+    error = rtMemcpyAsync(devPtr, size, hostPtr, size, RT_MEMCPY_HOST_TO_DEVICE, stream);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    
+    error = rtStreamSynchronize(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
+    g_isAddrFlatDevice = false;
+    
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
+    error = rtFree(devPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    
     GlobalMockObject::verify();
 }

@@ -238,12 +238,12 @@ rtError_t NpuDriver::HostUnregister(void *ptr,  const uint32_t deviceId)
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::HostGetDevPointer(void *srcPtr, uint32_t deviceId, void **dstPtr)
+rtError_t NpuDriver::HostGetDevPointer(void *srcPtr, uint32_t deviceId, void **dstPtr, const bool isLogError)
 {
     COND_RETURN_WARN(&halMemHostGetDevPointer == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "[drv api] halMemHostGetDevPointer does not exist");
     drvError_t drvRet = halMemHostGetDevPointer(srcPtr, deviceId, dstPtr);
-    if (drvRet != DRV_ERROR_NONE) {
+    if (isLogError && (drvRet != DRV_ERROR_NONE)) {
         DRV_ERROR_PROCESS(drvRet, "Call driver api halMemHostGetDevPointer failed, drvRetCode=%d, drvDevId=%u.",
             static_cast<int32_t>(drvRet), deviceId);
         return RT_GET_DRV_ERRCODE(drvRet);

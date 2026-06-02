@@ -73,7 +73,7 @@ public:
     rtError_t HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability *capabilities) override;
 
     // Get device pointer from host pointer
-    rtError_t HostGetDevPointer(void *srcPtr, uint32_t deviceId, void **dstPtr) override;
+    rtError_t HostGetDevPointer(void *srcPtr, uint32_t deviceId, void **dstPtr, const bool isLogError = true) override;
 
     // Alloc specified memory.
     rtError_t MemAllocEx(void ** const dptr, const uint64_t size, const rtMemType_t memType) override;

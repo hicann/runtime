@@ -2670,37 +2670,36 @@ rtError_t ApiImpl::MemCopySyncEx(void * const dst, const uint64_t destMax, const
     return driver->MemCopySync(dst, destMax, src, cnt, curKind);
 }
 
-rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,
-    const rtMemcpyKind_t kind, Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo,
-    const rtD2DAddrCfgInfo_t * const addrCfg, bool checkKind, const rtMemcpyConfig_t * const memcpyConfig)
+static void ConvertMappedAddrToDevice(Device* const device, void* &src, rtMemcpyKind_t &kind)
 {
-    RT_LOG(RT_LOG_DEBUG, "async memcpy, count=%" PRIu64 ", kind=%d", cnt, kind);
-    UNUSED(memcpyConfig);
-    Context * const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    if (!g_isAddrFlatDevice) {
+        return;
+    }
+    // 仅会转换 h2d -> d2d
+    if (kind != RT_MEMCPY_HOST_TO_DEVICE) {
+        return;
+    }
+    Driver *driver = device->Driver_();
+    if (unlikely(driver == nullptr)) {
+        return;
+    }
+    void *devicePtr = nullptr;
+    (void)driver->HostGetDevPointer(src, device->Id_(), &devicePtr, false);
+    if (devicePtr != nullptr) {
+        RT_LOG(RT_LOG_DEBUG, "Convert host addr=%p to device addr=%p, device id=%u.", src, devicePtr, device->Id_());
+        src = devicePtr;
+        kind = RT_MEMCPY_DEVICE_TO_DEVICE;
+    }
+}
 
-    Stream *curStm = stm;
-    if (curStm == nullptr) {
-        curStm = curCtx->DefaultStream_();
-        NULL_STREAM_PTR_RETURN_MSG(curStm);
-    }
-    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
-        "stream " + std::to_string(curStm->Id_()));
-    
-    // UVM memcpyAsync doesn't support RT_MEMCPY_ADDR_DEVICE_TO_DEVICE
-    if ((kind != RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) && (UvmCallback::IsUvmMem(src, cnt) || UvmCallback::IsUvmMem(dst, cnt))) {
-        rtMemcpyCallbackParam *params = new (std::nothrow) rtMemcpyCallbackParam;
-        COND_RETURN_AND_MSG_OUTER((params == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
-            sizeof(rtMemcpyCallbackParam));
-        UvmCallback::CreateMemcpyCallbackParam(dst, destMax, src, cnt, kind, checkKind, curStm, params);
-        rtError_t error = LaunchHostFunc(curStm, UvmCallback::MemcpyAsyncCallback, static_cast<void *>(params));
-        ERROR_PROC_RETURN_MSG_INNER(error, delete params, "CallbackLaunch fails in MemcopyAsync, err:%#x.", static_cast<uint32_t>(error));
-        return RT_ERROR_NONE;
-    }
+static rtError_t LaunchAsyncCopy(void *dst, const uint64_t destMax, void *src, const uint64_t cnt, rtMemcpyKind_t kind,
+    Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo, const rtD2DAddrCfgInfo_t * const addrCfg)
+{
+    Device *const device = stm->Device_();
+    NULL_PTR_RETURN_MSG_OUTER(device, RT_ERROR_INVALID_VALUE);
+    ConvertMappedAddrToDevice(device, src, kind);
 
     if (addrCfg != nullptr) {
-        Device* device = curStm->Device_();
-        NULL_PTR_RETURN_MSG_OUTER(device, RT_ERROR_INVALID_VALUE);
         RT_LOG(RT_LOG_INFO, "device_id=%u, tsch version=%u", device->Id_(), device->GetTschVersion());
         if (!device->CheckFeatureSupport(TS_FEATURE_D2D_ADDR_ASYNC)) {
             RT_LOG(RT_LOG_WARNING, "current ts version does not support d2d addr MemcpyAsync");
@@ -2717,7 +2716,7 @@ rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const v
         realSize = doingSize;
         error = MemcopyAsync(
             (static_cast<char_t*>(dst)) + doneSize, destMax - doneSize, (static_cast<const char_t*>(src)) + doneSize,
-            doingSize, kind, curStm, &realSize, nullptr, cfgInfo, addrCfg);
+            doingSize, kind, stm, &realSize, nullptr, cfgInfo, addrCfg);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "cnt=%lld, doingSize=%lld, realSize=%lld.", cnt, doingSize, realSize);
             return error;
@@ -2726,6 +2725,38 @@ rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const v
         remainSize -= realSize;
     }
     return error;
+}
+
+rtError_t ApiImpl::MemcpyAsync(void * const dst, const uint64_t destMax, const void * const src, const uint64_t cnt,
+    const rtMemcpyKind_t kind, Stream * const stm, const rtTaskCfgInfo_t * const cfgInfo,
+    const rtD2DAddrCfgInfo_t * const addrCfg, bool checkKind, const rtMemcpyConfig_t * const memcpyConfig)
+{
+    RT_LOG(RT_LOG_DEBUG, "async memcpy, count=%" PRIu64 ", kind=%d", cnt, kind);
+    UNUSED(memcpyConfig);
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Stream *curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+    COND_RETURN_AND_MSG_INVALID_CONTEXT(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
+        "stream " + std::to_string(curStm->Id_()));
+
+    // UVM memcpyAsync doesn't support RT_MEMCPY_ADDR_DEVICE_TO_DEVICE
+    if ((kind != RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) && (UvmCallback::IsUvmMem(src, cnt) || UvmCallback::IsUvmMem(dst, cnt))) {
+        rtMemcpyCallbackParam *params = new (std::nothrow) rtMemcpyCallbackParam;
+        COND_RETURN_AND_MSG_OUTER((params == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(rtMemcpyCallbackParam));
+        UvmCallback::CreateMemcpyCallbackParam(dst, destMax, src, cnt, kind, checkKind, curStm, params);
+        rtError_t error = LaunchHostFunc(curStm, UvmCallback::MemcpyAsyncCallback, static_cast<void *>(params));
+        ERROR_PROC_RETURN_MSG_INNER(error, delete params, "CallbackLaunch fails in MemcopyAsync, err:%#x.", static_cast<uint32_t>(error));
+        return RT_ERROR_NONE;
+    }
+
+    void *mutableSrc = RtPtrToUnConstPtr<void *>(src);
+    return LaunchAsyncCopy(dst, destMax, mutableSrc, cnt, kind, curStm, cfgInfo, addrCfg);
 }
 
 rtError_t ApiImpl::LaunchSqeUpdateTask(uint32_t streamId, uint32_t taskId, void *src, uint64_t cnt, Stream * const stm, bool needCpuTask)
