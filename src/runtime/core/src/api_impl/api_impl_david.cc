@@ -71,6 +71,11 @@ rtError_t ApiImplDavid::KernelLaunch(const void * const stubFunc, const uint32_t
     }
     COND_RETURN_AND_MSG_OUTER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         ErrorCode::EE1010, __func__, "stream");
+    
+    if ((cfgInfo != nullptr) && ((cfgInfo->dumpflag & RT_KERNEL_DUMPFLAG) != 0U)) {
+        ERROR_RETURN_MSG_INNER(Runtime::Instance()->StartAicpuSd(curCtx->Device_()),
+            "kernel launch with kernel dump flag failed, check and start tsd open aicpu sd error.");
+    }
 
     TaskCfg taskCfg = {};
     (void)ConvertTaskCfgInfoToTaskCfg(taskCfg, cfgInfo);
@@ -227,6 +232,12 @@ rtError_t ApiImplDavid::KernelLaunchEx(const char_t * const opName, const void *
     }
     COND_RETURN_AND_MSG_OUTER(curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
         ErrorCode::EE1010, __func__, "stream");
+
+    Runtime * const rtInstance = Runtime::Instance();
+    COND_RETURN_ERROR(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
+    ERROR_RETURN_MSG_INNER(rtInstance->StartAicpuSd(curCtx->Device_()),
+        "Cpu kernel launch ex with args failed, check and start tsd open aicpu sd error.");
+
     return StreamLaunchKernelEx(args, argsSize, flags, curStm);
 }
 
