@@ -110,10 +110,10 @@ int32_t ProfModuleReprotMgr::ProfSetProCommand(ProfCommand &command)
         if (finalizeGuard_ && k != RUNTIME) {
             continue;
         }
-        MSPROF_LOGI("call %u callback, type:%u, switch:%" PRIu64 ", switchHi:%" PRIu64 ", model:%u, devNums:%u, "
-            "dev:%u, cache: %u, finalizeGuard: %u",
-            k, command.type, command.profSwitch, command.profSwitchHi, command.modelId, command.devNums,
-            command.devIdList[0], command.cacheFlag, finalizeGuard_);
+        MSPROF_LOGI("call %u callback, type:%u, switch:0x%llx, switchHi:0x%llx, model:%u, devNums:%u, "
+            "dev:%u, cache: %u, finalizeGuard: %u", k, command.type,
+            static_cast<unsigned long long>(command.profSwitch), static_cast<unsigned long long>(command.profSwitchHi),
+            command.modelId, command.devNums, command.devIdList[0], command.cacheFlag, finalizeGuard_);
         for (auto& handle : it->second) {
             handle(static_cast<uint32_t>(PROF_CTRL_SWITCH), Utils::ReinterpretCast<VOID, ProfCommand>(&command),
                     sizeof(ProfCommand));

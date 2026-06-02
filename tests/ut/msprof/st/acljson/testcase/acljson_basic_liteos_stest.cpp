@@ -35,6 +35,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 };
 

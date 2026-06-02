@@ -28,6 +28,7 @@
 #include "prof_manager.h"
 #include "transport/file_transport.h"
 #include "transport/pipe_transport.h"
+#include "transport/stats_transport.h"
 #include "transport/uploader.h"
 #include "transport/uploader_mgr.h"
 #include "transport/hash_data.h"
@@ -79,7 +80,7 @@ uint64_t ProfGetOpExecutionTime(CONST_VOID_PTR data, uint32_t len, uint32_t inde
 }
 
 ProfAclMgr::ProfAclMgr() : isReady_(false), isProfWarmup_(false), mode_(WORK_MODE_OFF), curDevId_(-1), devSet_({}), aclApiDevSet_({}),
-    params_(nullptr), dataTypeConfig_(0), startIndex_(0), subscribeType_(0) {}
+    statsDevSet_({}), params_(nullptr), dataTypeConfig_(0), startIndex_(0), subscribeType_(0) {}
 
 ProfAclMgr::~ProfAclMgr()
 {
@@ -281,6 +282,15 @@ bool ProfAclMgr::IsPureCpuMode()
     return false;
 }
 
+bool ProfAclMgr::IsAclApiStatsMode()
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    if ((dataTypeConfig_ & PROF_API_STATS) != 0) {
+        return true;
+    }
+    return false;
+}
+
 static ProfAclMgr*           profAclMgrObjPtr      = NULL;
 static std::mutex            g_sigHandlerMtx;
 static bool                  g_sigHandlerRegistered = false;
@@ -458,6 +468,7 @@ int32_t ProfAclMgr::UnInit()
     UnregisterSigalHandler();
     params_ = nullptr;
     devTasks_.clear();
+    statsDevSet_.clear();
     isReady_ = false;
     return PROFILING_SUCCESS;
 }
@@ -545,12 +556,16 @@ bool ProfAclMgr::IsInited()
 int32_t ProfAclMgr::ProfAclFinalize()
 {
     MSPROF_EVENT("Received ProfAclFinalize request from acl");
-    std::lock_guard<std::mutex> lk(mtx_);
-    if (mode_ != WORK_MODE_API_CTRL) {
-        MSPROF_LOGE("Profiling has not been inited");
-        return ACL_ERROR_PROF_NOT_RUN;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        if (mode_ != WORK_MODE_API_CTRL) {
+            MSPROF_LOGE("Profiling has not been inited");
+            return ACL_ERROR_PROF_NOT_RUN;
+        }
     }
+    (void)ProfStopStatsCallback();
     UploaderMgr::instance()->SetAllUploaderTransportStopped();
+    std::lock_guard<std::mutex> lk(mtx_);
     for (auto iter = devTasks_.begin(); iter != devTasks_.end(); iter++) {
         iter->second.params->isCancel = true;
         if (ProfManager::instance()->IdeCloudProfileProcess(iter->second.params) != PROFILING_SUCCESS) {
@@ -856,7 +871,9 @@ uint64_t HashDataGenHashIdWrapper(const std::string &str) {
 int32_t ProfAclMgr::InitUploader(const std::string& devIdStr)
 {
     int32_t ret = 0;
-    if (mode_ == WORK_MODE_API_CTRL || mode_ == WORK_MODE_CMD) {
+    if ((dataTypeConfig_ & PROF_API_STATS) != 0) {
+        ret = InitStatsUploader();
+    } else if (mode_ == WORK_MODE_API_CTRL || mode_ == WORK_MODE_CMD) {
         ret = InitApiCtrlUploader(devIdStr);
     } else if (mode_ == WORK_MODE_SUBSCRIBE) {
         ret = InitSubscribeUploader(devIdStr);
@@ -932,6 +949,43 @@ void setUploaderPipeTransport(const std::string devId) {
         SHARED_PTR_ALIA<ITransport> trans = MsptiPipeTransportFactory().CreateMsptiPipeTransport();
         uploader->SetPipeTransport(trans);
     }
+}
+
+int32_t ProfAclMgr::InitStatsUploader()
+{
+    std::lock_guard<std::mutex> lk(mtxUploader_);
+    devUuid_[PROF_HOST_JOBID] = Utils::CreateResultPath(PROF_HOST_JOBID);
+    std::string hostDir = GenerateProfDirName(PROF_HOST_JOBID);
+    if (Utils::CreateDir(hostDir) != PROFILING_SUCCESS) {
+        char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
+        int32_t errNo = OsalGetErrorCode();
+        MSPROF_LOGE("Failed to create host dir: %s. [Error %d] %s.", Utils::BaseName(hostDir).c_str(),
+            errNo, OsalGetErrorFormatMessage(errNo, errBuf, MAX_ERR_STRING_LEN));
+        std::string reason = "The operation create dir on directory " + baseDir_ + " is abnormal. [Error " +
+            std::to_string(errNo) + "] " + std::string(OsalGetErrorFormatMessage(errNo, errBuf, MAX_ERR_STRING_LEN));
+        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({baseDir_, "output path", reason}));
+        return ACL_ERROR_INVALID_FILE;
+    }
+    std::string recordOutPutStr = baseDir_;
+    FUNRET_CHECK_EXPR_LOGW(RecordOutPut(recordOutPutStr) != PROFILING_SUCCESS,
+        "Unable to record output dir:%s, devId:%s", Utils::BaseName(devUuid_[PROF_HOST_JOBID]).c_str(),
+        PROF_HOST_JOBID.c_str());
+    SHARED_PTR_ALIA<ITransport> transport = nullptr;
+    transport = StatsTransportFactory().CreateStatsTransport(hostDir);
+    if (transport == nullptr) {
+        MSPROF_LOGE("Failed to create transport for device %s", PROF_HOST_JOBID.c_str());
+        return ACL_ERROR_INVALID_FILE;
+    }
+
+    const size_t uploaderCapacity = 4096 * 4; // 16384 : need more uploader capacity
+    int32_t ret = UploaderMgr::instance()->CreateUploader(PROF_HOST_JOBID, transport, uploaderCapacity);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to create uploader for device %s", PROF_HOST_JOBID.c_str());
+        return ACL_ERROR_PROFILING_FAILURE;
+    }
+
+    return ACL_SUCCESS;
 }
 
 bool ProfAclMgr::InitClientUploader(const std::string& devIdStr, SHARED_PTR_ALIA<ITransport> transport)
@@ -2148,7 +2202,7 @@ int32_t ProfAclMgr::MsprofResetDeviceHandle(uint32_t devId)
     return MSPROF_ERROR_NONE;
 }
 
-void ProfAclMgr::DoFinalizeHandle(void) const
+void ProfAclMgr::DoFinalizeHandle(void)
 {
     std::vector<uint32_t> devIds;
     Msprofiler::Api::ProfAclMgr::instance()->GetRunningDevices(devIds);
@@ -2169,6 +2223,8 @@ void ProfAclMgr::DoFinalizeHandle(void) const
             MSPROF_INNER_ERROR("EK9999", "Failed to callback stop on device %u.", devId);
         }
     }
+
+    (void)ProfStopStatsCallback();
     geRet = CommandHandleProfFinalize();
     if (geRet != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to CommandHandleProfFinalize");
@@ -2411,48 +2467,56 @@ int32_t ProfAclMgr::ProfStartCommon(const uint32_t *devIdList, uint32_t devNums)
         if (devId == DEFAULT_HOST_ID) {
             continue;
         }
-        if (MsprofDeviceHandle(devId) != PROFILING_SUCCESS) {
-            continue;
+        const bool isApiStatsMode = IsAclApiStatsMode();
+        if (isApiStatsMode) {
+            MSPROF_LOGD("Start profiling by api stats mode, skip device task: %u.", devId);
+        } else {
+            if (MsprofDeviceHandle(devId) != PROFILING_SUCCESS) {
+                continue;
+            }
         }
-        // callback init handle
-        int32_t ret = CommandHandleProfInit();
-        if (ret != ACL_SUCCESS) {
-            MSPROF_LOGE("Failed to execute CommandHandleProfInit.");
-            MSPROF_INNER_ERROR("EK9999", "Failed to callback init.");
+        if (ProfStartCallback(devId) != PROFILING_SUCCESS) {
             return MSPROF_ERROR;
         }
-        // callback start handle
-        uint32_t startDevIdList[1] = {devId};
-        uint64_t profSwitch = GetCmdModeDataTypeConfig();
-        const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
-        AddModelLoadConf(profSwitch);
-        AddOpDetailConf(profSwitch);
-        AddRuntimeTraceConf(profSwitch);
-        ret = CommandHandleProfStart(startDevIdList, 1, profSwitch, profSwitchHi);
-        if (ret != ACL_SUCCESS) {
-            MSPROF_LOGE("Failed to execute CommandHandleProfStart.");
-            MSPROF_INNER_ERROR("EK9999", "Failed to callback start on device %u.", devId);
-            return MSPROF_ERROR;
+        if (isApiStatsMode) {
+            ProfStartStatsCallback(devId);
         }
     }
 
     return MSPROF_ERROR_NONE;
 }
 
-int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
+int32_t ProfAclMgr::ProfStartCallback(uint32_t devId)
 {
-    if (IsModeOff()) {
-        MSPROF_LOGI("Profiling is already stopped, stop common task useless.");
-        return ACL_SUCCESS;
+    // callback init handle
+    int32_t ret = CommandHandleProfInit();
+    if (ret != ACL_SUCCESS) {
+        MSPROF_LOGE("Failed to execute CommandHandleProfInit.");
+        MSPROF_INNER_ERROR("EK9999", "Failed to callback init.");
+        return PROFILING_FAILED;
     }
-    MSPROF_LOGI("Stop profiling for common task.");
-    uint64_t profSwitch = config->profSwitch;
+    // callback start handle
+    uint32_t startDevIdList[1] = {devId};
+    uint64_t profSwitch = GetCmdModeDataTypeConfig();
+    const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
+    AddModelLoadConf(profSwitch);
+    AddOpDetailConf(profSwitch);
+    AddRuntimeTraceConf(profSwitch);
+    ret = CommandHandleProfStart(startDevIdList, 1, profSwitch, profSwitchHi);
+    if (ret != ACL_SUCCESS) {
+        MSPROF_LOGE("Failed to execute CommandHandleProfStart.");
+        MSPROF_INNER_ERROR("EK9999", "Failed to callback start on device %u.", devId);
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfAclMgr::StopCommonCallback(const std::vector<uint32_t> &devIds, uint64_t profSwitch)
+{
     const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
     AddModelLoadConf(profSwitch);
     AddRuntimeTraceConf(profSwitch);
     AddOpDetailConf(profSwitch);
-    std::vector<uint32_t> devIds;
-    GetRunningDevices(devIds);
     uint32_t devIdList[PROF_MAX_DEV_NUM] = {0};
     std::copy(devIds.begin(), devIds.end(), devIdList);
     MSPROF_LOGI("[ProfStopCommon] get running device task success, devTask size: %zu", devIds.size());
@@ -2461,8 +2525,11 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
         MSPROF_LOGE("Failed to execute CommandHandleProfStop.");
         return ret;
     }
-    MSPROF_EVENT("Received ProfAclStop request from acl");
-    UploaderMgr::instance()->SetAllUploaderTransportStopped();
+    return PROFILING_SUCCESS;
+}
+
+int32_t ProfAclMgr::StopCommonDeviceTasks(const std::vector<uint32_t> &devIds)
+{
     std::lock_guard<std::mutex> lk(mtx_);
     for (size_t i = 0; i < devIds.size(); i++) {
         uint32_t devId = devIds[i];
@@ -2488,6 +2555,43 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
         }
     }
     return ACL_SUCCESS;
+}
+
+int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig *config)
+{
+    if (IsModeOff()) {
+        MSPROF_LOGI("Profiling is already stopped, stop common task useless.");
+        return ACL_SUCCESS;
+    }
+    MSPROF_LOGI("Stop profiling for common task.");
+    std::vector<uint32_t> devIds;
+    GetRunningDevices(devIds);
+    int32_t ret = StopCommonCallback(devIds, config->profSwitch);
+    if (ret != PROFILING_SUCCESS) {
+        return ret;
+    }
+    (void)ProfStopStatsCallback();
+    MSPROF_EVENT("Received ProfAclStop request from acl");
+    UploaderMgr::instance()->SetAllUploaderTransportStopped();
+    return StopCommonDeviceTasks(devIds);
+}
+
+int32_t ProfAclMgr::ProfStopCallback(uint32_t devId, uint64_t dataTypeConfig) const
+{
+    // callback start handle
+    uint32_t stopDevIdList[1] = {devId};
+    uint64_t profSwitch = dataTypeConfig;
+    const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
+    AddModelLoadConf(profSwitch);
+    AddOpDetailConf(profSwitch);
+    AddRuntimeTraceConf(profSwitch);
+    const int32_t ret = CommandHandleProfStop(stopDevIdList, 1, profSwitch, profSwitchHi);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to CommandHandleProfStop on device:%u", devId);
+        MSPROF_INNER_ERROR("EK9999", "Failed to callback stop on device %u.", devId);
+        return ret;
+    }
+    return PROFILING_SUCCESS;
 }
 
 int32_t ProfAclMgr::ProfStartPureCpu(const MsprofConfig *config)
@@ -2870,6 +2974,45 @@ SHARED_PTR_ALIA<ProfSubscribeKey> ProfAclMgr::GenerateSubscribeKey(const MsprofC
     }
 
     return subscribePtr;
+}
+
+void ProfAclMgr::ProfStartStatsCallback(uint32_t deviceId)
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    statsDevSet_.emplace(deviceId);
+}
+
+int32_t ProfAclMgr::ProfStopStatsCallback()
+{
+    std::set<uint32_t> statsDevSet;
+    uint64_t dataTypeConfig = 0;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        if (statsDevSet_.empty()) {
+            return PROFILING_SUCCESS;
+        }
+        statsDevSet = statsDevSet_;
+        dataTypeConfig = dataTypeConfig_;
+    }
+
+    int32_t finalRet = PROFILING_SUCCESS;
+    std::set<uint32_t> stoppedDevSet;
+    for (auto devId : statsDevSet) {
+        const int32_t ret = ProfStopCallback(devId, dataTypeConfig);
+        if (ret == PROFILING_SUCCESS) {
+            stoppedDevSet.emplace(devId);
+            continue;
+        }
+        finalRet = ret;
+    }
+
+    if (!stoppedDevSet.empty()) {
+        std::lock_guard<std::mutex> lk(mtx_);
+        for (auto devId : stoppedDevSet) {
+            statsDevSet_.erase(devId);
+        }
+    }
+    return finalRet;
 }
 
 void ProfAclMgr::SetDeviceNotifyAclApi(const uint32_t *deviceId, uint32_t devNums)

@@ -258,12 +258,12 @@ aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
         g_isRepeatInvoking = true;
     }
 
+    uint32_t dataType = static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API);
     if (ProfAclMgr::instance()->IsProfWarmup()) {
         ProfAclMgr::instance()->ChangeProfWarmupToStart(devIds);
         ProfAclMgr::instance()->ResetProfWarmup();
     } else {
-        int32_t ret = Analysis::Dvvp::ProfilerCommon::ProfConfigStart(
-            static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), static_cast<const void *>(&cfg),
+        int32_t ret = Analysis::Dvvp::ProfilerCommon::ProfConfigStart(dataType, static_cast<const void *>(&cfg),
             sizeof(cfg));
         if (ret != ACL_SUCCESS) {
             MSPROF_LOGE("Start profiling failed, ret: %d", ret);

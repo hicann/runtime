@@ -51,6 +51,7 @@ protected:
         JsonParser::instance()->UnInit();
         GlobalMockObject::verify();
         system(JSON_RM_RF);
+        GlobalMockObject::reset();
     }
     void TestProfJson(std::string testcase)
     {

@@ -31,6 +31,8 @@ set(profimplCpp
     analyze/src/analyzer_ffts.cpp
     analyze/src/analyzer_ts.cpp
     analyze/src/analyzer_rt.cpp
+    analyze/src/stats_analyzer_api.cpp
+    analyze/src/stats_analyzer.cpp
     analyze/src/op_desc_parser.cpp
     common/cmd_log/cmd_log.cpp
     common/config/config_manager.cpp
@@ -119,6 +121,7 @@ set(profimplCpp
     transport/file_transport.cpp
     transport/pipe_transport.cpp
     transport/parser_transport.cpp
+    transport/stats_transport.cpp
     transport/prof_channel.cpp
     transport/uploader.cpp
     transport/uploader_mgr.cpp

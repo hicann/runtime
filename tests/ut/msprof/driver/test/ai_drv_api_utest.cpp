@@ -890,6 +890,32 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetHostFreq) {
     EXPECT_FLOAT_EQ(1.0, std::stof(freq));   // 返回1000Khz在处理完成之后返回1Mhz
 }
 
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetHostFreqFloatKeepDefaultOnFailure) {
+    GlobalMockObject::verify();
+    int64_t outFreq = 1000;
+    float freq = 1000.0F;
+    MOCKER(halGetDeviceInfo)
+        .stubs()
+        .with(any(), any(), any(), outBoundP(&outFreq))
+        .will(returnValue(DRV_ERROR_NO_DEVICE));
+
+    EXPECT_EQ(false, analysis::dvvp::driver::DrvGetHostFreq(freq));
+    EXPECT_FLOAT_EQ(1000.0F, freq);
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetHostFreqFloatSuccess) {
+    GlobalMockObject::verify();
+    int64_t outFreq = 2000;
+    float freq = 0.0F;
+    MOCKER(halGetDeviceInfo)
+        .stubs()
+        .with(any(), any(), any(), outBoundP(&outFreq))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(true, analysis::dvvp::driver::DrvGetHostFreq(freq));
+    EXPECT_FLOAT_EQ(2.0F, freq);
+}
+
 TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceFreq) {
     GlobalMockObject::verify();
     int64_t outFreq = 1000;

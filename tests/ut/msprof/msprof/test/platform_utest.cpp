@@ -18,6 +18,9 @@
 #include "prof_acl_mgr.h"
 #include "prof_params_adapter.h"
 #include "validation/param_validation.h"
+#include "cloud_v2_platform.h"
+#include "david_platform.h"
+#include "david_v121_platform.h"
 #include "mdc_lite_v2_platform.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
@@ -275,6 +278,19 @@ TEST_F(PLATFORM_UTEST, ProfSetConfigRejectsNtsMetricsWhenPlatformUnsupported) {
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM,
         Msprofiler::AclApi::ProfSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
 }
+
+TEST_F(PLATFORM_UTEST, ApiStatsFeatureSupportedOnCloudAndDavidPlatforms)
+{
+    GlobalMockObject::verify();
+    CloudV2Platform cloudV2Platform;
+    DavidPlatform davidPlatform;
+    DavidV121Platform davidV121Platform;
+
+    EXPECT_TRUE(cloudV2Platform.FeatureIsSupport(PLATFORM_API_STATS));
+    EXPECT_TRUE(davidPlatform.FeatureIsSupport(PLATFORM_API_STATS));
+    EXPECT_TRUE(davidV121Platform.FeatureIsSupport(PLATFORM_API_STATS));
+}
+
 #ifndef BUILD_OPEN_PROJECT
 TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics) {
     GlobalMockObject::verify();

@@ -54,6 +54,7 @@ protected:
         system(NANO_RM_RF);
         DataMgr().UnInit();
         MsprofMgr().UnInit();
+        GlobalMockObject::reset();
         system(NANO_RM_RF);
     }
     void DlStub()

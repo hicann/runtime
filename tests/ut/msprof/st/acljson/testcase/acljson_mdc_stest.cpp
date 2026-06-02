@@ -47,6 +47,7 @@ protected:
         DataMgr().UnInit();
         MsprofMgr().UnInit();
         system(MDC_RM_RF);
+        GlobalMockObject::reset();
     }
     void DlStub()
     {

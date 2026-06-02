@@ -39,6 +39,7 @@ int32_t DrvGetDeviceTime(uint32_t deviceId, uint64_t &startMono, uint64_t &cntvc
 std::string DrvGetDevIdsStr();
 bool DrvCheckIfHelperHost();
 bool DrvGetHostFreq(std::string &freq);
+bool DrvGetHostFreq(float &freq);
 bool DrvGetDeviceFreq(uint32_t deviceId, std::string &freq);
 bool DrvGetDeviceStatus(const uint32_t deviceId);
 }  // namespace driver

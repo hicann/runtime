@@ -321,6 +321,23 @@ bool DrvGetHostFreq(std::string &freq)
     return false;
 }
 
+bool DrvGetHostFreq(float &freq)
+{
+    int64_t hostFreq = 0;
+    const auto ret = halGetDeviceInfo(0, static_cast<int32_t>(MODULE_TYPE_SYSTEM),
+        static_cast<int32_t>(INFO_TYPE_HOST_OSC_FREQUE), &hostFreq);
+    if (ret == DRV_ERROR_NONE && hostFreq > 0) {
+        MSPROF_LOGI("Succeeded to DrvGetHostFreq frequency=%lld", hostFreq);
+        freq = (static_cast<float>(hostFreq) / FREQUENCY_KHZ_TO_MHZ);
+        return true;
+    } else {
+        MSPROF_LOGW("Driver doesn't support DrvGetHostFreq by halGetDeviceInfo interface, ret=%d",
+            static_cast<int32_t>(ret));
+    }
+
+    return false;
+}
+
 bool DrvGetDeviceFreq(uint32_t deviceId, std::string &freq)
 {
     int64_t deviceFreq = 0;

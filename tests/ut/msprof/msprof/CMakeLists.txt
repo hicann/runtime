@@ -18,6 +18,8 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/stub/adx_prof_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/wrapper/memory_utils.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_base.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_ge.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_ffts.cpp
@@ -101,6 +103,7 @@ set(profilerSrcList
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/stats_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/platform/soc/dev_mgr_api.cpp
@@ -152,6 +155,7 @@ set(profilerSrcFile
     test/platform_utest.cpp
     test/msprof_dynamic_utest.cpp
     test/msprofiler_adapter_utest.cpp
+    test/stats_analyzer_api_utest.cpp
     test/info_json_utest.cpp
     ../stub/drv_stub.cpp
     ../stub/mmpa_stub.cpp
@@ -333,6 +337,8 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_hwts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_ts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_rt.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
@@ -420,6 +426,7 @@ add_executable(msprof_utest
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hash_data.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/parser_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/prof_channel.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/stats_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp

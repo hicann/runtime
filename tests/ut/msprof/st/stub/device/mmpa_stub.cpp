@@ -1211,6 +1211,11 @@ int mmDlclose(void *handle)
     return 0;
 }
 
+extern "C" int dlclose(void *handle) noexcept
+{
+    return mmDlclose(handle);
+}
+
 typedef struct {
     mmEnvId id;
     const CHAR *name;

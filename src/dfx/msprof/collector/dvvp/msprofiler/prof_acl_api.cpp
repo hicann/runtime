@@ -205,6 +205,10 @@ ACL_PROF_CONFIG_PTR aclprofCreateConfig(uint32_t *deviceIdList, uint32_t deviceN
     if ((dataTypeConfig & PROF_TASK_TIME_L3_MASK) != 0) {
         profConfig->config.dataTypeConfig |= PROF_TASK_TIME | PROF_TASK_TIME_L1 | PROF_TASK_TIME_L2;
     }
+    if ((dataTypeConfig & PROF_API_STATS) != 0) {
+        MSPROF_LOGW("The ACL_PROF_API_STATS bit has been enabled, and other bit switches will become useless.");
+        profConfig->config.dataTypeConfig = PROF_ACL_API | PROF_API_STATS;
+    }
     profConfig->config.devIdList[profConfig->config.devNums] = PROF_DEFAULT_HOST_ID;
     profConfig->config.devNums++;
     MSPROF_LOGI("Successfully create prof config");

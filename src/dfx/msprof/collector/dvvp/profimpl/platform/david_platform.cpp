@@ -54,17 +54,6 @@ DavidPlatform::DavidPlatform()
         PLATFORM_TASK_CCU_STATISTIC,
         PLATFORM_TASK_INSTR_PROFILING,
         PLATFORM_TASK_PC_SAMPLING,
-        // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PUEXCT_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_L2_CACHE_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        PLATFORM_TASK_SOC_PMU,
-        PLATFORM_TASK_SOC_PMU_NOC,
         // Device
         PLATFORM_SYS_DEVICE_UB,
         PLATFORM_SYS_DEVICE_US,
@@ -75,8 +64,10 @@ DavidPlatform::DavidPlatform()
         PLATFORM_AICSCALE_ACP,
         PLATFORM_STARS_QOS,
         PLATFORM_SYS_MEM_SERVICEFLOW,
-        PLATFORM_ACLAPI_SETDEVICE_ENABLE
+        PLATFORM_ACLAPI_SETDEVICE_ENABLE,
+        PLATFORM_API_STATS
     };
+    InsertPmuFeature();
     InsertSysFeature();
 }
 
@@ -123,6 +114,24 @@ std::string DavidPlatform::GetResourceConflictRatioMetrics()
 std::string DavidPlatform::GetL2CacheMetrics()
 {
     return DAVID_L2CACHE;
+}
+
+void DavidPlatform::InsertPmuFeature()
+{
+    const auto pmuFeature =  {
+        // PMU
+        PLATFORM_TASK_AU_PMU,
+        PLATFORM_TASK_PU_PMU,
+        PLATFORM_TASK_PUEXCT_PMU,
+        PLATFORM_TASK_MEMORY_PMU,
+        PLATFORM_TASK_MEMORYL0_PMU,
+        PLATFORM_TASK_MEMORYUB_PMU,
+        PLATFORM_TASK_L2_CACHE_PMU,
+        PLATFORM_TASK_RCR_PMU,
+        PLATFORM_TASK_SOC_PMU,
+        PLATFORM_TASK_SOC_PMU_NOC
+    };
+    supportedFeature_.insert(pmuFeature.begin(), pmuFeature.end());
 }
 
 void DavidPlatform::InsertSysFeature()

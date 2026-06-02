@@ -23,6 +23,8 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_hwts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_ts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_rt.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/cmd_log/cmd_log.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/common/socket/local_socket.cpp
@@ -99,6 +101,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_slice.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_ageing.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/stats_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/hdc_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/helper_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/platform/soc/dev_mgr_api.cpp

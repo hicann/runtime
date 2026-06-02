@@ -190,6 +190,7 @@ public:
     bool IsSubscribeMode() const;
     bool IsModeOff() const;
     bool IsPureCpuMode();
+    bool IsAclApiStatsMode();
     int32_t StopProfConfigCheck(uint64_t dataTypeConfigStop, uint64_t dataTypeConfigStart);
     uint64_t GetProfSwitchHi(const uint64_t &dataTypeConfig) const;
 
@@ -270,9 +271,13 @@ public:
     std::string GetOutputPath() const;
 
 private:
+    int32_t ProfStartCallback(uint32_t devId);
+    int32_t ProfStopCallback(uint32_t devId, uint64_t dataTypeConfig) const;
+    int32_t ProfStopStatsCallback();
+    void ProfStartStatsCallback(uint32_t deviceId);
     int32_t MsprofTxSwitchPrecheck();
     int32_t DoHostHandle();
-    void DoFinalizeHandle(void) const;
+    void DoFinalizeHandle(void);
     int32_t MsprofSetDeviceImpl(uint32_t devId);
     int32_t CheckSubscribeConfig(const MsprofConfig *config) const;
 // struct of acltask info
@@ -310,6 +315,7 @@ private:
 private:
     int32_t InitResources();
     int32_t RecordOutPut(const std::string &data);
+    int32_t InitStatsUploader();
     bool InitClientUploader(const std::string& devIdStr,
         SHARED_PTR_ALIA<analysis::dvvp::transport::ITransport> transport);
     int32_t InitApiCtrlUploader(const std::string& devIdStr);
@@ -324,6 +330,8 @@ private:
     void AicoreMetricsEnumToName(ProfAicoreMetrics aicMetrics, std::string &name) const;
     void AicoreMetricsEnumToNameTwo(ProfAicoreMetrics aicMetrics, std::string &name) const;
     int32_t StartDeviceTask(const uint32_t devId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params);
+    int32_t StopCommonCallback(const std::vector<uint32_t> &devIds, uint64_t profSwitch);
+    int32_t StopCommonDeviceTasks(const std::vector<uint32_t> &devIds);
     void WaitAllDeviceResponse();
     void WaitDeviceResponse(const uint32_t devId);
     void GenerateSystemTraceConf(const uint64_t dataTypeConfig, ProfAicoreMetrics aicMetrics,
@@ -377,6 +385,7 @@ private:
     int64_t curDevId_;
     std::set<uint32_t> devSet_; // notify device mark
     std::set<uint32_t> aclApiDevSet_;
+    std::set<uint32_t> statsDevSet_; // api stats mode device mark
     std::map<uint32_t, ProfAclTaskInfo> devTasks_; // devId, info
     std::map<uint32_t, SHARED_PTR_ALIA<DeviceResponseHandler>> devResponses_;
     std::map<std::string, std::string> devUuid_;

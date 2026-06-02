@@ -364,12 +364,12 @@ int32_t ProfNotifySetDevice(uint32_t chipId, uint32_t devId, bool isOpenDevice)
         return MSPROF_ERROR_NONE;
     }
     MSPROF_LOGI("ProfNotifySetDevice called, is open: %d, devId: %u", isOpenDevice, devId);
+    uint32_t dataType = static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE);
     if (isOpenDevice) {
         struct MsprofConfig cfg;
         cfg.devNums = 1;
         cfg.devIdList[0] = {devId};
-        return ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_COMMAND_LINE), &cfg,
-            sizeof(MsprofConfig));
+        return ProfConfigStart(dataType, &cfg, sizeof(MsprofConfig));
     } else {
         return ProfAclMgr::instance()->MsprofResetDeviceHandle(devId);
     }

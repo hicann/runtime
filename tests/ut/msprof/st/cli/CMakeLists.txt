@@ -75,6 +75,8 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_hwts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_ts.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/analyzer_rt.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_bin.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_manager.cpp
@@ -171,6 +173,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_domain_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_data_handler.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/stats_transport.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/prof_channel.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/uploader_mgr.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/uploader.cpp

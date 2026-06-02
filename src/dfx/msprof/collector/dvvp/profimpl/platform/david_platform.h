@@ -35,6 +35,7 @@ protected:
 
 private:
     void InsertSysFeature();
+    void InsertPmuFeature();
 };
 }}}
 #endif

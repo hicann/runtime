@@ -225,3 +225,19 @@ TEST_F(AclApiMilanStest, AclApiSetConfigError)
     aclprofFinalize();
     aclFinalize();
 }
+
+TEST_F(AclApiMilanStest, AclApiStatsDefault)
+{
+    uint32_t deviceIdList[1] = {devId};
+    aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_ARITHMETIC_UTILIZATION;
+    aclprofAicoreEvents *aicoreEvents = nullptr;
+    uint64_t dataTypeConfig = ACL_PROF_API_STATS;
+    auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
+    EXPECT_NE(nullptr, config);
+
+    EXPECT_EQ(PROFILING_SUCCESS, AclApiStart(config, dataTypeConfig));
+
+    std::vector<std::string> deviceDataList = {};
+    std::vector<std::string> hostDataList = {};
+    EXPECT_EQ(0, CheckFiles(aclProfPath, deviceDataList, hostDataList));
+}

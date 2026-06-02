@@ -27,17 +27,6 @@ PLATFORM_REGISTER(CHIP_CLOUD_V4, DavidV121Platform);
 DavidV121Platform::DavidV121Platform()
 {
     supportedFeature_ = {
-        // PMU
-        PLATFORM_TASK_AU_PMU,
-        PLATFORM_TASK_PU_PMU,
-        PLATFORM_TASK_PUEXCT_PMU,
-        PLATFORM_TASK_MEMORY_PMU,
-        PLATFORM_TASK_MEMORYL0_PMU,
-        PLATFORM_TASK_MEMORYUB_PMU,
-        PLATFORM_TASK_L2_CACHE_PMU,
-        PLATFORM_TASK_RCR_PMU,
-        PLATFORM_TASK_SOC_PMU,
-        PLATFORM_TASK_SOC_PMU_NOC,
         // TASK
         PLATFORM_TASK_ASCENDCL,
         PLATFORM_TASK_RUNTIME_API,
@@ -73,8 +62,28 @@ DavidV121Platform::DavidV121Platform()
         PLATFORM_AICSCALE_ACP,
         PLATFORM_STARS_QOS,
         PLATFORM_SYS_MEM_SERVICEFLOW,
+        PLATFORM_API_STATS
     };
+    InsertPmuFeature();
     InsertSysFeature();
+}
+
+void DavidV121Platform::InsertPmuFeature()
+{
+    const auto pmuFeature =  {
+        // PMU
+        PLATFORM_TASK_AU_PMU,
+        PLATFORM_TASK_PU_PMU,
+        PLATFORM_TASK_PUEXCT_PMU,
+        PLATFORM_TASK_MEMORY_PMU,
+        PLATFORM_TASK_MEMORYL0_PMU,
+        PLATFORM_TASK_MEMORYUB_PMU,
+        PLATFORM_TASK_L2_CACHE_PMU,
+        PLATFORM_TASK_RCR_PMU,
+        PLATFORM_TASK_SOC_PMU,
+        PLATFORM_TASK_SOC_PMU_NOC
+    };
+    supportedFeature_.insert(pmuFeature.begin(), pmuFeature.end());
 }
 
 void DavidV121Platform::InsertSysFeature()
