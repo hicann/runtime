@@ -533,6 +533,102 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSchedMode)
     EXPECT_EQ(attrValue, 1);
 }
 
+TEST_F(CloudV2ApiKernelTest, TestApiImplRegisterFuncSymbol_APITest)
+{
+    ElfProgram *prog = new ElfProgram(RT_KERNEL_ATTR_TYPE_AICPU);  
+    const void *symbol = (const void *)0x01;
+    char *kernelName = "test_path";
+
+    ApiImpl apiImpl;
+    ApiErrorDecorator apiError(&apiImpl);
+    rtError_t ret = apiError.RegisterFuncSymbol(nullptr, symbol, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    ret = apiError.RegisterFuncSymbol(prog, nullptr, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    ret = apiError.RegisterFuncSymbol(prog, symbol, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplRegisterFuncSymbol_Success)
+{
+    ElfProgram *prog = new ElfProgram(RT_KERNEL_ATTR_TYPE_AICPU);
+    uint64_t tilingValue = 0ULL;
+    Kernel *kernelPtr = new (std::nothrow) Kernel("test_funcsymbol", tilingValue, prog, RT_KERNEL_ATTR_TYPE_AICORE, 0, 0, NO_MIX);
+    EXPECT_NE(kernelPtr, nullptr);
+
+    uint32_t error = prog->KernelNameMapAdd(kernelPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    const void *symbol = (const void *)0x01;
+    char *kernelName = "test_funcsymbol";
+
+    ApiImpl apiImpl;
+    rtError_t ret = apiImpl.RegisterFuncSymbol(prog, symbol, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ApiErrorDecorator apiError(&apiImpl);
+    ret = apiError.RegisterFuncSymbol(prog, symbol, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ApiDecorator apiDecorator(&apiImpl);
+    ret = apiDecorator.RegisterFuncSymbol(prog, symbol, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_Success)
+{
+    const void *symbol = (const void *)0x05;
+    rtFuncHandle funcHandle = nullptr;
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError_t ret = rtGetFuncBySymbol(symbol, &funcHandle);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_APITest)
+{
+    const void *symbol = (const void *)0x05;
+    Kernel *outKernel = nullptr;
+    ApiImpl apiImpl;
+    ApiErrorDecorator apiError(&apiImpl);
+    rtError_t ret = apiError.GetFunctionBySymbol(nullptr, &outKernel);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    ret = apiError.GetFunctionBySymbol(symbol, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+}
+TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_SymbolNotFound)
+{
+    const void *symbol = (const void *)0x05;
+    Kernel *outKernel = nullptr;
+    ApiImpl apiImpl;
+    rtError_t ret = apiImpl.GetFunctionBySymbol(symbol, &outKernel);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_DEVICE_FUNCTION);
+    ApiErrorDecorator apiError(&apiImpl);
+    ret = apiError.GetFunctionBySymbol(symbol, &outKernel);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_DEVICE_FUNCTION);
+    ApiDecorator apiDecorator(&apiImpl);
+    ret = apiDecorator.GetFunctionBySymbol(symbol, &outKernel);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_DEVICE_FUNCTION);
+}
+
+TEST_F(CloudV2ApiKernelTest, TestApiImplrtFuncGetBySymbol_SymbolFound)
+{
+    const void *symbol = (const void *)0x05;
+    Kernel *outKernel = nullptr;
+    char *kernelName = "testKernelName";
+    ApiImpl apiImpl;
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel *kernelPtr = new (std::nothrow) Kernel(kernelName, tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+
+    uint32_t error = program.KernelNameMapAdd(kernelPtr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rtError_t ret = apiImpl.RegisterFuncSymbol(&program, symbol, kernelName);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    
+    ret = apiImpl.GetFunctionBySymbol(symbol, &outKernel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiKernelTest, TestApiImplBinaryGetGlobal_Success)
 {
     ElfProgram prog;

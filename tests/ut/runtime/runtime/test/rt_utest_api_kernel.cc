@@ -543,6 +543,27 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplSuccess)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api *>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::LaunchKernelV2).stubs().will(returnValue(RT_ERROR_NONE));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    const Kernel *retKernel = &kernel;
+    MOCKER_CPP(&Runtime::KernelLookup).stubs().will(returnValue(retKernel));
+    
+    uint32_t numBlocks = 1;
+    rtStream_t stm = nullptr;
+    rtKernelLaunchCfg_t cfg = {};
+    void *argsArray[2] = {(void *)0x10, (void *)0x20};
+    
+    rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void *>(&kernel), numBlocks, stm, &cfg, argsArray);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplKernelInvalid)
 {
     ApiImpl apiImpl;

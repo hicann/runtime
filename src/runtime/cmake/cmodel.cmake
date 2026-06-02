@@ -379,6 +379,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/symbol_table.cc
@@ -501,6 +502,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/v200_base/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc

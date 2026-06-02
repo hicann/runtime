@@ -1469,6 +1469,18 @@ rtError_t rtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtRegisterFuncSymbol(void *binHandle, const void *symbol, const char *kernelName,
+                               void *reserve)
+{
+    UNUSED(reserve);
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->RegisterFuncSymbol(binHandle, symbol, kernelName);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t stm,
                                       rtKernelLaunchCfg_t *cfg, void **args)
 {
@@ -1482,14 +1494,25 @@ rtError_t rtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, rtStream_t
         RT_LOG(RT_LOG_WARNING, "XPU not support rtLaunchKernelWithArgsArray");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    Kernel * const kernel = RtPtrToPtr<Kernel *>(func);
+    Kernel *kernel = nullptr;
+    Kernel *symbolKernel = nullptr;
+    rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
+    // 若用户传入的参数已经是func handle，那么GetFunctionBySymbol会找不到对应的handle返回错误。
+    // 这是正常情况，因此失败时不直接返回
+    if (ret == RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_INFO, "find function handle by symbol");
+        kernel = symbolKernel;
+    } else {
+        RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
+        kernel = RtPtrToPtr<Kernel *>(func);
+    }
 
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_ARRAY;
     argsWithType.args.argsArrayInfo = args;
 
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
-    const rtError_t ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
+    ret = apiInstance->LaunchKernelV2(kernel, numBlocks, &argsWithType,
         exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -1510,6 +1533,18 @@ rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t *aicSize, size_t *
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->FuncGetSize(RtPtrToPtr<Kernel *>(funcHandle), aicSize, aivSize);
+    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtGetFuncBySymbol(const void *symbol, rtFuncHandle *funcHandle)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t ret = apiInstance->GetFunctionBySymbol(symbol, RtPtrToPtr<Kernel **>(funcHandle));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(ret == RT_ERROR_INVALID_DEVICE_FUNCTION, ACL_ERROR_RT_INVALID_DEVICE_FUNCTION, ErrorCode::EE1017,
+        __func__, "symbol", "The corresponding kernel function cannot be found through the symbol");
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }

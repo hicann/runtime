@@ -309,6 +309,7 @@ namespace acl {
         {AclProfType::AclmdlRIGetId,                            "aclmdlRIGetId"},
         {AclProfType::AclrtMemsetD32,                           "aclrtMemsetD32"},
         {AclProfType::AclrtMemsetD32Async,                      "aclrtMemsetD32Async"},
+        {AclProfType::AclrtGetFuncBySymbol,                     "aclrtGetFuncBySymbol"},
 };
 
 aclError RegisterType(const uint32_t index) {

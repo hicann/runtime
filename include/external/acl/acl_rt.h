@@ -3337,6 +3337,17 @@ ACL_FUNC_VISIBILITY aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHan
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void **dptr, size_t *size);
+
+/**
+ * @ingroup AscendCL
+ * @brief Get function handle by function symbol
+ * @param [in] symbol  Pointer to kernel function to search for
+ * @param [out] funcHandle  function handle
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle);
+
 /**
  * @ingroup AscendCL
  * @brief Get kernel pc start address in device

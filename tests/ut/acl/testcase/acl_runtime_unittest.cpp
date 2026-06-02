@@ -8697,6 +8697,31 @@ TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetParamInfo_FeatureNotSupportTest)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetFuncBySymbol_success)
+{
+    const void *symbol = (const void *)0x01;
+    aclrtFuncHandle funcHandle = nullptr;
+    const auto ret = aclrtGetFuncBySymbol(symbol, &funcHandle);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetFuncBySymbol_failed_with_invalid_args)
+{
+    const void *symbol = (const void *)0x01;
+    aclrtFuncHandle funcHandle = nullptr;
+    auto ret = aclrtGetFuncBySymbol(nullptr, &funcHandle);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    ret = aclrtGetFuncBySymbol(symbol, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetFuncBySymbol(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+
+    ret = aclrtGetFuncBySymbol(symbol, &funcHandle);
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetParamCount_FuncNullptrTest)
 {
     size_t paramCount = 0;

@@ -220,6 +220,7 @@ constexpr int32_t RT_ERROR_KERNEL_UNREGISTERING     = 0x07080008;
 constexpr int32_t RT_ERROR_KERNEL_INVALID           = 0x07080009;
 constexpr int32_t RT_ERROR_SYMBOL_NOT_FOUND         = 0x0708000A;
 constexpr int32_t RT_ERROR_INVALID_SYMBOL           = 0x0708000B;
+constexpr int32_t RT_ERROR_INVALID_DEVICE_FUNCTION  = 0x0708000C;
 
 constexpr int32_t RT_ERROR_PROGRAM_BASE             = 0x07090000;
 constexpr int32_t RT_ERROR_PROGRAM_NULL             = 0x07090001;

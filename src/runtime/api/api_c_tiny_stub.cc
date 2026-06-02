@@ -1007,6 +1007,25 @@ rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle *binHan
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtGetFuncBySymbol(const void *symbol, rtFuncHandle *funcHandle)
+{
+    UNUSED(symbol);
+    UNUSED(funcHandle);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtRegisterFuncSymbol(void *binHandle, const void *symbol, const char *kernelName,
+                               void *reserve)
+{
+    UNUSED(binHandle);
+    UNUSED(symbol);
+    UNUSED(kernelName);
+    UNUSED(reserve);
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtFunctionGetParamCount(const void *func, size_t *paramCount)
 {
     UNUSED(func);

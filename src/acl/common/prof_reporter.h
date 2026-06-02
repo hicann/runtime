@@ -313,6 +313,7 @@ namespace acl {
         AclrtFunctionGetParamInfo,
         AclrtMemsetD32,      
         AclrtMemsetD32Async, 
+        AclrtGetFuncBySymbol,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

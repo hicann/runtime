@@ -988,6 +988,36 @@ rtError_t ApiImpl::BinaryGetFunctionByEntry(const Program * const binHandle, con
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImpl::GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle)
+{
+    const Kernel *kernelTmp = nullptr;
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device *device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+    Runtime* const rtInstance = Runtime::Instance();
+    kernelTmp = rtInstance->funcSymbolTable_.Lookup(symbol);
+    if (kernelTmp == nullptr) {
+        return RT_ERROR_INVALID_DEVICE_FUNCTION;
+    }
+
+    const Program * const prog = kernelTmp->Program_();
+    Program * const progTmp = const_cast<Program *>(prog);
+    rtError_t ret = progTmp->CopySoAndNameToCurrentDevice();
+    ERROR_RETURN(ret, "copy program failed retCode=%#x.", ret);
+
+    *funcHandle = const_cast<Kernel *>(kernelTmp);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+                                      const char_t * const kernelName)
+{
+    RT_LOG(RT_LOG_INFO, "register function symbol, symbol=%p.",symbol);
+    Runtime* const rtInstance = Runtime::Instance();
+    return rtInstance->funcSymbolTable_.Register(binHandle, symbol, kernelName);
+}
+
 rtError_t ApiImpl::BinaryGetMetaNum(Program * const binHandle, const rtBinaryMetaType type, size_t *numOfMeta)
 {
     const rtError_t error = binHandle->BinaryGetMetaNum(type, numOfMeta);

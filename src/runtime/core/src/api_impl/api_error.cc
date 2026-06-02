@@ -572,6 +572,25 @@ rtError_t ApiErrorDecorator::FunctionGetMetaInfo(const Kernel * const funcHandle
     return impl_->FunctionGetMetaInfo(funcHandle, type, data, length);
 }  
 
+rtError_t ApiErrorDecorator::GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle)
+{
+    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(funcHandle, RT_ERROR_INVALID_VALUE);
+    return impl_->GetFunctionBySymbol(symbol, funcHandle);
+}
+
+rtError_t ApiErrorDecorator::RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+                                                const char_t * const kernelName)
+{
+    NULL_PTR_RETURN_MSG_OUTER(binHandle, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(symbol, RT_ERROR_INVALID_VALUE);
+    NULL_PTR_RETURN_MSG_OUTER(kernelName, RT_ERROR_INVALID_VALUE);
+    
+    const rtError_t error = impl_->RegisterFuncSymbol(binHandle, symbol, kernelName);
+    ERROR_RETURN(error, "Register function symbol failed, symbol=%p.", symbol);
+    return error;
+}
+
 rtError_t ApiErrorDecorator::FunctionGetMetaInfoSize(const Kernel * const funcHandle, const rtFunctionMetaType type,
  	                                                       size_t *size)
 {

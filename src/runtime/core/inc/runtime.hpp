@@ -20,6 +20,7 @@
 #include "driver.hpp"
 #include "tsd_client.h"
 #include "stream.hpp"
+#include "funcsymbol_table.hpp"
 #include "label.hpp"
 #include "dfx_api.hpp"
 #include "base_david.hpp"
@@ -696,6 +697,7 @@ public:
     }
 
     DriverFactory driverFactory_;
+    FuncSymbolTable funcSymbolTable_;
     KernelTable kernelTable_;
     SymbolTable symbolTable_;
     FacadeDriver facadeDriver_;

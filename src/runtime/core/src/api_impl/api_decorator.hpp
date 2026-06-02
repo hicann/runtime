@@ -40,6 +40,9 @@ public:
     rtError_t BinaryGetMetaNum(Program * const binHandle, const rtBinaryMetaType type, size_t *numOfMeta) override;
     rtError_t BinaryGetMetaInfo(Program * const binHandle, const rtBinaryMetaType type, const size_t numOfMeta,
                                 void **data, const size_t *dataSize) override;
+    rtError_t GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle) override;
+    rtError_t RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+                                 const char_t * const kernelName) override;
     rtError_t FunctionGetMetaInfo(const Kernel * const funcHandle, const rtFunctionMetaType type,
                                   void *data, const uint32_t length) override;
     rtError_t FunctionGetMetaInfoSize(const Kernel * const funcHandle, const rtFunctionMetaType type,

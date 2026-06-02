@@ -169,6 +169,7 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/rdma_task_tiny_stub.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table_tiny_stub.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/tiny/task_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/profiler/api_profile_decorator_tiny_stub.cc

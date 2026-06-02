@@ -42,6 +42,7 @@
 - [`aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)`](#aclrtFunctionGetParamCount)：从核函数句柄获取参数个数。
 - [`aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *paramOffset, size_t *paramSize)`](#aclrtFunctionGetParamInfo)：根据索引从核函数句柄获取参数信息。
 - [`aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize)`](#aclrtFunctionGetAvailDynUbufPerBlock)：从核函数句柄获取每个Block可用的动态UB buffer大小。
+- [`aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)`](#aclrtGetFuncBySymbol)：根据核函数名获取核函数句柄。
 
 ## 概念及使用说明
 
@@ -1370,7 +1371,7 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明                                                                                                  |
 | --- | :---: |-----------------------------------------------------------------------------------------------------|
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。                                   |
+| func | 输入 | 核函数名（__global__声明的函数名，比如myKernel）。func也可以传入通过aclrtBinaryGetFunction、aclrtBinaryGetFunctionByEntry获取的aclrtFuncHandle，aclrtFuncHandle类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。                                   |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
 | stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25_数据类型及其操作接口.md#aclrtStream)。                                   |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25_数据类型及其操作接口.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
@@ -1685,6 +1686,54 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+
+<br>
+<br>
+<br>
+
+
+
+<a id="aclrtGetFuncBySymbol"></a>
+
+## aclrtGetFuncBySymbol
+
+```c
+aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
+```
+
+### 产品支持情况
+
+
+| 产品 | 是否支持 |
+| --- | :---: |
+| Ascend 950PR/Ascend 950DT | √ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
+### 功能说明
+
+根据核函数名（__global__声明的函数名，比如myKernel）获取核函数句柄。
+
+本接口仅适用于使用Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景。用户自定义Device侧核函数后，可以通过本接口根据核函数名，在内部符号表中查找到对应的核函数，并使用funcHandle表达，用于后续Launch Kernel。
+
+### 参数说明
+
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| symbol | 输入 | 核函数名。|
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+### 约束说明
+
+- 本接口仅适用于使用Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景。
+- 本接口只能用于算子静态Shape场景，不支持tilingKey、显式加载等场景
+- 本接口不支持AI CPU算子。
 
 
 <br>

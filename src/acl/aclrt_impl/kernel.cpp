@@ -232,6 +232,21 @@ aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, vo
     return ACL_SUCCESS;
 }
 
+aclError aclrtGetFuncBySymbolImpl(const void *symbol, aclrtFuncHandle *funcHandle)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtGetFuncBySymbol);
+    ACL_LOG_INFO("start to execute aclrtGetFuncBySymbol");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(symbol);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+
+    const auto rtErr = rtGetFuncBySymbol(symbol, funcHandle);
+    if (rtErr != RT_ERROR_NONE) {
+       ACL_LOG_CALL_ERROR("Get function by symbol Failed, runtime result = %d", rtErr);
+       return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
 {
     ACL_LOG_INFO("start to execute aclrtGetFunctionAddr");

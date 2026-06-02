@@ -223,6 +223,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_KERNEL_INVALID] = {ACL_ERROR_RT_INVALID_HANDLE, "invalid funcHandle"};
     rtErrMap_[RT_ERROR_SYMBOL_NOT_FOUND] = {ACL_ERROR_RT_SYMBOL_NOT_FOUND, "global symbol not found"};
     rtErrMap_[RT_ERROR_INVALID_SYMBOL] = {ACL_ERROR_RT_INVALID_SYMBOL, "invalid device symbol"};
+    rtErrMap_[RT_ERROR_INVALID_DEVICE_FUNCTION] = {ACL_ERROR_RT_INVALID_DEVICE_FUNCTION, "invalid device function"};
 
     // program error
     rtErrMap_[RT_ERROR_PROGRAM_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "program base error"};

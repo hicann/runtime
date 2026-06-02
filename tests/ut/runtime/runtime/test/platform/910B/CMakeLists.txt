@@ -277,6 +277,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/kernel/binary_loader.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/elf.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/kernel.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/funcsymbol_table.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/module.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/program.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc

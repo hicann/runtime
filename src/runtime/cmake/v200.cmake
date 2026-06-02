@@ -300,6 +300,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/module.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program.cc
     ${RUNTIME_CORE_DIR}/src/kernel/program_common.cc
     ${RUNTIME_CORE_DIR}/src/kernel/symbol_table.cc

@@ -42,6 +42,9 @@ public:
                                   void *data, const uint32_t length) override;
     rtError_t FunctionGetMetaInfoSize(const Kernel * const funcHandle, const rtFunctionMetaType type,
  	                                  size_t *size) override;
+    rtError_t GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle) override;
+    rtError_t RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+                                 const char_t * const kernelName) override;
     rtError_t RegisterCpuFunc(rtBinHandle binHandle, const char_t * const funcName,
         const char_t * const kernelName, rtFuncHandle *funcHandle) override;
     rtError_t BinaryUnLoad(Program * const binHandle) override;

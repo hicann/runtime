@@ -62,6 +62,7 @@ extern "C" {
 #define  ACL_ERROR_RT_CAPTURE_MODE_BLOCK_ASYNC   107041 // async oper convert to sync oper, stream is captured, not support current oper
 #define  ACL_ERROR_RT_SYMBOL_NOT_FOUND           107042 // symbol not found
 #define  ACL_ERROR_RT_INVALID_SYMBOL             107043 // invalid device symbol
+#define  ACL_ERROR_RT_INVALID_DEVICE_FUNCTION    107044 // invalid device function
 
 #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT        207000 // feature not support
 #define  ACL_ERROR_RT_MEMORY_ALLOCATION          207001 // memory allocation error, only used by out of memory

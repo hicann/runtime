@@ -113,6 +113,30 @@ RTS_API rtError_t rtSymbolLookup(const void *hostVar, void **devPtr, size_t *siz
  */
 RTS_API rtError_t rtBinaryGetGlobal(const rtBinHandle binHandle, const char *name, void **dptr, size_t *size);
 
+/**
+ * @ingroup rt_kernel
+ * @brief register kernel function symbol mapping relationship.
+ * @param [in] binHandle   binary handle
+ * @param [in] symbol   kernel function reference
+ * @param [in] kernelName   kernel function name
+ * @param [in] reserve   reserved parameter
+ * @return ACL_RT_SUCCESS for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ */
+RTS_API rtError_t rtRegisterFuncSymbol(void *binHandle, const void *symbol, const char *kernelName,
+                                       void *reserve);
+
+/**
+ * @ingroup rt_kernel
+ * @brief Get function handle by function symbol.
+ * @param [in] symbol kernel function name
+ * @param [out] funcHandle if find, this will be the function handle
+ * @return ACL_RT_SUCCESS for ok
+ * @return ACL_ERROR_RT_PARAM_INVALID for error input
+ * @return ACL_ERROR_RT_INVALID_DEVICE_FUNCTION for symbol not found in funcsymbol table
+ */
+RTS_API rtError_t rtGetFuncBySymbol(const void *symbol, rtFuncHandle *funcHandle);
+
 #if defined(__cplusplus)
 }
 #endif

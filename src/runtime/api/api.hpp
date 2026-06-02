@@ -145,6 +145,9 @@ public:
                                           void *data, const uint32_t length) = 0;
     virtual rtError_t FunctionGetMetaInfoSize(const Kernel * const funcHandle, const rtFunctionMetaType type, 
                                                size_t *size) = 0;
+    virtual rtError_t GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle) = 0;
+    virtual rtError_t RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+                                         const char_t * const kernelName) = 0;
     virtual rtError_t RegisterCpuFunc(rtBinHandle binHandle, const char_t * const funcName,
         const char_t * const kernelName, rtFuncHandle *funcHandle) = 0;
     virtual rtError_t LaunchKernel(Kernel * const kernel, uint32_t blockDim, const rtArgsEx_t * const argsInfo,

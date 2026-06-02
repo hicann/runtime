@@ -69,6 +69,17 @@ rtError_t ApiDecorator::MetadataRegister(Program * const prog, const char_t * co
     return impl_->MetadataRegister(prog, metadata);
 }
 
+rtError_t ApiDecorator::GetFunctionBySymbol(const void *symbol, Kernel ** const funcHandle)
+{
+    return impl_->GetFunctionBySymbol(symbol, funcHandle);
+}
+
+rtError_t ApiDecorator::RegisterFuncSymbol(void * const binHandle, const void * const symbol,
+    const char_t * const kernelName)
+{
+    return impl_->RegisterFuncSymbol(binHandle, symbol, kernelName);
+}
+
 rtError_t ApiDecorator::DependencyRegister(Program * const mProgram, Program * const sProgram)
 {
     return impl_->DependencyRegister(mProgram, sProgram);
