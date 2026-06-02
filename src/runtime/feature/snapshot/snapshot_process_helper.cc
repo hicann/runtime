@@ -286,7 +286,7 @@ rtError_t SnapShotProcessRestore()
         ERROR_RETURN(ret, "ModelRestore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
         ret = SnapShotAclGraphRestore(dev);
-        ERROR_RETURN(ret, "AclGraph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
+        ERROR_RETURN(ret, "ACL Graph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
         dev->ArgLoader_()->RestoreAiCpuKernelInfo();
     }
