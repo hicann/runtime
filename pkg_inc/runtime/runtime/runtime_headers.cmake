@@ -33,4 +33,11 @@ if(ENABLE_OPEN_SRC)
         $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/aicpu_sched>
         $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/aicpu_sched/common>
     )
+
+    add_library(datagw_headers INTERFACE)
+    target_include_directories(datagw_headers INTERFACE
+        $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
+        $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/queue_schedule>
+        $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/tsd>
+    )
 endif()
