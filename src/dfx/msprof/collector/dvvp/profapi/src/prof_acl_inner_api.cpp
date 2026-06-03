@@ -15,12 +15,15 @@
 extern "C" {
 #endif  // __cplusplus
 
+static bool g_profAclInited = false;
+
 // prof acl api
 MSVP_PROF_API int32_t ProfAclInit(uint32_t type, const char *profilerPath, uint32_t len)
 {
     ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
     ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf();
     ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
+    g_profAclInited = true;
     return ProfAPI::ProfAclPlugin::instance()->ProfAclInit(type, profilerPath, len);
 }
 
@@ -31,6 +34,27 @@ MSVP_PROF_API int32_t ProfAclWarmup(uint32_t type, PROFAPI_CONFIG_CONST_PTR prof
 
 MSVP_PROF_API int32_t ProfAclStart(uint32_t type, PROFAPI_CONFIG_CONST_PTR profilerConfig)
 {
+    // Use the authoritative manager state (IsInited) as the only criterion: the local
+    // g_profAclInited flag can be out of sync when aclprofInit was issued through another path
+    // (e.g. the adaptor layer), which would wrongly trigger a second init and fail with
+    // ACL_ERROR_REPEAT_INITIALIZE. Only auto-init when profiling is genuinely not initialized.
+    if (!ProfAPI::ProfAclPlugin::instance()->IsInited()) {
+        ProfAPI::ProfCannPlugin::instance()->ProfApiInit();
+        ProfAPI::ProfCannPlugin::instance()->ProfInitReportBuf();
+        ProfAPI::ProfCannPlugin::instance()->ProfTxInit();
+        std::string resultPath = ProfAPI::ProfAclPlugin::instance()->GetResultPath();
+        if (resultPath.empty()) {
+            resultPath = "./";
+        }
+        int32_t ret = ProfAPI::ProfAclPlugin::instance()->ProfAclInit(type, resultPath.c_str(), resultPath.length());
+        // Tolerate REPEAT_INITIALIZE: profiling was already initialized through another path
+        // (the IsInited() probe may be stale across so boundaries). In that case just proceed to
+        // start instead of failing. Any other init error is a real failure and is propagated.
+        if (ret != 0 && ret != ACL_ERROR_REPEAT_INITIALIZE) {
+            return ret;
+        }
+        g_profAclInited = true;
+    }
     return ProfAPI::ProfAclPlugin::instance()->ProfAclStart(type, profilerConfig);
 }
 
@@ -43,6 +67,9 @@ MSVP_PROF_API int32_t ProfAclFinalize(uint32_t type)
 {
     int32_t ret = ProfAPI::ProfAclPlugin::instance()->ProfAclFinalize(type);
     ProfAPI::ProfCannPlugin::instance()->ProfUnInitReportBuf();
+    if (ret == 0) {
+        g_profAclInited = false;
+    }
     return ret;
 }
 

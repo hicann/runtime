@@ -92,7 +92,8 @@ typedef enum {
     ACL_PROF_SYS_CPU_FREQ               = 13,
     ACL_PROF_OPTYPE                     = 14,
     ACL_PROF_NTS_METRICS                = 15,
-    ACL_PROF_ARGS_MAX                   = 16
+    ACL_PROF_PATH                       = 16,
+    ACL_PROF_ARGS_MAX                   = 17
 } aclprofConfigType;
 
 typedef struct aclprofConfig aclprofConfig;

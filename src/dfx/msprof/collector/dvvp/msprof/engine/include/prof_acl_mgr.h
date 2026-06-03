@@ -198,6 +198,7 @@ public:
     int32_t ProfAclInit(const std::string& profResultPath);
     int32_t InitParams();
     bool IsInited();
+    std::string GetResultPath() const;
     bool EnableRpcHelperMode(std::string msprofPath);
     int32_t InitUploader(const std::string& devIdStr);
     int32_t ProfAclFinalize();

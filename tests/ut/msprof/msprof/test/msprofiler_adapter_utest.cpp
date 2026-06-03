@@ -28,6 +28,12 @@
 extern "C" {
 extern Msprofiler::AclApi::ProfCreateTransportFunc ProfCreateParsertransport();
 extern void ProfRegisterTransport(Msprofiler::AclApi::ProfCreateTransportFunc callback);
+// ProfIsInited / ProfGetResultPath are declared in msprofiler_adaptor.h, but that header cannot be
+// included here because it declares ProfAclInit/Start/... as extern "C" with ProfType params, which
+// conflicts with the uint32_t-param declarations already pulled in via prof_inner_api.h. Declare
+// them locally, matching the existing pattern above for transport functions.
+extern bool ProfIsInited();
+extern int32_t ProfGetResultPath(char *path, uint32_t len);
 }
 
 using namespace analysis::dvvp::common::error;
@@ -132,4 +138,51 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_SINGLE_OP_CONFIG)
   
   EXPECT_EQ(true, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "MatMul", 6));
   EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Add", 3));
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_IS_INITED)
+{
+  // ProfIsInited passes through ProfAclMgr::IsInited().
+  MOCKER(&Msprofiler::Api::ProfAclMgr::IsInited)
+    .stubs()
+    .will(returnValue(true))
+    .then(returnValue(false));
+
+  EXPECT_EQ(true, ProfIsInited());
+  EXPECT_EQ(false, ProfIsInited());
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_NORMAL)
+{
+  // Normal: result path fits into the buffer, copied out and returns success.
+  MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath)
+    .stubs()
+    .will(returnValue(std::string("/tmp/prof_result")));
+
+  char buf[64] = {0};
+  EXPECT_EQ(PROFILING_SUCCESS, ProfGetResultPath(buf, sizeof(buf)));
+  EXPECT_STREQ("/tmp/prof_result", buf);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_EMPTY)
+{
+  // Empty result path: returns success with an empty C-string.
+  MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath)
+    .stubs()
+    .will(returnValue(std::string("")));
+
+  char buf[64] = {'x', 'y', 'z', '\0'};
+  EXPECT_EQ(PROFILING_SUCCESS, ProfGetResultPath(buf, sizeof(buf)));
+  EXPECT_EQ('\0', buf[0]);
+}
+
+TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_BUFFER_TOO_SMALL)
+{
+  // Buffer too small: path length >= len must fail without writing out of bounds.
+  MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath)
+    .stubs()
+    .will(returnValue(std::string("/tmp/a_long_result_path")));
+
+  char buf[8] = {0};
+  EXPECT_EQ(PROFILING_FAILED, ProfGetResultPath(buf, sizeof(buf)));
 }

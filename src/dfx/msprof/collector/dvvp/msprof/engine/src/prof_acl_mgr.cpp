@@ -532,6 +532,12 @@ int32_t ProfAclMgr::ProfAclInit(const std::string &profResultPath)
 
     FUNRET_CHECK_EXPR_ACTION(InitParams() != ACL_SUCCESS, return ACL_ERROR_PROFILING_FAILURE, "Failed to init params");
 
+    // The path passed to init reflects the latest setting at init time: if ACL_PROF_PATH was
+    // set before init, resultPath_ already carries it (auto-init passes GetResultPath() in here);
+    // if the user passes an explicit init path, it wins over the earlier ACL_PROF_PATH.
+    // A path set by ACL_PROF_PATH AFTER init is applied separately in MsprofSetConfig
+    // (last-write-wins), so no override is done here.
+
     mode_ = WORK_MODE_API_CTRL;
     return ACL_SUCCESS;
 }
@@ -548,6 +554,21 @@ int32_t ProfAclMgr::InitParams()
 bool ProfAclMgr::IsInited()
 {
     return mode_ != WORK_MODE_OFF;
+}
+
+std::string ProfAclMgr::GetResultPath() const
+{
+    // After init, resultPath_ holds the canonicalized absolute path that data is actually
+    // written to (already overridden by ACL_PROF_PATH if set), so prefer it.
+    if (!resultPath_.empty()) {
+        return resultPath_;
+    }
+    // Before init, fall back to the user-configured ACL_PROF_PATH so the auto-init flow
+    // can pass it into ProfAclInit.
+    if (params_ != nullptr && !params_->resultPath.empty()) {
+        return params_->resultPath;
+    }
+    return resultPath_;
 }
 
 /**
@@ -2416,6 +2437,26 @@ int32_t ProfAclMgr::MsprofSetConfig(aclprofConfigType cfgType, const std::string
         return PROFILING_FAILED;
     }
 
+    // last-write-wins: if ACL_PROF_PATH is set AFTER init (mode is already API_CTRL), apply the
+    // new path to resultPath_ immediately so it overrides the path given at init time. When set
+    // before init (mode is OFF), ProfAclInit consumes params_->resultPath via the auto-init flow.
+    if (cfgType == ACL_PROF_PATH && mode_ == WORK_MODE_API_CTRL && !config.empty()) {
+        std::string cfgPath = Utils::RelativePathToAbsolutePath(config);
+        if (cfgPath.empty() || !Utils::CheckPathWithInvalidChar(cfgPath) ||
+            Utils::CreateDir(cfgPath) != PROFILING_SUCCESS) {
+            MSPROF_LOGE("Invalid ACL_PROF_PATH: %s", Utils::BaseName(config).c_str());
+            return PROFILING_FAILED;
+        }
+        cfgPath = Utils::CanonicalizePath(cfgPath);
+        if (cfgPath.empty() || !Utils::IsDirAccessible(cfgPath)) {
+            MSPROF_LOGE("ACL_PROF_PATH not accessible: %s", Utils::BaseName(config).c_str());
+            return PROFILING_FAILED;
+        }
+        resultPath_ = cfgPath;
+        MSPROF_LOGI("Override result path by ACL_PROF_PATH after init: %s",
+            Utils::BaseName(resultPath_).c_str());
+    }
+
     return PROFILING_SUCCESS;
 }
 
@@ -2747,12 +2788,15 @@ int32_t ProfAclMgr::PrepareStopAclApi(const MsprofConfig *config)
         return ACL_ERROR_FEATURE_UNSUPPORTED;
     }
 
+    // Not initialized (e.g. called after aclprofFinalize): stop is a no-op, return success.
+    // Use IsInited() first so the precheck's misleading error log is not printed. ProfStopCommon
+    // afterwards is also a no-op when IsModeOff(), so the whole stop succeeds.
+    if (!IsInited()) {
+        MSPROF_LOGI("Profiling is not initialized, aclprofStop returns success directly.");
+        return ACL_SUCCESS;
+    }
     int32_t ret = ProfStopPrecheck();
     if (ret != ACL_SUCCESS) {
-        if (ret == ACL_ERROR_PROF_NOT_RUN) {
-            MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
-                std::vector<std::string>({"aclprofStart", "aclprofStop"}));
-        }
         return ret;
     }
 

@@ -435,6 +435,130 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfAclInit_failed) {
     analysis::dvvp::common::utils::Utils::RemoveDir(result);
 }
 
+// GetResultPath: before init (resultPath_ empty) falls back to the configured ACL_PROF_PATH.
+TEST_F(MSPROF_ACL_CORE_UTEST, GetResultPath_BeforeInit_FallbackToConfig) {
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+    ProfAclMgr::instance()->resultPath_.clear();
+    ProfAclMgr::instance()->InitParams();
+    ProfAclMgr::instance()->params_->resultPath = "/tmp/lww_cfg_path";
+
+    EXPECT_EQ("/tmp/lww_cfg_path", ProfAclMgr::instance()->GetResultPath());
+
+    ProfAclMgr::instance()->params_->resultPath.clear();
+}
+
+// GetResultPath: after init (resultPath_ set) returns the real landed absolute path.
+TEST_F(MSPROF_ACL_CORE_UTEST, GetResultPath_AfterInit_ReturnsResultPath) {
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+    ProfAclMgr::instance()->InitParams();
+    ProfAclMgr::instance()->params_->resultPath = "/tmp/lww_cfg_path";
+    ProfAclMgr::instance()->resultPath_ = "/tmp/lww_real_abs_path";
+
+    // resultPath_ (already canonicalized at init) takes precedence over the raw config value.
+    EXPECT_EQ("/tmp/lww_real_abs_path", ProfAclMgr::instance()->GetResultPath());
+
+    ProfAclMgr::instance()->params_->resultPath.clear();
+    ProfAclMgr::instance()->resultPath_.clear();
+}
+
+static std::string PathIdentity_stub(const std::string &path)
+{
+    return path;
+}
+
+// last-write-wins, sequence B: Init(pathB) then SetConfig(ACL_PROF_PATH, pathA) -> pathA wins.
+TEST_F(MSPROF_ACL_CORE_UTEST, AclProfPath_SetConfigAfterInit_Wins) {
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+
+    MOCKER(analysis::dvvp::common::utils::Utils::RelativePathToAbsolutePath)
+        .stubs().will(invoke(PathIdentity_stub));
+    MOCKER(analysis::dvvp::common::utils::Utils::CanonicalizePath)
+        .stubs().will(invoke(PathIdentity_stub));
+    MOCKER(analysis::dvvp::common::utils::Utils::CheckPathWithInvalidChar)
+        .stubs().will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDirAccessible)
+        .stubs().will(returnValue(true));
+
+    ProfAclMgr::instance()->InitParams();
+    // simulate "already inited at /tmp/lww_init_b"
+    ProfAclMgr::instance()->mode_ = WORK_MODE_API_CTRL;
+    ProfAclMgr::instance()->resultPath_ = "/tmp/lww_init_b";
+
+    EXPECT_EQ(PROFILING_SUCCESS,
+        ProfAclMgr::instance()->MsprofSetConfig(ACL_PROF_PATH, "/tmp/lww_setcfg_a"));
+    // the later ACL_PROF_PATH overrides the path given at init time.
+    EXPECT_EQ("/tmp/lww_setcfg_a", ProfAclMgr::instance()->resultPath_);
+    EXPECT_EQ("/tmp/lww_setcfg_a", ProfAclMgr::instance()->GetResultPath());
+
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+    ProfAclMgr::instance()->resultPath_.clear();
+    ProfAclMgr::instance()->params_->resultPath.clear();
+}
+
+// last-write-wins, sequence A: SetConfig(pathA) before init, then Init(pathB) -> pathB wins.
+TEST_F(MSPROF_ACL_CORE_UTEST, AclProfPath_InitAfterSetConfig_Wins) {
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+
+    MOCKER(analysis::dvvp::common::utils::Utils::RelativePathToAbsolutePath)
+        .stubs().will(invoke(PathIdentity_stub));
+    MOCKER(analysis::dvvp::common::utils::Utils::CanonicalizePath)
+        .stubs().will(invoke(PathIdentity_stub));
+    MOCKER(analysis::dvvp::common::utils::Utils::CheckPathWithInvalidChar)
+        .stubs().will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER(analysis::dvvp::common::utils::Utils::IsDirAccessible)
+        .stubs().will(returnValue(true));
+
+    ProfAclMgr::instance()->Init();
+    ProfAclMgr::instance()->isReady_ = true;
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+    ProfAclMgr::instance()->resultPath_.clear();
+    // ACL_PROF_PATH set before init
+    ProfAclMgr::instance()->InitParams();
+    ProfAclMgr::instance()->params_->resultPath = "/tmp/lww_setcfg_a";
+
+    // explicit init path should win over the earlier ACL_PROF_PATH
+    EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->ProfAclInit("/tmp/lww_init_b"));
+    EXPECT_EQ("/tmp/lww_init_b", ProfAclMgr::instance()->resultPath_);
+
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+    ProfAclMgr::instance()->resultPath_.clear();
+    ProfAclMgr::instance()->params_->resultPath.clear();
+}
+
+// ACL_PROF_PATH set after init with an invalid path must fail and not corrupt resultPath_.
+TEST_F(MSPROF_ACL_CORE_UTEST, AclProfPath_SetConfigAfterInit_InvalidPath_Fails) {
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+
+    MOCKER(analysis::dvvp::common::utils::Utils::RelativePathToAbsolutePath)
+        .stubs().will(invoke(PathIdentity_stub));
+    MOCKER(analysis::dvvp::common::utils::Utils::CheckPathWithInvalidChar)
+        .stubs().will(returnValue(true));
+    MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+
+    ProfAclMgr::instance()->InitParams();
+    ProfAclMgr::instance()->mode_ = WORK_MODE_API_CTRL;
+    ProfAclMgr::instance()->resultPath_ = "/tmp/lww_init_keep";
+
+    EXPECT_EQ(PROFILING_FAILED,
+        ProfAclMgr::instance()->MsprofSetConfig(ACL_PROF_PATH, "/tmp/lww_bad_path"));
+    // resultPath_ unchanged on failure.
+    EXPECT_EQ("/tmp/lww_init_keep", ProfAclMgr::instance()->resultPath_);
+
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+    ProfAclMgr::instance()->resultPath_.clear();
+    ProfAclMgr::instance()->params_->resultPath.clear();
+}
+
 static void CustomerSigHandler(int signum) {
     MSPROF_LOGI("CustomerSigHandler");
 }
@@ -3739,7 +3863,8 @@ TEST_F(MSPROF_ACL_CORE_UTEST, aclprofSetConfigAllowsEmptyStorageLimit)
 TEST_F(MSPROF_ACL_CORE_UTEST, aclprofSetConfigNtsMetricsBasicValidation)
 {
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_OPTYPE) + 1, static_cast<int32_t>(ACL_PROF_NTS_METRICS));
-    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_PATH));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
 
     std::string config("TaskTime");
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
@@ -3803,9 +3928,116 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfStop) {
     config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
     config.dataTypeConfig = 0x0080;
     // MOCKER(preCheckProfConfig).stubs().will(returnValue(0));
+    // ProfStop short-circuits to success when !IsInited(); force IsInited() true so the
+    // config-consistency validation under test is reached.
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited).stubs().will(returnValue(true));
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopPrecheck).stubs().will(returnValue(0));
     MOCKER((int (Msprofiler::Api::ProfAclMgr::*)(const uint32_t devId, uint64_t &dataTypeConfig))&Msprofiler::Api::ProfAclMgr::ProfAclGetDataTypeConfig).stubs().will(returnValue(0));
     EXPECT_EQ(ACL_ERROR_INVALID_PROFILING_CONFIG, Msprofiler::AclApi::ProfStop(ACL_API_TYPE, &config));
+}
+
+// AutoInitForStartIfNeeded (via ProfStart): cover all auto-init failure branches in one body,
+// resetting mocks between sub-cases with GlobalMockObject::verify().
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfStart_AutoInit_FailureBranches) {
+    ProfConfig config;
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+    config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
+    config.dataTypeConfig = ACL_PROF_TASK_TIME;
+
+    // not inited + helper host side -> feature unsupported.
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_PROF_NOT_RUN)));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs().will(returnValue(true));
+    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, &config));
+
+    // not inited + manager Init fails.
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_PROF_NOT_RUN)));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs().will(returnValue(false));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::Init)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, &config));
+
+    // not inited + ProfAclInit fails -> propagate error.
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_PROF_NOT_RUN)));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs().will(returnValue(false));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::Init)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetResultPath)
+        .stubs().will(returnValue(std::string("/tmp/auto_init")));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfAclInit)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_INVALID_FILE)));
+    EXPECT_EQ(ACL_ERROR_INVALID_FILE, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, &config));
+
+    // not inited + StartUploaderDumper fails.
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_ERROR_PROF_NOT_RUN)));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs().will(returnValue(false));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::Init)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetResultPath)
+        .stubs().will(returnValue(std::string("/tmp/auto_init")));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfAclInit)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StartUploaderDumper)
+        .stubs().will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, &config));
+}
+
+// AutoInitForStartIfNeeded (via ProfStart): already inited -> skip auto-init and start normally.
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfStart_AutoInit_AlreadyInitedSkips) {
+    GlobalMockObject::verify();
+    ProfConfig config;
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+    config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
+    config.dataTypeConfig = ACL_PROF_TASK_TIME;
+    // precheck returns SUCCESS -> AutoInitForStartIfNeeded returns early without auto-init.
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStartPrecheck)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CheckConfigConsistency)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsProfWarmup)
+        .stubs().will(returnValue(false));
+    MOCKER(&Analysis::Dvvp::ProfilerCommon::ProfConfigStart)
+        .stubs().will(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
+    EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, &config));
+}
+
+// aclprofStop on an uninitialized state (e.g. after finalize) returns success directly (no error).
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfStop_NotInited_ReturnsSuccess) {
+    GlobalMockObject::verify();
+    ProfConfig config;
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+    config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
+    config.dataTypeConfig = 0x0080;
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
+        .stubs()
+        .will(returnValue(false));
+    EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfStop(ACL_API_TYPE, &config));
+}
+
+// aclprofFinalize on an uninitialized state (e.g. after finalize) returns success directly.
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfFinalize_NotInited_ReturnsSuccess) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs()
+        .will(returnValue(false));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
+        .stubs()
+        .will(returnValue(false));
+    EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfFinalize(ACL_API_TYPE));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillReturnUnintializeWhenInitParmasFail)
@@ -3931,6 +4163,20 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapterWillAcceptNtsMetricsConsistently)
         Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(params,
             ACL_PROF_NTS_METRICS, "TaskTime"));
     EXPECT_TRUE(params->ntsMetrics.empty());
+}
+
+// ACL_PROF_PATH is platform-agnostic (always supported) and stores the value into resultPath.
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_AclProfPath_SupportAndStore)
+{
+    auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
+
+    EXPECT_EQ(PROFILING_SUCCESS,
+        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigSupport(ACL_PROF_PATH));
+
+    EXPECT_EQ(PROFILING_SUCCESS,
+        Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->CheckApiConfigIsValid(params,
+            ACL_PROF_PATH, "/tmp/acl_prof_path_store"));
+    EXPECT_EQ("/tmp/acl_prof_path_store", params->resultPath);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, AclSetConfigNtsMetricsWillEnablePmuAndTaskCollection)
@@ -4728,8 +4974,8 @@ TEST_F(MSPROF_ACL_CORE_UTEST, DISABLED_MsprofStart_AclApi_part3) {
 
     // PlatformIsHelperHostSide
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
-    // ProfStopPrecheck
-    EXPECT_EQ(ACL_ERROR_PROF_NOT_RUN, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
+    // ProfStopPrecheck returns NOT_RUN: not initialized -> aclprofStop is a no-op and succeeds.
+    EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // IsModeOff
     EXPECT_EQ(ACL_SUCCESS, MsprofStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &cfg, sizeof(cfg)));
     // CommandHandleProfStop
@@ -5448,13 +5694,31 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofilerAclApi_ProfFinalize_HelperHostSide)
     EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, Msprofiler::AclApi::ProfFinalize(ACL_API_TYPE));
 }
 
-TEST_F(MSPROF_ACL_CORE_UTEST, MsprofilerAclApi_ProfFinalize_PrecheckFail)
+// Not initialized (precheck returns ACL_ERROR_PROF_NOT_RUN): finalize is a no-op, returns success.
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofilerAclApi_ProfFinalize_NotInitedReturnsSuccess)
 {
     MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
         .stubs().will(returnValue(false));
+    // Explicitly drive the not-inited path; avoids dependence on residual mode_ state left by
+    // earlier tests, which would otherwise let IsInited() return true and reach the precheck.
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
+        .stubs().will(returnValue(false));
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfFinalizePrecheck)
         .stubs().will(returnValue((int32_t)ACL_ERROR_PROF_NOT_RUN));
-    EXPECT_EQ(ACL_ERROR_PROF_NOT_RUN, Msprofiler::AclApi::ProfFinalize(ACL_API_TYPE));
+    EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfFinalize(ACL_API_TYPE));
+}
+
+// Other precheck failures (not the uninitialized case) are still propagated as errors.
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofilerAclApi_ProfFinalize_OtherPrecheckFailPropagates)
+{
+    MOCKER(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
+        .stubs().will(returnValue(false));
+    // Inited (IsInited true) so it passes the no-op short-circuit and reaches the precheck.
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
+        .stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfFinalizePrecheck)
+        .stubs().will(returnValue((int32_t)ACL_ERROR_PROF_API_CONFLICT));
+    EXPECT_EQ(ACL_ERROR_PROF_API_CONFLICT, Msprofiler::AclApi::ProfFinalize(ACL_API_TYPE));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofilerAclApi_ProfWarmup_NullConfig)

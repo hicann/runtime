@@ -17,6 +17,8 @@
 #include "dyn_prof_mgr.h"
 #include "prof_reporter_mgr.h"
 #include "receive_data.h"
+#include "prof_acl_mgr.h"
+#include "securec.h"
 
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Msprofiler::Parser;
@@ -126,6 +128,30 @@ extern "C" MSVP_PROF_API int32_t ProfAclFinalize(ProfType type)
 extern "C" MSVP_PROF_API int32_t ProfAclSetConfig(aclprofConfigType type, const char *config, size_t configLength)
 {
     return Msprofiler::AclApi::ProfSetConfig(type, config, configLength);
+}
+
+extern "C" MSVP_PROF_API bool ProfIsInited()
+{
+    return Msprofiler::Api::ProfAclMgr::instance()->IsInited();
+}
+
+extern "C" MSVP_PROF_API int32_t ProfGetResultPath(char *path, uint32_t len)
+{
+    std::string resultPath = Msprofiler::Api::ProfAclMgr::instance()->GetResultPath();
+    if (resultPath.length() >= len) {
+        MSPROF_LOGE("Result path buffer too small, need %zu, got %u", resultPath.length(), len);
+        return PROFILING_FAILED;
+    }
+    if (resultPath.empty()) {
+        path[0] = '\0';
+        return PROFILING_SUCCESS;
+    }
+    errno_t ret = memcpy_s(path, len, resultPath.c_str(), resultPath.length() + 1);
+    if (ret != EOK) {
+        MSPROF_LOGE("Failed to copy result path");
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
 }
 
 extern "C" MSVP_PROF_API int32_t ProfAclSubscribe(

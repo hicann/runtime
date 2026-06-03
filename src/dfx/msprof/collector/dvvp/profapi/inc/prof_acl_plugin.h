@@ -40,6 +40,8 @@ using ProfRegisterTransportFunc = void (*)(ProfCreateTransportFunc callback);
 using ProfAclGetCompatibleFeaturesFunc = int32_t (*) (size_t *featuresSize, void **featuresData);
 using ProfAclGetCompatibleFeaturesV2Func = int32_t (*) (size_t *featuresSize, void **featuresData);
 using ProfAclRegisterDeviceCallbackFunc = int (*) ();
+using ProfIsInitedFunc = bool (*) ();
+using ProfGetResultPathFunc = int32_t (*) (char *, uint32_t);
 
 class ProfAclPlugin : public analysis::dvvp::common::singleton::Singleton<ProfAclPlugin> {
 public:
@@ -65,6 +67,8 @@ public:
     int32_t ProfAclGetCompatibleFeatures(size_t *featuresSize, void **featuresData);
     int32_t ProfAclGetCompatibleFeaturesV2(size_t *featuresSize, void **featuresData);
     int32_t ProfAclRegisterDeviceCallback();
+    bool IsInited();
+    std::string GetResultPath();
 private:
     VOID_PTR msProfLibHandle_{nullptr};
 
@@ -87,6 +91,8 @@ private:
     PTHREAD_ONCE_T profAclGetCompatibleFeaturesFlags_;
     PTHREAD_ONCE_T profAclGetCompatibleFeaturesV2Flags_;
     PTHREAD_ONCE_T profAclRegisterDeviceCallbackFlag_;
+    PTHREAD_ONCE_T profIsInitedFlag_;
+    PTHREAD_ONCE_T profGetResultPathFlag_;
 
     ProfAclInitFunc profAclInit_;
     ProfAclCtrlFunc profAclWarmup_;
@@ -109,6 +115,8 @@ private:
     ProfAclGetCompatibleFeaturesFunc profAclGetCompatibleFeatures_;
     ProfAclGetCompatibleFeaturesV2Func profAclGetCompatibleFeaturesV2_;
     ProfAclRegisterDeviceCallbackFunc profAclRegisterDeviceCallback_;
+    ProfIsInitedFunc profIsInited_{nullptr};
+    ProfGetResultPathFunc profGetResultPath_{nullptr};
 
     void LoadProfAclInit();
     void LoadProfAclWarmup();
@@ -131,6 +139,8 @@ private:
     void LoadProfAclGetCompatibleFeatures();
     void LoadProfAclGetCompatibleFeaturesV2();
     void LoadProfAclRegisterDeviceCallback();
+    void LoadProfIsInited();
+    void LoadProfGetResultPath();
 };
 }
 #endif

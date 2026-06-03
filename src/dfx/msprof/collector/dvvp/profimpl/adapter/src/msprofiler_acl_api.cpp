@@ -122,12 +122,14 @@ aclError ProfFinalize(ProfType type)
     }
     MSPROF_LOGI("Start to execute %s%s", g_subscribeTypeMap[type].c_str(), __func__);
     std::lock_guard<std::mutex> lock(g_profMutex);
+    // Not initialized (e.g. called after a previous aclprofFinalize): finalize is a no-op, return
+    // success. Use IsInited() first so no misleading error log is printed by the precheck.
+    if (!ProfAclMgr::instance()->IsInited()) {
+        MSPROF_LOGI("Profiling is not initialized, aclprofFinalize returns success directly.");
+        return ACL_SUCCESS;
+    }
     int32_t ret = ProfAclMgr::instance()->ProfFinalizePrecheck();
     if (ret != ACL_SUCCESS) {
-        if (ret == ACL_ERROR_PROF_NOT_RUN) {
-            MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
-                std::vector<std::string>({"aclprofInit", "aclprofFinalize"}));
-        }
         return ret;
     }
 
@@ -229,6 +231,72 @@ aclError ProfWarmup(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
     return ACL_SUCCESS;
 }
 
+// Auto-init the acl profiling manager when aclprofStart is called without a prior aclprofInit.
+// Must be called with g_profMutex held. Returns ACL_SUCCESS if already inited or auto-init done.
+static aclError AutoInitForStartIfNeeded()
+{
+    if (ProfAclMgr::instance()->ProfStartPrecheck() != ACL_ERROR_PROF_NOT_RUN) {
+        return ACL_SUCCESS;
+    }
+    if (Platform::instance()->PlatformIsHelperHostSide()) {
+        MSPROF_LOGE("acl api not support in helper");
+        MSPROF_INPUT_ERROR("EK0004", std::vector<std::string>({"intf"}),
+            std::vector<std::string>({"aclprofStart"}));
+        return ACL_ERROR_FEATURE_UNSUPPORTED;
+    }
+    if (ProfAclMgr::instance()->Init() != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to init acl manager");
+        return ACL_ERROR_PROFILING_FAILURE;
+    }
+    std::string path = ProfAclMgr::instance()->GetResultPath();
+    if (path.empty()) {
+        path = "./";
+    }
+    int32_t ret = ProfAclMgr::instance()->ProfAclInit(path);
+    if (ret != ACL_SUCCESS) {
+        MSPROF_LOGE("Auto init fail, ret = %d", ret);
+        return ret;
+    }
+    if (Msprof::Engine::MsprofReporter::reporters_.empty()) {
+        MSPROF_LOGI("MsprofReporter InitReporters");
+        Msprof::Engine::MsprofReporter::InitReporters();
+    }
+    if (ProfAclMgr::instance()->StartUploaderDumper() != PROFILING_SUCCESS) {
+        return ACL_ERROR_PROFILING_FAILURE;
+    }
+    return ACL_SUCCESS;
+}
+
+// Build the internal MsprofConfig (and collect device ids) from the acl prof config.
+static void BuildMsprofConfig(PROF_CONFIG_CONST_PTR config, struct MsprofConfig &cfg, std::vector<uint32_t> &devIds)
+{
+    cfg.profSwitch = config->dataTypeConfig;
+    cfg.devNums = config->devNums;
+    cfg.metrics = static_cast<uint32_t>(config->aicoreMetrics);
+    for (uint32_t i = 0; i < cfg.devNums; ++i) {
+        cfg.devIdList[i] = config->devIdList[i];
+        devIds.push_back(config->devIdList[i]);
+    }
+}
+
+// Apply the start config: switch warmup to start if warming up, otherwise issue ProfConfigStart.
+static aclError ApplyStartConfig(const struct MsprofConfig &cfg, const std::vector<uint32_t> &devIds)
+{
+    if (ProfAclMgr::instance()->IsProfWarmup()) {
+        ProfAclMgr::instance()->ChangeProfWarmupToStart(devIds);
+        ProfAclMgr::instance()->ResetProfWarmup();
+        return ACL_SUCCESS;
+    }
+    uint32_t dataType = static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API);
+    int32_t ret = Analysis::Dvvp::ProfilerCommon::ProfConfigStart(dataType, static_cast<const void *>(&cfg),
+        sizeof(cfg));
+    if (ret != ACL_SUCCESS) {
+        MSPROF_LOGE("Start profiling failed, ret: %d", ret);
+        return ret;
+    }
+    return ACL_SUCCESS;
+}
+
 aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
 {
     PROF_CONFIG_CONST_PTR config = profilerConfig;
@@ -242,33 +310,33 @@ aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
     }
     std::vector<uint32_t> devIds;
     struct MsprofConfig cfg;
-    cfg.profSwitch = config->dataTypeConfig;
-    cfg.devNums = config->devNums;
-    cfg.metrics = static_cast<uint32_t>(config->aicoreMetrics);
-    for (uint32_t i = 0; i < cfg.devNums; ++i) {
-        cfg.devIdList[i] = config->devIdList[i];
-        devIds.push_back(config->devIdList[i]);
-    }
+    BuildMsprofConfig(config, cfg, devIds);
 
     MSPROF_LOGI("Start to execute %s%s", g_subscribeTypeMap[type].c_str(), __func__);
     std::lock_guard<std::mutex> lock(g_profMutex);
+
+    aclRet = AutoInitForStartIfNeeded();
+    if (aclRet != ACL_SUCCESS) {
+        return aclRet;
+    }
+
+    int32_t precheckRet = ProfAclMgr::instance()->ProfStartPrecheck();
+    if (precheckRet != ACL_SUCCESS) {
+        if (precheckRet == ACL_ERROR_PROF_NOT_RUN) {
+            MSPROF_INPUT_ERROR("EK0002", std::vector<std::string>({"intf1", "intf2"}),
+                std::vector<std::string>({"aclprofInit", "aclprofStart"}));
+        }
+        return precheckRet;
+    }
     if (g_isRepeatInvoking) {
         return ProfAclMgr::instance()->CheckConfigConsistency(static_cast<const MsprofConfig *>(&cfg), "start");
     } else {
         g_isRepeatInvoking = true;
     }
 
-    uint32_t dataType = static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API);
-    if (ProfAclMgr::instance()->IsProfWarmup()) {
-        ProfAclMgr::instance()->ChangeProfWarmupToStart(devIds);
-        ProfAclMgr::instance()->ResetProfWarmup();
-    } else {
-        int32_t ret = Analysis::Dvvp::ProfilerCommon::ProfConfigStart(dataType, static_cast<const void *>(&cfg),
-            sizeof(cfg));
-        if (ret != ACL_SUCCESS) {
-            MSPROF_LOGE("Start profiling failed, ret: %d", ret);
-            return ret;
-        }
+    aclRet = ApplyStartConfig(cfg, devIds);
+    if (aclRet != ACL_SUCCESS) {
+        return aclRet;
     }
 
     MSPROF_LOGI("Acl has been allocated start profiling config, successfully execute %s%s",
@@ -278,6 +346,16 @@ aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
 
 aclError ProfStop(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
 {
+    {
+        // Not initialized (e.g. called after aclprofFinalize): stop is a no-op, return success.
+        // Use IsInited() instead of ProfStopPrecheck() so no misleading error log is printed.
+        std::lock_guard<std::mutex> lock(g_profMutex);
+        if (!ProfAclMgr::instance()->IsInited()) {
+            MSPROF_LOGI("Profiling is not initialized, aclprofStop returns success directly.");
+            return ACL_SUCCESS;
+        }
+    }
+
     PROF_CONFIG_CONST_PTR config = profilerConfig;
     if (profilerConfig == nullptr) {
         config = ProfGetCurrentConfig();

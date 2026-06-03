@@ -35,6 +35,7 @@ const std::string PROFILING_STATE_FILE = "job_state.ini";
 struct ProfileParams : public BaseInfo {
     std::string job_id;
     std::string result_dir;
+    std::string resultPath;
     std::string storageLimit;
     std::string profiling_mode;
     std::string devices;

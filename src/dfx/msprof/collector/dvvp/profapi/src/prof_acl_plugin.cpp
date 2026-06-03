@@ -211,6 +211,28 @@ int32_t ProfAclPlugin::ProfAclRegisterDeviceCallback()
     return 0;
 }
 
+bool ProfAclPlugin::IsInited()
+{
+    PthreadOnce(&profIsInitedFlag_, []()-> void { ProfAclPlugin::instance()->LoadProfIsInited();});
+    if (profIsInited_ != nullptr) {
+        return profIsInited_();
+    }
+    return false;
+}
+
+std::string ProfAclPlugin::GetResultPath()
+{
+    PthreadOnce(&profGetResultPathFlag_, []()-> void { ProfAclPlugin::instance()->LoadProfGetResultPath();});
+    if (profGetResultPath_ != nullptr) {
+        char path[4096] = {0};
+        int32_t ret = profGetResultPath_(path, sizeof(path));
+        if (ret == PROFILING_SUCCESS) {
+            return std::string(path);
+        }
+    }
+    return "";
+}
+
 void ProfAclPlugin::LoadProfAclInit()
 {
     if (msProfLibHandle_ != nullptr) {
@@ -376,6 +398,22 @@ void ProfAclPlugin::LoadProfAclRegisterDeviceCallback()
     if (msProfLibHandle_ != nullptr) {
         profAclRegisterDeviceCallback_ = reinterpret_cast<ProfAclRegisterDeviceCallbackFunc>(
             dlsym(msProfLibHandle_, "ProfAclRegisterDeviceCallback"));
+    }
+}
+
+void ProfAclPlugin::LoadProfIsInited()
+{
+    if (msProfLibHandle_ != nullptr) {
+        profIsInited_ = reinterpret_cast<ProfIsInitedFunc>(
+            dlsym(msProfLibHandle_, "ProfIsInited"));
+    }
+}
+
+void ProfAclPlugin::LoadProfGetResultPath()
+{
+    if (msProfLibHandle_ != nullptr) {
+        profGetResultPath_ = reinterpret_cast<ProfGetResultPathFunc>(
+            dlsym(msProfLibHandle_, "ProfGetResultPath"));
     }
 }
 }

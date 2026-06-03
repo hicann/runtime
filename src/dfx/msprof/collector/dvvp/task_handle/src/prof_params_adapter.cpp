@@ -221,6 +221,9 @@ int32_t ProfParamsAdapter::CheckApiConfigSupport(aclprofConfigType type) const
     if (type == ACL_PROF_STORAGE_LIMIT) {
         return PROFILING_SUCCESS;
     }
+    if (type == ACL_PROF_PATH) {
+        return PROFILING_SUCCESS;
+    }
     if (platformAclApiMap.find(type) != platformAclApiMap.end()) {
         for (const auto& feature : platformAclApiMap.at(type)) {
             if (Platform::instance()->CheckIfSupport(feature)) {
@@ -280,6 +283,9 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValid(SHARED_PTR_ALIA<analysis::dvvp:
 {
     FUNRET_CHECK_EXPR_ACTION(params == nullptr, return PROFILING_FAILED, "Check config failed, the params is nullptr.");
     switch (type) {
+        case ACL_PROF_PATH:
+            params->resultPath = config;
+            return PROFILING_SUCCESS;
         case ACL_PROF_STORAGE_LIMIT:
             params->storageLimit = config;
             if (ParamValidation::instance()->CheckStorageLimit(params)) {

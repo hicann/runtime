@@ -28,6 +28,8 @@ extern "C" MSVP_PROF_API int32_t ProfAclStop(Msprof::Engine::Intf::ProfType type
     PROF_CONFIG_CONST_PTR profilerConfig);
 extern "C" MSVP_PROF_API int32_t ProfAclFinalize(Msprof::Engine::Intf::ProfType type);
 extern "C" MSVP_PROF_API int32_t ProfAclSetConfig(aclprofConfigType type, const char *config, size_t configLength);
+extern "C" MSVP_PROF_API bool ProfIsInited();
+extern "C" MSVP_PROF_API int32_t ProfGetResultPath(char *path, uint32_t len);
 extern "C" MSVP_PROF_API int32_t ProfAclSubscribe(Msprof::Engine::Intf::ProfType type, uint32_t modelId,
     const aclprofSubscribeConfig *profSubscribeConfig);
 extern "C" MSVP_PROF_API Msprofiler::AclApi::ProfCreateTransportFunc ProfCreateParsertransport();

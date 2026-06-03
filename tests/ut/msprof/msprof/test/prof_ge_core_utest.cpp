@@ -275,6 +275,11 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfStop_Fail)
     uint32_t devList[1] = {0};
     auto *cfg = ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, 0);
     ASSERT_NE(nullptr, cfg);
+    // PrepareStopAclApi short-circuits to success when !IsInited(), so force IsInited() to
+    // return true to reach the ProfStopPrecheck failure path under test.
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsInited)
+        .stubs()
+        .will(returnValue(true));
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopPrecheck)
         .stubs()
         .will(returnValue(ACL_ERROR_PROFILING_FAILURE));

@@ -180,7 +180,8 @@ TEST_F(PLATFORM_UTEST, NtsMetricsValidationAcceptsCustomEventsAndRejectsInvalidI
 
 TEST_F(PLATFORM_UTEST, AclprofSetConfigRejectsInvalidNtsMetricsArgs) {
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_OPTYPE) + 1, static_cast<int32_t>(ACL_PROF_NTS_METRICS));
-    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_PATH));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
 
     std::string config("PipeUtilization");
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), 0));
