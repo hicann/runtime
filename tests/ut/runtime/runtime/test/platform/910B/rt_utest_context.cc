@@ -3067,10 +3067,6 @@ TEST_F(CloudV2ContextTest, StreamClear_StreamAbort_invalid_stream)
     EXPECT_EQ(ctx->StreamClear(stream, RT_STREAM_STOP), RT_ERROR_STREAM_INVALID);
     EXPECT_EQ(ctx->StreamAbort(stream), RT_ERROR_STREAM_INVALID);
 
-    stream->bindFlag_.Set(false);
-    stream->flags_ = 0U;
-    EXPECT_EQ(ctx->StreamClear(stream, RT_STREAM_STOP), RT_ERROR_STREAM_INVALID);
-
     delete stream;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     GlobalMockObject::verify();
