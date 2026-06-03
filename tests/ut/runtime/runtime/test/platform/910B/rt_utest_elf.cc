@@ -1408,6 +1408,12 @@ TEST_F(CloudV2ELFTest, GetFunctionMetaInfoSize)
     error = GetFunctionMetaInfoSize(elfData, "", FuncTLVType, &metaSize);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
+    error = GetFunctionMetaInfoSize(elfData, "", RT_FUNCTION_TYPE_INVALID, &metaSize);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    error = GetFunctionMetaInfoSize(elfData, "", rtFunctionMetaType(100), &metaSize);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
     elfData->obj_size = 1;
     elfData->section_headers[0].sh_size = 1;
     elfData->section_headers[0].sh_offset = 1;
@@ -1564,6 +1570,8 @@ TEST_F(CloudV2ELFTest, rtFunctionGetMetaInfoSize)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     prog->elfData_ = new rtElfData;
     error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), RT_FUNCTION_TYPE_INVALID, &metaSize);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    error = rtFunctionGetMetaInfoSize(RtPtrToPtr<rtFuncHandle>(funcHandle), rtFunctionMetaType(100), &metaSize);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     delete prog->elfData_;
     prog->elfData_ = nullptr;

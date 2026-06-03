@@ -36,6 +36,36 @@ bool IsAssertOnly(const uint32_t metaFlag)
     }
     return true;
 }
+
+static const char_t *g_functionMetaTypeStr[] = {
+    "RT_FUNCTION_TYPE_INVALID",              // 0
+    "RT_FUNCTION_TYPE_KERNEL_TYPE",          // 1
+    "RT_FUNCTION_TYPE_CROSS_CORE",           // 2
+    "RT_FUNCTION_TYPE_MIX_TASK_RATION",      // 3
+    "RT_FUNCTION_TYPE_DFX_TYPE",             // 4
+    "RT_FUNCTION_TYPE_DFX_ARG_INFO",         // 5
+    "RT_FUNCTION_TYPE_L0_EXCEPTION_DFX_IS_TIK", // 6
+    "RT_FUNCTION_TYPE_COMPILER_ALLOC_UB_SIZE",  // 7
+    "RT_FUNCTION_TYPE_SU_STACK_SIZE",        // 8
+    "RT_FUNCTION_TYPE_SIMT_WARP_STACK_SIZE", // 9
+    "RT_FUNCTION_TYPE_SIMT_DVG_WARP_STACK_SIZE", // 10
+    "RT_FUNCTION_TYPE_EARLY_START_ENABLE",   // 11
+    "RT_FUNCTION_TYPE_AIV_TYPE_FLAG",        // 12
+    "RT_FUNCTION_TYPE_DETERMINISTIC_INFO",   // 13
+    "RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO",  // 14
+    "RT_FUNCTION_TYPE_BLOCK_DIM_INFO",       // 15
+    "RT_FUNCTION_TYPE_PARAM_SUMMARY",        // 16
+    "RT_FUNCTION_TYPE_PARAM_INFO",           // 17
+    "RT_FUNCTION_TYPE_SCHED_MODE_INFO",      // 18
+};
+
+static std::string GetFunctionMetaTypeStr(const uint16_t type)
+{
+    if ((type == 0U) || (type > RT_FUNCTION_TYPE_SCHED_MODE_INFO)) {
+        return "unknown(" + std::to_string(type) + ")";
+    }
+    return g_functionMetaTypeStr[type];
+}
 } // namespace
 
 namespace cce {
@@ -1702,8 +1732,11 @@ static rtError_t GetMetaInfoInternal(const rtElfData * const elfData, const std:
                                       const uint16_t type, std::vector<std::pair<void *, uint32_t>> &metaInfo)
 {
     NULL_PTR_RETURN(elfData, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_WARN(((type > RT_FUNCTION_TYPE_SCHED_MODE_INFO) || (type == 0)), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Meta type %u is invalid.", type);
+    if ((type > RT_FUNCTION_TYPE_SCHED_MODE_INFO) || (type == 0U)) {
+        const std::string typeStr = GetFunctionMetaTypeStr(type);
+        RT_LOG(RT_LOG_WARNING, "Meta type %s is invalid.", typeStr.c_str());
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
 
     const std::string targetSection = ELF_SECTION_PREFIX_ASCEND_META + kernelName;
     Elf_Internal_Shdr *section = nullptr;
@@ -1719,7 +1752,7 @@ static rtError_t GetMetaInfoInternal(const rtElfData * const elfData, const std:
     metaInfo = GetMetaInfo(elfData, section, type);
     if (metaInfo.empty()) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1014,
-            "Failed to find the meta information of the " + std::to_string(type) + 
+            "Failed to find the meta information of the " + GetFunctionMetaTypeStr(type) + 
             " type from the binary file of the operator. The kernel name of the corresponding operator is " + 
             kernelName);
         return RT_ERROR_INVALID_VALUE;
