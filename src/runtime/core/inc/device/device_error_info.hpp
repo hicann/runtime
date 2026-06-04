@@ -40,6 +40,17 @@ namespace runtime {
     constexpr uint32_t CCU_TASK_LINK_ERROR = 0x05U;
     constexpr uint32_t CCU_TASK_LOCAL_MEM_ERROR_SUBSTATUS = 0x0U;
     constexpr uint32_t CCU_TASK_READ_LOCAL_MEM_ERROR_SUBSTATUS = 0xCU;
+    constexpr uint32_t RINGBUFFER_MAGIC = 0xA55A2020U;
+    constexpr uint32_t RINGBUFFER_ONE_ELEMENT_LENGTH = 4096U;
+    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH = 12288U; // 4K + 8K
+    constexpr uint32_t RINGBUFFER_LEN = 10U;
+    // total 2M, used:element(47k) * 30 = 1410k, stream snap shot:17k, TSCH_CAPABILITY_LEN:10k
+    constexpr uint32_t RINGBUFFER_LEN_DAVID = 30U;
+    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 48128U; // 47k for David
+    constexpr uint32_t MAX_STREAM_NUM_CLOUD = 2048U;
+    constexpr uint32_t MAX_AIC_ID = 64U;
+    constexpr uint32_t MAX_AIV_ID = 64U;
+    constexpr uint32_t MAX_DEV_ID = 16U;
 
 enum rtErrorType : std::uint8_t {
     AICORE_ERROR = 0,
@@ -59,8 +70,44 @@ enum rtErrorType : std::uint8_t {
     AICORE_TIMEOUT_DFX,
     FUSION_KERNEL_ERROR,
     CCU_ERROR,
+    AICORE_EXT_ERROR,
+    AIVECTOR_EXT_ERROR,
     ERROR_TYPE_BUTT
 };
+
+// Base error elements carry the original error payload and may be followed by matched Ext elements.
+inline bool IsRingBufferBaseErrorType(uint32_t errorType)
+{
+    return (
+        errorType == static_cast<uint32_t>(AICORE_ERROR) || errorType == static_cast<uint32_t>(AIVECTOR_ERROR) ||
+        errorType == static_cast<uint32_t>(FFTS_PLUS_AICORE_ERROR) ||
+        errorType == static_cast<uint32_t>(FFTS_PLUS_AIVECTOR_ERROR) ||
+        errorType == static_cast<uint32_t>(FUSION_KERNEL_ERROR));
+}
+
+// Ext error elements only supplement the previous matched base element and are skipped if standalone.
+inline bool IsRingBufferExtErrorType(uint32_t errorType)
+{
+    return (
+        errorType == static_cast<uint32_t>(AICORE_EXT_ERROR) || errorType == static_cast<uint32_t>(AIVECTOR_EXT_ERROR));
+}
+
+// Check whether extType can supplement baseType in the ringbuffer protocol.
+inline bool IsMatchedRingBufferExtType(uint32_t baseType, uint32_t extType)
+{
+    if ((baseType == static_cast<uint32_t>(AICORE_ERROR)) ||
+        (baseType == static_cast<uint32_t>(FFTS_PLUS_AICORE_ERROR))) {
+        return extType == static_cast<uint32_t>(AICORE_EXT_ERROR);
+    }
+    if ((baseType == static_cast<uint32_t>(AIVECTOR_ERROR)) ||
+        (baseType == static_cast<uint32_t>(FFTS_PLUS_AIVECTOR_ERROR))) {
+        return extType == static_cast<uint32_t>(AIVECTOR_EXT_ERROR);
+    }
+    if (baseType == static_cast<uint32_t>(FUSION_KERNEL_ERROR)) {
+        return IsRingBufferExtErrorType(extType);
+    }
+    return false;
+}
 
 extern const std::map<uint32_t, std::string> g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList;
 
@@ -157,6 +204,43 @@ struct RingBufferElementInfo {
     uint16_t vfId;
     uint8_t reserved[6];
 };
+
+// it is control info in device ringbuffer.
+struct DevRingBufferCtlInfo {
+    uint32_t magic;  // used to judge whether the buffer is valid
+    uint32_t head;   // read pointer
+    uint32_t tail;   // write pointer
+    uint32_t ringBufferLen;
+    uint64_t pid;    // host pid
+    uint32_t elementSize; // one ringbuffer element size
+    uint32_t reserved; // 8Byte alion
+};
+
+struct RtsTimeoutStreamSnapshotInfo {
+    uint16_t stream_id;
+    uint16_t task_id;
+    uint16_t sq_id : 12;
+    uint16_t sq_fsm : 4;
+    uint16_t acsq_id : 8;
+    uint16_t acsq_fsm : 6;
+    uint16_t is_swap_in : 1;
+    uint16_t rsv : 1;
+};
+
+struct RtsTimeoutStreamSnapshot {
+    uint16_t stream_num;
+    uint16_t rsv;
+    RtsTimeoutStreamSnapshotInfo detailInfo[MAX_STREAM_NUM_CLOUD];
+};
+
+struct AicErrorInfo final {
+    uint64_t last_error_pc[MAX_AIC_ID + MAX_AIV_ID];
+};
+
+constexpr uint32_t DEVICE_ERROR_RINGBUFFER_SIZE =
+    ((RINGBUFFER_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
+constexpr uint32_t DEVICE_ERROR_EXT_RINGBUFFER_SIZE =
+    ((RINGBUFFER_EXT_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
 
 struct StreamTaskId {
     uint16_t streamId = 0xFFFFU;

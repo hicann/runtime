@@ -39,6 +39,22 @@
 using namespace testing;
 using namespace cce::runtime;
 
+static uint64_t g_expectCoreId0 = 0U;
+static uint64_t g_expectCoreId1 = 0U;
+static uint64_t g_expectAicCond = 0U;
+static uint64_t g_expectRsvExt0 = 0U;
+static uint32_t g_expectAicCondIndex = 1U;
+
+rtError_t CheckStarsCoreErrorInfoStub(const StarsDeviceErrorInfo * const info,
+    const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr)
+{
+    EXPECT_EQ(info->u.coreErrorInfo.info[0].coreId, g_expectCoreId0);
+    EXPECT_EQ(info->u.coreErrorInfo.info[1].coreId, g_expectCoreId1);
+    EXPECT_EQ(info->u.coreErrorInfo.info[g_expectAicCondIndex].aicCond, g_expectAicCond);
+    EXPECT_EQ(info->u.coreErrorInfo.info[g_expectAicCondIndex].rsvExt[0], g_expectRsvExt0);
+    return RT_ERROR_NONE;
+}
+
 class DeviceTest : public testing::Test
 {
 protected:
@@ -824,6 +840,188 @@ TEST_F(DeviceTest, STARS_CORE_Normal_0)
         errorInfo->u.coreErrorInfo.info[1].aicError[5] = 0x27;
 
         error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+        free(ctlInfo);
+    }
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
+TEST_F(DeviceTest, STARS_CORE_Merge_Base_NoExt)
+{
+    rtSetDevice(1);
+    Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo *ctlInfo  = (DevRingBufferCtlInfo *)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    if (ctlInfo != nullptr) {
+        memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+        ctlInfo->tail = 1;
+        ctlInfo->head = 0;
+        ctlInfo->magic = RINGBUFFER_MAGIC;
+        ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
+        uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+        RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
+        StarsDeviceErrorInfoRingBuffer *errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer *>(info + 1);
+        info->errorType = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.type = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.coreNum = 2;
+        errorInfo->u.coreErrorInfo.info[0].coreId = 5;
+        errorInfo->u.coreErrorInfo.info[1].coreId = 25;
+        g_expectCoreId0 = 5;
+        g_expectCoreId1 = 25;
+        g_expectAicCond = 0U;
+        g_expectRsvExt0 = 0U;
+        g_expectAicCondIndex = 1U;
+        MOCKER_CPP(&DeviceErrorProc::ProcessStarsCoreErrorInfo).stubs().will(invoke(CheckStarsCoreErrorInfoStub));
+        rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+        free(ctlInfo);
+    }
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
+TEST_F(DeviceTest, STARS_CORE_Merge_Base_WithExt)
+{
+    rtSetDevice(1);
+    Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo *ctlInfo  = (DevRingBufferCtlInfo *)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    if (ctlInfo != nullptr) {
+        memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+        ctlInfo->tail = 2;
+        ctlInfo->head = 0;
+        ctlInfo->magic = RINGBUFFER_MAGIC;
+        ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
+        uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+        RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
+        StarsDeviceErrorInfoRingBuffer *errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer *>(info + 1);
+        info->errorType = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.type = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.coreNum = 2;
+        errorInfo->u.coreErrorInfo.info[0].coreId = 5;
+        errorInfo->u.coreErrorInfo.info[1].coreId = 25;
+
+        uintptr_t extAddr = infoAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+        RingBufferElementInfo *extInfo = (RingBufferElementInfo *)extAddr;
+        StarsCoreErrorInfoExt *extData = reinterpret_cast<StarsCoreErrorInfoExt *>(extInfo + 1);
+        extInfo->errorType = AICORE_EXT_ERROR;
+        extData->comm.coreNum = 2;
+        extData->info[1].coreId = 25;
+        extData->info[1].validSize = sizeof(extData->info[1].aicCond) + sizeof(extData->info[1].rsv[0]);
+        extData->info[1].aicCond = 0x1234U;
+        extData->info[1].rsv[0] = 0x13579BDFU;
+
+        g_expectCoreId0 = 5;
+        g_expectCoreId1 = 25;
+        g_expectAicCond = 0x1234U;
+        g_expectRsvExt0 = 0x13579BDFU;
+        g_expectAicCondIndex = 1U;
+        MOCKER_CPP(&DeviceErrorProc::ProcessStarsCoreErrorInfo).stubs().will(invoke(CheckStarsCoreErrorInfoStub));
+        rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 2);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+        free(ctlInfo);
+    }
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
+TEST_F(DeviceTest, STARS_CORE_Merge_Base_WithMismatchedExt)
+{
+    rtSetDevice(1);
+    Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo *ctlInfo  = (DevRingBufferCtlInfo *)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    if (ctlInfo != nullptr) {
+        memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+        ctlInfo->tail = 2;
+        ctlInfo->head = 0;
+        ctlInfo->magic = RINGBUFFER_MAGIC;
+        ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
+        uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+        RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
+        StarsDeviceErrorInfoRingBuffer *errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer *>(info + 1);
+        info->errorType = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.type = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.coreNum = 2;
+        errorInfo->u.coreErrorInfo.info[0].coreId = 5;
+        errorInfo->u.coreErrorInfo.info[1].coreId = 25;
+
+        uintptr_t extAddr = infoAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+        RingBufferElementInfo *extInfo = (RingBufferElementInfo *)extAddr;
+        StarsCoreErrorInfoExt *extData = reinterpret_cast<StarsCoreErrorInfoExt *>(extInfo + 1);
+        extInfo->errorType = AIVECTOR_EXT_ERROR;
+        extData->comm.coreNum = 1;
+        extData->info[0].coreId = 25;
+        extData->info[0].validSize = sizeof(extData->info[0].aicCond) + sizeof(extData->info[0].rsv[0]);
+        extData->info[0].aicCond = 0x1234U;
+        extData->info[0].rsv[0] = 0x13579BDFU;
+
+        g_expectCoreId0 = 5;
+        g_expectCoreId1 = 25;
+        g_expectAicCond = 0U;
+        g_expectRsvExt0 = 0U;
+        g_expectAicCondIndex = 1U;
+        MOCKER_CPP(&DeviceErrorProc::ProcessStarsCoreErrorInfo).stubs().will(invoke(CheckStarsCoreErrorInfoStub));
+        rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 2);
+        EXPECT_EQ(error, RT_ERROR_NONE);
+        free(ctlInfo);
+    }
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
+TEST_F(DeviceTest, STARS_CORE_Merge_Base_WithDuplicateExtCoreIdKeepsFirstMatch)
+{
+    rtSetDevice(1);
+    Device* device= ((Runtime *)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo *ctlInfo  = (DevRingBufferCtlInfo *)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    if (ctlInfo != nullptr) {
+        memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+        ctlInfo->tail = 2;
+        ctlInfo->head = 0;
+        ctlInfo->magic = RINGBUFFER_MAGIC;
+        ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
+        uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+        RingBufferElementInfo *info = (RingBufferElementInfo *)infoAddr;
+        StarsDeviceErrorInfoRingBuffer *errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer *>(info + 1);
+        info->errorType = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.type = AICORE_ERROR;
+        errorInfo->u.coreErrorInfo.comm.coreNum = 2;
+        errorInfo->u.coreErrorInfo.info[0].coreId = 0;
+        errorInfo->u.coreErrorInfo.info[1].coreId = 25;
+
+        uintptr_t extAddr = infoAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+        RingBufferElementInfo *extInfo = (RingBufferElementInfo *)extAddr;
+        StarsCoreErrorInfoExt *extData = reinterpret_cast<StarsCoreErrorInfoExt *>(extInfo + 1);
+        extInfo->errorType = AICORE_EXT_ERROR;
+        extData->comm.coreNum = 2;
+        extData->info[0].coreId = 0;
+        extData->info[0].validSize = sizeof(extData->info[0].aicCond) + sizeof(extData->info[0].rsv[0]);
+        extData->info[0].aicCond = 0x1234U;
+        extData->info[0].rsv[0] = 0x13579BDFU;
+        extData->info[1].coreId = 0;
+
+        g_expectCoreId0 = 0;
+        g_expectCoreId1 = 25;
+        g_expectAicCond = 0x1234U;
+        g_expectRsvExt0 = 0x13579BDFU;
+        g_expectAicCondIndex = 0U;
+        MOCKER_CPP(&DeviceErrorProc::ProcessStarsCoreErrorInfo).stubs().will(invoke(CheckStarsCoreErrorInfoStub));
+        rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 2);
         EXPECT_EQ(error, RT_ERROR_NONE);
         free(ctlInfo);
     }

@@ -680,6 +680,8 @@ static void GetRegInfoErrReg(const DavidOneCoreErrorInfo& info, rtExceptionErrRe
     regInfo.errReg[RT_V200_L1_ERROR_T0_1] = static_cast<uint32_t>(info.l1Error >> REG_OFFSET);
     regInfo.errReg[RT_V200_SC_ERR_INFO_T0_0] = static_cast<uint32_t>(info.scErrInfo);
     regInfo.errReg[RT_V200_SC_ERR_INFO_T0_1] = static_cast<uint32_t>(info.scErrInfo >> REG_OFFSET);
+    regInfo.errReg[RT_V200_SU_SPR_CONDITION_0] = static_cast<uint32_t>(info.aicCond);
+    regInfo.errReg[RT_V200_SU_SPR_CONDITION_1] = static_cast<uint32_t>(info.aicCond >> REG_OFFSET);
 }
 
 static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, const uint32_t coreIdx,
@@ -741,7 +743,8 @@ rtError_t ProcessDavidStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info
             "sc error info: %#" PRIx64 ", su error info: %#" PRIx64 ",%#" PRIx64 ", "
             "mte error info: %#" PRIx64 ", vec error info: %#" PRIx64 ", "
             "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
-            "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ".\n"
+            "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ", "
+            "aic cond: %#" PRIx64 ".\n"
             "The extend info: errcode:(%s) errorStr: %s subErrType: %#x.\n"
             "For details, see the troubleshooting document on the Ascend official website. Search for the keyword \"AI Core Error\".",
             info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
@@ -753,7 +756,7 @@ rtError_t ProcessDavidStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info
             info->u.davidCoreErrorInfo.info[coreIdx].mteErrInfo[0], info->u.davidCoreErrorInfo.info[coreIdx].vecErrInfo[0],
             info->u.davidCoreErrorInfo.info[coreIdx].cubeErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo,
             info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask, info->u.davidCoreErrorInfo.info[coreIdx].paraBase,
-            info->u.davidCoreErrorInfo.info[coreIdx].mteError[0],
+            info->u.davidCoreErrorInfo.info[coreIdx].mteError[0], info->u.davidCoreErrorInfo.info[coreIdx].aicCond,
             errorCode.c_str(), errorString.c_str(), info->u.davidCoreErrorInfo.info[coreIdx].subErrType);
     }
     return RT_ERROR_NONE;

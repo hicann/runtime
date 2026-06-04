@@ -231,7 +231,9 @@ typedef enum ErrRegInfoIdxV100 {
     RT_V100_VEC_ERR_0,
     RT_V100_VEC_ERR_1,
     RT_V100_FIXP_ERR_0,
-    RT_V100_FIXP_ERR_1
+    RT_V100_FIXP_ERR_1,
+    RT_V100_AIC_COND_0,
+    RT_V100_AIC_COND_1
 } rtErrRegInfoIdxV100_t;
 
 #define RT_ERR_REG_NUMS  (64U)

@@ -16,12 +16,6 @@
 
 namespace {
     constexpr uint32_t MAX_BIT_LEN = 64U;
-    constexpr uint32_t RINGBUFFER_MAGIC = 0xA55A2020U;
-    constexpr uint32_t RINGBUFFER_ONE_ELEMENT_LENGTH = 4096U;
-    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH = 12288U; // 4K + 8K
-    constexpr uint32_t RINGBUFFER_LEN = 10U;
-    // total 2M, used:element(47k) * 30 = 1410k, stream snap shot:17k, TSCH_CAPABILITY_LEN:10k
-    constexpr uint32_t RINGBUFFER_LEN_DAVID = 30U;
     constexpr uint32_t DEVICE_ERR_MSG_MAGIC = 0xA55A2021U;
     constexpr uint32_t MAX_CORE_BLOCK_NUM  = 50U;
     constexpr uint32_t MAX_CORE_NUM  = 75U;
@@ -29,16 +23,13 @@ namespace {
     constexpr uint32_t RINGBUFFER_ERRCODE0_OFFSET = 0U;
     constexpr uint32_t RINGBUFFER_ERRCODE2_OFFSET = 64U;
     constexpr uint32_t RINGBUFFER_ERRCODE4_OFFSET = 128U;
-    constexpr uint32_t MAX_STREAM_NUM_CLOUD = 2048U;
     constexpr uint32_t RINGBUFFER_HCCL_FFTSPLUS_MAX_CONTEXT_NUM = 8U;
 	constexpr uint32_t MAX_CORE_BLOCK_NUM_ON_DAVID  = 72U;
-    constexpr uint32_t RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID = 48128U; // 47k for David
-    constexpr uint32_t MAX_AIC_ID = 64U;
-    constexpr uint32_t MAX_AIV_ID = 64U;
-    constexpr uint32_t MAX_DEV_ID = 16U;
     constexpr uint32_t MAX_TASK_NUM_ONE_CORE = 2U;
     constexpr uint32_t RT_STARS_V2_AICORE_NUM = 36U;
     constexpr uint32_t RT_STARS_V2_AIVECTOR_NUM = 72U;
+    constexpr uint32_t STARS_CORE_ERROR_EXT_RSV_NUM = 28U;
+    constexpr uint32_t STARS_V2_CORE_ERROR_EXT_RSV_NUM = 64U;
 }
 
 namespace cce {
@@ -163,6 +154,64 @@ struct starsOstTaskOneCoreInfo {
     uint64_t pcStart;
 };
 
+// 仅用作解析RingBuffer, 不用做逻辑处理。
+// 后续不得在末尾或中间新增字段；新增寄存器必须放到对应Ext结构中。
+struct DavidOneCoreErrorInfoRingBuffer {
+    uint64_t coreId;
+    uint64_t pcStart;
+    uint64_t currentPC;
+    uint64_t scErrInfo;
+    uint64_t suErrInfo[4];
+    uint64_t mteErrInfo[3];
+    uint64_t vecErrInfo[3];
+    uint64_t cubeErrInfo;
+    uint64_t l1ErrInfo;
+    uint64_t aicErrorMask;
+    uint64_t paraBase;
+    uint32_t runStall;
+    uint32_t aiCoreInt;
+    uint32_t eccEn;
+    uint32_t axiClampCtrl;
+    uint64_t scError;
+    uint64_t suError;
+    uint64_t mteError[2];
+    uint64_t vecError;
+    uint64_t cubeError;
+    uint64_t l1Error;
+    uint64_t clkGateMask;
+    uint64_t dbgAddr;
+    uint64_t dbgData0;
+    uint64_t dbgData1;
+    uint64_t dbgData2;
+    uint64_t dbgData3;
+    uint64_t dfxData;
+    uint32_t subErrType;
+    uint32_t isConcurrentExe;
+    starsOstTaskOneCoreInfo ostTaskOneCore[MAX_TASK_NUM_ONE_CORE];
+};
+
+struct DavidCoreErrorInfoRingBuffer {
+    StarsErrorCommonInfo comm;
+    DavidOneCoreErrorInfoRingBuffer info[MAX_CORE_BLOCK_NUM_ON_DAVID];
+};
+
+// 仅用作解析RingBuffer中aic/aiv扩展, 不用做逻辑处理。
+// validSize表示从aicCond开始的连续有效payload字节数；后续新增Ext寄存器只能追加在aicCond之后、rsv之前。
+// 并确保DavidOneCoreErrorInfo从aicCond开始的payload布局一致。
+struct DavidOneCoreErrorInfoExt {
+    uint32_t coreId;
+    uint32_t validSize;
+    uint64_t aicCond;
+    uint64_t rsv[STARS_V2_CORE_ERROR_EXT_RSV_NUM];
+};
+
+struct DavidCoreErrorInfoExt {
+    StarsErrorCommonInfo comm;
+    DavidOneCoreErrorInfoExt info[MAX_CORE_BLOCK_NUM_ON_DAVID];
+};
+
+// 汇聚 DavidOneCoreErrorInfoRingBuffer和DavidOneCoreErrorInfoExt 寄存器信息，用于后续逻辑处理。
+// base字段必须与DavidOneCoreErrorInfoRingBuffer保持前缀布局一致；Ext字段只能从aicCond开始追加。
 struct DavidOneCoreErrorInfo {
     uint64_t coreId;
     uint64_t pcStart;
@@ -196,8 +245,12 @@ struct DavidOneCoreErrorInfo {
     uint64_t dbgData3;
     uint64_t dfxData;
     uint32_t subErrType;
-    uint32_t isConcurrentExe; //aic是否同时执行两个task的标记位
+    uint32_t isConcurrentExe; // aic是否同时执行两个task的标记位
     starsOstTaskOneCoreInfo ostTaskOneCore[MAX_TASK_NUM_ONE_CORE];
+    uint64_t aicCond; // 汇聚aicCond
+    // 从aicCond开始的payload布局必须与DavidOneCoreErrorInfoExt从aicCond开始的payload布局一致。
+    // 后续新增Ext寄存器只能在尾部追加，并通过validSize控制实际拷贝长度。
+    uint64_t rsvExt[STARS_V2_CORE_ERROR_EXT_RSV_NUM];
 };
 
 struct DavidCoreErrorInfo {
@@ -205,6 +258,54 @@ struct DavidCoreErrorInfo {
     DavidOneCoreErrorInfo info[MAX_CORE_BLOCK_NUM_ON_DAVID];
 };
 
+// 仅用作ringbuffer解析，不用于逻辑处理。
+// 新增寄存器必须放到对应Ext结构中。
+struct StarsOneCoreErrorInfoRingBuffer {
+    uint64_t coreId;
+    uint64_t aicError[3];
+    uint64_t pcStart;
+    uint64_t currentPC;
+    uint64_t vecErrInfo;
+    uint64_t mteErrInfo;
+    uint64_t ifuErrInfo;
+    uint64_t ccuErrInfo;
+    uint64_t cubeErrInfo;
+    uint64_t biuErrInfo;
+    uint32_t fixPError0;
+    uint32_t fixPError1;
+    uint64_t aicErrorMask;
+    uint64_t paraBase;
+    uint32_t fsmId;
+    uint32_t fsmTslotId;
+    uint32_t fsmThreadId;
+    uint32_t fsmCxtId;
+    uint32_t fsmBlkId;
+    uint32_t fsmSublkId;
+    uint32_t subErrType;
+};
+
+struct StarsCoreErrorInfoRingBuffer {
+    StarsErrorCommonInfo comm;
+    StarsOneCoreErrorInfoRingBuffer info[MAX_CORE_BLOCK_NUM];
+};
+
+// 仅用作解析RingBuffer中aic/aiv扩展, 不用做逻辑处理。
+// validSize表示从aicCond开始的连续有效payload字节数；后续新增Ext寄存器只能追加在aicCond之后、rsv之前。
+// 修改该结构时必须同步TS侧协议，并确保StarsOneCoreErrorInfo从aicCond开始的payload布局一致。
+struct StarsOneCoreErrorInfoExt {
+    uint32_t coreId;
+    uint32_t validSize;
+    uint64_t aicCond;
+    uint64_t rsv[STARS_CORE_ERROR_EXT_RSV_NUM];
+};
+
+struct StarsCoreErrorInfoExt {
+    StarsErrorCommonInfo comm;
+    StarsOneCoreErrorInfoExt info[MAX_CORE_BLOCK_NUM];
+};
+
+// 汇聚 StarsOneCoreErrorInfoRingBuffer和StarsOneCoreErrorInfoExt 寄存器信息，用于后续逻辑处理。
+// base字段必须与StarsOneCoreErrorInfoRingBuffer保持前缀布局一致；Ext字段只能从aicCond开始追加。
 struct StarsOneCoreErrorInfo {
     uint64_t coreId;
     uint64_t aicError[3];
@@ -227,6 +328,10 @@ struct StarsOneCoreErrorInfo {
     uint32_t fsmBlkId;
     uint32_t fsmSublkId;
     uint32_t subErrType;
+    uint64_t aicCond;
+    // 从aicCond开始的payload布局必须与StarsOneCoreErrorInfoExt从aicCond开始的payload布局一致。
+    // 后续新增Ext寄存器只能在尾部追加，并通过validSize控制实际拷贝长度。
+    uint64_t rsvExt[STARS_CORE_ERROR_EXT_RSV_NUM];
 };
 
 struct StarsCoreErrorInfo {
@@ -392,7 +497,62 @@ struct StarsFusionKernelErrorInfo {
     DavidCoreErrorInfo aivInfo;
 };
 
-// it is format data in one element from ringbuffer.
+// 仅用作RingBuffer解析，不用于逻辑处理
+struct StarsFusionKernelErrorInfoRingBuffer {
+    StarsErrorCommonInfo comm;
+    uint16_t sqeLength;
+    uint16_t subType;
+    uint32_t cqeStatus;
+    uint32_t aicError : 1;
+    uint32_t aivError : 1;
+    uint32_t aicpuError : 1;
+    uint32_t ccuError : 1;
+    uint32_t resv : 28;
+    rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX];
+    union {
+        StarsAicpuErrorInfo aicpuInfo;
+        StarsCcuErrorInfo ccuInfo;
+    } u;
+    DavidCoreErrorInfoRingBuffer aicInfo;
+    DavidCoreErrorInfoRingBuffer aivInfo;
+};
+
+// it is format data in one element from ringbuffer, constrained by 48128.
+// 仅用于解析ringbuffer base payload；Ext payload由Collect*ExtInfos单独解析，不作为该union分支。
+// 修改Ext结构时必须保证RingBufferElementInfo + Ext payload不超过对应elementSize。
+struct StarsDeviceErrorInfoRingBuffer {
+    union {
+        StarsCoreErrorInfoRingBuffer coreErrorInfo;
+        DavidCoreErrorInfoRingBuffer davidCoreErrorInfo;
+        StarsSdmaErrorInfo           sdmaErrorInfo;
+        StarsAicpuErrorInfo          aicpuErrorInfo;
+        StarsDvppErrorInfo           dvppErrorInfo;
+        StarsSqeErrorInfo            sqeErrorInfo;
+        StarsTimeoutErrorInfo        timeoutErrorInfo;
+        StarsHcclFftsplusTimeoutInfo hcclFftsplusTimeoutInfo;
+        StarsDsaErrorInfo            dsaErrorInfo;
+        StarsFusionKernelErrorInfoRingBuffer   fusionKernelErrorInfo;
+        StarsCcuErrorInfo            ccuErrorInfo;
+        StarsCoreTimeoutDfxInfo      coreTimeoutDfxInfo;
+        StarsV2CoreTimeoutDfxInfo    starsV2CoreTimeoutDfxInfo;
+    } u;
+};
+
+static_assert(
+    (sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfoRingBuffer)) <=
+        RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID,
+    "Element info exceeds single element capacity.");
+
+static_assert(
+    (sizeof(RingBufferElementInfo) + sizeof(StarsCoreErrorInfoExt)) <= RINGBUFFER_EXT_ONE_ELEMENT_LENGTH,
+    "Stars ext payload exceeds single element capacity.");
+
+static_assert(
+    (sizeof(RingBufferElementInfo) + sizeof(DavidCoreErrorInfoExt)) <= RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID,
+    "Stars V2 ext payload exceeds single element capacity.");
+
+// processing layer struct, no size constraint, contains merged ext info.
+// 用在逻辑处理中，与StarsDeviceErrorInfoRingBuffer搭配
 struct StarsDeviceErrorInfo {
     union {
         StarsCoreErrorInfo           coreErrorInfo;
@@ -410,49 +570,6 @@ struct StarsDeviceErrorInfo {
         StarsV2CoreTimeoutDfxInfo    starsV2CoreTimeoutDfxInfo;
     }u;
 };
-
-static_assert(
-    (sizeof(RingBufferElementInfo) + sizeof(StarsDeviceErrorInfo)) <= RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID,
- 	"Element info exceeds single element capacity.");
-
-/*********************************** ringbuffer for STARS ***********************************/
-
-// it is control info in device ringbuffer.
-struct DevRingBufferCtlInfo {
-    uint32_t magic;  // used to judge whether the buffer is valid
-    uint32_t head;   // read pointer
-    uint32_t tail;   // write pointer
-    uint32_t ringBufferLen;
-    uint64_t pid;    // host pid
-    uint32_t elementSize; // one ringbuffer element size
-    uint32_t reserved; // 8Byte alion
-};
-
-struct RtsTimeoutStreamSnapshotInfo {
-    uint16_t stream_id;
-    uint16_t task_id;
-    uint16_t sq_id : 12;
-    uint16_t sq_fsm : 4;
-    uint16_t acsq_id : 8;
-    uint16_t acsq_fsm : 6;
-    uint16_t is_swap_in : 1;
-    uint16_t rsv : 1;
-};
-
-struct RtsTimeoutStreamSnapshot {
-    uint16_t stream_num;
-    uint16_t rsv;
-    RtsTimeoutStreamSnapshotInfo detailInfo[MAX_STREAM_NUM_CLOUD];
-};
-
-struct AicErrorInfo final {
-    uint64_t last_error_pc[MAX_AIC_ID + MAX_AIV_ID];
-};
-
-constexpr uint32_t DEVICE_ERROR_RINGBUFFER_SIZE =
-    ((RINGBUFFER_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
-constexpr uint32_t DEVICE_ERROR_EXT_RINGBUFFER_SIZE =
-    ((RINGBUFFER_EXT_ONE_ELEMENT_LENGTH * RINGBUFFER_LEN) + sizeof(DevRingBufferCtlInfo) + 100U);
 }
 }
 

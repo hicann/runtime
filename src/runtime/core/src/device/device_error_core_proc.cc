@@ -25,6 +25,8 @@
 #include "ctrl_stream.hpp"
 #include "stub_task.hpp"
 #include "context_manage.hpp"
+#include "davinci_kernel_task.h"
+#include "npu_driver.hpp"
 namespace cce {
 namespace runtime {
 namespace {
@@ -193,6 +195,385 @@ const EventRasFilter g_ubMemTrafficTimeoutFilter = {
     .errorRegisterIndex = 0x03,
     .bitMask = 0x100000,
     .description = "UB MEM traffic timeout exception"
+};
+
+namespace {
+enum RtCoreErrorType : std::uint8_t {
+    // this is bit position
+    BIU_L2_READ_OOB = 0,
+    BIU_L2_WRITE_OOB,
+    CCU_CALL_DEPTH_OVRFLW,
+    CCU_DIV0,
+    CCU_ILLEGAL_INSTR,
+    CCU_LOOP_CNT_ERR,
+    CCU_LOOP_ERR,
+    CCU_NEG_SQRT,
+    CCU_UB_ECC,
+    CUBE_INVLD_INPUT,
+    CUBE_L0A_ECC,
+    CUBE_L0A_RDWR_CFLT,
+    CUBE_L0A_WRAP_AROUND,
+    CUBE_L0B_ECC,
+    CUBE_L0B_RDWR_CFLT,
+    CUBE_L0B_WRAP_AROUND,
+    CUBE_L0C_ECC,
+    CUBE_L0C_RDWR_CFLT,
+    CUBE_L0C_SELF_RDWR_CFLT,
+    CUBE_L0C_WRAP_AROUND,
+    IFU_BUS_ERR,
+    MTE_AIPP_ILLEGAL_PARAM,
+    MTE_BAS_RADDR_OBOUND,
+    MTE_BIU_RDWR_RESP,
+    MTE_CIDX_OVERFLOW,
+    MTE_DECOMP,
+    MTE_F1WPOS_LARGER_FSIZE,
+    MTE_FMAP_LESS_KERNEL,
+    MTE_FMAPWH_LARGER_L1SIZE,
+    MTE_FPOS_LARGER_FSIZE,
+    MTE_GDMA_ILLEGAL_BURST_LEN,
+    MTE_GDMA_ILLEGAL_BURST_NUM,
+    MTE_GDMA_READ_OVERFLOW,
+    MTE_GDMA_WRITE_OVERFLOW,
+    MTE_COMP,
+    MTE_ILLEGAL_FM_SIZE,
+    MTE_ILLEGAL_L1_3D_SIZE,
+    MTE_ILLEGAL_STRIDE,
+    MTE_L0A_RDWR_CFLT,
+    MTE_L0B_RDWR_CFLT,
+    MTE_L1_ECC,
+    MTE_PADDING_CFG,
+    MTE_READ_OVERFLOW,
+    MTE_ROB_ECC,
+    MTE_TLU_ECC,
+    MTE_UB_ECC,
+    MTE_UNZIP,
+    MTE_WRITE_3D_OVERFLOW,
+    MTE_WRITE_OVERFLOW,
+    VEC_DATA_EXCP_CCU,
+    VEC_DATA_EXCP_MTE,
+    VEC_DATA_EXCP_VEC,
+    VEC_DIV0,
+    VEC_ILLEGAL_MASK,
+    VEC_INF_NAN,
+    VEC_L0C_ECC,
+    VEC_L0C_RDWR_CFLT,
+    VEC_NEG_LN,
+    VEC_NEG_SQRT,
+    VEC_SAME_BLK_ADDR,
+    VEC_UB_ECC,
+    VEC_UB_SELF_RDWR_CFLT,
+    VEC_UB_WRAP_AROUND,
+    BIU_DFX_ERR,
+    /*********************** aicore error_2 for stars ***********************/
+    CCU_SBUF_ECC,
+    VEC_COL2IMG_RD_FM_ADDR_OVFLOW,
+    VEC_COL2IMG_RD_DFM_ADDR_OVFFLOW,
+    VEC_COL2IMG_ILLEGAL_FM_SIZE,
+    VEC_COL2IMG_ILLEGAL_STRIDE,
+    VEC_COL2IMG_ILLEGAL_1ST_WIN_POS,
+    VEC_COL2IMG_ILLEGAL_FETCH_POS,
+    VEC_COL2IMG_ILLEGAL_K_SIZE,
+    CCU_INF_NAN,
+    MTE_ILLEGAL_SCHN_CFG,
+    MTE_ATM_ADDR_MISALG,
+    VEC_INSTR_ADDR_MISALIGN,
+    VEC_INSTR_ILLEGAL_CFG,
+    VEC_INSTR_UNDEF,
+    CCU_ADDR_ERR,
+    CCU_BUS_ERR,
+    MTE_ERR_ADDR_MISALIGN,
+    MTE_ERR_DW_PAD_CONF_ERR,
+    MTE_ERR_DW_FMAP_H_ILLEGAL,
+    MTE_ERR_WINO_L0B_WRITE_OVERFLOW,
+    MTE_ERR_WINO_L0B_READ_OVERFLOW,
+    MTE_ERR_ILLEGAL_V_COV_PAD_CTL,
+    MTE_ERR_ILLEGAL_H_COV_PAD_CTL,
+    MTE_ERR_ILLEGAL_W_SIZE,
+    MTE_ERR_ILLEGAL_H_SIZE,
+    MTE_ERR_ILLEGAL_CHN_SIZE,
+    MTE_ERR_ILLEGAL_K_M_EXT_STEP,
+    MTE_ERR_ILLEGAL_K_M_START_POS,
+    MTE_ERR_ILLEGAL_SMALLK_CFG,
+    MTE_ERR_READ_3D_OVERFLOW,
+    CCU_VECIQ_ECC,
+    CCU_DC_DATA_ECC,
+    /*********************** aicore error_3 for stars ***********************/
+    CCU_DC_TAG_ECC,
+    CCU_DIV0_FP,
+    CCU_NEG_SQRT_FP,
+    CNT_SW_BUS_ERR,
+    FIXP_ERR_INSTR_ADDR_MISAL,
+    FIXP_ERR_ILLEGAL_CFG,
+    FIXP_ERR_READ_L0C_OVFLW,
+    FIXP_ERR_READ_L1_OVFLW,
+    FIXP_ERR_READ_UB_OVFLW,
+    FIXP_ERR_WRITE_L1_OVFLW,
+    FIXP_ERR_WRITE_UB_OVFLW,
+    FIXP_ERR_FBUF_WRITE_OVFLW,
+    FIXP_ERR_FBUF_READ_OVFLW,
+    SC_REG_PARITY_ERR,
+    MTE_ERR_FIFO_PARITY,
+    MTE_ERR_WAITSET,
+    CCU_ERR_PARITY_ERR,
+    MTE_ERR_CACHE_ECC,
+    CUBE_ERR_HSET_CNT_UNF,
+    CUBE_ERR_HSET_CNT_OVF,
+    MTE_ERR_INSTR_ILLEGAL_CFG,
+    MTE_ERR_HEBCD,
+    MTE_ERR_HEBCE,
+    MTE_ERR_WAIPP,
+    CCU_SEQ_ERR,
+    CCU_MPU_ERR,
+    CCU_LSU_ERR,
+    CCU_PB_ECC_ERR,
+    MTE_UB_WR_OVFLW,
+    MTE_UB_RD_OVFLW,
+    CUBE_ILLEGAL_INSTR,
+    CCU_SAFETY_CRC_ERR,
+    /*********************** aicore error_4 for stars ***********************/
+    MTE_TIMEOUT,
+    MTE_UB_RD_CFLT,
+    MTE_UB_WR_CFLT,
+    MTE_KTABLE_WR_ADDR_OVERFLOW,
+    MTE_KTABLE_RD_ADDR_OVERFLOW,
+    CCU_UB_RD_CFLT,
+    CCU_UB_WR_CFLT,
+    CCU_UB_OVERFLOW_ERR,
+    BIU_UNSPLIT_ERR,
+    MTE_STB_ECC_ERR,
+    MTE_AIPP_ECC_ERR,
+    CCU_LSU_ATOMIC_ERR,
+    CCU_CROSS_CORE_SET_OVFL_ERR,
+    FIXP_ERR_OUT_WRITE_OVERFLOW,
+    CUBE_ERR_PBUF_WRAP_AROUND,
+    FIXP_L0C_ECC,
+    MTE_ERR_L0C_RDWR_CFLT,
+    /*********************** aicore error_5 for stars ***********************/
+    VEC_DATA_EXCPT_MTE,
+    VEC_DATA_EXCPT_SU,
+    VEC_DATA_EXCPT_VEC,
+    VEC_INSTR_TIMEOUT,
+    VEC_INSTRS_UNDEF,
+    VEC_INSTR_ILL_CFG,
+    VEC_INSTR_MISALIGN,
+    VEC_INSTR_ILL_MASK,
+    VEC_INSTR_ILL_SQZN,
+    VEC_UB_ADDR_WRAP_AROUND,
+    VEC_UB_ECC_MBERR,
+    VEC_IDATA_INF_NAN,
+    VEC_DIV_BY_ZERO,
+    VEC_VALU_NEG_LN,
+    VEC_VALU_NEG_SQRT,
+    VEC_VCI_IDATA_OUT_RANGE,
+    VEC_ILL_VLOOP_OP,
+    VEC_ILL_VLOOP_SREG,
+    VEC_LD_NUM_MISMATCH,
+    VEC_ST_NUM_MISMATCH,
+    VEC_EX_NUM_MISMATCH,
+    VEC_LD_NUM_EXCEED_LIMIT,
+    VEC_ST_NUM_EXCEED_LIMIT,
+    VEC_ILL_INSTR_PADDING,
+    VEC_ILL_VGA_VPD_ORDER,
+    VEC_IC_ECC_ERR,
+    VEC_BIU_RESP_ERR,
+    VEC_PB_ECC_MBERR,
+    VEC_PB_READ_NO_RESP,
+    VEC_VALU_ILL_ISSUE,
+    VEC_ERR_PARITY_ERR
+};
+} // namespace
+
+const std::map<uint64_t, std::string> DeviceErrorProc::errorMapInfo_ = {
+    {BIU_L2_READ_OOB, "Bus read access error. You are advised to check the L2 code."},
+    {BIU_L2_WRITE_OOB, "Bus write access error. You are advised to check the L2 code."},
+    {CCU_CALL_DEPTH_OVRFLW, "The depth of nested function call is greater than CTRL[5:2]."},
+    {CCU_DIV0, "Division by zero error."},
+    {CCU_ILLEGAL_INSTR, "Illegal instruction, which is usually caused by unaligned UUB addresses."},
+    {CCU_LOOP_CNT_ERR, "The loop count of the hardware loop instruction is 0."
+     " Possible cause: The compiler optimization is incorrect or the instruction is overwritten."},
+    {CCU_LOOP_ERR, "The loopend instruction is executed before executing loop instruction."
+     " Possible cause: The compiler optimization is incorrect or the instruction is overwritten."},
+    {CCU_NEG_SQRT, "The number of roots is negative. "},
+    {CCU_UB_ECC, "A multi-bit ECC error occures when CCU reads/writes UB. See the RAS alarm handling."},
+    {CUBE_INVLD_INPUT, "The data of L0a and L0b read back is the INF or NAN data."},
+    {CUBE_L0A_ECC, "A multi-bit ECC error occures when CCU reads/writes L0A. See the RAS alarm handling."},
+    {CUBE_L0A_RDWR_CFLT, "L0A read/write conflict."},
+    {CUBE_L0A_WRAP_AROUND, "The operation address of L0A exceeds the maximum range of L0A."},
+    {CUBE_L0B_ECC, "A multi-bit ECC error occures when CUBE reads/writes L0B. See the RAS alarm handling."},
+    {CUBE_L0B_RDWR_CFLT, "L0B read/write conflict."},
+    {CUBE_L0B_WRAP_AROUND, "The operation address of L0B exceeds the maximum range of L0B."},
+    {CUBE_L0C_ECC, "A multi-bit ECC error occures when CUBE reads/writes L0C. See the RAS alarm handling"},
+    {CUBE_L0C_RDWR_CFLT, "L0C read/write conflict(vec read operation or cube write operation)."},
+    {CUBE_L0C_SELF_RDWR_CFLT, "The address for VEC to read L0C confilicts with that for CUBE to write L0C."},
+    {CUBE_L0C_WRAP_AROUND, "The operation address of L0C exceeds the maximum range of L0C."},
+    {IFU_BUS_ERR, "The address of instruction is illegal when the AIcore reads instructions from GM."
+     "Possible cause: The application unloads the operator binary in advance or stack corruption occurs."},
+    {MTE_AIPP_ILLEGAL_PARAM, "The configuration of AIPP is incorrect."},
+    {MTE_BAS_RADDR_OBOUND, "The base address of the mte load3d instruction is out of bounds."},
+    {MTE_BIU_RDWR_RESP, "MTE accesses an invalid GM address or the cross-device memory access times out."},
+    {MTE_CIDX_OVERFLOW, "The C0 index of the mte load3d instruction overflows."},
+    {MTE_DECOMP, "The number of load index entries is different from the number of data blocks "
+     "to be decompressed in the latest load decompressed data."},
+    {MTE_F1WPOS_LARGER_FSIZE, "The 1st filter window position of the mte load3d instruction is greater than "
+     "(Feature map size – Filter size)."},
+    {MTE_FMAP_LESS_KERNEL, "The feature map size of the mte load3d instruction is less than the kernel size."},
+    {MTE_FMAPWH_LARGER_L1SIZE,
+     "FeatureMapW * FeatureMapH * (CIndex + 1) of the mte load3d instruction is greater than L1 buffer size/32."},
+    {MTE_FPOS_LARGER_FSIZE, "The fetch position in filter of the mte load3d instruction is greater than the filter size."},
+    {MTE_GDMA_ILLEGAL_BURST_LEN, "The burst length of the mte instruction is incorrect."},
+    {MTE_GDMA_ILLEGAL_BURST_NUM, "The burst num of the mte command is incorrect."},
+    {MTE_GDMA_READ_OVERFLOW, "The address for the MTE instruction to read on-chip buffer is out of bounds."},
+    {MTE_GDMA_WRITE_OVERFLOW, "The address for the MTE instruction to write on-chip buffer is out of bounds."},
+    {MTE_COMP, "A new index table is delivered before the current index is completed."},
+    {MTE_ILLEGAL_FM_SIZE, "The feature map size of the mte load3d instruction is illegal(size = 0)."},
+    {MTE_ILLEGAL_L1_3D_SIZE, "The set l1 3D size of the mte load3d instruction is illegal."},
+    {MTE_ILLEGAL_STRIDE, "The stride size of the mte load3d instruction is illegal."},
+    {MTE_L0A_RDWR_CFLT, "L0A read/write conflict in the MTE (same address)."},
+    {MTE_L0B_RDWR_CFLT, "L0B read/write conflict in the MTE (same address)."},
+    {MTE_L1_ECC, "A multi-bit ECC error occurs when MTE reads/writes L1. See the RAS alarm handling."},
+    {MTE_PADDING_CFG, "The error in mte load3d padding configuration."},
+    {MTE_READ_OVERFLOW, "The read address of the mte load2d instruction is greater than the maximum address of the source (L1)."},
+    {MTE_ROB_ECC, "A multi-bit ECC error occurs when MTE reads/writes the internal buffer. See the RAS alarm handling."},
+    {MTE_TLU_ECC, "An error occurred during the ECC check of the MTE TLU."},
+    {MTE_UB_ECC, "A multi-bit ECC error occurs when MTE reads/writes UB. See the RAS alarm handling."},
+    {MTE_UNZIP, "Decompression exception: length check or parity check or empty FIFO read or full FIFO write."},
+    {MTE_WRITE_3D_OVERFLOW, "The write address of the mte load3d instruction is out of bounds."},
+    {MTE_WRITE_OVERFLOW, "The write address of the mte load2d instruction is greater than the maximum destination address."},
+    {VEC_DATA_EXCP_CCU, "Data from the CCU is abnormal."},
+    {VEC_DATA_EXCP_MTE, "Data from the MTE is abnormal."},
+    {VEC_DATA_EXCP_VEC, "Data from the VEC is abnormal."},
+    {VEC_DIV0, "VEC instruction error: reciprocal division by 0 error."},
+    {VEC_ILLEGAL_MASK, "VEC instruction error: the MASK instruction is all 0."},
+    {VEC_INF_NAN, "VEC instruction error: the data is inf or nan."},
+    {VEC_L0C_ECC, "A multi-bit ECC error occurs when VEC reads L0C. See the RAS alarm handling."},
+    {VEC_L0C_RDWR_CFLT, "VEC reads/writes L0C and cube reads/writes L0C addresses are the same."},
+    {VEC_NEG_LN, "VEC instruction error: the value of ln is a negative number."},
+    {VEC_NEG_SQRT, "VEC instruction error: the reciprocal of the square root is a negative number."},
+    {VEC_SAME_BLK_ADDR, "VEC instruction error: the destination blocks have the same address."},
+    {VEC_UB_ECC, "A multi-bit ECC error occurs when VEC reads UB. See the RAS alarm handling."},
+    {VEC_UB_SELF_RDWR_CFLT, "The address for VEC to read UB confilicts that for VEC to write UB."},
+    {VEC_UB_WRAP_AROUND, "The address for the VEC instruction to read/write UB is out of bounds."},
+    {BIU_DFX_ERR, "BIU error, which need to be further read from BIU_STATUS1 bit 15:11."},
+    {CCU_SBUF_ECC, "ECC is reported in the CCU Scalar buffer."},
+    {VEC_COL2IMG_RD_FM_ADDR_OVFLOW, "The value of col2img is invalid."},
+    {VEC_COL2IMG_RD_DFM_ADDR_OVFFLOW, "The value of col2img is invalid."},
+    {VEC_COL2IMG_ILLEGAL_FM_SIZE, "The value of col2img is invalid."},
+    {VEC_COL2IMG_ILLEGAL_STRIDE, "The value of col2img is invalid."},
+    {VEC_COL2IMG_ILLEGAL_1ST_WIN_POS, "The value of col2img is invalid."},
+    {VEC_COL2IMG_ILLEGAL_FETCH_POS, "The value of col2img is invalid."},
+    {VEC_COL2IMG_ILLEGAL_K_SIZE, "The value of col2img is invalid."},
+    {CCU_INF_NAN, "The input of the floating-point instruction run by the CCU is nan/inf."},
+    {MTE_ILLEGAL_SCHN_CFG,
+     "The small_channal enable flag is valid but does not meet the conditions for small_channal."},
+    {MTE_ATM_ADDR_MISALG, "The address of the MTE atomic instruction is not aligned with the data type bit width."},
+    {VEC_INSTR_ADDR_MISALIGN, "The UB address accessed by the VEC instruction is not aligned."},
+    {VEC_INSTR_ILLEGAL_CFG, "The VEC instruction parameter is invalid."},
+    {VEC_INSTR_UNDEF, "The VEC instruction is abnormal. "
+     "Possible cause: The parameter violates the instruction constraints, the binary version does not match, or the instruction is overwritten."},
+    {CCU_ADDR_ERR, "The GM address accessed by scalar exceeds 48 bits."},
+    {CCU_BUS_ERR,
+     "The scalar instruction accesses an invalid GM address or the cross-device memory access times out."},
+    {MTE_ERR_ADDR_MISALIGN, "The access address of the MTE instruction is not aligned with the data type bit width."},
+    {MTE_ERR_DW_PAD_CONF_ERR, "DEPTHWIS PADDING is incorrectly configured."},
+    {MTE_ERR_DW_FMAP_H_ILLEGAL, "The value of H configured on the DEPTHWISE FMAP is less than 3."},
+    {MTE_ERR_WINO_L0B_WRITE_OVERFLOW, "L0B address overflow occurs when the WINOB writes to the L0B address."},
+    {MTE_ERR_WINO_L0B_READ_OVERFLOW, "The L1 address read by WINOB overflows, and the loop occurs."},
+    {MTE_ERR_ILLEGAL_V_COV_PAD_CTL, "The value of WINOA V padding is invalid."},
+    {MTE_ERR_ILLEGAL_H_COV_PAD_CTL, "The value of WINOA H padding is invalid."},
+    {MTE_ERR_ILLEGAL_W_SIZE, "The value of WINOA fmap W is invalid."},
+    {MTE_ERR_ILLEGAL_H_SIZE, "The value of WINOA fmap H is invalid."},
+    {MTE_ERR_ILLEGAL_CHN_SIZE, "The LOAD3DV2 channel size is invalid."},
+    {MTE_ERR_ILLEGAL_K_M_EXT_STEP, "The LOAD3DV2 K_M_EXT_STEP is invalid."},
+    {MTE_ERR_ILLEGAL_K_M_START_POS, "The LOAD3DV2 K_M_START_POS is invalid."},
+    {MTE_ERR_ILLEGAL_SMALLK_CFG, "The small K configuration of the MTE load3d instruction is incorrect."},
+    {MTE_ERR_READ_3D_OVERFLOW, "The address for the LOAD3D to read L1 is out of bounds."},
+    {CCU_VECIQ_ECC, "A multi-bit ECC error occurs when VEC instructions issue. See the RAS alarm handling."},
+    {CCU_DC_DATA_ECC, "A multi-bit ECC error occurs when scalar accesses the dcache data. See the RAS alarm handling."},
+    {CCU_DC_TAG_ECC, "A multi-bit ECC error occurs when scalar accesses the dcache tag. See the RAS alarm handling."},
+    {CCU_DIV0_FP, "A error occurs in the FP32 DIV0."},
+    {CCU_NEG_SQRT_FP, "The input of the FP SQRT calculation unit is a negative number."},
+    {CNT_SW_BUS_ERR,
+     "During the slow context switch, the SC transfers data through the AXI bus, and the AXI returns an error."},
+    {FIXP_ERR_INSTR_ADDR_MISAL, "The address for FIXP to read L0C/L1 and write FIXP buffer is not aligned."},
+    {FIXP_ERR_ILLEGAL_CFG, "The parameter of the FIXP instruction is invalid."},
+    {FIXP_ERR_READ_L0C_OVFLW, "The address for FIXP to read L0C is out of bounds."},
+    {FIXP_ERR_READ_L1_OVFLW, "The address for FIXP to read L1 is out of bounds."},
+    {FIXP_ERR_READ_UB_OVFLW, "The address for FIXP to read UB is out of bounds."},
+    {FIXP_ERR_WRITE_L1_OVFLW, "The address for FIXP to write L1 is out of bounds."},
+    {FIXP_ERR_WRITE_UB_OVFLW, "The address for FIXP to write UB is out of bounds."},
+    {FIXP_ERR_FBUF_WRITE_OVFLW, "The address for FIXP to write FIXP buffer is out of bounds."},
+    {FIXP_ERR_FBUF_READ_OVFLW, "The address for FIXP to read FIXP buffer is out of bounds."},
+    {SC_REG_PARITY_ERR, "During safety check, parity errors occur in the registers in the nManager."},
+    {MTE_ERR_FIFO_PARITY, "A parity error occurs when MTE reads FIFO. See the RAS alarm handling."},
+    {MTE_ERR_WAITSET, "The configuration of HWATI/HSET is incorrect."},
+    {CCU_ERR_PARITY_ERR, "A parity error occurs in the SU internal buffer during the safety feature."},
+    {MTE_ERR_CACHE_ECC, "The MTE internal MVF cache fails."},
+    {CUBE_ERR_HSET_CNT_UNF, "A underflow error occurs in the CUBE HSET counter."},
+    {CUBE_ERR_HSET_CNT_OVF, "A overflow error occurs in the CUBE HSET counter."},
+    {MTE_ERR_INSTR_ILLEGAL_CFG, "The MTE instruction parameter is invalid."},
+    {MTE_ERR_HEBCD, "The instruction configuration of HEBCD is invalid."},
+    {MTE_ERR_HEBCE, "The instruction configuration of HEBCE is invalid."},
+    {MTE_ERR_WAIPP, "The instruction configuration of WAIPP is invalid."},
+    {CCU_SEQ_ERR, "The SEQ command sequence is incorrect."},
+    {CCU_MPU_ERR, "The address for the scalar to access the internal buffer of AICore is out of bounds."},
+    {CCU_LSU_ERR, "When the buffer is enabled, the stack access instruction cache is missed."},
+    {CCU_PB_ECC_ERR, "A multi-bit ECC error occurs when scalar read parameter buffer. See the RAS alarm handling."},
+    {MTE_UB_WR_OVFLW, "The address for MTE to write UB is out of bounds."},
+    {MTE_UB_RD_OVFLW, "The address for MTE to read UB is out of bounds."},
+    {CUBE_ILLEGAL_INSTR, "The CUBE instruction parameter is invalid."},
+    {CCU_SAFETY_CRC_ERR, "MTE CRC error."},
+    {MTE_TIMEOUT, "An exception is reported when the MTE instruction or data times out."},
+    {MTE_UB_RD_CFLT,
+     "When the MTE reads the ub, the ub read/write conflict occurs and an exception is reported."},
+    {MTE_UB_WR_CFLT, "When the MTE writes to the UB, the UB read/write conflict is reported."},
+    {MTE_KTABLE_WR_ADDR_OVERFLOW,
+     "An exception is reported when a write address conflict occurs when the MTE is full."},
+    {MTE_KTABLE_RD_ADDR_OVERFLOW,
+     "An exception is reported when a read address conflict occurs when the MTE is empty."},
+    {CCU_UB_RD_CFLT, "When the CCU reads the UB, the UB read and write conflict is reported."},
+    {CCU_UB_WR_CFLT, "When the CCU writes data to the UB, the UB read and write conflict occurs."},
+    {CCU_UB_OVERFLOW_ERR, "The address for scalar to read/write UB is out of bounds."},
+    {BIU_UNSPLIT_ERR, "An exception occurs on the BIU, for example, tag_id error or FIFO overflow."},
+    {MTE_STB_ECC_ERR, "A multi-bit ECC error occurs when MTE read STB buffer. See the RAS alarm handling."},
+    {MTE_AIPP_ECC_ERR, "A multi-bit ECC error occurs when MTE read the internal buffer of AIPP. See the RAS alarm handling."},
+    {CCU_LSU_ATOMIC_ERR, "The scalar atomic instruction accesses the GM that is modified by scalar but is not written back."},
+    {CCU_CROSS_CORE_SET_OVFL_ERR,
+     "The value of the flag counter for inter-core communication exceeds the maximum value 15."},
+    {FIXP_ERR_OUT_WRITE_OVERFLOW, "The GM address accessed by FIXP exceeds 48 bits."},
+    {CUBE_ERR_PBUF_WRAP_AROUND, "The address for CUBE to read FIXP buffer is out of bounds."},
+    {FIXP_L0C_ECC, "A multi-bit ECC error occurs when FIXP read L0C. See the RAS alarm handling."},
+    {MTE_ERR_L0C_RDWR_CFLT, "The address for FIXP to read L0C confilicts with that for CUBE to write L0C."},
+    {VEC_DATA_EXCPT_MTE, "An data_exception is reported when the MTE writes/reads."},
+    {VEC_DATA_EXCPT_SU, "An data_exception is reported when the SU writes/reads."},
+    {VEC_DATA_EXCPT_VEC, "An data_exception is reported when the VECTOR writes/reads."},
+    {VEC_INSTR_TIMEOUT, "The instruction running timeout."},
+    {VEC_INSTRS_UNDEF, "The instruction is not defined in ISA."},
+    {VEC_INSTR_ILL_CFG, "The instruction configuration of VEC is illegal."},
+    {VEC_INSTR_MISALIGN, "The instruction access UB address is not aligned."},
+    {VEC_INSTR_ILL_MASK, "The mask value is invalid."},
+    {VEC_INSTR_ILL_SQZN, "The sqzn value is invalid."},
+    {VEC_UB_ADDR_WRAP_AROUND, "The access address of the UB is out of range."},
+    {VEC_UB_ECC_MBERR, "Multi-bit ECC error occurs when access UB."},
+    {VEC_IDATA_INF_NAN, "The input data of the instruction operation is INF/NAN."},
+    {VEC_DIV_BY_ZERO, "The instruction of VEC divide-by-zero error."},
+    {VEC_VALU_NEG_LN, "The input data of the VALU lN operation is a negative number."},
+    {VEC_VALU_NEG_SQRT, "The input data of the VALU squart operation is a negative number."},
+    {VEC_VCI_IDATA_OUT_RANGE, "The input data of the VCI instruction is out of range."},
+    {VEC_ILL_VLOOP_OP, "A opcode error occurs in the VLOOP instruction."},
+    {VEC_ILL_VLOOP_SREG, "The number of VLOOP loop times at layer 4 is all 0."},
+    {VEC_LD_NUM_MISMATCH, "The code segment where the ld instruction resides contains a non-ld instruction."},
+    {VEC_ST_NUM_MISMATCH, "The code segment where the st instruction resides contains a non-st instruction."},
+    {VEC_EX_NUM_MISMATCH, "The code segment where the ex instruction resides contains a non-ex instruction."},
+    {VEC_LD_NUM_EXCEED_LIMIT, "The number of ld instructions exceeds the maximum specified in the ISA."},
+    {VEC_ST_NUM_EXCEED_LIMIT, "The number of st instructions exceeds the maximum specified in the ISA."},
+    {VEC_ILL_INSTR_PADDING, "The PADDING instruction of the VGA and VPD is not a VNOP."},
+    {VEC_ILL_VGA_VPD_ORDER, "The order of the VGA and VPD commands violates IAS constraints."},
+    {VEC_IC_ECC_ERR, "An ECC error occurs in the instruction fetched from the VEC ICACHE."},
+    {VEC_BIU_RESP_ERR, "The data returned by the BIU to the VEC is incorrect."},
+    {VEC_PB_ECC_MBERR, "The PB data returned by the SU to the VEC contains ECC errors."},
+    {VEC_PB_READ_NO_RESP, "The SU does not respond for a long time after receiving a PB read request from the VEC."},
+    {VEC_VALU_ILL_ISSUE, "VALU instruction transmit order violates ISA constraints."},
+    {VEC_ERR_PARITY_ERR, "A parity check error occurs in the VEC."},
 };
 
 void DeviceErrorProc::PrintCoreErrorInfo(const DeviceErrorInfo *const coreInfo,
@@ -705,6 +1086,8 @@ static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, co
     regInfo.errReg[RT_V100_VEC_ERR_1] = static_cast<uint32_t>(info.vecErrInfo >> REG_OFFSET);
     regInfo.errReg[RT_V100_FIXP_ERR_0] = info.fixPError0;
     regInfo.errReg[RT_V100_FIXP_ERR_1] = info.fixPError1;
+    regInfo.errReg[RT_V100_AIC_COND_0] = static_cast<uint32_t>(info.aicCond);
+    regInfo.errReg[RT_V100_AIC_COND_1] = static_cast<uint32_t>(info.aicCond >> REG_OFFSET);
 
     Device *dev = errTaskPtr->stream->Device_();
     uint32_t taskId = starsInfo->u.coreErrorInfo.comm.taskId;
@@ -728,7 +1111,8 @@ static void PrintCoreInfo(const StarsDeviceErrorInfo * const info, const uint32_
         "vec error info: %#" PRIx64 ", mte error info: %#" PRIx64 ", "
         "ifu error info: %#" PRIx64 ", ccu error info: %#" PRIx64 ", "
         "cube error info: %#" PRIx64 ", biu error info: %#" PRIx64 ", "
-        "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ".\n"
+        "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", "
+        "aic cond: %#" PRIx64 ".\n"
         "The extend info: errcode:(%#" PRIx64 ", %#" PRIx64 ", %#" PRIx64 ") "
         "errorStr: %s "
         "fixp_error0 info: %#x, fixp_error1 info: %#x, "
@@ -741,6 +1125,7 @@ static void PrintCoreInfo(const StarsDeviceErrorInfo * const info, const uint32_
         info->u.coreErrorInfo.info[coreIdx].ifuErrInfo, info->u.coreErrorInfo.info[coreIdx].ccuErrInfo,
         info->u.coreErrorInfo.info[coreIdx].cubeErrInfo, info->u.coreErrorInfo.info[coreIdx].biuErrInfo,
         info->u.coreErrorInfo.info[coreIdx].aicErrorMask, info->u.coreErrorInfo.info[coreIdx].paraBase,
+        info->u.coreErrorInfo.info[coreIdx].aicCond,
         info->u.coreErrorInfo.info[coreIdx].aicError[0], info->u.coreErrorInfo.info[coreIdx].aicError[1],
         info->u.coreErrorInfo.info[coreIdx].aicError[2], errorString.c_str(),
         info->u.coreErrorInfo.info[coreIdx].fixPError0, info->u.coreErrorInfo.info[coreIdx].fixPError1,
@@ -771,6 +1156,260 @@ static void ProcessMteAndFfts(const StarsDeviceErrorInfo * const info, const uin
         PushBackErrInfo(errTaskPtr, static_cast<const void *>(&fftsPlusErrInfo),
                         static_cast<uint32_t>(sizeof(rtFftsPlusTaskErrInfo_t)));
     }
+}
+
+void DeviceErrorProc::ProcessStarsCoreErrorOneMapInfo(uint32_t * const cnt, uint64_t err, std::string &errorString,
+    uint32_t offset)
+{
+    if (err == 0ULL) {
+        return;
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "core errorCode:%" PRIx64, err);
+    for (uint32_t i = static_cast<uint32_t>(BitScan(err)); i < MAX_BIT_LEN; i = static_cast<uint32_t>(BitScan(err))) {
+        BITMAP_CLR(err, static_cast<uint64_t>(i));
+        const auto it = errorMapInfo_.find((i + offset));
+        if (it != errorMapInfo_.end()) {
+            // if the string is too long, the log will truncate to 1024.
+            // so the error string only show 400.
+            if (unlikely((it->second.size() + errorString.size()) > RINGBUFFER_ERROR_MSG_MAX_LEN)) {
+                RT_LOG(RT_LOG_WARNING, "The error info is too long.");
+                break;
+            }
+            errorString += it->second;
+        }
+    }
+    (*cnt)++;
+
+    return;
+}
+
+void DeviceErrorProc::ProcessStarsCoreErrorMapInfo(const StarsOneCoreErrorInfo * const info, std::string &errorString)
+{
+    uint32_t cnt = 0U;
+
+    // aicError1 aicError 0
+    DeviceErrorProc::ProcessStarsCoreErrorOneMapInfo(&cnt, info->aicError[0], errorString, RINGBUFFER_ERRCODE0_OFFSET);
+    // aicError3 aicError 2
+    DeviceErrorProc::ProcessStarsCoreErrorOneMapInfo(&cnt, info->aicError[1], errorString, RINGBUFFER_ERRCODE2_OFFSET);
+    // aicError4 17 bits
+    // aicError5 aicError 4
+    const uint64_t err = (static_cast<uint64_t>((info->aicError[2] >> 32ULL) << 17ULL) | (info->aicError[2] & 0x1FFFFULL));
+    DeviceErrorProc::ProcessStarsCoreErrorOneMapInfo(&cnt, err, errorString, RINGBUFFER_ERRCODE4_OFFSET);
+    if (cnt != 0U) {  // at least one error bit exists.
+        return;
+    }
+
+    errorString = "timeout or trap error.";
+    return;
+}
+
+rtError_t DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo(const StarsDeviceErrorInfo *const info,
+    const uint64_t errorNumber, const Device *const dev, const DeviceErrorProc *const insPtr)
+{
+    UNUSED(insPtr);
+    if (info == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "info or device is null");
+        return RT_ERROR_NONE;
+    }
+    StarsErrorCommonInfo common = info->u.coreTimeoutDfxInfo.comm;
+    RT_LOG(RT_LOG_ERROR,
+        "The error from device(chipId:%u, dieId:%u), serial number is %" PRIu64 ", "
+        "aicore task timeout dfx, falut_stream_id=%u, falut_task_id=%u, falut_slot_id=%u, timeout and own_bitmap=0",
+        common.chipId,
+        common.dieId,
+        errorNumber,
+        common.streamId,
+        common.taskId,
+        common.exceptionSlotId);
+    TaskInfo *errTaskPtr = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(common.streamId), common.taskId);
+    if (errTaskPtr != nullptr) {
+        errTaskPtr->isRingbufferGet = true;
+    }
+    // process 8 slot,include ffts+
+    for (uint16_t slotIdx = 0U; slotIdx < static_cast<uint16_t>(common.slotNum); slotIdx++) {
+        StarsOneTimeoutSlotDfxInfo slotInfo = info->u.coreTimeoutDfxInfo.slotInfo[slotIdx];
+        if (slotInfo.fftsType != RT_FFTS_PLUS_TYPE) {
+            ProcessStarsTimeoutDfxSlotInfo(info, dev, slotIdx);
+            continue;
+        }
+        TaskInfo *taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(slotInfo.streamId), slotInfo.taskId);
+        if (taskInfo == nullptr) {
+            RT_LOG(RT_LOG_ERROR, "task info is null, stream_id=%hu, task_id=%hu", slotInfo.streamId, slotInfo.taskId);
+            continue;
+        }
+
+        AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+        if (aicTaskInfo->kernel == nullptr) {
+            RT_LOG(RT_LOG_ERROR, "task kernel is null, stream_id=%hu, task_id=%hu", slotInfo.streamId, slotInfo.taskId);
+            continue;
+        }
+        const uint8_t mixType = aicTaskInfo->kernel->GetMixType();
+        if ((mixType > NO_MIX) && (mixType <= static_cast<uint8_t>(MIX_AIC_AIV_MAIN_AIV))) {
+            // mix
+            ProcessStarsTimeoutDfxSlotInfo(info, dev, slotIdx);
+        } else {
+            // ffts+
+            ProcessStarsTimeoutDfxSlotInfo4FftsPlus(info, const_cast<Device *>(dev), slotIdx);
+        }
+    }
+    // core info, only print subError!=0
+    for (uint16_t coreIdx = 0U; coreIdx < common.coreNum; coreIdx++) {
+        StarsOneTimeoutCoreDfxInfo coreInfo = info->u.coreTimeoutDfxInfo.coreInfo[coreIdx];
+        if (coreInfo.subError != 0) {
+            RT_LOG(RT_LOG_ERROR,
+                "aicore task timeout dfx, show core info, core_id=%u, core_type=%u, sub_error=%u, "
+                "current_pc=%#" PRIx64 ", slot_id=%u.",
+                coreInfo.coreId,
+                coreInfo.coreType,
+                coreInfo.subError,
+                coreInfo.currentPc,
+                coreInfo.slotId);
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo(
+    const StarsDeviceErrorInfo *const info, const Device *const dev, uint16_t slotIdx)
+{
+    if (info == nullptr || dev == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "info or device is null");
+        return;
+    }
+    StarsOneTimeoutSlotDfxInfo slotInfo = info->u.coreTimeoutDfxInfo.slotInfo[slotIdx];
+    const uint16_t streamId = slotInfo.streamId;
+    const uint16_t taskId = slotInfo.taskId;
+
+    TaskInfo *taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
+    if (taskInfo == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "task info is null, device_id=%u, stream_id=%u, task_id=%u, slot_id=%u",
+        dev->Id_(), streamId, taskId, slotInfo.slotId);
+        return;
+    }
+    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    std::string kernelNameStr;
+    std::string kernelInfoExt;
+    if (aicTaskInfo->kernel == nullptr) {
+        kernelNameStr = "none";
+        kernelInfoExt = "none";
+    } else {
+        kernelNameStr = aicTaskInfo->kernel->Name_().empty() ? "none" : aicTaskInfo->kernel->Name_();
+        kernelInfoExt = aicTaskInfo->kernel->KernelInfoExtString().empty() ? "none" :
+            aicTaskInfo->kernel->KernelInfoExtString();
+    }
+    RT_LOG(RT_LOG_ERROR,
+        "aicore task timeout dfx, show slot info, slot_id=%u, device_id=%u, stream_id=%u, task_id=%u, "
+        "sche_mode=%u, blockd_dim=%u, aic_own_bitmap=%#" PRIx64 ", aiv_own_bitmap0=%#" PRIx64
+        " aiv_own_bitmap1=%#" PRIx64 ", "
+        "kernel_name=%s, kernel_info_ext=%s, pc_start=%#" PRIx64 ".",
+        slotInfo.slotId,
+        dev->Id_(),
+        streamId,
+        taskId,
+        GetSchemMode(aicTaskInfo),
+        aicTaskInfo->comm.dim,
+        slotInfo.aicOwnBitmap,
+        slotInfo.aivOwnBitmap0,
+        slotInfo.aivOwnBitmap1,
+        kernelNameStr.c_str(),
+        kernelInfoExt.c_str(),
+        slotInfo.pcStart);
+}
+
+void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
+    const StarsDeviceErrorInfo *const info, Device *dev, uint16_t slotIdx)
+{
+    if (info == nullptr || dev == nullptr) {
+        RT_LOG(RT_LOG_WARNING, "info or device is null");
+        return;
+    }
+    StarsOneTimeoutSlotDfxInfo slotInfo = info->u.coreTimeoutDfxInfo.slotInfo[slotIdx];
+    const uint16_t streamId = slotInfo.streamId;
+    const uint16_t taskId = slotInfo.taskId;
+
+    TaskInfo *taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
+    if (taskInfo == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "task info is null, stream_id=%u, task_id=%u", streamId, taskId);
+        return;
+    }
+
+    rtFftsPlusAicAivCtx_t contextInfo;
+    const uint64_t offset = static_cast<uint64_t>(slotInfo.cxtId) * CONTEXT_LEN;
+    FftsPlusTaskInfo *fftsPlusTaskInfo = &(taskInfo->u.fftsPlusTask);
+    if (((offset + CONTEXT_LEN) > fftsPlusTaskInfo->descBufLen) || (fftsPlusTaskInfo->descAlignBuf == nullptr)) {
+        RT_LOG(RT_LOG_ERROR,
+            "fftsplus task timeout dfx print failed, dev_id=%u, stream_id=%d, "
+            "task_id=%u, context_id=%u, descBufLen=%u, descAlignBuf=%u, descAlignBuf is invalid.",
+            dev->Id_(),
+            streamId,
+            taskId,
+            slotInfo.cxtId,
+            fftsPlusTaskInfo->descBufLen,
+            fftsPlusTaskInfo->descAlignBuf);
+        return;
+    }
+    Driver *const devDrv = dev->Driver_();
+    const rtError_t ret = devDrv->MemCopySync(&contextInfo,
+        CONTEXT_LEN,
+        static_cast<void *>((RtPtrToPtr<uint8_t *, void *>(fftsPlusTaskInfo->descAlignBuf)) + offset),
+        CONTEXT_LEN,
+        RT_MEMCPY_DEVICE_TO_HOST);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "MemCopySync failed, retCode=%#x.", ret);
+        return;
+    }
+
+    std::vector<uint64_t> mapAddr;
+    uint16_t schemMode = 0U;
+    uint16_t blockdim = 0U;
+    if ((contextInfo.contextType == RT_CTX_TYPE_AICORE) || (contextInfo.contextType == RT_CTX_TYPE_AIV)) {
+        mapAddr.emplace_back(
+            static_cast<uint64_t>(contextInfo.nonTailTaskStartPcH) << 32U | static_cast<uint64_t>(contextInfo.nonTailTaskStartPcL));
+        mapAddr.emplace_back(static_cast<uint64_t>(contextInfo.tailTaskStartPcH) << 32U | contextInfo.tailTaskStartPcL);
+        schemMode = contextInfo.schem;
+        blockdim = contextInfo.tailBlockdim;
+    } else if ((contextInfo.contextType == RT_CTX_TYPE_MIX_AIC) || (contextInfo.contextType == RT_CTX_TYPE_MIX_AIV)) {
+        rtFftsPlusMixAicAivCtx_t *mixCtx = nullptr;
+        mixCtx = RtPtrToPtr<rtFftsPlusMixAicAivCtx_t *, rtFftsPlusAicAivCtx_t *>(&contextInfo);
+        mapAddr.emplace_back(
+            static_cast<uint64_t>(mixCtx->nonTailAicTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->nonTailAicTaskStartPcL));
+        mapAddr.emplace_back(static_cast<uint64_t>(mixCtx->tailAicTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->tailAicTaskStartPcL));
+        mapAddr.emplace_back(
+            static_cast<uint64_t>(mixCtx->nonTailAivTaskStartPcH) << 32U | mixCtx->nonTailAivTaskStartPcL);
+        mapAddr.emplace_back(static_cast<uint64_t>(mixCtx->tailAivTaskStartPcH) << 32U | static_cast<uint64_t>(mixCtx->tailAivTaskStartPcL));
+        schemMode = mixCtx->schem;
+        blockdim = mixCtx->tailBlockdim;
+    } else {
+        // do nothing
+    }
+
+    std::string kernelName;
+    for (uint32_t i = 0U; i < mapAddr.size(); i++) {
+        RT_LOG(RT_LOG_DEBUG, "contextype=%hu, map[%u]=%#" PRIx64 ".", contextInfo.contextType, i, mapAddr[i]);
+        if (mapAddr[i] == slotInfo.pcStart) {
+            kernelName = dev->LookupKernelNameByAddr(mapAddr[i]);
+            break;
+        }
+    }
+    kernelName = (kernelName.empty()) ? "none" : kernelName;
+
+    RT_LOG(RT_LOG_ERROR,
+        "fftsplus aicore task timeout dfx, show slot info, slot_id=%u, device_id=%u, stream_id=%u, task_id=%u, "
+        "sche_mode=%u, block_dim=%u, aic_own_bitmap=%#" PRIx64 ", aiv_own_bitmap0=%#" PRIx64
+        ", aiv_own_bitmap1=%#" PRIx64 ", "
+        "kernel_name=%s, pc_start=%#" PRIx64 ".",
+        slotInfo.slotId,
+        dev->Id_(),
+        streamId,
+        taskId,
+        schemMode,
+        blockdim,
+        slotInfo.aicOwnBitmap,
+        slotInfo.aivOwnBitmap0,
+        slotInfo.aivOwnBitmap1,
+        kernelName.c_str(),
+        slotInfo.pcStart);
 }
 
 rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(const StarsDeviceErrorInfo * const info,

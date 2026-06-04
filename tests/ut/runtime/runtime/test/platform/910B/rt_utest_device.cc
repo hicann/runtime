@@ -85,6 +85,7 @@ public:
     static uint16_t g_sId;
     static uint16_t g_tId;
     static uint32_t g_printType;
+    static uint32_t g_reportElementIndex;
     static rtError_t MemCopySyncForRingBuffer(Driver *drv, void *dst, uint64_t destMax, const void *src, uint64_t size, rtMemcpyKind_t kind)
     {
         if (g_case_num == 0) {
@@ -95,6 +96,7 @@ public:
             tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
             tmpCtrlInfo->tail = 0;
             tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->ringBufferLen = RINGBUFFER_LEN;
             tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
             return RT_ERROR_NONE;
         }
@@ -103,6 +105,7 @@ public:
             tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
             tmpCtrlInfo->tail = 1;
             tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->ringBufferLen = RINGBUFFER_LEN;
             tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
             return RT_ERROR_NONE;
         }
@@ -143,6 +146,33 @@ public:
                     break;
                 default:
                     break;
+            }
+        }
+        return RT_ERROR_NONE;
+    }
+
+    static rtError_t MemCopySyncForRingBufferWithStandaloneExt(Driver *drv, void *dst, uint64_t destMax,
+        const void *src, uint64_t size, rtMemcpyKind_t kind)
+    {
+        if (size == sizeof(DevRingBufferCtlInfo)) {
+            DevRingBufferCtlInfo *tmpCtrlInfo = reinterpret_cast<DevRingBufferCtlInfo *>(dst);
+            tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
+            tmpCtrlInfo->tail = 2;
+            tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->ringBufferLen = RINGBUFFER_LEN;
+            tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+            return RT_ERROR_NONE;
+        }
+        if (size == RINGBUFFER_EXT_ONE_ELEMENT_LENGTH) {
+            RingBufferElementInfo *info = reinterpret_cast<RingBufferElementInfo *>(dst);
+            StarsDeviceErrorInfo *errorInfo = reinterpret_cast<StarsDeviceErrorInfo *>(info + 1);
+            if (g_reportElementIndex == 0U) {
+                info->errorType = AICORE_EXT_ERROR;
+                g_reportElementIndex++;
+            } else {
+                info->errorType = AICORE_ERROR;
+                errorInfo->u.coreErrorInfo.comm.streamId = g_streamId;
+                g_reportElementIndex++;
             }
         }
         return RT_ERROR_NONE;
@@ -225,6 +255,7 @@ uint32_t CloudV2DeviceTest::g_streamId = 0;
 uint16_t CloudV2DeviceTest::g_sId = 0;
 uint16_t CloudV2DeviceTest::g_tId = 0;
 uint32_t CloudV2DeviceTest::g_printType = 0;
+uint32_t CloudV2DeviceTest::g_reportElementIndex = 0;
 
 TEST_F(CloudV2DeviceTest, STARS_FFTSPLUS_ERROR_PROC)
 {
@@ -515,6 +546,41 @@ TEST_F(CloudV2DeviceTest, device_reportRingbuffer_04)
     MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
     g_case_num = 100U;
     error = errorProc->ReportRingBuffer(&streamId);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    GlobalMockObject::verify();
+    delete errorProc;
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(CloudV2DeviceTest, device_reportRingbuffer_skip_standalone_ext)
+{
+    rtStream_t stream;
+    uint16_t streamId;
+    Device* device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    DeviceErrorProc *errorProc = new DeviceErrorProc(device);
+    std::unique_ptr<char[]> hostAddr(new (std::nothrow)  char[16]);
+
+    rtError_t error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    g_streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
+    device->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<const uint32_t>(g_streamId),
+                                                       rt_ut::UnwrapOrNull<Stream>(stream));
+
+    error = errorProc->ProcRingBufferTask(hostAddr.get(), false, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    errorProc->deviceRingBufferAddr_ = hostAddr.get();
+
+    g_reportElementIndex = 0U;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(
+        invoke(MemCopySyncForRingBufferWithStandaloneExt));
+    MOCKER_CPP(&DeviceErrorProc::CheckValid).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
+    error = errorProc->ReportRingBuffer(&streamId);
+    EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
+    EXPECT_EQ(streamId, g_streamId);
+
+    error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     errorProc->deviceRingBufferAddr_ = nullptr;
     GlobalMockObject::verify();

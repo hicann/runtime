@@ -19,6 +19,7 @@
 #include "event.hpp"
 #include "task_info.hpp"
 #include "device/device_error_proc.hpp"
+#include "device_error_proc_c.hpp"
 #include "program.hpp"
 #include "uma_arg_loader.hpp"
 #include "npu_driver.hpp"
@@ -36,6 +37,17 @@
 using namespace testing;
 using namespace cce::runtime;
 
+rtError_t CheckFusionKernelErrorInfoStub(const StarsDeviceErrorInfo * const info,
+    const uint64_t errorNumber, const Device * const dev, const DeviceErrorProc * const insPtr)
+{
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].coreId, 25U);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].aicCond, 0x1234U);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aicInfo.info[1].rsvExt[0], 0x13579BDFU);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].coreId, 27U);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].aicCond, 0x9abcU);
+    EXPECT_EQ(info->u.fusionKernelErrorInfo.aivInfo.info[1].rsvExt[0], 0x13579BDFU);
+    return RT_ERROR_NONE;
+}
 
 class DeviceTestDavid : public testing::Test
 {
@@ -68,6 +80,44 @@ public:
     static uint32_t binary_[32];
 };
 
+static void InitStarv2ExtRingBufferCtl(DevRingBufferCtlInfo* ctlInfo, uint32_t tail)
+{
+    memset_s(ctlInfo, DEVICE_ERROR_EXT_RINGBUFFER_SIZE, 0, DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    ctlInfo->tail = tail;
+    ctlInfo->head = 0;
+    ctlInfo->magic = RINGBUFFER_MAGIC;
+    ctlInfo->ringBufferLen = RINGBUFFER_LEN;
+    ctlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+}
+
+static void FillFusionKernelBase(RingBufferElementInfo* info)
+{
+    StarsDeviceErrorInfoRingBuffer* errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(info + 1);
+    info->errorType = FUSION_KERNEL_ERROR;
+    errorInfo->u.fusionKernelErrorInfo.aicError = 1;
+    errorInfo->u.fusionKernelErrorInfo.aivError = 1;
+    errorInfo->u.fusionKernelErrorInfo.aicInfo.comm.type = AICORE_ERROR;
+    errorInfo->u.fusionKernelErrorInfo.aicInfo.comm.coreNum = 2;
+    errorInfo->u.fusionKernelErrorInfo.aicInfo.info[0].coreId = 5;
+    errorInfo->u.fusionKernelErrorInfo.aicInfo.info[1].coreId = 25;
+    errorInfo->u.fusionKernelErrorInfo.aivInfo.comm.type = AIVECTOR_ERROR;
+    errorInfo->u.fusionKernelErrorInfo.aivInfo.comm.coreNum = 2;
+    errorInfo->u.fusionKernelErrorInfo.aivInfo.info[0].coreId = 7;
+    errorInfo->u.fusionKernelErrorInfo.aivInfo.info[1].coreId = 27;
+}
+
+static void FillStarv2CoreExt(
+    RingBufferElementInfo* info, rtErrorType errorType, uint32_t coreIndex, uint32_t coreId, uint64_t aicCond)
+{
+    DavidCoreErrorInfoExt* extData = reinterpret_cast<DavidCoreErrorInfoExt*>(info + 1);
+    info->errorType = errorType;
+    extData->comm.coreNum = coreIndex + 1U;
+    extData->info[coreIndex].coreId = coreId;
+    extData->info[coreIndex].validSize = sizeof(extData->info[coreIndex].aicCond) + sizeof(extData->info[coreIndex].rsv[0]);
+    extData->info[coreIndex].aicCond = aicCond;
+    extData->info[coreIndex].rsv[0] = 0x13579BDFU;
+}
+
 TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
 {
     rtSetDevice(1);
@@ -86,7 +136,7 @@ TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
     ctlInfo->ringBufferLen  = RINGBUFFER_LEN;
 
     // element size is invalid
-    rtError_t error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    rtError_t error = errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     // init element size
@@ -102,7 +152,7 @@ TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
     errorInfo->u.davidCoreErrorInfo.comm.coreNum = 1;
     errorInfo->u.davidCoreErrorInfo.info[0].coreId = 1;
     errorInfo->u.davidCoreErrorInfo.info[0].scError = 0x6;
-    error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    error = errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     errorInfo->u.davidCoreErrorInfo.comm.type = AIVECTOR_ERROR;
@@ -113,13 +163,49 @@ TEST_F(DeviceTestDavid, STARS_CORE_Normal_0)
     errorInfo->u.davidCoreErrorInfo.info[0].vecError = 0x6;
     errorInfo->u.davidCoreErrorInfo.info[1].coreId = 25;
 
-    error = errorProc->ProcessStarsOneElementInRingBuffer(ctlInfo, 0, 1);
+    error = errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
     free(ctlInfo);
 
     errorProc->deviceRingBufferAddr_ = nullptr;
     delete errorProc;
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+    rtDeviceReset(1);
+}
+
+TEST_F(DeviceTestDavid, FUSION_KERNEL_Merge_Base_WithStarv2Ext)
+{
+    rtSetDevice(1);
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(1, 0);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo* ctlInfo = (DevRingBufferCtlInfo*)malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE);
+    EXPECT_NE(ctlInfo, nullptr);
+    if (ctlInfo == nullptr) {
+        return;
+    }
+
+    InitStarv2ExtRingBufferCtl(ctlInfo, 3);
+
+    uintptr_t infoAddr = reinterpret_cast<uintptr_t>(ctlInfo) + sizeof(DevRingBufferCtlInfo);
+    RingBufferElementInfo* info = (RingBufferElementInfo*)infoAddr;
+    FillFusionKernelBase(info);
+
+    uintptr_t aicExtAddr = infoAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+    RingBufferElementInfo* aicExtInfo = (RingBufferElementInfo*)aicExtAddr;
+    FillStarv2CoreExt(aicExtInfo, AICORE_EXT_ERROR, 1U, 25, 0x1234U);
+
+    uintptr_t aivExtAddr = aicExtAddr + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID;
+    RingBufferElementInfo* aivExtInfo = (RingBufferElementInfo*)aivExtAddr;
+    FillStarv2CoreExt(aivExtInfo, AIVECTOR_EXT_ERROR, 1U, 27, 0x9abcU);
+
+    MOCKER(ProcessDavidStarsFusionKernelErrorInfo).stubs().will(invoke(CheckFusionKernelErrorInfoStub));
+    rtError_t error = errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0, 3);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    free(ctlInfo);
+
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    delete errorProc;
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
     rtDeviceReset(1);
 }
 

@@ -13,7 +13,7 @@
 #include "context.hpp"
 #include "stars_david.hpp"
 #include "ringbuffer_maintain_task.h"
-#include "device_error_inner_data.hpp"
+#include "device_error_info.hpp"
 
 namespace cce {
 namespace runtime {

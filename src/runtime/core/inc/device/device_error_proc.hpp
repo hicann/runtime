@@ -60,6 +60,9 @@ public:
     using StarsErrorInfoProc = rtError_t (*)(const StarsDeviceErrorInfo * const info,
                                             const uint64_t errorNumber,
                                             const Device * const dev, const DeviceErrorProc * const insPtr);
+    using ExtProcessorFn = std::function<void(
+        const DevRingBufferCtlInfo* ctlInfo, size_t elementSize, uint32_t& head, uint32_t tail,
+        uint32_t errorType, const StarsDeviceErrorInfoRingBuffer* rbErrorInfo, StarsDeviceErrorInfo& mergedOut)>;
 
     // create a ringbuffer and send task to device.
     rtError_t CreateDeviceRingBufferAndSendTask();
@@ -180,6 +183,12 @@ private:
         const uint32_t tail) const;
     rtError_t ProcessStarsOneElementInRingBuffer(const DevRingBufferCtlInfo * const ctlInfo, uint32_t head,
         const uint32_t tail, const bool isPrintTaskInfo = false, const TaskInfo * const taskPtr = nullptr) const;
+    rtError_t ProcessStarv2OneElementInRingBuffer(
+        const DevRingBufferCtlInfo* const ctlInfo, uint32_t head, const uint32_t tail,
+        const bool isPrintTaskInfo = false, const TaskInfo* const taskPtr = nullptr) const;
+    rtError_t ProcessOneElementInRingBufferImpl(
+        const DevRingBufferCtlInfo* const ctlInfo, uint32_t head, const uint32_t tail, const bool isPrintTaskInfo,
+        const TaskInfo* const taskPtr, size_t elementSize, const ExtProcessorFn& extMergeProcessor) const;
     // print task info in monitor
     void PrintTaskErrorInfo(const uint32_t errorType, const StarsDeviceErrorInfo * const errorInfo) const;
 
@@ -210,6 +219,8 @@ private:
     using ErrorInfoProc = rtError_t (*)(const DeviceErrorInfo * const info,
                                         const uint64_t errorNumber,
                                         const Device *const dev);
+    void ProcessStarsRingBufferErrorInfo(const RingBufferElementInfo * const info, const bool isPrintTaskInfo,
+        const StarsDeviceErrorInfo * const errorInfo) const;
     static const std::map<uint64_t, ErrorInfoProc> funcMap_;
     static const std::map<uint64_t, std::string> errMsgCommMap_;
     static const std::map<uint64_t, std::string> cqeErrorMapInfo_;
