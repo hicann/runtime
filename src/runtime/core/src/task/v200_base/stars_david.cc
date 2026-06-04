@@ -164,7 +164,6 @@ void RegTaskToDavidSqefunc(void)
 {
     g_toDavidSqeFunc[TS_TASK_TYPE_REDUCE_ASYNC_V2] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_REMOTE_EVENT_WAIT] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_MAINTENANCE] = &ConstructDavidSqeForMaintenanceTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_ISSUE] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE] = &ConstructDavidSqeForProfilingEnableTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILING_DISABLE] = &ConstructDavidSqeForProfilingDisableTask;
@@ -174,41 +173,27 @@ void RegTaskToDavidSqefunc(void)
     g_toDavidSqeFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_MAINTAINCE] = &ConstructDavidSqeForModelMaintainceTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ConstructDavidSqeForModelExecuteTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM] = &ConstructDavidSqeForDebugUnRegisterForStreamTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_END_GRAPH] = &ConstructDavidSqeForAddEndGraphTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_EXIT_GRAPH] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &ConstructDavidSqeForModelToAicpuTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_NOTIFY_RECORD] = &ConstructDavidSqeForNotifyRecordTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_NOTIFY_WAIT] = &ConstructDavidSqeForNotifyWaitTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FFTS_PLUS] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_NPU_GET_FLOAT_STATUS] = &ConstructDavidSqeForNpuGetFloatStaTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS] = &ConstructDavidSqeForNpuClrFloatStaTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL] = &ConstructDavidSqeForRingBufferMaintainTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_BARRIER] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_RDMA_SEND] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_RDMA_DB_SEND] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILER_TRACE] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructDavidSqeForProfilerTraceExTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_FUSIONDUMP_ADDR_SET] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &ConstructDavidSqeForDataDumpLoadInfoTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER] = &ConstructDavidSqeForDebugRegisterTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DEBUG_UNREGISTER] = &ConstructDavidSqeForDebugUnRegisterTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructDavidSqeForTimeoutSetTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_GET_DEVICE_MSG] = &ConstructDavidSqeForGetDevMsgTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM] = &ConstructDavidSqeForDebugRegisterForStreamTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_ALLOC_DSA_ADDR] = &ConstructDavidSqeBase;
-    g_toDavidSqeFunc[TS_TASK_TYPE_GET_STARS_VERSION] = &ConstructDavidSqeBase;
     g_toDavidSqeFunc[TS_TASK_TYPE_CCU_LAUNCH] = &ConstructDavidSqeForCcuLaunchTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_FUSION_KERNEL] = &ConstructDavidSqeForFusionKernelTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_UB_DB_SEND] = &ConstructDavidSqeForUbDbSendTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DIRECT_SEND] = &ConstructDavidSqeForUbDirectSendTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructDavidSqeForModelUpdateTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &ConstructDavidSqeForAicpuInfoLoadTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_NOP] = &ConstructDavidSqeForNopTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &ConstructDavidSqeForEventRecordTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT] = &ConstructDavidSqeForEventWaitTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_RESET] = &ConstructDavidSqeForEventResetTask;
-    g_toDavidSqeFunc[TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION] = &ConstructDavidSqeForAicpuMsgVersionTask;
 }
 
 }  // namespace runtime

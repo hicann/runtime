@@ -15,7 +15,7 @@
 namespace cce {
 namespace runtime {
 
-void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     RtStarsGetFloatStatusSqe &sqe = command->getFloatStatusSqe;
     NpuGetFloatStatusTaskInfo *npuGetFltSta = &taskInfo->u.npuGetFloatStatusTask;
@@ -44,7 +44,7 @@ void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const c
            stm->Id_(), static_cast<uint32_t>(taskInfo->id), sqe.debugFlag);
 }
 
-void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     RtStarsPhSqe *const sqe = &(command->phSqe);
     NpuClearFloatStatusTaskInfo *npuClrFltSta = &taskInfo->u.npuClrFloatStatusTask;
@@ -65,6 +65,40 @@ void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const c
     RT_LOG(RT_LOG_INFO, "stream_id=%d, task_id=%u, debug_flag=%d",
         taskInfo->stream->Id_(), static_cast<uint32_t>(taskInfo->id), npuClrFltSta->debugFlag);
 }
+
+static bool FloatStatusTaskRegister()
+{
+    TaskFuncSingle getFloatStatusFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForNpuGetFloatStaTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle clearFloatStatusFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForNpuClrFloatStaTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, getFloatStatusFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, clearFloatStatusFuncs);
+    }
+
+    return true;
+}
+
+static bool g_floatStatusTaskRegister = FloatStatusTaskRegister();
 
 } // namespace runtime
 } // namespace cce

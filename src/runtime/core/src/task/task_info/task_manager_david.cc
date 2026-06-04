@@ -21,7 +21,6 @@
 #include "reduce_task.h"
 #include "debug_task.h"
 #include "davinci_multiple_task.h"
-#include "dump_task.h"
 #include "barrier_task.h"
 #include "model_maintaince_task.h"
 #include "notify_task.h"
@@ -29,7 +28,6 @@
 #include "ringbuffer_maintain_task.h"
 #include "model_update_task.h"
 #include "model_to_aicpu_task.h"
-#include "maintenance_task.h"
 #include "ccu_task.hpp"
 #include "error_code.h"
 #include "task_manager.h"
@@ -124,11 +122,9 @@ static void DavidRegSetStarsResultFunc(const std::vector<rtChipType_t> &chipType
         setStarsResultFunc[TS_TASK_TYPE_EVENT_RECORD] = &SetStarsResultForEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &SetStarsResultForDavidEventRecordTask;
         setStarsResultFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &SetStarsResultForModelExecuteTask;
-        setStarsResultFunc[TS_TASK_TYPE_DATADUMP_LOADINFO] = &SetStarsResultForDataDumpLoadInfoTask;
         setStarsResultFunc[TS_TASK_TYPE_MODEL_TO_AICPU] = &SetStarsResultForModelToAicpuTask;
         setStarsResultFunc[TS_TASK_TYPE_STREAM_WAIT_EVENT] = &SetStarsResultForEventWaitTask;
         setStarsResultFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT] = &SetStarsResultForEventWaitTask;
-        setStarsResultFunc[TS_TASK_TYPE_AICPU_INFO_LOAD] = &SetStarsResultForAicpuInfoLoadTask;
         setStarsResultFunc[TS_TASK_TYPE_CCU_LAUNCH] = &SetResultForCcuLaunchTask;
         setStarsResultFunc[TS_TASK_TYPE_FUSION_KERNEL] = &SetStarsResultForFusionKernelTask;
         setStarsResultFunc[TS_TASK_TYPE_UB_DB_SEND] = &SetResultForUbDmaTask;

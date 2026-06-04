@@ -11,11 +11,12 @@
 #include "stars_david.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "stream.hpp"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
-void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
+static void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
     uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
@@ -41,7 +42,7 @@ void ConstructDavidSqeForNpuGetFloatStaTask(TaskInfo * const taskInfo, rtDavidSq
         sqe.debugFlag);
 }
 
-void ConstructDavidSqeForNpuClrFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
+static void ConstructDavidSqeForNpuClrFloatStaTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe,
     uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
@@ -60,5 +61,42 @@ void ConstructDavidSqeForNpuClrFloatStaTask(TaskInfo * const taskInfo, rtDavidSq
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         npuClrFltSta->debugFlag);
 }
+
+static bool FloatStatusTaskRegister()
+{
+    TaskFuncSingle getFloatStatusFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle clearFloatStatusFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, getFloatStatusFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, clearFloatStatusFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, &ConstructDavidSqeForNpuGetFloatStaTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, &ConstructDavidSqeForNpuClrFloatStaTask);
+
+    return true;
+}
+
+static bool g_floatStatusTaskRegister = FloatStatusTaskRegister();
 } // namespace runtime
 } // namespace cce

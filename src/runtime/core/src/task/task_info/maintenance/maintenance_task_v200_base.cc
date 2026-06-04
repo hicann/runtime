@@ -13,12 +13,13 @@
 #include "context.hpp"
 #include "stars_david.hpp"
 #include "maintenance_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("MaintenanceTask")
-void ConstructDavidSqeForMaintenanceTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
+static void ConstructDavidSqeForMaintenanceTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
     uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
@@ -47,7 +48,8 @@ void ConstructDavidSqeForMaintenanceTask(TaskInfo * const taskInfo, rtDavidSqe_t
 #endif
 
 #if F_DESC("GetDevMsgTask")
-void ConstructDavidSqeForGetDevMsgTask(TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
+static void ConstructDavidSqeForGetDevMsgTask(
+    TaskInfo *taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     GetDevMsgTaskInfo * const getDevMsgTask = &(taskInfo->u.getDevMsgTask);
@@ -85,7 +87,7 @@ void AicpuMsgVersionTaskInit(TaskInfo *taskInfo)
     return;
 }
 
-void ConstructDavidSqeForAicpuMsgVersionTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
+static void ConstructDavidSqeForAicpuMsgVersionTask(TaskInfo * const taskInfo, rtDavidSqe_t * const davidSqe,
     uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
@@ -127,5 +129,78 @@ void ConstructDavidSqeForAicpuMsgVersionTask(TaskInfo * const taskInfo, rtDavidS
         static_cast<uint32_t>(sqe->topicType), sqe->usrData.cmdType);
 }
 #endif
+
+static bool MaintenanceTaskRegister()
+{
+    TaskFuncSingle maintenanceFuncs = {
+        .toCommandFunc = &ToCommandBodyForMaintenanceTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle allocDsaAddrFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle getDeviceMsgFuncs = {
+        .toCommandFunc = &ToCommandBodyForGetDevMsgTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle getStarsVersionFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle aicpuMsgVersionFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto& chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MAINTENANCE, maintenanceFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ALLOC_DSA_ADDR, allocDsaAddrFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, getDeviceMsgFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, getStarsVersionFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, aicpuMsgVersionFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_MAINTENANCE, &ConstructDavidSqeForMaintenanceTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_ALLOC_DSA_ADDR, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_GET_DEVICE_MSG, &ConstructDavidSqeForGetDevMsgTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_GET_STARS_VERSION, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, &ConstructDavidSqeForAicpuMsgVersionTask);
+
+    return true;
+}
+
+static bool g_maintenanceTaskRegister = MaintenanceTaskRegister();
 }  // namespace runtime
 }  // namespace cce

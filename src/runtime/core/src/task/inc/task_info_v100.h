@@ -28,13 +28,6 @@ void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t * const co
 void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
-void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void DoCompleteSuccessForDataDumpLoadInfoTask(TaskInfo* taskInfo, const uint32_t devId);
-void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-
 void ConstructSqeForProfilingEnableTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForProfilingDisableTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForProfilerTraceExTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
@@ -52,8 +45,6 @@ void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t 
 void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId);
 void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
 void SetResultForEventRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
@@ -76,9 +67,6 @@ void ConstructFftsMixSqeForDavinciTask(TaskInfo *taskInfo, rtStarsSqe_t *const c
 void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 
-void ConstructSqeForMaintenanceTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
-void DoCompleteSuccessForMaintenanceTask(TaskInfo * const taskInfo, const uint32_t devId);
-
 void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo);
 void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
 void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
@@ -89,17 +77,11 @@ void ConstructSqeForDavinciMultipleTask(TaskInfo * const taskInfo, rtStarsSqe_t 
 
 void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
 
-void ConstructSqeForStarsVersionTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
 void DoCompleteSuccessForStarsVersionTask(TaskInfo* taskInfo, const uint32_t devId);
 
 void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-
-void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const command);
 
 rtError_t WaitAsyncCopyCompleteForUpdateTask(TaskInfo* taskInfo);
 

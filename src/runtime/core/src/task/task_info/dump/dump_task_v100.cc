@@ -14,13 +14,14 @@
 #include "stars.hpp"
 #include "error_code.h"
 #include "dump_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 constexpr const uint16_t STARS_DATADUMP_LOADINFO_END_BITMAP = 0x20U;
 
 #if F_DESC("DataDumpLoadInfoTask")
-void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     Stream * const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -47,7 +48,7 @@ void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtStarsSqe_t *const
     RT_LOG(RT_LOG_INFO, "DataDumpLoadInfoTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
 }
 
-void DoCompleteSuccessForDataDumpLoadInfoTask(TaskInfo* taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForDataDumpLoadInfoTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     UNUSED(devId);
     const uint32_t errorCode = taskInfo->errorCode;
@@ -61,7 +62,7 @@ void DoCompleteSuccessForDataDumpLoadInfoTask(TaskInfo* taskInfo, const uint32_t
 #endif
 
 #if F_DESC("DebugRegisterTask")
-void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     Stream * const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -87,7 +88,7 @@ void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const co
 #endif
 
 #if F_DESC("DebugUnRegisterTask")
-void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     Stream * const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -111,7 +112,7 @@ void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t *const 
 #endif
 
 #if F_DESC("DebugRegisterForStreamTask")
-void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     Stream * const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -139,7 +140,7 @@ void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t 
 #endif
 
 #if F_DESC("DebugUnRegisterForStreamTask")
-void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     RtStarsPhSqe *const sqe = &(command->phSqe);
     Stream *stm = taskInfo->stream;
@@ -165,7 +166,7 @@ void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_
 #endif
 
 #if F_DESC("AicpuInfoLoadTask")
-void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
 {
     Stream * const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -192,7 +193,7 @@ void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t *const co
     RT_LOG(RT_LOG_INFO, "AicpuInfoLoadTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
 }
 
-void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint32_t devId)
 {
     UNUSED(devId);
     const uint32_t errorCode = taskInfo->errorCode;
@@ -220,6 +221,106 @@ void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const comma
     sqe->kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     PrintSqe(command, "NoOperationTask");
 }
+
+static bool DumpTaskRegister()
+{
+    TaskFuncSingle fusionDumpAddrSetFuncs = {
+        .toCommandFunc = &ToCommandBodyForFusionDumpAddrSetTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle dataDumpLoadInfoFuncs = {
+        .toCommandFunc = &ToCommandBodyForDataDumpLoadInfoTask,
+        .toSqeFunc = &ConstructSqeForDataDumpLoadInfoTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForDataDumpLoadInfoTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForDataDumpLoadInfoTask,
+    };
+    TaskFuncSingle debugRegisterFuncs = {
+        .toCommandFunc = &ToCommandBodyForDebugRegisterTask,
+        .toSqeFunc = &ConstructSqeForDebugRegisterTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle debugUnRegisterFuncs = {
+        .toCommandFunc = &ToCommandBodyForDebugUnRegisterTask,
+        .toSqeFunc = &ConstructSqeForDebugUnRegisterTask,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle debugRegisterForStreamFuncs = {
+        .toCommandFunc = &ToCommandBodyForDebugRegisterForStreamTask,
+        .toSqeFunc = &ConstructSqeForDebugRegisterForStreamTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle debugUnRegisterForStreamFuncs = {
+        .toCommandFunc = &ToCmdBodyForDebugUnRegisterForStreamTask,
+        .toSqeFunc = &ConstructSqeForDebugUnRegisterForStreamTask,
+        .doCompleteSuccFunc = nullptr,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle aicpuInfoLoadFuncs = {
+        .toCommandFunc = &ToCommandBodyForAicpuInfoLoadTask,
+        .toSqeFunc = &ConstructSqeForAicpuInfoLoadTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForAicpuInfoLoadTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForAicpuInfoLoadTask,
+    };
+    TaskFuncSingle nopFuncs = {
+        .toCommandFunc = &ToCommandForNopTask,
+        .toSqeFunc = &ConstructSqeForNopTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_FUSIONDUMP_ADDR_SET, fusionDumpAddrSetFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DATADUMP_LOADINFO, dataDumpLoadInfoFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER, debugRegisterFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER, debugUnRegisterFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM, debugRegisterForStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, debugUnRegisterForStreamFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_AICPU_INFO_LOAD, aicpuInfoLoadFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_NOP, nopFuncs);
+    }
+
+    return true;
+}
+
+static bool g_dumpTaskRegister = DumpTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

@@ -12,12 +12,14 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "task_info_v100.h"
+#include "maintenance_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("MaintenanceTask")
-void ConstructSqeForMaintenanceTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForMaintenanceTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     MaintenanceTaskInfo *maintenanceTaskInfo = &(taskInfo->u.maintenanceTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -50,7 +52,7 @@ void ConstructSqeForMaintenanceTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
     RT_LOG(RT_LOG_INFO, "MaintenanceTask stream_id:%d task_id:%u.", stream->Id_(), static_cast<uint32_t>(taskInfo->id));
 }
 
-void DoCompleteSuccessForMaintenanceTask(TaskInfo * const taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForMaintenanceTask(TaskInfo * const taskInfo, const uint32_t devId)
 {
     UNUSED(devId);
     MaintenanceTaskInfo *maintenanceTaskInfo = &(taskInfo->u.maintenanceTaskInfo);
@@ -69,7 +71,7 @@ void DoCompleteSuccessForMaintenanceTask(TaskInfo * const taskInfo, const uint32
 #endif
 
 #if F_DESC("AllocDsaAddrTask")
-void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     AllocDsaAddrInfoTaskInfo *dsaTaskInfo = &(taskInfo->u.allocDsaAddrTask);
     Stream *const stm = taskInfo->stream;
@@ -94,7 +96,7 @@ void ConstructSqeForAllocDsaAddrTask(TaskInfo * const taskInfo, rtStarsSqe_t *co
 #endif
 
 #if F_DESC("GetDevMsgTask")
-void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const command)
+static void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const command)
 {
     GetDevMsgTaskInfo *getDevMsgTask = &(taskInfo->u.getDevMsgTask);
     Stream * const stm = taskInfo->stream;
@@ -122,7 +124,7 @@ void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t * const comma
 #endif
 
 #if F_DESC("StarsVersionTask")
-void ConstructSqeForStarsVersionTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForStarsVersionTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     Stream *const stm = taskInfo->stream;
     RtStarsPhSqe *const sqe = &(command->phSqe);
@@ -166,6 +168,62 @@ void DoCompleteSuccessForStarsVersionTask(TaskInfo* taskInfo, const uint32_t dev
     dev->SetTschVersion(tschVersion);
 }
 #endif
+
+static bool MaintenanceTaskRegister()
+{
+    TaskFuncSingle maintenanceFuncs = {
+        .toCommandFunc = &ToCommandBodyForMaintenanceTask,
+        .toSqeFunc = &ConstructSqeForMaintenanceTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForMaintenanceTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle allocDsaAddrFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForAllocDsaAddrTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle getDeviceMsgFuncs = {
+        .toCommandFunc = &ToCommandBodyForGetDevMsgTask,
+        .toSqeFunc = &ConstructSqeForGetDevMsgTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle getStarsVersionFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForStarsVersionTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForStarsVersionTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForStarsVersionTask,
+    };
+
+    const auto& chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MAINTENANCE, maintenanceFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_ALLOC_DSA_ADDR, allocDsaAddrFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, getDeviceMsgFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, getStarsVersionFuncs);
+    }
+
+    return true;
+}
+
+static bool g_maintenanceTaskRegister = MaintenanceTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce
