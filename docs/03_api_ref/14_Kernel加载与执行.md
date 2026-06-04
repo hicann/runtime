@@ -1694,54 +1694,6 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 
 
-<a id="aclrtGetFuncBySymbol"></a>
-
-## aclrtGetFuncBySymbol
-
-```c
-aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
-```
-
-### 产品支持情况
-
-
-| 产品 | 是否支持 |
-| --- | :---: |
-| Ascend 950PR/Ascend 950DT | √ |
-| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
-| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
-
-### 功能说明
-
-根据核函数名（__global__声明的函数名，比如myKernel）获取核函数句柄。
-
-本接口仅适用于使用Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景。用户自定义Device侧核函数后，可以通过本接口根据核函数名，在内部符号表中查找到对应的核函数，并使用funcHandle表达，用于后续Launch Kernel。
-
-### 参数说明
-
-
-| 参数名 | 输入/输出 | 说明 |
-| --- | :---: | --- |
-| symbol | 输入 | 核函数名。|
-| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
-
-### 返回值说明
-
-返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
-
-### 约束说明
-
-- 本接口仅适用于使用Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景。
-- 本接口只能用于算子静态Shape场景，不支持tilingKey、显式加载等场景
-- 本接口不支持AI CPU算子。
-
-
-<br>
-<br>
-<br>
-
-
-
 <a id="aclrtFunctionGetAvailDynUbufPerBlock"></a>
 
 ## aclrtFunctionGetAvailDynUbufPerBlock
@@ -1778,3 +1730,51 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+
+<br>
+<br>
+<br>
+
+
+
+<a id="aclrtGetFuncBySymbol"></a>
+
+## aclrtGetFuncBySymbol
+
+```c
+aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
+```
+
+### 产品支持情况
+
+
+| 产品 | 是否支持 |
+| --- | :---: |
+| Ascend 950PR/Ascend 950DT | √ |
+| Atlas A3 训练系列产品/Atlas A3 推理系列产品 | √ |
+| Atlas A2 训练系列产品/Atlas A2 推理系列产品 | √ |
+
+### 功能说明
+
+根据核函数名（__global__声明的函数名，比如myKernel）获取核函数句柄。
+
+本接口仅适用于使用Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景。不适用于直接加载算子二进制文件的场景。
+用户自定义Device侧核函数后，可以通过本接口根据核函数名在内部符号表中查找到对应的核函数，并使用funcHandle表达，用于后续Launch Kernel。
+
+### 参数说明
+
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| symbol | 输入 | 核函数名。|
+| funcHandle | 输出 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25_数据类型及其操作接口.md#aclrtFuncHandle)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25_数据类型及其操作接口.md#aclError)。
+
+### 约束说明
+
+- 本接口只能用于算子静态Shape场景，且仅支持AI Core算子。
+- 核函数句柄仅在当前Device有效，切换Device后需要重新获取。
