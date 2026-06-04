@@ -547,9 +547,9 @@ TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Init) {
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_NOTSUPPORT, profHostCcaMsJob->Init(collectionJobCfg_));
 
-    collectionJobCfg_->comParams->params->host_platform_profiling = "off";
+    collectionJobCfg_->comParams->params->host_numa_profiling = "off";
     EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Init(collectionJobCfg_));
-    collectionJobCfg_->comParams->params->host_platform_profiling = "on";
+    collectionJobCfg_->comParams->params->host_numa_profiling = "on";
     EXPECT_EQ(PROFILING_SUCCESS, profHostCcaMsJob->Init(collectionJobCfg_));
 }
 
@@ -571,7 +571,7 @@ TEST_F(JOB_WRAPPER_PROF_HOST_CCA_MS_JOB_TEST, Process) {
         .then(returnValue(PROFILING_SUCCESS));
 
     collectionJobCfg_->comParams->params->hostProfiling = true;
-    collectionJobCfg_->comParams->params->host_platform_profiling = "on";
+    collectionJobCfg_->comParams->params->host_numa_profiling = "on";
     auto profHostCcaMsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHostCcaMsJob>();
 
     EXPECT_EQ(PROFILING_FAILED, profHostCcaMsJob->Process());

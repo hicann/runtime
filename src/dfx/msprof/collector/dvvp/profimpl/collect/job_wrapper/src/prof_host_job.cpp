@@ -353,7 +353,7 @@ int32_t ProfHostCcaMsJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     collectionJobCfg_ = cfg;
-    if (collectionJobCfg_->comParams->params->host_platform_profiling.compare(MSVP_PROF_ON) != 0) {
+    if (collectionJobCfg_->comParams->params->host_numa_profiling.compare(MSVP_PROF_ON) != 0) {
         MSPROF_LOGI("Host_CcaMS_profiling not enabled");
         return PROFILING_FAILED;
     }

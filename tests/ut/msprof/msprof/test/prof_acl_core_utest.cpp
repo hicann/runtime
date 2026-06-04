@@ -5419,13 +5419,13 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_SetHostSysParam_AllSwitches)
 {
     auto a = NewAdapter();
     auto p = NewParams();
-    a->SetHostSysParam("cpu,mem,network,disk,osrt,platform,unknown", p);
+    a->SetHostSysParam("cpu,mem,network,disk,osrt,numa,unknown", p);
     EXPECT_EQ("on", p->host_cpu_profiling);
     EXPECT_EQ("on", p->host_mem_profiling);
     EXPECT_EQ("on", p->host_network_profiling);
     EXPECT_EQ("on", p->host_disk_profiling);
     EXPECT_EQ("on", p->host_osrt_profiling);
-    EXPECT_EQ("on", p->host_platform_profiling);
+    EXPECT_EQ("on", p->host_numa_profiling);
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_SetHostSysUsageParam_AllSwitches)
