@@ -189,7 +189,6 @@ source ${install_path}/cann/set_env.sh
 若您的编译环境可以访问网络，编译过程中将自动下载开源第三方软件，可以使用如下命令进行编译：
 
 ```bash
-export CMAKE_TLS_VERIFY=0
 bash build.sh
 ```
 
