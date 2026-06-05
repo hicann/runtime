@@ -65,7 +65,7 @@ void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_
         RtPtrToValue<void *>(reduceAsyncV2TaskInfo->src),
         RtPtrToValue<void *>(reduceAsyncV2TaskInfo->destPtr));
     PrintModuleIdProc(taskInfo->stream->Device_()->Driver_(), errStr, reduceAsyncV2TaskInfo->src,
-        reduceAsyncV2TaskInfo->destPtr, &countNum);
+        reduceAsyncV2TaskInfo->destPtr, countNum);
     RT_LOG(RT_LOG_ERROR, "%s.", errStr);
 }
 

@@ -2444,7 +2444,7 @@ rtError_t ApiImpl::FreeHostSharedMemory(rtFreeHostSharedMemoryIn * const in)
 
 rtError_t ApiImpl::HostRegister(void *ptr, uint64_t size, rtHostRegisterType type, void **devPtr)
 {
-    RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 "u.", size);
+    RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 "u, type=%d.", size, type);
     Context * const curCtx = CurrentContext();
     NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
 

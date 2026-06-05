@@ -39,7 +39,8 @@ void ToCommandBodyForMemcpyAsyncTask(TaskInfo * const taskInfo, rtCommand_t *con
 void SetStarsResultForMemcpyAsyncTask(TaskInfo * const taskInfo, const rtLogicCqReport_t &logicCq);
 void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t devId);
 bool GetModuleIdByMemcpyAddr(Driver * const driver, void *memcpyAddr, uint32_t *moduleId);
-void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, void *dst, int32_t *count);
+void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, void *dst, int32_t &countNum);
+void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcpyAddrInfo, int32_t &countNum);
 void ReleaseCpyTmpMemFor3588(TaskInfo * const taskInfo);
 rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
                                 const void *&src, void *&des, uint64_t size);

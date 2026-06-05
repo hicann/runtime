@@ -34,7 +34,7 @@ rtError_t MemcopyAsyncPtr(void * const memcpyAddrInfo, const uint64_t destMax, c
 
     RtDavidStarsMemcpySqe sdmaSqe = {};
     InitStarsSdmaSqeForDavid(&sdmaSqe, cfgInfo, stm);
-    RT_LOG(RT_LOG_INFO, "memcpyAddrInfo=0x%lx , qos=%u", RtPtrToValue(memcpyAddrInfo), sdmaSqe.qos);
+    RT_LOG(RT_LOG_INFO, "memcpyAddrInfo=0x%lx, qos=%u", RtPtrToValue(memcpyAddrInfo), sdmaSqe.qos);
 
     error = dev->Driver_()->MemCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
     ERROR_RETURN(error, "Failed to memory copy info, device_id=%u, size=%u, retCode=%#x.",

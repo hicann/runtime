@@ -428,6 +428,22 @@ rtError_t WaitAsyncCopyCompleteForMemcpyTask(TaskInfo* taskInfo)
 
     return RT_ERROR_NONE;
 }
+
+void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcpyAddrInfo, int32_t &countNum)
+{
+    rtMemcpyAddrInfo addrInfo;
+    const rtError_t ret = driver->MemCopySync(&addrInfo, sizeof(rtMemcpyAddrInfo),
+        memcpyAddrInfo, sizeof(rtMemcpyAddrInfo), RT_MEMCPY_DEVICE_TO_HOST);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "MemCopySync failed, retCode=%#x.", ret);
+    } else {
+        countNum += snprintf_truncated_s(errStr + countNum,
+            static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum),
+            ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64, addrInfo.src, addrInfo.dst);
+        PrintModuleIdProc(driver, errStr, reinterpret_cast<void *>(addrInfo.src),
+            reinterpret_cast<void *>(addrInfo.dst), countNum);
+    }
+}
 #endif
 
 #if F_DESC("MemWriteValueTask")

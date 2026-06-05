@@ -380,6 +380,22 @@ void StarsV2MemcpyAsyncTaskUnInit(TaskInfo * const taskInfo)
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.src = nullptr;
     memcpyAsyncTaskInfo->dmaAddr.phyAddr.priv = nullptr;
 }
+
+void PrintAsyncPtrProc(Driver * const driver, char_t * const errStr, void *memcpyAddrInfo, int32_t &countNum)
+{
+    rtDavidMemcpyAddrInfo hostAddrInfo;
+    const rtError_t ret = driver->MemCopySync(&hostAddrInfo, sizeof(rtDavidMemcpyAddrInfo),
+        memcpyAddrInfo, sizeof(rtDavidMemcpyAddrInfo), RT_MEMCPY_DEVICE_TO_HOST);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "MemCopySync failed, retCode=%#x.", ret);
+    } else {
+        countNum += snprintf_truncated_s(errStr + countNum,
+            static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum),
+            ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64, hostAddrInfo.src, hostAddrInfo.dst);
+        PrintModuleIdProc(driver, errStr, reinterpret_cast<void *>(hostAddrInfo.src),
+            reinterpret_cast<void *>(hostAddrInfo.dst), countNum);
+    }
+}
 #endif
 
 #if F_DESC("MemWaitValueTask")

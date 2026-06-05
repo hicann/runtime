@@ -1160,6 +1160,79 @@ TEST_F(DavidTaskRecycleTest, DoCompleteSuccessForMemcpyAsyncTaskForSDMALinkError
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(DavidTaskRecycleTest, PrintAsyncPtrProcFunction)
+{
+    rtError_t ret;
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    Stream *stream;
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    Driver *driver = device->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    char_t errMsg[MSG_LENGTH] = {};
+    char_t *errStr = errMsg;
+    int32_t countNum = 0;
+    rtDavidMemcpyAddrInfo deviceAddrInfo = {};
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(PrintModuleIdProc).stubs();
+
+    PrintAsyncPtrProc(driver, errStr, static_cast<void *>(&deviceAddrInfo), countNum);
+
+    GlobalMockObject::verify();
+
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(DavidTaskRecycleTest, PrintAsyncPtrProcErrorCheck)
+{
+    rtError_t ret;
+    Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+    Stream *stream;
+    rtStream_t streamHandle = nullptr;
+    ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    Driver *driver = device->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    char_t errMsg[MSG_LENGTH] = {};
+    char_t *errStr = errMsg;
+    int32_t countNum = 0;
+    rtDavidMemcpyAddrInfo deviceAddrInfo = {};
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    PrintAsyncPtrProc(driver, errStr, static_cast<void *>(&deviceAddrInfo), countNum);
+
+    EXPECT_TRUE(countNum == 0 || strstr(errStr, "src_addr=") == nullptr);
+    GlobalMockObject::verify();
+
+    countNum = 0;
+    (void)memset_s(errMsg, MSG_LENGTH, 0, MSG_LENGTH);
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    PrintAsyncPtrProc(driver, errStr, nullptr, countNum);
+
+    EXPECT_TRUE(countNum == 0 || strstr(errStr, "src_addr=") == nullptr);
+    GlobalMockObject::verify();
+
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ((Runtime *)Runtime::Instance())->DeviceRelease(device);
+}
 
 TEST_F(DavidTaskRecycleTest, PrintErrorInfoForStreamLabelSwitchByIndexTask)
 {

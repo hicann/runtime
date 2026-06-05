@@ -811,9 +811,8 @@ bool GetModuleIdByMemcpyAddr(Driver * const driver, void *memcpyAddr, uint32_t *
     return true;
 }
 
-void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, void *dst, int32_t *count)
+void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, void *dst, int32_t &countNum)
 {
-    int32_t countNum = *count;
     uint32_t srcModuleId = static_cast<uint32_t>(SVM_INVALID_MODULE_ID);
     uint32_t dstModuleId = static_cast<uint32_t>(SVM_INVALID_MODULE_ID);
     if (GetModuleIdByMemcpyAddr(driver, reinterpret_cast<void *>(&src), &srcModuleId)) {
@@ -828,8 +827,6 @@ void PrintModuleIdProc(Driver * const driver, char_t * const errStr, void *src, 
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),", dst_module_id=%u", dstModuleId);
         }
     }
-
-    *count = countNum;
 }
 
 static void PrintUbdmaErrorInfo(const MemcpyAsyncTaskInfo * const memcpyAsyncTaskInfo)
@@ -903,25 +900,14 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo * const taskInfo, const uint32_t 
             countNum += snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)), ", memcpyAddrInfo=%#" PRIx64,
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->memcpyAddrInfo)));
-            rtMemcpyAddrInfo addrInfo;
-            const rtError_t ret = driver->MemCopySync(&addrInfo, sizeof(rtMemcpyAddrInfo),
-                memcpyAsyncTaskInfo->memcpyAddrInfo, sizeof(rtMemcpyAddrInfo), RT_MEMCPY_DEVICE_TO_HOST);
-            if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "MemCopySync failed, retCode=%#x.", ret);
-            } else {
-                countNum += snprintf_truncated_s(errStr + countNum,
-                    static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum),
-                    ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64, addrInfo.src, addrInfo.dst);
-                PrintModuleIdProc(driver, errStr, reinterpret_cast<void *>(addrInfo.src),
-                    reinterpret_cast<void *>(addrInfo.dst), &countNum);
-            }
+            PrintAsyncPtrProc(driver, errStr, memcpyAsyncTaskInfo->memcpyAddrInfo, countNum);
         } else {
             countNum += snprintf_truncated_s(errStr + countNum,
                 (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 ", src_addr=%#" PRIx64 ", dst_addr=%#" PRIx64,
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->src)),
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->destPtr)));
-            PrintModuleIdProc(driver, errStr, memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr, &countNum);
+            PrintModuleIdProc(driver, errStr, memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr, countNum);
         }
     }
     STREAM_REPORT_ERR_MSG(reportStream, errorModuleType, "%s", errStr);
