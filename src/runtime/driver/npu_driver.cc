@@ -271,18 +271,18 @@ rtError_t NpuDriver::MemConvertAddr(const uint64_t src, const uint64_t dst, cons
             static_cast<int32_t>(drvRet));
     }
     if (dmaAddress->fixed_size > len) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "[drv api] drvMemConvertAddr failed: pSrc=%" PRIu64 ", pDst=%" PRIu64
-            ", len=%" PRIu64 "(bytes), fixed_size:%u(bytes), drvRetCode=%d.",
-            src, dst, len, dmaAddress->fixed_size, static_cast<int32_t>(drvRet));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1017, "len",
+            "DMA transfer size exceeds the requested length, please check whether len is smaller than the actual "
+            "transfer size, len=" + std::to_string(len) + ", actual transfer size=" +
+                std::to_string(dmaAddress->fixed_size));
         return RT_ERROR_DRV_ERR;
     }
 
     if ((dmaAddress->fixed_size != len) && (dmaAddress->fixed_size == 0U)) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR,
-            "[drv api] drvMemConvertAddr failed, fixed_size is 0 : pSrc=%" PRIu64 ", "
-            "pDst=%" PRIu64 ", len=%" PRIu64 "(bytes), fixed_size:%u, drvRetCode=%d.", src,
-            dst, len, dmaAddress->fixed_size, static_cast<int32_t>(drvRet));
+        RT_LOG_INNER_MSG(RT_LOG_ERROR,
+            "Failed to convert memory address, actual transfer size is 0, src=%" PRIu64
+            ", dst=%" PRIu64 ", len=%" PRIu64 "(bytes).",
+            src, dst, len);
         return RT_ERROR_DRV_ERR;
     }
 

@@ -410,6 +410,7 @@ rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream * const stm, uint32_t &pos, 
     uint32_t needLogCnt = 0U;
     while (error == RT_ERROR_TASKRES_QUEUE_FULL) {
         if ((stm->Flags() & RT_STREAM_PERSISTENT) != 0U) {
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1019, "the number of pending tasks on the stream exceeds the limit");
             return RT_ERROR_STREAM_FULL;
         }
         error = stm->CheckContextStatus();

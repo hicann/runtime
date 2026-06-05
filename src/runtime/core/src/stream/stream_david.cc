@@ -651,7 +651,6 @@ rtError_t DavidStream::AddTaskToList(const TaskInfo * const tsk)
         if (unlikely(publicQueueHead_ == tail)) {
             RT_LOG(RT_LOG_WARNING, "task public buff full, stream_id=%d, task_id=%hu, head=%u, tail=%u",
                 streamId_, tsk->id, publicQueueHead_, publicQueueTail_);
-            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1019, "stream task public buffer is full");
             return RT_ERROR_STREAM_FULL;
         }
         taskPublicBuff_[publicQueueTail_ % taskPublicBuffSize_] = tsk->id;

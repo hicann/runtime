@@ -1526,8 +1526,7 @@ rtError_t NpuDriver::DevMemAllocCached(void ** const dptr, const uint64_t size,
 {
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     if (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_ONLY) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "not support huge page, device_id=%u,size=%" PRIu64,
-            deviceId, size);
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "huge page only policy");
         return RT_ERROR_INVALID_VALUE;
     } else {
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
