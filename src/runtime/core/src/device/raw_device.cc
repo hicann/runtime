@@ -1193,7 +1193,7 @@ void RawDevice::FreeProfSwitchAddr(void)
 
 void RawDevice::ProfSwitchDisable()
 {
-    if (!CheckFeatureSupport(TS_FEATURE_MEM_WAIT_PROF)) {
+    if (!CheckFeatureSupport(TS_FEATURE_MEM_WAIT_PROF) || (profSwitchAddr_ == 0UL)) {
         return;
     }
 
@@ -1206,7 +1206,7 @@ void RawDevice::ProfSwitchDisable()
 
 void RawDevice::ProfSwitchEnable()
 {
-    if (!CheckFeatureSupport(TS_FEATURE_MEM_WAIT_PROF)) {
+    if (!CheckFeatureSupport(TS_FEATURE_MEM_WAIT_PROF) || (profSwitchAddr_ == 0UL)) {
         return;
     }
 
