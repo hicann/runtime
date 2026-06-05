@@ -46,7 +46,9 @@ static void ExceptionCallback(rtExceptionInfo* const exception)
     if (exception != nullptr) {
         if (exception->retcode == ACL_ERROR_RT_AICORE_OVER_FLOW ||
             exception->retcode == ACL_ERROR_RT_AIVEC_OVER_FLOW ||
-            exception->retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR) {
+            exception->retcode == ACL_ERROR_RT_DEVICE_MEM_ERROR ||
+            exception->retcode == ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR ||
+            exception->retcode == ACL_ERROR_RT_LINK_ERROR) {
             IDE_LOGW("Ignore exception dump request, retcode: %u.", exception->retcode);
             return;
         }
