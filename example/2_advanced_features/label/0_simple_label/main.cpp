@@ -28,6 +28,7 @@ int main()
     const int32_t deviceId = 0;
     const uint32_t branchIndex = 1;
     const uint32_t labelCount = 2;
+    const uint32_t headStreamFlag = 0x00000000U;
 
     aclrtContext context = nullptr;
     aclrtStream labelStream = nullptr;
@@ -49,9 +50,10 @@ int main()
     bool labelStreamBound = false;
 
     const int32_t result = [&]() -> int32_t {
+        // Initialize ACL and bind runtime resources to device 0.
         CHECK_ERROR(aclInit(nullptr));
         aclInitialized = true;
-        INFO_LOG("AscendCL initialized.");
+        INFO_LOG("ACL initialized.");
 
         CHECK_ERROR(aclrtSetDevice(deviceId));
         deviceSet = true;
@@ -69,14 +71,16 @@ int main()
         executeStreamCreated = true;
         INFO_LOG("Execute stream created.");
 
+        // Build a model runtime instance and bind the persistent stream for label tasks.
         CHECK_ERROR(aclmdlRIBuildBegin(&modelRI, 0x00U));
         modelRICreated = true;
         INFO_LOG("Model runtime instance build started.");
 
-        CHECK_ERROR(aclmdlRIBindStream(modelRI, labelStream, ACL_MODEL_STREAM_FLAG_HEAD));
+        CHECK_ERROR(aclmdlRIBindStream(modelRI, labelStream, headStreamFlag));
         labelStreamBound = true;
         INFO_LOG("Persistent label stream bound to the model runtime instance.");
 
+        // Prepare the branch index on device memory.
         CHECK_ERROR(
             aclrtMalloc(reinterpret_cast<void **>(&branchIndexDevice), sizeof(branchIndex), ACL_MEM_MALLOC_HUGE_FIRST));
         branchIndexAllocated = true;
@@ -90,6 +94,7 @@ int main()
             ACL_MEMCPY_HOST_TO_DEVICE));
         INFO_LOG("Copied branch index %u from host to device.", branchIndex);
 
+        // Create labels and organize them as a label list.
         for (uint32_t index = 0; index < labelCount; ++index) {
             CHECK_ERROR(aclrtCreateLabel(&labels[index]));
             labelCreated[index] = true;
@@ -113,6 +118,7 @@ int main()
         CHECK_ERROR(aclmdlRIBuildEnd(modelRI, nullptr));
         INFO_LOG("Model runtime instance build finished.");
 
+        // Execute the model runtime instance and wait for completion.
         CHECK_ERROR(aclmdlRIExecuteAsync(modelRI, executeStream));
         CHECK_ERROR(aclrtSynchronizeStream(executeStream));
         INFO_LOG("Switch label executed successfully with branch index %u.", branchIndex);
@@ -121,7 +127,8 @@ int main()
 
     int32_t finalResult = result;
     if (labelStreamBound) {
-        UpdateFinalResultOnError("aclmdlRIUnbindStream(modelRI, labelStream)", aclmdlRIUnbindStream(modelRI, labelStream), finalResult);
+        UpdateFinalResultOnError(
+            "aclmdlRIUnbindStream(modelRI, labelStream)", aclmdlRIUnbindStream(modelRI, labelStream), finalResult);
     }
     if (modelRICreated) {
         UpdateFinalResultOnError("aclmdlRIDestroy(modelRI)", aclmdlRIDestroy(modelRI), finalResult);

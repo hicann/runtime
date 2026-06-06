@@ -9,25 +9,63 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-CURRENT_DIR=$(
-    cd $(dirname ${BASH_SOURCE:-$0})
-    pwd
-)
-cd $CURRENT_DIR
+set -euo pipefail
 
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
-source $_ASCEND_INSTALL_PATH/bin/setenv.bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXAMPLE_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+
+source "${EXAMPLE_DIR}/common/resolve_cann_env.sh"
+
+detect_sample_env() {
+    if [ -n "${SOC_VERSION:-}" ] && [ -n "${ASCENDC_CMAKE_DIR:-}" ]; then
+        return 0
+    fi
+    if [ ! -f "${EXAMPLE_DIR}/set_sample_env.sh" ]; then
+        return 0
+    fi
+
+    set +eu
+    source "${EXAMPLE_DIR}/set_sample_env.sh"
+    local ret=$?
+    set -euo pipefail
+    return "${ret}"
+}
+
+resolve_cann_env
+
+if ! detect_sample_env; then
+    echo "[ERROR]: Failed to auto detect SOC_VERSION or ASCENDC_CMAKE_DIR. Please source ${EXAMPLE_DIR}/set_sample_env.sh manually."
+    exit 1
+fi
+
+if [ -z "${ASCENDC_CMAKE_DIR:-}" ]; then
+    echo "[ERROR]: ASCENDC_CMAKE_DIR is not set. Please export ASCENDC_CMAKE_DIR before building this sample."
+    exit 1
+fi
+
+if [ -z "${SOC_VERSION:-}" ]; then
+    echo "[ERROR]: SOC_VERSION is not set. Please export SOC_VERSION before building this sample."
+    exit 1
+fi
+
+if [ ! -f "${ASCENDC_CMAKE_DIR}/ascendc.cmake" ]; then
+    echo "[ERROR]: ${ASCENDC_CMAKE_DIR}/ascendc.cmake does not exist."
+    exit 1
+fi
+
+cd "${SCRIPT_DIR}"
 
 BUILD_TYPE="Debug"
-INSTALL_PREFIX="${CURRENT_DIR}/out"
+INSTALL_PREFIX="${SCRIPT_DIR}/out"
+RUN_MODE="simple"
 
-export ASCEND_TOOLKIT_HOME=${_ASCEND_INSTALL_PATH}
-export ASCEND_HOME_PATH=${_ASCEND_INSTALL_PATH}
+export ASCEND_TOOLKIT_HOME="${ASCEND_INSTALL_PATH}"
+export ASCEND_HOME_PATH="${ASCEND_INSTALL_PATH}"
 
 SHORT=r:,
 LONG=run-mode:,
 OPTS=$(getopt -a --options $SHORT --longoptions $LONG -- "$@")
-eval set -- "$OPTS"
+eval set -- "${OPTS}"
 
 while :; do
     case "$1" in
@@ -46,48 +84,37 @@ while :; do
     esac
 done
 
-# 编译前拦截，若 RUN_MODE 不为 simple、placeholder或者为空字符串，则报错终止
-if [ "$RUN_MODE" != "simple" ] && [ "$RUN_MODE" != "placeholder" ] && [ "$RUN_MODE" != "" ]; then
-    echo "[ERROR]: Invalid run mode: $RUN_MODE , mode must be simple or placeholder"
+if [ "${RUN_MODE}" != "simple" ] && [ "${RUN_MODE}" != "placeholder" ]; then
+    echo "[ERROR]: Invalid run mode: ${RUN_MODE}, mode must be simple or placeholder."
     exit 1
 fi
 
-set -e
-rm -rf build out
-mkdir -p build
-cmake -B build \
-    -DSOC_VERSION=${SOC_VERSION} \
-    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-    -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-    -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
-cmake --build build -j
-cmake --install build
+BUILD_DIR="${SCRIPT_DIR}/build"
+mkdir -p "${BUILD_DIR}"
 
-rm -f ascendc_kernels_bbit
-cp ./out/bin/ascendc_kernels_bbit ./
+echo "Configuring CMake..."
+cmake -B "${BUILD_DIR}" \
+    -DSOC_VERSION="${SOC_VERSION}" \
+    -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+    -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" \
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
+
+echo "Building..."
+cmake --build "${BUILD_DIR}" -j"$(nproc)"
+cmake --install "${BUILD_DIR}"
+
 rm -rf input output
 mkdir -p input output
 
-# check and install numpy
-set +e
-echo "checking for numpy dependency..."
-python3 -c "import numpy" &> /dev/null
-if [ $? -ne 0 ]; then
-    echo "numpy not found. installing numpy..."
-    python3 -m pip install numpy --user
-    if [ $? -ne 0 ]; then
-        echo "Error: numpy installation failed. please check your pip environment."
-        exit 1
-    fi
-    echo "numpy installation completed."
-else
-    echo "numpy is already installed."
+if ! python3 -c "import numpy" &> /dev/null; then
+    echo "[ERROR]: numpy is not installed. Please install numpy before running this sample."
+    exit 1
 fi
-set -e
+
 python3 scripts/gen_data.py
 
-export LD_LIBRARY_PATH=$(pwd)/out/lib:$(pwd)/out/lib64:${_ASCEND_INSTALL_PATH}/lib64:$LD_LIBRARY_PATH
-./ascendc_kernels_bbit "$RUN_MODE"
+export LD_LIBRARY_PATH="${SCRIPT_DIR}/out/lib:${SCRIPT_DIR}/out/lib64:${ASCEND_INSTALL_PATH}/lib64:${LD_LIBRARY_PATH:-}"
+"${SCRIPT_DIR}/out/bin/ascendc_kernels_bbit" "${RUN_MODE}"
 
 md5sum output/*.bin
 python3 scripts/verify_result.py output/output_z.bin output/golden.bin

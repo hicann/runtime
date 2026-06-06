@@ -23,5 +23,5 @@ target_compile_options(main PRIVATE
 )
 
 target_link_libraries(main PRIVATE
-    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libascendcl.so
+    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libacl_rt.so
 )

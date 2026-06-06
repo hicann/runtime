@@ -1,4 +1,4 @@
-﻿# -----------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------
 # Copyright (c) 2025 Huawei Technologies Co., Ltd.
 # This program is free software, you can redistribute it and/or modify it under the terms and conditions of
 # CANN Open Software License Agreement Version 2.0 (the "License").
@@ -8,11 +8,9 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-# CMake lowest version requirement
 cmake_minimum_required(VERSION 3.16.0)
 
-# Project information
-project(Kernel_Sample)
+project(Kernel_Launch_Sample)
 
 set(ASCENDC_CMAKE_DIR $ENV{ASCENDC_CMAKE_DIR})
 set(RUN_MODE "npu" CACHE STRING "cpu/sim/npu")
@@ -24,12 +22,10 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_LIST_DIR}/out" CACHE STRING "path for 
 file(GLOB KERNEL_FILES_SIMPLE ../../../kernel_func/add_custom.cpp)
 file(GLOB KERNEL_FILES_PLACEHOLDER ../../../kernel_func/add_custom_tiling.cpp)
 
-# Ascend library use to add kernel file to generate ascendc library
 include(${ASCENDC_CMAKE_DIR}/ascendc.cmake)
 ascendc_fatbin_library(ascendc_kernels_simple ${KERNEL_FILES_SIMPLE})
 ascendc_fatbin_library(ascendc_kernels_placeholder ${KERNEL_FILES_PLACEHOLDER})
 
-# Include directories and libraries
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${ASCEND_CANN_PACKAGE_PATH}/include)
@@ -42,8 +38,7 @@ target_compile_options(ascendc_kernels_bbit PRIVATE
 )
 
 target_link_libraries(ascendc_kernels_bbit PRIVATE
-    host_intf_pub
-    ascendcl
+    ${ASCEND_CANN_PACKAGE_PATH}/lib64/libacl_rt.so
 )
 
 install(TARGETS ascendc_kernels_bbit
@@ -51,4 +46,3 @@ install(TARGETS ascendc_kernels_bbit
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-

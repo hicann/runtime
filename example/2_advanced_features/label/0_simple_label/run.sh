@@ -9,12 +9,14 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-set -e
-
-_ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
-source $_ASCEND_INSTALL_PATH/bin/setenv.bash
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXAMPLE_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+
+source "${EXAMPLE_DIR}/common/resolve_cann_env.sh"
+resolve_cann_env
+
 cd "${SCRIPT_DIR}"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
@@ -23,10 +25,10 @@ cd "${BUILD_DIR}"
 
 echo "Configuring CMake..."
 cmake .. \
-    -DASCEND_CANN_PACKAGE_PATH=${_ASCEND_INSTALL_PATH}
+    -DASCEND_CANN_PACKAGE_PATH="${ASCEND_INSTALL_PATH}"
 
 echo "Building..."
-make -j$(nproc)
+make -j"$(nproc)"
 
 cd "${SCRIPT_DIR}"
 
