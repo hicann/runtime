@@ -205,6 +205,49 @@ set(libruntime_api_src_files_optional
     ${RUNTIME_DIR}/src/runtime/api/api_c_uvm.cc
 )
 
+set(libruntime_api_aclrt_impl_src_files
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/log.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/device.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/dfx.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/event.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/stream.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/memory.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/context.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/callback.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/group.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/kernel.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/notify.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/label.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/acl_rt_impl_base.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/model_ri.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/data_buffer.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/allocator.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/callback_api.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/init_callback_manager.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/snapshot.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16_impl.cpp
+ 	${RUNTIME_DIR}/src/acl/common/log_inner.cpp
+ 	${RUNTIME_DIR}/src/acl/common/prof_reporter.cpp
+ 	${RUNTIME_DIR}/src/acl/common/resource_statistics.cpp
+ 	${RUNTIME_DIR}/src/acl/common/json_parser.cpp
+ 	${RUNTIME_DIR}/src/acl/utils/string_utils.cpp
+ 	${RUNTIME_DIR}/src/acl/utils/cann_info_utils.cpp
+ 	${RUNTIME_DIR}/src/acl/utils/hash_utils.cpp
+ 	${RUNTIME_DIR}/src/acl/utils/file_utils.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling_manager.cpp
+ 	${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump_shim.cpp    
+)
+
+set_source_files_properties(${libruntime_api_aclrt_impl_src_files}
+    PROPERTIES
+        COMPILE_OPTIONS "-ftrapv"
+        COMPILE_DEFINITIONS "OS_TYPE=0;FUNC_VISIBILITY"
+)
+
 #------------------------- runtime v100 -------------------------
 set(xpu_tprt_api_file
     ${RUNTIME_FEATURE_DIR}/xpu/api_error_xpu.cc
@@ -526,6 +569,7 @@ macro(add_runtime_api_library target_name)
         ${RUNTIME_DIR}/src/runtime/api/api.cc
         ${RUNTIME_CORE_DIR}/src/profiler/prof_map_ge_model_device.cc
         ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
+        ${libruntime_api_aclrt_impl_src_files}
         $<TARGET_OBJECTS:runtime_platform_910B>
         $<TARGET_OBJECTS:runtime_platform_kirin>
         $<TARGET_OBJECTS:runtime_platform_others>
@@ -558,6 +602,18 @@ macro(add_runtime_api_library target_name)
     target_include_directories(${target_name} PRIVATE
         ${RUNTIME_INC_DIR_OPEN}
         ${RUNTIME_DIR}/include
+        ${RUNTIME_DIR}/src/acl/aclrt_impl
+ 	    ${RUNTIME_DIR}/src/acl/common
+ 	    ${RUNTIME_DIR}/src/acl/utils
+ 	    ${RUNTIME_DIR}/src/acl
+ 	    ${RUNTIME_DIR}/include/external
+ 	    ${RUNTIME_DIR}/pkg_inc
+ 	    ${RUNTIME_DIR}/pkg_inc/runtime
+ 	    ${RUNTIME_DIR}/pkg_inc/runtime/runtime
+ 	    ${RUNTIME_DIR}/pkg_inc/dump
+ 	    ${RUNTIME_DIR}/src/dfx/error_manager
+ 	    ${RUNTIME_DIR}/src/dfx/adump/inc/metadef/external
+ 	    ${RUNTIME_DIR}/include/dfx
     )
 
     target_link_libraries(${target_name}

@@ -9,40 +9,30 @@
 # -----------------------------------------------------------------------------------------------------------
 
 ############ libacl_rt_impl.so ############
+# This library provides runtime forwarding to libruntime.so using auto-generated stubs.
+set(ACL_RT_IMPL_STUB_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/../../../scripts/package/runtime/scripts/gen_dynamic_stub.py)
+set(ACL_RT_IMPL_HEADER ${CMAKE_CURRENT_LIST_DIR}/acl_rt_impl.h)
+set(ACL_RT_WRAPPER_HEADER ${CMAKE_CURRENT_LIST_DIR}/acl_rt_wrapper.h)
+set(ACL_RT_IMPL_STUB_CPP ${CMAKE_CURRENT_BINARY_DIR}/acl_rt_impl_stub.cpp)
+
+add_custom_command(
+    OUTPUT ${ACL_RT_IMPL_STUB_CPP}
+    COMMAND ${CMAKE_COMMAND} -E echo "Generating stub files:acl_rt_impl_stub.cpp."
+    COMMAND python3 ${ACL_RT_IMPL_STUB_SCRIPT}
+            ${CMAKE_CURRENT_LIST_DIR}/../../../air/inc/external/acl
+            ${CMAKE_CURRENT_LIST_DIR}
+            ${ACL_RT_IMPL_STUB_CPP}
+    COMMAND ${CMAKE_COMMAND} -E echo "Generating stub files end."
+    DEPENDS
+            ${ACL_RT_IMPL_STUB_SCRIPT}
+            ${ACL_RT_IMPL_HEADER}
+            ${ACL_RT_WRAPPER_HEADER}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    VERBATIM
+)
+
 add_library(acl_rt_impl SHARED
-    ../common/log_inner.cpp
-    ../common/prof_reporter.cpp
-    ../common/resource_statistics.cpp
-    acl.cpp
-    log.cpp
-    device.cpp
-    dfx.cpp
-    event.cpp
-    stream.cpp
-    memory.cpp
-    context.cpp
-    callback.cpp
-    group.cpp
-    kernel.cpp
-    notify.cpp
-    label.cpp
-    acl_rt_impl_base.cpp
-    model_ri.cpp
-    data_buffer.cpp
-    allocator.cpp
-    callback_api.cpp
-    init_callback_manager.cpp
-    snapshot.cpp
-    types/fp16.cpp
-    types/fp16_impl.cpp
-    ../common/json_parser.cpp
-    ../utils/string_utils.cpp
-    ../utils/cann_info_utils.cpp
-    ../utils/hash_utils.cpp
-    ../utils/file_utils.cpp
-    toolchain/dump.cpp
-    toolchain/profiling.cpp
-    toolchain/profiling_manager.cpp
+    ${ACL_RT_IMPL_STUB_CPP}
 )
 
 set(ACL_INC_EXTERNAL_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../include/external)
@@ -50,17 +40,6 @@ set(ACL_INC_EXTERNAL_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../include/external)
 target_include_directories(acl_rt_impl PRIVATE
     ${ACL_INC_EXTERNAL_DIR}
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
-    ${RUNTIME_DIR}/pkg_inc
-    ${RUNTIME_DIR}/pkg_inc/runtime
- 	${RUNTIME_DIR}/pkg_inc/runtime/runtime
-    ${RUNTIME_DIR}/pkg_inc/dump
-    ${RUNTIME_DIR}/src
-    ${RUNTIME_DIR}/src/inc
-    ${RUNTIME_DIR}/src/dfx/error_manager
-    ${RUNTIME_DIR}/src/dfx/adump/inc/metadef/external
-    ${RUNTIME_DIR}/include/dfx
 )
 
 target_compile_options(acl_rt_impl PRIVATE
@@ -73,8 +52,8 @@ target_compile_definitions(acl_rt_impl PRIVATE
     FUNC_VISIBILITY
 )
 
+# Link options for the generated forwarding stub library.
 target_link_options(acl_rt_impl PRIVATE
-    -rdynamic
     -Wl,-Bsymbolic
     -Wl,--exclude-libs,ALL
     -Wl,--no-undefined
@@ -82,19 +61,6 @@ target_link_options(acl_rt_impl PRIVATE
 
 target_link_libraries(acl_rt_impl PRIVATE
     $<BUILD_INTERFACE:intf_pub>
-    $<BUILD_INTERFACE:c_sec_headers>
-    $<BUILD_INTERFACE:mmpa_headers>
-    $<BUILD_INTERFACE:msprof_headers>
-    $<BUILD_INTERFACE:platform_headers>
-    mmpa
-    runtime
-    c_sec
-    unified_dlog
-    profapi_share
-    platform
-    ascend_dump
-    json
-    error_manager
     -Wl,--as-needed
     -ldl
     -lpthread

@@ -19,6 +19,7 @@ target_include_directories(acl_rt PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/../aclrt_impl
+    ${CMAKE_CURRENT_LIST_DIR}/../../../pkg_inc/dump
 )
 
 target_compile_options(acl_rt PRIVATE
@@ -42,11 +43,12 @@ target_link_libraries(acl_rt
     PRIVATE
         $<BUILD_INTERFACE:intf_pub>
         -Wl,--no-as-needed
-        acl_rt_impl
+        runtime
+        ascend_dump
+        -lstdc++
         -Wl,--as-needed
         -ldl
         -lpthread
-        -lstdc++
     PUBLIC
         $<BUILD_INTERFACE:acl_rt_headers>
 )

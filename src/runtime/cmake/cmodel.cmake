@@ -256,6 +256,50 @@ set(libruntime_cmodel_profile_src_files
     ${RUNTIME_CORE_DIR}/src/profiler/profile_log_record.cc
     ${RUNTIME_CORE_DIR}/src/profiler/npu_driver_record.cc
 )
+
+set(libruntime_cmodel_aclrt_impl_src_files
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/log.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/device.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/dfx.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/event.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/stream.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/memory.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/context.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/group.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/kernel.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/notify.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/label.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/acl_rt_impl_base.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/model_ri.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/data_buffer.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/allocator.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/callback_api.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/init_callback_manager.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/snapshot.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/types/fp16_impl.cpp
+    ${RUNTIME_DIR}/src/acl/common/log_inner.cpp
+    ${RUNTIME_DIR}/src/acl/common/prof_reporter.cpp
+    ${RUNTIME_DIR}/src/acl/common/resource_statistics.cpp
+    ${RUNTIME_DIR}/src/acl/common/json_parser.cpp
+    ${RUNTIME_DIR}/src/acl/utils/string_utils.cpp
+    ${RUNTIME_DIR}/src/acl/utils/cann_info_utils.cpp
+    ${RUNTIME_DIR}/src/acl/utils/hash_utils.cpp
+    ${RUNTIME_DIR}/src/acl/utils/file_utils.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/profiling_manager.cpp
+    ${RUNTIME_DIR}/src/acl/aclrt_impl/toolchain/dump_shim.cpp
+)
+
+set_source_files_properties(${libruntime_cmodel_aclrt_impl_src_files}
+    PROPERTIES
+        COMPILE_OPTIONS "-fvisibility=hidden;-ftrapv"
+        COMPILE_DEFINITIONS "OS_TYPE=0;FUNC_VISIBILITY"
+)
+
 set(libruntime_cmodel_arg_loader_files
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
@@ -434,6 +478,7 @@ set(libruntime_cmodel_src_files
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
+    ${libruntime_cmodel_aclrt_impl_src_files}
     ${common_src_files_cmodel}
     ${libruntime_cmodel_src_files_optional}
     ${libruntime_cmodel_api_src_files_cmodel}
@@ -575,6 +620,7 @@ set(libruntime_cmodel_v200_src_files
     ${libruntime_cmodel_profile_src_files}
     ${libruntime_cmodel_arg_loader_files}
     ${libruntime_cmodel_callback_files}
+    ${libruntime_cmodel_aclrt_impl_src_files}
     ${RUNTIME_CORE_DIR}/src/plugin_manage/v200/plugin_old_arch.cc
     ${RUNTIME_CORE_DIR}/src/plugin_manage/runtime_keeper.cc
     ${common_src_files_cmodel}
@@ -693,6 +739,18 @@ target_include_directories(runtime_model PRIVATE
     ${RUNTIME_CMODEL_INC_DIR}
     ${RUNTIME_DIR}/src/cmodel_driver
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
+    ${RUNTIME_DIR}/src/acl/aclrt_impl
+    ${RUNTIME_DIR}/src/acl/common
+    ${RUNTIME_DIR}/src/acl/utils
+    ${RUNTIME_DIR}/src/acl
+    ${RUNTIME_DIR}/include/external
+    ${RUNTIME_DIR}/pkg_inc
+    ${RUNTIME_DIR}/pkg_inc/runtime
+    ${RUNTIME_DIR}/pkg_inc/runtime/runtime
+    ${RUNTIME_DIR}/pkg_inc/dump
+    ${RUNTIME_DIR}/src/dfx/error_manager
+    ${RUNTIME_DIR}/src/dfx/adump/inc/metadef/external
+    ${RUNTIME_DIR}/include/dfx
 )
 
 target_compile_definitions(runtime_model PRIVATE
@@ -745,6 +803,18 @@ target_include_directories(runtime_model_v200 PRIVATE
     ${RUNTIME_DIR}/src/cmodel_driver
     ${RUNTIME_DIR}/src/dfx/msprof/inc/toolchain
     ${RUNTIME_DIR}/src/inc/runtime
+    ${RUNTIME_DIR}/src/acl/aclrt_impl
+    ${RUNTIME_DIR}/src/acl/common
+    ${RUNTIME_DIR}/src/acl/utils
+    ${RUNTIME_DIR}/src/acl
+    ${RUNTIME_DIR}/include/external
+    ${RUNTIME_DIR}/pkg_inc
+    ${RUNTIME_DIR}/pkg_inc/runtime
+    ${RUNTIME_DIR}/pkg_inc/runtime/runtime
+    ${RUNTIME_DIR}/pkg_inc/dump
+    ${RUNTIME_DIR}/src/dfx/error_manager
+    ${RUNTIME_DIR}/src/dfx/adump/inc/metadef/external
+    ${RUNTIME_DIR}/include/dfx
 )
 
 target_compile_definitions(runtime_model_v200 PRIVATE
@@ -812,6 +882,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         -Wl,--no-as-needed
         unified_dlog
         -Wl,--as-needed
+        error_manager
         json
         awatchdog_share
     )
@@ -848,6 +919,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         -Wextra
         -Wfloat-equal
     )
+
     target_link_libraries(runtime_camodel_${product_type} PRIVATE
         mmpa
         platform
@@ -859,6 +931,7 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
         -Wl,--no-as-needed
         unified_dlog
         -Wl,--as-needed
+        error_manager
         json
         awatchdog_share
     )

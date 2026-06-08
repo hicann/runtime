@@ -20,11 +20,11 @@
 #include "runtime/rts/rts_device.h"
 #include "runtime/rts/rts_stars.h"
 #include "runtime/event.h"
-#include "adx_datadump_server.h"
 #include "base/err_mgr.h"
 #include "common/log_inner.h"
 #include "toolchain/plog.h"
 #include "toolchain/dump.h"
+#include "toolchain/dump_shim.h"
 #include "toolchain/profiling.h"
 #include "common/error_codes_inner.h"
 #include "common/resource_statistics.h"
@@ -563,7 +563,12 @@ aclError aclFinalizeInternal()
     }
 
     if (acl::AclDump::GetInstance().GetAdxInitFromAclInitFlag()) {
-        const int32_t adxRet = AdxDataDumpServerUnInit();
+        const auto& funcs = acl::GetAdumpCallbacks();
+        if (funcs.serverUnInit == nullptr) {
+            ACL_LOG_INNER_ERROR("[Check][DumpCallback]Adump server uninit callback is not registered.");
+            return ACL_ERROR_INTERNAL_ERROR;
+        }
+        const int32_t adxRet = funcs.serverUnInit();
         if (adxRet != 0) {
             ACL_LOG_CALL_ERROR("[Generate][DumpFile]generate dump file failed in disk, adx errorCode = %d", adxRet);
             return ACL_ERROR_INTERNAL_ERROR;

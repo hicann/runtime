@@ -34,6 +34,8 @@ namespace {
             (void)!system(("touch " + infoFile).c_str());
             (void)!system(("mkdir -p " + fakeConfigDir).c_str());
             (void)!system(("touch " + fakeConfigFile).c_str());
+            (void)!system(("mkdir -p " + camodelDir).c_str());
+            (void)!system(("touch " + camodelRuntimeFile).c_str());
         }
         void RemoveTestDir()
         {
@@ -77,6 +79,8 @@ namespace {
         const std::string failDir = testDir + "/tmp_fail";
         const std::string fakeConfigDir = failDir + "/tmp_run_data/ascendcl_config";
         const std::string fakeConfigFile = fakeConfigDir + "/swFeatureList.json";
+        const std::string camodelDir = testDir + "/simulator/dav_3510/camodel";
+        const std::string camodelRuntimeFile = camodelDir + "/libruntime_camodel.so";
     };
 
     bool MockGetPlatformResWithLock(const string &label, const string &key, string &val)
@@ -112,6 +116,13 @@ namespace {
         {
             (void)addr;
             info->dli_fname = ACL_BASE_DIR"/tests/tmp_run_data/tmp_fail/tmp_run_data/ascendcl_config";
+            return 0;
+        }
+
+        static INT32 mmDladdrCamodel(VOID* addr, mmDlInfo* info)
+        {
+            (void)addr;
+            info->dli_fname = ACL_BASE_DIR "/tests/tmp_run_data/simulator/dav_3510/camodel/libruntime_camodel.so";
             return 0;
         }
     };
@@ -310,6 +321,18 @@ TEST_F(UTEST_ACL_Capability, aclGetCannAttribute_Fail_CannInfoUtilsInitError)
 }
 
 // test cases bewlow will successfully initialize CannInfoUtils
+TEST_F(UTEST_ACL_Capability, aclGetCannAttribute_Ok_CamodelFallbackGetInfNan)
+{
+    dirUtils.MakeRuntimeVersionInfo();
+    aclCannAttr cannAttr = ACL_CANN_ATTR_INF_NAN;
+    int32_t value;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), mmDladdr(_, _)).WillRepeatedly(Invoke(MockMmpa::mmDladdrCamodel));
+
+    aclError ret = aclGetCannAttribute(cannAttr, &value);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(value, 1);
+}
+
 TEST_F(UTEST_ACL_Capability, aclGetCannAttribute_Fail_InvalidCannAttr)
 {
     dirUtils.MakeRuntimeVersionInfo();

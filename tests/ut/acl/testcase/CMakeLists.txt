@@ -78,6 +78,7 @@ set(SRC_FILES
     ${BASE_DIR}/src/acl/aclrt_impl/allocator.cpp
     ${BASE_DIR}/src/acl/aclrt_impl/log.cpp
     ${BASE_DIR}/src/acl/aclrt_impl/toolchain/dump.cpp
+    ${BASE_DIR}/src/acl/aclrt_impl/toolchain/dump_shim.cpp
     ${BASE_DIR}/src/acl/aclrt_impl/toolchain/profiling.cpp
     ${BASE_DIR}/src/acl/aclrt_impl/toolchain/profiling_manager.cpp
     ${BASE_DIR}/src/acl/common/json_parser.cpp

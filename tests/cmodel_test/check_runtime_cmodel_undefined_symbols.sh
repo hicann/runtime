@@ -96,8 +96,9 @@ CAMODEL_SO="${BUILD_LIB_DIR}/libruntime_camodel.so"
 DRIVER_LIB_DIR="${ROOT_DIR}/build_runtime_cmodel_product/src/cmodel_driver/${PRODUCT_TYPE}"
 PVDRIVER_SO="${DRIVER_LIB_DIR}/libnpu_drv_pvmodel.so"
 CADRIVER_SO="${DRIVER_LIB_DIR}/libnpu_drv_camodel.so"
+ERROR_MANAGER_SO="${ROOT_DIR}/build_runtime_cmodel_product/src/dfx/error_manager/liberror_manager.so"
 
-if [ ! -f "${CMODEL_SO}" ] || [ ! -f "${CAMODEL_SO}" ] || [ ! -f "${PVDRIVER_SO}" ] || [ ! -f "${CADRIVER_SO}" ]; then
+if [ ! -f "${CMODEL_SO}" ] || [ ! -f "${CAMODEL_SO}" ] || [ ! -f "${PVDRIVER_SO}" ] || [ ! -f "${CADRIVER_SO}" ] || [ ! -f "${ERROR_MANAGER_SO}" ]; then
   fail "Built runtime cmodel libraries not found under: ${BUILD_LIB_DIR}"
 fi
 
@@ -106,6 +107,7 @@ cp -f "${CMODEL_SO}" "${SIMULATOR_PRODUCT_DIR}/lib/"
 cp -f "${CAMODEL_SO}" "${SIMULATOR_PRODUCT_DIR}/lib/"
 cp -f "${PVDRIVER_SO}" "${SIMULATOR_PRODUCT_DIR}/lib/"
 cp -f "${CADRIVER_SO}" "${SIMULATOR_PRODUCT_DIR}/lib/"
+cp -f "${ERROR_MANAGER_SO}" "${SIMULATOR_PRODUCT_DIR}/lib/"
 
 LIB_DIR="${SIMULATOR_PRODUCT_DIR}/lib"
 DRIVER_COMMON_LIB_DIR="/usr/local/Ascend/driver/lib64/common"

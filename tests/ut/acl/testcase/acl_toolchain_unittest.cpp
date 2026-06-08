@@ -24,6 +24,7 @@
 #include "common/json_parser.h"
 #include "common/prof_reporter.h"
 #include "toolchain/dump.h"
+#include "toolchain/dump_shim.h"
 #include "toolchain/profiling.h"
 #include "toolchain/profiling_manager.h"
 #include "aprof_pub.h"
@@ -356,6 +357,110 @@ TEST_F(UTEST_ACL_toolchain, HandleDumpConfig_EmptyConfigStr_Test)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_toolchain, HandleDumpCommand_ServerInitNotRegistered)
+{
+    // Backup original callbacks
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    // Set serverInit to nullptr
+    mockCallbacks.serverInit = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    // Call HandleDumpCommand
+    const char* config = "{}";
+    aclError ret = acl::AclDump::HandleDumpCommand(config, 2, nullptr);
+
+    // Verify return value
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    // Restore original callbacks
+    acl::SetAdumpCallbacks(originalCallbacks);
+}
+
+TEST_F(UTEST_ACL_toolchain, HandleDumpCommand_SetDumpNotRegistered)
+{
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    mockCallbacks.setDumpConfig = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    const char* config = "{}";
+    aclError ret = acl::AclDump::HandleDumpCommand(config, 2, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    acl::SetAdumpCallbacks(originalCallbacks);
+}
+
+TEST_F(UTEST_ACL_toolchain, aclmdlInitDump_ServerInitNotRegistered)
+{
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    mockCallbacks.serverInit = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    (void)aclmdlFinalizeDump();
+    aclError ret = aclmdlInitDump();
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    acl::SetAdumpCallbacks(originalCallbacks);
+}
+
+TEST_F(UTEST_ACL_toolchain, aclmdlSetDump_SetDumpNotRegistered)
+{
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    (void)aclmdlFinalizeDump();
+    ASSERT_EQ(aclmdlInitDump(), ACL_SUCCESS);
+
+    mockCallbacks.setDumpConfig = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    aclError ret = aclmdlSetDump(ACL_BASE_DIR "/tests/ut/acl/json/testDump1.json");
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    acl::SetAdumpCallbacks(originalCallbacks);
+    (void)aclmdlFinalizeDump();
+}
+
+TEST_F(UTEST_ACL_toolchain, aclmdlFinalizeDump_UnsetDumpNotRegistered)
+{
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    (void)aclmdlFinalizeDump();
+    ASSERT_EQ(aclmdlInitDump(), ACL_SUCCESS);
+
+    mockCallbacks.unsetDump = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    aclError ret = aclmdlFinalizeDump();
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    acl::SetAdumpCallbacks(originalCallbacks);
+    (void)aclmdlFinalizeDump();
+}
+
+TEST_F(UTEST_ACL_toolchain, aclmdlFinalizeDump_ServerUnInitNotRegistered)
+{
+    auto originalCallbacks = acl::GetAdumpCallbacks();
+    acl::AdumpCallbacks mockCallbacks = originalCallbacks;
+
+    (void)aclmdlFinalizeDump();
+    ASSERT_EQ(aclmdlInitDump(), ACL_SUCCESS);
+
+    mockCallbacks.serverUnInit = nullptr;
+    acl::SetAdumpCallbacks(mockCallbacks);
+
+    aclError ret = aclmdlFinalizeDump();
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+
+    acl::SetAdumpCallbacks(originalCallbacks);
+    (void)aclmdlFinalizeDump();
+}
 // ========================== profiling testcase =============================
 
 TEST_F(UTEST_ACL_toolchain, setDeviceSuccess)

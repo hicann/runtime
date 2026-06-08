@@ -10,6 +10,30 @@
 #include <cstdarg>
 #include "set_device_vxx.h"
 #include "acl_rt_impl.h"
+#include "toolchain/dump_shim.h"
+#include "adump_pub.h"
+#include "adx_datadump_server.h"
+
+namespace {
+int32_t SetDumpConfigByShim(const acl::AdumpDumpConfigInfo& configInfo)
+{
+    Adx::DumpConfigInfo adxConfigInfo;
+    adxConfigInfo.dumpConfigPath = configInfo.dumpConfigPath;
+    adxConfigInfo.dumpConfigData = configInfo.dumpConfigData;
+    adxConfigInfo.dumpConfigSize = configInfo.dumpConfigSize;
+    return Adx::AdumpSetDumpConfig(adxConfigInfo);
+}
+
+__attribute__((constructor)) void InitializeAscendDump()
+{
+    acl::AdumpCallbacks callbacks;
+    callbacks.setDumpConfig = SetDumpConfigByShim;
+    callbacks.unsetDump = Adx::AdumpUnSetDump;
+    callbacks.serverInit = AdxDataDumpServerInit;
+    callbacks.serverUnInit = AdxDataDumpServerUnInit;
+    acl::SetAdumpCallbacks(callbacks);
+}
+} // namespace
 
 ACL_FUNC_MAP(ACL_RT_CPP)
 

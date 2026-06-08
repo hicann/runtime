@@ -11,6 +11,7 @@
 #include "utils/cann_info_utils.h"
 
 #include <fstream>
+#include <sys/stat.h>
 #include "acl_rt_impl.h"
 #include "utils/file_utils.h"
 #include "common/json_parser.h"
@@ -25,6 +26,52 @@ namespace acl {
         constexpr const char_t *const RUNTIME_VERSION_PATH = "share/info/runtime/version.info";
 #endif
         constexpr const char_t *const VERSION_INFO_KEY = "Version=";
+        constexpr size_t MAX_INSTALL_PATH_SEARCH_DEPTH = 8U;
+
+        std::string StripTrailingSlash(const std::string& path)
+        {
+            if ((path.size() > 1UL) && (path.back() == '/')) {
+                return path.substr(0, path.size() - 1UL);
+            }
+            return path;
+        }
+
+        std::string GetParentDir(const std::string& path)
+        {
+            const std::string strippedPath = StripTrailingSlash(path);
+            const size_t pos = strippedPath.rfind('/');
+            if (pos == std::string::npos) {
+                return "";
+            }
+            return strippedPath.substr(0, pos + 1UL);
+        }
+
+        bool IsRegularFile(const std::string& path)
+        {
+            struct stat fileStat = {};
+            return (stat(path.c_str(), &fileStat) == 0) && ((fileStat.st_mode & S_IFMT) == S_IFREG);
+        }
+
+        bool FindFileFromCurrentToParents(
+            const std::string& startDir, const std::string& relativePath, std::string& matchedDir)
+        {
+            std::string currentDir = startDir;
+            for (size_t depth = 0U; depth < MAX_INSTALL_PATH_SEARCH_DEPTH; ++depth) {
+                if (currentDir.empty()) {
+                    return false;
+                }
+                if (IsRegularFile(currentDir + relativePath)) {
+                    matchedDir = currentDir;
+                    return true;
+                }
+                const std::string parentDir = GetParentDir(currentDir);
+                if ((parentDir.empty()) || (parentDir == currentDir)) {
+                    return false;
+                }
+                currentDir = parentDir;
+            }
+            return false;
+        }
     } // namespace
 
     std::mutex CannInfoUtils::mutex_;
@@ -118,12 +165,28 @@ namespace acl {
             return ret;
         }
         ACL_LOG_DEBUG("current path = %s", path.c_str());
+        const std::string soDir = path;
         path = path.substr(0, path.rfind('/'));
         path = path.substr(0, path.rfind('/') + 1UL);
         swConfigPath_ = path + SW_CONFIG_FILE;
+        if (!IsRegularFile(swConfigPath_)) {
+            std::string matchedDir;
+            if (FindFileFromCurrentToParents(soDir, SW_CONFIG_FILE, matchedDir)) {
+                swConfigPath_ = matchedDir + SW_CONFIG_FILE;
+                path = matchedDir;
+                ACL_LOG_INFO("fallback to swConfigPath = %s", swConfigPath_.c_str());
+            }
+        }
         ACL_LOG_DEBUG("swConfigPath = %s", swConfigPath_.c_str());
         path.pop_back();
         defaultInstallPath_ = path.substr(0, path.rfind('/') + 1UL);
+        if (!IsRegularFile(defaultInstallPath_ + RUNTIME_VERSION_PATH)) {
+            std::string matchedDir;
+            if (FindFileFromCurrentToParents(soDir, RUNTIME_VERSION_PATH, matchedDir)) {
+                defaultInstallPath_ = matchedDir;
+                ACL_LOG_INFO("fallback to defaultInstallPath = %s", defaultInstallPath_.c_str());
+            }
+        }
         ACL_LOG_DEBUG("defaultInstallPath = %s", defaultInstallPath_.c_str());
         return ACL_SUCCESS;
     }
