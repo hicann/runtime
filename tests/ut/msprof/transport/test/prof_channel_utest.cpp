@@ -11,7 +11,9 @@
 #include <errno.h>
 #include <strings.h>
 #include <string.h>
+#include <unistd.h>
 #include <memory>
+#include <mutex>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "prof_channel.h"
@@ -210,14 +212,30 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuffDoesNotSupportNtsTask) {
     reader->FlushDrvBuff();
 }
 
+struct FlushThreadData {
+    analysis::dvvp::transport::ChannelReader *reader;
+    bool stop;
+};
+
 void *ThreadRun(void *data)
 {
-    auto reader = reinterpret_cast<analysis::dvvp::transport::ChannelReader *>(data);
-    while(reader->flushBufSize_ == 0) {
-        sleep(1);
+    auto threadData = reinterpret_cast<FlushThreadData *>(data);
+    auto reader = threadData->reader;
+    bool stop = false;
+    while (!stop) {
+        {
+            std::unique_lock<std::mutex> guard(reader->flushMutex_);
+            if (reader->needWait_) {
+                reader->SendFlushFinished();
+                return nullptr;
+            }
+            stop = threadData->stop;
+        }
+        if (!stop) {
+            usleep(1000);
+        }
     }
-    reader->SendFlushFinished();
-    pthread_exit(NULL);
+    return nullptr;
 }
 
 TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff2) {
@@ -230,17 +248,22 @@ TEST_F(TRANSPORT_PROF_CHANNELREADER_UTEST, FlushDrvBuff2) {
         .stubs()
         .with(any(), any(), outBound(flushsize))
         .will(returnValue(PROFILING_SUCCESS));
-    analysis::dvvp::transport::ChannelReader *reader(
+    std::shared_ptr<analysis::dvvp::transport::ChannelReader> reader(
         new analysis::dvvp::transport::ChannelReader(
             0, analysis::dvvp::driver::PROF_CHANNEL_TS_CPU, "data/ts.12.0.0",
             _job_ctx));
     EXPECT_EQ(PROFILING_SUCCESS, reader->Init());
     reader->flushBufSize_ = 0;
     reader->channelId_ = analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG;
+    FlushThreadData threadData = {reader.get(), false};
     pthread_t threadId;
-    pthread_create(&threadId, NULL, ThreadRun, reinterpret_cast<void *>(reader));
+    ASSERT_EQ(0, pthread_create(&threadId, NULL, ThreadRun, reinterpret_cast<void *>(&threadData)));
     reader->FlushDrvBuff();
-    delete reader;
+    {
+        std::unique_lock<std::mutex> guard(reader->flushMutex_);
+        threadData.stop = true;
+    }
+    ASSERT_EQ(0, pthread_join(threadId, nullptr));
 }
 
 class TRANSPORT_PROF_CHANNELPOLL_UTEST: public testing::Test {
