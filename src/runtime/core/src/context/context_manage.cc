@@ -309,7 +309,8 @@ void ContextManage::SetGlobalFailureErr(const uint32_t devId, const rtError_t er
     const ReadProtect wp(&g_ctxMan.GetSetRwLock());
     for (Context *const ctx : g_ctxMan.GetSetObj()) {
         if (ctx != nullptr && ctx->Device_() != nullptr) {
-            COND_PROC((ctx->Device_()->Id_() != devId), continue);
+            COND_PROC((ctx->Device_()->Id_() != devId) ||
+                (ctx->Device_()->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT), continue);
             ctx->SetFailureError(errCode);
             ctx->SetStreamsStatus(errCode);
             ctx->Device_()->SetDeviceStatus(errCode);

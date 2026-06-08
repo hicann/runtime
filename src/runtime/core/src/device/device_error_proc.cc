@@ -1073,7 +1073,8 @@ rtError_t DeviceErrorProc::ProcTaskErrorWithoutLock(const TaskInfo * const taskP
 
 rtError_t DeviceErrorProc::ProcErrorInfo(const TaskInfo * const taskPtr)
 {
-    if (((taskPtr != nullptr) && (taskPtr->isNoRingbuffer == 1U))) {
+    if ((device_->GetDeviceStatus() == RT_ERROR_DEVICE_TASK_ABORT) ||
+        ((taskPtr != nullptr) && (taskPtr->isNoRingbuffer == 1U))) {
         return RT_ERROR_NONE;
     }
     const std::lock_guard<std::mutex> mutexLock(mutex_);
