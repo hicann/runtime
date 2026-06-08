@@ -59,7 +59,7 @@ int32_t FileAgeing::Init2()
         if (availableVolume < STORAGE_RESERVED_VOLUME) {
             MSPROF_LOGE("Available volume:%" PRIu64 " (%lluMB) less than 20MB. Data will not be collected.",
                 availableVolume, (availableVolume >> MOVE_BIT));
-            std::string reason = "The remaining disk space of the system is " +
+            std::string reason = "The remaining disk space of path " + storageDir_ + " is " +
                 std::to_string((availableVolume >> MOVE_BIT)) + "MB, which is less than 20MB";
             MSPROF_ENV_ERROR("EK0204", std::vector<std::string>({"reason"}), std::vector<std::string>({reason}));
             return PROFILING_FAILED;

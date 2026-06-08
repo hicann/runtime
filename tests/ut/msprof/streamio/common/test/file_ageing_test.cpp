@@ -59,6 +59,22 @@ protected:
 private:
 };
 
+int32_t GetLowVolumeSize(const std::string &path, unsigned long long &size,
+    analysis::dvvp::common::utils::VolumeSize sizeType)
+{
+    (void)path;
+    if (sizeType == analysis::dvvp::common::utils::VolumeSize::TOTAL_SIZE) {
+        size = MB_TO_BYTE(100);
+        return PROFILING_SUCCESS;
+    }
+    if (sizeType == analysis::dvvp::common::utils::VolumeSize::AVAIL_SIZE) {
+        size = MB_TO_BYTE(19);
+        return PROFILING_SUCCESS;
+    }
+    size = MB_TO_BYTE(19);
+    return PROFILING_SUCCESS;
+}
+
 TEST_F(COMMON_FILE_AGEING_TEST, Init) {
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
@@ -86,6 +102,21 @@ TEST_F(COMMON_FILE_AGEING_TEST, Init) {
     unsigned long long availVolume = 20856832; // 19MB
     FileAgeing ageingObj2(storageDir, storageLimit);
     EXPECT_EQ(PROFILING_FAILED, ageingObj2.Init());
+}
+
+TEST_F(COMMON_FILE_AGEING_TEST, InitDiskSpaceInsufficient) {
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
+    MOCKER(analysis::dvvp::common::utils::Utils::GetVolumeSize)
+        .stubs()
+        .will(invoke(GetLowVolumeSize));
+
+    std::string storageDir = "/tmp/prof_disk_full_path";
+    std::string storageLimit = "0MB";
+    FileAgeing ageingObj(storageDir, storageLimit);
+    EXPECT_EQ(PROFILING_FAILED, ageingObj.Init());
 }
 
 TEST_F(COMMON_FILE_AGEING_TEST, Init2) {

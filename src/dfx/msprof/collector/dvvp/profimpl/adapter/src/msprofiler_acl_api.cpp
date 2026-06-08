@@ -51,6 +51,39 @@ std::map<uint32_t, std::string> g_subscribeTypeMap = {
 };
 static std::atomic<bool> g_isRepeatInvoking{false};
 
+namespace {
+constexpr size_t aclProfPathMaxLen = 4096;   // path max length: 4096
+
+aclError CheckProfInitPath(CONST_CHAR_PTR profilerResultPath, size_t length)
+{
+    if (profilerResultPath == nullptr) {
+        MSPROF_LOGE("ProfilerResultPath is nullptr");
+        MSPROF_INPUT_ERROR("EK0006", std::vector<std::string>({"api", "param"}),
+            std::vector<std::string>({"aclprofInit", "profilerResultPath"}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    if (length >= aclProfPathMaxLen || length == 0) {
+        MSPROF_LOGE("Length of profilerResultPath is illegal, which should be in (0, %zu)",
+                    length, aclProfPathMaxLen);
+        std::string errorReason = "Length of profilerResultPath should be in [1, " +
+            std::to_string(aclProfPathMaxLen) + ")";
+        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({std::to_string(length), "profilerResultPath length", errorReason}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+
+    if (strlen(profilerResultPath) != length) {
+        MSPROF_LOGE("Length of profilerResultPath does not equal to given length");
+        std::string errorReason = "Length of profilerResultPath does not equal to strlen(profilerResultPath)";
+        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
+            std::vector<std::string>({std::to_string(length), "profilerResultPath length", errorReason}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    return ACL_SUCCESS;
+}
+} // namespace
+
 aclError ProfInit(ProfType type, CONST_CHAR_PTR profilerResultPath, size_t length)
 {
     if (Platform::instance()->PlatformIsHelperHostSide()) {
@@ -62,22 +95,9 @@ aclError ProfInit(ProfType type, CONST_CHAR_PTR profilerResultPath, size_t lengt
     MSPROF_LOGI("Start to execute %s%s", g_subscribeTypeMap[type].c_str(), __func__);
     std::lock_guard<std::mutex> lock(g_profMutex);
 
-    if (profilerResultPath == nullptr || strlen(profilerResultPath) != length) {
-        MSPROF_LOGE("profilerResultPath is nullptr or its length does not equals given length");
-        std::string errorReason = "profilerResultPath is nullptr or its length does not equals given length";
-        std::string valueStr = (profilerResultPath == nullptr) ? "nullptr" : std::string(profilerResultPath);
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({valueStr, "profilerResultPath", errorReason}));
-        return ACL_ERROR_INVALID_PARAM;
-    }
-    constexpr size_t aclProfPathMaxLen = 4096;   // path max length: 4096
-    if (length > aclProfPathMaxLen || length == 0) {
-        MSPROF_LOGE("length of profilerResultPath is illegal, the value is %zu, it should be in (0, %zu)",
-                    length, aclProfPathMaxLen);
-        std::string errorReason = "profilerResultPath length should be in [1, " + std::to_string(aclProfPathMaxLen) + ")";
-        MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
-            std::vector<std::string>({std::to_string(length), "profilerResultPath length", errorReason}));
-        return ACL_ERROR_INVALID_PARAM;
+    aclError aclRet = CheckProfInitPath(profilerResultPath, length);
+    if (aclRet != ACL_SUCCESS) {
+        return aclRet;
     }
 
     int32_t ret = ProfAclMgr::instance()->ProfInitPrecheck();

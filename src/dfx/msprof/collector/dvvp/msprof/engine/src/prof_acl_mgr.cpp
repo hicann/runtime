@@ -2823,17 +2823,12 @@ int32_t ProfAclMgr::CheckConfigConsistency(const MsprofConfig *config, const std
                 action.c_str(), config->profSwitch, dataTypeConfig);
             const int32_t bufLength = 64;
             char profSwitchbuf[bufLength] = {0};
-            char dataTypeConfigbuf[bufLength] = {0};
             ret = snprintf_s(profSwitchbuf, bufLength, bufLength - 1, "0x%" PRIx64, config->profSwitch);
             if (ret == OSAL_EN_ERROR) {
                 MSPROF_LOGE("Unable to format config->profSwitch.");
             }
-            ret = snprintf_s(dataTypeConfigbuf, bufLength, bufLength - 1, "0x%" PRIx64, dataTypeConfig);
-            if (ret == OSAL_EN_ERROR) {
-                MSPROF_LOGE("Unable to format dataTypeConfigbuf.");
-            }
-            std::string errorReason = std::string("DataTypeConfig ") + action.c_str() + ":" + profSwitchbuf + 
-                                      " different from start:" + dataTypeConfigbuf;
+            std::string errorReason = "Please check the dataTypeConfig input by aclprofStart or aclprofStop, "
+                "which is different from the last startup";
             MSPROF_INPUT_ERROR("EK0001", std::vector<std::string>({"value", "param", "reason"}),
                 std::vector<std::string>({profSwitchbuf, "dataTypeConfig", errorReason}));
             return ACL_ERROR_INVALID_PROFILING_CONFIG;
