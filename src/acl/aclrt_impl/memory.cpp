@@ -488,7 +488,7 @@ aclError aclrtHostMemMapCapabilitiesImpl(uint32_t deviceId, aclrtHacType hacType
         reinterpret_cast<rtHostMemMapCapability*>(capabilities));
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtHostMemMapCapabilities not support this feature, runtime result = %d", static_cast<int32_t>(rtErr));
+            ACL_LOG_WARN("rtHostMemMapCapabilities does not support this feature, runtime result = %d", static_cast<int32_t>(rtErr));
         } else {
             ACL_LOG_CALL_ERROR("call rtHostMemMapCapabilities failed, runtime result = %d", static_cast<int32_t>(rtErr));
         }
@@ -832,7 +832,7 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
     const rtError_t rtErr = rtMemsetD32(ptr, static_cast<uint64_t>(memSize), value, N);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtMemsetD32 not support this feature, runtime result = %d", rtErr);
+            ACL_LOG_WARN("rtMemsetD32 does not support this feature, runtime result = %d", rtErr);
         } else {
             ACL_LOG_CALL_ERROR("call rtMemsetD32 failed, runtime result = %d", rtErr);
             return ACL_GET_ERRCODE_RTS(rtErr);
@@ -889,7 +889,7 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value,
                                              value, N, static_cast<rtStream_t>(stream));
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtMemsetD32Async not support this feature, runtime result = %d", rtErr);
+            ACL_LOG_WARN("rtMemsetD32Async does not support this feature, runtime result = %d", rtErr);
         } else {
             ACL_LOG_CALL_ERROR("call rtMemsetD32Async failed, runtime result = %d", rtErr);
             return ACL_GET_ERRCODE_RTS(rtErr);
@@ -1197,7 +1197,7 @@ aclError aclrtMallocPhysicalImpl(aclrtDrvMemHandle *handle,
     if (it != memAttrHandlers.end()) {
         it->second(rtProp, isHostAlloc, isDeviceAlloc);
     } else {
-        ACL_LOG_ERROR("memAttr [%d] not support. "
+        ACL_LOG_ERROR("memAttr [%d] is not supported. "
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal = std::to_string(prop->memAttr);
@@ -1430,7 +1430,7 @@ aclError aclrtMemGetAllocationGranularityImpl(aclrtPhysicalMemProp *prop, aclrtM
     if (it != memAttrHandlers.end()) {
         it->second(rtProp1, isHostAlloc, isDeviceAlloc);
     } else {
-        ACL_LOG_ERROR("memAttr [%d] not support. "
+        ACL_LOG_ERROR("memAttr [%d] is not supported. "
                       "For details, please refer to the manual.",
                       static_cast<int32_t>(prop->memAttr));
         const std::string memAttrVal2 = std::to_string(prop->memAttr);

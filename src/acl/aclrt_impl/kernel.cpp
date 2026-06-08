@@ -222,7 +222,7 @@ aclError aclrtBinaryGetGlobalImpl(aclrtBinHandle binHandle, const char *name, vo
     const auto rtErr = rtBinaryGetGlobal(binHandle, name, dptr, size);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtBinaryGetGlobal not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtBinaryGetGlobal does not support, runtime result = %d.", rtErr);
         } else {
             ACL_LOG_CALL_ERROR("Binary get global Failed, runtime result = %d", rtErr);
         }
@@ -657,7 +657,7 @@ aclError aclrtLaunchKernelWithArgsArrayImpl(void *func, uint32_t numBlocks,
             ACL_LOG_WARN("rtLaunchKernelWithArgsArray func is invalid, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_INVALID_HANDLE;
         } else if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtLaunchKernelWithArgsArray not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtLaunchKernelWithArgsArray does not support, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             ACL_LOG_CALL_ERROR("rtLaunchKernelWithArgsArray failed, runtime result = %d.", rtErr);
@@ -862,7 +862,7 @@ aclError aclrtFunctionGetParamCountImpl(const void *func, size_t *paramCount)
     const rtError_t rtErr = rtFunctionGetParamCount(func, paramCount);
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtFunctionGetParamCount not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtFunctionGetParamCount does not support, runtime result = %d.", rtErr);
  	        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             ACL_LOG_CALL_ERROR("rtFunctionGetParamCount failed, runtime result = %d.", rtErr);
@@ -886,7 +886,7 @@ aclError aclrtFunctionGetParamInfoImpl(const void *func, size_t paramIndex,
     const rtError_t rtErr = rtFunctionGetParamInfo(func, paramIndex, paramOffset, paramSize);
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtFunctionGetParamInfo not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtFunctionGetParamInfo does not support, runtime result = %d.", rtErr);
  	        return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             ACL_LOG_CALL_ERROR("rtFunctionGetParamInfo failed, runtime result = %d.", rtErr);
@@ -907,7 +907,7 @@ aclError aclrtFunctionGetAvailDynUbufPerBlockImpl(void *func, uint32_t flags, si
     const rtError_t rtErr = rtFunctionGetAvailDynUbufPerBlock(func, flags, dynamicUbufSize);
     if (rtErr != ACL_RT_SUCCESS) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("rtFunctionGetAvailDynUbufPerBlock not support, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtFunctionGetAvailDynUbufPerBlock does not support, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         } else {
             ACL_LOG_CALL_ERROR("rtFunctionGetAvailDynUbufPerBlock failed, runtime result = %d.", rtErr);

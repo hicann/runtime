@@ -582,7 +582,7 @@ rtError_t CaptureModel::ReleaseSqCq(uint32_t &releaseNum)
 {
     releaseNum = 0U;
     if ((sqCqNum_ == 0U) || (refCount_ != 0U)) {
-        RT_LOG(RT_LOG_DEBUG, "model can not be released, model_id=%u, sqCqNum=%u, refCount=%u.",
+        RT_LOG(RT_LOG_DEBUG, "model cannot be released, model_id=%u, sqCqNum=%u, refCount=%u.",
             Id_(), sqCqNum_, refCount_);
         return RT_ERROR_NONE;
     }

@@ -397,7 +397,7 @@ rtError_t StarsEngine::FinishedTaskReclaim(Stream * const stm, const bool limite
         GetRecycleHead(taskHead, sqHead, stm->GetSqDepth(), recycleHead);
     }
 
-    // get taskId by postion, recycleHead is executing Currently, pos has been executed.
+    // get taskId by position, recycleHead is executing Currently, pos has been executed.
     uint16_t pos = 0;
     Device * const dev = GetDevice();
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
@@ -426,7 +426,7 @@ rtError_t StarsEngine::FinishedTaskReclaim(Stream * const stm, const bool limite
         stm->SetLastRecyclePos(pos);
     }
 
-    // It is normal that the first task of each stream fails to get the task id by postion.
+    // It is normal that the first task of each stream fails to get the task id by position.
     if ((error != RT_ERROR_NONE) && (recycleHead == 0U)) {
         RT_LOG(RT_LOG_DEBUG, "GetTaskIdByPos fail, sqHead=%hu", recycleHead);
         return RT_ERROR_NONE;
@@ -524,7 +524,7 @@ rtError_t StarsEngine::ProcessHeadTaskByStreamId(const uint16_t streamId)
     const uint32_t taskHead = stm->GetTaskPosHead();
     error = stm->GetTaskIdByPos(static_cast<uint16_t>(taskHead), taskId);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "Get task id by postion failed, pos=%#x.", taskHead);
+        RT_LOG(RT_LOG_WARNING, "Get task id by position failed, pos=%#x.", taskHead);
         return error;
     }
     taskId = taskId & 0xFFFFU;
@@ -725,7 +725,7 @@ rtError_t StarsEngine::SendingProcReport(Stream * const stm, const bool limited,
 rtError_t StarsEngine::TryRecycleTask(Stream * const stm)
 {
     rtError_t error = RT_ERROR_NONE;
-    const uint32_t taskTail = stm->GetTaskPosTail();   // tail sqe postion of not release task
+    const uint32_t taskTail = stm->GetTaskPosTail();   // tail sqe position of not release task
     stm->SetLimitFlag(false);
     if (stm->IsSeparateSendAndRecycle()) {
         constexpr uint16_t ASNC_THREAD_TASK_RECLAIM_MAX_NUM = 64U;    // Task reclaim num in async reclaim thread.
@@ -1107,7 +1107,7 @@ void StarsEngine::IsSyncTaskFinish(Stream * const stm, const uint32_t taskId) co
 
     const uint16_t recycleHead = sqHead;
     uint32_t finishedTaskId = 0U;
-    // get taskId by postion, recycleHead is executing Currently, pos has been executed.
+    // get taskId by position, recycleHead is executing Currently, pos has been executed.
     uint16_t pos = 0U;
     if (dev->GetDevProperties().getRtsqPosition != UINT16_MAX) {
         pos = (recycleHead == 0U) ? RT_MILAN_POSITION_NUM_MAX_MINIV3 : (recycleHead - 1U);

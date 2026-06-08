@@ -41,7 +41,7 @@ rtError_t SnapShotDeviceRestore()
         }
         const rtError_t ret = dev->ReOpen();
         if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
-            RT_LOG(RT_LOG_WARNING, "DeviceReOpen driver not support, ret=%#x, devId=%d.", ret, devId);
+            RT_LOG(RT_LOG_WARNING, "DeviceReOpen driver does not support, ret=%#x, devId=%d.", ret, devId);
             return ret;
         }
         ERROR_RETURN(ret, "DeviceOpen failed, ret=%#x, devId=%d.", ret, devId);

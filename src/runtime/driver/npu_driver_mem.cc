@@ -2035,7 +2035,7 @@ rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t * const attribut
         attributes->memoryType = RT_MEMORY_TYPE_USER;
         attributes->locationType = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
     } else {
-        RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
+        RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -2109,7 +2109,7 @@ rtError_t NpuDriver::PtrGetAttributes(const void * const ptr, rtPtrAttributes_t 
     } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
         attributes->location.type = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
     } else {
-        RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
+        RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
     }
     // devId is valid only for the device side memory
@@ -2165,7 +2165,7 @@ rtError_t NpuDriver::PtrGetRealLocation(const void * const ptr, rtMemLocationTyp
         location = RT_MEMORY_LOC_UVM_MANAGED;
         realLocation = RT_MEMORY_LOC_HOST;
     } else {
-        RT_LOG(RT_LOG_ERROR, "not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
+        RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -2540,7 +2540,7 @@ rtError_t NpuDriver::CheckSupportPcieBarCopy(const uint32_t deviceId, uint32_t &
 
     const uint32_t devRunMode = GetRunMode();
     if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) || (halMemCtl == nullptr)) {
-        RT_LOG(RT_LOG_INFO, "chip type=%d, not support pcie bar copy", static_cast<int32_t>(chipType_));
+        RT_LOG(RT_LOG_INFO, "chip type=%d, does not support pcie bar copy", static_cast<int32_t>(chipType_));
         return RT_ERROR_NONE;
     }
 

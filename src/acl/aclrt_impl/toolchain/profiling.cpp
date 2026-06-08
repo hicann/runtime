@@ -161,7 +161,7 @@ namespace acl {
             bool found = false;
             ret = acl::JsonParser::GetJsonCtxByKey(configPath, strConfig, ACL_PROF_CONFIG_NAME, found);
             if ((ret != ACL_SUCCESS) || (!found)) {
-                ACL_LOG_INFO("can not parse profiling config from file[%s], errorCode = %d", configPath, ret);
+                ACL_LOG_INFO("Cannot parse profiling config from file[%s], errorCode = %d", configPath, ret);
                 noValidConfig = true;
             }
 

@@ -326,7 +326,7 @@ rtError_t Notify::SetName(const char_t * const nameIn)
 rtError_t Notify::CreateIpcNotify(char_t * const ipcNotifyName, const uint32_t len)
 {
     COND_RETURN_ERROR_MSG_INNER(isIpcNotify_, RT_ERROR_NOTIFY_TYPE,
-        "Create ipc notify failed, ipc notify flag can not be true");
+        "Create ipc notify failed, ipc notify flag cannot be true");
     NULL_PTR_RETURN(driver_, RT_ERROR_DRV_NULL);
     uint32_t curNotifyId = notifyid_;
 
@@ -374,7 +374,7 @@ rtError_t Notify::CheckIpcNotifyDevId()
         rtError_t error = dev->Driver_()->GetDevicePhyIdByIndex(dev->Id_(), &phyDeviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
         if (phyId_ != phyDeviceId) {
-            RT_LOG(RT_LOG_ERROR, "ipc notify can not notify wait, name=%s, phyId=%u, ctx_device_id=%u, ctx_phy_id=%u",
+            RT_LOG(RT_LOG_ERROR, "ipc notify cannot notify wait, name=%s, phyId=%u, ctx_device_id=%u, ctx_phy_id=%u",
                 ipcName_.c_str(), phyId_, dev->Id_(), phyDeviceId);
             return RT_ERROR_INVALID_VALUE;
         }
@@ -395,7 +395,7 @@ void Notify::SetNotifyInfo(const uint64_t vaAddr, const char_t * const ipcNotify
 rtError_t Notify::OpenIpcNotify(const char_t * const ipcNotifyName, uint32_t flag)
 {
     COND_RETURN_ERROR_MSG_INNER(isIpcNotify_, RT_ERROR_NOTIFY_TYPE,
-        "Open ipc notify failed, flag can not be true, name is %s.",
+        "Open ipc notify failed, flag cannot be true, name is %s.",
         (ipcNotifyName == nullptr) ? "(null)" : ipcNotifyName);
 
     Runtime* runtime = Runtime::Instance();

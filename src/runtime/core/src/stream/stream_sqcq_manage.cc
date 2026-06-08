@@ -405,7 +405,7 @@ rtError_t StreamSqCqManage::DeAllocStreamSqCq(const uint32_t streamId, const uin
 
     const auto iter = sqIdRefMap_.find(sqId);
     if (iter == sqIdRefMap_.end()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find stream map by sqId=%u.", sqId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find stream map by sqId=%u.", sqId);
         return RT_ERROR_STREAM_NOT_EXIST;
     } else if ((drvFlag & (static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID))) != 0U) {
         // The remote SQ is not reused, and can be directly released.
@@ -458,7 +458,7 @@ rtError_t StreamSqCqManage::GetSqId(const uint32_t streamId, uint32_t &sqId)
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     const auto itor = streamIdToSqIdMap_.find(streamId);
     if (itor == streamIdToSqIdMap_.end()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find stream map by stream_id=%u.", streamId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find stream map by stream_id=%u.", streamId);
         return RT_ERROR_STREAM_NOT_EXIST;
     }
     sqId = itor->second;
@@ -470,7 +470,7 @@ rtError_t StreamSqCqManage::GetStreamIdBySqId(const uint32_t sqId, uint32_t &str
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     const auto itor = sqIdToStreamIdMap_.find(sqId);
     if (itor == sqIdToStreamIdMap_.end()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find stream_id by sq_id=%u.", sqId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find stream_id by sq_id=%u.", sqId);
         return RT_ERROR_STREAM_NOT_EXIST;
     }
     streamId = itor->second;

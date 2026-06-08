@@ -249,7 +249,7 @@ static const std::map<uint64_t, std::string> g_davidErrorMapInfo = {
     {L1_FMAPWH_LARGER_L1SIZE,
         "The LOAD3D parameter is invalid. L1H*L1W*(C1+1) is greater than L1 buffer size/32."},
     {L1_FPOS_LARGER_FSIZE,
-        "The LOAD3D K postion is out of the filter range."},
+        "The LOAD3D K position is out of the filter range."},
 
     // RINGBUFFER_L1_ERROR_1_OFFSET
     {FIXP_BIU_RDWR_RESP, "The address for fixpipe to write GM is invalid"},
@@ -689,7 +689,7 @@ static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, co
 {
     COND_RETURN_NORMAL(type != AICORE_ERROR && type != AIVECTOR_ERROR, "the type[%hu] not match", type);
     COND_RETURN_VOID(errTaskPtr == nullptr || errTaskPtr->stream == nullptr ||
-        errTaskPtr->stream->Device_() == nullptr, "cannot get the device by errTaskPtr");
+        errTaskPtr->stream->Device_() == nullptr, "Cannot get the device by errTaskPtr");
 
     const DavidOneCoreErrorInfo& info = starsInfo->u.davidCoreErrorInfo.info[coreIdx];
     rtExceptionErrRegInfo_t regInfo = {};

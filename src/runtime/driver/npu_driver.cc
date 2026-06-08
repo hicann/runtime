@@ -1254,7 +1254,7 @@ rtError_t NpuDriver::GetPairDevicesInfo(const uint32_t devId, const uint32_t oth
 
     if (drvRet == DRV_ERROR_NOT_SUPPORT) {
         std::string name = deviceFlag ? "halGetPairPhyDevicesInfo" : "halGetPairDevicesInfo";
-        RT_LOG(RT_LOG_WARNING, "not support %s!", name.c_str());
+        RT_LOG(RT_LOG_WARNING, "does not support %s!", name.c_str());
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     if (drvRet != DRV_ERROR_NONE) {

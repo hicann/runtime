@@ -1081,7 +1081,7 @@ rtError_t DeviceErrorProc::PrintStreamTimeoutSnapshotInfo()
         const uint16_t taskId = streamTaskInfo->detailInfo[i].task_id;
         TaskInfo *tsk = GetTaskInfo(device_, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId), true);
         if (tsk == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "stream_id=%hu task_id=%hu can not find", streamId, taskId);
+            RT_LOG(RT_LOG_ERROR, "stream_id=%hu task_id=%hu cannot find", streamId, taskId);
             continue;
         }
         countNum = sprintf_s(errStr, static_cast<size_t>(MSG_LENGTH),

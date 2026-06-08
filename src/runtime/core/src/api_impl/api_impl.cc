@@ -3251,7 +3251,7 @@ rtError_t ApiImpl::GetDeviceCount(int32_t * const cnt)
             break;
         case RT_ALL_DUPLICATED_ERROR:
             RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, Runtime::Instance()->inputDeviceStr, "ASCEND_RT_VISIBLE_DEVICES",
-                "cannot be duplicated");
+                "Cannot be duplicated");
             error = RT_ERROR_DRV_NO_DEVICE;
             break;
         case RT_ALL_ORDER_ERROR:
@@ -4254,7 +4254,7 @@ rtError_t ApiImpl::ModelAbort(Model * const mdl)
             "The current version " + std::to_string(dev->GetTschVersion()) + 
             " is earlier than the required version " + std::to_string(static_cast<uint32_t>(TS_VERSION_TS_MODEL_ABORT)));
         if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT)) {
-            RT_LOG(RT_LOG_ERROR, "feature not supported. Ts model can not be abort in current device");
+            RT_LOG(RT_LOG_ERROR, "feature not supported. Ts model cannot be abort in current device");
             RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1005);
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
@@ -5732,7 +5732,7 @@ rtError_t ApiImpl::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUceIn
     COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
                      "Getting fault events is not supported");
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "can not get fault event of device_id=%u, error=%d", deviceId, error);
+        RT_LOG(RT_LOG_ERROR, "Cannot get fault event of device_id=%u, error=%d", deviceId, error);
         return error;
     }
     (void)mmGetTimeOfDay(&tv[index++], nullptr);
@@ -5751,7 +5751,7 @@ rtError_t ApiImpl::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *memUceIn
     COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
                      "Getting the fault SMMU valid status is not supported");
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "can not get smmu of device_id=%u, error=%d", deviceId, error);
+        RT_LOG(RT_LOG_ERROR, "Cannot get smmu of device_id=%u, error=%d", deviceId, error);
         return error;
     }
     (void)mmGetTimeOfDay(&tv[index++], nullptr);
@@ -8549,7 +8549,7 @@ rtError_t ApiImpl::ValidateMemCpyParamsAndAttributes(void* dst, size_t destMax, 
 
     COND_RETURN_ERROR_MSG_INNER((size > destMax), RT_ERROR_INVALID_VALUE, 
         "Invalid size, current size=%" PRIu64 "(bytes), valid size range is (0, %" PRIu64 "]!", size, destMax);
-    COND_RETURN_ERROR_MSG_INNER((size == 0U), RT_ERROR_INVALID_VALUE, "sizes's value can not be 0.");
+    COND_RETURN_ERROR_MSG_INNER((size == 0U), RT_ERROR_INVALID_VALUE, "sizes's value cannot be 0.");
     COND_RETURN_ERROR_MSG_INNER(((dst == nullptr) || (src == nullptr)),
         RT_ERROR_INVALID_VALUE, "dst's value or src's value is nullptr.");    
 
@@ -9007,7 +9007,7 @@ rtError_t ApiImpl::MemMapSelectedLink(void *virPtrDst, size_t size, void *virPtr
             "The address virPtrOld is not the starting address of its corresponding memory block. virPtrOld=%p, base=%p", virPtrOld, base);
         error = MemRetainAllocationHandle(base, &handle); 
         ERROR_RETURN(error, "Failed to obtain the handle from virtual pointer, ptr=%p, handle=%p.", base, handle);
-        COND_RETURN_ERROR(handle == nullptr, RT_ERROR_INVALID_VALUE, "virPtrSrc can not get handle, virPtrSrc=%p", virPtrSrc);
+        COND_RETURN_ERROR(handle == nullptr, RT_ERROR_INVALID_VALUE, "virPtrSrc cannot get handle, virPtrSrc=%p", virPtrSrc);
 
         rtHandleAttr attrOrg;
         rtHandleAttr attrNew;

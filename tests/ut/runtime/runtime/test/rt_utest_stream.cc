@@ -415,6 +415,41 @@ TEST_F(StreamTest, stream_set_l2_addr_kernel_launch_translate_addr_failed)
 }
 #endif
 
+TEST_F(StreamTest, StreamSqCqManageGetStreamIdBySqIdNotExist)
+{
+    Runtime *rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    Device *device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+
+    uint32_t streamId = 0U;
+    rtError_t error = device->GetStreamSqCqManage()->GetStreamIdBySqId(UINT32_MAX, streamId);
+    EXPECT_EQ(error, RT_ERROR_STREAM_NOT_EXIST);
+
+    rtInstance->DeviceRelease(device);
+}
+
+TEST_F(StreamTest, StreamSqCqManageDeAllocMissSqRef)
+{
+    Runtime *rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    Device *device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+
+    StreamSqCqManage *manage = device->GetStreamSqCqManage();
+    ASSERT_NE(manage, nullptr);
+
+    const uint32_t streamId = UINT32_MAX - 1U;
+    const uint32_t sqId = UINT32_MAX - 2U;
+    manage->streamIdToSqIdMap_[streamId] = sqId;
+    manage->sqIdToStreamIdMap_[sqId] = streamId;
+    manage->sqIdRefMap_.erase(sqId);
+
+    EXPECT_EQ(manage->DeAllocStreamSqCq(streamId, 0U, 0U), RT_ERROR_STREAM_NOT_EXIST);
+    EXPECT_EQ(manage->streamIdToSqIdMap_.count(streamId), 0U);
+    EXPECT_EQ(manage->sqIdToStreamIdMap_.count(sqId), 0U);
+
+    rtInstance->DeviceRelease(device);
+}
+
 //for llt exception
 #if 0
 TEST_F(StreamTest, stream_fusion_end)

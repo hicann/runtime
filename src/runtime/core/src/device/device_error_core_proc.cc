@@ -800,7 +800,7 @@ bool IsSmmuFault(const uint32_t deviceId)
     COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, false,
         "Getting fault SMMU valid status is not supported");
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "can not get smmu of device_id=%u, error=%d", deviceId, error);
+        RT_LOG(RT_LOG_ERROR, "Cannot get smmu of device_id=%u, error=%d", deviceId, error);
         return false;
     }
     return isSmmuFault;
@@ -1055,7 +1055,7 @@ static void AddExceptionRegInfo(const StarsDeviceErrorInfo * const starsInfo, co
     COND_RETURN_NORMAL(type != AICORE_ERROR && type != AIVECTOR_ERROR && type != FFTS_PLUS_AICORE_ERROR &&
         type != FFTS_PLUS_AIVECTOR_ERROR, "the type[%hu] not match", type);
     COND_RETURN_VOID(errTaskPtr == nullptr || errTaskPtr->stream == nullptr ||
-        errTaskPtr->stream->Device_() == nullptr, "cannot get the device by errTaskPtr");
+        errTaskPtr->stream->Device_() == nullptr, "Cannot get the device by errTaskPtr");
 
     const uint8_t errCoreType = (type == AICORE_ERROR || type == FFTS_PLUS_AICORE_ERROR) ?
         AICORE_ERROR : AIVECTOR_ERROR;

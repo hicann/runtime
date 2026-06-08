@@ -128,6 +128,13 @@ TEST_F(DeviceTest, module_alloc_03)
     rt->PutProgram(program);
 }
 
+TEST_F(DeviceTest, IsSmmuFaultGetValidFailed)
+{
+    MOCKER(NpuDriver::GetSmmuFaultValid).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_FALSE(IsSmmuFault(0));
+}
+
 TEST_F(DeviceTest, module_alloc_04)
 {
     rtError_t error;

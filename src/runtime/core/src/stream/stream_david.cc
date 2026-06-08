@@ -67,7 +67,7 @@ DavidStream::~DavidStream()
     if (device_ != nullptr) {
         if ((device_->GetDevStatus() != RT_ERROR_NONE) && (this->GetBindFlag())) {
             RT_LOG(RT_LOG_WARNING, "Device fault and the model binds this stream, device_id=%u, stream_id=%d, "
-                "can not delete.", device_->Id_(), streamId_);
+                "Cannot delete.", device_->Id_(), streamId_);
             return;
         }
         (void)FreeExecutedTimesSvm();

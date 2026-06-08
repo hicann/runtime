@@ -74,7 +74,7 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV1(TaskInfo* taskInfo, rtStarsStrea
                                   RT_SIMPLE_SQ_OFFSET_1000 * static_cast<uint64_t>(fcPara.trueSqId);
         }
     } else {
-        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] not support init func call para", chipType);
+        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] does not support init func call para", chipType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;
@@ -133,7 +133,7 @@ rtError_t InitFuncCallParaForStreamSwitchTaskV2(TaskInfo* taskInfo, rtStarsStrea
                                   RT_SIMPLE_SQ_OFFSET_1000 * static_cast<uint64_t>(fcPara.trueSqId);
         }
     } else {
-        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] not support init func call para", chipType);
+        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] does not support init func call para", chipType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;

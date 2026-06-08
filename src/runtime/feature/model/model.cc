@@ -1901,7 +1901,7 @@ rtError_t Model::GetCmoId(const uint32_t logicId, uint16_t &cmoId)
     const std::unique_lock<std::mutex> lk(cmoIdMapMutex_);
     const auto iter = logicIdToCMOIdMap_.find(logicId);
     if (iter == logicIdToCMOIdMap_.end()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find cmo id map by logicId=%u.", logicId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find cmo id map by logicId=%u.", logicId);
         return RT_ERROR_MODEL_EXIT_ID;
     }
     cmoId = iter->second;

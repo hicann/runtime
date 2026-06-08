@@ -960,7 +960,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo)
             if (Runtime::Instance()->ChipIsHaveStars()) {
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_DATA_TYPE_BFP16);
             } else {
-                RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or not support.",
+                RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or is not supported.",
                     static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
                 opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             }
@@ -970,7 +970,7 @@ uint8_t ReduceOpcodeHigh(TaskInfo * const taskInfo)
             // Should not run here.
             // if not support, it will return RT_ERROR_FEATURE_NOT_SUPPORT at context.cc's reduce ability check.
             // Only for code style, 0x80 is reserved value of STRAS opcode.
-            RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or not support.",
+            RT_LOG(RT_LOG_WARNING, "DataType=%u is out of range or is not supported.",
                    static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType));
             opcode = static_cast<uint8_t>(RT_STARS_MEMCPY_ASYNC_OP_RESERVED);
             break;

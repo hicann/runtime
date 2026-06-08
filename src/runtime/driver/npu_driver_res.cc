@@ -1784,7 +1784,7 @@ rtError_t NpuDriver::VirtualCqAllocate(const uint32_t devId, const uint32_t tsId
         Runtime::Instance()->SetDisableThread(true);
         return RT_ERROR_NONE;
     } else if (drvRet == DRV_ERROR_INVALID_VALUE) {
-        RT_LOG(RT_LOG_INFO, "device_id=%u not support virtual cq, use thread mode", devId);
+        RT_LOG(RT_LOG_INFO, "device_id=%u does not support virtual cq, use thread mode", devId);
         return RT_GET_DRV_ERRCODE(drvRet);
     } else {
         DRV_ERROR_PROCESS(drvRet, "Call driver api halSqCqAllocate failed, drvRetCode=%d, drvDevId=%u, tsId=%u.",
@@ -2091,7 +2091,7 @@ rtError_t NpuDriver::LogicCqReportV2(const LogicCqWaitInfo &waitInfo, uint8_t *r
         std::map<int32_t, uint32_t>::const_iterator it =
             rtInstance->eschedMap_.find(curTid);
         if (it == rtInstance->eschedMap_.end()) {
-            RT_LOG(RT_LOG_ERROR, "eschedMap can not find current os tid (=%u).", curTid);
+            RT_LOG(RT_LOG_ERROR, "eschedMap cannot find current os tid (=%u).", curTid);
             rtInstance->StreamSyncEschedUnLock();
             return RT_ERROR_INVALID_VALUE;
         }

@@ -212,7 +212,7 @@ rtError_t InitFuncCallParaForStreamActiveTask(TaskInfo* taskInfo, rtStarsStreamA
                                   RT_SIMPLE_SQ_OFFSET_1000 * static_cast<uint64_t>(activeStreamSqId);
         }
     } else {
-        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] not support init func call para", chipType);
+        RT_LOG(RT_LOG_DEBUG, "current chipType[%d] does not support init func call para", chipType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;
@@ -493,7 +493,7 @@ rtError_t SendFlipTaskWithStreamId(Stream *stream)
     Device *dev = stream->Device_();
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
     if (!dev->CheckFeatureSupport(TS_FEATURE_FLIP_TASK_WITH_STREAM_ID)) {
-        RT_LOG(RT_LOG_DEBUG, "TS not support stream destroy flip task, stream_id=%d", stream->Id_());
+        RT_LOG(RT_LOG_DEBUG, "TS does not support stream destroy flip task, stream_id=%d", stream->Id_());
         return RT_ERROR_NONE;
     }
     Stream *ctrlStream = dev->GetCtrlStream(stream);

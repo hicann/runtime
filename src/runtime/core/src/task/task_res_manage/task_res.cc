@@ -99,7 +99,7 @@ void* TaskResManage::MallocPcieBarBuffer(const uint32_t size, Device* const dev,
     bool is4KAsync = (size > HUGE_PAGE_MEM_CRITICAL_VALUE) ? false : true;
     (void)dev->Driver_()->CheckSupportPcieBarCopy(dev->Id_(), val, is4KAsync);
     if (val != RT_CAPABILITY_SUPPORT) {
-        RT_LOG(RT_LOG_WARNING, "dev not support pcie bar copy, device_id=%d, val=%u.", dev->Id_(), val);
+        RT_LOG(RT_LOG_WARNING, "dev does not support pcie bar copy, device_id=%d, val=%u.", dev->Id_(), val);
         return nullptr;
     }
     rtError_t ret = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size),

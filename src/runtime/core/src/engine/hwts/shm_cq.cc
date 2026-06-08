@@ -46,7 +46,7 @@ rtError_t ShmCq::Init(Device * dev)
 
     const rtError_t error = driver_->VirtualCqAllocate(deviceId_, tsId_, vSqId_, vCqId_, vSqBase_, vSqReadonly_);
     if (error == RT_ERROR_DRV_INPUT) {
-        RT_LOG(RT_LOG_INFO, "Not support virtual cq, retCode=%#x, deviceId=%u.",
+        RT_LOG(RT_LOG_INFO, "Does not support virtual cq, retCode=%#x, deviceId=%u.",
                static_cast<uint32_t>(error), deviceId_);
         return error;
     }

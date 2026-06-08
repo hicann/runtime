@@ -344,7 +344,7 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(const uint32_t deviceId, const 
     try {
         *value = std::stoll(strVal);
     } catch (...) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "strVal[%s] can not be converted to digital value, label=%s key=%s socVersion=%s",
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "strVal[%s] cannot be converted to digital value, label=%s key=%s socVersion=%s",
             strVal.c_str(), label.c_str(), key.c_str(), socVersion.c_str());
         return RT_ERROR_INVALID_VALUE;
     }

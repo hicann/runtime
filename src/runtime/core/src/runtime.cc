@@ -349,31 +349,31 @@ void Runtime::TsdClientInit()
 
     FUNC_TDT_UPDATE const updateFunc = RtPtrToPtr<FUNC_TDT_UPDATE>(mmDlsym(handlePtr, "UpdateProfilingMode"));
     if (updateFunc == nullptr) {
-        // if runtime cloud not find new api, allowed continue set device and not dlclose
+        // if runtime could not find new api, allow continuing set device and not dlclose
         RT_LOG(RT_LOG_WARNING, "No UpdateProfilingMode symbol found in %s.", libSoName);
     }
 
     FUNC_TDT_SET_PROF_CALLBACK const setProfCallback =
             RtPtrToPtr<FUNC_TDT_SET_PROF_CALLBACK>(mmDlsym(handlePtr, "TsdSetMsprofReporterCallback"));
     if (setProfCallback == nullptr) {
-        // if runtime cloud not find new api, allowed continue set device and not dlclose
+        // if runtime could not find new api, allow continuing set device and not dlclose
         RT_LOG(RT_LOG_WARNING, "No TsdSetMsprofReporterCallback symbol found in %s.", libSoName);
     }
 
     FUNC_TDT_INIT_QS const initQsFunc = RtPtrToPtr<FUNC_TDT_INIT_QS>(mmDlsym(handlePtr, "TsdInitQs"));
     if (initQsFunc == nullptr) {
-        // if runtime cloud not find new api, allowed continue set device and not dlclose
+        // if runtime could not find new api, allow continuing set device and not dlclose
         RT_LOG(RT_LOG_WARNING, "No TsdInitQs symbol found in %s.", libSoName);
     }
     FUNC_TDT_SET_ATTR const setAttrFunc = RtPtrToPtr<FUNC_TDT_SET_ATTR>(mmDlsym(handlePtr, "TsdSetAttr"));
     if (setAttrFunc == nullptr) {
-        // if runtime can not find callback, allowed continue
+        // if runtime cannot find callback, allow continuing
         RT_LOG(RT_LOG_WARNING, "No SetAttr symbol found in %s.", libSoName);
     }
     FUNC_TDT_GET_QOS const capabilityGetFunc = RtPtrToPtr<FUNC_TDT_GET_QOS>(mmDlsym(handlePtr,
         "TsdCapabilityGet"));
     if (capabilityGetFunc == nullptr) {
-        // if runtime cloud not find new api, allowed continue
+        // if runtime could not find new api, allow continuing
         RT_LOG(RT_LOG_WARNING, "No TsdCapabilityGet symbol found in %s.", libSoName);
     }
 
@@ -418,7 +418,7 @@ void Runtime::LoadFunction(void * const handlePtr, const char_t * const libSoNam
     FUNC_TDT_INIT_FLOW_GW const tsdInitFlowGwFunc =
             RtPtrToPtr<FUNC_TDT_INIT_FLOW_GW>(mmDlsym(handlePtr, "TsdInitFlowGw"));
     if (tsdInitFlowGwFunc == nullptr) {
-        // if runtime cloud not find new api, allowed continue set device and not dlclose
+        // if runtime could not find new api, allow continuing set device and not dlclose
         RT_LOG(RT_LOG_WARNING, "No TsdInitFlowGw symbol found in %s.", libSoName);
     }
     tsdInitFlowGw_ = tsdInitFlowGwFunc;
@@ -426,7 +426,7 @@ void Runtime::LoadFunction(void * const handlePtr, const char_t * const libSoNam
     FUNC_TDT_GET_HDC_CON_STA const getHdcConctStatus =
             RtPtrToPtr<FUNC_TDT_GET_HDC_CON_STA>(mmDlsym(handlePtr, "GetHdcConctStatus"));
     if (getHdcConctStatus == nullptr) {
-        // if runtime can not find callback, allowed continue
+        // if runtime cannot find callback, allow continuing
         RT_LOG(RT_LOG_WARNING, "No GetHdcConctStatus symbol found in %s.", libSoName);
     }
     tsdGetHdcConctStatus_ = getHdcConctStatus;
@@ -1019,7 +1019,7 @@ rtError_t Runtime::InitSetRuntimeVersion()
         halSetRuntimeApiVer(__HAL_API_VERSION);
         RT_LOG(RT_LOG_INFO, "set runtime api ver success");
     } else {
-        RT_LOG(RT_LOG_WARNING, "can not find halSetRuntimeApiVer");
+        RT_LOG(RT_LOG_WARNING, "Cannot find halSetRuntimeApiVer");
     }
 
     return RT_ERROR_NONE;
@@ -2146,7 +2146,7 @@ rtError_t Runtime::HandleAiCpuProfiling(
 #if (!defined CFG_DEV_PLATFORM_PC)
 
         COND_RETURN_WARN(tsdHandleAicpuProfiling_ == nullptr, RT_ERROR_DRV_SYM_TSD,
-            "handle is null, maybe can not find symbol UpdateProfilingMode in libtsd_client.so.");
+            "handle is null, maybe cannot find symbol UpdateProfilingMode in libtsd_client.so.");
 
         uint32_t userDeviceId;
         const rtError_t err = GetUserDevIdByDeviceId(devId, &userDeviceId, true);
@@ -2194,19 +2194,19 @@ rtError_t Runtime::LookupAddrByFun(const void * const stubFunc, Context * const 
     rtError_t error;
     const Kernel * const kernelObj = rt->kernelTable_.Lookup(stubFunc);
     if (unlikely(kernelObj == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find kernel.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find kernel.");
         goto LOOKUP_ERROR;
     }
 
     prog = kernelObj->Program_();
     if (unlikely(prog == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find program.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find program.");
         goto LOOKUP_ERROR;
     }
 
     programModule = ctx->GetModule(prog);
     if (unlikely(programModule == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Can not find module.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find module.");
         goto MODULE_ERROR;
     }
 
@@ -2238,17 +2238,17 @@ rtError_t Runtime::LookupAddrAndPrefCntWithHandle(const void * const handlePtr, 
     const Kernel *fftsKernel = kernelTable_.KernelInfoExtLookup((const char_t *)kernelInfoExt);
     RT_LOG(RT_LOG_INFO, "Look up fftsKernel, kernelInfoExt=%s.",
            RtPtrToPtr<const char_t *>(kernelInfoExt));
-    COND_RETURN_ERROR_MSG_INNER(fftsKernel == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find kernel.");
+    COND_RETURN_ERROR_MSG_INNER(fftsKernel == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find kernel.");
 
     program = fftsKernel->Program_();
-    COND_RETURN_ERROR_MSG_INNER(program == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find program.");
+    COND_RETURN_ERROR_MSG_INNER(program == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find program.");
 
     std::function<void()> programGuardFunc = [program, this]() {
         this->PutProgram(program);
     };
     ScopeGuard programGuard(programGuardFunc);
     mdl = ctx->GetModule(program);
-    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find module.");
+    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find module.");
 
     program->LoadDependencies(ctx);
     {
@@ -2272,14 +2272,14 @@ rtError_t Runtime::LookupAddrAndPrefCnt(const Kernel * const kernel, Context * c
     Module *mdl = nullptr;
 
     prog = kernel->Program_();
-    COND_RETURN_ERROR_MSG_INNER(prog == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find program.");
+    COND_RETURN_ERROR_MSG_INNER(prog == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find program.");
 
     std::function<void()> progGuardFunc = [prog, this]() {
         this->PutProgram(prog);
     };
     ScopeGuard progGuard(progGuardFunc);
     mdl = ctx->GetModule(prog);
-    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find module.");
+    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find module.");
 
     rtFunctionInfo_t * const functionInfo = kernelInfo->functionInfo;
     prog->LoadDependencies(ctx);
@@ -2325,14 +2325,14 @@ rtError_t Runtime::LookupAddrAndPrefCnt(const Kernel * const kernel, Context * c
     Module *mdl = nullptr;
 
     prog = kernel->Program_();
-    COND_RETURN_ERROR_MSG_INNER(prog == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find program.");
+    COND_RETURN_ERROR_MSG_INNER(prog == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find program.");
 
     std::function<void()> progGuardFunc = [prog, this]() {
         this->PutProgram(prog);
     };
     ScopeGuard progGuard(progGuardFunc);
     mdl = ctx->GetModule(prog);
-    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Can not find module.");
+    COND_RETURN_ERROR_MSG_INNER(mdl == nullptr, RT_ERROR_KERNEL_LOOKUP, "Cannot find module.");
 
     prog->LoadDependencies(ctx);
     {
@@ -2733,7 +2733,7 @@ Device *Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
                 ERROR_GOTO_MSG_INNER(
                     RT_ERRORCODE_BASE, DEV_FREE,
                     "The soc version=%s has been set,"
-                    " device can not be created on real soc version=%s, the current input soc version does not match "
+                    " device cannot be created on real soc version=%s, the current input soc version does not match "
                     "the NPU type.",
                     GlobalContainer::GetSocVersion().c_str(), GlobalContainer::GetHardwareSocVersion().c_str());
             }
@@ -2846,7 +2846,7 @@ void Runtime::DeviceRelease(Device *dev, const bool isForceReset)
                     DlogReportStop(static_cast<int32_t>(devId));)
             }
             refObj[tsId].ChangeValStatus(refObj[tsId].STATUS_IDLE);
-            // 1、2、3 order can not be changed (drv and log requirement)
+            // 1、2、3 order cannot be changed (drv and log requirement)
             return;
         }
         refObj[tsId].ChangeValStatus(refObj[tsId].STATUS_IDLE);
@@ -4085,7 +4085,7 @@ static uint64_t ConvertTimeoutToUs(const uint64_t timeout, const RtTaskTimeUnitT
     } else { // us
         opExcTaskTimeout = timeout;
     }
-    COND_PROC(opExcTaskTimeout == MAX_UINT64_NUM, opExcTaskTimeout -= 1); // not support never timeout
+    COND_PROC(opExcTaskTimeout == MAX_UINT64_NUM, opExcTaskTimeout -= 1); // never timeout is not supported
     return opExcTaskTimeout;
 }
 
@@ -4549,7 +4549,7 @@ rtError_t Runtime::BinaryGetFunction(const Program * const prog, const uint64_t 
     Program * const progTmp = const_cast<Program *>(prog);
     const Kernel *kernel = progTmp->GetKernelByTillingKey(tilingKey);
     COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_KERNEL_NULL,
-        "Can not find kernel by tilingKey[%" PRIu64 "].", tilingKey);
+        "Cannot find kernel by tilingKey[%" PRIu64 "].", tilingKey);
     *funcHandle = const_cast<Kernel *>(kernel);
     return RT_ERROR_NONE;
 }
@@ -4573,7 +4573,7 @@ rtError_t Runtime::BinaryGetFunctionByName(const Program * const binHandle, cons
     Kernel *kernel = const_cast<Kernel*>(progTmp->GetKernelByName(kernelName));
     const uint32_t devId = static_cast<uint32_t>(dev->Id_());
     COND_RETURN_ERROR_MSG_INNER(kernel == nullptr, RT_ERROR_KERNEL_NULL,
-                                "Can not find kernel by name %s.", kernelName);
+                                "Cannot find kernel by name %s.", kernelName);
 
     *funcHandle = kernel;
     if (IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_XPU)) {
@@ -4823,7 +4823,7 @@ void Runtime::ReadStreamSyncModeFromConfigIni(void)
     const char_t *env = nullptr;
     MM_SYS_GET_ENV(MM_ENV_ASCEND_LATEST_INSTALL_PATH, env);
     if ((env == nullptr) || (*env == '\0')) {
-        RT_LOG(RT_LOG_WARNING, "can not read ASCEND_LATEST_INSTALL_PATH! using non esched mode");
+        RT_LOG(RT_LOG_WARNING, "Cannot read ASCEND_LATEST_INSTALL_PATH! using non esched mode");
         isStreamSyncEsched_ = false;
         return;
     }

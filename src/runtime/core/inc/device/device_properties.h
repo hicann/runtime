@@ -224,7 +224,7 @@ enum class DeviceSatStatusImpl : uint8_t {
 };
 
 enum class DeviceCvArchType : uint8_t {
-    CV_ARCH_INVALID    = 0U,   /* The compilation state dose not involve the CV architecture */
+    CV_ARCH_INVALID    = 0U,   /* The compilation state does not involve the CV architecture */
     CV_ARCH_INTERGRATION = 1U,
     CV_ARCH_SEPARATION = 2U,
     CV_ARCH_MAX = 3U

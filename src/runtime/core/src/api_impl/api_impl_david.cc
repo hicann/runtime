@@ -2030,7 +2030,7 @@ rtError_t ApiImplDavid::RepairError(const uint32_t deviceId, const rtErrorInfo *
             break;
         default:
             error = RT_ERROR_INVALID_VALUE;
-            RT_LOG(RT_LOG_ERROR, "Not support current error type [%d]", errorInfo->errorType);
+            RT_LOG(RT_LOG_ERROR, "Does not support current error type [%d]", errorInfo->errorType);
             break;
     }
     return error;

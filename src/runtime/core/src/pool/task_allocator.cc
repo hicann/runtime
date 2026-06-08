@@ -292,7 +292,7 @@ void *TaskAllocator::GetItemBySerial(const int32_t streamId, const int32_t seria
     const auto it1 = serialManager_.find(streamId);
     if (it1 == serialManager_.end()) {
         serialLock.unlock();
-        RT_LOG(RT_LOG_WARNING, "can not get task, stream_id=%d is invalid", streamId);
+        RT_LOG(RT_LOG_WARNING, "Cannot get task, stream_id=%d is invalid", streamId);
         return nullptr;
     }
 
@@ -300,7 +300,7 @@ void *TaskAllocator::GetItemBySerial(const int32_t streamId, const int32_t seria
     const auto it2 = idManager.serialIds.find(static_cast<uint16_t>(serial));
     if (it2 == idManager.serialIds.end()) {
         serialLock.unlock();
-        RT_LOG(RT_LOG_WARNING, "can not get task, serial_id=%d is invalid", serial);
+        RT_LOG(RT_LOG_WARNING, "Cannot get task, serial_id=%d is invalid", serial);
         return nullptr;
     }
     serialLock.unlock();

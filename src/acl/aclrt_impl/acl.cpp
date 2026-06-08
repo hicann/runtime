@@ -238,7 +238,7 @@ int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen)
     int32_t devId = 0;
     auto rtErr = rtGetDevice(&devId);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_ERROR("can not get device id, runtime errorCode is %d", rtErr);
+        ACL_LOG_ERROR("Cannot get device id, runtime errorCode is %d", rtErr);
         return rtErr;
     }
 
@@ -247,9 +247,9 @@ int32_t UpdateOpSystemRunCfg(void *cfgAddr, uint32_t cfgLen)
     rtErr = rtGetL2CacheOffset(devId, &offset);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-            ACL_LOG_WARN("can not get l2 cache offset, feature not support, device id = %d", devId);
+            ACL_LOG_WARN("Cannot get l2 cache offset, feature is not supported, device id = %d", devId);
         } else {
-            ACL_LOG_ERROR("can not get l2 cache offset, runtime errorCode is %d, device id = %d", rtErr, devId);
+            ACL_LOG_ERROR("Cannot get l2 cache offset, runtime errorCode is %d, device id = %d", rtErr, devId);
         }
         return rtErr;
     }
@@ -272,7 +272,7 @@ aclError HandleErrorManagerConfig(const char_t *const configPath, error_message:
         bool found = false;
         auto ret = acl::JsonParser::GetJsonCtxByKey(configPath, strConfig, ACL_ERR_MSG_CONFIG_NAME, found);
         if (ret != ACL_SUCCESS) {
-            ACL_LOG_INNER_ERROR("cannot parse err_msg config from file[%s], errorCode = %d", configPath, ret);
+            ACL_LOG_INNER_ERROR("Cannot parse err_msg config from file[%s], errorCode = %d", configPath, ret);
             return ret;
         }
         if (!found) {
@@ -303,7 +303,7 @@ aclError HandleEventModeConfig(const char_t *const configPath) {
 
     auto ret = acl::JsonParser::GetEventModeFromFile(configPath, event_mode, found);
     if (ret != ACL_SUCCESS) {
-        ACL_LOG_ERROR("Can not parse event mode config from file[%s], errorCode = %d", configPath, ret);
+        ACL_LOG_ERROR("Cannot parse event mode config from file[%s], errorCode = %d", configPath, ret);
         return ret;
     }
     if (!found) {
@@ -416,11 +416,11 @@ aclError aclInitImpl(const char *configPath)
 
     int32_t initRet = static_cast<uint32_t>(error_message::ErrMgrInit(error_mode));
     if (initRet != 0) {
-        ACL_LOG_WARN("can not init ge errorManager, ge errorCode = %d", initRet);
+        ACL_LOG_WARN("Cannot init ge errorManager, ge errorCode = %d", initRet);
     }
 
     if (DlogReportInitialize() != 0) {
-        ACL_LOG_WARN("can not init device's log module");
+        ACL_LOG_WARN("Cannot init device's log module");
     }
 
     // init acl_model
@@ -476,7 +476,7 @@ aclError aclInitImpl(const char *configPath)
     }
     const auto profRet = MsprofRegisterCallback(ASCENDCL, &acl::AclProfCtrlHandle);
     if (profRet != 0) {
-        ACL_LOG_WARN("can not register Callback, prof result = %d", profRet);
+        ACL_LOG_WARN("Cannot register Callback, prof result = %d", profRet);
     }
 
     // config profiling
@@ -508,7 +508,7 @@ aclError aclInitImpl(const char *configPath)
         auto rtRegErr = rtRegKernelLaunchFillFunc("g_opSystemRunCfg", acl::UpdateOpSystemRunCfg);
         if (rtRegErr != RT_ERROR_NONE) {
             if (rtRegErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-                ACL_LOG_WARN("can not register kernel launch fill function, feature not support.");
+                ACL_LOG_WARN("Cannot register kernel launch fill function, feature is not supported.");
             } else {
                 ACL_LOG_INNER_ERROR("[Init][RegFillFunc]Failed to register kernel launch fill function, ret = %d.", rtRegErr);
                 return ACL_GET_ERRCODE_RTS(rtRegErr);
@@ -542,7 +542,7 @@ aclError aclFinalizeInternal()
     ACL_LOG_INFO("start to execute aclFinalizeInternal");
 
     if (DlogReportFinalize() != 0) {
-        ACL_LOG_WARN("can not init device's log module");
+        ACL_LOG_WARN("Cannot init device's log module");
     }
     acl::ResourceStatistics::GetInstance().TraverseStatistics();
     const int32_t profRet = MsprofFinalize();
@@ -588,7 +588,7 @@ aclError aclFinalizeInternal()
         auto rtRegErr = rtUnRegKernelLaunchFillFunc("g_opSystemRunCfg");
         if (rtRegErr != RT_ERROR_NONE) {
             if (rtRegErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-                ACL_LOG_WARN("can not unregister kernel launch fill function, feature not support.");
+                ACL_LOG_WARN("Cannot unregister kernel launch fill function, feature is not supported.");
             } else {
                 ACL_LOG_INNER_ERROR("[Finalize][UnRegFillFunc]Failed to unregister kernel launch fill function, ret = %d.", rtRegErr);
                 return ACL_GET_ERRCODE_RTS(rtRegErr);
@@ -823,7 +823,7 @@ aclError aclsysGetCANNVersionImpl(aclCANNPackageName name, aclCANNPackageVersion
         case ACL_PKG_NAME_OPP_KERNEL:
             MM_SYS_GET_ENV(MM_ENV_ASCEND_HOME_PATH, pathEnv);
             if (!pathEnv) {
-                ACL_LOG_WARN("[Check]can not get env [%s].", kAscendHomeEnvName);
+                ACL_LOG_WARN("[Check]Cannot get env [%s].", kAscendHomeEnvName);
                 ret = ACL_ERROR_INVALID_FILE;
                 break;
             }
@@ -933,7 +933,7 @@ aclError GetVersionByPkgName(const std::string &targetPkgName, std::string &vers
         char *pathEnv = nullptr;
         MM_SYS_GET_ENV(MM_ENV_ASCEND_HOME_PATH, pathEnv);
         if (pathEnv == nullptr) {
-            ACL_LOG_WARN("Can not get env [%s]. Please check if ASCEND_HOME_PATH is set.", "ASCEND_HOME_PATH");
+            ACL_LOG_WARN("Cannot get env [%s]. Please check if ASCEND_HOME_PATH is set.", "ASCEND_HOME_PATH");
             return ACL_ERROR_INVALID_FILE;
         }
         std::string homePath(pathEnv);
@@ -1226,7 +1226,7 @@ static std::string GetFaultEventInfo()
     int32_t deviceId = 0;
     auto ret = rtGetDevice(&deviceId);
     if (ret != RT_ERROR_NONE) {
-        ACL_LOG_INFO("can not get device id, runtime errorCode is %d", static_cast<int32_t>(ret));
+        ACL_LOG_INFO("Cannot get device id, runtime errorCode is %d", static_cast<int32_t>(ret));
         return faultInfo;
     }
 
@@ -1236,7 +1236,7 @@ static std::string GetFaultEventInfo()
     uint32_t eventCount = 0UL;
     ret = rtGetFaultEvent(deviceId, &filter, faultEventInfo, maxFaultNum, &eventCount);
     if (ret != RT_ERROR_NONE || eventCount == 0UL) {
-        ACL_LOG_INFO("can not get fault event of device %d, runtime errorCode is %d",
+        ACL_LOG_INFO("Cannot get fault event of device %d, runtime errorCode is %d",
             deviceId, static_cast<int32_t>(ret));
         return faultInfo;
     }
@@ -1265,7 +1265,7 @@ const char *aclGetRecentErrMsgImpl()
     constexpr const rtGetDevMsgType_t msgType = RT_GET_DEV_ERROR_MSG;
     const auto ret = rtGetDevMsg(msgType, &acl::aclGetMsgCallback);
     if (ret != RT_ERROR_NONE) {
-        ACL_LOG_DEBUG("can not get device errorMessage, runtime errorCode is %d",
+        ACL_LOG_DEBUG("Cannot get device errorMessage, runtime errorCode is %d",
             static_cast<int32_t>(ret));
     }
 

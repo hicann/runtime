@@ -276,7 +276,7 @@ rtError_t ApiErrorDecorator::FusionLaunch(void * const fusionInfo, Stream * cons
     } else {
         //  1952 only supports A3(aicpu + aic) task
         COND_RETURN_OUT_ERROR_MSG_CALL(fusionList != "AICPUAIC",
-            RT_ERROR_INVALID_VALUE, "Fusion task list %s is invalid, not support.", fusionList.c_str());
+            RT_ERROR_INVALID_VALUE, "Fusion task list %s is invalid or is not supported.", fusionList.c_str());
     }
 
     RT_LOG(RT_LOG_INFO, "fusion launch: subTaskNum=%u, fusion list=%s.", subTaskNum, fusionList.c_str());

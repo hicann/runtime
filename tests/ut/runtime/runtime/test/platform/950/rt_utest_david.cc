@@ -3562,6 +3562,29 @@ TEST_F(DavidTaskTest, InitFuncStreamSwitchTaskV1)
     delete stub;
 }
 
+TEST_F(DavidTaskTest, InitFuncStreamSwitchTaskNotSupport)
+{
+    TaskInfo switchtask = {};
+    void *buf = malloc(2);
+    ASSERT_NE(buf, nullptr);
+
+    InitByStream(&switchtask, stream_);
+    switchtask.u.streamswitchTask.trueStream = stream_;
+    switchtask.u.streamactiveTask.activeStream = stream_;
+    stream_->executedTimesSvm_ = static_cast<uint16_t *>(buf);
+
+    rtStarsStreamSwitchFcPara_t switchfcPara = {};
+    rtError_t error = InitFuncCallParaForStreamSwitchTaskV1(&switchtask, switchfcPara, CHIP_ADC);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    rtStarsStreamSwitchExFcPara_t switchfcExPara = {};
+    error = InitFuncCallParaForStreamSwitchTaskV2(&switchtask, switchfcExPara, CHIP_ADC);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    stream_->executedTimesSvm_ = nullptr;
+    free(buf);
+}
+
 TEST_F(DavidTaskTest1, InitFuncStreamSwitchTaskV2)
 {
     TaskInfo switchtask = {};

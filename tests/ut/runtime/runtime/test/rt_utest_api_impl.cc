@@ -566,6 +566,27 @@ TEST_F(ApiImplTest, GetDevErrMsg)
     delete stream;
 }
 
+TEST_F(ApiImplTest, GetMemUceInfoGetAllFaultEventFailed)
+{
+    ApiImpl apiImpl;
+    MOCKER(NpuDriver::GetAllFaultEvent).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    rtMemUceInfo memUceInfo = {};
+    rtError_t ret = apiImpl.GetMemUceInfo(0, &memUceInfo);
+    EXPECT_EQ(ret, RT_ERROR_DRV_ERR);
+}
+
+TEST_F(ApiImplTest, GetMemUceInfoGetSmmuFaultValidFailed)
+{
+    ApiImpl apiImpl;
+    MOCKER(NpuDriver::GetAllFaultEvent).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(NpuDriver::GetSmmuFaultValid).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    rtMemUceInfo memUceInfo = {};
+    rtError_t ret = apiImpl.GetMemUceInfo(0, &memUceInfo);
+    EXPECT_EQ(ret, RT_ERROR_DRV_ERR);
+}
+
 rtError_t GetDevMsgSubmitTaskStub1(Device *dev, TaskInfo *task, rtTaskGenCallback callback)
 {
     (void)dev->GetTaskFactory()->Recycle(task);

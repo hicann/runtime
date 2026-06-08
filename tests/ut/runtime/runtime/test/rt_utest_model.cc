@@ -79,6 +79,33 @@ TEST_F(ModelTest, TestModelSetupWithDevMemAllocFailed)
     ((Runtime *)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(ModelTest, TestGetCmoIdWithMapMiss)
+{
+    Runtime *rtInstance = static_cast<Runtime *>(Runtime::Instance());
+    Device *device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+
+    rtModel_t rtModel = nullptr;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::ModelIdAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError_t error = rtModelCreate(&rtModel, 0);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+
+    Model *model = rt_ut::UnwrapOrNull<Model>(rtModel);
+    ASSERT_NE(model, nullptr);
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_MODEL_CMO_BARRIER))
+        .will(returnValue(true));
+
+    uint16_t cmoId = 0U;
+    error = model->GetCmoId(1U, cmoId);
+    EXPECT_EQ(error, RT_ERROR_MODEL_EXIT_ID);
+
+    error = rtModelDestroy(rtModel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rtInstance->DeviceRelease(device);
+}
+
 TEST_F(ModelTest, TestModelSetupWithMallocDevValueFailed)
 {
     rtError_t error;

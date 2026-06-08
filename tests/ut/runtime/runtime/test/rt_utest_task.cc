@@ -1264,6 +1264,23 @@ TEST_F(TaskTest, stars_stream_activate_sqe)
     ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
 }
 
+TEST_F(TaskTest, stars_stream_activate_func_call_para_not_support)
+{
+    TaskInfo task = {};
+    rtStream_t stream = nullptr;
+    rtError_t error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
+    StreamActiveTaskInit(&task, rt_ut::UnwrapOrNull<Stream>(stream));
+    rtStarsStreamActiveFcPara_t fcPara = {};
+    error = InitFuncCallParaForStreamActiveTask(&task, fcPara, CHIP_ADC);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    rtStreamDestroy(stream);
+    ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
+}
+
 TEST_F(TaskTest, stars_ph_sqe)
 {
     TaskInfo task = {};

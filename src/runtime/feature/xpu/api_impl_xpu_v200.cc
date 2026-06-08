@@ -23,7 +23,7 @@ namespace runtime {
 rtError_t ApiImplDavid::XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len)
 {
     if (type != PROF_CTRL_SWITCH) {
-        RT_LOG(RT_LOG_WARNING, "dose not support the type: %u", type);
+        RT_LOG(RT_LOG_WARNING, "does not support the type: %u", type);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     RT_LOG(RT_LOG_DEBUG, "len:%u.", len);

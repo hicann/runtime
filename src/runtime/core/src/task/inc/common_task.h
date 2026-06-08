@@ -33,7 +33,7 @@ rtError_t StarsCommonTaskInit(TaskInfo* taskInfo, const T &sqe, const uint32_t f
 
     const uint16_t sqeType = sqe.sqeHeader.type;
     if (!IsSupportType(sqeType)) {
-        RT_LOG(RT_LOG_ERROR, "StarsCommonTask not support type[%hu]", sqeType);
+        RT_LOG(RT_LOG_ERROR, "StarsCommonTask does not support type[%hu]", sqeType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 

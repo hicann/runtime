@@ -76,7 +76,7 @@ aclError aclrtSetDeviceWithoutTsdVXXImpl(int32_t deviceId)
     ACL_LOG_INFO("start to execute aclrtSetDeviceWithoutTsdVXX, deviceId = %d.", deviceId);
     const std::string &socVersion = acl::GetSocVersion();
     if (strncmp(socVersion.c_str(), "Ascend910", (sizeof("Ascend910") - 1UL)) != 0) {
-        ACL_LOG_INFO("The soc version is not Ascend910, not support");
+        ACL_LOG_INFO("The soc version is not Ascend910, which is not supported");
         acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_SYSTEM_MSG, {"func"},
             {"aclrtResetDeviceWithoutTsdVXX, only Ascend 910 chips are supported"});
         return ACL_ERROR_API_NOT_SUPPORT;
@@ -128,7 +128,7 @@ aclError aclrtResetDeviceWithoutTsdVXXImpl(int32_t deviceId)
     ACL_LOG_INFO("start to execute aclrtResetDeviceWithoutTsdVXX, deviceId = %d.", deviceId);
     const std::string &socVersion = acl::GetSocVersion();
     if (strncmp(socVersion.c_str(), "Ascend910", (sizeof("Ascend910") - 1UL)) != 0) {
-        ACL_LOG_ERROR("The soc version is not Ascend910, not support");
+        ACL_LOG_ERROR("The soc version is not Ascend910, which is not supported");
         acl::AclErrorLogManager::ReportInputError(acl::UNSUPPORTED_SYSTEM_MSG, {"func"},
             {"aclrtResetDeviceWithoutTsdVXX, only Ascend 910 chips are supported"});
         return ACL_ERROR_API_NOT_SUPPORT;
@@ -149,7 +149,7 @@ aclError aclrtGetDeviceImpl(int32_t *deviceId)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(deviceId);
     const rtError_t rtErr = rtGetDevice(deviceId);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_INFO("can not get device id, runtime result = %d.", static_cast<int32_t>(rtErr));
+        ACL_LOG_INFO("Cannot get device id, runtime result = %d.", static_cast<int32_t>(rtErr));
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     ACL_LOG_DEBUG("successfully execute aclrtGetDevice, get device id is %d.", *deviceId);
