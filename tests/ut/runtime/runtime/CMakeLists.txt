@@ -1389,8 +1389,8 @@ target_compile_options(runtime_utest_intf_pub INTERFACE
 target_link_libraries(runtime_utest_intf_pub INTERFACE
     mmpa
     json
-    GTest::gtest
-    GTest::gtest_main
+    GTestShared::gtest
+    GTestShared::gtest_main
     c_sec
     -lrt
     -ldl
@@ -1437,8 +1437,8 @@ target_link_directories(intf_llt_pub INTERFACE
 )
 
 target_link_libraries(intf_llt_pub INTERFACE
-    GTest::gtest
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    GTestShared::gtest
+    mockcpp
     -lpthread
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
 )
@@ -1818,4 +1818,3 @@ add_custom_target(runtime_ut_910b DEPENDS ${RUNTIME_TARGET_910B})
 add_custom_target(runtime_ut_common DEPENDS ${RUNTIME_TARGET_COMMON})
 add_custom_target(runtime_ut_all DEPENDS ${RUNTIME_TARGET})
 add_custom_target(runtime_ut DEPENDS ${RUNTIME_TARGET})
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)

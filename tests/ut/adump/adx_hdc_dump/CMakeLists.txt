@@ -9,8 +9,6 @@
 # -----------------------------------------------------------------------------------------------------------
 
 #  cmakelist for adx hdc data dump ut
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(adxHdcDumpApiSrcList
     ${SRC_CODE_ROOT_PATH}/adcore/hdc/hdc_api.cpp
@@ -137,7 +135,7 @@ target_compile_definitions(adx_hdc_dump_utest PRIVATE
 
 target_link_libraries(adx_hdc_dump_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
-    GTest::gtest
+    GTestShared::gtest
 )
 
 target_compile_options(adx_hdc_dump_utest PRIVATE

@@ -371,7 +371,7 @@ target_link_options(acljson_stest PRIVATE
 
 target_link_libraries(acljson_stest PRIVATE
     $<BUILD_INTERFACE:msprof_utestonetrack_pub>
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    mockcpp
     c_sec
     json
 )

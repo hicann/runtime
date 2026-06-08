@@ -39,10 +39,10 @@ target_link_libraries(ge_stub PRIVATE
     $<BUILD_INTERFACE:c_sec_headers>
     c_sec
     json
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
 )
 
 target_compile_options(ge_stub PRIVATE -fno-access-control)

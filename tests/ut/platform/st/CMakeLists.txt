@@ -50,10 +50,10 @@ target_link_libraries(platform_st PRIVATE
         $<BUILD_INTERFACE:intf_llt_pub>
         $<BUILD_INTERFACE:slog_headers>
         -Wl,--no-as-needed
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
-        GTest::gmock_main
+        GTestShared::gtest
+        GTestShared::gtest_main
+        GTestShared::gmock
+        GTestShared::gmock_main
         -lrt
         -ldl
         ascend_protobuf)
@@ -106,10 +106,10 @@ target_link_libraries(platform_stub_st PRIVATE
         $<BUILD_INTERFACE:intf_llt_pub>
         $<BUILD_INTERFACE:slog_headers>
         -Wl,--no-as-needed
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
-        GTest::gmock_main
+        GTestShared::gtest
+        GTestShared::gtest_main
+        GTestShared::gmock
+        GTestShared::gmock_main
         -lrt
         -ldl
         ascend_protobuf)

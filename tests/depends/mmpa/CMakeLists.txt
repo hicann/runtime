@@ -40,8 +40,8 @@ target_link_libraries(mmpa_stub PRIVATE
     $<BUILD_INTERFACE:c_sec_headers>
     -Wl,--no-as-needed
     c_sec
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
 )

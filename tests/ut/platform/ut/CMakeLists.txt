@@ -1,6 +1,4 @@
 set(CMAKE_CXX_STANDARD 14)
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 # compile for ut
 set(SLOG_STUB_FILES
         ${CMAKE_CURRENT_LIST_DIR}/../depends/slog/slog_stub.cc)
@@ -88,28 +86,30 @@ target_compile_options(platform_stub_ut PRIVATE
 
 target_link_libraries(platform_utest PRIVATE
         -Wl,--no-as-needed
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
-        GTest::gmock_main
+        GTestShared::gtest
+        GTestShared::gtest_main
+        GTestShared::gmock
+        GTestShared::gmock_main
         -lrt
         -ldl
         -lgcov
         ascend_protobuf
+        mockcpp
         $<BUILD_INTERFACE:intf_ut_pub>
         $<BUILD_INTERFACE:slog_headers>
 )
 
 target_link_libraries(platform_stub_ut PRIVATE
         -Wl,--no-as-needed
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
-        GTest::gmock_main
+        GTestShared::gtest
+        GTestShared::gtest_main
+        GTestShared::gmock
+        GTestShared::gmock_main
         -lrt
         -ldl
         -lgcov
         ascend_protobuf
+        mockcpp
         $<BUILD_INTERFACE:intf_ut_pub>
         $<BUILD_INTERFACE:slog_headers>
 )

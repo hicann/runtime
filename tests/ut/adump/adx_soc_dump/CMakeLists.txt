@@ -9,8 +9,6 @@
 # -----------------------------------------------------------------------------------------------------------
 
 ############ adx_dump_soc_api ###########
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(adxSocDumpApiSrcList
     ${SRC_CODE_ROOT_PATH}/adcore/hdc/hdc_api.cpp

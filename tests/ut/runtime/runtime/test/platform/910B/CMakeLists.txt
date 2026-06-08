@@ -7,9 +7,6 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
-
 set(runtime_raw_device_adpt_common_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
 )
@@ -546,8 +543,8 @@ target_compile_options(runtime_ut_910b_intf_pub INTERFACE
 target_link_libraries(runtime_ut_910b_intf_pub INTERFACE
     mmpa
     json
-    GTest::gtest
-    GTest::gtest_main
+    GTestShared::gtest
+    GTestShared::gtest_main
     c_sec
     -lrt
     -ldl
@@ -594,8 +591,8 @@ target_link_directories(intf_910b_llt_pub INTERFACE
 )
 
 target_link_libraries(intf_910b_llt_pub INTERFACE
-    GTest::gtest
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    GTestShared::gtest
+    mockcpp
     -lpthread
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
 )

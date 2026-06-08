@@ -87,10 +87,10 @@ target_link_libraries(ascendcl_c_utest PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
     c_sec
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
     -lrt
     -ldl
     -lpthread

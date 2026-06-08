@@ -164,10 +164,10 @@ target_link_libraries(ascendcl_cpp_utest PRIVATE
     $<BUILD_INTERFACE:c_sec_headers>
     ut_ascendcl_src
     json
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
     slog_stub
     c_sec
     mmpa_stub

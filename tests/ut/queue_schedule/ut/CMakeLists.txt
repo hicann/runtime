@@ -139,7 +139,6 @@ set(LOCAL_C_INCLUDES
     ${CMAKE_BINARY_DIR}/proto/aicpu
     ${CMAKE_BINARY_DIR}/proto/aicpu/proto
     ${CMAKE_CURRENT_SOURCE_DIR}/../stub
-    ${CANN_3RD_LIB_PATH}/mockcpp_src/include
 )
 target_include_directories(queue_schedule_main_ut PRIVATE
     ${LOCAL_C_INCLUDES}

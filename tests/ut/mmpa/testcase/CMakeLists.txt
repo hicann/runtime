@@ -33,8 +33,6 @@ target_compile_definitions(mmpa_cpp_utest PRIVATE
 target_include_directories(mmpa_cpp_utest PRIVATE
     ${BASE_DIR}/pkg_inc/mmpa
     ${BASE_DIR}/tests/ut/mmpa
-    ${CANN_3RD_LIB_PATH}/mockcpp_src/include
-    ${CANN_3RD_LIB_PATH}/boost-1.87.0
 )
 
 target_link_libraries(mmpa_cpp_utest PRIVATE
@@ -42,11 +40,11 @@ target_link_libraries(mmpa_cpp_utest PRIVATE
     $<BUILD_INTERFACE:c_sec_headers>
     c_sec
     json
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    mockcpp
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
     -lgcov
     -ldl
     -lrt

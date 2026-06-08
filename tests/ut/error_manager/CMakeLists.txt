@@ -13,7 +13,6 @@ include_directories(${BASE_DIR}/src/dfx/error_manager)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/pkg_inc)
 include_directories(${BASE_DIR}/pkg_inc/base)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(UT_FILES
     "testcase/error_manager_unittest.cc"
@@ -52,8 +51,8 @@ target_link_libraries(ut_error_manager PRIVATE
     mmpa
     unified_dlog
     json
-    GTest::gtest
-    GTest::gtest_main    
+    GTestShared::gtest
+    GTestShared::gtest_main    
     ascend_protobuf
     c_sec
     -lrt

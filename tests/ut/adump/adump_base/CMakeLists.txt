@@ -8,8 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 ########################### adump base utest ################################
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 set(ADUMP_BASE_UT_ROOT_PATH ${TOP_DIR}/tests/ut/adump/adump_base)
 

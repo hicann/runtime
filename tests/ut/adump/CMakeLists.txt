@@ -11,8 +11,6 @@
 set(SRC_CODE_ROOT_PATH ${TOP_DIR}/src/dfx/adump)
 set(LLT_CODE_ROOT_PATH ${TOP_DIR}/tests/ut/adump/ut)
 
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)
 
 ############# intf_llt_pub ####################
 add_library(adump_intf_llt_pub INTERFACE)
@@ -43,8 +41,8 @@ target_link_directories(adump_intf_llt_pub INTERFACE
 )
 
 target_link_libraries(adump_intf_llt_pub INTERFACE
-    GTest::gtest
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    GTestShared::gtest
+    mockcpp
     -lpthread
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
     c_sec

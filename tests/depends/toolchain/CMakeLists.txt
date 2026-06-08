@@ -41,8 +41,8 @@ target_link_libraries(toolchain_stub PRIVATE
     c_sec
     #static_turbojpeg
     json
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
 )

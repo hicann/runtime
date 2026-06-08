@@ -66,6 +66,3 @@ target_link_libraries(c_base_utest
     $<$<BOOL:${ENABLE_ASAN}>:-fsanitize=address,-fsanitize=leak>
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
 )
-
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)

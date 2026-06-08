@@ -156,6 +156,3 @@ target_link_libraries(c_feature_liteos_utest
         c_sec
     PUBLIC
 )
-
-include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
-include_directories(${CANN_3RD_LIB_PATH}/mockcpp_src/include)

@@ -57,8 +57,8 @@ target_link_directories(intf_ut_pub INTERFACE
 )
 
 target_link_libraries(intf_ut_pub INTERFACE
-    GTest::gtest
-    ${CANN_3RD_LIB_PATH}/mockcpp/lib/libmockcpp.a
+    GTestShared::gtest
+    mockcpp
     -lpthread
     $<$<BOOL:${ENABLE_GCOV}>:-lgcov>
 )

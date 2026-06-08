@@ -40,8 +40,8 @@ target_link_libraries(tdt_stub PRIVATE
     $<BUILD_INTERFACE:c_sec_headers>
     c_sec
     # static_turbojpeg
-    GTest::gtest
-    GTest::gtest_main
-    GTest::gmock
-    GTest::gmock_main
+    GTestShared::gtest
+    GTestShared::gtest_main
+    GTestShared::gmock
+    GTestShared::gmock_main
 )
