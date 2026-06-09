@@ -6028,18 +6028,14 @@ rtError_t ApiImpl::CheckArchCompatibility(const char_t *socVersion, const char_t
     // Get the NpuArch to the omSocVersion
     int32_t inputNpuArch;
     rtError_t ret = GetNpuArchByName(omSocVersion, &inputNpuArch);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version=%s is invalid", omSocVersion);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((ret != RT_ERROR_NONE), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        __func__, omSocVersion, "omSocVersion", "SoC version " + std::string(omSocVersion) + " is invalid");
 
     // Get the NpuArch to the hardwareSocVersion
     int32_t hardwareNpuArch;
     ret = GetNpuArchByName(socVersion, &hardwareNpuArch);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version=%s is invalid", socVersion);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((ret != RT_ERROR_NONE), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        __func__, socVersion, "socVersion", "SoC version " + std::string(socVersion) + " is invalid");
 
     if (inputNpuArch != hardwareNpuArch) {
         constexpr int32_t archVerInCompatible = 0U;
@@ -7129,18 +7125,14 @@ rtError_t ApiImpl::ModelCheckArchVersion(const char_t *omsocVersion)
     // Get the NpuArch to the omSocVersion
     int32_t inputNpuArch;
     rtError_t ret = GetNpuArchByName(omsocVersion, &inputNpuArch);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version=%s is invalid", omsocVersion);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((ret != RT_ERROR_NONE), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        __func__, omsocVersion, "omsocVersion", "SoC version " + std::string(omsocVersion) + " is invalid");
 
     // Get the NpuArch to the hardwareSocVersion
     int32_t hardwareNpuArch;
     ret = GetNpuArchByName(socVersion.c_str(), &hardwareNpuArch);
-    if (ret != RT_ERROR_NONE) {
-        RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "Soc version=%s is invalid", socVersion.c_str());
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER((ret != RT_ERROR_NONE), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        __func__, socVersion.c_str(), "socVersion", "SoC version " + socVersion + " is invalid");
 
     if (inputNpuArch != hardwareNpuArch) {
         RT_LOG(
