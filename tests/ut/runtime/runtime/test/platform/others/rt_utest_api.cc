@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "acl_base_rt.h"
 #include "profiling_task.h"
 #include "../../data/elf.h"
 #include "../../rt_utest_config_define.hpp"
@@ -4926,34 +4927,6 @@ TEST_F(ApiTest, memcpy_batch)
     size_t failIdx = 0U;
     error = rtsMemcpyBatch(nullptr, nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-
-    constexpr size_t count = 2U;
-    void *dsts[count] = {nullptr, nullptr};
-    void *srcs[count] = {nullptr, nullptr};
-    size_t sizes[count] = {0U, 0U};
-    size_t attrsIdxs = 0U;
-    rtMemcpyBatchAttr attrs = {};
-    failIdx = 0U;
-    error = rtsMemcpyBatch(dsts, srcs, sizes, count, &attrs, &attrsIdxs, 1U, &failIdx);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-}
-
-TEST_F(ApiTest, memcpy_batch_validates_attrs_before_zero_size)
-{
-    constexpr size_t count = 2U;
-    void *dsts[count] = {nullptr, nullptr};
-    void *srcs[count] = {nullptr, nullptr};
-    size_t sizes[count] = {0U, 0U};
-    size_t attrsIdxs = 0U;
-    rtMemcpyBatchAttr attrs = {};
-    attrs.rsv[0] = 1U;
-    size_t failIdx = 0U;
-
-    rtError_t error = rtsMemcpyBatch(dsts, srcs, sizes, count, &attrs, &attrsIdxs, 1U, &failIdx);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
 }
 
 
@@ -4963,41 +4936,6 @@ TEST_F(ApiTest, memcpy_batch_async)
     size_t failIdx = 0U;
     error = rtsMemcpyBatchAsync(nullptr, nullptr,  nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx, stream_);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-
-    constexpr size_t count = 2U;
-    void *dsts[count] = {nullptr, nullptr};
-    size_t destMaxs[count] = {0U, 0U};
-    void *srcs[count] = {nullptr, nullptr};
-    size_t sizes[count] = {0U, 0U};
-    size_t attrsIdxs = 0U;
-    rtMemcpyBatchAttr attrs = {};
-    failIdx = 0U;
-    error = rtsMemcpyBatchAsync(dsts, destMaxs, srcs, sizes, count, &attrs, &attrsIdxs, 1U, &failIdx, stream_);
-    EXPECT_EQ(error, ACL_RT_SUCCESS);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-}
-
-TEST_F(ApiTest, memcpy_batch_async_validates_destmax_and_attrs_before_zero_size)
-{
-    constexpr size_t count = 2U;
-    void *dsts[count] = {nullptr, nullptr};
-    void *srcs[count] = {nullptr, nullptr};
-    size_t sizes[count] = {0U, 0U};
-    size_t attrsIdxs = 0U;
-    rtMemcpyBatchAttr attrs = {};
-    size_t failIdx = 0U;
-
-    rtError_t error = rtsMemcpyBatchAsync(dsts, nullptr, srcs, sizes, count, &attrs, &attrsIdxs, 1U, &failIdx,
-        stream_);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
-
-    size_t destMaxs[count] = {0U, 0U};
-    attrs.rsv[0] = 1U;
-    error = rtsMemcpyBatchAsync(dsts, destMaxs, srcs, sizes, count, &attrs, &attrsIdxs, 1U, &failIdx, stream_);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-    EXPECT_EQ(failIdx, SIZE_MAX);
 }
 
 

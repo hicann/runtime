@@ -50,8 +50,9 @@ protected:
     {
         Runtime *rtInstance = (Runtime *)Runtime::Instance();
         oldChipType = rtInstance->GetChipType();
+        oldDeviceCustomerStackSize = rtInstance->deviceCustomerStackSize_;
         rtInstance->SetChipType(CHIP_910_B_93);
-    GlobalContainer::SetRtChipType(CHIP_910_B_93);
+        GlobalContainer::SetRtChipType(CHIP_910_B_93);
         int64_t hardwareVersion = CHIP_910_B_93 << 8;
         Driver *driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
@@ -70,13 +71,14 @@ protected:
         rtInstance->timeoutConfig_.isCfgOpWaitTaskTimeout = isCfgOpWaitTaskTimeout;
         rtInstance->timeoutConfig_.isCfgOpExcTaskTimeout = isCfgOpExcTaskTimeout;
         rtInstance->SetChipType(oldChipType);
-    GlobalContainer::SetRtChipType(oldChipType);
+        GlobalContainer::SetRtChipType(oldChipType);
         GlobalMockObject::verify();
-        rtInstance->deviceCustomerStackSize_ = 0;
+        rtInstance->deviceCustomerStackSize_ = oldDeviceCustomerStackSize;
     }
 
 private:
     rtChipType_t oldChipType;
+    uint32_t oldDeviceCustomerStackSize{KERNEL_STACK_SIZE_32K};
     bool isCfgOpWaitTaskTimeout{false};
     bool isCfgOpExcTaskTimeout{false};
 };

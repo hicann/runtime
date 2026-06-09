@@ -56,6 +56,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
         rtDeviceReset(0);
     }
 };
@@ -414,7 +415,7 @@ TEST_F(RuntimeTest, ut_AicMetricStart_MdcTs1Scenario)
     uint32_t originalTsNum = rtInstance->tsNum_;
 
     rtInstance->tsNum_ = TS_NUM_ADC;
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::DevGetTsId).stubs().will(returnValue(1U));
+    (void)dev->DevSetTsId(1U);
     rtInstance->AicMetricStart(profConfig, type, dev);
     EXPECT_EQ(type, 0ULL);
 
@@ -431,7 +432,7 @@ TEST_F(RuntimeTest, ut_AicMetricStop_MdcTs1Scenario)
     uint32_t originalTsNum = rtInstance->tsNum_;
 
     rtInstance->tsNum_ = TS_NUM_ADC;
-    MOCKER_CPP_VIRTUAL(dev, &RawDevice::DevGetTsId).stubs().will(returnValue(1U));
+    (void)dev->DevSetTsId(1U);
     rtInstance->AicMetricStop(profConfig, type, dev);
     EXPECT_EQ(type, 0ULL);
 

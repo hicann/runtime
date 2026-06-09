@@ -117,11 +117,6 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t &
     return ACL_SUCCESS;
 }
 
-inline bool IsZeroSizeMemcpy(const size_t count)
-{
-    return count == 0UL;
-}
-
 inline bool IsZeroSizeMemcpy2d(const size_t width, const size_t height)
 {
     return (width == 0UL) || (height == 0UL);
@@ -651,7 +646,7 @@ aclError aclrtMemcpyImpl(void *dst,
         ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
         return ret;
     }
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("count is zero, no memory copy will be performed");
         return ACL_SUCCESS;
     }
@@ -672,7 +667,7 @@ aclError aclrtMemsetImpl(void *devPtr, size_t maxCount, int32_t value, size_t co
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemset);
     ACL_LOG_DEBUG("start to execute aclrtMemset, maxSize = %zu, size = %zu, value = %d",
         maxCount, count, value);
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("zero-size memset, no memory set will be performed");
         return ACL_SUCCESS;
     }
@@ -700,7 +695,7 @@ aclError aclrtMemcpyAsyncImpl(void *dst,
         ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
         return ret;
     }
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("count is zero, no memory copy async will be performed");
         return ACL_SUCCESS;
     }
@@ -728,7 +723,7 @@ aclError aclrtMemcpyAsyncWithConditionImpl(void *dst,
         ACL_LOG_ERROR("invalid kind of memcpy, kind = %d", static_cast<int32_t>(kind));
         return ret;
     }
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("zero-size memcpy, no memory copy async will be performed");
         return ACL_SUCCESS;
     }
@@ -757,7 +752,7 @@ aclError aclrtMemsetAsyncImpl(void *devPtr, size_t maxCount, int32_t value, size
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemsetAsync);
     ACL_LOG_DEBUG("start to execute aclrtMemsetAsync, maxCount = %zu, value = %d, count = %zu",
         maxCount, value, count);
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("zero-size memset, no memory set async will be performed");
         return ACL_SUCCESS;
     }
@@ -794,7 +789,7 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
     ACL_LOG_DEBUG("start to execute aclrtMemsetD32, memSize = %zu, N = %zu, value = 0x%x",
                   memSize, N, value);
 
-    if (IsZeroSizeMemcpy(N)) {
+    if (N == 0UL) {
         ACL_LOG_INFO("zero-size memsetD32, no memory set will be performed");
         return ACL_SUCCESS;
     }
@@ -853,7 +848,7 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value,
     ACL_LOG_DEBUG("start to execute aclrtMemsetD32Async, memSize = %zu, N = %zu, value = 0x%x",
                   memSize, N, value);
 
-    if (IsZeroSizeMemcpy(N)) {
+    if (N == 0UL) {
         ACL_LOG_INFO("zero-size memsetD32 async, no memory set will be performed");
         return ACL_SUCCESS;
     }
@@ -1554,7 +1549,7 @@ aclError aclrtMemcpyAsyncWithOffsetImpl(void **dst, size_t destMax, size_t dstDa
         ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy with offset, kind = %d", static_cast<int32_t>(kind));
         return ACL_ERROR_INVALID_PARAM;
     }
-    if (IsZeroSizeMemcpy(count)) {
+    if (count == 0UL) {
         ACL_LOG_INFO("zero-size memcpy, no memory copy async with offsetwill be performed");
         return ACL_SUCCESS;
     }

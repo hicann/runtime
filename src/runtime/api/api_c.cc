@@ -1052,12 +1052,12 @@ rtError_t rtMallocCached(void **devPtr, uint64_t size, rtMemType_t type, const u
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t count, rtMemcpyKind_t kind)
+rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t cnt, rtMemcpyKind_t kind)
 {
     if (!IsValidRtMemcpyKind(kind)) {
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
-    if (count == 0U) {
+    if (cnt == 0U) {
         RT_LOG(RT_LOG_INFO, "count is 0, no need to copy memory ex, just return success.");
         return ACL_RT_SUCCESS;
     }
@@ -1065,7 +1065,7 @@ rtError_t rtMemcpyEx(void *dst, uint64_t destMax, const void *src, uint64_t coun
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     TIMESTAMP_BEGIN(rtMemcpyEx);
-    const rtError_t error = apiInstance->MemCopySyncEx(dst, destMax, src, count, kind);
+    const rtError_t error = apiInstance->MemCopySyncEx(dst, destMax, src, cnt, kind);
     TIMESTAMP_END(rtMemcpyEx);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

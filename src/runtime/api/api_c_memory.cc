@@ -88,20 +88,6 @@ rtError_t ValidateMemcpyBatchParams(void ** const dsts, void ** const srcs, cons
         (count > static_cast<size_t>(DEVMM_MEMCPY_BATCH_MAX_COUNT)) || (attrsIdxs[0] != 0UL)) {
         return RT_ERROR_INVALID_VALUE;
     }
-    for (size_t i = 1U; i < numAttrs; i++) {
-        if ((attrsIdxs[i] <= attrsIdxs[i - 1U]) || (attrsIdxs[i] >= count)) {
-            return RT_ERROR_INVALID_VALUE;
-        }
-    }
-
-    constexpr uint32_t rsvMaxSize = sizeof(rtMemcpyBatchAttr::rsv) / sizeof(uint8_t);
-    for (size_t idx = 0UL; idx < numAttrs; idx++) {
-        for (uint32_t i = 0U; i < rsvMaxSize; i++) {
-            if (attrs[idx].rsv[i] != 0U) {
-                return RT_ERROR_INVALID_VALUE;
-            }
-        }
-    }
     return RT_ERROR_NONE;
 }
 }

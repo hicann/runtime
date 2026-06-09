@@ -76,9 +76,12 @@ protected:
 
     virtual void SetUp()
     {
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
         rtSetDevice(0);
 
-        device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+        device_ = rtInstance->DeviceRetain(0, 0);
         engine_ = ((RawDevice *)device_)->engine_;
         RawDevice *rawDevice = new RawDevice(0);
         MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::SetTschVersionForCmodel).stubs().will(ignoreReturnValue());
@@ -93,12 +96,17 @@ protected:
 
     virtual void TearDown()
     {
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
+        device_->SetDevStatus(RT_ERROR_NONE);
         rtStreamDestroy(streamHandle_);
         stream_ = nullptr;
         engine_ = nullptr;
-        ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
+        rtInstance->DeviceRelease(device_);
         rtDeviceReset(0);
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 
 protected:
@@ -317,7 +325,9 @@ TEST_F(EngineTest, engine_start)
             .will(returnValue(RT_ERROR_INVALID_VALUE));
     device->Start();
     EXPECT_EQ(device->engine_->CheckMonitorThreadAlive(), false);
+    (void)device->Stop();
     delete device;
+    GlobalMockObject::reset();
 }
 
 TEST_F(EngineTest, engine_report_last_error1)
@@ -337,19 +347,18 @@ TEST_F(EngineTest, engine_report_last_error1)
     EXPECT_EQ(task->type, TS_TASK_TYPE_KERNEL_AICORE);
     task->tid = 256;
     task->stream = stream;
+    const uint16_t taskId = task->id;
 
-    MOCKER_CPP(&HwtsEngine::ReportExceptProc).stubs().will(ignoreReturnValue());
-    MOCKER_CPP(&Engine::ProcessTask).stubs().will(returnValue(false));
     uint32_t errorCode = 0x2f;
     uint32_t errorDesc = 0x0;
     std::unique_ptr<DirectHwtsEngine> engine = std::make_unique<DirectHwtsEngine>(device_);
-    engine->ReportLastError(stream->Id_(), task->id, errorCode, errorDesc);
+    engine->ReportLastError(stream->Id_(), taskId, errorCode, errorDesc);
 
-    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
     observer.TaskSubmited(device_, task);
-
-    taskFactory->Recycle(task);
-    GlobalMockObject::reset();
+    TaskInfo *leftTask = taskFactory->GetTask(stream->Id_(), taskId);
+    if (leftTask != nullptr) {
+        (void)taskFactory->Recycle(leftTask);
+    }
 
     res = rtStreamDestroy(streamHandle);
     EXPECT_EQ(res, RT_ERROR_NONE);
@@ -1617,29 +1626,34 @@ protected:
 
     virtual void SetUp()
     {
-        rtSetDevice(0);
-        device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
-        engine_ = ((RawDevice *)device_)->engine_;
-        rtError_t res = rtStreamCreate(&streamHandle_, 0);
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
+        device_ = new RawDevice(0);
+        rtError_t res = static_cast<RawDevice *>(device_)->Init();
         EXPECT_EQ(res, RT_ERROR_NONE);
-        stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+        engine_ = ((RawDevice *)device_)->engine_;
     }
 
     virtual void TearDown()
     {
-        rtStreamDestroy(streamHandle_);
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
+        device_->SetDevStatus(RT_ERROR_NONE);
         stream_ = nullptr;
         engine_ = nullptr;
-        ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
-        rtDeviceReset(0);
+        (void)static_cast<RawDevice *>(device_)->Stop();
+        delete device_;
+        device_ = nullptr;
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 
 protected:
     Device *device_ = nullptr;
     Stream *stream_ = nullptr;
     Engine *engine_ = nullptr;
-    rtStream_t streamHandle_ = 0;
 };
 
 TEST_F(EngineTestWithDisableThread, test_not_same_taskid_branch_engine)
@@ -1752,6 +1766,7 @@ TEST_F(EngineTest, ProcessTask_pciebar)
     bool ret = engine->ProcessTask(&task, 0U);
     EXPECT_EQ(ret, true);
     GlobalMockObject::verify();
+    GlobalMockObject::reset();
 }
 
 class EngineTest1 : public testing::Test
@@ -1771,12 +1786,18 @@ protected:
 
     virtual void SetUp()
     {
-
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
     }
 
     virtual void TearDown()
     {
+        Runtime *rtInstance = (Runtime *)Runtime::Instance();
+        rtInstance->SetDisableThread(false);
+        rtInstance->excptCallBack_ = nullptr;
         GlobalMockObject::verify();
+        GlobalMockObject::reset();
     }
 };
 

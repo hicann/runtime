@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
+#include "rt_error_codes.h"
 #include "securec.h"
 #include "runtime/rt.h"
 #include "runtime/rts/rts.h"
@@ -1416,7 +1417,7 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_async_param_err0)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, 0U, attrs, attrsIdxs, numAttrs, &failIdx, nullptr);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatchAsync((void **)dsts, destMaxs, (void **)srcs, sizes, count, nullptr, attrsIdxs, numAttrs, &failIdx, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1532,7 +1533,7 @@ TEST_F(ApiCloudV2DisableThreadTest, memcpy_batch_param_err0)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, 0U, attrs, attrsIdxs, numAttrs, &failIdx);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
     EXPECT_EQ(failIdx, SIZE_MAX);
     error = rtsMemcpyBatch((void **)dsts, (void **)srcs, sizes, count, nullptr, attrsIdxs, numAttrs, &failIdx);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
+#include "rt_error_codes.h"
 #include "securec.h"
 #include "runtime/rt.h"
 #include "runtime/rts/rts.h"
