@@ -2,7 +2,7 @@
 
 ## 1. 模块概述
 
-- **功能介绍**：Task 模块负责管理各类任务的创建、执行和回收。支持多种任务类型（内核执行、内存操作、事件同步、模型执行等），通过 TaskInfo 结构体承载任务信息，Stream::taskResMang_ 负责任务对象分配和回收。
+- **功能介绍**：Task 模块负责管理各类任务的创建、执行和回收。支持多种任务类型（核函数执行、内存操作、事件同步、模型执行等），通过 TaskInfo 结构体承载任务信息。Stream::taskResMang_ 和 TaskFatory 共同负责任务对象分配和回收。
 - **设计目标**：
   - 提供统一的任务管理接口
   - 支持多种任务类型扩展
@@ -15,184 +15,210 @@
 
 - **场景一**：内核执行任务
   ```cpp
-  // 文件位置：src/runtime/core/src/launch/launch.cc
-  DavinciKernelTask *task;
-  stream->AllocTask(&taskInfo, TS_TASK_TYPE_KERNEL);
-  // 填充内核参数
-  task->kernel = kernel;
-  task->args = args;
-  stream->SubmitTask(taskInfo);
+    // 下发单算子任务
+    aclrtLaunchKernel(funcHandle, numBlocks, argsData, argsSize, stream);
+    aclrtLaunchKernelXXX();
   ```
 
-- **场景二**：内存操作任务
+- **场景二**：事件同步任务
   ```cpp
-  // 文件位置：src/runtime/core/src/task/memory_task.h
-  MemoryTask *task;
-  stream->AllocTask(&taskInfo, TS_TASK_TYPE_MEM);
-  // 填充内存操作参数
-  task->srcAddr = src;
-  task->dstAddr = dst;
-  task->size = size;
-  ```
-
-- **场景三**：事件同步任务
-  ```cpp
-  // 文件位置：src/runtime/core/src/task/event_task.h
-  EventTask *task;
-  stream->AllocTask(&taskInfo, TS_TASK_TYPE_EVENT_RECORD);
-  task->event = event;
+  // 下发event 同步任务，并流同步结果
+  aclrtRecordEvent(event, stream1);  // 在 stream1 记录事件
+  aclrtStreamWaitEvent(stream2, event);  // stream2 等待事件
+  aclrtSynchronizeStream(stream1);  // stream1 流同步，触发回收
+  aclrtSynchronizeStream(stream2);  // stream2 流同步，触发回收
   ```
 
 ### 2.2 任务类型
-| 任务枚举值 | 任务类型 | 头文件 | 说明 |
-|------------|----------|--------|------|
-| 0 | `TS_TASK_TYPE_KERNEL_AICORE` | `davinci_kernel_task.h` | AICore 内核执行 |
-| 1 | `TS_TASK_TYPE_KERNEL_AICPU` | `davinci_kernel_task.h` | AICPU 内核 |
-| 2 | `TS_TASK_TYPE_EVENT_RECORD` | `event_task.h` | 事件记录 |
-| 3 | `TS_TASK_TYPE_STREAM_WAIT_EVENT` | `event_task.h` | 流等待事件 |
-| 5 | `TS_TASK_TYPE_MEMCPY` | `memory_task.h` | 内存拷贝 |
-| 6 | `TS_TASK_TYPE_MAINTENANCE` | `maintenance_task.h` | 维护操作（流/事件销毁） |
-| 12 | `TS_TASK_TYPE_MODEL_MAINTAINCE` | `model_maintaince_task.h` | 模型绑定/解绑流 |
-| 13 | `TS_TASK_TYPE_MODEL_EXECUTE` | `model_execute_task.h` | 模型执行 |
-| 14 | `TS_TASK_TYPE_NOTIFY_WAIT` | `notify_task.h` | 通知等待 |
-| 15 | `TS_TASK_TYPE_NOTIFY_RECORD` | `notify_task.h` | 通知记录 |
-| 16 | `TS_TASK_TYPE_RDMA_SEND` | `rdma_task.h` | HCCL RDMA 拷贝 |
-| 18 | `TS_TASK_TYPE_STREAM_SWITCH` | `cond_op_stream_task.h` | 条件流切换 |
-| 19 | `TS_TASK_TYPE_STREAM_ACTIVE` | `cond_op_stream_task.h` | 激活流 |
-| 20-22 | `TS_TASK_TYPE_LABEL_*` | `cond_op_label_task.h` | 标签控制流 |
-| 23 | `TS_TASK_TYPE_PROFILER_TRACE` | `profiling_task.h` | 性能追踪 |
-| 24 | `TS_TASK_TYPE_EVENT_RESET` | `event_task.h` | 事件重置 |
-| 50 | `TS_TASK_TYPE_STARS_COMMON` | `common_task.h` | STARS 通用任务（DVPP/DSA） |
-| 51-52 | `TS_TASK_TYPE_FFTS / FFTS_PLUS` | — | FFTS 任务 |
-| 53 | `TS_TASK_TYPE_CMO` | `cmo_task.h` | 缓存维护操作 |
-| 54 | `TS_TASK_TYPE_BARRIER` | `barrier_task.h` | 同步屏障 |
-| 55 | `TS_TASK_TYPE_WRITE_VALUE` | `common_task.h` | 写值任务 |
-| 56 | `TS_TASK_TYPE_MULTIPLE_TASK` | `davinci_multiple_task.h` | DVPP 多任务 |
-| 57 | `TS_TASK_TYPE_TASK_SQE_UPDATE` | `model_update_task.h` | 更新任务 tiling/args |
-| 66 | `TS_TASK_TYPE_KERNEL_AIVEC` | `davinci_kernel_task.h` | AI Vector 内核 |
-| 68 | `TS_TASK_TYPE_MODEL_TO_AICPU` | `model_to_aicpu_task.h` | 模型加载/执行到 AICPU |
-| 72 | `TS_TASK_TYPE_HOSTFUNC_CALLBACK` | `common_task.h` | Host 函数回调 |
-| 86 | `TS_TASK_TYPE_TASK_TIMEOUT_SET` | `timeout_set_task.h` | 任务超时配置 |
-| 92 | `TS_TASK_TYPE_REDUCE_ASYNC_V2` | `reduce_task.h` | 异步 Reduce V2 |
-| 96 | `TS_TASK_TYPE_MODEL_LOAD` | `model_graph_task.h` | 模型加载 |
-| 98 | `TS_TASK_TYPE_FLIP` | `common_task.h` | Flip 任务（taskId 回卷） |
-| 100 | `TS_TASK_TYPE_UPDATE_ADDRESS` | `common_task.h` | Tiny 地址更新 |
-| 101 | `TS_TASK_TYPE_MODEL_TASK_UPDATE` | `model_update_task.h` | 模型信息更新 |
-| 107 | `TS_TASK_TYPE_FUSION_KERNEL` | `kernel_fusion_task.h` | 融合内核任务 |
-| 110-112 | `TS_TASK_TYPE_DAVID_EVENT_*` | `event_task.h` | David 事件（record/wait/reset） |
-| 113-114 | `TS_TASK_TYPE_MEM_WRITE/WAIT_VALUE` | `common_task.h` | 内存写值/等值 |
-| 116-132 | `TS_TASK_TYPE_DQS_*` | — | DQS 任务族（enqueue/dequeue/prepare 等） |
-| 126-127 | `TS_TASK_TYPE_CAPTURE_*` | — | Capture 记录/等待 |
-| 129-130 | `TS_TASK_TYPE_IPC_*` | — | IPC 记录/等待 |
+| 任务分类 | 任务类型 | 头文件 | 说明 |
+|---------|---------|--------|------|
+| 计算类任务 | `TS_TASK_TYPE_KERNEL_AICORE` <br> `TS_TASK_TYPE_KERNEL_AICPU` <br> `TS_TASK_TYPE_KERNEL_AIVEC` | `davinci_kernel_task.h` | 算子核执行 |
+| 内存类任务 | `TS_TASK_TYPE_MEMCPY` | `memory_task.h` | H2D、D2D、D2H等异步拷贝任务执行 |
+| 事件同步类任务 | `TS_TASK_TYPE_EVENT_RECORD` <br> `TS_TASK_TYPE_STREAM_WAIT_EVENT` <br> `TS_TASK_TYPE_NOTIFY_RECORD` <br> `TS_TASK_TYPE_NOTIFY_WAIT` <br> `TS_TASK_TYPE_DAVID_EVENT_*` <br> `TS_TASK_TYPE_MEM_WRITE/WAIT_VALUE` | `event_task.h` <br> `notify_task.h` <br> `common_task.h` |流间同步、卡间同步等事件等待执行|
+| 条件类任务 | `TS_TASK_TYPE_LABEL_*` <br> `TS_TASK_TYPE_STREAM_SWITCH` <br> `TS_TASK_TYPE_STREAM_ACTIVE` | `cond_op_label_task.h` | 标签控制类 |
+| 管理类任务 | `TS_TASK_TYPE_MAINTENANCE` <br> `TS_TASK_TYPE_MODEL_MAINTAINCE` <br> `TS_TASK_TYPE_MODEL_EXECUTE`| `maintenance_task.h` <br>  `model_maintaince_task.h` <br> `model_execute_task.h` | 维护操作（流/事件销毁） <br> 模型绑定/解绑流 <br> 模型执行 |
 
 ## 3. 架构总览
 
-### 整体设计思路
+**整体设计思路**
+**Task 管理整理分为三部分：**
+- **Task 资源管理：** Task 资源分为两部分，Device 粒度的Task资源和Stream粒度的资源。
+- **Task 处理函数：** Task 处理函数主要是针对不同类型的Task进行任务初始化、SQE封装、Task回收后处理、Task 异常后处理等流程进行统一注册管理。
+- **Task 下发流程：** 配合API接口通过task资源申请、任务组装、任务下发的等接口组合完成运行时调度。
 
-Task 模块整体演进方向：Stream上的 taskResMang_ 作为分配器来管理Task对象资源。进行task资源分配和回收，配合业务api完成Task下发和任务回收。
 
-### 架构分层图
+### 3.1 Task 资源管理架构
 
 ```mermaid
+
 graph TB
-    subgraph TaskTypes["任务类型层"]
-        KernelTask["KernelTask<br/>内核执行"]
-        MemTask["MemoryTask<br/>内存操作"]
-        EventTask["EventTask<br/>事件同步"]
-        ModelTask["ModelTask<br/>模型执行"]
+    classDef apiStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef rtStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+    classDef objStyle fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#1B5E20
+    classDef resStyle fill:#FCE4EC,stroke:#E91E63,stroke-width:2px,color:#880E4F
+
+    subgraph ACL_API1["ACL 接口层"]
+        aclrtCreateStream["aclrtCreateStream()"]:::apiStyle
     end
 
-    subgraph TaskResManage["任务资源层"]
-        AllocTaskInfo["stream->taskResMang->AllocTaskInfoAndPos<br/>Task资源分配"]
-        RecycleTaskInfo["stm->taskResMang_->RecycleTaskInfo<br/>回收Task资源"]
+    subgraph RT_API1["RT 接口层"]
+        rtStreamCreate["rtStreamCreate()"]:::rtStyle
     end
 
-    subgraph DavidSendTask["整体任务下发"]
-        Task资源分配["AllocTaskInfoForCapture"]
-        Task资源初始化
-        Task转换sqe["ToConstructDavidSqe"]
-        Task下发["halSqTaskSend"]
+    subgraph Object1["对象层"]
+        Stream["Stream <br/> 流管理"]:::objStyle
     end
 
-    Task资源初始化 --> TaskTypes
-    Task资源分配 --> AllocTaskInfo
-    AllocTaskInfo --> Task资源初始化
-    TaskTypes --> Task转换sqe
-    Task转换sqe --> Task下发
+    subgraph StreamResource["资源管理层"]
+        TaskResManage["TaskResManage<br/>Stream Task资源管理"]:::resStyle
+    end
+
+    ACL_API1 --> RT_API1
+    RT_API1 --> Object1
+    Object1 --> StreamResource
+
+    subgraph ACL_API["ACL 接口层"]
+        aclrtSetDevice["aclrtSetDevice()"]:::apiStyle
+    end
+
+    subgraph RT_API["RT 接口层"]
+        rtSetDevice["rtSetDevice()"]:::rtStyle
+    end
+
+    subgraph Object["对象层"]
+        Device["Device <br/> 管理"]:::objStyle
+    end
+
+    subgraph DeviceResource["资源管理层"]
+        TaskAllocator["TaskFactory->TaskAllocator<br/>Device Task资源管理"]:::resStyle
+    end
+
+    ACL_API --> RT_API
+    RT_API --> Object
+    Object --> DeviceResource
+
 ```
-### David 下发流程
+
+### 3.2 Task 处理函数注册架构
 
 ```mermaid
+
+flowchart TD
+    classDef entryStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef branchStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef v100Style fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+    classDef v200baseStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef v200Style fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20
+    classDef v201Style fill:#E0F2F1,stroke:#00695C,stroke-width:2px,color:#004D40
+
+    A["Runtime::Init() RegTaskFunc()"]:::entryStyle --> B{"路径选择"}:::branchStyle
+    B -->|v100| C["TaskFuncReg()"]:::v100Style
+    B -->|v200_base| D["RegDavidTaskFunc()"]:::v200baseStyle
+
+    D -->|v200| E["RegDavidTaskFunc() <br/> RegXpuTaskFunc()"]:::v200Style
+    D -->|v201| F["RegDavidTaskFunc()  <br/> 更新DQS钩子"]:::v201Style
+
+```
+
+### 3.3 David Task下发流程
+
+```mermaid
+
 sequenceDiagram
+    autonumber
     participant User as 用户API
     participant Stream as Stream
     participant TaskResMang as TaskResManageDavid
     participant PublicQueue as PublicTaskBuff
     participant Driver as HAL驱动
-    participant HW as 硬件SQ
+    participant HWTS as 硬件
 
-    User->>Stream: StreamLock()
+    User->>Stream: aclrtLaunchKernel
+    Stream->>Stream: StreamLock() <br/> 允许单流多线程下发任务，taskId严格保序
     Stream->>TaskResMang: AllocTaskInfoAndPos(sqeNum, pos, taskInfo)
-    TaskResMang-->>Stream: pos + TaskInfo*
-    Stream->>Stream: SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)
-    Stream->>Stream: 填充任务类型专用参数
-    Stream->>Stream: DavidSendTask(taskInfo, stm)
-    Stream->>Stream: ToConstructDavidSqe(taskInfo, sqeAddr) — 构建 SQE
-    Stream->>PublicQueue: AddTaskToPublicQueue(taskInfo, sqeNum) — 加入跟踪队列
-    Stream->>Driver: halSqTaskSend(devId, &sendInfo) — 发送 SQE 到硬件
-    Driver-->>HW: SQE 写入 SQ
-    HW->>HW: 硬件执行任务
+    TaskResMang-->>Stream: task指针 TaskInfo* + pos
+    Stream->>Stream: SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)  <br/> taskInfo 公共头信息保存
+    Stream->>Stream: 根据任务类型填充 TaskInfo.u.xxx
+    rect rgba(245, 237, 244, 0.62)
+        alt DavidSendTask
+            Stream->>Stream: ToConstructDavidSqe(taskInfo, sqeAddr) <br/> 构建 SQE
+            Stream->>PublicQueue: AddTaskToPublicQueue(taskInfo, sqeNum) <br/> 加入Task 队列
+            Stream->>Driver: halSqTaskSend(devId, &sendInfo) <br/> 发送 SQE 到硬件
+            Driver-->>HWTS: SQE 写入执行地址
+        end
+    end
     Stream->>Stream: StreamUnLock()
     Stream->>Stream: SubmitTaskPostProc — 触发回收或唤醒回收线程
-```
+    HWTS->>HWTS: 执行任务
 
+```
 
 ## 4. 详细设计
 
 ### 4.1 核心流程
 
-**关键代码**：
+#### 4.1.1 单算子流上 Task 资源申请和下发流程
 
-**DavidSendTask 核心逻辑** (`task_david.cc:497-589`)：
+```mermaid
 
-```cpp
-rtError_t DavidSendTask(TaskInfo *taskInfo, Stream *stm) {
-    const uint16_t pos = taskInfo->id;
-    uint64_t sqBaseAddr = stm->GetSqBaseAddr();
-    
-    // 1. 确定 SQE 写入目标
-    rtDavidSqe_t *sqeAddr = davidSqe;  // 默认栈上临时缓冲
-    if (sqBaseAddr != 0ULL) {
-        // 硬件 SQ 模式：直接写到设备 SQ 内存
-        sqeAddr = RtPtrToPtr<rtDavidSqe_t*>(sqBaseAddr + (pos << SHIFT_SIX_SIZE));
-    }
-    
-    // 2. 构建 SQE 内容
-    ToConstructDavidSqe(taskInfo, sqeAddr, sqBaseAddr);
-    
-    // 3. 加入 public queue（用于回收时遍历）
-    AddTaskToPublicQueue(taskInfo, taskInfo->sqeNum);
-    
-    // 4. Auto-split 模式：SQE 写入 host 缓冲
-    if (stm->IsAutoSplitSq()) {
-        return WriteAutoSplitSqeToHostBuffer(taskInfo, stm, sqeAddr);
-    }
-    
-    // 5. Software SQ 模式：拷贝到 host SQ buffer
-    if (stm->IsSoftwareSqEnable()) {
-        memcpy_s(stm->GetSqeBuffer() + sizeof(rtStarsSqe_t) * taskInfo->pos, ...);
-        return error;
-    }
-    
-    // 6. 硬件 SQ 模式：通过 driver 发送
-    struct halTaskSendInfo sendInfo = {...};
-    drvError_t drvRet = halSqTaskSend(devId, &sendInfo);  // DRV 层提交
-}
+flowchart TD
+    classDef userStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef lockStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+    classDef allocStyle fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#1B5E20
+    classDef decisionStyle fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#F57F17
+    classDef errorStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#B71C1C
+    classDef retryStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+    classDef successStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A["用户 API 调用"]:::userStyle --> B["Stream::StreamLock"]:::lockStyle
+    B --> C["AllocTaskInfoForCapture"]:::allocStyle
+    C --> D["AllocTaskInfo(taskInfo, stm, pos, sqeNum)"]:::allocStyle
+    D --> E["TaskResManageDavid::AllocTaskInfoAndPos(sqeNum, pos, taskInfo)"]:::allocStyle
+    E --> F{"taskResMang_ 队列已满？"}:::decisionStyle
+
+    F -->|是| G["返回 RT_ERROR_TASKRES_QUEUE_FULL"]:::errorStyle
+
+    G --> I["Stream::StreamUnLock"]:::lockStyle
+    I --> J["TryToReclaimTask(stm)<br>尝试回收任务"]:::retryStyle
+    J --> K["Stream::StreamLock"]:::lockStyle
+    K --> E
+
+    F -->|否| H["分配 taskInfo <br> 更新 taskResATail_"]:::successStyle
+    H --> L["Runtime::AllocTaskSn(taskSn)<br>分配全局唯一序列号"]:::successStyle
+    L --> M["SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)"]:::successStyle
+    M --> N["InitByStream + 设置 id/flipNum/sqeNum"]:::successStyle
+    N --> O["组装SQE，并发送"]:::successStyle
+    O --> P["Stream::StreamUnLock"]:::lockStyle
+    P --> Q["返回 RT_ERROR_NONE"]:::successStyle
+
+```
+
+#### 4.1.2 模型流 Task 资源申请和下发流程
+
+```mermaid
+
+flowchart TD
+    classDef userStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef lockStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+    classDef allocStyle fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#1B5E20
+    classDef successStyle fill:#E0F7FA,stroke:#00838F,stroke-width:2px,color:#004D40
+
+    A["User"]:::userStyle --> B["aclmdlRIBuildBegin <br/>aclrtCreateStreamWithConfig <br/> aclmdlRIBindStream <br/> aclrtLaunchKernel"]:::userStyle
+    B --> F["Stream::StreamLock"]:::lockStyle
+    F --> G["TaskFactory::Alloc()"]:::allocStyle
+    G --> H["TaskAllocator::AllocId() ->全局 device级TaskId"]:::allocStyle
+    H --> I["TaskAllocator::GetItemById -> 获取TaskInfo 指针"]:::allocStyle
+    I --> L["Runtime::AllocTaskSn() -> 获取全局 taskSn 保序ID"]:::allocStyle
+    L --> M["SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)"]:::allocStyle
+    M --> O["组装SQE，并发送"]:::allocStyle
+    O --> P["Stream::StreamUnLock"]:::lockStyle
+    P --> Q["返回 RT_ERROR_NONE"]:::successStyle
+
 ```
 
 ### 4.2 核心机制详解
 
-#### 4.2.1 TaskInfo 任务信息结构
+#### 4.2.1 TaskInfo 结构设计
 
 **设计思想**：TaskInfo 作为任务的统一载体，包含任务类型、参数、状态、位域标记等信息。通过 union 存储不同任务类型的专用信息结构。
 
@@ -200,81 +226,39 @@ rtError_t DavidSendTask(TaskInfo *taskInfo, Stream *stm) {
 // 文件位置：core/inc/task/task_info.hpp
 typedef struct tagTaskInfoStru {
     Stream *stream;              // 所属流
-    const char_t *typeName;      // 任务类型名称
     tsTaskType_t type;           // 任务类型枚举
-    uint64_t taskTrackTimeStamp; // 追踪时间戳
-    uint32_t tid;                // 线程 ID
-    uint32_t error;              // 错误码
-    uint32_t drvErr;             // 驱动错误码
     uint32_t errorCode;          // 错误码
     uint32_t taskSn;             // 流水号（profiling 用）
     uint32_t pos;                // SQ 位置（David 用）
-    uint32_t stmArgPos;          // 流参数位置
-    uint32_t liteStreamResId;    // Lite 流资源 ID
-    uint32_t modelSeqId;         // 模型序列 ID
-    uint16_t liteTaskResId;      // Lite 任务资源 ID
-    uint16_t mte_error;          // MTE 错误
     uint16_t id;                 // 任务 ID
     uint16_t flipNum;            // 翻转计数（taskId 回卷）
     uint8_t profEn;              // Profiling 启用标志
-    uint8_t updateFlag;          // 更新标志（KEEP/UPDATE/DISABLE）
-    // 位域标记：
+    ...
     uint8_t serial : 1;          // 串行 ID 模式
-    uint8_t terminal : 1;        // 终端标志
     uint8_t bindFlag : 1;        // 模型绑定流标志
-    uint8_t preRecycleFlag : 1;  // 预回收标志
     uint8_t isCqeNeedConcern : 1; // CQE 需关注
     uint8_t isNeedStreamSync : 1; // 需流同步
-    uint8_t isForceCycle : 1;    // 强制循环标志
-    uint8_t isValidInO1 : 1;     // O1 回收模式有效
-    uint8_t isRingbufferGet : 1;  // Ringbuffer 已获取
-    uint8_t isUpdateSinkSqe : 1;  // 更新 Sink SQE
-    uint8_t isNoRingbuffer : 1;   // 无 Ringbuffer
-    uint8_t taskOwner : 1;        // 用户/内部任务
-    uint8_t resv : 4;
     uint8_t sqeNum : 7;           // SQE 数量（David 多 SQE）
-    uint8_t needPostProc : 1;     // 需后处理（DVPP cmdlist）
-    std::shared_ptr<PCTrace> pcTrace; // PC 追踪
-    union { ... } u;              // 各任务类型专用信息
-    rtPkgDesc pkgStat[RT_PACKAGE_TYPE_BUTT]; // 包统计
+    ...
+    union {
+        AicTaskInfo aicTaskInfo;
+        AicpuTaskInfo aicpuTaskInfo;
+        DavinciMultiTaskInfo davinciMultiTaskInfo;
+        MemcpyAsyncTaskInfo memcpyAsyncTaskInfo;
+        ...
+    } u;   // 各任务类型专用信息
+    ...
 } TaskInfo;
 ```
-### 4.3 资源分配流程
 
-### 4.3.1 TaskRes — 环形队列节点
-```cpp
-// task_res.hpp:25-28
-struct TaskRes {
-    TaskInfo taskInfo;     // 任务描述信息
-    void* copyDev;         // PCIe BAR 缓冲区（仅 v100 使用，David/XPU 为 null）
-};
-```
+#### 4.2.2 TaskRes资源分配核心逻辑
 
-### 4.3.2 David 分配流程
+**TaskResManageDavid 核心分配代码**：Stream上的TaskId需要严格保序，从TaskInfo指针申请到sqe组组装下发到硬件，整个过程要和TaskId行为一致。因此整个过程有StreamLock进行控制。
 
-```mermaid
-flowchart TD
-    A["用户 API 调用"] --> B["Stream::StreamLock()"]
-    B --> C["AllocTaskInfo(taskInfo, stm, pos, sqeNum)"]
-    C --> D["TaskResManageDavid::AllocTaskInfoAndPos(sqeNum, pos, taskInfo)"]
-    D --> E{"队列是否已满?<br>(tail+sqeNum) >= head?"}
-    E -->|否| F["pos = 当前 tail<br>memset TaskInfo 为 0<br>标记 sqeNum 个槽位 id=pos<br>推进 taskResATail_"]
-    E -->|是| G["返回 RT_ERROR_TASKRES_QUEUE_FULL"]
-    G --> H["释放 StreamLock"]
-    H --> I["TryToReclaimTask(stm)<br>尝试回收已完成任务"]
-    I --> J["重新获取 StreamLock"]
-    J --> K["再次调用 AllocTaskInfoAndPos"]
-    K --> E
-    F --> L["Runtime::AllocTaskSn(taskSn)<br>分配全局唯一序列号"]
-    L --> M["SaveTaskCommonInfo(taskInfo, stm, pos, sqeNum)"]
-    M --> N["InitByStream + 设置 id/flipNum/sqeNum"]
-    N --> O["返回 RT_ERROR_NONE"]
-```
-
-**核心分配代码**：
+**多 SQE 设计**：一个任务可能占用多个 SQE（如 `sqeNum=2`）， `taskInfo.id` 都指向首位置 `pos`。回收时按 `sqeNum` 刷新 `taskResAHead_`。
 
 ```cpp
-// task_res_da.cc:110-144
+// task_res_da.cc
 rtError_t TaskResManageDavid::AllocTaskInfoAndPos(uint32_t sqeNum, uint32_t &pos, TaskInfo **task, bool needLog) {
     const uint16_t head = taskResAHead_.Value();
     uint16_t tail = taskResATail_.Value();
@@ -290,24 +274,22 @@ rtError_t TaskResManageDavid::AllocTaskInfoAndPos(uint32_t sqeNum, uint32_t &pos
     *task = &taskRes_[pos].taskInfo;
     (void)memset_s(*task, sizeof(TaskInfo), 0, sizeof(TaskInfo));
     
-    // 多 SQE 任务：所有 sqeNum 个槽位共享同一个 id（= pos）
+    // 多 SQE 任务：所有 sqeNum 共享同一个 id（= pos）
     while (tail != taskDesTailIdx) {
         taskRes_[tail].taskInfo.id = pos;
         tail = (tail + 1U) % taskPoolNum_;
     }
     
-    taskResATail_.Set(tail);   // 原子推进 tail
+    taskResATail_.Set(tail);   // 更新 tail
     allocNum_++;                // 累计分配计数（用于周期回收触发）
     return RT_ERROR_NONE;
 }
 ```
 
-**多 SQE 设计**：一个任务可能占用多个 SQE 槽位（如 `sqeNum=2`），所有槽位 `id` 都指向首位置 `pos`。回收时按 `sqeNum` 批量推进 head。
-
 **队列满时的回收重试**：
 
 ```cpp
-// task_david.cc:393-433
+// task_david.cc
 rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream *stm, uint32_t &pos, uint32_t sqeNum) {
     TaskResManageDavid *taskResMang = ...;
     rtError_t error = taskResMang->AllocTaskInfoAndPos(sqeNum, pos, taskInfo);
@@ -327,101 +309,67 @@ rtError_t AllocTaskInfo(TaskInfo **taskInfo, Stream *stm, uint32_t &pos, uint32_
 }
 ```
 
-## 5. 任务回收流程
+#### 4.2.3 Task处理函数的回调框架
 
-### 5.1 David 回收触发时机
+**1. TaskFuncSingle 结构体** <br/>
+不同 TASK_TYPE 的任务回调函数结构体，针对不同 CHIP_TYPE 和 taskType 单独处理，调用函数 rtError_t RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs) 进行全局注册。
+
+```cpp
+// task_manager.h:61-70
+struct TaskFuncSingle {
+    PfnTaskToCmd toCommandFunc;
+    PfnTaskToSqe toSqeFunc;
+    PfnDoCompleteSucc doCompleteSuccFunc;
+    PfnTaskUnInit taskUnInitFunc;
+    PfnWaitAsyncCpCompleteFunc waitAsyncCpCompleteFunc;
+    PfnPrintErrorInfo printErrorInfoFunc;
+    PfnTaskSetResult setResultFunc;
+    PfnTaskSetStarsResult setStarsResultFunc;
+};
+```
+
+**2. TaskFuncArrays 结构体** <br/>
+TaskFuncArrays g_taskFuncArrays[CHIP_END]  runtime初始化的时候根据 CHIP_TYPE 保存对应 TaskFunc。
+
+```cpp
+// task_manager.h
+struct TaskFuncArrays {
+    PfnTaskToCmd toCommandFunc[TS_TASK_TYPE_RESERVED];           // [0] TaskCommand 构建
+    PfnTaskToSqe toSqeFunc[TS_TASK_TYPE_RESERVED];               // [1] SQE 构建
+    PfnDoCompleteSucc doCompleteSuccFunc[TS_TASK_TYPE_RESERVED];  // [2] Task完成后处理
+    PfnTaskUnInit taskUnInitFunc[TS_TASK_TYPE_RESERVED];          // [3] Task指针清空
+    PfnWaitAsyncCpCompleteFunc waitAsyncCpCompleteFunc[TS_TASK_TYPE_RESERVED]; // [4] 异步等待
+    PfnPrintErrorInfo printErrorInfoFunc[TS_TASK_TYPE_RESERVED];  // [5] 错误打印
+    PfnTaskSetResult setResultFunc[TS_TASK_TYPE_RESERVED];        // [6] Task异常结果设置（v100）
+    PfnTaskSetStarsResult setStarsResultFunc[TS_TASK_TYPE_RESERVED]; // [7] Task异常结果设置（v100）
+};
+```
+**3. Task处理时使用的全局变量**  <br/>
+业务代码中通过 g_XXX 对 taskType 进行回调处理。
+```cpp
+static PfnTaskToCmd *g_toCommandFunc = g_taskFuncArrays[CHIP_BEGIN].toCommandFunc;
+static PfnTaskToSqe *g_toSqeFunc = g_taskFuncArrays[CHIP_BEGIN].toSqeFunc;
+static PfnDoCompleteSucc *g_doCompleteSuccFunc = g_taskFuncArrays[CHIP_BEGIN].doCompleteSuccFunc;
+static PfnWaitAsyncCpCompleteFunc *g_waitAsyncCpCompleteFunc = g_taskFuncArrays[CHIP_BEGIN].waitAsyncCpCompleteFunc;
+static PfnPrintErrorInfo *g_printErrorInfoFunc = g_taskFuncArrays[CHIP_BEGIN].printErrorInfoFunc;
+static PfnTaskSetResult *g_setResultFunc = g_taskFuncArrays[CHIP_BEGIN].setResultFunc;
+static PfnTaskSetStarsResult *g_setStarsResultFunc = g_taskFuncArrays[CHIP_BEGIN].setStarsResultFunc;
+PfnTaskUnInit *g_taskUnInitFunc = g_taskFuncArrays[CHIP_BEGIN].taskUnInitFunc;
+
+```
+
+### 4.2.4 任务回收流程
+#### 4.2.4.1 David 任务回收触发时机
 
 | 触发条件 | 调用方式 | 说明 |
 |----------|---------|------|
-| 每 64 个任务下发后 | `TryRecycleTask(stm)` | 周期性回收，`allocNum_ % 64 == 0` 时触发 |
-| 队列满时 | `TryToReclaimTask(stm)` | 分配失败后主动回收腾出空间 |
-| 流同步（Synchronize）时 | `TaskReclaimByStream(stm, false)` | 等待所有任务完成 |
-| 流销毁（TearDown）时 | `TaskReclaimByStream(stm, false)` | 清空所有任务 |
+| 每 64 个任务下发后 | `WakeUpRecycleThread` | 周期性回收，`allocNum_ % 64 == 0` 时触发 |
+| 下发任务队列满 | `TryToReclaimTask` | 分配队列满时触发主动回收 |
+| 流同步（Synchronize） | `WakeUpRecycleThread` | 出发回收线程，等待所有任务完成 |
+| 流销毁（TearDown） | `TaskReclaimByStream` | 清空所有任务 |
 | 独立回收线程 | `RecycleThreadDoForStarsV2` | `IsSeparateSendAndRecycle()` 模式 |
 
-### 5.2 David 回收主流程
-
-```mermaid
-flowchart TD
-    A["TryRecycleTask / TaskReclaimByStream"] --> B["GetDrvSqHead(stm, sqHead)"]
-    B --> C["硬件返回 sqHead — 硬件已执行完的位置"]
-    C --> D["SendingProcReport(stm, limited, taskHead, sqHead)"]
-    D --> E{"需要处理 CQE?"}
-    E -->|是| F["ProcLogicCqUntilEmpty — 收取所有 CQE 报告"]
-    E -->|否| G["直接跳到回收"]
-    F --> G
-    G --> H["FinishedTaskReclaim(stm, limited, curPos=taskResAHead_, tarPos=sqHead)"]
-    H --> I{"curPos == tarPos?"}
-    I -->|是| J["无需回收，返回"]
-    I -->|否| K["计算 recycleHead（限制每次最多回收 64 个）"]
-    K --> L["GetTaskInfo(recycleHead-1) → 获取 workTask"]
-    L --> M{"IsSeparateSendAndRecycle?"}
-    M -->|是| N["TryReclaimToTask(workTask)"]
-    M -->|否| O["TryReclaimToTaskForDvppGrp(workTask)"]
-```
-
-### 5.3 TryReclaimToTask 详细逻辑
-
-```cpp
-// task_recycle_common_base.cc:164-208
-void TryReclaimToTask(TaskInfo *workTask) {
-    Stream *stm = workTask->stream;
-    const uint16_t endTaskSqPos = workTask->id;  // 回收终点位置
-    uint16_t delPos = 0U;
-    TaskInfo *delWorkTask = nullptr;
-    bool earlyBreakFlag = false;
-    
-    // 遍历 publicTaskBuff_，从 head 到 endTaskSqPos
-    do {
-        GetPublicTask(stm, endTaskSqPos, delPos, &delWorkTask, earlyBreakFlag);
-        if (breakFlag) break;
-        
-        // 回收 arg handle
-        ArgManagePtr()->RecycleDevLoader(stm->GetArgHandle());
-        
-        // 释放任务类型专用资源 + Complete 回调
-        TaskUnInitProc(delWorkTask);
-        
-    } while (delPos != endTaskSqPos);
-    
-    // 批量回收：推进 taskResAHead_
-    if (delWorkTask != nullptr) {
-        stm->SetRecycleEndTaskId(delWorkTask->id);
-        // Arg 池回收
-        davidStm->ArgReleaseStmPool(delWorkTask);
-        // 环形队列 head 推进
-        TaskResManageDavid::RecycleTaskInfo(delWorkTask->id, delWorkTask->sqeNum);
-    }
-}
-```
-
-### 5.4 RecycleTaskInfo 核心逻辑
-
-```cpp
-// task_res_da.cc:146-178
-bool TaskResManageDavid::RecycleTaskInfo(uint32_t pos, uint32_t sqeNum) {
-    const uint16_t tail = taskResATail_.Value();
-    const uint16_t headBeforeRecycle = taskResAHead_.Value();
-    const uint32_t taskDesHeadIdx = (pos + sqeNum) % taskPoolNum_;
-    
-    // 有效性校验...
-    
-    // 标记所有 sqeNum 个槽位为已回收
-    uint16_t head = headBeforeRecycle;
-    while (head != taskDesHeadIdx) {
-        taskRes_[head].taskInfo.id = UINT16_MAX;      // 标记回收
-        taskRes_[head].taskInfo.stmArgPos = UINT32_MAX;
-        head = (head + 1U) % taskPoolNum_;
-    }
-    taskResAHead_.Set(head);  // 原子推进 head
-    
-    return true;
-}
-```
-
-**批量回收**：一次性推进 `taskResAHead_` 跨越 `sqeNum` 个槽位，而非逐个回收。
-
-### 5.5 独立回收线程
+#### 4.2.4.2 独立回收线程
 
 ```cpp
 // task_recycle.cc:310-341
@@ -445,28 +393,170 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo) {
 }
 ```
 
----
+### 4.3 模块职责划分
+ | 模块 | 职责 | 位置 | 
+ |------|------|------| 
+ | TaskInfo | 任务信息结构体 | `task/inc/task_info.h` | 
+ | TaskFactory | 任务对象工厂类 Device对象持有，Task 对象分配和回收 | `task/task_factory.hpp` | 
+ | TaskAllocator | 任务对象分配器，管理任务池，属于TaskFactory | `task/task_allocator.hpp` | 
+ | TaskResManage | 任务资源管理，Stream持有 | `task/task_res_manage/` | 
+ | DavidSendTask <br/> SubmitTask | 任务提交模块 | `task/task_submit/v200/task_david.cc` <br/> `engine/engine.cc`|
+ | RecycleThreadDoForStarsV2 | 任务回收模块 | `task/task_recycle/` <br/> `stars_engine.cc`| 
 
-## 6. 关键文件索引
+### 4.4 核心数据结构
+
+#### 4.4.1 Device TaskFactory 类图
+
+```mermaid
+
+classDiagram
+    classDef deviceStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef factoryStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef allocatorStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+    classDef managerStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#4A148C
+    classDef infoStyle fill:#E0F2F1,stroke:#00695C,stroke-width:2px,color:#004D40
+
+    class Device:::deviceStyle {
+      +GetTaskFactory()
+      +SubmitTask()
+      +TaskReclaim()
+    }
+
+    class RawDevice:::deviceStyle {
+      -TaskFactory taskFactory_
+      +SubmitTask()
+    }
+
+    class TaskFactory:::factoryStyle {
+      -TaskAllocator allocator_  // task 分配器
+      -Device device_
+      +Init()  // 初始化
+      +Alloc()  // 分配Task 指针 + 全局TaskId
+      +Recycle() // 回收Task 指针
+      +GetTask() // 获取Task指针
+      +SetSerialId() // 序列化流上的TaskId
+      +TryAgainAlloc()
+      +TryTaskReclaim()
+    }
+
+    class TaskAllocator:::allocatorStyle {
+      -BufferAllocator allocator_
+      -vector~TaskIdManager~ vecIdManager_
+      -map~streamId, SerialTaskId~ serialManager_
+      -uint32 usedCntSink_
+      -uint32 usedCntUnSink_
+      +AllocId()
+      +GetItemById()
+      +FreeById()
+      +SetSerialId()
+      +GetItemBySerial()
+      +FreeStreamRes()
+    }
+
+    class TaskIdManager:::managerStyle {
+      +mapTaskIds[MAX_UINT16_NUM]
+      +lastId
+      +taskIdManagerLock
+    }
+
+    class SerialTaskId:::managerStyle {
+      +serialIds
+      +lastId
+    }
+
+
+    class TaskInfo:::infoStyle {
+      +id
+      +type
+      +stream
+      +serial
+      +bindFlag
+      +flipNum
+    }
+
+    RawDevice --|> Device
+    RawDevice o-- TaskFactory
+    TaskFactory --> TaskAllocator
+    TaskAllocator --> TaskIdManager
+    TaskIdManager -- SerialTaskId
+    TaskFactory ..> TaskInfo
+
+```
+
+#### 4.4.2 Stream TaskRes 类图
+```mermaid
+classDiagram
+    classDef baseStyle fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef davidStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef streamStyle fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100
+
+    class TaskResManage:::baseStyle {
+        +TaskRes* taskRes_
+        +uint16_t taskResHead_
+        +uint16_t taskResTail_
+        +uint16_t taskPoolNum_
+        +int32_t streamId_
+        +uint32_t deviceId_
+        -void* taskResBaseAddr_
+        -void* pcieBaseAddr_
+        -mutex taskHeadMutex_
+        -mutex taskTailMutex_
+        +AllocTaskInfoByTaskResId()
+        +RecycleTaskInfoO1()
+        +RecycleTaskInfoOn()
+        +GetTaskInfo()  // 获取task 指针
+        +CreateTaskRes()  // 创建 StreamTaskRes 资源
+        +ReleaseTaskResource()  // 释放 StreamTaskRes 资源
+        +Load()
+    }
+
+    class TaskResManageDavid:::davidStyle {
+        +Atomic~uint16_t~ taskResAHead_  // 下一个待回收的位置
+        +Atomic~uint16_t~ taskResATail_  // 下一个待分配的位置
+        +uint64_t allocNum_
+        +AllocTaskInfoAndPos()  // 分配Task 指针
+        +RecycleTaskInfo()  // 回收Task 指针
+        +RollbackTail()
+        +GetHeadTail()   
+        +GetTaskPosHead()
+        +GetTaskPosTail()
+        +IsEmpty()
+        +GetAllocNum()
+        +GetPendingNum()
+        +IsRecyclePosValid()
+        +ResetTaskRes()
+        +ShowDfxInfo()
+    }
+
+    class Stream:::streamStyle {
+        +TaskResManage* taskResMang_
+    }
+
+    class DavidStream:::streamStyle {
+        +CreateStreamTaskRes()
+    }
+
+    DavidStream --|> Stream
+    TaskResManageDavid --|> TaskResManage
+    DavidStream o-- TaskResManageDavid : taskResMang_
+
+```
+
+
+## 5. 关键文件索引
 
 | 功能模块 | 文件路径 | 核心内容 |
 |----------|---------|---------|
-| TaskRes 基类 | `core/inc/task/task_res.hpp` | TaskRes 结构、TaskResManage 类声明 |
-| TaskResManageDavid | `core/inc/task/task_res_da.hpp` | 原子 head/tail、AllocTaskInfoAndPos |
+| Stream 声明 | `core/src/stream/stream.hpp` | `taskResMang_` 字段 |
+| DavidStream | `core/src/stream/stream_david.cc` | CreateStreamTaskRes<br>TearDown |
+| TaskInfo 定义 | `core/inc/task/task_info.hpp` | TaskInfo 结构体 |
+| TaskRes 基类 | `core/inc/task/task_res.hpp` | TaskRes 结构 <br> TaskResManage 类声明 |
+| TaskResManageDavid | `core/inc/task/task_res_da.hpp` | 原子 head/tail<br> AllocTaskInfoAndPos |
 | TaskResManage 实现 | `core/src/task/task_res_manage/task_res.cc` | v100 分配/回收/Load |
 | TaskResManageDavid 实现 | `core/src/task/task_res_manage/v200/task_res_da.cc` | David 分配/回收/回滚 |
-| TaskInfo 定义 | `core/inc/task/task_info.hpp` | TaskInfo 结构体 |
-| Stream 声明 | `core/src/stream/stream.hpp` | `taskResMang_` 字段 |
-| DavidStream | `core/src/stream/stream_david.cc` | CreateStreamTaskRes、TearDown |
-| David 任务下发 | `core/src/task/task_submit/v200/task_david.cc` | AllocTaskInfo、DavidSendTask |
-| David 任务回收 | `core/src/task/task_recycle/v200/task_recycle.cc` | TryRecycleTask、回收线程 |
-| 回收公共逻辑 | `core/src/task/task_recycle/v200/task_recycle_common_base.cc` | FinishedTaskReclaim、TryReclaimToTask |
----
-
-## 7. 性能优化策略
-
-- **任务预分配**：Stream创建的时 TaskResManage 预分配任务对象池，减少分配开销
-- **异步回收**：回收与下发解耦，不阻塞任务下发
+| David 任务下发 | `core/src/task/task_submit/v200/task_david.cc` | AllocTaskInfo <br> DavidSendTask |
+| David 任务回收 | `core/src/task/task_recycle/v200/task_recycle.cc` | TryRecycleTask <br> 回收线程 |
+| 回收公共逻辑 | `core/src/task/task_recycle/v200/task_recycle_common_base.cc` | TaskReclaimForSeparatedStm <br> 回收CQE、回收Task |
 ---
 
 _本模块文档基于源码 `src/runtime/core/src/task/` 分析。_
