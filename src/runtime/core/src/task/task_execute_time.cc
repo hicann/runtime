@@ -54,6 +54,22 @@ void TransExeTimeoutCfgToKernelCredit(const uint64_t opExcTaskTimeout, uint16_t 
     }
 }
 
+static void TransExeTimeoutCfgToKernelCreditNeverTimeout(const uint64_t opExcTaskTimeout, uint16_t &kernelCredit)
+{
+    const float64_t kernelCreditScale = Runtime::Instance()->GetKernelCreditScaleUS();
+    if ((opExcTaskTimeout != 0ULL) && (kernelCreditScale >= RT_STARS_TASK_KERNEL_CREDIT_SCALE_MIN)) {
+        const float64_t trans = ceil(static_cast<float64_t>(opExcTaskTimeout) / kernelCreditScale);
+        kernelCredit = (trans > static_cast<float64_t>(RT_STARS_MAX_KERNEL_CREDIT)) ?
+            RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT : static_cast<uint16_t>(trans);
+    } else {
+        kernelCredit = RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT;
+    }
+
+    if (kernelCredit < (RT_STARS_MAX_KERNEL_CREDIT - RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8)) {
+        kernelCredit += RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8;
+    }
+}
+
 uint16_t GetAicoreKernelCredit(const uint64_t customTimeoutUs)
 {
     uint16_t kernelCredit = 0U;
@@ -92,7 +108,7 @@ uint16_t GetSdmaKernelCredit()
     return TransKernelCreditCreditByChip(kernelCredit);
 }
 
-uint16_t GetAicpuKernelCredit(uint64_t timeout)
+static uint16_t GetAicpuKernelCreditInternal(uint64_t timeout, bool defaultNeverTimeout)
 {
     uint64_t tmpTimeout = 0UL;
     uint16_t kernelCredit = RT_STARS_DEFAULT_AICPU_KERNEL_CREDIT;
@@ -104,13 +120,31 @@ uint16_t GetAicpuKernelCredit(uint64_t timeout)
     } else {
         // no op
     }
-    TransExeTimeoutCfgToKernelCredit(tmpTimeout, kernelCredit);
+
+    if (defaultNeverTimeout &&
+        std::abs(Runtime::Instance()->GetCurChipProperties().KernelCreditScale) == RT_MC_KERNEL_CREDIT_SCALE) {
+        TransExeTimeoutCfgToKernelCreditNeverTimeout(tmpTimeout, kernelCredit);
+    } else {
+        TransExeTimeoutCfgToKernelCredit(tmpTimeout, kernelCredit);
+        if (kernelCredit < (RT_STARS_MAX_KERNEL_CREDIT - RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8)) {
+            kernelCredit += RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8;
+        }
+    }
+
     RT_LOG(RT_LOG_DEBUG, "timeout=%" PRIu64 "us, isCfg=%u, cfgTime=%" PRIu64 "us, kernelCredit=%u.",
         timeout, timeoutCfg.isCfgOpExcTaskTimeout, timeoutCfg.opExcTaskTimeout, kernelCredit);
-    if (kernelCredit < (RT_STARS_MAX_KERNEL_CREDIT - RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8)) {
-        kernelCredit += RT_STARS_TASK_KERNEL_CREDIT_SCALE_UINT8;
-    }
+
     return TransKernelCreditCreditByChip(kernelCredit);
+}
+
+uint16_t GetAicpuKernelCreditV200(uint64_t timeout)
+{
+    return GetAicpuKernelCreditInternal(timeout, true);
+}
+
+uint16_t GetAicpuKernelCredit(uint64_t timeout)
+{
+    return GetAicpuKernelCreditInternal(timeout, false);
 }
 
 uint16_t GetCCUCredit(uint16_t customTimeout)

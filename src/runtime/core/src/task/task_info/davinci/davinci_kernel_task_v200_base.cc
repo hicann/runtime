@@ -131,7 +131,7 @@ void ConstructDavidAICpuSqeForDavinciTaskBase(TaskInfo *const taskInfo, rtDavidS
     const bool isNeedNoTimeout = ((aicpuTaskInfo->timeout > RUNTIME_DAVINCI_MAX_TIMEOUT) && isSupportTimeout) ||
         (aicpuTaskInfo->timeout == MAX_UINT64_NUM);
     sqe->kernelCredit = isNeedNoTimeout ? RT_STARS_NEVER_TIMEOUT_KERNEL_CREDIT :
-                        static_cast<uint8_t>(GetAicpuKernelCredit(aicpuTaskInfo->timeout));
+                        static_cast<uint8_t>(GetAicpuKernelCreditV200(aicpuTaskInfo->timeout));
     sqe->sqeLength = 0U;
 
     /* words4-13 use reserved field */

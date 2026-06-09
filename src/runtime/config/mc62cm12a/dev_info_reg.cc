@@ -95,7 +95,7 @@ static constexpr uint32_t CQE_DEPTH = 1024U;
 
 static constexpr uint32_t RT_STARS_MAX_KERNEL_CREDIT_UINT32 = 254U; // STARS MAX KERNEL_CREDIT = 255.
 static constexpr uint32_t RT_STARS_MC62CM12A_DEFAULT_KERNEL_CREDIT_UINT32 = 9U; // The STARS MC62CM12A reference time is 301.989ms.
-static constexpr double RT_STARS_MC62CM12A_TASK_KERNEL_CREDIT_SCALE_US = 33554.432; // 2^24 / 500M *1000*1000(us)
+static constexpr double RT_STARS_MC62CM12A_TASK_KERNEL_CREDIT_SCALE_US = RT_MC_KERNEL_CREDIT_SCALE; // 2^24 / 500M *1000*1000(us)
 
 static const DevProperties CHIP_MC62CM12A_PROPERTIES = {
     .engineType = "STARS",
