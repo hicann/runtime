@@ -2662,10 +2662,29 @@ rtError_t ApiErrorDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_
 
     error = Runtime::Instance()->GetUserDevIdByDeviceId(realDeviceId, devIndex);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
-        "Failed to convert the driver device ID %u to user device ID, phyId=%u, retCode=%#x", 
+        "Failed to convert the driver device ID %u to user device ID, phyId=%u, retCode=%#x",
         realDeviceId, phyId, static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_DEBUG, "realDeviceId:%u, phyId=%u, devIndex=%u.", realDeviceId, phyId, (*devIndex));
     return RT_ERROR_NONE;
+}
+
+rtError_t ApiErrorDecorator::GetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t * const phyDevId)
+{
+    NULL_PTR_RETURN_MSG_OUTER(phyDevId, RT_ERROR_INVALID_VALUE);
+    const rtError_t error = CheckDeviceIdIsValid(logicDevId);
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x",
+        logicDevId, static_cast<uint32_t>(error));
+    // 契约就是 LogicDevId（驱动 index），不做 ChgUserDevIdToDeviceId。
+    return impl_->GetPhyDevIdByLogicDevId(logicDevId, phyDevId);
+}
+
+rtError_t ApiErrorDecorator::GetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t * const logicDevId)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((phyDevId < 0), RT_ERROR_DEVICE_ID,
+        phyDevId, "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER(logicDevId, RT_ERROR_INVALID_VALUE);
+    // 出参就是 LogicDevId，不做 GetUserDevIdByDeviceId 反转。
+    return impl_->GetLogicDevIdByPhyDevId(phyDevId, logicDevId);
 }
 
 rtError_t ApiErrorDecorator::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)

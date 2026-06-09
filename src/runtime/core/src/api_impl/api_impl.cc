@@ -3343,9 +3343,25 @@ rtError_t ApiImpl::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const 
     COND_RETURN_ERROR(CheckCurCtxValid(static_cast<int32_t>(phyId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
                       "Current Context is null, phyId[%d].", phyId);
     rtError_t error = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDeviceIndexByPhyId(phyId, devIndex);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, 
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
         "GetDeviceIndexByPhyId failed, phyId = %u, retCode=%#x.", phyId, static_cast<uint32_t>(error));
     return error;
+}
+
+rtError_t ApiImpl::GetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t * const phyDevId)
+{
+    RT_LOG(RT_LOG_INFO, "get PhyDevId by LogicDevId=%d.", logicDevId);
+    return Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->
+        GetDevicePhyIdByIndex(static_cast<uint32_t>(logicDevId),
+                              reinterpret_cast<uint32_t *>(phyDevId));
+}
+
+rtError_t ApiImpl::GetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t * const logicDevId)
+{
+    RT_LOG(RT_LOG_INFO, "get LogicDevId by PhyDevId=%d.", phyDevId);
+    return Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->
+        GetDeviceIndexByPhyId(static_cast<uint32_t>(phyDevId),
+                              reinterpret_cast<uint32_t *>(logicDevId));
 }
 
 rtError_t ApiImpl::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)

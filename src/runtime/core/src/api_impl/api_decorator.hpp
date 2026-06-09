@@ -309,6 +309,8 @@ public:
     rtError_t GetDevice(int32_t * const devId) override;
     rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t * const phyId) override;
     rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex) override;
+    rtError_t GetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t * const phyDevId) override;
+    rtError_t GetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t * const logicDevId) override;
     rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) override;
     rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) override;
     rtError_t DeviceSynchronize(const int32_t timeout) override;

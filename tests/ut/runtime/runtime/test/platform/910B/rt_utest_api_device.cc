@@ -615,9 +615,9 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsNewDeviceId)
     error = rtsGetUserDevIdByLogicDevId(0, &count3);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtsGetLogicDevIdByPhyDevId(-1, &count);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
     error = rtsGetPhyDevIdByLogicDevId(-1, &count1);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
     error = rtsGetLogicDevIdByUserDevId(-1, &count2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     error = rtsGetUserDevIdByLogicDevId(-1, &count3);
