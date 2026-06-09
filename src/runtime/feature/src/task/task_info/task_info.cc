@@ -987,7 +987,10 @@ rtError_t SendFlipTaskWithStreamId(Stream *stream)
         RT_LOG(RT_LOG_DEBUG, "TS not support stream destroy flip task, stream_id=%d", stream->Id_());
         return RT_ERROR_NONE;
     }
-    Stream *ctrlStream = dev->GetCtrlStream(stream);
+
+    Context *curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream *ctrlStream = curCtx->GetCtrlSQStream();
     if (ctrlStream == nullptr) {
         RT_LOG(RT_LOG_WARNING, "CtrlStream is null, stream_id=%d", stream->Id_());
         return RT_ERROR_STREAM_NULL;
@@ -1007,8 +1010,8 @@ rtError_t SendFlipTaskWithStreamId(Stream *stream)
     if (error != RT_ERROR_NONE) {
         (void)dev->GetTaskFactory()->Recycle(flipTask);
         RT_LOG(RT_LOG_WARNING, "Submit destroy flip task on ctrl stream failed, "
-            "stream_id=%d, flipNum=%hu, retCode=%#x",
-            stream->Id_(), flipTask->u.flipTask.flipNumReport, static_cast<uint32_t>(error));
+            "stream_id=%d, ctrl_stream_id=%d, flipNum=%hu, retCode=%#x",
+            stream->Id_(), ctrlStream->Id_(), flipTask->u.flipTask.flipNumReport, static_cast<uint32_t>(error));
         return error;
     }
     RT_LOG(RT_LOG_INFO, "Task send succ.");
