@@ -228,7 +228,7 @@ runtime在编译时，依赖的第三方开源软件列表如下：
 | mockcpp_patch | 2.7-h5 | [mockcpp-2.7-h5.patch](https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch) |
 | protobuf | 25.1 | [protobuf-25.1.tar.gz](https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz) |
 | makeself | 2.5.0 | [makeself-release-2.5.0-patch1.tar.gz](https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz) |
-| cann-cmake | master-023 | [cmake-master-023.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-023.tar.gz) |
+| cann-cmake | master-026 | [cmake-master-026.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-026.tar.gz) |
 
 > [!NOTE]注意
 > 如果您从其他地址下载，请确保版本号一致。

@@ -47,6 +47,7 @@ add_cann_third_party(protobuf)
 include(version.cmake)
 check_cann_pkg_build_deps("npu-runtime")
 add_cann_version_info_targets()
+include(cmake/gen_version_headers.cmake)
 
 add_subdirectory(src)
 

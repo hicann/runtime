@@ -59,6 +59,10 @@
         <path value="$(TARGET_ENV)/include/experiment/msprof/profiling"/>
         <path value="compat"/>
     </dir_info>
+    <file_info dst_path="$(TARGET_ENV)/include/version" install_path="$(TARGET_ENV)/include/version" install_type="devel" install_mod="440">
+        <file value="cann_version.h"/>
+        <file value="runtime_version.h"/>
+    </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/include/driver" install_path="$(TARGET_ENV)/include/driver" install_type="all">
         <file value="appmon_lib.h" install_mod="440" entity="true"/>
         <file value="ascend_hal_base.h" install_mod="440" entity="true"/>
