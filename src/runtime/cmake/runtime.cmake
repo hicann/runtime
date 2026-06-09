@@ -766,7 +766,6 @@ endmacro()
 add_runtime_api_library(runtime)
 add_runtime_common_library(runtime_common)
 add_runtime_v100_library(runtime_v100)
-add_dependencies(runtime runtime_v100)
 
 install(TARGETS runtime DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL)
 install(TARGETS runtime_common DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL)
