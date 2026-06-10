@@ -1315,6 +1315,16 @@ public:
         return isSoftwareSqEnable_;
     }
 
+    bool IsSubCaptureModel(void) const
+    {
+        return isSubCaptureModel_;
+    }
+
+    void SetSubCaptureModel(void)
+    {
+        isSubCaptureModel_ = true;
+    }
+
     bool IsAutoSplitSq() const { return isAutoSplitSq_; }
     void SetAutoSplitSq(bool enable) { isAutoSplitSq_ = enable; }
     AutoSplitSqContext* GetAutoSplitCtx() const { return autoSplitCtx_; }
@@ -1641,6 +1651,7 @@ private:
     uint64_t sqAddr_{0ULL};   /* max size is 2M */
     uint32_t sqMemOrderType_{SQ_ADDR_MEM_ORDER_TYPE_MAX};
     bool isSoftwareSqEnable_{false};
+    bool isSubCaptureModel_{false};
     uint32_t sqDepth_;
     uint8_t *sqeBuffer_{nullptr};
     uint32_t sqeBufferSize_{0U};

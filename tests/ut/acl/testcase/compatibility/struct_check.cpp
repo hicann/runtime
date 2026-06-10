@@ -611,3 +611,21 @@ TEST_F(UTEST_ACL_compatibility_struct_check, aclmdlRIKernelTaskParams)
     // 检查整个结构体的大小是否正确
     EXPECT_EQ(sizeof(aclmdlRIKernelTaskParams), sizeof(uint32_t) * 10 + 48);
 }
+
+TEST_F(UTEST_ACL_compatibility_struct_check, aclmdlRICondTaskParams)
+{
+    size_t offset;
+    offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, handle);
+    EXPECT_EQ(offset, 0);
+
+    offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, type);
+    EXPECT_EQ(offset, sizeof(aclmdlRICondHandle));
+
+    offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, size);
+    EXPECT_EQ(offset, sizeof(aclmdlRICondHandle) + sizeof(aclmdlRICondTaskType));
+
+    offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, modelRIArray);
+    EXPECT_EQ(offset, sizeof(aclmdlRICondHandle) + sizeof(aclmdlRICondTaskType) + sizeof(uint32_t));
+
+    EXPECT_EQ(sizeof(aclmdlRICondTaskParams), sizeof(aclmdlRICondHandle) + sizeof(aclmdlRICondTaskType) + sizeof(uint32_t) + sizeof(aclmdlRI *));
+}

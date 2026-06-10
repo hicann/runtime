@@ -10930,6 +10930,11 @@ TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
     ApiImplDavid apiImpl;
     rtError_t error;
     rtEvent_t event;
+    rtModel_t model;
+
+    error = rtModelCreate(&model, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    stream_->SetModel(rt_ut::UnwrapOrNull<Model>(model));
 
     error = rtEventCreate(&event);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -10960,6 +10965,11 @@ TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
     task.u.davidEventResetTaskInfo.event = evt;
     (void)memset_s(&params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
     error = apiImpl.TaskGetParams(static_cast<rtTask_t>(&task), &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    stream_->SetModel(nullptr);
+    stream_->models_.clear();
+    error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtEventDestroy(event);

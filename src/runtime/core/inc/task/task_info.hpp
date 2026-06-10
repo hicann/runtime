@@ -165,6 +165,8 @@ typedef struct tagTaskInfoStru {
         DqsInterChipProcTaskInfo dqsInterChipPostProcTask;
         DqsAdspcTaskInfo dqsAdspcTaskInfo;
         SqeUpdateTaskInfo sqeUpdateTask;
+
+        CaptureConditionTaskInfo captureConditionTask;
     } u;
 
     rtPkgDesc pkgStat[RT_PACKAGE_TYPE_BUTT];

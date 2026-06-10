@@ -137,5 +137,10 @@ void ConstructStarsSqeForNotifyRecordTask(TaskInfo *taskInfo, uint8_t *const com
     ConstructDavidSqeForNotifyRecordTask(taskInfo, RtPtrToPtr<rtDavidSqe_t *>(command), 0U);
 }
 
+void ConstructStarsSqeForConditionNotifyWait(TaskInfo *taskInfo, uint8_t *const command)
+{
+    Construct2ndDavidSqeForCaptureConditionTask(taskInfo, RtPtrToPtr<rtDavidSqe_t *>(command));
+}
+
 }  // namespace runtime
 }  // namespace cce

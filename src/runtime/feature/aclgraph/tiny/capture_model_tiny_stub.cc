@@ -60,11 +60,11 @@ void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskI
 
 rtError_t CaptureModel::Update(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t CaptureModel::ReleaseNotifyId(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t CaptureModel::ReleaseNotifyId(uint32_t &releaseNum) { UNUSED(releaseNum); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::UpdateNotifyId(Stream * const exeStream) { UNUSED(exeStream); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t CaptureModel::BuildResource(Stream * const exeStream) { UNUSED(exeStream); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t CaptureModel::BuildSqCq(Stream * const exeStream) { UNUSED(exeStream); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 void CaptureModel::DeconstructSqCq(void) {}
 

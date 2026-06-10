@@ -40,6 +40,7 @@ public:
     rtError_t GetNotifyAddress(Stream * const streamIn, uint64_t &addr);
     rtError_t Record(Stream * const streamIn);
     rtError_t Setup();
+    rtError_t SetupWithoutAllocNtyId();
     rtError_t ReAllocId() const;
     rtError_t Wait(Stream * const streamIn, const uint32_t timeOut, const bool isEndGraphNotify = false,
         Model* const captureModel = nullptr);

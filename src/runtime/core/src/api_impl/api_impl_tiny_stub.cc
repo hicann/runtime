@@ -438,10 +438,11 @@ rtError_t ApiImpl::CaptureEventReset(const Event * const evt, Stream * const stm
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
     UNUSED(stm);
     UNUSED(mode);
+    UNUSED(mdl);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
@@ -518,6 +519,45 @@ rtError_t ApiImpl::StreamAddToModel(Stream * const stm, Model * const captureMdl
 {
     UNUSED(stm);
     UNUSED(captureMdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
+    rtCondHandleFlag_t flag, CondHandle ** const handle)
+{
+    UNUSED(mdl);
+    UNUSED(defaultValue);
+    UNUSED(flag);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelCondHandleDestroy(CondHandle * handle)
+{
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
+{
+    UNUSED(handle);
+    UNUSED(devPtr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream * const stm, CondHandle **handle)
+{
+    UNUSED(params);
+    UNUSED(stm);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    UNUSED(params);
+    UNUSED(stm);
+    UNUSED(flags);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

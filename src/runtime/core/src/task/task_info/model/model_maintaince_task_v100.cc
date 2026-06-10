@@ -38,6 +38,7 @@ void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t 
     sqe->u.model_maintaince_info.operation = type;
     sqe->u.model_maintaince_info.stream_type = static_cast<uint16_t>(modelMaintainceTaskInfo->streamType);
     sqe->u.model_maintaince_info.first_task_id = static_cast<uint16_t>(modelMaintainceTaskInfo->firstTaskId);
+    
 
     switch (type) {
         case MMT_STREAM_ADD:
@@ -54,13 +55,15 @@ void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t 
                 type, sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         case MMT_MODEL_PRE_PROC:
+            sqe->u.model_maintaince_info.root_exe_stream_id = GetRootExeStreamId(modelMaintainceTaskInfo->model);
             sqe->pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             sqe->u.model_maintaince_info.executor_flag = MODEL_EXECUTOR_RESERVED;
             if (modelMaintainceTaskInfo->model->ModelExecuteType() == EXECUTOR_AICPU) {
                 sqe->u.model_maintaince_info.executor_flag = MODEL_EXECUTOR_AICPU;
             } else {
+                sqe->u.model_maintaince_info.executor_flag = GetCaptureModelExecutorType(modelMaintainceTaskInfo);
                 sqe->u.model_maintaince_info.endgraph_notify_id =
-                    static_cast<uint16_t>(modelMaintainceTaskInfo->model->GetEndGraphNotify()->GetNotifyId());
+                    static_cast<uint16_t>(GetEndGraphNotifyId(modelMaintainceTaskInfo->model));
             }
             PrintSqe(command, "ModelPreProcTask");
             RT_LOG(RT_LOG_INFO, "model maintaince type=%u, pre proc stream_id=%hu of model_id=%hu, endgraph_notify_id"

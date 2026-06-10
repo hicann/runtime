@@ -29,7 +29,11 @@ aclError aclmdlRIExecuteAsyncImpl(aclmdlRI modelRI, aclrtStream stream)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
     const rtError_t rtErr = rtModelExecute(static_cast<rtModel_t>(modelRI), static_cast<rtStream_t>(stream), 0U);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("execute rtModel failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelExecute not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("execute rtModel failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
@@ -44,7 +48,11 @@ aclError aclmdlRIDestroyImpl(aclmdlRI modelRI)
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
     const rtError_t rtErr = rtModelDestroy(static_cast<rtModel_t>(modelRI));
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("destroy rtModel failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelDestroy not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("destroy rtModel failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
@@ -433,7 +441,11 @@ aclError aclmdlRIAbortImpl(aclmdlRI modelRI)
 
     const rtError_t rtErr = rtsModelAbort(static_cast<rtModel_t>(modelRI));
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call aclmdlRIAbort failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelAbort not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call aclmdlRIAbort failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
@@ -446,7 +458,11 @@ aclError aclmdlRIGetStreamsImpl(aclmdlRI modelRI, aclrtStream *streams, uint32_t
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetStreams);
     const rtError_t rtErr = rtModelGetStreams(static_cast<rtModel_t>(modelRI),  static_cast<rtStream_t *>(streams), numStreams);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtModelGetStreams failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelGetStreams not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtModelGetStreams failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
     return ACL_SUCCESS;
@@ -457,7 +473,11 @@ aclError aclmdlRIDestroyRegisterCallbackImpl(aclmdlRI modelRI, aclrtCallback fun
     const rtError_t rtErr = rtModelDestroyRegisterCallback(static_cast<rtModel_t>(modelRI),
         reinterpret_cast<rtCallback_t>(func), userData);
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtModelDestroyRegisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelDestroyRegisterCallback not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtModelDestroyRegisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
@@ -469,12 +489,122 @@ aclError aclmdlRIDestroyUnregisterCallbackImpl(aclmdlRI modelRI, aclrtCallback f
     const rtError_t rtErr = rtModelDestroyUnregisterCallback(static_cast<rtModel_t>(modelRI),
         reinterpret_cast<rtCallback_t>(func));
     if (rtErr != RT_ERROR_NONE) {
-        ACL_LOG_CALL_ERROR("call rtModelDestroyUnregisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelDestroyUnregisterCallback not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtModelDestroyUnregisterCallback failed, runtime result = %d", static_cast<int32_t>(rtErr));
+        }
         return ACL_GET_ERRCODE_RTS(rtErr);
     }
 
     return ACL_SUCCESS;
 }
+
+aclError aclmdlRICondHandleCreateImpl(aclmdlRI modelRI, uint32_t defaultLaunchValue,
+    aclmdlRICondHandleFlag flag, aclmdlRICondHandle *handle)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRICondHandleCreate);
+    ACL_LOG_INFO("start to execute aclmdlRICondHandleCreate");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+
+    rtCondHandle_t rtHandle = nullptr;
+    const rtError_t rtErr = rtModelCondHandleCreate(static_cast<rtModel_t>(modelRI),
+        defaultLaunchValue, static_cast<rtCondHandleFlag_t>(flag), &rtHandle);
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelCondHandleCreate not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtModelCondHandleCreate failed, runtime result = %d",
+                static_cast<int32_t>(rtErr));
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    if (rtHandle != nullptr) {
+        *handle = static_cast<aclmdlRICondHandle>(rtHandle);
+    }
+
+    ACL_LOG_INFO("successfully execute aclmdlRICondHandleCreate");
+    return ACL_SUCCESS;
+}
+
+aclError aclmdlRICondHandleGetCondPtrImpl(aclmdlRICondHandle handle, uint64_t **ptr)
+{ 
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRICondHandleGetCondPtr);
+    ACL_LOG_INFO("start to execute aclmdlRICondHandleGetCondPtr");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
+
+    const rtError_t rtErr = rtModelCondHandleGetCondPtr(static_cast<rtCondHandle_t>(handle), ptr);
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtModelCondHandleGetCondPtr not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtModelCondHandleGetCondPtr failed, runtime result = %d",
+                static_cast<int32_t>(rtErr));
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_INFO("successfully execute aclmdlRICondHandleGetCondPtr");
+    return ACL_SUCCESS;
+}
+
+aclError aclmdlRIAddCondTaskImpl(aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRIAddCondTask);
+    ACL_LOG_INFO("start to execute aclmdlRIAddCondTask");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
+
+    rtCondTaskParams rtParams = {};
+    rtParams.handle = static_cast<rtCondHandle_t>(params.handle);
+    rtParams.type = static_cast<rtCondTaskType_t>(params.type);
+    rtParams.size = params.size;
+    rtParams.modelRIArray = reinterpret_cast<rtModel_t *>(params.modelRIArray);
+
+    const rtError_t rtErr = rtStreamAddCondTask(rtParams, static_cast<rtStream_t>(stream), flags);
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtStreamAddCondTask not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtStreamAddCondTask failed, runtime result = %d",
+                static_cast<int32_t>(rtErr));
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    for (uint32_t i = 0; i < params.size; ++i) {
+ 	    params.modelRIArray[i] = static_cast<aclmdlRI>(rtParams.modelRIArray[i]);
+ 	}
+
+    ACL_LOG_INFO("successfully execute aclmdlRIAddCondTask");
+    return ACL_SUCCESS;
+}
+
+aclError aclmdlRICaptureToModelRIBeginImpl(aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRICaptureToModelRIBegin);
+    ACL_LOG_INFO("start to execute aclmdlRICaptureToModelRIBegin");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);
+
+    rtError_t rtErr = rtStreamBeginCaptureToModel(static_cast<rtStream_t>(stream), static_cast<rtModel_t>(modelRI), 
+        static_cast<rtStreamCaptureMode>(mode));
+    if (rtErr != ACL_RT_SUCCESS) {
+        if (rtErr == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
+            ACL_LOG_WARN("rtStreamBeginCaptureToModel not support, runtime result = %d", static_cast<int32_t>(rtErr));
+        } else {
+            ACL_LOG_CALL_ERROR("call rtStreamBeginCaptureToModel failed, runtime result = %d",
+                static_cast<int32_t>(rtErr));
+        }
+        return ACL_GET_ERRCODE_RTS(rtErr);
+    }
+
+    ACL_LOG_INFO("successfully execute aclmdlRICaptureToModelRIBegin");
+    return ACL_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif

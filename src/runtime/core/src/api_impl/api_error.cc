@@ -3164,6 +3164,12 @@ rtError_t ApiErrorDecorator::ModelSetExtId(Model * const mdl, const uint32_t ext
 rtError_t ApiErrorDecorator::ModelDestroy(Model * const mdl)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support destroying model");
+    }
+    
     const uint32_t modelId = mdl->Id_();
     RT_LOG(RT_LOG_INFO, "model id=%u.", modelId);
 
@@ -3255,6 +3261,12 @@ rtError_t ApiErrorDecorator::ModelExecute(Model * const mdl, Stream * const stm,
         COND_RETURN_OUT_ERROR_MSG_CALL(
         ((stm->Flags() & (RT_STREAM_AICPU | RT_STREAM_PERSISTENT | RT_STREAM_CP_PROCESS_USE)) != 0),
         RT_ERROR_INVALID_VALUE, "The stream whose flag is %u cannot be used for model execution.", stm->Flags());
+    }
+
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support executing model");
     }
 
     const rtError_t error = impl_->ModelExecute(mdl, stm, flag, timeout);
@@ -3452,6 +3464,11 @@ rtError_t ApiErrorDecorator::ModelExecutorSet(Model * const mdl, const uint8_t f
 rtError_t ApiErrorDecorator::ModelAbort(Model * const mdl)
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support aborting model");
+    }
     const rtError_t error = impl_->ModelAbort(mdl);
     ERROR_RETURN(error, "Abort model failed.");
     return error;
@@ -3461,6 +3478,11 @@ rtError_t ApiErrorDecorator::ModelExit(Model * const mdl, Stream * const stm)
 {
     Stream *curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support exiting model");
+    }
     NULL_PTR_RETURN_MSG_OUTER(curStm, RT_ERROR_INVALID_VALUE);
     const rtError_t error = impl_->ModelExit(mdl, curStm);
     if (error != RT_ERROR_MODEL_ABORT_NORMAL) {
@@ -5819,6 +5841,9 @@ rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
         ErrorCode::EE1006, __func__, "non ACL Graph mode" );
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "sub ACL Graph does not support updating model");
     return impl_->ModelUpdate(mdl);
 }
 
@@ -5826,6 +5851,11 @@ rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model * const mdl, con
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support registering destroy callback");
+    }
     return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
 }
 
@@ -5833,6 +5863,11 @@ rtError_t ApiErrorDecorator::ModelDestroyUnregisterCallback(Model * const mdl, c
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(fn, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support unregistering destroy callback");
+    }
     return impl_->ModelDestroyUnregisterCallback(mdl, fn);
 }
 
@@ -6407,6 +6442,15 @@ rtError_t ApiErrorDecorator::ModelGetStreams(const Model * const mdl, Stream **s
 {
     NULL_PTR_RETURN_MSG_OUTER(mdl, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(numStreams, RT_ERROR_INVALID_VALUE);
+    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        const CaptureModel *captureModel = dynamic_cast<const CaptureModel *>(mdl);
+        if (captureModel == nullptr) {
+            RT_LOG(RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%d, model_id=%u.",
+                mdl->GetModelType(), mdl->Id_());
+            return RT_ERROR_MODEL_NULL;
+        }
+        COND_RETURN_WARN(captureModel->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support getting streams");
+    }
     return impl_->ModelGetStreams(mdl, streams, numStreams);
 }
 

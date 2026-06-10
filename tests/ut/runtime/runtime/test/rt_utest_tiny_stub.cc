@@ -922,14 +922,15 @@ TEST_F(TinyStubTest, capture_model_task_stub)
     EXPECT_EQ(captureModel.GetTaskGroup(0, 0), nullptr);
     captureModel.BackupArgHandle(0, 0);
     EXPECT_EQ(captureModel.Update(), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(captureModel.ReleaseNotifyId(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    uint32_t notifyCount = 0;
+    EXPECT_EQ(captureModel.ReleaseNotifyId(notifyCount), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(captureModel.UpdateNotifyId(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, capture_model_sqcq_stub)
 {
     CaptureModel captureModel(RT_MODEL_NORMAL);
-    EXPECT_EQ(captureModel.BuildResource(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.BuildSqCq(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     captureModel.DeconstructSqCq();
     uint32_t releaseNum = 0;
     EXPECT_EQ(captureModel.ReleaseSqCq(releaseNum), RT_ERROR_FEATURE_NOT_SUPPORT);

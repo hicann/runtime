@@ -12,11 +12,11 @@
 namespace cce {
 namespace runtime {
 
-rtError_t ApiDecorator::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+rtError_t ApiDecorator::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
     UNUSED(stm);
     UNUSED(mode);
-    return impl_->StreamBeginCapture(stm, mode);
+    return impl_->StreamBeginCapture(stm, mode, mdl);
 }
 
 rtError_t ApiDecorator::StreamEndCapture(Stream * const stm, Model ** const captureMdl)
@@ -93,6 +93,37 @@ rtError_t ApiDecorator::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const 
     UNUSED(stm);
     UNUSED(handle);
     return impl_->StreamEndTaskGrp(stm, handle);
+}
+
+rtError_t ApiDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
+    rtCondHandleFlag_t flag, CondHandle ** const handle)
+{
+    UNUSED(mdl);
+    UNUSED(defaultValue);
+    UNUSED(flag);
+    UNUSED(handle);
+    return impl_->ModelCondHandleCreate(mdl, defaultValue, flag, handle);
+}
+
+rtError_t ApiDecorator::ModelCondHandleDestroy(CondHandle * handle)
+{
+    UNUSED(handle);
+    return impl_->ModelCondHandleDestroy(handle);
+}
+
+rtError_t ApiDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
+{
+    UNUSED(handle);
+    UNUSED(devPtr);
+    return impl_->ModelCondHandleGetCondPtr(handle, devPtr);
+}
+
+rtError_t ApiDecorator::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    UNUSED(params);
+    UNUSED(stm);
+    UNUSED(flags);
+    return impl_->StreamAddCondTask(params, stm, flags);
 }
 
 }

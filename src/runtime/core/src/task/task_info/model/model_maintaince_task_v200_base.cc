@@ -15,6 +15,7 @@
 #include "notify.hpp"
 #include "stars_david.hpp"
 #include "model_maintaince_task.h"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -93,14 +94,13 @@ void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtDavidS
         case MMT_MODEL_PRE_PROC:
             sqe->header.preP = 1U;
             sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_RESERVED;
+            sqe->u.modelMaintainceInfo.rootExeStreamId = GetRootExeStreamId(modelMaintainceTaskInfo->model);
             if (modelMaintainceTaskInfo->model->ModelExecuteType() == EXECUTOR_AICPU) {
                 sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_AICPU;
             } else {
-                if (modelMaintainceTaskInfo->model->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-                    sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_CAPTURE;
-                }
+                sqe->u.modelMaintainceInfo.executorFlag = GetCaptureModelExecutorType(modelMaintainceTaskInfo);
                 sqe->u.modelMaintainceInfo.endgraphNotifyId =
-                    static_cast<uint16_t>(modelMaintainceTaskInfo->model->GetEndGraphNotify()->GetNotifyId());
+                    static_cast<uint16_t>(GetEndGraphNotifyId(modelMaintainceTaskInfo->model));
             }
             PrintDavidSqe(davidSqe, "ModelPreProcTask");
             RT_LOG(RT_LOG_INFO, "model maintaince type=%d, device_id=%u, pre proc stream_id=%hu of modelId=%hu,"

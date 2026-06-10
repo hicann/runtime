@@ -17,6 +17,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common
     ${RUNTIME_DIR}/src/runtime/core/inc/common
+    ${RUNTIME_DIR}/src/runtime/core/inc/cond_handle
     ${RUNTIME_DIR}/src/runtime/core/inc/context
     ${RUNTIME_DIR}/src/runtime/core/inc/device
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx

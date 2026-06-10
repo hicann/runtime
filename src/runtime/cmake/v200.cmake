@@ -239,6 +239,7 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_CORE_DIR}/src/task/task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event.cc
@@ -288,6 +289,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
@@ -334,6 +336,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
     ${RUNTIME_CORE_DIR}/src/device/aicpu_err_msg.cc
@@ -438,6 +441,7 @@ set(RUNTIME_INC_DIR_COMMON_V200
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common
     ${RUNTIME_DIR}/src/runtime/core/inc/common
+    ${RUNTIME_DIR}/src/runtime/core/inc/cond_handle
     ${RUNTIME_DIR}/src/runtime/core/inc/context
     ${RUNTIME_DIR}/src/runtime/core/inc/device
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx

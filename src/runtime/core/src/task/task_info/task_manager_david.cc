@@ -35,6 +35,8 @@
 #include "device_error_proc.hpp"
 #include "fusion_task.h"
 #include <vector>
+#include "aclgraph_cond_task.h"
+
 namespace cce {
 namespace runtime {
 
@@ -83,6 +85,7 @@ static void DavidRegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
         taskUnInitFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT] = &DavidEventWaitTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_MODEL_EXECUTE] = &ModelExecuteTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FUSION_KERNEL] = &FusionKernelTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
     }
 }
 

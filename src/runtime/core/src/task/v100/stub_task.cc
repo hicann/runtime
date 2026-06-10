@@ -14,6 +14,7 @@
 #include "stream_factory.hpp"
 #include "task_info_v100.h"
 #include "maintenance_task.h"
+#include "aclgraph_cond_task.h"
 
 namespace cce {
 namespace runtime {
@@ -212,6 +213,11 @@ void RecycleThreadDoForStarsV2(Device *deviceInfo)
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo *taskInfo, uint8_t *const command)
 {
     ConstructSqeForNotifyRecordTask(taskInfo, RtPtrToPtr<rtStarsSqe_t *>(command));
+}
+
+void ConstructStarsSqeForConditionNotifyWait(TaskInfo *taskInfo, uint8_t *const command)
+{
+    Construct2ndSqeForCaptureConditionTask(taskInfo, RtPtrToPtr<rtStarsSqe_t *>(command));
 }
 
 rtError_t CheckTaskCanSend(Stream * const stm)

@@ -41,10 +41,11 @@ rtError_t Context::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
     UNUSED(stm);
     UNUSED(mode);
+    UNUSED(mdl);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

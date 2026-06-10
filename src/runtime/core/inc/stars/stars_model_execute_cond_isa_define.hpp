@@ -19,15 +19,28 @@ namespace runtime {
 
 #pragma pack(push)
 #pragma pack(1)
+struct RtStarsModelExeScanSqAdapt {
+    RtStarsCondOpLHWI lhwi1;  // load SqArr array address as the immediate to R1
+    RtStarsCondOpLLWI llwi1;
+    RtStarsCondOpLHWI lhwi2;  // load sqMax sa immediate to R4
+    RtStarsCondOpLLWI llwi2;
+};
+
+struct RtStarsSubModelExeScanSqAdapt {
+    RtStarsCondOpLoadImm loadImmSqAddr;
+    RtStarsCondOpLoadImm loadImmSqCountAddr;
+    RtStarsCondOpNop nop1;
+    RtStarsCondOpNop nop2;
+};
 
 struct RtStarsModelExeScanSq {
     // this is a goto lable: ScanSqArrInit
     RtStarsCondOpImm addi1;  // ADDI, Assignment 0 to R2. As an sqArrAddr index
     // this is a goto lable: ScanSqArr
-    RtStarsCondOpLHWI lhwi1;  // load SqArr array address as the immediate to R1
-    RtStarsCondOpLLWI llwi1;
-    RtStarsCondOpLHWI lhwi2;  // load sqMax sa immediate to R4
-    RtStarsCondOpLLWI llwi2;
+    union {
+        RtStarsModelExeScanSqAdapt rootModelAdapt;
+        RtStarsSubModelExeScanSqAdapt subModelAdapt;
+    } u;
     RtStarsCondOpLHWI lhwi3;  // load goto instr num as a immediate to R5
     RtStarsCondOpLLWI llwi3;
     RtStarsCondOpSystemCsr csrrw;  // set goto instr num to jump_pc reg
@@ -121,11 +134,23 @@ struct rtStarsModelExeScanHeadSq_t {
     RtStarsCondOpLoad ldr;         // LD_R: read cur sq id, r3 is cur sq id
 };
 
-struct RtStarsModelExeActiveSq {
-    RtStarsCondOpImmSLLI slli;  // SLLI: get stream svm addr offset R3 left 3 bit is offset and assigned to the r5
-    RtStarsCondOpImm addi0;     // ADDI, r2,headSqArrAddr index++
+struct RtStarsModelExeActiveSqAdapt {
     RtStarsCondOpLHWI lhwi1;    // LHWI/LLWI: load stream svm base addr sa immediate to R4
     RtStarsCondOpLLWI llwi1;
+};
+
+struct RtStarsSubModelExeActiveSqAdapt {
+    RtStarsCondOpLoadImm loadImmSvmAddr;
+    RtStarsCondOpNop loadSvmAddrNop;
+};
+
+struct RtStarsModelExeActiveSq {
+    union {
+        RtStarsModelExeActiveSqAdapt rootModelAdapt;
+        RtStarsSubModelExeActiveSqAdapt subModelAdapt;
+    } u;
+    RtStarsCondOpImmSLLI slli;  // SLLI: get stream svm addr offset R3 left 3 bit is offset and assigned to the r5
+    RtStarsCondOpImm addi0;     // ADDI, r2,headSqArrAddr index++
     RtStarsCondOpOp add;                 // ADD: r5 is addr saving stream svm addr
     RtStarsCondOpLoad ldr1;              // LD_R: get stream svm addr r4
     RtStarsCondOpLoad ldr2;              // LD_R: get cnt in stream svm addr to r5
@@ -179,6 +204,8 @@ struct rtStarsModelExeFuncCallPara_t {
     uint64_t dfxAddr;
     uint16_t sqHeadOffset;
     uint16_t sqTailOffset;
+    uint64_t deltaOffset;
+    bool isCondTaskModelExec;
 };
 
 struct RtStarsPivalueModifyFuncCall {

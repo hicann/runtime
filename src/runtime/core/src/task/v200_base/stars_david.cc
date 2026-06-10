@@ -70,6 +70,8 @@ uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo)
     } else if ((type == TS_TASK_TYPE_IPC_WAIT) || (type == TS_TASK_TYPE_MEM_WAIT_VALUE) ||
         (type == TS_TASK_TYPE_CAPTURE_WAIT)) {
         return MEM_WAIT_V2_SQE_NUM;
+    } else if (type == TS_TASK_TYPE_CAPTURE_CONDITION) {
+        return taskInfo->sqeNum;
     } else {
         return TASK_SQE_NUM_ONE;
     }
@@ -196,6 +198,7 @@ void RegTaskToDavidSqefunc(void)
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_RECORD] = &ConstructDavidSqeForEventRecordTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_WAIT] = &ConstructDavidSqeForEventWaitTask;
     g_toDavidSqeFunc[TS_TASK_TYPE_DAVID_EVENT_RESET] = &ConstructDavidSqeForEventResetTask;
+    g_toDavidSqeFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &ConstructDavidSqeForCaptureConditionTask;
 }
 
 }  // namespace runtime

@@ -188,6 +188,7 @@ set(libruntime_src_files_optional
     ${RUNTIME_CORE_DIR}/src/task/task_to_sqe.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc
@@ -319,6 +320,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/args_handle_allocator.cc
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
@@ -382,6 +384,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task_fail_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${RUNTIME_CORE_DIR}/src/memory/common_memset_d32.cpp
     ${RUNTIME_CORE_DIR}/src/memory/simd_memsetd32.cpp
@@ -414,6 +417,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common
     ${RUNTIME_DIR}/src/runtime/core/inc/common
+    ${RUNTIME_DIR}/src/runtime/core/inc/cond_handle
     ${RUNTIME_DIR}/src/runtime/core/inc/context
     ${RUNTIME_DIR}/src/runtime/core/inc/device
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx

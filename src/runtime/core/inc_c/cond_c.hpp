@@ -13,6 +13,7 @@
 #include "stream.hpp"
 #include "label.hpp"
 #include "context.hpp"
+#include "cond_handle.hpp"
 
 namespace cce {
 namespace runtime {
@@ -27,6 +28,9 @@ namespace runtime {
         Stream * const stm, const rtSwitchDataType_t dataType, Context * const ctx = nullptr);
     rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
         const uint32_t flag, Stream * const stm);
+    rtError_t StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm, uint32_t flags);
+    rtError_t SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm);
+    rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm);
 
 }  // namespace runtime
 }  // namespace cce

@@ -28,6 +28,7 @@ TaskInfo* GetStreamTaskInfo(const Device * const dev, uint16_t streamId, uint16_
 rtError_t SendNopTask(const Context * const curCtx, Stream * const stm);
 bool TaskTypeIsSupportTaskGroup(const TaskInfo * const task);
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo *taskInfo, uint8_t *const command);
+void ConstructStarsSqeForConditionNotifyWait(TaskInfo *taskInfo, uint8_t *const command);
 
 }  // namespace runtime
 }  // namespace cce

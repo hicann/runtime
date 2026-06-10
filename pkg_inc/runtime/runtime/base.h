@@ -236,6 +236,18 @@ typedef enum ErrRegInfoIdxV100 {
     RT_V100_AIC_COND_1
 } rtErrRegInfoIdxV100_t;
 
+/**
+ * @ingroup stream_capture_mode
+ * @brief stream capture mode
+ */
+typedef enum tagRtStreamCaptureMode {
+    RT_STREAM_CAPTURE_MODE_GLOBAL       = 0,
+    RT_STREAM_CAPTURE_MODE_THREAD_LOCAL = 1,
+    RT_STREAM_CAPTURE_MODE_RELAXED      = 2,
+
+    RT_STREAM_CAPTURE_MODE_MAX
+} rtStreamCaptureMode;
+
 #define RT_ERR_REG_NUMS  (64U)
 typedef struct rtExceptionErrRegInfo {
     uint32_t coreId;

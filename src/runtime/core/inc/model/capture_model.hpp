@@ -15,7 +15,9 @@
 #include "stream.hpp"
 #include "device_sq_cq_pool.hpp"
 #include "jetty_pool.h"
+#include "cond_handle.hpp"
 #include <unordered_set>
+#include <tuple>
 
 namespace cce {
 namespace runtime {
@@ -88,6 +90,11 @@ public:
     {
         return ((captureModelStatus_ == RtCaptureModelStatus::CAPTURE_ACTIVE) ||
                 (captureModelStatus_ == RtCaptureModelStatus::CAPTURE_INVALIDATED));
+    }
+
+    bool IsCaptureActive() const
+    {
+        return (captureModelStatus_ == RtCaptureModelStatus::CAPTURE_ACTIVE);
     }
 
     bool IsCaptureInvalid() const
@@ -194,6 +201,11 @@ public:
         return taskGroupErrCode_;
     }
 
+    const std::map<std::tuple<int32_t, uint16_t>, CondHandle *> &GetCondHandleTaskMap()
+    {
+        return condHandleTaskMap_;
+    }
+
     void DebugDotPrintTaskGroups(const uint32_t deviceId) const;
     void ReportedStreamInfoForProfiling() const;
     void EraseStreamInfoForProfiling() const;
@@ -258,17 +270,89 @@ public:
         return seqId_++;
     }
 
+    const std::list<CondHandle *> CondHandle_() const
+    {
+        return condHandles_;
+    }
+
+    void ModelEraseCondHandle(CondHandle * const condHandle)
+    {
+        condHandles_.remove(condHandle);
+    }
+
+    void ModelPushBackCondHandle(CondHandle * const condHandle)
+    {
+        condHandles_.push_back(condHandle);
+    }
+
+    bool IsSubCaptureModel(void) const
+    {
+        return isSubCaptureModel_;
+    }
+
+    void SetSubCaptureModel(void)
+    {
+        isSubCaptureModel_ = true;
+    }
+
+    void SetCondHandle(rtCondHandle_t condHandle)
+    {
+        condHandle_ = condHandle;
+    }
+
+    rtCondHandle_t GetCondHandle()
+    {
+        return condHandle_;
+    }
+
+    void SetIsNeedUpdateEndGraph(bool isNeedUpdateEndGraph)
+    {
+        isNeedUpdateEndGraph_ = isNeedUpdateEndGraph;
+    }
+
+    void SetRootExeStreamId(uint16_t rootExeStreamId)
+    {
+        rootExeStreamId_ = rootExeStreamId;
+    }
+
+    uint16_t GetRootExeStreamId() const
+    {
+        return rootExeStreamId_;
+    }
+
+    uint32_t GetLoadCompleteNotifyid() const
+    {
+        return loadCompleteNotifyid_;
+    }
+
     const TaskGroup* GetTaskGroup(uint16_t streamId, uint16_t taskId);
     void BackupArgHandle(const uint16_t streamId, const uint16_t taskId);
     rtError_t Update(void);
 
-    rtError_t ReleaseNotifyId(void);
+    rtError_t ReleaseNotifyId(uint32_t &releaseNum);
     rtError_t UpdateNotifyId(Stream * const exeStream);
     // endGraph + alloc sq cq + Send sqe + bind sq cq + load complete + update task
-    rtError_t BuildResource(Stream * const exeStream);
+    rtError_t BuildSqCq(Stream * const exeStream);
     void DeconstructSqCq(void);
     rtError_t ReleaseSqCq(uint32_t &releaseNum);
     void CaptureModelExecuteFinish(const uint32_t errCode);
+
+    // 子模型资源管理相关方法
+    void GetSqCqTotalNum(uint32_t &streamNum);
+    rtError_t ModelEndGraph();
+    rtError_t SendLoadCompleteEndGraph();
+    rtError_t AllocSqCqAndBindInternal();
+    rtError_t AllocAllSqCq();
+    rtError_t ReleaseSqCqInternal(uint32_t &releaseNum);
+    rtError_t ReleaseAllSqCq(uint32_t &releaseNum);
+    rtError_t LoadCompleteAll(uint32_t loadCompltetNotifyid);
+    rtError_t UpdateNotifyIdAll(Stream * const exeStream);
+    rtError_t UpdateStreamActiveTaskFuncCallMemAll();
+    rtError_t UpdateCondTaskFuncCallMemAll();
+    void SetRootExeStreamIdAll(uint16_t rootExeStreamId);
+    rtError_t StoreCondHandleTaskInfo(const int32_t streamId, const uint16_t taskId, CondHandle *condHandle);
+    bool CheckSubModelsIsEndCapture();
+    
     rtError_t MarkStreamActiveTask(TaskInfo *streamActiveTask); // the task of stream active is need updated
                                                                 // after sq cq is allocated
     rtError_t RestoreForSoftwareSq(Device * const dev);
@@ -288,6 +372,7 @@ private:
     rtError_t BindSqCqAndSendSqe(void);
     rtError_t BindStreamToModel(void);
     void ReportCacheTrackData();
+    rtError_t InitAllSubCaptureModelCondTaskByDefValue();
     rtError_t BindJetty(Stream * const stm, JettyType type);
     rtError_t RecycleJetty(int32_t streamId, JettyType type, uint32_t &count);
     rtError_t ReleaseJetty(int32_t streamId, JettyType type);
@@ -316,6 +401,7 @@ private:
     std::mutex streamActiveTaskListMutex_;
     std::vector<TaskInfo *> streamActiveTaskList_;
     std::mutex sqBindMutex_;
+    std::list<CondHandle *> condHandles_; // 模型下发的condHandle
     uint32_t refCount_{0U};
     bool isNeedUpdateEndGraph_{false};
     uint64_t beginCaptureTimeStamp_{0UL};
@@ -323,6 +409,13 @@ private:
     std::atomic<uint32_t> seqId_{0};
     std::set<void *> argLoaderBackup_;
     std::mutex jettyMutex_;
+    std::mutex condHandleTaskMapLock_;
+    std::map<std::tuple<int32_t, uint16_t>, CondHandle *> condHandleTaskMap_; // <stream id, condition task id>, condHandle
+    bool isSubCaptureModel_{false};
+    uint64_t resourceGroupId_{0U};  // 资源组ID，同一父子关系网共享
+    rtCondHandle_t condHandle_{nullptr}; // 模型归属的condHandle
+    uint16_t rootExeStreamId_{UINT16_MAX};
+    uint32_t loadCompleteNotifyid_{0UL}; // 用于子模型task error等异常场景
 };
 }
 }

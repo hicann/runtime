@@ -160,6 +160,8 @@ void ErrorcodeManage::InitRtErrCodeMap()
                                                     "the capture was not initiated in this stream"};
     rtErrMap_[RT_ERROR_STREAM_CAPTURE_WRONG_THREAD] = {ACL_ERROR_RT_STREAM_CAPTURE_WRONG_THREAD,
                                                        "end capture in the wrong thread"};
+    rtErrMap_[RT_ERROR_STREAM_NOT_SUPPORT_OPERA] = {ACL_ERROR_RT_STREAM_NOT_SUPPORT_OPERA, "stream does not support this operation"};
+    rtErrMap_[RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING] = {ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING, "the sub ACL Graph is capturing"};
 
     // model error
     rtErrMap_[RT_ERROR_MODEL_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "model base error"};

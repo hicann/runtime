@@ -153,6 +153,53 @@ void ConstructSwitchDisableStreamFcI(
 
 void ConstructAddExecTimesFc(const uint64_t indexPtr, const uint64_t labelInfoPtr, RtStarsAddExecTimesFc &fc);
 
+void ConstructCondStoreCurModelPara(uint64_t dfxAddr, uint64_t headSqArrPtrArrAddr,
+    uint64_t modelSqCountArrAddr, uint64_t streamSvmPtrArrAddr, RtStarsCondStoreCurModelPara &storePara);
+
+void ConstructSubmodelOffset(RtStarsCaptureCondSubModelOffset &subModelOffset);
+
+void ConstructSwitchCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureSwitchCondSetupBranch &setupBranch);
+void TransParaToModelExecuteFuncCallPara(rtStarsCaptureCondFcPara_t &para, rtStarsModelExeFuncCallPara_t &modelPara);
+void ConstructIfCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsIfCondSetupBranchFc &setupBranch);
+void ConstructWhileCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsWhileCondSetupBranchFc &setupBranch);
+
+template <typename CondFc>
+void ConstructCondTaskGotoNextSqe(rtStarsCaptureCondFcPara_t &para, CondFc &fc)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r3 = RT_STARS_COND_ISA_REGISTER_R3;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+
+    ConstructLoadImm(r3, para.sqIdMemAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, fc.gotoNextSqe.loadSqId);
+
+    ConstructLHWI(r4, static_cast<uint64_t>(para.sqHeadNext), fc.gotoNextSqe.lhwiHead);
+    ConstructLLWI(r4, static_cast<uint64_t>(para.sqHeadNext), fc.gotoNextSqe.llwiHead);
+    ConstructOpImmSlli(r4, r4, 16U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
+                       fc.gotoNextSqe.slliHead);
+    ConstructOpOp(r3, r4, r3, RT_STARS_COND_ISA_OP_FUNC3_OR, RT_STARS_COND_ISA_OP_FUNC7_OR, fc.gotoNextSqe.orHead);
+    ConstructGotoR(r3, r2, fc.gotoNextSqe.gotoSkip);
+
+    const uint64_t endOffset = offsetof(CondFc, nop) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r1, endOffset, fc.gotoNextSqe.jumpPcToEnd);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.gotoNextSqe.branchToEnd);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&fc.gotoNextSqe);
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
+        RT_LOG(RT_LOG_DEBUG, "construct cond task goto next sqe, offset=%u", endOffset);
+        for (size_t i = 0UL; i < (sizeof(RtStarsCaptureCondGotoNextSqe) / sizeof(uint32_t)); i++) {
+            RT_LOG(RT_LOG_DEBUG, "construct cond task goto next sqe, instr[%zu]=0x%08x", i, cmd[i]);
+        }
+    }
+}
+
+void ConstructCaptureIfCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureIfCondFc &fc);
+
+void ConstructCaptureWhileCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureWhileCondFc &fc);
+
+void ConstructCaptureSwitchCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureSwitchCondFc &fc);
+
 template <typename T>
 void ConstructGetFloatStatusInstr(const uint64_t svmAddr, const uint64_t svmSize, T &sqe)
 {

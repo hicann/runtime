@@ -65,9 +65,14 @@ void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio)
 
 rtError_t ConvertTaskType(const TaskInfo * const task, rtTaskType *type)
 {
-    if (task->stream == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "The stream associated with the task does not exist, taskId=%u.", task->id);
-        return RT_ERROR_INVALID_VALUE;
+    COND_RETURN_ERROR((task->stream == nullptr), RT_ERROR_INVALID_VALUE,
+        "The stream associated with the task does not exist, taskId=%u.", task->id);
+
+    Model* const mdl = task->stream->Model_();
+    if (mdl != nullptr && mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "task belongs to sub ACL Graph, does not support querying task type");
     }
 
     rtTaskType taskType = rtTaskType::RT_TASK_DEFAULT;

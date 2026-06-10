@@ -49,6 +49,7 @@
 #include "runtime/kernel.h"
 #include "starsv2_base.hpp"
 #include "utils.h"
+#include "api_handle_guard.h"
 
 namespace cce {
 namespace runtime {
@@ -2132,6 +2133,15 @@ rtError_t ApiImplDavid::MemWaitValue(const void * const devAddr, const uint64_t 
         ErrorCode::EE1010, __func__, "stream");
 
     return cce::runtime::MemWaitValue(devAddr, value, flag, curStm);
+}
+
+rtError_t ApiImplDavid::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    CondHandle *realHandle = nullptr;
+    rtError_t error = StreamAddCondTaskParasCheck(params, stm, &realHandle);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "condition task parameters check failed.");
+
+    return cce::runtime::StreamAddCondTask(realHandle, params, stm, flags);
 }
 
 }  // namespace runtime

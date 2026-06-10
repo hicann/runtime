@@ -1105,6 +1105,7 @@ rtError_t Context::StreamCreate(const uint32_t prio, const uint32_t flag, Stream
             newStream->Id_(), prio, flag);
     } else if (isSoftWareSqEnable) {
         newStream->SetSoftWareSqEnable();
+        newStream->SetSubCaptureModel();
         error = newStream->SetupWithoutBindSq();
         RT_LOG(RT_LOG_INFO, "Stream setup without bind sq, stream_id=%d, prio=%u, flag=%u.",
             newStream->Id_(), prio, flag);
@@ -1393,6 +1394,15 @@ ERROR_RETURN:
     return error;
 }
 
+void Context::SubModelDestroy(Model *subMdl)
+{
+    ResetEmbeddedInnerHandle<Model>(subMdl);
+    (void)subMdl->TearDown();
+    DELETE_O(subMdl);
+
+    return;
+}
+
 rtError_t Context::ModelDestroy(Model *mdl)
 {
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
@@ -1554,12 +1564,14 @@ rtError_t Context::ModelAddEndGraph(Model * const mdl, Stream * const stm, const
             COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW, ErrorCode::EE1013, sizeof(Notify));
             error = notify->Setup();
             COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
+        } else {
+            error = AllocNotifyIdForSubModel(mdl, notify);
+            COND_RETURN_WARN(error != RT_ERROR_NONE, error, "Alloc notify Id, retCode=%#x", error);
         }
 
         error = notify->Record(stm);
         if (error != RT_ERROR_NONE) {
-            DELETE_O(notify);
-            mdl->SetEndGraphNotify(nullptr);
+            (void)ReleaseNotifyResWhenSendEndGraphFailed(mdl, notify);
             RT_LOG(RT_LOG_ERROR, "Notify record failed, retCode=%#x", error);
             return error;
         }

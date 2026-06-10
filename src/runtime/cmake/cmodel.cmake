@@ -412,6 +412,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_FEATURE_DIR}/model/v100/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
@@ -469,6 +470,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v200/task_david_stub.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/label_stars.cc
@@ -534,6 +536,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/cond_handle.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_utils.cc
     ${RUNTIME_FEATURE_DIR}/model/v200/capture_adapt.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
@@ -598,6 +601,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc
     ${RUNTIME_CORE_DIR}/src/task/v200_base/stars_david.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/cntnotify/count_notify.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_starsv2.cc
@@ -644,6 +648,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common
     ${RUNTIME_DIR}/src/runtime/core/inc/common
+    ${RUNTIME_DIR}/src/runtime/core/inc/cond_handle
     ${RUNTIME_DIR}/src/runtime/core/inc/context
     ${RUNTIME_DIR}/src/runtime/core/inc/device
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx

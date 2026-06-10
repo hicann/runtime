@@ -741,10 +741,13 @@ rtError_t MdlAddEndGraph(Model * const mdl, Stream * const stm, const uint32_t f
 
             error = notify->Setup();
             COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Failed to set up notify, retCode=%#x.", error);
+        } else {
+            error = AllocNotifyIdForSubModel(mdl, notify);
+            COND_RETURN_WARN(error != RT_ERROR_NONE, error, "Alloc notify Id, retCode=%#x", error);
         }
 
         error = NtyRecord(notify, stm);
-        ERROR_PROC_RETURN_MSG_INNER(error, DELETE_O(notify);,
+        ERROR_PROC_RETURN_MSG_INNER(error, (void)ReleaseNotifyResWhenSendEndGraphFailed(mdl, notify);,
                                     "Notify record failed, retCode=%#x.", static_cast<uint32_t>(error));
 
         notify->SetEndGraphModel(mdl);

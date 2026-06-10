@@ -2591,6 +2591,42 @@ rtError_t aclStub::rtModelUpdate(rtModel_t mdl)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t *handle)
+{
+    (void)mdl;
+    (void)defaultLaunchValue;
+    (void)flag;
+    if (handle != nullptr) {
+        *handle = (rtCondHandle_t)0x01;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
+{
+    (void)handle;
+    if (devPtr != nullptr) {
+        *devPtr = (uint64_t *)0x01;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t flags)
+{
+    (void)params;
+    (void)stm;
+    (void)flags;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtStreamBeginCaptureToModel(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode)
+{
+    (void)stm;
+    (void)mdl;
+    (void)mode;
+    return RT_ERROR_NONE;
+}
+
 MockFunctionTest& MockFunctionTest::aclStubInstance()
 {
     static MockFunctionTest stub;
@@ -4591,6 +4627,32 @@ rtError_t rtModelTaskDisable(rtTask_t task)
 rtError_t rtModelUpdate(rtModel_t mdl)
 {
     return MockFunctionTest::aclStubInstance().rtModelUpdate(mdl);
+}
+
+rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t *handle)
+{
+    if (handle != nullptr) {
+        *handle = (rtCondHandle_t)0x01;
+    }
+    return MockFunctionTest::aclStubInstance().rtModelCondHandleCreate(mdl, defaultLaunchValue, flag, handle);
+}
+
+rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
+{
+    if (devPtr != nullptr) {
+        *devPtr = (uint64_t *)0x01;
+    }
+    return MockFunctionTest::aclStubInstance().rtModelCondHandleGetCondPtr(handle, devPtr);
+}
+
+rtError_t rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t flags)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamAddCondTask(params, stm, flags);
+}
+
+rtError_t rtStreamBeginCaptureToModel(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamBeginCaptureToModel(stm, mdl, mode);
 }
 
 rtError_t rtMemManagedPrefetchAsync(const void* ptr, size_t size, rtMemManagedLocation location, uint32_t flags, rtStream_t stream)

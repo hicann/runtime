@@ -23,6 +23,7 @@
 #include "task_info.hpp"
 #include "model_execute_task.h"
 #include "stub_task.hpp"
+#include "capture_model_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -309,6 +310,8 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo * const taskInfo)
         if(model->GetFirstExecute()){
             RtStarsModelExeFuncCall funcCall = {};
             rtStarsModelExeFuncCallPara_t funcCallPara = {};
+            funcCallPara.deltaOffset = 0;
+            funcCallPara.isCondTaskModelExec = false;
             ret = ConstructFuncCallPara(taskInfo, funcCallPara);
             COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "construct func call para failed, retCode=%#x.", ret);
 
@@ -618,6 +621,11 @@ static void ModelExecuteTaskProcErrorForSoftwareSq(TaskInfo * const taskInfo, co
 
     modelExecuteTaskInfo->errorTaskId = swStatus.model_exec_ex.task_id;
     modelExecuteTaskInfo->errorStreamId = modelExecuteTaskInfo->model->GetStreamIdBySqId(swStatus.model_exec_ex.sq_id);
+    if ((modelExecuteTaskInfo->errorStreamId == UINT32_MAX) && (modelExecuteTaskInfo->model != nullptr) &&
+        (modelExecuteTaskInfo->model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(modelExecuteTaskInfo->model);
+        modelExecuteTaskInfo->errorStreamId = FindStreamIdInSubModels(captureModel, swStatus.model_exec_ex.sq_id);
+    }
     RT_LOG(RT_LOG_WARNING, "errorCode=0x%x, errorTaskId=%u, errorStreamId=%u, sqId=%hu.",
         taskInfo->errorCode, modelExecuteTaskInfo->errorTaskId, modelExecuteTaskInfo->errorStreamId,
         swStatus.model_exec_ex.sq_id);

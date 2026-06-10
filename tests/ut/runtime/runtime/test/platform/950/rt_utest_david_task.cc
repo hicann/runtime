@@ -71,6 +71,10 @@
 #include "inner_thread_local.hpp"
 #include "model_maintaince_task.h"
 #include "model_to_aicpu_task.h"
+#include "capture_model.hpp"
+#include "cond_handle/cond_handle.hpp"
+#include "runtime/rt_inner_model.h"
+#include "capture_model_utils.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1708,7 +1712,7 @@ TEST_F(TaskTestDavid, CaptureModeExecute)
     captureMdl1->CaptureModelExecuteFinish(RT_ERROR_NONE);
     uint32_t releaseNum;
     captureMdl1->ReleaseSqCq(releaseNum);
-    captureMdl1->BuildResource(rt_ut::UnwrapOrNull<Stream>(streamExe));
+    captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2135,6 +2139,486 @@ TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_basic)
     ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
 }
 
+class DavidCondHandleTest : public testing::Test {
+protected:
+    static void SetUpTestCase() {}
+    static void TearDownTestCase() {}
+
+    Device *device_ = nullptr;
+    Engine *engine_ = nullptr;
+    Driver *driver_ = nullptr;
+
+    virtual void SetUp()
+    {
+        int64_t hardwareVersion = ((ARCH_V100 << 16) | (CHIP_DAVID << 8) | (VER_NA));
+        driver_ = ((Runtime *)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::GetDevInfo)
+            .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),
+                outBoundP(&hardwareVersion, sizeof(hardwareVersion)))
+            .will(returnValue(RT_ERROR_NONE));
+        char *socVer = "Ascend950PR_9599";
+        MOCKER(halGetSocVersion).stubs().with(mockcpp::any(),
+            outBoundP(socVer, strlen("Ascend950PR_9599")), mockcpp::any())
+            .will(returnValue(DRV_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::StreamBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::StreamUnBindLogicCq).stubs().will(returnValue(RT_ERROR_NONE));
+
+        bool enable = false;
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::GetSqEnable)
+            .stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(enable))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::SetSqHead).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::EnableSq).stubs().will(returnValue(RT_ERROR_NONE));
+
+        rtSetDevice(0);
+        (void)rtSetSocVersion("Ascend950PR_9599");
+        ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
+        device_ = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+        device_->SetChipType(CHIP_DAVID);
+        engine_ = ((RawDevice *)device_)->engine_;
+
+        MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+            .stubs().with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE)).will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+            .stubs().with(eq(TS_FEATURE_ACLGRAPH_CONDOP)).will(returnValue(true));
+
+        MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
+
+        MOCKER_CPP(&Model::LoadCompleteByStreamPostp).stubs().will(returnValue(RT_ERROR_NONE));
+    }
+
+    virtual void TearDown()
+    {
+        while (engine_->GetPendingNum() > 0) {
+            engine_->pendingNum_.Set(0U);
+        }
+        ((Runtime *)Runtime::Instance())->DeviceRelease(device_);
+        rtDeviceReset(0);
+        GlobalMockObject::verify();
+    }
+};
+
+TEST_F(DavidCondHandleTest, CondHandleWhileE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream;
+    ret = rtStreamCreate(&subStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_WHILE;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModelResult;
+    ret = rtStreamEndCapture(subStream, &subModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidCondHandleTest, CondHandleWhileWithAssignDefault)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream;
+    ret = rtStreamCreate(&subStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 1, RT_COND_HANDLE_ASSIGN_DEFAULT, &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_WHILE;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModelResult;
+    ret = rtStreamEndCapture(subStream, &subModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidCondHandleTest, CondHandleIfE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream1;
+    ret = rtStreamCreate(&subStream1, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream2;
+    ret = rtStreamCreate(&subStream2, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[2] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_IF;
+    params.size = 2;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult1;
+    ret = rtStreamEndCapture(subStream1, &subModelResult1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream2, subModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult2;
+    ret = rtStreamEndCapture(subStream2, &subModelResult2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidCondHandleTest, CondHandleIfSizeOneE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream1;
+    ret = rtStreamCreate(&subStream1, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_IF;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult1;
+    ret = rtStreamEndCapture(subStream1, &subModelResult1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidCondHandleTest, CondHandleSwitchE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    const uint32_t switchSize = 3;
+    rtStream_t subStreams[switchSize];
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamCreate(&subStreams[i], 0);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[switchSize] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_SWITCH;
+    params.size = switchSize;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamBeginCaptureToModel(subStreams[i], subModels[i], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+        rtModel_t subModelResult;
+        ret = rtStreamEndCapture(subStreams[i], &subModelResult);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamDestroy(subStreams[i]);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t parentStream;
+    ret = rtStreamCreate(&parentStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t ifTrueSubStream;
+    ret = rtStreamCreate(&ifTrueSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t ifFalseSubStream;
+    ret = rtStreamCreate(&ifFalseSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t innerIfSubStream;
+    ret = rtStreamCreate(&innerIfSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(parentStream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(parentStream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t outerCondHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &outerCondHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *outerCondDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(outerCondHandle, &outerCondDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t outerSubModels[2] = {};
+    rtCondTaskParams outerParams;
+    outerParams.handle = outerCondHandle;
+    outerParams.type = RT_COND_TASK_TYPE_IF;
+    outerParams.size = 2;
+    outerParams.modelRIArray = outerSubModels;
+    ret = rtStreamAddCondTask(outerParams, parentStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(ifTrueSubStream, outerSubModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus innerStatus;
+    rtModel_t ifTrueModel;
+    ret = rtStreamGetCaptureInfo(ifTrueSubStream, &innerStatus, &ifTrueModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t innerCondHandle = nullptr;
+    ret = rtModelCondHandleCreate(ifTrueModel, 0, static_cast<rtCondHandleFlag_t>(0), &innerCondHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *innerCondDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(innerCondHandle, &innerCondDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t innerSubModels[1] = {};
+    rtCondTaskParams innerParams;
+    innerParams.handle = innerCondHandle;
+    innerParams.type = RT_COND_TASK_TYPE_IF;
+    innerParams.size = 1;
+    innerParams.modelRIArray = innerSubModels;
+    ret = rtStreamAddCondTask(innerParams, ifTrueSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(innerIfSubStream, innerSubModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t innerSubModelResult;
+    ret = rtStreamEndCapture(innerIfSubStream, &innerSubModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t ifTrueModelResult;
+    ret = rtStreamEndCapture(ifTrueSubStream, &ifTrueModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(ifFalseSubStream, outerSubModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t ifFalseModelResult;
+    ret = rtStreamEndCapture(ifFalseSubStream, &ifFalseModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(parentStream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(parentStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(ifTrueSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(ifFalseSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(innerIfSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
 TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_8bit_size)
 {
     RtStarsMemWaitValueInstrFcParaWithDynamicProf fcPara = {};

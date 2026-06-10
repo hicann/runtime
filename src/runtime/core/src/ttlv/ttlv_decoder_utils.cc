@@ -68,6 +68,7 @@ static std::map<uint16_t, const char_t *> g_taskType2String = {
     {TS_TASK_TYPE_TASK_TIMEOUT_SET, "task timeout set"},
     {TS_TASK_TYPE_GET_DEVICE_MSG, "get device message"},
     {TS_TASK_TYPE_REDUCE_ASYNC_V2, "reduce async v2"},
+    {TS_TASK_TYPE_CAPTURE_CONDITION, "capture model condition"},
 };
 
 static std::map<uint8_t, const char_t *> g_taskPhase2String = {

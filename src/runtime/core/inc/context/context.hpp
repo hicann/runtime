@@ -36,7 +36,7 @@
 #include "context_protect.hpp"
 #include "rts/rts.h"
 #include "mmpa_linux.h"
-
+#include "cond_handle.hpp"
 
 #define CHECK_CONTEXT_VALID_WITH_RETURN(tmpCtx, ERRCODE) \
     { \
@@ -147,7 +147,7 @@ public:
 
     rtError_t StreamsUpdate(void);
 
-    rtError_t StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode);
+    rtError_t StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl = nullptr);
 
     rtError_t StreamEndCapture(Stream * const stm, Model ** const captureMdl);
 
@@ -158,7 +158,16 @@ public:
 
     rtError_t StreamEndTaskUpdate(Stream * const stm) const;
 
+    rtError_t StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm, uint32_t flags);
+    rtError_t SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm);
+    rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm);
+    
+
+    rtError_t CheckCondTaskParamsSize(rtCondTaskParams params);
+
     rtError_t ModelGetNodes(const Model * const mdl, uint32_t * const num);
+
+    rtError_t CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm);
 
     rtError_t ModelDebugDotPrint(const Model * const mdl);
     
@@ -188,6 +197,8 @@ public:
 
     rtError_t ModelDestroy(Model *mdl);
 
+    void SubModelDestroy(Model *subMdl);
+
     rtError_t ModelBindStream(Model * const mdl, Stream * const stm, const uint32_t flag);
 
     rtError_t ModelUnbindStream(Model * const mdl, Stream * const stm);
@@ -199,6 +210,8 @@ public:
     rtError_t ModelLoadComplete(Model * const mdl) const;
 
     rtError_t ModelAddEndGraph(Model * const mdl, Stream * const stm, const uint32_t flags);
+
+    bool CheckSubModelsIsEndCapture(Stream * const captureStream);
 
     rtError_t ModelExecutorSet(Model * const mdl, const uint8_t flags) const;
 
@@ -501,6 +514,8 @@ public:
     }
 
     rtError_t UpdateEndGraphTask(Stream * const origCaptureStream, Stream * const exeStream, Notify *ntf) const;
+    rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo *taskInfo,
+        Stream * const exeStream) const;
     rtError_t SendAndRecvDebugTask(RtDebugSendInfo * const sendInfo, rtDebugReportInfo_t * const reportInfo) const;
     uint64_t GetCallBackThreadId() const
     {

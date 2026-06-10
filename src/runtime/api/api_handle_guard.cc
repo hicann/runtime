@@ -18,6 +18,7 @@
 #include "event.hpp"
 #include "notify.hpp"
 #include "stream.hpp"
+#include "cond_handle/cond_handle.hpp"
 
 namespace cce {
 namespace runtime {
@@ -98,6 +99,16 @@ rtError_t ValidateNotifyHandleForApi(rtNotify_t handle, Notify *&outRealObj, con
 rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify *&outRealObj, const char_t *callerFuncName)
 {
     const rtError_t ret = GetValidatedObject<CountNotify>(handle, outRealObj);
+    if (ret == RT_ERROR_NONE) {
+        return RT_ERROR_NONE;
+    } else {
+        return ReportApiHandleValidationError(ret, callerFuncName);
+    }
+}
+
+rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle *&outRealObj, const char_t *callerFuncName)
+{
+    const rtError_t ret = GetValidatedObject<CondHandle>(handle, outRealObj);
     if (ret == RT_ERROR_NONE) {
         return RT_ERROR_NONE;
     } else {

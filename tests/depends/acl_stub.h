@@ -366,6 +366,10 @@ public:
     virtual rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue);
     virtual rtError_t rtModelTaskDisable(rtTask_t task);
     virtual rtError_t rtModelUpdate(rtModel_t mdl);
+    virtual rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t *handle);
+    virtual rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr);
+    virtual rtError_t rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t flags);
+    virtual rtError_t rtStreamBeginCaptureToModel(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode);
 
     virtual rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcpyConfig_t *config, rtStream_t stream);
     virtual rtError_t rtMemcpyAsyncWithOffset(void **dst, uint64_t dstMax, uint64_t dstDataOffset, const void **src,
@@ -857,6 +861,10 @@ public:
     MOCK_METHOD3(rtModelKernelTaskGetAttribute, rtError_t(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t *attrValue));
     MOCK_METHOD1(rtModelTaskDisable, rtError_t(rtTask_t task));
     MOCK_METHOD1(rtModelUpdate, rtError_t(rtModel_t mdl));
+    MOCK_METHOD4(rtModelCondHandleCreate, rtError_t(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t *handle));
+    MOCK_METHOD2(rtModelCondHandleGetCondPtr, rtError_t(rtCondHandle_t handle, uint64_t **devPtr));
+    MOCK_METHOD3(rtStreamAddCondTask, rtError_t(rtCondTaskParams params, rtStream_t stm, uint32_t flags));
+    MOCK_METHOD3(rtStreamBeginCaptureToModel, rtError_t(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode));
 
     MOCK_METHOD4(rtsMemcpyAsyncWithDesc, rtError_t(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcpyConfig_t *config,
                                                    rtStream_t stream));

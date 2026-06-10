@@ -380,6 +380,10 @@
     _(aclError, aclmdlRITaskDisable, (aclmdlRITask task), (task)) \
     _(aclError, aclmdlRIDestroyRegisterCallback, (aclmdlRI modelRI, aclrtCallback func, void *userData), (modelRI, func, userData)) \
     _(aclError, aclmdlRIDestroyUnregisterCallback, (aclmdlRI modelRI, aclrtCallback func), (modelRI, func)) \
+    _(aclError, aclmdlRICondHandleCreate, (aclmdlRI modelRI, uint32_t defaultLaunchValue, aclmdlRICondHandleFlag flag, aclmdlRICondHandle *handle), (modelRI, defaultLaunchValue, flag, handle)) \
+    _(aclError, aclmdlRICondHandleGetCondPtr, (aclmdlRICondHandle handle, uint64_t **ptr), (handle, ptr)) \
+    _(aclError, aclmdlRIAddCondTask, (aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags), (params, stream, flags)) \
+    _(aclError, aclmdlRICaptureToModelRIBegin, (aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode), (stream, modelRI, mode)) \
     
 // aclmdl interface map list
 #define ACL_MDL_FUNC_MAP(_)  \

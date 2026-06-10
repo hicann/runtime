@@ -271,9 +271,11 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/context_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/cond_handle.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/event_capture.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/stream_capture.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/aclgraph_cond_task.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_manager.cc
     ${TOP_DIR}/src/runtime/feature/jetty/jetty_pool.cc
     ${TOP_DIR}/src/runtime/feature/jetty/stream_jetty_context.cc
@@ -1299,6 +1301,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/core/inc/spec
     ${TOP_DIR}/src/runtime/inc/common
     ${TOP_DIR}/src/runtime/core/inc/common
+    ${TOP_DIR}/src/runtime/core/inc/cond_handle
     ${TOP_DIR}/src/runtime/inc/device
     ${TOP_DIR}/src/runtime/inc/sqe
     ${TOP_DIR}/src/runtime/core/inc/sqe/v200_base

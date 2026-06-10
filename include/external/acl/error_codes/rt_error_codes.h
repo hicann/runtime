@@ -63,6 +63,8 @@ extern "C" {
 #define  ACL_ERROR_RT_SYMBOL_NOT_FOUND           107042 // symbol not found
 #define  ACL_ERROR_RT_INVALID_SYMBOL             107043 // invalid device symbol
 #define  ACL_ERROR_RT_INVALID_DEVICE_FUNCTION    107044 // invalid device function
+#define  ACL_ERROR_RT_STREAM_NOT_SUPPORT_OPERA   107045 // stream not support
+#define  ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING  107046 // sub acl graph is caputring
 
 #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT        207000 // feature not support
 #define  ACL_ERROR_RT_MEMORY_ALLOCATION          207001 // memory allocation error, only used by out of memory

@@ -103,6 +103,7 @@ rtError_t Notify::Setup()
             deviceId_, phyId_, static_cast<uint32_t>(error));
         return error;
     }
+
     uint32_t curNotifyId = 0U;
     RT_LOG(RT_LOG_INFO, "notify_flag=%u", notifyFlag_);
     error = driver_->NotifyIdAlloc(static_cast<int32_t>(deviceId_), &curNotifyId, dev->DevGetTsId(), notifyFlag_);
@@ -114,8 +115,32 @@ rtError_t Notify::Setup()
 
     dev_ = dev;
     dev_->PushNotify(this);
-    notifyid_ = curNotifyId;
     InitEmbeddedInnerHandle<Notify>(this);
+    notifyid_ = curNotifyId;
+    return RT_ERROR_NONE;
+}
+
+rtError_t Notify::SetupWithoutAllocNtyId()
+{
+    Runtime* runtime = Runtime::Instance();
+    NULL_PTR_RETURN(runtime, RT_ERROR_INSTANCE_NULL);
+    Context * const curCtx = runtime->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    Device * const dev = curCtx->Device_();
+    driver_ = dev->Driver_();
+
+    rtError_t error = driver_->GetDevicePhyIdByIndex(deviceId_, &phyId_);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Failed to get phy id by logic index, device_id=%u, phydevice_id=%u, retCode=%#x.",
+            deviceId_, phyId_, static_cast<uint32_t>(error));
+        return error;
+    }
+
+    dev_ = dev;
+    dev_->PushNotify(this);
+    InitEmbeddedInnerHandle<Notify>(this);
+    notifyid_ = MAX_UINT32_NUM;
     return RT_ERROR_NONE;
 }
 

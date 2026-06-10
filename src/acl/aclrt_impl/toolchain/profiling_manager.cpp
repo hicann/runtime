@@ -316,6 +316,10 @@ namespace acl {
         {AclProfType::AclrtMemcpyFromSymbolAsync,               "aclrtMemcpyFromSymbolAsync"},
         {AclProfType::AclrtMemcpyToSymbol,                      "aclrtMemcpyToSymbol"},
         {AclProfType::AclrtMemcpyToSymbolAsync,                 "aclrtMemcpyToSymbolAsync"},
+        {AclProfType::AclmdlRICondHandleCreate,                 "aclmdlRICondHandleCreate"},
+        {AclProfType::AclmdlRICondHandleGetCondPtr,             "aclmdlRICondHandleGetCondPtr"},
+        {AclProfType::AclmdlRIAddCondTask,                      "aclmdlRIAddCondTask"},
+        {AclProfType::AclmdlRICaptureToModelRIBegin,            "aclmdlRICaptureToModelRIBegin"},
 };
 
 aclError RegisterType(const uint32_t index) {

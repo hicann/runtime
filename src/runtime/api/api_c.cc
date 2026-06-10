@@ -1660,6 +1660,7 @@ rtError_t rtModelDestroy(rtModel_t mdl)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     const rtError_t error = apiInstance->ModelDestroy(realModel);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1711,6 +1712,7 @@ rtError_t rtModelExecute(rtModel_t mdl, rtStream_t stm, uint32_t flag)
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->ModelExecute(realModel, exeStream, flag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1771,6 +1773,7 @@ rtError_t rtModelAbort(rtModel_t mdl)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     const rtError_t error = apiInstance->ModelAbort(realModel);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -2109,6 +2112,7 @@ rtError_t rtLabelCreateV2(rtLabel_t *lbl, rtModel_t mdl)
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(mdl, RT_ERROR_INVALID_VALUE);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     const rtError_t error = apiInstance->LabelCreate(RtPtrToPtr<Label **>(lbl), realModel);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     Label *realLabel = RtPtrToPtr<Label *>(*lbl);
     *lbl = ExportEmbeddedHandle<rtLabel_t>(realLabel);
@@ -2134,6 +2138,7 @@ rtError_t rtLabelSet(rtLabel_t lbl, rtStream_t stm)
     RT_VALIDATE_AND_UNWRAP_OBJECT(lbl, Label, realLabel);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->LabelSet(realLabel, exeStream);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -2257,6 +2262,7 @@ rtError_t rtLabelSwitchByIndex(void *ptr, uint32_t maxValue, void *labelInfoPtr,
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->LabelSwitchByIndex(ptr, maxValue, labelInfoPtr, exeStream);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -2307,6 +2313,7 @@ rtError_t rtLabelCreateExV2(rtLabel_t *lbl, rtModel_t mdl, rtStream_t stm)
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->LabelCreateEx(RtPtrToPtr<Label **>(lbl), realModel,
         exeStream);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     Label *realLabel = RtPtrToPtr<Label *>(*lbl);
     *lbl = ExportEmbeddedHandle<rtLabel_t>(realLabel);

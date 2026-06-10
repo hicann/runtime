@@ -13,6 +13,9 @@
 #include <vector>
 
 #include "runtime_handle_guard.h"
+#include "rt_inner_model.h"
+
+typedef void *rtCondHandle_t;
 
 namespace cce {
 namespace runtime {
@@ -25,6 +28,7 @@ rtError_t ValidateStreamHandleForApi(rtStream_t handle, Stream *&outRealObj, con
 rtError_t ValidateEventHandleForApi(rtEvent_t handle, Event *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateNotifyHandleForApi(rtNotify_t handle, Notify *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify *&outRealObj, const char_t *callerFuncName); 
+rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle *&outRealObj, const char_t *callerFuncName);
 
 template <typename HandleT, typename ObjectT>
 HandleT ExportEmbeddedHandle(ObjectT *realObj)

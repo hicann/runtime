@@ -37,6 +37,8 @@
 #include "kernel_fusion_task.h"
 #include "error_code.h"
 #include "stub_task.hpp"
+#include "aclgraph_cond_task.h"
+#include "capture_model.hpp"
 #include <mutex>
 #include <vector>
 
@@ -180,7 +182,8 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_CAPTURE_RECORD, "CAPTURE_RECORD"},
     {TS_TASK_TYPE_CAPTURE_WAIT, "CAPTURE_WAIT"},
     {TS_TASK_TYPE_IPC_RECORD, "IPC_EVENT_RECORD"},
- 	{TS_TASK_TYPE_IPC_WAIT, "IPC_EVENT_WAIT"}
+ 	{TS_TASK_TYPE_IPC_WAIT, "IPC_EVENT_WAIT"},
+	{TS_TASK_TYPE_CAPTURE_CONDITION, "CAPTURE_CONDITION"},
 };
 
 #if F_DESC("pkgStat")
@@ -292,6 +295,18 @@ Stream* GetReportStream(Stream *stream)
     Stream *reportStream = stream;
     const Model *const modelObj = reportStream->Model_();
     if (modelObj != nullptr) {
+        const auto *const captureModel = dynamic_cast<const CaptureModel *>(modelObj);
+        if (captureModel != nullptr) {
+            const uint16_t rootExeStreamId = captureModel->GetRootExeStreamId();
+            if (rootExeStreamId != static_cast<uint16_t>(MAX_UINT16_NUM)) {
+                Stream *rootExeStream = nullptr;
+                const auto ret = reportStream->Device_()->GetStreamSqCqManage()->GetStreamById(
+                    static_cast<uint32_t>(rootExeStreamId), &rootExeStream);
+                if ((ret == RT_ERROR_NONE) && (rootExeStream != nullptr)) {
+                    return rootExeStream;
+                }
+            }
+        }
         auto *const exeStream = modelObj->GetExeStream();
         reportStream = (exeStream != nullptr) ? exeStream : reportStream;
     }
@@ -921,7 +936,9 @@ void RegTaskToCommandFunc(const std::vector<rtChipType_t> &chipTypes)
         toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ToCommandBodyForProfilerTraceExTask;
         toCommandFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ToCommandBodyForTimeoutSetTask;
         toCommandFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ToCommandBodyForModelUpdateTask;
+        toCommandFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = nullptr;
     }
+
 }
 static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
 {
@@ -957,6 +974,7 @@ static void RegTaskToSqefunc(const std::vector<rtChipType_t> &chipTypes)
         toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &ConstructSqeForProfilerTraceExTask;
         toSqeFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &ConstructSqeForTimeoutSetTask;
         toSqeFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &ConstructSqeForModelUpdateTask;
+        toSqeFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &ConstructSqeForCaptureConditionTask;
     }
 }
 
@@ -972,6 +990,7 @@ static void RegTaskUnInitFunc(const std::vector<rtChipType_t> &chipTypes)
         taskUnInitFunc[TS_TASK_TYPE_PCTRACE_ENABLE] = &PCTraceTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_FFTS_PLUS] = &FftsPlusTaskUnInit;
         taskUnInitFunc[TS_TASK_TYPE_RDMA_PI_VALUE_MODIFY] = &RdmaPiValueModifyTaskUnInit;
+        taskUnInitFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &CaptureConditionTaskUnInit;
     }
 }
 
@@ -1013,6 +1032,7 @@ static void RegDoCompleteSuccFunc(const std::vector<rtChipType_t> &chipTypes)
         doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE_EX] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_TASK_TIMEOUT_SET] = &DoCompleteSuccess;
         doCompleteSuccFunc[TS_TASK_TYPE_MODEL_TASK_UPDATE] = &DoCompleteSuccess;
+        doCompleteSuccFunc[TS_TASK_TYPE_CAPTURE_CONDITION] = &DoCompleteSuccess;
     }
 }
 

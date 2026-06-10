@@ -29,6 +29,8 @@ uint32_t GetSendSqeNum(TaskInfo * const taskInfo)
     } else if ((type == TS_TASK_TYPE_MEM_WAIT_VALUE) || (type == TS_TASK_TYPE_CAPTURE_WAIT) ||
         (type == TS_TASK_TYPE_IPC_WAIT)) {
         return GetSendSqeNumForMemWaitTask(taskInfo);
+    } else if (type == TS_TASK_TYPE_CAPTURE_CONDITION) {
+        return taskInfo->sqeNum;
     } else {
         return 1U;
     }

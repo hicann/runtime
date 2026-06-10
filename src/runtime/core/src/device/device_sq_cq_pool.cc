@@ -13,8 +13,6 @@
 namespace cce {
 namespace runtime {
 
-constexpr uint32_t RT_DEVICE_SQCQ_RES_MAX_NUM = 1024U;
-
 DeviceSqCqPool::DeviceSqCqPool(Device * const dev)
     : NoCopy(),
       device_(dev)

@@ -170,6 +170,7 @@ public:
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t *moduleName, void *callback) override;
     rtError_t XpuProfilingCommandHandle(uint32_t type, void *data, uint32_t len) override;
+    rtError_t StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags) override;
 
 protected:
     rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback) override;

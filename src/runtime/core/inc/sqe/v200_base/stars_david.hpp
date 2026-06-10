@@ -587,6 +587,10 @@ void ConstructDavidSqeForDavinciMultipleTask(TaskInfo * const taskInfo, rtDavidS
 void StarsV2DavinciMultipleTaskUnInit(TaskInfo* taskInfo);
 void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t * const command);
 void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void ConstructDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
+void Construct1stDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe);
+void Construct2ndDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe);
+void Construct3rdDavidSqeForCaptureConditionTask(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidSqeForMemWriteValueTask(TaskInfo *const taskInfo, rtDavidSqe_t * const davidSqe, uint64_t sqBaseAddr);
 void StarsV2IpcEventWaitTaskUnInit(TaskInfo* taskInfo);
 void StarsV2IpcEventRecordTaskUnInit(TaskInfo* taskInfo);

@@ -4933,6 +4933,12 @@ rtError_t ApiImpl::LabelCreate(Label ** const lbl, Model * const mdl)
     COND_RETURN_AND_MSG_INVALID_CONTEXT((mdl != nullptr) && (mdl->Context_() != curCtx), RT_ERROR_MODEL_CONTEXT, 
         "model " + std::to_string(mdl->Id_()));
 
+    if (mdl != nullptr && mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support creating label");
+    }
+
     return CondLabelCreate(lbl, mdl, curCtx);
 }
 
@@ -4955,6 +4961,11 @@ rtError_t ApiImpl::LabelSet(Label * const lbl, Stream * const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(stm->Id_()));
 
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support setting label");
+    }
+
     return lbl->Set(stm);
 }
 
@@ -4967,6 +4978,12 @@ rtError_t ApiImpl::LabelGoto(Label * const lbl, Stream * const stm)
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(stm->Id_()));
+
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support goto label");
+    }
+
 #ifndef CFG_DEV_PLATFORM_PC
     const uint32_t ver = curCtx->Device_()->GetTschVersion();
     COND_RETURN_ERROR_MSG_INNER(ver >= TS_VERSION_MORE_LABEL, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -5306,6 +5323,11 @@ rtError_t ApiImpl::LabelSwitchByIndex(void * const ptr, const uint32_t maxVal, v
     COND_RETURN_AND_MSG_OUTER(stm->GetModelNum() == 0, RT_ERROR_STREAM_MODEL, ErrorCode::EE1011, __func__,
             0, "stm->modelNum", "The stream is not bound to a model");
 
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support switching label by index");
+    }
+
     return CondLabelSwitchByIndex(ptr, maxVal, labelInfoPtr, stm);
 }
 
@@ -5316,6 +5338,12 @@ rtError_t ApiImpl::LabelGotoEx(Label * const lbl, Stream * const stm)
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(stm->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT(lbl->Context_() != curCtx, RT_ERROR_LABEL_CONTEXT, "label");
+
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support goto label extended");
+    }
+
 #ifndef CFG_DEV_PLATFORM_PC
     const uint32_t ver = curCtx->Device_()->GetTschVersion();
     COND_RETURN_ERROR_MSG_INNER(ver >= TS_VERSION_MORE_LABEL, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -5369,6 +5397,12 @@ rtError_t ApiImpl::LabelCreateEx(Label ** const lbl, Model * const mdl, Stream *
         "stream " + std::to_string(stm->Id_()));
     COND_RETURN_AND_MSG_INVALID_CONTEXT((mdl != nullptr) && (mdl->Context_() != curCtx), RT_ERROR_MODEL_CONTEXT, 
         "model " + std::to_string(mdl->Id_()));
+
+    if (mdl != nullptr && mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "sub ACL Graph does not support creating label extended");
+    }
 
     const rtError_t error = CondLabelCreate(lbl, mdl, curCtx);
     ERROR_RETURN_MSG_INNER(error, "Create label failed, retCode=%#x", static_cast<uint32_t>(error));
@@ -9103,6 +9137,12 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     const TaskInfo* const taskInfo = static_cast<const TaskInfo *>(task);
     const Stream* stm = taskInfo->stream;
     NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
+    Model* const mdl = stm->Model_();
+    if ((mdl != nullptr) && (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+        COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+            RT_ERROR_FEATURE_NOT_SUPPORT, "task belongs to sub ACL Graph, does not support getting task parameters");
+    }
     rtError_t error = CheckCaptureModelSupportSoftwareSq(stm->Device_());
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
@@ -9273,6 +9313,12 @@ rtError_t ApiImpl::StreamGetTasks(Stream * const stm, void **tasks, uint32_t *nu
 {
     COND_RETURN_OUT_ERROR_MSG_CALL(stm->GetModelNum() == 0, RT_ERROR_INVALID_VALUE,
         "The stream is not bound to a model.");
+    Model* const mdl = stm->Model_();
+    NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support getting tasks");
+    }
     return stm->StreamGetTasks(tasks, numTasks);
 }
 
@@ -9445,6 +9491,9 @@ rtError_t ApiImpl::TaskGetSeqId(rtTask_t task, uint32_t *id)
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
         ErrorCode::EE1006, __func__, "non aclGraph mode");
+    const CaptureModel *captureModel = dynamic_cast<const CaptureModel *>(mdl);
+    COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "task belongs to sub ACL Graph, does not support querying task sequence ID");
     *id = taskInfo->modelSeqId;
     RT_LOG(RT_LOG_INFO, "Get task sequence id=%u, streamId=%d, taskId=%u.", *id, stm->Id_(), taskInfo->id);
     return RT_ERROR_NONE;

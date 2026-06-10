@@ -81,7 +81,9 @@ struct DavidStarsModelMaintaince {
     uint64_t streamExecTimesAddr;
     uint32_t opSqId;
     uint32_t sqId;
-    uint32_t reserved[4];
+    uint16_t rootExeStreamId;
+    uint16_t reserved0;
+    uint32_t reserved[3];
 };
 
 struct DavidRingBufferControl {

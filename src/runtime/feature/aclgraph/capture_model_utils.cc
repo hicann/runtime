@@ -12,6 +12,8 @@
 #include "raw_device.hpp"
 #include "context.hpp"
 #include <sstream>
+#include "notify.hpp"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -37,7 +39,7 @@ bool NeedReBuildSqe(const TaskInfo *const task)
     const tsTaskType_t type = task->type;
     // mem wait类型task在sqe中会使用到当前stream的PosTail，在task更新后需要重新构造sqe
     if ((type == TS_TASK_TYPE_MEM_WAIT_VALUE) || (type == TS_TASK_TYPE_CAPTURE_WAIT) ||
-        (type == TS_TASK_TYPE_IPC_WAIT)) {
+        (type == TS_TASK_TYPE_IPC_WAIT) || (type == TS_TASK_TYPE_CAPTURE_CONDITION)) {
         return true;
     }
     return false;
@@ -212,7 +214,8 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
     COND_RETURN_AND_MSG_OUTER(mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, 
         ErrorCode::EE1006, __func__, "non aclGraph mode");
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+    COND_RETURN_WARN(((captureModel != nullptr) && captureModel->IsSubCaptureModel()),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support update operations");
     if (!captureModel->CanUpdate()) {
         RawDevice* const rawDev = dynamic_cast<RawDevice *>(dev);
         rawDev->PollEndGraphNotifyInfoByModelId(mdl->Id_());
@@ -222,6 +225,25 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
             return RT_ERROR_MODEL_UPDATE_FAILED;    
         }
     }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CheckCaptureModelSupportCondOp(Device * const dev)
+{
+    NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
+
+    const rtError_t ret = CheckCaptureModelSupportSoftwareSq(dev);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_WARNING, "aclgraph condop depends on software sq, device_id=%u, retCode=%#x.",
+            dev->Id_(), static_cast<uint32_t>(ret));
+        return ret;
+    }
+
+    if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_CONDOP))) {
+        RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condop, device_id=%u.", dev->Id_());
+        return RT_ERROR_NONE;
+    }
+
     return RT_ERROR_NONE;
 }
 
@@ -257,6 +279,75 @@ bool CheckCaptureModeSupport(const Context* ctx, const char* funcName)
         return false;
     }
     return true;
+}
+
+rtError_t AllocNotifyIdForSubModel(Model * const mdl, Notify *notify)
+{
+    if ((mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL) || (notify->GetNotifyId() != MAX_UINT32_NUM)) {
+        return RT_ERROR_NONE;
+    }
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+    if (captureModel->IsSubCaptureModel()) {
+        rtError_t error = notify->AllocId();
+        COND_RETURN_WARN(error != RT_ERROR_NONE, error, "Alloc notify Id, retCode=%#x", error);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t ReleaseNotifyResWhenSendEndGraphFailed(Model * const mdl, Notify *notify)
+{
+    /* 非aclgraph的，走老流程 */
+    if (mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL) {
+        DELETE_O(notify);
+        mdl->SetEndGraphNotify(nullptr);
+        return RT_ERROR_NONE;
+    }
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+    COND_PROC(captureModel == nullptr, DELETE_O(notify); mdl->SetEndGraphNotify(nullptr); return RT_ERROR_NONE;);
+
+    /* 非sub aclgraph的，释放notify句柄，下次重新申请 */
+    if (!captureModel->IsSubCaptureModel()) {
+        DELETE_O(notify);
+        mdl->SetEndGraphNotify(nullptr);
+        return RT_ERROR_NONE;
+    }
+
+    /* sub aclgraph的，不能释放notify句柄，因为其他sub graph还存的是当前这个notify句柄 */
+    rtError_t error = notify->FreeId();
+    COND_RETURN_WARN(error != RT_ERROR_NONE, error, "free notify id=%u, retCode=%#x", notify->GetNotifyId(), error);
+
+    return RT_ERROR_NONE;
+}
+
+uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId)
+{
+    if (parentModel == nullptr) {
+        return UINT32_MAX;
+    }
+
+    for (const auto &entry : parentModel->GetCondHandleTaskMap()) {
+        CondHandle *condHandle = entry.second;
+        if (condHandle == nullptr) {
+            continue;
+        }
+        for (Model *subModel : condHandle->GetSubCaptureModels()) {
+            CaptureModel *subCaptureModel = dynamic_cast<CaptureModel *>(subModel);
+            if (subCaptureModel == nullptr) {
+                continue;
+            }
+            uint32_t subStreamId = subCaptureModel->GetStreamIdBySqId(sqId);
+            if (subStreamId != UINT32_MAX) {
+                RT_LOG(RT_LOG_WARNING,
+                    "Found stream id in submodel, parent_model_id=%u, sub_model_id=%u, sq_id=%hu, stream_id=%u",
+                    parentModel->Id_(), subCaptureModel->Id_(), sqId, subStreamId);
+                return subStreamId;
+            }
+        }
+    }
+    return UINT32_MAX;
 }
 
 } // namespace runtime

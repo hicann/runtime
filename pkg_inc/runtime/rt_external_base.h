@@ -431,6 +431,12 @@ typedef void *rtMemHandle;
  */
 typedef void *rtTaskGrp_t;
 
+/**
+ * @ingroup dvrt_base
+ * @brief condition task handle.
+ */
+typedef void *rtCondHandle_t;
+
 #define RT_PROF_MAX_DEV_NUM 64
 
 #define PATH_LEN_MAX 1023

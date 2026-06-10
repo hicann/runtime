@@ -24,6 +24,10 @@
 #include "buffer_allocator.hpp"
 #include "memcpy_c.hpp"
 #include "stream_jetty_handler.h"
+#include "stub_task.hpp"
+#include "cond_handle.hpp"
+#include "cond_op_stream_task.h"
+#include "aclgraph_cond_task.h"
 
 namespace cce {
 namespace runtime {
@@ -52,6 +56,25 @@ rtError_t Context::UpdateEndGraphTask(Stream * const origCaptureStream, Stream *
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update task fail error=0x%x", error);
     RT_LOG(RT_LOG_WARNING, "exec stream_id=%d target stream_id=%u pos=%u",
         exeStream->Id_(), origCaptureStream->Id_(), rtNotifyRecord->pos);
+    return error;
+}
+
+rtError_t Context::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo *taskInfo,
+    Stream * const exeStream) const
+{
+    Notify *ntf = taskInfo->u.captureConditionTask.condHandle->GetSubModelNotify();
+    rtStarsSqe_t sqeMem = {};
+    ConstructStarsSqeForConditionNotifyWait(taskInfo, reinterpret_cast<uint8_t *>(&sqeMem));
+    void *targetAddrOfUpdatedSqe = RtValueToPtr<void *>(taskInfo->stream->GetSqBaseAddr() +
+        ((taskInfo->pos + 1U) * sizeof(rtStarsSqe_t)));
+
+    uint64_t realSize = 0U;
+    auto error = MemcopyAsync(
+        targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), &sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
+        &realSize);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update sqe fail error=0x%x", error);
+    RT_LOG(RT_LOG_DEBUG, "exec stream_id=%d target stream_id=%u, ntyId=%u",
+        exeStream->Id_(), taskInfo->stream->Id_(), ntf->GetNotifyId());
     return error;
 }
 
@@ -220,11 +243,26 @@ bool Context::IsCaptureModeSupport(void) const
     return true;
 }
 
-rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+static inline rtError_t CheckCaptureModelIsCaptured(Model * const mdl)
 {
-    Model *captureModel = nullptr;
+    COND_PROC((mdl == nullptr), return RT_ERROR_NONE);
+
+    std::unique_lock<std::mutex> taskLock(mdl->Context_()->GetCaptureLock());
+    std::list<Stream*> headStreams = mdl->GetHeadStreamList_();
+    const size_t stmNum = headStreams.size();
+    COND_RETURN_ERROR(stmNum != 0U, RT_ERROR_MODEL_CAPTURED, "model is captured, model_id=%u.", mdl->Id_());
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
+{
+    Model *captureModel = mdl;
 
     BufferAllocator::OpenHugeBuff();
+    rtError_t error = CheckCaptureModelIsCaptured(mdl);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "stream begin captured failed, stream_id=%d, model_id=%u.",
+        stm->Id_(), mdl->Id_());
 
     const rtStreamCaptureStatus status = stm->GetCaptureStatus();
     const int32_t streamId = stm->Id_();
@@ -239,11 +277,13 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
     }
 
     /* create capture model */
-    rtError_t error = ModelCreate(&captureModel, RT_MODEL_CAPTURE_MODEL);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Capture model create failed, device_id=%u, original stream_id=%d, retCode=%#x.",
-            device_->Id_(), streamId, error);
-        return error;
+    if (captureModel == nullptr) {
+        error = ModelCreate(&captureModel, RT_MODEL_CAPTURE_MODEL);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "Capture model create failed, device_id=%u, original stream_id=%d, retCode=%#x.",
+                device_->Id_(), streamId, error);
+            return error;
+        }
     }
 
     if ((stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) && 
@@ -267,9 +307,16 @@ rtError_t Context::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
 
     CaptureModeEnter(stm, mode);
 
-    RT_LOG(RT_LOG_EVENT, "capture begin success, device_id=%u, model_id=%u,"
- 	    " original stream_id=%d, capture stream_id=%d, stream_status=%d.",
- 	    device_->Id_(), captureModel->Id_(), streamId, stm->GetCaptureStream()->Id_(), stm->GetCaptureStatus());
+    CondHandle *condHandle = nullptr;
+    /* 父model取到的condHandle是nullptr，接口不返错 */
+    CaptureModel *captureMdl = dynamic_cast<CaptureModel *>(captureModel);
+    const rtError_t ret = GetValidatedObject<CondHandle>(captureMdl->GetCondHandle(), condHandle);
+    COND_PROC(ret != RT_ERROR_NONE, return RT_ERROR_NONE;);
+
+    RT_LOG(RT_LOG_EVENT, "capture begin success, device_id=%u, model_id=%u"
+ 	    " original stream_id=%d, capture stream_id=%d, stream_status=%d, isSubmodel=%u, parent model_id=%u.",
+ 	    device_->Id_(), captureMdl->Id_(), streamId, stm->GetCaptureStream()->Id_(), stm->GetCaptureStatus(),
+        captureMdl->IsSubCaptureModel(), (condHandle != nullptr) ? condHandle->GetParentModel()->Id_() : MAX_UINT32_NUM);
 
     return RT_ERROR_NONE;
 }
@@ -395,9 +442,28 @@ static inline void ClearCaptureModel(Context * const ctx, Stream * const stm, Mo
 {
     stm->ExitCapture();
     /* steam is bound to model, only need destroy model */
+
     if (mdl != nullptr) {
+        CaptureModel *captureModel = dynamic_cast<CaptureModel * const>(mdl);
+        COND_PROC(captureModel == nullptr, return;);
+
+        /* 子model不在这里单独销毁，随父model销毁 */
+        COND_PROC(captureModel->IsSubCaptureModel(), return;);
         (void)ctx->ModelDestroy(mdl);
     }
+}
+
+bool Context::CheckSubModelsIsEndCapture(Stream * const captureStream)
+{
+    CaptureModel *captureModel = dynamic_cast<CaptureModel * const>(captureStream->Model_());
+    COND_RETURN_ERROR(captureModel == nullptr, false,
+        "capture model is null, capture stream_id=%d.", captureStream->Id_());
+
+    bool isEndCapture = captureModel->CheckSubModelsIsEndCapture();
+    COND_RETURN_ERROR(!isEndCapture, false,
+        "sub capture model is not end capture, capture model_id=%d.", captureModel->Id_());
+
+    return true;
 }
 
 rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMdl)
@@ -444,6 +510,11 @@ rtError_t Context::StreamEndCapture(Stream * const stm, Model ** const captureMd
         ClearCaptureModel(this, stm, captureModel);
         return RT_ERROR_STREAM_CAPTURE_INVALIDATED;
     }
+
+    bool isCaptureFinished = CheckSubModelsIsEndCapture(captureStream);
+    COND_PROC_RETURN_ERROR(!isCaptureFinished, RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING,
+        ClearCaptureModel(this, stm, captureModel),
+        "sub ACL Graph is capturing, stream_id=%d, capture stream_id=%d.", stm->Id_(), captureStream->Id_());
 
     error = CheckCaptureModelValidity(captureModel);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error,
@@ -672,6 +743,7 @@ rtError_t Context::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handl
 {
     *handle = nullptr;
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
+
     const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
     COND_RETURN_ERROR_MSG_INNER(status != StreamTaskGroupStatus::SAMPLE,
         RT_ERROR_STREAM_TASKGRP_STATUS,
@@ -739,6 +811,143 @@ rtError_t Context::StreamEndTaskUpdate(Stream * const stm) const
     stm->ResetUpdateTaskGroup();
     RT_LOG(RT_LOG_INFO, "stream_id=%d update tasks result: total=%zu, success=%zu, remain=%zu",
         stm->Id_(), updateTaskGroup->taskIds.size(), taskIndex, (updateTaskGroup->taskIds.size() - taskIndex));
+    return RT_ERROR_NONE;
+}
+
+rtError_t Context::CheckCondTaskParamsSize(rtCondTaskParams params)
+{
+    RT_LOG(RT_LOG_DEBUG, "condition type=%u, condition size=%u", params.type, params.size);
+    switch (params.type) {
+        case RT_COND_TASK_TYPE_IF:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+                (params.size != RT_COND_NUMBER_ONE) && (params.size != RT_COND_NUMBER_TWO),
+                RT_ERROR_INVALID_VALUE, params.size,
+                "1 or 2");
+            return RT_ERROR_NONE;
+        case RT_COND_TASK_TYPE_WHILE:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size != RT_COND_NUMBER_ONE,
+                RT_ERROR_INVALID_VALUE, params.size,
+                "1");
+            return RT_ERROR_NONE;
+        case RT_COND_TASK_TYPE_SWITCH:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(params.size == RT_COND_NUMBER_ZERO,
+                RT_ERROR_INVALID_VALUE, params.size,
+                "greater than 0");
+            return RT_ERROR_NONE;
+        default:
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM(true, RT_ERROR_INVALID_VALUE, params.type,
+                "RT_COND_TASK_TYPE_IF or RT_COND_TASK_TYPE_WHILE or RT_COND_TASK_TYPE_SWITCH");
+    }
+}
+
+rtError_t Context::CreateSubCaptureModels(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm)
+{
+    for (uint32_t loop = 0; loop < params.size; loop++) {
+        Model *subModel = nullptr;
+        rtError_t ret = ModelCreate(&subModel, RT_MODEL_CAPTURE_MODEL);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "Capture model create failed, device_id=%u, original stream_id=%d, size=%u, retCode=%#x.",
+                stm->Device_()->Id_(), stm->Id_(), params.size, ret);
+            condHandle->SubModelDestroy();
+            (void)memset_s(params.modelRIArray, params.size * sizeof(rtModel_t), 0x0U, params.size * sizeof(rtModel_t));
+            return ret;
+        }
+
+        models_.remove(subModel); // capture model资源回收不遍历子模型，context析构也不遍历子图，都靠父模型递归完成。
+        subModel->SetExeStream(stm->GetCaptureStream()); // 子模型的执行流是固定的
+        CaptureModel *subCaptureModel = dynamic_cast<CaptureModel *>(subModel);
+        subCaptureModel->SetSubCaptureModel();
+        subCaptureModel->SetCondHandle(params.handle);
+        condHandle->PushBackSubModel(subModel);
+        params.modelRIArray[loop] = static_cast<rtModel_t>(subModel);
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t Context::SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Device * const dev = stm->Device_();
+    TaskInfo *tsk = nullptr;
+    TaskInfo submitTask = {};
+    const uint32_t sqeNum = (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) ? COND_TASK_WHILE_SQE_NUM : COND_TASK_IF_SWITCH_SQE_NUM;
+    tsk = stm->AllocTask(&submitTask, TS_TASK_TYPE_CAPTURE_CONDITION, error, sqeNum);
+    COND_RETURN_ERROR_MSG_INNER((tsk == nullptr), error, "task alloc fail err:%#x", static_cast<uint32_t>(error));
+    std::function<void()> const errRecycle = [&dev, &tsk]() {
+        (void)dev->GetTaskFactory()->Recycle(tsk);
+    };
+    ScopeGuard tskErrRecycle(errRecycle);
+
+    error = cce::runtime::CaptureConditionTaskInit(tsk, condHandle);
+    ERROR_RETURN(error, "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%d, condsize=%u, retCode=%#x.",
+        stm->Model_()->Id_(), stm->Id_(), tsk->id, condHandle->GetCondType(), condHandle->GetCondSize(), error);
+    error = dev->SubmitTask(tsk, taskGenCallback_);
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit capture model condition task, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    GET_THREAD_TASKID_AND_STREAMID(tsk, stm->AllocTaskStreamId());
+    tskErrRecycle.ReleaseGuard();
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t Context::PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
+{
+
+    Notify *notify = condHandle->GetSubModelNotify();
+    for (Model *mdl : condHandle->GetSubCaptureModels()) {
+        CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
+        if (subModel == nullptr) {
+            continue;
+        }
+        subModel->SetEndGraphNotify(notify);
+    }
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(stm->GetCaptureStream()->Model_());
+    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+    Stream *captureStream = stm->GetCaptureStream();
+    captureModel->StoreCondHandleTaskInfo(captureStream->Id_(), captureStream->GetLastTaskId(), condHandle);
+
+    RT_LOG(RT_LOG_INFO, "capture model condition task submit, device_id=%u, stream_id=%d",
+        device_->Id_(), captureStream->Id_());
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t Context::StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    UNUSED(flags);
+    std::function<void()> const errSubModelRecycle = [&condHandle, &params]() {
+        condHandle->SubModelDestroy();
+        memset_s(params.modelRIArray, params.size * sizeof(rtModel_t), 0x0U, params.size * sizeof(rtModel_t));
+    };
+    ScopeGuard subModelErrRecycle(errSubModelRecycle);
+
+    rtError_t error;
+    Notify *notify = const_cast<Notify *>(condHandle->GetSubModelNotify());
+    if (notify == nullptr) {
+        notify = new (std::nothrow) Notify(device_->Id_(), device_->DevGetTsId());
+        COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW,
+            ErrorCode::EE1013, sizeof(Notify));
+        error = notify->SetupWithoutAllocNtyId();
+        COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
+    }
+    condHandle->SetSubModelNotify(notify);
+
+    auto &subModels = condHandle->GetSubCaptureModels();
+    Model *firstSubModel = subModels.empty() ? nullptr : subModels[0];
+    notify->SetEndGraphModel(firstSubModel);
+
+    error = SubmitCaptureConditionTask(condHandle, stm);
+    ERROR_RETURN_MSG_INNER(error, "Failed to submit capture condition task, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    error = PostProcCaptureConditionTask(condHandle, stm);
+    ERROR_RETURN_MSG_INNER(error, "Failed to post proc capture condition task, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    subModelErrRecycle.ReleaseGuard();
     return RT_ERROR_NONE;
 }
 

@@ -129,7 +129,7 @@ public:
     rtError_t GetCqId(Stream * const stm, uint32_t * const cqId, uint32_t * const logicCqId) override;
     rtError_t StreamSetMode(Stream * const stm, const uint64_t stmMode) override;
     rtError_t StreamGetMode(const Stream * const stm, uint64_t * const stmMode) override;
-    rtError_t StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode) override;
+    rtError_t StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl = nullptr) override;
     rtError_t StreamEndCapture(Stream * const stm, Model ** const captureMdl) override;
     rtError_t StreamGetCaptureInfo(const Stream * const stm, rtStreamCaptureStatus * const status,
         Model ** const captureMdl) override;
@@ -463,6 +463,11 @@ public:
     rtError_t ModelTaskDisable(rtTask_t task) override;
     rtError_t ModelDestroyRegisterCallback(Model * const mdl, const rtCallback_t fn, void* ptr) override;
     rtError_t ModelDestroyUnregisterCallback(Model * const mdl, const rtCallback_t fn) override;
+    rtError_t ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
+        rtCondHandleFlag_t flag, CondHandle ** const handle) override;
+    rtError_t ModelCondHandleDestroy(CondHandle * handle) override;
+    rtError_t ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr) override;
+    rtError_t StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags) override;
 
     // Notify api
     rtError_t NotifyCreate(const int32_t deviceId, Notify ** const retNotify,

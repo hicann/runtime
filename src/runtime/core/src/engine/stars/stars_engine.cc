@@ -31,6 +31,9 @@
 #include "stub_task.hpp"
 #include "global_state_manager.hpp"
 #include "raw_device.hpp"
+#include "cond_handle/cond_handle.hpp"
+#include "capture_model.hpp"
+#include "model_c.hpp"
 
 namespace {
 constexpr uint16_t TASK_RECLAIM_MAX_NUM = 64U;     // Max reclaim num per query.
@@ -1541,6 +1544,7 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t &logicCq, const bool
     const char_t * const errMsg = static_cast<size_t>(errBit) < StarsCqeErrorDesc_.size() ?
                                   StarsCqeErrorDesc_[static_cast<size_t>(errBit)].c_str() : "unknow";
     bool isExceptionFlag = false;
+    TaskInfo *faultTaskPtr = nullptr;
 
     if (reportTask == nullptr) {
         reportTask = GetDevice()->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
@@ -1555,7 +1559,7 @@ void StarsEngine::ProcLogicCqReport(const rtLogicCqReport_t &logicCq, const bool
         isExceptionFlag = true;
         (void)GetDevice()->PrintStreamTimeoutSnapshotInfo();
         if (reportTask != nullptr) {
-            TaskInfo * const faultTaskPtr = GetRealReportFaultTask(reportTask, static_cast<const void *>(&swStatus));
+            faultTaskPtr = GetRealReportFaultTask(reportTask, static_cast<const void *>(&swStatus));
             (void)GetDevice()->ProcDeviceErrorInfo(faultTaskPtr);
             if (faultTaskPtr != nullptr && !faultTaskPtr->isRingbufferGet && faultTaskPtr->type != TS_TASK_TYPE_KERNEL_AICPU) { // Try to get ringbuffer for N-seconds fast recovery.
                 (void)GetDevice()->ProcDeviceErrorInfo(faultTaskPtr);

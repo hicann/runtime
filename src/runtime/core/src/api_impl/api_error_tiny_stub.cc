@@ -344,10 +344,11 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(const void** ptrs, siz
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+rtError_t ApiErrorDecorator::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
     UNUSED(stm);
     UNUSED(mode);
+    UNUSED(mdl);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
@@ -424,6 +425,37 @@ rtError_t ApiErrorDecorator::StreamEndTaskGrp(Stream * const stm, TaskGroup ** c
 {
     UNUSED(stm);
     UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
+    rtCondHandleFlag_t flag, CondHandle ** const handle)
+{
+    UNUSED(mdl);
+    UNUSED(defaultValue);
+    UNUSED(flag);
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::ModelCondHandleDestroy(CondHandle * handle)
+{
+    UNUSED(handle);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
+{
+    UNUSED(handle);
+    UNUSED(devPtr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    UNUSED(params);
+    UNUSED(stm);
+    UNUSED(flags);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

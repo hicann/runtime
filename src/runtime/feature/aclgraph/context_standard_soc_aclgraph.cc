@@ -15,6 +15,7 @@ namespace runtime {
 rtError_t Context::TryRecycleCaptureModelResource(const uint32_t allocSqNum, const uint32_t ntfCnt,
     const CaptureModel * const excludeMdl)
 {
+    UNUSED(excludeMdl);
     rtError_t error = RT_ERROR_NONE;
     uint32_t releaseSqNum = 0U;
     uint32_t totalReleaseSqNum = 0U;
@@ -43,10 +44,11 @@ rtError_t Context::TryRecycleCaptureModelResource(const uint32_t allocSqNum, con
 
             if (ntfCnt > totalReleaseNtfNum) {
                 if (captureMdl->ModelSqOperTryLock()) {
-                    error = captureMdl->ReleaseNotifyId();
+                    releaseSqNum = 0U;
+                    error = captureMdl->ReleaseNotifyId(releaseSqNum);
                     captureMdl->ModelSqOperUnLock();
                     COND_PROC(error != RT_ERROR_NONE, continue);
-                    totalReleaseNtfNum++;
+                    totalReleaseNtfNum += releaseSqNum;
                 }
             }
         }

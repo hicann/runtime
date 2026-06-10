@@ -768,6 +768,50 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue,
+    rtCondHandleFlag_t flag, rtCondHandle_t *handle)
+{
+    (void)mdl;
+    (void)defaultLaunchValue;
+    (void)flag;
+    (void)handle;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleDestroy(rtCondHandle_t handle)
+{
+    (void)handle;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
+{
+    (void)handle;
+    (void)devPtr;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t flags)
+{
+    (void)params;
+    (void)stm;
+    (void)flags;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamBeginCaptureToModel(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode)
+{
+    (void)stm;
+    (void)mdl;
+    (void)mode;
+    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtGetTaskBufferLen(const rtTaskBuffType_t type, uint32_t * const bufferLen)
 {
     (void)type;

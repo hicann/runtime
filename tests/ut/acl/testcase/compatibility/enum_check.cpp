@@ -890,6 +890,26 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtAtomicOperation)
     EXPECT_EQ(sizeof(aclrtAtomicOperation), sizeof(uint32_t));
 }
 
+TEST_F(UTEST_ACL_compatibility_enum_check, aclmdlRICondHandleFlag)
+{
+    aclmdlRICondHandleFlag value;
+    value = (aclmdlRICondHandleFlag)1;
+    EXPECT_EQ(value, ACL_MODEL_RI_COND_HANDLE_ASSIGN_DEFAULT);
+    EXPECT_EQ(sizeof(aclmdlRICondHandleFlag), 4);
+}
+
+TEST_F(UTEST_ACL_compatibility_enum_check, aclmdlRICondTaskType)
+{
+    aclmdlRICondTaskType value;
+    value = (aclmdlRICondTaskType)0;
+    EXPECT_EQ(value, ACL_MODEL_RI_COND_TYPE_IF);
+    value = (aclmdlRICondTaskType)1;
+    EXPECT_EQ(value, ACL_MODEL_RI_COND_TYPE_WHILE);
+    value = (aclmdlRICondTaskType)2;
+    EXPECT_EQ(value, ACL_MODEL_RI_COND_TYPE_SWITCH);
+    EXPECT_EQ(sizeof(aclmdlRICondTaskType), 4);
+}
+
 TEST_F(UTEST_ACL_compatibility_enum_check, aclrtDevAttr)
 {
   aclrtDevAttr value;

@@ -35,6 +35,8 @@ const char *GetResourceNameByMagic(const uint64_t magic)
             return "notify";
         case RT_CNTNOTIFY_MAGIC:
             return "cntnotify";
+        case RT_COND_HANDLE_MAGIC:
+            return "cond_handle";
         default:
             return "unknown";
     }

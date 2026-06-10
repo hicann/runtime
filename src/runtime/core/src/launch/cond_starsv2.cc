@@ -10,6 +10,8 @@
 
 #include "cond_c.hpp"
 #include "task_david.hpp"
+#include "runtime.hpp"
+#include "context.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "profiler_c.hpp"
@@ -17,6 +19,9 @@
 #include "stream_david.hpp"
 #include "stream_task.h"
 #include "cond_op_stream_task.h"
+#include "aclgraph_cond_task.h"
+#include "notify.hpp"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -24,7 +29,7 @@ namespace runtime {
 static rtError_t CondStreamActiveForAicpuStream(const Stream * const activeStream, Stream * const stm)
 {
     Model *mdl = stm->Model_();
-    NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODEL_NULL);
+    NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
     const void * const funcName = mdl->GetDevString(RT_DEV_STRING_ACTIVE_STREAM);
     const uint32_t activeStreamId = static_cast<uint32_t>(activeStream->Id_());
     void *args = nullptr;
@@ -58,7 +63,7 @@ rtError_t CondStreamActive(const Stream * const activeStream, Stream * const stm
     }
     if ((activeStrFlag & RT_STREAM_AICPU) != 0U) {
         Model *mdl = stm->Model_();
-        NULL_PTR_RETURN_MSG(mdl, RT_ERROR_MODEL_NULL);
+        NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
         RT_LOG(RT_LOG_INFO, "no process flags=%u, active_stream_id=%u, stream flags=%u, stream_id=%d.",
         activeStrFlag, activeStreamId, strFlag, streamId);
         return RT_ERROR_NONE;
@@ -179,5 +184,106 @@ rtError_t CondMemWaitValue(const void * const devAddr, const uint64_t value,
     return RT_ERROR_NONE;
 }
 
+rtError_t SubmitCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
+{
+    int32_t streamId = stm->Id_();
+    rtError_t error = CheckTaskCanSend(stm);
+    ERROR_RETURN_MSG_INNER(error, "stream_id=%d check failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+
+    TaskInfo *condTask = nullptr;
+    uint32_t pos = 0xFFFFU;
+    Stream *dstStm = stm;
+    const uint32_t sqeNum = (condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) ? COND_TASK_WHILE_SQE_NUM : COND_TASK_IF_SWITCH_SQE_NUM;
+    std::function<void()> const errRecycle = [&condTask, &stm, &pos, &dstStm]() {
+        TaskUnInitProc(condTask);
+        TaskRollBack(dstStm, pos);
+        stm->StreamUnLock();
+    };
+
+    stm->StreamLock();
+    error = AllocTaskInfoForCapture(&condTask, stm, pos, dstStm, sqeNum);
+    ERROR_PROC_RETURN_MSG_INNER(error, stm->StreamUnLock();, "Failed to alloc task, stream_id=%d, retCode=%#x.",
+        streamId, static_cast<uint32_t>(error));
+    ScopeGuard tskErrRecycle(errRecycle);
+    SaveTaskCommonInfo(condTask, dstStm, pos, sqeNum);
+
+    error = CaptureConditionTaskInit(condTask, condHandle);
+    ERROR_RETURN(error, "Capture condition task init failed, model_id=%u, stream_id=%d, task_id=%u, condtype=%d, condsize=%u, retCode=%#x.",
+        stm->Model_()->Id_(), streamId, pos, condHandle->GetCondType(), condHandle->GetCondSize(), error);
+
+    error = DavidSendTask(condTask, dstStm);
+    ERROR_RETURN_MSG_INNER(error, "Capture model condition task submit task failed, stream_id=%d, pos=%u, retCode=%#x.",
+        streamId, pos, static_cast<uint32_t>(error));
+    tskErrRecycle.ReleaseGuard();
+    stm->StreamUnLock();
+    SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), condTask->taskSn);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
+{
+    Notify *notify = condHandle->GetSubModelNotify();
+    rtError_t retFreeId = notify->FreeId();
+    COND_PROC(retFreeId != RT_ERROR_NONE, RT_LOG(RT_LOG_WARNING, "Free notify %u failed", notify->GetNotifyId()));
+
+    for (Model *mdl : condHandle->GetSubCaptureModels()) {
+        CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
+        if (subModel == nullptr) {
+            continue;
+        }
+        subModel->SetEndGraphNotify(notify);
+    }
+    // 存储id, handle到父capture model中
+    Stream *captureStream = stm->GetCaptureStream();
+    NULL_PTR_RETURN(captureStream, RT_ERROR_STREAM_NULL);
+
+    Model *capMdl = captureStream->Model_();
+    NULL_PTR_RETURN(capMdl, RT_ERROR_MODEL_NULL);
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(capMdl);
+    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+
+    captureModel->StoreCondHandleTaskInfo(captureStream->Id_(), captureStream->GetLastTaskId(), condHandle);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    UNUSED(flags);
+    rtError_t error = RT_ERROR_NONE;
+    std::function<void()> const errSubModelRecycle = [&condHandle, &params]() {
+        condHandle->SubModelDestroy();
+        memset_s(params.modelRIArray, params.size * sizeof(rtModel_t), 0x0U, params.size * sizeof(rtModel_t));
+        //condHandleTaskMap_也要清理 todo
+    };
+    ScopeGuard subModelErrRecycle(errSubModelRecycle);
+
+    Notify *notify = const_cast<Notify *>(condHandle->GetSubModelNotify());
+    if (notify == nullptr) {
+        notify = new (std::nothrow) Notify(stm->Device_()->Id_(), stm->Device_()->DevGetTsId());
+        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, notify == nullptr, RT_ERROR_NOTIFY_NEW,
+            "Add end graph of model failed, new notify failed.");
+        error = notify->SetupWithoutAllocNtyId();
+        COND_PROC_RETURN_WARN(error != RT_ERROR_NONE, error, DELETE_O(notify), "Notify setup, retCode=%#x", error);
+    }
+    condHandle->SetSubModelNotify(notify);
+
+    auto &subModels = condHandle->GetSubCaptureModels();
+    Model *firstSubModel = subModels.empty() ? nullptr : subModels[0];
+    notify->SetEndGraphModel(firstSubModel);
+
+    error = SubmitCaptureConditionTask(condHandle, stm);
+    ERROR_RETURN(error, "Failed to submit capture condition task, model_id=%u, stream_id=%d, condition type=%d, condition size=%u, retCode=%#x.",
+        stm->Model_()->Id_(), stm->Id_(), params.type, params.size, static_cast<uint32_t>(error));
+
+    error = PostProcCaptureConditionTask(condHandle, stm);
+    ERROR_RETURN(error, "Failed to post proc capture condition task, model_id=%u, stream_id=%d, retCode=%#x.",
+        stm->Model_()->Id_(), stm->Id_(), static_cast<uint32_t>(error));
+
+    subModelErrRecycle.ReleaseGuard();
+    return RT_ERROR_NONE;
+}
 }  // namespace runtime
 }  // namespace cce

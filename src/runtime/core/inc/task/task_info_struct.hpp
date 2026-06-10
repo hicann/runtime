@@ -12,6 +12,7 @@
 
 #include "dev.h"
 #include "task_info_base.hpp"
+#include "rt_inner_model.h"
 
 #define THREAD_FOR_PRE_LOAD (30U)
 
@@ -26,6 +27,7 @@ class Program;
 class Model;
 class Driver;
 class ArgLoader;
+class CondHandle;
 
 struct CmoAddrTaskInfo {
     void *src;
@@ -486,6 +488,35 @@ struct SqeUpdateTaskInfo {
     uint16_t desTaskId;
     uint8_t schemMode;
     void *updateArgHandle;
+};
+
+struct CaptureConditionTaskInfo {
+    // === 全局属性 ===
+    CondHandle *condHandle;               // 条件操作 Handle（type/size/devAddr 均可从中获取）
+
+    // === SQE[0] CondFirst：条件判断 FunctionCall ===
+    void *funcCallSvmMem;                  // FunctionCall 指令设备内存地址（已对齐）
+    void *baseFuncCallSvmMem;              // 设备内存分配基地址（用于 free）
+    void *baseFuncCallDevMem;              // 设备内存分配基地址，存储条件算子各个入参，如sqlist、sqcountlist、sqsvmlist
+    void *funcCallHostMem;                 // FunctionCall 指令主机内存地址
+    uint64_t funCallMemSize;               // FunctionCall 指令大小
+    void *dfxPtr;                          // dfx 数据起始地址
+    void *headSqArrPtrArrSvmMem;           // 每个模型 sq list 首地址的指针数组设备内存
+    void *headSqArrDataSvmMem;             // 所有模型 sq id 数据设备内存
+    uint32_t headSqArrDataSvmMemSize;      // sq id 数据大小
+    void *modelSqCountArrSvmMem;           // 每个模型的 sq 数量数组设备内存
+    void *streamSvmPtrArrSvmMem;           // 每个模型 svm list 首地址的指针数组设备内存
+    void *streamSvmDataSvmMem;             // 所有模型 svm 数据设备内存
+    uint32_t streamSvmDataSvmMemSize;      // svm 数据大小
+
+    // === SQE[1] NotifyWait：子模型完成通知 ===
+    uint32_t notifyId;                     // notify_id
+    uint32_t notifyTimeout;                // timeout
+
+    // === SQE[2] JumpBack（仅 WHILE）：跳回循环头部 ===
+    void *jumpBackFuncCallSvmMem;          // FunctionCall 指令设备内存地址
+    void *jumpBackBaseFuncCallSvmMem;      // 设备内存分配基地址（用于 free）
+    uint64_t jumpBackFunCallMemSize;       // FunctionCall 指令大小
 };
 
 }

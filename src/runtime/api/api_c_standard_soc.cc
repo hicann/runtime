@@ -642,6 +642,7 @@ rtError_t rtStreamAddToModel(rtStream_t stm, rtModel_t captureMdl)
     RT_VALIDATE_AND_UNWRAP_OBJECT(captureMdl, Model, realModel);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t error = apiInstance->StreamAddToModel(streamPtr, realModel);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -699,7 +700,9 @@ rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t *captureMdl)
     const rtError_t error = apiInstance->StreamEndCapture(streamPtr,
                                                           RtPtrToPtr<Model **>(captureMdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    *captureMdl = ExportEmbeddedHandle<rtModel_t>(RtPtrToPtr<Model *>(*captureMdl));
+    if (captureMdl != nullptr) {
+        *captureMdl = ExportEmbeddedHandle<rtModel_t>(RtPtrToPtr<Model *>(*captureMdl));
+    }
     return ACL_RT_SUCCESS;
 }
 
@@ -725,6 +728,80 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     StoreOptionalEmbeddedHandle<rtModel_t>(
         ((captureMdl == nullptr) || (*captureMdl == nullptr)) ? nullptr : RtPtrToPtr<Model *>(*captureMdl), captureMdl);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleCreate(rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag,
+    rtCondHandle_t *handle)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
+    CondHandle *condHandle = nullptr;
+    const rtError_t error = apiInstance->ModelCondHandleCreate(realModel, defaultLaunchValue, flag, &condHandle);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    *handle = ExportEmbeddedHandle<rtCondHandle_t>(condHandle);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleDestroy(rtCondHandle_t handle)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(handle, CondHandle, realHandle);
+    const rtError_t error = apiInstance->ModelCondHandleDestroy(realHandle);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelCondHandleGetCondPtr(rtCondHandle_t handle, uint64_t **devPtr)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(handle, CondHandle, realHandle);
+    const rtError_t error = apiInstance->ModelCondHandleGetCondPtr(realHandle, devPtr);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamAddCondTask(rtCondTaskParams params, rtStream_t stm, uint32_t flags)
+{
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, realStm);
+    const rtError_t error = apiInstance->StreamAddCondTask(params, realStm, flags);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+
+    for (uint32_t i = 0; i < params.size; i++) {
+        StoreOptionalEmbeddedHandle<rtModel_t>(RtPtrToPtr<Model *>(params.modelRIArray[i]), &params.modelRIArray[i]);
+    }
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtStreamBeginCaptureToModel(rtStream_t stm, rtModel_t mdl, const rtStreamCaptureMode mode)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    const Runtime * const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    const rtChipType_t chipType = rtInstance->GetChipType();
+    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
+            static_cast<int32_t>(chipType));
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+
+    Api * const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
+    const rtError_t error = apiInstance->StreamBeginCapture(streamPtr, mode, realModel);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+
     return ACL_RT_SUCCESS;
 }
 
@@ -1642,6 +1719,7 @@ rtError_t rtModelDestroyRegisterCallback(rtModel_t const mdl, rtCallback_t fn, v
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     const rtError_t error = apiInstance->ModelDestroyRegisterCallback(realModel, fn, ptr);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1652,6 +1730,7 @@ rtError_t rtModelDestroyUnregisterCallback(rtModel_t const mdl, rtCallback_t fn)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     const rtError_t error = apiInstance->ModelDestroyUnregisterCallback(realModel, fn);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1698,6 +1777,7 @@ rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(numStreams, RT_ERROR_INVALID_VALUE);
     if (streams == nullptr) {
         const rtError_t error = apiInstance->ModelGetStreams(realModel, nullptr, numStreams);
+        COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
         return ACL_RT_SUCCESS;
     }
@@ -1705,11 +1785,13 @@ rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *
         // streams非空但numStreams为0时，表示输出数组容量不足，不是查询stream数量。
         Stream *stream = nullptr;
         const rtError_t error = apiInstance->ModelGetStreams(realModel, &stream, numStreams);
+        COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
         return ACL_RT_SUCCESS;
     }
     std::vector<Stream *> streamVec(*numStreams, nullptr);
     const rtError_t error = apiInstance->ModelGetStreams(realModel, streamVec.data(), numStreams);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     for (uint32_t i = 0U; i < *numStreams; ++i) {
         streams[i] = ExportEmbeddedHandle<rtStream_t>(streamVec[i]);
@@ -1736,6 +1818,7 @@ rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numT
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, streamPtr);
     const rtError_t error = apiInstance->StreamGetTasks(streamPtr, static_cast<void **>(tasks),
                                                         numTasks);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

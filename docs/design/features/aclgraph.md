@@ -225,7 +225,7 @@ sequenceDiagram
     Context-->>App: 返回 CaptureModel
 
     App->>CaptureModel: rtModelExecute(model, exeStream)
-    CaptureModel->>CaptureModel: BuildResource(exeStream)
+    CaptureModel->>CaptureModel: BuildSqCq(exeStream)
     CaptureModel->>SqCq: AllocSqCq(streamNum)
     CaptureModel->>CaptureModel: BindSqCqAndSendSqe
     CaptureModel->>Notify: SetNotifyBeforeExecute
@@ -443,7 +443,7 @@ flowchart TD
     E --> F{是否 READY}
     F -->|否| G[返回 RT_ERROR_MODEL_EXE_FAILED]
     F -->|是| H[SetNotifyBeforeExecute]
-    H --> I[BuildResource]
+    H --> I[BuildSqCq]
     I --> J[AllocSqCqProc]
     J --> K[AllocSqAddr]
     K --> L[BindSqCqAndSendSqe]
@@ -480,7 +480,7 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
     // ...
 
     // 构建 SQ/CQ
-    error = BuildResource(stm);
+    error = BuildSqCq(stm);
     // ...
 
     ReportCacheTrackData();
@@ -518,7 +518,7 @@ classDiagram
         -vector~unique_ptr~TaskGroup~~ taskGroupList_
         +Execute(stm, timeout) rtError_t
         +ExecuteAsync(stm) rtError_t
-        +BuildResource(exeStream) rtError_t
+        +BuildSqCq(exeStream) rtError_t
         +BindSqCq() rtError_t
         +UnBindSqCq() rtError_t
         +AddStreamToCaptureModel(stm) rtError_t
@@ -567,7 +567,7 @@ public:
     // SQ/CQ 管理
     bool IsSoftwareSqEnable(void) const;
     void SetSoftwareSqEnable(void);
-    rtError_t BuildResource(Stream * const exeStream);
+    rtError_t BuildSqCq(Stream * const exeStream);
     void DeconstructSqCq(void);
     rtError_t ReleaseSqCq(uint32_t &releaseNum);
 
@@ -743,7 +743,7 @@ rtError_t Event::CaptureWaitProcess(Stream * const stm)
 
 ```cpp
 // 文件位置：src/runtime/feature/aclgraph/capture_model.cc:471-567
-rtError_t CaptureModel::BuildResource(Stream * const exeStream)
+rtError_t CaptureModel::BuildSqCq(Stream * const exeStream)
 {
     // 检查是否启用 Software Sq
     COND_PROC(!IsSoftwareSqEnable(), return RT_ERROR_NONE);
@@ -853,7 +853,7 @@ classDiagram
 
 - **捕获阶段**：任务被记录到 CaptureStream，不立即执行
 - **构建阶段**：EndCapture 时构建可执行的图结构
-- **执行阶段**：BuildResource 动态绑定 SQ/CQ，提交优化后的执行任务
+- **执行阶段**：BuildSqCq 动态绑定 SQ/CQ，提交优化后的执行任务
 
 ### 5.2 级联捕获支持
 
@@ -874,7 +874,7 @@ if ((curCaptureStream->GetCaptureSqeNum() + reserved) >= curCaptureStream->GetSq
 ### 5.3 Software SQ 动态绑定
 
 - 支持 SQ/CQ 的动态分配和绑定
-- 执行时 BuildResource，完成后 ReleaseSqCq
+- 执行时 BuildSqCq，完成后 ReleaseSqCq
 - 通过 SqSwitchStreamBatch 实现批量流切换
 
 ### 5.4 Notify 同步机制

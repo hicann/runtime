@@ -320,6 +320,10 @@ namespace acl {
         AclrtMemcpyFromSymbolAsync,
         AclrtMemcpyToSymbol,
         AclrtMemcpyToSymbolAsync,
+        AclmdlRICondHandleCreate,
+        AclmdlRICondHandleGetCondPtr,
+        AclmdlRIAddCondTask,
+        AclmdlRICaptureToModelRIBegin,
         // this is the end, can not add after AclRtProfTypeEnd
         AclRtProfTypeEnd
     };

@@ -20,6 +20,7 @@ namespace cce {
 namespace runtime {
 
 // Magic Constants
+constexpr uint64_t RT_COND_HANDLE_MAGIC = 0x434F4E44ull; // COND
 constexpr uint64_t RT_MODEL_MAGIC     = 0x4D4F444Cull; // MODL
 constexpr uint64_t RT_LABEL_MAGIC     = 0x4C41424Cull; // LABL
 constexpr uint64_t RT_STREAM_MAGIC    = 0x5354524Dull; // STRM
@@ -37,6 +38,7 @@ struct RtMagicTraits<Type> {                \
     static constexpr uint64_t value = MagicValue; \
 }
 
+class CondHandle;
 class Model;
 class Label;
 class Stream;
@@ -46,6 +48,7 @@ class CountNotify;
 class Kernel;
 
 // Register all magic constants
+REGISTER_RT_MAGIC(CondHandle, RT_COND_HANDLE_MAGIC);
 REGISTER_RT_MAGIC(Model,     RT_MODEL_MAGIC);
 REGISTER_RT_MAGIC(Label,     RT_LABEL_MAGIC);
 REGISTER_RT_MAGIC(Stream,    RT_STREAM_MAGIC);

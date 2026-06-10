@@ -38,6 +38,9 @@ bool CheckCaptureModeSupport(const Context* ctx, const char* funcName) { UNUSED(
 bool NeedReBuildSqe(const TaskInfo *const task) { UNUSED(task); return false; }
 
 bool IsUseHardwareEvent(Device * const dev) { UNUSED(dev); return false; }
+rtError_t AllocNotifyIdForSubModel(Model * const mdl, Notify *notify) { UNUSED(mdl); UNUSED(notify); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t ReleaseNotifyResWhenSendEndGraphFailed(Model * const mdl, Notify *notify) { UNUSED(mdl); UNUSED(notify); return RT_ERROR_FEATURE_NOT_SUPPORT; }
+uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId) { UNUSED(parentModel); UNUSED(sqId); return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 }
 }

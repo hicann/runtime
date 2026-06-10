@@ -16,6 +16,8 @@
 #define protected public
 #include "runtime.hpp"
 #include "model.hpp"
+#include "capture_model.hpp"
+#include "cond_handle/cond_handle.hpp"
 #include "rt_unwrap.h"
 #include "raw_device.hpp"
 #include "module.hpp"
@@ -34,6 +36,8 @@
 #include "rdma_task.h"
 #include "stream_task.h"
 #include "thread_local_container.hpp"
+#include "runtime/rt_inner_model.h"
+#include "capture_model_utils.hpp"
 #include "stream_jetty_handler.h"
 #undef private
 #undef protected
@@ -180,7 +184,7 @@ TEST_F(CloudV2CaptureModelTest, PRINT_DFX_INFO)
     captureModel->UpdateNotifyId(stm);
     captureModel->ReleaseSqCq(releaseNum);
 
-    captureModel->BuildResource(stm);
+    captureModel->BuildSqCq(stm);
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -1066,7 +1070,7 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
     captureMdl1->CaptureModelExecuteFinish(RT_ERROR_NONE);
     uint32_t releaseNum;
     captureMdl1->ReleaseSqCq(releaseNum);
-    captureMdl1->BuildResource(rt_ut::UnwrapOrNull<Stream>(streamExe));
+    captureMdl1->BuildSqCq(rt_ut::UnwrapOrNull<Stream>(streamExe));
 
     error = rtModelDestroy(model1);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1113,6 +1117,692 @@ TEST_F(CloudV2CaptureModelTest, capture_activestream)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+class CloudV2CondHandleTest : public testing::Test {
+protected:
+    static void SetUpTestCase() {}
+    static void TearDownTestCase() {}
+
+    std::string socVersion_;
+
+    virtual void SetUp()
+    {
+        rtSetDevice(0);
+        socVersion_ = GlobalContainer::GetSocVersion();
+        GlobalContainer::SetSocVersion("Ascend910B2");
+        Device *device = ((Runtime *)Runtime::Instance())->DeviceRetain(0, 0);
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
+            .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_ACLGRAPH_CONDOP))
+            .will(returnValue(true));
+        MOCKER(CheckCaptureModelSupportSoftwareSq)
+            .stubs()
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP(&Model::LoadCompleteByStreamPostp)
+            .stubs()
+            .will(returnValue(RT_ERROR_NONE));
+    }
+
+    virtual void TearDown()
+    {
+        GlobalContainer::SetSocVersion(socVersion_);
+        rtDeviceReset(0);
+        GlobalMockObject::verify();
+    }
+};
+
+TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream;
+    ret = rtStreamCreate(&subStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(condHandle, nullptr);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(condDevPtr, nullptr);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_WHILE;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(subModels[0], nullptr);
+
+    ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModelResult;
+    ret = rtStreamEndCapture(subStream, &subModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CondHandleTest, CondHandleWhileWithAssignDefault)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream;
+    ret = rtStreamCreate(&subStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 1, RT_COND_HANDLE_ASSIGN_DEFAULT, &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_WHILE;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModelResult;
+    ret = rtStreamEndCapture(subStream, &subModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CondHandleTest, CondHandleIfE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream1;
+    ret = rtStreamCreate(&subStream1, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream2;
+    ret = rtStreamCreate(&subStream2, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[2] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_IF;
+    params.size = 2;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult1;
+    ret = rtStreamEndCapture(subStream1, &subModelResult1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream2, subModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult2;
+    ret = rtStreamEndCapture(subStream2, &subModelResult2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CondHandleTest, CondHandleIfSizeOneE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t subStream1;
+    ret = rtStreamCreate(&subStream1, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[1] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_IF;
+    params.size = 1;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(subStream1, subModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t subModelResult1;
+    ret = rtStreamEndCapture(subStream1, &subModelResult1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(subStream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CondHandleTest, CondHandleSwitchE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    const uint32_t switchSize = 3;
+    rtStream_t subStreams[switchSize];
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamCreate(&subStreams[i], 0);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(stream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t condHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &condHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *condDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(condHandle, &condDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t subModels[switchSize] = {};
+    rtCondTaskParams params;
+    params.handle = condHandle;
+    params.type = RT_COND_TASK_TYPE_SWITCH;
+    params.size = switchSize;
+    params.modelRIArray = subModels;
+    ret = rtStreamAddCondTask(params, stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamBeginCaptureToModel(subStreams[i], subModels[i], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+        rtModel_t subModelResult;
+        ret = rtStreamEndCapture(subStreams[i], &subModelResult);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(stream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    for (uint32_t i = 0; i < switchSize; i++) {
+        ret = rtStreamDestroy(subStreams[i]);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+    }
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CondHandleTest, CondHandleIfNestedIfE2E)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t parentStream;
+    ret = rtStreamCreate(&parentStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t ifTrueSubStream;
+    ret = rtStreamCreate(&ifTrueSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t ifFalseSubStream;
+    ret = rtStreamCreate(&ifFalseSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t innerIfSubStream;
+    ret = rtStreamCreate(&innerIfSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(parentStream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus status;
+    rtModel_t parentModel;
+    ret = rtStreamGetCaptureInfo(parentStream, &status, &parentModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t outerCondHandle = nullptr;
+    ret = rtModelCondHandleCreate(parentModel, 0, static_cast<rtCondHandleFlag_t>(0), &outerCondHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *outerCondDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(outerCondHandle, &outerCondDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t outerSubModels[2] = {};
+    rtCondTaskParams outerParams;
+    outerParams.handle = outerCondHandle;
+    outerParams.type = RT_COND_TASK_TYPE_IF;
+    outerParams.size = 2;
+    outerParams.modelRIArray = outerSubModels;
+    ret = rtStreamAddCondTask(outerParams, parentStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(ifTrueSubStream, outerSubModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStreamCaptureStatus innerStatus;
+    rtModel_t ifTrueModel;
+    ret = rtStreamGetCaptureInfo(ifTrueSubStream, &innerStatus, &ifTrueModel);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtCondHandle_t innerCondHandle = nullptr;
+    ret = rtModelCondHandleCreate(ifTrueModel, 0, static_cast<rtCondHandleFlag_t>(0), &innerCondHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint64_t *innerCondDevPtr = nullptr;
+    ret = rtModelCondHandleGetCondPtr(innerCondHandle, &innerCondDevPtr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t innerSubModels[1] = {};
+    rtCondTaskParams innerParams;
+    innerParams.handle = innerCondHandle;
+    innerParams.type = RT_COND_TASK_TYPE_IF;
+    innerParams.size = 1;
+    innerParams.modelRIArray = innerSubModels;
+    ret = rtStreamAddCondTask(innerParams, ifTrueSubStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(innerIfSubStream, innerSubModels[0], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t innerSubModelResult;
+    ret = rtStreamEndCapture(innerIfSubStream, &innerSubModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t ifTrueModelResult;
+    ret = rtStreamEndCapture(ifTrueSubStream, &ifTrueModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCaptureToModel(ifFalseSubStream, outerSubModels[1], RT_STREAM_CAPTURE_MODE_THREAD_LOCAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    rtModel_t ifFalseModelResult;
+    ret = rtStreamEndCapture(ifFalseSubStream, &ifFalseModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t parentModelResult;
+    ret = rtStreamEndCapture(parentStream, &parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t exeStream;
+    ret = rtStreamCreate(&exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    NpuDriver *rawDrv = new NpuDriver();
+    void *memBase = (void *)0x1000;
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAlloc)
+        .stubs()
+        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::SqSwitchStreamBatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    CaptureModel *captureMdl = static_cast<CaptureModel *>(rt_ut::UnwrapOrNull<Model>(parentModelResult));
+    captureMdl->isModelComplete_ = true;
+
+    Stream *origCaptureStream = rt_ut::UnwrapOrNull<Stream>(parentStream);
+    Notify *endGraphNotify = new Notify(0, 0);
+    MOCKER_CPP(&Notify::Setup).stubs().with(eq(endGraphNotify)).will(returnValue(RT_ERROR_NONE));
+    endGraphNotify->SetEndGraphModel(captureMdl);
+    captureMdl->SetEndGraphNotify(endGraphNotify);
+
+    ret = rtModelExecute(parentModelResult, exeStream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    captureMdl->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    uint32_t releaseNum;
+    captureMdl->ReleaseSqCq(releaseNum);
+
+    delete rawDrv;
+    ret = rtModelDestroy(parentModelResult);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(exeStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(parentStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(ifTrueSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(ifFalseSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(innerIfSubStream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2CaptureModelTest, capture_activestream_nulltask)

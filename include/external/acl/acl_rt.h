@@ -1014,6 +1014,25 @@ typedef enum aclrtAtomicOperation {
     ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH = 44,
 } aclrtAtomicOperation;
 
+typedef void* aclmdlRICondHandle;
+
+typedef enum {
+    ACL_MODEL_RI_COND_HANDLE_ASSIGN_DEFAULT = 1,
+} aclmdlRICondHandleFlag;
+
+typedef enum {
+    ACL_MODEL_RI_COND_TYPE_IF = 0,
+    ACL_MODEL_RI_COND_TYPE_WHILE = 1,
+    ACL_MODEL_RI_COND_TYPE_SWITCH = 2,
+} aclmdlRICondTaskType;
+
+typedef struct tagAclmdlRICondTaskParams {
+    aclmdlRICondHandle handle; // condition handle
+    aclmdlRICondTaskType type; // condition type
+    uint32_t size; //means the size of modelRIArray, 1 or 2 for if condition, 1 for while condition, greater than 0 for switch condition
+    aclmdlRI *modelRIArray; // sub acl graph, output parameter.
+} aclmdlRICondTaskParams;
+
 /**
  * @ingroup AscendCL
  * @brief acl initialize
@@ -5261,6 +5280,50 @@ ACL_FUNC_VISIBILITY aclError aclrtCheckArchCompatibility(const char *socVersion,
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclmdlRIAbort(aclmdlRI modelRI);
+
+/**
+ * @ingroup AscendCL
+ * @brief create condition handle
+ * @param [in] modelRI  model to create handle
+ * @param [in] defaultLaunchValue When the flag is set to ACL_CODN_HANDLE_ASSIGN_DEFAULT, the condition variable is initialized to this value at the start of each model execution.
+ * @param [in] flag  currenttly only support ACL_CODN_HANDLE_ASSIGN_DEFAULT or 0
+ * @param [out] handle  condition handle
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRICondHandleCreate(aclmdlRI modelRI, uint32_t defaultLaunchValue, aclmdlRICondHandleFlag flag, aclmdlRICondHandle *handle);
+
+/**
+ * @ingroup AscendCL
+ * @brief get condition handle device ptr
+ * @param [in] handle  condition handle
+ * @param [out] ptr  device ptr used to store condition values
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr);
+
+/**
+ * @ingroup AscendCL
+ * @brief add condition task to stream
+ * @param [in] params  Conditional operator task parameters include condition handle (condition value, default value, etc.), condition type, number of branches, subgraph, etc.
+ * @param [in] stream  The stream executing conditional tasks must be an ACL graph stream in the capture status active state.
+ * @param [in] flags   reserved parameter
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags);
+
+/**
+ * @ingroup AscendCL
+ * @brief begin capture
+ * @param [in] stream set the stream to be captured
+ * @param [in] modelRI father capture model
+ * @param [in] mode capture mode
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode);
 
 /**
  * @ingroup AscendCL

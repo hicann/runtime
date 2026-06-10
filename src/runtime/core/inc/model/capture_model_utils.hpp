@@ -14,6 +14,7 @@
 #include "model.hpp"
 #include "event.hpp"
 #include "stream.hpp"
+#include "notify.hpp"
 
 namespace cce {
 namespace runtime {
@@ -24,11 +25,15 @@ bool IsCapturedTask(const Stream * const launchStm, const TaskInfo *submitTask);
 rtError_t GetCaptureStream(Context * const ctx, Stream * const stm, const Event * const evt, Stream ** const captureStm);
 rtError_t CheckCaptureStreamThreadIsMatch(const Stream * const stm);
 rtError_t CheckCaptureModelSupportSoftwareSq(Device* const dev);
+rtError_t CheckCaptureModelSupportCondOp(Device * const dev);
 rtError_t CheckCaptureModelForUpdate(const Stream* stm);
 bool IsSoftwareSqCaptureModel(const Model * const mdl);
 bool CheckCaptureModeSupport(const Context* ctx, const char* funcName);
 bool NeedReBuildSqe(const TaskInfo *const task);
 bool IsUseHardwareEvent(Device * const dev);
+rtError_t AllocNotifyIdForSubModel(Model * const mdl, Notify *notify);
+rtError_t ReleaseNotifyResWhenSendEndGraphFailed(Model * const mdl, Notify *notify);
+uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId);
 }
 }
 

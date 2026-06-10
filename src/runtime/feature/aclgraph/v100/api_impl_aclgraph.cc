@@ -10,7 +10,11 @@
 #include "internal_error_define.hpp"
 #include "api_impl.hpp"
 #include "context.hpp"
+#include "device.hpp"
 #include "stream.hpp"
+#include "cond_handle/cond_handle.hpp"
+#include "api_handle_guard.h"
+#include "capture_model_utils.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM)     NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -18,7 +22,7 @@
 namespace cce {
 namespace runtime {
 
-rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode)
+rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureMode mode, Model * const mdl)
 {
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -28,11 +32,20 @@ rtError_t ApiImpl::StreamBeginCapture(Stream * const stm, const rtStreamCaptureM
         "stream", "Stream " + std::to_string(stm->Id_()) + " is already bound to model " + std::to_string(stm->Model_()->Id_()));
     COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
         "stream", "The default stream cannot be used in the ACL Graph");
-    return curCtx->StreamBeginCapture(stm, mode);
+    return curCtx->StreamBeginCapture(stm, mode, mdl);
 }
 
 rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMdl)
 {
+    Stream *captureStream = stm->GetCaptureStream();
+    bool isSubCaptureModel = true; // 默认是子model，对入参captureMdl 不修改。
+    if ((captureStream != nullptr) && (captureStream->Model_() != nullptr)) {
+        CaptureModel *captureModel = RtPtrToPtr<CaptureModel *, Model *>(captureStream->Model_());
+        if ((captureModel != nullptr) && (!captureModel->IsSubCaptureModel())) {
+            isSubCaptureModel = false;
+            NULL_PTR_RETURN_MSG_OUTER(captureMdl, RT_ERROR_INVALID_VALUE);
+        }
+    }
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
@@ -42,7 +55,18 @@ rtError_t ApiImpl::StreamEndCapture(Stream * const stm, Model ** const captureMd
     COND_RETURN_AND_MSG_OUTER((stm == curCtx->DefaultStream_()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1017, __func__,
         "stream", "The default stream cannot be used in the ACL Graph");
 
-    return curCtx->StreamEndCapture(stm, captureMdl);
+    Model *mdl = nullptr;    
+    rtError_t ret = curCtx->StreamEndCapture(stm, &mdl);
+    if (ret != RT_ERROR_NONE) {
+        if (!isSubCaptureModel) {
+            *captureMdl = nullptr;
+        }
+    } else {
+        if (captureMdl != nullptr) {
+            *captureMdl = mdl;
+        }
+    }
+    return ret;
 }
 
 rtError_t ApiImpl::StreamBeginTaskUpdate(Stream * const stm, TaskGroup * handle)
@@ -160,6 +184,110 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream * const stm, TaskGroup ** const handl
     COND_RETURN_AND_MSG_INVALID_CONTEXT(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT, 
         "stream " + std::to_string(stm->Id_()));
     return curCtx->StreamEndTaskGrp(stm, handle);
+}
+
+rtError_t ApiImpl::ModelCondHandleCreate(Model * const mdl, uint32_t defaultValue,
+    rtCondHandleFlag_t flag, CondHandle ** const handle)
+{
+    CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
+    NULL_PTR_RETURN_MSG_OUTER(captureModel, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_AND_MSG_OUTER(!(captureModel->IsCaptureActive()),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, "mdl",
+        "The ACL Graph has finished capturing.");
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_AND_MSG_OUTER(mdl->Context_() != curCtx, RT_ERROR_MODEL_CONTEXT,
+        ErrorCode::EE1010, __func__, "model");
+    rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+
+    CondHandle *condHandle = new (std::nothrow) CondHandle(mdl, defaultValue, flag);
+    COND_RETURN_AND_MSG_OUTER((condHandle == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(CondHandle));
+
+    error = condHandle->Setup(curCtx);
+    if (error != RT_ERROR_NONE) {
+        DELETE_O(condHandle);
+        return error;
+    }
+
+    *handle = condHandle;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::ModelCondHandleDestroy(CondHandle * handle)
+{
+    if (handle == nullptr) {
+        return RT_ERROR_NONE;
+    }
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    error = handle->Destroy();
+    DELETE_O(handle);
+    return error;
+}
+
+rtError_t ApiImpl::ModelCondHandleGetCondPtr(CondHandle * const handle, uint64_t ** const devPtr)
+{
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    *devPtr = handle->GetDevAddr();
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream * const stm, CondHandle **handle)
+{
+    const auto *inner = static_cast<const rtInnerObject *>(params.handle);
+    CondHandle *realHandle = static_cast<CondHandle *>(inner->object);
+    COND_RETURN_AND_MSG_OUTER((realHandle->GetSubCaptureModels().size() != 0), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, __func__, "params.handle", "the handle has been launched with condition task.");
+
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_AND_MSG_OUTER(stm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
+        ErrorCode::EE1010, __func__, "stream");
+    COND_RETURN_AND_MSG_OUTER(!stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED,
+        ErrorCode::EE1016, __func__, "stream " + std::to_string(stm->Id_()) + " is not in the capture stage");
+    NULL_PTR_RETURN(stm->GetCaptureStream(), RT_ERROR_STREAM_NOT_CAPTURED);
+    rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    COND_RETURN_ERROR_MSG_INNER((stm->GetCaptureStream()->Model_() != realHandle->GetParentModel()), RT_ERROR_INVALID_VALUE,
+        "model associated with the condition handle is inconsistent with that associated with the stream, "
+        "condhandle model=%p, capture stream model=%p.", realHandle->GetParentModel(), stm->GetCaptureStream()->Model_());
+
+    auto &addStreamMap = (dynamic_cast<CaptureModel *>(stm->GetCaptureStream()->Model_()))->GetAddStreamMap();
+    auto it = addStreamMap.find(stm);
+    COND_RETURN_AND_MSG_OUTER((it != addStreamMap.end()), RT_ERROR_FEATURE_NOT_SUPPORT,
+        ErrorCode::EE1016, __func__, "The ACL Graph add stream does not support add condition task");
+
+    error = curCtx->CheckCondTaskParamsSize(params);
+    ERROR_RETURN_MSG_INNER(error, "Failed to check condition task params, condition type=%u, condition size=%u, retCode=%#x.",
+        params.type, params.size, static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_OUTER(!realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        __func__, "condHandle", "The condHandle has already been used by rtStreamAddCondTask");
+
+    realHandle->SetCondType(params.type);
+    realHandle->SetCondSize(params.size);
+    error = curCtx->CreateSubCaptureModels(realHandle, params, stm);
+    ERROR_RETURN_MSG_INNER(error, "Create sub capture model failed, condition type=%u, condition size=%u, retCode=%#x.",
+        params.type, params.size, static_cast<uint32_t>(error));
+
+    *handle = realHandle;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream * const stm, uint32_t flags)
+{
+    CondHandle *realHandle = nullptr;
+    rtError_t error = StreamAddCondTaskParasCheck(params, stm, &realHandle);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "condition task parameters check failed.");
+
+    Context * const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    return curCtx->StreamAddCondTask(realHandle, params, stm, flags);
 }
 
 } // namespace runtime

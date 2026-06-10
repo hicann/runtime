@@ -21,6 +21,22 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("ModelMaintainceTask")
+uint16_t GetRootExeStreamId(const Model * const mdl)
+{
+    if ((mdl == nullptr) || (mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL)) {
+        return UINT16_MAX;
+    }
+
+    auto *captureModel = dynamic_cast<const CaptureModel *>(mdl);
+    if (captureModel == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "dynamic_cast to CaptureModel failed, model_type=%d, model_id=%u.",
+            mdl->GetModelType(), mdl->Id_());
+        return UINT16_MAX;
+    }
+
+    return captureModel->GetRootExeStreamId();
+}
+
 rtError_t ModelMaintainceTaskInit(TaskInfo * const taskInfo, const MmtType mType,
                                   Model *const modelPtr, Stream *const opStreamPtr,
                                   const rtModelStreamType_t modelStreamType,
@@ -83,6 +99,20 @@ void ToCommandBodyForModelMaintainceTask(TaskInfo * const taskInfo, rtCommand_t 
     }
 }
 
+uint32_t GetEndGraphNotifyId(Model *mdl)
+{
+    if (mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL) {
+        return mdl->GetEndGraphNotify()->GetNotifyId();
+    }
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel*>(mdl);
+    if (captureModel->IsSubCaptureModel()) {
+        return captureModel->GetLoadCompleteNotifyid();
+    }
+
+    return mdl->GetEndGraphNotify()->GetNotifyId();
+}
+
 void PrintErrorInfoForModelMaintainceTask(TaskInfo * const taskInfo, const uint32_t devId)
 {
     ModelMaintainceTaskInfo *modelMaintainceTaskInfo = &(taskInfo->u.modelMaintainceTaskInfo);
@@ -112,6 +142,25 @@ void DoCompleteSuccessForModelMaintainceTask(TaskInfo * const taskInfo, const ui
         TaskFailCallBack(static_cast<uint32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
             taskInfo->tid, errorCode, stream->Device_());
     }
+}
+
+uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *maintainceTaskInfo)
+{
+    if (maintainceTaskInfo->model->GetModelType() != RT_MODEL_CAPTURE_MODEL) {
+        return MODEL_EXECUTOR_RESERVED;
+    }
+
+    CaptureModel *captureModel = dynamic_cast<CaptureModel*>(maintainceTaskInfo->model);
+    if (captureModel->IsSubCaptureModel()) {
+        return MODEL_EXECUTOR_SUB_CAPTURE;
+    }
+
+    /*不属于任何condHandle，且存在子model，则是根model */
+    if ((captureModel->GetCondHandle() == nullptr) && (captureModel->CondHandle_().size() != 0)) {
+        return MODEL_EXECUTOR_ROOT_CAPTURE;
+    }
+
+    return MODEL_EXECUTOR_CAPTURE;
 }
 
 #endif

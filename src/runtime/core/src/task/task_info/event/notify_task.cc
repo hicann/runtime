@@ -21,6 +21,7 @@
 #include "rdma_task.h"
 #include "model_execute_task.h"
 #include "stub_task.hpp"
+#include "capture_model_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -399,7 +400,13 @@ TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo *taskInfo, const void
         Device *const dev = taskInfo->stream->Device_();
         if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) && 
             (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
-            streamId = notify->GetEndGraphModel()->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
+            Model *endGraphModel = notify->GetEndGraphModel();
+            streamId = endGraphModel->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
+            if ((streamId == UINT16_MAX) && (endGraphModel->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
+                CaptureModel *captureModel = dynamic_cast<CaptureModel *>(endGraphModel);
+                const uint32_t tmpStreamId = FindStreamIdInSubModels(captureModel, sw_status.model_exec_ex.sq_id);
+                streamId = (tmpStreamId != UINT32_MAX) ? static_cast<uint16_t>(tmpStreamId) : UINT16_MAX;
+            }
             taskId = sw_status.model_exec_ex.task_id;
         }
 

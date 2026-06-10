@@ -21,6 +21,7 @@
 #include "runtime_handle_guard.h"
 #include "driver.hpp"
 #include "device.hpp"
+#include "cond_handle/cond_handle.hpp"
 
 namespace cce {
 namespace runtime {
@@ -30,6 +31,7 @@ class Task;
 class LabelAllocator;
 class Label;
 class Notify;
+class CondHandle;
 extern bool g_isAddrFlatDevice;
 enum rtDevStringNameT : uint8_t {
     RT_DEV_STRING_ENDGRAPH,

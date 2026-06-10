@@ -711,6 +711,135 @@ struct RtStarsMemWaitValueInstrFcParaWithDynamicProf {
     uint16_t awSize;
 };
 
+struct RtStarsCondStoreCurModelPara {
+    RtStarsCondOpLHWI lhwiDfxAddr;
+    RtStarsCondOpLLWI llwiDfxAddr;
+    RtStarsCondOpImmSLLI slliIndexOffset;
+
+    RtStarsCondOpLHWI lhwiHeadSqPtrArrAddr;
+    RtStarsCondOpLLWI llwiHeadSqPtrArrAddr;
+    RtStarsCondOpOp addHeadSqPtrAddr;
+    RtStarsCondOpLoad loadHeadSqPtr;
+    RtStarsCondOpStore storeHeadSqPtr;
+
+    RtStarsCondOpLHWI lhwiSqCountArrAddr;
+    RtStarsCondOpLLWI llwiSqCountArrAddr;
+    RtStarsCondOpOp addSqCountAddr;
+    RtStarsCondOpLoad loadSqCount;
+    RtStarsCondOpStore storeSqCount;
+
+    RtStarsCondOpLHWI lhwiSvmPtrArrAddr;
+    RtStarsCondOpLLWI llwiSvmPtrArrAddr;
+    RtStarsCondOpOp addSvmPtrAddr;
+    RtStarsCondOpLoad loadSvmPtr;
+    RtStarsCondOpStore storeSvmPtr;
+};
+
+// condition task func call para
+struct rtStarsCaptureCondFcPara_t {
+    uint64_t devAddr;                 // condHandle->GetDevAddr()
+    uint64_t sqIdMemAddr;             // current SQ ID ， for goto_r
+    uint64_t headSqArrPtrArrAddr;     // pointer array device address
+    uint64_t modelSqCountArrAddr;     // count array device address
+    uint64_t modelCount;              // sub model count
+    uint64_t sqFsmSelBasAddr;         // FSM register base address
+    uint64_t sqVirtualAddr;           // SQ virtual address array base address
+    uint64_t dfxAddr;                 // DFX address
+    uint16_t sqHeadOffset;            // SQ Head offset
+    uint16_t sqTailOffset;            // SQ Tail offset
+    uint64_t streamSvmPtrArrAddr;     // streamSvm pointer array
+    uint64_t deltaOffset;             // offset delta relative to RtStarsModelExeFuncCall
+    uint64_t sqHeadNext;              // (IF/SWITCH= task_pos + 2, WHILE=task_pos + 3)
+};
+
+// IF condition func call
+struct RtStarsIfCondSetupBranchFc {
+    RtStarsCondOpLoadImm loadDevAddr;         // LDI R1, devAddr
+    RtStarsCondOpImm initOffsetIndex;         // ADDI R5, R0, 0
+    RtStarsSetCsrJumpPc jumpPcTolocatePara;   // SetJumpPc offset_to_locateModelPara
+    RtStarsCondOpBranch bneToTrue;            // BNE R2, R0, offset_to_locateModelPara
+
+    RtStarsCondOpImm addiModelIndex;          // ADDI R5, R5, 1
+    RtStarsCondOpLHWI lhwiModelCount;         // LHWI R2, modelCount[63:49]
+    RtStarsCondOpLLWI llwiModelCount;         // LLWI R2, modelCount[48:0]
+    RtStarsCondOpBranch bltuToTrue;           // BLTU R5, R2, offset_to_locateModelPara
+};
+
+struct RtStarsCaptureCondGotoNextSqe {
+    RtStarsCondOpLoadImm loadSqId;           // load sqid from virtual addr to r3
+    RtStarsCondOpLHWI lhwiHead;              // LHWI R4, 2
+    RtStarsCondOpLLWI llwiHead;              // LLWI R4, 2
+    RtStarsCondOpImmSLLI slliHead;           // SLLI R4, R4, 16
+    RtStarsCondOpOp orHead;                  // OR R3, R3, R4
+    RtStarsCondOpStreamGotoR gotoSkip;       // GOTO_R R3, R5
+    RtStarsSetCsrJumpPc jumpPcToEnd;         // SetJumpPc offset_to_end
+    RtStarsCondOpBranch branchToEnd;         // BEQ R0, R0, offset_to_end
+};
+
+struct RtStarsCaptureIfCondFc {
+    RtStarsIfCondSetupBranchFc setupBranch;
+    RtStarsCaptureCondGotoNextSqe gotoNextSqe;
+    RtStarsCondStoreCurModelPara storeCurModelPara;
+    RtStarsModelExeFuncCall modelExe;
+    RtStarsCondOpNop nop;
+};
+
+// WHILE condition func call
+struct RtStarsWhileCondSetupBranchFc {
+    RtStarsCondOpLoadImm loadDevAddr;         // LDI R1, devAddr
+    RtStarsSetCsrJumpPc jumpPcToaddiModel;    // SetJumpPc offset_to_addiModelIndex
+    RtStarsCondOpBranch bneToExecute;         // BNE R2, R0, offset_to_part3
+};
+
+struct RtStarsCaptureWhileCondFc {
+    RtStarsWhileCondSetupBranchFc setupBranch;
+    RtStarsCaptureCondGotoNextSqe gotoNextSqe;
+    RtStarsCondOpImm addiModelIndex;
+    RtStarsCondStoreCurModelPara storeCurModelPara;
+    RtStarsModelExeFuncCall modelExe;
+    RtStarsCondOpNop nop;
+};
+
+// Sub model offset: compute r5 = r2 - 1 (index - 1 for 0-based array access)
+struct RtStarsCaptureCondSubModelOffset {
+    RtStarsCondOpOp addModelIndex;    // ADD R5, R2, R0   -> r5 = index
+};
+
+struct RtStarsCaptureSwitchCondSetupBranch {
+    RtStarsCondOpLoadImm loadDevAddr;         // LDI R1, devAddr
+    RtStarsCondOpLHWI lhwiModelCount;         // LHWI R5, modelCount
+    RtStarsCondOpLLWI llwiModelCount;         // LLWI R5, modelCount
+    RtStarsSetCsrJumpPc jumpPcToaddModel;     // SetJumpPc offset_to_addModelIndex
+    RtStarsCondOpBranch bltToSkip;            // BLT R2, R5, offset_to_skip
+};
+
+// SWITCH condition func call
+struct RtStarsCaptureSwitchCondFc {
+    RtStarsCaptureSwitchCondSetupBranch setupBranch;
+    RtStarsCaptureCondGotoNextSqe gotoNextSqe;
+    RtStarsCaptureCondSubModelOffset subModelOffset;
+    RtStarsCondStoreCurModelPara storeCurModelPara;
+    RtStarsModelExeFuncCall modelExe;
+    RtStarsCondOpNop nop;
+};
+
+// while jump back condition func call
+struct RtStarsCaptureWhileCondJumpBackFc {
+    RtStarsCondOpLoadImm loadDevAddr;  // LDI R1, devAddr
+    RtStarsSetCsrJumpPc jumpPcToEnd;   // SetJumpPc offset_to_end
+    RtStarsCondOpBranch beqToSkip;     // BEQ r1 r0 offset_to_end
+
+	RtStarsCondOpLHWI lhwi;            // load sqHead
+    RtStarsCondOpLLWI llwi;
+    RtStarsCondOpLoadImm loadSqId;     // load sqIdMemAddr stream->GetSqIdMemAddr()
+
+	RtStarsCondOpImmSLLI slli;         // r4 = r4 < 16
+	RtStarsCondOpOp        op;         // r3 = r3 | r4, sqId=r3[10:0], head=r3[31:16]
+	RtStarsCondOpStreamGotoR goto_pre; // modify sq head, sqe pre;
+
+    RtStarsCondOpNop end;
+};
+
 #pragma pack(pop)
 
 }

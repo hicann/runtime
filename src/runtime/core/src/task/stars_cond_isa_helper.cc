@@ -428,6 +428,29 @@ void ConstrucStreamResetInstr(const uint32_t sqId, const uint64_t sqEnReg,
     }
 }
 
+void ConstrucModelExeScanSqAdapt(rtStarsModelExeFuncCallPara_t &funcCallPara,
+    RtStarsModelExeScanSq &scanSq)
+{
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+
+    // LHWI/LLWI: load headsqArr array address as the immediate to R1
+    // LHWI/LLWI: load headsqMax sa immediate to R4, headsqMax = length(headsqArrAddr)
+    if (funcCallPara.isCondTaskModelExec) {
+        ConstructLoadImm(r1, funcCallPara.dfxAddr + TS_STARS_COND_DFX_SIZE, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD,
+            scanSq.u.subModelAdapt.loadImmSqAddr);
+        ConstructLoadImm(r4, funcCallPara.dfxAddr + TS_STARS_COND_DFX_SIZE + 8U, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD,
+            scanSq.u.subModelAdapt.loadImmSqCountAddr);
+        ConstructNop(scanSq.u.subModelAdapt.nop1);
+        ConstructNop(scanSq.u.subModelAdapt.nop2);
+    } else {
+        ConstructLHWI(r1, funcCallPara.headSqArrAddr, scanSq.u.rootModelAdapt.lhwi1);
+        ConstructLLWI(r1, funcCallPara.headSqArrAddr, scanSq.u.rootModelAdapt.llwi1);
+        ConstructLHWI(r4, funcCallPara.headSqArrMax, scanSq.u.rootModelAdapt.lhwi2);
+        ConstructLLWI(r4, funcCallPara.headSqArrMax, scanSq.u.rootModelAdapt.llwi2);
+    }
+}
+
 void ConstrucModelExeScanSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
                                                 RtStarsModelExeScanSq &scanSq)
 {
@@ -442,17 +465,12 @@ void ConstrucModelExeScanSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
     // ADDI, Assignment 0 to R2. As an headsqArrAddr index, index = 0
     ConstructOpImmAndi(r0, r2, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, scanSq.addi1);
 
-    // LHWI/LLWI: load headsqArr array address as the immediate to R1
-    ConstructLHWI(r1, funcCallPara.headSqArrAddr, scanSq.lhwi1);
-    ConstructLLWI(r1, funcCallPara.headSqArrAddr, scanSq.llwi1);
-
-    // LHWI/LLWI: load headsqMax sa immediate to R4, headsqMax = length(headsqArrAddr)
-    ConstructLHWI(r4, funcCallPara.headSqArrMax, scanSq.lhwi2);
-    ConstructLLWI(r4, funcCallPara.headSqArrMax, scanSq.llwi2);
+    ConstrucModelExeScanSqAdapt(funcCallPara, scanSq);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
     RtStarsModelExeFuncCall fc;
-    const uint64_t toEnd = (RtPtrToValue(&(fc.endInstr.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    const uint64_t toEnd = (RtPtrToValue(&(fc.endInstr.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t)
+                           + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to end, instr:%" PRIu64, toEnd);
 
     ConstructLHWI(r5, (toEnd >> 4ULL), scanSq.lhwi3); // {19, 4}bit save in jump_pc
@@ -473,7 +491,7 @@ void ConstrucModelExeScanSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
     ConstructOpOp(r1, r3, r4, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, scanSq.add);
 
     // AD_R: read cur sq id, r3 is cur sq id
-    ConstructLoad(r4, 0U, r3, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, scanSq.ldr);  // virtual address read
+    ConstructLoad(r4, 0U, r3, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, scanSq.ldr);
 
     const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&scanSq);
     if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
@@ -527,15 +545,15 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t &funcCallPara,
     /* Do not go to lhwi0 cause Offset1 > 15 Loop instruction will high-order truncation.  */
     RtStarsModelExeFuncCall fc;
     constexpr uint32_t cycle = 1100U;
-    const uint64_t offset1 = (RtPtrToValue(&(fc.checkSqFsm.lhwi0)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
-    RT_LOG(RT_LOG_DEBUG, "go to offset1:%" PRIu64, offset1);
+    const uint64_t offset1 = (RtPtrToValue(&(fc.checkSqFsm.lhwi0)) - RtPtrToValue(&fc)) / sizeof(uint32_t)
+                             + funcCallPara.deltaOffset;
 
     /* r1 = r4 */
     ConstructOpImmAndi(r4, r1, 0, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, checkSqFsm.addi);
     const rtChipType_t chipType = Runtime::Instance()->GetChipType();
     DevProperties prop;
     const rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
-    RT_LOG(RT_LOG_DEBUG, "GetDevProperties, ret = %u", error);
+    RT_LOG(RT_LOG_DEBUG, "go to offset1:%" PRIu64 "GetDevProperties, ret = %u", offset1, error);
     const uint32_t shamt = prop.rtsqShamt;
 
     // r1 is sqid
@@ -546,8 +564,7 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t &funcCallPara,
     ConstructSetJumpPcFc(r5, offset1, checkSqFsm.jumpPc0);
     ConstructLoop(r1, cycle, static_cast<uint8_t>(offset1), checkSqFsm.loop0);
     //这个是右移，因为r4现在是64bit的，低位代表了STARS_RTSQ_FSM_SEL，高位代表了STARS_RTSQ_FSM_STATE，所以需要右移
-    ConstructOpImmSlli(r4, r4, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI,
-                       checkSqFsm.srli1);
+    ConstructOpImmSlli(r4, r4, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, checkSqFsm.srli1);
     // {3:0} dfx_rtsq_fsm_state
     ConstructOpImmAndi(r4, r4, 0xFU, RT_STARS_COND_ISA_OP_IMM_FUNC3_ANDI, checkSqFsm.andi2);
     ConstructSetJumpPcFc(r1, offset1, checkSqFsm.jumpPc1);
@@ -555,7 +572,8 @@ void ConstrucModelExeCheckSqFsm(rtStarsModelExeFuncCallPara_t &funcCallPara,
     // *******************end add loop finding if sq fsm idle *******************
 
     // LHWI/LLWI: load goto instr num as a immediate to R1
-    const uint64_t errorInstr = (RtPtrToValue(&(fc.errInstr.err)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    const uint64_t errorInstr = (RtPtrToValue(&(fc.errInstr.err)) - RtPtrToValue(&fc)) / sizeof(uint32_t)
+                                + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
     // BNE: if sq fsm status is not equal idle(0), goto error
     ConstructSetJumpPcFc(r1, errorInstr, checkSqFsm.jumpPc2);
@@ -596,7 +614,7 @@ void ConstrucModelExeCheckSqDisable(rtStarsModelExeFuncCallPara_t &funcCallPara,
     // LHWI/LLWI: load goto instr num as a immediate to R5
     RtStarsModelExeFuncCall fc;
     const uint64_t errorInstr = (RtPtrToValue(&(fc.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&fc))
-            / sizeof(uint32_t);
+                                / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
 
     ConstructLHWI(r5, (errorInstr >> 4ULL), checkSqDisable.lhwi3); // {19, 4}bit save in jump_pc
@@ -611,8 +629,7 @@ void ConstrucModelExeCheckSqDisable(rtStarsModelExeFuncCallPara_t &funcCallPara,
     ConstructBranch(r4, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, instrOffset, checkSqDisable.beq1);
 
     // LD_R: read sq head to R1,  from R4 + offset(STARS_SIMPLE_SQ_HEAD_OFFSET)
-    ConstructLoad(r4, funcCallPara.sqHeadOffset, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR,
-                  checkSqDisable.ldr2);   // virtual address read
+    ConstructLoad(r4, funcCallPara.sqHeadOffset, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, checkSqDisable.ldr2);   // virtual address read
 
     // SLLI/SRLI: get sq enable flag: R1<<31, then R1>>63
     ConstructOpImmSlli(r1, r1, 31U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
@@ -621,7 +638,8 @@ void ConstrucModelExeCheckSqDisable(rtStarsModelExeFuncCallPara_t &funcCallPara,
                         checkSqDisable.srli2);
 
     // LHWI/LLWI: load goto instr num as a immediate to r5
-    const uint64_t setSqHead0 = (RtPtrToValue(&(fc.deactiveSq.gotoR)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    const uint64_t setSqHead0 = (RtPtrToValue(&(fc.deactiveSq.gotoR)) - RtPtrToValue(&fc)) / sizeof(uint32_t)
+                                + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to setSqHead0, instr:%" PRIu64, setSqHead0);
 
     ConstructLHWI(r5, (setSqHead0 >> 4ULL), checkSqDisable.lhwi4); // {19, 4}bit save in jump_pc
@@ -633,8 +651,7 @@ void ConstrucModelExeCheckSqDisable(rtStarsModelExeFuncCallPara_t &funcCallPara,
 
     // BEQ: if sq enable flag is disable(0), goto setSqHead0
     instrOffset = setSqHead0 & 0xFULL;
-    ConstructBranch(r1, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ,
-                    instrOffset, checkSqDisable.beq2);
+    ConstructBranch(r1, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, instrOffset, checkSqDisable.beq2);
 
     const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&checkSqDisable);
     if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
@@ -654,8 +671,7 @@ void ConstrucModelExeCheckSqHeadTail(const rtStarsModelExeFuncCallPara_t &funcCa
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
 
     // LD_R: read sq head to R5,  from R4 + offset(STARS_SIMPLE_SQ_HEAD_OFFSET)
-    ConstructLoad(r4, funcCallPara.sqHeadOffset, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR,
-                  checkSqHeadTail.ldr1);    // virtual address read
+    ConstructLoad(r4, funcCallPara.sqHeadOffset, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, checkSqHeadTail.ldr1);    // virtual address read
 
     // SLLI/SRLI: get sq head r5: r5<<48, then r5>>48
     ConstructOpImmSlli(r5, r5, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
@@ -664,8 +680,7 @@ void ConstrucModelExeCheckSqHeadTail(const rtStarsModelExeFuncCallPara_t &funcCa
                        checkSqHeadTail.srli1);
 
     // LD_R: read sq tail to R1, from R4 + offset(STARS_SIMPLE_SQ_TAIL_OFFSET)
-    ConstructLoad(r4, funcCallPara.sqTailOffset, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR,
-                  checkSqHeadTail.ldr2);  // virtual address read
+    ConstructLoad(r4, funcCallPara.sqTailOffset, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, checkSqHeadTail.ldr2);  // virtual address read
 
     // SLLI/SRLI: get sq tail r1: r1<<48, then r1>>48
     ConstructOpImmSlli(r1, r1, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
@@ -674,13 +689,12 @@ void ConstrucModelExeCheckSqHeadTail(const rtStarsModelExeFuncCallPara_t &funcCa
                        checkSqHeadTail.srli2);
 
     // XOR: head is equal tail r1 =r1^r5
-    ConstructOpOp(r1, r5, r1, RT_STARS_COND_ISA_OP_FUNC3_XOR,
-                  RT_STARS_COND_ISA_OP_FUNC7_XOR, checkSqHeadTail.xor1);
+    ConstructOpOp(r1, r5, r1, RT_STARS_COND_ISA_OP_FUNC3_XOR, RT_STARS_COND_ISA_OP_FUNC7_XOR, checkSqHeadTail.xor1);
 
     // LHWI/LLWI: load goto instr num as a immediate to R5
     RtStarsModelExeFuncCall fc;
     const uint64_t errorInstr = (RtPtrToValue(&(fc.checkSqHeadTailErrInstr.lhwi0)) - RtPtrToValue(&fc))
-            / sizeof(uint32_t);
+                                / sizeof(uint32_t) + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to errorInstr, instr:%" PRIu64, errorInstr);
 
     ConstructLHWI(r5, (errorInstr >> 4ULL), checkSqHeadTail.lhwi1); // {19, 4}bit save in jump_pc
@@ -723,6 +737,22 @@ void ConstrucModelExeDeactiveSq(RtStarsModelExeDeactiveSq &deactiveSq)
     }
 }
 
+void ConstrucModelExeActiveHeadSqAdapt(rtStarsModelExeFuncCallPara_t &funcCallPara,
+    RtStarsModelExeActiveSq &activeHeadSq)
+{
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+
+    // LHWI/LLWI: load stream svm base addr to R4
+    if (funcCallPara.isCondTaskModelExec) {
+        ConstructLoadImm(r4, funcCallPara.dfxAddr + TS_STARS_COND_DFX_SIZE + 16U, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD,
+            activeHeadSq.u.subModelAdapt.loadImmSvmAddr);
+        ConstructNop(activeHeadSq.u.subModelAdapt.loadSvmAddrNop);
+    } else {
+        ConstructLHWI(r4, funcCallPara.streamSvmArrAddr, activeHeadSq.u.rootModelAdapt.lhwi1);
+        ConstructLLWI(r4, funcCallPara.streamSvmArrAddr, activeHeadSq.u.rootModelAdapt.llwi1);
+    }
+}
+
 void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
                                                       RtStarsModelExeActiveSq &activeHeadSq)
 {
@@ -733,16 +763,14 @@ void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
 
     // ************************ update stream svm info / active sq*********************
+    ConstrucModelExeActiveHeadSqAdapt(funcCallPara, activeHeadSq);
+
     // SLLI: get stream svm addr offset R2 left 3 bit is offset and assigned to the r5
     ConstructOpImmSlli(r2, r5, 0x3U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
                        activeHeadSq.slli);
 
     // ADDI, r2,headSqArrAddr index++
     ConstructOpImmAndi(r2, r2, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, activeHeadSq.addi0);
-
-    // LHWI/LLWI: load stream svm base addr sa immediate to R4
-    ConstructLHWI(r4, funcCallPara.streamSvmArrAddr, activeHeadSq.lhwi1);
-    ConstructLLWI(r4, funcCallPara.streamSvmArrAddr, activeHeadSq.llwi1);
 
     // ADD: r5 is addr saving stream svm addr
     ConstructOpOp(r4, r5, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, activeHeadSq.add);
@@ -765,7 +793,8 @@ void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
     // ************************ continue, goto ScanHeadSqArr *************************
     // LHWI/LLWI: load goto instr num as a immediate to r4
     RtStarsModelExeFuncCall fc;
-    const uint64_t toScanSqArr = (RtPtrToValue(&(fc.scanSq.lhwi1)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    const uint64_t toScanSqArr = (RtPtrToValue(&(fc.scanSq.u.rootModelAdapt.lhwi1)) - RtPtrToValue(&fc)) / sizeof(uint32_t)
+                                 + funcCallPara.deltaOffset;
     RT_LOG(RT_LOG_DEBUG, "go to ScanSqArr, instr:%" PRIu64 "", toScanSqArr);
 
     ConstructLHWI(r4, (toScanSqArr >> 4ULL), activeHeadSq.lhwi2); // {19, 4}bit save in jump_pc
@@ -2667,6 +2696,183 @@ void ConstructMemWaitValueInstr2ExWithDynamicProf(RtStarsMemWaitValueLastInstrFc
     for (size_t i = 0UL; i < (sizeof(RtStarsMemWaitValueLastInstrFcExWithDynamicProf) / sizeof(uint32_t)); i++) {
         RT_LOG(RT_LOG_DEBUG, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
     }
+}
+
+void ConstructSubmodelOffset(RtStarsCaptureCondSubModelOffset &subModelOffset)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    ConstructOpOp(r2, r0, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD,
+        subModelOffset.addModelIndex);
+}
+
+void ConstructSwitchCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureSwitchCondSetupBranch &setupBranch)
+{
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    ConstructLoadImm(r2, para.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, setupBranch.loadDevAddr);
+    ConstructLHWI(r5, para.modelCount, setupBranch.lhwiModelCount);
+    ConstructLLWI(r5, para.modelCount, setupBranch.llwiModelCount);
+    const uint64_t skipOffset = offsetof(RtStarsCaptureSwitchCondFc, subModelOffset) / sizeof(uint32_t);
+
+    // Switch语句中，*devAddr为待执行模型数组下标，>= modelCount范围就跳过，执行下一个任务
+    ConstructSetJumpPcFc(r1, skipOffset, setupBranch.jumpPcToaddModel);
+    ConstructBranch(r2, r5, RT_STARS_COND_ISA_BRANCH_FUNC3_BLT, static_cast<uint8_t>(skipOffset), setupBranch.bltToSkip);
+}
+
+void ConstructCondStoreCurModelPara(uint64_t dfxAddr, uint64_t headSqArrPtrArrAddr,
+    uint64_t modelSqCountArrAddr, uint64_t streamSvmPtrArrAddr, RtStarsCondStoreCurModelPara &storePara)
+{
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r4 = RT_STARS_COND_ISA_REGISTER_R4;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    ConstructLHWI(r2, dfxAddr, storePara.lhwiDfxAddr);
+    ConstructLLWI(r2, dfxAddr, storePara.llwiDfxAddr);
+    ConstructOpImmSlli(r5, r5, 3U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
+        storePara.slliIndexOffset);
+
+    ConstructLHWI(r1, headSqArrPtrArrAddr, storePara.lhwiHeadSqPtrArrAddr);
+    ConstructLLWI(r1, headSqArrPtrArrAddr, storePara.llwiHeadSqPtrArrAddr);
+    ConstructOpOp(r5, r1, r1, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, storePara.addHeadSqPtrAddr);
+    ConstructLoad(r1, 0U, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, storePara.loadHeadSqPtr);
+    // sqhead list地址固定存储在dfxAddr + TS_STARS_COND_DFX_SIZE的位置，占8字节，mem[r2 + TS_STARS_COND_DFX_SIZE] = r1
+    ConstructStore(r2, r1, TS_STARS_COND_DFX_SIZE, RT_STARS_COND_ISA_STORE_FUNC3_SD, storePara.storeHeadSqPtr);
+
+    ConstructLHWI(r4, modelSqCountArrAddr, storePara.lhwiSqCountArrAddr);
+    ConstructLLWI(r4, modelSqCountArrAddr, storePara.llwiSqCountArrAddr);
+    ConstructOpOp(r5, r4, r4, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, storePara.addSqCountAddr);
+    ConstructLoad(r4, 0U, r4, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, storePara.loadSqCount);
+    // sqcount存储在sqheadlist后，占8字节
+    ConstructStore(r2, r4, TS_STARS_COND_DFX_SIZE + 8U, RT_STARS_COND_ISA_STORE_FUNC3_SD, storePara.storeSqCount);
+
+    ConstructLHWI(r1, streamSvmPtrArrAddr, storePara.lhwiSvmPtrArrAddr);
+    ConstructLLWI(r1, streamSvmPtrArrAddr, storePara.llwiSvmPtrArrAddr);
+    ConstructOpOp(r5, r1, r1, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, storePara.addSvmPtrAddr);
+    ConstructLoad(r1, 0U, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, storePara.loadSvmPtr);
+    // svmlist地址存储在sqcount后，占8字节
+    ConstructStore(r2, r1, TS_STARS_COND_DFX_SIZE + 16U, RT_STARS_COND_ISA_STORE_FUNC3_SD, storePara.storeSvmPtr);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&storePara);
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
+        for (size_t i = 0UL; i < (sizeof(RtStarsCondStoreCurModelPara) / sizeof(uint32_t)); i++) {
+            RT_LOG(RT_LOG_DEBUG, "construct cond task store model para, instr[%zu]=0x%08x", i, cmd[i]);
+        }
+    }
+}
+
+void ConstructIfCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsIfCondSetupBranchFc &setupBranch)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5; // 选中执行models的数组下标
+
+    // 加载condhandle的条件值device地址到r2
+    ConstructLoadImm(r2, para.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, setupBranch.loadDevAddr);
+    ConstructOpImmAndi(r0, r5, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, setupBranch.initOffsetIndex);
+
+    const uint64_t modelOffset = offsetof(RtStarsCaptureIfCondFc, storeCurModelPara) / sizeof(uint32_t);
+    // 不相等，则执行sub model[0]
+    ConstructSetJumpPcFc(r1, modelOffset, setupBranch.jumpPcTolocatePara);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(modelOffset), setupBranch.bneToTrue);
+
+    ConstructOpImmAndi(r5, r5, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, setupBranch.addiModelIndex);
+
+    // *devptr == 0的场景，判断是否存在model[1],用modelCount判断，复用r2
+    ConstructLHWI(r2, para.modelCount, setupBranch.lhwiModelCount);
+    ConstructLLWI(r2, para.modelCount, setupBranch.llwiModelCount);
+    // 1 < r2, 表示存在model[1]，则执行sub model[1]
+    ConstructBranch(r5, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BLTU, static_cast<uint8_t>(modelOffset), setupBranch.bltuToTrue);
+
+    const uint32_t * const cmd = RtPtrToPtr<const uint32_t *>(&setupBranch);
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_DEBUG) == 1) {
+        for (size_t i = 0UL; i < (sizeof(RtStarsIfCondSetupBranchFc) / sizeof(uint32_t)); i++) {
+            RT_LOG(RT_LOG_DEBUG, "construct cond task setup branch, instr[%zu]=0x%08x", i, cmd[i]);
+        }
+    }
+}
+
+void TransParaToModelExecuteFuncCallPara(rtStarsCaptureCondFcPara_t &para, rtStarsModelExeFuncCallPara_t &modelPara)
+{
+    modelPara.sqFsmSelBasAddr = para.sqFsmSelBasAddr;
+    modelPara.sqVirtualAddr = para.sqVirtualAddr;
+    modelPara.sqHeadOffset = para.sqHeadOffset;
+    modelPara.sqTailOffset = para.sqTailOffset;
+    modelPara.dfxAddr = para.dfxAddr;
+    modelPara.streamSvmArrAddr = para.streamSvmPtrArrAddr;
+    modelPara.deltaOffset = para.deltaOffset;
+    modelPara.isCondTaskModelExec = true;
+}
+
+void ConstructCaptureIfCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureIfCondFc &fc)
+{
+    ConstructIfCondSetupBranch(para, fc.setupBranch);
+    ConstructCondTaskGotoNextSqe(para, fc);
+    ConstructCondStoreCurModelPara(para.dfxAddr, para.headSqArrPtrArrAddr, para.modelSqCountArrAddr,
+        para.streamSvmPtrArrAddr, fc.storeCurModelPara);
+
+    rtStarsModelExeFuncCallPara_t modelPara = {};
+    TransParaToModelExecuteFuncCallPara(para, modelPara);
+    ConstrucModelExeFuncCall(modelPara, fc.modelExe);
+
+    ConstructNop(fc.nop);
+}
+
+void ConstructWhileCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsWhileCondSetupBranchFc &setupBranch)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r1 = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t r2 = RT_STARS_COND_ISA_REGISTER_R2;
+
+    ConstructLoadImm(r2, para.devAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD, setupBranch.loadDevAddr);
+
+    const uint64_t part3Offset = offsetof(RtStarsCaptureWhileCondFc, addiModelIndex) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r1, part3Offset, setupBranch.jumpPcToaddiModel);
+    ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(part3Offset), setupBranch.bneToExecute);
+}
+
+void ConstructWhileCondSubmodelOffset(RtStarsCaptureWhileCondFc &fc)
+{
+    constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
+    constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
+
+    ConstructOpImmAndi(r0, r5, 0U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiModelIndex);
+}
+
+void ConstructCaptureWhileCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureWhileCondFc &fc)
+{
+    ConstructWhileCondSetupBranch(para, fc.setupBranch);
+    ConstructCondTaskGotoNextSqe(para, fc);
+    ConstructWhileCondSubmodelOffset(fc);
+    ConstructCondStoreCurModelPara(para.dfxAddr, para.headSqArrPtrArrAddr, para.modelSqCountArrAddr,
+        para.streamSvmPtrArrAddr, fc.storeCurModelPara);
+
+    rtStarsModelExeFuncCallPara_t modelPara = {};
+    TransParaToModelExecuteFuncCallPara(para, modelPara);
+    ConstrucModelExeFuncCall(modelPara, fc.modelExe);
+
+    ConstructNop(fc.nop);
+}
+
+void ConstructCaptureSwitchCondFc(rtStarsCaptureCondFcPara_t &para, RtStarsCaptureSwitchCondFc &fc)
+{
+    ConstructSwitchCondSetupBranch(para, fc.setupBranch);
+    ConstructCondTaskGotoNextSqe(para, fc);
+    ConstructSubmodelOffset(fc.subModelOffset);
+    ConstructCondStoreCurModelPara(para.dfxAddr, para.headSqArrPtrArrAddr, para.modelSqCountArrAddr,
+        para.streamSvmPtrArrAddr, fc.storeCurModelPara);
+
+    rtStarsModelExeFuncCallPara_t modelPara = {};
+    TransParaToModelExecuteFuncCallPara(para, modelPara);
+    ConstrucModelExeFuncCall(modelPara, fc.modelExe);
+
+    ConstructNop(fc.nop);
 }
 
 }  // namespace runtime

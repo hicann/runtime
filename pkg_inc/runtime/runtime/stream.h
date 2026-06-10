@@ -60,18 +60,6 @@ typedef enum tagRtClearStep {
 } rtClearStep_t;
 
 /**
- * @ingroup stream_capture_mode
- * @brief stream capture mode
- */
-typedef enum tagRtStreamCaptureMode {
-    RT_STREAM_CAPTURE_MODE_GLOBAL       = 0,
-    RT_STREAM_CAPTURE_MODE_THREAD_LOCAL = 1,
-    RT_STREAM_CAPTURE_MODE_RELAXED      = 2,
-
-    RT_STREAM_CAPTURE_MODE_MAX
-} rtStreamCaptureMode;
-
-/**
  * @ingroup stream_capture_status
  * @brief stream capture status
  */

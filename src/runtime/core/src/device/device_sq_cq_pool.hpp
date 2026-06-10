@@ -20,6 +20,8 @@ namespace cce {
 namespace runtime {
 class Device;
 
+constexpr uint32_t RT_DEVICE_SQCQ_RES_MAX_NUM = 1024U;
+
 typedef struct {
     uint32_t sqId;
     uint32_t cqId;

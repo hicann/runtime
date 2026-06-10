@@ -18,6 +18,7 @@
 #include "runtime/rt_ras.h"
 #include "runtime/rt_inner_task.h"
 #include "runtime/rt_inner_device.h"
+#include "runtime/rt_inner_model.h"
 #undef private
 #endif
 
@@ -921,4 +922,40 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtAtomicOperation)
     EXPECT_EQ((uint32_t)ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH, (uint32_t)RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH);
 
     EXPECT_EQ(sizeof(aclrtAtomicOperation), sizeof(rtAtomicOperation));
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclmdlRICondHandleFlag)
+{
+    EXPECT_EQ((uint64_t)ACL_MODEL_RI_COND_HANDLE_ASSIGN_DEFAULT, (uint64_t)RT_COND_HANDLE_ASSIGN_DEFAULT);
+    EXPECT_EQ(sizeof(aclmdlRICondHandleFlag), sizeof(rtCondHandleFlag_t));
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclmdlRICondTaskType)
+{
+    EXPECT_EQ((uint64_t)ACL_MODEL_RI_COND_TYPE_IF, (uint64_t)RT_COND_TASK_TYPE_IF);
+    EXPECT_EQ((uint64_t)ACL_MODEL_RI_COND_TYPE_WHILE, (uint64_t)RT_COND_TASK_TYPE_WHILE);
+    EXPECT_EQ((uint64_t)ACL_MODEL_RI_COND_TYPE_SWITCH, (uint64_t)RT_COND_TASK_TYPE_SWITCH);
+    EXPECT_EQ(sizeof(aclmdlRICondTaskType), sizeof(rtCondTaskType_t));
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclmdlRICondTaskParams)
+{
+    size_t acl_offset, rt_offset;
+    acl_offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, handle);
+    rt_offset = OFFSET_OF_MEMBER(rtCondTaskParams, handle);
+    EXPECT_EQ(acl_offset, rt_offset);
+
+    acl_offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, type);
+    rt_offset = OFFSET_OF_MEMBER(rtCondTaskParams, type);
+    EXPECT_EQ(acl_offset, rt_offset);
+
+    acl_offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, size);
+    rt_offset = OFFSET_OF_MEMBER(rtCondTaskParams, size);
+    EXPECT_EQ(acl_offset, rt_offset);
+
+    acl_offset = OFFSET_OF_MEMBER(aclmdlRICondTaskParams, modelRIArray);
+    rt_offset = OFFSET_OF_MEMBER(rtCondTaskParams, modelRIArray);
+    EXPECT_EQ(acl_offset, rt_offset);
+
+    EXPECT_EQ(sizeof(aclmdlRICondTaskParams), sizeof(rtCondTaskParams));
 }

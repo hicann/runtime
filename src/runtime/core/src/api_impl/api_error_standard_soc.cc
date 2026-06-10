@@ -318,6 +318,10 @@ rtError_t ApiErrorDecorator::StreamTaskClean(Stream * const stm)
         ErrorCode::EE1011, __func__, "RT_STREAM_AICPU", "stream flag", 
         "AICPU stream " + std::to_string(stm->Id_()) + " does not support stream task clearance");
     NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
+    Stream *captureStream = stm->GetCaptureStream();
+    if (captureStream != nullptr) {
+        COND_RETURN_WARN(captureStream->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT, "stream belongs to sub ACL Graph, does not support cleaning tasks");
+    }
     COND_RETURN_AND_MSG_OUTER((!stm->Model_()->IsModelLoadComplete()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, 
         __func__, "stream", "Model " + std::to_string(stm->Model_()->Id_()) + " where stream " + std::to_string(stm->Id_()) + " is located has not been loaded. Clear stream tasks after the model is loaded");
     return impl_->StreamTaskClean(stm);
