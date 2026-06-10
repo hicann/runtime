@@ -186,8 +186,9 @@ static void MapAicpuErrorCodeForFastRecovery(TaskInfo *taskInfo, const rtLogicCq
 {
     taskInfo->errorCode = TS_ERROR_AICPU_EXCEPTION;
     Stream * const stream = taskInfo->stream;
+    const bool hasMteErr = HasMteErr(stream->Device_());
     if (logicCq.errorCode == AICPU_HCCL_OP_UB_DDRC_FAILED) {
-        if(HasMteErr(stream->Device_()) && IsEventIdAndRasCodeMatch(stream->Device_()->Id_(), g_ubNonMemPoisonRasList) && !HasMemUceErr(stream->Device_()->Id_(), g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
+        if(hasMteErr && IsEventIdAndRasCodeMatch(stream->Device_()->Id_(), g_ubNonMemPoisonRasList) && !HasMemUceErr(stream->Device_()->Id_(), g_aicOrSdmaOrHcclLocalMulBitEccEventIdBlkList)) {
                 taskInfo->errorCode = TS_ERROR_LOCAL_MEM_ERROR;
                 (RtPtrToUnConstPtr<Device *>(stream->Device_()))->SetDeviceFaultType(DeviceFaultType::HBM_UCE_ERROR);
                 RT_LOG(RT_LOG_ERROR,
@@ -195,7 +196,7 @@ static void MapAicpuErrorCodeForFastRecovery(TaskInfo *taskInfo, const rtLogicCq
                     stream->Device_()->Id_(), stream->Id_(), taskInfo->id, logicCq.errorCode, logicCq.errorType, taskInfo->errorCode);
         }  
     } else if (logicCq.errorCode == AICPU_HCCL_OP_UB_POISON_FAILED) {
-        if (!HasMteErr(stream->Device_()) && !HasMemUceErr(stream->Device_()->Id_(), g_hcclRemoteMulBitEccEventIdBlkList)) {
+        if (!hasMteErr && !HasMemUceErr(stream->Device_()->Id_(), g_hcclRemoteMulBitEccEventIdBlkList)) {
                 taskInfo->errorCode = TS_ERROR_REMOTE_MEM_ERROR;
                 RT_LOG(RT_LOG_ERROR,
                     "hccl aicpu task error is remote mem error, device_id=%u, stream_id=%d, task_id=%hu, logicCq.errorCode=%u, logicCq.errorType=%hhu, taskInfo->errorCode=%u",

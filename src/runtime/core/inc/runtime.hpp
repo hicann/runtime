@@ -63,8 +63,11 @@ constexpr uint32_t HBM_ECC_NOTIFY_EVENT_ID = 0x80E18400U; // for ReadFaultEvent
 constexpr uint32_t HBM_ECC_EVENT_ID = 0x80E01801U;
 constexpr uint32_t L2_BUFFER_ECC_EVENT_ID = 0x80CD8008U;
 constexpr uint32_t UB_MEM_NETWORK_EXCEPTION_EVENT_ID = 0x81AFAA06U;
+
+constexpr uint32_t RAS_QUERY_INTERVAL = 10U; 
+constexpr uint32_t RAS_QUERY_MAX_COUNT = 50U;
 constexpr uint16_t RT_DSM_EVENT_FILTER_FLAG_EVENT_ID = 1U;
-constexpr uint16_t READ_FAULT_EVENT_TIMEOUT = 1000U;
+constexpr uint16_t READ_FAULT_EVENT_TIMEOUT = 1000U; // 1s
 
 constexpr size_t NON_CPU_KERNEL_ARGS_ALIGN_SIZE = sizeof(uint64_t);
 constexpr size_t CPU_KERNEL_ARGS_ALIGN_SIZE = 1U;

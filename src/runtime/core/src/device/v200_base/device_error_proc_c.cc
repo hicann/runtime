@@ -387,18 +387,15 @@ void CheckAndPrintRasInfo(const Device * const dev)
     const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
     const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
     ScopeGuard faultEventInfoRelease(releaseFunc);
-    
-    const uint32_t maxQueryCount = 20U;
-    const uint32_t queryIntervalMs = 10U;
 
-    for (uint32_t queryCount = 0U; queryCount < maxQueryCount; ++queryCount) {
+    for (uint32_t queryCount = 0U; queryCount < RAS_QUERY_MAX_COUNT; ++queryCount) {
         (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
         uint32_t eventCount = 0U;
         rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
         if ((error == RT_ERROR_NONE) && PrintRasEvents(dev, faultEventInfo, eventCount)) {
             return;
         }
-        (void)mmSleep(queryIntervalMs);
+        std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
     }
 }
 
@@ -541,14 +538,6 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device * const 
         return;
     }
 
-    /*
-     * L2_BUFFER_ECC    HBM_ECC_NOTIFY    HBM_ECC    hit_black_list   mte_error       fault_type
-     * YES              \                 \          NO               local_error     L2_BUFFER_ERROR
-     * NO               NOT_SUPPORT       YES        NO               local_error     HBM_UCE_ERROR
-     * NO               YES               \          NO               local_error     HBM_UCE_ERROR
-     * NO               NO                \          NO               remote_error    LINK_ERROR
-     * OTHERS                                                         0               AICORE_UNKNOWN_ERROR
-     */
     if (errType == AICORE_ERROR) {
         (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::AICORE_UNKNOWN_ERROR);
     }
@@ -615,8 +604,8 @@ static void SetDeviceFaultTypeByAixErrClass(const Device * const dev, const Star
             }
             break;
         case AixErrClass::AIX_LINK_ERROR:
-            AixLinkErrProc(dev, info, errTaskPtr);
             CheckAndPrintRasInfo(dev);
+            AixLinkErrProc(dev, info, errTaskPtr);
             break;
         default:
             break;

@@ -384,15 +384,12 @@ const std::string GetStarsRingBufferHeadMsg(const uint16_t errType)
     }
 }
 
-/* 检查200ms内是否存在HBM RAS告警 */
 bool HasMteErr(const Device * const dev)
 {
-    // 检测到告警后200ms，会设置device状态
     bool hasMteErr = dev->GetDeviceRas();
     uint32_t count = 0;
-    while ((!hasMteErr) && (count < GetMteErrWaitCount()) &&  // 每10ms判断一次，最多等待1.2s或0.2s (算子ms超时不等待)
-        (!Runtime::Instance()->IsSupportOpTimeoutMs())) {
-        (void)mmSleep(10U); // 每10ms判断一次
+    while ((!hasMteErr) && (count < GetMteErrWaitCount()) && (!Runtime::Instance()->IsSupportOpTimeoutMs())) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
         hasMteErr = dev->GetDeviceRas();
         count++;
     }

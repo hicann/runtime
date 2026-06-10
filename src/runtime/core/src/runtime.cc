@@ -4970,7 +4970,7 @@ void Runtime::ReportRasRun(void)
             ReportPageFaultProc();
         }
         ReportUBMemRasProc();
-        (void)mmSleep(10U); // 每10ms进行一次检测
+        std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
     }
     GlobalStateManager::GetInstance().DecBackgroundThreadCount(__func__);
     RT_LOG(RT_LOG_EVENT, "Report ras thread exits normally!");
@@ -5014,14 +5014,13 @@ void Runtime::ProcHBMRas(const uint32_t devId)
 void Runtime::ReportHBMRasProc(void)
 {
     if (hbmRasProcFlag_ == HBM_RAS_WAIT_PROC) {
-        // 上一次发现告警，此处已等待10ms，每隔10ms唤醒回收线程，共等待190ms开始上报
-        for (uint32_t i = 0U; hbmRasThreadRunFlag_ == true && i < 19U; i++) {
+        for (uint32_t i = 0U; hbmRasThreadRunFlag_ == true && i < (RAS_QUERY_MAX_COUNT - 1U); i++) {
             Device *dev = GetDevice(rasInfo_.devId, 0U, false);
             if (dev != nullptr && !dev->IsDeviceRelease()) {
                 RT_LOG(RT_LOG_DEBUG, "wake up the recycle thread to receive cqe.");
                 dev->WakeUpRecycleThread();
             }
-            (void)mmSleep(10U);
+            std::this_thread::sleep_for(std::chrono::milliseconds(RAS_QUERY_INTERVAL));
         }
         ProcHBMRas(rasInfo_.devId);
         hbmRasProcFlag_ = HBM_RAS_WORKING;

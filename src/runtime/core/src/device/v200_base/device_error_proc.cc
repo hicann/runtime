@@ -38,7 +38,7 @@ void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInf
 
 uint16_t GetMteErrWaitCount()
 {
-    return 20U;
+    return RAS_QUERY_MAX_COUNT;
 }
 
 // fast ringbuffer(4k): DevRingBufferCtlInfo + RingBufferElementInfo + StarsOpExceptionInfo
