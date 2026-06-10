@@ -12,6 +12,7 @@
 #include "stars_cond_isa_helper.hpp"
 #include "stars_cond_isa_batch_struct.hpp"
 #include "stars_cond_isa_struct.hpp"
+#include "tsch_cmd.h"
 
 namespace cce {
 namespace runtime {
@@ -722,8 +723,8 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc &fc, const RtStarsDqsBa
     ConstructOpImmAndi(r8, r8, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, fc.right4); /* 右移32位，取低32位 */
 	ConstructStore(r9, r1, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.swNew); /* 把newValue写到索引为1的地方; */
 	
-    ConstructLLWI(r9, 2U, fc.llwiHandleCacheDeep); // r9 是 2，为数组的总大小
-    ConstructLHWI(r9, 2U, fc.lhwiHandleCacheDeep); // r9 是 2，为数组的总大小
+    ConstructLLWI(r9, MAX_CACHE_SIZE, fc.llwiHandleCacheDeep);
+    ConstructLHWI(r9, MAX_CACHE_SIZE, fc.lhwiHandleCacheDeep);
 	offset = offsetof(RtStarsDqsBatchDequeueFc, llwiHandleCnt1);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r1, offset, fc.jumpNotFull2);
@@ -808,22 +809,187 @@ void ConstructDqsBatchDequeueFc(RtStarsDqsBatchDequeueFc &fc, const RtStarsDqsBa
     }
 }
 
+/* 针对DSS场景做帧对齐操作：无需帧对齐，只要任意一路有数据，从input_mbuf_cache_list.handle_array[0]取数据，放入input_mbuf_list */
+void ConstructDqsFrameAlignForDssFc(RtStarsDqsFrameAlignForDssFc &fc, const RtStarsDqsFrameAlignFcPara &fcPara)
+{
+    // r1 = input_mbuf_list当前写入地址
+    ConstructLLWI(r1, fcPara.inputMbufListAddr, fc.llwiInputMbufListAddr);
+    ConstructLHWI(r1, fcPara.inputMbufListAddr, fc.lhwiInputMbufListAddr);
+    // r2 = input_mbuf_cache_list当前读取地址
+    ConstructLLWI(r2, fcPara.inputMbufCacheListAddr, fc.llwiInputMbufCacheListAddr);
+    ConstructLHWI(r2, fcPara.inputMbufCacheListAddr, fc.lhwiInputMbufCacheListAddr);
+    // r3 = input_queue_num
+    ConstructLLWI(r3, static_cast<uint64_t>(fcPara.inputQueueNum), fc.llwiInputQueueNum);
+    ConstructLHWI(r3, static_cast<uint64_t>(fcPara.inputQueueNum), fc.lhwiInputQueueNum);
+    // r4 = 当前queue索引
+    ConstructLLWI(r4, 0ULL, fc.llwiIndex);
+    ConstructLHWI(r4, 0ULL, fc.lhwiIndex);
+
+    // 从input_mbuf_cache_t.cnt读取缓存深度，cnt字段为uint16_t，使用移位清理高位。
+    // r5 = cnt字段地址，r6 = 当前queue的cnt值
+    ConstructLLWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.llwiCntOffset);
+    ConstructLHWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.lhwiCntOffset);
+    ConstructOpOp(r2, r5, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, fc.addCntAddr);
+    ConstructLoad(r5, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slliCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srliCnt);
+
+    // cnt为0表示该queue无缓存数据，直接跳到next处理下一个queue。
+    uint64_t offset = offsetof(RtStarsDqsFrameAlignForDssFc, addiInputMbufListAddr) / sizeof(uint32_t);
+    // r7 = jump pc临时寄存器
+    ConstructSetJumpPcFc(r7, offset, fc.jumpNextIfCntZero);
+    ConstructBranch(r6, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beqCntZero);
+
+    // DSS场景无需等待多路帧对齐，直接将handle_array[0]写入对应input_mbuf_list。
+    // r8 = mbuf handle临时寄存器
+    ConstructLoad(r2, 0U, r8, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrHandle0);
+    ConstructStore(r1, r8, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.storeInputMbuf);
+
+    // cache深度为2时，将handle_array[1]前移到handle_array[0]，保持下一次读取仍从0号槽位取数。
+    // r9 = cache深度比较值
+    ConstructLLWI(r9, MAX_CACHE_SIZE, fc.llwiCacheDeep);
+    ConstructLHWI(r9, MAX_CACHE_SIZE, fc.lhwiCacheDeep);
+    offset = offsetof(RtStarsDqsFrameAlignForDssFc, llwiOne) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpDecCnt);
+    ConstructBranch(r6, r9, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(offset), fc.bneCntNotTwo);
+    ConstructLoad(r2, sizeof(uint32_t), r8, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrHandle1);
+    ConstructStore(r2, r8, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.storeHandle1To0);
+
+    // 当前queue已消耗一个缓存handle，cnt减1后按uint16_t写回cnt字段。
+    // r9 = cnt递减值
+    ConstructLLWI(r9, 1ULL, fc.llwiOne);
+    ConstructLHWI(r9, 1ULL, fc.lhwiOne);
+    ConstructOpOp(r6, r9, r6, RT_STARS_COND_ISA_OP_FUNC3_SUB, RT_STARS_COND_ISA_OP_FUNC7_SUB, fc.subCnt);
+    ConstructStore(r5, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SH, fc.storeCnt);
+
+    // next: 推进到下一个queue的input_mbuf_list和input_mbuf_cache_list。
+    ConstructOpImmAndi(r1, r1, sizeof(uint32_t), RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiInputMbufListAddr);
+    ConstructOpImmAndi(r2, r2, fcPara.sizeofHandleCache, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI,
+        fc.addiInputMbufCacheListAddr);
+    ConstructOpImmAndi(r4, r4, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiIndex);
+
+    // index < input_queue_num时回到循环起点，继续处理下一路输入。
+    offset = offsetof(RtStarsDqsFrameAlignForDssFc, llwiCntOffset) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpStartLoop);
+    ConstructBranch(r4, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BLTU, static_cast<uint8_t>(offset), fc.bltuStartLoop);
+
+    ConstructNop(fc.end);
+
+    const uint32_t *const cmd = RtPtrToPtr<const uint32_t *>(&fc);
+    for (size_t i = 0UL; i < (sizeof(RtStarsDqsFrameAlignForDssFc) / sizeof(uint32_t)); i++) {
+        RT_LOG(RT_LOG_INFO, "func call: instr[%zu]=0x%08x", i, *(cmd + i));
+    }
+}
+
+static void ConstructDqsFrameAlignCheckPhase(RtStarsDqsFrameAlignFc &fc, const RtStarsDqsFrameAlignFcPara &fcPara)
+{
+    // Check phase: 只检查所有input queue是否都有缓存数据，不消费handle。
+    ConstructLLWI(r2, fcPara.inputMbufCacheListAddr, fc.llwiCheckCacheListAddr);
+    ConstructLHWI(r2, fcPara.inputMbufCacheListAddr, fc.lhwiCheckCacheListAddr);
+    ConstructLLWI(r3, static_cast<uint64_t>(fcPara.inputQueueNum), fc.llwiQueueNum);
+    ConstructLHWI(r3, static_cast<uint64_t>(fcPara.inputQueueNum), fc.lhwiQueueNum);
+    ConstructLLWI(r4, 0ULL, fc.llwiCheckIndex);
+    ConstructLHWI(r4, 0ULL, fc.lhwiCheckIndex);
+
+    // r5 = 当前input_mbuf_cache_t.cnt地址，r6 = cnt值。cnt是uint16_t，LDR后必须裁剪高位。
+    ConstructLLWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.llwiCheckCntOffset);
+    ConstructLHWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.lhwiCheckCntOffset);
+    ConstructOpOp(r2, r5, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, fc.addCheckCntAddr);
+    ConstructLoad(r5, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCheckCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slliCheckCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srliCheckCnt);
+
+    // 任一路cnt为0表示对齐失败，跳转到stream head等待下一次调度。
+    // SetJumpPc/Branch的offset单位是4B指令字，不是字节。
+    uint64_t offset = offsetof(RtStarsDqsFrameAlignFc, llwiSqId) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpGotoHeadIfCheckCntZero);
+    ConstructBranch(r6, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beqCheckCntZero);
+
+    // 当前queue检查通过后，推进到下一路input_mbuf_cache_t继续检查。
+    ConstructOpImmAndi(r2, r2, fcPara.sizeofHandleCache, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI,
+        fc.addiCheckCacheListAddr);
+    ConstructOpImmAndi(r4, r4, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCheckIndex);
+    offset = offsetof(RtStarsDqsFrameAlignFc, llwiCheckCntOffset) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpCheckStartLoop);
+    ConstructBranch(r4, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BLTU, static_cast<uint8_t>(offset), fc.bltuCheckStartLoop);
+}
+
+static void ConstructDqsFrameAlignCommitPhase(RtStarsDqsFrameAlignFc &fc, const RtStarsDqsFrameAlignFcPara &fcPara)
+{
+    // Commit phase: 此时已确认所有queue都有数据，可以逐路写input_mbuf_list并递减cnt。
+    ConstructLLWI(r1, fcPara.inputMbufListAddr, fc.llwiCommitMbufListAddr);
+    ConstructLHWI(r1, fcPara.inputMbufListAddr, fc.lhwiCommitMbufListAddr);
+    ConstructLLWI(r2, fcPara.inputMbufCacheListAddr, fc.llwiCommitCacheListAddr);
+    ConstructLHWI(r2, fcPara.inputMbufCacheListAddr, fc.lhwiCommitCacheListAddr);
+    ConstructLLWI(r4, 0ULL, fc.llwiCommitIndex);
+    ConstructLHWI(r4, 0ULL, fc.lhwiCommitIndex);
+
+    // cnt为1时取handle_array[0]，cnt大于1时取handle_array[1]。
+    // 选择handle时不移动handle_array内容：cnt递减后，下次cnt==1会自然取handle_array[0]。
+    ConstructLLWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.llwiCommitCntOffset);
+    ConstructLHWI(r5, static_cast<uint64_t>(fcPara.cntOffset), fc.lhwiCommitCntOffset);
+    ConstructOpOp(r2, r5, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, fc.addCommitCntAddr);
+    ConstructLoad(r5, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCommitCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slliCommitCnt);
+    ConstructOpImmSlli(r6, r6, 48U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI,
+        RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srliCommitCnt);
+    ConstructLLWI(r7, 1ULL, fc.llwiCntStep);
+    ConstructLHWI(r7, 1ULL, fc.lhwiCntStep);
+    uint64_t offset = offsetof(RtStarsDqsFrameAlignFc, ldrCacheHandle1) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpLoadHandle1IfCntNotOne);
+    ConstructBranch(r6, r7, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(offset),
+        fc.bneLoadHandle1IfCntNotOne);
+
+    // cnt==1时加载handle_array[0]；加载后用无条件跳转跳过handle_array[1]分支。
+    ConstructLoad(r2, 0U, r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCacheHandle0);
+    offset = offsetof(RtStarsDqsFrameAlignFc, storeSelectedHandle) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpStoreSelectedHandle);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset),
+        fc.beqStoreSelectedHandle);
+
+    // cnt!=1时加载handle_array[1]，与cnt==1分支共用后续写input_mbuf_list逻辑。
+    ConstructLoad(r2, sizeof(uint32_t), r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCacheHandle1);
+    ConstructStore(r1, r9, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.storeSelectedHandle);
+
+    // 已提交一路handle到input_mbuf_list，对应cache cnt减1并按uint16_t写回。
+    ConstructOpOp(r6, r7, r6, RT_STARS_COND_ISA_OP_FUNC3_SUB, RT_STARS_COND_ISA_OP_FUNC7_SUB, fc.subCommitCnt);
+    ConstructStore(r5, r6, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SH, fc.storeCommitCnt);
+
+    // 推进到下一路input_mbuf_list和input_mbuf_cache_list，直到所有输入queue完成提交。
+    ConstructOpImmAndi(r1, r1, sizeof(uint32_t), RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCommitMbufListAddr);
+    ConstructOpImmAndi(r2, r2, fcPara.sizeofHandleCache, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI,
+        fc.addiCommitCacheListAddr);
+    ConstructOpImmAndi(r4, r4, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCommitIndex);
+    offset = offsetof(RtStarsDqsFrameAlignFc, llwiCommitCntOffset) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpCommitStartLoop);
+    ConstructBranch(r4, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BLTU, static_cast<uint8_t>(offset),
+        fc.bltuCommitStartLoop);
+}
+
+static void ConstructDqsFrameAlignGotoHead(RtStarsDqsFrameAlignFc &fc, const RtStarsDqsFrameAlignFcPara &fcPara)
+{
+    // 对齐成功后跳到end，避免继续执行下面的stream goto head失败处理。
+    uint64_t offset = offsetof(RtStarsDqsFrameAlignFc, end) / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r8, offset, fc.jumpEnd);
+    ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beqEnd);
+
+    // Check phase发现任一路无缓存数据时会跳到这里，回到stream head等待后续调度。
+    ConstructLLWI(r1, fcPara.sqId, fc.llwiSqId);
+    ConstructLHWI(r1, fcPara.sqId, fc.lhwiSqId);
+    ConstructGotoR(r1, r0, fc.gotor);  // stream goto head
+}
+
+/* 针对NN/VPC场景的基础对齐，所有路都有数据输入时才对齐成功，从input_mbuf_cache_list将数据放入input_mbuf_list；对齐失败时跳转到head */
 void ConstructDqsFrameAlignFc(RtStarsDqsFrameAlignFc &fc, const RtStarsDqsFrameAlignFcPara &fcPara)
 {
-    ConstructLLWI(r1, fcPara.frameAlignResAddr, fc.llwi1);
-    ConstructLHWI(r1, fcPara.frameAlignResAddr, fc.lhwi1);
-    ConstructLoad(r1, 0U, r1, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.load1);
-
-    uint64_t offset = offsetof(RtStarsDqsFrameAlignFc, end);
-    offset = offset / sizeof(uint32_t);
-    // if frame_align_res != 0, goto end (frame align success)
-    ConstructSetJumpPcFc(r2, offset, fc.jumpPc1);
-    ConstructBranch(r1, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, offset, fc.bne);
-
-    ConstructLLWI(r1, fcPara.sqId, fc.llwi2);
-    ConstructLHWI(r1, fcPara.sqId, fc.lhwi2);
-    ConstructGotoR(r1, r0, fc.gotor);  // stream goto head
-
+    ConstructDqsFrameAlignCheckPhase(fc, fcPara);
+    ConstructDqsFrameAlignCommitPhase(fc, fcPara);
+    ConstructDqsFrameAlignGotoHead(fc, fcPara);
     ConstructNop(fc.end);
 
     const uint32_t *const cmd = RtPtrToPtr<const uint32_t *>(&fc);
@@ -1014,6 +1180,14 @@ void ConstructDqsZeroCopyFc(RtStarsDqsZeroCopyFc &fc, const RtStarsDqsZeroCopyPa
     ConstructOpImmSlli(r2, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI, fc.slli2);
     ConstructOpImmSlli(r2, r2, 32U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SRLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SRLI, fc.srli2);
 
+    // 如果mbufHandle的值大于等于RT_DQS_MBUF_INVALID，直接跳转结束
+    ConstructLLWI(r3, RT_DQS_MBUF_INVALID, fc.llwiInvalidMbuf);
+    ConstructLHWI(r3, RT_DQS_MBUF_INVALID, fc.lhwiInvalidMbuf);
+    uint64_t offset = offsetof(RtStarsDqsZeroCopyFc, end);
+    offset = offset / sizeof(uint32_t);
+    ConstructSetJumpPcFc(r7, offset, fc.jumpPcInvalidMbuf);
+    ConstructBranch(r2, r3, RT_STARS_COND_ISA_BRANCH_FUNC3_BGEU, static_cast<uint8_t>(offset), fc.bgeuInvalidMbuf);
+
     // r4: block_id, and with the effective bit
     ConstructLLWI(r3, dqsBlockIdMask, fc.llwi3);
     ConstructLHWI(r3, dqsBlockIdMask, fc.lhwi3);
@@ -1039,7 +1213,7 @@ void ConstructDqsZeroCopyFc(RtStarsDqsZeroCopyFc &fc, const RtStarsDqsZeroCopyPa
     ConstructOpOp(r0, r0, r6, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, fc.add2);
 
     // r7: 无条件跳转
-    uint64_t offset = offsetof(RtStarsDqsZeroCopyFc, jumpPc2);
+    offset = offsetof(RtStarsDqsZeroCopyFc, jumpPc2);
     offset = offset / sizeof(uint32_t);
     ConstructSetJumpPcFc(r7, offset, fc.jumpPc1);
     ConstructBranch(r0, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(offset), fc.beq1);

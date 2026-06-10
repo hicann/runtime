@@ -154,8 +154,12 @@ struct RtStarsDqsAdspcFcPara {
 };
 
 struct RtStarsDqsFrameAlignFcPara {
-    uint64_t frameAlignResAddr;
+    uint64_t inputMbufListAddr;
+    uint64_t inputMbufCacheListAddr;
     uint64_t sqId;
+    uint8_t inputQueueNum;
+    uint8_t cntOffset;
+    uint8_t sizeofHandleCache;
 };
 }
 }

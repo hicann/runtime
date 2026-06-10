@@ -1228,7 +1228,6 @@ void ConstructSqeForDqsFrameAlignTask(TaskInfo * const taskInfo, rtDavidSqe_t * 
 
     const Stream *const stm = taskInfo->stream;
     InitDqsFunctionCallSqe(sqe, stm->GetStarsWrCqeFlag(), taskInfo->taskSn, CONDS_SUB_TYPE_DQS_FRAME_ALIGN);
-    sqe.header.preP = 1U; // pre_p: frame align in ts
 
     const uint64_t funcAddr = RtPtrToValue(dqsFrameAlignTask->funcCallSvmMem);
     const uint64_t funcCallSize = dqsFrameAlignTask->funCallMemSize;
@@ -1511,32 +1510,49 @@ rtError_t DqsPrepareTaskInit(TaskInfo *taskInfo, const Stream * const stream, co
     return RT_ERROR_NONE;
 }
 
-static rtError_t InitFuncCallParaForDqsFrameAlignTask(TaskInfo *taskInfo, RtStarsDqsFrameAlignFcPara &fcPara)
+static rtError_t InitFuncCallParaForDqsFrameAlignTask(
+    TaskInfo *taskInfo, stars_dqs_ctrl_space_t *ctrlSpacePtr, RtStarsDqsFrameAlignFcPara &fcPara)
 {
-    StreamWithDqs *stm = dynamic_cast<StreamWithDqs *>(taskInfo->stream);
-    NULL_PTR_RETURN_MSG(stm, RT_ERROR_INSTANCE_NULL);
-    stars_dqs_ctrl_space_t *ctrlSpacePtr = stm->GetDqsCtrlSpace();
-    COND_RETURN_ERROR((ctrlSpacePtr == nullptr), RT_ERROR_INVALID_VALUE, "ctrl space is nullptr.");
-    fcPara.frameAlignResAddr = PtrToValue(&ctrlSpacePtr->align_res);
+    fcPara.inputMbufListAddr = RtPtrToValue(ctrlSpacePtr->input_mbuf_list);
+    fcPara.inputMbufCacheListAddr = RtPtrToValue(ctrlSpacePtr->input_mbuf_cache_list);
     fcPara.sqId = taskInfo->u.dqsFrameAlignTask.sqId;
+    fcPara.inputQueueNum = ctrlSpacePtr->input_queue_num;
+    fcPara.cntOffset = static_cast<uint8_t>(offsetof(input_mbuf_cache_t, cnt));
+    fcPara.sizeofHandleCache = static_cast<uint8_t>(sizeof(input_mbuf_cache_t));
     return RT_ERROR_NONE;
 }
 
 static rtError_t PrepareSqeInfoForDqsFrameAlignTask(TaskInfo* taskInfo)
 {
     DqsCommonTaskInfo *dqsFrameAlignTask = &(taskInfo->u.dqsFrameAlignTask);
+    StreamWithDqs *stm = dynamic_cast<StreamWithDqs *>(taskInfo->stream);
+    NULL_PTR_RETURN_MSG(stm, RT_ERROR_INSTANCE_NULL);
+    stars_dqs_ctrl_space_t *ctrlSpacePtr = stm->GetDqsCtrlSpace();
+    COND_RETURN_ERROR((ctrlSpacePtr == nullptr), RT_ERROR_INVALID_VALUE, "ctrl space is nullptr.");
+
+    const bool isDss = (ctrlSpacePtr->type == static_cast<uint8_t>(RT_DQS_SCHED_TYPE_DSS));
+    dqsFrameAlignTask->funCallMemSize = isDss ?
+        sizeof(RtStarsDqsFrameAlignForDssFc) : sizeof(RtStarsDqsFrameAlignFc);
+
     rtError_t ret = AllocDqsCommonTaskFuncCall(dqsFrameAlignTask, taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", static_cast<uint32_t>(ret));
 
     RtStarsDqsFrameAlignFcPara fcPara = {};
-    ret = InitFuncCallParaForDqsFrameAlignTask(taskInfo, fcPara);
-    ERROR_RETURN(ret, "Init func call param failed, retCode=%#x.", static_cast<uint32_t>(ret));
+    ret = InitFuncCallParaForDqsFrameAlignTask(taskInfo, ctrlSpacePtr, fcPara);
 
-    RtStarsDqsFrameAlignFc fc = {};
-    ConstructDqsFrameAlignFc(fc, fcPara);
     const auto dev = taskInfo->stream->Device_();
-    ret = dev->Driver_()->MemCopySync(dqsFrameAlignTask->funcCallSvmMem, dqsFrameAlignTask->funCallMemSize, &fc,
-        dqsFrameAlignTask->funCallMemSize, RT_MEMCPY_DEVICE_TO_DEVICE);
+    if ((ret == RT_ERROR_NONE) && isDss) {
+        RtStarsDqsFrameAlignForDssFc fc = {};
+        ConstructDqsFrameAlignForDssFc(fc, fcPara);
+        ret = dev->Driver_()->MemCopySync(dqsFrameAlignTask->funcCallSvmMem,
+            dqsFrameAlignTask->funCallMemSize, &fc, dqsFrameAlignTask->funCallMemSize, RT_MEMCPY_DEVICE_TO_DEVICE);
+    } else if (ret == RT_ERROR_NONE) {
+        RtStarsDqsFrameAlignFc fc = {};
+        ConstructDqsFrameAlignFc(fc, fcPara);
+        ret = dev->Driver_()->MemCopySync(dqsFrameAlignTask->funcCallSvmMem,
+            dqsFrameAlignTask->funCallMemSize, &fc, dqsFrameAlignTask->funCallMemSize, RT_MEMCPY_DEVICE_TO_DEVICE);
+    }
+
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(dqsFrameAlignTask, taskInfo);
         RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs frame align func call failed,retCode=%#x.", ret);

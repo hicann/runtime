@@ -364,6 +364,7 @@ void StreamWithDqs::InitCtrlSpaceMbufHandleInfo(void) const
     }
     for (uint32_t i = 0U; i < dqsCtrlSpace_->input_queue_num; i++) {
         dqsCtrlSpace_->input_mbuf_cache_list[i].last_used_handle = UINT32_MAX;
+        dqsCtrlSpace_->input_mbuf_list[i] = UINT32_MAX;
     }
 }
 

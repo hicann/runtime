@@ -599,6 +599,12 @@ TEST_F(TaskTestV201, Test_DqsTask_02)
     error = DqsLaunchTask(stm, &cfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    ctrlSpace.type = 3;
+    cfg.type = RT_DQS_TASK_FRAME_ALIGN;
+    error = DqsLaunchTask(stm, &cfg);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    ctrlSpace.type = 1;
     cfg.type = RT_DQS_TASK_FRAME_ALIGN;
     error = DqsLaunchTask(stm, &cfg);
     EXPECT_EQ(error, RT_ERROR_NONE);

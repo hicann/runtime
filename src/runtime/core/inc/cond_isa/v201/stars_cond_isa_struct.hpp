@@ -283,6 +283,10 @@ struct RtStarsDqsZeroCopyFc {
     RtStarsCondOpLoad              ldr2;
     RtStarsCondOpImmSLLI           slli2;
     RtStarsCondOpImmSLLI           srli2;
+    RtStarsCondOpLLWI              llwiInvalidMbuf;
+    RtStarsCondOpLHWI              lhwiInvalidMbuf;
+    RtStarsSetCsrJumpPc            jumpPcInvalidMbuf;
+    RtStarsCondOpBranch            bgeuInvalidMbuf;
 
     RtStarsCondOpLLWI              llwi3;
     RtStarsCondOpLHWI              lhwi3;

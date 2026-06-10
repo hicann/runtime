@@ -162,16 +162,104 @@ struct RtStarsDqsBatchDequeueFc {
 };
 
 struct RtStarsDqsFrameAlignFc {
-    RtStarsCondOpLLWI           llwi1;
-    RtStarsCondOpLHWI           lhwi1;
-    RtStarsCondOpLoad           load1;
+    RtStarsCondOpLLWI           llwiCheckCacheListAddr;
+    RtStarsCondOpLHWI           lhwiCheckCacheListAddr;
+    RtStarsCondOpLLWI           llwiQueueNum;
+    RtStarsCondOpLHWI           lhwiQueueNum;
+    RtStarsCondOpLLWI           llwiCheckIndex;
+    RtStarsCondOpLHWI           lhwiCheckIndex;
 
-    RtStarsSetCsrJumpPc         jumpPc1;
-    RtStarsCondOpBranch         bne;
+    RtStarsCondOpLLWI           llwiCheckCntOffset;
+    RtStarsCondOpLHWI           lhwiCheckCntOffset;
+    RtStarsCondOpOp             addCheckCntAddr;
+    RtStarsCondOpLoad           ldrCheckCnt;
+    RtStarsCondOpImmSLLI        slliCheckCnt;
+    RtStarsCondOpImmSLLI        srliCheckCnt;
+    RtStarsSetCsrJumpPc         jumpGotoHeadIfCheckCntZero;
+    RtStarsCondOpBranch         beqCheckCntZero;
+    RtStarsCondOpImm            addiCheckCacheListAddr;
+    RtStarsCondOpImm            addiCheckIndex;
+    RtStarsSetCsrJumpPc         jumpCheckStartLoop;
+    RtStarsCondOpBranch         bltuCheckStartLoop;
 
-    RtStarsCondOpLLWI           llwi2;
-    RtStarsCondOpLHWI           lhwi2;
+    RtStarsCondOpLLWI           llwiCommitMbufListAddr;
+    RtStarsCondOpLHWI           lhwiCommitMbufListAddr;
+    RtStarsCondOpLLWI           llwiCommitCacheListAddr;
+    RtStarsCondOpLHWI           lhwiCommitCacheListAddr;
+    RtStarsCondOpLLWI           llwiCommitIndex;
+    RtStarsCondOpLHWI           lhwiCommitIndex;
+
+    RtStarsCondOpLLWI           llwiCommitCntOffset;
+    RtStarsCondOpLHWI           lhwiCommitCntOffset;
+    RtStarsCondOpOp             addCommitCntAddr;
+    RtStarsCondOpLoad           ldrCommitCnt;
+    RtStarsCondOpImmSLLI        slliCommitCnt;
+    RtStarsCondOpImmSLLI        srliCommitCnt;
+    RtStarsCondOpLLWI           llwiCntStep;
+    RtStarsCondOpLHWI           lhwiCntStep;
+    RtStarsSetCsrJumpPc         jumpLoadHandle1IfCntNotOne;
+    RtStarsCondOpBranch         bneLoadHandle1IfCntNotOne;
+    RtStarsCondOpLoad           ldrCacheHandle0;
+    RtStarsSetCsrJumpPc         jumpStoreSelectedHandle;
+    RtStarsCondOpBranch         beqStoreSelectedHandle;
+    RtStarsCondOpLoad           ldrCacheHandle1;
+    RtStarsCondOpStore          storeSelectedHandle;
+    RtStarsCondOpOp             subCommitCnt;
+    RtStarsCondOpStore          storeCommitCnt;
+    RtStarsCondOpImm            addiCommitMbufListAddr;
+    RtStarsCondOpImm            addiCommitCacheListAddr;
+    RtStarsCondOpImm            addiCommitIndex;
+    RtStarsSetCsrJumpPc         jumpCommitStartLoop;
+    RtStarsCondOpBranch         bltuCommitStartLoop;
+    RtStarsSetCsrJumpPc         jumpEnd;
+    RtStarsCondOpBranch         beqEnd;
+
+    RtStarsCondOpLLWI           llwiSqId;
+    RtStarsCondOpLHWI           lhwiSqId;
     RtStarsCondOpStreamGotoR    gotor;
+
+    RtStarsCondOpNop            end;
+};
+
+struct RtStarsDqsFrameAlignForDssFc {
+    RtStarsCondOpLLWI           llwiInputMbufListAddr;
+    RtStarsCondOpLHWI           lhwiInputMbufListAddr;
+    RtStarsCondOpLLWI           llwiInputMbufCacheListAddr;
+    RtStarsCondOpLHWI           lhwiInputMbufCacheListAddr;
+    RtStarsCondOpLLWI           llwiInputQueueNum;
+    RtStarsCondOpLHWI           lhwiInputQueueNum;
+    RtStarsCondOpLLWI           llwiIndex;
+    RtStarsCondOpLHWI           lhwiIndex;
+
+    RtStarsCondOpLLWI           llwiCntOffset;
+    RtStarsCondOpLHWI           lhwiCntOffset;
+    RtStarsCondOpOp             addCntAddr;
+    RtStarsCondOpLoad           ldrCnt;
+    RtStarsCondOpImmSLLI        slliCnt;
+    RtStarsCondOpImmSLLI        srliCnt;
+    RtStarsSetCsrJumpPc         jumpNextIfCntZero;
+    RtStarsCondOpBranch         beqCntZero;
+
+    RtStarsCondOpLoad           ldrHandle0;
+    RtStarsCondOpStore          storeInputMbuf;
+
+    RtStarsCondOpLLWI           llwiCacheDeep;
+    RtStarsCondOpLHWI           lhwiCacheDeep;
+    RtStarsSetCsrJumpPc         jumpDecCnt;
+    RtStarsCondOpBranch         bneCntNotTwo;
+    RtStarsCondOpLoad           ldrHandle1;
+    RtStarsCondOpStore          storeHandle1To0;
+
+    RtStarsCondOpLLWI           llwiOne;
+    RtStarsCondOpLHWI           lhwiOne;
+    RtStarsCondOpOp             subCnt;
+    RtStarsCondOpStore          storeCnt;
+
+    RtStarsCondOpImm            addiInputMbufListAddr;
+    RtStarsCondOpImm            addiInputMbufCacheListAddr;
+    RtStarsCondOpImm            addiIndex;
+    RtStarsSetCsrJumpPc         jumpStartLoop;
+    RtStarsCondOpBranch         bltuStartLoop;
 
     RtStarsCondOpNop            end;
 };
