@@ -145,6 +145,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
 
     if (driver->GetRunMode() == RT_RUN_MODE_ONLINE) {
         if (IsDavidUbDma(memcpyAsyncTaskInfo->copyType)) {
+            taskInfo->isNoRingbuffer = 1U;
             if (stream->GetBindFlag()) {
                 ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
             } else {
@@ -156,6 +157,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo * const taskInfo, rtDavidSqe_t
                 }
             }
         } else if (IsPcieDma(memcpyAsyncTaskInfo->copyType)) {
+            taskInfo->isNoRingbuffer = 1U;
             ConstructDavidPcieDmaSqe(taskInfo, davidSqe, sqBaseAddr);
         } else {
             ConstructDavidMemcpySqe(taskInfo, davidSqe, sqBaseAddr);
