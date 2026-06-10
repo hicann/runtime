@@ -169,6 +169,10 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
 
     bool isNeedAllocSqeDevBuf = false;
     AicTaskInit(taskInfo, kernel, kernelAttrType, static_cast<uint16_t>(blockDim), taskCfg, isNeedAllocSqeDevBuf);
+    error = CheckDynSizeValid(taskInfo, kernel);
+    ERROR_RETURN(error, "Failed to check shared memory size, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.",
+        error, dev->Id_(), stm->Id_(), taskInfo->id);
+
     AicTaskInfo* aicTask = &(taskInfo->u.aicTaskInfo);
     aicTask->kernel = kernel;
     aicTask->progHandle = prog;
@@ -188,11 +192,13 @@ static rtError_t UpdateKernelTaskInfoWithArgsAndCfg(
         RT_LOG_INFO,
         "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%d, kernel_name=%s, arg_size=%u, "
         "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu.",
+        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
+        "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
         dev->Id_(), stm->Id_(), taskInfo->id, kernelAttrType, kernel->Name_().c_str(), argsInfo->argsSize, blockDim,
         kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
         aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
-        aicTask->inputArgsSize.atomicIndex);
+        aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(), kernel->KernelVfType_(),
+        aicTask->dynamicShareMemSize, aicTask->simtDcuSmSize);
 
     return RT_ERROR_NONE;
 }

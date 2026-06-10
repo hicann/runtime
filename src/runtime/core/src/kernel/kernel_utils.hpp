@@ -29,6 +29,7 @@ namespace runtime {
     rtError_t PostUpdateKernelParams(TaskInfo* taskInfo);
     void SetAicoreArgsSuperKernel(TaskInfo* taskInfo, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result);
     void BackupTaskArgHandle(TaskInfo* taskInfo);
+    rtError_t CheckDynSizeValid(TaskInfo* taskInfo, const Kernel * const kernel);
 }  // namespace runtime
 }  // namespace cce
 #endif  // __CCE_RUNTIME_KERNEL_UTILS_HPP__

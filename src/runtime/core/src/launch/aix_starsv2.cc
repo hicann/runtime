@@ -57,7 +57,7 @@ rtError_t CheckAndGetTotalShareMemorySize(const Kernel * const kernel, uint32_t 
     return RT_ERROR_NONE;
 }
 
-static rtError_t CheckDynSizeValid(TaskInfo* taskInfo, const Kernel * const kernel)
+rtError_t CheckDynSizeValid(TaskInfo* taskInfo, const Kernel * const kernel)
 {
     if ((taskInfo == nullptr) || (kernel == nullptr)) {
         return RT_ERROR_NONE;
