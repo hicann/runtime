@@ -62,6 +62,7 @@ private:
     int32_t RegisterDrvChannel(uint32_t devId, uint32_t channelId);
     void RunHostMoveMode();
     void RunNormalMode();
+    void FillStr2IdIntoBuffer(std::string& dataStr);
 
 #ifdef __PROF_LLT
 public:
@@ -70,6 +71,7 @@ private:
 #endif
     void UninitHostMoveBuffer();
     int32_t WriteToHostMoveBuffer(const MsprofAdditionalInfo *data, size_t dataSize);
+    int32_t DrainBufferToHostMove();
 
 private:
     volatile bool stopped_;

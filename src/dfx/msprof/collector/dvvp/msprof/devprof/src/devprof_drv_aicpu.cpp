@@ -304,7 +304,7 @@ void DevprofDrvAicpu::AddStr2IdIntoBuffer(std::string& str) {
     MSPROF_LOGI("Add str2id into additional buffer, size:%uB", additionInfo.dataLen);
 }
 
-int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
+void DevprofDrvAicpu::FillStr2IdIntoBuffer(std::string& dataStr) {
     dataStr.insert(0, STR2ID_MARK);
     std::stringstream ss(dataStr);
     std::string item;
@@ -318,7 +318,7 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
         }
         uint32_t addSize = currentSize > 0 ? itemSize + 1 : itemSize;
         if (currentSize + addSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
-MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
+            MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
             AddStr2IdIntoBuffer(sendStr);
             sendStr = "";
             currentSize = 0;
@@ -335,6 +335,10 @@ MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendS
         MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
         AddStr2IdIntoBuffer(sendStr);
     }
+}
+
+int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr) {
+    FillStr2IdIntoBuffer(dataStr);
     int32_t ret = SendAddtionalInfo();
     if(ret != PROFILING_SUCCESS) {
         MSPROF_LOGE("send str2id info failed");
@@ -344,16 +348,9 @@ MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendS
     return ret;
 }
 
-void DevprofDrvAicpu::RunHostMoveMode()
+int32_t DevprofDrvAicpu::DrainBufferToHostMove()
 {
-    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || hostMoveRptr_ == nullptr) {
-        MSPROF_LOGE("Host move buffer pointers are null while isSupportHostMove_ is true");
-        return;
-    }
-    if (hostMoveBufferSize_ == 0 || hostMoveBufferSize_ < sizeof(MsprofAdditionalInfo)) {
-        MSPROF_LOGE("Host move buffer size is invalid, hostMoveBufferSize_=%zu", hostMoveBufferSize_);
-        return;
-    }
+    uint64_t totalWriteLen = 0;
     while (!stopped_ || (aicpuAdditionalBuffer_.GetUsedSize() != 0)) {
         if (aicpuAdditionalBuffer_.GetUsedSize() == 0) {
             (void)OsalSleep(WAIT_DATA_TIME);
@@ -367,7 +364,7 @@ void DevprofDrvAicpu::RunHostMoveMode()
             MSPROF_LOGE("Invalid wptr/rptr, wptr=%u rptr=%u max=%u", writeIdx, rptr, maxIdx);
             stopped_ = true;
             MSPROF_LOGE("Discarded pending data size=%zu in host move buffer", aicpuAdditionalBuffer_.GetUsedSize());
-            break;
+            return PROFILING_FAILED;
         }
 
         uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
@@ -375,7 +372,7 @@ void DevprofDrvAicpu::RunHostMoveMode()
             MSPROF_LOGW("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
             if (stopped_) {
                 MSPROF_LOGE("Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
-                break;
+                return PROFILING_FAILED;
             }
             (void)OsalSleep(WAIT_DATA_TIME);
             continue;
@@ -389,11 +386,42 @@ void DevprofDrvAicpu::RunHostMoveMode()
         }
 
         int32_t ret = WriteToHostMoveBuffer(static_cast<const MsprofAdditionalInfo *>(outPtr),
-            sizeof(MsprofAdditionalInfo));
+                      sizeof(MsprofAdditionalInfo));
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("Write to host move buffer failed");
+        } else {
+            totalWriteLen += sizeof(MsprofAdditionalInfo);
         }
         aicpuAdditionalBuffer_.BatchPopBufferIndexShift(outPtr, sizeof(MsprofAdditionalInfo));
+    }
+    MSPROF_LOGI("Host move: write pointer wrote total length=%lu bytes to ring buffer", totalWriteLen);
+    return PROFILING_SUCCESS;
+}
+
+void DevprofDrvAicpu::RunHostMoveMode()
+{
+    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || hostMoveRptr_ == nullptr) {
+        MSPROF_LOGE("Host move buffer pointers are null while isSupportHostMove_ is true");
+        return;
+    }
+    if (hostMoveBufferSize_ == 0 || hostMoveBufferSize_ < sizeof(MsprofAdditionalInfo)) {
+        MSPROF_LOGE("Host move buffer size is invalid, hostMoveBufferSize_=%zu", hostMoveBufferSize_);
+        return;
+    }
+
+    int32_t drainRet = DrainBufferToHostMove();
+
+    // send str2id keys to host via the ring buffer (mirrors RunNormalMode tail, but ring not driver).
+    // Skip when the main drain already broke/filled the ring, otherwise we'd fill then discard str2id.
+    if (drainRet == PROFILING_SUCCESS) {
+        std::string str2Id;
+        int32_t ret = analysis::dvvp::transport::HashData::instance()->GetHashKeys(str2Id);
+        MSPROF_LOGD("dev get hash keys ret:%u and str length:%u", ret, str2Id.length());
+        if (ret == PROFILING_SUCCESS && str2Id.length() > 0) {
+            MSPROF_LOGI("report str2id info length:%u via host move ring buffer", str2Id.length());
+            FillStr2IdIntoBuffer(str2Id);
+            (void)DrainBufferToHostMove();
+        }
     }
 
     MSPROF_LOGI("Host move: all pending data flushed to ring buffer, Run() exiting");
@@ -474,11 +502,25 @@ int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserP
             info->buffer_size, info->buffer_base_user_va);
         return PROFILING_FAILED;
     }
+    if (info->buffer_write_ptr_user_va == 0 || info->buffer_read_ptr_user_va == 0) {
+        MSPROF_LOGE("RecordHostMoveBufferAddresses wptr=0x%llx or rptr=0x%llx is invalid",
+            info->buffer_write_ptr_user_va, info->buffer_read_ptr_user_va);
+        return PROFILING_FAILED;
+    }
     hostMoveBufferSize_ = static_cast<size_t>(info->buffer_size);
     hostMoveBuffer_ = reinterpret_cast<uint8_t *>(static_cast<uintptr_t>(info->buffer_base_user_va));
     hostMoveRptr_ = reinterpret_cast<volatile uint32_t *>(static_cast<uintptr_t>(info->buffer_read_ptr_user_va));
     hostMoveWptr_ = reinterpret_cast<volatile uint32_t *>(static_cast<uintptr_t>(info->buffer_write_ptr_user_va));
     hostMoveWriteIndex_.store(0);
+    // The shared write/read pointers live in device memory allocated by the host (halMemAlloc does
+    // not guarantee zeroed memory). Until WriteToHostMoveBuffer writes the first record, *hostMoveWptr_
+    // would otherwise hold stale bytes, and the host consumer (prof_sample_aicpu_channel.c) computes
+    // write_index = wptr * AICPU_BUF_UNIT and copies [read_index, write_index) -- a garbage wptr makes
+    // it read far more than was ever written. Explicitly zero both pointers so producer and consumer
+    // share base 0 before any data is produced.
+    *hostMoveWptr_ = 0;
+    *hostMoveRptr_ = 0;
+    std::atomic_thread_fence(std::memory_order_release);
     MSPROF_LOGI("RecordHostMoveBufferAddresses: base=0x%llx, size=%zu, wptr=0x%llx, rptr=0x%llx",
         info->buffer_base_user_va, hostMoveBufferSize_,
         info->buffer_write_ptr_user_va, info->buffer_read_ptr_user_va);

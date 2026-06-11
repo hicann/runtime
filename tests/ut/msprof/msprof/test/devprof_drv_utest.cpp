@@ -18,6 +18,7 @@
 #include "config.h"
 #include "utils.h"
 #include "devprof_drv_aicpu.h"
+#include "transport/hash_data.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::config;
@@ -488,13 +489,25 @@ TEST_F(DEVPROF_DRV_UTEST, RecordHostMoveBufferAddresses)
     invalidInfo.buffer_base_user_va = 0;
     EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&invalidInfo));
 
-    DevprofDrvAicpu::instance()->SetSupportHostMove(true);
     uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    // wptr/rptr user va must be valid (non-zero), otherwise the shared pointers cannot be initialized.
+    invalidInfo.buffer_base_user_va = reinterpret_cast<uint64_t>(buffer);
+    invalidInfo.buffer_write_ptr_user_va = 0;
+    invalidInfo.buffer_read_ptr_user_va = 0;
+    EXPECT_EQ(PROFILING_FAILED, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&invalidInfo));
+
+    DevprofDrvAicpu::instance()->SetSupportHostMove(true);
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
+    // Pre-dirty the shared pointers to mimic halMemAlloc returning non-zeroed memory; the fix must
+    // reset them to 0 so the host consumer does not read stale records before any data is produced.
+    wptrVal = 12345;
+    rptrVal = 678;
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
     EXPECT_EQ(PROFILING_SUCCESS, DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info));
+    EXPECT_EQ(0U, wptrVal);
+    EXPECT_EQ(0U, rptrVal);
 
     MsprofAdditionalInfo data;
     data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
@@ -808,6 +821,11 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_InvalidBufferSize)
 TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_StoppedNoData)
 {
     DevprofDrvAicpu::instance()->Reset();
+    // Reset the additional buffer and clear str2id keys leaked by prior tests, so this case truly
+    // starts from "no pending data, no hash keys" and the ring buffer stays untouched.
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
+    analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
     uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
@@ -832,10 +850,13 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_InvalidWptrRptr)
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
     uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
-    uint32_t rptrVal = 99999;
+    uint32_t rptrVal = 0;
     Devprof::AicpuUserProfileBufferInfo info;
     SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
     DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    // RecordHostMoveBufferAddresses now zeroes the shared pointers, so inject the invalid rptr
+    // afterwards to mimic a corrupt read pointer appearing at runtime.
+    rptrVal = 99999;
     DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
 
     MsprofAdditionalInfo data;
@@ -885,6 +906,8 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteSuccess)
     DevprofDrvAicpu::instance()->Reset();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
     DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
+    // Clear leaked str2id keys so only the single pushed record is written to the ring buffer.
+    analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
     uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
     uint32_t wptrVal = 0;
     uint32_t rptrVal = 0;
@@ -902,6 +925,42 @@ TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_WriteSuccess)
     DevprofDrvAicpu::instance()->RunHostMoveMode();
     EXPECT_EQ(1U, wptrVal);
 
+    DevprofDrvAicpu::instance()->Release();
+    delete[] buffer;
+    GlobalMockObject::verify();
+}
+
+// host-move 模式下，所有采样数据落盘后，str2id hashkey 也应通过环形缓冲区回传给 host，
+// 与 RunNormalMode 行为对齐。验证 str2id 记录确实被写入了环形缓冲区且带 STR2ID_MARK 标记。
+TEST_F(DEVPROF_DRV_UTEST, RunHostMoveMode_ReportStr2Id)
+{
+    DevprofDrvAicpu::instance()->Reset();
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.UnInit();
+    DevprofDrvAicpu::instance()->aicpuAdditionalBuffer_.Init("AicpuBuffer");
+    analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
+    uint8_t *buffer = new uint8_t[4 * 1024 * 1024];
+    uint32_t wptrVal = 0;
+    uint32_t rptrVal = 0;
+    Devprof::AicpuUserProfileBufferInfo info;
+    SetupHostMoveBufferInfo(info, buffer, 4 * 1024 * 1024, &wptrVal, &rptrVal);
+    DevprofDrvAicpu::instance()->RecordHostMoveBufferAddresses(&info);
+    DevprofDrvAicpu::instance()->isSupportHostMove_ = true;
+
+    // 预置若干 hashkey，使 GetHashKeys 返回非空
+    analysis::dvvp::transport::HashData::instance()->GenHashId("op_kernel_name_0");
+    analysis::dvvp::transport::HashData::instance()->GenHashId("op_kernel_name_1");
+
+    MOCKER(OsalSleep).stubs().will(returnValue(0));
+    DevprofDrvAicpu::instance()->stopped_ = true;
+    DevprofDrvAicpu::instance()->RunHostMoveMode();
+
+    // 采样 buffer 为空，主排空不写入；str2id flush 后环形缓冲区应至少有一条记录
+    EXPECT_GT(wptrVal, 0U);
+    // 校验首条记录的 data 以 STR2ID_MARK 开头
+    const MsprofAdditionalInfo *record = reinterpret_cast<const MsprofAdditionalInfo *>(buffer);
+    EXPECT_EQ(0, strncmp(reinterpret_cast<const char *>(record->data), STR2ID_MARK, strlen(STR2ID_MARK)));
+
+    analysis::dvvp::transport::HashData::instance()->hashVector_.clear();
     DevprofDrvAicpu::instance()->Release();
     delete[] buffer;
     GlobalMockObject::verify();
