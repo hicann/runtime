@@ -124,9 +124,9 @@ rtError_t CheckFftsPlusDsaContext(const void * const descBuf, const uint64_t des
     const auto * const contextBuf = static_cast<const uint8_t *>(descBuf);
     for (uint32_t i = 0U; i < contextNum; ++i) {
         const auto * const context =
-            reinterpret_cast<const rtFftsPlusComCtx_t *>(contextBuf + (static_cast<uint64_t>(i) * CONTEXT_LEN));
-        COND_RETURN_ERROR_MSG_INNER(context->contextType == RT_CTX_TYPE_DSA, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "fftsplus dsa context is not supported after dsa stream deletion, context_id=%u.", i);
+            RtPtrToPtr<const rtFftsPlusComCtx_t *, const uint8_t *>(contextBuf + (static_cast<uint64_t>(i) * CONTEXT_LEN));
+        COND_RETURN_AND_MSG_OUTER(context->contextType == RT_CTX_TYPE_DSA, RT_ERROR_FEATURE_NOT_SUPPORT,
+            ErrorCode::EE1006, __func__,  "random number generation subtask"); 
     }
     return RT_ERROR_NONE;
 }
