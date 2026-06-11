@@ -9,6 +9,7 @@
  */
 
 #include "task_info_v100.h"
+#include "task_manager.h"
 #include "stars.hpp"
 #include "stream.hpp"
 
@@ -60,6 +61,29 @@ void ConstructSqeForBarrierTask(TaskInfo* taskInfo, rtStarsSqe_t *const command)
     PrintSqe(command, "BarrierTask");
     RT_LOG(RT_LOG_INFO, "BarrierTask stream_id=%d task_id=%hu.", taskInfo->stream->Id_(), taskInfo->id);
 }
+
+static bool BarrierTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForBarrierTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_BARRIER, funcs);
+    }
+
+    return true;
+}
+
+static bool g_barrierTaskRegister = BarrierTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

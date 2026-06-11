@@ -47,15 +47,7 @@ void ConstructSqeForModelUpdateTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
 void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructSqeForNopTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command);
 
-void SetResultForEventRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
-void ConstructSqeForEventRecordTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
-void ConstructSqeForEventResetTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
-void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo *const taskInfo, const uint32_t devId);
-void ConstructSqeForEventWaitTask(TaskInfo *const taskInfo, rtStarsSqe_t *const command);
-
 void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
-void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize);
-void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
 
 void SetStarsResultForDavinciTask(TaskInfo* taskInfo, const rtLogicCqReport_t &logicCq);
 void DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
@@ -66,10 +58,6 @@ void FillFftsPlusMixSqeSubtask(const AicTaskInfo *taskInfo, uint8_t *const subty
 void ConstructFftsMixSqeForDavinciTask(TaskInfo *taskInfo, rtStarsSqe_t *const command);
 void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
-
-void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo);
-void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
-void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId);
 
 void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t *const command);
 

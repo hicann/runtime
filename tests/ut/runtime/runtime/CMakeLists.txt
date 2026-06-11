@@ -77,6 +77,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/common/common_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
+    ${TOP_DIR}/src/runtime/feature/ffts/rdma_task_v100.cc
 )
 
 set(runtimeut_david_series_common_src_task_list
@@ -93,6 +94,9 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/david_event_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/ubdma_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v200_base.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
@@ -126,17 +130,14 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
 
     # mechanism dependance
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/barrier/barrier_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_to_aicpu_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v100.cc
-    ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/rdma_task_v100.cc
 )
 
 set(runtimeut_david_src_task_list

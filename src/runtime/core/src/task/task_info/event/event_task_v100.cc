@@ -23,7 +23,7 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("EventRecordTask")
-void SetResultForEventRecordTask(TaskInfo * const taskInfo, const void *const data, const uint32_t dataSize)
+static void SetResultForEventRecordTask(TaskInfo * const taskInfo, const void *const data, const uint32_t dataSize)
 {
     UNUSED(dataSize);
     EventRecordTaskInfo *eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
@@ -33,7 +33,7 @@ void SetResultForEventRecordTask(TaskInfo * const taskInfo, const void *const da
         (static_cast<uint64_t>(tsData[1]) << 32U); // shift 32 bit
 }
 
-void ConstructSqeForEventRecordTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForEventRecordTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     EventRecordTaskInfo *eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -79,7 +79,7 @@ void ConstructSqeForEventRecordTask(TaskInfo * const taskInfo, rtStarsSqe_t *con
 #endif
 
 #if F_DESC("EventResetTask")
-void ConstructSqeForEventResetTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForEventResetTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     EventResetTaskInfo *eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -151,7 +151,7 @@ void ConstructSqeForEventResetTask(TaskInfo * const taskInfo, rtStarsSqe_t *cons
 #endif
 
 #if F_DESC("RemoteEventWaitTask")
-void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo * const taskInfo, const uint32_t devId)
 {
     UNUSED(devId);
     RemoteEventWaitTaskInfo *remoteEventWaitTaskInfo = &(taskInfo->u.remoteEventWaitTaskInfo);
@@ -164,7 +164,7 @@ void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo * const taskInfo, const ui
 #endif
 
 #if F_DESC("EventWaitTask")
-void ConstructSqeForEventWaitTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForEventWaitTask(TaskInfo * const taskInfo, rtStarsSqe_t *const command)
 {
     EventWaitTaskInfo *eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -201,5 +201,61 @@ void ConstructSqeForEventWaitTask(TaskInfo * const taskInfo, rtStarsSqe_t *const
         eventWaitTaskInfo->timeout);
 }
 #endif
+
+static bool EventTaskRegister()
+{
+    TaskFuncSingle eventRecordFuncs = {
+        .toCommandFunc = &ToCommandBodyForEventRecordTask,
+        .toSqeFunc = &ConstructSqeForEventRecordTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEventRecordTask,
+        .taskUnInitFunc = &EventRecordTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultForEventRecordTask,
+        .setStarsResultFunc = &SetStarsResultForEventRecordTask,
+    };
+    TaskFuncSingle eventResetFuncs = {
+        .toCommandFunc = &ToCommandBodyForEventResetTask,
+        .toSqeFunc = &ConstructSqeForEventResetTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEventResetTask,
+        .taskUnInitFunc = &EventResetTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle remoteEventWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForRemoteEventWaitTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccessForRemoteEventWaitTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle eventWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForEventWaitTask,
+        .toSqeFunc = &ConstructSqeForEventWaitTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForEventWaitTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForEventWaitTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultForEventWaitTask,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_EVENT_RECORD, eventRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_EVENT_RESET, eventResetFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_REMOTE_EVENT_WAIT, remoteEventWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_WAIT_EVENT, eventWaitFuncs);
+    }
+
+    return true;
+}
+
+static bool g_eventTaskRegister = EventTaskRegister();
 }  // namespace runtime
 }  // namespace cce

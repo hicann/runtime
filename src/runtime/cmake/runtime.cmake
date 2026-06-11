@@ -190,6 +190,7 @@ set(libruntime_src_files_optional
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_pool.cc

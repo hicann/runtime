@@ -11,6 +11,7 @@
 #include "stars_david.hpp"
 #include "stars.hpp"
 #include "device.hpp"
+#include "notify_task.h"
 #include "task_manager.h"
 #include "error_code.h"
 namespace cce {
@@ -40,6 +41,42 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t * const
         "writeAddrLow=0x%x, writeAddrHigh=0x%x, subType=%u.", devId, stream->Id_(), taskInfo->id,
         taskInfo->taskSn, stream->GetSqId(), sqe->writeAddrLow, sqe->writeAddrHigh, sqe->subType);
 }
+
+static bool NotifyTaskRegister()
+{
+    TaskFuncSingle notifyRecordFuncs = {
+        .toCommandFunc = &ToCommandBodyForNotifyRecordTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForNotifyRecordTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle notifyWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForNotifyWaitTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForNotifyWaitTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForNotifyWaitTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetV200Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
+    return true;
+}
+
+static bool g_notifyTaskRegister = NotifyTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

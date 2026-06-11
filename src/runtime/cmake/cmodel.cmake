@@ -93,6 +93,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v200_base.cc
 
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cond_op/cond_op_stream_task_v200_base.cc
@@ -109,8 +110,10 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/common/common_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/random_num_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/cmo/cmo_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/ubdma_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task_v200_base.cc
@@ -145,11 +148,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_sqe.cc
 
     # mechanism dependance
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/notify_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/event/event_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/barrier/barrier_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/profiling/profiling_task_v100.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/reduce/reduce_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/ringbuffer_maintain/ringbuffer_maintain_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/timeout_set/timeout_set_task_v100.cc
@@ -342,6 +341,7 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task.cc
+    ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task.cc
     ${RUNTIME_CORE_DIR}/src/event/ipc_event.cc
     ${RUNTIME_CORE_DIR}/src/pool/event_expanding.cc

@@ -14,12 +14,13 @@
 #include "context.hpp"
 #include "notify.hpp"
 #include "notify_task.h"
+#include "task_manager.h"
 
 namespace cce {
 namespace runtime {
 
 #if F_DESC("NotifyRecordTask")
-void ConstructNotifySqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
+static void ConstructNotifySqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
 {
     Stream* const stream = taskInfo->stream;
     RtStarsNotifySqe *const sqe = &(command->notifySqe);
@@ -40,7 +41,7 @@ void ConstructNotifySqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *con
     PrintSqe(command, "NotifyRecordTask");
 }
 
-void ConstructIpcSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
+static void ConstructIpcSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
 {
     NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
     Stream* const stream = taskInfo->stream;
@@ -137,7 +138,7 @@ void ConstructSqeForNotifyRecordTask(TaskInfo *taskInfo, rtStarsSqe_t *const com
            notifyRecord->deviceId, notifyRecord->phyId);
 }
 
-void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize)
+static void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const data, const uint32_t dataSize)
 {
     UNUSED(taskInfo);
     UNUSED(dataSize);
@@ -146,7 +147,7 @@ void SetResultForNotifyRecordTask(TaskInfo *const taskInfo, const void *const da
 #endif
 
 #if F_DESC("NotifyWaitTask")
-void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
+static void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const command)
 {
     NotifyWaitTaskInfo* notifyWaitTask = &(taskInfo->u.notifywaitTask);
     Stream* const stream = taskInfo->stream;
@@ -171,6 +172,40 @@ void ConstructSqeForNotifyWaitTask(TaskInfo *taskInfo, rtStarsSqe_t *const comma
         stream->Device_()->Id_(), notifyWaitTask->timeout);
 }
 #endif
+
+static bool NotifyTaskRegister()
+{
+    TaskFuncSingle notifyRecordFuncs = {
+        .toCommandFunc = &ToCommandBodyForNotifyRecordTask,
+        .toSqeFunc = &ConstructSqeForNotifyRecordTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForNotifyRecordTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultForNotifyRecordTask,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle notifyWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForNotifyWaitTask,
+        .toSqeFunc = &ConstructSqeForNotifyWaitTask,
+        .doCompleteSuccFunc = &DoCompleteSuccessForNotifyWaitTask,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForNotifyWaitTask,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
+    }
+
+    return true;
+}
+
+static bool g_notifyTaskRegister = NotifyTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce

@@ -9,6 +9,8 @@
  */
 
 #include "task_info_v100.h"
+#include "rdma_task.h"
+#include "task_manager.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_cond_isa_helper.hpp"
@@ -223,6 +225,40 @@ void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsSqe_t * const comm
 }
 
 #endif
+
+static bool RdmaTaskRegister()
+{
+    TaskFuncSingle rdmaSendFuncs = {
+        .toCommandFunc = &ToCommandBodyForRdmaSendTask,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+    TaskFuncSingle rdmaDbSendFuncs = {
+        .toCommandFunc = &ToCommandBodyForRdmaDbSendTask,
+        .toSqeFunc = &ConstructSqeForRdmaDbSendTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_RDMA_SEND, rdmaSendFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_RDMA_DB_SEND, rdmaDbSendFuncs);
+    }
+
+    return true;
+}
+
+static bool g_rdmaTaskRegister = RdmaTaskRegister();
 
 }
 }

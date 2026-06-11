@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "event_david.hpp"
+#include "event_task.h"
 #include "task_manager.h"
 #include "stars.hpp"
 #include "stars_david.hpp"
@@ -99,7 +100,8 @@ void DoCompleteSuccessForDavidEventRecordTask(TaskInfo * const taskInfo, const u
         stream->GetSqId(), eventRecordTaskInfo->eventId, eventRecordTaskInfo->timestamp);
 }
 
-void ConstructDavidSqeForEventRecordTask(TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
+static void ConstructDavidSqeForEventRecordTask(
+    TaskInfo * const taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     DavidEventRecordTaskInfo *eventRecordTaskInfo = &(taskInfo->u.davidEventRecordTaskInfo);
@@ -205,7 +207,7 @@ void DoCompleteSuccessForDavidEventWaitTask(TaskInfo * const taskInfo, const uin
     }
 }
 
-void ConstructDavidSqeForEventWaitTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
+static void ConstructDavidSqeForEventWaitTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     Stream * const stream = taskInfo->stream;
@@ -283,7 +285,7 @@ void DoCompleteSuccessForDavidEventResetTask(TaskInfo * const taskInfo, const ui
     DoCompleteSuccess(taskInfo, devId);
 }
 
-void ConstructDavidSqeForEventResetTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
+static void ConstructDavidSqeForEventResetTask(TaskInfo *taskInfo, rtDavidSqe_t * const command, uint64_t sqBaseAddr)
 {
     UNUSED(sqBaseAddr);
     Stream * const stream = taskInfo->stream;
@@ -336,5 +338,65 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo *taskInfo, Event **eventPtr, David
     }
 }
 #endif
+
+static bool EventTaskRegister()
+{
+    TaskFuncSingle remoteEventWaitFuncs = {
+        .toCommandFunc = &ToCommandBodyForRemoteEventWaitTask,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle davidEventRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForDavidEventRecordTask,
+        .taskUnInitFunc = &DavidEventRecordTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForDavidEventRecordTask,
+    };
+    TaskFuncSingle davidEventWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForDavidEventWaitTask,
+        .taskUnInitFunc = &DavidEventWaitTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForDavidEventWaitTask,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultForEventWaitTask,
+    };
+    TaskFuncSingle davidEventResetFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = nullptr,
+        .doCompleteSuccFunc = &DoCompleteSuccessForDavidEventResetTask,
+        .taskUnInitFunc = &DavidEventResetTaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+
+    const auto &chips = GetDavidChips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_REMOTE_EVENT_WAIT, remoteEventWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RECORD, davidEventRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_WAIT, davidEventWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_DAVID_EVENT_RESET, davidEventResetFuncs);
+    }
+
+    RegDavidSqeFunc(TS_TASK_TYPE_REMOTE_EVENT_WAIT, &ConstructDavidSqeBase);
+    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_RECORD, &ConstructDavidSqeForEventRecordTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_WAIT, &ConstructDavidSqeForEventWaitTask);
+    RegDavidSqeFunc(TS_TASK_TYPE_DAVID_EVENT_RESET, &ConstructDavidSqeForEventResetTask);
+    return true;
+}
+
+static bool g_eventTaskRegister = EventTaskRegister();
 }  // namespace runtime
 }  // namespace cce

@@ -21,7 +21,7 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("ReduceAsyncV2Task")
-void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo)
+static void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo)
 {
     ReduceAsyncV2TaskInfo *reduceAsyncV2TaskInfo = &(taskInfo->u.reduceAsyncV2TaskInfo);
 
@@ -37,7 +37,7 @@ void ReduceAsyncV2TaskUnInit(TaskInfo * const taskInfo)
     return;
 }
 
-void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId)
+static void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId)
 {
     ReduceAsyncV2TaskInfo *reduceAsyncV2TaskInfo = &(taskInfo->u.reduceAsyncV2TaskInfo);
     Stream * const stream = taskInfo->stream;
@@ -69,7 +69,7 @@ void PrintErrorInfoForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_
     RT_LOG(RT_LOG_ERROR, "%s.", errStr);
 }
 
-void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint32_t devId)
 {
     const uint32_t errorCode = taskInfo->errorCode;
     Stream * const stream = taskInfo->stream;
@@ -85,6 +85,29 @@ void DoCompleteSuccessForReduceAsyncV2Task(TaskInfo * const taskInfo, const uint
 }
 
 #endif
+
+static bool ReduceTaskRegister()
+{
+    TaskFuncSingle funcs = {
+        .toCommandFunc = &ToCommandBodyForReduceAsyncV2Task,
+        .toSqeFunc = &ConstructSqeBase,
+        .doCompleteSuccFunc = &DoCompleteSuccessForReduceAsyncV2Task,
+        .taskUnInitFunc = &ReduceAsyncV2TaskUnInit,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoForReduceAsyncV2Task,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
+    const auto &chips = GetV100Chips();
+    for (auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_REDUCE_ASYNC_V2, funcs);
+    }
+
+    return true;
+}
+
+static bool g_reduceTaskRegister = ReduceTaskRegister();
 
 }  // namespace runtime
 }  // namespace cce
