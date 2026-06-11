@@ -95,6 +95,13 @@ extern "C" {
 #define ACL_HOST_DEVICE_CONNECT_TYPE_PCIE   0  // PCIe connection
 #define ACL_HOST_DEVICE_CONNECT_TYPE_HCCS   1  // HCCS connection
 #define ACL_HOST_DEVICE_CONNECT_TYPE_UB     2  // UB connection
+
+// for event
+#define ACL_EVENT_RECORD_DEFAULT 0x0U
+#define ACL_EVENT_RECORD_EXTERNAL 0x01U
+#define ACL_EVENT_WAIT_DEFAULT 0x0U
+#define ACL_EVENT_WAIT_EXTERNAL 0x01U
+
 typedef enum aclrtRunMode {
     ACL_DEVICE,
     ACL_HOST,
@@ -580,17 +587,20 @@ typedef struct aclmdlRIKernelTaskParams {
 
 typedef struct aclmdlRIEventRecordTaskParams {
     aclrtEvent event;
-    uint64_t eventFlag;
+    uint32_t eventFlag; // The flag passed when creating an event.
+    uint32_t recordFlag; // 0:ACL_EVENT_RECORD_DEFAULT;1:ACL_EVENT_RECORD_EXTERNAL
 } aclmdlRIEventRecordTaskParams;
 
 typedef struct aclmdlRIEventWaitTaskParams {
     aclrtEvent event;
-    uint64_t eventFlag;
+    uint32_t eventFlag; // The flag passed when creating an event.
+    uint32_t waitFlag; // 0:ACL_EVENT_WAIT_DEFAULT;1:ACL_EVENT_WAIT_EXTERNAL
 } aclmdlRIEventWaitTaskParams;
 
 typedef struct aclmdlRIEventResetTaskParams {
     aclrtEvent event;
-    uint64_t eventFlag;
+    uint32_t eventFlag;
+    uint32_t resetFlag;
 } aclmdlRIEventResetTaskParams;
 
 typedef struct aclmdlRIValueWriteTaskParams {

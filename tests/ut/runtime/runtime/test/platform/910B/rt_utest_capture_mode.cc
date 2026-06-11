@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -24,6 +24,7 @@
 #include "notify.hpp"
 #include "event.hpp"
 #include "task_info.hpp"
+#include "memory_task.h"
 #include "ffts_task.h"
 #include "device/device_error_proc.hpp"
 #include "program.hpp"
@@ -2601,5 +2602,95 @@ TEST_F(CloudV2CaptureModelTest, CaptureEventProcess_SubmitTaskFail)
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(captureStream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, GetCaptureRecordTaskParams_Success)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtEvent_t event;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    TaskInfo *taskInfo = createTaskInfo();
+    taskInfo->type = TS_TASK_TYPE_CAPTURE_RECORD;
+    taskInfo->typeName = "CAPTURE_RECORD";
+    taskInfo->u.memWriteValueTask.event = evt;
+
+    rtTaskParams params = {};
+    error = GetCaptureRecordTaskParams(taskInfo, &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_RECORD);
+    EXPECT_EQ(params.eventRecordTaskParams.recordFlag, RT_EVENT_RECORD_DEFAULT);
+
+    free(taskInfo);
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, GetCaptureWaitTaskParams_Success)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtEvent_t event;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    TaskInfo *taskInfo = createTaskInfo();
+    taskInfo->type = TS_TASK_TYPE_CAPTURE_WAIT;
+    taskInfo->typeName = "CAPTURE_WAIT";
+    taskInfo->u.memWaitValueTask.event = evt;
+
+    rtTaskParams params = {};
+    error = GetCaptureWaitTaskParams(taskInfo, &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_WAIT);
+    EXPECT_EQ(params.eventWaitTaskParams.waitFlag, RT_EVENT_WAIT_DEFAULT);
+
+    free(taskInfo);
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, GetCaptureResetTaskParams_Success)
+{
+    rtError_t error;
+    rtStream_t stream;
+    rtEvent_t event;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    Event *evt = rt_ut::UnwrapOrNull<Event>(event);
+
+    TaskInfo *taskInfo = createTaskInfo();
+    taskInfo->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    taskInfo->typeName = "MEM_WRITE_VALUE";
+    taskInfo->u.memWriteValueTask.event = evt;
+
+    rtTaskParams params = {};
+    error = GetCaptureResetTaskParams(taskInfo, &params);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.type, RT_TASK_EVENT_RESET);
+    EXPECT_EQ(params.eventResetTaskParams.resetFlag, RT_EVENT_WAIT_DEFAULT);
+
+    free(taskInfo);
+    error = rtEventDestroy(event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }

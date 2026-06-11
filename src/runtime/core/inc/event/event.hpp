@@ -56,6 +56,14 @@ struct RecordTaskInfo {
     rtEventState_t state;
 };
 
+// Event Record Flag definitions
+#define RT_EVENT_RECORD_DEFAULT    0U
+#define RT_EVENT_RECORD_EXTERNAL   1U
+
+// Event Wait Flag definitions
+#define RT_EVENT_WAIT_DEFAULT      0U
+#define RT_EVENT_WAIT_EXTERNAL     1U
+
 class Event : public NoCopy {
 public:
     Event();

@@ -1840,7 +1840,8 @@ rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParam
     Event *event = taskInfo->u.memWriteValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
     params->eventRecordTaskParams.event = event;
-    params->eventRecordTaskParams.eventFlag = event->GetEventFlag();
+    params->eventRecordTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
+    params->eventRecordTaskParams.recordFlag = RT_EVENT_RECORD_DEFAULT;
 
     return RT_ERROR_NONE;
 }
@@ -1853,7 +1854,8 @@ rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams*
     Event *event = taskInfo->u.memWaitValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
     params->eventWaitTaskParams.event = event;
-    params->eventWaitTaskParams.eventFlag = event->GetEventFlag();
+    params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
+    params->eventWaitTaskParams.waitFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
 }
@@ -1866,7 +1868,8 @@ rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams
     Event *event = taskInfo->u.memWriteValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER(event, RT_ERROR_INVALID_VALUE);
     params->eventResetTaskParams.event = event;
-    params->eventResetTaskParams.eventFlag = event->GetEventFlag();
+    params->eventResetTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
+    params->eventResetTaskParams.resetFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
 }

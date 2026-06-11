@@ -20,6 +20,7 @@ extern "C" {
 
 #define RT_IPCINT_MSGLEN_MAX     (0x8U)
 #define RT_IPC_HANDLE_SIZE       (64U)
+
 typedef enum rtEventWaitStatus {
     EVENT_STATUS_COMPLETE = 0,
     EVENT_STATUS_NOT_READY = 1,
