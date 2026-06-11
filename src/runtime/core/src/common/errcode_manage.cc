@@ -521,6 +521,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
 
     // hccl op retry failed
     rtErrMap_[RT_ERROR_AICPU_HCCL_OP_RETRY_FAILED] = {ACL_ERROR_RT_COMM_OP_RETRY_FAIL, "hccl op retry failed"};
+    rtErrMap_[RT_ERROR_AICPU_HCCL_OTHER_ERROR] = {ACL_ERROR_RT_TS_ERROR, "hccl other error"};
 
     // snapshot
     rtErrMap_[RT_ERROR_SNAPSHOT_LOCK_TIMEOUT] = {ACL_ERROR_SNAPSHOT_LOCK_TIMEOUT, "snapshot lock timeout"};

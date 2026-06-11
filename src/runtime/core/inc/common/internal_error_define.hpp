@@ -468,6 +468,7 @@ constexpr int32_t RT_ERROR_GROUP_NOT_CREATE                             = 0x0717
 constexpr int32_t RT_ERROR_AICPU_BASE                                   = 0x07180000;
 constexpr int32_t RT_ERROR_AICPU_INTERNAL_ERROR                         = 0x07180001;
 constexpr int32_t RT_ERROR_AICPU_HCCL_OP_RETRY_FAILED                   = 0x07180002;
+constexpr int32_t RT_ERROR_AICPU_HCCL_OTHER_ERROR                       = 0x07180003;
 
 constexpr int32_t RT_ERROR_CDQ_BASE                                    = 0x07190000;
 constexpr int32_t RT_ERROR_CDQ_DUPLICATE_CREATION                      = 0x07190001;
