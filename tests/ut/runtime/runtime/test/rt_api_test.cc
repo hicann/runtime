@@ -299,6 +299,25 @@ TEST_F(ApiAbnormalTest, RtsMemcpyAsyncTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiAbnormalTest, RtsMemcpyAsyncCountZeroTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t srcPtr[64];
+    uint32_t dstPtr[64];
+    uint64_t count = 0;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(api, &ApiErrorDecorator::MemcpyAsync)
+        .expects(never());
+
+    rtError_t error = api.RtsMemcpyAsync(dstPtr, sizeof(dstPtr), srcPtr, count,
+        RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(ApiAbnormalTest, RtsMemcpyTest)
 {
     ApiImpl impl;
@@ -332,6 +351,25 @@ TEST_F(ApiAbnormalTest, RtsMemcpyTest)
     error = impl.RtsMemcpy(dstPtr, count, srcPtr, count, RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = apiDecorator.RtsMemcpy(dstPtr, count, srcPtr, count, RT_MEMCPY_KIND_INTER_DEVICE_TO_DEVICE, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiAbnormalTest, RtsMemcpyCountZeroTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t srcPtr[64];
+    uint32_t dstPtr[64];
+    uint64_t count = 0;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(api, &ApiErrorDecorator::MemCopySync)
+        .expects(never());
+
+    rtError_t error = api.RtsMemcpy(dstPtr, sizeof(dstPtr), srcPtr, count,
+        RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
