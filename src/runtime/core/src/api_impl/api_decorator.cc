@@ -830,16 +830,6 @@ rtError_t ApiDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * c
     return impl_->GetDeviceIndexByPhyId(phyId, devIndex);
 }
 
-rtError_t ApiDecorator::GetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t * const phyDevId)
-{
-    return impl_->GetPhyDevIdByLogicDevId(logicDevId, phyDevId);
-}
-
-rtError_t ApiDecorator::GetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t * const logicDevId)
-{
-    return impl_->GetLogicDevIdByPhyDevId(phyDevId, logicDevId);
-}
-
 rtError_t ApiDecorator::DeviceReset(const int32_t devId, const bool isForceReset)
 {
     return impl_->DeviceReset(devId, isForceReset);

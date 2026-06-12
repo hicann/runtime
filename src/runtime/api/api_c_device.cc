@@ -295,21 +295,21 @@ rtError_t rtGetDeviceIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
 VISIBILITY_DEFAULT
 rtError_t rtsGetLogicDevIdByPhyDevId(int32_t phyDevId, int32_t * const logicDevId)
 {
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetLogicDevIdByPhyDevId(phyDevId, logicDevId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
+    if (phyDevId < 0) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(phyDevId, "greater than or equal to 0");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
+    return rtGetDeviceIndexByPhyId(static_cast<uint32_t>(phyDevId), RtPtrToPtr<uint32_t *>(logicDevId));
 }
-
+ 
 VISIBILITY_DEFAULT
 rtError_t rtsGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t * const phyDevId)
 {
-    Api * const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetPhyDevIdByLogicDevId(logicDevId, phyDevId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
+    if (logicDevId < 0) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDevId, "greater than or equal to 0");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
+    return rtGetDevicePhyIdByIndex(static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t *>(phyDevId));
 }
  
 VISIBILITY_DEFAULT

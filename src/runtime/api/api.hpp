@@ -413,8 +413,6 @@ public:
     virtual rtError_t GetDevice(int32_t * const devId) = 0;
     virtual rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t * const phyId) = 0;
     virtual rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t * const devIndex) = 0;
-    virtual rtError_t GetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t * const phyDevId) = 0;
-    virtual rtError_t GetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t * const logicDevId) = 0;
     virtual rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) = 0;
     virtual rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) = 0;
     virtual rtError_t DeviceSynchronize(const int32_t timeout = -1) = 0;
