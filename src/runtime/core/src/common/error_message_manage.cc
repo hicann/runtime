@@ -58,6 +58,10 @@ void ErrorMessageUtils::FuncErrorReason(const RtInnerErrcodeType rtErrCode, cons
             RT_LOG_OUTER_MSG(RT_INVALID_ARGUMENT_ERROR, "%s execution failed, %s.", funcName,
                             RT_GET_ERRREASON(rtErrCode).c_str());
             break;
+        case RT_ERROR_INVALID_HANDLE:
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, funcName, "handle",
+                "1. The handle has been destroyed. 2. The handle type is not the expected one");
+            break;
         case RT_ERROR_STREAM_SYNC_TIMEOUT:
             RT_LOG_OUTER_MSG(RT_STREAM_SYNC_TIMEOUT_INNER_ERROR, "%s execution failed.", funcName);
             break;

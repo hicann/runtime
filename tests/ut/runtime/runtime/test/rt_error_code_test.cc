@@ -14,6 +14,7 @@
 #include "errcode_manage.hpp"
 #include "runtime.hpp"
 #include "rt_log.h"
+#include "runtime_handle_guard.h"
 using namespace testing;
 using namespace cce::runtime;
 class RtErrorCodeTest : public Test {
@@ -335,3 +336,63 @@ TEST_F(RtErrorCodeTest, XMacroTableFormatSelfCheck)
 #undef RT_COUNT_IMPL
 #undef RT_COUNT
 #undef RT_UNPAREN
+
+// 覆盖 runtime_handle_guard.cc：magic 不匹配分支，经 ValidateInnerObject
+// 触发 BuildInvalidHandleReason 与 GetResourceNameByMagic，并上报 EE1017
+TEST_F(RtErrorCodeTest, ValidateInnerObjectMagicMismatch)
+{
+    rtInnerObject inner;
+    int dummyObj = 0;
+    InitializeInnerObject(inner, RT_STREAM_MAGIC, &dummyObj);
+
+    void *out = nullptr;
+    // 期望 EVENT，实际是 STREAM -> magic 不匹配 -> 上报 EE1017
+    EXPECT_EQ(GetValidatedObjectImpl(&inner, RT_EVENT_MAGIC, out), RT_ERROR_INVALID_HANDLE);
+    EXPECT_EQ(out, nullptr);
+}
+
+// 覆盖 ValidateInnerObject 的“已销毁”分支（actualMagic == 0）
+TEST_F(RtErrorCodeTest, ValidateInnerObjectDestroyed)
+{
+    rtInnerObject inner;
+    int dummyObj = 0;
+    InitializeInnerObject(inner, RT_STREAM_MAGIC, &dummyObj);
+    ResetInnerObject(inner); // magic 置 0 -> 已销毁
+
+    void *out = nullptr;
+    EXPECT_EQ(GetValidatedObjectImpl(&inner, RT_STREAM_MAGIC, out), RT_ERROR_INVALID_HANDLE);
+}
+
+// 覆盖 GetResourceNameByMagic 的所有资源类型分支 + unknown 默认分支
+// 每次都构造与 expected 不同的实际 magic，确保走进 BuildInvalidHandleReason
+TEST_F(RtErrorCodeTest, ValidateInnerObjectAllResourceNames)
+{
+    const uint64_t expectedMagics[] = {
+        RT_MODEL_MAGIC, RT_LABEL_MAGIC, RT_STREAM_MAGIC, RT_EVENT_MAGIC,
+        RT_NOTIFY_MAGIC, RT_CNTNOTIFY_MAGIC, 0xDEADBEEFull /* unknown */,
+    };
+    for (uint64_t expected : expectedMagics) {
+        rtInnerObject inner;
+        int dummyObj = 0;
+        InitializeInnerObject(inner, expected + 1U, &dummyObj); // 实际 magic 必不匹配
+        void *out = nullptr;
+        EXPECT_EQ(GetValidatedObjectImpl(&inner, expected, out), RT_ERROR_INVALID_HANDLE);
+    }
+}
+
+// 覆盖 GetValidatedObjectImpl 的成功路径与空句柄契约
+TEST_F(RtErrorCodeTest, ValidateInnerObjectSuccessAndNull)
+{
+    rtInnerObject inner;
+    int dummyObj = 0;
+    InitializeInnerObject(inner, RT_STREAM_MAGIC, &dummyObj);
+
+    void *out = nullptr;
+    EXPECT_EQ(GetValidatedObjectImpl(&inner, RT_STREAM_MAGIC, out), RT_ERROR_NONE);
+    EXPECT_EQ(out, &dummyObj);
+
+    // 空句柄 -> 直接返回 NONE 且出参置空
+    void *outNull = reinterpret_cast<void *>(0x1);
+    EXPECT_EQ(GetValidatedObjectImpl(nullptr, RT_STREAM_MAGIC, outNull), RT_ERROR_NONE);
+    EXPECT_EQ(outNull, nullptr);
+}
