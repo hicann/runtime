@@ -31,8 +31,7 @@ enum class QsLogFuncId : uint32_t {
 
 inline int64_t GetTid()
 {
-    thread_local static const int64_t BQS_TID = syscall(__NR_gettid);
-    return BQS_TID;
+    return syscall(__NR_gettid);
 }
 
 class HostQsLog {
