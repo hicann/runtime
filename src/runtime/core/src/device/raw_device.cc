@@ -1174,7 +1174,7 @@ rtError_t RawDevice::AllocProfSwitchAddr(void)
     profSwitchAddr_ = RtPtrToValue(addr);
 
     /* init value */
-    uint64_t profSwitch = 0UL;
+    constexpr uint64_t profSwitch = 0UL;
     (void)driver_->MemCopySync(RtValueToPtr<void *>(profSwitchAddr_), sizeof(uint64_t), static_cast<const void *>(&profSwitch),
         sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
     return RT_ERROR_NONE;
@@ -2448,7 +2448,7 @@ void RawDevice::PollEndGraphNotifyInfo()
             continue;);
 
         std::list<uint32_t>& sqePosList = it->second;
-        bool isAlreadyExecuted = JudgeIsEndGraphNotifyWaitExecuted(exeStream.get(), model, sqePosList);
+        const bool isAlreadyExecuted = JudgeIsEndGraphNotifyWaitExecuted(exeStream.get(), model, sqePosList);
         exeStream.reset();
         if (isAlreadyExecuted) {
             it = captureModelExeInfoMap_.erase(it);
@@ -2471,7 +2471,7 @@ void RawDevice::PollEndGraphNotifyInfoByModelId(const uint32_t modelId)
         COND_PROC((model->Id_() != modelId),
             ++it;
             continue;);
-        rtError_t ret = GetStreamSqCqManage()->GetStreamSharedPtrById(streamId, exeStream);
+        const rtError_t ret = GetStreamSqCqManage()->GetStreamSharedPtrById(streamId, exeStream);
         COND_PROC(((ret != RT_ERROR_NONE) || (exeStream == nullptr)),
             it = captureModelExeInfoMap_.erase(it);
             break;);
@@ -2525,7 +2525,7 @@ rtError_t RawDevice::SetSupportHcomcpuFlag()
     }
 
     int64_t hcomCpuNum = 0;
-    rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_HCOM_CPU, INFO_TYPE_CORE_NUM, &hcomCpuNum);
+    const rtError_t error = driver_->GetDevInfo(deviceId_, MODULE_TYPE_HCOM_CPU, INFO_TYPE_CORE_NUM, &hcomCpuNum);
     ERROR_RETURN(error, "get hcom cpu num failed, deviceId=%d, retCode=%#x, hcomCpuNum=%lld", deviceId_, error, hcomCpuNum);
     isSupportHcomcpu_ = (hcomCpuNum == 0) ? 0U : 1U;
     return RT_ERROR_NONE;

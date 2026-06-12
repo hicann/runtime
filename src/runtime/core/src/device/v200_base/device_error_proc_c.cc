@@ -385,7 +385,7 @@ void CheckAndPrintRasInfo(const Device * const dev)
     rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
     COND_RETURN_VOID_AND_MSG_OUTER(faultEventInfo == nullptr, ErrorCode::EE1013,
         maxFaultNum * sizeof(rtDmsFaultEvent));
-    const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
+    constexpr size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
     const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
     ScopeGuard faultEventInfoRelease(releaseFunc);
 
@@ -509,7 +509,7 @@ static void GetMteDeviceFaultEvent(
     constexpr uint32_t maxFaultNum = 128U;
     rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
     COND_RETURN_VOID((faultEventInfo == nullptr), "new rtDmsFaultEvent failed.");
-    const size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
+    constexpr size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
     (void)memset_s(faultEventInfo, totalSize, 0, totalSize);
 
     const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
@@ -554,7 +554,7 @@ static void SetTaskMteErrByType(const rtErrorType errType, const Device * const 
     bool isHitRemoteBlklist = false;
     bool isHitWhitelist = false;
     GetMteDeviceFaultEvent(dev, faultEventId, isHitBlklist, isHitRemoteBlklist, isHitWhitelist);
-    bool hasL2BuffEcc = (faultEventId == L2_BUFFER_ECC_EVENT_ID);
+    const bool hasL2BuffEcc = (faultEventId == L2_BUFFER_ECC_EVENT_ID);
     bool hasHbmEcc = (faultEventId == HBM_ECC_EVENT_ID);
     bool isHitHbmBlkList = !hasL2BuffEcc && isHitBlklist;
     RT_LOG(RT_LOG_ERROR, "support_hbm_ras_report=%d, has_l2_buffer_ecc_event=%d, has_hbm_ecc_notify_event=%d, "

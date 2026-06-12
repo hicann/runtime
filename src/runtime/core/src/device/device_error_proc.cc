@@ -1705,7 +1705,7 @@ rtError_t DeviceErrorProc::ProcessStarsOneElementInRingBuffer(const DevRingBuffe
                                  StarsDeviceErrorInfo& mergedOut) {
         const StarsCoreErrorInfoExt* aicExtData = nullptr;
         const StarsCoreErrorInfoExt* aivExtData = nullptr;
-        uint32_t extConsumed = CollectStarsExtInfos(
+        const uint32_t extConsumed = CollectStarsExtInfos(
             ctlInfo, elementSize, head, tail, errorType, &aicExtData, &aivExtData);
         // 已被合并的 Ext 元素不再作为独立错误处理，需要推进 head 跳过它们。
         if (extConsumed > 0U) {

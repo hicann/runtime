@@ -348,7 +348,7 @@ void DeviceSqCqPool::FreeReallocatedSqCqToDrv(
 
 rtError_t DeviceSqCqPool::ReAllocSqCqForFreeList(void)
 {
-    uint32_t drvFlag = (TSDRV_FLAG_SPECIFIED_SQ_ID | TSDRV_FLAG_SPECIFIED_CQ_ID | TSDRV_FLAG_NO_SQ_MEM);
+    const uint32_t drvFlag = (TSDRV_FLAG_SPECIFIED_SQ_ID | TSDRV_FLAG_SPECIFIED_CQ_ID | TSDRV_FLAG_NO_SQ_MEM);
 
     for (auto it = deviceSqCqFreeList_.begin(); it != deviceSqCqFreeList_.end(); ++it) {
         rtError_t error = AllocSqCqFromDrv(&(*it), drvFlag);
