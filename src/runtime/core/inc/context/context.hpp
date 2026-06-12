@@ -106,9 +106,6 @@ public:
     // Wait event recorded to complete.
     rtError_t Synchronize(int32_t timeout);
 
-    rtError_t LaunchKernelGetPrefetchCnt(const Kernel * const kernelPtr, const Program * const prog,
-        uint32_t &icachePrefetchCnt1, uint32_t &icachePrefetchCnt2, uint8_t &mixType) const;
-
     rtError_t DatadumpInfoLoad(const void * const dumpInfo, const uint32_t length, const uint32_t flag);
 
     rtError_t AicpuInfoLoad(const void * const aicpuInfo, const uint32_t length);
@@ -368,7 +365,7 @@ public:
         return --count_;
     }
 
-    uint64_t GetCount()
+    uint64_t GetCount() const
     {
         return count_;
     }

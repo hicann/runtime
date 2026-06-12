@@ -81,7 +81,8 @@ rtError_t RawDevice::FreeSimtStackPhyBase()
 
 rtError_t RawDevice::AllocStackPhyBaseDavid()
 {
-    uint64_t scalerBufSize = 32U * 1024U * GetDavidDieNum() * (RT_DAVID_AICORE_NUM_PER_DIE + GetDevProperties().aivNumPerDie);
+    const uint64_t scalerBufSize =
+        32U * 1024U * GetDavidDieNum() * (RT_DAVID_AICORE_NUM_PER_DIE + GetDevProperties().aivNumPerDie);
 
     rtError_t error = AllocAddrForDcache(deviceId_, stackPhyBase32k_, scalerBufSize, drvMemCtrlHandle_);
     if (error == RT_ERROR_NONE) {

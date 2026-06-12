@@ -170,7 +170,7 @@ static rtError_t LaunchAicpuKernelForCpuSoImpl(const rtKernelLaunchNames_t * con
 
     error = stm->Device_()->SubmitTask(tsk);
     COND_PROC_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, device->GetTaskFactory()->Recycle(tsk),
+        error != RT_ERROR_NONE, error, (void)device->GetTaskFactory()->Recycle(tsk),
         "Failed to submit AI CPU task, retCode=%#x.", error);
     return error;
 }

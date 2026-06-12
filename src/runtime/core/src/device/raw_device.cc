@@ -510,7 +510,7 @@ rtError_t RawDevice::RegisterAndLaunchDcacheLockOp(Context *ctx)
 
 bool RawDevice::IsSupportFeature(RtOptionalFeatureType f) const
 {
-    uint32_t index = static_cast<uint32_t>(f);
+    const uint32_t index = static_cast<uint32_t>(f);
     if (index >= featureSet_.size()) {
         return false;
     }

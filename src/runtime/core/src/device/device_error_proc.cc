@@ -189,7 +189,7 @@ rtError_t DeviceErrorProc::GetQosInfoFromRingbuffer()
             aicoreQosCfg.pmg = tsQosCfgArray[i].pmg;
             // replace_en、vf_en 和 mode 的映射关系维护在驱动中，这里值关注replace_en=1的场景，其他场景下mode继续保持非法值
             if (tsQosCfgArray[i].replaceEn == 1) {
-                aicoreQosCfg.mode = 0;
+                aicoreQosCfg.mode = 0U;
             }
             index = static_cast<uint32_t>(tsQosCfgArray[i].type) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
             RT_LOG(RT_LOG_INFO, "The QOS info from ringbuffer is: type=%u, mpamId=%u, qos=%u, pmg=%u, replaceEn=%u, index=%u.",
@@ -861,7 +861,7 @@ rtError_t DeviceErrorProc::ReportRingBuffer(uint16_t *errorStreamId)
     // read ringbuffer obtain the device status
     rtError_t error;
     constexpr uint64_t headSize = sizeof(DevRingBufferCtlInfo);
-    std::unique_ptr<char[]> hostAddr(new (std::nothrow) char[headSize]);
+    std::unique_ptr<uint8_t[]> hostAddr(new (std::nothrow) uint8_t[headSize]);
     COND_RETURN_AND_MSG_OUTER(hostAddr == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
         headSize);
     NULL_PTR_RETURN(device_, RT_ERROR_DEVICE_NULL);
@@ -876,7 +876,7 @@ rtError_t DeviceErrorProc::ReportRingBuffer(uint16_t *errorStreamId)
     error = devDrv->MemCopySync(hostAddr.get(), headSize, devMem, headSize, RT_MEMCPY_DEVICE_TO_HOST, false);
     ERROR_RETURN(error, "failed to Memcpy, copy size=%" PRIu64 "(bytes), ret=%#x.", headSize, error);
     
-    DevRingBufferCtlInfo *tmpCtrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *, char_t *>(hostAddr.get());
+    DevRingBufferCtlInfo *tmpCtrlInfo = RtPtrToPtr<DevRingBufferCtlInfo *, uint8_t *>(hostAddr.get());
     if (tmpCtrlInfo->magic != RINGBUFFER_MAGIC) {
         return RT_ERROR_NONE;
     }

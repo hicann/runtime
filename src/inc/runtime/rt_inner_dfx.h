@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef enum {
+enum rtKernelDfxInfoType {
     RT_KERNEL_DFX_INFO_DEFAULT = 0U,
     RT_KERNEL_DFX_INFO_PRINTF = 1U,
     RT_KERNEL_DFX_INFO_TENSOR = 2U,
@@ -25,9 +25,9 @@ typedef enum {
     RT_KERNEL_DFX_INFO_TIME_STAMP = 4U,
     RT_KERNEL_DFX_INFO_BLOCK_INFO = 5U,
     RT_KERNEL_DFX_INFO_INVALID = 0x7FFFFFFFU,
-} rtKernelDfxInfoType;
+};
 
-typedef void (*rtKernelDfxInfoProFunc)(rtKernelDfxInfoType type, uint32_t coreType, uint32_t coreId, const uint8_t *buffer, size_t length);
+using rtKernelDfxInfoProFunc = void (*)(rtKernelDfxInfoType type, uint32_t coreType, uint32_t coreId, const uint8_t *buffer, size_t length);
 
 /**
  * @brief register dump function

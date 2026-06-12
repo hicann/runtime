@@ -796,19 +796,15 @@ bool IsSmmuFault(const uint32_t deviceId)
 bool IsHitBlacklist(const uint32_t deviceId, const std::map<uint32_t, std::string>& eventIdBlkList)
 {
     constexpr uint32_t maxFaultNum = 128U;
-    rtDmsFaultEvent *faultEventInfo = new (std::nothrow)rtDmsFaultEvent[maxFaultNum];
-    COND_RETURN_AND_MSG_OUTER(faultEventInfo == nullptr, false, ErrorCode::EE1013,
-        maxFaultNum * sizeof(rtDmsFaultEvent));
-    const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
-    ScopeGuard faultEventInfoRelease(releaseFunc);
+    std::vector<rtDmsFaultEvent> faultEventInfo(maxFaultNum);
 
     constexpr size_t totalSize = maxFaultNum * sizeof(rtDmsFaultEvent);
-    auto eRet = memset_s(faultEventInfo, totalSize, 0, totalSize);
+    auto eRet = memset_s(&faultEventInfo[0U], totalSize, 0, totalSize);
     COND_RETURN_WARN(eRet != EOK, false, "Mem set error, ret=%d", eRet);
 
     uint32_t eventCount = 0U;
-    rtError_t error = GetDeviceFaultEvents(deviceId, faultEventInfo, eventCount, maxFaultNum);
-    COND_PROC((faultEventInfo == nullptr) || (error != RT_ERROR_NONE), return false);
+    rtError_t error = GetDeviceFaultEvents(deviceId, &faultEventInfo[0U], eventCount, maxFaultNum);
+    COND_PROC((error != RT_ERROR_NONE), return false);
     for (uint32_t faultIndex = 0U; faultIndex < eventCount; faultIndex++) {
         if (eventIdBlkList.find(faultEventInfo[faultIndex].eventId) != eventIdBlkList.end()) {
             std::ostringstream oss;
