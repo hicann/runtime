@@ -10,6 +10,8 @@
 
 #include "stream.hpp"
 #include "runtime.hpp"
+#include "kernel.hpp"
+#include "model.hpp"
 #include "task_info_v100.h"
 #include "cond_op_label_task.h"
 #include "task_manager.h"

@@ -12,6 +12,8 @@
 
 #include "base.hpp"
 #include "runtime.hpp"
+#include "kernel.hpp"
+#include "program.hpp"
 #include "task_fail_callback_data_manager.h"
 #include "xpu_task_fail_callback_data_manager.h"
 

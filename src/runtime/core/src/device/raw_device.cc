@@ -1410,11 +1410,7 @@ rtError_t RawDevice::UpdateTimeoutConfig()
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit TaskTimeoutSetTask, retCode=%#x.",
                          static_cast<uint32_t>(error));
 
-    if (stm->IsCtrlStream()) {
-        error = (dynamic_cast<CtrlStream*>(stm))->Synchronize();
-    } else {
-        error = stm->Synchronize();
-    }
+    error = stm->Synchronize();
     ERROR_RETURN_MSG_INNER(error, "Failed to synchronize stream, stream_id=%d, retCode=%#x.", stm->Id_(),
                            static_cast<uint32_t>(error));
 

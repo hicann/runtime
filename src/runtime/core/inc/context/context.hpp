@@ -21,6 +21,8 @@
 #include "reference.hpp"
 #include "arg_loader.hpp"
 #include "runtime.hpp"
+#include "kernel.hpp"
+#include "program.hpp"
 #include "pctrace.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"

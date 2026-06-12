@@ -13,7 +13,6 @@
 #include "base.hpp"
 #include "securec.h"
 #include "runtime.hpp"
-#include "ctrl_stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "scheduler.hpp"
 #include "profiler.hpp"
@@ -774,7 +773,7 @@ rtError_t DirectHwtsEngine::SubmitSend(TaskInfo * const workTask, uint32_t * con
     if (isNeedStreamSync) {
         if (stm->IsCtrlStream()) {
             // No need to profile and HalfEventProc for ctrl stream
-            return (dynamic_cast<CtrlStream*>(stm))->Synchronize();
+            return stm->Synchronize();
         }
         stm->StreamSyncLock();
         // isStreamSync para set true if need wait cq in unsink stream

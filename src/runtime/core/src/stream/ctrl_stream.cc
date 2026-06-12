@@ -94,8 +94,10 @@ rtError_t CtrlStream::GetHeadPosFromCtrlSq(uint32_t &sqHead)
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlStream::Synchronize()
+rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
 {
+    (void)isNeedWaitSyncCq;
+    (void)timeout;
     constexpr bool queryFlag = true;
     uint32_t currPosId = UINT32_MAX;
     const uint32_t lastPosId = sqTailPos_;

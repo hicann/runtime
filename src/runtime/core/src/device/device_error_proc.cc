@@ -18,7 +18,6 @@
 #include "context.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "stream_sqcq_manage.hpp"
-#include "ctrl_stream.hpp"
 #include "stub_task.hpp"
 #include "context_manage.hpp"
 #include "davinci_kernel_task.h"
@@ -437,11 +436,7 @@ rtError_t DeviceErrorProc::ProcRingBufferTask(const void * const devMem, const b
     error = device_->SubmitTask(tsk);
     ERROR_GOTO(error, ERROR_TASK, "Failed to SubmitTask task.");
 
-    if (stm->IsCtrlStream()) {
-        error = (dynamic_cast<CtrlStream*>(stm))->Synchronize();
-    } else {
-        error = stm->Synchronize();
-    }
+    error = stm->Synchronize();
     ERROR_GOTO(error, ERROR_TASK, "Failed to Synchronize.");
 
     return RT_ERROR_NONE;

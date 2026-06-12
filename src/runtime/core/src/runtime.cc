@@ -16,7 +16,6 @@
 #include "api_impl.hpp"
 #include "api_impl_mbuf.hpp"
 #include "context.hpp"
-#include "ctrl_stream.hpp"
 #include "engine_stream_observer.hpp"
 #include "raw_device.hpp"
 #include "program.hpp"
@@ -4062,11 +4061,7 @@ static rtError_t SetTimeoutConfigTaskSubmit(Stream * const stm, const rtTaskTime
 
     error = stm->Device_()->SubmitTask(timeoutSetTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "Failed to submit TaskTimeoutSetTask, retCode=%#x.", error);
-    if (stm->IsCtrlStream()) {
-        error = (dynamic_cast<CtrlStream*>(stm))->Synchronize();
-    } else {
-        error = stm->Synchronize();
-    }
+    error = stm->Synchronize();
     ERROR_RETURN_MSG_INNER(error, "Failed to synchronize TaskTimeoutSetTask, retCode=%#x.", error);
     return error;
 

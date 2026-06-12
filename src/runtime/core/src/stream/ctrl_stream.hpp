@@ -26,7 +26,7 @@ public:
     rtError_t Setup() override;
     rtError_t GetTaskIdByPos(const uint16_t recycleHead, uint32_t &taskId) override;
     rtError_t GetHeadPosFromCtrlSq(uint32_t &sqHead);
-    rtError_t Synchronize();
+    rtError_t Synchronize(const bool isNeedWaitSyncCq = false, int32_t timeout = -1) override;
     rtError_t AddTaskToStream(const uint32_t pos, const TaskInfo * const tsk);
     void DelPosToCtrlTaskIdMap(uint16_t pos);
     // total sqsize if 1024, last two sq is used as head(index:1022) and tail(index:1023), only 1022 is available

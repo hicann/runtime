@@ -13,15 +13,11 @@
 #include "base.hpp"
 #include "osal.hpp"
 #include "reference.hpp"
-#include "kernel.hpp"
 #include "symbol_table.hpp"
-#include "program.hpp"
 #include "tsch_defines.h"
 #include "driver.hpp"
 #include "tsd_client.h"
-#include "stream.hpp"
 #include "funcsymbol_table.hpp"
-#include "label.hpp"
 #include "dfx_api.hpp"
 #include "base_david.hpp"
 #include "capability.hpp"
@@ -134,6 +130,11 @@ static inline bool IsAbortError(rtError_t error)
 class Api;
 class Context;
 class Device;
+class Kernel;
+class Program;
+class ElfProgram;
+class Stream;
+class LabelAllocator;
 class ApiErrorDecorator;
 class Logger;
 class Profiler;

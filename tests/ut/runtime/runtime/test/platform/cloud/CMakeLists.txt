@@ -29,6 +29,7 @@ add_executable(runtime_utest_cloud
     rt_utest_model_api.cc
     rt_utest_launch.cc
     rt_utest_macro_value.cc
+    rt_utest_ctrl_stream.cc
     )
 
 target_compile_definitions(runtime_utest_cloud PUBLIC

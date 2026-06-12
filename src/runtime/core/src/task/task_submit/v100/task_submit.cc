@@ -10,7 +10,6 @@
 
 #include "task_submit.hpp"
 #include "task.hpp"
-#include "ctrl_stream.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "engine.hpp"
 #include "profiler.hpp"
@@ -335,7 +334,7 @@ rtError_t SubmitTaskDc(TaskInfo *submitTask, Stream *stm, uint32_t * const flipT
     if (submitTask->isNeedStreamSync != 0U) {
         if (stm->IsCtrlStream()) {
             // No need to profile and HalfEventProc for ctrl stream
-            return (dynamic_cast<CtrlStream*>(stm))->Synchronize();
+            return stm->Synchronize();
         }
         stm->StreamSyncLock();
         // isStreamSync para set true if need wait cq in unsink stream

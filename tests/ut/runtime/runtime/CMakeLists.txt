@@ -877,7 +877,6 @@ add_executable(runtime_utest
     ${TOP_DIR}/src/runtime/core/src/launch/xpu_aicpu_c_stub.cc
     stub/hal_stub.cc
     test/main.cc
-    test/rt_utest_ctrl_stream.cc
     test/rt_utest_kernellaunch.cc
     test/rt_utest_ctrl_res_pool.cc
     test/rt_utest_stream.cc
