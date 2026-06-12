@@ -2470,6 +2470,12 @@ TEST_F(StreamTest, stream_set_attribute1) {
  
     error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_MAX, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    rtStreamAttrValue_t setvalue;
+    setvalue = {0};
+    setvalue.streamPriority = 8; // 修改流优先级的值
+    error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_PRIORITY, &setvalue);
+    EXPECT_EQ(error, RT_ERROR_NONE);
  
     // 销毁流
     error = rtStreamDestroy(stream);

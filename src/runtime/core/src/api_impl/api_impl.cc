@@ -6861,7 +6861,6 @@ rtError_t ApiImpl::SetStreamPriorityValue(Stream * const stm, const uint32_t str
 
     Stream * const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-
     return targetStm->Device_()->Driver_()->SetStreamPriorityValue(targetStm, streamPriority);
 }
 
@@ -6872,7 +6871,6 @@ rtError_t ApiImpl::GetStreamPriorityValue(Stream * const stm, uint32_t * const s
 
     Stream * const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
-
     return targetStm->Device_()->Driver_()->GetStreamPriorityValue(targetStm, streamPriority);
 }
 

@@ -4999,7 +4999,20 @@ rtError_t ApiErrorDecorator::SetStreamPriorityValue(Stream * const stm, const ui
     NULL_PTR_RETURN_MSG_OUTER(stm, RT_ERROR_INVALID_VALUE);
     COND_RETURN_AND_MSG_OUTER(((stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) || (stm->Flags() & RT_STREAM_AICPU)) != 0U, 
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__, "flags=" + std::to_string(stm->Flags()));
-    return impl_->SetStreamPriorityValue(stm, streamPriority);
+    int32_t validPriority = static_cast<int32_t>(streamPriority);
+    uint32_t priority = streamPriority;
+    if (validPriority < RT_STREAM_GREATEST_PRIORITY) {
+        priority = RT_STREAM_GREATEST_PRIORITY;
+    } else if (validPriority > RT_STREAM_LEAST_PRIORITY) {
+        priority = RT_STREAM_LEAST_PRIORITY;
+    } else {
+        // no operation
+    }
+    if (priority != streamPriority) {
+        RT_LOG(RT_LOG_INFO, "Input priority=%d is out of range [%u, %u], adjusted to %u",
+            validPriority, RT_STREAM_GREATEST_PRIORITY, RT_STREAM_LEAST_PRIORITY, priority);
+    }
+    return impl_->SetStreamPriorityValue(stm, priority);
 }
 
 rtError_t ApiErrorDecorator::GetStreamPriorityValue(Stream * const stm, uint32_t * const streamPriority)
