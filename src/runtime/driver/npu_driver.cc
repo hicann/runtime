@@ -488,12 +488,12 @@ rtError_t NpuDriver::GetDevInfo(const uint32_t deviceId, const int32_t moduleTyp
     }
     const drvError_t drvRet = halGetDeviceInfo(curDevIdx, moduleType, infoType, val);
     if (drvRet != DRV_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "[drv api] halGetDeviceInfo failed: device_id=%u, "
-                "moduleType=%d, infoType=%d, drvRetCode=%d!",
-               deviceId, moduleType, infoType, static_cast<int32_t>(drvRet));
         if (moduleType == MODULE_TYPE_VECTOR_CORE) {
             (*val) = 0;
         } else {
+            DRV_ERROR_PROCESS(drvRet,
+                "Call driver api halGetDeviceInfo failed, drvRetCode=%d, drvDevId=%u.",
+                static_cast<int32_t>(drvRet), deviceId);
             return RT_GET_DRV_ERRCODE(drvRet);
         }
     }
