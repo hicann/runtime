@@ -241,7 +241,7 @@ rtError_t CheckCaptureModelSupportCondOp(Device * const dev)
 
     if (!(dev->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_CONDOP))) {
         RT_LOG(RT_LOG_WARNING, "tsfw does not support aclgraph condop, device_id=%u.", dev->Id_());
-        return RT_ERROR_NONE;
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     return RT_ERROR_NONE;
@@ -343,6 +343,10 @@ uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_
                 RT_LOG(RT_LOG_WARNING,
                     "Found stream id in submodel, parent_model_id=%u, sub_model_id=%u, sq_id=%hu, stream_id=%u",
                     parentModel->Id_(), subCaptureModel->Id_(), sqId, subStreamId);
+                return subStreamId;
+            }
+            subStreamId = FindStreamIdInSubModels(subCaptureModel, sqId);
+            if (subStreamId != UINT32_MAX) {
                 return subStreamId;
             }
         }

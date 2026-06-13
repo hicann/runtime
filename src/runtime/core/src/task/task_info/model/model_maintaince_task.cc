@@ -150,16 +150,6 @@ uint32_t GetCaptureModelExecutorType(ModelMaintainceTaskInfo *maintainceTaskInfo
         return MODEL_EXECUTOR_RESERVED;
     }
 
-    CaptureModel *captureModel = dynamic_cast<CaptureModel*>(maintainceTaskInfo->model);
-    if (captureModel->IsSubCaptureModel()) {
-        return MODEL_EXECUTOR_SUB_CAPTURE;
-    }
-
-    /*不属于任何condHandle，且存在子model，则是根model */
-    if ((captureModel->GetCondHandle() == nullptr) && (captureModel->CondHandle_().size() != 0)) {
-        return MODEL_EXECUTOR_ROOT_CAPTURE;
-    }
-
     return MODEL_EXECUTOR_CAPTURE;
 }
 

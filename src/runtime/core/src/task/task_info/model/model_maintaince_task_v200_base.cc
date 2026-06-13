@@ -94,7 +94,6 @@ void ConstructDavidSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtDavidS
         case MMT_MODEL_PRE_PROC:
             sqe->header.preP = 1U;
             sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_RESERVED;
-            sqe->u.modelMaintainceInfo.rootExeStreamId = GetRootExeStreamId(modelMaintainceTaskInfo->model);
             if (modelMaintainceTaskInfo->model->ModelExecuteType() == EXECUTOR_AICPU) {
                 sqe->u.modelMaintainceInfo.executorFlag = MODEL_EXECUTOR_AICPU;
             } else {

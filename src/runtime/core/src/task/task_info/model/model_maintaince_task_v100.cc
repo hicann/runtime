@@ -55,7 +55,6 @@ void ConstructSqeForModelMaintainceTask(TaskInfo * const taskInfo, rtStarsSqe_t 
                 type, sqe->u.model_maintaince_info.stream_id, sqe->u.model_maintaince_info.model_id);
             break;
         case MMT_MODEL_PRE_PROC:
-            sqe->u.model_maintaince_info.root_exe_stream_id = GetRootExeStreamId(modelMaintainceTaskInfo->model);
             sqe->pre_p = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             sqe->u.model_maintaince_info.executor_flag = MODEL_EXECUTOR_RESERVED;
             if (modelMaintainceTaskInfo->model->ModelExecuteType() == EXECUTOR_AICPU) {

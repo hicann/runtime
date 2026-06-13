@@ -2619,6 +2619,76 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
     ret = rtCtxDestroy(ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
+
+TEST_F(DavidCondHandleTest, CheckCaptureModelSupportCondOp_FeatureNotSupport)
+{
+    GlobalMockObject::reset();
+
+    MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs().with(eq(TS_FEATURE_ACLGRAPH_CONDOP)).will(returnValue(false));
+
+    EXPECT_FALSE(device_->CheckFeatureSupport(TS_FEATURE_ACLGRAPH_CONDOP));
+
+    rtError_t ret = CheckCaptureModelSupportCondOp(device_);
+    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(DavidCondHandleTest, FindStreamIdInSubModels_FoundInNestedSubModel)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+
+    Context *currentCtx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(currentCtx, nullptr);
+
+    auto *parentModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    parentModel->context_ = currentCtx;
+    parentModel->SetSoftwareSqEnable();
+
+    auto *subModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    subModel->context_ = currentCtx;
+    subModel->SetSubCaptureModel();
+    subModel->SetSoftwareSqEnable();
+
+    auto *nestedModel = new CaptureModel(RT_MODEL_CAPTURE_MODEL);
+    nestedModel->context_ = currentCtx;
+    nestedModel->SetSubCaptureModel();
+    nestedModel->SetSoftwareSqEnable();
+
+    auto *outerCond = new CondHandle(parentModel, 0, static_cast<rtCondHandleFlag_t>(0));
+    auto *innerCond = new CondHandle(subModel, 0, static_cast<rtCondHandleFlag_t>(0));
+    outerCond->PushBackSubModel(subModel);
+    innerCond->PushBackSubModel(nestedModel);
+    parentModel->condHandleTaskMap_[std::make_tuple(-1, static_cast<uint16_t>(0))] = outerCond;
+    subModel->condHandleTaskMap_[std::make_tuple(-1, static_cast<uint16_t>(0))] = innerCond;
+
+    auto *nestedStream = new Stream(device_, 0);
+    nestedStream->sqId_ = 10U;
+    nestedStream->streamId_ = 5;
+    nestedModel->ModelPushFrontStream(nestedStream);
+
+    EXPECT_EQ(FindStreamIdInSubModels(parentModel, 10U), 5U);
+    EXPECT_EQ(FindStreamIdInSubModels(parentModel, 11U), UINT32_MAX);
+
+    nestedModel->ModelRemoveStream(nestedStream);
+    outerCond->GetSubCaptureModels().clear();
+    innerCond->GetSubCaptureModels().clear();
+    parentModel->condHandleTaskMap_.clear();
+    subModel->condHandleTaskMap_.clear();
+
+    delete nestedStream;
+    delete innerCond;
+    delete outerCond;
+    delete nestedModel;
+    delete subModel;
+    delete parentModel;
+
+    ret = rtCtxDestroy(ctx);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+}
+
 TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_8bit_size)
 {
     RtStarsMemWaitValueInstrFcParaWithDynamicProf fcPara = {};

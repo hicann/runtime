@@ -160,11 +160,7 @@ struct RtStarsModelMaintaince {
     uint16_t endgraph_notify_id;
     uint32_t executor_flag;
     uint64_t streamExecTimesAddr;
-    uint32_t reserved0; // reserved for David alignment
- 	uint32_t reserved1; // reserved for David alignment
-    uint16_t root_exe_stream_id;
-    uint16_t reserved2;
-    uint32_t reserved[3];
+    uint32_t reserved[6];
 };
 
 struct RtStarsMaintaince {
