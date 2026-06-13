@@ -365,8 +365,7 @@ rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo *condTaskInfo, rtS
             {
                 RtStarsCaptureIfCondFc fcIf;
                 ConstructCaptureIfCondFc(para, fcIf);
-                ret = memcpy_s(condTaskInfo->funcCallHostMem, sizeof(fcIf),
-                               &fcIf, sizeof(fcIf));
+                ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcIf, sizeof(fcIf));
                 COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcIf failed.");
             }
             break;
@@ -374,8 +373,7 @@ rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo *condTaskInfo, rtS
             {
                 RtStarsCaptureWhileCondFc fcWhile;
                 ConstructCaptureWhileCondFc(para, fcWhile);
-                ret = memcpy_s(condTaskInfo->funcCallHostMem, sizeof(fcWhile),
-                               &fcWhile, sizeof(fcWhile));
+                ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcWhile, sizeof(fcWhile));
                 COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcWhile failed.");
             }
             break;
@@ -383,8 +381,8 @@ rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo *condTaskInfo, rtS
             {
                 RtStarsCaptureSwitchCondFc fcSwitch;
                 ConstructCaptureSwitchCondFc(para, fcSwitch);
-                ret = memcpy_s(condTaskInfo->funcCallHostMem, sizeof(fcSwitch),
-                               &fcSwitch, sizeof(fcSwitch));
+                ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize,
+                    &fcSwitch, sizeof(fcSwitch));
                 COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcSwitch failed.");
             }
             break;

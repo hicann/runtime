@@ -285,7 +285,6 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/task/ctrl_res_pool.cpp
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${libruntime_v100_task_src_files}
@@ -393,7 +392,6 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/host_task.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
     ${RUNTIME_CORE_DIR}/src/task/task_fail_callback_manager.cc
-    ${RUNTIME_CORE_DIR}/src/task/task_info/aclgraph_cond_task.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc

@@ -259,7 +259,7 @@ rtError_t StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams params, Str
     };
     ScopeGuard subModelErrRecycle(errSubModelRecycle);
 
-    Notify *notify = const_cast<Notify *>(condHandle->GetSubModelNotify());
+    Notify *notify = condHandle->GetSubModelNotify();
     if (notify == nullptr) {
         notify = new (std::nothrow) Notify(stm->Device_()->Id_(), stm->Device_()->DevGetTsId());
         COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, notify == nullptr, RT_ERROR_NOTIFY_NEW,

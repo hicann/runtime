@@ -11,8 +11,8 @@
 #define __CCE_RUNTIME_COND_HANDLE_HPP__
 
 #include "base.hpp"
-#include "runtime/base.h"
 #include "runtime_handle_guard.h"
+#include "rt_inner_model.h"
 
 namespace cce {
 namespace runtime {
