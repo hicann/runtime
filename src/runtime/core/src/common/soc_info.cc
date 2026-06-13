@@ -20,7 +20,7 @@ namespace cce {
 namespace runtime {
 namespace {
 
-rtError_t GetChipTypeFromPlatform(const std::string& socName, rtChipType_t& chipType)
+rtError_t GetChipTypeFromPlatformBySocName(const std::string& socName, rtChipType_t& chipType)
 {
     std::string result;
     const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(socName, platform_config::kVersionSection,
@@ -51,7 +51,7 @@ rtError_t GetChipTypeFromPlatform(const std::string& socName, rtChipType_t& chip
 rtError_t GetChipTypeFromPlatform(const char_t* const socName, rtChipType_t& chipType)
 {
     COND_PROC_RETURN_ERROR(socName == nullptr, RT_ERROR_INVALID_VALUE, , "socName is null.");
-    return GetChipTypeFromPlatform(std::string(socName), chipType);
+    return GetChipTypeFromPlatformBySocName(std::string(socName), chipType);
 }
 
 rtError_t GetNpuArchByName(const char_t* const socName, int32_t* hardwareNpuArch)

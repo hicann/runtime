@@ -25,24 +25,33 @@ constexpr size_t INVALID_HANDLE_REASON_MAX_LEN = 128U;
 
 const char *GetResourceNameByMagic(const uint64_t magic)
 {
+    const char *resourceName = "unknown";
     switch (magic) {
         case RT_MODEL_MAGIC:
-            return "model";
+            resourceName = "model";
+            break;
         case RT_LABEL_MAGIC:
-            return "label";
+            resourceName = "label";
+            break;
         case RT_STREAM_MAGIC:
-            return "stream";
+            resourceName = "stream";
+            break;
         case RT_EVENT_MAGIC:
-            return "event";
+            resourceName = "event";
+            break;
         case RT_NOTIFY_MAGIC:
-            return "notify";
+            resourceName = "notify";
+            break;
         case RT_CNTNOTIFY_MAGIC:
-            return "cntnotify";
+            resourceName = "cntnotify";
+            break;
         case RT_COND_HANDLE_MAGIC:
-            return "cond_handle";
+            resourceName = "cond_handle";
+            break;
         default:
-            return "unknown";
+            break;
     }
+    return resourceName;
 }
 
 rtError_t ValidateInnerObject(const void *handle, const uint64_t expectedMagic)
@@ -52,8 +61,9 @@ rtError_t ValidateInnerObject(const void *handle, const uint64_t expectedMagic)
     const uint64_t actualMagic = innerObject->magic.load();
 
     if (actualMagic != expectedMagic) {
+        const char * const destroyedMsg = (actualMagic == 0U) ? "(Already destroyed)" : "";
         RT_LOG(RT_LOG_ERROR, "Validate %s failed, magic mismatch, expected=%#" PRIx64 ", actual=%#" PRIx64 ". %s",
-               objectName, expectedMagic, actualMagic, (actualMagic == 0 ? "(Already destroyed)" : ""));
+               objectName, expectedMagic, actualMagic, destroyedMsg);
         char reason[INVALID_HANDLE_REASON_MAX_LEN] = {0};
         const int32_t ret = snprintf_s(reason, sizeof(reason), sizeof(reason) - 1U,
             "1. The %s handle has been destroyed. 2. The handle type must be %s", objectName, objectName);

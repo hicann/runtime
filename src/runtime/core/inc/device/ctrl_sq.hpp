@@ -78,7 +78,7 @@ private:
     rtError_t CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam &param, uint32_t * const msgId = nullptr) const;
     void RegCtrlMsgInitFunc(void) const;
     Device* device_;
-    Stream* stream_; // 内部下任务对应的stream
+    Stream* stream_{nullptr}; // 内部下任务对应的stream
 };
 }  // namespace runtime
 }  // namespace cce

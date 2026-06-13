@@ -767,7 +767,7 @@ bool HasMteErr(const Device * const dev)
 static bool CheckSmmuFault(const uint32_t deviceId)
 {
     bool isSmmuFault = false;
-    rtError_t error = NpuDriver::GetSmmuFaultValid(deviceId, isSmmuFault);
+    const rtError_t error = NpuDriver::GetSmmuFaultValid(deviceId, isSmmuFault);
     if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
         RT_LOG(RT_LOG_EVENT, "Getting fault SMMU valid status is not supported");
         return false;
@@ -783,7 +783,7 @@ static bool CheckSmmuFault(const uint32_t deviceId)
 bool IsSmmuFault(const uint32_t deviceId)
 {
     bool isSmmuFault = false;
-    rtError_t error = NpuDriver::GetSmmuFaultValid(deviceId, isSmmuFault);
+    const rtError_t error = NpuDriver::GetSmmuFaultValid(deviceId, isSmmuFault);
     COND_RETURN_WARN(error == RT_ERROR_FEATURE_NOT_SUPPORT, false,
         "Getting fault SMMU valid status is not supported");
     if (error != RT_ERROR_NONE) {
@@ -1233,7 +1233,7 @@ rtError_t DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo(const StarsDeviceError
             ProcessStarsTimeoutDfxSlotInfo(info, dev, slotIdx);
         } else {
             // ffts+
-            ProcessStarsTimeoutDfxSlotInfo4FftsPlus(info, const_cast<Device *>(dev), slotIdx);
+            ProcessStarsTimeoutDfxSlotInfo4FftsPlus(info, dev, slotIdx);
         }
     }
     // core info, only print subError!=0
@@ -1301,7 +1301,7 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo(
 }
 
 void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
-    const StarsDeviceErrorInfo *const info, Device *dev, uint16_t slotIdx)
+    const StarsDeviceErrorInfo *const info, const Device *dev, uint16_t slotIdx)
 {
     if (info == nullptr || dev == nullptr) {
         RT_LOG(RT_LOG_WARNING, "info or device is null");
@@ -1333,9 +1333,10 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
         return;
     }
     Driver *const devDrv = dev->Driver_();
+    uint8_t *const descAlignBuf = RtPtrToPtr<uint8_t *, void *>(fftsPlusTaskInfo->descAlignBuf);
     const rtError_t ret = devDrv->MemCopySync(&contextInfo,
         CONTEXT_LEN,
-        static_cast<void *>((RtPtrToPtr<uint8_t *, void *>(fftsPlusTaskInfo->descAlignBuf)) + offset),
+        static_cast<void *>(&descAlignBuf[offset]),
         CONTEXT_LEN,
         RT_MEMCPY_DEVICE_TO_HOST);
     if (ret != RT_ERROR_NONE) {
@@ -1438,7 +1439,14 @@ rtError_t DeviceErrorProc::ProcessStarsCoreErrorInfo(const StarsDeviceErrorInfo 
         ProcessMteAndFfts(info, coreIdx, isMteErr, isSupportFastRecover, isFftsPlusTask, errTaskPtr);
     }
     // 本地没有其他告警，且报错写mte错误，认为疑似是远端出错
-    if (isMteErr && (errTaskPtr != nullptr) && (!HasMteErr(dev)) && (!HasMemUceErr(dev->Id_()))) {
+    const bool hasErrTask = (errTaskPtr != nullptr);
+    bool isLinkError = false;
+    if (isMteErr && hasErrTask) {
+        if (!HasMteErr(dev)) {
+            isLinkError = !HasMemUceErr(dev->Id_());
+        }
+    }
+    if (isLinkError) {
         errTaskPtr->mte_error = TS_ERROR_SDMA_LINK_ERROR;
         (RtPtrToUnConstPtr<Device *>(dev))->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
     }

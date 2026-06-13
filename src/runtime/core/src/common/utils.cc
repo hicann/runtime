@@ -146,18 +146,16 @@ std::string GetFilePathByExtension(const std::string &binPath, std::string exten
 
 const std::string RealPathForFileNotExists(const std::string &inputPath)
 {
-    size_t lastSlash = inputPath.find_last_of("/\\");
-    std::string dirPath;
-    std::string fileName;
+    const std::string::size_type lastSlash = inputPath.find_last_of("/\\");
     std::string fullPath;
 
     if (lastSlash == std::string::npos) {
         //input path contains file name only;
         fullPath = inputPath;
     } else {
-        dirPath = inputPath.substr(0, lastSlash);
-        fileName = inputPath.substr(lastSlash + 1);
-        std::string canonicalDir = RealPath(dirPath);
+        const std::string dirPath = inputPath.substr(0, lastSlash);
+        const std::string fileName = inputPath.substr(lastSlash + std::string::size_type{1U});
+        const std::string canonicalDir = RealPath(dirPath);
         if (canonicalDir.empty()) {
             return "";
         }
@@ -233,7 +231,7 @@ uint64_t GetQuickHash(const void *data, const size_t size)
 std::string EscapeJsonString(const std::string& value)
 {
     std::ostringstream oss;
-    for (unsigned char ch : value) {
+    for (const char ch : value) {
         switch (ch) {
             case '\\':
                 oss << "\\\\";
@@ -257,11 +255,12 @@ std::string EscapeJsonString(const std::string& value)
                 oss << "\\t";
                 break;
             default:
-                if (ch < 0x20U) {
-                    oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<uint32_t>(ch)
+                const uint32_t charValue = static_cast<uint32_t>(static_cast<unsigned char>(ch));
+                if (charValue < 0x20U) {
+                    oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << charValue
                         << std::dec << std::setfill(' ');
                 } else {
-                    oss << static_cast<char>(ch);
+                    oss << ch;
                 }
                 break;
         }

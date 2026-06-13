@@ -279,7 +279,7 @@ public:
         return chipType_;
     }
 
-    void SetChipType(const rtChipType_t& chipType) override
+    void SetChipType(rtChipType_t chipType) override
     {
         chipType_ = chipType;
     }
@@ -448,7 +448,7 @@ public:
     rtError_t AllocMemForSqVirtualArr();
 
     rtError_t AddAddrKernelNameMapTable(rtAddrKernelName_t &mapInfo) override;
-    std::string LookupKernelNameByAddr(const uint64_t addr) override;
+    std::string LookupKernelNameByAddr(const uint64_t addr) const override;
     void AddAddrBinHandleMapTable(const uint64_t addr, void *const handle) override;
     void *LookupBinHandleByAddr(const uint64_t addr) override;
     void CreateMessageQueue();
@@ -882,12 +882,12 @@ public:
 
     rtError_t SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index) override;
 
-    const qos_master_config_t& GetQosCfg()
+    const qos_master_config_t& GetQosCfg() const
     {
         return aicoreQosCfgs_;
     }
 
-    void SetDeviceFaultInfo(const DeviceFaultInfo& info) override
+    void SetDeviceFaultInfo(DeviceFaultInfo info) override
     {
         devFaultInfo_ = info;
     }

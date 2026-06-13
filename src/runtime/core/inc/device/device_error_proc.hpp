@@ -205,7 +205,7 @@ private:
         const StarsDeviceErrorInfo *const info, const Device *const dev, uint16_t slotIdx);
 
     static void ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
-        const StarsDeviceErrorInfo *const info, Device *dev, uint16_t slotIdx);
+        const StarsDeviceErrorInfo *const info, const Device *dev, uint16_t slotIdx);
 
 	static void ProcessStarsCoreErrorOneMapInfo(uint32_t * const cnt, uint64_t err, std::string &errorString,
         uint32_t offset);
@@ -256,4 +256,3 @@ void InitFastRingBuffer(void* fastRingBufferAddr);
 } // namespace runtime
 }
 #endif // CCE_RUNTIME_DEVICE_ERROR_PROC_HPP
-

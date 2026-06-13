@@ -21,7 +21,7 @@ namespace cce {
 namespace runtime {
 using PfnCtrlMsgInit = rtError_t (*)(TaskInfo* taskInfo, const RtCtrlMsgParam& param);
 static PfnCtrlMsgInit ctrlMsgHandlerArr[static_cast<uint32_t>(RtCtrlMsgType::RT_CTRL_MSG_MAX)] = {};
-CtrlSQ::CtrlSQ(Device * const dev): NoCopy(), device_(dev), stream_(nullptr)
+CtrlSQ::CtrlSQ(Device * const dev): NoCopy(), device_(dev)
 {
 }
 
@@ -162,7 +162,7 @@ rtError_t CtrlSQ::SendStreamRecycleMsg(const RtMaintainceParam &maintenanceParam
     uint32_t taskId = 0U;
     const rtError_t error = CreateCtrlMsg(RtCtrlMsgType::RT_CTRL_MSG_STREAM_RECYCLE, param, &taskId);
     ERROR_RETURN_MSG_INNER(error, "Failed to send ctrl msg, retCode=%#x.", static_cast<uint32_t>(error));
-    task = device_->GetTaskFactory()->GetTask(GetStream()->Id_(), taskId);
+    task = device_->GetTaskFactory()->GetTask(GetStream()->Id_(), static_cast<uint16_t>(taskId));
     return RT_ERROR_NONE;
 }
 

@@ -44,7 +44,7 @@ rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
     const uint64_t simtWarpStkSize = Runtime::Instance()->GetSimtWarpStkSize();
     const uint32_t simtDvgWarpStkSize = Runtime::Instance()->GetSimtDvgWarpStkSize();
 
-    uint64_t aivCoreNum = GetDavidDieNum() * GetDevProperties().aivNumPerDie;
+    const uint64_t aivCoreNum = GetDavidDieNum() * GetDevProperties().aivNumPerDie;
     uint64_t stackPhySize = aivCoreNum * RT_MAX_WARP_NUM_PER_VECTOR_CORE * (simtWarpStkSize + static_cast<uint64_t>(simtDvgWarpStkSize));
     stackPhySize += static_cast<uint64_t>(STACK_PHY_BASE_ALIGN_LEN);   // 128B align
 
@@ -59,7 +59,7 @@ rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
         RtPtrToValue(simtStackPhyBase_) :
         (((RtPtrToValue(simtStackPhyBase_) >> STACK_PHY_BASE_ALIGN_BIT) + 1U) << STACK_PHY_BASE_ALIGN_BIT);
     simtStackPhyBaseAlign_ = RtValueToPtr<void *>(devAlignAddr);
-    simtWarpStkSize_ = (simtWarpStkSize >= MAX_UINT32_NUM) ? MAX_UINT32_NUM : simtWarpStkSize;
+    simtWarpStkSize_ = static_cast<uint32_t>((simtWarpStkSize >= MAX_UINT32_NUM) ? MAX_UINT32_NUM : simtWarpStkSize);
     simtDvgWarpStkSize_ = simtDvgWarpStkSize;
     return RT_ERROR_NONE;
 }
@@ -90,7 +90,10 @@ rtError_t RawDevice::AllocStackPhyBaseDavid()
         stackPhyBase32kAlign_ = stackPhyBase32k_;
         return RT_ERROR_NONE;
     }
-    const uint64_t stackPhySize = static_cast<uint64_t>(scalerBufSize + STACK_PHY_BASE_ALIGN_LEN);
+    if (scalerBufSize > (MAX_UINT64_NUM - STACK_PHY_BASE_ALIGN_LEN)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    const uint64_t stackPhySize = scalerBufSize + STACK_PHY_BASE_ALIGN_LEN;
     error = driver_->DevMemAlloc(&stackPhyBase32k_,
         stackPhySize, RT_MEMORY_DDR, deviceId_);
     COND_RETURN_ERROR((error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,

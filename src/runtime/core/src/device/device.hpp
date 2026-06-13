@@ -96,7 +96,7 @@ typedef struct {
 } rtAddrKernelName_t;
 
 typedef struct {
-    std::mutex mapMutex;
+    mutable std::mutex mapMutex;
     std::map<uint64_t, std::string> mapInfo;
 } rtKernelNameMapTable_t;
 
@@ -228,7 +228,7 @@ public:
     virtual rtError_t AllocExpandingPoolEvent(void ** const eventAddr, int32_t *eventId) = 0;
     virtual void FreeExpandingPoolEvent(const int32_t eventId) = 0;
     virtual rtChipType_t GetChipType() const = 0;
-    virtual void SetChipType(const rtChipType_t& chipType) = 0;
+    virtual void SetChipType(rtChipType_t chipType) = 0;
     virtual std::string GetSocVersion() const = 0;
     virtual CtrlResEntry *GetCtrlResEntry(void) = 0;
     virtual rtError_t WriteDevValue(void * const dest, const size_t size, const void * const data) = 0;
@@ -349,7 +349,7 @@ public:
     virtual void CtrlTaskReclaimByPos(CtrlStream* const stm, const uint32_t sqPos) = 0;
     virtual void CtrlTaskReclaim(CtrlStream* const stm) = 0;
     virtual rtError_t AddAddrKernelNameMapTable(rtAddrKernelName_t &mapInfo) = 0;
-    virtual std::string LookupKernelNameByAddr(const uint64_t addr) = 0;
+    virtual std::string LookupKernelNameByAddr(const uint64_t addr) const = 0;
     virtual void AddAddrBinHandleMapTable(const uint64_t addr, void *const handle) = 0;
     virtual void *LookupBinHandleByAddr(const uint64_t addr) = 0;
     virtual rtError_t TaskReclaimByStm(Stream * const stm, const bool limited, uint32_t &taskId) = 0;
@@ -477,7 +477,7 @@ public:
     virtual void PushFftsPlusArgHandle(void *argHandle) = 0;
     virtual void FreeFftsPlusArgHandleCache() = 0;
     virtual rtError_t RestoreSqCqPool() = 0;
-    virtual void SetDeviceFaultInfo(const DeviceFaultInfo& info) = 0;
+    virtual void SetDeviceFaultInfo(DeviceFaultInfo info) = 0;
     virtual DeviceFaultInfo GetDeviceFaultInfo() const = 0;
 
     inline std::mutex& GetHcclStreamIndexMutex(void)

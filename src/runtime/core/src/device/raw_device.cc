@@ -1959,7 +1959,7 @@ rtError_t RawDevice::AddAddrKernelNameMapTable(rtAddrKernelName_t &mapInfo)
     return RT_ERROR_NONE;
 }
 
-std::string RawDevice::LookupKernelNameByAddr(const uint64_t addr)
+std::string RawDevice::LookupKernelNameByAddr(const uint64_t addr) const
 {
     const std::unique_lock<std::mutex> lk(addrKernelNameMap_.mapMutex);
     const auto iter = addrKernelNameMap_.mapInfo.find(addr);
