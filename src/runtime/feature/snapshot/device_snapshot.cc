@@ -66,7 +66,7 @@ void HandleStreamActive(TaskInfo* const task, DeviceSnapshot* snapshot)
 
 DeviceSnapshot::DeviceSnapshot(Device* dev) { device_ = dev; }
 
-DeviceSnapshot::~DeviceSnapshot() noexcept {}
+DeviceSnapshot::~DeviceSnapshot() noexcept = default;
 
 void DeviceSnapshot::RecordFuncCallAddrAndSize(TaskInfo* const task)
 {

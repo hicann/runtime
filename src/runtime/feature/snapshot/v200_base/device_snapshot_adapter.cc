@@ -72,7 +72,7 @@ void DeviceSnapshot::RecordArgsAddrAndSize(TaskInfo * const task)
         void *args = task->u.fusionKernelTask.args;
         const size_t size = task->u.fusionKernelTask.argsSize;
         AddOpVirtualAddr(args, static_cast<size_t>(size));
-    }
+    } else {}
 }
 
 const DeviceSnapshot::TaskHandlerFuncMap& DeviceSnapshot::GetHandlerMap() const
