@@ -969,7 +969,7 @@ rtError_t RawDevice::GetQosInfoByIpc()
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIC_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIC_INS;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_DAT) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_DAT;
     aicoreQosCfg[static_cast<int32_t>(QosMasterType::MASTER_AIV_INS) - static_cast<int32_t>(QosMasterType::MASTER_AIC_DAT)].type = QosMasterType::MASTER_AIV_INS;
-    for(int i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
+    for(size_t i = 0; i < MAX_ACC_QOS_CFG_NUM; i++) {
         rtError_t error = GetOneAicoreQosCfg(deviceId_, aicoreQosCfg[i]);
         if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
             RT_LOG(RT_LOG_WARNING, "Getting AICore QoS config is not supported.");
