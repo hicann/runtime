@@ -108,12 +108,11 @@ rtError_t XpuArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, voi
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
         if (ret != EOK) {
             const std::string retStr = std::to_string(ret);
-            const std::string extInfo = "src=" + std::to_string(RtPtrToValue(args)) +
-                ", dest=" + std::to_string(RtPtrToValue(result->kerArgs)) +
-                ", dest_max=" + std::to_string(size) +
-                ", count=" + std::to_string(size);
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(result->kerArgs) << ", src=0x" << RtPtrToValue(args)
+               << std::dec << ", destMax=" << size << ", count=" << size << ".";
             RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
-                retStr.c_str(), strerror(ret), extInfo.c_str());
+                retStr.c_str(), strerror(ret), ss.str().c_str());
             return RT_ERROR_DRV_MEMORY;
         }
     }

@@ -567,10 +567,13 @@ rtError_t rtConfigureCall(uint32_t numBlocks, rtSmDesc_t *smDesc, rtStream_t stm
         launchArg.smUsed = true;
         ret = memcpy_s(&launchArg.smDesc, sizeof(launchArg.smDesc), smDesc,
                        sizeof(launchArg.smDesc));
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__,
-            "memcpy_s", std::to_string(ret), strerror(ret), "src=" + std::to_string(RtPtrToValue(smDesc)) + ", dest=" +
-            std::to_string(RtPtrToValue(&launchArg.smDesc)) + ", dest_max=" + std::to_string(sizeof(launchArg.smDesc)) +
-            ", count=" + std::to_string(sizeof(launchArg.smDesc)) + ".");
+        if (ret != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(&launchArg.smDesc) << ", smDesc=0x" << RtPtrToValue(smDesc)
+               << std::dec << ", destMax=" << sizeof(launchArg.smDesc) << ", count=" << sizeof(launchArg.smDesc) << ".";
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+            return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_SEC_HANDLE);
+        }
     } else {
         launchArg.smUsed = false;
         ret = memset_s(&launchArg.smDesc, sizeof(launchArg.smDesc), 0, sizeof(launchArg.smDesc));
@@ -4130,11 +4133,13 @@ rtError_t rtsProfTrace(void *userdata, int32_t length, rtStream_t stream)
 
     rtProfTraceUserData data = {0, 0, 0};
     errno_t ret = memcpy_s(&data, sizeof(data), userdata, length);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__, "memcpy_s",
-        std::to_string(ret), strerror(ret), "src=" + std::to_string(RtPtrToValue(userdata)) + ", dest=" +
-        std::to_string(RtPtrToValue(&data)) + ", dest_max=" + std::to_string(dataSize) + ", count=" +
-        std::to_string(length) + ".");
-
+    if (ret != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(&data) << ", userdata=0x" << RtPtrToValue(userdata)
+           << std::dec << ", destMax=" << sizeof(data) << ", length=" << length << ".";
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_SEC_HANDLE);
+    }
     RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, exeStream);
     const rtError_t error = apiInstance->ProfilerTraceEx(data.id, data.modelId, data.tagId, exeStream);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

@@ -1415,12 +1415,11 @@ rtError_t ApiImpl::SetupArgument(const void * const setupArg, const uint32_t siz
     const errno_t ret = memcpy_s(launchArgs + offset, sizeof(launchArg.args) - offset,
         setupArg, static_cast<size_t>(size));
     if (ret != EOK) {
-        std::string extendInfo = "destAddr=" + std::to_string(RtPtrToValue(launchArgs + offset)) +
-                                 ", srcAddr=" + std::to_string(RtPtrToValue(setupArg)) +
-                                 ", maxLen=" + std::to_string(sizeof(launchArg.args) - offset) + "(bytes)" +
-                                 ", actualLen=" + std::to_string(static_cast<size_t>(size)) + "(bytes)";
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(launchArgs + offset) << ", setupArg=0x" << RtPtrToValue(setupArg)
+           << std::dec << ", destMax=" << sizeof(launchArg.args) - offset << ", size=" << size << ".";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
-            "memcpy_s", std::to_string(ret).c_str(), strerror(ret), extendInfo.c_str());
+            "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
     const uint32_t totalSize = size + offset;
@@ -8480,12 +8479,11 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle *argsHandle, void *para, size_t
     const uintptr_t offset = reinterpret_cast<uintptr_t>(argsHandle->buffer) + static_cast<uint64_t>(realParaOffset);
     const errno_t ret = memcpy_s(reinterpret_cast<void *>(offset), paraSize, para, paraSize);
     if (ret != EOK) {
-        std::string extendInfo = "destAddr=" + std::to_string(offset) +
-                                  ", srcAddr=" + std::to_string(RtPtrToValue(para)) +
-                                  ", maxLen=" + std::to_string(paraSize) + "(bytes)" +
-                                  ", actualLen=" + std::to_string(paraSize) + "(bytes)";
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << offset << ", para=0x" << RtPtrToValue(para)
+           << std::dec << ", destMax=" << paraSize << ", paraSize=" << paraSize << ".";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
-            "memcpy_s", std::to_string(ret).c_str(), strerror(ret), extendInfo.c_str());
+            "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_INVALID_VALUE;
     }
     argsHandle->argsSize = needOccupyOffset; // 本地append参数后，内存偏移的变化
@@ -8735,12 +8733,11 @@ rtError_t ApiImpl::FuncGetName(const Kernel * const kernel, const uint32_t maxLe
 {
     const errno_t error = memcpy_s(name, static_cast<size_t>(maxLen), kernel->Name_().c_str(), kernel->Name_().length() + 1U);
     if (error != EOK) {
-        std::string extendInfo = "destAddr=" + std::to_string(RtPtrToValue(name)) +
-                                  ", srcAddr=" + std::to_string(RtPtrToValue(kernel->Name_().c_str())) +
-                                  ", maxLen=" + std::to_string(static_cast<size_t>(maxLen)) + "(bytes)" +
-                                  ", actualLen=" + std::to_string(kernel->Name_().length() + 1U) + "(bytes)";
+        std::stringstream ss;
+        ss << std::hex << "name=0x" << RtPtrToValue(name) << ", kernelName=0x" << RtPtrToValue(kernel->Name_().c_str())
+           << std::dec << ", maxLen=" << maxLen << ", actualLen=" << kernel->Name_().length() + 1U << ".";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
-            "memcpy_s", std::to_string(error).c_str(), strerror(error), extendInfo.c_str());
+            "memcpy_s", std::to_string(error).c_str(), strerror(error), ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
     return RT_ERROR_NONE;

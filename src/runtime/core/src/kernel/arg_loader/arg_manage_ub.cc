@@ -115,12 +115,11 @@ rtError_t UbArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, void
             RtValueToPtr<void *>(RtPtrToValue<void *>(src) + offset), static_cast<size_t>(curSize));
         if (ret != EOK) {
             const std::string retStr = std::to_string(ret);
-            const std::string extInfo = "src=" + std::to_string(RtPtrToValue(src) + offset) +
-                ", dest=" + std::to_string(RtPtrToValue(dest) + offset) +
-                ", dest_max=" + std::to_string(curSize) +
-                ", count=" + std::to_string(curSize);
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(dest) + offset << ", src=0x" << RtPtrToValue(src) + offset
+               << std::dec << ", destMax=" << curSize << ", count=" << curSize << ".";
             RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
-                retStr.c_str(), strerror(ret), extInfo.c_str());
+                retStr.c_str(), strerror(ret), ss.str().c_str());
             return RT_ERROR_DRV_ERR;
         }
         offset += curSize;

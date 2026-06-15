@@ -1354,3 +1354,107 @@ TEST_F(RtApiTest, model_json_print_stream_active)
     error = rtStreamDestroy(activeStream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+
+TEST_F(RtApiTest, rtGetSocVersion_SocNameEmpty_MemcpyFail)
+{
+    rtError_t error;
+    char ver[64] = {0};
+
+    GlobalContainer::SetSocVersion("");
+    ((Runtime *)Runtime::Instance())->SetIsUserSetSocVersion(false);
+    
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtGetSocVersion(ver, sizeof(ver));
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+
+    GlobalContainer::SetSocVersion("Ascend910B1");
+    GlobalMockObject::verify();
+}
+
+TEST_F(RtApiTest, rtGetSocVersion_SocNameNotEmpty_MemcpyFail)
+{
+    rtError_t error;
+    char ver[64] = {0};
+
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtGetSocVersion(ver, sizeof(ver));
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(RtApiTest, rtGetSocSpec_MemcpyFail)
+{
+    rtError_t error;
+    char val[64] = {0};
+
+    char socVersion[SOC_VERSION_LEN] = "Ascend910B1";
+    MOCKER_CPP(&rtGetSocVersion)
+        .stubs()
+        .with(outBoundP(socVersion, SOC_VERSION_LEN), mockcpp::any())
+        .will(returnValue(ACL_RT_SUCCESS));
+    
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtGetSocSpec("version", "NpuArch", val, sizeof(val));
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(RtApiTest, rtsKernelArgsParaUpdate_MemcpyFail)
+{
+    rtError_t error;
+    
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program *program = &stubProg;
+    Kernel *k1 = new Kernel("f1", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+    k1->userParaNum_ = 2;
+    k1->systemParaNum_ = 2;
+    k1->isSupportOverFlow_ = true;
+    k1->isNeedSetFftsAddrInArg_ = true;
+
+    void *argsHandle;
+    error = rtsKernelArgsInit(k1, &argsHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(argsHandle, nullptr);
+
+    RtArgsHandle *handle = (RtArgsHandle *)argsHandle;
+    EXPECT_NE(handle->buffer, nullptr);
+
+    uint32_t param1 = 1002;
+    void *paramHandle = nullptr;
+    error = rtsKernelArgsAppend(argsHandle, &param1, sizeof(uint32_t), &paramHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(paramHandle, nullptr);
+
+    ParaDetail *pHandle = (ParaDetail *)paramHandle;
+    EXPECT_EQ(pHandle->type, 0);
+    EXPECT_EQ(pHandle->paraSize, sizeof(uint32_t));
+
+    error = rtsKernelArgsFinalize(argsHandle);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t updateData = 2001;
+    size_t updateSize = sizeof(uint32_t);
+    
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtsKernelArgsParaUpdate(argsHandle, paramHandle, &updateData, updateSize);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    delete k1;
+}
+
+TEST_F(RtApiTest, rtConfigureCall_MemcpyFail)
+{
+    rtSmDesc_t desc;
+    rtError_t error;
+    rtStream_t stream = NULL;
+    desc.size = 128;
+
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtConfigureCall(1, &desc, stream);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+
+    GlobalMockObject::verify();
+}

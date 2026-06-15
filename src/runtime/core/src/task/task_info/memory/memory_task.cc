@@ -58,10 +58,14 @@ rtError_t AllocCpyTmpMem(TaskInfo * const taskInfo, uint32_t &cpyType,
         COND_RETURN_AND_MSG_OUTER(memcpyAsyncTaskInfo->srcPtr == nullptr, RT_ERROR_MEMORY_ALLOCATION,
             ErrorCode::EE1013, size);
         errno_t rc = memcpy_s(memcpyAsyncTaskInfo->srcPtr, size, src, size);
-        COND_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__, "memcpy_s",
-            std::to_string(rc), strerror(rc), "src=" + std::to_string(RtPtrToValue(src)) + ", dest=" +
-            std::to_string(RtPtrToValue(memcpyAsyncTaskInfo->srcPtr)) + ", dest_max=" + std::to_string(size) +
-            ", count=" + std::to_string(size) + ".");
+        if (rc != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) << ", src=0x" << RtPtrToValue(src)
+               << std::dec << ", destMax=" << sizeof(size) << ", count=" << sizeof(size) << ".";
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
+                "memcpy_s", std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
+            return RT_ERROR_SEC_HANDLE;
+        }
         src = (void *)memcpyAsyncTaskInfo->srcPtr;
     } else if ((cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) || (cpyType == RT_MEMCPY_DEVICE_TO_HOST)) {
         cpyType = RT_MEMCPY_DEVICE_TO_HOST;
@@ -116,19 +120,21 @@ rtError_t AllocCpyTmpMem(TaskInfo * const taskInfo, uint32_t &cpyType,
                                     (reinterpret_cast<uintptr_t>(memcpyAsyncTaskInfo->srcPtr) %
                                     static_cast<uint64_t>(ASYNC_MEMORY_ALIGN_SIZE));
         const errno_t rc = memcpy_s(reinterpret_cast<void *>(offset), addrSize, srcAddr, addrSize);
-        if (stream->Device_()->IsAddrFlatDev()) {
-            COND_PROC_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
-                (void)driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr);memcpyAsyncTaskInfo->srcPtr = nullptr, __func__,
-                "memcpy_s", std::to_string(rc), strerror(rc), "src=" + std::to_string(RtPtrToValue(srcAddr)) +
-                ", dest=" + std::to_string(offset) + ", dest_max=" + std::to_string(addrSize) +
-                ", count=" + std::to_string(addrSize) + ".");
-        } else {
-            COND_PROC_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
-                free(memcpyAsyncTaskInfo->srcPtr);memcpyAsyncTaskInfo->srcPtr = nullptr, __func__, "memcpy_s",
-                std::to_string(rc), strerror(rc), "src=" + std::to_string(RtPtrToValue(srcAddr)) +
-                ", dest=" + std::to_string(offset) + ", dest_max=" + std::to_string(addrSize) +
-                ", count=" + std::to_string(addrSize) + ".");
+        if (rc != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << offset << ", src=0x" << RtPtrToValue(srcAddr)
+               << std::dec << ", destMax=" << sizeof(addrSize) << ", count=" << sizeof(addrSize) << ".";
+            if (stream->Device_()->IsAddrFlatDev()) {
+                COND_PROC_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
+                    (void)driver->HostMemFree(memcpyAsyncTaskInfo->srcPtr);memcpyAsyncTaskInfo->srcPtr = nullptr, __func__,
+                    "memcpy_s", std::to_string(rc), strerror(rc), ss.str().c_str());
+            } else {
+                COND_PROC_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
+                    free(memcpyAsyncTaskInfo->srcPtr);memcpyAsyncTaskInfo->srcPtr = nullptr, __func__, "memcpy_s",
+                    std::to_string(rc), strerror(rc), ss.str().c_str());
+            }
         }
+
         srcAddr = reinterpret_cast<void *>(offset);
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) {
         cpyType = RT_MEMCPY_DEVICE_TO_HOST;
@@ -222,10 +228,14 @@ rtError_t AllocCpyTmpMemFor3588(TaskInfo * const taskInfo, uint32_t &cpyType,
             "Failed to alloc memory, err=%#x, size=%" PRIu64 "(bytes), devId=%u.",
             error, size, stream->Device_()->Id_());
         const errno_t rc = memcpy_s(memcpyAsyncTaskInfo->srcPtr, size, src, size);
-        COND_RETURN_AND_MSG_OUTER(rc != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__, "memcpy_s",
-            std::to_string(rc), strerror(rc), "src=" + std::to_string(RtPtrToValue(src)) + ", dest=" +
-            std::to_string(RtPtrToValue(memcpyAsyncTaskInfo->srcPtr)) + ", dest_max=" + std::to_string(size) + 
-            ", count=" + std::to_string(size) + ".");
+        if (rc != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(memcpyAsyncTaskInfo->srcPtr) << ", src=0x" << RtPtrToValue(src)
+               << std::dec << ", destMax=" << size << ", count=" << size << ".";
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
+                "memcpy_s", std::to_string(rc).c_str(), strerror(rc), ss.str().c_str());
+            return RT_ERROR_SEC_HANDLE;
+        }
         src = (void *)memcpyAsyncTaskInfo->srcPtr;
     } else if ((cpyType == RT_MEMCPY_DEVICE_TO_HOST_EX) || (cpyType == RT_MEMCPY_DEVICE_TO_HOST)) {
         cpyType = RT_MEMCPY_DEVICE_TO_HOST;

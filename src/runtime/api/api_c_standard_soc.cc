@@ -1696,10 +1696,13 @@ rtError_t rtGetSocSpec(const char* label, const char* key, char* val, const uint
         "maxLen should be larger than size of query result");
 
     const errno_t rtn = memcpy_s(val, maxLen, result.c_str(), result.size() + 1U);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((rtn != EOK), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(rtn), strerror(rtn),
-        "src=" + result + ", dest=" + std::to_string(RtPtrToValue(val)) + ", dest_max=" +
-        std::to_string(maxLen) + ", count=" + std::to_string(result.size() + 1U) + ".");
+    if (rtn != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "val=0x" << RtPtrToValue(val) << ", src=0x" << RtPtrToValue(result.c_str())
+           << std::dec << ", maxLen=" << maxLen << ", count=" << result.size() + 1U << ".";
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(rtn).c_str(), strerror(rtn), ss.str().c_str());
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
     return ACL_RT_SUCCESS;
 }
 

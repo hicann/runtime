@@ -33,12 +33,14 @@ rtError_t CmoTaskInit(TaskInfo *taskInfo, const rtCmoTaskInfo_t *const cmoTaskIn
             // sqe info copy
             const errno_t error = memcpy_s(
                 &cmoTsk->cmoSqeInfo, sizeof(rtCmoTaskInfo_t), cmoTaskInfo, sizeof(rtCmoTaskInfo_t));
-            COND_RETURN_AND_MSG_OUTER((error != EOK), RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
-                __func__, "memcpy_s", std::to_string(error), strerror(error), "src=" +
-                std::to_string(RtPtrToValue(cmoTaskInfo)) + ", dest=" + 
-                std::to_string(RtPtrToValue(&cmoTsk->cmoSqeInfo)) + ", dest_max=" +
-                std::to_string(sizeof(rtCmoTaskInfo_t)) + ", count=" + std::to_string(sizeof(rtCmoTaskInfo_t)) + ".");
-
+            if (error != EOK) {
+                std::stringstream ss;
+                ss << std::hex << "dest=0x" << RtPtrToValue(&cmoTsk->cmoSqeInfo) << ", src=0x" << RtPtrToValue(cmoTaskInfo)
+                   << std::dec << ", destMax=" << sizeof(rtCmoTaskInfo_t) << ", count=" << sizeof(rtCmoTaskInfo_t) << ".";
+                RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
+                    "memcpy_s", std::to_string(error).c_str(), strerror(error), ss.str().c_str());
+                return RT_ERROR_SEC_HANDLE;
+            }
             RT_LOG(RT_LOG_DEBUG, "CmoTask Init, opCode=%u, length=%u", cmoTsk->cmoSqeInfo.opCode,
                 cmoTsk->cmoSqeInfo.lengthInner);
             return RT_ERROR_NONE;
@@ -57,11 +59,14 @@ rtError_t CmoTaskInit(TaskInfo *taskInfo, const rtCmoTaskInfo_t *const cmoTaskIn
     CmoTaskInfo *cmoTsk = &taskInfo->u.cmoTask;
     // sqe info copy
     const errno_t error = memcpy_s(&cmoTsk->cmoSqeInfo, sizeof(rtCmoTaskInfo_t), cmoTaskInfo, sizeof(rtCmoTaskInfo_t));
-    COND_RETURN_AND_MSG_OUTER((error != EOK), RT_ERROR_SEC_HANDLE, ErrorCode::EE1020,
-        __func__, "memcpy_s", std::to_string(error), strerror(error), "src=" + std::to_string(RtPtrToValue(cmoTaskInfo)) +
-        ", dest=" + std::to_string(RtPtrToValue(&cmoTsk->cmoSqeInfo)) + ", dest_max=" + std::to_string(sizeof(rtCmoTaskInfo_t)) +
-        ", count=" + std::to_string(sizeof(rtCmoTaskInfo_t)) + ".");
-
+    if (error != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(&cmoTsk->cmoSqeInfo) << ", src=0x" << RtPtrToValue(cmoTaskInfo)
+           << std::dec << ", destMax=" << sizeof(rtCmoTaskInfo_t) << ", count=" << sizeof(rtCmoTaskInfo_t) << ".";
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
+            "memcpy_s", std::to_string(error).c_str(), strerror(error), ss.str().c_str());
+        return RT_ERROR_SEC_HANDLE;
+    }
     const rtError_t ret = cmoModel->CmoIdAlloc(cmoTsk->cmoSqeInfo.logicId, cmoTsk->cmoid);
     ERROR_RETURN(ret, "Failed to alloc cmo id.");
 

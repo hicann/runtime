@@ -1856,12 +1856,13 @@ rtError_t ApiImplDavid::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo *mem
                             memUceArray->repairAddrArray, sizeof(memUceArray->repairAddrArray));
     if (ret != EOK) {
         const std::string retStr = std::to_string(ret);
-        const std::string extInfo = "src=" + std::to_string(RtPtrToValue(memUceArray->repairAddrArray)) +
-            ", dest=" + std::to_string(RtPtrToValue(memUceInfo->repairAddr)) +
-            ", dest_max=" + std::to_string(sizeof(memUceInfo->repairAddr)) +
-            ", count=" + std::to_string(sizeof(memUceArray->repairAddrArray));
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(memUceInfo->repairAddr)
+           << ", src=0x" << RtPtrToValue(memUceArray->repairAddrArray) 
+           << std::dec << ", destMax=" << sizeof(memUceInfo->repairAddr) 
+           << ", count=" << sizeof(memUceArray->repairAddrArray) << ".";
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
-            retStr.c_str(), strerror(ret), extInfo.c_str());
+            retStr.c_str(), strerror(ret), ss.str().c_str());
         return RT_ERROR_INVALID_VALUE;
     }
 

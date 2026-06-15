@@ -335,10 +335,14 @@ rtError_t rtsKernelArgsParaUpdate(rtArgsHandle argsHandle, rtParaHandle paraHand
 
     const uint64_t offset = RtPtrToValue(handle->buffer) + pHandle->paraOffset;
     const errno_t ret = memcpy_s(RtValueToPtr<void *>(offset), paraSize, para, paraSize);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((ret != EOK), RT_ERROR_INVALID_VALUE,
-        ErrorCode::EE1020, __func__, "memcpy_s", std::to_string(ret), strerror(ret),
-        "src=" + std::to_string(RtPtrToValue(para)) + ", dest=" + std::to_string((offset)) +
-        ", dest_max=" + std::to_string(paraSize) + ", count=" + std::to_string(paraSize) + ".");
+    if (ret != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << offset << ", para=0x" << RtPtrToValue(para)
+           << std::dec << ", maxLen=" << paraSize << ", paraSize=" << paraSize << ".";
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__, "memcpy_s",
+            std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
     handle->isParamUpdating = 1U;
 
     return ACL_RT_SUCCESS;

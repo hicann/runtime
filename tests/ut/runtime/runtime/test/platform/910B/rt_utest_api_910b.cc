@@ -1624,6 +1624,26 @@ TEST_F(CloudV2ApiTest910b, rtsProfTrace_007)
     delete stubDevice;
 }
 
+TEST_F(CloudV2ApiTest910b, rtsProfTrace_memcpy_s_fail)
+{
+    rtError_t error;
+    rtStream_t stream;
+
+    error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    int32_t length = 18;
+    uint8_t data[length] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    error = rtsProfTrace(&data, length, stream);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
 TEST_F(CloudV2ApiTest910b, rtsMemReserveAddress)
 {
     rtError_t error;

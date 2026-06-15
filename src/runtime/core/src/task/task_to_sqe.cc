@@ -97,10 +97,16 @@ rtError_t ConstructHostFuncParamSqe(const rtTaskInput_t* const taskInput, uint32
     }
 
     const errno_t ret = memcpy_s(taskInput->dataBuffer, bufferLen, paramBufDesc.bufInfo, paramBufDesc.bufSize);
-    COND_RETURN_AND_MSG_OUTER(ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, __func__, "memcpy_s",
-        std::to_string(ret), strerror(ret), "src=" + std::to_string(RtPtrToValue(paramBufDesc.bufInfo)) +
-        ", dest=" + std::to_string(RtPtrToValue(taskInput->dataBuffer)) + ", dest_max=" +
-        std::to_string(bufferLen) + ", count=" + std::to_string(paramBufDesc.bufSize) + ".");
+    if (ret != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(taskInput->dataBuffer)
+           << ", src=0x" << RtPtrToValue(paramBufDesc.bufInfo)
+           << std::dec << ", destMax=" << bufferLen << ", count=" << paramBufDesc.bufSize << ".";
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1020, __func__,
+            "memcpy_s", std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
+        return RT_ERROR_SEC_HANDLE;
+    }
+
     RT_LOG(RT_LOG_INFO, "Construct host func prefetch Sqe success. taskLen=%u.", *taskLen);
     return RT_ERROR_NONE;
 }
