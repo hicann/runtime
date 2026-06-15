@@ -19,6 +19,7 @@
 #define RT_KIS_SIMT_WARP_STK_SIZE (RT_MAX_THREAD_NUM_PER_WARP * RT_SIMT_DEFAULT_STACK_SIZE_THREAD) // 0x2000B
 #define RT_KIS_SIMT_DVG_WARP_STK_SIZE (1024U)            // 1024B
 #define RT_SIMT_UB_SIZE (256U * 1024U)                  // UBSize 256K
+#define RT_SIMT_STL_UB_SIZE (200U * 1024U)              // STL UBSize 200K
 #define RT_SIMT_DCACHE_MIN_SIZE (32U * 1024U)           // SIMTDCacheMinSize 32K
 #define RT_SIMT_REMAIN_UB_SIZE (RT_SIMT_UB_SIZE - RT_SIMT_DCACHE_MIN_SIZE)
 #define RT_SIMT_COMPILER_AUX_SIZE (8U * 1024U)          // BiSheng aux scalar stack + ASC: 8K

@@ -293,7 +293,7 @@ static void ConstructDavidAICoreSqeForDavinciTask(TaskInfo *taskInfo, rtDavidSqe
     const uint64_t addr = RtPtrToValue(aicTaskInfo->comm.args);
     Stream * const stm = taskInfo->stream;
     ConstructAicSqePart(aicTaskInfo, sqe, addr, stm);
-    UpdateDavidAICoreSqeForDavinciTask(sqe);
+    UpdateDavidAICoreSqeForDavinciTask(taskInfo, sqe);
     PrintDavidSqe(command, "AICore Task");
     return;
 }

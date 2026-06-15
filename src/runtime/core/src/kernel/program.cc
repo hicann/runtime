@@ -1061,6 +1061,7 @@ void ElfProgram::SetKernelAttribute(const RtKernel * const kernel, Kernel * cons
 {
     const RtKernelMetaInfo * const metaInfo = &(kernel->metaInfo);
     const uint32_t nameOffset = AppendKernelName(kernel->name);
+    kernelObj->SetStlKernelByKernelName(kernel->name);
     kernelObj->SetNameOffset(nameOffset);
     kernelObj->SetDfxAddr(metaInfo->dfxAddr);
     kernelObj->SetDfxSize(metaInfo->dfxSize);

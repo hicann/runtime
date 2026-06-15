@@ -9,6 +9,8 @@
  */
 
 #include "stars_david.hpp"
+#include "base_david.hpp"
+#include "kernel.hpp"
 #include "task_manager.h"
 #include "davinci_kernel_task.h"
 
@@ -31,8 +33,14 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo *const taskInfo, rtDavidSqe_t
     return;
 }
 
-void UpdateDavidAICoreSqeForDavinciTask(RtDavidStarsAicAivKernelSqe * const sqe)
+void UpdateDavidAICoreSqeForDavinciTask(TaskInfo *taskInfo, RtDavidStarsAicAivKernelSqe * const sqe)
 {
+    AicTaskInfo *aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    const Kernel *kernel = aicTaskInfo->kernel;
+    if ((kernel != nullptr) && (kernel->isStlKernel())) {
+        sqe->aivSimtDcuSmSize = RT_SIMT_STL_UB_SIZE;
+        sqe->stl = 1U;
+    }
     sqe->piMix = 1U;
     return;
 }

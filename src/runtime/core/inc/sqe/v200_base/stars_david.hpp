@@ -163,7 +163,8 @@ struct RtDavidStarsAicAivKernelSqe {
     uint8_t dieFriendly : 1;
     uint8_t mix : 1;
     uint8_t loose : 1;
-    uint8_t res2 : 2;
+    uint8_t stl : 1;
+    uint8_t res2 : 1;
     uint8_t sqeLength : 3;
 
     /* word4-5 */
@@ -605,7 +606,7 @@ void ConstructDavidCmoSdmaSqe(TaskInfo * const taskInfo, rtDavidSqe_t *const dav
 void ConstructDavidMemcpySqe(TaskInfo * const taskInfo, rtDavidSqe_t *const davidSqe, uint64_t sqBaseAddr);
 
 void PrintErrorInfoForDavidCmoTask(TaskInfo* taskInfo, const uint32_t devId);
-void UpdateDavidAICoreSqeForDavinciTask(RtDavidStarsAicAivKernelSqe * const sqe);
+void UpdateDavidAICoreSqeForDavinciTask(TaskInfo *taskInfo, RtDavidStarsAicAivKernelSqe * const sqe);
 void UpdateDavidAICpuKernelSqeForDavinciTask(RtDavidStarsAicpuKernelSqe * const sqe);
 void UpdateDavidAICpuControlSqeForDavinciTask(RtDavidStarsAicpuControlSqe * const sqe);
 void ConstructDavidSqeForCallbackLaunchTask(TaskInfo * const taskInfo, rtDavidSqe_t *const command, uint64_t sqBaseAddr);

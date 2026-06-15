@@ -470,6 +470,13 @@ public:
         return &handle_;
     }
 
+    void SetStlKernelByKernelName(const char_t *kernelName);
+
+    bool isStlKernel(void) const
+    {
+        return isStlKernel_;
+    }
+
 private:
     Program *program_;
     uint32_t aicpuKernelType_ = static_cast<uint32_t>(KERNEL_TYPE_RESERVED);
@@ -494,6 +501,7 @@ private:
     uint16_t systemParaNum_;
     bool isNeedSetFftsAddrInArg_ = false;
     bool isSupportOverFlow_ = true;
+    bool isStlKernel_ = false;
 
     const void *dfxAddr_;
     uint16_t dfxSize_;

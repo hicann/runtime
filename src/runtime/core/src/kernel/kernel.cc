@@ -400,5 +400,24 @@ rtError_t Kernel::GetParamInfo(uint32_t paramIndex, uint32_t *paramOffset, uint3
     return RT_ERROR_NONE;
 }
 
+void Kernel::SetStlKernelByKernelName(const char_t *kernelName)
+{
+    const char_t *stlNames[] = {"mc62_aic_mte_stl", "mc62_aic_su_cube_stl",
+                                "mc62_aic_vec_simd_stl", "mc62_aic_vec_simt_stl"};
+    isStlKernel_ = false;
+    if (kernelName == nullptr) {
+        return;
+    }
+
+    size_t nameLen = strlen(kernelName);
+    for (size_t i = 0; i < sizeof(stlNames) / sizeof(stlNames[0]); i++) {
+        size_t len = strlen(stlNames[i]);
+        if ((nameLen == len) && (strncmp(kernelName, stlNames[i], len) == 0)) {
+            isStlKernel_ = true;
+            return;
+        }
+    }
+}
+
 }  // namespace runtime
 }  // namespace cce
