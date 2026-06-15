@@ -49,7 +49,7 @@ bool DevInfoManage::RegChipFeatureSet(rtChipType_t chip, const std::unordered_se
     
     std::array<bool, FEATURE_MAX_VALUE> feature = {false};
     for (auto &i : f) {
-        uint32_t index = static_cast<uint32_t>(i);
+        const uint32_t index = static_cast<uint32_t>(i);
         if (index < FEATURE_MAX_VALUE) {
             feature[index] = true;
         }
@@ -89,7 +89,7 @@ rtError_t DevInfoManage::GetChipFeatureSet(rtChipType_t chip, std::array<bool, F
 
 bool DevInfoManage::IsSupportChipFeature(rtChipType_t chip, RtOptionalFeatureType f)
 {
-    uint32_t index = static_cast<uint32_t>(f);
+    const uint32_t index = static_cast<uint32_t>(f);
     if (isDestroy || (chip < CHIP_BEGIN) || (index >= FEATURE_MAX_VALUE)) {
         return false;
     }

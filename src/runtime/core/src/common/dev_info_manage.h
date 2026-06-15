@@ -75,7 +75,7 @@ public:
 
 private:
     std::atomic<bool> isDestroy{false};
-    mmRWLock_t soLock;
+    mmRWLock_t soLock{};
     std::unordered_map<rtChipType_t, std::string> platformSoName;
 
     // Static feature table. each chip must be registered only once when startup. Dynamic registration is prohibited.
@@ -86,11 +86,11 @@ private:
     // 使用单独的数组处理扩展段，避免数组过大
     std::unordered_map<rtChipType_t, std::array<bool, FEATURE_MAX_VALUE>> extChipFeatureSet{};
 
-    mmRWLock_t propertiesLock;
+    mmRWLock_t propertiesLock{};
     std::unordered_map<rtChipType_t, DevProperties> propertiesMap;
     // soc/platform/arch maybe need reg
 
-    mmRWLock_t devInfoProcLock;
+    mmRWLock_t devInfoProcLock{};
     std::unordered_map<rtChipType_t, DevDynInfoProcFunc> devInfoProcMap;
     // capability
 };
