@@ -9,6 +9,7 @@
  */
 
 #include <string>
+#include "common/enum_to_string_utils.hpp"
 #include "cond_c.hpp"
 #include "internal_error_define.hpp"
 #include "label_c.hpp"
@@ -5676,7 +5677,7 @@ rtError_t ApiImpl::GetHostAicpuDeviceInfo(const uint32_t deviceId, const int32_t
     if ((featureType != static_cast<int32_t>(INFO_TYPE_CORE_NUM)) &&
         (featureType != static_cast<int32_t>(INFO_TYPE_FREQUE)) &&
         (featureType != static_cast<int32_t>(INFO_TYPE_WORK_MODE)))  {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "featureType=" + std::to_string(featureType));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "featureType=" + InfoTypeToString(featureType));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -5720,7 +5721,7 @@ rtError_t ApiImpl::GetDeviceCapability(const int32_t deviceId, const int32_t mod
         return RT_ERROR_NONE;
     } else {
         RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006,
-            "featureType=" + std::to_string(featureType) + " and " + "moduleType=" + std::to_string(moduleType));
+            "featureType=" + InfoTypeToString(featureType) + " and moduleType=" + ModuleTypeToString(moduleType));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 }

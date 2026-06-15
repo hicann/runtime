@@ -11,6 +11,7 @@
 
 #include "base.hpp"
 #include "cond_c.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "inner_thread_local.hpp"
 #include "memory_task.h"
 #include "stream_c.hpp"
@@ -19,6 +20,7 @@
 
 namespace cce {
 namespace runtime {
+
 TIMESTAMP_EXTERN(rtReduceAsync_part2);
 
 namespace {
@@ -40,13 +42,13 @@ rtError_t CheckReduceCapability(Stream * const stm, const rtRecudeKind_t kind, c
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_kind=0x%x.", sdmaReduceKind);
     const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
     COND_RETURN_AND_MSG_OUTER((((sdmaReduceKind >> shift) & 0x1U) == 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
-        ErrorCode::EE1006, __func__, "kind=" + std::to_string(kind));
+        ErrorCode::EE1006, __func__, "kind=" + ReduceKindToString(kind));
 
     const uint32_t sdmaReduceSupport = capabilityInfo.sdma_reduce_support;
     const uint32_t offset = static_cast<uint32_t>(type);
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_support=0x%x.", sdmaReduceSupport);
     if (((sdmaReduceSupport >> offset) & 0x1U) == 0U) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + std::to_string(type));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + DataTypeToString(type));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;

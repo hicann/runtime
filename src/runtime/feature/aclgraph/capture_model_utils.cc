@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model_utils.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "inner_thread_local.hpp"
 #include "raw_device.hpp"
 #include "context.hpp"
@@ -17,20 +18,6 @@
 
 namespace cce {
 namespace runtime {
-
-static inline const char* GetStreamCaptureModeStr(const rtStreamCaptureMode mode)
-{
-    switch (mode) {
-        case RT_STREAM_CAPTURE_MODE_GLOBAL:
-            return "GLOBAL";
-        case RT_STREAM_CAPTURE_MODE_THREAD_LOCAL:
-            return "THREAD_LOCAL";
-        case RT_STREAM_CAPTURE_MODE_RELAXED:
-            return "RELAXED";
-        default:
-            return "UNKNOWN";
-    }
-}
 
 constexpr uint32_t HARD_EVENT_RESVERD_MAX = 8 * 1024U;
 
@@ -221,7 +208,7 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm) {
         rawDev->PollEndGraphNotifyInfoByModelId(mdl->Id_());
         if (!captureModel->CanUpdate()) {
             RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model",
-                "Model is in running or capture state, status=" + std::to_string(static_cast<int>(captureModel->GetCaptureModelStatus())));
+                "Model is in running or capture state, status=" + CaptureModelStatusToString(captureModel->GetCaptureModelStatus()));
             return RT_ERROR_MODEL_UPDATE_FAILED;    
         }
     }
@@ -259,14 +246,14 @@ static void ReportCaptureModeError(const Context* ctx, const char* funcName)
         oss << "Other threads of the current context are in the capture state. "
             << "As a result, the current operation cannot be performed on thread " << threadId << ". "
             << "To perform this operation in the current thread, call aclmdlRICaptureThreadExchangeMode to change the capture mode of the current thread. "
-            << "The mode set using the aclmdlRICaptureBegin API is " << GetStreamCaptureModeStr(contextCaptureMode) << ", "
-            << "and the capture mode of the current thread is " << GetStreamCaptureModeStr(threadCaptureMode) << ".";
+            << "The mode set using the aclmdlRICaptureBegin API is " << StreamCaptureModeToString(contextCaptureMode) << ", "
+            << "and the capture mode of the current thread is " << StreamCaptureModeToString(threadCaptureMode);
     } else {
         oss << "The current thread " << threadId << " is in the capture state and the current operation cannot be performed. "
             << "Check whether the mode set by the aclmdlRICaptureBegin API supports the current operation. "
             << "This operation is supported only in the RELAXED mode. "
-            << "The mode set using the aclmdlRICaptureBegin API is " << GetStreamCaptureModeStr(contextCaptureMode) << ", "
-            << "and the capture mode of the current thread is " << GetStreamCaptureModeStr(threadCaptureMode) << ".";
+            << "The mode set using the aclmdlRICaptureBegin API is " << StreamCaptureModeToString(contextCaptureMode) << ", "
+            << "and the capture mode of the current thread is " << StreamCaptureModeToString(threadCaptureMode);
     }
     
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1016, funcName, oss.str());

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "memory_c.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "inner_thread_local.hpp"
 #include "context.hpp"
 #include "device.hpp"
@@ -16,6 +17,7 @@
 
 namespace cce {
 namespace runtime {
+
 TIMESTAMP_EXTERN(rtReduceAsyncV2_part1);
 TIMESTAMP_EXTERN(rtReduceAsyncV2_part2);
 
@@ -38,7 +40,7 @@ rtError_t ReduceAsyncV2(void * const dst, const void * const src, const uint64_t
         const uint32_t offset = static_cast<uint32_t>(type);
         RT_LOG(RT_LOG_INFO, "ReduceAsyncV2 sdma_reduce_support=0x%x.", sdmaReduceSupport);
         if (((sdmaReduceSupport >> offset) & 0x1U) == 0U) {
-            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + std::to_string(type));
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + DataTypeToString(type));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }

@@ -28,8 +28,8 @@
 #include "heterogenous.h"
 #include "runtime_keeper.h"
 #include "global_state_manager.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "api_handle_guard.h"
-
 using namespace cce::runtime;
 
 namespace cce {
@@ -4062,8 +4062,8 @@ rtError_t rtGetLastError(rtLastErrLevel_t level)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((level > RT_CONTEXT_LEVEL) || (level < RT_THREAD_LEVEL), ACL_ERROR_RT_PARAM_INVALID,
-        level, "[RT_THREAD_LEVEL, RT_CONTEXT_LEVEL]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((level > RT_CONTEXT_LEVEL) || (level < RT_THREAD_LEVEL), ACL_ERROR_RT_PARAM_INVALID,
+        LastErrLevelToString(level), "level", "RT_THREAD_LEVEL(0) or RT_CONTEXT_LEVEL(1)");
     const rtError_t error = apiInstance->GetLastErr(level);
     return error;
 }
@@ -4073,8 +4073,8 @@ rtError_t rtPeekAtLastError(rtLastErrLevel_t level)
 {
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((level > RT_CONTEXT_LEVEL) || (level < RT_THREAD_LEVEL), ACL_ERROR_RT_PARAM_INVALID,
-        level, "[RT_THREAD_LEVEL, RT_CONTEXT_LEVEL]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((level > RT_CONTEXT_LEVEL) || (level < RT_THREAD_LEVEL), ACL_ERROR_RT_PARAM_INVALID,
+        LastErrLevelToString(level), "level", "RT_THREAD_LEVEL(0) or RT_CONTEXT_LEVEL(1)");
     const rtError_t error = apiInstance->PeekLastErr(level);
     return error;
 }

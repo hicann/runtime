@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"
@@ -927,8 +928,8 @@ rtError_t ApiErrorDecorator::DatadumpInfoLoad(const void * const dumpInfo, const
 {
     NULL_PTR_RETURN_MSG_OUTER(dumpInfo, RT_ERROR_INVALID_VALUE);
     ZERO_RETURN_AND_MSG_OUTER(length);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((flag != RT_KERNEL_DEFAULT) && (flag != RT_KERNEL_CUSTOM_AICPU)), RT_ERROR_INVALID_VALUE, 
-        flag, std::to_string(RT_KERNEL_DEFAULT) + " or " + std::to_string(RT_KERNEL_CUSTOM_AICPU));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(((flag != RT_KERNEL_DEFAULT) && (flag != RT_KERNEL_CUSTOM_AICPU)), RT_ERROR_INVALID_VALUE, 
+        KernelFlagToString(flag), "flag", "RT_KERNEL_DEFAULT(0) or RT_KERNEL_CUSTOM_AICPU(8)");
 
     const rtError_t error = impl_->DatadumpInfoLoad(dumpInfo, length, flag);
     ERROR_RETURN(error, "Load data dump info failed, length=%u, flag=%u.", length, flag);

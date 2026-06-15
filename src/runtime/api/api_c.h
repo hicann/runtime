@@ -48,6 +48,20 @@ constexpr uint32_t RUNTIME_PUBLIC_VERSION = 1001U;
         } \
     } while (false)
 
+// EE1003使用，value与参数名分开传入
+// value: ToString(var)等可读值表达式（运行时求值）
+// paramName: 参数名字字符串字面量（如"devFeatureType"）
+#define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(COND, RTERRCODE, value, paramName, ...) \
+    do { \
+        if (unlikely(COND)) { \
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, value, paramName, ##__VA_ARGS__); \
+            const std::string& errorStr = RT_GET_ERRDESC(RTERRCODE); \
+            RT_LOG(RT_LOG_ERROR, "%s", errorStr.c_str()); \
+            RT_LOG_FLUSH(); \
+            return GetRtExtErrCodeAndSetGlobalErr((RTERRCODE)); \
+        } \
+    } while (false)
+
 // 除EE1003之外的其他外部错误码使用
 #define COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(COND, RTERRCODE, ERRCODE, ...) \
     do { \

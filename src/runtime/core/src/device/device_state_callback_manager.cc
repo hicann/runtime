@@ -9,6 +9,7 @@
  */
 
 #include "device_state_callback_manager.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "error_message_manage.hpp"
 
 namespace cce {
@@ -44,9 +45,8 @@ rtError_t DeviceStateCallbackManager::RegDeviceStateCallback(const char_t *regNa
         callbackMap_[regName].args = args;
         callbackMap_[regName].notifyPos = DEV_CB_POS_END;
     } else {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, static_cast<uint32_t>(type), "type",
-            "[" + std::to_string(static_cast<uint32_t>(DeviceStateCallback::RT_DEVICE_STATE_CALLBACK)) + ", "
-            + std::to_string(static_cast<uint32_t>(DeviceStateCallback::DEVICE_CALLBACK_TYPE_MAX))  + ")");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, DeviceStateCallbackToString(type), "type",
+            "RT_DEVICE_STATE_CALLBACK(0) or RTS_DEVICE_STATE_CALLBACK(1)");
         return RT_ERROR_INVALID_VALUE;
     }
 

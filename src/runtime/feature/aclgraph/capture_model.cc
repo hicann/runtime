@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "event.hpp"
@@ -28,6 +29,7 @@
 
 namespace cce {
 namespace runtime {
+
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_DEFAULT = 0U; /* async and with timeout */
 constexpr uint8_t RT_MODEL_CAPTURE_EXECUTE_ASYNC = 1U;   /* async */
 
@@ -217,7 +219,7 @@ rtError_t CaptureModel::ExecuteCommon(Stream * const stm, int32_t timeout, const
 
     if (captureModelStatus_ != RtCaptureModelStatus::READY) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1017, __func__, "model",
-            "Model is not ready, status=" + std::to_string(static_cast<int>(captureModelStatus_)));
+            "Model is not ready, status=" + CaptureModelStatusToString(captureModelStatus_));
         return RT_ERROR_MODEL_EXE_FAILED;
     }
 

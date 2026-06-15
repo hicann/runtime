@@ -10,6 +10,7 @@
 #include "memory_c.hpp"
 
 #include "common/inner_thread_local.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "context/context.hpp"
 #include "device.hpp"
 #include "memory_task.h"
@@ -17,6 +18,7 @@
 
 namespace cce {
 namespace runtime {
+
 TIMESTAMP_EXTERN(rtReduceAsync_part1);
 TIMESTAMP_EXTERN(rtReduceAsync_part2);
 
@@ -39,26 +41,26 @@ rtError_t CheckReduceCapability(Device * const dev, const rtRecudeKind_t kind, c
         RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_kind=0x%x.", sdmaReduceKind);
         const uint32_t shift = static_cast<uint32_t>(kind) - static_cast<uint32_t>(RT_MEMCPY_SDMA_AUTOMATIC_ADD);
         if (((sdmaReduceKind >> shift) & 0x1U) == 0U) {
-            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
+            RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + ReduceKindToString(kind));
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
 
     if (((kind == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL) && (!starsFlag))) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + ReduceKindToString(kind));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     const uint32_t kindShift = static_cast<uint32_t>(kind);
     if (((dev->GetDevProperties().sdmaReduceKind >> kindShift) & 0x1U) == 0U) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + std::to_string(kind));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "kind=" + ReduceKindToString(kind));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     const uint32_t offset = static_cast<uint32_t>(type);
     RT_LOG(RT_LOG_INFO, "ReduceAsync sdma_reduce_support=0x%x.", capabilityInfo.sdma_reduce_support);
     if (((capabilityInfo.sdma_reduce_support >> offset) & 0x1U) == 0U) {
-        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + std::to_string(type));
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1006, "type=" + DataTypeToString(type));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return RT_ERROR_NONE;

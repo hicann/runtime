@@ -10,6 +10,7 @@
 #include "task_to_sqe.hpp"
 #include <cinttypes>
 #include "event.hpp"
+#include "common/enum_to_string_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -24,8 +25,9 @@ static constexpr pfnNanoTaskToSqe g_BufToFunc[MAX_TASK][RT_TASK_TYPE_MAX] = {
 rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t* taskLen)
 {
     const rtTaskBuffType_t taskBufferType = taskInput->compilerInfo.bufType;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((taskBufferType >= MAX_TASK) || (taskBufferType < HWTS_STATIC_TASK_DESC),
-        RT_ERROR_INVALID_VALUE, taskInput->compilerInfo.bufType, "[HWTS_STATIC_TASK_DESC, MAX_TASK)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((taskBufferType >= MAX_TASK) || (taskBufferType < HWTS_STATIC_TASK_DESC),
+        RT_ERROR_INVALID_VALUE, TaskBuffTypeToString(taskBufferType), "taskBufferType",
+        "HWTS_STATIC_TASK_DESC(0), HWTS_DYNAMIC_TASK_DESC(1) or PARAM_TASK_INFO_DESC(2)");
 
     const rtTaskType_t type = taskInput->compilerInfo.taskType;
     COND_RETURN_AND_MSG_OUTER((type != RT_TASK_TYPE_KERNEL_NANO_AICORE) && (type != RT_TASK_TYPE_KERNEL_NANO_AICPU_HOSTFUNC),

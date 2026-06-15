@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include "common/enum_to_string_utils.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"
@@ -52,8 +53,8 @@ rtError_t ApiErrorDecorator::CntNotifyCreate(const int32_t deviceId, CountNotify
         reinterpret_cast<uint32_t *>(&realDeviceId));
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error,
         "Failed to convert the user device ID %d to driver device ID.", deviceId);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(!((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)),
-        RT_ERROR_INVALID_VALUE, flag, std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(!((flag == RT_NOTIFY_FLAG_DEFAULT) || (flag == RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)),
+        RT_ERROR_INVALID_VALUE, NotifyFlagToString(flag), "flag", "RT_NOTIFY_FLAG_DEFAULT(0) or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(1)");
     return impl_->CntNotifyCreate(realDeviceId, retCntNotify, flag);
 }
 
@@ -68,8 +69,9 @@ rtError_t ApiErrorDecorator::CntNotifyRecord(CountNotify * const inCntNotify, St
 {
     NULL_PTR_RETURN_MSG_OUTER(inCntNotify, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)), 
-        RT_ERROR_INVALID_VALUE, info->mode, "[0, 3) & (3, " + std::to_string(static_cast<uint32_t>(RECORD_MODE_MAX)) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)), 
+        RT_ERROR_INVALID_VALUE, RecordModeToString(info->mode), "info->mode",
+        "RECORD_STORE_MODE(0), RECORD_ADD_MODE(1), RECORD_WRITE_BIT_MODE(2) or RECORD_CLEAR_BIT_MODE(4)");
     const rtError_t error = impl_->CntNotifyRecord(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
     return error;
@@ -80,8 +82,8 @@ rtError_t ApiErrorDecorator::CntNotifyWaitWithTimeout(CountNotify * const inCntN
 {
     NULL_PTR_RETURN_MSG_OUTER(inCntNotify, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(info, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, 
-        info->mode, "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, 
+        WaitModeToString(info->mode), "info->mode", "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
     const rtError_t error = impl_->CntNotifyWaitWithTimeout(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
     return error;
@@ -142,8 +144,8 @@ rtError_t ApiErrorDecorator::CCULaunch(rtCcuTaskInfo_t *taskInfo,  Stream * cons
 rtError_t ApiErrorDecorator::UbDevQueryInfo(rtUbDevQueryCmd cmd, void * devInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER(devInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, 
-        cmd, "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(static_cast<uint32_t>(cmd) >= QUERY_TYPE_BUFF, RT_ERROR_INVALID_VALUE, 
+        UbDevQueryCmdToString(cmd), "cmd", "[0, " + std::to_string(QUERY_TYPE_BUFF) + ")");
     return impl_->UbDevQueryInfo(cmd, devInfo);
 }
 
@@ -153,20 +155,20 @@ rtError_t ApiErrorDecorator::GetDevResAddress(const rtDevResInfo * const resInfo
     NULL_PTR_RETURN_MSG_OUTER(addrInfo, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(addrInfo->len, RT_ERROR_INVALID_VALUE);
     NULL_PTR_RETURN_MSG_OUTER(addrInfo->resAddress, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0), RT_ERROR_INVALID_VALUE, 
-        resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM((resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0), RT_ERROR_INVALID_VALUE, 
-        resInfo->procType, "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((resInfo->resType >= RT_RES_TYPE_MAX) || (resInfo->resType < 0), RT_ERROR_INVALID_VALUE, 
+        DevResTypeToString(resInfo->resType), "resInfo->resType", "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME((resInfo->procType >= RT_PROCESS_CPTYPE_MAX) || (resInfo->procType < 0), RT_ERROR_INVALID_VALUE, 
+        DevResProcTypeToString(resInfo->procType), "resInfo->procType", "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->GetDevResAddress(resInfo, addrInfo);
 }
 
 rtError_t ApiErrorDecorator::ReleaseDevResAddress(rtDevResInfo * const resInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER(resInfo, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
-        resInfo->resType, "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX, RT_ERROR_INVALID_VALUE, 
-        resInfo->procType, "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(static_cast<uint32_t>(resInfo->resType) >= RT_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, 
+        DevResTypeToString(resInfo->resType), "resInfo->resType", "[0, " + std::to_string(RT_RES_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(static_cast<uint32_t>(resInfo->procType) >= RT_PROCESS_CPTYPE_MAX, RT_ERROR_INVALID_VALUE, 
+        DevResProcTypeToString(resInfo->procType), "resInfo->procType", "[0, " + std::to_string(RT_PROCESS_CPTYPE_MAX) + ")");
     return impl_->ReleaseDevResAddress(resInfo);
 }
 
@@ -437,8 +439,9 @@ rtError_t ApiErrorDecorator::MemsetD32Async(void * const dst, const uint64_t des
 
 rtError_t ApiErrorDecorator::EventWorkModeSet(uint8_t mode)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), 
-        RT_ERROR_INVALID_VALUE, mode, "[0, " + std::to_string(static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE)) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(mode > static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE), 
+        RT_ERROR_INVALID_VALUE, CaptureEventModeToString(mode), "mode",
+        "[0, " + std::to_string(static_cast<uint8_t>(CaptureEventModeType::HARDWARE_MODE)) + "]");
     return impl_->EventWorkModeSet(mode);
 }
 

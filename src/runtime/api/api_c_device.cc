@@ -11,6 +11,7 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
+#include "common/enum_to_string_utils.hpp"
 #include "errcode_manage.hpp"
 #include "error_code.h"
 #include "driver/ascend_hal.h"
@@ -530,8 +531,8 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
     Api * const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     rtError_t error = RT_ERROR_NONE;
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((devFeatureType >= static_cast<int32_t>(RT_DEV_FEATURE_MAX)) || (devFeatureType < 0),
-        RT_ERROR_INVALID_VALUE, devFeatureType, "[0, RT_DEV_FEATURE_MAX)");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME((devFeatureType >= static_cast<int32_t>(RT_DEV_FEATURE_MAX)) || (devFeatureType < 0),
+        RT_ERROR_INVALID_VALUE, DevFeatureTypeToString(devFeatureType), "devFeatureType", "[0, " + std::to_string(RT_DEV_FEATURE_MAX) + ")");
 
     if (devFeatureType == static_cast<int32_t>(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV)) {
         error = apiInstance->GetDeviceCapability(deviceId, static_cast<int32_t>(RT_MODULE_TYPE_TSCPU),
@@ -561,9 +562,8 @@ rtError_t rtsDeviceGetCapability(int32_t deviceId, int32_t devFeatureType, int32
             devFeatureType, val);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
     } else {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(
-           devFeatureType,
-           "[RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV, RT_DEV_FEATURE_MAX)");
+        RT_LOG_OUTER_MSG_WITH_FUNC(ErrorCode::EE1003, DevFeatureTypeToString(devFeatureType), "devFeatureType",
+            "[" + std::to_string(RT_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV) + ", " + std::to_string(RT_DEV_FEATURE_MAX) + ")");
         return ACL_ERROR_RT_PARAM_INVALID;
     }
     return ACL_RT_SUCCESS;
