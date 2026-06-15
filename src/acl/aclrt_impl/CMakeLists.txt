@@ -77,7 +77,7 @@ target_link_options(acl_rt_impl PRIVATE
     -rdynamic
     -Wl,-Bsymbolic
     -Wl,--exclude-libs,ALL
-    -Wl,--no-undefined
+    $<$<NOT:$<BOOL:${ENABLE_TSAN}>>:-Wl,--no-undefined>
 )
 
 target_link_libraries(acl_rt_impl PRIVATE
