@@ -13,6 +13,7 @@ include_guard(GLOBAL)
 add_library(runtime_warning_options INTERFACE)
 
 target_compile_options(runtime_warning_options INTERFACE
+    -Wall
     -Werror=missing-field-initializers
     -Werror=unused
 )

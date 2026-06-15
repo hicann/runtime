@@ -19,7 +19,7 @@ typedef void *rtCondHandle_t;
 
 namespace cce {
 namespace runtime {
-
+class CondHandle;
 rtError_t ValidateModelHandleForApi(rtModel_t handle, Model *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateLabelHandleForApi(rtLabel_t handle, Label *&outRealObj, const char_t *callerFuncName);
 rtError_t ValidateLabelHandleArrayForApi(rtLabel_t *handles, size_t count, std::vector<Label *> &outRealObjs,

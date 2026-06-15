@@ -12,14 +12,6 @@
 #include "api_global_err.h"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
-#include "label.hpp"
-#include "model.hpp"
-#include "count_notify.hpp"
-#include "event.hpp"
-#include "notify.hpp"
-#include "stream.hpp"
-#include "cond_handle/cond_handle.hpp"
-
 namespace cce {
 namespace runtime {
 namespace {
