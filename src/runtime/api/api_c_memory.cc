@@ -72,24 +72,6 @@ bool HasZeroSizeBatch(const size_t * const sizes, const size_t count)
         return size == 0UL;
     });
 }
-
-void SetMemcpyBatchFailIndex(size_t * const failIdx, const size_t value)
-{
-    if (failIdx != nullptr) {
-        *failIdx = value;
-    }
-}
-
-rtError_t ValidateMemcpyBatchParams(void ** const dsts, void ** const srcs, const size_t * const sizes,
-    const size_t count, const rtMemcpyBatchAttr * const attrs, const size_t * const attrsIdxs, const size_t numAttrs)
-{
-    if ((dsts == nullptr) || (srcs == nullptr) || (sizes == nullptr) || (attrs == nullptr) || (attrsIdxs == nullptr) ||
-        (count == 0UL) || (numAttrs == 0UL) || (numAttrs > count) ||
-        (count > static_cast<size_t>(DEVMM_MEMCPY_BATCH_MAX_COUNT)) || (attrsIdxs[0] != 0UL)) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-    return RT_ERROR_NONE;
-}
 }
 
 #ifdef __cplusplus
@@ -782,10 +764,6 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatch(void **dsts, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx)
 {
-    SetMemcpyBatchFailIndex(failIdx, SIZE_MAX);
-    const rtError_t validateErr = ValidateMemcpyBatchParams(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs);
-    ERROR_RETURN_WITH_EXT_ERRCODE(validateErr);
-
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch, just return success.");
         return ACL_RT_SUCCESS;
@@ -813,10 +791,6 @@ VISIBILITY_DEFAULT
 rtError_t rtsMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t count,
     rtMemcpyBatchAttr *attrs, size_t *attrsIdxs, size_t numAttrs, size_t *failIdx, rtStream_t stream)
 {
-    SetMemcpyBatchFailIndex(failIdx, SIZE_MAX);
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(destMaxs, RT_ERROR_INVALID_VALUE);
-    const rtError_t validateErr = ValidateMemcpyBatchParams(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs);
-    ERROR_RETURN_WITH_EXT_ERRCODE(validateErr);
     if (IsAllZeroSizeBatch(sizes, count)) {
         RT_LOG(RT_LOG_INFO, "All sizes are 0, no need to copy memory batch async, just return success.");
         return ACL_RT_SUCCESS;

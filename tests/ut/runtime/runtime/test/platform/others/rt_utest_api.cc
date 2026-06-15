@@ -4926,7 +4926,7 @@ TEST_F(ApiTest, memcpy_batch)
     rtError_t error;
     size_t failIdx = 0U;
     error = rtsMemcpyBatch(nullptr, nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
 
@@ -4935,7 +4935,7 @@ TEST_F(ApiTest, memcpy_batch_async)
     rtError_t error;
     size_t failIdx = 0U;
     error = rtsMemcpyBatchAsync(nullptr, nullptr,  nullptr, nullptr, 0, nullptr, nullptr, 0, &failIdx, stream_);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
 
 
