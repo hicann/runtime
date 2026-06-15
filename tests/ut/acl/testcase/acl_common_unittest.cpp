@@ -1088,6 +1088,30 @@ TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_InvalidFormat_Fail)
     MM_SYS_UNSET_ENV(MM_ENV_ASCEND_HOME_PATH, mmRet);
 }
 
+TEST_F(UTEST_ACL_Common, aclsysGetVersionStr_CopyVersionFailed)
+{
+    std::string mockAscendHome = utTestBasePath + "/Ascend";
+    std::string infoPath = mockAscendHome + "/share/info/runtime/version.info";
+    std::string longVersion(ACL_PKG_VERSION_MAX_SIZE, '1');
+
+    writeToFile(infoPath, "Version=" + longVersion);
+
+    int32_t mmRet = 0;
+    MM_SYS_SET_ENV(MM_ENV_ASCEND_HOME_PATH, mockAscendHome.c_str(), 1, mmRet);
+    (void)mmRet;
+
+    char pkgName[] = "runtime";
+    char verStr[ACL_PKG_VERSION_MAX_SIZE] = {0};
+
+    aclError ret = aclsysGetVersionStr(pkgName, verStr);
+
+    EXPECT_EQ(ret, ACL_ERROR_INTERNAL_ERROR);
+    EXPECT_EQ(verStr[0], '\0');
+
+    system(("rm -rf " + mockAscendHome).c_str());
+    MM_SYS_UNSET_ENV(MM_ENV_ASCEND_HOME_PATH, mmRet);
+}
+
 TEST_F(UTEST_ACL_Common, aclsysGetVersionNum_InvalidFormat_Fail)
 {
     std::string mockAscendHome = utTestBasePath + "/Ascend";

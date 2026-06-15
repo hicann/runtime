@@ -10,6 +10,7 @@
 
 #include "acl/acl.h"
 
+#include <cstdint>
 #include <mutex>
 #include <fstream>
 #include <cctype>
@@ -996,9 +997,11 @@ aclError aclsysGetVersionStrImpl(char *pkgName, char *versionStr)
 
     errno_t strcpyRet = strcpy_s(versionStr, ACL_PKG_VERSION_MAX_SIZE, verInfo.c_str());
     if (strcpyRet != EOK) {
-        std::string extendInfo = acl::AclErrorLogManager::FormatStr(
-            "dest=versionStr, destLen=%zu, srcLen=%zu",
-            static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE), verInfo.length());
+        std::stringstream ss;
+        ss << std::hex << "src=0x" << reinterpret_cast<uintptr_t>(verInfo.c_str())
+            << ", versionStr=0x" << reinterpret_cast<uintptr_t>(versionStr)
+            << std::dec << ", dest_max=" << static_cast<size_t>(ACL_PKG_VERSION_MAX_SIZE) << ".";
+        const std::string extendInfo = ss.str();
         const std::string strcpyRetVal = std::to_string(strcpyRet);
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),

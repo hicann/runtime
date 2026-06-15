@@ -30,7 +30,6 @@ enum class ErrorCode
     EE1005,
     EE1006,
     EE1007,
-    EE1008,
     EE1009,
     EE1010,
     EE1011,

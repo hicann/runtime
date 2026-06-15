@@ -11,6 +11,7 @@
 #include "tensor_data_transfer.h"
 #include <map>
 #include <mutex>
+#include <sstream>
 #include <unordered_map>
 
 #include "data_common.h"
@@ -1026,17 +1027,21 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
     ACL_CHECK_MALLOC_RESULT_REPORT_RET(handle, sizeof(acltdtChannelHandle), nullptr);
     handle->isTdtProcess = false;
     acltdtQueueAttr attr{};
-    auto ret = memcpy_s(attr.name, RT_MQ_MAX_NAME_LEN, name, strlen(name) + 1);
+    const size_t count = strlen(name) + 1U;
+    auto ret = memcpy_s(attr.name, RT_MQ_MAX_NAME_LEN, name, count);
     if (ret != EN_OK) {
         const std::string retCode = std::to_string(ret);
-        const std::string extendInfo = "src=name, nameLen=" + std::to_string(strlen(name) + 1) + 
-            ", dst=attr.name, maxLen=" + std::to_string(RT_MQ_MAX_NAME_LEN);
+        std::stringstream ss;
+        ss << std::hex << "name=0x" << reinterpret_cast<uintptr_t>(name)
+            << ", dest=0x" << reinterpret_cast<uintptr_t>(attr.name)
+            << std::dec << ", dest_max=" << RT_MQ_MAX_NAME_LEN << ", count=" << count << ".";
+        const std::string extendInfo = ss.str();
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
             std::vector<const char *>({__func__, "memcpy_s", retCode.c_str(),
                 strerror(ret), extendInfo.c_str()}));
         ACL_LOG_ERROR("[Call][MemCpy]call memcpy failed, result=%d, srcLen=%zu, dstLen=%d",
-            ret, strlen(name) + 1, RT_MQ_MAX_NAME_LEN);
+            ret, count, RT_MQ_MAX_NAME_LEN);
         ACL_DELETE_AND_SET_NULL(handle);
         return nullptr;
     }

@@ -493,17 +493,6 @@
     },
     {
       "errClass": "RTS Errors",
-      "errTitle": "Execution_Error_Load_OP_Kernel",
-      "ErrCode": "EE1008",
-      "ErrMessage": "OP kernel loading failed. Reason: %s.",
-      "Arglist": "reason",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "N/A"
-      }
-    },
-    {
-      "errClass": "RTS Errors",
       "errTitle": "Execution_Error_Model",
       "ErrCode": "EE1009",
       "ErrMessage": "Failed to execute model with ID %s. Reason: %s.",
@@ -792,7 +781,7 @@
       "errClass": "ACL Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EH0001",
-      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value %s for %s is invalid. Reason: %s.",
       "Arglist": "value,param,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -803,7 +792,7 @@
       "errClass": "ACL Errors",
       "errTitle": "Invalid_Argument_Null_Pointer",
       "ErrCode": "EH0002",
-      "ErrMessage": "Argument [%s] must not be null.",
+      "ErrMessage": "Argument %s must not be null.",
       "Arglist": "param",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -814,7 +803,7 @@
       "errClass": "ACL Errors",
       "errTitle": "File_Operation_Error_Invalid_Path",
       "ErrCode": "EH0003",
-      "ErrMessage": "Path [%s] is invalid. Reason: %s.",
+      "ErrMessage": "Path %s is invalid. Reason: %s.",
       "Arglist": "path,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -825,7 +814,7 @@
       "errClass": "ACL Errors",
       "errTitle": "File_Operation_Error",
       "ErrCode": "EH0004",
-      "ErrMessage": "File [%s] is invalid. Reason: %s.",
+      "ErrMessage": "File %s is invalid. Reason: %s.",
       "Arglist": "path,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -836,7 +825,7 @@
       "errClass": "ACL Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EH0005",
-      "ErrMessage": "AIPP argument [%s] is invalid. Reason: %s.",
+      "ErrMessage": "AIPP argument %s is invalid. Reason: %s.",
       "Arglist": "param,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -909,7 +898,7 @@
       "errClass": "ACL Errors",
       "errTitle": "Invalid_Argument",
       "ErrCode": "EH0012",
-      "ErrMessage": "%s failed, Parameter %s is invalid. Reason: %s.",
+      "ErrMessage": "%s failed. Parameter %s is invalid. Reason: %s.",
       "Arglist": "func, param, reason",
       "suggestion": {
         "Possible Cause": "N/A",

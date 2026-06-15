@@ -82,9 +82,6 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
     std::vector<std::string> values5 = {"10", "repeat bind"};
     PrintErrMsgToLog(ErrorCode::EE1007, "file", 1000, "func", values5);
  
-    std::vector<std::string> values6 = {"section invalid"};
-    PrintErrMsgToLog(ErrorCode::EE1008, "file", 1000, "func", values6);
- 
     std::vector<std::string> values7 = {"10", "model invalid"};
     PrintErrMsgToLog(ErrorCode::EE1009, "file", 1000, "func", values7);
  
@@ -145,7 +142,6 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1005, "rtMemCpy");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1006, "rtMemCpy", "d2d");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1007, "10", "repeat bind");
-    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1008, "malloc", "section invalid");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1009, "10", "model invalid");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1010, "rtModelExecute", "stream");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1011, "rtMemCpy", "0", "size", "size is not 0");
@@ -179,8 +175,6 @@ TEST_F(RtErrorCodeTest, CheckErrCodeParams)
     EXPECT_EQ(names, (std::vector<std::string>{"func", "type"}));
     names = GetParamNames(ErrorCode::EE1007);
     EXPECT_EQ(names, (std::vector<std::string>{"id", "reason"}));
-    names = GetParamNames(ErrorCode::EE1008);
-    EXPECT_EQ(names, (std::vector<std::string>{"reason"}));
     names = GetParamNames(ErrorCode::EE1009);
     EXPECT_EQ(names, (std::vector<std::string>{"id", "reason"}));
     names = GetParamNames(ErrorCode::EE1010);
@@ -230,7 +224,7 @@ TEST_F(RtErrorCodeTest, ErrorCodeTableParamCountMatchesMessageFormat)
     std::vector<CodeInfo> allCodes = {
         {ErrorCode::EE1001, 1}, {ErrorCode::EE1002, 1}, {ErrorCode::EE1003, 4},
         {ErrorCode::EE1004, 2}, {ErrorCode::EE1005, 1}, {ErrorCode::EE1006, 2},
-        {ErrorCode::EE1007, 2}, {ErrorCode::EE1008, 1}, {ErrorCode::EE1009, 2},
+        {ErrorCode::EE1007, 2}, {ErrorCode::EE1009, 2},
         {ErrorCode::EE1010, 2}, {ErrorCode::EE1011, 4}, {ErrorCode::EE1012, 4},
         {ErrorCode::EE1013, 1}, {ErrorCode::EE1014, 1}, {ErrorCode::EE1015, 2},
         {ErrorCode::EE1016, 2}, {ErrorCode::EE1017, 3}, {ErrorCode::EE1018, 2},

@@ -64,11 +64,11 @@ static const ErrorInfoConfig ERROR_MAP[] = {
     // {"EE4004", "Failed to enable profiling.  %s", NULL, "Do not enable profiling repeatedly.", {"extend_info"}},
 
     //  ACL Errors
-    {"EH0001", "Value [%s] for [%s] is invalid. Reason: %s.", NULL, NULL, {"value", "param", "reason"}},
-    {"EH0002", "Argument [%s] must not be NULL.", NULL, "Try again with a correct pointer argument.", {"param"}},
-    {"EH0003", "Path [%s] is invalid. Reason: %s.", NULL, NULL, {"path", "reason"}},
-    // {"EH0004", "File [%s] is invalid. Reason: %s.", NULL, NULL, {"path", "reason"}},  //主线没用到
-    // {"EH0005", "AIPP argument [%s] is invalid. Reason: %s.", NULL, NULL, {"param", "reason"}}, // AIPP
+    {"EH0001", "Value %s for %s is invalid. Reason: %s.", NULL, NULL, {"value", "param", "reason"}},
+    {"EH0002", "Argument %s must not be NULL.", NULL, "Try again with a correct pointer argument.", {"param"}},
+    {"EH0003", "Path %s is invalid. Reason: %s.", NULL, NULL, {"path", "reason"}},
+    // {"EH0004", "File %s is invalid. Reason: %s.", NULL, NULL, {"path", "reason"}},  //主线没用到
+    // {"EH0005", "AIPP argument %s is invalid. Reason: %s.", NULL, NULL, {"param", "reason"}}, // AIPP
     // {"EH0006", "%s is not supported. Reason: %s.", NULL, NULL, {"feature", "reason"}}, // DVPP跟TDT
 
     // Profiling Errors
@@ -175,12 +175,12 @@ static int SubString(const char *str, const char *sub)
 
 /* 函数名：FormatString
    函数功能：格式化错误模板信息，如
-      FormatString({"value", "param", "reason"}, "Value [%s] for [%s] is invalid. Reason: %s.",
+      FormatString({"value", "param", "reason"}, "Value %s for %s is invalid. Reason: %s.",
                    {"value", "param", "reason"}, {"25", "x", "The value is too small"}, 3);
-      返回"Value [25] for [x] is invalid. Reason: The value is too small.
+      返回"Value 25 for x is invalid. Reason: The value is too small.
    输入：
        tmplArgList : 模板参数列表，如{"value", "param", "reason"}
-       tmplErrorMsg : 模板errMsg, 如"Value [%s] for [%s] is invalid. Reason: %s."
+       tmplErrorMsg : 模板errMsg, 如"Value %s for %s is invalid. Reason: %s."
        args : 用户传入的参数列表, {"value", "param", "reason", "..."}
        argValues : 用户传入的参数值列表， {"5", "x", "x is invalid", "..."}
        argsNum :用户传入的参数值或者参数列表长度, sizeof(args) / sizeof(char*)

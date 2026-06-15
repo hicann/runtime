@@ -2267,6 +2267,23 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetGroupInfoDetail_Fail_ValueLenTooSmall)
     EXPECT_EQ(aclrtDestroyGroupInfo(groupInfo), ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetGroupInfoDetail_Fail_MemcpySecurecRange)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetGroupCount(_))
+        .WillRepeatedly(Return(RT_ERROR_NONE));
+
+    aclrtGroupInfo *groupInfo = aclrtCreateGroupInfo();
+    uint32_t value = 0U;
+    size_t paramRetSize = 0U;
+    const size_t invalidValueLen = 0x80000000UL;
+
+    EXPECT_EQ(aclrtGetGroupInfoDetail(groupInfo, 0, ACL_GROUP_AICORE_INT,
+        static_cast<void *>(&value), invalidValueLen, &paramRetSize), ACL_ERROR_FAILURE);
+    EXPECT_EQ(paramRetSize, 0U);
+
+    EXPECT_EQ(aclrtDestroyGroupInfo(groupInfo), ACL_SUCCESS);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetAllGroupInfoTest)
 {
     aclrtGroupInfo *groupInfo = aclrtCreateGroupInfo();
@@ -6222,6 +6239,32 @@ TEST_F(UTEST_ACL_Runtime, aclrtSetBufUserData_failed_with_size_offset_exceed_max
 
     auto ret = aclrtSetBufUserData(mbuf, data, size, offset);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetBufUserData_failed_when_memcpy_returns_error)
+{
+    char privateData[96] = {0};
+    char data[1] = {0};
+    aclrtMbuf mbuf = reinterpret_cast<aclrtMbuf>(privateData);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMbufGetPrivInfo(_, _, _))
+        .WillOnce(DoAll(SetArgPointee<1>(privateData), SetArgPointee<2>(sizeof(privateData)),
+            Return(RT_ERROR_NONE)));
+
+    auto ret = aclrtGetBufUserData(mbuf, data, 0U, 0U);
+    EXPECT_EQ(ret, ACL_ERROR_FAILURE);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtSetBufUserData_failed_when_memcpy_returns_error)
+{
+    char privateData[96] = {0};
+    char data[1] = {0};
+    aclrtMbuf mbuf = reinterpret_cast<aclrtMbuf>(privateData);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMbufGetPrivInfo(_, _, _))
+        .WillOnce(DoAll(SetArgPointee<1>(privateData), SetArgPointee<2>(sizeof(privateData)),
+            Return(RT_ERROR_NONE)));
+
+    auto ret = aclrtSetBufUserData(mbuf, data, 0U, sizeof(privateData));
+    EXPECT_EQ(ret, ACL_ERROR_FAILURE);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtBinaryLoadFromData_failed_with_invalid_args)

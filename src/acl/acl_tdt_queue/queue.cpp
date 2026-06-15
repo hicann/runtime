@@ -10,6 +10,7 @@
 
 #include "queue.h"
 #include <map>
+#include <sstream>
 #include "common/log_inner.h"
 #include "toolchain/prof_api_reg.h"
 #include "common/resource_statistics.h"
@@ -28,9 +29,11 @@ namespace {
         const auto ret = memcpy_s(dst, dstLen, src, srcLen);
         if (ret != EOK) {
             const std::string retVal = std::to_string(ret);
-            const std::string extendInfo = "src=" + std::to_string(reinterpret_cast<uintptr_t>(src)) + 
-                ", dst=" + std::to_string(reinterpret_cast<uintptr_t>(dst)) +
-                ", dstLen=" + std::to_string(dstLen) + ", srcLen=" + std::to_string(srcLen);
+            std::stringstream ss;
+            ss << std::hex << "src=0x" << reinterpret_cast<uintptr_t>(src)
+                << ", dest=0x" << reinterpret_cast<uintptr_t>(dst)
+                << std::dec << ", dest_max=" << dstLen << ", count=" << srcLen << ".";
+            const std::string extendInfo = ss.str();
             acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
                 std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
                 std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),

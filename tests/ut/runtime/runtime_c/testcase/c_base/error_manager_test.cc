@@ -46,10 +46,10 @@ TEST_F(UtestErrManagerTest, ReportErrMessage) {
   // 外部错误码正常上报，用户传入arglist比模板多一个参数, "reason"模板argList没有
   REPORT_INPUT_ERROR("EH0003", ARRAY("path", "reason", "value"), ARRAY("./a.text", "cannot find", "100"));
   char* errmsg = GetErrorMessage();
-  ASSERT_STREQ(errmsg, "EH0001: Value [25] for [x] is invalid. Reason: The value is too small.\r\n"
+  ASSERT_STREQ(errmsg, "EH0001: Value 25 for x is invalid. Reason: The value is too small.\r\n"
                "        TraceBack (most recent call last):\r\n"
-               "        Argument [ll] must not be NULL.\r\n"
-               "        Path [./a.text] is invalid. Reason: cannot find.\r\n");
+               "        Argument ll must not be NULL.\r\n"
+               "        Path ./a.text is invalid. Reason: cannot find.\r\n");
 
   REPORT_INPUT_ERROR("EK0201", ARRAY("buf_size"), ARRAY("100"));
   errmsg = GetErrorMessage();
@@ -87,8 +87,8 @@ TEST_F(UtestErrManagerTest, GetErrorMessage) {
                "        TraceBack (most recent call last):\r\n"
                "        Param input.size() < minsize, check invalid\r\n"
                "        This is an inner error!\r\n"
-               "        Value [25] for [x] is invalid. Reason: The value is too small.\r\n"
-               "        Argument [ll] must not be NULL.\r\n");
+               "        Value 25 for x is invalid. Reason: The value is too small.\r\n"
+               "        Argument ll must not be NULL.\r\n");
   char* errmsg3 = GetErrorMessage();
   ASSERT_STREQ(errmsg3, NULL);
 }

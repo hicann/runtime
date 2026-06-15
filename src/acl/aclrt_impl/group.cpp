@@ -9,6 +9,7 @@
  */
 
 #include "acl_rt_impl.h"
+#include <sstream>
 #include "securec.h"
 #include "runtime/context.h"
 #include "common/log_inner.h"
@@ -39,12 +40,14 @@ static aclError FillAttrValue(const void *const src, const size_t srcLen, void *
     if (ret != EOK) {
         ACL_LOG_ERROR("call memcpy_s failed, result = %d, srcLen = %zu, dstLen = %zu", ret, srcLen, dstLen);
         const std::string retVal = std::to_string(ret);
-        const std::string extendInfo = "src=" + std::to_string(reinterpret_cast<uintptr_t>(src)) +
-                ", dst=" + std::to_string(reinterpret_cast<uintptr_t>(dst)) +
-                ", dstLen=" + std::to_string(dstLen) + ", srcLen=" + std::to_string(srcLen);
+        std::stringstream ss;
+        ss << std::hex << "src=0x" << reinterpret_cast<uintptr_t>(src)
+            << ", attrValue=0x" << reinterpret_cast<uintptr_t>(dst)
+            << std::dec << ", valueLen=" << dstLen << ", count=" << srcLen << ".";
+        const std::string extendInfo = ss.str();
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
-            std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
+            std::vector<const char *>({funcName, "memcpy_s", retVal.c_str(),
                 strerror(ret), extendInfo.c_str()}));
         return ACL_ERROR_FAILURE;
     }

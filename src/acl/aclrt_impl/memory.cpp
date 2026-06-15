@@ -12,6 +12,7 @@
 #include <mutex>
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include "acl_rt_impl.h"
 #include "runtime/mem.h"
 #include "runtime/rts/rts_mem.h"
@@ -1689,12 +1690,15 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void *dataPtr, size_t size
     ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
     ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
-    const auto ret = memcpy_s(dataPtr, size, (static_cast<uint8_t *>(tmpDataPtr) + offset), size);
+    const void *const srcAddr = static_cast<uint8_t *>(tmpDataPtr) + offset;
+    const auto ret = memcpy_s(dataPtr, size, srcAddr, size);
     if (ret != EOK) {
         const std::string retVal = std::to_string(ret);
-        const std::string extendInfo = "src=" + std::to_string(reinterpret_cast<uintptr_t>(tmpDataPtr)) + 
-            ",dst=" + std::to_string(reinterpret_cast<uintptr_t>(dataPtr)) +
-            ",dstLen=" + std::to_string(size) + ",srcLen=" + std::to_string(size);
+        std::stringstream ss;
+        ss << std::hex << "src=0x" << reinterpret_cast<uintptr_t>(srcAddr)
+            << ", dataPtr=0x" << reinterpret_cast<uintptr_t>(dataPtr)
+            << std::dec << ", size=" << size << ", count=" << size << ".";
+        const std::string extendInfo = ss.str();
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
             std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),
@@ -1728,14 +1732,16 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void *dataPtr, size_t size
     ACL_REQUIRES_CALL_RTS_OK(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
     ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
-    const auto ret = memcpy_s((static_cast<uint8_t *>(tmpDataPtr) + offset),
-                              (static_cast<size_t>(bufSize) - offset),
-                              dataPtr, size);
+    void *const destAddr = static_cast<uint8_t *>(tmpDataPtr) + offset;
+    const size_t destMax = static_cast<size_t>(bufSize) - offset;
+    const auto ret = memcpy_s(destAddr, destMax, dataPtr, size);
     if (ret != EOK) {
         const std::string retVal = std::to_string(ret);
-        const std::string extendInfo = "src=" + std::to_string(reinterpret_cast<uintptr_t>(dataPtr)) + 
-            ", dst=" + std::to_string(reinterpret_cast<uintptr_t>(tmpDataPtr)) +
-            ", dstLen=" + std::to_string(bufSize - offset) + ", srcLen=" + std::to_string(size);
+        std::stringstream ss;
+        ss << std::hex << "dataPtr=0x" << reinterpret_cast<uintptr_t>(dataPtr)
+            << ", dest=0x" << reinterpret_cast<uintptr_t>(destAddr)
+            << std::dec << ", dest_max=" << destMax << ", size=" << size << ".";
+        const std::string extendInfo = ss.str();
         acl::AclErrorLogManager::ReportInputError(acl::STANDARD_FUNC_FAILED_MSG,
             std::vector<const char *>({"func1", "func2", "ret_code", "reason", "extend_info"}),
             std::vector<const char *>({__func__, "memcpy_s", retVal.c_str(),

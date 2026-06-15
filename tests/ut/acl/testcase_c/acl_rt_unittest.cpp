@@ -643,7 +643,7 @@ TEST_F(AclRtTest, hostfunc_aclrtProcessHostFuncTest) {
 TEST_F(AclRtTest, acl_GetRecentErrMsg) {
   REPORT_INPUT_ERROR(INVALID_NULL_POINTER_MSG, ARRAY(const_cast<char *>("param")), ARRAY(const_cast<char *>("datatest")));
   const char *message = aclGetRecentErrMsg();
-  ASSERT_STREQ(message, "EH0002: Argument [datatest] must not be NULL.\r\n"
+  ASSERT_STREQ(message, "EH0002: Argument datatest must not be NULL.\r\n"
                "        Solution: Try again with a correct pointer argument.\r\n");
   message = aclGetRecentErrMsg();
   ASSERT_STREQ(message, NULL); 

@@ -60,11 +60,6 @@
       ("id", "reason"),                                                       \
       "Failed to bind stream with ID %s. Reason: %s. ErrorCode=EE1007.\n",    \
       DLOG_ERROR)                                                             \
-    /* EE1008 - Execution_Error_Load_OP_Kernel */                             \
-    X(EE1008, "EE1008",                                                       \
-      ("reason"),                                                             \
-      "OP kernel loading failed. Reason: %s. ErrorCode=EE1008.\n",            \
-      DLOG_ERROR)                                                             \
     /* EE1009 - Execution_Error_Model */                                      \
     X(EE1009, "EE1009",                                                       \
       ("id", "reason"),                                                       \
