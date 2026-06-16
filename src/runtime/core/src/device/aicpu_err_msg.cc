@@ -11,7 +11,6 @@
 #include "aicpu_err_msg.hpp"
 #include "davinci_kernel_task.h"
 #include "base.hpp"
-#include "kernel.h"
 #include "runtime.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "program.hpp"
