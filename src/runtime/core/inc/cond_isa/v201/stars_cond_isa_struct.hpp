@@ -66,14 +66,12 @@ struct RtStarsDqsEnqueueFc {
     RtStarsCondOpLLWI              llwi8;
     RtStarsCondOpLHWI              lhwi8;
     RtStarsCondOpOp                and1;
+    CondMbufTraceFc                owFreeMbufTracefc;
     RtStarsCondOpLLWI              llwi;
     RtStarsCondOpLHWI              lhwi;
     RtStarsCondOpSystemCsr         csrrc;
     RtStarsCondOpStore             owfree;
     RtStarsCondOpSystemCsr         csrrs;
-
-    CondMbufTraceFc                owFreeMbufTracefc;
-
     RtStarsCondOpLoad              ldr4;
     RtStarsCondOpImmSLLI           slli2;
     RtStarsCondOpImmSLLI           srli2;
@@ -475,12 +473,11 @@ struct RtStarsDqsInterChipPostProcFc {
     RtStarsCondOpLHWI              lhwi6;
     RtStarsCondOpOp                and1;
 
+    CondMbufTraceFc                dstProdFreeMbufTracefc;
+
     RtStarsCondOpSystemCsr         csrrc1;
     RtStarsCondOpStore             sw1;
     RtStarsCondOpSystemCsr         csrrs1;
-
-    CondMbufTraceFc                dstProdFreeMbufTracefc;
-
     RtStarsCondOpLLWI              llwi7;
     RtStarsCondOpLHWI              lhwi7;
     RtStarsCondOpLoad              ldr4;

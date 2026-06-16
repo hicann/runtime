@@ -287,9 +287,6 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     ConstructLLWI(r2, funcCallPara.mbufHandleAddr, fc.llwi2);
     ConstructLHWI(r2, funcCallPara.mbufHandleAddr, fc.lhwi2);
 
-    // 加载 mbufPoolIndexMax 到 r3 寄存器中
-    ConstructLLWI(r3, funcCallPara.mbufPoolIndexMax, fc.llwi3);
-    ConstructLHWI(r3, funcCallPara.mbufPoolIndexMax, fc.lhwi3);
 
     // 根据mbufHandleAddr的地址 r2 读mbuf handle 到 r4 寄存器中, LOAD 64bit数据，而mbuf handle是32bit的, 存在读越界风险(数组多开4Byte)
     ConstructLoad(r2, 0U, r4, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr1);
@@ -302,6 +299,14 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     // r5 = mbuf_free_op_addr，根据mbufFreeAddr的地址 r1 读mbuf pool 到 r5 寄存器中
     ConstructLoad(r1, 0U, r5, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr3);
 
+    // r4位mbuf handle value寄存器， 结合上下文mbuf_handle_reg可复用
+    MbufTraceRegParam freeRegParam = {
+        .loop_index_reg = r6, .mbuf_handle_reg = r4, .avail_reg0 = r3, .avail_reg1 = r7, .avail_reg2 = r9, .avail_reg3 = r10
+    };
+
+    const uint32_t mbufTraceNop = (RtPtrToValue(&(fc.freeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    ConstructMbufTrace(fc.freeMbufTracefc, funcCallPara.freeMbufTracePara, freeRegParam, mbufTraceNop);
+
     // cfg use PA
     ConstructSystemCsr(r8, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc);
 
@@ -310,14 +315,6 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
 
     // restore to use VA
     ConstructSystemCsr(r8, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs);
-
-    // r4位mbuf handle value寄存器， 结合上下文mbuf_handle_reg可复用
-    MbufTraceRegParam freeRegParam = {
-        .loop_index_reg = r6, .mbuf_handle_reg = r4, .avail_reg0 = r5, .avail_reg1 = r7, .avail_reg2 = r9, .avail_reg3 = r10
-    };
-
-    const uint32_t mbufTraceNop = (RtPtrToValue(&(fc.freeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
-    ConstructMbufTrace(fc.freeMbufTracefc, funcCallPara.freeMbufTracePara, freeRegParam, mbufTraceNop);
 
     // r2 mbufHandleAddr + 4， 下一个mbuf handle 的地址
     ConstructOpImmAndi(r2, r2, 4, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addi2);
@@ -334,6 +331,10 @@ void ConstructMbufFreeInstrFc(RtStarsDqsMbufFreeFc &fc, const RtDqsMbufFreeFcPar
     ConstructLoad(r10, 0U, r9, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldrCntAddr1);
     ConstructOpImmAndi(r9, r9, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, fc.addiCnt1);
     ConstructStore(r10, r9, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SB, fc.incCnt1);
+
+    // 加载 mbufPoolIndexMax 到 r3 寄存器中
+    ConstructLLWI(r3, funcCallPara.mbufPoolIndexMax, fc.llwi3);
+    ConstructLHWI(r3, funcCallPara.mbufPoolIndexMax, fc.lhwi3);
 
     // Jump pc 在 Func call 中，跳转指令大于15时，需要借助 CSR寄存器(JUMP_PC)完成跳转
     uint64_t offset = offsetof(RtStarsDqsMbufFreeFc, ldr1);
@@ -414,6 +415,13 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc &fc, const RtStarsDqsFcPara &func
     ConstructLHWI(r8, dqsPoolIdBlkIdMask, fc.lhwi8);
     ConstructOpAnd(r5, r8, r8, fc.and1);
 
+    // r8位当前mbuf handle value寄存器，结合上下文mbuf_handle_reg可复用
+    MbufTraceRegParam owFreeRegInfo = {
+        .loop_index_reg = r10, .mbuf_handle_reg = r8, .avail_reg0 = r4, .avail_reg1 = r5, .avail_reg2 = r6, .avail_reg3 = r7
+    };
+    uint32_t mbufTraceNop = (RtPtrToValue(&(fc.owFreeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    ConstructMbufTrace(fc.owFreeMbufTracefc, funcCallPara.owFreeMbufTracePara, owFreeRegInfo, mbufTraceNop);
+
     // read immd reg va cfg mask
     ConstructLLWI(r5, AXI_USER_VA_CFG_MASK, fc.llwi);
     ConstructLHWI(r5, AXI_USER_VA_CFG_MASK, fc.lhwi);
@@ -423,13 +431,6 @@ void ConstructDqsEnqueueFc(RtStarsDqsEnqueueFc &fc, const RtStarsDqsFcPara &func
     ConstructStore(r7, r8, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.owfree);
     // restore to use VA
     ConstructSystemCsr(r5, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs);
-
-    // r8位当前mbuf handle value寄存器，结合上下文mbuf_handle_reg可复用
-    MbufTraceRegParam owFreeRegInfo = {
-        .loop_index_reg = r10, .mbuf_handle_reg = r8, .avail_reg0 = r4, .avail_reg1 = r5, .avail_reg2 = r6, .avail_reg3 = r7
-    };
-    uint32_t mbufTraceNop = (RtPtrToValue(&(fc.owFreeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
-    ConstructMbufTrace(fc.owFreeMbufTracefc, funcCallPara.owFreeMbufTracePara, owFreeRegInfo, mbufTraceNop);
 
     // load mbufHandle into R6
     ConstructLoad(r2, 0U, r6, RT_STARS_COND_ISA_LOAD_FUNC3_LDR, fc.ldr4);
@@ -1521,19 +1522,19 @@ void ConstructDqsInterChipPostProcFc(RtStarsDqsInterChipPostProcFc &fc, const Rt
     ConstructLHWI(r3, dqsPoolIdBlkIdMask, fc.lhwi6);
     ConstructOpAnd(r5, r3, r3, fc.and1);
 
+    // r3为mbuf handle value寄存器， 结合上下文，mbuf_handle_reg可以复用
+    MbufTraceRegParam dstProdFreePara = {
+        .loop_index_reg = r0, .mbuf_handle_reg = r3, .avail_reg0 = r1, .avail_reg1 = r10, .avail_reg2 = r7, .avail_reg3 = r9
+    };
+    uint32_t mbufTraceNop = (RtPtrToValue(&(fc.dstProdFreeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
+    ConstructMbufTrace(fc.dstProdFreeMbufTracefc, funcCallPara.dstProdFreeMbufTracePara, dstProdFreePara, mbufTraceNop);
+
     // cfg use PA
     ConstructSystemCsr(r4, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRC, fc.csrrc1);
     // 释放 ow mbuf handle
     ConstructStore(r2, r3, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SW, fc.sw1);
     // restore to use VA
     ConstructSystemCsr(r4, r0, RT_STARS_COND_CSR_AXI_USER_REG, RT_STARS_COND_ISA_SYSTEM_FUNC3_CSRRS, fc.csrrs1);
-
-    // r3为mbuf handle value寄存器， 结合上下文，mbuf_handle_reg可以复用
-    MbufTraceRegParam dstProdFreePara = {
-        .loop_index_reg = r0, .mbuf_handle_reg = r3, .avail_reg0 = r1, .avail_reg1 = r2, .avail_reg2 = r7, .avail_reg3 = r9
-    };
-    uint32_t mbufTraceNop = (RtPtrToValue(&(fc.dstProdFreeMbufTracefc.nop)) - RtPtrToValue(&fc)) / sizeof(uint32_t);
-    ConstructMbufTrace(fc.dstProdFreeMbufTracefc, funcCallPara.dstProdFreeMbufTracePara, dstProdFreePara, mbufTraceNop);
 
     // r1: dstMbufHandleAddr
     ConstructLLWI(r1, funcCallPara.dstMbufHandleAddr, fc.llwi7);

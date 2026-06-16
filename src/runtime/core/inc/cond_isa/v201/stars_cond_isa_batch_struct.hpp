@@ -276,8 +276,6 @@ struct RtStarsDqsMbufFreeFc {
     RtStarsCondOpLHWI              lhwi1;
     RtStarsCondOpLLWI              llwi2;
     RtStarsCondOpLHWI              lhwi2;
-    RtStarsCondOpLLWI              llwi3;
-    RtStarsCondOpLHWI              lhwi3;
     RtStarsCondOpLoad              ldr1; // 读mbuf handle 32bit
     RtStarsCondOpImmSLLI           slli1;
     RtStarsCondOpImmSLLI           srli1;
@@ -306,11 +304,10 @@ struct RtStarsDqsMbufFreeFc {
     RtStarsSetCsrJumpPc            jumpPc3;
     RtStarsCondOpBranch            bgeu2;
     RtStarsCondOpLoad              ldr3;
+    CondMbufTraceFc                freeMbufTracefc;
     RtStarsCondOpSystemCsr         csrrc; // use PA
     RtStarsCondOpStore             sw3;
     RtStarsCondOpSystemCsr         csrrs; // restore to VA
-
-    CondMbufTraceFc                freeMbufTracefc;
     RtStarsCondOpImm               addi2;
     RtStarsCondOpImm               addi3;
     RtStarsCondOpImm               addi4;
@@ -320,7 +317,8 @@ struct RtStarsDqsMbufFreeFc {
     RtStarsCondOpLoad              ldrCntAddr1;
     RtStarsCondOpImm               addiCnt1;
     RtStarsCondOpStore             incCnt1;
-
+    RtStarsCondOpLLWI              llwi3;
+    RtStarsCondOpLHWI              lhwi3;
     RtStarsSetCsrJumpPc            jumpPc4;
     RtStarsCondOpBranch            blt1;
     RtStarsCondOpNop               end;  // end of func, must be the last instruction
