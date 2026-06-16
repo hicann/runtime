@@ -1449,11 +1449,11 @@ rtError_t Program::BinaryPoolMemCopySync(void * const devMem, const uint32_t siz
 {
     uint32_t devId = device->Id_();
     Driver * const curDrv = device->Driver_();
-    // get the base address of the memory pool corresponding to the current memory.
-    void *tmpAddr = const_cast<void *>(device->GetKernelMemoryPool()->GetMemoryPoolBaseAddr(devMem));
-    void *const baseAddr = tmpAddr;
+    // 使用 GetPoolMemInfo 原子化获取 baseAddr 和 adviseMutex，消除 TOCTOU 竞争
+    PoolMemInfo poolInfo = device->GetKernelMemoryPool()->GetPoolMemInfo(devMem);
+    void *const baseAddr = const_cast<void *>(poolInfo.baseAddr);
     // lock the current memory pool block.
-    std::lock_guard<std::mutex> lock(*(device->GetKernelMemoryPool()->GetMemoryPoolAdviseMutex(devMem)));
+    std::lock_guard<std::mutex> lock(*(poolInfo.adviseMutex));
 
     RT_LOG(RT_LOG_INFO, "binary memcpy to pool_mem, dev_mem=%p, size=%u, device_id=%u, readonly=%d.",
         devMem, size, devId, readonly);

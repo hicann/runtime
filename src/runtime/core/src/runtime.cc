@@ -4468,10 +4468,12 @@ rtError_t Runtime::GetUserDevIdByDeviceId(const uint32_t deviceId, uint32_t * co
 static void BinaryMemFree(const Device * const device, Program * const prog, uint32_t alignSize)
 {
     Driver * const curDrv = device->Driver_();
-    if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
-        device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
+    void *baseAddr = prog->GetBinBaseAddr(device->Id_());
+    // 使用 TryRelease 原子化 Contains + Release，消除 TOCTOU 竞争
+    if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->TryRelease(baseAddr, alignSize)) {
+        // 已通过内存池释放
     } else {
-        (void)curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
+        (void)curDrv->DevMemFree(baseAddr, device->Id_());
     }
     prog->SetBinBaseAddr(nullptr, device->Id_());
     prog->SetBinAlignBaseAddr(nullptr, device->Id_());
@@ -4712,11 +4714,13 @@ rtError_t Runtime::BinaryUnLoad(const Device *const device, Program * const prog
     TIMESTAMP_BEGIN(rtBinaryUnLoad_DevMemRelease);
     rtError_t ret = RT_ERROR_NONE;
     if (prog->GetBinBaseAddr(device->Id_()) != nullptr) {
-        if ((device->GetKernelMemoryPool() != nullptr) && device->GetKernelMemoryPool()->Contains(prog->GetBinBaseAddr(device->Id_()))) {
-            const uint32_t devSize = device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
-                (prog->LoadSize() + PREFETCH_INCREASE_SIZE) : prog->LoadSize();
-            const uint32_t alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
-            device->GetKernelMemoryPool()->Release(prog->GetBinBaseAddr(device->Id_()), alignSize);
+        const uint32_t devSize = device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
+            (prog->LoadSize() + PREFETCH_INCREASE_SIZE) : prog->LoadSize();
+        const uint32_t alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
+        // 使用 TryRelease 原子化 Contains + Release，消除 TOCTOU 竞争
+        if ((device->GetKernelMemoryPool() != nullptr) &&
+            device->GetKernelMemoryPool()->TryRelease(prog->GetBinBaseAddr(device->Id_()), alignSize)) {
+            // 已通过内存池释放
         } else {
             Driver * const curDrv = device->Driver_();
             ret = curDrv->DevMemFree(prog->GetBinBaseAddr(device->Id_()), device->Id_());
@@ -5432,8 +5436,9 @@ rtError_t Runtime::RestoreModule(void) const
         void *hostAddr = static_cast<void *>(node->hostAddr);
         Device *device = const_cast<Runtime*>(this)->GetDevice(node->devId, 0U);
         rtError_t error;
-        void *baseAddr = const_cast<void *>(device->GetKernelMemoryPool()->GetMemoryPoolBaseAddr(devAddr));
-        if (baseAddr != nullptr) {
+        // 使用 GetPoolMemInfo 原子化查询，避免 TOCTOU 竞争
+        PoolMemInfo poolInfo = device->GetKernelMemoryPool()->GetPoolMemInfo(devAddr);
+        if (poolInfo.found) {
             error = Program::BinaryPoolMemCopySync(devAddr, static_cast<uint32_t>(memSize), hostAddr, device, node->readonly);
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error,
                 "BinaryPoolMemCopySync failed, device_id=%u, src=%p, dest=%p, len=%u.", node->devId, hostAddr, devAddr, memSize);

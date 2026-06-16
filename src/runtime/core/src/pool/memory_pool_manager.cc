@@ -26,6 +26,8 @@ MemoryPoolManager::MemoryPoolManager(Device *dev, int32_t initialPoolsNum) : NoC
 TIMESTAMP_EXTERN(ReleaseMemoryPoolManager);
 MemoryPoolManager::~MemoryPoolManager() noexcept
 {
+    // 持写锁，确保析构时没有并发操作
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     driver_ = nullptr;
     device_ = nullptr;
     RT_LOG(RT_LOG_DEBUG, "~MemoryPoolManager release device memory, size=%u.", pools_.size());
@@ -35,11 +37,13 @@ MemoryPoolManager::~MemoryPoolManager() noexcept
             delete pool;
         }
     }
+    pools_.clear();
     TIMESTAMP_END(ReleaseMemoryPoolManager);
 }
 
 rtError_t MemoryPoolManager::Init()
 {
+    // Init 在单线程初始化阶段调用，无需加锁
     rtError_t error = RT_ERROR_NONE;
     MemoryPool *mPool;
     for (int32_t i = 0; i < numPools_; ++i) {
@@ -57,6 +61,7 @@ MEMORY_POOL_FREE:
     for(auto pool : pools_) {
         DELETE_O(pool);
     }
+    pools_.clear();
     return error;
 }
 
@@ -66,7 +71,7 @@ void* MemoryPoolManager::Allocate(const size_t size, const bool readOnly)
     if (size == 0 || (size > POOL_SIZE_2M)) {
         return nullptr;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     for (auto pool : pools_) {
         if (readOnly == pool->GetReadOnlyFlag()) {
             void* block = pool->Allocate(size);
@@ -78,7 +83,7 @@ void* MemoryPoolManager::Allocate(const size_t size, const bool readOnly)
             }
         }
     }
- 
+
     // 没有可用的内存池，创建一个新的内存池
     const rtError_t error = AddMemoryPool(readOnly);
     if (error != RT_ERROR_NONE) {
@@ -91,7 +96,7 @@ TIMESTAMP_EXTERN(MemoryPoolManagerRelease);
 void MemoryPoolManager::Release(void* ptr, size_t size)
 {
     TIMESTAMP_BEGIN(MemoryPoolManagerRelease);
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     for (auto pool : pools_) {
         if (pool->Contains(ptr)) {
             pool->Release(ptr, size);
@@ -101,10 +106,40 @@ void MemoryPoolManager::Release(void* ptr, size_t size)
             return;
         }
     }
+    TIMESTAMP_END(MemoryPoolManagerRelease);
+}
+
+bool MemoryPoolManager::TryRelease(void* ptr, size_t size)
+{
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    for (auto pool : pools_) {
+        if (pool->Contains(ptr)) {
+            pool->Release(ptr, size);
+            RT_LOG(RT_LOG_DEBUG, "TryRelease device memory, ptr=%#" PRIx64 ", size=%u.", ptr, size);
+            CheckAndReleasePools();
+            return true;
+        }
+    }
+    return false;
+}
+
+PoolMemInfo MemoryPoolManager::GetPoolMemInfo(void* ptr)
+{
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    for (MemoryPool *pool : pools_) {
+        if (pool->Contains(ptr)) {
+            RT_LOG(RT_LOG_DEBUG, "GetPoolMemInfo device_id=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", ptr=%#" PRIx64,
+                device_->Id_(), pool, pool->GetAddr(), ptr);
+            return {pool->GetAddr(), pool->GetMemoryPoolAdviseMutex(), true};
+        }
+    }
+    RT_LOG(RT_LOG_DEBUG, "GetPoolMemInfo not found, device_id=%u, ptr=%#" PRIx64, device_->Id_(), ptr);
+    return {nullptr, nullptr, false};
 }
 
 rtError_t MemoryPoolManager::AddMemoryPool(const bool readOnly)
 {
+    // 调用者必须已持有 mutex_ 写锁（由 Allocate 保证）
     rtError_t error = RT_ERROR_NONE;
     MemoryPool *pool = new (std::nothrow) MemoryPool(device_, readOnly);
     COND_RETURN_AND_MSG_OUTER(pool == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
@@ -122,6 +157,7 @@ MEMORY_POOL_FREE:
 
 bool MemoryPoolManager::Contains(void* ptr)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     for (auto pool : pools_) {
         if (pool->Contains(ptr)) {
             return true;
@@ -132,6 +168,7 @@ bool MemoryPoolManager::Contains(void* ptr)
 
 void MemoryPoolManager::CheckAndReleasePools()
 {
+    // 调用者必须已持有 mutex_ 写锁（由 Release/TryRelease 保证）
     int32_t freePoolCount = 0;
 
     // 计算空闲池的数量
@@ -147,7 +184,7 @@ void MemoryPoolManager::CheckAndReleasePools()
         while ((it != pools_.cend()) && (freePoolCount > maxFreePools_)) {
             if ((*it)->GetUsedSize() == 0) {
                 delete *it;
-                it = pools_.erase(it);  // 从向量中移除并释放内存池
+                it = pools_.erase(it);  // 从 deque 中移除并释放内存池
                 --freePoolCount;
                 --numPools_;
             } else {
@@ -159,6 +196,7 @@ void MemoryPoolManager::CheckAndReleasePools()
 
 std::mutex *MemoryPoolManager::GetMemoryPoolAdviseMutex(void *ptr)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     for (MemoryPool *pool : pools_) {
         if (pool->Contains(ptr)) {
             RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", ptr=%#" PRIx64 "",
@@ -166,13 +204,14 @@ std::mutex *MemoryPoolManager::GetMemoryPoolAdviseMutex(void *ptr)
             return pool->GetMemoryPoolAdviseMutex();
         }
     }
-    
+
     RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, ptr=%#" PRIx64 "", device_->Id_(), ptr);
     return nullptr;
 }
 
 const void *MemoryPoolManager::GetMemoryPoolBaseAddr(void *ptr)
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     for (MemoryPool *pool : pools_) {
         if (pool->Contains(ptr)) {
             RT_LOG(RT_LOG_DEBUG, "drv device_id=%u, pool=%#" PRIx64 ", addr=%#" PRIx64 ", ptr=%#" PRIx64 "",

@@ -41,9 +41,11 @@ void Module::TearDown() noexcept
 {
     TIMESTAMP_BEGIN(ModuleDevMemFree);
     if (baseAddr_ != nullptr) {
-        if (device_->GetKernelMemoryPool() != nullptr && device_->GetKernelMemoryPool()->Contains(baseAddr_)) {
-            const uint32_t alignSize = (baseAddrSize_ + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
-            device_->GetKernelMemoryPool()->Release(baseAddr_, static_cast<size_t>(alignSize));
+        const uint32_t alignSize = (baseAddrSize_ + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
+        // 使用 TryRelease 原子化 Contains + Release，消除 TOCTOU 竞争
+        if (device_->GetKernelMemoryPool() != nullptr &&
+            device_->GetKernelMemoryPool()->TryRelease(baseAddr_, static_cast<size_t>(alignSize))) {
+            // 已通过内存池释放
         } else {
             (void)device_->Driver_()->DevMemFree(baseAddr_, device_->Id_());
         }
@@ -180,8 +182,10 @@ rtError_t Module::Load(Program * const prog)
 
 FAIL_FREE:
     if (devMem != nullptr) {
-        if (device_->GetKernelMemoryPool() != nullptr && device_->GetKernelMemoryPool()->Contains(baseAddr_)) {
-            device_->GetKernelMemoryPool()->Release(baseAddr_, alignSize);
+        // 使用 TryRelease 原子化 Contains + Release，消除 TOCTOU 竞争
+        if (device_->GetKernelMemoryPool() != nullptr &&
+            device_->GetKernelMemoryPool()->TryRelease(baseAddr_, alignSize)) {
+            // 已通过内存池释放
         } else {
             (void)device_->Driver_()->DevMemFree(baseAddr_, device_->Id_());
         }
