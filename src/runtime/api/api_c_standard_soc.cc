@@ -29,6 +29,9 @@
 #include "platform_manager_v2.h"
 #include "kernel_dfx_info.hpp"
 #include "api_handle_guard.h"
+#include "runtime/kernel.h"
+#include "runtime/inner_kernel.h"
+#include "runtime/rt_inner_task.h"
 
 using namespace cce::runtime;
 namespace cce {
@@ -373,7 +376,7 @@ rtError_t rtsLaunchReduceAsyncTask(const rtReduceInfo_t *reduceInfo, const rtStr
 
     rtError_t ret = RT_ERROR_NONE;
     DevProperties properties;
-    auto error = GET_DEV_PROPERTIES(rtInstance->GetChipType(), properties);
+    const auto error = GET_DEV_PROPERTIES(rtInstance->GetChipType(), properties);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "GetDevProperties failed, chip type=%d.", rtInstance->GetChipType());
     if (properties.reduceOverflow == ReduceOverflowType::REDUCE_OVERFLOW_TS_VERSION_REDUCE_V2_ID ||
         properties.reduceOverflow == ReduceOverflowType::REDUCE_OVERFLOW_TS_VERSION_REDUCV2_SUPPORT_DC) {
@@ -487,7 +490,7 @@ rtError_t rtsLaunchCmoAddrTask(rtCmoDesc_t cmoDesc, rtStream_t stm, rtCmoOpCode 
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM((reserve != nullptr), RT_ERROR_INVALID_VALUE, reserve, "nullptr");
 
     DevProperties properties;
-    auto error = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), properties);
+    const auto error = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), properties);
     COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "GetDevProperties failed, chip type=%d.",
         Runtime::Instance()->GetChipType());
     const uint64_t sizeMax = properties.cmoDDRStructInfoSize;
@@ -712,7 +715,7 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
 {
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+    static const bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
  	    RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
     if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
@@ -726,8 +729,11 @@ rtError_t rtStreamGetCaptureInfo(rtStream_t stm, rtStreamCaptureStatus * const s
     const rtError_t error = apiInstance->StreamGetCaptureInfo(streamPtr, status,
                                                               RtPtrToPtr<Model **>(captureMdl));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    StoreOptionalEmbeddedHandle<rtModel_t>(
-        ((captureMdl == nullptr) || (*captureMdl == nullptr)) ? nullptr : RtPtrToPtr<Model *>(*captureMdl), captureMdl);
+    Model *captureModel = nullptr;
+    if ((captureMdl != nullptr) && (*captureMdl != nullptr)) {
+        captureModel = RtPtrToPtr<Model *>(*captureMdl);
+    }
+    StoreOptionalEmbeddedHandle<rtModel_t>(captureModel, captureMdl);
     return ACL_RT_SUCCESS;
 }
 
@@ -1316,11 +1322,12 @@ rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid *
         
     RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
     for (size_t i = 0; i < num; i++) {
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004,
+        const rtServerPid &serverPid = *(serverPids + i);
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPid.pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004,
             __func__, "serverPids[" + std::to_string(i) + "].pid" );
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPids[i].num != 1UL), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003,
-            __func__, serverPids[i].num, "serverPids[" + std::to_string(i) + "].num", "1");
-        const rtError_t ret = rtSetIpcNotifySuperPodPid(notifyPtr->GetIpcName().c_str(), serverPids[i].sdid, serverPids[i].pid[0U]);
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER((serverPid.num != 1UL), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003,
+            __func__, serverPid.num, "serverPids[" + std::to_string(i) + "].num", "1");
+        const rtError_t ret = rtSetIpcNotifySuperPodPid(notifyPtr->GetIpcName().c_str(), serverPid.sdid, *(serverPid.pid));
         if (ret != ACL_RT_SUCCESS) {
             return ret;
         }
@@ -1766,7 +1773,7 @@ rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     
-    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+    static const bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
     if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",
@@ -1797,7 +1804,7 @@ rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t *streams, uint32_t *
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     for (uint32_t i = 0U; i < *numStreams; ++i) {
-        streams[i] = ExportEmbeddedHandle<rtStream_t>(streamVec[i]);
+        *(streams + i) = ExportEmbeddedHandle<rtStream_t>(streamVec[i]);
     }
     return ACL_RT_SUCCESS;
 }
@@ -1808,7 +1815,7 @@ rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t *tasks, uint32_t *numT
     const Runtime * const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     
-    const static bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
+    static const bool isSupportAclGraph = IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(),
         RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
     if (!isSupportAclGraph) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support, return.",

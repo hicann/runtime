@@ -189,8 +189,8 @@ static rtGeneralCtrlFunc g_genCtrPro[] = {
     {rtStarsTaskLaunchWithFlagCtrl, RT_GNL_CTRL_NUM_STARS_TSK_FLAG},
     {rtSetStreamTagCtrl, RT_GNL_CTRL_NUM_SET_STREAM_TAG_TSK},
     {rtMultipleTaskInfoLaunchCtrl, RT_GNL_CTRL_NUM_MULTIPLE_TSK},
-    {rtNpuGetFloatDebugStatusCtrl, RT_GNL_CTRL_NUM_NPU_GET_FLOAT_STATUS},
-    {rtNpuClearFloatDebugStatusCtrl, RT_GNL_CTRL_NUM_NPU_CLEAR_FLOAT_STATUS},
+    {&rtNpuGetFloatDebugStatusCtrl, RT_GNL_CTRL_NUM_NPU_GET_FLOAT_STATUS},
+    {&rtNpuClearFloatDebugStatusCtrl, RT_GNL_CTRL_NUM_NPU_CLEAR_FLOAT_STATUS},
 };
 
 rtError_t rtGeneralCtrlInner(uintptr_t *ctl, uint32_t num, uint32_t type)

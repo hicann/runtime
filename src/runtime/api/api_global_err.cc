@@ -39,8 +39,9 @@ rtError_t RtCheckDeviceIdListValid(const uint32_t * const devIdList, const uint3
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ACL_ERROR_RT_INTERNAL_ERROR,
         "Failed to get device info count, retCode=%#x.", static_cast<uint32_t>(ret));
     for (uint32_t i = 0U; i < devCnt; i++) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devIdList[i] >= static_cast<uint32_t>(npuDrvDevCnt),
-            RT_ERROR_INVALID_VALUE, devIdList[i], "[0, " + std::to_string(npuDrvDevCnt) + ")");
+        const uint32_t devId = *(devIdList + i);
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM(devId >= static_cast<uint32_t>(npuDrvDevCnt),
+            RT_ERROR_INVALID_VALUE, devId, "[0, " + std::to_string(npuDrvDevCnt) + ")");
     }
     return RT_ERROR_NONE;
 }

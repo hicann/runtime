@@ -9,6 +9,7 @@
  */
 #include "api.hpp"
 #include "api_c.h"
+#include "rt_external_device.h"
 using namespace cce::runtime;
 
 #ifdef __cplusplus
