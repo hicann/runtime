@@ -197,11 +197,8 @@ static rtError_t ShiftBatchArrays(AsyncDmaBatchInfo &batchInfo, bool handleFixed
     if (batchInfo.fixedCnt == 0) {
         return RT_ERROR_NONE;
     }
-    if (batchInfo.fixedCnt > batchInfo.count) {
-        RT_LOG(RT_LOG_ERROR, "fixedCnt=%lu exceeds count=%lu.", batchInfo.fixedCnt, batchInfo.count);
-        return RT_ERROR_INVALID_VALUE;
-    }
-    uint64_t realCnt = batchInfo.count - batchInfo.fixedCnt;
+
+    uint64_t realCnt = batchInfo.count;
     size_t offset = static_cast<size_t>(batchInfo.fixedCnt);
     errno_t memRet = memmove_s(batchInfo.srcs, realCnt * sizeof(void*),
                     batchInfo.srcs + offset, realCnt * sizeof(void*));
@@ -215,7 +212,6 @@ static rtError_t ShiftBatchArrays(AsyncDmaBatchInfo &batchInfo, bool handleFixed
                     batchInfo.sizes + offset, realCnt * sizeof(uint64_t));
     COND_RETURN_ERROR(memRet != EOK, RT_ERROR_SEC_HANDLE,
         "memmove_s sizes failed, retCode=%#x.", memRet);
-    batchInfo.count = realCnt;
 
     if (handleFixedSize && batchInfo.fixedSize != 0) {
         if (batchInfo.sizes[0] < batchInfo.fixedSize) {
@@ -223,10 +219,8 @@ static rtError_t ShiftBatchArrays(AsyncDmaBatchInfo &batchInfo, bool handleFixed
                 batchInfo.fixedSize, batchInfo.sizes[0]);
             return RT_ERROR_INVALID_VALUE;
         }
-        batchInfo.srcs[0] = reinterpret_cast<void*>(
-            reinterpret_cast<uintptr_t>(batchInfo.srcs[0]) + batchInfo.fixedSize);
-        batchInfo.dsts[0] = reinterpret_cast<void*>(
-            reinterpret_cast<uintptr_t>(batchInfo.dsts[0]) + batchInfo.fixedSize);
+        batchInfo.srcs[0] = RtValueToPtr<void*>(RtPtrToValue(batchInfo.srcs[0]) + batchInfo.fixedSize);
+        batchInfo.dsts[0] = RtValueToPtr<void*>(RtPtrToValue(batchInfo.dsts[0]) + batchInfo.fixedSize);
         batchInfo.sizes[0] -= batchInfo.fixedSize;
     }
     return RT_ERROR_NONE;

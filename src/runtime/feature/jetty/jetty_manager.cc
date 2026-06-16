@@ -159,7 +159,7 @@ rtError_t JettyManager::GetJettyInfoForStream(int32_t streamId, JettyType type, 
     return RT_ERROR_NONE;
 }
 
-StreamJettyContext* JettyManager::GetOrCreateStreamJettyContext(Stream *stream, JettyType type)
+StreamJettyContext* JettyManager::GetOrCreateStreamJettyContext(const Stream *stream, JettyType type)
 {
     std::lock_guard<std::recursive_mutex> lock(managerLock_);
     int32_t streamId = static_cast<int32_t>(stream->Id_());

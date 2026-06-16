@@ -562,7 +562,7 @@ public:
     virtual rtError_t AsyncDmaJettyDestroy(const uint32_t devId, const uint64_t handle) = 0;
     virtual rtError_t AsyncDmaJettyQuery(const uint32_t devId, const uint64_t handle,
         uint32_t &dieId, uint32_t &functionId, uint32_t &jettyId) = 0;
-    virtual rtError_t AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara *in, AsyncWqeOutputPara *out) = 0;
+    virtual rtError_t AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara* inParam, AsyncWqeOutputPara* outParam) = 0;
     virtual rtError_t AsyncDmaWqeFill(const uint32_t devId, AsyncWqeFillInfo *fillInfo) = 0;
 
     virtual rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) = 0;

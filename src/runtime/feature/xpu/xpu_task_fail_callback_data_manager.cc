@@ -59,7 +59,7 @@ XpuTaskFailCallBackManager::XpuTaskFailCallBackManager()
     RT_LOG(RT_LOG_EVENT, "XpuTaskFailCallBackManager Constructor.");
 }
 
-XpuTaskFailCallBackManager::~XpuTaskFailCallBackManager()
+XpuTaskFailCallBackManager::~XpuTaskFailCallBackManager() noexcept
 {
     RT_LOG(RT_LOG_EVENT, "XpuTaskFailCallBackManager Destructor.");
 }

@@ -38,7 +38,7 @@ struct StreamJettyContext {
     bool isLargeDepth = false;
     uint64_t jettyHandle = 0;
 
-    uint8_t *GetNextWqeBuffer();
+    uint8_t *GetNextWqeBuffer() const;
     rtError_t GrowBuffer(Driver *driver);
     rtError_t RoundUpCapacity(Driver *driver, uint32_t deviceId);
     void ReleaseBuffers(Driver *driver);

@@ -247,27 +247,27 @@ static bool StreamTaskRegister()
 
     const auto& chips = GetDavidChips();
     for (auto chip : chips) {
-        RegTaskFunc(chip, TS_TASK_TYPE_CREATE_STREAM, createStreamFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_STREAM_ACTIVE, streamActiveFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, activeAicpuStreamFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_HOSTFUNC_CALLBACK, callbackLaunchFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, overflowSwitchFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, streamTagFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_MODE, streamModeFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, sqLockUnlockFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_FLIP, flipFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_TASK_SQE_UPDATE, sqeUpdateFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_CREATE_STREAM, createStreamFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_STREAM_ACTIVE, streamActiveFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, activeAicpuStreamFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_HOSTFUNC_CALLBACK, callbackLaunchFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, overflowSwitchFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, streamTagFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_SET_STREAM_MODE, streamModeFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, sqLockUnlockFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_FLIP, flipFuncs);
+        (void)RegTaskFunc(chip, TS_TASK_TYPE_TASK_SQE_UPDATE, sqeUpdateFuncs);
     }
 
-    RegDavidSqeFunc(TS_TASK_TYPE_CREATE_STREAM, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_STREAM_ACTIVE, &ConstructDavidSqeForStreamActiveTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_ACTIVE_AICPU_STREAM, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_HOSTFUNC_CALLBACK, &ConstructDavidSqeForCallbackLaunchTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_SET_OVERFLOW_SWITCH, &ConstructDavidSqeForOverflowSwitchSetTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, &ConstructDavidSqeForStreamTagSetTask);
-    RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_MODE, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, &ConstructDavidSqeBase);
-    RegDavidSqeFunc(TS_TASK_TYPE_FLIP, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_CREATE_STREAM, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_STREAM_ACTIVE, &ConstructDavidSqeForStreamActiveTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_ACTIVE_AICPU_STREAM, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_HOSTFUNC_CALLBACK, &ConstructDavidSqeForCallbackLaunchTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_SET_OVERFLOW_SWITCH, &ConstructDavidSqeForOverflowSwitchSetTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, &ConstructDavidSqeForStreamTagSetTask);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_SET_STREAM_MODE, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, &ConstructDavidSqeBase);
+    (void)RegDavidSqeFunc(TS_TASK_TYPE_FLIP, &ConstructDavidSqeBase);
     return true;
 }
 

@@ -32,7 +32,7 @@ void JettyManager::Clear()
 {
 }
 
-rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(Stream *stream, JettyType jettyType)
+rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream *stream, JettyType jettyType)
 {
     UNUSED(stream);
     UNUSED(jettyType);
@@ -46,7 +46,7 @@ JettyType StreamJettyHandler::GetJettyTypeFromTask(const TaskInfo *task)
 }
 
 rtError_t StreamJettyHandler::HandleUbDmaTask(
-    Stream *stream, TaskInfo *task, JettyType jettyType,
+    const Stream *stream, const TaskInfo *task, JettyType jettyType,
     AsyncWqeInputPara *input, AsyncWqeOutputPara *output)
 {
     UNUSED(stream);

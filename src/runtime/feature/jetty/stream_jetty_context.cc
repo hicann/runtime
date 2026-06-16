@@ -15,7 +15,7 @@
 
 namespace cce {
 namespace runtime {
-uint8_t *StreamJettyContext::GetNextWqeBuffer()
+uint8_t *StreamJettyContext::GetNextWqeBuffer() const
 {
     if (filledWqeCount >= capacity) {
         return nullptr;
@@ -73,7 +73,7 @@ rtError_t StreamJettyContext::RoundUpCapacity(Driver *driver, uint32_t deviceId)
 
     uint32_t validDepth = WQE_BUFFER_DEPTH;
     while (validDepth < capacity) {
-        validDepth *= 2;
+        validDepth *= 2U; // 2 jetty深度限制
         if (validDepth > JETTY_DEPTH_MAX) {
             RT_LOG(RT_LOG_ERROR, "capacity %u exceeds max jetty depth %u.",
                 capacity, JETTY_DEPTH_MAX);

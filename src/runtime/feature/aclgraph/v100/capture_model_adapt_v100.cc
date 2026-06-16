@@ -46,10 +46,5 @@ rtError_t CaptureModel::ReleaseAllJetty()
 {
     return RT_ERROR_NONE;
 }
-
-rtError_t CaptureModel::ReleaseAllLargeJetty()
-{
-    return RT_ERROR_NONE;
-}
 } // namespace runtime
 } // namespace cce

@@ -1358,7 +1358,7 @@ public:
         sqDepth_ = sqDepth;
     }
 
-    uint8_t* GetSqeBuffer(void)
+    uint8_t* GetSqeBuffer(void) const
     {
         return sqeBuffer_;
     }

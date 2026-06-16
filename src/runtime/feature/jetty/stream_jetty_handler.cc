@@ -56,7 +56,7 @@ JettyType StreamJettyHandler::ConvertCopyTypeToJettyType(uint32_t copyType)
     return JettyType::JETTY_TYPE_D2D;
 }
 
-rtError_t StreamJettyHandler::GetDriverAndDeviceId(Stream* stream, Driver*& driver, uint32_t& deviceId)
+rtError_t StreamJettyHandler::GetDriverAndDeviceId(const Stream* stream, Driver*& driver, uint32_t& deviceId)
 {
     if (stream == nullptr || stream->Device_() == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Stream or device is null.");
@@ -75,7 +75,7 @@ rtError_t StreamJettyHandler::GetDriverAndDeviceId(Stream* stream, Driver*& driv
 }
 
 rtError_t StreamJettyHandler::GetOrCreateStreamJettyContext(
-    Stream* stream, JettyType jettyType, StreamJettyContext*& context)
+    const Stream* stream, JettyType jettyType, StreamJettyContext*& context)
 {
     if (stream == nullptr || stream->Device_() == nullptr || stream->Device_()->GetJettyManager() == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -92,7 +92,7 @@ rtError_t StreamJettyHandler::GetOrCreateStreamJettyContext(
 
 // for normal/2d/batch copy
 rtError_t StreamJettyHandler::CreateAndAppendWqe(
-    Stream* stream, TaskInfo* task, StreamJettyContext* context, AsyncWqeInputPara* input, AsyncWqeOutputPara *output)
+    const Stream* stream, const TaskInfo* task, StreamJettyContext* context, AsyncWqeInputPara* input, AsyncWqeOutputPara *output)
 {
     if (stream == nullptr || task == nullptr || context == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -109,7 +109,7 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
         RT_LOG(RT_LOG_DEBUG, "GrowBuffer success, capacity=%u, wqe count=%u.", context->capacity, context->filledWqeCount);
     }
 
-    MemcpyAsyncTaskInfo* memcpyInfo = &(task->u.memcpyAsyncTaskInfo);
+    const MemcpyAsyncTaskInfo* memcpyInfo = &(task->u.memcpyAsyncTaskInfo);
     // wqe buffer addr
     input->wqeBuffer = context->GetNextWqeBuffer();
     // wqe buffer 可用大小
@@ -120,14 +120,13 @@ rtError_t StreamJettyHandler::CreateAndAppendWqe(
     context->filledWqeCount += output->wqeCnt;
     // 记录 taskId 和 totalWqeCount，用于后续刷新 dieId/funcId/jettyId/pi
     context->taskWqeCounts.push_back(std::pair<uint32_t, uint32_t>(task->id, output->wqeCnt));
-    RT_LOG(
-        RT_LOG_DEBUG, "CreateAndAppendWqe success, stream_id=%d, task_id=%u, size=%lu, wqeCount=%u.", stream->Id_(),
+    RT_LOG(RT_LOG_DEBUG, "CreateAndAppendWqe success, stream_id=%d, task_id=%u, size=%lu, wqeCount=%u.", stream->Id_(),
         task->id, memcpyInfo->size, output->wqeCnt);
     return RT_ERROR_NONE;
 }
 
 rtError_t StreamJettyHandler::HandleUbDmaTask(
-    Stream* stream, TaskInfo* task, JettyType jettyType, AsyncWqeInputPara* input, AsyncWqeOutputPara *output)
+    const Stream* stream, const TaskInfo* task, JettyType jettyType, AsyncWqeInputPara* input, AsyncWqeOutputPara *output)
 {
     if (stream == nullptr || task == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -152,7 +151,7 @@ rtError_t StreamJettyHandler::HandleUbDmaTask(
 }
 
 // NOP WQE创建接口, 批量添加NOP
-rtError_t StreamJettyHandler::FillNopWqeForPartialBuffer(Stream* stream, StreamJettyContext* context)
+rtError_t StreamJettyHandler::FillNopWqeForPartialBuffer(const Stream* stream, const StreamJettyContext* context)
 {
     if (stream == nullptr || context == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -195,7 +194,7 @@ rtError_t StreamJettyHandler::FillNopWqeForPartialBuffer(Stream* stream, StreamJ
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(Stream* stream, JettyType jettyType)
+rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(const Stream* stream, JettyType jettyType)
 {
     if (stream == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -209,8 +208,6 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(Stream* stream, JettyType j
     StreamJettyContext* context =
         stream->Device_()->GetJettyManager()->GetStreamJettyContext(streamId, jettyType);
     if (context == nullptr) {
-        RT_LOG(RT_LOG_INFO, "No capture context for stream_id=%d, jettyType=%d.", streamId,
-            static_cast<int32_t>(jettyType));
         return RT_ERROR_NONE;
     }
 
@@ -237,7 +234,7 @@ rtError_t StreamJettyHandler::FillNopWqeOnCaptureEnd(Stream* stream, JettyType j
 }
 
 rtError_t StreamJettyHandler::SyncWqeBufferToDevice(
-    Stream* stream, StreamJettyContext* context, JettyInfo& jettyInfo)
+    const Stream* stream, const StreamJettyContext* context, const JettyInfo& jettyInfo)
 {
     if (stream == nullptr || context == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -277,7 +274,7 @@ rtError_t StreamJettyHandler::SyncWqeBufferToDevice(
 }
 
 rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
-    Stream* stream, StreamJettyContext* context, JettyInfo& jettyInfo)
+    const Stream* stream, const StreamJettyContext* context, const JettyInfo& jettyInfo)
 {
     if (stream == nullptr || context == nullptr) {
         return RT_ERROR_INVALID_VALUE;
@@ -324,8 +321,7 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
             stream->Id_(), taskId, wqeCount, jettyInfo.jettyId, jettyInfo.dieId, jettyInfo.functionId);
     }
 
-    RT_LOG(
-        RT_LOG_DEBUG, "UpdateUbdmaSqeWithJettyInfo success, stream_id=%d, posCount=%zu.", stream->Id_(),
+    RT_LOG(RT_LOG_DEBUG, "UpdateUbdmaSqeWithJettyInfo success, stream_id=%d, posCount=%zu.", stream->Id_(),
         context->taskWqeCounts.size());
 
     return RT_ERROR_NONE;

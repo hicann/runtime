@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <string>
+#include "runtime/base.h"
 #include "driver/ascend_hal_define.h"
 
 namespace cce {

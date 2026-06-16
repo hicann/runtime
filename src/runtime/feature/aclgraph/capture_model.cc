@@ -855,11 +855,8 @@ void CaptureModel::CaptureModelExecuteFinish(const uint32_t errCode)
     const std::unique_lock<std::mutex> lk(sqBindMutex_);
     COND_PROC(refCount_ < 1U, return);
     refCount_--;
-    if (refCount_ == 0) {
-        if (errCode != RT_ERROR_NONE) {
-            ReleaseAllJetty();
-        }
-        ReleaseAllLargeJetty();
+    if (refCount_ == 0 && errCode != RT_ERROR_NONE) {
+        ReleaseAllJetty();
     }
     return;
 }

@@ -160,14 +160,14 @@ rtError_t CaptureModel::RecycleJetty(int32_t streamId, JettyType type, uint32_t 
         error = stm->Synchronize();
         COND_RETURN_ERROR((error != RT_ERROR_NONE), error,
             "ub doorbell sync failed, stream_id=%d, error=%d.", streamId, error);
-    }
 
-    bool isReleased = false;
-    error = jettyMgr->UnbindJettyForStream(streamId, type, isReleased);
-    ERROR_RETURN_MSG_INNER(error, "UnbindJettyForStream failed, stream_id=%d, type=%d, ret=%d.",
-        streamId, static_cast<int32_t>(type), error);
-    if (isReleased) {
-        count++;
+        bool isReleased = false;
+        error = jettyMgr->UnbindJettyForStream(streamId, type, isReleased);
+        ERROR_RETURN_MSG_INNER(error, "UnbindJettyForStream failed, stream_id=%d, type=%d, ret=%d.",
+            streamId, static_cast<int32_t>(type), error);
+        if (isReleased) {
+            count++;
+        }
     }
     return RT_ERROR_NONE;
 }
@@ -251,43 +251,6 @@ rtError_t CaptureModel::ReleaseAllJetty()
 
     RT_LOG(RT_LOG_DEBUG, "ReleaseAllJetty completed, model_id=%u.", Id_());
     return finalError;
-}
-
-rtError_t CaptureModel::UnbindLargeJetty(int32_t streamId, JettyType type)
-{
-    JettyManager *jettyMgr = Context_()->Device_()->GetJettyManager();
-    COND_RETURN_ERROR(jettyMgr == nullptr, RT_ERROR_INVALID_VALUE,
-        "GetJettyManager returned null, stream_id=%d.", streamId);
-    StreamJettyContext* context = jettyMgr->GetStreamJettyContext(streamId, type);
-    if (context == nullptr) {
-        return RT_ERROR_NONE;
-    }
-    bool isReleased = false;
-    if (context->isLargeDepth && context->jettyHandle != 0) {
-        rtError_t ret = jettyMgr->UnbindJettyForStream(streamId, type, isReleased);
-        if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "UnbindJettyForStream(large) failed, stream_id=%d, ret=%d.",
-                streamId, static_cast<int32_t>(ret));
-            return ret;
-        }
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t CaptureModel::ReleaseAllLargeJetty()
-{
-    COND_PROC((!IsSoftwareSqEnable()) || (!Runtime::Instance()->GetConnectUbFlag()), return RT_ERROR_NONE);
-    const std::unique_lock<std::mutex> lk(jettyMutex_);
-    RT_LOG(RT_LOG_DEBUG, "release all large jetty, model_id=%u.", Id_());
-
-    for (Stream *stm : StreamList_()) {
-        int32_t streamId = stm->Id_();
-        (void)UnbindLargeJetty(streamId, JettyType::JETTY_TYPE_H2D);
-        (void)UnbindLargeJetty(streamId, JettyType::JETTY_TYPE_D2D);
-    }
-
-    RT_LOG(RT_LOG_DEBUG, "release all large jetty completed, model_id=%u.", Id_());
-    return RT_ERROR_NONE;
 }
 } // namespace runtime
 } // namespace cce

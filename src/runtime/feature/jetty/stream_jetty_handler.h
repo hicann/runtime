@@ -21,16 +21,16 @@ namespace runtime {
 class StreamJettyHandler {
 public:
     static rtError_t HandleUbDmaTask(
-        Stream *stream,
-        TaskInfo *task,
+        const Stream *stream,
+        const TaskInfo *task,
         JettyType jettyType,
         AsyncWqeInputPara *input,
         AsyncWqeOutputPara *output);
 
-    static rtError_t FillNopWqeOnCaptureEnd(Stream *stream, JettyType jettyType);
+    static rtError_t FillNopWqeOnCaptureEnd(const Stream *stream, JettyType jettyType);
 
     static rtError_t GetOrCreateStreamJettyContext(
-        Stream *stream,
+        const Stream *stream,
         JettyType jettyType,
         StreamJettyContext *&context);
 
@@ -41,29 +41,29 @@ public:
     static JettyType GetJettyTypeFromTask(const TaskInfo *task);
 
     static rtError_t SyncWqeBufferToDevice(
-        Stream *stream,
-        StreamJettyContext *context,
-        JettyInfo &jettyInfo);
+        const Stream *stream,
+        const StreamJettyContext *context,
+        const JettyInfo &jettyInfo);
 
     static rtError_t UpdateUbdmaSqeWithJettyInfo(
-        Stream *stream,
-        StreamJettyContext *context,
-        JettyInfo &jettyInfo);
+        const Stream *stream,
+        const StreamJettyContext *context,
+        const JettyInfo &jettyInfo);
 
 private:
     static rtError_t CreateAndAppendWqe(
-        Stream *stream,
-        TaskInfo *task,
+        const Stream *stream,
+        const TaskInfo *task,
         StreamJettyContext *context,
         AsyncWqeInputPara* input,
         AsyncWqeOutputPara *output);
 
     static rtError_t FillNopWqeForPartialBuffer(
-        Stream *stream,
-        StreamJettyContext *context);
+        const Stream *stream,
+        const StreamJettyContext *context);
 
     static rtError_t GetDriverAndDeviceId(
-        Stream *stream,
+        const Stream *stream,
         Driver *&driver,
         uint32_t &deviceId);
 

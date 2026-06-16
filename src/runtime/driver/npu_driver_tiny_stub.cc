@@ -272,11 +272,11 @@ rtError_t NpuDriver::AsyncDmaJettyQuery(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t NpuDriver::AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara* input, AsyncWqeOutputPara* output)
+rtError_t NpuDriver::AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara* inParam, AsyncWqeOutputPara* outParam)
 {
     UNUSED(devId);
-    UNUSED(input);
-    UNUSED(output);
+    UNUSED(inParam);
+    UNUSED(outParam);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

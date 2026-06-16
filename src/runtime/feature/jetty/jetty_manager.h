@@ -78,7 +78,7 @@ public:
      * @param type Jetty 类型
      * @return StreamJettyContext* 上下文指针
      */
-    StreamJettyContext* GetOrCreateStreamJettyContext(Stream *stream, JettyType type);
+    StreamJettyContext* GetOrCreateStreamJettyContext(const Stream *stream, JettyType type);
 
     /**
      * @brief 获取流的 Capture Jetty 上下文(只读，不创建)

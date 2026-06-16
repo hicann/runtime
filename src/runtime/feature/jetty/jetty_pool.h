@@ -20,8 +20,8 @@
 namespace cce {
 namespace runtime {
 
-constexpr uint32_t JETTY_POOL_H2D_MAX_SIZE = 1792U;
-constexpr uint32_t JETTY_POOL_D2D_MAX_SIZE = 256U;
+constexpr uint32_t JETTY_POOL_H2D_MAX_SIZE = 1024U;
+constexpr uint32_t JETTY_POOL_D2D_MAX_SIZE = 1024U;
 constexpr uint32_t JETTY_DEPTH_STANDARD = 2048U;
 
 enum class JettyType : uint8_t { JETTY_TYPE_H2D = 0, JETTY_TYPE_D2D = 1, JETTY_TYPE_MAX };
@@ -97,7 +97,7 @@ public:
      * @param jettyId 输出参数，返回 Jetty ID
      * @return rtError_t 错误码
      */
-    rtError_t QueryJettyInfo(uint64_t handle, uint32_t& dieId, uint32_t& functionId, uint32_t& jettyId);
+    rtError_t QueryJettyInfo(uint64_t handle, uint32_t& dieId, uint32_t& functionId, uint32_t& jettyId) const;
 
     /**
      * @brief 根据句柄查找 Jetty 信息(适用于全部类型)
@@ -121,10 +121,10 @@ public:
     void Clear();
 
 private:
-    rtError_t CreateJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo);
+    rtError_t CreateJetty(JettyType type, uint32_t depth, JettyInfo& jettyInfo) const;
     bool FindJettyByState(JettyType type, JettyState state, JettyInfo *&jettyInfo);
 
-    uint32_t deviceId_;
+    uint32_t deviceId_{0};
     std::vector<JettyInfo> h2dJettyPool_;
     std::vector<JettyInfo> d2dJettyPool_;
     std::vector<JettyInfo> largeJettyPool_;

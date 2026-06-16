@@ -905,7 +905,7 @@ TEST_F(CaptureModelJettyTest, RecycleAllJetty_LargeJetty_Success)
     uint32_t d2dCount = 0;
     rtError_t error = captureModel_->RecycleAllJetty(h2dCount, d2dCount);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(d2dCount, 1U);
+    EXPECT_EQ(d2dCount, 0U);
 }
 
 TEST_F(CaptureModelJettyTest, RecycleAllJetty_BothTypes_Success)
@@ -946,19 +946,6 @@ TEST_F(CaptureModelJettyTest, RecycleAllJetty_AlreadyRecycled)
     rtError_t error2 = captureModel_->RecycleAllJetty(h2dCount2, d2dCount2);
     EXPECT_EQ(error2, RT_ERROR_NONE);
     EXPECT_EQ(h2dCount2, 0U);
-}
-
-TEST_F(CaptureModelJettyTest, ReleaseAllLargeJetty_Success)
-{
-    captureModel_->ModelPushFrontStream(stream_);
-    SetupJettyContext(stream_, JettyType::JETTY_TYPE_H2D, 3000, true);
-    JettyManager* mgr = device_->GetJettyManager();
-    int32_t streamId = static_cast<int32_t>(stream_->Id_());
-    rtError_t bindError = mgr->BindJettyForStream(streamId, nullptr, JettyType::JETTY_TYPE_H2D);
-    ASSERT_EQ(bindError, RT_ERROR_NONE);
-
-    rtError_t error = captureModel_->ReleaseAllLargeJetty();
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CaptureModelJettyTest, ReleaseJetty_Success)

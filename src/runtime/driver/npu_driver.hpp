@@ -706,7 +706,7 @@ public:
     rtError_t AsyncDmaJettyDestroy(const uint32_t devId, const uint64_t handle) override;
     rtError_t AsyncDmaJettyQuery(const uint32_t devId, const uint64_t handle, uint32_t &dieId,
         uint32_t &functionId, uint32_t &jettyId) override;
-    rtError_t AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara *in, AsyncWqeOutputPara *out) override;
+    rtError_t AsyncDmaWqeConvert(const uint32_t devId, AsyncWqeInputPara* inParam, AsyncWqeOutputPara* outParam) override;
     rtError_t AsyncDmaWqeFill(const uint32_t devId, AsyncWqeFillInfo *fillInfo) override;
 
     rtError_t SetStreamPriorityValue(Stream * const stm, const uint32_t streamPriority) override;

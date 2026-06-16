@@ -468,7 +468,7 @@ rtError_t ConstructCaptureCondTaskPara(TaskInfo *taskInfo, CondHandle *condHandl
 rtError_t ReConstructCaptureConditionTaskFc(TaskInfo *taskInfo, CondHandle *condHandle)
 {
     /* 先释放原先的内存，sq个数因为sk功能，可能会增、减 */
-    FreeFuncCallDevForCaptureCondTask(taskInfo);
+    (void)FreeFuncCallDevForCaptureCondTask(taskInfo);
     rtError_t ret = CondTaskFuncCallDevMemAlloc(taskInfo, condHandle);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);
 

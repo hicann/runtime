@@ -146,10 +146,10 @@ rtError_t MemcopyBatchAsync(AsyncDmaBatchInfo &batchInfo, uint64_t* const realCn
         static_cast<uint32_t>(error));
     // David UB 单算子场景 如果驱动本次下发处理的count个数为0，则表示没有触发wqe下发，不需要下发ub db task	 
     if (IsDavidUbDma(taskAsyncBatch->u.memcpyAsyncTaskInfo.copyType) && !stm->GetBindFlag()
-        && batchInfo.fixedSize == taskAsyncBatch->u.memcpyAsyncTaskInfo.size) {
+        && batchInfo.fixedCnt == taskAsyncBatch->u.memcpyAsyncTaskInfo.size) {
         RT_LOG(RT_LOG_WARNING,
-            "In UB eager mode, no need to send taskAsyncBatch if fixedSize has not changed. stream_id=%d, fixedSize=%" PRIu64 ", size=%" PRIu64 " ",  
-            stm->Id_(), batchInfo.fixedSize, taskAsyncBatch->u.memcpyAsyncTaskInfo.size);
+            "In UB eager mode, no need to send taskAsyncBatch if fixedCnt has not changed. stream_id=%d, fixedCnt=%" PRIu64 ", size=%" PRIu64 " ",  
+            stm->Id_(), batchInfo.fixedCnt, taskAsyncBatch->u.memcpyAsyncTaskInfo.size);
         return RT_ERROR_NONE;
     }
     *realCnt = taskAsyncBatch->u.memcpyAsyncTaskInfo.size;

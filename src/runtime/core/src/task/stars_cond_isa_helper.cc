@@ -2172,7 +2172,7 @@ void MemWaitInstrWaitSuccessForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLa
     ConstructBranch(r2, r2, RT_STARS_COND_ISA_BRANCH_FUNC3_BEQ, static_cast<uint8_t>(endOffset), fc.branch5);
 }
 
-void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
+static void MemWaitInstrWaitFailedForNonSoftwareSqAndDynamicProf(RtStarsMemWaitValueLastInstrFcWithDynamicProf &fc,
     const RtStarsMemWaitValueInstrFcParaWithDynamicProf &fcPara)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
@@ -2837,7 +2837,7 @@ void ConstructWhileCondSetupBranch(rtStarsCaptureCondFcPara_t &para, RtStarsWhil
     ConstructBranch(r2, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(part3Offset), setupBranch.bneToExecute);
 }
 
-void ConstructWhileCondSubmodelOffset(RtStarsCaptureWhileCondFc &fc)
+static void ConstructWhileCondSubmodelOffset(RtStarsCaptureWhileCondFc &fc)
 {
     constexpr rtStarsCondIsaRegister_t r0 = RT_STARS_COND_ISA_REGISTER_R0;
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;

@@ -28,7 +28,7 @@ JettyPool::~JettyPool()
     Clear();
 }
 
-rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo &jettyInfo)
+rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo &jettyInfo) const
 {
     Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     if (driver == nullptr) {
@@ -143,7 +143,7 @@ rtError_t JettyPool::MarkFree(uint64_t handle)
     }
 
     jetty->state = JettyState::FREE;
-    RT_LOG(RT_LOG_INFO, "MarkFree jetty success, device_id=%u, jetty_id=%u.",
+    RT_LOG(RT_LOG_INFO, "Mark jetty free success, device_id=%u, jetty_id=%u.",
         deviceId_, jetty->jettyId);
     return RT_ERROR_NONE;
 }
@@ -211,7 +211,7 @@ rtError_t JettyPool::GetJettyInfoByHandle(uint64_t handle, JettyInfo &jettyInfo)
     return RT_ERROR_NONE;
 }
 
-rtError_t JettyPool::QueryJettyInfo(uint64_t handle, uint32_t &dieId, uint32_t &functionId, uint32_t &jettyId)
+rtError_t JettyPool::QueryJettyInfo(uint64_t handle, uint32_t &dieId, uint32_t &functionId, uint32_t &jettyId) const
 {
     Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     if (driver == nullptr) {

@@ -21,7 +21,7 @@ public:
     rtError_t RegXpuTaskFailCallback(const char_t *regName, void *callback);
     void XpuNotify(rtExceptionInfo_t * const exceptionInfo);
     XpuTaskFailCallBackManager();
-    ~XpuTaskFailCallBackManager();
+    ~XpuTaskFailCallBackManager() noexcept;
 
 private:
     XpuTaskFailCallBackManager(const XpuTaskFailCallBackManager &other) = delete;
