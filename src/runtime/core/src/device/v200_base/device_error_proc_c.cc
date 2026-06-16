@@ -515,7 +515,7 @@ static void GetMteDeviceFaultEvent(
     const std::function<void()> releaseFunc = [&faultEventInfo]() { DELETE_A(faultEventInfo); };
     ScopeGuard faultEventInfoRelease(releaseFunc);
     uint32_t eventCount = 0U;
-    rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
+    const rtError_t error = GetDeviceFaultEvents(dev->Id_(), faultEventInfo, eventCount, maxFaultNum);
     if (error != RT_ERROR_NONE) {
         return;
     }

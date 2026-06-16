@@ -1196,7 +1196,7 @@ void RawDevice::ProfSwitchDisable()
         return;
     }
 
-    uint64_t profSwitch = 0UL;
+    constexpr uint64_t profSwitch = 0UL;
     (void)driver_->MemCopySync(RtValueToPtr<void *>(profSwitchAddr_), sizeof(uint64_t), static_cast<const void *>(&profSwitch),
                                sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
     RT_LOG(RT_LOG_INFO, "profiling disabled, device_id=%u", deviceId_);
@@ -1209,7 +1209,7 @@ void RawDevice::ProfSwitchEnable()
         return;
     }
 
-    uint64_t profSwitch = 1UL;
+    constexpr uint64_t profSwitch = 1UL;
     (void)driver_->MemCopySync(RtValueToPtr<void *>(profSwitchAddr_), sizeof(uint64_t), static_cast<const void *>(&profSwitch),
                                sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
     RT_LOG(RT_LOG_INFO, "profiling enabled, device_id=%u", deviceId_);
@@ -2306,7 +2306,7 @@ rtError_t RawDevice::StoreEndGraphNotifyInfo(const uint32_t streamId, Model* cap
     auto it = captureModelExeInfoMap_.find(key);
     if (it == captureModelExeInfoMap_.end()) {
         numOfPos = 1;
-        captureModelExeInfoMap_.emplace(key, std::list<uint32_t>(numOfPos, endGraphNotifyPos));
+        (void)captureModelExeInfoMap_.emplace(key, std::list<uint32_t>(numOfPos, endGraphNotifyPos));
     } else {
         std::list<uint32_t>& posList = captureModelExeInfoMap_[key];
         (void)posList.emplace_back(endGraphNotifyPos);
