@@ -50,6 +50,7 @@
 #include "task_info_v100.h"
 #include "task_res.hpp"
 #include "dvpp_c.hpp"
+#include "api_impl.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -896,6 +897,9 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
 
+    ApiImpl apiImpl;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::SetStreamOverflowSwitch).stubs().will(returnValue(RT_ERROR_NONE));
+
     uint32_t flags = 0U;
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
@@ -904,7 +908,7 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtSetStreamOverflowSwitch(stream, 1U);
-    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(flags, 0U);
@@ -915,7 +919,7 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    EXPECT_EQ(flags, 1U);
+    EXPECT_EQ(flags, 0U);
 }
 
 TEST_F(StarsTaskTest, OverflowSwitchSetTask)

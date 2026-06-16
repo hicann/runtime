@@ -366,7 +366,7 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 
 ### 功能说明
 
-饱和模式下，对接上层训练框架时（例如PyTorch），针对指定Stream，打开或关闭溢出检测开关，关闭后无法通过溢出检测算子获取任务是否溢出。
+对接上层训练框架时（例如PyTorch），针对指定Stream，打开或关闭溢出检测开关，关闭后无法通过溢出检测算子获取任务是否溢出。
 
 ### 参数说明
 
@@ -382,7 +382,6 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 
 ### 约束说明
 
--   在调用本接口前，可调用[aclrtSetDeviceSatMode](04_Device管理.md#aclrtSetDeviceSatMode)接口设置饱和模式。
 -   调用该接口打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
 
 

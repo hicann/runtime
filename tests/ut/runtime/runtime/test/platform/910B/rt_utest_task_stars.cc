@@ -837,10 +837,10 @@ TEST_F(StarsTaskTest, OverflowSwitch)
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_INFNAN);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtSetStreamOverflowSwitch(stream, 1U);
-    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(stream, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
-    EXPECT_EQ(flags, 0U);
+    EXPECT_EQ(flags, 1U);
 
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);

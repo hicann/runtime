@@ -5690,8 +5690,10 @@ TEST_F(ApiDavidTest, test_overflow_switch_task_on_david)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
+
+    MOCKER(SetOverflowSwitchOnStream).stubs().will(returnValue(RT_ERROR_NONE));
     ret = rtSetStreamOverflowSwitch(streamHandle_, 1U);
-    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(streamHandle_, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(flags, 0U);
@@ -5699,7 +5701,7 @@ TEST_F(ApiDavidTest, test_overflow_switch_task_on_david)
     ret = rtSetDeviceSatMode(RT_OVERFLOW_MODE_SATURATION);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSetStreamOverflowSwitch(streamHandle_, 1U);
-    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ret, ACL_RT_SUCCESS);
     ret = rtGetStreamOverflowSwitch(streamHandle_, &flags);
     EXPECT_EQ(ret, ACL_RT_SUCCESS);
     EXPECT_EQ(flags, 0U);

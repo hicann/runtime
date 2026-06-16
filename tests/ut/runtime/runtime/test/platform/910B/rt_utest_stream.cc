@@ -151,7 +151,7 @@ TEST_F(CloudV2StreamTest, stream_set_attribute2)
 
     value.overflowSwitch = false; // 关闭溢出检测
     error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK, &value);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     value.userCustomTag = 0; // 不使用自定义标签
     error = rtsStreamSetAttribute(stream, RT_STREAM_ATTR_USER_CUSTOM_TAG, &value);
@@ -202,10 +202,10 @@ TEST_F(CloudV2StreamTest, stream_get_attribute2)
     setvalue = {0};
     setvalue.overflowSwitch = true; // 关闭溢出检测
     error = rtsStreamSetAttribute(stm, RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK, &setvalue);
-    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     stmModeRet = {0};
     error = rtsStreamGetAttribute(stm, RT_STREAM_ATTR_FLOAT_OVERFLOW_CHECK, &stmModeRet);
-    EXPECT_EQ(stmModeRet.overflowSwitch, 0);
+    EXPECT_EQ(stmModeRet.overflowSwitch, 1);
 
     setvalue = {0};
     setvalue.userCustomTag = 0; // 关闭溢出检测

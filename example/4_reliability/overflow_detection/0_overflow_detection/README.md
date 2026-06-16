@@ -55,4 +55,4 @@ bash run.sh
 
 ## 已知 issue
 
-- `aclrtSetStreamOverflowSwitch` 仅在 `ACL_RT_OVERFLOW_MODE_SATURATION` 模式下可用；如果当前产品或运行时不支持该能力，相关接口可能返回 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`。样例会记录告警并在完成资源清理后退出。
+- `aclrtSetStreamOverflowSwitch` 在 `ACL_RT_OVERFLOW_MODE_SATURATION` 和 `ACL_RT_OVERFLOW_MODE_INFNAN` 模式下均可使用。如果当前产品不支持该能力，相关接口可能返回 `ACL_ERROR_RT_FEATURE_NOT_SUPPORT (207000)`。样例会记录告警并在完成资源清理后退出。

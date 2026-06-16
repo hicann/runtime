@@ -1249,11 +1249,6 @@ rtError_t ApiImplDavid::SetStreamOverflowSwitch(Stream * const stm, const uint32
     Context * const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    rtFloatOverflowMode_t overflowModel = RT_OVERFLOW_MODE_UNDEF;
-    (void)GetDeviceSatMode(&overflowModel);
-    COND_RETURN_AND_MSG_OUTER(overflowModel != RT_OVERFLOW_MODE_SATURATION,
-        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006, __func__,
-        "overflow switch in non-saturation mode");
     Stream * const targetStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(targetStm);
     COND_RETURN_AND_MSG_OUTER(targetStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
