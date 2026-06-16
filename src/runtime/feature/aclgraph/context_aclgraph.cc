@@ -894,7 +894,6 @@ rtError_t Context::SubmitCaptureConditionTask(CondHandle *condHandle, Stream * c
 
 rtError_t Context::PostProcCaptureConditionTask(CondHandle *condHandle, Stream * const stm)
 {
-
     Notify *notify = condHandle->GetSubModelNotify();
     for (Model *mdl : condHandle->GetSubCaptureModels()) {
         CaptureModel *subModel = dynamic_cast<CaptureModel *>(mdl);
@@ -925,7 +924,7 @@ rtError_t Context::StreamAddCondTask(CondHandle *condHandle, rtCondTaskParams pa
     ScopeGuard subModelErrRecycle(errSubModelRecycle);
 
     rtError_t error;
-    Notify *notify = const_cast<Notify *>(condHandle->GetSubModelNotify());
+    Notify *notify = condHandle->GetSubModelNotify();
     if (notify == nullptr) {
         notify = new (std::nothrow) Notify(device_->Id_(), device_->DevGetTsId());
         COND_RETURN_AND_MSG_OUTER(notify == nullptr, RT_ERROR_NOTIFY_NEW,

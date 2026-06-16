@@ -88,6 +88,7 @@ CaptureModel::~CaptureModel() noexcept
     condHandles_.clear(); 
 
 }
+
 rtError_t CaptureModel::SetNotifyBeforeExecute(Stream * const exeStm, CaptureModel* const captureMdl)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -1323,7 +1324,7 @@ rtError_t CaptureModel::UpdateNotifyIdAll(Stream * const exeStream)
             Id_(), GetEndGraphNotify()->GetNotifyId());
     }
 
-    Stream * dstStream = nullptr;
+    Stream *dstStream = nullptr;
     rtError_t error;
     for (const auto &it : condHandleTaskMap_) {
         CondHandle *condHandle = it.second;
@@ -1343,20 +1344,20 @@ rtError_t CaptureModel::UpdateNotifyIdAll(Stream * const exeStream)
         int32_t streamId = 0U;
         uint16_t taskId = 0U;
         std::tie(streamId, taskId) = it.first;
-        COND_PROC(dstStream->Id_() != streamId, continue; RT_LOG(RT_LOG_WARNING,
-            "stream_id=%d, sub ACL Graph exec stream_id=%d, model_id=%u.", streamId, dstStream->Id_(), Id_()));
+        COND_PROC(dstStream->Id_() != streamId, RT_LOG(RT_LOG_WARNING,
+            "stream_id=%d, sub ACL Graph exec stream_id=%d, model_id=%u.", streamId, dstStream->Id_(), Id_()); continue;);
 
         TaskInfo *taskInfo = dstStream->Device_()->GetTaskFactory()->GetTask(streamId, taskId);
-        COND_PROC(taskInfo == nullptr, continue; RT_LOG(RT_LOG_WARNING,
-            "stream_id=%d, submodel task_id=%u.", streamId, taskId));
-        COND_PROC(taskInfo->type != TS_TASK_TYPE_CAPTURE_CONDITION, continue; RT_LOG(RT_LOG_WARNING,
-            "task type is not capture condition, stream_id=%d, task_id=%u.", streamId, taskId));
+        COND_PROC(taskInfo == nullptr, RT_LOG(RT_LOG_WARNING,
+            "stream_id=%d, submodel task_id=%u.", streamId, taskId); continue;);
+        COND_PROC(taskInfo->type != TS_TASK_TYPE_CAPTURE_CONDITION, RT_LOG(RT_LOG_WARNING,
+            "task type is not capture condition, stream_id=%d, task_id=%u.", streamId, taskId); continue;);
 
         taskInfo->u.captureConditionTask.notifyId = condHandle->GetSubModelNotify()->GetNotifyId();
         Context *context = dstStream->Context_();
         error = context->UpdateSuModelExeStreamNotifyWaitSqe(taskInfo, exeStream);
-        COND_PROC(error != RT_ERROR_NONE, continue; RT_LOG(RT_LOG_WARNING,
-            "update cond task notify wait sqe failed, stream_id=%d, task_id=%u.", streamId, taskId));
+        COND_PROC(error != RT_ERROR_NONE, RT_LOG(RT_LOG_WARNING,
+            "update cond task notify wait sqe failed, stream_id=%d, task_id=%u.", streamId, taskId); continue;);
     }
     return RT_ERROR_NONE;
 }

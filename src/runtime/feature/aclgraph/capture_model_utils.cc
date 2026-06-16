@@ -372,7 +372,7 @@ bool IsStreamBindWithSubModel(Stream * const stream)
     Stream *captureStream = stream->GetCaptureStream();
     COND_PROC(captureStream == nullptr, return false;);
 
-    Model * mdl = captureStream->Model_();
+    Model *mdl = captureStream->Model_();
     COND_PROC(mdl == nullptr, return false;);
 
     CaptureModel *captureModel = dynamic_cast<CaptureModel *>(mdl);
