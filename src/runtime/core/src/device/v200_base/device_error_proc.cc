@@ -38,7 +38,7 @@ void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInf
 
 uint16_t GetMteErrWaitCount()
 {
-    return RAS_QUERY_MAX_COUNT;
+    return static_cast<uint16_t>(RAS_QUERY_MAX_COUNT);
 }
 
 void DeviceErrorProc::MapFusionTaskErrorCode(const TaskInfo* tsk, StarsOpExceptionInfo* report) const

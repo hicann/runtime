@@ -64,7 +64,9 @@ void HandleStreamActive(TaskInfo* const task, DeviceSnapshot* snapshot)
 }
 } // namespace TaskHandlers
 
-DeviceSnapshot::DeviceSnapshot(Device *dev) : device_(dev) {}
+DeviceSnapshot::DeviceSnapshot(Device *dev)
+    : NoCopy(), IDeviceSnapshotOps(), device_(dev)
+{}
 
 DeviceSnapshot::~DeviceSnapshot() noexcept {}
 

@@ -2341,7 +2341,7 @@ rtError_t RawDevice::DeleteEndGraphNotifyInfo(
 
         numOfPos = posList.size();
         if (posList.empty()) {
-            captureModelExeInfoMap_.erase(it);
+            (void)captureModelExeInfoMap_.erase(it);
         }
 
         CaptureModel *captureModelTmp = static_cast<CaptureModel*>(captureModel);
@@ -2503,11 +2503,11 @@ rtError_t RawDevice::InitCtrlSQ()
 }
 void RawDevice::RegisterProgram(Program * prog) {
     programMtx_.lock();
-    programSet_.insert(prog);
+    (void)programSet_.insert(prog);
     programMtx_.unlock();
 }
 void RawDevice::UnRegisterProgram(Program * prog) {
-    programSet_.erase(prog);
+    (void)programSet_.erase(prog);
 }
 void RawDevice::UnregisterAllProgram() {
     programMtx_.lock();

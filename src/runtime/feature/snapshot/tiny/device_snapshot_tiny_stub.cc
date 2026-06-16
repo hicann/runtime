@@ -12,7 +12,9 @@
 namespace cce {
 namespace runtime {
 
-DeviceSnapshot::DeviceSnapshot(Device *dev) : device_(dev) {}
+DeviceSnapshot::DeviceSnapshot(Device *dev)
+    : NoCopy(), IDeviceSnapshotOps(), device_(dev)
+{}
 
 DeviceSnapshot::~DeviceSnapshot() noexcept {}
 

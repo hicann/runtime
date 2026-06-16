@@ -1172,7 +1172,7 @@ static rtError_t CollectDumpInfoFromBuffer(const uint8_t* dumpReadStartAddr,
         }
 
         dumpInfoLen = sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
-        dumpInfoHolds.emplace_back(dumpHead);
+        (void)dumpInfoHolds.emplace_back(dumpHead);
         processedLen += dumpInfoLen;
         device->AddSimtPrintTlvCnt(1U);
     }
