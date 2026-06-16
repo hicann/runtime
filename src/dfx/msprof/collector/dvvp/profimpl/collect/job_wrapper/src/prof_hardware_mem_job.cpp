@@ -344,7 +344,7 @@ int32_t ProfAiStackMemJob::SetPeripheralConfig()
     }
 
     configP->period = samplePeriod_;
-    configP->res1 = 0;
+    configP->res1 = Platform::instance()->PlatformHostFreqIsEnable() ? 1 : 0;
     configP->res2 = 0;
     configP->event = 0;
 
