@@ -43,6 +43,9 @@ rtError_t ReleaseNotify(Model * const mdl, Notify *notify) { UNUSED(mdl); UNUSED
 uint32_t FindStreamIdInSubModels(CaptureModel * const parentModel, const uint16_t sqId) { UNUSED(parentModel); UNUSED(sqId); return UINT32_MAX; }
 bool IsStreamBindWithSubModel(Stream * const stream) { UNUSED(stream); return false; }
 bool IsTaskBelongToSubCaptureMdl(const TaskInfo * const task) { UNUSED(task); return false; }
+void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *sqe) { UNUSED(taskInfo); UNUSED(sqe); }
+void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t *const command) { UNUSED(taskInfo); UNUSED(command); }
+void CaptureConditionTaskUnInit(TaskInfo * const taskInfo) { UNUSED(taskInfo); }
 
 }
 }

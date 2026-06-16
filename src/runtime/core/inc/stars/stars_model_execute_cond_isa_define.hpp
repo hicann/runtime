@@ -145,12 +145,12 @@ struct RtStarsSubModelExeActiveSqAdapt {
 };
 
 struct RtStarsModelExeActiveSq {
+    RtStarsCondOpImmSLLI slli;  // SLLI: get stream svm addr offset R3 left 3 bit is offset and assigned to the r5
+    RtStarsCondOpImm addi0;     // ADDI, r2,headSqArrAddr index++
     union {
         RtStarsModelExeActiveSqAdapt rootModelAdapt;
         RtStarsSubModelExeActiveSqAdapt subModelAdapt;
     } u;
-    RtStarsCondOpImmSLLI slli;  // SLLI: get stream svm addr offset R3 left 3 bit is offset and assigned to the r5
-    RtStarsCondOpImm addi0;     // ADDI, r2,headSqArrAddr index++
     RtStarsCondOpOp add;                 // ADD: r5 is addr saving stream svm addr
     RtStarsCondOpLoad ldr1;              // LD_R: get stream svm addr r4
     RtStarsCondOpLoad ldr2;              // LD_R: get cnt in stream svm addr to r5

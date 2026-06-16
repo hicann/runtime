@@ -429,6 +429,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/memory/common_memset_d32.cpp
     ${TOP_DIR}/src/runtime/core/src/memory/simd_memsetd32.cpp
     ${TOP_DIR}/src/runtime/core/src/kernel/symbol_table.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/aclgraph_cond_task.cc
 )
 
 set(runtimeut_src_tiny_include_list

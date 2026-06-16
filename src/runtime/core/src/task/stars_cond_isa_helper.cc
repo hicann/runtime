@@ -763,14 +763,14 @@ void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t &funcCallPara,
     constexpr rtStarsCondIsaRegister_t r5 = RT_STARS_COND_ISA_REGISTER_R5;
 
     // ************************ update stream svm info / active sq*********************
-    ConstrucModelExeActiveHeadSqAdapt(funcCallPara, activeHeadSq);
-
     // SLLI: get stream svm addr offset R2 left 3 bit is offset and assigned to the r5
     ConstructOpImmSlli(r2, r5, 0x3U, RT_STARS_COND_ISA_OP_IMM_FUNC3_SLLI, RT_STARS_COND_ISA_OP_IMM_FUNC7_SLLI,
                        activeHeadSq.slli);
 
     // ADDI, r2,headSqArrAddr index++
     ConstructOpImmAndi(r2, r2, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, activeHeadSq.addi0);
+
+    ConstrucModelExeActiveHeadSqAdapt(funcCallPara, activeHeadSq);
 
     // ADD: r5 is addr saving stream svm addr
     ConstructOpOp(r4, r5, r5, RT_STARS_COND_ISA_OP_FUNC3_ADD, RT_STARS_COND_ISA_OP_FUNC7_ADD, activeHeadSq.add);
